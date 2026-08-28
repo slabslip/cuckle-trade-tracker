@@ -144,7 +144,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828s";
+    const DATA_V = "20260828t";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -313,6 +313,18 @@ const html = `<!DOCTYPE html>
       return (t.windows && t.windows[lens]) || t.even || t.realized;
     }
 
+    // ponytail: middle = rounded bags, so 12,944 − 6,874 reads 6,070 not a raw 6069.33 or an aged leftover.
+    function displayDelta(got, sent) {
+      if (got == null || sent == null || Number.isNaN(got) || Number.isNaN(sent)) return null;
+      return Math.round(got) - Math.round(sent);
+    }
+
+    function windowScore(r) {
+      const w = r.windows && r.windows[lens];
+      if (!w || w.incomplete) return null;
+      return displayDelta(w.got, w.sent);
+    }
+
     function windowPer(list) {
       const ds = (list || []).filter((t) => !t.incomplete)
         .map((t) => t.windows && t.windows[lens] && t.windows[lens].today_delta)
@@ -343,29 +355,19 @@ const html = `<!DOCTYPE html>
       return date <= addYears(today, -need);
     }
 
-    // ponytail: aging = window mean minus accept. t0 chip is the accept score itself.
-    function ageScore(r) {
-      const w = r.windows && r.windows[lens];
-      const t0 = r.windows && r.windows.t0;
-      if (!w || w.incomplete || w.delta == null) return null;
-      if (lens === "t0") return w.delta;
-      if (!t0 || t0.incomplete || t0.delta == null) return null;
-      return w.delta - t0.delta;
-    }
-
     function rankAge(dir) {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const by = new Map();
       for (const r of sides) {
         if (!windowLived(r.date)) continue;
-        const s = ageScore(r);
+        const s = windowScore(r);
         if (s == null) continue;
         const prev = by.get(r.transaction_id);
         if (!prev) { by.set(r.transaction_id, r); continue; }
-        const ps = ageScore(prev);
+        const ps = windowScore(prev);
         if (dir > 0 ? s > ps : s < ps) by.set(r.transaction_id, r);
       }
-      return [...by.values()].sort((a, b) => dir * (ageScore(b) - ageScore(a))).slice(0, 10);
+      return [...by.values()].sort((a, b) => dir * (windowScore(b) - windowScore(a))).slice(0, 10);
     }
 
     async function seatData(uid) {
@@ -381,7 +383,7 @@ const html = `<!DOCTYPE html>
       const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
       if (openId === r.transaction_id && hit) return tradeRow(hit);
       const w = (r.windows && r.windows[lens]) || {};
-      const s = ageScore(r);
+      const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
       const mid = s == null ? "—" : s > 0 ? "← " + fmt(s) : s < 0 ? fmt(Math.abs(s)) + " →" : fmt(s);
@@ -434,8 +436,8 @@ const html = `<!DOCTYPE html>
       const items = [];
       const best = rankAge(1)[0];
       const worst = rankAge(-1)[0];
-      if (best) items.push({ pack: "best", kicker: "Best aged", line: best.name + " vs " + best.other + " · " + fmt(ageScore(best)) });
-      if (worst) items.push({ pack: "worst", kicker: "Worst aged", line: worst.name + " vs " + worst.other + " · " + fmt(ageScore(worst)) });
+      if (best) items.push({ pack: "best", kicker: "Best aged", line: best.name + " vs " + best.other + " · " + fmt(windowScore(best)) });
+      if (worst) items.push({ pack: "worst", kicker: "Worst aged", line: worst.name + " vs " + worst.other + " · " + fmt(windowScore(worst)) });
       const traders = ((league && league.traders) || []).slice().sort((a, b) => (b.two_way || 0) - (a.two_way || 0));
       if (traders[0]) items.push({ pack: "", kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
       if (traders.length > 1) {
@@ -505,7 +507,7 @@ const html = `<!DOCTYPE html>
         ? (mine === extra.winner ? extra.loser : extra.winner)
         : ((t.others || []).join(" · ") || "Them");
       const multi = (t.others || []).length > 1;
-      const dlt = s.today_delta;
+      const dlt = incomplete ? null : displayDelta(s.today, s.sent_today);
       const mineCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
       const otherCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
       let detail = "";

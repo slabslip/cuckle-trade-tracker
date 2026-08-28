@@ -59,7 +59,6 @@ const html = `<!DOCTYPE html>
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
     .names { font-weight: 600; }
-    .verdict { font-weight: 750; font-size: 1.05rem; margin-top: 2px; }
     .date { color: var(--dim); font-size: 0.8125rem; }
     .margin { font-variant-numeric: tabular-nums; font-weight: 650; }
     .detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -97,7 +96,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "even";
-    const DATA_V = "20260828d";
+    const DATA_V = "20260828e";
     let view = "home";
     let draftTab = "rookie";
     let year = "all";
@@ -313,11 +312,8 @@ const html = `<!DOCTYPE html>
         : ((t.others || []).join(" · ") || "Them");
       const multi = (t.others || []).length > 1;
       const dlt = s.today_delta;
-      const verdict = incomplete || dlt == null
-        ? { text: "No score", cls: "" }
-        : dlt === 0 ? { text: "Even trade", cls: "" }
-        : dlt > 0 ? { text: mine + " won", cls: "pos" }
-        : { text: other + " won", cls: "neg" };
+      const mineCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
+      const otherCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
       let detail = "";
       if (open) {
         const gotTitle = mine + " received";
@@ -366,8 +362,7 @@ const html = `<!DOCTYPE html>
       }
       return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + t.transaction_id + '">'
         + '<div class="row-top"><div>'
-        + '<div class="verdict ' + verdict.cls + '">' + verdict.text + "</div>"
-        + '<div class="names">' + mine + " vs " + other + "</div>"
+        + '<div class="names"><span class="' + mineCls + '">' + mine + '</span> vs <span class="' + otherCls + '">' + other + "</span></div>"
         + '<div class="date">' + t.date
         + " · " + mine + " " + gotShow + " / " + other + " " + sentShow
         + (incomplete ? ' <span class="badge">no DP row</span>' : "")

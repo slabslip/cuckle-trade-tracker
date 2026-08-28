@@ -63,7 +63,7 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 
 | Tab | HAVE |
 | --- | --- |
-| Home | Public Best 10 / Worst 10 aged trades. Score = window mean − day of trade (t0 chip = accept only). 1y/2y/3y need that many years elapsed; all time needs 1 year. No `?me=` required. |
+| Home | No team = league Best/Worst aged boards. Dropdown picks a team → that team’s home (hero + latest trades/rookies). |
 | Trades | Your tape. Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
 | Drafts | Rookie surplus (player today − pick cost on draft day). Startup 2019 = player today only (no 2019 pick prices). |

@@ -30,17 +30,20 @@
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
     #lead:empty { display: none; }
-    .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    @media (min-width: 640px) { .tiles { grid-template-columns: repeat(5, 1fr); } }
-    button.tile, button.row, button.chip, button.tab, .row {
+    select.who {
+      display: block; width: 100%;
+      appearance: none; font: inherit; color: var(--text);
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 10px 12px; margin: 0 0 16px;
+    }
+    select.who:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.row, button.chip, button.tab, .row {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       min-height: 44px; touch-action: manipulation;
     }
-    button.tile, button.row, button.chip, button.tab { cursor: pointer; }
-    button.tile { padding: 14px 12px; font-weight: 650; }
-    button.tile.on { border-color: #4a4a58; background: #1c1c22; }
-    button.tile:focus-visible, button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible {
+    button.row, button.chip, button.tab { cursor: pointer; }
+    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     .you { color: var(--text); font-weight: 650; }
@@ -85,7 +88,9 @@
 <body>
   <h1>CuckleChunckle</h1>
   <p id="lead"></p>
-  <div class="tiles" id="who"></div>
+  <select class="who" id="who" aria-label="Team">
+    <option value="">League</option>
+  </select>
   <div id="app" hidden></div>
   <script>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
@@ -96,7 +101,7 @@
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828k";
+    const DATA_V = "20260828l";
     const WINDOWS = [
       ["t0", "Day of trade"],
       ["y1", "1 year"],
@@ -177,9 +182,7 @@
     async function loadMembers() {
       members = await (await fetch("data/ui/members.json?" + DATA_V)).json();
       league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
-      document.getElementById("who").innerHTML = members.map((m) =>
-        '<button type="button" class="tile" data-id="' + m.user_id + '">' + m.name + "</button>"
-      ).join("");
+      paintWho();
       document.getElementById("app").hidden = false;
       let hit = members.find((m) => m.name === startMe || m.user_id === startMe);
       if (!hit && (startView === "review" || startT)) {
@@ -199,6 +202,28 @@
       render();
     }
 
+    function paintWho() {
+      const sel = document.getElementById("who");
+      sel.innerHTML = '<option value="">League</option>'
+        + members.map((m) =>
+          '<option value="' + m.user_id + '"' + (me && me.user_id === m.user_id ? " selected" : "") + ">"
+          + m.name + "</option>"
+        ).join("");
+    }
+
+    function clearLeague() {
+      me = null;
+      data = null;
+      view = "home";
+      openId = null;
+      partnerName = null;
+      openPick = null;
+      document.getElementById("lead").textContent = "";
+      paintWho();
+      syncUrl();
+      render();
+    }
+
     function syncUrl() {
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
@@ -213,9 +238,9 @@
       data = await (await fetch("data/ui/me/" + id + ".json?" + DATA_V)).json();
       if (!league) league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
       if (!picks) picks = await (await fetch("data/ui/picks.json?" + DATA_V)).json();
-      document.querySelectorAll("#who .tile").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
-      document.getElementById("lead").textContent = me.name;
+      document.getElementById("lead").textContent = "";
       document.getElementById("app").hidden = false;
+      paintWho();
       if (!keep) {
         view = "home";
         openId = null;
@@ -314,17 +339,24 @@
         + "</div></button>";
     }
 
+    function renderLeagueHome() {
+      return "<h2>Best aged</h2>" + rankAge(1).map(boardTape).join("")
+        + "<h2>Worst aged</h2>" + rankAge(-1).map(boardTape).join("");
+    }
+
+    function renderTeamHome() {
+      const per = windowPer(data.trades);
+      const total = windowTotal(data.trades);
+      return '<div class="hero"><b class="' + cls(per) + '">' + fmt(per) + "</b>"
+        + '<div class="caption">' + ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "")
+        + (total != null ? " · " + fmt(total) : "")
+        + "</div></div>"
+        + "<h2>Latest trades</h2>" + (data.recent_trades || []).map(tradeRow).join("")
+        + "<h2>Latest rookie picks</h2>" + (data.recent_rookies || []).map(pickRow).join("");
+    }
+
     function renderHome() {
-      const best = rankAge(1);
-      const worst = rankAge(-1);
-      let open = "";
-      if (me && data && openId) {
-        const t = (data.trades || []).find((x) => x.transaction_id === openId);
-        if (t) open = tradeRow(t);
-      }
-      return "<h2>Best aged</h2>" + best.map(boardTape).join("")
-        + "<h2>Worst aged</h2>" + worst.map(boardTape).join("")
-        + open;
+      return me && data ? renderTeamHome() : renderLeagueHome();
     }
 
     function tradeRow(t, extra) {
@@ -527,9 +559,10 @@
       syncUrl();
     }
 
-    document.getElementById("who").addEventListener("click", (e) => {
-      const b = e.target.closest("[data-id]");
-      if (b) selectMe(b.dataset.id);
+    document.getElementById("who").addEventListener("change", (e) => {
+      const id = e.target.value;
+      if (!id) clearLeague();
+      else selectMe(id);
     });
     document.getElementById("app").addEventListener("click", (e) => {
       const pickBtn = e.target.closest("[data-pick]");
@@ -543,7 +576,7 @@
         const uid = boardRow.dataset.openMe;
         const tx = boardRow.dataset.id;
         Promise.resolve(me && me.user_id === uid ? null : selectMe(uid, true)).then(() => {
-          view = "home";
+          view = "trades";
           openId = tx;
           partnerName = null;
           render();

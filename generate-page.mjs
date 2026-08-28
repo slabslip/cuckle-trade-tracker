@@ -144,7 +144,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828r";
+    const DATA_V = "20260828s";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -413,7 +413,7 @@ const html = `<!DOCTYPE html>
       const on = openPacks.has(id);
       return '<div class="pack">'
         + '<button type="button" class="pack-head" data-pack="' + id + '" aria-expanded="' + on + '">'
-        + "<h2>" + title + "</h2><span class=\"chev\">" + (on ? "−" : "+") + "</span></button>"
+        + "<h2>" + title + "</h2><span class='chev'>" + (on ? "-" : "+") + "</span></button>"
         + (on ? '<div class="pack-body">' + inner + "</div>" : "")
         + "</div>";
     }
@@ -766,7 +766,8 @@ const html = `<!DOCTYPE html>
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
     });
     loadMembers().catch((err) => {
-      document.getElementById("lead").textContent = "Serve this folder over http (python3 -m http.server) so data/ui can load.";
+      document.getElementById("app").hidden = false;
+      document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
       console.error(err);
     });
   </script>

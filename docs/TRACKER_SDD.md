@@ -15,7 +15,7 @@ The product is a **phone-first static page** that grades CuckleChunckle trades (
 | Local | `index.html` + `data/ui/*.json`. Serve the folder over HTTP (`python3 -m http.server`). `?me=TipsUp` still lands on Home. |
 | Rebuild | `node build.mjs` (or sleeper-sync → draft-resolve → value-snapshot → revalue → generate-page). No npm. |
 | Git | **https://github.com/slabslip/cuckle-trade-tracker** (public as of 2026-08-28) — source + spec + generated `data/ui`. Not inside `tradeslabs-web`. |
-| Pages on that repo | **On.** **https://slabslip.github.io/cuckle-trade-tracker/?me=TipsUp** — hard-refresh. |
+| Pages on that repo | **On.** **https://slabslip.github.io/cuckle-trade-tracker/** — no `?me=` (that is a team home). Hard-refresh. |
 | Older phone copy | **https://slabslip.github.io/league-standings/?me=TipsUp** still works. Prefer the tracker Pages URL. |
 
 **Do not start new feature work** until Truman answers §8. The First 3 years chip is already in the tree; leave Today, T0, hops, and Best/Worst frozen.

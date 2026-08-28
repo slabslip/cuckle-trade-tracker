@@ -111,19 +111,13 @@ A slotted pick with no exact or tier row is **unpriced**, not a quiet Mid.
 
 ---
 
-## 4. The 300 floor
+## 4. Window floor (off the board, not “under 300”)
 
-**HAVE (IN FLIGHT):** `MIN_ACTIVE = 300`. `floorActive(v) = v < 300 ? 0 : v` on every y3 snap (players **and** picks).
+**HAVE:** A player snap on a year-end / window date is **0** only if they are **not in that month’s DP Superflex file**. Cheap-but-listed players keep their raw (then flatten). Still-a-pick Mid values are never zeroed this way. Today and T0 are unchanged.
 
-**RECOMMEND (WANT, once Truman confirms Q1):**
+The old `MIN_ACTIVE = 300` rule zeroed live players (Alec Pierce 35–222 in 2023–25, Hill 285, Pollard, etc.). That was the “0 on the bag” bug.
 
-- Parameter on the **window** clock only. Tune the constant; do not hard-code 300 in UI copy as if it were a DP rule.
-- **Do not** apply to Today. Hill is 285 and still on the board.
-- **Do not** apply to T0.
-- Retired / last-gasp year **inside the average = 0**. Do **not** drop that year (dropping inflates the mean).
-- **RECOMMEND** apply the floor to **player** snaps and `off_board` 0s, not to still-a-pick Mid values. A 44-point 2028 3rd is a cheap pick, not a retiree. Current IN FLIGHT code floors those picks to 0 — that is why Truman–Bubba y3 is +406 instead of a true window (the window is one day long and the three picks vanish).
-
-**Carry-forward vs floor.** `off_board` in code never fires if the player ever had a row. Zeke’s last DP row is 2026-02-27 = 3; Today still prints 3. The floor is the only way a dead year becomes 0, and only on y3. If we later want Today to show 0 for off-board, that is a **new** clock rule — not a silent change.
+**Carry-forward vs floor.** `asofRow` still carries the last-known raw if we ask for a later date. The window floor now checks “were they on *this* snapshot?” so Zeke after his last DP row (2026-02-27) is 0 on later window dates, while Pierce on every 2023–26 file stays priced.
 
 ---
 

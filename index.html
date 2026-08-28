@@ -86,6 +86,40 @@
     .badge { font-size: 0.8125rem; color: #e0b44c; }
     svg.spark { width: 100%; height: 72px; margin-top: 8px; }
     a.back { color: var(--muted); font-size: 0.85rem; }
+    #feed { overflow: hidden; margin: 0 0 14px; }
+    #feed:empty, #feed[hidden] { display: none; }
+    .ticker {
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    }
+    .ticker-track {
+      display: flex; gap: 8px; width: max-content;
+      animation: ticker 48s linear infinite;
+    }
+    @keyframes ticker { to { transform: translateX(-50%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .ticker { overflow-x: auto; mask-image: none; }
+      .ticker-track { animation: none; }
+    }
+    button.bubble {
+      flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
+      background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+      padding: 8px 14px; min-height: 40px; white-space: nowrap; cursor: pointer;
+    }
+    button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.bubble b { font-weight: 650; }
+    button.bubble span { color: var(--dim); }
+    .pack { margin: 0 0 8px; }
+    button.pack-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      width: 100%; appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 12px; cursor: pointer;
+    }
+    button.pack-head:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.pack-head h2 { margin: 0; font-size: 1.05rem; }
+    .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .pack-body { margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -94,6 +128,7 @@
   <select class="who" id="who" aria-label="Team">
     <option value="">League boards</option>
   </select>
+  <div id="feed" hidden></div>
   <div id="app" hidden></div>
   <script>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
@@ -104,7 +139,8 @@
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828n";
+    const DATA_V = "20260828q";
+    const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
       ["y1", "1 year"],
@@ -368,21 +404,73 @@
         + '<div class="margin">' + right + "</div></div></div>";
     }
 
+    function pack(id, title, inner) {
+      const on = openPacks.has(id);
+      return '<div class="pack">'
+        + '<button type="button" class="pack-head" data-pack="' + id + '" aria-expanded="' + on + '">'
+        + "<h2>" + title + "</h2><span class="chev">" + (on ? "−" : "+") + "</span></button>"
+        + (on ? '<div class="pack-body">' + inner + "</div>" : "")
+        + "</div>";
+    }
+
     function renderPlayerLists() {
       const p = (league && league.player_lists) || {};
       const most = (p.most_traded || []).map((r) => listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"))).join("");
       const least = (p.least_traded || []).map((r) => listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"))).join("");
       const forever = (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
       const stay = (p.homesteaders || []).map((r) => listRow(r, yearsOn(r.days))).join("");
-      return "<h2>Most passed around</h2>" + most
-        + "<h2>Least traded</h2>" + least
-        + "<h2>Forever players</h2>" + forever
-        + "<h2>Homesteaders</h2>" + stay;
+      return pack("passed", "Most passed around", most)
+        + pack("least", "Least traded", least)
+        + pack("forever", "Forever players", forever)
+        + pack("home", "Homesteaders", stay);
+    }
+
+    function leagueBubbles() {
+      const items = [];
+      const best = rankAge(1)[0];
+      const worst = rankAge(-1)[0];
+      if (best) items.push({ pack: "best", kicker: "Best aged", line: best.name + " vs " + best.other + " · " + fmt(ageScore(best)) });
+      if (worst) items.push({ pack: "worst", kicker: "Worst aged", line: worst.name + " vs " + worst.other + " · " + fmt(ageScore(worst)) });
+      const traders = ((league && league.traders) || []).slice().sort((a, b) => (b.two_way || 0) - (a.two_way || 0));
+      if (traders[0]) items.push({ pack: "", kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
+      if (traders.length > 1) {
+        const quiet = traders[traders.length - 1];
+        items.push({ pack: "", kicker: "Least active", line: quiet.name + " · " + quiet.two_way + " trades" });
+      }
+      const p = (league && league.player_lists) || {};
+      const hot = (p.most_traded || [])[0];
+      const cold = (p.least_traded || [])[0];
+      const stay = (p.homesteaders || [])[0];
+      if (hot) items.push({ pack: "passed", kicker: "Most passed around", line: hot.name + " · " + hot.trades + " trades" });
+      if (cold) items.push({ pack: "least", kicker: "Least traded", line: cold.name + " · " + cold.team });
+      if ((p.forever || []).length) items.push({ pack: "forever", kicker: "Forever players", line: p.forever.length + " still on their startup team" });
+      if (p.forever && p.forever[0]) items.push({ pack: "forever", kicker: "Forever", line: p.forever[0].name + " · " + p.forever[0].team });
+      if (stay) items.push({ pack: "home", kicker: "Homesteader", line: stay.name + " · " + yearsOn(stay.days) });
+      return items;
+    }
+
+    function paintFeed() {
+      const el = document.getElementById("feed");
+      if (me || view !== "home") {
+        el.hidden = true;
+        el.innerHTML = "";
+        el.dataset.key = "";
+        return;
+      }
+      const items = leagueBubbles();
+      const key = lens + ":" + items.map((b) => b.kicker + b.line).join("|");
+      if (el.dataset.key === key) { el.hidden = false; return; }
+      el.dataset.key = key;
+      el.hidden = !items.length;
+      const pill = (b) => '<button type="button" class="bubble"' + (b.pack ? ' data-pack="' + b.pack + '"' : "") + ">"
+        + "<b>" + b.kicker + "</b> <span>" + b.line + "</span></button>";
+      const row = items.map(pill).join("");
+      el.innerHTML = '<div class="ticker" aria-label="League feed"><div class="ticker-track">' + row + row + "</div></div>";
     }
 
     function renderLeagueHome() {
-      return "<h2>Best aged</h2>" + rankAge(1).map(boardTape).join("")
-        + "<h2>Worst aged</h2>" + rankAge(-1).map(boardTape).join("")
+      return pack("best", "Best aged", rankAge(1).map(boardTape).join(""))
+        + pack("worst", "Worst aged", rankAge(-1).map(boardTape).join(""))
         + renderPlayerLists();
     }
 
@@ -598,6 +686,7 @@
         : view === "trades" ? renderTrades()
         : view === "partners" ? renderPartners() : view === "drafts" ? renderDrafts() : renderLeague();
       app.innerHTML = nav + body;
+      paintFeed();
       syncUrl();
     }
 
@@ -606,7 +695,20 @@
       if (!id) clearLeague();
       else selectMe(id);
     });
+    function togglePack(id) {
+      if (!id) return;
+      if (openPacks.has(id)) openPacks.delete(id);
+      else openPacks.add(id);
+      render();
+    }
+
+    document.getElementById("feed").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-pack]");
+      if (btn) togglePack(btn.dataset.pack);
+    });
     document.getElementById("app").addEventListener("click", (e) => {
+      const packBtn = e.target.closest("[data-pack]");
+      if (packBtn) { togglePack(packBtn.dataset.pack); return; }
       const pickBtn = e.target.closest("[data-pick]");
       if (pickBtn) {
         openPick = openPick === pickBtn.dataset.pick ? null : pickBtn.dataset.pick;

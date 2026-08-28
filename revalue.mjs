@@ -3,7 +3,6 @@
 import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
 
 const TEAMS = 10;
-const MIN_ACTIVE = 300;
 const FLAT_SCALE = 10000;
 // ponytail: blend fitted to 12 KTC names (2026-08-28). Top stays near raw DP; bottom lifts. Hill will stay high vs KTC — DP ranks him 285, KTC 1069.
 const FLAT_EXP = 0.3;
@@ -217,8 +216,16 @@ function windowAsOfs(t0, today, years) {
   return yearEnds(t0, end);
 }
 
-function floorActive(v) {
-  return v < MIN_ACTIVE ? 0 : v;
+function snapOnOrBefore(idx, asOf) {
+  let d = null;
+  for (const x of idx.dates) if (x <= asOf) d = x;
+  return d;
+}
+
+function onSnap(curveIdx, key, snap) {
+  if (!snap || !key) return false;
+  const rows = curveIdx.get(key);
+  return !!(rows && rows.some((r) => r.as_of === snap));
 }
 
 function indexVmax(curve) {
@@ -259,7 +266,12 @@ function y3Snaps(leg, dates, ctx) {
     const priced = priceLeg(leg, d, "realized", ctx);
     if (priced.value == null) continue;
     const raw = priced.value;
-    const dead = leg.kind === "player" && raw < MIN_ACTIVE;
+    const playerKey = String(priced.priced_as || "").startsWith("player:")
+      ? priced.priced_as
+      : (leg.kind === "player" ? leg.asset_key : null);
+    const snap = snapOnOrBefore(ctx.vmaxIdx, d);
+    // ponytail: 300 floor treated live cheap WRs (Pierce 35–222) as dead. Off that month’s board = retired.
+    const dead = !!(playerKey && !onSnap(ctx.curveIdx, playerKey, snap));
     const top = vmaxAt(ctx.vmaxIdx, d);
     const even = flatten(dead ? 0 : raw, top);
     snaps.push({
@@ -1163,7 +1175,11 @@ async function main() {
   check("sides complete", trade_boards.sides.every((r) => r.today_delta != null && r.date && r.headline != null));
   check("sides have windows", trade_boards.sides.every((r) =>
     r.windows && r.windows.t0 && r.windows.all && ["t0", "y1", "y2", "y3", "all"].every((k) => r.windows[k])));
-  check("MIN_ACTIVE", MIN_ACTIVE === 300);
+  const pierceTx = meters.find((t) => t.transaction_id === "998733744402010112");
+  const pierceY1 = [...Object.values(pierceTx?.lenses.windows?.y1?.sides || {})]
+    .flatMap((s) => [...(s.legs || []), ...(s.sent || [])])
+    .find((l) => l.label === "Alec Pierce");
+  check("pierce y1 not zeroed", pierceY1 && pierceY1.value > 0);
   for (const row of leaderboard) {
     const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
       .map((t) => t.lenses.realized.sides[row.user_id]?.today_delta)
@@ -1178,19 +1194,27 @@ async function main() {
   const zekeToday = chiefArae?.lenses.realized.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
   const zekeY3 = chiefArae?.lenses.y3.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
   check("zeke on chief-arae", !!(zekeToday && zekeY3));
-  check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3 && (zekeToday.value < MIN_ACTIVE ? zekeY3.value !== zekeToday.value : true));
+  check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3);
   let badFloor = 0;
   for (const t of meters) {
     const dates = windowAsOfs(t.date, today, 3);
     for (const leg of inByTx.get(t.transaction_id) || []) {
-      for (const snap of y3Snaps(leg, dates, ctx)) {
-        if (leg.kind !== "player") continue;
-        if (snap.floored > 0 && snap.floored < MIN_ACTIVE) badFloor += 1;
-        if (snap.raw < MIN_ACTIVE && snap.floored !== 0) badFloor += 1;
+      for (const d of dates) {
+        const priced = priceLeg(leg, d, "realized", ctx);
+        if (priced.value == null) continue;
+        const playerKey = String(priced.priced_as || "").startsWith("player:")
+          ? priced.priced_as
+          : (leg.kind === "player" ? leg.asset_key : null);
+        if (!playerKey) continue;
+        const snap = y3Snaps(leg, [d], ctx)[0];
+        if (!snap) continue;
+        const live = onSnap(ctx.curveIdx, playerKey, snapOnOrBefore(ctx.vmaxIdx, d));
+        if (live && snap.floored !== snap.raw) badFloor += 1;
+        if (!live && snap.floored !== 0) badFloor += 1;
       }
     }
   }
-  check("no sub-300 positive 3y snap", badFloor === 0);
+  check("off-board snaps are 0, on-board keep raw", badFloor === 0);
   const topToday = vmaxAt(vmaxIdx, today);
   check("flatten top is 10k", flatten(topToday, topToday) === FLAT_SCALE);
   const bigsbyFlat = flatten(83, topToday);

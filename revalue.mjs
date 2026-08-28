@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
-import fs from "node:fs";
-import { attachKtcIds, ktcPickKey } from "./ktc-snapshot.mjs";
-import { DATA, pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
+import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
 
 const TEAMS = 10;
 const MIN_ACTIVE = 300;
@@ -10,8 +8,6 @@ const FLAT_SCALE = 10000;
 // ponytail: blend fitted to 12 KTC names (2026-08-28). Top stays near raw DP; bottom lifts. Hill will stay high vs KTC — DP ranks him 285, KTC 1069.
 const FLAT_EXP = 0.3;
 const FLAT_TOP_MIX = 0.5;
-// ponytail: KTC owns even-lens; even-DP assists. Historical dates with no KTC file stay flatten-only — do not paste today's crowd book onto 2019–2025.
-const KTC_TODAY_WEIGHT = 0.60;
 // ponytail: pinned calibration tape. Swap IDs here, not a CMS.
 const REVIEW_IDS = [
   "460470201385742336",
@@ -44,6 +40,10 @@ function asofRow(index, key, asOf) {
   return best;
 }
 
+function asofRowNear(index, key, asOf) {
+  return asofRow(index, key, asOf) || index.get(key)?.[0] || null;
+}
+
 function playerValue(index, key, asOf) {
   const hit = asofRow(index, key, asOf);
   if (hit) return { value: hit.value, flag: null, priced_as: key, as_of: hit.as_of };
@@ -74,29 +74,57 @@ function pickValueAt(index, year, round, slot, asOf) {
   const r = Number(round);
   if (slot) {
     const exactKey = `pickval:${y}:${r}:${Number(slot)}`;
-    const exact = asofRow(index, exactKey, asOf);
+    const exact = asofRowNear(index, exactKey, asOf);
     if (exact) return { value: exact.value, flag: null, priced_as: exactKey, as_of: exact.as_of };
     const wanted = pickTier(slot, TEAMS);
     const tierKey = `pickval:${y}:${r}:${wanted}`;
-    const tier = asofRow(index, tierKey, asOf);
+    const tier = asofRowNear(index, tierKey, asOf);
     if (tier) return { value: tier.value, flag: null, priced_as: tierKey, as_of: tier.as_of };
     return { value: null, flag: "unpriced", priced_as: tierKey, as_of: null };
   }
   const midKey = `pickval:${y}:${r}:Mid`;
-  const mid = asofRow(index, midKey, asOf);
+  const mid = asofRowNear(index, midKey, asOf);
   if (mid) return { value: mid.value, flag: "priced_as_mid", priced_as: midKey, as_of: mid.as_of };
   return { value: null, flag: "unpriced", priced_as: midKey, as_of: null };
 }
 
-// ponytail: DP has no 2029 rows yet; use the same 2028 round until they land in the git history.
-function pickValue(index, year, round, slot, asOf) {
-  const hit = pickValueAt(index, year, round, slot, asOf);
-  if (hit.value != null) return hit;
-  if (Number(year) === 2029) {
-    const proxy = pickValueAt(index, 2028, round, slot, asOf);
-    if (proxy.value != null) return { ...proxy, flag: "priced_as_2028" };
+let _pickYears = null;
+let _pickMaxRound = null;
+function pickBoardYears(index) {
+  if (_pickYears) return _pickYears;
+  const ys = new Set();
+  let maxR = 0;
+  for (const key of index.keys()) {
+    if (!key.startsWith("pickval:")) continue;
+    const p = key.split(":");
+    ys.add(Number(p[1]));
+    maxR = Math.max(maxR, Number(p[2]) || 0);
   }
-  return hit;
+  _pickYears = [...ys].sort((a, b) => a - b);
+  _pickMaxRound = maxR || 4;
+  return _pickYears;
+}
+
+// ponytail: DP has no 2019/2029 rows and no 5th+. Closest year, then deepest round on the board.
+function pickValue(index, year, round, slot, asOf) {
+  const y0 = Number(year);
+  const r0 = Number(round);
+  const years = pickBoardYears(index).slice().sort((a, b) => {
+    const d = Math.abs(a - y0) - Math.abs(b - y0);
+    return d || a - b;
+  });
+  const tryRound = (r) => {
+    const useSlot = r === r0 ? slot : null;
+    for (const y of years) {
+      const hit = pickValueAt(index, y, r, useSlot, asOf);
+      if (hit.value == null) continue;
+      if (y === y0 && r === r0) return hit;
+      return { ...hit, flag: r === r0 ? `priced_as_${y}` : `priced_as_${y}r${r}` };
+    }
+    return null;
+  };
+  return tryRound(r0) || tryRound(_pickMaxRound)
+    || { value: null, flag: "unpriced", priced_as: `pickval:${year}:${round}:Mid`, as_of: null };
 }
 
 function latestAsOf(curve) {
@@ -184,9 +212,9 @@ function addYears(ymd, n) {
   return `${y + n}-${String(m).padStart(2, "0")}-${String(Math.min(d, last)).padStart(2, "0")}`;
 }
 
-function windowAsOfs(t0, today) {
-  const cap = addYears(t0, 3) < today ? addYears(t0, 3) : today;
-  return yearEnds(t0, today).filter((d) => d <= cap);
+function windowAsOfs(t0, today, years) {
+  const end = years == null ? today : (addYears(t0, years) < today ? addYears(t0, years) : today);
+  return yearEnds(t0, end);
 }
 
 function floorActive(v) {
@@ -204,10 +232,11 @@ function indexVmax(curve) {
 }
 
 function vmaxAt(idx, asOf) {
-  let v = FLAT_SCALE;
+  let v = null;
   for (const d of idx.dates) {
     if (d <= asOf) v = idx.by.get(d);
   }
+  if (v == null && idx.dates.length) v = idx.by.get(idx.dates[0]);
   return v || FLAT_SCALE;
 }
 
@@ -223,71 +252,6 @@ function flattenLegs(legs, top) {
   return (legs || []).map((l) => ({ ...l, value: flatten(l.value, top) }));
 }
 
-function blendToday(dpEven, ktcSf) {
-  if (dpEven == null) return null;
-  if (ktcSf == null) return dpEven;
-  return Math.round((1 - KTC_TODAY_WEIGHT) * dpEven + KTC_TODAY_WEIGHT * ktcSf);
-}
-
-function bookFromSnap(snap) {
-  if (!snap?.players?.length) return null;
-  const players = snap.players;
-  if (!players.some((p) => p.sleeper_id || p.pick_key)) {
-    const csvPath = `${DATA}/dp/latest/db_playerids.csv`;
-    if (fs.existsSync(csvPath)) attachKtcIds(players, fs.readFileSync(csvPath, "utf8"));
-  }
-  const map = new Map();
-  for (const p of players) {
-    if (p.value == null) continue;
-    if (p.pick_key) map.set(p.pick_key, p.value);
-    else if (p.sleeper_id) map.set(`player:${p.sleeper_id}`, p.value);
-    else if (p.pos === "PI") {
-      const key = ktcPickKey(p.name);
-      if (key) map.set(key, p.value);
-    }
-  }
-  return map.size ? map : null;
-}
-
-function loadKtcBooks() {
-  const dir = `${DATA}/ktc`;
-  if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
-  const books = [];
-  for (const f of files) {
-    const snap = readJson(`ktc/${f}`, null);
-    const map = bookFromSnap(snap);
-    if (!map) continue;
-    books.push({ as_of: snap.as_of || f.slice(0, 10), map });
-  }
-  return books;
-}
-
-function ktcBookAt(books, asOf) {
-  let best = null;
-  for (const b of books) if (b.as_of <= asOf) best = b.map;
-  return best;
-}
-
-function ktcForLeg(leg, ktcBook, resIdx, today) {
-  if (!ktcBook) return null;
-  if (leg.kind === "player") return ktcBook.has(leg.asset_key) ? ktcBook.get(leg.asset_key) : null;
-  const playerRes = latestRes(resIdx, leg.asset_key, today, "player");
-  if (playerRes?.player_key && ktcBook.has(playerRes.player_key)) return ktcBook.get(playerRes.player_key);
-  const slotRes = latestRes(resIdx, leg.asset_key, today, "slot");
-  const [, year, round] = (leg.asset_key || "").split(":");
-  if (!year) return null;
-  for (const k of pickKeys(year, Number(round), slotRes?.draft_slot ?? null)) {
-    if (ktcBook.has(k)) return ktcBook.get(k);
-  }
-  return null;
-}
-
-function blendEvenAt(legs, ktcBook, resIdx, asOf) {
-  if (!ktcBook) return legs;
-  return (legs || []).map((l) => ({ ...l, value: blendToday(l.value, ktcForLeg(l, ktcBook, resIdx, asOf)) }));
-}
-
 // ponytail: year-end (+ today if inside the window) only, not monthly. Monthly if a mid-year crash must count.
 function y3Snaps(leg, dates, ctx) {
   const snaps = [];
@@ -298,12 +262,10 @@ function y3Snaps(leg, dates, ctx) {
     const dead = leg.kind === "player" && raw < MIN_ACTIVE;
     const top = vmaxAt(ctx.vmaxIdx, d);
     const even = flatten(dead ? 0 : raw, top);
-    const book = ktcBookAt(ctx.ktcBooks || [], d);
-    const ktc = book ? ktcForLeg(leg, book, ctx.resIdx, d) : null;
     snaps.push({
       raw,
       floored: dead ? 0 : raw,
-      even: blendToday(even, ktc),
+      even,
     });
   }
   return snaps;
@@ -315,6 +277,17 @@ function y3Score(leg, dates, today, ctx) {
   if (!snaps.length) return { ...display, value: null, flag: "unpriced" };
   const value = snaps.reduce((a, s) => a + s.even, 0) / snaps.length;
   return { ...display, value };
+}
+
+function bagAtEven(legs, uid, asOf, ctx, which) {
+  const raw = bagFor(legs, uid, asOf, "pick", ctx, which);
+  const top = vmaxAt(ctx.vmaxIdx, asOf);
+  const graded = flattenLegs(raw.legs, top);
+  return {
+    points: graded.reduce((a, l) => a + (l.value || 0), 0),
+    unpriced: raw.unpriced,
+    legs: graded,
+  };
 }
 
 function bagY3(legs, uid, dates, today, ctx, which) {
@@ -429,10 +402,10 @@ async function main() {
     if (l.kind === "pick") {
       const [, y, r] = l.asset_key.split(":");
       for (const k of pickKeys(y, Number(r), null)) used.add(k);
-      if (Number(y) === 2029) {
-        for (const k of pickKeys(2028, Number(r), null)) used.add(k);
-      }
     }
+  }
+  for (const r of fullCurve) {
+    if (r.asset_key.startsWith("pickval:")) used.add(r.asset_key);
   }
   for (const r of resolutions) {
     if (r.player_key) used.add(r.player_key);
@@ -470,9 +443,7 @@ async function main() {
   const vmaxIdx = indexVmax(curve);
   const resIdx = resIndex(resolutions);
   const today = latestAsOf(fullCurve.length ? fullCurve : curve);
-  const ktcBooks = loadKtcBooks();
-  const ktcBook = ktcBookAt(ktcBooks, today);
-  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, ktcBooks };
+  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx };
   const tradeById = new Map(allTrades.map((t) => [t.transaction_id, t]));
 
   function buildPicks() {
@@ -636,7 +607,7 @@ async function main() {
       });
       entry.lenses[lens] = { sides, year_ends: points, t0_priced: t0Priced, incomplete };
     }
-    const y3Dates = windowAsOfs(t0, today);
+    const y3Dates = windowAsOfs(t0, today, 3);
     const y3Sides = {};
     for (const uid of uids) {
       const got = bagY3(legs, uid, y3Dates, today, ctx, "in");
@@ -659,19 +630,17 @@ async function main() {
       incomplete: uids.some((uid) => y3Sides[uid].incomplete),
     };
     const topToday = vmaxAt(vmaxIdx, today);
-    const bookToday = ktcBookAt(ktcBooks, today);
     const top0 = vmaxAt(vmaxIdx, t0);
-    const book0 = ktcBookAt(ktcBooks, t0);
     const evenSides = {};
     for (const uid of uids) {
       const s = entry.lenses.realized.sides[uid];
-      const gotLegs = blendEvenAt(flattenLegs(s.legs, topToday), bookToday, resIdx, today);
-      const sentLegs = blendEvenAt(flattenLegs(s.sent, topToday), bookToday, resIdx, today);
+      const gotLegs = flattenLegs(s.legs, topToday);
+      const sentLegs = flattenLegs(s.sent, topToday);
       const gotP = gotLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sentP = sentLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sent0Raw = bagFor(legs, uid, t0, "realized", ctx, "out");
-      const got0Legs = blendEvenAt(flattenLegs(s.t0_legs, top0), book0, resIdx, t0);
-      const sent0Legs = blendEvenAt(flattenLegs(sent0Raw.legs, top0), book0, resIdx, t0);
+      const got0Legs = flattenLegs(s.t0_legs, top0);
+      const sent0Legs = flattenLegs(sent0Raw.legs, top0);
       const t0Got = got0Legs.reduce((a, l) => a + (l.value || 0), 0);
       const t0Sent = sent0Legs.reduce((a, l) => a + (l.value || 0), 0);
       const t0Priced = s.t0 != null;
@@ -697,11 +666,10 @@ async function main() {
     }
     const evenYearEnds = yearEnds(t0, today).map((d) => {
       const top = vmaxAt(vmaxIdx, d);
-      const book = ktcBookAt(ktcBooks, d);
       const pts = {};
       for (const uid of uids) {
         const bag = bagFor(legs, uid, d, "realized", ctx, "in");
-        const graded = blendEvenAt(flattenLegs(bag.legs, top), book, resIdx, d);
+        const graded = flattenLegs(bag.legs, top);
         pts[nameById[uid] || uid] = graded.reduce((a, l) => a + (l.value || 0), 0);
       }
       return { as_of: d, points: pts };
@@ -711,22 +679,45 @@ async function main() {
       year_ends: evenYearEnds,
       incomplete: entry.lenses.realized.incomplete,
     };
+    const winKeys = [["t0", 0], ["y1", 1], ["y2", 2], ["y3", 3], ["all", null]];
+    entry.lenses.windows = {};
+    for (const [key, n] of winKeys) {
+      const dates = n === 0 ? [t0] : windowAsOfs(t0, today, n);
+      const sides = {};
+      for (const uid of uids) {
+        const got = n === 0
+          ? bagAtEven(legs, uid, t0, ctx, "in")
+          : bagY3(legs, uid, dates, today, ctx, "in");
+        const sent = n === 0
+          ? bagAtEven(legs, uid, t0, ctx, "out")
+          : bagY3(legs, uid, dates, today, ctx, "out");
+        const incomplete = got.unpriced + sent.unpriced > 0 || (n !== 0 && !dates.length);
+        sides[uid] = {
+          name: nameById[uid] || uid,
+          today: got.points,
+          sent_today: sent.points,
+          today_delta: incomplete ? null : got.points - sent.points,
+          unpriced: got.unpriced,
+          sent_unpriced: sent.unpriced,
+          incomplete,
+          snaps: dates.length,
+          legs: got.legs,
+          sent: sent.legs,
+        };
+      }
+      entry.lenses.windows[key] = {
+        sides,
+        snaps: dates.length,
+        incomplete: uids.some((uid) => sides[uid].incomplete),
+      };
+    }
     entry.incomplete = entry.lenses.realized.incomplete;
     meters.push(entry);
   }
 
-  function gradeRaw(raw, asOf, ktcSf) {
+  function gradeRaw(raw, asOf) {
     if (raw == null) return null;
-    return blendToday(flatten(raw, vmaxAt(vmaxIdx, asOf)), ktcSf);
-  }
-
-  function ktcForPick(season, round, slot, asOf) {
-    const book = ktcBookAt(ktcBooks, asOf);
-    if (!book) return null;
-    for (const k of pickKeys(season, Number(round), slot)) {
-      if (book.has(k)) return book.get(k);
-    }
-    return null;
+    return flatten(raw, vmaxAt(vmaxIdx, asOf));
   }
 
   const drafterRows = [];
@@ -736,8 +727,8 @@ async function main() {
     const playerKey = `player:${p.player_id}`;
     const nowRaw = playerValue(curveIdx, playerKey, today);
     const costRaw = pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, draftDay);
-    const nowVal = gradeRaw(nowRaw.value, today, ktcBookAt(ktcBooks, today)?.get(playerKey));
-    const costVal = gradeRaw(costRaw.value, draftDay, ktcForPick(p.season, p.round, p.draft_slot, draftDay));
+    const nowVal = gradeRaw(nowRaw.value, today);
+    const costVal = gradeRaw(costRaw.value, draftDay);
     const surplus = nowVal != null && costVal != null ? nowVal - costVal : null;
     const startup = p.season === "2019";
     drafterRows.push({
@@ -756,11 +747,10 @@ async function main() {
       flag: nowRaw.flag || costRaw.flag || null,
       year_ends: yearEnds(draftDay, today).map((d) => ({
         as_of: d,
-        player: gradeRaw(playerValue(curveIdx, playerKey, d).value, d, ktcBookAt(ktcBooks, d)?.get(playerKey)),
+        player: gradeRaw(playerValue(curveIdx, playerKey, d).value, d),
         pick: startup ? null : gradeRaw(
           pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, d).value,
           d,
-          ktcForPick(p.season, p.round, p.draft_slot, d),
         ),
       })),
     });
@@ -900,6 +890,18 @@ async function main() {
       for (const uid of t.user_ids) {
         const s = t.lenses.even.sides[uid];
         if (s.today_delta == null) continue;
+        const win = t.lenses.windows || {};
+        const windows = {};
+        for (const [k, w] of Object.entries(win)) {
+          const side = w.sides[uid];
+          windows[k] = {
+            delta: side?.today_delta ?? null,
+            got: side?.today ?? null,
+            sent: side?.sent_today ?? null,
+            snaps: side?.snaps ?? w.snaps ?? 0,
+            incomplete: !!(side?.incomplete || w.incomplete),
+          };
+        }
         rows.push({
           transaction_id: t.transaction_id,
           date: t.date,
@@ -910,6 +912,7 @@ async function main() {
           t0_delta: s.t0_delta,
           aged: s.t0_delta != null ? s.today_delta - s.t0_delta : null,
           headline: headlineOf(s),
+          windows,
         });
       }
     }
@@ -1047,6 +1050,8 @@ async function main() {
   }
   check("sides 2-team pairs", Object.values(sideCounts).every((n) => n === 2));
   check("sides complete", trade_boards.sides.every((r) => r.today_delta != null && r.date && r.headline != null));
+  check("sides have windows", trade_boards.sides.every((r) =>
+    r.windows && r.windows.t0 && r.windows.all && ["t0", "y1", "y2", "y3", "all"].every((k) => r.windows[k])));
   check("MIN_ACTIVE", MIN_ACTIVE === 300);
   for (const row of leaderboard) {
     const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
@@ -1065,7 +1070,7 @@ async function main() {
   check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3 && (zekeToday.value < MIN_ACTIVE ? zekeY3.value !== zekeToday.value : true));
   let badFloor = 0;
   for (const t of meters) {
-    const dates = windowAsOfs(t.date, today);
+    const dates = windowAsOfs(t.date, today, 3);
     for (const leg of inByTx.get(t.transaction_id) || []) {
       for (const snap of y3Snaps(leg, dates, ctx)) {
         if (leg.kind !== "player") continue;
@@ -1089,7 +1094,6 @@ async function main() {
     return (avg == null && row.realized_per_trade == null)
       || (avg != null && row.realized_per_trade != null && Math.abs(avg - row.realized_per_trade) < 1e-6);
   }));
-  check("KTC_TODAY_WEIGHT", KTC_TODAY_WEIGHT === 0.60);
   check("even_per matches even deltas", leaderboard.every((row) => {
     const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
       .map((t) => t.lenses.even.sides[row.user_id]?.today_delta)
@@ -1105,33 +1109,42 @@ async function main() {
     return Math.abs(sides[0].today_delta + sides[1].today_delta) >= 1;
   });
   check("zero-sum 2-team even", evenZeroBreaks.length === 0);
-  if (!ktcBook) {
-    let flattenDrift = 0;
-    for (const t of meters) {
-      for (const uid of t.user_ids) {
-        const r = t.lenses.realized.sides[uid];
-        const e = t.lenses.even.sides[uid];
-        const gotFlat = (r.legs || []).reduce((a, l) => a + (flatten(l.value, topToday) || 0), 0);
-        if (Math.abs((e.today || 0) - gotFlat) >= 1) flattenDrift += 1;
+  let flattenDrift = 0;
+  for (const t of meters) {
+    for (const uid of t.user_ids) {
+      const r = t.lenses.realized.sides[uid];
+      const e = t.lenses.even.sides[uid];
+      const gotFlat = (r.legs || []).reduce((a, l) => a + (flatten(l.value, topToday) || 0), 0);
+      if (Math.abs((e.today || 0) - gotFlat) >= 1) flattenDrift += 1;
+    }
+  }
+  check("even is flatten-only", flattenDrift === 0);
+  const winKeys = ["t0", "y1", "y2", "y3", "all"];
+  check("every trade has windows", meters.every((t) => winKeys.every((k) => t.lenses.windows?.[k])));
+  const winZero = meters.filter((t) => {
+    if (t.user_ids.length !== 2) return false;
+    return winKeys.some((k) => {
+      const w = t.lenses.windows[k];
+      if (w.incomplete) return false;
+      const sides = Object.values(w.sides);
+      if (sides.some((s) => s.today_delta == null)) return false;
+      return Math.abs(sides[0].today_delta + sides[1].today_delta) >= 1;
+    });
+  });
+  check("zero-sum 2-team windows", winZero.length === 0);
+  check("chief-arae t0 scored", !chiefArae?.lenses.windows.t0.incomplete
+    && chiefArae?.lenses.windows.t0.sides[chiefId]?.today_delta != null);
+  check("chief-arae all scored", chiefArae?.lenses.windows.all.sides[chiefId]?.today_delta != null);
+  let unpricedPickT0 = 0;
+  for (const t of meters) {
+    for (const uid of t.user_ids) {
+      const s = t.lenses.windows.t0.sides[uid];
+      for (const l of [...(s.legs || []), ...(s.sent || [])]) {
+        if (l.kind === "pick" && l.value == null) unpricedPickT0 += 1;
       }
     }
-    check("no-ktc even is flatten-only", flattenDrift === 0);
-  } else {
-    const toward = (label, sid) => {
-      const ktc = ktcBook.get(`player:${sid}`);
-      const dp = playerValue(curveIdx, `player:${sid}`, today).value;
-      if (ktc == null || dp == null) return;
-      const even = flatten(dp, topToday);
-      const mix = blendToday(even, ktc);
-      if (ktc > even) check(`${label} toward ktc`, mix > even && mix <= ktc);
-      else if (ktc < even) check(`${label} toward ktc`, mix < even && mix >= ktc);
-      else check(`${label} ktc==even`, mix === even);
-    };
-    toward("baker", "4892");
-    toward("bigsby", "9225");
-    toward("hill", "3321");
-    toward("bijan", "9509");
   }
+  check("all t0 picks priced", unpricedPickT0 === 0);
 
   console.log(JSON.stringify({
     trades: meters.length,
@@ -1146,25 +1159,22 @@ async function main() {
     startup_used: startups.length,
     trader: leaderboard[0]?.name,
     drafter: draftersRookie[0]?.name,
-    ktc_today: !!ktcBook,
-    ktc_keys: ktcBook ? ktcBook.size : 0,
-    ktc_weight: ktcBook ? KTC_TODAY_WEIGHT : 0,
+    book: "even-flatten",
   }, null, 2));
 }
 
 function slimTrade(t, uid) {
-  const steep = t.lenses.realized.sides[uid];
-  const pick = t.lenses.pick.sides[uid];
-  const y3 = t.lenses.y3.sides[uid];
   const even = t.lenses.even.sides[uid];
-  const others = t.names.filter((n) => n !== (steep?.name));
+  const others = t.names.filter((n) => n !== (even?.name));
+  const win = t.lenses.windows || {};
+  const packWin = (id) => Object.fromEntries(
+    Object.entries(win).map(([k, w]) => [k, w.sides[id]]),
+  );
   const pack = (id) => ({
     name: t.lenses.even.sides[id].name,
     realized: t.lenses.even.sides[id],
-    steep: t.lenses.realized.sides[id],
-    pick: t.lenses.pick.sides[id],
-    y3: t.lenses.y3.sides[id],
     even: t.lenses.even.sides[id],
+    windows: packWin(id),
   });
   const otherBags = t.user_ids.filter((id) => id !== uid).map(pack);
   return {
@@ -1174,14 +1184,10 @@ function slimTrade(t, uid) {
     others,
     incomplete: t.incomplete,
     realized: even,
-    steep,
-    pick,
-    y3,
     even,
+    windows: packWin(uid),
     other_bags: otherBags,
     year_ends: t.lenses.even.year_ends,
-    steep_year_ends: t.lenses.realized.year_ends,
-    pick_year_ends: t.lenses.pick.year_ends,
     even_year_ends: t.lenses.even.year_ends,
   };
 }

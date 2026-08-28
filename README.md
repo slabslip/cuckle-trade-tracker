@@ -23,7 +23,7 @@ node revalue.mjs
 node generate-page.mjs
 ```
 
-Dashboard default is **60% KTC Superflex + 40% even-flatten DynastyProcess** on dates we have a KTC file. Older history is flatten-only. Steep DP is still the “Became the player” chip. See `data/ktc/README.md` and `docs/VALUE_SDD.md` §11.
+Dashboard book is **even-flatten DynastyProcess**. Filter every trade by day of trade / 1 year / 2 years / 3 years / all time (mean of year-ends in that window). KTC snaps stay in `data/ktc/` and are not mixed into the score. See `docs/VALUE_SDD.md`.
 
 Serve the folder over HTTP so each person’s slice can load:
 
@@ -33,7 +33,7 @@ python3 -m http.server 8766
 # http://localhost:8766/?me=TipsUp&view=review
 ```
 
-Live: [Review 10](https://slabslip.github.io/cuckle-trade-tracker/?me=TipsUp&view=review)
+Live: [Home](https://slabslip.github.io/cuckle-trade-tracker/) · [Review 10](https://slabslip.github.io/cuckle-trade-tracker/?me=TipsUp&view=review)
 
 Pin display names in `data/aliases.overrides.json` — re-sync will not overwrite it.
 

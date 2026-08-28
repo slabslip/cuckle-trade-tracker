@@ -34,6 +34,7 @@ const html = `<!DOCTYPE html>
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
+    #lead:empty { display: none; }
     .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     @media (min-width: 640px) { .tiles { grid-template-columns: repeat(5, 1fr); } }
     button.tile, button.row, button.chip, button.tab, .row {
@@ -58,6 +59,10 @@ const html = `<!DOCTYPE html>
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; width: 100%; align-items: baseline; }
+    .row-top.tape .side.right { text-align: right; }
+    .row-top.tape .mid { text-align: center; font-variant-numeric: tabular-nums; }
+    .row-top.tape .val { font-variant-numeric: tabular-nums; font-weight: 650; }
     .names { font-weight: 600; }
     .date { color: var(--dim); font-size: 0.8125rem; }
     .margin { font-variant-numeric: tabular-nums; font-weight: 650; }
@@ -84,7 +89,7 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1>CuckleChunckle</h1>
-  <p id="lead">Who are you? Everything below is your received bags, your used picks, and how they aged.</p>
+  <p id="lead"></p>
   <div class="tiles" id="who"></div>
   <div id="app" hidden></div>
   <script>
@@ -95,8 +100,15 @@ const html = `<!DOCTYPE html>
     let data = null;
     let league = null;
     let picks = null;
-    let lens = "even";
-    const DATA_V = "20260828e";
+    let lens = "all";
+    const DATA_V = "20260828k";
+    const WINDOWS = [
+      ["t0", "Day of trade"],
+      ["y1", "1 year"],
+      ["y2", "2 years"],
+      ["y3", "3 years"],
+      ["all", "All time"],
+    ];
     let view = "home";
     let draftTab = "rookie";
     let year = "all";
@@ -111,7 +123,7 @@ const html = `<!DOCTYPE html>
     const startView = params.get("view");
     const startT = params.get("t");
     const startLens = params.get("lens");
-    if (startLens) lens = startLens;
+    if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
 
     function spark(series) {
       const keys = Object.keys(series[0] || {}).filter((k) => k !== "as_of");
@@ -150,8 +162,9 @@ const html = `<!DOCTYPE html>
       const items = (legs || []).map((l) => {
         const val = l.flag === "unpriced" || l.value == null
           ? "no DP row"
-          : l.flag === "priced_as_2028" ? fmt(l.value) + " · as 2028"
           : l.flag === "priced_as_mid" ? fmt(l.value) + " · Mid"
+          : l.flag && String(l.flag).startsWith("priced_as_")
+            ? fmt(l.value) + " · as " + String(l.flag).slice(10)
           : fmt(l.value);
         const body = "<span>" + l.label + "</span><b>" + val + "</b>";
         if (l.kind === "pick" && l.asset_key) {
@@ -168,9 +181,11 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       members = await (await fetch("data/ui/members.json?" + DATA_V)).json();
+      league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
       document.getElementById("who").innerHTML = members.map((m) =>
         '<button type="button" class="tile" data-id="' + m.user_id + '">' + m.name + "</button>"
       ).join("");
+      document.getElementById("app").hidden = false;
       let hit = members.find((m) => m.name === startMe || m.user_id === startMe);
       if (!hit && (startView === "review" || startT)) {
         hit = members.find((m) => m.name === "TipsUp") || members[0];
@@ -184,7 +199,9 @@ const html = `<!DOCTYPE html>
         }
         syncUrl();
         render();
+        return;
       }
+      render();
     }
 
     function syncUrl() {
@@ -192,7 +209,7 @@ const html = `<!DOCTYPE html>
       if (me) q.set("me", me.name);
       if (view && view !== "home") q.set("view", view);
       if (openId) q.set("t", openId);
-      if (lens && lens !== "even") q.set("lens", lens);
+      if (lens && lens !== "all") q.set("lens", lens);
       history.replaceState(null, "", "?" + q.toString());
     }
 
@@ -202,7 +219,7 @@ const html = `<!DOCTYPE html>
       if (!league) league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
       if (!picks) picks = await (await fetch("data/ui/picks.json?" + DATA_V)).json();
       document.querySelectorAll("#who .tile").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
-      document.getElementById("lead").textContent = me.name + " · 60% KTC + 40% even-DP · FAAB thrown out";
+      document.getElementById("lead").textContent = me.name;
       document.getElementById("app").hidden = false;
       if (!keep) {
         view = "home";
@@ -227,77 +244,92 @@ const html = `<!DOCTYPE html>
     }
 
     function sideOf(t) {
-      if (lens === "pick") return t.pick;
-      if (lens === "y3") return t.y3 || t.even || t.realized;
-      if (lens === "steep") return t.steep || t.realized;
-      return t.even || t.realized;
+      return (t.windows && t.windows[lens]) || t.even || t.realized;
+    }
+
+    function windowPer(list) {
+      const ds = (list || []).filter((t) => !t.incomplete)
+        .map((t) => t.windows && t.windows[lens] && t.windows[lens].today_delta)
+        .filter((d) => d != null);
+      if (!ds.length) return null;
+      return ds.reduce((a, b) => a + b, 0) / ds.length;
+    }
+
+    function windowTotal(list) {
+      const ds = (list || []).filter((t) => !t.incomplete)
+        .map((t) => t.windows && t.windows[lens] && t.windows[lens].today_delta)
+        .filter((d) => d != null);
+      return ds.length ? ds.reduce((a, b) => a + b, 0) : null;
+    }
+
+    function addYears(ymd, n) {
+      const p = (ymd || "").split("-").map(Number);
+      if (p.length < 3) return ymd;
+      const y = p[0] + n, m = p[1], d = p[2];
+      const dim = new Date(y, m, 0).getDate();
+      return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
+    }
+
+    function windowLived(date) {
+      const need = { t0: 0, y1: 1, y2: 2, y3: 3, all: 1 }[lens];
+      if (!need) return true;
+      const today = (league && league.today) || "";
+      return date <= addYears(today, -need);
+    }
+
+    // ponytail: aging = window mean minus accept. t0 chip is the accept score itself.
+    function ageScore(r) {
+      const w = r.windows && r.windows[lens];
+      const t0 = r.windows && r.windows.t0;
+      if (!w || w.incomplete || w.delta == null) return null;
+      if (lens === "t0") return w.delta;
+      if (!t0 || t0.incomplete || t0.delta == null) return null;
+      return w.delta - t0.delta;
+    }
+
+    function rankAge(dir) {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const by = new Map();
+      for (const r of sides) {
+        if (!windowLived(r.date)) continue;
+        const s = ageScore(r);
+        if (s == null) continue;
+        const prev = by.get(r.transaction_id);
+        if (!prev) { by.set(r.transaction_id, r); continue; }
+        const ps = ageScore(prev);
+        if (dir > 0 ? s > ps : s < ps) by.set(r.transaction_id, r);
+      }
+      return [...by.values()].sort((a, b) => dir * (ageScore(b) - ageScore(a))).slice(0, 10);
+    }
+
+    function boardTape(r) {
+      const w = (r.windows && r.windows[lens]) || {};
+      const s = ageScore(r);
+      const got = w.incomplete && !w.got ? "—" : fmt(w.got);
+      const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
+      const mid = s == null ? "—" : s > 0 ? "← " + fmt(s) : s < 0 ? fmt(Math.abs(s)) + " →" : fmt(s);
+      const leftCls = s == null || s === 0 ? "" : s > 0 ? "pos" : "neg";
+      const rightCls = s == null || s === 0 ? "" : s > 0 ? "neg" : "pos";
+      return '<button type="button" class="row" data-open-me="' + r.user_id + '" data-id="' + r.transaction_id + '">'
+        + '<div class="row-top tape">'
+        + '<div class="side"><span class="names ' + leftCls + '">' + r.name + '</span> <span class="val">' + got + "</span></div>"
+        + '<div class="mid"><span class="margin pos">' + mid + "</span>"
+        + '<div class="date">' + r.date + (r.headline ? " · " + r.headline : "") + "</div></div>"
+        + '<div class="side right"><span class="val">' + sent + '</span> <span class="names ' + rightCls + '">' + r.other + "</span></div>"
+        + "</div></button>";
     }
 
     function renderHome() {
-      const h = data.hero || {};
-      const per = lens === "pick" ? h.pick_per_trade
-        : lens === "steep" ? h.realized_per_trade
-        : (h.even_per_trade ?? h.realized_per_trade);
-      const total = lens === "pick" ? h.pick_total
-        : lens === "steep" ? h.realized_total
-        : (h.even_total ?? h.realized_total);
-      return '<div class="hero"><b class="' + cls(per) + '">' + fmt(per) + '</b>'
-        + '<div class="caption">per complete trade · received vs what you sent'
-        + (total != null ? " · total " + fmt(total) : "")
-        + " · " + (h.two_way || 0) + " complete"
-        + (h.incomplete ? " · " + h.incomplete + " incomplete (no DP row), off this number" : "")
-        + "</div></div>"
-        + styleLine()
-        + (data.hit || data.miss ? '<p class="caption">' +
-          (data.hit ? "Rookie hit: " + data.hit.player + " (" + data.hit.season + " R" + data.hit.round + ")" : "") +
-          (data.hit && data.miss ? " · " : "") +
-          (data.miss ? "Miss: " + data.miss.player : "") + "</p>" : "")
-        + smashDigest()
-        + partnerDigest()
-        + "<h2>Latest trades</h2>" + data.recent_trades.map(tradeRow).join("")
-        + "<h2>Latest rookie picks</h2>"
-        + '<p class="caption">Green = player · Blue = pick cost · Number = player today minus what that pick cost on draft day</p>'
-        + data.recent_rookies.map(pickRow).join("");
-    }
-
-    function styleLine() {
-      const s = data.style;
-      if (!s || !s.label) return "";
-      const dir = s.sold_picks_for_players === s.sold_players_for_picks
-        ? "mix of pick and player bags"
-        : s.sold_picks_for_players > s.sold_players_for_picks
-          ? "you sell picks for players (" + s.sold_picks_for_players + ")"
-          : "you sell players for picks (" + s.sold_players_for_picks + ")";
-      return '<p class="caption">' + s.label + " · " + dir + "</p>";
-    }
-
-    function smashDigest() {
-      const b = league && league.trade_boards && league.trade_boards.today;
-      if (!b || !b.best || !b.best[0]) return "";
-      const chip = (label, row) => {
-        if (!row) return "";
-        return '<button type="button" class="chip" data-board="today">' + label + " · " + row.name
-          + " · " + fmt(row.today_delta) + "</button>";
-      };
-      return '<h2>League trades</h2><div class="toggle">'
-        + chip("Best smash", b.best[0])
-        + chip("Worst", b.worst && b.worst[0])
-        + "</div>";
-    }
-
-    function partnerDigest() {
-      const h = data.partner_headlines || {};
-      if (!h.best && !h.most) return "";
-      const bit = (label, row, extra) => {
-        if (!row) return "";
-        return '<button type="button" class="chip" data-partner="' + row.name + '">' + label + " · " + row.name
-          + (extra || "") + "</button>";
-      };
-      return '<h2>Trade partners</h2><div class="toggle">'
-        + bit("Best", h.best, h.best && h.best.per != null ? " · " + fmt(h.best.per) + "/trade" : "")
-        + bit("Worst", h.worst, h.worst && h.worst.per != null ? " · " + fmt(h.worst.per) + "/trade" : "")
-        + bit("Most", h.most, h.most ? " · " + h.most.trades + " deals" : "")
-        + "</div>";
+      const best = rankAge(1);
+      const worst = rankAge(-1);
+      let open = "";
+      if (me && data && openId) {
+        const t = (data.trades || []).find((x) => x.transaction_id === openId);
+        if (t) open = tradeRow(t);
+      }
+      return "<h2>Best aged</h2>" + best.map(boardTape).join("")
+        + "<h2>Worst aged</h2>" + worst.map(boardTape).join("")
+        + open;
     }
 
     function tradeRow(t, extra) {
@@ -322,52 +354,26 @@ const html = `<!DOCTYPE html>
           + bagBlock(sentTitle, s.sent, s.sent_today, s.sent_unpriced);
         if ((t.others || []).length > 1) {
           bags += (t.other_bags || []).map((b) => {
-            const side = lens === "pick" ? b.pick
-              : lens === "y3" ? (b.y3 || b.even || b.realized)
-              : lens === "steep" ? (b.steep || b.realized)
-              : (b.even || b.realized);
+            const side = (b.windows && b.windows[lens]) || b.even || b.realized;
             return bagBlock(b.name + " received", side.legs, side.today, side.unpriced);
           }).join("");
         }
-        const signed = (n) => (n > 0 ? "+" : "") + fmt(n);
-        const aged = (lens === "steep" || lens === "even" || lens === "realized") && s.t0_delta != null
-          ? '<p class="caption">At accept: ' + signed(s.t0_delta)
-            + " · since then: " + signed(s.today_delta - s.t0_delta) + "</p>"
-          : "";
-        const clockNote = lens === "pick"
-          ? "This toggle is accept-day prices. Name in parentheses drafted the pick, not who got it in this trade."
-          : lens === "y3"
-          ? "Even-curve mean of year-ends in the 3 years after accept. Player years under 300 DP (raw) count as 0, then flatten. KTC mixes in only on dates we snapped."
-          : lens === "steep"
-          ? "Raw steep DynastyProcess today. Not the dashboard book."
-          : "40% even-flatten DP + 60% KTC Superflex. Older year-ends are flatten-only. Name in parentheses drafted the pick.";
-        const sparkSrc = lens === "pick" ? t.pick_year_ends
-          : lens === "steep" ? (t.steep_year_ends || t.year_ends)
-          : (t.even_year_ends || t.year_ends);
+        const sparkSrc = t.even_year_ends || t.year_ends;
         const line = spark((sparkSrc || []).map((p) => ({ as_of: p.as_of, ...p.points })));
-        const hint = line
-          ? '<p class="caption">Each line = that side received bag at year-end · Number on the row = received minus sent'
-            + (lens === "y3" ? " (first 3 years)" : lens === "steep" ? " (steep DP today)" : " (60% KTC + even-DP)") + "</p>"
-          : "";
-        const steepNote = extra && extra.steep != null && lens !== "steep"
-          ? '<p class="caption">Steep DP (raw): ' + (extra.steep > 0 ? "+" : "") + fmt(extra.steep)
-            + (extra.y3 != null ? " · First 3 years: " + (extra.y3 > 0 ? "+" : "") + fmt(extra.y3) : "")
-            + (Math.sign(extra.steep || 0) !== Math.sign(s.today_delta || 0) && extra.steep && s.today_delta
-              ? " · books disagree on who won"
-              : "")
-            + "</p>"
-          : "";
-        detail = '<div class="detail"><div class="bags">' + bags + "</div>"
-          + aged + steepNote + '<p class="caption">' + clockNote + "</p>" + line + hint + "</div>";
+        detail = '<div class="detail"><div class="bags">' + bags + "</div>" + line + "</div>";
       }
+      const mid = dlt == null || incomplete ? "—"
+        : dlt > 0 ? "← " + fmt(dlt)
+        : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
+        : fmt(dlt);
+      const midCls = dlt == null || incomplete || dlt === 0 ? "" : "pos";
       return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + t.transaction_id + '">'
-        + '<div class="row-top"><div>'
-        + '<div class="names"><span class="' + mineCls + '">' + mine + '</span> vs <span class="' + otherCls + '">' + other + "</span></div>"
-        + '<div class="date">' + t.date
-        + " · " + mine + " " + gotShow + " / " + other + " " + sentShow
-        + (incomplete ? ' <span class="badge">no DP row</span>' : "")
-        + "</div></div>"
-        + '<div class="margin ' + cls(s.today_delta) + '">' + fmt(s.today_delta) + "</div></div>"
+        + '<div class="row-top tape">'
+        + '<div class="side"><span class="names ' + mineCls + '">' + mine + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
+        + '<div class="date">' + t.date + (incomplete ? ' <span class="badge">no DP row</span>' : "") + "</div></div>"
+        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + other + "</span></div>"
+        + "</div>"
         + detail + "</button>";
     }
 
@@ -378,8 +384,7 @@ const html = `<!DOCTYPE html>
         const extra = { winner: rt.winner, loser: rt.loser, steep: rt.steep_delta, y3: rt.y3_delta, asYou: !!mine };
         return tradeRow(mine || rt, extra);
       }).join("");
-      return '<p class="caption">10 deals across 2019–2026. Same bags as Trades. Number is KTC blend today (received − sent) for the named seat — you if you were in it, blend winner if you were not. Open a row. Flip to Became the player if the books fight.</p>'
-        + rows;
+      return rows;
     }
 
     function pickRow(p) {
@@ -395,8 +400,7 @@ const html = `<!DOCTYPE html>
       const years = [...new Set(data.trades.map((t) => t.season))].sort().reverse();
       let list = data.trades;
       if (year !== "all") list = list.filter((t) => t.season === year);
-      return '<p class="caption">Received vs sent. One-way and FAAB-only are out. Incomplete (no DP row) stay listed and stay off the needle.</p>'
-        + '<div class="toggle">'
+      return '<div class="toggle">'
         + '<button type="button" class="chip' + (year === "all" ? " on" : "") + '" data-year="all">All</button>'
         + years.map((y) => '<button type="button" class="chip' + (year === y ? " on" : "") + '" data-year="' + y + '">' + y + "</button>").join("")
         + "</div>"
@@ -405,14 +409,7 @@ const html = `<!DOCTYPE html>
 
     function renderDrafts() {
       const list = data.drafts[draftTab] || [];
-      const used = data.drafts.rookie.length + data.drafts.startup.length;
-      const graded = data.drafts.rookie.filter((p) => p.surplus != null).length;
-      const hint = draftTab === "startup"
-        ? "Green = player value · Number = player today (no 2019 pick prices)"
-        : "Green = player · Blue = pick cost · Number = player today minus what that pick cost on draft day";
-      return '<p class="caption">' + used + " picks used · " + graded + " rookie picks graded vs pick cost · "
-        + data.drafts.startup.length + " startup (ranked by player today). " + hint + "</p>"
-        + '<div class="toggle">'
+      return '<div class="toggle">'
         + '<button type="button" class="chip' + (draftTab === "rookie" ? " on" : "") + '" data-dt="rookie">Rookie 2020–26</button>'
         + '<button type="button" class="chip' + (draftTab === "startup" ? " on" : "") + '" data-dt="startup">Startup 2019</button>'
         + "</div>"
@@ -479,8 +476,7 @@ const html = `<!DOCTYPE html>
         + '<div class="margin ' + cls(scoreOf(r)) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
       ).join("");
       const windows = [["3m","3 months"],["6m","6 months"],["1y","1 year"],["3y","3 years"],["all","All time"]];
-      return '<p class="caption">Complete 2-team only. 60% KTC + 40% even-DP today. Aged = that minus flatten-at-accept (KTC only if we had a snap that day). Window = trade date.</p>'
-        + '<div class="toggle">'
+      return '<div class="toggle">'
         + '<button type="button" class="chip' + (boardClock === "today" ? " on" : "") + '" data-board="today">As of today</button>'
         + '<button type="button" class="chip' + (boardClock === "aged" ? " on" : "") + '" data-board="aged">Aged after accept</button>'
         + "</div>"
@@ -493,12 +489,13 @@ const html = `<!DOCTYPE html>
 
     function renderPartners() {
       const list = data.partners || [];
-      const perOf = (p) => lens === "pick" ? p.pick_per_trade
-        : lens === "steep" ? p.realized_per_trade
-        : (p.even_per_trade ?? p.realized_per_trade);
+      const perOf = (p) => {
+        const deals = (data.trades || []).filter((t) => t.others.length === 1 && t.others[0] === p.name && !t.incomplete);
+        return windowPer(deals);
+      };
       const rows = list.slice().sort((a, b) => (perOf(b) ?? -1e9) - (perOf(a) ?? -1e9)).map((p) => {
         const per = perOf(p);
-        const g = lens === "pick" ? (per >= 100 ? "you_extract" : per <= -100 ? "they_extract" : "even") : p.grade;
+        const g = per == null ? "even" : per >= 100 ? "you_extract" : per <= -100 ? "they_extract" : "even";
         return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + p.name + '">'
           + '<div class="row-top"><div><div class="names">' + p.name + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
@@ -509,35 +506,25 @@ const html = `<!DOCTYPE html>
       if (partnerName) {
         const p = list.find((x) => x.name === partnerName);
         const deals = data.trades.filter((t) => t.others.length === 1 && t.others[0] === partnerName);
-        detail = p ? "<h2>" + p.name + "</h2>"
-          + '<p class="caption">' + gradeLabel(lens === "pick"
-            ? (p.pick_per_trade >= 100 ? "you_extract" : p.pick_per_trade <= -100 ? "they_extract" : "even")
-            : p.grade)
-          + " · " + fmt(lens === "pick" ? p.pick_per_trade : lens === "steep" ? p.realized_per_trade : (p.even_per_trade ?? p.realized_per_trade)) + " per complete trade"
-          + " · total " + fmt(lens === "pick" ? p.pick_total : lens === "steep" ? p.realized_total : (p.even_total ?? p.realized_total))
-          + ". 3-team deals are not in this pair grade.</p>"
-          + deals.map(tradeRow).join("") : "";
+        detail = p ? "<h2>" + p.name + "</h2>" + deals.map(tradeRow).join("") : "";
       }
-      return '<p class="caption">2-team complete trades only. You extract / even / they extract uses ±100 DP points per trade. Best and worst need 2+ complete deals.</p>'
-        + rows + detail;
+      return rows + detail;
     }
 
     function render() {
       const app = document.getElementById("app");
+      const tabs = me ? ["home","review","trades","partners","drafts","league"] : ["home"];
+      if (!me && view !== "home") view = "home";
       const nav = '<div class="nav">'
-        + ["home","review","trades","partners","drafts","league"].map((v) =>
+        + tabs.map((v) =>
           '<button type="button" class="tab' + (view === v ? " on" : "") + '" data-view="' + v + '">' + v + "</button>"
         ).join("")
         + "</div>"
         + '<div class="toggle">'
-        + '<button type="button" class="chip' + (lens === "even" || lens === "realized" ? " on" : "") + '" data-lens="even">KTC blend</button>'
-        + '<button type="button" class="chip' + (lens === "pick" ? " on" : "") + '" data-lens="pick">Pick at trade day</button>'
-        + '<button type="button" class="chip' + (lens === "y3" ? " on" : "") + '" data-lens="y3">First 3 years</button>'
-        + '<button type="button" class="chip' + (lens === "steep" ? " on" : "") + '" data-lens="steep">Steep DP</button>'
-        + "</div>"
-        + (lens === "y3" ? '<p class="caption">First 3 years: flatten each year-end (player years under 300 raw DP → 0). KTC 60% mixes in only on snapped dates.</p>' : "")
-        + (lens === "even" || lens === "realized" ? '<p class="caption">Dashboard book: 40% even-flatten DynastyProcess + 60% KTC Superflex on snapped dates. Steep DP is the old raw tape.</p>' : "")
-        + (lens === "steep" ? '<p class="caption">Raw DynastyProcess value_2qb today. Hill 285 lives here. Not the score we use.</p>' : "");
+        + WINDOWS.map((w) =>
+          '<button type="button" class="chip' + (lens === w[0] ? " on" : "") + '" data-lens="' + w[0] + '">' + w[1] + "</button>"
+        ).join("")
+        + "</div>";
       const body = view === "home" ? renderHome() : view === "review" ? renderReview()
         : view === "trades" ? renderTrades()
         : view === "partners" ? renderPartners() : view === "drafts" ? renderDrafts() : renderLeague();
@@ -560,8 +547,8 @@ const html = `<!DOCTYPE html>
       if (boardRow) {
         const uid = boardRow.dataset.openMe;
         const tx = boardRow.dataset.id;
-        Promise.resolve(me && me.user_id === uid ? null : selectMe(uid)).then(() => {
-          view = "trades";
+        Promise.resolve(me && me.user_id === uid ? null : selectMe(uid, true)).then(() => {
+          view = "home";
           openId = tx;
           partnerName = null;
           render();
@@ -583,7 +570,7 @@ const html = `<!DOCTYPE html>
         return;
       }
       const lensBtn = e.target.closest("[data-lens]");
-      if (lensBtn) { lens = lensBtn.dataset.lens === "realized" ? "even" : lensBtn.dataset.lens; render(); return; }
+      if (lensBtn) { lens = lensBtn.dataset.lens; render(); return; }
       const dt = e.target.closest("[data-dt]");
       if (dt) { draftTab = dt.dataset.dt; render(); return; }
       const yr = e.target.closest("[data-year]");

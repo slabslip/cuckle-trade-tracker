@@ -95,15 +95,17 @@ Win-now / Investor / Balanced is a **label** from T0 bag mix + how today moved v
 1. Exact `pickval:Y:R:slot` if we know the slot.
 2. Else that slot’s tier (Early ≤ ceil(10/3), Mid, Late).
 3. Unslotted: Mid, flag `priced_as_mid`.
-4. 2029 → step 1–3 on 2028, flag `priced_as_2028`.
+4. No row for that year (2019, 2029, …) → steps 1–3 on the closest year that has the same round, flag `priced_as_{year}`.
+5. Round deeper than the book (startup 8th / 10th) → deepest round on the closest year (`priced_as_{year}r{n}`).
+6. Query date before the first snap → use that first snap (DP starts 2020-04-30).
 
 A slotted pick with no exact or tier row is **unpriced**, not a quiet Mid.
 
 **Unpriced / no DP row**
 
 - No Sleeper id (IDP: Bosa, Parsons-as-player). Incomplete, off needle.
-- Date before the asset’s first curve row (2019 T0 picks).
-- 2029 with no 2028 proxy (should not happen while 2028 Mid exists).
+- Date before the asset’s first curve row **and** no closest-year pick proxy (named players in 2019, not picks).
+- Pick year with no matching round on any later/earlier DP year.
 
 **IDP.** There is no IDP book. Defensive players are unpriced. Do not invent a 0.
 
@@ -252,7 +254,9 @@ Add (when touching y3), do not replace:
 
 ---
 
-## 11. Keep Trade Cut (HAVE — dashboard default 60/40)
+## 11. Keep Trade Cut (PARKED — not on the dashboard)
+
+Dashboard book is **even-flatten only**. Window chips (day of trade / 1y / 2y / 3y / all time) average those flatten year-ends. Do not mix KTC into the score. Snapshot script and `data/ktc/` stay for later if we want a crowd check.
 
 **Not a second book on historical clocks.** We start snapping KTC Superflex ourselves. First file = the day we ran `node ktc-snapshot.mjs`. There is no honest 2019–2025 KTC in this repo. Do not scrape “old” ranking pages — they do not exist as dated archives.
 
@@ -280,6 +284,4 @@ custom = (1 - w) * dp_even + w * ktc_sf   // only if a KTC file has as_of <= tha
 - Pick → blend only on a clean `pickval` join; else even-DP pick price.
 - Do **not** paste the 2026-08-28 KTC book onto 2019–2025 year-ends. Those stay flatten-only until we have a snap for that week.
 
-**Uses this blend (dashboard default = KTC blend chip):** Home hero `even_per_trade`, Best/Worst, partners, drafts today/surplus, even-lens bags, even T0 / aged, even year-end sparks (KTC only when a file exists), First 3 years snaps on dates we snapped.
-
-**Does not:** Steep `realized` chip (raw DP). Hop tape stays raw DP.
+**Not used on the dashboard.** Hop tape stays raw DP. Even-flatten is the trade needle.

@@ -63,13 +63,13 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 
 | Tab | HAVE |
 | --- | --- |
-| Home | Your per-complete-trade hero (today). Style line. Rookie hit/miss. Best smash / Worst teasers (all-time today). Partner teasers. Latest 5 trades. Latest 5 rookies. |
+| Home | Public Best 10 / Worst 10 aged trades. Score = window mean − day of trade (t0 chip = accept only). 1y/2y/3y need that many years elapsed; all time needs 1 year. No `?me=` required. |
 | Trades | Your tape. Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
 | Drafts | Rookie surplus (player today − pick cost on draft day). Startup 2019 = player today only (no 2019 pick prices). |
 | League | Best 10 / Worst 10. Clocks: **As of today** / **Aged after accept**. Windows: 3 months / 6 months / 1 year / 3 years / all (filter by **trade date**). Then per-trader / per-drafter lists. |
 
-**Lens chips (global):** **KTC blend (default)** · Became the player · Pick at trade day · First 3 years.
+**Value windows (global, default All time):** Day of trade · 1 year · 2 years · 3 years · All time. Same even-flatten book on every chip. No KTC mix. No steep DP chip.
 
 ### Identity and bags
 
@@ -82,11 +82,9 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 
 | Clock | Question | On Home hero? | On Best/Worst? |
 | --- | --- | --- | --- |
-| **Today** (became-player) | Steep raw DP now | Only if that chip is on | No |
-| **T0** (pick at accept) | What did they click yes on? | Only if Pick chip is on | No |
-| **Aged** | Blend-today Δ − flatten-T0 Δ (KTC at T0 only if we snapped that day) | Caption on an open row when T0 exists | Yes — “Aged after accept” |
-| **First 3 years** | Mean of even-curve year-ends in `[accept, accept+3y]`. Raw player snap &lt; 300 → 0, then flatten. KTC 60% on snapped dates only. | Only if that chip is on | **No** |
-| **KTC blend** (default) | `0.40 * flatten(DP) + 0.60 * KTC` when a KTC file has `as_of <=` that day; else flatten-only. Home / Best-Worst / partners / drafts use this. | **Yes** | Yes — “As of today” |
+| **Day of trade** | Even-flatten pick values at accept. Missing year (2019, 2029) uses closest year, same round | Yes if that chip is on | Aged clock still uses today − T0 |
+| **1 / 2 / 3 years** | Mean of even-flatten year-ends in `[accept, accept+N]`. Player year under 300 raw DP → 0 | Yes if that chip is on | **No** (League windows are trade-date filters) |
+| **All time** (default) | Mean of even-flatten year-ends accept → today | **Yes** | League “As of today” is flatten-today, not this mean |
 
 Incomplete (no DP row) stays **listed**, off every needle. One-ways and FAAB-only never enter the meter.
 
@@ -104,7 +102,7 @@ DP has no 2029 rows. Matching **2028** round, flag `priced_as_2028`, UI `· as 2
 
 ### ChiefGumby vs ARae, 2019-07-26 (`460470201385742336`)
 
-Startup picks. T0 = **null** (no DP in 2019). No third pile. On a 2-team deal, “ARae received” **is** what Chief gave up — do not print it twice.
+Startup picks. T0 = closest-year pick (2020 slot or 2021 Mid). No third pile. On a 2-team deal, “ARae received” **is** what Chief gave up — do not print it twice.
 
 | | Became | Today |
 | --- | --- | --- |

@@ -59,6 +59,7 @@ const html = `<!DOCTYPE html>
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
     .names { font-weight: 600; }
+    .verdict { font-weight: 750; font-size: 1.05rem; margin-top: 2px; }
     .date { color: var(--dim); font-size: 0.8125rem; }
     .margin { font-variant-numeric: tabular-nums; font-weight: 650; }
     .detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -96,7 +97,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "even";
-    const DATA_V = "20260828c";
+    const DATA_V = "20260828d";
     let view = "home";
     let draftTab = "rookie";
     let year = "all";
@@ -306,11 +307,21 @@ const html = `<!DOCTYPE html>
       const incomplete = t.incomplete || s.incomplete;
       const gotShow = s.unpriced && !s.today ? "—" : fmt(s.today);
       const sentShow = s.sent_unpriced && !s.sent_today ? "—" : fmt(s.sent_today);
-      const asYou = !extra || extra.asYou !== false;
+      const mine = (me && me.name) || extra && extra.winner || s.name || "This seat";
+      const other = extra && extra.winner && extra.loser
+        ? (mine === extra.winner ? extra.loser : extra.winner)
+        : ((t.others || []).join(" · ") || "Them");
+      const multi = (t.others || []).length > 1;
+      const dlt = s.today_delta;
+      const verdict = incomplete || dlt == null
+        ? { text: "No score", cls: "" }
+        : dlt === 0 ? { text: "Even trade", cls: "" }
+        : dlt > 0 ? { text: mine + " won", cls: "pos" }
+        : { text: other + " won", cls: "neg" };
       let detail = "";
       if (open) {
-        const gotTitle = asYou ? "You received" : (t.winner || t.others[0] || "Received");
-        const sentTitle = asYou ? "You gave up" : ((t.loser || "They") + " received");
+        const gotTitle = mine + " received";
+        const sentTitle = multi ? mine + " gave up" : other + " received";
         let bags = bagBlock(gotTitle, s.legs, s.today, s.unpriced)
           + bagBlock(sentTitle, s.sent, s.sent_today, s.sent_unpriced);
         if ((t.others || []).length > 1) {
@@ -353,16 +364,13 @@ const html = `<!DOCTYPE html>
         detail = '<div class="detail"><div class="bags">' + bags + "</div>"
           + aged + steepNote + '<p class="caption">' + clockNote + "</p>" + line + hint + "</div>";
       }
-      const others = (t.others || []).join(" · ");
-      const who = extra && extra.winner && extra.loser
-        ? extra.winner + " vs " + extra.loser
-        : others;
       return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + t.transaction_id + '">'
-        + '<div class="row-top"><div><div class="names">' + who + "</div>"
+        + '<div class="row-top"><div>'
+        + '<div class="verdict ' + verdict.cls + '">' + verdict.text + "</div>"
+        + '<div class="names">' + mine + " vs " + other + "</div>"
         + '<div class="date">' + t.date
-        + " · got " + gotShow + " / sent " + sentShow
+        + " · " + mine + " " + gotShow + " / " + other + " " + sentShow
         + (incomplete ? ' <span class="badge">no DP row</span>' : "")
-        + (!asYou && extra && extra.winner ? " · viewing as " + extra.winner : "")
         + "</div></div>"
         + '<div class="margin ' + cls(s.today_delta) + '">' + fmt(s.today_delta) + "</div></div>"
         + detail + "</button>";

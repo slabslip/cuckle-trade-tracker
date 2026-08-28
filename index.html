@@ -91,6 +91,7 @@
     let league = null;
     let picks = null;
     let lens = "even";
+    const DATA_V = "20260828c";
     let view = "home";
     let draftTab = "rookie";
     let year = "all";
@@ -104,6 +105,8 @@
     const startMe = params.get("me");
     const startView = params.get("view");
     const startT = params.get("t");
+    const startLens = params.get("lens");
+    if (startLens) lens = startLens;
 
     function spark(series) {
       const keys = Object.keys(series[0] || {}).filter((k) => k !== "as_of");
@@ -159,7 +162,7 @@
     }
 
     async function loadMembers() {
-      members = await (await fetch("data/ui/members.json")).json();
+      members = await (await fetch("data/ui/members.json?" + DATA_V)).json();
       document.getElementById("who").innerHTML = members.map((m) =>
         '<button type="button" class="tile" data-id="' + m.user_id + '">' + m.name + "</button>"
       ).join("");
@@ -184,14 +187,15 @@
       if (me) q.set("me", me.name);
       if (view && view !== "home") q.set("view", view);
       if (openId) q.set("t", openId);
+      if (lens && lens !== "even") q.set("lens", lens);
       history.replaceState(null, "", "?" + q.toString());
     }
 
     async function selectMe(id, keep) {
       me = members.find((m) => m.user_id === id);
-      data = await (await fetch("data/ui/me/" + id + ".json")).json();
-      if (!league) league = await (await fetch("data/ui/league.json")).json();
-      if (!picks) picks = await (await fetch("data/ui/picks.json")).json();
+      data = await (await fetch("data/ui/me/" + id + ".json?" + DATA_V)).json();
+      if (!league) league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
+      if (!picks) picks = await (await fetch("data/ui/picks.json?" + DATA_V)).json();
       document.querySelectorAll("#who .tile").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
       document.getElementById("lead").textContent = me.name + " · 60% KTC + 40% even-DP · FAAB thrown out";
       document.getElementById("app").hidden = false;
@@ -219,19 +223,19 @@
 
     function sideOf(t) {
       if (lens === "pick") return t.pick;
-      if (lens === "y3") return t.y3 || t.realized;
-      if (lens === "even") return t.even || t.realized;
-      return t.realized;
+      if (lens === "y3") return t.y3 || t.even || t.realized;
+      if (lens === "steep") return t.steep || t.realized;
+      return t.even || t.realized;
     }
 
     function renderHome() {
       const h = data.hero || {};
       const per = lens === "pick" ? h.pick_per_trade
-        : lens === "even" ? (h.even_per_trade ?? h.realized_per_trade)
-        : h.realized_per_trade;
+        : lens === "steep" ? h.realized_per_trade
+        : (h.even_per_trade ?? h.realized_per_trade);
       const total = lens === "pick" ? h.pick_total
-        : lens === "even" ? (h.even_total ?? h.realized_total)
-        : h.realized_total;
+        : lens === "steep" ? h.realized_total
+        : (h.even_total ?? h.realized_total);
       return '<div class="hero"><b class="' + cls(per) + '">' + fmt(per) + '</b>'
         + '<div class="caption">per complete trade · received vs what you sent'
         + (total != null ? " · total " + fmt(total) : "")
@@ -307,14 +311,14 @@
         if ((t.others || []).length > 1) {
           bags += (t.other_bags || []).map((b) => {
             const side = lens === "pick" ? b.pick
-              : lens === "y3" ? (b.y3 || b.realized)
-              : lens === "even" ? (b.even || b.realized)
-              : b.realized;
+              : lens === "y3" ? (b.y3 || b.even || b.realized)
+              : lens === "steep" ? (b.steep || b.realized)
+              : (b.even || b.realized);
             return bagBlock(b.name + " received", side.legs, side.today, side.unpriced);
           }).join("");
         }
         const signed = (n) => (n > 0 ? "+" : "") + fmt(n);
-        const aged = (lens === "realized" || lens === "even") && s.t0_delta != null
+        const aged = (lens === "steep" || lens === "even" || lens === "realized") && s.t0_delta != null
           ? '<p class="caption">At accept: ' + signed(s.t0_delta)
             + " · since then: " + signed(s.today_delta - s.t0_delta) + "</p>"
           : "";
@@ -322,17 +326,19 @@
           ? "This toggle is accept-day prices. Name in parentheses drafted the pick, not who got it in this trade."
           : lens === "y3"
           ? "Even-curve mean of year-ends in the 3 years after accept. Player years under 300 DP (raw) count as 0, then flatten. KTC mixes in only on dates we snapped."
-          : lens === "even"
-          ? "40% even-flatten DP + 60% KTC Superflex on dates we snapped. Older year-ends are flatten-only (no 2019–2025 KTC). KTC is not re-flattened."
-          : "Steep DynastyProcess today. Name in parentheses drafted the pick, not who got it in this trade.";
-        const sparkSrc = lens === "pick" ? t.pick_year_ends : lens === "even" ? (t.even_year_ends || t.year_ends) : t.year_ends;
+          : lens === "steep"
+          ? "Raw steep DynastyProcess today. Not the dashboard book."
+          : "40% even-flatten DP + 60% KTC Superflex. Older year-ends are flatten-only. Name in parentheses drafted the pick.";
+        const sparkSrc = lens === "pick" ? t.pick_year_ends
+          : lens === "steep" ? (t.steep_year_ends || t.year_ends)
+          : (t.even_year_ends || t.year_ends);
         const line = spark((sparkSrc || []).map((p) => ({ as_of: p.as_of, ...p.points })));
         const hint = line
           ? '<p class="caption">Each line = that side received bag at year-end · Number on the row = received minus sent'
-            + (lens === "y3" ? " (first 3 years)" : lens === "even" ? " (60% KTC + even-DP)" : " today") + "</p>"
+            + (lens === "y3" ? " (first 3 years)" : lens === "steep" ? " (steep DP today)" : " (60% KTC + even-DP)") + "</p>"
           : "";
-        const steepNote = extra && extra.steep != null && lens === "even"
-          ? '<p class="caption">Steep DP (Became the player): ' + (extra.steep > 0 ? "+" : "") + fmt(extra.steep)
+        const steepNote = extra && extra.steep != null && lens !== "steep"
+          ? '<p class="caption">Steep DP (raw): ' + (extra.steep > 0 ? "+" : "") + fmt(extra.steep)
             + (extra.y3 != null ? " · First 3 years: " + (extra.y3 > 0 ? "+" : "") + fmt(extra.y3) : "")
             + (Math.sign(extra.steep || 0) !== Math.sign(s.today_delta || 0) && extra.steep && s.today_delta
               ? " · books disagree on who won"
@@ -480,8 +486,8 @@
     function renderPartners() {
       const list = data.partners || [];
       const perOf = (p) => lens === "pick" ? p.pick_per_trade
-        : lens === "even" ? (p.even_per_trade ?? p.realized_per_trade)
-        : p.realized_per_trade;
+        : lens === "steep" ? p.realized_per_trade
+        : (p.even_per_trade ?? p.realized_per_trade);
       const rows = list.slice().sort((a, b) => (perOf(b) ?? -1e9) - (perOf(a) ?? -1e9)).map((p) => {
         const per = perOf(p);
         const g = lens === "pick" ? (per >= 100 ? "you_extract" : per <= -100 ? "they_extract" : "even") : p.grade;
@@ -499,8 +505,8 @@
           + '<p class="caption">' + gradeLabel(lens === "pick"
             ? (p.pick_per_trade >= 100 ? "you_extract" : p.pick_per_trade <= -100 ? "they_extract" : "even")
             : p.grade)
-          + " · " + fmt(lens === "pick" ? p.pick_per_trade : lens === "even" ? (p.even_per_trade ?? p.realized_per_trade) : p.realized_per_trade) + " per complete trade"
-          + " · total " + fmt(lens === "pick" ? p.pick_total : lens === "even" ? (p.even_total ?? p.realized_total) : p.realized_total)
+          + " · " + fmt(lens === "pick" ? p.pick_per_trade : lens === "steep" ? p.realized_per_trade : (p.even_per_trade ?? p.realized_per_trade)) + " per complete trade"
+          + " · total " + fmt(lens === "pick" ? p.pick_total : lens === "steep" ? p.realized_total : (p.even_total ?? p.realized_total))
           + ". 3-team deals are not in this pair grade.</p>"
           + deals.map(tradeRow).join("") : "";
       }
@@ -516,13 +522,14 @@
         ).join("")
         + "</div>"
         + '<div class="toggle">'
-        + '<button type="button" class="chip' + (lens === "realized" ? " on" : "") + '" data-lens="realized">Became the player</button>'
+        + '<button type="button" class="chip' + (lens === "even" || lens === "realized" ? " on" : "") + '" data-lens="even">KTC blend</button>'
         + '<button type="button" class="chip' + (lens === "pick" ? " on" : "") + '" data-lens="pick">Pick at trade day</button>'
         + '<button type="button" class="chip' + (lens === "y3" ? " on" : "") + '" data-lens="y3">First 3 years</button>'
-        + '<button type="button" class="chip' + (lens === "even" ? " on" : "") + '" data-lens="even">KTC blend</button>'
+        + '<button type="button" class="chip' + (lens === "steep" ? " on" : "") + '" data-lens="steep">Steep DP</button>'
         + "</div>"
-        + (lens === "y3" ? '<p class="caption">First 3 years: flatten each year-end (player years under 300 raw DP → 0). KTC 60% mixes in only on snapped dates. Home hero follows the active chip.</p>' : "")
-        + (lens === "even" ? '<p class="caption">Default book: 40% even-flatten DynastyProcess + 60% KTC Superflex. KTC only on weeks we snapped. Became the player is still raw steep DP.</p>' : "");
+        + (lens === "y3" ? '<p class="caption">First 3 years: flatten each year-end (player years under 300 raw DP → 0). KTC 60% mixes in only on snapped dates.</p>' : "")
+        + (lens === "even" || lens === "realized" ? '<p class="caption">Dashboard book: 40% even-flatten DynastyProcess + 60% KTC Superflex on snapped dates. Steep DP is the old raw tape.</p>' : "")
+        + (lens === "steep" ? '<p class="caption">Raw DynastyProcess value_2qb today. Hill 285 lives here. Not the score we use.</p>' : "");
       const body = view === "home" ? renderHome() : view === "review" ? renderReview()
         : view === "trades" ? renderTrades()
         : view === "partners" ? renderPartners() : view === "drafts" ? renderDrafts() : renderLeague();
@@ -568,7 +575,7 @@
         return;
       }
       const lensBtn = e.target.closest("[data-lens]");
-      if (lensBtn) { lens = lensBtn.dataset.lens; render(); return; }
+      if (lensBtn) { lens = lensBtn.dataset.lens === "realized" ? "even" : lensBtn.dataset.lens; render(); return; }
       const dt = e.target.closest("[data-dt]");
       if (dt) { draftTab = dt.dataset.dt; render(); return; }
       const yr = e.target.closest("[data-year]");

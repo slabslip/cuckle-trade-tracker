@@ -1153,45 +1153,34 @@ async function main() {
 }
 
 function slimTrade(t, uid) {
-  const real = t.lenses.realized.sides[uid];
+  const steep = t.lenses.realized.sides[uid];
   const pick = t.lenses.pick.sides[uid];
   const y3 = t.lenses.y3.sides[uid];
-  const others = t.names.filter((n) => n !== (real?.name));
-  const otherBags = t.user_ids.filter((id) => id !== uid).map((id) => ({
-    name: t.lenses.realized.sides[id].name,
-    realized: {
-      today: t.lenses.realized.sides[id].today,
-      unpriced: t.lenses.realized.sides[id].unpriced,
-      legs: t.lenses.realized.sides[id].legs,
-    },
-    pick: {
-      today: t.lenses.pick.sides[id].today,
-      unpriced: t.lenses.pick.sides[id].unpriced,
-      legs: t.lenses.pick.sides[id].legs,
-    },
-    y3: {
-      today: t.lenses.y3.sides[id].today,
-      unpriced: t.lenses.y3.sides[id].unpriced,
-      legs: t.lenses.y3.sides[id].legs,
-    },
-    even: {
-      today: t.lenses.even.sides[id].today,
-      unpriced: t.lenses.even.sides[id].unpriced,
-      legs: t.lenses.even.sides[id].legs,
-    },
-  }));
+  const even = t.lenses.even.sides[uid];
+  const others = t.names.filter((n) => n !== (steep?.name));
+  const pack = (id) => ({
+    name: t.lenses.even.sides[id].name,
+    realized: t.lenses.even.sides[id],
+    steep: t.lenses.realized.sides[id],
+    pick: t.lenses.pick.sides[id],
+    y3: t.lenses.y3.sides[id],
+    even: t.lenses.even.sides[id],
+  });
+  const otherBags = t.user_ids.filter((id) => id !== uid).map(pack);
   return {
     transaction_id: t.transaction_id,
     date: t.date,
     season: t.season,
     others,
     incomplete: t.incomplete,
-    realized: real,
+    realized: even,
+    steep,
     pick,
     y3,
-    even: t.lenses.even.sides[uid],
+    even,
     other_bags: otherBags,
-    year_ends: t.lenses.realized.year_ends,
+    year_ends: t.lenses.even.year_ends,
+    steep_year_ends: t.lenses.realized.year_ends,
     pick_year_ends: t.lenses.pick.year_ends,
     even_year_ends: t.lenses.even.year_ends,
   };

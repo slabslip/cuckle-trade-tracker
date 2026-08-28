@@ -1,9 +1,30 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
-import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
+import fs from "node:fs";
+import { attachKtcIds, ktcPickKey } from "./ktc-snapshot.mjs";
+import { DATA, pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
 
 const TEAMS = 10;
 const MIN_ACTIVE = 300;
+const FLAT_SCALE = 10000;
+// ponytail: blend fitted to 12 KTC names (2026-08-28). Top stays near raw DP; bottom lifts. Hill will stay high vs KTC — DP ranks him 285, KTC 1069.
+const FLAT_EXP = 0.3;
+const FLAT_TOP_MIX = 0.5;
+// ponytail: KTC owns even-lens; even-DP assists. Historical dates with no KTC file stay flatten-only — do not paste today's crowd book onto 2019–2025.
+const KTC_TODAY_WEIGHT = 0.60;
+// ponytail: pinned calibration tape. Swap IDs here, not a CMS.
+const REVIEW_IDS = [
+  "460470201385742336",
+  "471856282999975936",
+  "641429892827013120",
+  "701112437734211584",
+  "826292607033421824",
+  "1008489561648959488",
+  "1167606865556242432",
+  "1178835654515593216",
+  "1269369347395026944",
+  "1397412606653767680",
+];
 
 function indexCurve(curve) {
   const map = new Map();
@@ -172,12 +193,118 @@ function floorActive(v) {
   return v < MIN_ACTIVE ? 0 : v;
 }
 
+function indexVmax(curve) {
+  const by = new Map();
+  for (const r of curve) {
+    if (r.value == null) continue;
+    const prev = by.get(r.as_of) || 0;
+    if (r.value > prev) by.set(r.as_of, r.value);
+  }
+  return { by, dates: [...by.keys()].sort() };
+}
+
+function vmaxAt(idx, asOf) {
+  let v = FLAT_SCALE;
+  for (const d of idx.dates) {
+    if (d <= asOf) v = idx.by.get(d);
+  }
+  return v || FLAT_SCALE;
+}
+
+function flatten(v, top) {
+  if (v == null) return null;
+  if (v <= 0) return 0;
+  const t = v / top;
+  const w = t ** FLAT_TOP_MIX;
+  return Math.round(FLAT_SCALE * (w * t + (1 - w) * (t ** FLAT_EXP)));
+}
+
+function flattenLegs(legs, top) {
+  return (legs || []).map((l) => ({ ...l, value: flatten(l.value, top) }));
+}
+
+function blendToday(dpEven, ktcSf) {
+  if (dpEven == null) return null;
+  if (ktcSf == null) return dpEven;
+  return Math.round((1 - KTC_TODAY_WEIGHT) * dpEven + KTC_TODAY_WEIGHT * ktcSf);
+}
+
+function bookFromSnap(snap) {
+  if (!snap?.players?.length) return null;
+  const players = snap.players;
+  if (!players.some((p) => p.sleeper_id || p.pick_key)) {
+    const csvPath = `${DATA}/dp/latest/db_playerids.csv`;
+    if (fs.existsSync(csvPath)) attachKtcIds(players, fs.readFileSync(csvPath, "utf8"));
+  }
+  const map = new Map();
+  for (const p of players) {
+    if (p.value == null) continue;
+    if (p.pick_key) map.set(p.pick_key, p.value);
+    else if (p.sleeper_id) map.set(`player:${p.sleeper_id}`, p.value);
+    else if (p.pos === "PI") {
+      const key = ktcPickKey(p.name);
+      if (key) map.set(key, p.value);
+    }
+  }
+  return map.size ? map : null;
+}
+
+function loadKtcBooks() {
+  const dir = `${DATA}/ktc`;
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
+  const books = [];
+  for (const f of files) {
+    const snap = readJson(`ktc/${f}`, null);
+    const map = bookFromSnap(snap);
+    if (!map) continue;
+    books.push({ as_of: snap.as_of || f.slice(0, 10), map });
+  }
+  return books;
+}
+
+function ktcBookAt(books, asOf) {
+  let best = null;
+  for (const b of books) if (b.as_of <= asOf) best = b.map;
+  return best;
+}
+
+function ktcForLeg(leg, ktcBook, resIdx, today) {
+  if (!ktcBook) return null;
+  if (leg.kind === "player") return ktcBook.has(leg.asset_key) ? ktcBook.get(leg.asset_key) : null;
+  const playerRes = latestRes(resIdx, leg.asset_key, today, "player");
+  if (playerRes?.player_key && ktcBook.has(playerRes.player_key)) return ktcBook.get(playerRes.player_key);
+  const slotRes = latestRes(resIdx, leg.asset_key, today, "slot");
+  const [, year, round] = (leg.asset_key || "").split(":");
+  if (!year) return null;
+  for (const k of pickKeys(year, Number(round), slotRes?.draft_slot ?? null)) {
+    if (ktcBook.has(k)) return ktcBook.get(k);
+  }
+  return null;
+}
+
+function blendEvenAt(legs, ktcBook, resIdx, asOf) {
+  if (!ktcBook) return legs;
+  return (legs || []).map((l) => ({ ...l, value: blendToday(l.value, ktcForLeg(l, ktcBook, resIdx, asOf)) }));
+}
+
 // ponytail: year-end (+ today if inside the window) only, not monthly. Monthly if a mid-year crash must count.
 function y3Snaps(leg, dates, ctx) {
   const snaps = [];
   for (const d of dates) {
     const priced = priceLeg(leg, d, "realized", ctx);
-    if (priced.value != null) snaps.push({ raw: priced.value, floored: floorActive(priced.value) });
+    if (priced.value == null) continue;
+    const raw = priced.value;
+    const dead = leg.kind === "player" && raw < MIN_ACTIVE;
+    const top = vmaxAt(ctx.vmaxIdx, d);
+    const even = flatten(dead ? 0 : raw, top);
+    const book = ktcBookAt(ctx.ktcBooks || [], d);
+    const ktc = book ? ktcForLeg(leg, book, ctx.resIdx, d) : null;
+    snaps.push({
+      raw,
+      floored: dead ? 0 : raw,
+      even: blendToday(even, ktc),
+    });
   }
   return snaps;
 }
@@ -186,7 +313,7 @@ function y3Score(leg, dates, today, ctx) {
   const snaps = y3Snaps(leg, dates, ctx);
   const display = priceLeg(leg, today, "realized", ctx);
   if (!snaps.length) return { ...display, value: null, flag: "unpriced" };
-  const value = snaps.reduce((a, s) => a + s.floored, 0) / snaps.length;
+  const value = snaps.reduce((a, s) => a + s.even, 0) / snaps.length;
   return { ...display, value };
 }
 
@@ -340,9 +467,12 @@ async function main() {
   check("has curve", curve.length > 0);
 
   const curveIdx = indexCurve(curve);
+  const vmaxIdx = indexVmax(curve);
   const resIdx = resIndex(resolutions);
   const today = latestAsOf(fullCurve.length ? fullCurve : curve);
-  const ctx = { curveIdx, resIdx, nameById, originOf };
+  const ktcBooks = loadKtcBooks();
+  const ktcBook = ktcBookAt(ktcBooks, today);
+  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, ktcBooks };
   const tradeById = new Map(allTrades.map((t) => [t.transaction_id, t]));
 
   function buildPicks() {
@@ -416,8 +546,8 @@ async function main() {
   const edges = {};
   for (const m of members) {
     edges[m.user_id] = {
-      realized: 0, pick: 0, two_way: 0, incomplete: 0,
-      realized_per: [], pick_per: [],
+      realized: 0, pick: 0, even: 0, two_way: 0, incomplete: 0,
+      realized_per: [], pick_per: [], even_per: [],
       now_got: 0, now_priced: 0, horizons: [],
       sold_picks: 0, sold_players: 0,
     };
@@ -528,8 +658,75 @@ async function main() {
       sides: y3Sides,
       incomplete: uids.some((uid) => y3Sides[uid].incomplete),
     };
+    const topToday = vmaxAt(vmaxIdx, today);
+    const bookToday = ktcBookAt(ktcBooks, today);
+    const top0 = vmaxAt(vmaxIdx, t0);
+    const book0 = ktcBookAt(ktcBooks, t0);
+    const evenSides = {};
+    for (const uid of uids) {
+      const s = entry.lenses.realized.sides[uid];
+      const gotLegs = blendEvenAt(flattenLegs(s.legs, topToday), bookToday, resIdx, today);
+      const sentLegs = blendEvenAt(flattenLegs(s.sent, topToday), bookToday, resIdx, today);
+      const gotP = gotLegs.reduce((a, l) => a + (l.value || 0), 0);
+      const sentP = sentLegs.reduce((a, l) => a + (l.value || 0), 0);
+      const sent0Raw = bagFor(legs, uid, t0, "realized", ctx, "out");
+      const got0Legs = blendEvenAt(flattenLegs(s.t0_legs, top0), book0, resIdx, t0);
+      const sent0Legs = blendEvenAt(flattenLegs(sent0Raw.legs, top0), book0, resIdx, t0);
+      const t0Got = got0Legs.reduce((a, l) => a + (l.value || 0), 0);
+      const t0Sent = sent0Legs.reduce((a, l) => a + (l.value || 0), 0);
+      const t0Priced = s.t0 != null;
+      const todayDelta = s.incomplete ? null : gotP - sentP;
+      const t0Delta = s.incomplete || !t0Priced ? null : t0Got - t0Sent;
+      evenSides[uid] = {
+        name: s.name,
+        today: gotP,
+        sent_today: sentP,
+        today_delta: todayDelta,
+        t0: t0Priced ? t0Got : null,
+        t0_delta: t0Delta,
+        unpriced: s.unpriced,
+        sent_unpriced: s.sent_unpriced,
+        incomplete: s.incomplete,
+        legs: gotLegs,
+        sent: sentLegs,
+      };
+      if (!s.incomplete && todayDelta != null) {
+        edges[uid].even += todayDelta;
+        edges[uid].even_per.push(todayDelta);
+      }
+    }
+    const evenYearEnds = yearEnds(t0, today).map((d) => {
+      const top = vmaxAt(vmaxIdx, d);
+      const book = ktcBookAt(ktcBooks, d);
+      const pts = {};
+      for (const uid of uids) {
+        const bag = bagFor(legs, uid, d, "realized", ctx, "in");
+        const graded = blendEvenAt(flattenLegs(bag.legs, top), book, resIdx, d);
+        pts[nameById[uid] || uid] = graded.reduce((a, l) => a + (l.value || 0), 0);
+      }
+      return { as_of: d, points: pts };
+    });
+    entry.lenses.even = {
+      sides: evenSides,
+      year_ends: evenYearEnds,
+      incomplete: entry.lenses.realized.incomplete,
+    };
     entry.incomplete = entry.lenses.realized.incomplete;
     meters.push(entry);
+  }
+
+  function gradeRaw(raw, asOf, ktcSf) {
+    if (raw == null) return null;
+    return blendToday(flatten(raw, vmaxAt(vmaxIdx, asOf)), ktcSf);
+  }
+
+  function ktcForPick(season, round, slot, asOf) {
+    const book = ktcBookAt(ktcBooks, asOf);
+    if (!book) return null;
+    for (const k of pickKeys(season, Number(round), slot)) {
+      if (book.has(k)) return book.get(k);
+    }
+    return null;
   }
 
   const drafterRows = [];
@@ -537,9 +734,11 @@ async function main() {
     if (!p.drafted_by_user_id || !p.player_id) continue;
     const draftDay = p.as_of || today;
     const playerKey = `player:${p.player_id}`;
-    const now = playerValue(curveIdx, playerKey, today);
-    const cost = pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, draftDay);
-    const surplus = now.value != null && cost.value != null ? now.value - cost.value : null;
+    const nowRaw = playerValue(curveIdx, playerKey, today);
+    const costRaw = pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, draftDay);
+    const nowVal = gradeRaw(nowRaw.value, today, ktcBookAt(ktcBooks, today)?.get(playerKey));
+    const costVal = gradeRaw(costRaw.value, draftDay, ktcForPick(p.season, p.round, p.draft_slot, draftDay));
+    const surplus = nowVal != null && costVal != null ? nowVal - costVal : null;
     const startup = p.season === "2019";
     drafterRows.push({
       season: p.season,
@@ -551,14 +750,18 @@ async function main() {
       drafted_by_user_id: p.drafted_by_user_id,
       drafted_by: nameById[p.drafted_by_user_id] || p.drafted_by_user_id,
       startup,
-      pick_cost: cost.value,
-      player_today: now.value,
+      pick_cost: costVal,
+      player_today: nowVal,
       surplus,
-      flag: now.flag || cost.flag || null,
+      flag: nowRaw.flag || costRaw.flag || null,
       year_ends: yearEnds(draftDay, today).map((d) => ({
         as_of: d,
-        player: playerValue(curveIdx, playerKey, d).value,
-        pick: startup ? null : pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, d).value,
+        player: gradeRaw(playerValue(curveIdx, playerKey, d).value, d, ktcBookAt(ktcBooks, d)?.get(playerKey)),
+        pick: startup ? null : gradeRaw(
+          pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, d).value,
+          d,
+          ktcForPick(p.season, p.round, p.draft_slot, d),
+        ),
       })),
     });
   }
@@ -618,18 +821,21 @@ async function main() {
       if (!t.user_ids.includes(uid) || t.user_ids.length !== 2) continue;
       const other = t.user_ids.find((id) => id !== uid);
       if (!by[other]) {
-        by[other] = { user_id: other, name: nameById[other] || other, n: 0, realized: [], pick: [] };
+        by[other] = { user_id: other, name: nameById[other] || other, n: 0, realized: [], pick: [], even: [] };
       }
       by[other].n += 1;
       if (t.incomplete) continue;
       const rd = t.lenses.realized.sides[uid]?.today_delta;
       const pd = t.lenses.pick.sides[uid]?.today_delta;
+      const ed = t.lenses.even.sides[uid]?.today_delta;
       if (rd != null) by[other].realized.push(rd);
       if (pd != null) by[other].pick.push(pd);
+      if (ed != null) by[other].even.push(ed);
     }
     return Object.values(by).map((p) => {
       const rAvg = p.realized.length ? p.realized.reduce((a, b) => a + b, 0) / p.realized.length : null;
       const pAvg = p.pick.length ? p.pick.reduce((a, b) => a + b, 0) / p.pick.length : null;
+      const eAvg = p.even.length ? p.even.reduce((a, b) => a + b, 0) / p.even.length : null;
       return {
         user_id: p.user_id,
         name: p.name,
@@ -639,7 +845,9 @@ async function main() {
         realized_per_trade: rAvg,
         pick_total: p.pick.reduce((a, b) => a + b, 0),
         pick_per_trade: pAvg,
-        grade: partnerGrade(rAvg),
+        even_total: p.even.reduce((a, b) => a + b, 0),
+        even_per_trade: eAvg,
+        grade: partnerGrade(eAvg),
       };
     }).sort((a, b) => (b.realized_per_trade ?? -1e9) - (a.realized_per_trade ?? -1e9));
   }
@@ -647,10 +855,10 @@ async function main() {
   function partnerHeadlines(list) {
     const graded = list.filter((p) => p.complete >= 2);
     const pool = graded.length ? graded : list.filter((p) => p.complete >= 1);
-    const best = pool.slice().sort((a, b) => (b.realized_per_trade ?? -1e9) - (a.realized_per_trade ?? -1e9))[0];
-    const worst = pool.slice().sort((a, b) => (a.realized_per_trade ?? 1e9) - (b.realized_per_trade ?? 1e9))[0];
+    const best = pool.slice().sort((a, b) => (b.even_per_trade ?? b.realized_per_trade ?? -1e9) - (a.even_per_trade ?? a.realized_per_trade ?? -1e9))[0];
+    const worst = pool.slice().sort((a, b) => (a.even_per_trade ?? a.realized_per_trade ?? 1e9) - (b.even_per_trade ?? b.realized_per_trade ?? 1e9))[0];
     const most = list.slice().sort((a, b) => b.trades - a.trades)[0];
-    const slim = (p) => p ? { name: p.name, per: p.realized_per_trade, n: p.complete, trades: p.trades, grade: p.grade } : null;
+    const slim = (p) => p ? { name: p.name, per: p.even_per_trade ?? p.realized_per_trade, n: p.complete, trades: p.trades, grade: p.grade } : null;
     return {
       best: slim(best),
       worst: worst && best && worst.user_id !== best.user_id ? slim(worst) : slim(worst),
@@ -662,6 +870,7 @@ async function main() {
     const e = edges[m.user_id];
     const per = e.realized_per;
     const avg = per.length ? per.reduce((a, b) => a + b, 0) / per.length : null;
+    const evenAvg = e.even_per.length ? e.even_per.reduce((a, b) => a + b, 0) / e.even_per.length : null;
     return {
       user_id: m.user_id,
       name: m.canonical_name,
@@ -671,9 +880,11 @@ async function main() {
       realized_per_trade: avg,
       pick_total: e.pick,
       pick_per_trade: e.pick_per.length ? e.pick_per.reduce((a, b) => a + b, 0) / e.pick_per.length : null,
+      even_total: e.even,
+      even_per_trade: evenAvg,
       style: styleOf(e.now_got, e.now_priced, e.horizons, e.sold_picks, e.sold_players),
     };
-  }).sort((a, b) => (b.realized_per_trade ?? -Infinity) - (a.realized_per_trade ?? -Infinity));
+  }).sort((a, b) => (b.even_per_trade ?? -Infinity) - (a.even_per_trade ?? -Infinity));
 
   function headlineOf(side) {
     const first = (side.legs || []).find((l) => l.label);
@@ -687,7 +898,7 @@ async function main() {
     for (const t of meters) {
       if (t.user_ids.length !== 2 || t.incomplete) continue;
       for (const uid of t.user_ids) {
-        const s = t.lenses.realized.sides[uid];
+        const s = t.lenses.even.sides[uid];
         if (s.today_delta == null) continue;
         rows.push({
           transaction_id: t.transaction_id,
@@ -714,6 +925,27 @@ async function main() {
 
   const trade_boards = tradeBoards();
 
+  function reviewTape() {
+    return REVIEW_IDS.map((id) => {
+      const t = meters.find((x) => x.transaction_id === id);
+      if (!t) return null;
+      const winnerId = t.user_ids.slice().sort((a, b) =>
+        (t.lenses.even.sides[b]?.today_delta ?? -1e15) - (t.lenses.even.sides[a]?.today_delta ?? -1e15)
+      )[0];
+      const loserId = t.user_ids.find((uid) => uid !== winnerId);
+      const row = slimTrade(t, winnerId);
+      row.winner = nameById[winnerId] || winnerId;
+      row.loser = nameById[loserId] || loserId;
+      row.winner_id = winnerId;
+      row.steep_delta = t.lenses.realized.sides[winnerId]?.today_delta ?? null;
+      row.y3_delta = t.lenses.y3?.sides[winnerId]?.today_delta ?? null;
+      return row;
+    }).filter(Boolean);
+  }
+
+  const review_trades = reviewTape();
+  check("review tape is 10", review_trades.length === 10);
+
   writeJson("trade_meter.json", meters);
   writeJson("leaderboard.json", leaderboard);
   writeJson("draft_skill.json", {
@@ -729,6 +961,7 @@ async function main() {
     drafters_rookie: draftersRookie,
     drafters_startup: draftersStartup,
     trade_boards,
+    review_trades,
     today,
   });
   writeUi("picks.json", pickIndex);
@@ -835,12 +1068,70 @@ async function main() {
     const dates = windowAsOfs(t.date, today);
     for (const leg of inByTx.get(t.transaction_id) || []) {
       for (const snap of y3Snaps(leg, dates, ctx)) {
+        if (leg.kind !== "player") continue;
         if (snap.floored > 0 && snap.floored < MIN_ACTIVE) badFloor += 1;
         if (snap.raw < MIN_ACTIVE && snap.floored !== 0) badFloor += 1;
       }
     }
   }
   check("no sub-300 positive 3y snap", badFloor === 0);
+  const topToday = vmaxAt(vmaxIdx, today);
+  check("flatten top is 10k", flatten(topToday, topToday) === FLAT_SCALE);
+  const bigsbyFlat = flatten(83, topToday);
+  check("flatten bigsby ktc-ish", bigsbyFlat >= 2000 && bigsbyFlat <= 2700);
+  const bakerFlat = flatten(2588, topToday);
+  check("flatten baker ktc-ish", bakerFlat >= 4200 && bakerFlat <= 5200);
+  check("even leaves realized_per_trade", leaderboard.every((row) => {
+    const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
+      .map((t) => t.lenses.realized.sides[row.user_id]?.today_delta)
+      .filter((d) => d != null);
+    const avg = ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
+    return (avg == null && row.realized_per_trade == null)
+      || (avg != null && row.realized_per_trade != null && Math.abs(avg - row.realized_per_trade) < 1e-6);
+  }));
+  check("KTC_TODAY_WEIGHT", KTC_TODAY_WEIGHT === 0.60);
+  check("even_per matches even deltas", leaderboard.every((row) => {
+    const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
+      .map((t) => t.lenses.even.sides[row.user_id]?.today_delta)
+      .filter((d) => d != null);
+    const avg = ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
+    return (avg == null && row.even_per_trade == null)
+      || (avg != null && row.even_per_trade != null && Math.abs(avg - row.even_per_trade) < 1e-6);
+  }));
+  const evenZeroBreaks = meters.filter((t) => {
+    if (t.user_ids.length !== 2 || t.lenses.even.incomplete) return false;
+    const sides = Object.values(t.lenses.even.sides);
+    if (sides.some((s) => s.today_delta == null)) return false;
+    return Math.abs(sides[0].today_delta + sides[1].today_delta) >= 1;
+  });
+  check("zero-sum 2-team even", evenZeroBreaks.length === 0);
+  if (!ktcBook) {
+    let flattenDrift = 0;
+    for (const t of meters) {
+      for (const uid of t.user_ids) {
+        const r = t.lenses.realized.sides[uid];
+        const e = t.lenses.even.sides[uid];
+        const gotFlat = (r.legs || []).reduce((a, l) => a + (flatten(l.value, topToday) || 0), 0);
+        if (Math.abs((e.today || 0) - gotFlat) >= 1) flattenDrift += 1;
+      }
+    }
+    check("no-ktc even is flatten-only", flattenDrift === 0);
+  } else {
+    const toward = (label, sid) => {
+      const ktc = ktcBook.get(`player:${sid}`);
+      const dp = playerValue(curveIdx, `player:${sid}`, today).value;
+      if (ktc == null || dp == null) return;
+      const even = flatten(dp, topToday);
+      const mix = blendToday(even, ktc);
+      if (ktc > even) check(`${label} toward ktc`, mix > even && mix <= ktc);
+      else if (ktc < even) check(`${label} toward ktc`, mix < even && mix >= ktc);
+      else check(`${label} ktc==even`, mix === even);
+    };
+    toward("baker", "4892");
+    toward("bigsby", "9225");
+    toward("hill", "3321");
+    toward("bijan", "9509");
+  }
 
   console.log(JSON.stringify({
     trades: meters.length,
@@ -855,6 +1146,9 @@ async function main() {
     startup_used: startups.length,
     trader: leaderboard[0]?.name,
     drafter: draftersRookie[0]?.name,
+    ktc_today: !!ktcBook,
+    ktc_keys: ktcBook ? ktcBook.size : 0,
+    ktc_weight: ktcBook ? KTC_TODAY_WEIGHT : 0,
   }, null, 2));
 }
 
@@ -880,6 +1174,11 @@ function slimTrade(t, uid) {
       unpriced: t.lenses.y3.sides[id].unpriced,
       legs: t.lenses.y3.sides[id].legs,
     },
+    even: {
+      today: t.lenses.even.sides[id].today,
+      unpriced: t.lenses.even.sides[id].unpriced,
+      legs: t.lenses.even.sides[id].legs,
+    },
   }));
   return {
     transaction_id: t.transaction_id,
@@ -890,9 +1189,11 @@ function slimTrade(t, uid) {
     realized: real,
     pick,
     y3,
+    even: t.lenses.even.sides[uid],
     other_bags: otherBags,
     year_ends: t.lenses.realized.year_ends,
     pick_year_ends: t.lenses.pick.year_ends,
+    even_year_ends: t.lenses.even.year_ends,
   };
 }
 

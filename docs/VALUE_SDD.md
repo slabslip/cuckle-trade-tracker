@@ -229,6 +229,9 @@ Add (when touching y3), do not replace:
 - Still-a-pick snap is either unfloored (RECOMMEND) or, if Truman chooses “floor everything,” flagged in the caption — pick one, test one.
 - Window-not-elapsed trades may have a y3 number; they must not appear on a 3y Best/Worst until that board exists (it must not exist yet).
 - Chief–ARae: today −1940, T0 null, y3 ≠ today and y3 ≠ 3 for Zeke.
+- Missing `data/ktc/latest.json` → even-today === flatten(DP) (blend skipped).
+- With a KTC snap: Baker / Bigsby / Hill / Bijan even-today move toward KTC vs flatten-only (direction, not exact match).
+- Zero-sum 2-team holds on blended even-today. Truman–Bubba stays complete.
 
 ---
 
@@ -246,3 +249,37 @@ Add (when touching y3), do not replace:
 - T0 Δ +312; aged −58.
 - y3 IN FLIGHT (one snap = today, floor on): 794+0 vs 388+0+0+0, Δ +406.
 - 2029 4th flag `priced_as_2028`.
+
+---
+
+## 11. Keep Trade Cut (HAVE — dashboard default 60/40)
+
+**Not a second book on historical clocks.** We start snapping KTC Superflex ourselves. First file = the day we ran `node ktc-snapshot.mjs`. There is no honest 2019–2025 KTC in this repo. Do not scrape “old” ranking pages — they do not exist as dated archives.
+
+### Weekly snapshot
+
+- Script: `ktc-snapshot.mjs`. Superflex only (`format=2`). ~10 pages, sequential, ~600ms delay, identifying User-Agent.
+- Writes `data/ktc/YYYY-MM-DD.json` and copies it to `data/ktc/latest.json`.
+- How to run: see `data/ktc/README.md`. Git-committing those JSON files **is** the history. Prefer local/cron over CI so we do not hammer KTC.
+- ToS posture: personal weekly snapshot for this league’s offline formula. **Not** a live scrape from the phone page.
+- Names → Sleeper id via DynastyProcess `db_playerids` (`ktc_id`, then merge_name). Unmatched names are logged on the snapshot (`unmatched`). A few misses do not fail the build. Picks join only when the name parses to `pickval:Y:R:Early|Mid|Late`.
+
+### Blend
+
+KTC is already crowd-flat (~10k scale). Do **not** run the even-flatten curve on KTC.
+
+```text
+w = 0.60                         // KTC_TODAY_WEIGHT — KTC owns, even-DP assists
+dp_even = flatten(DP value_2qb)  // even curve, that day's board max
+custom = (1 - w) * dp_even + w * ktc_sf   // only if a KTC file has as_of <= that day
+```
+
+- No KTC file on or before the query date → flatten-only.
+- Player with both even-DP and a mapped KTC SF value → blend.
+- DP only → DP only. KTC only → skip (do not invent a DP row).
+- Pick → blend only on a clean `pickval` join; else even-DP pick price.
+- Do **not** paste the 2026-08-28 KTC book onto 2019–2025 year-ends. Those stay flatten-only until we have a snap for that week.
+
+**Uses this blend (dashboard default = KTC blend chip):** Home hero `even_per_trade`, Best/Worst, partners, drafts today/surplus, even-lens bags, even T0 / aged, even year-end sparks (KTC only when a file exists), First 3 years snaps on dates we snapped.
+
+**Does not:** Steep `realized` chip (raw DP). Hop tape stays raw DP.

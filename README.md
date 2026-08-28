@@ -18,16 +18,22 @@ Or one step at a time:
 node sleeper-sync.mjs
 node draft-resolve.mjs
 node value-snapshot.mjs          # latest + monthly git history
+node ktc-snapshot.mjs            # weekly Superflex snap → data/ktc/ (not in build.mjs)
 node revalue.mjs
 node generate-page.mjs
 ```
+
+Dashboard default is **60% KTC Superflex + 40% even-flatten DynastyProcess** on dates we have a KTC file. Older history is flatten-only. Steep DP is still the “Became the player” chip. See `data/ktc/README.md` and `docs/VALUE_SDD.md` §11.
 
 Serve the folder over HTTP so each person’s slice can load:
 
 ```bash
 python3 -m http.server 8766
 # http://localhost:8766/?me=TipsUp
+# http://localhost:8766/?me=TipsUp&view=review
 ```
+
+Live: [Review 10](https://slabslip.github.io/cuckle-trade-tracker/?me=TipsUp&view=review)
 
 Pin display names in `data/aliases.overrides.json` — re-sync will not overwrite it.
 

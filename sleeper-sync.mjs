@@ -85,6 +85,7 @@ async function main() {
   const legs = [];
 
   const players = await loadPlayers();
+  const currentRosters = [];
 
   for (const league of leagues) {
     const season = String(league.season);
@@ -113,6 +114,14 @@ async function main() {
         roster_id: r.roster_id,
         owner_id: r.owner_id,
       });
+      if (league.league_id === leagues[0].league_id) {
+        currentRosters.push({
+          season,
+          roster_id: r.roster_id,
+          owner_id: r.owner_id,
+          players: r.players || [],
+        });
+      }
     }
 
     const useCache = Number(season) < new Date().getUTCFullYear();
@@ -261,6 +270,7 @@ async function main() {
   writeJson("members.json", memberList);
   writeJson("name_observations.json", observations);
   writeJson("seats.json", seats);
+  writeJson("rosters_now.json", currentRosters);
   writeJson("trades.json", trades);
   writeJson("trade_legs.json", legs);
   writeJson("trade_tape.json", tape);

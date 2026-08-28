@@ -928,6 +928,116 @@ async function main() {
 
   const trade_boards = tradeBoards();
 
+  // ponytail: ownership from startup/rookie draft + player in-legs only. Waivers/drops are invisible.
+  function playerLists() {
+    function dayDiff(a, b) {
+      const ms = Date.parse(b) - Date.parse(a);
+      if (!Number.isFinite(ms) || ms < 0) return 0;
+      return Math.round(ms / 86400000);
+    }
+    function nowVal(key) {
+      return playerValue(curveIdx, key, today).value ?? 0;
+    }
+    const rostersNow = readJson("rosters_now.json", []);
+    const rosterOwner = new Map();
+    for (const r of rostersNow) {
+      for (const pid of r.players || []) rosterOwner.set(`player:${pid}`, r.owner_id);
+    }
+    const origin = new Map();
+    for (const p of draftPicks) {
+      if (!p.player_id) continue;
+      const key = `player:${p.player_id}`;
+      const prev = origin.get(key);
+      if (!prev || (p.as_of || "") < (prev.as_of || "") || ((p.as_of || "") === (prev.as_of || "") && Number(p.season) < Number(prev.season))) {
+        origin.set(key, p);
+      }
+    }
+    const hopsBy = new Map();
+    for (const l of allLegs) {
+      if (l.kind !== "player" || l.direction !== "in" || !String(l.asset_key || "").startsWith("player:")) continue;
+      const t = tradeById.get(l.transaction_id);
+      if (!t?.date || !l.to_user_id) continue;
+      if (!hopsBy.has(l.asset_key)) hopsBy.set(l.asset_key, []);
+      hopsBy.get(l.asset_key).push({
+        date: t.date,
+        to: l.to_user_id,
+        tx: l.transaction_id,
+        label: l.label,
+      });
+    }
+    const keys = new Set([...origin.keys(), ...hopsBy.keys()]);
+    const rows = [];
+    for (const key of keys) {
+      const d = origin.get(key);
+      const hops = (hopsBy.get(key) || []).slice().sort((a, b) => a.date.localeCompare(b.date) || a.tx.localeCompare(b.tx));
+      const name = d?.label || hops[hops.length - 1]?.label || key;
+      let owner = d?.drafted_by_user_id || hops[0]?.to || null;
+      let from = d?.as_of || hops[0]?.date || today;
+      let i = 0;
+      if (!d && hops.length) {
+        owner = hops[0].to;
+        from = hops[0].date;
+        i = 1;
+      }
+      const stints = [];
+      for (; i < hops.length; i++) {
+        const h = hops[i];
+        if (!h.to || h.to === owner) continue;
+        stints.push({ owner, from, to: h.date });
+        owner = h.to;
+        from = h.date;
+      }
+      stints.push({ owner, from, to: today });
+      const sitsWith = rosterOwner.get(key) || owner;
+      const onNow = stints.filter((s) => s.owner === sitsWith);
+      let days = onNow.reduce((a, s) => a + dayDiff(s.from, s.to), 0);
+      if (!onNow.length && d?.drafted_by_user_id === sitsWith) days = dayDiff(d.as_of || today, today);
+      const leftHome = !!(d && hops.some((h) => h.to && h.to !== d.drafted_by_user_id));
+      rows.push({
+        key,
+        name,
+        team: nameById[sitsWith] || sitsWith || "—",
+        trades: new Set(hops.map((h) => h.tx)).size,
+        days,
+        stays: Math.max(onNow.length, days ? 1 : 0),
+        start: d?.as_of || hops[0]?.date || today,
+        value: nowVal(key),
+        rostered: rosterOwner.has(key),
+        drafted: !!d,
+        forever: !!(d && d.season === "2019" && !leftHome && sitsWith === d.drafted_by_user_id && rosterOwner.has(key)),
+      });
+    }
+    const slim = (r) => ({
+      name: r.name,
+      team: r.team,
+      trades: r.trades,
+      days: r.days,
+      stays: r.stays,
+    });
+    const onRoster = rows.filter((r) => r.rostered);
+    const most_traded = rows.slice().sort((a, b) => b.trades - a.trades || b.value - a.value).slice(0, 5).map(slim);
+    const least_traded = onRoster.slice()
+      .sort((a, b) => a.trades - b.trades || b.value - a.value || a.name.localeCompare(b.name))
+      .slice(0, 5).map(slim);
+    const forever = onRoster.filter((r) => r.forever).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name)).map(slim);
+    const homesteaders = onRoster.filter((r) => !r.forever)
+      .sort((a, b) => b.days - a.days || b.value - a.value || a.name.localeCompare(b.name))
+      .slice(0, 5).map(slim);
+    return { most_traded, least_traded, forever, homesteaders };
+  }
+
+  const player_lists = playerLists();
+  check("has current rosters", readJson("rosters_now.json", []).length === 10);
+  check("most traded is 5", player_lists.most_traded.length === 5);
+  check("least traded is 5", player_lists.least_traded.length === 5);
+  check("homesteaders is 5", player_lists.homesteaders.length === 5);
+  check("most ranked by trades", player_lists.most_traded[0].trades >= player_lists.most_traded[4].trades);
+  check("least ranked by trades", player_lists.least_traded[0].trades <= player_lists.least_traded[4].trades);
+  check("forever never moved", player_lists.forever.every((r) => r.trades === 0));
+  check("forever still rostered", player_lists.forever.length > 0);
+  check("homestead not forever", player_lists.homesteaders.every((r) => !player_lists.forever.some((f) => f.name === r.name)));
+  check("homestead days ranked", player_lists.homesteaders[0].days >= player_lists.homesteaders[4].days);
+
   function reviewTape() {
     return REVIEW_IDS.map((id) => {
       const t = meters.find((x) => x.transaction_id === id);
@@ -965,6 +1075,7 @@ async function main() {
     drafters_startup: draftersStartup,
     trade_boards,
     review_trades,
+    player_lists,
     today,
   });
   writeUi("picks.json", pickIndex);

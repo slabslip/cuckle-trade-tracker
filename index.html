@@ -104,7 +104,7 @@
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828m";
+    const DATA_V = "20260828n";
     const WINDOWS = [
       ["t0", "Day of trade"],
       ["y1", "1 year"],
@@ -355,9 +355,35 @@
         + "</div></button>";
     }
 
+    function yearsOn(days) {
+      if (days == null) return "—";
+      if (days < 365) return days + "d";
+      const y = days / 365;
+      return (Math.round(y * 10) / 10).toString().replace(/.0$/, "") + "y";
+    }
+
+    function listRow(r, right) {
+      return '<div class="row"><div class="row-top"><div><div class="names">' + r.name + "</div>"
+        + '<div class="date">' + (r.team || "") + (r.stays > 1 ? " · " + r.stays + " stays" : "") + "</div></div>"
+        + '<div class="margin">' + right + "</div></div></div>";
+    }
+
+    function renderPlayerLists() {
+      const p = (league && league.player_lists) || {};
+      const most = (p.most_traded || []).map((r) => listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"))).join("");
+      const least = (p.least_traded || []).map((r) => listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"))).join("");
+      const forever = (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
+      const stay = (p.homesteaders || []).map((r) => listRow(r, yearsOn(r.days))).join("");
+      return "<h2>Most passed around</h2>" + most
+        + "<h2>Least traded</h2>" + least
+        + "<h2>Forever players</h2>" + forever
+        + "<h2>Homesteaders</h2>" + stay;
+    }
+
     function renderLeagueHome() {
       return "<h2>Best aged</h2>" + rankAge(1).map(boardTape).join("")
-        + "<h2>Worst aged</h2>" + rankAge(-1).map(boardTape).join("");
+        + "<h2>Worst aged</h2>" + rankAge(-1).map(boardTape).join("")
+        + renderPlayerLists();
     }
 
     function renderTeamHome() {

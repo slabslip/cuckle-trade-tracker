@@ -44,16 +44,27 @@ function asofRowNear(index, key, asOf) {
 }
 
 function playerValue(index, key, asOf) {
-  const hit = asofRow(index, key, asOf);
-  if (hit) return { value: hit.value, flag: null, priced_as: key, as_of: hit.as_of };
   const rows = index.get(key);
-  if (rows?.length) {
-    const last = rows[rows.length - 1];
-    if (last.as_of < asOf) {
-      return { value: 0, flag: "off_board", priced_as: key, as_of: last.as_of };
-    }
+  if (!rows?.length) return { value: null, flag: "unpriced", priced_as: key, as_of: null };
+  let at = null;
+  let lastPos = null;
+  for (const row of rows) {
+    if (row.as_of > asOf) break;
+    at = row;
+    if (row.value > 0) lastPos = row;
   }
-  return { value: null, flag: "unpriced", priced_as: key, as_of: null };
+  if (lastPos) {
+    return {
+      value: lastPos.value,
+      flag: at && at.as_of === lastPos.as_of ? null : "last_positive",
+      priced_as: key,
+      as_of: lastPos.as_of,
+    };
+  }
+  const firstPos = rows.find((r) => r.value > 0);
+  if (firstPos) return { value: firstPos.value, flag: "first_snap", priced_as: key, as_of: firstPos.as_of };
+  if (at) return { value: at.value, flag: null, priced_as: key, as_of: at.as_of };
+  return { value: rows[0].value, flag: "first_snap", priced_as: key, as_of: rows[0].as_of };
 }
 
 function pickKeys(year, round, slot) {
@@ -216,18 +227,6 @@ function windowAsOfs(t0, today, years) {
   return yearEnds(t0, end);
 }
 
-function snapOnOrBefore(idx, asOf) {
-  let d = null;
-  for (const x of idx.dates) if (x <= asOf) d = x;
-  return d;
-}
-
-function onSnap(curveIdx, key, snap) {
-  if (!snap || !key) return false;
-  const rows = curveIdx.get(key);
-  return !!(rows && rows.some((r) => r.as_of === snap));
-}
-
 function indexVmax(curve) {
   const by = new Map();
   for (const r of curve) {
@@ -266,19 +265,9 @@ function y3Snaps(leg, dates, ctx) {
     const priced = priceLeg(leg, d, "realized", ctx);
     if (priced.value == null) continue;
     const raw = priced.value;
-    const playerKey = String(priced.priced_as || "").startsWith("player:")
-      ? priced.priced_as
-      : (leg.kind === "player" ? leg.asset_key : null);
-    const snap = snapOnOrBefore(ctx.vmaxIdx, d);
-    // ponytail: 300 floor treated live cheap WRs (Pierce 35–222) as dead. Off that month’s board = retired.
-    const dead = !!(playerKey && !onSnap(ctx.curveIdx, playerKey, snap));
     const top = vmaxAt(ctx.vmaxIdx, d);
-    const even = flatten(dead ? 0 : raw, top);
-    snaps.push({
-      raw,
-      floored: dead ? 0 : raw,
-      even,
-    });
+    const even = flatten(raw, top);
+    snaps.push({ raw, floored: raw, even });
   }
   return snaps;
 }
@@ -1195,26 +1184,26 @@ async function main() {
   const zekeY3 = chiefArae?.lenses.y3.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
   check("zeke on chief-arae", !!(zekeToday && zekeY3));
   check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3);
-  let badFloor = 0;
+  let ghostZero = 0;
   for (const t of meters) {
-    const dates = windowAsOfs(t.date, today, 3);
-    for (const leg of inByTx.get(t.transaction_id) || []) {
-      for (const d of dates) {
-        const priced = priceLeg(leg, d, "realized", ctx);
-        if (priced.value == null) continue;
-        const playerKey = String(priced.priced_as || "").startsWith("player:")
-          ? priced.priced_as
-          : (leg.kind === "player" ? leg.asset_key : null);
-        if (!playerKey) continue;
-        const snap = y3Snaps(leg, [d], ctx)[0];
-        if (!snap) continue;
-        const live = onSnap(ctx.curveIdx, playerKey, snapOnOrBefore(ctx.vmaxIdx, d));
-        if (live && snap.floored !== snap.raw) badFloor += 1;
-        if (!live && snap.floored !== 0) badFloor += 1;
+    for (const w of Object.values(t.lenses.windows || {})) {
+      for (const s of Object.values(w.sides || {})) {
+        for (const l of [...(s.legs || []), ...(s.sent || [])]) {
+          if (l.kind !== "player" || l.value !== 0) continue;
+          if ((curveIdx.get(l.asset_key) || []).some((r) => r.value > 0)) ghostZero += 1;
+        }
       }
     }
   }
-  check("off-board snaps are 0, on-board keep raw", badFloor === 0);
+  check("no zero on a player who has a DP row", ghostZero === 0);
+  for (const name of ["Dalton Schultz", "Mason Rudolph"]) {
+    const hits = meters.flatMap((t) => Object.entries(t.lenses.windows || {}).flatMap(([k, w]) =>
+      Object.values(w.sides || {}).flatMap((s) =>
+        [...(s.legs || []), ...(s.sent || [])].filter((l) => l.label === name).map((l) => ({ k, v: l.value, f: l.flag }))
+      )));
+    check(`${name} appears`, hits.length > 0);
+    check(`${name} never zero`, hits.every((h) => h.v == null || h.v > 0));
+  }
   const topToday = vmaxAt(vmaxIdx, today);
   check("flatten top is 10k", flatten(topToday, topToday) === FLAT_SCALE);
   const bigsbyFlat = flatten(83, topToday);

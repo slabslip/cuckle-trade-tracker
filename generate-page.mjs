@@ -144,7 +144,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828q";
+    const DATA_V = "20260828r";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],

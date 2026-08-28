@@ -113,11 +113,7 @@ A slotted pick with no exact or tier row is **unpriced**, not a quiet Mid.
 
 ## 4. Window floor (off the board, not “under 300”)
 
-**HAVE:** A player snap on a year-end / window date is **0** only if they are **not in that month’s DP Superflex file**. Cheap-but-listed players keep their raw (then flatten). Still-a-pick Mid values are never zeroed this way. Today and T0 are unchanged.
-
-The old `MIN_ACTIVE = 300` rule zeroed live players (Alec Pierce 35–222 in 2023–25, Hill 285, Pollard, etc.). That was the “0 on the bag” bug.
-
-**Carry-forward vs floor.** `asofRow` still carries the last-known raw if we ask for a later date. The window floor now checks “were they on *this* snapshot?” so Zeke after his last DP row (2026-02-27) is 0 on later window dates, while Pierce on every 2023–26 file stays priced.
+**HAVE:** Do **not** invent 0 for a player who has any Superflex row. Window / T0 / today use last quote on or before the date; if the date is before their first file, use that first quote (`first_snap`). Only a player with **no DP row at all** is unpriced (IDP). Cheap listed values (Schultz 121, Rudolph 2, Pierce 35–222) stay priced, then flatten.
 
 ---
 

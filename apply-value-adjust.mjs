@@ -71,6 +71,93 @@ function check(name, cond) {
   if (!cond) throw new Error(`self-check failed: ${name}`);
 }
 
+const LENSES = ["t0", "y1", "y2", "y3", "all"];
+
+function addYears(ymd, n) {
+  const p = String(ymd || "").split("-").map(Number);
+  if (p.length < 3) return ymd;
+  const y = p[0] + n;
+  const dim = new Date(y, p[1], 0).getDate();
+  return `${y}-${String(p[1]).padStart(2, "0")}-${String(Math.min(p[2], dim)).padStart(2, "0")}`;
+}
+
+/** t0 and all are unfiltered; y1/y2/y3 hide deals that have not lived the clock. */
+function chipLived(date, lens, today) {
+  if (lens === "t0" || lens === "all") return true;
+  const need = { y1: 1, y2: 2, y3: 3 }[lens];
+  return !need || date <= addYears(today, -need);
+}
+
+/** Same rule as the browser's displayDelta: round each bag, then subtract. */
+function tradeDelta(t, lens) {
+  if (!t || t.incomplete) return null;
+  const s = (t.windows || {})[lens] || t.even;
+  if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
+  return Math.round(s.today) - Math.round(s.sent_today);
+}
+
+function partnerDeltas(seat, name, lens, today) {
+  return (seat.trades || [])
+    .filter((t) => (t.others || []).length === 1 && t.others[0] === name
+      && !t.incomplete && chipLived(t.date, lens, today))
+    .map((t) => tradeDelta(t, lens))
+    .filter((d) => d != null);
+}
+
+/**
+ * Everything the six home tiles and the league chart need, per seat and per clock.
+ * The browser used to fetch all ten seat files (~7.4 MB) to draw one bar chart, and
+ * computed the same numbers a second way for its own tiles.
+ */
+function buildMarks(seats, today) {
+  const out = {};
+  for (const seat of seats) {
+    const st = seat.style || {};
+    const aged = [];
+    for (const t of seat.trades || []) {
+      if ((t.others || []).length !== 1) continue;
+      const now = tradeDelta(t, "all");
+      const t0 = tradeDelta(t, "t0");
+      if (now == null || t0 == null) continue;
+      aged.push(now - t0);
+    }
+    const rookie = ((seat.drafts && seat.drafts.rookie) || []).filter((p) => p.surplus != null);
+    const byLens = {};
+    for (const lens of LENSES) {
+      const ds = (seat.trades || [])
+        .filter((t) => chipLived(t.date, lens, today))
+        .map((t) => tradeDelta(t, lens))
+        .filter((d) => d != null);
+      let extract = 0, farmed = 0, evenN = 0;
+      for (const p of seat.partners || []) {
+        if (!(p.complete >= 1)) continue;
+        const pd = partnerDeltas(seat, p.name, lens, today);
+        const per = pd.length ? pd.reduce((a, b) => a + b, 0) / pd.length : null;
+        const g = partnerGrade(per);
+        if (g === "you_extract") extract += 1;
+        else if (g === "they_extract") farmed += 1;
+        else evenN += 1;
+      }
+      byLens[lens] = {
+        n: ds.length,
+        total: ds.length ? ds.reduce((a, b) => a + b, 0) : null,
+        per: mean(ds),
+        extract, farmed, even: evenN,
+      };
+    }
+    out[seat.user_id] = {
+      name: seat.name,
+      two_way: (seat.hero && seat.hero.two_way) || 0,
+      sold_picks: st.sold_picks_for_players || 0,
+      sold_players: st.sold_players_for_picks || 0,
+      aging: { mean: mean(aged), n: aged.length },
+      draft: { mean: mean(rookie.map((p) => p.surplus)), n: rookie.length },
+      lens: byLens,
+    };
+  }
+  return { as_of: today, seats: out };
+}
+
 function main() {
   const league0 = JSON.parse(readFileSync(`${DATA}/ui/league.json`, "utf8"));
   const ctx = makeTodayPrice(league0.today || "2026-08-29");
@@ -116,12 +203,13 @@ function main() {
       const row = by[p.name];
       const e = row?.even || [];
       // realized_* described a book that is no longer in this file and nothing reads it.
-      const { realized_total, realized_per_trade, ...keep } = p;
+      // grade is gone too: it froze one clock, so the home tile and the Partners tab
+      // disagreed on 18 of 82 pairs. marks.json now grades every clock.
+      const { realized_total, realized_per_trade, grade, ...keep } = p;
       return {
         ...keep,
         even_total: e.reduce((a, b) => a + b, 0),
         even_per_trade: mean(e),
-        grade: partnerGrade(mean(e)),
       };
     }).sort((a, b) => (b.even_per_trade ?? -1e9) - (a.even_per_trade ?? -1e9));
 
@@ -209,6 +297,8 @@ function main() {
   delete league.drafters_startup;
 
   writeUi("league.json", league);
+  const marks = buildMarks(seats, league.today);
+  writeUi("marks.json", marks);
 
   const ceedee = seats.flatMap((m) => m.trades || []).find((t) =>
     t.transaction_id === "1269369347395026944"
@@ -274,6 +364,19 @@ function main() {
   check("realized_* gone", !sides.some((r) => "realized_per_trade" in r)
     && league.traders.every((t) => !("realized_per_trade" in t) && !("realized_total" in t)));
   check("drafters_rookie survives for the board screen", (league.drafters_rookie || []).length > 0);
+  check("marks cover every seat and clock", Object.keys(marks.seats).length === seats.length
+    && Object.values(marks.seats).every((m) => LENSES.every((k) => m.lens[k])));
+  check("marks partner counts add up", Object.values(marks.seats).every((m) => {
+    const seat = seats.find((s) => s.name === m.name);
+    const graded = (seat.partners || []).filter((p) => p.complete >= 1).length;
+    return LENSES.every((k) => m.lens[k].extract + m.lens[k].farmed + m.lens[k].even === graded);
+  }));
+  check("marks 'all' total matches the even deltas", Object.values(marks.seats).every((m) => {
+    const seat = seats.find((s) => s.name === m.name);
+    const ds = (seat.trades || []).map((t) => tradeDelta(t, "all")).filter((d) => d != null);
+    const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
+    return (want == null && m.lens.all.total == null) || Math.abs(want - m.lens.all.total) < 1e-6;
+  }));
   check("dead league keys gone", !("review_trades" in league) && !("drafters_startup" in league)
     && !("today" in league.trade_boards) && !("aged" in league.trade_boards));
 

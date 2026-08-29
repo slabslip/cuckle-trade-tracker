@@ -328,14 +328,17 @@ const html = `<!DOCTYPE html>
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+    // One threshold for "even", used by every screen that grades a partner.
+    const GRADE_EVEN = 100;
     let members = [];
     let me = null;
     let data = null;
     let league = null;
     let picks = null;
     let titles = null;
+    let marks = null;
     let lens = "all";
-    const DATA_V = "20260829p";
+    const DATA_V = "20260829q";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -456,6 +459,8 @@ const html = `<!DOCTYPE html>
       league = await getJson("data/ui/league.json");
       try { titles = await getJson("data/ui/titles.json"); }
       catch (err) { titles = { titles: [] }; }
+      try { marks = await getJson("data/ui/marks.json"); }
+      catch (err) { marks = { seats: {} }; }
       const startTitle = params.get("title");
       const startView = params.get("view");
       if (startView === "titles") {
@@ -518,6 +523,9 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    // Safari throttles history writes around 100 per 30 s. render() calls this every time,
+    // so only write when a URL-bearing piece of state actually moved.
+    let lastUrl = null;
     function syncUrl() {
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
@@ -525,7 +533,10 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (lens && lens !== "all") q.set("lens", lens);
-      history.replaceState(null, "", "?" + q.toString());
+      const url = "?" + q.toString();
+      if (url === lastUrl) return;
+      lastUrl = url;
+      history.replaceState(null, "", url);
     }
 
     async function selectMe(id, keep) {
@@ -559,6 +570,24 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    function gradeOf(per) {
+      if (per == null) return "even";
+      if (per >= GRADE_EVEN) return "you_extract";
+      if (per <= -GRADE_EVEN) return "they_extract";
+      return "even";
+    }
+
+    /** The one per-partner number. Home's teaser and the Partners tab both read this. */
+    function partnerPer(seat, name) {
+      const ds = ((seat && seat.trades) || [])
+        .filter((t) => (t.others || []).length === 1 && t.others[0] === name
+          && !t.incomplete && chipLived(t.date))
+        .map(tradeDelta)
+        .filter((d) => d != null);
+      const per = ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
+      return { name: name, n: ds.length, per: per, grade: gradeOf(per) };
+    }
+
     function gradeLabel(g) {
       if (g === "you_extract") return "you extract";
       if (g === "they_extract") return "they extract";
@@ -588,7 +617,7 @@ const html = `<!DOCTYPE html>
       if (!got.length && !sent.length) return s;
       const pieceWeight = (l) => {
         if (!l || l.became) return 1;
-        return /^pick:\d{4}:4:/.test(String(l.asset_key || "")) ? 0.5 : 1;
+        return /^pick:\\d{4}:4:/.test(String(l.asset_key || "")) ? 0.5 : 1;
       };
       const one = (mine, other) => {
         if (!mine.length || !other.length) return 0;
@@ -625,27 +654,25 @@ const html = `<!DOCTYPE html>
       return displayDelta(w.got, w.sent);
     }
 
+    // renderTeamHome used to call this inside a sort comparator, so one home render
+    // recomputed the Value Adjustment from legs about 2,000 times.
+    const deltaCache = new WeakMap();
     function tradeDelta(t) {
       if (!t || t.incomplete) return null;
+      let byLens = deltaCache.get(t);
+      if (!byLens) { byLens = {}; deltaCache.set(t, byLens); }
+      if (lens in byLens) return byLens[lens];
       const s = sideOf(t);
-      if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
-      return displayDelta(s.today, s.sent_today);
+      const d = !s || s.incomplete || s.today == null || s.sent_today == null
+        ? null
+        : displayDelta(s.today, s.sent_today);
+      byLens[lens] = d;
+      return d;
     }
 
     function chipLived(date) {
       if (lens === "t0" || lens === "all") return true;
       return windowLived(date);
-    }
-
-    function windowPer(list) {
-      const ds = (list || []).filter((t) => chipLived(t.date)).map(tradeDelta).filter((d) => d != null);
-      if (!ds.length) return null;
-      return ds.reduce((a, b) => a + b, 0) / ds.length;
-    }
-
-    function windowTotal(list) {
-      const ds = (list || []).filter((t) => chipLived(t.date)).map(tradeDelta).filter((d) => d != null);
-      return ds.length ? ds.reduce((a, b) => a + b, 0) : null;
     }
 
     function addYears(ymd, n) {
@@ -665,6 +692,7 @@ const html = `<!DOCTYPE html>
 
     function rankWide() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      // Score each side once, then dedupe and sort on the stored key.
       const by = new Map();
       for (const r of sides) {
         // chipLived, not windowLived: "all" is unfiltered, and windowLived maps it to 1 year.
@@ -672,9 +700,10 @@ const html = `<!DOCTYPE html>
         const s = windowScore(r);
         if (s == null) continue;
         const prev = by.get(r.transaction_id);
-        if (!prev || Math.abs(s) > Math.abs(windowScore(prev))) by.set(r.transaction_id, r);
+        if (!prev || Math.abs(s) > Math.abs(prev.score)) by.set(r.transaction_id, { r: r, score: s });
       }
-      return [...by.values()].sort((a, b) => Math.abs(windowScore(b)) - Math.abs(windowScore(a))).slice(0, 10);
+      return [...by.values()].sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
+        .slice(0, 10).map((x) => x.r);
     }
 
     async function seatData(uid) {
@@ -714,7 +743,7 @@ const html = `<!DOCTYPE html>
       if (days == null) return "—";
       if (days < 365) return days + "d";
       const y = days / 365;
-      return (Math.round(y * 10) / 10).toString().replace(/\.0$/, "") + "y";
+      return (Math.round(y * 10) / 10).toString().replace(/\\.0$/, "") + "y";
     }
 
     function listRow(r, right) {
@@ -926,10 +955,9 @@ const html = `<!DOCTYPE html>
     }
 
     function partnerLine(p) {
-      const g = p.per == null ? "even" : p.per >= 100 ? "you_extract" : p.per <= -100 ? "they_extract" : "even";
       return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
-        + '<div class="date">' + p.n + " complete · " + gradeLabel(g) + "</div></div>"
+        + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
         + '<div class="margin ' + cls(p.per) + '">' + fmt(p.per) + "</div></div></button>";
     }
 
@@ -940,57 +968,49 @@ const html = `<!DOCTYPE html>
         + '<div class="margin ' + cls(p.surplus) + '">' + fmt(p.surplus) + "</div></div></div>";
     }
 
-    function deltaAt(t, key) {
-      if (!t || t.incomplete) return null;
-      const s = t.windows && t.windows[key];
-      if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
-      return displayDelta(s.today, s.sent_today);
-    }
-
     function mark(id, title, sub, tone) {
       const on = markOpen === id;
       return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + esc(id) + '" aria-expanded="' + on + '">'
         + "<b>" + esc(title) + "</b>" + (sub ? "<span>" + esc(sub) + "</span>" : "") + "</button>";
     }
 
-    function marksOf(seat) {
-      const n = (seat.hero && seat.hero.two_way) || 0;
+    /**
+     * Every number here is precomputed in apply-value-adjust.mjs and shipped in marks.json.
+     * The browser used to recompute them from a seat file, which is why the home "manners"
+     * tile and the Partners tab disagreed on 20 of 82 grades: the tile read the pipeline's
+     * today-clock grade while the tab regraded on the selected clock.
+     */
+    function marksOf(row) {
+      const m = row || {};
+      const w = (m.lens && m.lens[lens]) || {};
+      const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
-      const st = seat.style || {};
-      const soldPicks = st.sold_picks_for_players || 0;
-      const soldPlayers = st.sold_players_for_picks || 0;
+      const soldPicks = m.sold_picks || 0;
+      const soldPlayers = m.sold_players || 0;
       let posture = "Swap shop";
       if (soldPlayers >= soldPicks + 5) posture = "Buys picks";
       else if (soldPicks >= soldPlayers + 5) posture = "Buys players";
-      const graded = (seat.partners || []).filter((p) => p.complete >= 1);
-      const extract = graded.filter((p) => p.grade === "you_extract").length;
-      const farmed = graded.filter((p) => p.grade === "they_extract").length;
-      const even = graded.length - extract - farmed;
+      const extract = w.extract || 0;
+      const farmed = w.farmed || 0;
+      const even = w.even || 0;
       let manners = "Fair";
       let mannersTone = "";
       if (farmed >= extract + 2) { manners = "Gets extracted"; mannersTone = "neg"; }
       else if (extract > farmed) { manners = "Extracts"; mannersTone = "pos"; }
-      const aged = [];
-      for (const t of seat.trades || []) {
-        if ((t.others || []).length !== 1) continue;
-        const now = deltaAt(t, "all");
-        const t0 = deltaAt(t, "t0");
-        if (now == null || t0 == null) continue;
-        aged.push(now - t0);
-      }
-      const ageMean = aged.length ? aged.reduce((a, b) => a + b, 0) / aged.length : null;
+      const aged = { length: (m.aging && m.aging.n) || 0 };
+      const ageMean = (m.aging && m.aging.mean != null) ? m.aging.mean : null;
       let aging = "Held";
       let agingTone = "";
       if (ageMean != null && ageMean > 100) { aging = "Aged up"; agingTone = "pos"; }
       else if (ageMean != null && ageMean < -100) { aging = "Aged down"; agingTone = "neg"; }
-      const rook = ((seat.drafts && seat.drafts.rookie) || []).filter((p) => p.surplus != null);
-      const draftMean = rook.length ? rook.reduce((a, p) => a + p.surplus, 0) / rook.length : null;
+      const rook = { length: (m.draft && m.draft.n) || 0 };
+      const draftMean = (m.draft && m.draft.mean != null) ? m.draft.mean : null;
       let draft = "Mixed";
       let draftTone = "";
       if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
       else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
-      const total = windowTotal(seat.trades);
-      const per = windowPer(seat.trades);
+      const total = w.total == null ? null : w.total;
+      const per = w.per == null ? null : w.per;
       let run = "Even";
       let runTone = "";
       if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
@@ -1036,7 +1056,7 @@ const html = `<!DOCTYPE html>
     }
 
     function teamMarks() {
-      const m = marksOf(data);
+      const m = marksOf(marks && marks.seats && marks.seats[me.user_id]);
       return '<div class="marks">'
         + mark("run", m.run.title, m.run.sub, m.run.tone)
         + mark("volume", m.volume.title, m.volume.sub, m.volume.tone)
@@ -1058,13 +1078,13 @@ const html = `<!DOCTYPE html>
         draft: ["Rookie hits", "Mean surplus vs the pick."],
       };
       const head = heads[markOpen] || ["League", ""];
-      const rows = members.map((mem) => {
-        const seat = seatCache[mem.user_id];
-        if (!seat) return { name: mem.name, uid: mem.user_id, loading: true };
-        return { name: mem.name, uid: mem.user_id, ...marksOf(seat)[markOpen] };
-      });
-      if (rows.some((r) => r.loading)) {
-        return '<div class="mark-chart"><div class="mark-chart-h">' + head[0] + '</div><p class="caption">Loading league…</p></div>';
+      const seats = (marks && marks.seats) || {};
+      const rows = members
+        .filter((mem) => seats[mem.user_id])
+        .map((mem) => ({ name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[markOpen] }));
+      if (!rows.length) {
+        return '<div class="mark-chart"><div class="mark-chart-h">' + esc(head[0])
+          + '</div><p class="caption">No league marks in this build.</p></div>';
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
@@ -1082,8 +1102,10 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    // league.today is the day the book was priced. The browser's own UTC date gave a user
+    // west of UTC "0 trades today" every evening, and already disagreed with the data.
     function tapeDay() {
-      return new Date().toISOString().slice(0, 10);
+      return (league && league.today) || "";
     }
 
     function daySides() {
@@ -1138,17 +1160,12 @@ const html = `<!DOCTYPE html>
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
       const best = pool[0];
       const worst = pool.length > 1 ? pool[pool.length - 1] : null;
-      const by = {};
+      const names = new Set();
       for (const t of pool) {
-        if ((t.others || []).length !== 1) continue;
-        const name = t.others[0];
-        const d = tradeDelta(t);
-        if (!by[name]) by[name] = { name: name, n: 0, sum: 0 };
-        by[name].n += 1;
-        by[name].sum += d;
+        if ((t.others || []).length === 1) names.add(t.others[0]);
       }
-      const partners = Object.keys(by).map((k) => ({ name: by[k].name, n: by[k].n, per: by[k].sum / by[k].n }))
-        .sort((a, b) => b.per - a.per);
+      const partners = [...names].map((n) => partnerPer(data, n))
+        .filter((p) => p.n).sort((a, b) => b.per - a.per);
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
       const empty = pool.length ? "" : ((data.trades || []).length
@@ -1526,18 +1543,15 @@ const html = `<!DOCTYPE html>
 
     function renderPartners() {
       const list = (data && data.partners) || [];
-      const perOf = (p) => {
-        const deals = ((data && data.trades) || [])
-          .filter((t) => (t.others || []).length === 1 && t.others[0] === p.name && !t.incomplete);
-        return windowPer(deals);
-      };
-      const rows = list.slice().sort((a, b) => (perOf(b) ?? -1e9) - (perOf(a) ?? -1e9)).map((p) => {
-        const per = perOf(p);
-        const g = per == null ? "even" : per >= 100 ? "you_extract" : per <= -100 ? "they_extract" : "even";
+      // One per-partner number, scored once. Sorting used to call it twice per comparison.
+      const scored = list.map((p) => ({ p: p, w: partnerPer(data, p.name) }))
+        .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
+      const rows = scored.map((row) => {
+        const p = row.p, per = row.w.per;
         return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
           + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
-          + '<span class="' + gradeCls(g) + '">' + gradeLabel(g) + "</span></div></div>"
+          + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
           + '<div class="margin ' + cls(per) + '">' + fmt(per) + "</div></div></button>";
       }).join("");
       let detail = "";
@@ -1655,8 +1669,8 @@ const html = `<!DOCTYPE html>
       const markBtn = e.target.closest("[data-mark]");
       if (markBtn) {
         const id = markBtn.dataset.mark;
+        // marks.json carries all ten seats, so the chart no longer downloads every seat file.
         markOpen = markOpen === id ? null : id;
-        if (markOpen) Promise.all(members.map((m) => seatData(m.user_id))).then(() => render());
         render();
         return;
       }

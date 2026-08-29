@@ -330,7 +330,7 @@
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829o";
+    const DATA_V = "20260829p";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -899,7 +899,8 @@
       if (!list.length) return '<p class="caption">No championship path yet. Run <code>node title-path.mjs</code>.</p>';
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
-      return '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
+      return "<h2>Champions Path</h2>"
+        + '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";

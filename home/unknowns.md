@@ -10,7 +10,7 @@ Ask the household (or look up live city/CAD tools) before treating any of these 
 
 ## Building systems
 
-- HVAC make/model, filter size, last service
+- HVAC make/model and last service (filter *sizes* are in `HOUSEHOLD.md`)
 - Water heater location and age
 - Electrical panel location and any 240V circuits (EV, dryer, oven)
 - Garage: how many cars, opener brand, EV charger

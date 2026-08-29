@@ -859,7 +859,6 @@ async function main() {
       if (ed != null) by[other].even.push(ed);
     }
     return Object.values(by).map((p) => {
-      const rAvg = p.realized.length ? p.realized.reduce((a, b) => a + b, 0) / p.realized.length : null;
       const pAvg = p.pick.length ? p.pick.reduce((a, b) => a + b, 0) / p.pick.length : null;
       const eAvg = p.even.length ? p.even.reduce((a, b) => a + b, 0) / p.even.length : null;
       return {
@@ -867,43 +866,23 @@ async function main() {
         name: p.name,
         trades: p.n,
         complete: p.realized.length,
-        realized_total: p.realized.reduce((a, b) => a + b, 0),
-        realized_per_trade: rAvg,
         pick_total: p.pick.reduce((a, b) => a + b, 0),
         pick_per_trade: pAvg,
         even_total: p.even.reduce((a, b) => a + b, 0),
         even_per_trade: eAvg,
         grade: partnerGrade(eAvg),
       };
-    }).sort((a, b) => (b.realized_per_trade ?? -1e9) - (a.realized_per_trade ?? -1e9));
-  }
-
-  function partnerHeadlines(list) {
-    const graded = list.filter((p) => p.complete >= 2);
-    const pool = graded.length ? graded : list.filter((p) => p.complete >= 1);
-    const best = pool.slice().sort((a, b) => (b.even_per_trade ?? b.realized_per_trade ?? -1e9) - (a.even_per_trade ?? a.realized_per_trade ?? -1e9))[0];
-    const worst = pool.slice().sort((a, b) => (a.even_per_trade ?? a.realized_per_trade ?? 1e9) - (b.even_per_trade ?? b.realized_per_trade ?? 1e9))[0];
-    const most = list.slice().sort((a, b) => b.trades - a.trades)[0];
-    const slim = (p) => p ? { name: p.name, per: p.even_per_trade ?? p.realized_per_trade, n: p.complete, trades: p.trades, grade: p.grade } : null;
-    return {
-      best: slim(best),
-      worst: worst && best && worst.user_id !== best.user_id ? slim(worst) : slim(worst),
-      most: most ? { name: most.name, trades: most.trades } : null,
-    };
+    }).sort((a, b) => (b.even_per_trade ?? -1e9) - (a.even_per_trade ?? -1e9));
   }
 
   const leaderboard = members.map((m) => {
     const e = edges[m.user_id];
-    const per = e.realized_per;
-    const avg = per.length ? per.reduce((a, b) => a + b, 0) / per.length : null;
     const evenAvg = e.even_per.length ? e.even_per.reduce((a, b) => a + b, 0) / e.even_per.length : null;
     return {
       user_id: m.user_id,
       name: m.canonical_name,
       two_way: e.two_way,
       incomplete: e.incomplete,
-      realized_total: e.realized,
-      realized_per_trade: avg,
       pick_total: e.pick,
       pick_per_trade: e.pick_per.length ? e.pick_per.reduce((a, b) => a + b, 0) / e.pick_per.length : null,
       even_total: e.even,
@@ -912,57 +891,9 @@ async function main() {
     };
   }).sort((a, b) => (b.even_per_trade ?? -Infinity) - (a.even_per_trade ?? -Infinity));
 
-  function headlineOf(side) {
-    const first = (side.legs || []).find((l) => l.label);
-    if (!first?.label) return "";
-    const became = first.label.includes(" · became ") ? first.label.split(" · became ")[1] : first.label;
-    return became.replace(/\s*\([^)]+\)$/, "");
-  }
+  // trade_boards, partner_headlines and the per-seat even_* aggregates are built by
+  // apply-value-adjust.mjs, which runs after this and owns the today blend. One builder only.
 
-  function tradeBoards() {
-    const rows = [];
-    for (const t of meters) {
-      if (t.user_ids.length !== 2 || t.incomplete) continue;
-      for (const uid of t.user_ids) {
-        const s = t.lenses.even.sides[uid];
-        if (s.today_delta == null) continue;
-        const win = t.lenses.windows || {};
-        const windows = {};
-        for (const [k, w] of Object.entries(win)) {
-          const side = w.sides[uid];
-          windows[k] = {
-            delta: side?.today_delta ?? null,
-            got: side?.today ?? null,
-            sent: side?.sent_today ?? null,
-            snaps: side?.snaps ?? w.snaps ?? 0,
-            incomplete: !!(side?.incomplete || w.incomplete),
-          };
-        }
-        rows.push({
-          transaction_id: t.transaction_id,
-          date: t.date,
-          user_id: uid,
-          name: s.name,
-          other: t.names.find((n) => n !== s.name),
-          today_delta: s.today_delta,
-          t0_delta: s.t0_delta,
-          aged: s.t0_delta != null ? s.today_delta - s.t0_delta : null,
-          headline: headlineOf(s),
-          windows,
-        });
-      }
-    }
-    const best = (list, key) => list.slice().sort((a, b) => (b[key] ?? -1e15) - (a[key] ?? -1e15)).slice(0, 10);
-    const worst = (list, key) => list.slice().sort((a, b) => (a[key] ?? 1e15) - (b[key] ?? 1e15)).slice(0, 10);
-    const aged = rows.filter((r) => r.aged != null);
-    return {
-      sides: rows,
-      today: { best: best(rows, "today_delta"), worst: worst(rows, "today_delta") },
-      aged: { best: best(aged, "aged"), worst: worst(aged, "aged") },
-    };
-  }
-
-  const trade_boards = tradeBoards();
 
   // ponytail: ownership from startup/rookie draft + player in-legs only. Waivers/drops are invisible.
   function playerLists() {
@@ -1112,7 +1043,6 @@ async function main() {
     traders: leaderboard,
     drafters_rookie: draftersRookie,
     drafters_startup: draftersStartup,
-    trade_boards,
     review_trades,
     player_lists,
     today,
@@ -1141,7 +1071,6 @@ async function main() {
       hit: hit ? { player: hit.player, season: hit.season, round: hit.round, surplus: hit.surplus } : null,
       miss: miss && miss !== hit ? { player: miss.player, season: miss.season, round: miss.round, surplus: miss.surplus } : null,
       partners,
-      partner_headlines: partnerHeadlines(partners),
       recent_trades: mine.slice(0, 5).map((t) => slimTrade(t, m.user_id)),
       recent_rookies: recentRookies.slice(0, 5),
       trades: mine.map((t) => slimTrade(t, m.user_id)),
@@ -1169,8 +1098,8 @@ async function main() {
     for (const row of partnersFor(a.user_id)) {
       if (a.user_id >= row.user_id || !row.complete) continue;
       const back = partnersFor(row.user_id).find((p) => p.user_id === a.user_id);
-      if (!back || back.realized_per_trade == null || row.realized_per_trade == null) continue;
-      if (Math.abs(row.realized_per_trade + back.realized_per_trade) >= 1) {
+      if (!back || back.even_per_trade == null || row.even_per_trade == null) continue;
+      if (Math.abs(row.even_per_trade + back.even_per_trade) >= 1) {
         pairBreaks.push(`${a.canonical_name}/${row.name}`);
       }
     }
@@ -1189,34 +1118,11 @@ async function main() {
   check("truman-bubba complete", bubbaTx && !bubbaTx.incomplete);
   check("bubba got 3 picks", bubbaGot.filter((l) => l.kind === "pick").length === 3);
   check("2029 as 2028", bubbaGot.some((l) => l.asset_key === "pick:2029:4:9" && l.value != null && l.flag === "priced_as_2028"));
-  check("today best 10", trade_boards.today.best.length === 10);
-  check("today best sorted", trade_boards.today.best[0].today_delta >= trade_boards.today.best[9].today_delta);
-  check("today worst sorted", trade_boards.today.worst[0].today_delta <= trade_boards.today.worst[9].today_delta);
-  check("aged has aged", trade_boards.aged.best.every((r) => r.aged != null) && trade_boards.aged.worst.every((r) => r.aged != null));
-  check("aged best sorted", trade_boards.aged.best[0].aged >= trade_boards.aged.best[9].aged);
-  check("aged worst sorted", trade_boards.aged.worst[0].aged <= trade_boards.aged.worst[9].aged);
-  const sideCounts = {};
-  for (const r of trade_boards.sides) {
-    sideCounts[r.transaction_id] = (sideCounts[r.transaction_id] || 0) + 1;
-  }
-  check("sides 2-team pairs", Object.values(sideCounts).every((n) => n === 2));
-  check("sides complete", trade_boards.sides.every((r) => r.today_delta != null && r.date && r.headline != null));
-  check("sides have windows", trade_boards.sides.every((r) =>
-    r.windows && r.windows.t0 && r.windows.all && ["t0", "y1", "y2", "y3", "all"].every((k) => r.windows[k])));
   const pierceTx = meters.find((t) => t.transaction_id === "998733744402010112");
   const pierceY1 = [...Object.values(pierceTx?.lenses.windows?.y1?.sides || {})]
     .flatMap((s) => [...(s.legs || []), ...(s.sent || [])])
     .find((l) => l.label === "Alec Pierce");
   check("pierce y1 not zeroed", pierceY1 && pierceY1.value > 0);
-  for (const row of leaderboard) {
-    const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
-      .map((t) => t.lenses.realized.sides[row.user_id]?.today_delta)
-      .filter((d) => d != null);
-    const avg = ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
-    const ok = (avg == null && row.realized_per_trade == null)
-      || (avg != null && row.realized_per_trade != null && Math.abs(avg - row.realized_per_trade) < 1e-6);
-    check("y3 leaves realized_per_trade", ok);
-  }
   const chiefArae = meters.find((t) => t.transaction_id === "460470201385742336");
   const chiefId = members.find((m) => m.canonical_name === "ChiefGumby")?.user_id;
   const zekeToday = chiefArae?.lenses.realized.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
@@ -1249,14 +1155,6 @@ async function main() {
   check("flatten bigsby ktc-ish", bigsbyFlat >= 2000 && bigsbyFlat <= 2700);
   const bakerFlat = flatten(2588, topToday);
   check("flatten baker ktc-ish", bakerFlat >= 4200 && bakerFlat <= 5200);
-  check("even leaves realized_per_trade", leaderboard.every((row) => {
-    const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
-      .map((t) => t.lenses.realized.sides[row.user_id]?.today_delta)
-      .filter((d) => d != null);
-    const avg = ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
-    return (avg == null && row.realized_per_trade == null)
-      || (avg != null && row.realized_per_trade != null && Math.abs(avg - row.realized_per_trade) < 1e-6);
-  }));
   check("even_per matches even deltas", leaderboard.every((row) => {
     const ds = meters.filter((t) => !t.incomplete && t.user_ids.includes(row.user_id))
       .map((t) => t.lenses.even.sides[row.user_id]?.today_delta)

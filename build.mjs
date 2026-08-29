@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 
+/**
+ * The whole rebuild, in order. apply-value-adjust.mjs is not optional: it owns the today
+ * blend, the Value Adjustment and every trade board, so a build without it ships the
+ * flatten-only book. title-path.mjs writes titles.json, which the Champions Path reads.
+ */
 const steps = [
   ["sleeper-sync.mjs"],
   ["draft-resolve.mjs"],
   ["value-snapshot.mjs"],
   ["revalue.mjs"],
+  ["title-path.mjs"],
+  ["apply-value-adjust.mjs"],
   ["generate-page.mjs"],
 ];
 

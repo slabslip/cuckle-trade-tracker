@@ -13,7 +13,7 @@ The product is a **phone-first static page** that grades CuckleChunckle trades (
 | Surface | State |
 | --- | --- |
 | Local | `index.html` + `data/ui/*.json`. Serve the folder over HTTP (`python3 -m http.server`). `?me=TipsUp` still lands on Home. |
-| Rebuild | `node build.mjs` (or sleeper-sync → draft-resolve → value-snapshot → revalue → generate-page). No npm. |
+| Rebuild | `node build.mjs` — sleeper-sync → draft-resolve → value-snapshot → revalue → title-path → apply-value-adjust → generate-page. No npm. `apply-value-adjust.mjs` is not optional: it owns the today blend, the Value Adjustment and every trade board. |
 | Git | **https://github.com/slabslip/cuckle-trade-tracker** (public as of 2026-08-28) — source + spec + generated `data/ui`. Not inside `tradeslabs-web`. |
 | Pages on that repo | **On.** **https://slabslip.github.io/cuckle-trade-tracker/** — no `?me=` (that is a team home). Hard-refresh. |
 | Older phone copy | **https://slabslip.github.io/league-standings/?me=TipsUp** still works. Prefer the tracker Pages URL. |
@@ -45,7 +45,10 @@ sleeper-sync.mjs     → raw league / trades / legs
 draft-resolve.mjs    → who used each pick
 value-snapshot.mjs   → DP Superflex curve (latest + monthly git history)
 ktc-snapshot.mjs     → weekly KTC Superflex file (not in build.mjs; cron/local)
-revalue.mjs          → meters, hops, boards, me/*.json
+revalue.mjs          → meters, hops, flatten windows, me/*.json
+title-path.mjs       → titles.json (Champions Path)
+apply-value-adjust.mjs → today blend (40/60 KTC, retired 0), Value Adjustment,
+                         trade_boards, partner grades, partner_headlines
 generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 ```
 
@@ -235,7 +238,8 @@ Zeros **stay in the average**. Dropping dead years inflates stars who later reti
 9. **Apostrophe-in-`<script>`** broke `?me=` once; captions are HTML/JSON now. Do not interpolate `Wan'Dale` into single-quoted JS.
 10. **Nested buttons** hid received picks; pick legs are `div`s now. Keep it that way.
 
-Self-checks in `revalue.mjs` must keep passing: no FAAB, zero-sum 2-team today, partner invert, Wilson/Breece hops, Truman–Bubba complete + 2029-as-2028, boards sorted, `y3 leaves realized_per_trade`, Zeke y3 ≠ leftover 3.
+Self-checks in `revalue.mjs` must keep passing: no FAAB, zero-sum 2-team today, partner invert on `even_per_trade`, Wilson/Breece hops, Truman–Bubba complete + 2029-as-2028, Zeke y3 ≠ leftover 3.
+Board checks moved to `apply-value-adjust.mjs`, which is now the only builder of `trade_boards`: sides are 2-team pairs, every side carries all five windows, best/worst sorted, `aged` equals `windows.all.delta − windows.t0.delta` (one book), and no `realized_*` survives.
 
 ---
 

@@ -172,7 +172,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828y";
+    const DATA_V = "20260828z";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -183,6 +183,7 @@ const html = `<!DOCTYPE html>
     ];
     let view = "home";
     let draftTab = "rookie";
+    let draftSort = "new";
     let year = "all";
     let openId = null;
     let openPick = null;
@@ -668,16 +669,6 @@ const html = `<!DOCTYPE html>
         + "</button>";
     }
 
-    function renderReview() {
-      const list = (league && league.review_trades) || [];
-      const rows = list.map((rt) => {
-        const mine = (data.trades || []).find((t) => t.transaction_id === rt.transaction_id);
-        const extra = { winner: rt.winner, loser: rt.loser, steep: rt.steep_delta, y3: rt.y3_delta, asYou: !!mine };
-        return tradeRow(mine || rt, extra);
-      }).join("");
-      return rows;
-    }
-
     function draftKey(p) {
       return p.asset_key || (p.season + ":" + p.round + ":" + (p.pick_no || p.player));
     }
@@ -709,6 +700,32 @@ const html = `<!DOCTYPE html>
       return acquiredHop(p) ? "Someone else's pick" : "Own pick";
     }
 
+    function pickWindowEnd(p) {
+      if (lens === "t0") return p.as_of;
+      if (lens === "all") return (league && league.today) || "";
+      const n = { y1: 1, y2: 2, y3: 3 }[lens];
+      return n ? addYears(p.as_of, n) : (league && league.today) || "";
+    }
+
+    function pickGot(p) {
+      const end = pickWindowEnd(p);
+      const pts = (p.year_ends || []).filter((m) => {
+        if (m.player == null) return false;
+        if (lens === "t0") return m.as_of === p.as_of;
+        return (!p.as_of || m.as_of >= p.as_of) && (!end || m.as_of <= end);
+      });
+      if (!pts.length) return lens === "all" ? p.player_today : null;
+      if (lens === "t0") return pts[0].player;
+      return pts.reduce((a, m) => a + m.player, 0) / pts.length;
+    }
+
+    function pickDelta(p) {
+      if (p.startup) return pickGot(p);
+      const got = pickGot(p);
+      if (got == null || p.pick_cost == null) return null;
+      return displayDelta(got, p.pick_cost);
+    }
+
     function pickRow(p) {
       const key = draftKey(p);
       const open = openDraft === key;
@@ -716,9 +733,10 @@ const html = `<!DOCTYPE html>
       const trade = hop && (data.trades || []).find((t) => t.transaction_id === hop.transaction_id);
       const origin = pickOrigin(p);
       const slot = (p.season || "") + " " + (p.startup ? "startup" : (Number(p.round) === 1 ? "1st" : Number(p.round) === 2 ? "2nd" : Number(p.round) === 3 ? "3rd" : p.round + "th"));
-      const gotShow = p.player_today == null ? "—" : fmt(p.player_today);
+      const got = pickGot(p);
+      const gotShow = got == null ? "—" : fmt(got);
       const sentShow = p.startup || p.pick_cost == null ? "—" : fmt(p.pick_cost);
-      const dlt = p.startup ? p.player_today : p.surplus;
+      const dlt = pickDelta(p);
       const mineCls = dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
       const otherCls = dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
       const mid = dlt == null ? "—"
@@ -726,14 +744,15 @@ const html = `<!DOCTYPE html>
         : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
         : fmt(dlt);
       const midCls = dlt == null || dlt === 0 ? "" : "pos";
+      const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
       let detail = "";
       if (open) {
-        const used = [{ label: p.player, value: p.player_today, kind: "player" }];
+        const used = [{ label: p.player, value: got, kind: "player" }];
         const cost = [{ label: slot + (p.pick_no ? " · pick " + p.pick_no : ""), value: p.pick_cost, kind: "pick", asset_key: p.asset_key }];
         detail = '<div class="detail">'
           + (trade ? tradeBags(trade) : '<div class="date">' + origin + " · no trade to get it</div>")
           + '<div class="bags">'
-          + bagBlock(p.player + " now", used, p.player_today, p.player_today == null ? 1 : 0)
+          + bagBlock(p.player + " · " + clock, used, got, got == null ? 1 : 0)
           + bagBlock("Pick at draft", cost, p.pick_cost, p.pick_cost == null ? 1 : 0)
           + "</div>"
           + draftSpark(p)
@@ -762,10 +781,28 @@ const html = `<!DOCTYPE html>
     }
 
     function renderDrafts() {
-      const list = []
+      let list = []
         .concat((data.drafts && data.drafts.rookie) || [], (data.drafts && data.drafts.startup) || [])
-        .sort((a, b) => Number(b.season) - Number(a.season) || (b.pick_no || 0) - (a.pick_no || 0));
-      return '<div class="caption">' + list.length + " picks used · newest first · tap for the get-trade and the player since draft</div>"
+        .filter((p) => chipLived(p.as_of));
+      list = list.slice().sort((a, b) => {
+        if (draftSort === "gain") {
+          const da = pickDelta(a), db = pickDelta(b);
+          if (da == null && db == null) return Number(b.season) - Number(a.season);
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return db - da;
+        }
+        return Number(b.season) - Number(a.season) || (b.pick_no || 0) - (a.pick_no || 0);
+      });
+      const graded = list.map(pickDelta).filter((d) => d != null);
+      const avg = graded.length ? graded.reduce((a, b) => a + b, 0) / graded.length : null;
+      const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
+      return '<div class="toggle">'
+        + '<button type="button" class="chip' + (draftSort === "new" ? " on" : "") + '" data-dsort="new">Newest</button>'
+        + '<button type="button" class="chip' + (draftSort === "gain" ? " on" : "") + '" data-dsort="gain">Best gain</button>'
+        + "</div>"
+        + '<div class="caption"><span class="' + cls(avg) + '">' + fmt(avg) + "</span> / pick · " + clock
+        + " · " + graded.length + " graded · " + list.length + " shown</div>"
         + list.map(pickRow).join("");
     }
 
@@ -866,8 +903,9 @@ const html = `<!DOCTYPE html>
 
     function render() {
       const app = document.getElementById("app");
-      const tabs = me ? ["home","review","trades","partners","drafts","league"] : [];
+      const tabs = me ? ["home", "trades", "partners", "drafts"] : [];
       if (!me && view !== "home") view = "home";
+      if (me && (view === "review" || view === "league")) view = "home";
       const nav = (tabs.length
         ? '<div class="nav">'
           + tabs.map((v) =>
@@ -880,9 +918,11 @@ const html = `<!DOCTYPE html>
           '<button type="button" class="chip' + (lens === w[0] ? " on" : "") + '" data-lens="' + w[0] + '">' + w[1] + "</button>"
         ).join("")
         + "</div>";
-      const body = view === "home" ? renderHome() : view === "review" ? renderReview()
+      const body = view === "home" ? renderHome()
         : view === "trades" ? renderTrades()
-        : view === "partners" ? renderPartners() : view === "drafts" ? renderDrafts() : renderLeague();
+        : view === "partners" ? renderPartners()
+        : view === "drafts" ? renderDrafts()
+        : renderLeagueHome();
       app.innerHTML = nav + body;
       paintFeed();
       syncUrl();
@@ -960,6 +1000,8 @@ const html = `<!DOCTYPE html>
       }
       const lensBtn = e.target.closest("[data-lens]");
       if (lensBtn) { lens = lensBtn.dataset.lens; render(); return; }
+      const sortBtn = e.target.closest("[data-dsort]");
+      if (sortBtn) { draftSort = sortBtn.dataset.dsort; render(); return; }
       const dt = e.target.closest("[data-dt]");
       if (dt) { draftTab = dt.dataset.dt; render(); return; }
       const yr = e.target.closest("[data-year]");

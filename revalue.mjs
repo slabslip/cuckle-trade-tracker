@@ -754,7 +754,11 @@ async function main() {
       player_today: nowVal,
       surplus,
       flag: nowRaw.flag || costRaw.flag || null,
-      year_ends: yearEnds(draftDay, today).map((d) => ({
+      year_ends: (() => {
+        const days = yearEnds(draftDay, today);
+        if (days[0] !== draftDay) days.unshift(draftDay);
+        return days;
+      })().map((d) => ({
         as_of: d,
         player: gradeRaw(playerValue(curveIdx, playerKey, d).value, d),
         pick: startup ? null : gradeRaw(

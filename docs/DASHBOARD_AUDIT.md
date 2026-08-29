@@ -4,6 +4,13 @@ Audit date **2026-08-29**. Live build `DATA_V = 20260829j`, `main` at the today-
 Method: four passes — UI code read (`generate-page.mjs`), data integrity scripts over `data/ui/**`,
 live click-through on iPhone and desktop, and docs-vs-shipped drift.
 
+**Reviewing UI changes at phone width:** open `preview.html` (deployed at
+`https://slabslip.github.io/cuckle-trade-tracker/preview.html`, or locally at
+`http://localhost:8766/preview.html`). It frames the real dashboard at 375 / 390 / 402 / 430
+and rotates. Cursor's browser has no device presets, so this is the only reliable phone view.
+Design Mode cannot select through an iframe — for that, open `index.html` directly and edit
+`generate-page.mjs`, never the generated `index.html`.
+
 This file is **findings only**. It is the input to the next SDD pass, not the SDD.
 Where this file and `docs/UI_SDD.md` disagree about what exists, **this file is HAVE**.
 
@@ -443,7 +450,8 @@ serves stale data with no signal. Derive it from `league.today` or a content has
 | A4 | P1 | **Broken listbox and non-tabs.** `#whoMenu` has `role="listbox"` (`:342`) but its children are plain buttons with no `role="option"`/`aria-selected`; no arrow keys, no Escape, no focus move or restore. The four tabs (`:1494`) have no `role="tablist"`/`tab`/`aria-selected` and the panel no `role="tabpanel"` — while `#yearFilters` *does* carry `role="group" aria-label`, so the pattern exists unevenly. |
 | A5 | P1 | **Sub-44px targets in a file that enforces 44px elsewhere.** `.who-menu button` **28px** (`:72`) — the seat picker, the most-used control in the app; `#yearFilters label` **26px** (`:308`); `button.who` **36px** (`:56`); `.score-btn` **36px** (`:247`). |
 | A6 | P2 | **Auto-scrolling marquee with no pause control** (`.ticker-track`, 48 s loop, `:134`). `prefers-reduced-motion` is respected (`:139`) but that is not a substitute for a control. |
-| A7 | P2 | **Grid overflow is clipped, not solved.** `.row-top.tape` is `1fr auto 1fr` (`:96`) and `.names` has no `min-width: 0` or ellipsis, so a long manager name shoves the middle column off-centre at 320px; `overflow-x: hidden` (`:22`) then hides the evidence. |
+| A7 | **P1** | **Grid overflow clips real numbers at true phone width.** `.row-top.tape` is `1fr auto 1fr` (`:96`) and `.names` has no `min-width: 0` or ellipsis. Reproduced in `preview.html` at 390px with a desktop scrollbar present (375px usable): the trade row for BubbaCuckShremp rendered its value as **"8,96"** and DarkWingDucks2023 as **"3,0"** — the figures the whole product exists to show, truncated. At a full 390px the numbers fit but `DarkWingDucks2023` sits flush against the edge, one character from clipping. Any longer display name, or a user with larger text, clips. `overflow-x: hidden` (`:22`) then hides the evidence. |
+| A7b | P2 | **The four nav tabs wrap onto two lines at 390px** (`home trades partners` / `drafts`), which reads as a rendering accident rather than a layout. Reproduced in `preview.html`. |
 | A8 | P2 | **Three colour languages in one Drafts row.** `pickRow` colours the player's name by pick surplus (`:1268`), the origin label by own-vs-acquired (`:1271`), and the middle number always green (`:1249`). A red player name reads as "bad player", not "the pick underperformed". |
 | — | — | **Contrast is fine.** `--muted` 6.59:1, `--dim` 5.38:1, `--red` 4.91:1, `--green` 10.41:1, gold 9.46:1 — all clear AA. Safe-area handling and `viewport-fit=cover` are correct. |
 

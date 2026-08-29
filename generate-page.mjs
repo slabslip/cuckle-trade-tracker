@@ -154,12 +154,13 @@ const html = `<!DOCTYPE html>
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 4px; }
     .day-heads { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .day-heads .bubble { margin-left: auto; }
-    button.text-link {
+    button.text-link, a.text-link {
       appearance: none; font: inherit; font-size: 0.8125rem; color: var(--muted);
       background: none; border: 0; padding: 0; min-height: 44px;
       text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
     }
-    button.text-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    a.text-link { display: inline-flex; align-items: center; }
+    button.text-link:focus-visible, a.text-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .day-scroller {
       display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
       padding-bottom: 2px; -webkit-overflow-scrolling: touch;
@@ -811,7 +812,7 @@ const html = `<!DOCTYPE html>
     function renderLeagueHome() {
       const n = ((titles && titles.titles) || []).length;
       const gate = n
-        ? '<p class="caption"><button type="button" class="text-link" data-view="titles">Champions path</button>'
+        ? '<p class="caption"><a class="text-link" href="?view=titles" data-view="titles">Champions path</a>'
           + " · " + n + " title years</p>"
         : "";
       return dayAlert()

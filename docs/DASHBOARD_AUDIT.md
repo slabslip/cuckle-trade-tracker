@@ -37,16 +37,16 @@ Each of these was reproduced with a script against the committed data.
 **do** carry `pick_cost` — 28 of 28 for SF69erss — and the pipeline already ships a correct
 `surplus` (Stefon Diggs: cost 3,096, today 2,896, surplus −200).
 
-Measured on SF69erss:
+Observed live on SF69erss's Drafts tab:
 
-| Drafts header | mean / pick |
+| Drafts header | Shown |
 | --- | ---: |
-| Rookie only | **−247** |
-| + startup, as shipped | **+360** |
-| + startup, computed correctly | **−514** |
+| Rookie only | **−18 / pick · 27 graded** (red) |
+| Tick "Include startup picks" | **962 / pick · 54 graded** (green) |
 
-One checkbox turns a losing draft record into a winning one, and each startup row shows a green
-figure in the column that means "surplus" everywhere else.
+One checkbox turns a losing draft record into a winning one and inflates the magnitude ~50×.
+The startup rows that appear show **"—"** in the right-hand cost column, so the figure has no
+visible denominator — while every other row in the tab means "surplus" in that position.
 *Fix:* `if (p.startup) return displayDelta(pickGot(p), p.pick_cost)` and stop blanking the cost.
 Generator-only.
 
@@ -247,6 +247,26 @@ Per-seat files (10 seats, **7.4 MB** total):
 **Roughly 4.2 MB of 7.4 MB in seat files and 185 KB of 717 KB in `league.json` is never read.**
 Restructuring `windows` to one leg list plus five values per trade saves ~1.2 MB more.
 That is a **~70% payload cut** with no visible change.
+
+---
+
+## 2c. Live reproduction
+
+Five defects were re-tested by clicking the deployed site (desktop, `DATA_V=20260829j`).
+All five reproduce:
+
+| Test | Result |
+| --- | --- |
+| Select TrumanCooper → trades → reload that exact URL (`?me=TrumanCooper&view=trades`) | **Lands on league home.** Team picker resets to "Team". (P1-1) |
+| Drafts → tick "Include startup picks" | Header goes **−18 → 962 / pick**; startup rows show "—" as their cost. (P0-1) |
+| Trades rows, won vs lost | Middle number is **green in both cases** — `−364`, `−24`, `−169`, `−732` losses all render a green middle. (P1-3) |
+| League home → Most lopsided trades, default Since-trade lens | Dates run 2019-09-16 … **2024-02-13**. Nothing from the last 12 months, while the gold card above it shows a 2026-08-29 trade. (P1-2) |
+| Expand a trade → click a player name | **Row collapses.** Drag-selecting the text does not collapse it, so the defect is specifically the click target. (A1) |
+
+An earlier automated pass over the same screens reported "zero defects, production-ready".
+It tested deep links with a **fake** id (`?me=999999999`), saw the fallback to league home, and
+recorded that as graceful error handling — the fallback *is* the bug, and real ids hit it too.
+Worth remembering when reading any clean bill of health: verify the specific claim, not the mood.
 
 ---
 

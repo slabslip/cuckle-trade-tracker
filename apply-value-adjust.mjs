@@ -34,6 +34,20 @@ function applyTrade(t, ctx) {
   return t;
 }
 
+/**
+ * Drop what the browser never reads. value_flat stays: in a checkout without the DP
+ * curve it is the only record of the flatten price, and repricing is idempotent from it.
+ */
+function slimForShip(t) {
+  if ((t.others || []).length <= 1) delete t.other_bags;
+  delete t.realized;      // sideOf falls back past windows[lens] and even, and even always exists
+  delete t.year_ends;     // tradeBags prefers even_year_ends, which is present on every trade
+  for (const side of [t.even, ...Object.values(t.windows || {}), ...(t.other_bags || []).map((b) => b.even)]) {
+    for (const l of [...(side?.legs || []), ...(side?.sent || [])]) delete l.drafted_by;
+  }
+  return t;
+}
+
 function mean(xs) {
   return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
 }
@@ -64,6 +78,7 @@ function main() {
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
   const seats = [];
   const players = new Map();
+  const evenBy = new Map();
   let tradesN = 0;
   let vaN = 0;
   let unpricedN = 0;
@@ -85,16 +100,9 @@ function main() {
         }
       }
     }
-    for (const t of me.recent_trades || []) applyTrade(t, ctx);
-
     const complete = (me.trades || []).filter((t) => !t.incomplete && t.even?.today_delta != null);
     const evenDs = complete.map((t) => t.even.today_delta);
-    if (me.hero) {
-      me.hero.even_total = evenDs.reduce((a, b) => a + b, 0);
-      me.hero.even_per_trade = mean(evenDs);
-      delete me.hero.realized_total;
-      delete me.hero.realized_per_trade;
-    }
+    evenBy.set(me.user_id, { total: evenDs.reduce((a, b) => a + b, 0), per: mean(evenDs) });
 
     const by = {};
     for (const t of me.trades || []) {
@@ -117,17 +125,10 @@ function main() {
       };
     }).sort((a, b) => (b.even_per_trade ?? -1e9) - (a.even_per_trade ?? -1e9));
 
-    const graded = (me.partners || []).filter((p) => p.complete >= 2);
-    const pool = graded.length ? graded : (me.partners || []).filter((p) => p.complete >= 1);
-    const best = pool.slice().sort((a, b) => (b.even_per_trade ?? -1e9) - (a.even_per_trade ?? -1e9))[0];
-    const worst = pool.slice().sort((a, b) => (a.even_per_trade ?? 1e9) - (b.even_per_trade ?? 1e9))[0];
-    const most = (me.partners || []).slice().sort((a, b) => b.trades - a.trades)[0];
-    const slim = (p) => p ? { name: p.name, per: p.even_per_trade, n: p.complete, trades: p.trades, grade: p.grade } : null;
-    me.partner_headlines = {
-      best: slim(best),
-      worst: worst && best && worst.name !== best.name ? slim(worst) : slim(worst),
-      most: most ? { name: most.name, trades: most.trades } : null,
-    };
+    delete me.partner_headlines;
+    delete me.recent_trades;
+    me.hero = me.hero ? { two_way: me.hero.two_way } : me.hero;
+    for (const t of me.trades || []) slimForShip(t);
 
     writeUi(`me/${f}`, me);
     seats.push(me);
@@ -137,9 +138,10 @@ function main() {
   const traders = new Map((league.traders || []).map((t) => [t.user_id, t]));
   for (const me of seats) {
     const row = traders.get(me.user_id);
-    if (row && me.hero) {
-      row.even_total = me.hero.even_total;
-      row.even_per_trade = me.hero.even_per_trade;
+    const e = evenBy.get(me.user_id);
+    if (row && e) {
+      row.even_total = e.total;
+      row.even_per_trade = e.per;
       delete row.realized_total;
       delete row.realized_per_trade;
     }
@@ -183,6 +185,9 @@ function main() {
         name: me.name,
         other: t.others[0],
         today_delta: t.even.today_delta,
+        // The board rounds each bag before subtracting, like every other margin in the UI.
+        today_got: t.even.today ?? null,
+        today_sent: t.even.sent_today ?? null,
         t0_delta: t.even.t0_delta ?? t0W?.today_delta ?? null,
         aged,
         headline: headlineOf(t.even),
@@ -190,16 +195,18 @@ function main() {
       });
     }
   }
+  // The board screen ranks from sides itself, so only sides ship. best/worst stay local
+  // for the self-checks below.
   const best = (list, key) => list.slice().sort((a, b) => (b[key] ?? -1e15) - (a[key] ?? -1e15)).slice(0, 10);
   const worst = (list, key) => list.slice().sort((a, b) => (a[key] ?? 1e15) - (b[key] ?? 1e15)).slice(0, 10);
-  const aged = sides.filter((r) => r.aged != null);
-  league.trade_boards = {
-    sides,
+  const agedRows = sides.filter((r) => r.aged != null);
+  const boards = {
     today: { best: best(sides, "today_delta"), worst: worst(sides, "today_delta") },
-    aged: { best: best(aged, "aged"), worst: worst(aged, "aged") },
+    aged: { best: best(agedRows, "aged"), worst: worst(agedRows, "aged") },
   };
-
-  for (const t of league.review_trades || []) applyTrade(t, ctx);
+  league.trade_boards = { sides };
+  delete league.review_trades;
+  delete league.drafters_startup;
 
   writeUi("league.json", league);
 
@@ -246,25 +253,29 @@ function main() {
   check("windows stay flatten (zeke all != 0)", !winZeke || (winZeke.value != null && winZeke.value > 0));
 
   // This file is the only builder of trade_boards, so the board checks live here now.
-  const boards = league.trade_boards;
   const sideCounts = {};
-  for (const r of boards.sides) sideCounts[r.transaction_id] = (sideCounts[r.transaction_id] || 0) + 1;
+  for (const r of sides) sideCounts[r.transaction_id] = (sideCounts[r.transaction_id] || 0) + 1;
   check("sides are 2-team pairs", Object.values(sideCounts).every((n) => n === 2));
-  check("sides complete", boards.sides.every((r) => r.today_delta != null && r.date && r.headline != null));
-  check("sides have all five windows", boards.sides.every((r) =>
+  check("sides complete", sides.every((r) => r.today_delta != null && r.date && r.headline != null));
+  check("sides carry got and sent", sides.every((r) => r.today_got != null && r.today_sent != null
+    && Math.abs(r.today_got - r.today_sent - r.today_delta) < 0.01));
+  check("sides have all five windows", sides.every((r) =>
     r.windows && ["t0", "y1", "y2", "y3", "all"].every((k) => r.windows[k])));
   check("today best 10", boards.today.best.length === 10);
   check("today best sorted", boards.today.best[0].today_delta >= boards.today.best[9].today_delta);
   check("today worst sorted", boards.today.worst[0].today_delta <= boards.today.worst[9].today_delta);
   check("aged rows have aged", boards.aged.best.every((r) => r.aged != null) && boards.aged.worst.every((r) => r.aged != null));
   check("aged best sorted", boards.aged.best[0].aged >= boards.aged.best[9].aged);
-  check("aged is one book", boards.sides.every((r) =>
+  check("aged is one book", sides.every((r) =>
     r.aged == null
     || Math.abs(r.aged - ((r.windows.all.delta ?? 0) - (r.windows.t0.delta ?? 0))) < 1e-6));
-  const sameDay = boards.sides.filter((r) => r.date === league.today);
+  const sameDay = sides.filter((r) => r.date === league.today);
   check("no aged on a same-day trade", sameDay.every((r) => r.aged == null || Math.abs(r.aged) < 1e-6));
-  check("realized_* gone", !boards.sides.some((r) => "realized_per_trade" in r)
+  check("realized_* gone", !sides.some((r) => "realized_per_trade" in r)
     && league.traders.every((t) => !("realized_per_trade" in t) && !("realized_total" in t)));
+  check("drafters_rookie survives for the board screen", (league.drafters_rookie || []).length > 0);
+  check("dead league keys gone", !("review_trades" in league) && !("drafters_startup" in league)
+    && !("today" in league.trade_boards) && !("aged" in league.trade_boards));
 
   console.log(JSON.stringify({
     seats: seats.length,

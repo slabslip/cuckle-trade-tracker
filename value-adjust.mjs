@@ -15,17 +15,10 @@ function maxValue(legs) {
   return xs.length ? Math.max(...xs.map((l) => l.value)) : 0;
 }
 
-/** Late 4th is half an extra: label /4th/ + Late/slot≥8, or pick:YYYY:4:. Became-player stays 1. */
+/** A 4th counts as half an extra. Became-player legs stay 1. */
 export function pieceWeight(leg) {
   if (!leg || leg.became) return 1;
-  const key = String(leg.asset_key || "");
-  if (/^pick:\d{4}:4:/.test(key)) return 0.5;
-  const label = String(leg.label || "");
-  if (/4th/i.test(label)) {
-    const slot = Number((key.match(/^pick:\d{4}:\d+:(\d+)$/) || [])[1]);
-    if (/late/i.test(label) || /late/i.test(String(leg.flag || "")) || slot >= 8) return 0.5;
-  }
-  return 1;
+  return /^pick:\d{4}:4:/.test(String(leg.asset_key || "")) ? 0.5 : 1;
 }
 
 function weight(legs) {

@@ -83,8 +83,6 @@
       border-radius: 999px; padding: 10px 14px; color: var(--muted);
     }
     button.tab.on, button.chip.on { color: var(--text); background: #1c1c22; }
-    .hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-    .hero b { display: block; font-size: 2rem; letter-spacing: -0.03em; }
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -119,7 +117,6 @@
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
     svg.spark { width: 100%; height: 72px; margin-top: 8px; }
-    a.back { color: var(--muted); font-size: 0.85rem; }
     #feed { overflow: hidden; margin: 0 0 14px; }
     #feed:empty, #feed[hidden] { display: none; }
     .ticker {
@@ -169,19 +166,6 @@
     button.day-in b { display: block; font-weight: 650; }
     button.day-in span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
     .home-tape { margin: 0 0 14px; }
-    .day-scroller {
-      display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
-      padding-bottom: 2px; -webkit-overflow-scrolling: touch;
-    }
-    button.day-chip {
-      flex: 0 0 220px; appearance: none; font: inherit; color: inherit; text-align: left;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      padding: 10px 12px; min-height: 52px; cursor: pointer;
-    }
-    button.day-chip.on { border-color: #6b5a2e; }
-    button.day-chip:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.day-chip b { display: block; font-weight: 650; }
-    button.day-chip span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
     .day-alert .row, .home-tape .row { margin-top: 10px; }
     .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
     button.mark {
@@ -222,11 +206,9 @@
     button.pack-head h2 { margin: 0; font-size: 1.05rem; }
     .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; }
     .pack-body { margin-top: 8px; }
-    .draft-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: 12px 0 8px; }
-    .draft-head .caption { margin: 0; padding-top: 10px; }
     .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
-    .lens-row-left .caption, .lens-row .filter-hint { margin: 0; }
+    .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     button.score-btn {
       flex: 0 0 auto; margin-left: auto; appearance: none; font: inherit;
@@ -283,8 +265,6 @@
     .filter-panel input { width: 18px; height: 18px; accent-color: var(--green); }
     .filter-panel .rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
     .filter-panel .filter-h { color: var(--dim); font-size: 0.75rem; margin: 8px 0 0; }
-    .filter-hint { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
-    .filter-hint .caption { margin: 0; }
     .filter-wrap { position: relative; z-index: 4; }
     #yearFilters {
       position: absolute; top: 52px; left: 0; z-index: 12;
@@ -350,7 +330,7 @@
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829n";
+    const DATA_V = "20260829o";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -360,7 +340,6 @@
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
-    let draftTab = "rookie";
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
@@ -465,7 +444,7 @@
       document.getElementById("lead").textContent = msg || "";
     }
 
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "league"];
 
     async function loadMembers() {
       members = await getJson("data/ui/members.json");
@@ -604,14 +583,7 @@
       if (!got.length && !sent.length) return s;
       const pieceWeight = (l) => {
         if (!l || l.became) return 1;
-        const key = String(l.asset_key || "");
-        if (/^pick:d{4}:4:/.test(key)) return 0.5;
-        const label = String(l.label || "");
-        if (/4th/i.test(label)) {
-          const slot = Number((key.match(/^pick:d{4}:d+:(d+)$/) || [])[1]);
-          if (/late/i.test(label) || /late/i.test(String(l.flag || "")) || slot >= 8) return 0.5;
-        }
-        return 1;
+        return /^pick:d{4}:4:/.test(String(l.asset_key || "")) ? 0.5 : 1;
       };
       const one = (mine, other) => {
         if (!mine.length || !other.length) return 0;
@@ -942,7 +914,8 @@
     function renderLeagueHome() {
       return dayAlert()
         + lensRow()
-        + pack("wide", "Most lopsided trades", rankWide().map(boardTape).join(""))
+        + pack("wide", "Most lopsided trades", rankWide().map((r) => boardTape(r)).join(""))
+        + '<div class="toggle"><button type="button" class="chip" data-view="league">Best 10 · Worst 10</button></div>'
         + renderPlayerLists();
     }
 
@@ -1276,15 +1249,9 @@
       return acquiredHop(p) ? "Someone else's pick" : "Own pick";
     }
 
-    function pickWindowEnd(p) {
-      if (lens === "t0") return p.as_of;
-      if (lens === "all") return (league && league.today) || "";
-      const n = { y1: 1, y2: 2, y3: 3 }[lens];
-      return n ? addYears(p.as_of, n) : (league && league.today) || "";
-    }
-
+    // renderDrafts pins the lens to "all" for the whole tab, so the window always ends today.
     function pickGot(p) {
-      const end = pickWindowEnd(p);
+      const end = (league && league.today) || "";
       const pts = (p.year_ends || []).filter((m) => {
         if (m.player == null) return false;
         if (lens === "t0") return m.as_of === p.as_of;
@@ -1491,7 +1458,8 @@
         + '<div class="date">' + t.used + " used · " + t.graded + " graded"
         + (t.best ? " · hit " + esc(t.best.player) : "") + "</div>"
       ).join("");
-      return renderTradeBoards()
+      return '<div class="toggle"><button type="button" class="chip" data-view="home">← League home</button></div>'
+        + renderTradeBoards()
         + "<h2>Traders · per complete two-way</h2>" + traders
         + "<h2>Drafters · rookie surplus per pick</h2>" + d;
     }
@@ -1505,6 +1473,12 @@
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
     }
 
+    // Same rounding rule as every other margin in the app: round each bag, then subtract.
+    function boardScore(r, clock) {
+      if (clock === "aged") return r.aged == null ? null : Math.round(r.aged);
+      return displayDelta(r.today_got, r.today_sent);
+    }
+
     function rankSides(clock, window) {
       const boards = league && league.trade_boards;
       if (!boards) return { best: [], worst: [] };
@@ -1513,26 +1487,26 @@
       const cut = months ? monthsAgo(asOf, months) : null;
       let pool = boards.sides || [];
       if (cut) pool = pool.filter((r) => r.date >= cut);
-      const key = clock === "aged" ? "aged" : "today_delta";
-      if (clock === "aged") pool = pool.filter((r) => r.aged != null);
-      const best = pool.slice().sort((a, b) => (b[key] ?? -1e15) - (a[key] ?? -1e15)).slice(0, 10);
-      const worst = pool.slice().sort((a, b) => (a[key] ?? 1e15) - (b[key] ?? 1e15)).slice(0, 10);
+      pool = pool.filter((r) => boardScore(r, clock) != null);
+      const best = pool.slice().sort((a, b) => boardScore(b, clock) - boardScore(a, clock)).slice(0, 10);
+      const worst = pool.slice().sort((a, b) => boardScore(a, clock) - boardScore(b, clock)).slice(0, 10);
       return { best, worst };
     }
 
     function renderTradeBoards() {
       const boards = league && league.trade_boards;
-      if (!boards) return "";
+      if (!boards) return '<p class="caption">No trade boards in this build.</p>';
       const pack = rankSides(boardClock, boardWindow);
       const you = me && me.name;
-      const scoreOf = (r) => boardClock === "aged" ? r.aged : r.today_delta;
+      const scoreOf = (r) => boardScore(r, boardClock);
       const list = (title, rows) => "<h2>" + esc(title) + "</h2>" + (rows || []).map((r) =>
         '<button type="button" class="row" data-open-me="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top"><div><div class="names' + (r.name === you ? " you" : "") + '">'
         + esc(r.name) + (r.name === you ? " · you" : "") + " vs " + esc(r.other) + "</div>"
         + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
-        + '<div class="margin ' + cls(scoreOf(r)) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
+        + '<div class="margin ' + (scoreOf(r) === 0 ? "" : cls(scoreOf(r))) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
       ).join("");
+      const empty = pack.best.length ? "" : '<p class="caption">No complete deals in this window.</p>';
       const windows = [["3m","3 months"],["6m","6 months"],["1y","1 year"],["3y","3 years"],["all","All time"]];
       return '<div class="toggle">'
         + '<button type="button" class="chip' + (boardClock === "today" ? " on" : "") + '" data-board="today">As of today</button>'
@@ -1541,8 +1515,7 @@
         + '<div class="toggle">'
         + windows.map((w) => '<button type="button" class="chip' + (boardWindow === w[0] ? " on" : "") + '" data-window="' + w[0] + '">' + w[1] + "</button>").join("")
         + "</div>"
-        + list("Best 10", pack.best)
-        + list("Worst 10", pack.worst);
+        + (empty || (list("Best 10", pack.best) + list("Worst 10", pack.worst)));
     }
 
     function renderPartners() {
@@ -1578,9 +1551,10 @@
 
     function render() {
       const app = document.getElementById("app");
-      const tabs = me && view !== "titles" ? ["home", "trades", "partners", "drafts"] : [];
-      if (!me && view !== "home" && view !== "titles") view = "home";
-      if (me && (view === "review" || view === "league")) view = "home";
+      // "league" is a league-wide screen: it needs no seat, and it owns its own chrome.
+      const tabs = me && view !== "titles" && view !== "league" ? ["home", "trades", "partners", "drafts"] : [];
+      if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
+      if (!me && view !== "home" && view !== "titles" && view !== "league") view = "home";
       const nav = (tabs.length
         ? '<div class="nav">'
           + tabs.map((v) =>
@@ -1593,6 +1567,7 @@
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
+        : view === "league" ? renderLeague()
         : renderLeagueHome();
       app.innerHTML = nav + body;
       paintFeed();
@@ -1743,8 +1718,6 @@
         lensOpen = false;
         closedFilter = true;
       }
-      const dt = e.target.closest("[data-dt]");
-      if (dt) { draftTab = dt.dataset.dt; render(); return; }
       const draftBtn = e.target.closest("[data-draft]");
       if (draftBtn) {
         openDraft = openDraft === draftBtn.dataset.draft ? null : draftBtn.dataset.draft;

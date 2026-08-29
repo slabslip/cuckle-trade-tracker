@@ -25,8 +25,13 @@ connected. Opinion only: votes never enter the value book.
   clears it.
 - Choices are the **two seat `user_id`s** of the trade, not display names, so a rename on Sleeper
   does not orphan a vote.
-- Voting is **not** gated on picking a seat with the Team button. If a seat *is* selected, its
-  `user_id` is recorded as the voter identity so a future store can show the tally per manager.
+- Voting is **not** gated on picking a seat with the Team button. The voter identity recorded with
+  each vote is the selected seat's `user_id`, falling back to the last seat this device picked
+  (`cuckle.seat.v1`), so a future store can show the tally per manager. The fallback is load
+  bearing rather than belt-and-braces: the card lives on **league home**, and the home button
+  calls `clearLeague()`, which nulls the selected seat. Without the remembered seat every vote
+  would be anonymous. Either way it is an **unverified claim** — anyone can pick any seat — so do
+  not present a per-manager tally as attested.
 - **N-way trades carry no vote.** "Which side won" has no two-sided answer across three bags, and
   N-way is already the case that carries no Value Adjustment. The block renders a caption instead
   of buttons. In practice `trade_boards.sides` only contains complete 2-team trades
@@ -64,7 +69,7 @@ writeVote(transactionId, choice) -> void   // choice === null clears the vote
 }
 ```
 
-Keys: `cuckle.votes.v1`, `cuckle.device.v1`. The device id is a `crypto.randomUUID()` with a
+Keys: `cuckle.votes.v1`, `cuckle.device.v1`, `cuckle.seat.v1`. The device id is a `crypto.randomUUID()` with a
 timestamp fallback. `localStorage` throws in private mode and on a full quota, so every read and
 write is wrapped and falls back to an in-memory box — voting still works for the session rather
 than breaking the render.

@@ -592,6 +592,7 @@
       say("");
       document.getElementById("app").hidden = false;
       paintWho();
+      voteSeatRemember(id);
       if (!keep) {
         view = "home";
         openId = null;
@@ -1138,6 +1139,7 @@
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
     const VOTE_KEY = "cuckle.votes.v1";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
+    const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // localStorage throws in private mode and when a quota is full. Memory is the fallback so
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;
@@ -1153,6 +1155,20 @@
       } catch (err) {
         return "device-unavailable";
       }
+    }
+
+    // The card lives on league home, and going home clears the selected seat by design, so a
+    // live seat is rarely there to read. Remember the last seat this device picked instead.
+    // It is an unverified claim either way — see docs/VOTES_SDD.md — and voting never waits on it.
+    function voteSeatRemember(uid) {
+      try { if (uid) localStorage.setItem(VOTE_SEAT_KEY, uid); }
+      catch (err) { /* private mode: the vote still records, just without an identity */ }
+    }
+
+    function voteSeatId() {
+      if (me && me.user_id) return me.user_id;
+      try { return localStorage.getItem(VOTE_SEAT_KEY) || null; }
+      catch (err) { return null; }
     }
 
     function voteBoxRead() {
@@ -1203,7 +1219,7 @@
     function writeVote(transactionId, choice) {
       const box = voteBoxRead();
       if (choice == null) delete box.votes[transactionId];
-      else box.votes[transactionId] = { choice: choice, seat: (me && me.user_id) || null, ts: new Date().toISOString() };
+      else box.votes[transactionId] = { choice: choice, seat: voteSeatId(), ts: new Date().toISOString() };
       voteBoxWrite(box);
     }
 

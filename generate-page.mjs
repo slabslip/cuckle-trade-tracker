@@ -146,14 +146,22 @@ const html = `<!DOCTYPE html>
     button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.bubble b { font-weight: 650; }
     button.bubble span { color: var(--dim); }
-    .day-alert {
-      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
-      padding: 12px; margin: 0 0 14px;
+    .alert-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      align-items: stretch; margin: 0 0 14px;
     }
+    @media (max-width: 520px) { .alert-row { grid-template-columns: 1fr; } }
+    .day-alert, a.champ-alert {
+      display: flex; flex-direction: column; justify-content: center;
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
+      padding: 12px; margin: 0; min-height: 88px; height: 100%;
+    }
+    a.champ-alert { color: inherit; text-decoration: none; box-sizing: border-box; cursor: pointer; }
+    a.champ-alert:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .home-tape { margin: 0 0 14px; }
+    .home-tape .day-scroller { margin-top: 0; }
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 4px; }
-    .day-heads { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-    .day-heads .bubble { margin-left: auto; }
     button.text-link, a.text-link {
       appearance: none; font: inherit; font-size: 1rem; font-weight: 650; color: var(--text);
       background: none; border: 0; padding: 0; min-height: 44px;
@@ -176,7 +184,7 @@ const html = `<!DOCTYPE html>
     button.day-chip:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.day-chip b { display: block; font-weight: 650; }
     button.day-chip span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
-    .day-alert .row { margin-top: 10px; }
+    .day-alert .row, .home-tape .row { margin-top: 10px; }
     .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
     button.mark {
       flex: 1 1 calc(50% - 8px); min-width: 140px;
@@ -340,7 +348,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829d";
+    const DATA_V = "20260829e";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1018,16 +1026,21 @@ const html = `<!DOCTYPE html>
       }).join("");
       const open = tape.rows.find((r) => r.transaction_id === openId);
       const champ = ((titles && titles.titles) || [])[0];
-      const champChip = champ
-        ? '<button type="button" class="bubble" data-view="titles" aria-label="Champions path, ' + champ.season + " " + champ.name + '">'
-          + "<b>Champion</b> <span>" + champ.season + " · " + champ.name + "</span></button>"
+      const rec = champ && champ.record || {};
+      const champBox = champ
+        ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
+          + '<div class="day-alert-h">Champion<span>' + champ.season + " · " + champ.name + "</span></div>"
+          + '<div class="date">' + rec.wins + "–" + rec.losses
+          + (rec.fpts_rank === 1 ? " · points race" : " · bracket")
+          + " · Champions path</div></a>"
         : "";
-      return '<div class="day-alert">'
-        + '<div class="day-heads"><div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
-        + champChip + "</div>"
-        + (chips ? '<div class="day-scroller">' + chips + "</div>" : "")
-        + (open ? boardTape(open) : "")
-        + "</div>";
+      return '<div class="alert-row"><div class="day-alert">'
+        + '<div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
+        + "</div>" + champBox + "</div>"
+        + ((chips || open) ? '<div class="home-tape">'
+          + (chips ? '<div class="day-scroller">' + chips + "</div>" : "")
+          + (open ? boardTape(open) : "")
+          + "</div>" : "");
     }
 
     function renderTeamHome() {

@@ -88,8 +88,6 @@ const html = `<!DOCTYPE html>
       border-radius: 999px; padding: 10px 14px; color: var(--muted);
     }
     button.tab.on, button.chip.on { color: var(--text); background: #1c1c22; }
-    .hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-    .hero b { display: block; font-size: 2rem; letter-spacing: -0.03em; }
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -124,7 +122,6 @@ const html = `<!DOCTYPE html>
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
     svg.spark { width: 100%; height: 72px; margin-top: 8px; }
-    a.back { color: var(--muted); font-size: 0.85rem; }
     #feed { overflow: hidden; margin: 0 0 14px; }
     #feed:empty, #feed[hidden] { display: none; }
     .ticker {
@@ -195,19 +192,6 @@ const html = `<!DOCTYPE html>
     button.vote-opt b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     button.vote-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
     .home-tape { margin: 0 0 14px; }
-    .day-scroller {
-      display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
-      padding-bottom: 2px; -webkit-overflow-scrolling: touch;
-    }
-    button.day-chip {
-      flex: 0 0 220px; appearance: none; font: inherit; color: inherit; text-align: left;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      padding: 10px 12px; min-height: 52px; cursor: pointer;
-    }
-    button.day-chip.on { border-color: #6b5a2e; }
-    button.day-chip:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.day-chip b { display: block; font-weight: 650; }
-    button.day-chip span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
     .day-alert .row, .home-tape .row { margin-top: 10px; }
     .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
     button.mark {
@@ -248,11 +232,9 @@ const html = `<!DOCTYPE html>
     button.pack-head h2 { margin: 0; font-size: 1.05rem; }
     .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; }
     .pack-body { margin-top: 8px; }
-    .draft-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: 12px 0 8px; }
-    .draft-head .caption { margin: 0; padding-top: 10px; }
     .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
-    .lens-row-left .caption, .lens-row .filter-hint { margin: 0; }
+    .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     button.score-btn {
       flex: 0 0 auto; margin-left: auto; appearance: none; font: inherit;
@@ -309,8 +291,6 @@ const html = `<!DOCTYPE html>
     .filter-panel input { width: 18px; height: 18px; accent-color: var(--green); }
     .filter-panel .rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
     .filter-panel .filter-h { color: var(--dim); font-size: 0.75rem; margin: 8px 0 0; }
-    .filter-hint { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
-    .filter-hint .caption { margin: 0; }
     .filter-wrap { position: relative; z-index: 4; }
     #yearFilters {
       position: absolute; top: 52px; left: 0; z-index: 12;
@@ -369,14 +349,17 @@ const html = `<!DOCTYPE html>
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+    // One threshold for "even", used by every screen that grades a partner.
+    const GRADE_EVEN = 100;
     let members = [];
     let me = null;
     let data = null;
     let league = null;
     let picks = null;
     let titles = null;
+    let marks = null;
     let lens = "all";
-    const DATA_V = "20260829o";
+    const DATA_V = "20260829r";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -386,7 +369,6 @@ const html = `<!DOCTYPE html>
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
-    let draftTab = "rookie";
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
@@ -494,13 +476,15 @@ const html = `<!DOCTYPE html>
       document.getElementById("lead").textContent = msg || "";
     }
 
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "league"];
 
     async function loadMembers() {
       members = await getJson("data/ui/members.json");
       league = await getJson("data/ui/league.json");
       try { titles = await getJson("data/ui/titles.json"); }
       catch (err) { titles = { titles: [] }; }
+      try { marks = await getJson("data/ui/marks.json"); }
+      catch (err) { marks = { seats: {} }; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
         const book = await getJson("data/ui/votes.json");
@@ -568,6 +552,9 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    // Safari throttles history writes around 100 per 30 s. render() calls this every time,
+    // so only write when a URL-bearing piece of state actually moved.
+    let lastUrl = null;
     function syncUrl() {
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
@@ -575,7 +562,10 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (lens && lens !== "all") q.set("lens", lens);
-      history.replaceState(null, "", "?" + q.toString());
+      const url = "?" + q.toString();
+      if (url === lastUrl) return;
+      lastUrl = url;
+      history.replaceState(null, "", url);
     }
 
     async function selectMe(id, keep) {
@@ -610,6 +600,24 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    function gradeOf(per) {
+      if (per == null) return "even";
+      if (per >= GRADE_EVEN) return "you_extract";
+      if (per <= -GRADE_EVEN) return "they_extract";
+      return "even";
+    }
+
+    /** The one per-partner number. Home's teaser and the Partners tab both read this. */
+    function partnerPer(seat, name) {
+      const ds = ((seat && seat.trades) || [])
+        .filter((t) => (t.others || []).length === 1 && t.others[0] === name
+          && !t.incomplete && chipLived(t.date))
+        .map(tradeDelta)
+        .filter((d) => d != null);
+      const per = ds.length ? ds.reduce((a, b) => a + b, 0) / ds.length : null;
+      return { name: name, n: ds.length, per: per, grade: gradeOf(per) };
+    }
+
     function gradeLabel(g) {
       if (g === "you_extract") return "you extract";
       if (g === "they_extract") return "they extract";
@@ -639,14 +647,7 @@ const html = `<!DOCTYPE html>
       if (!got.length && !sent.length) return s;
       const pieceWeight = (l) => {
         if (!l || l.became) return 1;
-        const key = String(l.asset_key || "");
-        if (/^pick:\\d{4}:4:/.test(key)) return 0.5;
-        const label = String(l.label || "");
-        if (/4th/i.test(label)) {
-          const slot = Number((key.match(/^pick:\\d{4}:\\d+:(\\d+)$/) || [])[1]);
-          if (/late/i.test(label) || /late/i.test(String(l.flag || "")) || slot >= 8) return 0.5;
-        }
-        return 1;
+        return /^pick:\\d{4}:4:/.test(String(l.asset_key || "")) ? 0.5 : 1;
       };
       const one = (mine, other) => {
         if (!mine.length || !other.length) return 0;
@@ -683,27 +684,25 @@ const html = `<!DOCTYPE html>
       return displayDelta(w.got, w.sent);
     }
 
+    // renderTeamHome used to call this inside a sort comparator, so one home render
+    // recomputed the Value Adjustment from legs about 2,000 times.
+    const deltaCache = new WeakMap();
     function tradeDelta(t) {
       if (!t || t.incomplete) return null;
+      let byLens = deltaCache.get(t);
+      if (!byLens) { byLens = {}; deltaCache.set(t, byLens); }
+      if (lens in byLens) return byLens[lens];
       const s = sideOf(t);
-      if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
-      return displayDelta(s.today, s.sent_today);
+      const d = !s || s.incomplete || s.today == null || s.sent_today == null
+        ? null
+        : displayDelta(s.today, s.sent_today);
+      byLens[lens] = d;
+      return d;
     }
 
     function chipLived(date) {
       if (lens === "t0" || lens === "all") return true;
       return windowLived(date);
-    }
-
-    function windowPer(list) {
-      const ds = (list || []).filter((t) => chipLived(t.date)).map(tradeDelta).filter((d) => d != null);
-      if (!ds.length) return null;
-      return ds.reduce((a, b) => a + b, 0) / ds.length;
-    }
-
-    function windowTotal(list) {
-      const ds = (list || []).filter((t) => chipLived(t.date)).map(tradeDelta).filter((d) => d != null);
-      return ds.length ? ds.reduce((a, b) => a + b, 0) : null;
     }
 
     function addYears(ymd, n) {
@@ -723,6 +722,7 @@ const html = `<!DOCTYPE html>
 
     function rankWide() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      // Score each side once, then dedupe and sort on the stored key.
       const by = new Map();
       for (const r of sides) {
         // chipLived, not windowLived: "all" is unfiltered, and windowLived maps it to 1 year.
@@ -730,9 +730,10 @@ const html = `<!DOCTYPE html>
         const s = windowScore(r);
         if (s == null) continue;
         const prev = by.get(r.transaction_id);
-        if (!prev || Math.abs(s) > Math.abs(windowScore(prev))) by.set(r.transaction_id, r);
+        if (!prev || Math.abs(s) > Math.abs(prev.score)) by.set(r.transaction_id, { r: r, score: s });
       }
-      return [...by.values()].sort((a, b) => Math.abs(windowScore(b)) - Math.abs(windowScore(a))).slice(0, 10);
+      return [...by.values()].sort((a, b) => Math.abs(b.score) - Math.abs(a.score))
+        .slice(0, 10).map((x) => x.r);
     }
 
     async function seatData(uid) {
@@ -962,7 +963,8 @@ const html = `<!DOCTYPE html>
       if (!list.length) return '<p class="caption">No championship path yet. Run <code>node title-path.mjs</code>.</p>';
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
-      return '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
+      return "<h2>Champions Path</h2>"
+        + '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
@@ -977,15 +979,15 @@ const html = `<!DOCTYPE html>
     function renderLeagueHome() {
       return dayAlert()
         + lensRow()
-        + pack("wide", "Most lopsided trades", rankWide().map(boardTape).join(""))
+        + pack("wide", "Most lopsided trades", rankWide().map((r) => boardTape(r)).join(""))
+        + '<div class="toggle"><button type="button" class="chip" data-view="league">Best 10 · Worst 10</button></div>'
         + renderPlayerLists();
     }
 
     function partnerLine(p) {
-      const g = p.per == null ? "even" : p.per >= 100 ? "you_extract" : p.per <= -100 ? "they_extract" : "even";
       return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
-        + '<div class="date">' + p.n + " complete · " + gradeLabel(g) + "</div></div>"
+        + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
         + '<div class="margin ' + cls(p.per) + '">' + fmt(p.per) + "</div></div></button>";
     }
 
@@ -996,57 +998,49 @@ const html = `<!DOCTYPE html>
         + '<div class="margin ' + cls(p.surplus) + '">' + fmt(p.surplus) + "</div></div></div>";
     }
 
-    function deltaAt(t, key) {
-      if (!t || t.incomplete) return null;
-      const s = t.windows && t.windows[key];
-      if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
-      return displayDelta(s.today, s.sent_today);
-    }
-
     function mark(id, title, sub, tone) {
       const on = markOpen === id;
       return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + esc(id) + '" aria-expanded="' + on + '">'
         + "<b>" + esc(title) + "</b>" + (sub ? "<span>" + esc(sub) + "</span>" : "") + "</button>";
     }
 
-    function marksOf(seat) {
-      const n = (seat.hero && seat.hero.two_way) || 0;
+    /**
+     * Every number here is precomputed in apply-value-adjust.mjs and shipped in marks.json.
+     * The browser used to recompute them from a seat file, which is why the home "manners"
+     * tile and the Partners tab disagreed on 20 of 82 grades: the tile read the pipeline's
+     * today-clock grade while the tab regraded on the selected clock.
+     */
+    function marksOf(row) {
+      const m = row || {};
+      const w = (m.lens && m.lens[lens]) || {};
+      const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
-      const st = seat.style || {};
-      const soldPicks = st.sold_picks_for_players || 0;
-      const soldPlayers = st.sold_players_for_picks || 0;
+      const soldPicks = m.sold_picks || 0;
+      const soldPlayers = m.sold_players || 0;
       let posture = "Swap shop";
       if (soldPlayers >= soldPicks + 5) posture = "Buys picks";
       else if (soldPicks >= soldPlayers + 5) posture = "Buys players";
-      const graded = (seat.partners || []).filter((p) => p.complete >= 1);
-      const extract = graded.filter((p) => p.grade === "you_extract").length;
-      const farmed = graded.filter((p) => p.grade === "they_extract").length;
-      const even = graded.length - extract - farmed;
+      const extract = w.extract || 0;
+      const farmed = w.farmed || 0;
+      const even = w.even || 0;
       let manners = "Fair";
       let mannersTone = "";
       if (farmed >= extract + 2) { manners = "Gets extracted"; mannersTone = "neg"; }
       else if (extract > farmed) { manners = "Extracts"; mannersTone = "pos"; }
-      const aged = [];
-      for (const t of seat.trades || []) {
-        if ((t.others || []).length !== 1) continue;
-        const now = deltaAt(t, "all");
-        const t0 = deltaAt(t, "t0");
-        if (now == null || t0 == null) continue;
-        aged.push(now - t0);
-      }
-      const ageMean = aged.length ? aged.reduce((a, b) => a + b, 0) / aged.length : null;
+      const aged = { length: (m.aging && m.aging.n) || 0 };
+      const ageMean = (m.aging && m.aging.mean != null) ? m.aging.mean : null;
       let aging = "Held";
       let agingTone = "";
       if (ageMean != null && ageMean > 100) { aging = "Aged up"; agingTone = "pos"; }
       else if (ageMean != null && ageMean < -100) { aging = "Aged down"; agingTone = "neg"; }
-      const rook = ((seat.drafts && seat.drafts.rookie) || []).filter((p) => p.surplus != null);
-      const draftMean = rook.length ? rook.reduce((a, p) => a + p.surplus, 0) / rook.length : null;
+      const rook = { length: (m.draft && m.draft.n) || 0 };
+      const draftMean = (m.draft && m.draft.mean != null) ? m.draft.mean : null;
       let draft = "Mixed";
       let draftTone = "";
       if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
       else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
-      const total = windowTotal(seat.trades);
-      const per = windowPer(seat.trades);
+      const total = w.total == null ? null : w.total;
+      const per = w.per == null ? null : w.per;
       let run = "Even";
       let runTone = "";
       if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
@@ -1092,7 +1086,7 @@ const html = `<!DOCTYPE html>
     }
 
     function teamMarks() {
-      const m = marksOf(data);
+      const m = marksOf(marks && marks.seats && marks.seats[me.user_id]);
       return '<div class="marks">'
         + mark("run", m.run.title, m.run.sub, m.run.tone)
         + mark("volume", m.volume.title, m.volume.sub, m.volume.tone)
@@ -1114,13 +1108,13 @@ const html = `<!DOCTYPE html>
         draft: ["Rookie hits", "Mean surplus vs the pick."],
       };
       const head = heads[markOpen] || ["League", ""];
-      const rows = members.map((mem) => {
-        const seat = seatCache[mem.user_id];
-        if (!seat) return { name: mem.name, uid: mem.user_id, loading: true };
-        return { name: mem.name, uid: mem.user_id, ...marksOf(seat)[markOpen] };
-      });
-      if (rows.some((r) => r.loading)) {
-        return '<div class="mark-chart"><div class="mark-chart-h">' + head[0] + '</div><p class="caption">Loading league…</p></div>';
+      const seats = (marks && marks.seats) || {};
+      const rows = members
+        .filter((mem) => seats[mem.user_id])
+        .map((mem) => ({ name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[markOpen] }));
+      if (!rows.length) {
+        return '<div class="mark-chart"><div class="mark-chart-h">' + esc(head[0])
+          + '</div><p class="caption">No league marks in this build.</p></div>';
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
@@ -1273,8 +1267,8 @@ const html = `<!DOCTYPE html>
         + '<p class="caption">' + note + " Opinion only: votes never enter the value book.</p></div>";
     }
 
-    // Recency, not the browser's clock: the card is named for the newest date on the tape,
-    // so there is no empty state to caption and no second "today" to disagree with league.today.
+    // Recency, not a clock: the card is named for the newest date on the tape, so there is no
+    // empty state to caption and no "today" that can disagree with league.today.
     function daySides() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       let day = "";
@@ -1327,17 +1321,12 @@ const html = `<!DOCTYPE html>
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
       const best = pool[0];
       const worst = pool.length > 1 ? pool[pool.length - 1] : null;
-      const by = {};
+      const names = new Set();
       for (const t of pool) {
-        if ((t.others || []).length !== 1) continue;
-        const name = t.others[0];
-        const d = tradeDelta(t);
-        if (!by[name]) by[name] = { name: name, n: 0, sum: 0 };
-        by[name].n += 1;
-        by[name].sum += d;
+        if ((t.others || []).length === 1) names.add(t.others[0]);
       }
-      const partners = Object.keys(by).map((k) => ({ name: by[k].name, n: by[k].n, per: by[k].sum / by[k].n }))
-        .sort((a, b) => b.per - a.per);
+      const partners = [...names].map((n) => partnerPer(data, n))
+        .filter((p) => p.n).sort((a, b) => b.per - a.per);
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
       const empty = pool.length ? "" : ((data.trades || []).length
@@ -1444,15 +1433,9 @@ const html = `<!DOCTYPE html>
       return acquiredHop(p) ? "Someone else's pick" : "Own pick";
     }
 
-    function pickWindowEnd(p) {
-      if (lens === "t0") return p.as_of;
-      if (lens === "all") return (league && league.today) || "";
-      const n = { y1: 1, y2: 2, y3: 3 }[lens];
-      return n ? addYears(p.as_of, n) : (league && league.today) || "";
-    }
-
+    // renderDrafts pins the lens to "all" for the whole tab, so the window always ends today.
     function pickGot(p) {
-      const end = pickWindowEnd(p);
+      const end = (league && league.today) || "";
       const pts = (p.year_ends || []).filter((m) => {
         if (m.player == null) return false;
         if (lens === "t0") return m.as_of === p.as_of;
@@ -1659,7 +1642,8 @@ const html = `<!DOCTYPE html>
         + '<div class="date">' + t.used + " used · " + t.graded + " graded"
         + (t.best ? " · hit " + esc(t.best.player) : "") + "</div>"
       ).join("");
-      return renderTradeBoards()
+      return '<div class="toggle"><button type="button" class="chip" data-view="home">← League home</button></div>'
+        + renderTradeBoards()
         + "<h2>Traders · per complete two-way</h2>" + traders
         + "<h2>Drafters · rookie surplus per pick</h2>" + d;
     }
@@ -1673,6 +1657,12 @@ const html = `<!DOCTYPE html>
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
     }
 
+    // Same rounding rule as every other margin in the app: round each bag, then subtract.
+    function boardScore(r, clock) {
+      if (clock === "aged") return r.aged == null ? null : Math.round(r.aged);
+      return displayDelta(r.today_got, r.today_sent);
+    }
+
     function rankSides(clock, window) {
       const boards = league && league.trade_boards;
       if (!boards) return { best: [], worst: [] };
@@ -1681,26 +1671,26 @@ const html = `<!DOCTYPE html>
       const cut = months ? monthsAgo(asOf, months) : null;
       let pool = boards.sides || [];
       if (cut) pool = pool.filter((r) => r.date >= cut);
-      const key = clock === "aged" ? "aged" : "today_delta";
-      if (clock === "aged") pool = pool.filter((r) => r.aged != null);
-      const best = pool.slice().sort((a, b) => (b[key] ?? -1e15) - (a[key] ?? -1e15)).slice(0, 10);
-      const worst = pool.slice().sort((a, b) => (a[key] ?? 1e15) - (b[key] ?? 1e15)).slice(0, 10);
+      pool = pool.filter((r) => boardScore(r, clock) != null);
+      const best = pool.slice().sort((a, b) => boardScore(b, clock) - boardScore(a, clock)).slice(0, 10);
+      const worst = pool.slice().sort((a, b) => boardScore(a, clock) - boardScore(b, clock)).slice(0, 10);
       return { best, worst };
     }
 
     function renderTradeBoards() {
       const boards = league && league.trade_boards;
-      if (!boards) return "";
+      if (!boards) return '<p class="caption">No trade boards in this build.</p>';
       const pack = rankSides(boardClock, boardWindow);
       const you = me && me.name;
-      const scoreOf = (r) => boardClock === "aged" ? r.aged : r.today_delta;
+      const scoreOf = (r) => boardScore(r, boardClock);
       const list = (title, rows) => "<h2>" + esc(title) + "</h2>" + (rows || []).map((r) =>
         '<button type="button" class="row" data-open-me="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top"><div><div class="names' + (r.name === you ? " you" : "") + '">'
         + esc(r.name) + (r.name === you ? " · you" : "") + " vs " + esc(r.other) + "</div>"
         + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
-        + '<div class="margin ' + cls(scoreOf(r)) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
+        + '<div class="margin ' + (scoreOf(r) === 0 ? "" : cls(scoreOf(r))) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
       ).join("");
+      const empty = pack.best.length ? "" : '<p class="caption">No complete deals in this window.</p>';
       const windows = [["3m","3 months"],["6m","6 months"],["1y","1 year"],["3y","3 years"],["all","All time"]];
       return '<div class="toggle">'
         + '<button type="button" class="chip' + (boardClock === "today" ? " on" : "") + '" data-board="today">As of today</button>'
@@ -1709,24 +1699,20 @@ const html = `<!DOCTYPE html>
         + '<div class="toggle">'
         + windows.map((w) => '<button type="button" class="chip' + (boardWindow === w[0] ? " on" : "") + '" data-window="' + w[0] + '">' + w[1] + "</button>").join("")
         + "</div>"
-        + list("Best 10", pack.best)
-        + list("Worst 10", pack.worst);
+        + (empty || (list("Best 10", pack.best) + list("Worst 10", pack.worst)));
     }
 
     function renderPartners() {
       const list = (data && data.partners) || [];
-      const perOf = (p) => {
-        const deals = ((data && data.trades) || [])
-          .filter((t) => (t.others || []).length === 1 && t.others[0] === p.name && !t.incomplete);
-        return windowPer(deals);
-      };
-      const rows = list.slice().sort((a, b) => (perOf(b) ?? -1e9) - (perOf(a) ?? -1e9)).map((p) => {
-        const per = perOf(p);
-        const g = per == null ? "even" : per >= 100 ? "you_extract" : per <= -100 ? "they_extract" : "even";
+      // One per-partner number, scored once. Sorting used to call it twice per comparison.
+      const scored = list.map((p) => ({ p: p, w: partnerPer(data, p.name) }))
+        .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
+      const rows = scored.map((row) => {
+        const p = row.p, per = row.w.per;
         return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
           + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
-          + '<span class="' + gradeCls(g) + '">' + gradeLabel(g) + "</span></div></div>"
+          + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
           + '<div class="margin ' + cls(per) + '">' + fmt(per) + "</div></div></button>";
       }).join("");
       let detail = "";
@@ -1746,9 +1732,10 @@ const html = `<!DOCTYPE html>
 
     function render() {
       const app = document.getElementById("app");
-      const tabs = me && view !== "titles" ? ["home", "trades", "partners", "drafts"] : [];
-      if (!me && view !== "home" && view !== "titles") view = "home";
-      if (me && (view === "review" || view === "league")) view = "home";
+      // "league" is a league-wide screen: it needs no seat, and it owns its own chrome.
+      const tabs = me && view !== "titles" && view !== "league" ? ["home", "trades", "partners", "drafts"] : [];
+      if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
+      if (!me && view !== "home" && view !== "titles" && view !== "league") view = "home";
       const nav = (tabs.length
         ? '<div class="nav">'
           + tabs.map((v) =>
@@ -1761,6 +1748,7 @@ const html = `<!DOCTYPE html>
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
+        : view === "league" ? renderLeague()
         : renderLeagueHome();
       app.innerHTML = nav + body;
       paintFeed();
@@ -1852,8 +1840,8 @@ const html = `<!DOCTYPE html>
       const markBtn = e.target.closest("[data-mark]");
       if (markBtn) {
         const id = markBtn.dataset.mark;
+        // marks.json carries all ten seats, so the chart no longer downloads every seat file.
         markOpen = markOpen === id ? null : id;
-        if (markOpen) Promise.all(members.map((m) => seatData(m.user_id))).then(() => render());
         render();
         return;
       }
@@ -1921,8 +1909,6 @@ const html = `<!DOCTYPE html>
         lensOpen = false;
         closedFilter = true;
       }
-      const dt = e.target.closest("[data-dt]");
-      if (dt) { draftTab = dt.dataset.dt; render(); return; }
       const draftBtn = e.target.closest("[data-draft]");
       if (draftBtn) {
         openDraft = openDraft === draftBtn.dataset.draft ? null : draftBtn.dataset.draft;
@@ -1972,10 +1958,10 @@ const html = `<!DOCTYPE html>
 </html>`;
 
 // A lone backslash inside the template literal above is swallowed before it reaches the browser,
-// which silently turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its
+// which once turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its
 // late-4th half weight. Escapes are written \\ in the template; assert they survived.
 const inline = html.slice(html.indexOf("<script>"));
-for (const need of ["/^pick:\\d{4}:4:/", "/^pick:\\d{4}:\\d+:(\\d+)$/", "/\\.0$/"]) {
+for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
 }
 

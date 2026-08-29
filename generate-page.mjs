@@ -173,6 +173,26 @@ const html = `<!DOCTYPE html>
     button.day-in:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.day-in b { display: block; font-weight: 650; }
     button.day-in span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    button.day-in .day-in-vals { margin-top: 6px; }
+    button.day-in .day-in-val {
+      display: flex; justify-content: space-between; gap: 12px;
+      color: var(--muted); font-size: 0.8125rem; margin-top: 2px;
+    }
+    button.day-in .day-in-val i { font-style: normal; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    button.day-in .day-in-val em { font-style: normal; font-weight: 650; color: var(--text); flex: 0 0 auto; }
+    .vote { margin: 10px 0 0; }
+    .vote-h { font-weight: 650; }
+    .vote-opts { display: flex; gap: 8px; margin-top: 8px; }
+    button.vote-opt {
+      flex: 1 1 0; min-width: 0; min-height: 48px;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 8px 12px; cursor: pointer;
+    }
+    button.vote-opt.on { background: #1a1810; border-color: #6b5a2e; }
+    button.vote-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.vote-opt b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    button.vote-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
     .home-tape { margin: 0 0 14px; }
     .day-scroller {
       display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
@@ -355,7 +375,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829n";
+    const DATA_V = "20260829o";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -383,6 +403,9 @@ const html = `<!DOCTYPE html>
     let boardWindow = "all";
     let titleYear = null;
     const seatCache = {};
+    // Committed league tallies from data/ui/votes.json, or null when that file is absent
+    // or not schema v1. Votes are opinion and live only here — never in league or seat data.
+    let voteBook = null;
 
     const params = new URLSearchParams(location.search);
     const startLens = params.get("lens");
@@ -477,6 +500,11 @@ const html = `<!DOCTYPE html>
       league = await getJson("data/ui/league.json");
       try { titles = await getJson("data/ui/titles.json"); }
       catch (err) { titles = { titles: [] }; }
+      // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
+      try {
+        const book = await getJson("data/ui/votes.json");
+        voteBook = book && book.v === 1 && book.votes ? book : null;
+      } catch (err) { voteBook = null; }
       const startTitle = params.get("title");
       const startView = params.get("view");
       if (startView === "titles") {
@@ -1108,39 +1136,157 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    function tapeDay() {
-      return new Date().toISOString().slice(0, 10);
+    // ---- Vote store -------------------------------------------------------------
+    // A vote is an opinion about who won a trade. It is NEVER value: it does not reach the
+    // needle, the even book, VA, the lens windows, today_delta, partner grades or any board
+    // ranking. One identity per number — so votes get their own file, their own two doors
+    // (readVotes / writeVote) and their own UI block, and nothing else may read them.
+    const VOTE_KEY = "cuckle.votes.v1";
+    const VOTE_DEVICE_KEY = "cuckle.device.v1";
+    // localStorage throws in private mode and when a quota is full. Memory is the fallback so
+    // voting still works for the session rather than breaking the render.
+    let voteMemory = null;
+
+    function voteDeviceId() {
+      try {
+        const found = localStorage.getItem(VOTE_DEVICE_KEY);
+        if (found) return found;
+        const made = (crypto.randomUUID && crypto.randomUUID())
+          || "d-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(VOTE_DEVICE_KEY, made);
+        return made;
+      } catch (err) {
+        return "device-unavailable";
+      }
     }
 
-    function daySides() {
-      const day = tapeDay();
+    function voteBoxRead() {
+      if (voteMemory) return voteMemory;
+      let box = null;
+      try {
+        const raw = localStorage.getItem(VOTE_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (found && found.v === 1 && found.votes) box = found;
+      } catch (err) {
+        console.error(err);
+      }
+      voteMemory = box || { v: 1, device: voteDeviceId(), votes: {} };
+      return voteMemory;
+    }
+
+    function voteBoxWrite(box) {
+      voteMemory = box;
+      try { localStorage.setItem(VOTE_KEY, JSON.stringify(box)); }
+      catch (err) { console.error(err); }
+    }
+
+    // readVotes(transactionId) -> { choice, tally, votes, league, asOf, seat }
+    // choice is the seat user_id this device voted for, or null. tally maps seat user_id to a
+    // count. A committed voters map tells us our vote is already in the league totals, so it is
+    // added locally only when it is not.
+    function readVotes(transactionId) {
+      const mine = voteBoxRead().votes[transactionId] || null;
+      const entry = (voteBook && voteBook.votes && voteBook.votes[transactionId]) || null;
+      const tally = Object.assign({}, (entry && entry.totals) || {});
+      const alreadyCounted = !!(entry && entry.voters && mine && mine.seat && entry.voters[mine.seat]);
+      if (mine && mine.choice && !alreadyCounted) tally[mine.choice] = (tally[mine.choice] || 0) + 1;
+      let votes = 0;
+      for (const k of Object.keys(tally)) votes += tally[k];
+      return {
+        choice: (mine && mine.choice) || null,
+        seat: (mine && mine.seat) || null,
+        tally: tally,
+        votes: votes,
+        league: !!entry,
+        asOf: (voteBook && voteBook.generated_at) || null,
+      };
+    }
+
+    // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
+    // The selected seat rides along as the voter identity so a future store can show the tally
+    // per manager, but voting is not gated on picking a seat.
+    function writeVote(transactionId, choice) {
+      const box = voteBoxRead();
+      if (choice == null) delete box.votes[transactionId];
+      else box.votes[transactionId] = { choice: choice, seat: (me && me.user_id) || null, ts: new Date().toISOString() };
+      voteBoxWrite(box);
+    }
+
+    function voteSeats(r) {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
-      const byDay = new Map();
-      let last = "";
+      const seats = [];
+      for (const s of sides) {
+        if (s.transaction_id !== r.transaction_id) continue;
+        if (!seats.some((x) => x.uid === s.user_id)) seats.push({ uid: s.user_id, name: s.name });
+      }
+      return seats;
+    }
+
+    function voteParties(r) {
+      const cached = seatCache[r.user_id];
+      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
+      return hit ? 1 + ((hit.others || []).length) : voteSeats(r).length;
+    }
+
+    function voteBlock(r) {
+      const seats = voteSeats(r);
+      const head = '<div class="vote"><div class="vote-h">Who actually won it?</div>';
+      // N-way trades get no vote: "which side won" has no head-to-head answer across three
+      // bags, and N-way is already the special case that carries no Value Adjustment.
+      if (seats.length !== 2 || voteParties(r) > 2) {
+        return head + '<p class="caption">Three-team trade. There is no two-sided answer to score, so voting is off here.</p></div>';
+      }
+      const v = readVotes(r.transaction_id);
+      const opts = seats.map((s) => {
+        const on = v.choice === s.uid;
+        const n = v.tally[s.uid] || 0;
+        const line = v.votes
+          ? n + (n === 1 ? " vote · " : " votes · ") + Math.round(n / v.votes * 100) + "%"
+          : "tap to vote";
+        return '<button type="button" class="vote-opt' + (on ? " on" : "") + '"'
+          + ' data-vote="' + esc(r.transaction_id) + '" data-vote-seat="' + esc(s.uid) + '"'
+          + ' aria-pressed="' + (on ? "true" : "false") + '">'
+          + "<b>" + esc(s.name) + "</b><span>" + line + "</span></button>";
+      }).join("");
+      const note = v.league
+        ? "League tally as of " + esc(v.asOf || "the last rebuild") + "; your vote joins it on the next rebuild."
+        : "Your vote, on this device only — the league tally lights up once the vote store is connected.";
+      return head
+        + '<div class="vote-opts">' + opts + "</div>"
+        + '<p class="caption">' + note + " Opinion only: votes never enter the value book.</p></div>";
+    }
+
+    // Recency, not the browser's clock: the card is named for the newest date on the tape,
+    // so there is no empty state to caption and no second "today" to disagree with league.today.
+    function daySides() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let day = "";
+      for (const r of sides) if (r.date > day) day = r.date;
+      const by = new Map();
       for (const r of sides) {
-        if (r.date > last) last = r.date;
-        if (!byDay.has(r.date)) byDay.set(r.date, new Map());
-        const by = byDay.get(r.date);
+        if (r.date !== day) continue;
         const prev = by.get(r.transaction_id);
         if (!prev || (me && r.user_id === me.user_id)) by.set(r.transaction_id, r);
       }
-      const todayRows = [...(byDay.get(day)?.values() || [])];
-      const showDay = todayRows.length ? day : last;
-      const rows = [...(byDay.get(showDay)?.values() || [])];
-      return { day: day, showDay: showDay, rows: rows, todayN: todayRows.length };
+      return { day: day, rows: [...by.values()] };
     }
 
     function dayAlert() {
       const tape = daySides();
-      const n = tape.todayN;
-      const title = n === 1 ? "1 trade today" : n + " trades today";
-      const hint = n ? "" : (tape.showDay ? "Last on tape " + tape.showDay : "No deals on the last rebuild");
       const chips = tape.rows.map((r) => {
         const on = openId === r.transaction_id;
-        return '<button type="button" class="day-in' + (on ? " on" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+        // Same windows[lens] and the same rounding the trades list uses, so the card cannot drift.
+        const w = (r.windows && r.windows[lens]) || {};
+        const got = w.incomplete && !w.got ? "—" : fmt(w.got);
+        const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
+        return '<button type="button" class="day-in' + (on ? " on" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '" aria-expanded="' + (on ? "true" : "false") + '">'
           + "<b>" + esc(r.name) + " vs " + esc(r.other) + "</b>"
-          + "<span>" + esc(r.headline || r.date) + "</span></button>";
-      }).join("");
+          + '<span class="day-in-vals">'
+          + '<span class="day-in-val"><i>' + esc(r.name) + "</i><em>" + got + "</em></span>"
+          + '<span class="day-in-val"><i>' + esc(r.other) + "</i><em>" + sent + "</em></span>"
+          + "</span></button>";
+      }).join("")
+        || '<div class="date">No trades on the tape yet.</div>';
       const open = tape.rows.find((r) => r.transaction_id === openId);
       const champ = ((titles && titles.titles) || [])[0];
       const rec = champ && champ.record || {};
@@ -1153,10 +1299,10 @@ const html = `<!DOCTYPE html>
           + "</div></a>"
         : "";
       return '<div class="alert-row"><div class="day-alert">'
-        + '<div class="day-alert-h">' + esc(title) + (hint ? "<span>" + esc(hint) + "</span>" : "") + "</div>"
+        + '<div class="day-alert-h">Recent Trade' + (tape.day ? "<span>" + esc(tape.day) + "</span>" : "") + "</div>"
         + chips
         + "</div>" + champBox + "</div>"
-        + (open ? '<div class="home-tape">' + boardTape(open) + "</div>" : "");
+        + (open ? '<div class="home-tape">' + boardTape(open) + voteBlock(open) + "</div>" : "");
     }
 
     function renderTeamHome() {
@@ -1648,6 +1794,16 @@ const html = `<!DOCTYPE html>
     document.getElementById("app").addEventListener("click", (e) => {
       const packBtn = e.target.closest("[data-pack]");
       if (packBtn) { togglePack(packBtn.dataset.pack); return; }
+      // Before the row handlers: the vote block is a sibling of the open row, not inside it,
+      // so a vote must not read as a click on the accordion.
+      const voteBtn = e.target.closest("[data-vote]");
+      if (voteBtn) {
+        const tx = voteBtn.dataset.vote;
+        const pick = voteBtn.dataset.voteSeat;
+        writeVote(tx, readVotes(tx).choice === pick ? null : pick);
+        render();
+        return;
+      }
       const pickBtn = e.target.closest("[data-pick]");
       if (pickBtn) {
         openPick = openPick === pickBtn.dataset.pick ? null : pickBtn.dataset.pick;

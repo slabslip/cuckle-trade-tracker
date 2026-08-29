@@ -155,12 +155,14 @@ const html = `<!DOCTYPE html>
     .day-heads { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .day-heads .bubble { margin-left: auto; }
     button.text-link, a.text-link {
-      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--muted);
+      appearance: none; font: inherit; font-size: 1rem; font-weight: 650; color: var(--text);
       background: none; border: 0; padding: 0; min-height: 44px;
       text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
     }
     a.text-link { display: inline-flex; align-items: center; }
     button.text-link:focus-visible, a.text-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    #pathNav { margin: 0 0 12px; }
+    #pathNav .caption { margin: 0; }
     .day-scroller {
       display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
       padding-bottom: 2px; -webkit-overflow-scrolling: touch;
@@ -322,6 +324,9 @@ const html = `<!DOCTYPE html>
       <div class="who-menu" id="whoMenu" hidden role="listbox"></div>
     </span>
   </h1>
+  <p id="pathNav">
+    <a class="text-link" href="?view=titles" data-view="titles">Champions path</a>
+  </p>
   <p id="lead"></p>
   <div id="feed" hidden></div>
   <div id="app" hidden></div>
@@ -335,7 +340,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829c";
+    const DATA_V = "20260829d";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -643,6 +648,8 @@ const html = `<!DOCTYPE html>
 
     function leagueBubbles() {
       const items = [];
+      const champ = ((titles && titles.titles) || [])[0];
+      if (champ) items.push({ view: "titles", kicker: "Champion", line: champ.season + " · " + champ.name });
       const best = rankAge(1)[0];
       const worst = rankAge(-1)[0];
       if (best) items.push({ pack: "best", kicker: "Best aged", line: best.name + " vs " + best.other + " · " + fmt(windowScore(best)) });
@@ -678,7 +685,9 @@ const html = `<!DOCTYPE html>
       if (el.dataset.key === key) { el.hidden = false; return; }
       el.dataset.key = key;
       el.hidden = !items.length;
-      const pill = (b) => '<button type="button" class="bubble"' + (b.pack ? ' data-pack="' + b.pack + '"' : "") + ">"
+      const pill = (b) => '<button type="button" class="bubble"'
+        + (b.view ? ' data-view="' + b.view + '"' : "")
+        + (b.pack ? ' data-pack="' + b.pack + '"' : "") + ">"
         + "<b>" + b.kicker + "</b> <span>" + b.line + "</span></button>";
       const row = items.map(pill).join("");
       el.innerHTML = '<div class="ticker" aria-label="League feed"><div class="ticker-track">' + row + row + "</div></div>";
@@ -810,13 +819,7 @@ const html = `<!DOCTYPE html>
     }
 
     function renderLeagueHome() {
-      const n = ((titles && titles.titles) || []).length;
-      const gate = n
-        ? '<p class="caption"><a class="text-link" href="?view=titles" data-view="titles">Champions path</a>'
-          + " · " + n + " title years</p>"
-        : "";
       return dayAlert()
-        + gate
         + lensRow()
         + pack("best", "Best aged", rankAge(1).map(boardTape).join(""))
         + pack("worst", "Worst aged", rankAge(-1).map(boardTape).join(""))
@@ -1473,7 +1476,24 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    function openTitles() {
+      view = "titles";
+      titleYear = null;
+      openId = null;
+      markOpen = null;
+      lensOpen = false;
+      render();
+    }
+
+    document.getElementById("pathNav").addEventListener("click", (e) => {
+      const a = e.target.closest("[data-view=titles]");
+      if (!a) return;
+      e.preventDefault();
+      openTitles();
+    });
     document.getElementById("feed").addEventListener("click", (e) => {
+      const pathBtn = e.target.closest("[data-view=titles]");
+      if (pathBtn) { openTitles(); return; }
       const btn = e.target.closest("[data-pack]");
       if (btn) togglePack(btn.dataset.pack);
     });
@@ -1532,6 +1552,7 @@ const html = `<!DOCTYPE html>
       }
       const viewBtn = e.target.closest("[data-view]");
       if (viewBtn) {
+        if (viewBtn.tagName === "A") e.preventDefault();
         view = viewBtn.dataset.view;
         openId = null;
         openDraft = null;

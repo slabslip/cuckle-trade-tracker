@@ -119,6 +119,8 @@ const html = `<!DOCTYPE html>
     .hop { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8125rem; padding: 4px 0; color: var(--dim); }
     .hop b { color: var(--text); font-variant-numeric: tabular-nums; }
     .leg b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .leg.va { color: var(--text); border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
+    .leg.va b { color: #d4c07a; }
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
     svg.spark { width: 100%; height: 72px; margin-top: 8px; }
@@ -348,7 +350,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829e";
+    const DATA_V = "20260829f";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -414,7 +416,7 @@ const html = `<!DOCTYPE html>
         }).join("") + "</div>";
     }
 
-    function bagBlock(title, legs, total, unpriced) {
+    function bagBlock(title, legs, total, unpriced, va) {
       const items = (legs || []).map((l) => {
         const val = l.flag === "unpriced" || l.value == null
           ? "no DP row"
@@ -430,9 +432,12 @@ const html = `<!DOCTYPE html>
         }
         return '<div class="leg">' + body + "</div>";
       }).join("");
+      const adj = va && Math.round(va)
+        ? '<div class="leg va"><span>Value Adjustment</span><b>' + (va > 0 ? "+" : "") + fmt(va) + "</b></div>"
+        : "";
       const warn = unpriced ? '<div class="warn">' + unpriced + " no DP row</div>" : "";
       const shown = unpriced && !total ? "—" : fmt(total);
-      return '<div class="bag"><h3>' + title + " · " + shown + "</h3>" + warn + items + "</div>";
+      return '<div class="bag"><h3>' + title + " · " + shown + "</h3>" + warn + items + adj + "</div>";
     }
 
     async function loadMembers() {
@@ -524,7 +529,31 @@ const html = `<!DOCTYPE html>
     }
 
     function sideOf(t) {
-      return (t.windows && t.windows[lens]) || t.even || t.realized;
+      return applyVa((t.windows && t.windows[lens]) || t.even || t.realized);
+    }
+
+    function applyVa(s) {
+      if (!s || s.incomplete) return s;
+      const priced = (legs) => (legs || []).filter((l) => l.value != null);
+      const sum = (legs) => priced(legs).reduce((a, l) => a + l.value, 0);
+      const got = priced(s.legs), sent = priced(s.sent);
+      if (!got.length || !sent.length) return s;
+      const one = (mine, other) => {
+        const myMax = Math.max(...mine.map((l) => l.value));
+        const theirMax = Math.max(...other.map((l) => l.value));
+        const spots = Math.max(0, other.length - mine.length);
+        const lesser = other.filter((l) => l.value < myMax).length;
+        const n = Math.max(spots, Math.max(0, lesser - mine.length));
+        const damp = theirMax > 0 ? myMax / Math.max(myMax, theirMax) : 1;
+        return 0.15 * n * myMax * damp;
+      };
+      const vaG = one(got, sent), vaS = one(sent, got);
+      return Object.assign({}, s, {
+        value_adjust: vaG,
+        value_adjust_sent: vaS,
+        today: sum(s.legs) + vaG,
+        sent_today: sum(s.sent) + vaS,
+      });
     }
 
     // ponytail: middle = rounded bags, so 12,944 − 6,874 reads 6,070 not a raw 6069.33 or an aged leftover.
@@ -1091,8 +1120,8 @@ const html = `<!DOCTYPE html>
       const p = tradeParties(t, extra);
       const gotTitle = p.mine + " received";
       const sentTitle = p.multi ? p.mine + " gave up" : p.other + " received";
-      let bags = bagBlock(gotTitle, p.s.legs, p.s.today, p.s.unpriced)
-        + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced);
+      let bags = bagBlock(gotTitle, p.s.legs, p.s.today, p.s.unpriced, p.s.value_adjust)
+        + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced, p.s.value_adjust_sent);
       if ((t.others || []).length > 1) {
         bags += (t.other_bags || []).map((b) => {
           const side = (b.windows && b.windows[lens]) || b.even || b.realized;

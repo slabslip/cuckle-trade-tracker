@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
 import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
+import { applyToSide } from "./value-adjust.mjs";
 
 const TEAMS = 10;
 const FLAT_SCALE = 10000;
@@ -647,7 +648,7 @@ async function main() {
       const t0Priced = s.t0 != null;
       const todayDelta = s.incomplete ? null : gotP - sentP;
       const t0Delta = s.incomplete || !t0Priced ? null : t0Got - t0Sent;
-      evenSides[uid] = {
+      evenSides[uid] = applyToSide({
         name: s.name,
         today: gotP,
         sent_today: sentP,
@@ -659,10 +660,21 @@ async function main() {
         incomplete: s.incomplete,
         legs: gotLegs,
         sent: sentLegs,
-      };
-      if (!s.incomplete && todayDelta != null) {
-        edges[uid].even += todayDelta;
-        edges[uid].even_per.push(todayDelta);
+      });
+      const t0Adj = applyToSide({
+        incomplete: s.incomplete || !t0Priced,
+        legs: got0Legs,
+        sent: sent0Legs,
+      });
+      if (t0Priced && !s.incomplete) {
+        evenSides[uid].t0 = t0Adj.today;
+        evenSides[uid].t0_delta = t0Adj.today_delta;
+        evenSides[uid].t0_value_adjust = t0Adj.value_adjust;
+      }
+      const evenDelta = evenSides[uid].today_delta;
+      if (!s.incomplete && evenDelta != null) {
+        edges[uid].even += evenDelta;
+        edges[uid].even_per.push(evenDelta);
       }
     }
     const evenYearEnds = yearEnds(t0, today).map((d) => {
@@ -693,7 +705,7 @@ async function main() {
           ? bagAtEven(legs, uid, t0, ctx, "out")
           : bagY3(legs, uid, dates, today, ctx, "out");
         const incomplete = got.unpriced + sent.unpriced > 0 || (n !== 0 && !dates.length);
-        sides[uid] = {
+        sides[uid] = applyToSide({
           name: nameById[uid] || uid,
           today: got.points,
           sent_today: sent.points,
@@ -704,7 +716,7 @@ async function main() {
           snaps: dates.length,
           legs: got.legs,
           sent: sent.legs,
-        };
+        });
       }
       entry.lenses.windows[key] = {
         sides,
@@ -949,7 +961,8 @@ async function main() {
       return Math.round(ms / 86400000);
     }
     function nowVal(key) {
-      return playerValue(curveIdx, key, today).value ?? 0;
+      const raw = playerValue(curveIdx, key, today).value;
+      return raw == null ? 0 : flatten(raw, vmaxAt(vmaxIdx, today));
     }
     const rostersNow = readJson("rosters_now.json", []);
     const rosterOwner = new Map();
@@ -1252,10 +1265,14 @@ async function main() {
       const r = t.lenses.realized.sides[uid];
       const e = t.lenses.even.sides[uid];
       const gotFlat = (r.legs || []).reduce((a, l) => a + (flatten(l.value, topToday) || 0), 0);
-      if (Math.abs((e.today || 0) - gotFlat) >= 1) flattenDrift += 1;
+      if (Math.abs((e.today || 0) - (e.value_adjust || 0) - gotFlat) >= 1) flattenDrift += 1;
     }
   }
   check("even is flatten-only", flattenDrift === 0);
+  const ceedeeTx = meters.find((t) => t.date === "2025-09-04" && t.names.includes("TrumanCooper"));
+  const trumanId = members.find((m) => m.canonical_name === "TrumanCooper")?.user_id;
+  const ceedeeVa = ceedeeTx?.lenses.even.sides[trumanId]?.value_adjust;
+  check("ceedee va ~5752", ceedeeVa != null && ceedeeVa >= 5500 && ceedeeVa <= 6000);
   const winKeys = ["t0", "y1", "y2", "y3", "all"];
   check("every trade has windows", meters.every((t) => winKeys.every((k) => t.lenses.windows?.[k])));
   const winZero = meters.filter((t) => {

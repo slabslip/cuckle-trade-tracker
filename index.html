@@ -28,9 +28,9 @@
     }
     h1.brand {
       display: flex; align-items: center; gap: 10px;
-      font-size: 1.4rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
+      font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
     }
-    h1.brand a { color: inherit; text-decoration: none; }
+    h1.brand a { color: inherit; text-decoration: none; margin-right: auto; }
     button.go-home {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -42,11 +42,11 @@
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
     #lead:empty { display: none; }
     select.who {
-      display: block; width: 100%;
-      appearance: none; font: inherit; color: var(--text);
-      background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a9aa3' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;
-      border: 1px solid var(--line); border-radius: 10px;
-      min-height: 44px; padding: 10px 36px 10px 12px; margin: 0 0 16px;
+      flex: 0 1 158px; width: 158px; max-width: 42%;
+      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--text);
+      background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a9aa3' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center;
+      border: 1px solid var(--line); border-radius: 8px;
+      min-height: 36px; padding: 6px 28px 6px 10px; margin: 0;
     }
     select.who:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.row, button.chip, button.tab, .row {
@@ -69,9 +69,13 @@
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
-    .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; width: 100%; align-items: baseline; }
+    .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; width: 100%; align-items: start; }
     .row-top.tape .side.right { text-align: right; }
     .row-top.tape .mid { text-align: center; font-variant-numeric: tabular-nums; }
+    .row.own-pick { border-color: #2e6b4f; }
+    .row.away-pick { border-color: #6b5a2e; }
+    .origin.own { color: var(--green); font-weight: 650; }
+    .origin.away { color: #e0b44c; font-weight: 650; }
     .row-top.tape .val { font-variant-numeric: tabular-nums; font-weight: 650; }
     .names { font-weight: 600; }
     .date { color: var(--dim); font-size: 0.8125rem; }
@@ -118,6 +122,26 @@
     button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.bubble b { font-weight: 650; }
     button.bubble span { color: var(--dim); }
+    .day-alert {
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
+      padding: 12px; margin: 0 0 14px;
+    }
+    .day-alert-h { font-weight: 650; }
+    .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 4px; }
+    .day-scroller {
+      display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
+      padding-bottom: 2px; -webkit-overflow-scrolling: touch;
+    }
+    button.day-chip {
+      flex: 0 0 220px; appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; min-height: 52px; cursor: pointer;
+    }
+    button.day-chip.on { border-color: #6b5a2e; }
+    button.day-chip:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.day-chip b { display: block; font-weight: 650; }
+    button.day-chip span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    .day-alert .row { margin-top: 10px; }
     .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
     button.mark {
       flex: 1 1 calc(50% - 8px); min-width: 140px;
@@ -141,6 +165,84 @@
     button.pack-head h2 { margin: 0; font-size: 1.05rem; }
     .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; }
     .pack-body { margin-top: 8px; }
+    .draft-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: 12px 0 8px; }
+    .draft-head .caption { margin: 0; padding-top: 10px; }
+    .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
+    .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
+    .lens-row-left .caption, .lens-row .filter-hint { margin: 0; }
+    .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    button.score-btn {
+      flex: 0 0 auto; margin-left: auto; appearance: none; font: inherit;
+      font-size: 0.8125rem; color: var(--text);
+      background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+      min-height: 36px; padding: 6px 12px; position: relative; cursor: pointer;
+      white-space: nowrap;
+    }
+    button.score-btn.on { border-color: #6b5a2e; }
+    button.score-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.score-btn .score-k { color: var(--dim); }
+    button.score-btn .chev { color: var(--muted); }
+    button.score-btn .dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 7px; height: 7px; border-radius: 50%; background: #e0b44c;
+    }
+    #scoreAs {
+      position: absolute; top: 52px; right: 0; left: auto; z-index: 12;
+      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
+      display: flex; flex-direction: column; gap: 4px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #scoreAs button.score-opt, #scoreAs button.score-more {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
+      min-height: 44px; padding: 8px 10px; cursor: pointer;
+    }
+    #scoreAs button.score-opt.on { border-color: #6b5a2e; }
+    #scoreAs button.score-opt b { display: block; font-weight: 650; }
+    #scoreAs button.score-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
+    #scoreAs button.score-more { color: var(--muted); min-height: 36px; text-align: center; }
+    #scoreAs button.score-opt:focus-visible, #scoreAs button.score-more:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    button.filter-btn {
+      flex: 0 0 auto; appearance: none; font: inherit; color: var(--muted);
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      width: 44px; height: 44px; padding: 0; display: grid; place-items: center;
+      position: relative; cursor: pointer;
+    }
+    button.filter-btn.on { color: var(--text); border-color: #6b5a2e; }
+    button.filter-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.filter-btn .dot {
+      position: absolute; top: 8px; right: 8px;
+      width: 7px; height: 7px; border-radius: 50%; background: #e0b44c;
+    }
+    .filter-panel {
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      padding: 4px 12px; margin: 0 0 14px;
+    }
+    .filter-panel label {
+      display: flex; align-items: center; gap: 10px;
+      min-height: 44px; color: var(--text);
+    }
+    .filter-panel input { width: 18px; height: 18px; accent-color: var(--green); }
+    .filter-panel .rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+    .filter-panel .filter-h { color: var(--dim); font-size: 0.75rem; margin: 8px 0 0; }
+    .filter-hint { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
+    .filter-hint .caption { margin: 0; }
+    .filter-wrap { position: relative; z-index: 4; }
+    #yearFilters {
+      position: absolute; top: 52px; left: 0; z-index: 12;
+      width: 168px; margin: 0; padding: 6px;
+      display: flex; flex-wrap: wrap; gap: 4px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #yearFilters button {
+      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--muted);
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
+      min-height: 32px; padding: 4px 8px; cursor: pointer;
+    }
+    #yearFilters button.on { color: var(--text); border-color: #6b5a2e; }
+    #yearFilters button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
   </style>
 </head>
 <body>
@@ -151,11 +253,11 @@
       </svg>
     </button>
     <a href="./">CuckleChunckle</a>
+    <select class="who" id="who" aria-label="Team">
+      <option value="">Team</option>
+    </select>
   </h1>
   <p id="lead"></p>
-  <select class="who" id="who" aria-label="Team">
-    <option value="">Team</option>
-  </select>
   <div id="feed" hidden></div>
   <div id="app" hidden></div>
   <script>
@@ -167,19 +269,34 @@
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828z";
+    const DATA_V = "20260828ai";
     const openPacks = new Set();
     const WINDOWS = [
-      ["t0", "Day of trade"],
-      ["y1", "1 year"],
-      ["y2", "2 years"],
-      ["y3", "3 years"],
-      ["all", "All time"],
+      ["t0", "At trade"],
+      ["y1", "First 1 year"],
+      ["y2", "First 2 years"],
+      ["y3", "First 3 years"],
+      ["all", "Since trade"],
+    ];
+    const SCORE_MAIN = [
+      ["all", "Since trade", "Typical year from accept through now"],
+      ["y3", "First 3 years", "Typical year in the first 3 after accept"],
+      ["t0", "At trade", "Bags the day they accepted (picks still picks)"],
+    ];
+    const SCORE_MORE = [
+      ["y2", "First 2 years", "Typical year in the first 2 after accept"],
+      ["y1", "First 1 year", "Typical year in the first year after accept"],
     ];
     let view = "home";
     let draftTab = "rookie";
     let draftSort = "new";
+    let draftRounds = { 1: true, 2: true, 3: true, 4: true };
+    let draftStartup = false;
+    let draftFilterOpen = false;
     let year = "all";
+    let yearFilterOpen = false;
+    let lensOpen = false;
+    let scoreMoreOpen = false;
     let openId = null;
     let openPick = null;
     let openDraft = null;
@@ -493,7 +610,9 @@
     }
 
     function renderLeagueHome() {
-      return pack("best", "Best aged", rankAge(1).map(boardTape).join(""))
+      return dayAlert()
+        + lensRow()
+        + pack("best", "Best aged", rankAge(1).map(boardTape).join(""))
         + pack("worst", "Worst aged", rankAge(-1).map(boardTape).join(""))
         + renderPlayerLists();
     }
@@ -573,6 +692,47 @@
         + "</div>";
     }
 
+    function tapeDay() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function daySides() {
+      const day = tapeDay();
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const byDay = new Map();
+      let last = "";
+      for (const r of sides) {
+        if (r.date > last) last = r.date;
+        if (!byDay.has(r.date)) byDay.set(r.date, new Map());
+        const by = byDay.get(r.date);
+        const prev = by.get(r.transaction_id);
+        if (!prev || (me && r.user_id === me.user_id)) by.set(r.transaction_id, r);
+      }
+      const todayRows = [...(byDay.get(day)?.values() || [])];
+      const showDay = todayRows.length ? day : last;
+      const rows = [...(byDay.get(showDay)?.values() || [])];
+      return { day: day, showDay: showDay, rows: rows, todayN: todayRows.length };
+    }
+
+    function dayAlert() {
+      const tape = daySides();
+      const n = tape.todayN;
+      const title = n === 1 ? "1 trade today" : n + " trades today";
+      const hint = n ? "" : (tape.showDay ? "Last on tape " + tape.showDay : "No deals on the last rebuild");
+      const chips = tape.rows.map((r) => {
+        const on = openId === r.transaction_id;
+        return '<button type="button" class="day-chip' + (on ? " on" : "") + '" data-board-open="' + r.user_id + '" data-id="' + r.transaction_id + '">'
+          + "<b>" + r.name + " vs " + r.other + "</b>"
+          + "<span>" + (r.headline || r.date) + "</span></button>";
+      }).join("");
+      const open = tape.rows.find((r) => r.transaction_id === openId);
+      return '<div class="day-alert">'
+        + '<div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
+        + (chips ? '<div class="day-scroller">' + chips + "</div>" : "")
+        + (open ? boardTape(open) : "")
+        + "</div>";
+    }
+
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
@@ -593,12 +753,13 @@
         .sort((a, b) => b.per - a.per);
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
-      const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
-      return teamMarks()
-        + '<div class="caption"><span class="' + cls(per) + '">' + fmt(per) + "</span> / trade · " + clock
+      const allN = (data.trades || []).filter((t) => tradeDelta(t) != null).length;
+      return dayAlert()
+        + teamMarks()
+        + lensRow('<div class="caption"><span class="' + cls(per) + '">' + fmt(per) + "</span> / trade"
         + (total != null ? " · " + fmt(total) + " total" : "")
-        + (pool.length ? " · " + pool.length + " deals" : "")
-        + "</div>"
+        + (allN ? " · " + livedHint(pool.length, allN) : "")
+        + "</div>")
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
         + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")
@@ -739,7 +900,7 @@
         : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
         : fmt(dlt);
       const midCls = dlt == null || dlt === 0 ? "" : "pos";
-      const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
+      const clock = clockName();
       let detail = "";
       if (open) {
         const used = [{ label: p.player, value: got, kind: "player" }];
@@ -754,11 +915,13 @@
           + (p.asset_key && picks && picks[p.asset_key] && (picks[p.asset_key].hops || []).length ? hopHtml(p.asset_key) : "")
           + "</div>";
       }
-      return '<button type="button" class="row' + (open ? " open" : "") + '" data-draft="' + key + '">'
+      const own = origin === "Own pick";
+      return '<button type="button" class="row' + (open ? " open" : "") + (own ? " own-pick" : " away-pick") + '" data-draft="' + key + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><span class="names ' + mineCls + '">' + p.player + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="side"><div><span class="names ' + mineCls + '">' + p.player + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="date">' + (p.as_of || "") + "</div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
-        + '<div class="date">' + (p.as_of || "") + ' · <span class="badge">' + origin + "</span></div></div>"
+        + '<div class="date origin ' + (own ? "own" : "away") + '">' + origin + "</div></div>"
         + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + slot + "</span></div>"
         + "</div>"
         + detail + "</button>";
@@ -768,36 +931,111 @@
       const years = [...new Set(data.trades.map((t) => t.season))].sort().reverse();
       let list = data.trades;
       if (year !== "all") list = list.filter((t) => t.season === year);
-      return '<div class="toggle">'
-        + '<button type="button" class="chip' + (year === "all" ? " on" : "") + '" data-year="all">All</button>'
-        + years.map((y) => '<button type="button" class="chip' + (year === y ? " on" : "") + '" data-year="' + y + '">' + y + "</button>").join("")
+      const hint = year === "all" ? "Filter by year" : "Filter by year · " + year;
+      const yearBtn = '<button type="button" class="filter-btn' + (year !== "all" || yearFilterOpen ? " on" : "") + '" data-yfilter="1" aria-label="Filter by year" aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (year !== "all" ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + hint + "</div>";
+      return '<div class="filter-wrap">'
+        + lensRow(yearBtn)
+        + (yearFilterOpen
+          ? '<div class="filter-panel" id="yearFilters">'
+            + '<button type="button" class="' + (year === "all" ? "on" : "") + '" data-year="all">All</button>'
+            + years.map((y) => '<button type="button" class="' + (year === y ? "on" : "") + '" data-year="' + y + '">' + y + "</button>").join("")
+            + "</div>"
+          : "")
         + "</div>"
         + list.map(tradeRow).join("");
     }
 
+    function clockName() {
+      return ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
+    }
+
+    function livedHint(shown, all, noun) {
+      if (!all) return "";
+      const one = noun || "deal";
+      const many = one + "s";
+      if (lens === "t0" || lens === "all" || shown === all) return shown + " " + (shown === 1 ? one : many);
+      const span = { y1: "1 year", y2: "2 years", y3: "3 years" }[lens] || clockName();
+      return shown + " of " + all + " lived " + span;
+    }
+
+    function scoreOpt(row) {
+      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '">'
+        + "<b>" + row[1] + "</b><span>" + row[2] + "</span></button>";
+    }
+
+    function scoreMenu() {
+      const extra = scoreMoreOpen || lens === "y1" || lens === "y2";
+      return '<div class="filter-panel" id="scoreAs">'
+        + SCORE_MAIN.map(scoreOpt).join("")
+        + '<button type="button" class="score-more" data-score-more="1">' + (extra ? "Less" : "More horizons") + "</button>"
+        + (extra ? SCORE_MORE.map(scoreOpt).join("") : "")
+        + "</div>";
+    }
+
+    function lensRow(left) {
+      const name = clockName();
+      const on = lens !== "all" || lensOpen;
+      return '<div class="filter-wrap">'
+        + '<div class="lens-row">'
+        + (left ? '<div class="lens-row-left">' + left + "</div>" : "")
+        + '<button type="button" class="score-btn' + (on ? " on" : "") + '" data-score="1" aria-label="Score as ' + name + '" aria-expanded="' + (lensOpen ? "true" : "false") + '">'
+        + '<span class="score-k">Score as</span> ' + name + ' <span class="chev">▾</span>'
+        + (lens !== "all" ? '<span class="dot"></span>' : "")
+        + "</button></div>"
+        + (lensOpen ? scoreMenu() : "")
+        + "</div>";
+    }
+
     function renderDrafts() {
-      let list = []
-        .concat((data.drafts && data.drafts.rookie) || [], (data.drafts && data.drafts.startup) || [])
-        .filter((p) => chipLived(p.as_of));
+      const raw = []
+        .concat((data.drafts && data.drafts.rookie) || [], draftStartup ? (data.drafts && data.drafts.startup) || [] : [])
+        .filter((p) => p.startup ? draftStartup : !!draftRounds[p.round]);
+      let list = raw.filter((p) => chipLived(p.as_of));
       list = list.slice().sort((a, b) => {
-        if (draftSort === "gain") {
+        const date = Number(a.season) - Number(b.season) || (a.pick_no || 0) - (b.pick_no || 0);
+        if (draftSort === "old") return date;
+        if (draftSort === "gain" || draftSort === "loss") {
           const da = pickDelta(a), db = pickDelta(b);
-          if (da == null && db == null) return Number(b.season) - Number(a.season);
+          if (da == null && db == null) return -date;
           if (da == null) return 1;
           if (db == null) return -1;
-          return db - da;
+          return draftSort === "gain" ? db - da : da - db;
         }
-        return Number(b.season) - Number(a.season) || (b.pick_no || 0) - (a.pick_no || 0);
+        return -date;
       });
       const graded = list.map(pickDelta).filter((d) => d != null);
       const avg = graded.length ? graded.reduce((a, b) => a + b, 0) / graded.length : null;
-      const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
-      return '<div class="toggle">'
-        + '<button type="button" class="chip' + (draftSort === "new" ? " on" : "") + '" data-dsort="new">Newest</button>'
-        + '<button type="button" class="chip' + (draftSort === "gain" ? " on" : "") + '" data-dsort="gain">Best gain</button>'
-        + "</div>"
-        + '<div class="caption"><span class="' + cls(avg) + '">' + fmt(avg) + "</span> / pick · " + clock
-        + " · " + graded.length + " graded · " + list.length + " shown</div>"
+      const filtered = draftSort !== "new" || draftStartup || !draftRounds[1] || !draftRounds[2] || !draftRounds[3] || !draftRounds[4];
+      const rounds = [["1", "1st round"], ["2", "2nd round"], ["3", "3rd round"], ["4", "4th round"]];
+      const sorts = [
+        ["new", "Newest"],
+        ["old", "Oldest"],
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const draftBtn = '<button type="button" class="filter-btn' + (filtered || draftFilterOpen ? " on" : "") + '" data-dfilter="1" aria-label="Filter drafts" aria-expanded="' + (draftFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption"><span class="' + cls(avg) + '">' + fmt(avg) + "</span> / pick"
+        + " · " + graded.length + " graded · " + livedHint(list.length, raw.length, "pick") + "</div>";
+      return lensRow(draftBtn)
+        + (draftFilterOpen
+          ? '<div class="filter-panel" id="draftFilters">'
+            + '<div class="filter-h">Date</div>'
+            + sorts.slice(0, 2).map((s) => '<label data-dsort="' + s[0] + '"><input type="radio" name="dsort"' + (draftSort === s[0] ? " checked" : "") + "> " + s[1] + "</label>").join("")
+            + '<div class="filter-h">Value</div>'
+            + sorts.slice(2).map((s) => '<label data-dsort="' + s[0] + '"><input type="radio" name="dsort"' + (draftSort === s[0] ? " checked" : "") + "> " + s[1] + "</label>").join("")
+            + '<hr class="rule">'
+            + rounds.map((r) => '<label data-dround="' + r[0] + '"><input type="checkbox"' + (draftRounds[r[0]] ? " checked" : "") + "> " + r[1] + "</label>").join("")
+            + '<hr class="rule">'
+            + '<label data-dstartup="1"><input type="checkbox"' + (draftStartup ? " checked" : "") + "> Include startup picks</label>"
+            + "</div>"
+          : "")
         + list.map(pickRow).join("");
     }
 
@@ -893,7 +1131,7 @@
         const deals = data.trades.filter((t) => t.others.length === 1 && t.others[0] === partnerName);
         detail = p ? "<h2>" + p.name + "</h2>" + deals.map(tradeRow).join("") : "";
       }
-      return rows + detail;
+      return lensRow() + rows + detail;
     }
 
     function render() {
@@ -907,12 +1145,7 @@
             '<button type="button" class="tab' + (view === v ? " on" : "") + '" data-view="' + v + '">' + v + "</button>"
           ).join("")
           + "</div>"
-        : "")
-        + '<div class="toggle">'
-        + WINDOWS.map((w) =>
-          '<button type="button" class="chip' + (lens === w[0] ? " on" : "") + '" data-lens="' + w[0] + '">' + w[1] + "</button>"
-        ).join("")
-        + "</div>";
+        : "");
       const body = view === "home" ? renderHome()
         : view === "trades" ? renderTrades()
         : view === "partners" ? renderPartners()
@@ -981,7 +1214,10 @@
         view = viewBtn.dataset.view;
         openId = null;
         openDraft = null;
+        if (view !== "drafts") draftFilterOpen = false;
+        if (view !== "trades") yearFilterOpen = false;
         if (view !== "partners") partnerName = null;
+        lensOpen = false;
         render();
         return;
       }
@@ -993,14 +1229,39 @@
         render();
         return;
       }
+      const scoreMore = e.target.closest("[data-score-more]");
+      if (scoreMore) { scoreMoreOpen = !scoreMoreOpen; lensOpen = true; render(); return; }
       const lensBtn = e.target.closest("[data-lens]");
-      if (lensBtn) { lens = lensBtn.dataset.lens; render(); return; }
-      const sortBtn = e.target.closest("[data-dsort]");
-      if (sortBtn) { draftSort = sortBtn.dataset.dsort; render(); return; }
+      if (lensBtn) { lens = lensBtn.dataset.lens; lensOpen = false; render(); return; }
+      const scoreBtn = e.target.closest("[data-score]");
+      if (scoreBtn) {
+        lensOpen = !lensOpen;
+        if (lensOpen) { yearFilterOpen = false; draftFilterOpen = false; }
+        render();
+        return;
+      }
+      const filterBtn = e.target.closest("[data-dfilter]");
+      if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
+      const yfilterBtn = e.target.closest("[data-yfilter]");
+      if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
+      const yearBtn = e.target.closest("[data-year]");
+      if (yearBtn) { year = yearBtn.dataset.year; yearFilterOpen = false; render(); return; }
+      if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters") || e.target.closest("#scoreAs")) return;
+      let closedFilter = false;
+      if (draftFilterOpen && !e.target.closest("#draftFilters")) {
+        draftFilterOpen = false;
+        closedFilter = true;
+      }
+      if (yearFilterOpen && !e.target.closest("#yearFilters")) {
+        yearFilterOpen = false;
+        closedFilter = true;
+      }
+      if (lensOpen && !e.target.closest("#scoreAs") && !e.target.closest("[data-score]")) {
+        lensOpen = false;
+        closedFilter = true;
+      }
       const dt = e.target.closest("[data-dt]");
       if (dt) { draftTab = dt.dataset.dt; render(); return; }
-      const yr = e.target.closest("[data-year]");
-      if (yr) { year = yr.dataset.year; render(); return; }
       const draftBtn = e.target.closest("[data-draft]");
       if (draftBtn) {
         openDraft = openDraft === draftBtn.dataset.draft ? null : draftBtn.dataset.draft;
@@ -1010,6 +1271,28 @@
       }
       const row = e.target.closest(".row[data-id]");
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
+      else if (closedFilter) render();
+    });
+    document.addEventListener("change", (e) => {
+      const sortLab = e.target.closest("[data-dsort]");
+      if (sortLab) {
+        draftSort = sortLab.dataset.dsort;
+        draftFilterOpen = true;
+        render();
+        return;
+      }
+      const roundLab = e.target.closest("[data-dround]");
+      if (roundLab) {
+        draftRounds[roundLab.dataset.dround] = e.target.checked;
+        draftFilterOpen = true;
+        render();
+        return;
+      }
+      if (e.target.closest("[data-dstartup]")) {
+        draftStartup = e.target.checked;
+        draftFilterOpen = true;
+        render();
+      }
     });
     loadMembers().catch((err) => {
       document.getElementById("app").hidden = false;

@@ -64,12 +64,12 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 | Tab | HAVE |
 | --- | --- |
 | Home | League boards is the dashboard home (house icon). A team’s home tabs are home / trades / partners / drafts. Identity marks + quiet per-trade line, then best/worst, extract partners, draft hit/miss. |
-| Trades | Your tape. Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
+| Trades | Your tape. Filter icon + “Filter by year” (All or one season). Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
-| Drafts | Every pick this seat used. Window chips score player-in-window vs pick-at-draft. Sort newest or best gain. Caption is average surplus. |
+| Drafts | Rookie picks this seat used (startup off by default). Score as chip grades player-in-window vs pick-at-draft. Filter icon: Newest/Oldest, value high↔low, 1st–4th, include startup. Own pick vs someone else’s pick is colored. Caption is average surplus. |
 | League | Best 10 / Worst 10. Clocks: **As of today** / **Aged after accept**. Windows: 3 months / 6 months / 1 year / 3 years / all (filter by **trade date**). Then per-trader / per-drafter lists. |
 
-**Value windows (global, default All time):** Day of trade · 1 year · 2 years · 3 years · All time. Same even-flatten book on every chip. No KTC mix. No steep DP chip.
+**Score as (global, default Since trade):** chip on the filter row — `Score as · {clock} ▾`. Menu: Since trade · First 3 years · At trade, plus More horizons (First 2 years / First 1 year). Gold dot when not Since trade. Home caption says `27 of 86 lived 3 years` when the clock hides young deals. **At trade** is accept day, not calendar today. Same even-flatten book. No KTC mix. No steep DP chip. Year funnel stays a separate control.
 
 ### Identity and bags
 
@@ -82,9 +82,9 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 
 | Clock | Question | On Home hero? | On Best/Worst? |
 | --- | --- | --- | --- |
-| **Day of trade** | Even-flatten pick values at accept. Missing year (2019, 2029) uses closest year, same round | Yes if that chip is on | Aged clock still uses today − T0 |
-| **1 / 2 / 3 years** | Mean of even-flatten year-ends in `[accept, accept+N]`. Player year under 300 raw DP → 0 | Yes if that chip is on | **No** (League windows are trade-date filters) |
-| **All time** (default) | Mean of even-flatten year-ends accept → today | **Yes** | League “As of today” is flatten-today, not this mean |
+| **At trade** | Even-flatten pick values at accept. Missing year (2019, 2029) uses closest year, same round | Yes if that stop is on | Aged clock still uses today − T0 |
+| **First 1 / 2 / 3 years** | Mean of even-flatten year-ends in `[accept, accept+N]`. Player year under 300 raw DP → 0 | Yes if that stop is on | **No** (League windows are trade-date filters) |
+| **Since trade** (default) | Mean of even-flatten year-ends accept → today | **Yes** | League “As of today” is flatten-today, not this mean |
 
 Incomplete (no DP row) stays **listed**, off every needle. One-ways and FAAB-only never enter the meter.
 

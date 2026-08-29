@@ -27,7 +27,72 @@ almost all presentation and plumbing, not pricing.
 
 ---
 
-## 2. P0 / P1 defects (confirmed, with line numbers)
+## 2. P0 defects — wrong numbers on screen
+
+Each of these was reproduced with a script against the committed data.
+
+### P0-1 — "Include startup picks" flips the Drafts headline sign
+`pickDelta` returns early for startup picks with the **raw player value** instead of a surplus
+(`generate-page.mjs:1226`), and `pickRow:1241` blanks the cost column. But startup picks
+**do** carry `pick_cost` — 28 of 28 for SF69erss — and the pipeline already ships a correct
+`surplus` (Stefon Diggs: cost 3,096, today 2,896, surplus −200).
+
+Measured on SF69erss:
+
+| Drafts header | mean / pick |
+| --- | ---: |
+| Rookie only | **−247** |
+| + startup, as shipped | **+360** |
+| + startup, computed correctly | **−514** |
+
+One checkbox turns a losing draft record into a winning one, and each startup row shows a green
+figure in the column that means "surplus" everywhere else.
+*Fix:* `if (p.startup) return displayDelta(pickGot(p), p.pick_cost)` and stop blanking the cost.
+Generator-only.
+
+### P0-2 — `node build.mjs` does not reproduce the deployed site
+`build.mjs` runs five scripts: `sleeper-sync`, `draft-resolve`, `value-snapshot`, `revalue`,
+`generate-page`. It does **not** run `apply-value-adjust.mjs` (which is what actually patched the
+committed UI JSON with the today blend and VA, because `value_curve.json` is absent from this
+checkout) or `title-path.mjs` (which writes `titles.json`). Both `README.md` and
+`docs/TRACKER_SDD.md` present `node build.mjs` as *the* rebuild.
+
+Live evidence the two paths are already out of step: `titles.json.as_of` is `2026-08-29` while
+`league.today` is `2026-08-28`. Worse, `revalue.mjs` and `apply-value-adjust.mjs` **both** build
+`trade_boards`, `hero.even_*`, `partners[].even_*` and `partner_headlines` by independent code
+paths, so which one ran last silently determines what the site shows.
+*Fix:* one canonical build list; delete the duplicate boards builder. Pipeline-only.
+
+### P0-3 — Third-party bags hide their Value Adjustment
+`tradeBags` passes five arguments to `bagBlock` for the two primary bags (`:1137-1138`) but only
+**four** for every other party's bag (`:1142`) — `va` is omitted. `bagBlock` therefore prints no
+Value Adjustment line while the header total it prints already contains VA.
+
+Measured: 12 third-party bags exist in the data; **4 carry non-zero invisible VA**. Trade
+`1277511518384037888` shows a TrumanCooper bag whose legs sum to 12,248 under a header reading
+12,960 — 712 unexplained. Third-party bags also never pass through `applyVa`, so they trust the
+committed value while the primary bags recompute.
+*Fix:* pass `side.value_adjust`; route the side through `applyVa`. Generator-only.
+
+### P0-4 — The manners tile and the Partners tab disagree on 1 partner in 4
+`marksOf` reads the committed `p.grade` (`:920`), which the pipeline derives from the **today**
+clock. The Partners tab recomputes the grade from the **selected lens** (`:1470`).
+Measured against lens `all`: **20 of 82 partner grades disagree.** Both screens carry a
+"Score as" control, so the home tile renders a today-clock verdict under a Since-trade heading.
+*Fix:* one `partnerPer(seat, name, lens)` helper; delete or explicitly label the stored grade.
+Both.
+
+### P0-5 — The Trades tab scores trades on clocks they have not lived
+`renderTrades` never filters by `chipLived` (`:1279`). On the `y3` lens a two-week-old trade
+renders a "First 3 years" number built from a single snapshot, while Home's tiles exclude exactly
+those trades via `windowTotal` → `chipLived`. `livedHint` — the function written to disclose this —
+is only ever called from Drafts (`:1372`), where `lens` is pinned to `all`, so its disclosure
+branch is unreachable.
+*Fix:* filter with `chipLived` and print `livedHint` above the list. Generator-only.
+
+---
+
+## 2b. P1 defects (confirmed, with line numbers)
 
 ### P1-1 — Shareable links are broken; `?me=` is written but never read
 `syncUrl()` (`generate-page.mjs:497`) writes `?me=<name>&view=trades&t=<tx>&lens=<lens>` on every render.
@@ -103,6 +168,40 @@ Only **one** trade is affected today (magnitude 94), but the rule is structurall
 future one-way or receiver-only side inherits it, and any change to the today book widens the gap.
 *Fix:* recompute totals whenever **either** side has priced legs; treat the empty side as 0 and
 say "sent nothing" rather than `0` (already listed as `UI_SDD.md` later-slice item 11). Pipeline + generator.
+
+### P1-10 — `aged` subtracts two different price books
+`sides[].aged` is `even.today_delta − even.t0_delta`, but `today_delta` is now the **40/60 KTC
+blend** while `t0_delta` comes from the **flatten-only** `windows.t0`. The number therefore
+measures the pricing model as much as the passage of time.
+
+Measured across all 576 sides: mean absolute difference between shipped `aged` and a
+same-book `windows.all.delta − windows.t0.delta` is **1,025**. Both sides of the trade dated
+`2026-08-29` — zero elapsed time — report `aged` of ±25.
+
+Live impact is currently **nil**, because the only screen that displayed `aged` is the
+unreachable board screen (§3). It is latent, and it is in the data.
+*Fix:* compute `aged` from one book, or ship a flatten `today_delta_flat` for it. Pipeline-only.
+
+### P1-11 — Filter state leaks across seats
+`clearLeague` (`:481`) resets `me`, `data`, `view`, `openId`, `partnerName`, `openPick`,
+`openDraft`, `markOpen`, `titleYear` — but **not** `year`, `lens`, `draftSort`, `draftRounds`,
+`draftStartup`, or `openPacks`. Pick 2019 in one seat's Trades, go home, pick a different seat:
+its Trades tab is filtered to a season it may not have, the filter dot stays lit, no checkbox
+reads as checked, and there is no "no trades in 2019" copy — just an empty list.
+*Fix:* reset filters in `clearLeague`, and add empty-state copy. Generator-only.
+
+### P1-12 — `history.replaceState` fires on every render
+`render` (`:1506`) calls `syncUrl` unconditionally and `syncUrl` (`:504`) calls `replaceState`,
+so every accordion toggle is a history write. Safari throttles around 100 calls per 30 s and
+begins dropping them with a console warning; opening trade rows quickly reaches that.
+*Fix:* only sync when a URL-bearing piece of state actually changed. Generator-only.
+
+### P1-13 — Attribute injection, not just element injection
+Extending §P1-6: unescaped data also lands **inside attribute values** —
+`data-partner="` (`:884`, `:1471`), `data-who="` (`:476`), `data-title="`. A Sleeper display name
+containing a double quote breaks out of the attribute, which is a second injection vector and
+also silently breaks the click handlers that read those datasets.
+*Fix:* the same `esc()`, applied to attributes as well as text. Generator-only.
 
 ---
 
@@ -227,6 +326,50 @@ payload, or the one structural gap in §P1-9 — not pricing.
 
 ---
 
+## 6b. Render cost
+
+Every render rebuilds `app.innerHTML` wholesale and recomputes VA from legs for every row.
+Benchmarked with the shipped inline implementation:
+
+| Render | `applyVa` calls | ms (desktop V8) |
+| --- | ---: | ---: |
+| `renderTeamHome` + `teamMarks` | ~2,000 | ~9 |
+| `markChart` (10 seats) | ~1,160 | ~5 |
+| `renderPartners` | ~710 | ~2 |
+
+Multiply by five to eight on a phone. The cost is structural, not algorithmic bad luck:
+`renderTeamHome` (`:1091`) calls `tradeDelta` **inside a sort comparator**, `renderPartners`
+(`:1468`) calls `perOf` twice per comparison and again in the `.map`, and `rankWide` (`:638`)
+calls `windowScore` inside both the dedupe and the sort. Each `applyVa` compiles regexes and
+spreads two `Math.max` calls.
+*Fix:* memoize by `(transaction_id, lens)` and sort on precomputed keys.
+
+`DATA_V` is also a hand-edited string literal (`:361`), so cache correctness depends on a human
+bumping a letter in the same commit as a data rebuild. With a 600 s CDN cache, a forgotten bump
+serves stale data with no signal. Derive it from `league.today` or a content hash at generate time.
+
+---
+
+## 6c. Accessibility and mobile
+
+| # | Sev | Issue |
+| --- | --- | --- |
+| A1 | P1 | **Interactive controls nested inside buttons.** `tradeRow` (`:1164`) and `pickRow` (`:1266`) place the expanded `.detail` — containing clickable `.leg[data-pick]` divs (`:437`) — *inside* the `<button>`. Invalid HTML; the hop toggles have no role, tabindex, or key handler. Any tap inside an open row that misses a `data-pick` bubbles to `.row[data-id]` (`:1668`) and **collapses the row**, so you cannot even select text in an expanded trade. |
+| A2 | P1 | **No keyboard support anywhere.** Not one `keydown` handler, `tabindex`, `Escape` handler, or focus call in 1,710 lines. `render` replaces `app.innerHTML` wholesale, destroying focus — expanding trade #40 returns focus to `<body>`. |
+| A3 | P1 | **`aria-expanded` only on two of five expandables.** `pack` (`:687`) and `mark` (`:906`) set it; `tradeRow`, `pickRow`, and `boardTape` — the three primary accordions — set nothing. None use `aria-controls`. |
+| A4 | P1 | **Broken listbox and non-tabs.** `#whoMenu` has `role="listbox"` (`:342`) but its children are plain buttons with no `role="option"`/`aria-selected`; no arrow keys, no Escape, no focus move or restore. The four tabs (`:1494`) have no `role="tablist"`/`tab`/`aria-selected` and the panel no `role="tabpanel"` — while `#yearFilters` *does* carry `role="group" aria-label`, so the pattern exists unevenly. |
+| A5 | P1 | **Sub-44px targets in a file that enforces 44px elsewhere.** `.who-menu button` **28px** (`:72`) — the seat picker, the most-used control in the app; `#yearFilters label` **26px** (`:308`); `button.who` **36px** (`:56`); `.score-btn` **36px** (`:247`). |
+| A6 | P2 | **Auto-scrolling marquee with no pause control** (`.ticker-track`, 48 s loop, `:134`). `prefers-reduced-motion` is respected (`:139`) but that is not a substitute for a control. |
+| A7 | P2 | **Grid overflow is clipped, not solved.** `.row-top.tape` is `1fr auto 1fr` (`:96`) and `.names` has no `min-width: 0` or ellipsis, so a long manager name shoves the middle column off-centre at 320px; `overflow-x: hidden` (`:22`) then hides the evidence. |
+| A8 | P2 | **Three colour languages in one Drafts row.** `pickRow` colours the player's name by pick surplus (`:1268`), the origin label by own-vs-acquired (`:1271`), and the middle number always green (`:1249`). A red player name reads as "bad player", not "the pick underperformed". |
+| — | — | **Contrast is fine.** `--muted` 6.59:1, `--dim` 5.38:1, `--red` 4.91:1, `--green` 10.41:1, gold 9.46:1 — all clear AA. Safe-area handling and `viewport-fit=cover` are correct. |
+
+Also dead CSS: `.hero` / `.hero b` (`:91`) is never emitted — the original product promise of one
+big number survives only as a stylesheet rule. Plus `a.back`, `.day-scroller`, `.day-chip`,
+`.draft-head`, `.filter-hint`.
+
+---
+
 ## 7. Docs drift (what the SDD says vs what ships)
 
 `docs/UI_SDD.md` is materially out of date:
@@ -274,9 +417,17 @@ values), and the browser only formats. That kills §P1-4, §P1-7, most of §4, a
 
 ## 9. Proposed fix order
 
-**Slice 1 — correctness, generator-only, no data change**
-`?me=`/`?t=` on boot · `rankWide` uses `chipLived` · middle margin uses `cls()` ·
-`esc()` on interpolation · spark null gaps · `catch` on seat fetches · guard `data.trades`.
+**Slice 1 — wrong numbers, generator-only, no data change**
+Startup surplus (P0-1) · third-party bag VA line (P0-3) · `rankWide` uses `chipLived` (P1-2) ·
+Trades tab filters `chipLived` + prints `livedHint` (P0-5) · middle margin uses `cls()` (P1-3) ·
+`?me=`/`?t=` on boot (P1-1) · `esc()` on text **and** attributes (P1-6, P1-13) ·
+spark null gaps (P1-5) · `catch` on seat fetches · guard `data.trades` · empty-state copy ·
+reset filters in `clearLeague` (P1-11).
+
+**Slice 1b — pipeline truth**
+One canonical build list in `build.mjs`, including `apply-value-adjust.mjs` and `title-path.mjs`;
+delete the duplicate `trade_boards` builder (P0-2) · `aged` from one price book (P1-10) ·
+recompute totals when either side has priced legs (P1-9).
 
 **Slice 2 — delete the dead**
 Remove `renderLeague`/`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`/
@@ -285,12 +436,15 @@ Remove `renderLeague`/`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`
 `trade_boards.today`/`.aged`, `drafters_*`.
 
 **Slice 3 — one source per number**
-`partnerPer()` helper · single grade threshold constant · single "today" clock (`league.today`) ·
-decide VA ownership · precomputed `marks.json`.
+`partnerPer()` helper feeding home tile and Partners tab (P0-4) · single grade threshold constant ·
+single "today" clock (`league.today`) · decide VA ownership · precomputed `marks.json` (P1-7) ·
+memoize `tradeDelta` and sort on precomputed keys (§6b).
 
 **Slice 4 — consistency and a11y**
 One posture vocabulary · ticker stops duplicating packs and stops double-rendering ·
-year filter becomes radios · back-button history · Champions Path "1st" column earns its keep.
+year filter becomes radios · back-button history (P1-8) · stop `replaceState` on every render
+(P1-12) · unnest interactive controls from buttons (A1) · keyboard and focus (A2–A4) ·
+44px targets (A5) · Champions Path "1st" column earns its keep.
 
 **Slice 5 — rewrite the specs**
 `UI_SDD.md` to match five windows, four tabs, gold cards, packs, Champions Path.

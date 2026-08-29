@@ -494,8 +494,8 @@ async function main() {
           date: h.date,
           from: fromId ? (nameById[fromId] || fromId) : null,
           to: toId ? (nameById[toId] || toId) : null,
-          t0: inn.value,
-          out: outPriced.value,
+          t0: flatten(inn.value, vmaxAt(vmaxIdx, h.date)),
+          out: flatten(outPriced.value, vmaxAt(vmaxIdx, outDate)),
           out_date: outDate,
           exit,
           transaction_id: h.trade.transaction_id,
@@ -732,6 +732,10 @@ async function main() {
     const costVal = gradeRaw(costRaw.value, draftDay);
     const surplus = nowVal != null && costVal != null ? nowVal - costVal : null;
     const startup = p.season === "2019";
+    const originSeason = Number(p.season) > Number(latestSeason) ? latestSeason : p.season;
+    const originUid = seatOwner.get(`${originSeason}:${p.origin_roster_id}`)
+      || seatOwner.get(`${latestSeason}:${p.origin_roster_id}`)
+      || null;
     drafterRows.push({
       season: p.season,
       round: p.round,
@@ -739,6 +743,8 @@ async function main() {
       draft_slot: p.draft_slot,
       asset_key: `pick:${p.season}:${p.round}:${p.origin_roster_id}`,
       as_of: draftDay,
+      own: !!(originUid && originUid === p.drafted_by_user_id),
+      origin_team: originUid ? (nameById[originUid] || originUid) : null,
       player: p.label,
       player_key: playerKey,
       drafted_by_user_id: p.drafted_by_user_id,
@@ -1143,6 +1149,7 @@ async function main() {
   const wilson = pickIndex["pick:2022:1:7"];
   check("wilson hops", wilson?.hops.length === 5);
   const wilsonToday = wilson.hops.find((h) => h.exit === "drafted")?.out;
+  check("hops are flatten", wilsonToday != null && wilsonToday >= 1000);
   check("wilson flip not player-today", wilson.hops.some((h) => h.exit === "flip" && h.out !== wilsonToday));
   check("wilson one drafted exit", wilson.hops.filter((h) => h.exit === "drafted").length === 1);
   check("breece hops", pickIndex["pick:2022:1:1"]?.hops.length === 6);

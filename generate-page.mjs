@@ -172,7 +172,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828x";
+    const DATA_V = "20260828y";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -617,36 +617,41 @@ const html = `<!DOCTYPE html>
       return me && data ? renderTeamHome() : renderLeagueHome();
     }
 
-    function tradeRow(t, extra) {
+    function tradeParties(t, extra) {
       const s = sideOf(t);
-      const open = openId === t.transaction_id;
-      const incomplete = t.incomplete || s.incomplete;
-      const gotShow = s.unpriced && !s.today ? "—" : fmt(s.today);
-      const sentShow = s.sent_unpriced && !s.sent_today ? "—" : fmt(s.sent_today);
       const mine = (me && me.name) || extra && extra.winner || s.name || "This seat";
       const other = extra && extra.winner && extra.loser
         ? (mine === extra.winner ? extra.loser : extra.winner)
         : ((t.others || []).join(" · ") || "Them");
-      const multi = (t.others || []).length > 1;
-      const dlt = incomplete ? null : displayDelta(s.today, s.sent_today);
+      return { s: s, mine: mine, other: other, multi: (t.others || []).length > 1 };
+    }
+
+    function tradeBags(t, extra) {
+      const p = tradeParties(t, extra);
+      const gotTitle = p.mine + " received";
+      const sentTitle = p.multi ? p.mine + " gave up" : p.other + " received";
+      let bags = bagBlock(gotTitle, p.s.legs, p.s.today, p.s.unpriced)
+        + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced);
+      if ((t.others || []).length > 1) {
+        bags += (t.other_bags || []).map((b) => {
+          const side = (b.windows && b.windows[lens]) || b.even || b.realized;
+          return bagBlock(b.name + " received", side.legs, side.today, side.unpriced);
+        }).join("");
+      }
+      const sparkSrc = t.even_year_ends || t.year_ends;
+      return '<div class="bags">' + bags + "</div>"
+        + spark((sparkSrc || []).map((row) => ({ as_of: row.as_of, ...row.points })));
+    }
+
+    function tradeRow(t, extra) {
+      const p = tradeParties(t, extra);
+      const open = openId === t.transaction_id;
+      const incomplete = t.incomplete || p.s.incomplete;
+      const gotShow = p.s.unpriced && !p.s.today ? "—" : fmt(p.s.today);
+      const sentShow = p.s.sent_unpriced && !p.s.sent_today ? "—" : fmt(p.s.sent_today);
+      const dlt = incomplete ? null : displayDelta(p.s.today, p.s.sent_today);
       const mineCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
       const otherCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
-      let detail = "";
-      if (open) {
-        const gotTitle = mine + " received";
-        const sentTitle = multi ? mine + " gave up" : other + " received";
-        let bags = bagBlock(gotTitle, s.legs, s.today, s.unpriced)
-          + bagBlock(sentTitle, s.sent, s.sent_today, s.sent_unpriced);
-        if ((t.others || []).length > 1) {
-          bags += (t.other_bags || []).map((b) => {
-            const side = (b.windows && b.windows[lens]) || b.even || b.realized;
-            return bagBlock(b.name + " received", side.legs, side.today, side.unpriced);
-          }).join("");
-        }
-        const sparkSrc = t.even_year_ends || t.year_ends;
-        const line = spark((sparkSrc || []).map((p) => ({ as_of: p.as_of, ...p.points })));
-        detail = '<div class="detail"><div class="bags">' + bags + "</div>" + line + "</div>";
-      }
       const mid = dlt == null || incomplete ? "—"
         : dlt > 0 ? "← " + fmt(dlt)
         : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
@@ -654,12 +659,13 @@ const html = `<!DOCTYPE html>
       const midCls = dlt == null || incomplete || dlt === 0 ? "" : "pos";
       return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + t.transaction_id + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><span class="names ' + mineCls + '">' + mine + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="side"><span class="names ' + mineCls + '">' + p.mine + '</span> <span class="val">' + gotShow + "</span></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
         + '<div class="date">' + t.date + (incomplete ? ' <span class="badge">no DP row</span>' : "") + "</div></div>"
-        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + other + "</span></div>"
+        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + p.other + "</span></div>"
         + "</div>"
-        + detail + "</button>";
+        + (open ? '<div class="detail">' + tradeBags(t, extra) + "</div>" : "")
+        + "</button>";
     }
 
     function renderReview() {
@@ -696,41 +702,51 @@ const html = `<!DOCTYPE html>
       return spark(pts);
     }
 
+    function pickOrigin(p) {
+      const mine = (me && me.name) || "";
+      if (p.own || (p.origin_team && p.origin_team === mine)) return "Own pick";
+      if (p.origin_team) return p.origin_team + "'s pick";
+      return acquiredHop(p) ? "Someone else's pick" : "Own pick";
+    }
+
     function pickRow(p) {
       const key = draftKey(p);
       const open = openDraft === key;
-      const n = p.startup ? p.player_today : p.surplus;
-      const slot = p.season + " R" + p.round + (p.pick_no ? " · pick " + p.pick_no : "");
-      const cost = p.startup ? "startup · no pick-cost grade" : "pick at draft " + fmt(p.pick_cost);
+      const hop = acquiredHop(p);
+      const trade = hop && (data.trades || []).find((t) => t.transaction_id === hop.transaction_id);
+      const origin = pickOrigin(p);
+      const slot = (p.season || "") + " " + (p.startup ? "startup" : (Number(p.round) === 1 ? "1st" : Number(p.round) === 2 ? "2nd" : Number(p.round) === 3 ? "3rd" : p.round + "th"));
+      const gotShow = p.player_today == null ? "—" : fmt(p.player_today);
+      const sentShow = p.startup || p.pick_cost == null ? "—" : fmt(p.pick_cost);
+      const dlt = p.startup ? p.player_today : p.surplus;
+      const mineCls = dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
+      const otherCls = dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
+      const mid = dlt == null ? "—"
+        : dlt > 0 ? "← " + fmt(dlt)
+        : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
+        : fmt(dlt);
+      const midCls = dlt == null || dlt === 0 ? "" : "pos";
       let detail = "";
       if (open) {
-        const hop = acquiredHop(p);
-        const trade = hop && (data.trades || []).find((t) => t.transaction_id === hop.transaction_id);
-        const side = trade ? sideOf(trade) : null;
-        let got = "";
-        if (trade && side) {
-          got = '<div class="date">' + hop.date + " · from " + (hop.from || "?") + "</div>"
-            + '<div class="bags">'
-            + bagBlock("You received", side.legs, side.today, side.unpriced)
-            + bagBlock("You gave up", side.sent, side.sent_today, side.sent_unpriced)
-            + "</div>";
-        } else {
-          got = '<div class="date">Original pick · no trade to get it</div>';
-        }
+        const used = [{ label: p.player, value: p.player_today, kind: "player" }];
+        const cost = [{ label: slot + (p.pick_no ? " · pick " + p.pick_no : ""), value: p.pick_cost, kind: "pick", asset_key: p.asset_key }];
         detail = '<div class="detail">'
-          + '<div class="date">Pick at draft · ' + fmt(p.pick_cost)
-          + " · player now · " + fmt(p.player_today)
-          + (p.surplus != null ? " · surplus " + fmt(p.surplus) : "")
+          + (trade ? tradeBags(trade) : '<div class="date">' + origin + " · no trade to get it</div>")
+          + '<div class="bags">'
+          + bagBlock(p.player + " now", used, p.player_today, p.player_today == null ? 1 : 0)
+          + bagBlock("Pick at draft", cost, p.pick_cost, p.pick_cost == null ? 1 : 0)
           + "</div>"
           + draftSpark(p)
-          + "<h3>How you got it</h3>" + got
           + (p.asset_key && picks && picks[p.asset_key] && (picks[p.asset_key].hops || []).length ? hopHtml(p.asset_key) : "")
           + "</div>";
       }
       return '<button type="button" class="row' + (open ? " open" : "") + '" data-draft="' + key + '">'
-        + '<div class="row-top"><div><div class="names">' + p.player + "</div>"
-        + '<div class="date">' + slot + " · " + cost + "</div></div>"
-        + '<div class="margin ' + cls(n) + '">' + fmt(n) + "</div></div>"
+        + '<div class="row-top tape">'
+        + '<div class="side"><span class="names ' + mineCls + '">' + p.player + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
+        + '<div class="date">' + (p.as_of || "") + ' · <span class="badge">' + origin + "</span></div></div>"
+        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + slot + "</span></div>"
+        + "</div>"
         + detail + "</button>";
     }
 

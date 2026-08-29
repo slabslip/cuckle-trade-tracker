@@ -66,7 +66,7 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 | Home | League boards is the dashboard home (house icon). A team’s home is identity marks (deals / posture / manners / aging / draft) plus a quiet per-trade line on the selected chip, then best/worst, extract partners, draft hit/miss. |
 | Trades | Your tape. Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
-| Drafts | Every pick this seat used, newest first. Tap = how they got it (original or the trade they paid), pick at draft, player since. |
+| Drafts | Every pick this seat used, newest first. Own pick vs someone else’s pick is marked. Tap = same received / gave-up tape as a trade, even-flatten pick-at-draft vs player now, player since draft. |
 | League | Best 10 / Worst 10. Clocks: **As of today** / **Aged after accept**. Windows: 3 months / 6 months / 1 year / 3 years / all (filter by **trade date**). Then per-trader / per-drafter lists. |
 
 **Value windows (global, default All time):** Day of trade · 1 year · 2 years · 3 years · All time. Same even-flatten book on every chip. No KTC mix. No steep DP chip.

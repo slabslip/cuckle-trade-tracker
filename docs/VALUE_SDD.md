@@ -274,4 +274,4 @@ custom = (1 - w) * dp_even + w * ktc_sf   // only if a KTC file has as_of <= tha
 - Pick → blend only on a clean `pickval` join; else even-DP pick price.
 - Do **not** paste the 2026-08-28 KTC book onto 2019–2025 year-ends. Those stay flatten-only until we have a snap for that week.
 
-**Not used on the dashboard.** Hop tape stays raw DP. Even-flatten is the trade needle.
+Dashboard hops use the same even-flatten book as trade bags. Raw DP is not shown.

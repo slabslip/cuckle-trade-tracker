@@ -171,8 +171,24 @@
     button.mark:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.mark b { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
     button.mark span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.35; }
+    button.mark.on { border-color: #6b5a2e; }
     button.mark.pos b { color: var(--green); }
     button.mark.neg b { color: var(--red); }
+    .mark-chart {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin: 0 0 14px;
+    }
+    .mark-chart-h { font-weight: 650; margin-bottom: 12px; }
+    .mark-chart-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px; }
+    .mark-bar { margin: 0 0 12px; }
+    .mark-bar:last-child { margin-bottom: 0; }
+    .mark-bar.you .names { color: var(--text); font-weight: 650; }
+    .mark-bar-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .mark-bar-top .lab { font-weight: 650; font-size: 0.85rem; }
+    .mark-bar-track { height: 8px; background: #1c1c22; border-radius: 99px; margin: 5px 0 4px; overflow: hidden; }
+    .mark-bar-track i { display: block; height: 100%; width: 0; background: #6b6b78; border-radius: 99px; }
+    .mark-bar-track i.pos { background: var(--green); }
+    .mark-bar-track i.neg { background: var(--red); }
     .pack { margin: 0 0 8px; }
     button.pack-head {
       display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -306,6 +322,7 @@
     let yearFilterOpen = false;
     let whoOpen = false;
     let lensOpen = false;
+    let markOpen = null;
     let openId = null;
     let openPick = null;
     let openDraft = null;
@@ -402,6 +419,7 @@
       partnerName = null;
       openPick = null;
       openDraft = null;
+      markOpen = null;
       document.getElementById("lead").textContent = "";
       paintWho();
       syncUrl();
@@ -653,49 +671,31 @@
       return displayDelta(s.today, s.sent_today);
     }
 
-    function mark(view, title, sub, tone) {
-      return '<button type="button" class="mark' + (tone ? " " + tone : "") + '" data-view="' + view + '">'
+    function mark(id, title, sub, tone) {
+      const on = markOpen === id;
+      return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + id + '" aria-expanded="' + on + '">'
         + "<b>" + title + "</b>" + (sub ? "<span>" + sub + "</span>" : "") + "</button>";
     }
 
-    function teamMarks() {
-      const n = (data.hero && data.hero.two_way) || 0;
+    function marksOf(seat) {
+      const n = (seat.hero && seat.hero.two_way) || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
-      const volumeSub = n >= 80
-        ? n + " two-way trades. 80+ is Hyper."
-        : n >= 40
-          ? n + " two-way trades. 40–79 is Active."
-          : n + " two-way trades. Under 40 is Quiet.";
-      const st = data.style || {};
+      const st = seat.style || {};
       const soldPicks = st.sold_picks_for_players || 0;
       const soldPlayers = st.sold_players_for_picks || 0;
       let posture = "Swap shop";
-      let postureSub = soldPicks + " picks sold for players vs " + soldPlayers + " the other way. Within 5 is Swap shop.";
-      if (soldPlayers >= soldPicks + 5) {
-        posture = "Buys picks";
-        postureSub = soldPlayers + " players sold for picks vs " + soldPicks + " the other way. Five or more extra is Buys picks.";
-      } else if (soldPicks >= soldPlayers + 5) {
-        posture = "Buys players";
-        postureSub = soldPicks + " picks sold for players vs " + soldPlayers + " the other way. Five or more extra is Buys players.";
-      }
-      const graded = (data.partners || []).filter((p) => p.complete >= 1);
+      if (soldPlayers >= soldPicks + 5) posture = "Buys picks";
+      else if (soldPicks >= soldPlayers + 5) posture = "Buys players";
+      const graded = (seat.partners || []).filter((p) => p.complete >= 1);
       const extract = graded.filter((p) => p.grade === "you_extract").length;
       const farmed = graded.filter((p) => p.grade === "they_extract").length;
       const even = graded.length - extract - farmed;
       let manners = "Fair";
       let mannersTone = "";
-      let mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + (even ? ". " + even + " even" : "") + ". Close enough is Fair.";
-      if (farmed >= extract + 2) {
-        manners = "Gets extracted";
-        mannersTone = "neg";
-        mannersSub = farmed + " partners came out ahead vs you. You came out ahead vs " + extract + ".";
-      } else if (extract > farmed) {
-        manners = "Extracts";
-        mannersTone = "pos";
-        mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + ".";
-      }
+      if (farmed >= extract + 2) { manners = "Gets extracted"; mannersTone = "neg"; }
+      else if (extract > farmed) { manners = "Extracts"; mannersTone = "pos"; }
       const aged = [];
-      for (const t of data.trades || []) {
+      for (const t of seat.trades || []) {
         if ((t.others || []).length !== 1) continue;
         const now = deltaAt(t, "all");
         const t0 = deltaAt(t, "t0");
@@ -705,50 +705,104 @@
       const ageMean = aged.length ? aged.reduce((a, b) => a + b, 0) / aged.length : null;
       let aging = "Held";
       let agingTone = "";
-      let agingSub = "No accept-day value to compare.";
-      if (ageMean != null && ageMean > 100) {
-        aging = "Aged up";
-        agingTone = "pos";
-        agingSub = "Trades got better after you accepted (" + fmt(ageMean) + " on average).";
-      } else if (ageMean != null && ageMean < -100) {
-        aging = "Aged down";
-        agingTone = "neg";
-        agingSub = "Trades got worse after you accepted (" + fmt(ageMean) + " on average).";
-      } else if (ageMean != null) {
-        agingSub = "Trades are worth about the same as the day you accepted.";
-      }
-      const rook = ((data.drafts && data.drafts.rookie) || []).filter((p) => p.surplus != null);
+      if (ageMean != null && ageMean > 100) { aging = "Aged up"; agingTone = "pos"; }
+      else if (ageMean != null && ageMean < -100) { aging = "Aged down"; agingTone = "neg"; }
+      const rook = ((seat.drafts && seat.drafts.rookie) || []).filter((p) => p.surplus != null);
       const draftMean = rook.length ? rook.reduce((a, p) => a + p.surplus, 0) / rook.length : null;
       let draft = "Mixed";
       let draftTone = "";
-      let draftSub = "No graded rookie picks yet.";
-      if (draftMean != null && draftMean > 200) {
-        draft = "Hit factory";
-        draftTone = "pos";
-        draftSub = "Rookie picks usually turn into more than the pick was worth (" + rook.length + " graded).";
-      } else if (draftMean != null && draftMean < -500) {
-        draft = "Miss factory";
-        draftTone = "neg";
-        draftSub = "Rookie picks usually turn into less than the pick was worth (" + rook.length + " graded).";
-      } else if (draftMean != null) {
-        draftSub = "Some rookies hit, some missed. Net is about even (" + rook.length + " graded).";
-      }
-      const total = windowTotal(data.trades);
-      const per = windowPer(data.trades);
+      if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
+      else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
+      const total = windowTotal(seat.trades);
+      const per = windowPer(seat.trades);
       let run = "Even";
       let runTone = "";
       if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
       else if (total != null && total < 0) { run = "Behind"; runTone = "neg"; }
+      const volumeSub = n >= 80
+        ? n + " two-way trades. 80+ is Hyper."
+        : n >= 40
+          ? n + " two-way trades. 40–79 is Active."
+          : n + " two-way trades. Under 40 is Quiet.";
+      let postureSub = soldPicks + " picks sold for players vs " + soldPlayers + " the other way. Within 5 is Swap shop.";
+      if (posture === "Buys picks") {
+        postureSub = soldPlayers + " players sold for picks vs " + soldPicks + " the other way. Five or more extra is Buys picks.";
+      } else if (posture === "Buys players") {
+        postureSub = soldPicks + " picks sold for players vs " + soldPlayers + " the other way. Five or more extra is Buys players.";
+      }
+      let mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + (even ? ". " + even + " even" : "") + ". Close enough is Fair.";
+      if (manners === "Gets extracted") mannersSub = farmed + " partners came out ahead vs you. You came out ahead vs " + extract + ".";
+      else if (manners === "Extracts") mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + ".";
+      let agingSub = "No accept-day value to compare.";
+      if (ageMean != null && aging === "Aged up") agingSub = "Trades got better after you accepted (" + fmt(ageMean) + " on average).";
+      else if (ageMean != null && aging === "Aged down") agingSub = "Trades got worse after you accepted (" + fmt(ageMean) + " on average).";
+      else if (ageMean != null) agingSub = "Trades are worth about the same as the day you accepted.";
+      let draftSub = "No graded rookie picks yet.";
+      if (draftMean != null && draft === "Hit factory") draftSub = "Rookie picks usually turn into more than the pick was worth (" + rook.length + " graded).";
+      else if (draftMean != null && draft === "Miss factory") draftSub = "Rookie picks usually turn into less than the pick was worth (" + rook.length + " graded).";
+      else if (draftMean != null) draftSub = "Some rookies hit, some missed. Net is about even (" + rook.length + " graded).";
       const runSub = per == null
         ? "No complete deals to total yet."
         : (total > 0 ? "+" : "") + fmt(total) + " net, about " + fmt(per) + " per deal.";
+      return {
+        run: { title: run, tone: runTone, sort: total == null ? 0 : total, sub: runSub,
+          stat: per == null ? "No complete deals" : (total > 0 ? "+" : "") + fmt(total) + " net · " + fmt(per) + " / deal" },
+        volume: { title: volume, tone: "", sort: n, sub: volumeSub, stat: n + " two-way" },
+        posture: { title: posture, tone: "", sort: soldPicks - soldPlayers, sub: postureSub,
+          stat: soldPicks + " picks for players · " + soldPlayers + " players for picks" },
+        manners: { title: manners, tone: mannersTone, sort: extract - farmed, sub: mannersSub,
+          stat: extract + " extracts · " + farmed + " extracted" + (even ? " · " + even + " even" : "") },
+        aging: { title: aging, tone: agingTone, sort: ageMean == null ? 0 : ageMean, sub: agingSub,
+          stat: ageMean == null ? "No accept-day compare" : fmt(ageMean) + " after accept · " + aged.length + " deals" },
+        draft: { title: draft, tone: draftTone, sort: draftMean == null ? 0 : draftMean, sub: draftSub,
+          stat: draftMean == null ? "No graded rookies" : fmt(draftMean) + " / pick · " + rook.length + " graded" },
+      };
+    }
+
+    function teamMarks() {
+      const m = marksOf(data);
       return '<div class="marks">'
-        + mark("trades", run, runSub, runTone)
-        + mark("trades", volume, volumeSub)
-        + mark("trades", posture, postureSub)
-        + mark("partners", manners, mannersSub, mannersTone)
-        + mark("trades", aging, agingSub, agingTone)
-        + mark("drafts", draft, draftSub, draftTone)
+        + mark("run", m.run.title, m.run.sub, m.run.tone)
+        + mark("volume", m.volume.title, m.volume.sub, m.volume.tone)
+        + mark("posture", m.posture.title, m.posture.sub, m.posture.tone)
+        + mark("manners", m.manners.title, m.manners.sub, m.manners.tone)
+        + mark("aging", m.aging.title, m.aging.sub, m.aging.tone)
+        + mark("draft", m.draft.title, m.draft.sub, m.draft.tone)
+        + "</div>";
+    }
+
+    function markChart() {
+      if (!markOpen) return "";
+      const heads = {
+        run: ["Ahead or behind", (WINDOWS.find((w) => w[0] === lens) || [])[1] || ""],
+        volume: ["How much they trade", "Two-way count. 80+ Hyper, 40–79 Active, under 40 Quiet."],
+        posture: ["Players vs picks", "Picks sold for players vs players sold for picks."],
+        manners: ["Who extracts", "Partners they beat vs partners who beat them."],
+        aging: ["Aged after accept", "How 2-team trades moved after the day they accepted."],
+        draft: ["Rookie hits", "Mean surplus vs the pick."],
+      };
+      const head = heads[markOpen] || ["League", ""];
+      const rows = members.map((mem) => {
+        const seat = seatCache[mem.user_id];
+        if (!seat) return { name: mem.name, uid: mem.user_id, loading: true };
+        return { name: mem.name, uid: mem.user_id, ...marksOf(seat)[markOpen] };
+      });
+      if (rows.some((r) => r.loading)) {
+        return '<div class="mark-chart"><div class="mark-chart-h">' + head[0] + '</div><p class="caption">Loading league…</p></div>';
+      }
+      rows.sort((a, b) => b.sort - a.sort);
+      const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
+      return '<div class="mark-chart">'
+        + '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>"
+        + rows.map((r, i) => {
+          const you = me && me.user_id === r.uid;
+          const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
+          return '<div class="mark-bar' + (you ? " you" : "") + '">'
+            + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + r.name + "</span>"
+            + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + r.title + "</span></div>"
+            + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
+            + '<div class="date">' + r.stat + "</div></div>";
+        }).join("")
         + "</div>";
     }
 
@@ -812,6 +866,7 @@
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
       return teamMarks()
+        + markChart()
         + lensRow()
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
         + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
@@ -1272,6 +1327,14 @@
         });
         return;
       }
+      const markBtn = e.target.closest("[data-mark]");
+      if (markBtn) {
+        const id = markBtn.dataset.mark;
+        markOpen = markOpen === id ? null : id;
+        if (markOpen) Promise.all(members.map((m) => seatData(m.user_id))).then(() => render());
+        render();
+        return;
+      }
       const boardBtn = e.target.closest("[data-board]");
       if (boardBtn) { boardClock = boardBtn.dataset.board; view = "league"; openId = null; render(); return; }
       const windowBtn = e.target.closest("[data-window]");
@@ -1281,6 +1344,7 @@
         view = viewBtn.dataset.view;
         openId = null;
         openDraft = null;
+        if (view !== "home") markOpen = null;
         if (view !== "drafts") draftFilterOpen = false;
         if (view !== "trades") yearFilterOpen = false;
         if (view !== "partners") partnerName = null;

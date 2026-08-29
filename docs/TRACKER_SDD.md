@@ -63,7 +63,7 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 
 | Tab | HAVE |
 | --- | --- |
-| Home | League boards is the dashboard home (house icon) and the only place with the **trades today** tape. A team’s home tabs are home / trades / partners / drafts. Identity marks include running P&L, then best/worst, extract partners, draft hit/miss. |
+| Home | League boards is the dashboard home (house icon) and the only place with the **trades today** tape. A team’s home tabs are home / trades / partners / drafts. Identity marks include running P&L, then best/worst, extract partners, draft hit/miss. Tap a mark to open a ranked bar of every seat’s label and stat for that mark. |
 | Trades | Your tape. Filter icon + “Filter by year” (All or one season, checkbox list). Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
 | Drafts | Rookie picks this seat used (startup off by default). No Score as chip — always since-trade vs pick-at-draft. Filter icon: Newest/Oldest, value high↔low, 1st–4th, include startup. Own pick vs someone else’s pick is colored. Caption is average surplus. |

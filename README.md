@@ -20,10 +20,18 @@ node draft-resolve.mjs
 node value-snapshot.mjs          # latest + monthly git history
 node ktc-snapshot.mjs            # weekly Superflex snap → data/ktc/ (not in build.mjs)
 node revalue.mjs
+node title-path.mjs              # titles.json for Champions Path
+node apply-value-adjust.mjs      # today blend + Value Adjustment + trade boards
 node generate-page.mjs
 ```
 
-Dashboard book is **even-flatten DynastyProcess**. Filter every trade by day of trade / 1 year / 2 years / 3 years / all time (mean of year-ends in that window). KTC snaps stay in `data/ktc/` and are not mixed into the score. See `docs/VALUE_SDD.md`.
+`apply-value-adjust.mjs` is not optional. It owns the today clock (40% flatten + 60% KTC,
+retired → 0), the Value Adjustment, and every `trade_boards` row. Skipping it ships the
+flatten-only book with stale boards.
+
+Dashboard windows (`t0` / `y1` / `y2` / `y3` / `all`) are **even-flatten DynastyProcess** and
+never see KTC: day of trade / 1 year / 2 years / 3 years / all time, as the mean of year-ends in
+that window. The today clock is the 40/60 blend. See `docs/VALUE_SDD.md`.
 
 Serve the folder over HTTP so each person’s slice can load:
 

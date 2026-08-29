@@ -26,8 +26,17 @@
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
     }
-    h1 { font-size: 1.4rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em; }
-    h1 a { color: inherit; text-decoration: none; }
+    h1.brand {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.4rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
+    }
+    h1.brand a { color: inherit; text-decoration: none; }
+    button.go-home {
+      flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
+    }
+    button.go-home:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
@@ -123,10 +132,17 @@
   </style>
 </head>
 <body>
-  <h1><a href="./">CuckleChunckle</a></h1>
+  <h1 class="brand">
+    <button type="button" class="go-home" id="goHome" aria-label="Home">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path fill="currentColor" d="M12 3.2l9 7.4h-2.4V21h-5.2v-6.2H10.6V21H5.4v-10.4H3L12 3.2z"/>
+      </svg>
+    </button>
+    <a href="./">CuckleChunckle</a>
+  </h1>
   <p id="lead"></p>
   <select class="who" id="who" aria-label="Team">
-    <option value="">League boards</option>
+    <option value="">Team</option>
   </select>
   <div id="feed" hidden></div>
   <div id="app" hidden></div>
@@ -139,7 +155,7 @@
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828t";
+    const DATA_V = "20260828u";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -159,9 +175,6 @@
     const seatCache = {};
 
     const params = new URLSearchParams(location.search);
-    const startMe = params.get("me");
-    const startView = params.get("view");
-    const startT = params.get("t");
     const startLens = params.get("lens");
     if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
 
@@ -224,27 +237,12 @@
       league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
       paintWho();
       document.getElementById("app").hidden = false;
-      let hit = members.find((m) => m.name === startMe || m.user_id === startMe);
-      if (!hit && (startView === "review" || startT)) {
-        hit = members.find((m) => m.name === "TipsUp") || members[0];
-      }
-      if (hit) {
-        await selectMe(hit.user_id, true);
-        if (startView) view = startView;
-        if (startT) {
-          openId = startT;
-          if (!startView) view = "review";
-        }
-        syncUrl();
-        render();
-        return;
-      }
       render();
     }
 
     function paintWho() {
       const sel = document.getElementById("who");
-      sel.innerHTML = '<option value="">League boards</option>'
+      sel.innerHTML = '<option value="">Team</option>'
         + members.map((m) =>
           '<option value="' + m.user_id + '"' + (me && me.user_id === m.user_id ? " selected" : "") + ">"
           + m.name + "</option>"
@@ -672,13 +670,15 @@
 
     function render() {
       const app = document.getElementById("app");
-      const tabs = me ? ["home","review","trades","partners","drafts","league"] : ["home"];
+      const tabs = me ? ["home","review","trades","partners","drafts","league"] : [];
       if (!me && view !== "home") view = "home";
-      const nav = '<div class="nav">'
-        + tabs.map((v) =>
-          '<button type="button" class="tab' + (view === v ? " on" : "") + '" data-view="' + v + '">' + v + "</button>"
-        ).join("")
-        + "</div>"
+      const nav = (tabs.length
+        ? '<div class="nav">'
+          + tabs.map((v) =>
+            '<button type="button" class="tab' + (view === v ? " on" : "") + '" data-view="' + v + '">' + v + "</button>"
+          ).join("")
+          + "</div>"
+        : "")
         + '<div class="toggle">'
         + WINDOWS.map((w) =>
           '<button type="button" class="chip' + (lens === w[0] ? " on" : "") + '" data-lens="' + w[0] + '">' + w[1] + "</button>"
@@ -692,6 +692,8 @@
       syncUrl();
     }
 
+    document.getElementById("goHome").addEventListener("click", () => clearLeague());
+    document.querySelector("h1.brand a").addEventListener("click", (e) => { e.preventDefault(); clearLeague(); });
     document.getElementById("who").addEventListener("change", (e) => {
       const id = e.target.value;
       if (!id) clearLeague();

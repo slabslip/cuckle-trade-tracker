@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>CuckleChunckle — phone preview</title>
+<style>
+  :root {
+    --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
+    --text: #f0f0f0; --muted: #9a9aa3; --dim: #8a8a93;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px; padding: 16px;
+  }
+  .bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    width: 100%; max-width: 900px;
+  }
+  .bar h1 { font-size: 0.95rem; font-weight: 650; margin: 0 auto 0 0; letter-spacing: -0.01em; }
+  button, select, input {
+    appearance: none; font: inherit; font-size: 0.8125rem; color: var(--text);
+    background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+    min-height: 34px; padding: 5px 10px; cursor: pointer;
+  }
+  input { cursor: text; min-width: 190px; flex: 1 1 190px; }
+  button.on { border-color: #6b6b78; background: #1e1e24; }
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid #c8c8d0; outline-offset: 2px;
+  }
+  .stage { flex: 0 0 auto; display: grid; place-items: start center; width: 100%; }
+  /* Holds the scaled footprint so the caption never collides with the frame. */
+  .wrap { position: relative; }
+  .phone {
+    position: relative;
+    border: 12px solid #1a1a1f;
+    border-radius: 44px;
+    background: #000;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.6), 0 0 0 1px #33333b;
+    transform-origin: top center;
+    overflow: hidden;
+  }
+  .notch {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 104px; height: 22px; border-radius: 12px; background: #000; z-index: 2;
+    pointer-events: none;
+  }
+  iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--bg); }
+  .caption { font-size: 0.75rem; color: var(--dim); text-align: center; max-width: 620px; line-height: 1.45; }
+  .caption b { color: var(--muted); font-weight: 600; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72rem; color: var(--muted);
+  }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Phone preview</h1>
+    <button type="button" data-dev="375x667">SE · 375</button>
+    <button type="button" data-dev="390x844" class="on">14 · 390</button>
+    <button type="button" data-dev="402x874">16 · 402</button>
+    <button type="button" data-dev="430x932">Max · 430</button>
+    <button type="button" id="rotate">Rotate</button>
+    <button type="button" id="reload">Reload</button>
+  </div>
+  <div class="bar">
+    <input id="path" value="index.html" aria-label="Path and query to load"
+           placeholder="index.html?view=titles" />
+    <button type="button" id="go">Go</button>
+    <select id="jump" aria-label="Jump to screen">
+      <option value="index.html">League home</option>
+      <option value="index.html?view=titles">Champions path</option>
+    </select>
+  </div>
+
+  <div class="stage">
+    <div class="wrap" id="wrap">
+      <div class="phone" id="phone">
+        <div class="notch"></div>
+        <iframe id="frame" src="index.html" title="CuckleChunckle at phone size"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <p class="caption">
+    Real dashboard at true phone width — same CSS a user gets in Safari.
+    <b>Pick a manager with the Team button inside the frame</b>; the <code>?me=</code> deep link
+    does not restore state yet. Design Mode cannot select elements through an iframe — for that,
+    open <code>index.html</code> directly and edit <code>generate-page.mjs</code>, not the
+    generated <code>index.html</code>.
+  </p>
+
+<script>
+  var phone = document.getElementById("phone");
+  var wrap = document.getElementById("wrap");
+  var frame = document.getElementById("frame");
+  var pathEl = document.getElementById("path");
+  var w = 390, h = 844, landscape = false;
+
+  function fit() {
+    var cw = landscape ? h : w;
+    var ch = landscape ? w : h;
+    phone.style.width = cw + "px";
+    phone.style.height = ch + "px";
+    // Frame is 12px bordered on each side, so its outer box is 24px larger.
+    var outerW = cw + 24;
+    var outerH = ch + 24;
+    var room = window.innerHeight - wrap.getBoundingClientRect().top - 96;
+    var scale = Math.min(1, room / outerH, (window.innerWidth - 32) / outerW);
+    if (!isFinite(scale) || scale <= 0) scale = 1;
+    phone.style.transform = scale < 1 ? "scale(" + scale.toFixed(3) + ")" : "none";
+    // Transforms do not affect layout, so mirror the visual size onto the wrapper.
+    wrap.style.width = Math.round(outerW * scale) + "px";
+    wrap.style.height = Math.round(outerH * scale) + "px";
+  }
+
+  function load(p) {
+    var clean = String(p || "index.html").replace(/^\/+/, "");
+    if (!clean) clean = "index.html";
+    frame.src = clean;
+    pathEl.value = clean;
+  }
+
+  // A desktop scrollbar inside the frame would steal ~15px and make 390 lie.
+  // Same-origin, so hide it the way a phone does.
+  frame.addEventListener("load", function () {
+    try {
+      var doc = frame.contentDocument;
+      if (!doc || doc.getElementById("previewNoBars")) return;
+      var st = doc.createElement("style");
+      st.id = "previewNoBars";
+      st.textContent = "html{scrollbar-width:none;-ms-overflow-style:none}"
+        + "html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0}";
+      doc.head.appendChild(st);
+    } catch (err) {
+      /* cross-origin: leave the scrollbar be */
+    }
+  });
+
+  document.querySelectorAll("[data-dev]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var parts = b.dataset.dev.split("x");
+      w = Number(parts[0]);
+      h = Number(parts[1]);
+      document.querySelectorAll("[data-dev]").forEach(function (o) { o.classList.remove("on"); });
+      b.classList.add("on");
+      fit();
+    });
+  });
+
+  document.getElementById("rotate").addEventListener("click", function () {
+    landscape = !landscape;
+    this.classList.toggle("on", landscape);
+    fit();
+  });
+  document.getElementById("reload").addEventListener("click", function () {
+    frame.src = frame.src;
+  });
+  document.getElementById("go").addEventListener("click", function () { load(pathEl.value); });
+  pathEl.addEventListener("keydown", function (e) { if (e.key === "Enter") load(pathEl.value); });
+  document.getElementById("jump").addEventListener("change", function () { load(this.value); });
+
+  window.addEventListener("resize", fit);
+  fit();
+</script>
+</body>
+</html>

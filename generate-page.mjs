@@ -34,6 +34,7 @@ const html = `<!DOCTYPE html>
     h1.brand {
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
+      overflow: visible;
     }
     h1.brand a { color: inherit; text-decoration: none; margin-right: auto; }
     button.go-home {
@@ -46,14 +47,32 @@ const html = `<!DOCTYPE html>
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
     #lead:empty { display: none; }
-    select.who {
-      flex: 0 1 158px; width: 158px; max-width: 42%;
-      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--text);
+    .who-wrap { position: relative; flex: 0 0 auto; }
+    button.who {
+      display: block; width: 158px; max-width: min(158px, calc(100vw - 120px));
+      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--text); text-align: left;
       background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a9aa3' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center;
       border: 1px solid var(--line); border-radius: 8px;
-      min-height: 36px; padding: 6px 28px 6px 10px; margin: 0;
+      min-height: 36px; padding: 6px 28px 6px 10px; margin: 0; cursor: pointer;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    select.who:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.who:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .who-menu {
+      position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
+      width: 168px; max-width: calc(100vw - 32px);
+      max-height: min(56dvh, calc(100dvh - 72px)); overflow-y: auto;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      padding: 4px 0; margin: 0;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    .who-menu button {
+      display: block; width: 100%; appearance: none; font: inherit;
+      font-size: 0.75rem; color: var(--muted); text-align: left;
+      background: transparent; border: 0;
+      min-height: 28px; padding: 3px 10px; cursor: pointer;
+    }
+    .who-menu button.on { color: var(--text); }
+    .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
     button.row, button.chip, button.tab, .row {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -155,8 +174,8 @@ const html = `<!DOCTYPE html>
       padding: 10px 12px; min-height: 52px; cursor: pointer;
     }
     button.mark:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.mark b { display: block; font-weight: 650; }
-    button.mark span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    button.mark b { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+    button.mark span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.35; }
     button.mark.pos b { color: var(--green); }
     button.mark.neg b { color: var(--red); }
     .pack { margin: 0 0 8px; }
@@ -197,7 +216,7 @@ const html = `<!DOCTYPE html>
       display: flex; flex-direction: column; gap: 4px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
-    #scoreAs button.score-opt, #scoreAs button.score-more {
+    #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
       min-height: 44px; padding: 8px 10px; cursor: pointer;
@@ -205,8 +224,7 @@ const html = `<!DOCTYPE html>
     #scoreAs button.score-opt.on { border-color: #6b5a2e; }
     #scoreAs button.score-opt b { display: block; font-weight: 650; }
     #scoreAs button.score-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
-    #scoreAs button.score-more { color: var(--muted); min-height: 36px; text-align: center; }
-    #scoreAs button.score-opt:focus-visible, #scoreAs button.score-more:focus-visible {
+    #scoreAs button.score-opt:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     button.filter-btn {
@@ -257,9 +275,10 @@ const html = `<!DOCTYPE html>
       </svg>
     </button>
     <a href="./">CuckleChunckle</a>
-    <select class="who" id="who" aria-label="Team">
-      <option value="">Team</option>
-    </select>
+    <span class="who-wrap">
+      <button type="button" class="who" id="who" aria-label="Team" aria-haspopup="listbox" aria-expanded="false">Team</button>
+      <div class="who-menu" id="whoMenu" hidden role="listbox"></div>
+    </span>
   </h1>
   <p id="lead"></p>
   <div id="feed" hidden></div>
@@ -276,20 +295,11 @@ const html = `<!DOCTYPE html>
     const DATA_V = "20260829a";
     const openPacks = new Set();
     const WINDOWS = [
-      ["t0", "At trade"],
-      ["y1", "First 1 year"],
-      ["y2", "First 2 years"],
-      ["y3", "First 3 years"],
-      ["all", "Since trade"],
-    ];
-    const SCORE_MAIN = [
-      ["all", "Since trade", "Typical year from accept through now"],
-      ["y3", "First 3 years", "Typical year in the first 3 after accept"],
-      ["t0", "At trade", "Bags the day they accepted (picks still picks)"],
-    ];
-    const SCORE_MORE = [
-      ["y2", "First 2 years", "Typical year in the first 2 after accept"],
-      ["y1", "First 1 year", "Typical year in the first year after accept"],
+      ["t0", "At trade", "Who won on accept day. Picks still picks."],
+      ["y1", "First 1 year", "Who won after 1 year. Hides younger deals."],
+      ["y2", "First 2 years", "Who won after 2 years. Hides younger deals."],
+      ["y3", "First 3 years", "Who won after 3 years. Hides younger deals."],
+      ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
     let draftTab = "rookie";
@@ -299,8 +309,8 @@ const html = `<!DOCTYPE html>
     let draftFilterOpen = false;
     let year = "all";
     let yearFilterOpen = false;
+    let whoOpen = false;
     let lensOpen = false;
-    let scoreMoreOpen = false;
     let openId = null;
     let openPick = null;
     let openDraft = null;
@@ -376,11 +386,16 @@ const html = `<!DOCTYPE html>
     }
 
     function paintWho() {
-      const sel = document.getElementById("who");
-      sel.innerHTML = '<option value="">Team</option>'
+      const btn = document.getElementById("who");
+      const menu = document.getElementById("whoMenu");
+      btn.textContent = (me && me.name) || "Team";
+      btn.setAttribute("aria-label", me ? "Team, " + me.name : "Team");
+      btn.setAttribute("aria-expanded", whoOpen ? "true" : "false");
+      menu.hidden = !whoOpen;
+      menu.innerHTML = '<button type="button" class="' + (!me ? "on" : "") + '" data-who="">Team</button>'
         + members.map((m) =>
-          '<option value="' + m.user_id + '"' + (me && me.user_id === m.user_id ? " selected" : "") + ">"
-          + m.name + "</option>"
+          '<button type="button" class="' + (me && me.user_id === m.user_id ? "on" : "") + '" data-who="' + m.user_id + '">'
+          + m.name + "</button>"
         ).join("");
     }
 
@@ -651,21 +666,39 @@ const html = `<!DOCTYPE html>
     function teamMarks() {
       const n = (data.hero && data.hero.two_way) || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
+      const volumeSub = n >= 80
+        ? n + " two-way trades. 80+ is Hyper."
+        : n >= 40
+          ? n + " two-way trades. 40–79 is Active."
+          : n + " two-way trades. Under 40 is Quiet.";
       const st = data.style || {};
       const soldPicks = st.sold_picks_for_players || 0;
       const soldPlayers = st.sold_players_for_picks || 0;
       let posture = "Swap shop";
-      let postureSub = soldPicks + " pick sales · " + soldPlayers + " player sales";
-      if (soldPlayers >= soldPicks + 5) { posture = "Buys picks"; postureSub = soldPlayers + " player sales · " + soldPicks + " pick sales"; }
-      else if (soldPicks >= soldPlayers + 5) { posture = "Buys players"; postureSub = soldPicks + " pick sales · " + soldPlayers + " player sales"; }
+      let postureSub = soldPicks + " picks sold for players vs " + soldPlayers + " the other way. Within 5 is Swap shop.";
+      if (soldPlayers >= soldPicks + 5) {
+        posture = "Buys picks";
+        postureSub = soldPlayers + " players sold for picks vs " + soldPicks + " the other way. Five or more extra is Buys picks.";
+      } else if (soldPicks >= soldPlayers + 5) {
+        posture = "Buys players";
+        postureSub = soldPicks + " picks sold for players vs " + soldPlayers + " the other way. Five or more extra is Buys players.";
+      }
       const graded = (data.partners || []).filter((p) => p.complete >= 1);
       const extract = graded.filter((p) => p.grade === "you_extract").length;
       const farmed = graded.filter((p) => p.grade === "they_extract").length;
+      const even = graded.length - extract - farmed;
       let manners = "Fair";
       let mannersTone = "";
-      if (farmed >= extract + 2) { manners = "Gets extracted"; mannersTone = "neg"; }
-      else if (extract > farmed) { manners = "Extracts"; mannersTone = "pos"; }
-      const mannersSub = extract + " extract · " + farmed + " farmed · " + (graded.length - extract - farmed) + " even";
+      let mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + (even ? ". " + even + " even" : "") + ". Close enough is Fair.";
+      if (farmed >= extract + 2) {
+        manners = "Gets extracted";
+        mannersTone = "neg";
+        mannersSub = farmed + " partners came out ahead vs you. You came out ahead vs " + extract + ".";
+      } else if (extract > farmed) {
+        manners = "Extracts";
+        mannersTone = "pos";
+        mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + ".";
+      }
       const aged = [];
       for (const t of data.trades || []) {
         if ((t.others || []).length !== 1) continue;
@@ -677,18 +710,46 @@ const html = `<!DOCTYPE html>
       const ageMean = aged.length ? aged.reduce((a, b) => a + b, 0) / aged.length : null;
       let aging = "Held";
       let agingTone = "";
-      if (ageMean != null && ageMean > 100) { aging = "Aged up"; agingTone = "pos"; }
-      else if (ageMean != null && ageMean < -100) { aging = "Aged down"; agingTone = "neg"; }
-      const agingSub = ageMean == null ? "no T0 to compare" : fmt(ageMean) + " after accept";
+      let agingSub = "No accept-day value to compare.";
+      if (ageMean != null && ageMean > 100) {
+        aging = "Aged up";
+        agingTone = "pos";
+        agingSub = "Trades got better after you accepted (" + fmt(ageMean) + " on average).";
+      } else if (ageMean != null && ageMean < -100) {
+        aging = "Aged down";
+        agingTone = "neg";
+        agingSub = "Trades got worse after you accepted (" + fmt(ageMean) + " on average).";
+      } else if (ageMean != null) {
+        agingSub = "Trades are worth about the same as the day you accepted.";
+      }
       const rook = ((data.drafts && data.drafts.rookie) || []).filter((p) => p.surplus != null);
       const draftMean = rook.length ? rook.reduce((a, p) => a + p.surplus, 0) / rook.length : null;
       let draft = "Mixed";
       let draftTone = "";
-      if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
-      else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
-      const draftSub = draftMean == null ? "no graded rookies" : fmt(draftMean) + " / pick · " + rook.length + " rookies";
+      let draftSub = "No graded rookie picks yet.";
+      if (draftMean != null && draftMean > 200) {
+        draft = "Hit factory";
+        draftTone = "pos";
+        draftSub = "Rookie picks usually turn into more than the pick was worth (" + rook.length + " graded).";
+      } else if (draftMean != null && draftMean < -500) {
+        draft = "Miss factory";
+        draftTone = "neg";
+        draftSub = "Rookie picks usually turn into less than the pick was worth (" + rook.length + " graded).";
+      } else if (draftMean != null) {
+        draftSub = "Some rookies hit, some missed. Net is about even (" + rook.length + " graded).";
+      }
+      const total = windowTotal(data.trades);
+      const per = windowPer(data.trades);
+      let run = "Even";
+      let runTone = "";
+      if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
+      else if (total != null && total < 0) { run = "Behind"; runTone = "neg"; }
+      const runSub = per == null
+        ? "No complete deals to total yet."
+        : (total > 0 ? "+" : "") + fmt(total) + " net, about " + fmt(per) + " per deal.";
       return '<div class="marks">'
-        + mark("trades", n + " trades", volume)
+        + mark("trades", run, runSub, runTone)
+        + mark("trades", volume, volumeSub)
         + mark("trades", posture, postureSub)
         + mark("partners", manners, mannersSub, mannersTone)
         + mark("trades", aging, agingSub, agingTone)
@@ -740,8 +801,6 @@ const html = `<!DOCTYPE html>
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
-      const per = windowPer(data.trades);
-      const total = windowTotal(data.trades);
       const best = pool[0];
       const worst = pool.length > 1 ? pool[pool.length - 1] : null;
       const by = {};
@@ -757,13 +816,8 @@ const html = `<!DOCTYPE html>
         .sort((a, b) => b.per - a.per);
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
-      const allN = (data.trades || []).filter((t) => tradeDelta(t) != null).length;
-      return dayAlert()
-        + teamMarks()
-        + lensRow('<div class="caption"><span class="' + cls(per) + '">' + fmt(per) + "</span> / trade"
-        + (total != null ? " · " + fmt(total) + " total" : "")
-        + (allN ? " · " + livedHint(pool.length, allN) : "")
-        + "</div>")
+      return teamMarks()
+        + lensRow()
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
         + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")
@@ -973,11 +1027,8 @@ const html = `<!DOCTYPE html>
     }
 
     function scoreMenu() {
-      const extra = scoreMoreOpen || lens === "y1" || lens === "y2";
       return '<div class="filter-panel" id="scoreAs">'
-        + SCORE_MAIN.map(scoreOpt).join("")
-        + '<button type="button" class="score-more" data-score-more="1">' + (extra ? "Less" : "More horizons") + "</button>"
-        + (extra ? SCORE_MORE.map(scoreOpt).join("") : "")
+        + WINDOWS.map(scoreOpt).join("")
         + "</div>";
     }
 
@@ -1167,10 +1218,22 @@ const html = `<!DOCTYPE html>
 
     document.getElementById("goHome").addEventListener("click", () => clearLeague());
     document.querySelector("h1.brand a").addEventListener("click", (e) => { e.preventDefault(); clearLeague(); });
-    document.getElementById("who").addEventListener("change", (e) => {
-      const id = e.target.value;
+    document.getElementById("who").addEventListener("click", () => {
+      whoOpen = !whoOpen;
+      paintWho();
+    });
+    document.getElementById("whoMenu").addEventListener("click", (e) => {
+      const pick = e.target.closest("[data-who]");
+      if (!pick) return;
+      whoOpen = false;
+      const id = pick.dataset.who;
       if (!id) clearLeague();
       else selectMe(id);
+    });
+    document.addEventListener("click", (e) => {
+      if (!whoOpen || e.target.closest(".who-wrap")) return;
+      whoOpen = false;
+      paintWho();
     });
     function togglePack(id) {
       if (!id) return;
@@ -1238,8 +1301,6 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const scoreMore = e.target.closest("[data-score-more]");
-      if (scoreMore) { scoreMoreOpen = !scoreMoreOpen; lensOpen = true; render(); return; }
       const lensBtn = e.target.closest("[data-lens]");
       if (lensBtn) { lens = lensBtn.dataset.lens; lensOpen = false; render(); return; }
       const scoreBtn = e.target.closest("[data-score]");

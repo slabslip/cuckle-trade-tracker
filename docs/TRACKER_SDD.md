@@ -63,7 +63,7 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 
 | Tab | HAVE |
 | --- | --- |
-| Home | League boards is the dashboard home (house icon). A team’s home is needle + best/worst deal + extract partners + draft hit/miss on the selected chip. |
+| Home | League boards is the dashboard home (house icon). A team’s home is identity marks (deals / posture / manners / aging / draft) plus a quiet per-trade line on the selected chip, then best/worst, extract partners, draft hit/miss. |
 | Trades | Your tape. Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
 | Drafts | Every pick this seat used, newest first. Tap = how they got it (original or the trade they paid), pick at draft, player since. |

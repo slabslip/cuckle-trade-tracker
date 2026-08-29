@@ -118,6 +118,18 @@
     button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.bubble b { font-weight: 650; }
     button.bubble span { color: var(--dim); }
+    .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+    button.mark {
+      flex: 1 1 calc(50% - 8px); min-width: 140px;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; min-height: 52px; cursor: pointer;
+    }
+    button.mark:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.mark b { display: block; font-weight: 650; }
+    button.mark span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    button.mark.pos b { color: var(--green); }
+    button.mark.neg b { color: var(--red); }
     .pack { margin: 0 0 8px; }
     button.pack-head {
       display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -155,7 +167,7 @@
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828w";
+    const DATA_V = "20260828x";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -500,6 +512,66 @@
         + '<div class="margin ' + cls(p.surplus) + '">' + fmt(p.surplus) + "</div></div></div>";
     }
 
+    function deltaAt(t, key) {
+      if (!t || t.incomplete) return null;
+      const s = t.windows && t.windows[key];
+      if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
+      return displayDelta(s.today, s.sent_today);
+    }
+
+    function mark(view, title, sub, tone) {
+      return '<button type="button" class="mark' + (tone ? " " + tone : "") + '" data-view="' + view + '">'
+        + "<b>" + title + "</b>" + (sub ? "<span>" + sub + "</span>" : "") + "</button>";
+    }
+
+    function teamMarks() {
+      const n = (data.hero && data.hero.two_way) || 0;
+      const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
+      const st = data.style || {};
+      const soldPicks = st.sold_picks_for_players || 0;
+      const soldPlayers = st.sold_players_for_picks || 0;
+      let posture = "Swap shop";
+      let postureSub = soldPicks + " pick sales · " + soldPlayers + " player sales";
+      if (soldPlayers >= soldPicks + 5) { posture = "Buys picks"; postureSub = soldPlayers + " player sales · " + soldPicks + " pick sales"; }
+      else if (soldPicks >= soldPlayers + 5) { posture = "Buys players"; postureSub = soldPicks + " pick sales · " + soldPlayers + " player sales"; }
+      const graded = (data.partners || []).filter((p) => p.complete >= 1);
+      const extract = graded.filter((p) => p.grade === "you_extract").length;
+      const farmed = graded.filter((p) => p.grade === "they_extract").length;
+      let manners = "Fair";
+      let mannersTone = "";
+      if (farmed >= extract + 2) { manners = "Gets extracted"; mannersTone = "neg"; }
+      else if (extract > farmed) { manners = "Extracts"; mannersTone = "pos"; }
+      const mannersSub = extract + " extract · " + farmed + " farmed · " + (graded.length - extract - farmed) + " even";
+      const aged = [];
+      for (const t of data.trades || []) {
+        if ((t.others || []).length !== 1) continue;
+        const now = deltaAt(t, "all");
+        const t0 = deltaAt(t, "t0");
+        if (now == null || t0 == null) continue;
+        aged.push(now - t0);
+      }
+      const ageMean = aged.length ? aged.reduce((a, b) => a + b, 0) / aged.length : null;
+      let aging = "Held";
+      let agingTone = "";
+      if (ageMean != null && ageMean > 100) { aging = "Aged up"; agingTone = "pos"; }
+      else if (ageMean != null && ageMean < -100) { aging = "Aged down"; agingTone = "neg"; }
+      const agingSub = ageMean == null ? "no T0 to compare" : fmt(ageMean) + " after accept";
+      const rook = ((data.drafts && data.drafts.rookie) || []).filter((p) => p.surplus != null);
+      const draftMean = rook.length ? rook.reduce((a, p) => a + p.surplus, 0) / rook.length : null;
+      let draft = "Mixed";
+      let draftTone = "";
+      if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
+      else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
+      const draftSub = draftMean == null ? "no graded rookies" : fmt(draftMean) + " / pick · " + rook.length + " rookies";
+      return '<div class="marks">'
+        + mark("trades", n + " trades", volume)
+        + mark("trades", posture, postureSub)
+        + mark("partners", manners, mannersSub, mannersTone)
+        + mark("trades", aging, agingSub, agingTone)
+        + mark("drafts", draft, draftSub, draftTone)
+        + "</div>";
+    }
+
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
@@ -521,11 +593,11 @@
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
       const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
-      return '<div class="hero"><b class="' + cls(per) + '">' + fmt(per) + "</b>"
-        + '<div class="caption">per trade · ' + clock
+      return teamMarks()
+        + '<div class="caption"><span class="' + cls(per) + '">' + fmt(per) + "</span> / trade · " + clock
         + (total != null ? " · " + fmt(total) + " total" : "")
         + (pool.length ? " · " + pool.length + " deals" : "")
-        + "</div></div>"
+        + "</div>"
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
         + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")

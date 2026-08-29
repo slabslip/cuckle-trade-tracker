@@ -737,6 +737,8 @@ async function main() {
       round: p.round,
       pick_no: p.pick_no,
       draft_slot: p.draft_slot,
+      asset_key: `pick:${p.season}:${p.round}:${p.origin_roster_id}`,
+      as_of: draftDay,
       player: p.label,
       player_key: playerKey,
       drafted_by_user_id: p.drafted_by_user_id,

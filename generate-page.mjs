@@ -160,7 +160,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828v";
+    const DATA_V = "20260828w";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -174,6 +174,7 @@ const html = `<!DOCTYPE html>
     let year = "all";
     let openId = null;
     let openPick = null;
+    let openDraft = null;
     let partnerName = null;
     let boardClock = "today";
     let boardWindow = "all";
@@ -261,6 +262,7 @@ const html = `<!DOCTYPE html>
       openId = null;
       partnerName = null;
       openPick = null;
+      openDraft = null;
       document.getElementById("lead").textContent = "";
       paintWho();
       syncUrl();
@@ -290,6 +292,7 @@ const html = `<!DOCTYPE html>
         openId = null;
         partnerName = null;
         openPick = null;
+        openDraft = null;
       }
       syncUrl();
       render();
@@ -597,13 +600,66 @@ const html = `<!DOCTYPE html>
       return rows;
     }
 
+    function draftKey(p) {
+      return p.asset_key || (p.season + ":" + p.round + ":" + (p.pick_no || p.player));
+    }
+
+    function acquiredHop(p) {
+      const tape = picks && p.asset_key && picks[p.asset_key];
+      if (!tape || !(tape.hops || []).length) return null;
+      const mine = (me && me.name) || "";
+      const incoming = tape.hops.filter((h) => h.to === mine);
+      return incoming.length ? incoming[incoming.length - 1] : null;
+    }
+
+    function draftSpark(p) {
+      const pts = [];
+      if (p.as_of && p.pick_cost != null) pts.push({ as_of: p.as_of, value: p.pick_cost });
+      for (const m of p.year_ends || []) {
+        if (m.player != null) pts.push({ as_of: m.as_of, value: m.player });
+      }
+      if (pts.length < 2 && p.player_today != null) {
+        pts.push({ as_of: (league && league.today) || p.as_of || "", value: p.player_today });
+      }
+      return spark(pts);
+    }
+
     function pickRow(p) {
-      const n = draftTab === "startup" ? p.player_today : p.surplus;
-      const meta = p.season + " R" + p.round + (p.surplus == null && !p.startup ? " · no pick-cost grade" : "");
-      const line = spark((p.year_ends || []).map((m) => ({ as_of: m.as_of, player: m.player || 0, pick: m.pick || 0 })));
-      return '<div class="row"><div class="row-top"><div><div class="names">' + p.player + "</div>"
-        + '<div class="date">' + meta + "</div></div>"
-        + '<div class="margin ' + cls(n) + '">' + fmt(n) + "</div></div>" + line + "</div>";
+      const key = draftKey(p);
+      const open = openDraft === key;
+      const n = p.startup ? p.player_today : p.surplus;
+      const slot = p.season + " R" + p.round + (p.pick_no ? " · pick " + p.pick_no : "");
+      const cost = p.startup ? "startup · no pick-cost grade" : "pick at draft " + fmt(p.pick_cost);
+      let detail = "";
+      if (open) {
+        const hop = acquiredHop(p);
+        const trade = hop && (data.trades || []).find((t) => t.transaction_id === hop.transaction_id);
+        const side = trade ? sideOf(trade) : null;
+        let got = "";
+        if (trade && side) {
+          got = '<div class="date">' + hop.date + " · from " + (hop.from || "?") + "</div>"
+            + '<div class="bags">'
+            + bagBlock("You received", side.legs, side.today, side.unpriced)
+            + bagBlock("You gave up", side.sent, side.sent_today, side.sent_unpriced)
+            + "</div>";
+        } else {
+          got = '<div class="date">Original pick · no trade to get it</div>';
+        }
+        detail = '<div class="detail">'
+          + '<div class="date">Pick at draft · ' + fmt(p.pick_cost)
+          + " · player now · " + fmt(p.player_today)
+          + (p.surplus != null ? " · surplus " + fmt(p.surplus) : "")
+          + "</div>"
+          + draftSpark(p)
+          + "<h3>How you got it</h3>" + got
+          + (p.asset_key && picks && picks[p.asset_key] && (picks[p.asset_key].hops || []).length ? hopHtml(p.asset_key) : "")
+          + "</div>";
+      }
+      return '<button type="button" class="row' + (open ? " open" : "") + '" data-draft="' + key + '">'
+        + '<div class="row-top"><div><div class="names">' + p.player + "</div>"
+        + '<div class="date">' + slot + " · " + cost + "</div></div>"
+        + '<div class="margin ' + cls(n) + '">' + fmt(n) + "</div></div>"
+        + detail + "</button>";
     }
 
     function renderTrades() {
@@ -618,11 +674,10 @@ const html = `<!DOCTYPE html>
     }
 
     function renderDrafts() {
-      const list = data.drafts[draftTab] || [];
-      return '<div class="toggle">'
-        + '<button type="button" class="chip' + (draftTab === "rookie" ? " on" : "") + '" data-dt="rookie">Rookie 2020–26</button>'
-        + '<button type="button" class="chip' + (draftTab === "startup" ? " on" : "") + '" data-dt="startup">Startup 2019</button>'
-        + "</div>"
+      const list = []
+        .concat((data.drafts && data.drafts.rookie) || [], (data.drafts && data.drafts.startup) || [])
+        .sort((a, b) => Number(b.season) - Number(a.season) || (b.pick_no || 0) - (a.pick_no || 0));
+      return '<div class="caption">' + list.length + " picks used · newest first · tap for the get-trade and the player since draft</div>"
         + list.map(pickRow).join("");
     }
 
@@ -799,7 +854,14 @@ const html = `<!DOCTYPE html>
       const windowBtn = e.target.closest("[data-window]");
       if (windowBtn) { boardWindow = windowBtn.dataset.window; view = "league"; openId = null; render(); return; }
       const viewBtn = e.target.closest("[data-view]");
-      if (viewBtn) { view = viewBtn.dataset.view; openId = null; if (view !== "partners") partnerName = null; render(); return; }
+      if (viewBtn) {
+        view = viewBtn.dataset.view;
+        openId = null;
+        openDraft = null;
+        if (view !== "partners") partnerName = null;
+        render();
+        return;
+      }
       const partnerBtn = e.target.closest("[data-partner]");
       if (partnerBtn) {
         partnerName = partnerBtn.dataset.partner;
@@ -814,6 +876,13 @@ const html = `<!DOCTYPE html>
       if (dt) { draftTab = dt.dataset.dt; render(); return; }
       const yr = e.target.closest("[data-year]");
       if (yr) { year = yr.dataset.year; render(); return; }
+      const draftBtn = e.target.closest("[data-draft]");
+      if (draftBtn) {
+        openDraft = openDraft === draftBtn.dataset.draft ? null : draftBtn.dataset.draft;
+        openPick = null;
+        render();
+        return;
+      }
       const row = e.target.closest(".row[data-id]");
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
     });

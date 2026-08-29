@@ -172,15 +172,6 @@ const html = `<!DOCTYPE html>
     button.day-in b { display: block; font-weight: 650; }
     button.day-in span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
     .home-tape { margin: 0 0 14px; }
-    button.text-link, a.text-link {
-      appearance: none; font: inherit; font-size: 1rem; font-weight: 650; color: var(--text);
-      background: none; border: 0; padding: 0; min-height: 44px;
-      text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
-    }
-    a.text-link { display: inline-flex; align-items: center; }
-    button.text-link:focus-visible, a.text-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    #pathNav { margin: 0 0 12px; }
-    #pathNav .caption { margin: 0; }
     .day-scroller {
       display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
       padding-bottom: 2px; -webkit-overflow-scrolling: touch;
@@ -342,9 +333,6 @@ const html = `<!DOCTYPE html>
       <div class="who-menu" id="whoMenu" hidden role="listbox"></div>
     </span>
   </h1>
-  <p id="pathNav">
-    <a class="text-link" href="?view=titles" data-view="titles">Champions path</a>
-  </p>
   <p id="lead"></p>
   <div id="feed" hidden></div>
   <div id="app" hidden></div>
@@ -365,7 +353,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829m";
+    const DATA_V = "20260829n";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1648,12 +1636,6 @@ const html = `<!DOCTYPE html>
       render();
     }
 
-    document.getElementById("pathNav").addEventListener("click", (e) => {
-      const a = e.target.closest("[data-view=titles]");
-      if (!a) return;
-      e.preventDefault();
-      openTitles();
-    });
     document.getElementById("feed").addEventListener("click", (e) => {
       const pathBtn = e.target.closest("[data-view=titles]");
       if (pathBtn) { openTitles(); return; }

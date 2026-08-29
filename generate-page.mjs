@@ -638,10 +638,10 @@ const html = `<!DOCTYPE html>
       const pieceWeight = (l) => {
         if (!l || l.became) return 1;
         const key = String(l.asset_key || "");
-        if (/^pick:\d{4}:4:/.test(key)) return 0.5;
+        if (/^pick:\\d{4}:4:/.test(key)) return 0.5;
         const label = String(l.label || "");
         if (/4th/i.test(label)) {
-          const slot = Number((key.match(/^pick:\d{4}:\d+:(\d+)$/) || [])[1]);
+          const slot = Number((key.match(/^pick:\\d{4}:\\d+:(\\d+)$/) || [])[1]);
           if (/late/i.test(label) || /late/i.test(String(l.flag || "")) || slot >= 8) return 0.5;
         }
         return 1;
@@ -770,7 +770,7 @@ const html = `<!DOCTYPE html>
       if (days == null) return "—";
       if (days < 365) return days + "d";
       const y = days / 365;
-      return (Math.round(y * 10) / 10).toString().replace(/\.0$/, "") + "y";
+      return (Math.round(y * 10) / 10).toString().replace(/\\.0$/, "") + "y";
     }
 
     function listRow(r, right) {
@@ -1953,6 +1953,14 @@ const html = `<!DOCTYPE html>
   </script>
 </body>
 </html>`;
+
+// A lone backslash inside the template literal above is swallowed before it reaches the browser,
+// which silently turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its
+// late-4th half weight. Escapes are written \\ in the template; assert they survived.
+const inline = html.slice(html.indexOf("<script>"));
+for (const need of ["/^pick:\\d{4}:4:/", "/^pick:\\d{4}:\\d+:(\\d+)$/", "/\\.0$/"]) {
+  if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
+}
 
 fs.writeFileSync(`${ROOT}index.html`, html);
 console.log(JSON.stringify({ page: `${ROOT}index.html` }, null, 2));

@@ -1,0 +1,82 @@
+{
+  "label": "Cooper household — current home",
+  "as_of": "2026-08-29",
+  "confidence": {
+    "address_and_building": "high — multiple public listings and tax-roll mirrors agree",
+    "ownership_and_tax_dollars": "medium — DCAD is canonical; third-party sites lag",
+    "occupancy_and_lease": "unknown — not assumed from the tax roll"
+  },
+  "address": {
+    "line1": "3521 Prescott Avenue",
+    "city": "Dallas",
+    "state": "TX",
+    "zip": "75219",
+    "county": "Dallas County",
+    "neighborhood": "Oak Lawn",
+    "approx_coordinates": {
+      "lat": 32.819612,
+      "lng": -96.813304,
+      "source": "HAR listing map marker for this address"
+    }
+  },
+  "building": {
+    "type": "Townhouse (fee-simple lot in Bowser & Prescott, not a high-rise condo)",
+    "subdivision": "Bowser & Prescott",
+    "legal_description": "BOWSER & PRESCOTT BLK 3/2041 LT 14D",
+    "stories": 3,
+    "year_built": 1998,
+    "beds": 3,
+    "baths": {
+      "full": 3,
+      "half": 1,
+      "notes": "HAR reports 3 full and 1 half; BlockShopper lists 3 baths without the half."
+    },
+    "living_sqft": 2856,
+    "lot_sqft": 2003,
+    "lot_acres_approx": 0.05
+  },
+  "tax_roll_snapshot": {
+    "source": "Third-party mirrors of Dallas Central Appraisal District (HAR, BlockShopper). Confirm live on dallascad.org.",
+    "dcad_search": "https://www.dallascad.org/SearchAddr.aspx",
+    "blockshopper_account_style_id": "002041000314D0000",
+    "owners_listed_on_mirrors": [
+      "Tara M. Cochran",
+      "Matthew J. Korinek"
+    ],
+    "owners_note": "Public tax-roll names. Cooper's home agent does not treat these as the household roster or as proof of who lives here.",
+    "last_recorded_sale_on_mirrors": {
+      "date": "2017-03-07",
+      "buyers": ["Tara M. Cochran", "Matthew J. Korinek"],
+      "sellers": ["Jeffrey Clinton Lowry", "Patricia Lowry"]
+    },
+    "assessed_value_usd": 542640,
+    "assessed_value_year": 2020,
+    "har_market_value_usd": 714820,
+    "har_market_value_note": "HAR 'Appraisal District' market value as of the 2026 street scrape; not a sale price.",
+    "property_tax_usd": 14667,
+    "property_tax_year": 2020
+  },
+  "schools": {
+    "district": "Dallas Independent School District (Dallas ISD)",
+    "typical_oak_lawn_campuses_nearby": {
+      "elementary": "Ben Milam Elementary School",
+      "middle": "Alex W. Spence Talented/Gifted Academy",
+      "high": "North Dallas High School"
+    },
+    "verify": "https://www.dallasisd.org/ — attendance zones change; look up this street before relying on a campus."
+  },
+  "civic": {
+    "city": "City of Dallas",
+    "typical_council_district_for_oak_lawn": {
+      "district": 14,
+      "member_as_of_2026": "Paul E. Ridley",
+      "verify": "https://dallascityhall.com/government/Pages/city-council.aspx"
+    },
+    "us_house_note": "Do not use stale BlockShopper names (Eddie Bernice Johnson). Look up the current district for this ZIP at https://www.house.gov/representatives/find-your-representative. Mid-decade 2026 maps may differ from the 2024 TX-32 seat."
+  },
+  "sources": [
+    "https://www.har.com/homedetail/3521-prescott-ave-dallas-tx-75219/11126522",
+    "https://blockshopper.com/tx/dallas-county/dallas/property/002041000314D0000/3521-prescott-avenue",
+    "https://www.dallascad.org/SearchAddr.aspx"
+  ]
+}

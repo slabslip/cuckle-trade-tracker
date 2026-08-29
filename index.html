@@ -1097,14 +1097,7 @@
         + "</div>";
     }
 
-    // league.today is the day the book was priced. The browser's own UTC date gave a user
-    // west of UTC "0 trades today" every evening, and already disagreed with the data.
-    function tapeDay() {
-      return (league && league.today) || "";
-    }
-
     function daySides() {
-      const day = tapeDay();
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const byDay = new Map();
       let last = "";
@@ -1115,6 +1108,11 @@
         const prev = by.get(r.transaction_id);
         if (!prev || (me && r.user_id === me.user_id)) by.set(r.transaction_id, r);
       }
+      // "Today" is league.today, the day the book was priced -- not the browser's own
+      // UTC date, which gave a viewer west of UTC "0 trades today" every evening. A deal
+      // can land after the last price snapshot, so the newer of the two is the real today.
+      const priced = (league && league.today) || "";
+      const day = last > priced ? last : priced;
       const todayRows = [...(byDay.get(day)?.values() || [])];
       const showDay = todayRows.length ? day : last;
       const rows = [...(byDay.get(showDay)?.values() || [])];

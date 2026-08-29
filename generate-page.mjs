@@ -351,6 +351,13 @@ const html = `<!DOCTYPE html>
   <script>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
     const cls = (n) => n == null ? "" : n >= 0 ? "pos" : "neg";
+    // Sleeper display names and player labels are user data. Escape text and attributes alike.
+    const esc = (s) => String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
     let members = [];
     let me = null;
     let data = null;
@@ -358,7 +365,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829l";
+    const DATA_V = "20260829m";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -391,23 +398,37 @@ const html = `<!DOCTYPE html>
     const startLens = params.get("lens");
     if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
 
+    // A missing year-end is a gap in the tape, not a value of zero: break the path there.
     function spark(series) {
       const keys = Object.keys(series[0] || {}).filter((k) => k !== "as_of");
       if (series.length < 2 || !keys.length) return "";
-      const vals = keys.map((k) => series.map((p) => p[k] || 0));
-      const flat = vals.flat();
-      const min = Math.min(...flat), max = Math.max(...flat), span = max - min || 1;
+      const vals = keys.map((k) => series.map((p) => {
+        const v = p[k];
+        return v == null || Number.isNaN(v) ? null : v;
+      }));
+      const flat = vals.flat().filter((v) => v != null);
+      if (!flat.length) return "";
+      const min = Math.min.apply(null, flat), max = Math.max.apply(null, flat), span = max - min || 1;
       const w = 300, h = 72, pad = 6;
       const colors = ["#3ddc97", "#7aa2ff", "#e0b44c"];
-      return '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none">' +
-        vals.map((arr, i) => {
-          const d = arr.map((v, x) => {
-            const px = pad + (x / (arr.length - 1)) * (w - pad * 2);
-            const py = pad + (1 - (v - min) / span) * (h - pad * 2);
-            return (x ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1);
-          }).join(" ");
-          return '<path d="' + d + '" fill="none" stroke="' + colors[i % 3] + '" stroke-width="1.6"/>';
-        }).join("") + "</svg>";
+      const paths = vals.map((arr, i) => {
+        const dots = [];
+        let d = "", pen = false;
+        arr.forEach((v, x) => {
+          if (v == null) { pen = false; return; }
+          const px = pad + (x / (arr.length - 1)) * (w - pad * 2);
+          const py = pad + (1 - (v - min) / span) * (h - pad * 2);
+          d += (pen ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1) + " ";
+          if (!pen && (x + 1 >= arr.length || arr[x + 1] == null)) {
+            dots.push('<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="2" fill="' + colors[i % 3] + '"/>');
+          }
+          pen = true;
+        });
+        if (!d) return "";
+        return '<path d="' + d.trim() + '" fill="none" stroke="' + colors[i % 3] + '" stroke-width="1.6"/>' + dots.join("");
+      }).join("");
+      if (!paths) return "";
+      return '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none">' + paths + "</svg>";
     }
 
     function hopHtml(key) {
@@ -416,10 +437,10 @@ const html = `<!DOCTYPE html>
       const head = p.became
         ? p.became + (p.used_by ? " · used by " + p.used_by : "")
         : (p.still_pick ? "still a pick" : "");
-      return '<div class="hops">' + (head ? '<div class="date">' + head + "</div>" : "")
-        + p.hops.map((h) => {
+      return '<div class="hops">' + (head ? '<div class="date">' + esc(head) + "</div>" : "")
+        + (p.hops || []).map((h) => {
           const exit = h.exit === "drafted" ? " · used" : h.exit === "flip" ? " · sold" : " · held";
-          return '<div class="hop"><span>' + h.date + " · " + (h.from || "?") + " → " + h.to + exit
+          return '<div class="hop"><span>' + esc(h.date) + " · " + esc(h.from || "?") + " → " + esc(h.to) + exit
             + "</span><b>" + fmt(h.t0) + " → " + fmt(h.out) + "</b></div>";
         }).join("") + "</div>";
     }
@@ -432,10 +453,10 @@ const html = `<!DOCTYPE html>
           : l.flag && String(l.flag).startsWith("priced_as_")
             ? fmt(l.value) + " · as " + String(l.flag).slice(10)
           : fmt(l.value);
-        const body = "<span>" + l.label + "</span><b>" + val + "</b>";
+        const body = "<span>" + esc(l.label) + "</span><b>" + val + "</b>";
         if (l.kind === "pick" && l.asset_key) {
           const open = openPick === l.asset_key;
-          return '<div class="leg' + (open ? " on" : "") + '" data-pick="' + l.asset_key + '">'
+          return '<div class="leg' + (open ? " on" : "") + '" data-pick="' + esc(l.asset_key) + '">'
             + body + "</div>" + (open ? hopHtml(l.asset_key) : "");
         }
         return '<div class="leg">' + body + "</div>";
@@ -445,19 +466,43 @@ const html = `<!DOCTYPE html>
         : "";
       const warn = unpriced ? '<div class="warn">' + unpriced + " no DP row</div>" : "";
       const shown = unpriced && !total ? "—" : fmt(total);
-      return '<div class="bag"><h3>' + title + " · " + shown + "</h3>" + warn + items + adj + "</div>";
+      return '<div class="bag"><h3>' + esc(title) + " · " + shown + "</h3>" + warn + items + adj + "</div>";
     }
 
+    // GitHub Pages answers a missing file with an HTML 404, so res.json() would throw a parse error.
+    async function getJson(path) {
+      const res = await fetch(path + "?" + DATA_V);
+      if (!res.ok) throw new Error(path + " " + res.status);
+      return res.json();
+    }
+
+    function say(msg) {
+      document.getElementById("lead").textContent = msg || "";
+    }
+
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles"];
+
     async function loadMembers() {
-      members = await (await fetch("data/ui/members.json?" + DATA_V)).json();
-      league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
-      try { titles = await (await fetch("data/ui/titles.json?" + DATA_V)).json(); }
+      members = await getJson("data/ui/members.json");
+      league = await getJson("data/ui/league.json");
+      try { titles = await getJson("data/ui/titles.json"); }
       catch (err) { titles = { titles: [] }; }
       const startTitle = params.get("title");
       const startView = params.get("view");
       if (startView === "titles") {
         view = "titles";
         titleYear = startTitle || null;
+      }
+      // syncUrl writes ?me=<display name>; accept either that or a user_id.
+      const startMe = params.get("me");
+      const seat = startMe
+        ? members.find((m) => m.user_id === startMe || m.name === startMe)
+        : null;
+      if (seat) {
+        view = VIEWS.indexOf(startView) >= 0 ? startView : "home";
+        openId = params.get("t") || null;
+        await selectMe(seat.user_id, true);
+        return;
       }
       paintWho();
       document.getElementById("app").hidden = false;
@@ -473,8 +518,8 @@ const html = `<!DOCTYPE html>
       menu.hidden = !whoOpen;
       menu.innerHTML = '<button type="button" class="' + (!me ? "on" : "") + '" data-who="">Team</button>'
         + members.map((m) =>
-          '<button type="button" class="' + (me && me.user_id === m.user_id ? "on" : "") + '" data-who="' + m.user_id + '">'
-          + m.name + "</button>"
+          '<button type="button" class="' + (me && me.user_id === m.user_id ? "on" : "") + '" data-who="' + esc(m.user_id) + '">'
+          + esc(m.name) + "</button>"
         ).join("");
     }
 
@@ -488,7 +533,17 @@ const html = `<!DOCTYPE html>
       openDraft = null;
       markOpen = null;
       titleYear = null;
-      document.getElementById("lead").textContent = "";
+      // Filters are per-seat state. Leaving them set filtered the next seat to a season it may not have.
+      year = "all";
+      lens = "all";
+      draftSort = "new";
+      draftRounds = { 1: true, 2: true, 3: true, 4: true };
+      draftStartup = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      lensOpen = false;
+      openPacks.clear();
+      say("");
       paintWho();
       syncUrl();
       render();
@@ -505,12 +560,23 @@ const html = `<!DOCTYPE html>
     }
 
     async function selectMe(id, keep) {
-      me = members.find((m) => m.user_id === id);
-      data = await (await fetch("data/ui/me/" + id + ".json?" + DATA_V)).json();
-      seatCache[id] = data;
-      if (!league) league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
-      if (!picks) picks = await (await fetch("data/ui/picks.json?" + DATA_V)).json();
-      document.getElementById("lead").textContent = "";
+      const prev = me;
+      try {
+        me = members.find((m) => m.user_id === id);
+        data = seatCache[id] || await getJson("data/ui/me/" + id + ".json");
+        seatCache[id] = data;
+        if (!league) league = await getJson("data/ui/league.json");
+        if (!picks) picks = await getJson("data/ui/picks.json");
+      } catch (err) {
+        console.error(err);
+        me = prev;
+        document.getElementById("app").hidden = false;
+        say("Could not load that team. Check your connection and try again.");
+        paintWho();
+        render();
+        return;
+      }
+      say("");
       document.getElementById("app").hidden = false;
       paintWho();
       if (!keep) {
@@ -639,7 +705,8 @@ const html = `<!DOCTYPE html>
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const by = new Map();
       for (const r of sides) {
-        if (!windowLived(r.date)) continue;
+        // chipLived, not windowLived: "all" is unfiltered, and windowLived maps it to 1 year.
+        if (!chipLived(r.date)) continue;
         const s = windowScore(r);
         if (s == null) continue;
         const prev = by.get(r.transaction_id);
@@ -649,10 +716,14 @@ const html = `<!DOCTYPE html>
     }
 
     async function seatData(uid) {
-      if (!seatCache[uid]) {
-        seatCache[uid] = await (await fetch("data/ui/me/" + uid + ".json?" + DATA_V)).json();
+      try {
+        if (!seatCache[uid]) seatCache[uid] = await getJson("data/ui/me/" + uid + ".json");
+        if (!picks) picks = await getJson("data/ui/picks.json");
+      } catch (err) {
+        console.error(err);
+        say("Could not load that team's trades. Check your connection and try again.");
+        return null;
       }
-      if (!picks) picks = await (await fetch("data/ui/picks.json?" + DATA_V)).json();
       return seatCache[uid];
     }
 
@@ -665,14 +736,15 @@ const html = `<!DOCTYPE html>
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
       const mid = s == null ? "—" : s > 0 ? "← " + fmt(s) : s < 0 ? fmt(Math.abs(s)) + " →" : fmt(s);
-      const leftCls = s == null || s === 0 ? "" : s > 0 ? "pos" : "neg";
-      const rightCls = s == null || s === 0 ? "" : s > 0 ? "neg" : "pos";
-      return '<button type="button" class="row" data-board-open="' + r.user_id + '" data-id="' + r.transaction_id + '">'
+      const leftCls = s == null || s === 0 ? "" : cls(s);
+      const rightCls = s == null || s === 0 ? "" : cls(-s);
+      const midCls = s == null || s === 0 ? "" : cls(s);
+      return '<button type="button" class="row" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><span class="names ' + leftCls + '">' + r.name + '</span> <span class="val">' + got + "</span></div>"
-        + '<div class="mid"><span class="margin pos">' + mid + "</span>"
-        + '<div class="date">' + r.date + (r.headline ? " · " + r.headline : "") + "</div></div>"
-        + '<div class="side right"><span class="val">' + sent + '</span> <span class="names ' + rightCls + '">' + r.other + "</span></div>"
+        + '<div class="side"><span class="names ' + leftCls + '">' + esc(r.name) + '</span> <span class="val">' + got + "</span></div>"
+        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
+        + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
+        + '<div class="side right"><span class="val">' + sent + '</span> <span class="names ' + rightCls + '">' + esc(r.other) + "</span></div>"
         + "</div></button>";
     }
 
@@ -684,8 +756,8 @@ const html = `<!DOCTYPE html>
     }
 
     function listRow(r, right) {
-      return '<div class="row"><div class="row-top"><div><div class="names">' + r.name + "</div>"
-        + '<div class="date">' + (r.team || "") + (r.stays > 1 ? " · " + r.stays + " stays" : "") + "</div></div>"
+      return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.name) + "</div>"
+        + '<div class="date">' + esc(r.team || "") + (r.stays > 1 ? " · " + r.stays + " stays" : "") + "</div></div>"
         + '<div class="margin">' + right + "</div></div></div>";
     }
 
@@ -748,9 +820,9 @@ const html = `<!DOCTYPE html>
       el.dataset.key = key;
       el.hidden = !items.length;
       const pill = (b) => '<button type="button" class="bubble"'
-        + (b.view ? ' data-view="' + b.view + '"' : "")
-        + (b.pack ? ' data-pack="' + b.pack + '"' : "") + ">"
-        + "<b>" + b.kicker + "</b> <span>" + b.line + "</span></button>";
+        + (b.view ? ' data-view="' + esc(b.view) + '"' : "")
+        + (b.pack ? ' data-pack="' + esc(b.pack) + '"' : "") + ">"
+        + "<b>" + esc(b.kicker) + "</b> <span>" + esc(b.line) + "</span></button>";
       const row = items.map(pill).join("");
       el.innerHTML = '<div class="ticker" aria-label="League feed"><div class="ticker-track">' + row + row + "</div></div>";
     }
@@ -781,34 +853,36 @@ const html = `<!DOCTYPE html>
 
     function bagLine(label, items) {
       if (!items || !items.length) return "";
-      return '<div class="leg"><span>' + label + "</span><b>" + items.join(" · ") + "</b></div>";
+      return '<div class="leg"><span>' + esc(label) + "</span><b>" + items.map(esc).join(" · ") + "</b></div>";
     }
 
     function chapterHtml(title, ch, extra) {
       if (!ch) return '<div class="chapter"><h3>' + title + "</h3><p class='caption'>No prior season in this league.</p></div>";
       const mean = ch.league_mean_trades;
       const vs = mean == null ? "" : " · league mean " + mean.toFixed(1);
-      const partners = (ch.partners || []).slice(0, 3).map((p) => p.name + " ×" + p.n).join(" · ");
+      const partners = (ch.partners || []).slice(0, 3).map((p) => esc(p.name) + " ×" + p.n).join(" · ");
       const big = (ch.big || []).map((b) => {
         return '<div class="row"><div class="row-top"><div><div class="names">'
-          + (b.partners || []).join(" · ") + "</div>"
-          + '<div class="date">' + (b.date || "")
+          + (b.partners || []).map(esc).join(" · ") + "</div>"
+          + '<div class="date">' + esc(b.date || "")
           + (b.firsts ? " · " + b.firsts + " first" + (b.firsts === 1 ? "" : "s") : "")
           + "</div></div></div>"
-          + '<div class="date">Got ' + ((b.got || []).join(", ") || "—")
-          + "<br>Sent " + ((b.sent || []).join(", ") || "—") + "</div></div>";
+          + '<div class="date">Got ' + ((b.got || []).map(esc).join(", ") || "—")
+          + "<br>Sent " + ((b.sent || []).map(esc).join(", ") || "—") + "</div></div>";
       }).join("");
-      return '<div class="chapter"><h3>' + title + "</h3>"
+      const picksIn = ch.picks_in || [];
+      const picksOut = ch.picks_out || [];
+      return '<div class="chapter"><h3>' + esc(title) + "</h3>"
         + '<div class="stats">'
         + statBox(ch.trades, "trades" + vs)
         + statBox(postureLab(ch.posture), "player " + ch.players_in + " in / " + ch.players_out + " out")
-        + statBox(String(ch.picks_in.length), "picks in · " + ch.firsts_in + " firsts")
-        + statBox(String(ch.picks_out.length), "picks out · " + ch.firsts_out + " firsts")
+        + statBox(String(picksIn.length), "picks in · " + ch.firsts_in + " firsts")
+        + statBox(String(picksOut.length), "picks out · " + ch.firsts_out + " firsts")
         + statBox(String((ch.waiver_adds || 0) + (ch.fa_adds || 0)), "waiver + FA adds")
         + statBox(String(ch.drops || 0), "drops")
         + "</div>"
-        + bagLine("Picks in", ch.picks_in)
-        + bagLine("Picks out", ch.picks_out)
+        + bagLine("Picks in", picksIn)
+        + bagLine("Picks out", picksOut)
         + (partners ? '<div class="caption">Traded with ' + partners + "</div>" : "")
         + (extra || "")
         + (big ? "<h2>Big moves</h2>" + big : "")
@@ -828,17 +902,17 @@ const html = `<!DOCTYPE html>
       const core = turn.core_from_prev_end || {};
       const used = (t.draft && t.draft.used) || [];
       const draftLine = used.length
-        ? used.map((p) => p.player + " (R" + p.round + ")").join(" · ")
+        ? used.map((p) => esc(p.player) + " (R" + esc(p.round) + ")").join(" · ")
         : "None used.";
       const lineup = ((t.title_lineup && t.title_lineup.starters) || []).map((p) =>
-        '<div class="leg"><span>' + p.player + '</span><b class="origin-' + (p.origin || "unknown") + '">'
+        '<div class="leg"><span>' + esc(p.player) + '</span><b class="origin-' + esc(p.origin || "unknown") + '">'
         + originLab(p.origin) + "</b></div>"
       ).join("");
       const winHow = rec.fpts_rank === 1 ? "Won the points race" : "Won the bracket";
       return '<button type="button" class="chip" data-title="">All champions</button>'
-        + '<div class="path-hero"><div class="kicker">' + t.season + " champion</div>"
-        + "<h2>" + t.name + "</h2>"
-        + '<p class="thesis">' + (t.thesis || "") + "</p></div>"
+        + '<div class="path-hero"><div class="kicker">' + esc(t.season) + " champion</div>"
+        + "<h2>" + esc(t.name) + "</h2>"
+        + '<p class="thesis">' + esc(t.thesis || "") + "</p></div>"
         + '<div class="stats">'
         + statBox(rec.wins + "–" + rec.losses, winHow + " · " + rec.fpts_rank + " of " + rec.teams + " in points")
         + statBox(fmt(rec.fpts), "scored · sit " + sit + " of potential")
@@ -847,7 +921,7 @@ const html = `<!DOCTYPE html>
         + statBox((t.title_lineup && t.title_lineup.from_opening) + " / " + (t.title_lineup && t.title_lineup.n), "title starters from opening roster")
         + statBox(end.retention == null ? "—" : pct(end.retention), "of last year's finale still on opening roster")
         + "</div>"
-        + '<p class="caption">Year before: ' + prior
+        + '<p class="caption">Year before: ' + esc(prior)
         + (core.n ? " · " + core.held + " of " + core.n + " opening starters were on that finale." : "")
         + "</p>"
         + "<h2>How they won</h2>"
@@ -872,8 +946,8 @@ const html = `<!DOCTYPE html>
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
-          return '<button type="button" class="row" data-title="' + t.season + '">'
-            + '<div class="row-top"><div><div class="names">' + t.season + " · " + t.name + "</div>"
+          return '<button type="button" class="row" data-title="' + esc(t.season) + '">'
+            + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + esc(t.name) + "</div>"
             + '<div class="date">' + rec.wins + "–" + rec.losses + " · " + how
             + " · " + ((t.draft && t.draft.used) || []).length + " pick" + (((t.draft && t.draft.used) || []).length === 1 ? "" : "s") + " used</div></div>"
             + '<div class="margin">1st</div></div></button>';
@@ -889,16 +963,16 @@ const html = `<!DOCTYPE html>
 
     function partnerLine(p) {
       const g = p.per == null ? "even" : p.per >= 100 ? "you_extract" : p.per <= -100 ? "they_extract" : "even";
-      return '<button type="button" class="row" data-partner="' + p.name + '">'
-        + '<div class="row-top"><div><div class="names">' + p.name + "</div>"
+      return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
+        + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
         + '<div class="date">' + p.n + " complete · " + gradeLabel(g) + "</div></div>"
         + '<div class="margin ' + cls(p.per) + '">' + fmt(p.per) + "</div></div></button>";
     }
 
     function draftLine(p, tag) {
       if (!p) return "";
-      return '<div class="row"><div class="row-top"><div><div class="names">' + p.player + "</div>"
-        + '<div class="date">' + tag + " · " + p.season + " R" + p.round + "</div></div>"
+      return '<div class="row"><div class="row-top"><div><div class="names">' + esc(p.player) + "</div>"
+        + '<div class="date">' + esc(tag) + " · " + esc(p.season) + " R" + esc(p.round) + "</div></div>"
         + '<div class="margin ' + cls(p.surplus) + '">' + fmt(p.surplus) + "</div></div></div>";
     }
 
@@ -911,8 +985,8 @@ const html = `<!DOCTYPE html>
 
     function mark(id, title, sub, tone) {
       const on = markOpen === id;
-      return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + id + '" aria-expanded="' + on + '">'
-        + "<b>" + title + "</b>" + (sub ? "<span>" + sub + "</span>" : "") + "</button>";
+      return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + esc(id) + '" aria-expanded="' + on + '">'
+        + "<b>" + esc(title) + "</b>" + (sub ? "<span>" + esc(sub) + "</span>" : "") + "</button>";
     }
 
     function marksOf(seat) {
@@ -1036,10 +1110,10 @@ const html = `<!DOCTYPE html>
           const you = me && me.user_id === r.uid;
           const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
           return '<div class="mark-bar' + (you ? " you" : "") + '">'
-            + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + r.name + "</span>"
-            + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + r.title + "</span></div>"
+            + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + esc(r.name) + "</span>"
+            + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
             + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
-            + '<div class="date">' + r.stat + "</div></div>";
+            + '<div class="date">' + esc(r.stat) + "</div></div>";
         }).join("")
         + "</div>";
     }
@@ -1073,22 +1147,22 @@ const html = `<!DOCTYPE html>
       const hint = n ? "" : (tape.showDay ? "Last on tape " + tape.showDay : "No deals on the last rebuild");
       const chips = tape.rows.map((r) => {
         const on = openId === r.transaction_id;
-        return '<button type="button" class="day-in' + (on ? " on" : "") + '" data-board-open="' + r.user_id + '" data-id="' + r.transaction_id + '">'
-          + "<b>" + r.name + " vs " + r.other + "</b>"
-          + "<span>" + (r.headline || r.date) + "</span></button>";
+        return '<button type="button" class="day-in' + (on ? " on" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+          + "<b>" + esc(r.name) + " vs " + esc(r.other) + "</b>"
+          + "<span>" + esc(r.headline || r.date) + "</span></button>";
       }).join("");
       const open = tape.rows.find((r) => r.transaction_id === openId);
       const champ = ((titles && titles.titles) || [])[0];
       const rec = champ && champ.record || {};
       const champBox = champ
         ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
-          + '<div class="day-alert-h">Champion<span>' + champ.season + " · " + champ.name + "</span></div>"
+          + '<div class="day-alert-h">Champion<span>' + esc(champ.season) + " · " + esc(champ.name) + "</span></div>"
           + '<div class="date">' + rec.wins + "–" + rec.losses
           + (rec.fpts_rank === 1 ? " · points race" : " · bracket")
           + " · Champions path</div></a>"
         : "";
       return '<div class="alert-row"><div class="day-alert">'
-        + '<div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
+        + '<div class="day-alert-h">' + esc(title) + (hint ? "<span>" + esc(hint) + "</span>" : "") + "</div>"
         + chips
         + "</div>" + champBox + "</div>"
         + (open ? '<div class="home-tape">' + boardTape(open) + "</div>" : "");
@@ -1112,9 +1186,13 @@ const html = `<!DOCTYPE html>
         .sort((a, b) => b.per - a.per);
       const take = partners[0];
       const pay = partners.length > 1 ? partners[partners.length - 1] : null;
+      const empty = pool.length ? "" : ((data.trades || []).length
+        ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
+        : '<p class="caption">No trades on this seat yet.</p>');
       return teamMarks()
         + markChart()
         + lensRow()
+        + empty
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
         + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")
@@ -1144,10 +1222,11 @@ const html = `<!DOCTYPE html>
       const sentTitle = p.multi ? p.mine + " gave up" : p.other + " received";
       let bags = bagBlock(gotTitle, p.s.legs, p.s.today, p.s.unpriced, p.s.value_adjust)
         + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced, p.s.value_adjust_sent);
-      if ((t.others || []).length > 1) {
+      if (p.multi) {
         bags += (t.other_bags || []).map((b) => {
-          const side = (b.windows && b.windows[lens]) || b.even || b.realized;
-          return bagBlock(b.name + " received", side.legs, side.today, side.unpriced);
+          const side = applyVa((b.windows && b.windows[lens]) || b.even || b.realized, true);
+          if (!side) return "";
+          return bagBlock(b.name + " received", side.legs, side.today, side.unpriced, side.value_adjust);
         }).join("");
       }
       const sparkSrc = t.even_year_ends || t.year_ends;
@@ -1168,13 +1247,13 @@ const html = `<!DOCTYPE html>
         : dlt > 0 ? "← " + fmt(dlt)
         : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
         : fmt(dlt);
-      const midCls = dlt == null || incomplete || dlt === 0 ? "" : "pos";
-      return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + t.transaction_id + '">'
+      const midCls = dlt == null || incomplete || dlt === 0 ? "" : cls(dlt);
+      return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + esc(t.transaction_id) + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><span class="names ' + mineCls + '">' + p.mine + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="side"><span class="names ' + mineCls + '">' + esc(p.mine) + '</span> <span class="val">' + gotShow + "</span></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
-        + '<div class="date">' + t.date + (incomplete ? ' <span class="badge">no DP row</span>' : "") + "</div></div>"
-        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + p.other + "</span></div>"
+        + '<div class="date">' + esc(t.date) + (incomplete ? ' <span class="badge">no DP row</span>' : "") + "</div></div>"
+        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + esc(p.other) + "</span></div>"
         + "</div>"
         + (open ? '<div class="detail">' + tradeBags(t, extra) + "</div>" : "")
         + "</button>";
@@ -1230,8 +1309,8 @@ const html = `<!DOCTYPE html>
       return pts.reduce((a, m) => a + m.player, 0) / pts.length;
     }
 
+    // Startup picks carry a pick_cost too, so they are graded on surplus like every other row.
     function pickDelta(p) {
-      if (p.startup) return pickGot(p);
       const got = pickGot(p);
       if (got == null || p.pick_cost == null) return null;
       return displayDelta(got, p.pick_cost);
@@ -1246,15 +1325,15 @@ const html = `<!DOCTYPE html>
       const slot = (p.season || "") + " " + (p.startup ? "startup" : (Number(p.round) === 1 ? "1st" : Number(p.round) === 2 ? "2nd" : Number(p.round) === 3 ? "3rd" : p.round + "th"));
       const got = pickGot(p);
       const gotShow = got == null ? "—" : fmt(got);
-      const sentShow = p.startup || p.pick_cost == null ? "—" : fmt(p.pick_cost);
+      const sentShow = p.pick_cost == null ? "—" : fmt(p.pick_cost);
       const dlt = pickDelta(p);
-      const mineCls = dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
-      const otherCls = dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
+      const mineCls = dlt == null || dlt === 0 ? "" : cls(dlt);
+      const otherCls = dlt == null || dlt === 0 ? "" : cls(-dlt);
       const mid = dlt == null ? "—"
         : dlt > 0 ? "← " + fmt(dlt)
         : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
         : fmt(dlt);
-      const midCls = dlt == null || dlt === 0 ? "" : "pos";
+      const midCls = dlt == null || dlt === 0 ? "" : cls(dlt);
       const clock = clockName();
       let detail = "";
       if (open) {
@@ -1271,38 +1350,50 @@ const html = `<!DOCTYPE html>
           + "</div>";
       }
       const own = origin === "Own pick";
-      return '<button type="button" class="row' + (open ? " open" : "") + (own ? " own-pick" : " away-pick") + '" data-draft="' + key + '">'
+      return '<button type="button" class="row' + (open ? " open" : "") + (own ? " own-pick" : " away-pick") + '" data-draft="' + esc(key) + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div><span class="names ' + mineCls + '">' + p.player + '</span> <span class="val">' + gotShow + "</span></div>"
-        + '<div class="date">' + (p.as_of || "") + "</div></div>"
+        + '<div class="side"><div><span class="names ' + mineCls + '">' + esc(p.player) + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="date">' + esc(p.as_of || "") + "</div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
-        + '<div class="date origin ' + (own ? "own" : "away") + '">' + origin + "</div></div>"
-        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + slot + "</span></div>"
+        + '<div class="date origin ' + (own ? "own" : "away") + '">' + esc(origin) + "</div></div>"
+        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + esc(slot) + "</span></div>"
         + "</div>"
         + detail + "</button>";
     }
 
     function renderTrades() {
-      const years = [...new Set(data.trades.map((t) => t.season))].sort().reverse();
-      let list = data.trades;
+      const all = (data && data.trades) || [];
+      const years = [...new Set(all.map((t) => t.season))].sort().reverse();
+      let list = all;
       if (year !== "all") list = list.filter((t) => t.season === year);
+      // Home tiles exclude trades that have not lived the selected clock; this list must too.
+      const lived = list.filter((t) => chipLived(t.date));
       const hint = year === "all" ? "Filter by year" : "Filter by year · " + year;
       const yearBtn = '<button type="button" class="filter-btn' + (year !== "all" || yearFilterOpen ? " on" : "") + '" data-yfilter="1" aria-label="Filter by year" aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
         + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
         + (year !== "all" ? '<span class="dot"></span>' : "")
         + "</button>"
         + '<div class="caption">' + hint + "</div>";
+      const empty = !all.length
+        ? '<p class="caption">No trades on this seat yet.</p>'
+        : !list.length
+          ? '<p class="caption">No trades in ' + esc(year) + '. Clear the year filter to see the rest.</p>'
+          : !lived.length
+            ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
+            : "";
       return '<div class="filter-wrap">'
         + lensRow(yearBtn)
         + (yearFilterOpen
           ? '<div class="filter-panel" id="yearFilters" role="group" aria-label="Year">'
             + [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
-              '<label data-year="' + row[0] + '"><input type="checkbox"' + (year === row[0] ? " checked" : "") + "> " + row[1] + "</label>"
+              '<label data-year="' + esc(row[0]) + '"><input type="checkbox"' + (year === row[0] ? " checked" : "") + "> " + esc(row[1]) + "</label>"
             ).join("")
             + "</div>"
           : "")
         + "</div>"
-        + list.map(tradeRow).join("");
+        + '<div class="caption">' + esc(livedHint(lived.length, list.length, "deal")) + "</div>"
+        + empty
+        + lived.map((t) => tradeRow(t)).join("");
     }
 
     function clockName() {
@@ -1377,7 +1468,7 @@ const html = `<!DOCTYPE html>
         + (filtered ? '<span class="dot"></span>' : "")
         + "</button>"
         + '<div class="caption"><span class="' + cls(avg) + '">' + fmt(avg) + "</span> / pick"
-        + " · " + graded.length + " graded · " + livedHint(list.length, raw.length, "pick") + "</div>";
+        + " · " + graded.length + " graded · " + esc(livedHint(list.length, raw.length, "pick")) + "</div>";
       const html = '<div class="lens-row"><div class="lens-row-left">' + draftBtn + "</div></div>"
         + (draftFilterOpen
           ? '<div class="filter-panel" id="draftFilters">'
@@ -1391,27 +1482,28 @@ const html = `<!DOCTYPE html>
             + '<label data-dstartup="1"><input type="checkbox"' + (draftStartup ? " checked" : "") + "> Include startup picks</label>"
             + "</div>"
           : "")
-        + list.map(pickRow).join("");
+        + (list.length ? "" : '<p class="caption">No graded picks with these filters. Widen the rounds, or include startup picks.</p>')
+        + list.map((p) => pickRow(p)).join("");
       lens = prev;
       return html;
     }
 
     function renderLeague() {
       const you = me && me.name;
-      const traders = (league.traders || []).map((t) =>
+      const traders = ((league && league.traders) || []).map((t) =>
         '<div class="row-top" style="padding:8px 0"><div class="names' + (t.name === you ? " you" : "") + '">'
-        + t.name + (t.name === you ? " · you" : "")
-        + (t.style && t.style.label ? " · " + t.style.label : "") + "</div>"
-        + '<div class="margin ' + cls(t.even_per_trade ?? t.realized_per_trade) + '">' + fmt(t.even_per_trade ?? t.realized_per_trade) + " / trade</div></div>"
+        + esc(t.name) + (t.name === you ? " · you" : "")
+        + (t.style && t.style.label ? " · " + esc(t.style.label) : "") + "</div>"
+        + '<div class="margin ' + cls(t.even_per_trade) + '">' + fmt(t.even_per_trade) + " / trade</div></div>"
         + '<div class="date">' + t.two_way + " complete"
         + (t.incomplete ? " · " + t.incomplete + " incomplete" : "") + "</div>"
       ).join("");
-      const d = (league.drafters_rookie || []).map((t) =>
+      const d = ((league && league.drafters_rookie) || []).map((t) =>
         '<div class="row-top" style="padding:8px 0"><div class="names' + (t.name === you ? " you" : "") + '">'
-        + t.name + (t.name === you ? " · you" : "") + "</div>"
+        + esc(t.name) + (t.name === you ? " · you" : "") + "</div>"
         + '<div class="margin ' + cls(t.per_pick) + '">' + fmt(t.per_pick) + " / pick</div></div>"
         + '<div class="date">' + t.used + " used · " + t.graded + " graded"
-        + (t.best ? " · hit " + t.best.player : "") + "</div>"
+        + (t.best ? " · hit " + esc(t.best.player) : "") + "</div>"
       ).join("");
       return renderTradeBoards()
         + "<h2>Traders · per complete two-way</h2>" + traders
@@ -1448,11 +1540,11 @@ const html = `<!DOCTYPE html>
       const pack = rankSides(boardClock, boardWindow);
       const you = me && me.name;
       const scoreOf = (r) => boardClock === "aged" ? r.aged : r.today_delta;
-      const list = (title, rows) => "<h2>" + title + "</h2>" + (rows || []).map((r) =>
-        '<button type="button" class="row" data-open-me="' + r.user_id + '" data-id="' + r.transaction_id + '">'
+      const list = (title, rows) => "<h2>" + esc(title) + "</h2>" + (rows || []).map((r) =>
+        '<button type="button" class="row" data-open-me="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top"><div><div class="names' + (r.name === you ? " you" : "") + '">'
-        + r.name + (r.name === you ? " · you" : "") + " vs " + r.other + "</div>"
-        + '<div class="date">' + r.date + (r.headline ? " · " + r.headline : "") + "</div></div>"
+        + esc(r.name) + (r.name === you ? " · you" : "") + " vs " + esc(r.other) + "</div>"
+        + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
         + '<div class="margin ' + cls(scoreOf(r)) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
       ).join("");
       const windows = [["3m","3 months"],["6m","6 months"],["1y","1 year"],["3y","3 years"],["all","All time"]];
@@ -1468,16 +1560,17 @@ const html = `<!DOCTYPE html>
     }
 
     function renderPartners() {
-      const list = data.partners || [];
+      const list = (data && data.partners) || [];
       const perOf = (p) => {
-        const deals = (data.trades || []).filter((t) => t.others.length === 1 && t.others[0] === p.name && !t.incomplete);
+        const deals = ((data && data.trades) || [])
+          .filter((t) => (t.others || []).length === 1 && t.others[0] === p.name && !t.incomplete);
         return windowPer(deals);
       };
       const rows = list.slice().sort((a, b) => (perOf(b) ?? -1e9) - (perOf(a) ?? -1e9)).map((p) => {
         const per = perOf(p);
         const g = per == null ? "even" : per >= 100 ? "you_extract" : per <= -100 ? "they_extract" : "even";
-        return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + p.name + '">'
-          + '<div class="row-top"><div><div class="names">' + p.name + "</div>"
+        return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
+          + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
           + '<span class="' + gradeCls(g) + '">' + gradeLabel(g) + "</span></div></div>"
           + '<div class="margin ' + cls(per) + '">' + fmt(per) + "</div></div></button>";
@@ -1485,10 +1578,16 @@ const html = `<!DOCTYPE html>
       let detail = "";
       if (partnerName) {
         const p = list.find((x) => x.name === partnerName);
-        const deals = data.trades.filter((t) => t.others.length === 1 && t.others[0] === partnerName);
-        detail = p ? "<h2>" + p.name + "</h2>" + deals.map(tradeRow).join("") : "";
+        const deals = ((data && data.trades) || [])
+          .filter((t) => (t.others || []).length === 1 && t.others[0] === partnerName && chipLived(t.date));
+        detail = p
+          ? "<h2>" + esc(p.name) + "</h2>"
+            + (deals.length ? deals.map((t) => tradeRow(t)).join("")
+              : '<p class="caption">No deal with ' + esc(p.name) + " has lived " + esc(clockName()) + " yet.</p>")
+          : "";
       }
-      return lensRow() + rows + detail;
+      const empty = list.length ? "" : '<p class="caption">No trade partners yet on this seat.</p>';
+      return lensRow() + empty + rows + detail;
     }
 
     function render() {

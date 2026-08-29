@@ -82,7 +82,33 @@ Measured against lens `all`: **20 of 82 partner grades disagree.** Both screens 
 *Fix:* one `partnerPer(seat, name, lens)` helper; delete or explicitly label the stored grade.
 Both.
 
-### P0-5 — The Trades tab scores trades on clocks they have not lived
+### P0-5 — 31 rostered NFL players are valued at zero
+`isRetired` returns `noTeam || tinyRaw || tinyFlat` (`price-today.mjs:118`). Because the
+conditions are OR'd, the `tinyFlat <= 1200` branch zeroes any player under that flatten value
+**even when he has a live NFL team**.
+
+Measured: of 124 assets zeroed on today, **31 have a current NFL team** — 108 leg instances,
+**22,324 flatten points** erased. Examples: Mason Rudolph (QB, PIT) ×10 legs, Andy Dalton (QB, PHI) ×6,
+Trey Sermon (RB, ATL) ×6, Austin Hooper (TE, ATL) ×4, Van Jefferson (WR, WAS) ×4,
+Tyler Conklin (TE, DET), Kyle Trask (QB, CAR), Jarrett Stidham (QB, DEN).
+
+These are cheap (flatten 761–1137, raw DP roughly 3–20), so this is **not** the raw-300 floor the
+product canon forbids — it is a much lower cut. But "a rostered backup QB is worth exactly 0" is
+still a claim the book should not be making, and it is invisible on screen.
+*Fix:* require `noTeam && (tinyRaw || tinyFlat)`, or drop `tinyFlat` and lean on the explicit
+retired set plus the KTC-board test. Pipeline-only.
+
+### P0-6 — Value Adjustment breaks zero-sum on 3-team trades
+VA is computed per seat against **that seat's own counter-bag**. In an N-way trade those bags do
+not mirror, so the adjustments never cancel.
+
+Measured: the two 3-team trades sum to **+397.39** and **+26.70** instead of 0, and the
+league-wide sum of every fully-observed `today_delta` is **+424.09** — exactly those two numbers.
+Two-team zero-sum remains perfect (0 breaks across 288 pairs), so this is specifically the N-way case.
+*Fix:* define VA for N-way trades against the union of the other bags, or exclude N-way trades
+from VA and say so. Pipeline; product decision first.
+
+### P0-7 — The Trades tab scores trades on clocks they have not lived
 `renderTrades` never filters by `chipLived` (`:1279`). On the `y3` lens a two-week-old trade
 renders a "First 3 years" number built from a single snapshot, while Home's tiles exclude exactly
 those trades via `windowTotal` → `chipLived`. `livedHint` — the function written to disclose this —
@@ -164,8 +190,13 @@ the bag header reads **3,091** while its single line item (2023 2nd → Zach Cha
 The browser's `applyVa` returns early on the same condition (`generate-page.mjs:547`), so the UI
 repeats the staleness rather than catching it.
 
-Only **one** trade is affected today (magnitude 94), but the rule is structurally missing: every
-future one-way or receiver-only side inherits it, and any change to the today book widens the gap.
+Widening the check to include `incomplete` sides finds **5 affected sides across 3 transactions**.
+The worst is tx `567502131945091072` / TipsUp: the bag header reads **1,692** while **every one of
+its legs prices at 0** (Kenny Golladay, and a 2nd that became Kadarius Toney). A completely
+worthless bag is presented as a 1,692 asset.
+
+The rule is structurally missing rather than a one-off: every future one-way, receiver-only, or
+incomplete side inherits it, and any change to the today book widens the gap.
 *Fix:* recompute totals whenever **either** side has priced legs; treat the empty side as 0 and
 say "sent nothing" rather than `0` (already listed as `UI_SDD.md` later-slice item 11). Pipeline + generator.
 
@@ -196,7 +227,28 @@ so every accordion toggle is a history write. Safari throttles around 100 calls 
 begins dropping them with a console warning; opening trade rows quickly reaches that.
 *Fix:* only sync when a URL-bearing piece of state actually changed. Generator-only.
 
-### P1-13 — Attribute injection, not just element injection
+### P1-13 — Name collisions silently skip the KTC blend
+`nflNameIndex` (`price-today.mjs:62`) keeps the **first** id per normalized name across 11,836
+Sleeper players; **357 names collide**, and the first id is often a retired namesake. Legs that
+resolve by name — became-pick legs, which have no `player:{id}` key — therefore look up the wrong
+player, miss KTC, and quietly fall back to flatten-only.
+
+Measured: **4 names, 22 leg instances**:
+
+| Became | Resolves to | Should be | Shown | Should be |
+| --- | --- | --- | ---: | ---: |
+| Kenneth Walker | 4634, WR, no team, inactive | 8151, RB, KC | 5,186 | ~5,500 |
+| Antonio Williams | 7203, no team, inactive | 13301, WAS | 2,984 | ~2,884 |
+| Kyle Williams | 94, DT, no team, inactive | 12547, NE | 1,989 | ~2,099 |
+| Kaleb Johnson | 2967, G, no team, inactive | 12504, RB, PIT | 1,675 | ~1,800 |
+
+Each miss is only a few hundred points, but note how close this sits to a much worse failure:
+these players are saved from `isRetired` only because KTC's *name* index happens to list them.
+A spelling difference there and a rostered starter would price at **0**.
+*Fix:* prefer the active/rostered id on collision, and give `ktcValue` the same name-index
+fallback `isRetired` already uses. Pipeline-only.
+
+### P1-14 — Attribute injection, not just element injection
 Extending §P1-6: unescaped data also lands **inside attribute values** —
 `data-partner="` (`:884`, `:1471`), `data-who="` (`:476`), `data-title="`. A Sleeper display name
 containing a double quote breaks out of the attribute, which is a second injection vector and
@@ -276,16 +328,27 @@ Scripted over all 10 seats, 586 trade sides, recomputing from legs with the live
 
 | Invariant | Result |
 | --- | --- |
-| `today == sum(priced legs) + value_adjust` | **1 violation** of 586 (§P1-9); all others exact |
+| Stored VA matches `value-adjust.mjs` recompute (cap 3, half 4ths) | **0 stale** across all sides and windows |
+| Stored today values match `price-today.mjs` recompute (retired 0, 40/60) | **0 stale** across all legs |
 | `today_delta == today − sent_today` | 0 violations |
-| Stored VA matches `value-adjust.mjs` recompute (cap 3, half 4ths) | 0 stale |
-| Stored today values match `price-today.mjs` recompute (retired 0, 40/60) | 0 stale |
-| Zero-sum on complete 2-team trades | 0 breaks across 288 pairs |
+| Zero-sum on complete **2-team** trades | 0 breaks across 288 pairs |
+| Cross-seat mirroring (legs, dates, flags) | exact on all pairs |
 | Both seats present for every 2-team trade | 288 of 288 |
-| Non-finite / NaN values in legs | 0 |
+| Non-finite / NaN / out-of-range values | 0 |
+| `titles.json` and `members.json` consistency | clean |
+| `today == sum(priced legs) + value_adjust` | **5 violations** (§P1-9) |
+| Zero-sum on **3-team** trades | **2 of 2 broken** (§P0-6) |
 
-**The book is arithmetically sound.** Every defect in this audit is presentation, plumbing,
-payload, or the one structural gap in §P1-9 — not pricing.
+**Leg-level pricing is sound — the wrappers are not.** Every value the book computes for an
+individual asset is correct and current: no stale VA, no stale blends, no drift. What fails is
+what surrounds the legs — totals on degenerate sides (§P1-9), VA on N-way trades (§P0-6),
+the retired test over-reaching onto rostered players (§P0-5), and the name join silently
+skipping KTC (§P1-13).
+
+One latent aggregate is also wrong: `realized_total` / `realized_per_trade` describe a book that
+is no longer in the file — up to ~37,000 off, with sign flips on four seats (ChiefGumby stored
+−10,092 against an actual +14,688). It is harmless **only** because the UI never reads it, which
+is exactly the kind of field §3 recommends deleting rather than repairing.
 
 ---
 
@@ -446,8 +509,10 @@ reset filters in `clearLeague` (P1-11).
 
 **Slice 1b — pipeline truth**
 One canonical build list in `build.mjs`, including `apply-value-adjust.mjs` and `title-path.mjs`;
-delete the duplicate `trade_boards` builder (P0-2) · `aged` from one price book (P1-10) ·
-recompute totals when either side has priced legs (P1-9).
+delete the duplicate `trade_boards` builder (P0-2) · stop zeroing rostered players (P0-5) ·
+decide VA on N-way trades (P0-6) · recompute totals when any side has priced legs (P1-9) ·
+prefer the rostered id on name collisions and give `ktcValue` a name fallback (P1-13) ·
+`aged` from one price book (P1-10) · delete `realized_*` rather than repair it.
 
 **Slice 2 — delete the dead**
 Remove `renderLeague`/`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`/

@@ -459,6 +459,7 @@ serves stale data with no signal. Derive it from `league.today` or a content has
 | A6 | P2 | **Auto-scrolling marquee with no pause control** (`.ticker-track`, 48 s loop, `:134`). `prefers-reduced-motion` is respected (`:139`) but that is not a substitute for a control. |
 | A7 | **P1** | **Grid overflow clips real numbers at true phone width.** `.row-top.tape` is `1fr auto 1fr` (`:96`) and `.names` has no `min-width: 0` or ellipsis. Reproduced in `preview.html` at 390px with a desktop scrollbar present (375px usable): the trade row for BubbaCuckShremp rendered its value as **"8,96"** and DarkWingDucks2023 as **"3,0"** — the figures the whole product exists to show, truncated. At a full 390px the numbers fit but `DarkWingDucks2023` sits flush against the edge, one character from clipping. Any longer display name, or a user with larger text, clips. `overflow-x: hidden` (`:22`) then hides the evidence. |
 | A7b | P2 | **The four nav tabs wrap onto two lines at 390px** (`home trades partners` / `drafts`), which reads as a rendering accident rather than a layout. Reproduced in `preview.html`. |
+| A7c | **P1** | **The brand header overflows the viewport at 390px.** The "Team" seat picker's right edge measures **410px** on a 390px viewport, so the most-used control in the app hangs off the screen. `overflow-x: hidden` on `html, body` hides the evidence rather than fixing it, and `button.who` already caps at `min(158px, calc(100vw - 120px))`, so the overflow is coming from the flex row (`h1.brand` with `overflow: visible`), not the button's own width. Measured on `main` before and after an unrelated change, so it is pre-existing and not a regression. |
 | A8 | P2 | **Three colour languages in one Drafts row.** `pickRow` colours the player's name by pick surplus (`:1268`), the origin label by own-vs-acquired (`:1271`), and the middle number always green (`:1249`). A red player name reads as "bad player", not "the pick underperformed". |
 | — | — | **Contrast is fine.** `--muted` 6.59:1, `--dim` 5.38:1, `--red` 4.91:1, `--green` 10.41:1, gold 9.46:1 — all clear AA. Safe-area handling and `viewport-fit=cover` are correct. |
 
@@ -510,6 +511,18 @@ market consensus without contaminating history. The KTC blend cut mean error aga
 symptom of that one unanswered question. Recommendation — **pipeline owns all arithmetic**,
 ships one flat row per trade per lens (delta, got, sent, VA, and a single leg list with five
 values), and the browser only formats. That kills §P1-4, §P1-7, most of §4, and ~70% of bytes.
+
+---
+
+## 8a. Removing a link can orphan its destination
+
+Logged because it cost a follow-up fix. The user asked to remove the "Champions path" text link under
+the brand header. That link was also the only thing naming the **Champions Path screen itself** —
+`renderTitles()` opened straight into a caption. Removing the link left the destination untitled.
+Fixed by adding `<h2>Champions Path</h2>` to the list view (`main` at `908174f`).
+
+The general lesson for the remaining slices: several elements in this app do double duty as
+navigation and as page titles. Before deleting one, render the thing it points at.
 
 ---
 

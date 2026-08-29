@@ -81,6 +81,29 @@ with a skeleton. Pipeline + generator.
 `popstate` listener, so back leaves the app entirely from any depth.
 *Fix:* push on view/seat/trade change, restore on `popstate`. Generator-only.
 
+### P1-9 — A receiver-only side shows a total that contradicts its own legs
+`applyToSide` (`value-adjust.mjs:68`) only refreshes `today` / `sent_today` / `today_delta`
+when **both** sides have priced legs:
+
+```
+const pricedGot = priced(side.legs).length;
+const pricedSent = priced(side.sent).length;
+if (pricedGot && pricedSent) { side.today = bag + gotVa; ... }
+```
+
+On a 3-team trade where a seat receives and sends nothing, `pricedSent === 0`, so the legs are
+repriced by the today blend but the totals keep the **old flatten sum**.
+Live example — tx `916914658962112512` (2023-01-06, SF69erss with ARae and TrumanCooper):
+the bag header reads **3,091** while its single line item (2023 2nd → Zach Charbonnet) reads
+**3,185**. The stale `today_delta` then feeds the league boards and that seat's per-trade mean.
+The browser's `applyVa` returns early on the same condition (`generate-page.mjs:547`), so the UI
+repeats the staleness rather than catching it.
+
+Only **one** trade is affected today (magnitude 94), but the rule is structurally missing: every
+future one-way or receiver-only side inherits it, and any change to the today book widens the gap.
+*Fix:* recompute totals whenever **either** side has priced legs; treat the empty side as 0 and
+say "sent nothing" rather than `0` (already listed as `UI_SDD.md` later-slice item 11). Pipeline + generator.
+
 ---
 
 ## 3. Dead code and dead payload
@@ -125,6 +148,25 @@ Per-seat files (10 seats, **7.4 MB** total):
 **Roughly 4.2 MB of 7.4 MB in seat files and 185 KB of 717 KB in `league.json` is never read.**
 Restructuring `windows` to one leg list plus five values per trade saves ~1.2 MB more.
 That is a **~70% payload cut** with no visible change.
+
+---
+
+## 3b. Data integrity — what passed
+
+Scripted over all 10 seats, 586 trade sides, recomputing from legs with the live modules:
+
+| Invariant | Result |
+| --- | --- |
+| `today == sum(priced legs) + value_adjust` | **1 violation** of 586 (§P1-9); all others exact |
+| `today_delta == today − sent_today` | 0 violations |
+| Stored VA matches `value-adjust.mjs` recompute (cap 3, half 4ths) | 0 stale |
+| Stored today values match `price-today.mjs` recompute (retired 0, 40/60) | 0 stale |
+| Zero-sum on complete 2-team trades | 0 breaks across 288 pairs |
+| Both seats present for every 2-team trade | 288 of 288 |
+| Non-finite / NaN values in legs | 0 |
+
+**The book is arithmetically sound.** Every defect in this audit is presentation, plumbing,
+payload, or the one structural gap in §P1-9 — not pricing.
 
 ---
 

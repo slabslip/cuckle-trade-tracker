@@ -237,17 +237,16 @@ const html = `<!DOCTYPE html>
     .filter-wrap { position: relative; z-index: 4; }
     #yearFilters {
       position: absolute; top: 52px; left: 0; z-index: 12;
-      width: 168px; margin: 0; padding: 6px;
-      display: flex; flex-wrap: wrap; gap: 4px;
+      width: 108px; margin: 0; padding: 4px 8px;
+      display: flex; flex-direction: column;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
-    #yearFilters button {
-      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--muted);
-      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
-      min-height: 32px; padding: 4px 8px; cursor: pointer;
+    #yearFilters label {
+      min-height: 26px; gap: 6px; font-size: 0.75rem; color: var(--muted);
+      cursor: pointer;
     }
-    #yearFilters button.on { color: var(--text); border-color: #6b5a2e; }
-    #yearFilters button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    #yearFilters label:has(input:checked) { color: var(--text); }
+    #yearFilters input { width: 13px; height: 13px; }
   </style>
 </head>
 <body>
@@ -274,7 +273,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828ai";
+    const DATA_V = "20260829a";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade"],
@@ -945,9 +944,10 @@ const html = `<!DOCTYPE html>
       return '<div class="filter-wrap">'
         + lensRow(yearBtn)
         + (yearFilterOpen
-          ? '<div class="filter-panel" id="yearFilters">'
-            + '<button type="button" class="' + (year === "all" ? "on" : "") + '" data-year="all">All</button>'
-            + years.map((y) => '<button type="button" class="' + (year === y ? "on" : "") + '" data-year="' + y + '">' + y + "</button>").join("")
+          ? '<div class="filter-panel" id="yearFilters" role="group" aria-label="Year">'
+            + [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
+              '<label data-year="' + row[0] + '"><input type="checkbox"' + (year === row[0] ? " checked" : "") + "> " + row[1] + "</label>"
+            ).join("")
             + "</div>"
           : "")
         + "</div>"
@@ -996,6 +996,8 @@ const html = `<!DOCTYPE html>
     }
 
     function renderDrafts() {
+      const prev = lens;
+      lens = "all";
       const raw = []
         .concat((data.drafts && data.drafts.rookie) || [], draftStartup ? (data.drafts && data.drafts.startup) || [] : [])
         .filter((p) => p.startup ? draftStartup : !!draftRounds[p.round]);
@@ -1028,7 +1030,7 @@ const html = `<!DOCTYPE html>
         + "</button>"
         + '<div class="caption"><span class="' + cls(avg) + '">' + fmt(avg) + "</span> / pick"
         + " · " + graded.length + " graded · " + livedHint(list.length, raw.length, "pick") + "</div>";
-      return lensRow(draftBtn)
+      const html = '<div class="lens-row"><div class="lens-row-left">' + draftBtn + "</div></div>"
         + (draftFilterOpen
           ? '<div class="filter-panel" id="draftFilters">'
             + '<div class="filter-h">Date</div>'
@@ -1042,6 +1044,8 @@ const html = `<!DOCTYPE html>
             + "</div>"
           : "")
         + list.map(pickRow).join("");
+      lens = prev;
+      return html;
     }
 
     function renderLeague() {
@@ -1249,8 +1253,6 @@ const html = `<!DOCTYPE html>
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
       const yfilterBtn = e.target.closest("[data-yfilter]");
       if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
-      const yearBtn = e.target.closest("[data-year]");
-      if (yearBtn) { year = yearBtn.dataset.year; yearFilterOpen = false; render(); return; }
       if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters") || e.target.closest("#scoreAs")) return;
       let closedFilter = false;
       if (draftFilterOpen && !e.target.closest("#draftFilters")) {
@@ -1279,6 +1281,13 @@ const html = `<!DOCTYPE html>
       else if (closedFilter) render();
     });
     document.addEventListener("change", (e) => {
+      const yearLab = e.target.closest("[data-year]");
+      if (yearLab) {
+        year = e.target.checked ? yearLab.dataset.year : "all";
+        yearFilterOpen = true;
+        render();
+        return;
+      }
       const sortLab = e.target.closest("[data-dsort]");
       if (sortLab) {
         draftSort = sortLab.dataset.dsort;

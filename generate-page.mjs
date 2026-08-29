@@ -705,7 +705,7 @@ const html = `<!DOCTYPE html>
     }
 
     function chapterHtml(title, ch, extra) {
-      if (!ch) return '<div class="chapter"><h3>' + title + "</h3><p class=\"caption\">No prior season in this league.</p></div>";
+      if (!ch) return '<div class="chapter"><h3>' + title + "</h3><p class='caption'>No prior season in this league.</p></div>";
       const mean = ch.league_mean_trades;
       const vs = mean == null ? "" : " · league mean " + mean.toFixed(1);
       const partners = (ch.partners || []).slice(0, 3).map((p) => p.name + " ×" + p.n).join(" · ");
@@ -730,7 +730,7 @@ const html = `<!DOCTYPE html>
         + bagLine("Picks in", ch.picks_in)
         + bagLine("Picks out", ch.picks_out)
         + (partners ? '<div class="caption">Traded with ' + partners + "</div>" : "")
-        + extra
+        + (extra || "")
         + (big ? "<h2>Big moves</h2>" + big : "")
         + "</div>";
     }
@@ -795,7 +795,7 @@ const html = `<!DOCTYPE html>
           return '<button type="button" class="row" data-title="' + t.season + '">'
             + '<div class="row-top"><div><div class="names">' + t.season + " · " + t.name + "</div>"
             + '<div class="date">' + rec.wins + "–" + rec.losses + " · " + how
-            + " · " + ((t.draft && t.draft.used) || []).length + " picks used</div></div>"
+            + " · " + ((t.draft && t.draft.used) || []).length + " pick" + (((t.draft && t.draft.used) || []).length === 1 ? "" : "s") + " used</div></div>"
             + '<div class="margin">1st</div></div></button>';
         }).join("");
     }

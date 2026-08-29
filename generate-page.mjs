@@ -358,7 +358,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829i";
+    const DATA_V = "20260829j";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -546,12 +546,25 @@ const html = `<!DOCTYPE html>
       const sum = (legs) => priced(legs).reduce((a, l) => a + l.value, 0);
       const got = priced(s.legs), sent = priced(s.sent);
       if (!got.length || !sent.length) return s;
+      const pieceWeight = (l) => {
+        if (!l || l.became) return 1;
+        const key = String(l.asset_key || "");
+        if (/^pick:\d{4}:4:/.test(key)) return 0.5;
+        const label = String(l.label || "");
+        if (/4th/i.test(label)) {
+          const slot = Number((key.match(/^pick:\d{4}:\d+:(\d+)$/) || [])[1]);
+          if (/late/i.test(label) || /late/i.test(String(l.flag || "")) || slot >= 8) return 0.5;
+        }
+        return 1;
+      };
       const one = (mine, other) => {
+        if (mine.length === other.length) return 0;
         const myMax = Math.max(...mine.map((l) => l.value));
         const theirMax = Math.max(...other.map((l) => l.value));
-        const spots = Math.max(0, other.length - mine.length);
-        const lesser = other.filter((l) => l.value < myMax).length;
-        const n = Math.max(spots, Math.max(0, lesser - mine.length));
+        const mineCount = mine.reduce((a, l) => a + pieceWeight(l), 0);
+        const spots = Math.max(0, other.reduce((a, l) => a + pieceWeight(l), 0) - mineCount);
+        const lesser = other.filter((l) => l.value < myMax).reduce((a, l) => a + pieceWeight(l), 0);
+        const n = Math.min(3, Math.max(spots, Math.max(0, lesser - mineCount)));
         const damp = theirMax > 0 ? myMax / Math.max(myMax, theirMax) : 1;
         return 0.15 * n * myMax * damp;
       };

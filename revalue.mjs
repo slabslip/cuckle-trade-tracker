@@ -2,6 +2,7 @@
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
 import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
+import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
 const TEAMS = 10;
 const FLAT_SCALE = 10000;
@@ -445,7 +446,8 @@ async function main() {
   const vmaxIdx = indexVmax(curve);
   const resIdx = resIndex(resolutions);
   const today = latestAsOf(fullCurve.length ? fullCurve : curve);
-  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx };
+  const todayPrice = makeTodayPrice(today);
+  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, todayPrice };
   const tradeById = new Map(allTrades.map((t) => [t.transaction_id, t]));
 
   function buildPicks() {
@@ -636,8 +638,13 @@ async function main() {
     const evenSides = {};
     for (const uid of uids) {
       const s = entry.lenses.realized.sides[uid];
-      const gotLegs = flattenLegs(s.legs, topToday);
-      const sentLegs = flattenLegs(s.sent, topToday);
+      const todayEvenLegs = (legs) => (legs || []).map((l) => {
+        const flat = flatten(l.value, topToday);
+        const priced = { ...l, raw: l.value, value: flat };
+        return { ...l, value: priceTodayValue(flat, priced, todayPrice) };
+      });
+      const gotLegs = todayEvenLegs(s.legs);
+      const sentLegs = todayEvenLegs(s.sent);
       const gotP = gotLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sentP = sentLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sent0Raw = bagFor(legs, uid, t0, "realized", ctx, "out");
@@ -740,7 +747,11 @@ async function main() {
     const playerKey = `player:${p.player_id}`;
     const nowRaw = playerValue(curveIdx, playerKey, today);
     const costRaw = pickValue(curveIdx, p.season, Number(p.round), p.draft_slot, draftDay);
-    const nowVal = gradeRaw(nowRaw.value, today);
+    const nowVal = priceTodayValue(
+      gradeRaw(nowRaw.value, today),
+      { kind: "player", asset_key: playerKey, raw: nowRaw.value, value: gradeRaw(nowRaw.value, today) },
+      todayPrice,
+    );
     const costVal = gradeRaw(costRaw.value, draftDay);
     const surplus = nowVal != null && costVal != null ? nowVal - costVal : null;
     const startup = p.season === "2019";
@@ -962,7 +973,9 @@ async function main() {
     }
     function nowVal(key) {
       const raw = playerValue(curveIdx, key, today).value;
-      return raw == null ? 0 : flatten(raw, vmaxAt(vmaxIdx, today));
+      if (raw == null) return 0;
+      const flat = flatten(raw, vmaxAt(vmaxIdx, today));
+      return priceTodayValue(flat, { kind: "player", asset_key: key, raw, value: flat }, todayPrice) ?? 0;
     }
     const rostersNow = readJson("rosters_now.json", []);
     const rosterOwner = new Map();
@@ -1259,20 +1272,33 @@ async function main() {
     return Math.abs(sides[0].today_delta + sides[1].today_delta) >= 1;
   });
   check("zero-sum 2-team even", evenZeroBreaks.length === 0);
-  let flattenDrift = 0;
+  let todayDrift = 0;
   for (const t of meters) {
     for (const uid of t.user_ids) {
       const r = t.lenses.realized.sides[uid];
       const e = t.lenses.even.sides[uid];
-      const gotFlat = (r.legs || []).reduce((a, l) => a + (flatten(l.value, topToday) || 0), 0);
-      if (Math.abs((e.today || 0) - (e.value_adjust || 0) - gotFlat) >= 1) flattenDrift += 1;
+      const gotToday = (r.legs || []).reduce((a, l) => {
+        const flat = flatten(l.value, topToday);
+        return a + (priceTodayValue(flat, { ...l, raw: l.value, value: flat }, todayPrice) || 0);
+      }, 0);
+      if (Math.abs((e.today || 0) - (e.value_adjust || 0) - gotToday) >= 1) todayDrift += 1;
     }
   }
-  check("even is flatten-only", flattenDrift === 0);
+  check("even today is retired/ktc blend", todayDrift === 0);
   const ceedeeTx = meters.find((t) => t.date === "2025-09-04" && t.names.includes("TrumanCooper"));
   const trumanId = members.find((m) => m.canonical_name === "TrumanCooper")?.user_id;
   const ceedeeVa = ceedeeTx?.lenses.even.sides[trumanId]?.value_adjust;
-  check("ceedee va ~5752", ceedeeVa != null && ceedeeVa >= 5500 && ceedeeVa <= 6000);
+  check("ceedee va ~3322 (cap 3 after today blend)", ceedeeVa != null && ceedeeVa >= 3200 && ceedeeVa <= 3450);
+  const chiefAraeEven = chiefArae?.lenses.even.sides[chiefId];
+  const zekeEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
+  const hillEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
+  check("zeke today retired 0", zekeEvenToday != null && zekeEvenToday.value === 0);
+  check("hill today blended", hillEvenToday != null && hillEvenToday.value >= 1600 && hillEvenToday.value <= 2000);
+  const bakerHits = meters.flatMap((t) => t.user_ids.flatMap((uid) => {
+    const s = t.lenses.even.sides[uid];
+    return [...(s?.legs || []), ...(s?.sent || [])].filter((l) => (l.label || "") === "Baker Mayfield");
+  }));
+  check("baker still mid-4k", bakerHits.length && bakerHits.every((l) => l.value >= 4200 && l.value <= 5200));
   const winKeys = ["t0", "y1", "y2", "y3", "all"];
   check("every trade has windows", meters.every((t) => winKeys.every((k) => t.lenses.windows?.[k])));
   const winZero = meters.filter((t) => {

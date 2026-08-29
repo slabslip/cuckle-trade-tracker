@@ -1,14 +1,22 @@
 #!/usr/bin/env node
-/** Apply Value Adjustment to the committed UI dataset (legs already flatten). */
+/** Reprice today even bags (retired=0 + 40/60 KTC), then apply VA. Windows stay flatten. */
 import { readdirSync, readFileSync } from "node:fs";
 import { DATA, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
+import { makeTodayPrice, repriceTodayLegs } from "./price-today.mjs";
 
 const EVEN = 100;
 
-function applyTrade(t) {
-  if (t.even) applyToSide(t.even);
-  if (t.realized && t.realized !== t.even) applyToSide(t.realized);
+function repriceEven(side, ctx) {
+  if (!side) return side;
+  if (side.legs) side.legs = repriceTodayLegs(side.legs, ctx);
+  if (side.sent) side.sent = repriceTodayLegs(side.sent, ctx);
+  return applyToSide(side);
+}
+
+function applyTrade(t, ctx) {
+  if (t.even) repriceEven(t.even, ctx);
+  if (t.realized && t.realized !== t.even) repriceEven(t.realized, ctx);
   for (const w of Object.values(t.windows || {})) applyToSide(w);
   if (t.even && t.windows?.t0 && !t.windows.t0.incomplete && t.windows.t0.today_delta != null) {
     t.even.t0 = t.windows.t0.today;
@@ -16,8 +24,8 @@ function applyTrade(t) {
     t.even.t0_value_adjust = t.windows.t0.value_adjust;
   }
   for (const bag of t.other_bags || []) {
-    if (bag.even) applyToSide(bag.even);
-    if (bag.realized && bag.realized !== bag.even) applyToSide(bag.realized);
+    if (bag.even) repriceEven(bag.even, ctx);
+    if (bag.realized && bag.realized !== bag.even) repriceEven(bag.realized, ctx);
     for (const w of Object.values(bag.windows || {})) applyToSide(w);
   }
   return t;
@@ -39,6 +47,8 @@ function check(name, cond) {
 }
 
 function main() {
+  const league0 = JSON.parse(readFileSync(`${DATA}/ui/league.json`, "utf8"));
+  const ctx = makeTodayPrice(league0.today || "2026-08-29");
   const dir = `${DATA}/ui/me`;
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
   const seats = [];
@@ -50,7 +60,7 @@ function main() {
   for (const f of files) {
     const me = JSON.parse(readFileSync(`${dir}/${f}`, "utf8"));
     for (const t of me.trades || []) {
-      applyTrade(t);
+      applyTrade(t, ctx);
       tradesN += 1;
       const s = t.even;
       if (s?.value_adjust) vaN += 1;
@@ -64,7 +74,7 @@ function main() {
         }
       }
     }
-    for (const t of me.recent_trades || []) applyTrade(t);
+    for (const t of me.recent_trades || []) applyTrade(t, ctx);
 
     const complete = (me.trades || []).filter((t) => !t.incomplete && t.even?.today_delta != null);
     const evenDs = complete.map((t) => t.even.today_delta);
@@ -165,15 +175,31 @@ function main() {
     aged: { best: best(aged, "aged"), worst: worst(aged, "aged") },
   };
 
-  for (const t of league.review_trades || []) applyTrade(t);
+  for (const t of league.review_trades || []) applyTrade(t, ctx);
 
   writeUi("league.json", league);
 
   const ceedee = seats.flatMap((m) => m.trades || []).find((t) =>
-    t.date === "2025-09-04" && (t.even?.legs || []).some((l) => (l.label || "").includes("CeeDee")));
+    t.transaction_id === "1269369347395026944"
+    || (t.date === "2025-09-04" && (t.even?.legs || []).some((l) => (l.label || "").includes("CeeDee"))));
   const ceedeeVa = ceedee?.even?.value_adjust;
   check("ceedee trade found", !!ceedee);
-  check("ceedee va ~5752", ceedeeVa >= 5500 && ceedeeVa <= 6000);
+  check("ceedee va ~3322 (cap 3 after today blend; not 5500-6000)", ceedeeVa != null && ceedeeVa >= 3200 && ceedeeVa <= 3450);
+
+  const chief = seats.flatMap((m) => m.trades || []).find((t) => t.transaction_id === "460470201385742336");
+  const zeke = [...(chief?.even?.legs || []), ...(chief?.even?.sent || [])]
+    .find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
+  const hill = [...(chief?.even?.legs || []), ...(chief?.even?.sent || [])]
+    .find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
+  check("chief-arae found", !!chief);
+  check("zeke today retired 0", zeke != null && zeke.value === 0);
+  check("hill today blended 1.6-2.0k", hill != null && hill.value >= 1600 && hill.value <= 2000);
+  check("hill not 2892 and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
+
+  const baker = seats.flatMap((m) => m.trades || []).flatMap((t) =>
+    [...(t.even?.legs || []), ...(t.even?.sent || [])]
+      .filter((l) => (l.label || "") === "Baker Mayfield"));
+  check("baker still mid-4k", baker.length && baker.every((l) => l.value >= 4200 && l.value <= 5200));
 
   let zeroBreaks = 0;
   const pair = new Map();
@@ -192,15 +218,22 @@ function main() {
     && (t.even?.sent || []).filter((l) => l.value != null).length === 1);
   check("1-for-1 no va", oneForOne.every((t) => Math.round(t.even.value_adjust || 0) === 0));
 
+  const winZeke = (chief?.windows?.all?.legs || []).find((l) => (l.became || "").includes("Ezekiel"));
+  check("windows stay flatten (zeke all != 0)", !winZeke || (winZeke.value != null && winZeke.value > 0));
+
   console.log(JSON.stringify({
     seats: seats.length,
     trades: tradesN,
     with_va: vaN,
     unique_players: players.size,
     unpriced_legs: unpricedN,
+    ktc_as_of: ctx.ktc.as_of,
     ceedee_va: Math.round(ceedeeVa),
     ceedee_delta: Math.round(ceedee.even.today_delta),
-    book: "even-flatten + value-adjust",
+    zeke_today: zeke?.value,
+    hill_today: hill?.value,
+    baker_today: baker[0]?.value,
+    book: "even-today 40/60 ktc + va cap 3",
   }, null, 2));
 }
 

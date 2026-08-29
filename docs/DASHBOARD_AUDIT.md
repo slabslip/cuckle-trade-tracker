@@ -234,7 +234,14 @@ so every accordion toggle is a history write. Safari throttles around 100 calls 
 begins dropping them with a console warning; opening trade rows quickly reaches that.
 *Fix:* only sync when a URL-bearing piece of state actually changed. Generator-only.
 
-### P1-13 — Name collisions silently skip the KTC blend
+### P1-13 — Name collisions silently skip the KTC blend — **FIXED 2026-08-29**
+Shipped in `main` at `fdec099`. `nflNameIndex` now ranks candidates (Superflex position +8,
+on a roster +4, active +2, higher id as tiebreak) instead of taking the first id, and `ktcValue`
+gained the KTC name-index fallback. 22 legs across 4 assets corrected, no zero flips.
+Also closes a latent hole at the top of the book: `Josh Allen` matches the Buffalo QB and a
+Jacksonville linebacker, both active and rostered — previously resolved correctly only by id order.
+Original finding below.
+
 `nflNameIndex` (`price-today.mjs:62`) keeps the **first** id per normalized name across 11,836
 Sleeper players; **357 names collide**, and the first id is often a retired namesake. Legs that
 resolve by name — became-pick legs, which have no `player:{id}` key — therefore look up the wrong
@@ -503,6 +510,20 @@ market consensus without contaminating history. The KTC blend cut mean error aga
 symptom of that one unanswered question. Recommendation — **pipeline owns all arithmetic**,
 ships one flat row per trade per lens (delta, got, sent, VA, and a single leg list with five
 values), and the browser only formats. That kills §P1-4, §P1-7, most of §4, and ~70% of bytes.
+
+---
+
+## 8b. Decisions needed before code
+
+Four of the fixes below change numbers on screen, so they need a ruling first. Everything else
+is unambiguous repair.
+
+| # | Decision | Recommendation |
+| --- | --- | --- |
+| D1 | **Rostered cheap players: 0 or flatten?** `isRetired` ORs `tinyFlat <= 1200`, so Mason Rudolph (PIT), Andy Dalton (PHI) and 29 others price at 0 despite having a team. | Change to `noTeam && (tinyRaw \|\| tinyFlat)`. A rostered QB2 prices at his flatten value (761–1137), not 0. Explicit retired set still wins. |
+| D2 | **VA on 3-team trades.** Per-seat bags do not mirror, so VA never cancels: +424.09 league-wide. | Compute each seat's VA against the **union** of the other bags, restoring zero-sum. Alternative — exclude N-way trades from VA and caption it. |
+| D3 | **Where does derived value live?** VA, partner means, and grade thresholds are each implemented two or three times. | Pipeline owns all arithmetic; ships one flat row per trade per lens; browser only formats. Kills P0-4, most of §4, ~70% of bytes. |
+| D4 | **Does the Home hero return, and do Best 10 / Worst 10 come back?** The board screen already works and is merely unreachable; `.hero` CSS survives with nothing emitting it. | Restore Best/Worst as a real screen (cheap — delete the two lines that force `view = "home"`), and either restore the hero or formally retire it. |
 
 ---
 

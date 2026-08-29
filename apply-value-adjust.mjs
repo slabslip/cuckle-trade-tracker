@@ -7,26 +7,29 @@ import { makeTodayPrice, repriceTodayLegs } from "./price-today.mjs";
 
 const EVEN = 100;
 
-function repriceEven(side, ctx) {
+function repriceEven(side, ctx, opts) {
   if (!side) return side;
   if (side.legs) side.legs = repriceTodayLegs(side.legs, ctx);
   if (side.sent) side.sent = repriceTodayLegs(side.sent, ctx);
-  return applyToSide(side);
+  return applyToSide(side, opts);
 }
 
 function applyTrade(t, ctx) {
-  if (t.even) repriceEven(t.even, ctx);
-  if (t.realized && t.realized !== t.even) repriceEven(t.realized, ctx);
-  for (const w of Object.values(t.windows || {})) applyToSide(w);
+  // VA is a pairwise stud-for-quantity add. On a 3-team trade the bags do not mirror,
+  // so per-seat adjustments never cancel — hold VA at 0 there to keep the trade zero-sum.
+  const opts = { noVa: (t.others || []).length > 1 };
+  if (t.even) repriceEven(t.even, ctx, opts);
+  if (t.realized && t.realized !== t.even) repriceEven(t.realized, ctx, opts);
+  for (const w of Object.values(t.windows || {})) applyToSide(w, opts);
   if (t.even && t.windows?.t0 && !t.windows.t0.incomplete && t.windows.t0.today_delta != null) {
     t.even.t0 = t.windows.t0.today;
     t.even.t0_delta = t.windows.t0.today_delta;
     t.even.t0_value_adjust = t.windows.t0.value_adjust;
   }
   for (const bag of t.other_bags || []) {
-    if (bag.even) repriceEven(bag.even, ctx);
-    if (bag.realized && bag.realized !== bag.even) repriceEven(bag.realized, ctx);
-    for (const w of Object.values(bag.windows || {})) applyToSide(w);
+    if (bag.even) repriceEven(bag.even, ctx, opts);
+    if (bag.realized && bag.realized !== bag.even) repriceEven(bag.realized, ctx, opts);
+    for (const w of Object.values(bag.windows || {})) applyToSide(w, opts);
   }
   return t;
 }

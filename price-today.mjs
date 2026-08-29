@@ -5,9 +5,6 @@ import { DATA, pickTier, readJson } from "./lib.mjs";
 export const TODAY_FLAT_W = 0.40;
 export const TODAY_KTC_W = 0.60;
 export const TEAMS = 10;
-export const TINY_RAW_MAX = 10;
-export const TINY_FLAT_MAX = 1200;
-
 /** Done names missing from KTC. Hill (3321) is on KTC — do not list him. */
 export const RETIRED_SLEEPER_IDS = new Set([
   "3164", // Ezekiel Elliott
@@ -127,19 +124,14 @@ function onKtcBoard(leg, idx, sid) {
   return !!(name && idx.byName.has(name));
 }
 
-export function isRetired(leg, ctx, flattenValue) {
+/** Off the KTC Superflex board *and* off an NFL roster. A cheap rostered QB2 is not retired. */
+export function isRetired(leg, ctx) {
   if (!leg) return false;
   if (leg.kind === "pick" && !leg.became) return false;
   const sid = sleeperIdFromLeg(leg, ctx.nameToId);
   if (sid && RETIRED_SLEEPER_IDS.has(sid)) return true;
   if (onKtcBoard(leg, ctx.ktc, sid)) return false;
-  const nfl = sid ? ctx.players[sid] : null;
-  const noTeam = !hasNflTeam(nfl);
-  const raw = leg.raw;
-  const tinyRaw = raw != null && Number.isFinite(raw) && raw > 0 && raw <= TINY_RAW_MAX;
-  const flat = flattenValue != null ? flattenValue : leg.value;
-  const tinyFlat = flat != null && Number.isFinite(flat) && flat > 0 && flat <= TINY_FLAT_MAX;
-  return noTeam || tinyRaw || tinyFlat;
+  return !hasNflTeam(sid ? ctx.players[sid] : null);
 }
 
 export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
@@ -166,7 +158,7 @@ export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
 
 export function priceTodayValue(flattenValue, leg, ctx) {
   if (flattenValue == null || !Number.isFinite(flattenValue)) return flattenValue;
-  if (isRetired(leg, ctx, flattenValue)) return 0;
+  if (isRetired(leg, ctx)) return 0;
   const ktc = ktcValue(leg, ctx.ktc.bySleeper, ctx.ktc.byPick, ctx.nameToId, ctx.ktc.byName);
   if (ktc == null) return flattenValue;
   return Math.round(TODAY_FLAT_W * flattenValue + TODAY_KTC_W * ktc);

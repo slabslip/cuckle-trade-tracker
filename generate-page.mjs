@@ -358,7 +358,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829k";
+    const DATA_V = "20260829l";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -536,16 +536,21 @@ const html = `<!DOCTYPE html>
       return "";
     }
 
-    function sideOf(t) {
-      return applyVa((t.windows && t.windows[lens]) || t.even || t.realized);
+    function isMulti(t) {
+      return !!(t && t.others && t.others.length > 1);
     }
 
-    function applyVa(s) {
+    function sideOf(t) {
+      return applyVa((t.windows && t.windows[lens]) || t.even || t.realized, isMulti(t));
+    }
+
+    // Mirrors value-adjust.mjs exactly: no VA on N-way trades, totals refresh when either bag is priced.
+    function applyVa(s, noVa) {
       if (!s || s.incomplete) return s;
       const priced = (legs) => (legs || []).filter((l) => l.value != null);
       const sum = (legs) => priced(legs).reduce((a, l) => a + l.value, 0);
       const got = priced(s.legs), sent = priced(s.sent);
-      if (!got.length || !sent.length) return s;
+      if (!got.length && !sent.length) return s;
       const pieceWeight = (l) => {
         if (!l || l.became) return 1;
         const key = String(l.asset_key || "");
@@ -558,6 +563,7 @@ const html = `<!DOCTYPE html>
         return 1;
       };
       const one = (mine, other) => {
+        if (!mine.length || !other.length) return 0;
         if (mine.length === other.length) return 0;
         const myMax = Math.max(...mine.map((l) => l.value));
         const theirMax = Math.max(...other.map((l) => l.value));
@@ -568,12 +574,14 @@ const html = `<!DOCTYPE html>
         const damp = theirMax > 0 ? myMax / Math.max(myMax, theirMax) : 1;
         return 0.15 * n * myMax * damp;
       };
-      const vaG = one(got, sent), vaS = one(sent, got);
+      const vaG = noVa ? 0 : one(got, sent), vaS = noVa ? 0 : one(sent, got);
+      const today = sum(s.legs) + vaG, sentToday = sum(s.sent) + vaS;
       return Object.assign({}, s, {
         value_adjust: vaG,
         value_adjust_sent: vaS,
-        today: sum(s.legs) + vaG,
-        sent_today: sum(s.sent) + vaS,
+        today: today,
+        sent_today: sentToday,
+        today_delta: today - sentToday,
       });
     }
 

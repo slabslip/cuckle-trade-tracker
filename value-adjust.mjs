@@ -55,24 +55,21 @@ export function valueAdjustment(gotLegs, sentLegs) {
   };
 }
 
-/** Fold VA into today / sent_today / today_delta. Idempotent: always from legs. */
-export function applyToSide(side) {
+/**
+ * Fold VA into today / sent_today / today_delta. Idempotent: always from legs.
+ * `opts.noVa` zeroes the adjustment but still refreshes the totals — used for N-way
+ * trades, where a seat's sent bag mirrors no single counterparty so VA cannot cancel.
+ */
+export function applyToSide(side, opts) {
   if (!side) return side;
-  const bag = sum(side.legs);
-  const sentBag = sum(side.sent);
-  const va = valueAdjustment(side.legs, side.sent);
-  const gotVa = side.incomplete ? 0 : va.got;
-  const sentVa = side.incomplete ? 0 : va.sent;
-  side.value_adjust = gotVa;
-  side.value_adjust_sent = sentVa;
-  if (!side.incomplete) {
-    const pricedGot = priced(side.legs).length;
-    const pricedSent = priced(side.sent).length;
-    if (pricedGot && pricedSent) {
-      side.today = bag + gotVa;
-      side.sent_today = sentBag + sentVa;
-      side.today_delta = side.today - side.sent_today;
-    }
+  const noVa = !!(opts && opts.noVa) || !!side.incomplete;
+  const va = noVa ? { got: 0, sent: 0 } : valueAdjustment(side.legs, side.sent);
+  side.value_adjust = va.got;
+  side.value_adjust_sent = va.sent;
+  if (priced(side.legs).length || priced(side.sent).length) {
+    side.today = sum(side.legs) + va.got;
+    side.sent_today = sum(side.sent) + va.sent;
+    side.today_delta = side.today - side.sent_today;
   }
   return side;
 }

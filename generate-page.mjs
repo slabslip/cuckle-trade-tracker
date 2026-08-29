@@ -162,6 +162,7 @@ const html = `<!DOCTYPE html>
     a.champ-alert:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 4px; }
+    a.champ-alert .champ-line { color: var(--text); font-weight: 650; margin-top: 4px; }
     button.day-in {
       display: block; width: 100%; appearance: none; font: inherit; color: inherit;
       text-align: left; background: none; border: 0; padding: 8px 0 0; margin: 4px 0 0;
@@ -1144,10 +1145,11 @@ const html = `<!DOCTYPE html>
       const rec = champ && champ.record || {};
       const champBox = champ
         ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
-          + '<div class="day-alert-h">Champion<span>' + esc(champ.season) + " · " + esc(champ.name) + "</span></div>"
+          + '<div class="day-alert-h">Champions Path</div>'
+          + '<div class="champ-line">' + esc(champ.season) + " champion · " + esc(champ.name) + "</div>"
           + '<div class="date">' + rec.wins + "–" + rec.losses
           + (rec.fpts_rank === 1 ? " · points race" : " · bracket")
-          + " · Champions path</div></a>"
+          + "</div></a>"
         : "";
       return '<div class="alert-row"><div class="day-alert">'
         + '<div class="day-alert-h">' + esc(title) + (hint ? "<span>" + esc(hint) + "</span>" : "") + "</div>"

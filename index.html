@@ -147,6 +147,14 @@
     }
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 4px; }
+    .day-heads { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .day-heads .bubble { margin-left: auto; }
+    button.text-link {
+      appearance: none; font: inherit; font-size: 0.8125rem; color: var(--muted);
+      background: none; border: 0; padding: 0; min-height: 44px;
+      text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+    }
+    button.text-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .day-scroller {
       display: flex; gap: 8px; overflow-x: auto; margin-top: 10px;
       padding-bottom: 2px; -webkit-overflow-scrolling: touch;
@@ -321,7 +329,7 @@
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829b";
+    const DATA_V = "20260829c";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -798,13 +806,11 @@
     function renderLeagueHome() {
       const n = ((titles && titles.titles) || []).length;
       const gate = n
-        ? '<button type="button" class="row" data-view="titles">'
-          + '<div class="row-top"><div><div class="names">Champions path</div>'
-          + '<div class="date">' + n + " title years · how they actually won</div></div>"
-          + '<div class="date">Open</div></div></button>'
+        ? '<p class="caption"><button type="button" class="text-link" data-view="titles">Champions path</button>'
+          + " · " + n + " title years</p>"
         : "";
-      return gate
-        + dayAlert()
+      return dayAlert()
+        + gate
         + lensRow()
         + pack("best", "Best aged", rankAge(1).map(boardTape).join(""))
         + pack("worst", "Worst aged", rankAge(-1).map(boardTape).join(""))
@@ -1002,8 +1008,14 @@
           + "<span>" + (r.headline || r.date) + "</span></button>";
       }).join("");
       const open = tape.rows.find((r) => r.transaction_id === openId);
+      const champ = ((titles && titles.titles) || [])[0];
+      const champChip = champ
+        ? '<button type="button" class="bubble" data-view="titles" aria-label="Champions path, ' + champ.season + " " + champ.name + '">'
+          + "<b>Champion</b> <span>" + champ.season + " · " + champ.name + "</span></button>"
+        : "";
       return '<div class="day-alert">'
-        + '<div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
+        + '<div class="day-heads"><div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
+        + champChip + "</div>"
         + (chips ? '<div class="day-scroller">' + chips + "</div>" : "")
         + (open ? boardTape(open) : "")
         + "</div>";
@@ -1521,7 +1533,7 @@
         if (view !== "drafts") draftFilterOpen = false;
         if (view !== "trades") yearFilterOpen = false;
         if (view !== "partners") partnerName = null;
-        if (view !== "titles") titleYear = null;
+        titleYear = null;
         lensOpen = false;
         render();
         return;

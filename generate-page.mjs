@@ -358,7 +358,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829h";
+    const DATA_V = "20260829i";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -694,7 +694,7 @@ const html = `<!DOCTYPE html>
       const champ = ((titles && titles.titles) || [])[0];
       if (champ) items.push({ view: "titles", kicker: "Champion", line: champ.season + " · " + champ.name });
       const wide = rankWide()[0];
-      if (wide) items.push({ pack: "wide", kicker: "Farthest from even", line: wide.name + " vs " + wide.other + " · " + fmt(windowScore(wide)) });
+      if (wide) items.push({ pack: "wide", kicker: "Most lopsided trades", line: wide.name + " vs " + wide.other + " · " + fmt(windowScore(wide)) });
       const traders = ((league && league.traders) || []).slice().sort((a, b) => (b.two_way || 0) - (a.two_way || 0));
       if (traders[0]) items.push({ pack: "", kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
       if (traders.length > 1) {
@@ -862,7 +862,7 @@ const html = `<!DOCTYPE html>
     function renderLeagueHome() {
       return dayAlert()
         + lensRow()
-        + pack("wide", "Farthest from even", rankWide().map(boardTape).join(""))
+        + pack("wide", "Most lopsided trades", rankWide().map(boardTape).join(""))
         + renderPlayerLists();
     }
 

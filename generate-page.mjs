@@ -160,10 +160,18 @@ const html = `<!DOCTYPE html>
     }
     a.champ-alert { color: inherit; text-decoration: none; box-sizing: border-box; cursor: pointer; }
     a.champ-alert:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .home-tape { margin: 0 0 14px; }
-    .home-tape .day-scroller { margin-top: 0; }
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 4px; }
+    button.day-in {
+      display: block; width: 100%; appearance: none; font: inherit; color: inherit;
+      text-align: left; background: none; border: 0; padding: 8px 0 0; margin: 4px 0 0;
+      cursor: pointer;
+    }
+    button.day-in + button.day-in { border-top: 1px solid #6b5a2e; padding-top: 10px; }
+    button.day-in:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.day-in b { display: block; font-weight: 650; }
+    button.day-in span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    .home-tape { margin: 0 0 14px; }
     button.text-link, a.text-link {
       appearance: none; font: inherit; font-size: 1rem; font-weight: 650; color: var(--text);
       background: none; border: 0; padding: 0; min-height: 44px;
@@ -350,7 +358,7 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let lens = "all";
-    const DATA_V = "20260829f";
+    const DATA_V = "20260829g";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1049,7 +1057,7 @@ const html = `<!DOCTYPE html>
       const hint = n ? "" : (tape.showDay ? "Last on tape " + tape.showDay : "No deals on the last rebuild");
       const chips = tape.rows.map((r) => {
         const on = openId === r.transaction_id;
-        return '<button type="button" class="day-chip' + (on ? " on" : "") + '" data-board-open="' + r.user_id + '" data-id="' + r.transaction_id + '">'
+        return '<button type="button" class="day-in' + (on ? " on" : "") + '" data-board-open="' + r.user_id + '" data-id="' + r.transaction_id + '">'
           + "<b>" + r.name + " vs " + r.other + "</b>"
           + "<span>" + (r.headline || r.date) + "</span></button>";
       }).join("");
@@ -1065,11 +1073,9 @@ const html = `<!DOCTYPE html>
         : "";
       return '<div class="alert-row"><div class="day-alert">'
         + '<div class="day-alert-h">' + title + (hint ? "<span>" + hint + "</span>" : "") + "</div>"
+        + chips
         + "</div>" + champBox + "</div>"
-        + ((chips || open) ? '<div class="home-tape">'
-          + (chips ? '<div class="day-scroller">' + chips + "</div>" : "")
-          + (open ? boardTape(open) : "")
-          + "</div>" : "");
+        + (open ? '<div class="home-tape">' + boardTape(open) + "</div>" : "");
     }
 
     function renderTeamHome() {

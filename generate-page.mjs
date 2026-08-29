@@ -160,7 +160,7 @@ const html = `<!DOCTYPE html>
     let league = null;
     let picks = null;
     let lens = "all";
-    const DATA_V = "20260828u";
+    const DATA_V = "20260828v";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "Day of trade"],
@@ -323,18 +323,26 @@ const html = `<!DOCTYPE html>
       return displayDelta(w.got, w.sent);
     }
 
+    function tradeDelta(t) {
+      if (!t || t.incomplete) return null;
+      const s = sideOf(t);
+      if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
+      return displayDelta(s.today, s.sent_today);
+    }
+
+    function chipLived(date) {
+      if (lens === "t0" || lens === "all") return true;
+      return windowLived(date);
+    }
+
     function windowPer(list) {
-      const ds = (list || []).filter((t) => !t.incomplete)
-        .map((t) => t.windows && t.windows[lens] && t.windows[lens].today_delta)
-        .filter((d) => d != null);
+      const ds = (list || []).filter((t) => chipLived(t.date)).map(tradeDelta).filter((d) => d != null);
       if (!ds.length) return null;
       return ds.reduce((a, b) => a + b, 0) / ds.length;
     }
 
     function windowTotal(list) {
-      const ds = (list || []).filter((t) => !t.incomplete)
-        .map((t) => t.windows && t.windows[lens] && t.windows[lens].today_delta)
-        .filter((d) => d != null);
+      const ds = (list || []).filter((t) => chipLived(t.date)).map(tradeDelta).filter((d) => d != null);
       return ds.length ? ds.reduce((a, b) => a + b, 0) : null;
     }
 
@@ -479,15 +487,55 @@ const html = `<!DOCTYPE html>
         + renderPlayerLists();
     }
 
+    function partnerLine(p) {
+      const g = p.per == null ? "even" : p.per >= 100 ? "you_extract" : p.per <= -100 ? "they_extract" : "even";
+      return '<button type="button" class="row" data-partner="' + p.name + '">'
+        + '<div class="row-top"><div><div class="names">' + p.name + "</div>"
+        + '<div class="date">' + p.n + " complete · " + gradeLabel(g) + "</div></div>"
+        + '<div class="margin ' + cls(p.per) + '">' + fmt(p.per) + "</div></div></button>";
+    }
+
+    function draftLine(p, tag) {
+      if (!p) return "";
+      return '<div class="row"><div class="row-top"><div><div class="names">' + p.player + "</div>"
+        + '<div class="date">' + tag + " · " + p.season + " R" + p.round + "</div></div>"
+        + '<div class="margin ' + cls(p.surplus) + '">' + fmt(p.surplus) + "</div></div></div>";
+    }
+
     function renderTeamHome() {
+      const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
+        .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
       const per = windowPer(data.trades);
       const total = windowTotal(data.trades);
+      const best = pool[0];
+      const worst = pool.length > 1 ? pool[pool.length - 1] : null;
+      const by = {};
+      for (const t of pool) {
+        if ((t.others || []).length !== 1) continue;
+        const name = t.others[0];
+        const d = tradeDelta(t);
+        if (!by[name]) by[name] = { name: name, n: 0, sum: 0 };
+        by[name].n += 1;
+        by[name].sum += d;
+      }
+      const partners = Object.keys(by).map((k) => ({ name: by[k].name, n: by[k].n, per: by[k].sum / by[k].n }))
+        .sort((a, b) => b.per - a.per);
+      const take = partners[0];
+      const pay = partners.length > 1 ? partners[partners.length - 1] : null;
+      const clock = ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "");
       return '<div class="hero"><b class="' + cls(per) + '">' + fmt(per) + "</b>"
-        + '<div class="caption">' + ((WINDOWS.find((w) => w[0] === lens) || [])[1] || "")
-        + (total != null ? " · " + fmt(total) : "")
+        + '<div class="caption">per trade · ' + clock
+        + (total != null ? " · " + fmt(total) + " total" : "")
+        + (pool.length ? " · " + pool.length + " deals" : "")
         + "</div></div>"
-        + "<h2>Latest trades</h2>" + (data.recent_trades || []).map(tradeRow).join("")
-        + "<h2>Latest rookie picks</h2>" + (data.recent_rookies || []).map(pickRow).join("");
+        + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
+        + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
+        + ((take || pay) ? "<h2>Partners</h2>" : "")
+        + (take ? partnerLine(take) : "")
+        + (pay && take && pay.name !== take.name ? partnerLine(pay) : "")
+        + ((data.hit || data.miss) ? "<h2>Draft</h2>" : "")
+        + draftLine(data.hit, "hit")
+        + draftLine(data.miss, "miss");
     }
 
     function renderHome() {

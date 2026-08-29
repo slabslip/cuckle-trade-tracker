@@ -688,7 +688,7 @@ const html = `<!DOCTYPE html>
     }
 
     function originLab(o) {
-      return ({ held: "held", drafted: "drafted", trade: "traded in", waiver: "waiver", fa: "FA", opening: "opening", unknown: "unknown" })[o] || o;
+      return ({ held: "held", drafted: "drafted", trade: "traded in", waiver: "waiver", fa: "FA", opening: "opening", unknown: "unknown" })[o] || "unknown";
     }
 
     function postureLab(p) {

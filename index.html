@@ -276,6 +276,23 @@
     }
     #yearFilters label:has(input:checked) { color: var(--text); }
     #yearFilters input { width: 13px; height: 13px; }
+    .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
+    .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
+    .path-hero h2 { margin: 0 0 6px; }
+    .path-hero .thesis { color: var(--muted); margin: 0; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px; }
+    .stat {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; min-height: 64px;
+    }
+    .stat b { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+    .stat span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.35; }
+    .chapter { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 0 0 12px; }
+    .chapter h3 { margin: 0 0 8px; font-size: 1rem; }
+    .origin-held { color: var(--muted); }
+    .origin-drafted { color: var(--green); }
+    .origin-trade { color: #e0b44c; }
+    .origin-waiver, .origin-fa { color: #7aa2ff; }
   </style>
 </head>
 <body>
@@ -302,8 +319,9 @@
     let data = null;
     let league = null;
     let picks = null;
+    let titles = null;
     let lens = "all";
-    const DATA_V = "20260829a";
+    const DATA_V = "20260829b";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -329,6 +347,7 @@
     let partnerName = null;
     let boardClock = "today";
     let boardWindow = "all";
+    let titleYear = null;
     const seatCache = {};
 
     const params = new URLSearchParams(location.search);
@@ -392,6 +411,14 @@
     async function loadMembers() {
       members = await (await fetch("data/ui/members.json?" + DATA_V)).json();
       league = await (await fetch("data/ui/league.json?" + DATA_V)).json();
+      try { titles = await (await fetch("data/ui/titles.json?" + DATA_V)).json(); }
+      catch (err) { titles = { titles: [] }; }
+      const startTitle = params.get("title");
+      const startView = params.get("view");
+      if (startView === "titles") {
+        view = "titles";
+        titleYear = startTitle || null;
+      }
       paintWho();
       document.getElementById("app").hidden = false;
       render();
@@ -420,6 +447,7 @@
       openPick = null;
       openDraft = null;
       markOpen = null;
+      titleYear = null;
       document.getElementById("lead").textContent = "";
       paintWho();
       syncUrl();
@@ -430,6 +458,7 @@
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
       if (view && view !== "home") q.set("view", view);
+      if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (lens && lens !== "all") q.set("lens", lens);
       history.replaceState(null, "", "?" + q.toString());
@@ -641,8 +670,141 @@
       el.innerHTML = '<div class="ticker" aria-label="League feed"><div class="ticker-track">' + row + row + "</div></div>";
     }
 
+    function nth(n) {
+      const v = Number(n);
+      if (!v) return String(n);
+      const m = v % 100;
+      if (m >= 11 && m <= 13) return v + "th";
+      return v + ({ 1: "st", 2: "nd", 3: "rd" }[v % 10] || "th");
+    }
+
+    function pct(n) {
+      return n == null || Number.isNaN(n) ? "—" : Math.round(n * 100) + "%";
+    }
+
+    function originLab(o) {
+      return ({ held: "held", drafted: "drafted", trade: "traded in", waiver: "waiver", fa: "FA", opening: "opening", unknown: "unknown" })[o] || o;
+    }
+
+    function postureLab(p) {
+      return ({ player_heavy: "Bought players", pick_heavy: "Bought picks", swap: "Swapped", none: "No trades" })[p] || "No trades";
+    }
+
+    function statBox(title, sub) {
+      return '<div class="stat"><b>' + title + "</b><span>" + sub + "</span></div>";
+    }
+
+    function bagLine(label, items) {
+      if (!items || !items.length) return "";
+      return '<div class="leg"><span>' + label + "</span><b>" + items.join(" · ") + "</b></div>";
+    }
+
+    function chapterHtml(title, ch, extra) {
+      if (!ch) return '<div class="chapter"><h3>' + title + "</h3><p class="caption">No prior season in this league.</p></div>";
+      const mean = ch.league_mean_trades;
+      const vs = mean == null ? "" : " · league mean " + mean.toFixed(1);
+      const partners = (ch.partners || []).slice(0, 3).map((p) => p.name + " ×" + p.n).join(" · ");
+      const big = (ch.big || []).map((b) => {
+        return '<div class="row"><div class="row-top"><div><div class="names">'
+          + (b.partners || []).join(" · ") + "</div>"
+          + '<div class="date">' + (b.date || "")
+          + (b.firsts ? " · " + b.firsts + " first" + (b.firsts === 1 ? "" : "s") : "")
+          + "</div></div></div>"
+          + '<div class="date">Got ' + ((b.got || []).join(", ") || "—")
+          + "<br>Sent " + ((b.sent || []).join(", ") || "—") + "</div></div>";
+      }).join("");
+      return '<div class="chapter"><h3>' + title + "</h3>"
+        + '<div class="stats">'
+        + statBox(ch.trades, "trades" + vs)
+        + statBox(postureLab(ch.posture), "player " + ch.players_in + " in / " + ch.players_out + " out")
+        + statBox(String(ch.picks_in.length), "picks in · " + ch.firsts_in + " firsts")
+        + statBox(String(ch.picks_out.length), "picks out · " + ch.firsts_out + " firsts")
+        + statBox(String((ch.waiver_adds || 0) + (ch.fa_adds || 0)), "waiver + FA adds")
+        + statBox(String(ch.drops || 0), "drops")
+        + "</div>"
+        + bagLine("Picks in", ch.picks_in)
+        + bagLine("Picks out", ch.picks_out)
+        + (partners ? '<div class="caption">Traded with ' + partners + "</div>" : "")
+        + extra
+        + (big ? "<h2>Big moves</h2>" + big : "")
+        + "</div>";
+    }
+
+    function renderTitleDetail(t) {
+      const rec = t.record || {};
+      const sit = rec.sit == null ? "—" : Math.round(rec.sit * 100) + "%";
+      const prior = t.prior
+        ? t.prior.season + " · " + (t.prior.place ? nth(t.prior.place) : "no place")
+          + " · " + t.prior.wins + "–" + t.prior.losses
+          + (t.prior.fpts_rank ? " · " + nth(t.prior.fpts_rank) + " in points" : "")
+        : "Startup year — no prior season.";
+      const turn = t.turnover || {};
+      const end = turn.vs_prev_end || {};
+      const core = turn.core_from_prev_end || {};
+      const used = (t.draft && t.draft.used) || [];
+      const draftLine = used.length
+        ? used.map((p) => p.player + " (R" + p.round + ")").join(" · ")
+        : "None used.";
+      const lineup = ((t.title_lineup && t.title_lineup.starters) || []).map((p) =>
+        '<div class="leg"><span>' + p.player + '</span><b class="origin-' + (p.origin || "unknown") + '">'
+        + originLab(p.origin) + "</b></div>"
+      ).join("");
+      const winHow = rec.fpts_rank === 1 ? "Won the points race" : "Won the bracket";
+      return '<button type="button" class="chip" data-title="">All champions</button>'
+        + '<div class="path-hero"><div class="kicker">' + t.season + " champion</div>"
+        + "<h2>" + t.name + "</h2>"
+        + '<p class="thesis">' + (t.thesis || "") + "</p></div>"
+        + '<div class="stats">'
+        + statBox(rec.wins + "–" + rec.losses, winHow + " · " + rec.fpts_rank + " of " + rec.teams + " in points")
+        + statBox(fmt(rec.fpts), "scored · sit " + sit + " of potential")
+        + statBox(String(rec.trades), "title-year trades · mean " + (rec.league_mean_trades == null ? "—" : rec.league_mean_trades.toFixed(1)))
+        + statBox(t.draft && t.draft.startup ? used.length + " startup" : String(used.length), t.draft && t.draft.startup ? "startup picks used" : "rookie picks used")
+        + statBox((t.title_lineup && t.title_lineup.from_opening) + " / " + (t.title_lineup && t.title_lineup.n), "title starters from opening roster")
+        + statBox(end.retention == null ? "—" : pct(end.retention), "of last year's finale still on opening roster")
+        + "</div>"
+        + '<p class="caption">Year before: ' + prior
+        + (core.n ? " · " + core.held + " of " + core.n + " opening starters were on that finale." : "")
+        + "</p>"
+        + "<h2>How they won</h2>"
+        + chapterHtml("Previous season", t.windows && t.windows.previous)
+        + chapterHtml("Offseason into " + t.season, t.windows && t.windows.offseason)
+        + chapterHtml("Title season — regular", t.windows && t.windows.regular)
+        + chapterHtml("Playoff run", t.windows && t.windows.playoffs)
+        + '<div class="chapter"><h3>Draft capital used</h3>'
+        + '<p class="caption">' + (t.draft && t.draft.startup ? "Startup. Not rookie capital." : "Rookie draft clicks.") + "</p>"
+        + '<div class="caption">' + draftLine + "</div></div>"
+        + '<div class="chapter"><h3>Title lineup</h3>'
+        + '<p class="caption">Who started the championship week, and how they got there this year.</p>'
+        + lineup + "</div>";
+    }
+
+    function renderTitles() {
+      const list = (titles && titles.titles) || [];
+      if (!list.length) return '<p class="caption">No championship path yet. Run <code>node title-path.mjs</code>.</p>';
+      const open = titleYear && list.find((t) => t.season === titleYear);
+      if (open) return renderTitleDetail(open);
+      return '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
+        + list.map((t) => {
+          const rec = t.record || {};
+          const how = rec.fpts_rank === 1 ? "points race" : "bracket";
+          return '<button type="button" class="row" data-title="' + t.season + '">'
+            + '<div class="row-top"><div><div class="names">' + t.season + " · " + t.name + "</div>"
+            + '<div class="date">' + rec.wins + "–" + rec.losses + " · " + how
+            + " · " + ((t.draft && t.draft.used) || []).length + " picks used</div></div>"
+            + '<div class="margin">1st</div></div></button>';
+        }).join("");
+    }
+
     function renderLeagueHome() {
-      return dayAlert()
+      const n = ((titles && titles.titles) || []).length;
+      const gate = n
+        ? '<button type="button" class="row" data-view="titles">'
+          + '<div class="row-top"><div><div class="names">Champions path</div>'
+          + '<div class="date">' + n + " title years · how they actually won</div></div>"
+          + '<div class="date">Open</div></div></button>'
+        : "";
+      return gate
+        + dayAlert()
         + lensRow()
         + pack("best", "Best aged", rankAge(1).map(boardTape).join(""))
         + pack("worst", "Worst aged", rankAge(-1).map(boardTape).join(""))
@@ -1246,8 +1408,8 @@
 
     function render() {
       const app = document.getElementById("app");
-      const tabs = me ? ["home", "trades", "partners", "drafts"] : [];
-      if (!me && view !== "home") view = "home";
+      const tabs = me && view !== "titles" ? ["home", "trades", "partners", "drafts"] : [];
+      if (!me && view !== "home" && view !== "titles") view = "home";
       if (me && (view === "review" || view === "league")) view = "home";
       const nav = (tabs.length
         ? '<div class="nav">'
@@ -1260,6 +1422,7 @@
         : view === "trades" ? renderTrades()
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
+        : view === "titles" ? renderTitles()
         : renderLeagueHome();
       app.innerHTML = nav + body;
       paintFeed();
@@ -1339,6 +1502,16 @@
       if (boardBtn) { boardClock = boardBtn.dataset.board; view = "league"; openId = null; render(); return; }
       const windowBtn = e.target.closest("[data-window]");
       if (windowBtn) { boardWindow = windowBtn.dataset.window; view = "league"; openId = null; render(); return; }
+      const titleBtn = e.target.closest("[data-title]");
+      if (titleBtn) {
+        view = "titles";
+        titleYear = titleBtn.dataset.title || null;
+        openId = null;
+        markOpen = null;
+        lensOpen = false;
+        render();
+        return;
+      }
       const viewBtn = e.target.closest("[data-view]");
       if (viewBtn) {
         view = viewBtn.dataset.view;
@@ -1348,6 +1521,7 @@
         if (view !== "drafts") draftFilterOpen = false;
         if (view !== "trades") yearFilterOpen = false;
         if (view !== "partners") partnerName = null;
+        if (view !== "titles") titleYear = null;
         lensOpen = false;
         render();
         return;

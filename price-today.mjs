@@ -59,12 +59,36 @@ export function loadNflPlayers() {
   return readJson("players.nfl.json", {}) || {};
 }
 
+/** DynastyProcess Superflex prices offence only, so an offensive namesake wins a tie. */
+export const SKILL_POS = new Set(["QB", "RB", "WR", "TE"]);
+
+/**
+ * 357 Sleeper names collide. First-id-wins handed "Kenneth Walker" to a retired WR
+ * instead of the KC back, which then missed KTC and priced flatten-only.
+ * Rank candidates: on the Superflex board, on a roster, still active.
+ */
+function nameCandidateScore(p) {
+  let score = 0;
+  if (SKILL_POS.has(String(p?.position || "").toUpperCase())) score += 8;
+  if (hasNflTeam(p)) score += 4;
+  if (p?.active) score += 2;
+  return score;
+}
+
 export function nflNameIndex(players) {
-  const byName = new Map();
+  const best = new Map();
   for (const [id, p] of Object.entries(players)) {
     const n = normName(p.full_name);
-    if (n && !byName.has(n)) byName.set(n, id);
+    if (!n) continue;
+    const score = nameCandidateScore(p);
+    const prev = best.get(n);
+    // Equal score: prefer the higher id, i.e. the more recent player.
+    if (!prev || score > prev.score || (score === prev.score && Number(id) > Number(prev.id))) {
+      best.set(n, { id, score });
+    }
   }
+  const byName = new Map();
+  for (const [n, v] of best) byName.set(n, v.id);
   return byName;
 }
 
@@ -118,7 +142,7 @@ export function isRetired(leg, ctx, flattenValue) {
   return noTeam || tinyRaw || tinyFlat;
 }
 
-export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId) {
+export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
   if (!leg) return null;
   if (leg.kind === "pick" && !leg.became) {
     const key = pickvalKey(leg);
@@ -127,15 +151,23 @@ export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId) {
     return Number.isFinite(v) ? v : null;
   }
   const sid = sleeperIdFromLeg(leg, nameToId);
-  if (!sid || !ktcBySleeper.has(sid)) return null;
-  const v = ktcBySleeper.get(sid).value;
-  return Number.isFinite(v) ? v : null;
+  if (sid && ktcBySleeper.has(sid)) {
+    const v = ktcBySleeper.get(sid).value;
+    if (Number.isFinite(v)) return v;
+  }
+  // A KTC row without a sleeper_id still counts; isRetired already trusts this index.
+  if (ktcByName) {
+    const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
+    const row = name ? ktcByName.get(name) : null;
+    if (row && Number.isFinite(row.value)) return row.value;
+  }
+  return null;
 }
 
 export function priceTodayValue(flattenValue, leg, ctx) {
   if (flattenValue == null || !Number.isFinite(flattenValue)) return flattenValue;
   if (isRetired(leg, ctx, flattenValue)) return 0;
-  const ktc = ktcValue(leg, ctx.ktc.bySleeper, ctx.ktc.byPick, ctx.nameToId);
+  const ktc = ktcValue(leg, ctx.ktc.bySleeper, ctx.ktc.byPick, ctx.nameToId, ctx.ktc.byName);
   if (ktc == null) return flattenValue;
   return Math.round(TODAY_FLAT_W * flattenValue + TODAY_KTC_W * ktc);
 }

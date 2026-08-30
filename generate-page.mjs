@@ -726,23 +726,20 @@ const html = `<!DOCTYPE html>
       margin-top: 4px; color: var(--dim); font-size: 0.75rem; line-height: 1.4;
       overflow-wrap: anywhere;
     }
-    /* A shared tweet's row is a plain container, not a link -- Open on X is a real <a> and
-       nesting one control inside another is defect A1. The tweet itself is always visible;
-       there is no expander. */
+    /* A shared tweet's row is a plain container, not a link -- See tweet is a real <a> and
+       nesting one control inside another is defect A1. The full tweet stays off the row;
+       the locker-room line is the copy, and the handle/time/link is the citation. */
     .news-row-tweet { display: block; }
-    /* The tweet, quoted. Indented by a rule rather than by a card, so it reads as somebody
-       else's words inside our row instead of as a second box inside the box. */
-    .news-detail { margin: 4px 0 2px; padding-left: 10px; border-left: 2px solid var(--line); }
-    .news-tweet-text {
-      margin: 0; color: var(--text); font-size: 0.8125rem; line-height: 1.45;
-      overflow-wrap: anywhere; text-wrap: pretty; white-space: pre-wrap;
+    .news-line-tweet {
+      margin-top: 4px; font-size: 0.875rem; line-height: 1.35; font-weight: 550;
+      overflow-wrap: anywhere; text-wrap: pretty;
     }
-    .news-tweet-by {
-      margin: 6px 0 0; color: var(--dim); font-size: 0.75rem; line-height: 1.4;
-      overflow-wrap: anywhere;
+    .news-tweet-foot {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+      margin-top: 6px; color: var(--dim); font-size: 0.75rem; line-height: 1.3;
     }
-    /* Its own 44px target: it is the one interactive control on the row and a finger has to
-       find it without hunting. */
+    .news-tweet-foot .news-tweet-sep { opacity: 0.55; }
+    /* Compact citation link — still clears 44px so a finger finds it. */
     .news-tweet-link {
       display: inline-flex; align-items: center; min-height: 44px;
       color: var(--muted); font-size: 0.75rem; font-weight: 650; text-decoration: underline;
@@ -917,7 +914,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830215323";
+    const DATA_V = "newscompact20260830215646";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2120,42 +2117,27 @@ const html = `<!DOCTYPE html>
           + '<div class="news-meta">' + where + "</div>";
 
         /**
-         * A tweet somebody shared in: the jab on top, the tweet itself always visible under it.
+         * A tweet somebody shared in: manager tag, compact locker-room summary, then citation.
          *
-         * **The row is a <div> and never an <a>.** Every other row in this feed wraps its whole
-         * body in a link, and putting Open on X (or Remove) inside one of those would be defect
-         * A1 -- an interactive control nested in another interactive control. So those controls
-         * are siblings inside the quoted block, and nothing on this row nests a control in a
-         * control.
+         * **The row is a <div> and never an <a>.** See tweet (and Remove) are real controls;
+         * nesting them inside a row-level link is defect A1.
          *
-         * There is no expander. The earlier Show/Hide button was one more tap on every post in a
-         * feed that is already short; the tweet is the post. Compact means the note, the tweet,
-         * who posted it, and the link out, with no toggle state to keep across renders.
+         * The full tweet text stays off the row on purpose -- it ate the viewport. The summary
+         * is the copy; @handle + relative time + See tweet is the receipt. tweet_text still
+         * has to exist on the item (the branch gate) so a row without oEmbed text cannot ship
+         * an empty roast with a dead link.
          *
-         * (No backticks in this comment, and none anywhere else inside this template literal:
-         * the whole page is one, so a backtick in a comment ends the string and the generator
-         * fails to parse -- which is the same class of hazard as the swallowed backslash.)
+         * (No backticks in this comment: the whole page is one template literal.)
          */
         if (it.category === "tweet" && it.tweet_text) {
           /**
-           * The link out of a tweet row is labelled "Open on X", so it may only go to X.
-           *
-           * The row-level gate above admits any http(s) URL, which is right for a news row whose
-           * source genuinely is ESPN or Rotowire. It is not right here: a row promising X and
-           * opening somebody else's domain in a new tab is a phishing affordance, and the label
-           * is the part the reader trusts. news-sync.mjs refuses to write a shared tweet whose
-           * source_url is not already the canonical x.com form, so the pipeline cannot produce
-           * one -- but this is the point at which a string becomes clickable, and that check
-           * lives in a different program. Verified against a news.json hand-built to carry
-           * https://evil.com/a/status/1, which linked before this gate and does not after.
+           * The link out is labelled "See tweet", so it may only go to X.
            *
            * The escapes are doubled because this whole page is one template literal: a lone
-           * backslash is swallowed, which is how /^pick:\\d{4}:4:/ once shipped as
-           * /^pick:d{4}:4:/. A build guard asserts this exact string survived.
+           * backslash is swallowed. A build guard asserts this exact x.com shape survived.
            */
           const xLink = /^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : "";
           const handle = it.tweet_handle ? "@" + esc(it.tweet_handle) : "";
-          const by = [esc(it.tweet_author), handle].filter(Boolean).join(" \\u00b7 ");
           const subId = newsSubmissionId(it.id);
           const del = (admin && subId)
             ? '<button type="button" class="news-del" data-news-del="' + esc(it.id) + '"'
@@ -2164,20 +2146,27 @@ const html = `<!DOCTYPE html>
               + (newsDelPending === it.id ? "Removing\\u2026" : "Remove")
               + "</button>"
             : "";
+          const footBits = [];
+          if (handle) footBits.push('<span class="news-tweet-handle">' + handle + "</span>");
+          if (when) footBits.push('<span class="news-tweet-when">' + esc(when) + "</span>");
+          if (xLink) {
+            footBits.push(
+              '<a class="news-tweet-link" href="' + esc(xLink)
+                + '" target="_blank" rel="noopener noreferrer">See tweet</a>'
+            );
+          }
+          const foot = footBits.length
+            ? '<div class="news-tweet-foot">'
+              + footBits.join('<span class="news-tweet-sep" aria-hidden="true">\\u00b7</span>')
+              + del
+              + "</div>"
+            : (del ? '<div class="news-tweet-foot">' + del + "</div>" : "");
           return '<div class="news-row news-row-tweet">'
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
             + noteBit
-            + '<div class="news-line">' + esc(it.league_line) + "</div>"
-            + '<div class="news-detail">'
-            + '<p class="news-tweet-text">' + esc(it.tweet_text) + "</p>"
-            + (by ? '<p class="news-tweet-by">Posted by ' + by + "</p>" : "")
-            + (xLink
-              ? '<a class="news-tweet-link" href="' + esc(xLink) + '" target="_blank" rel="noopener noreferrer">Open on X</a>'
-              : "")
-            + del
-            + "</div>"
-            + '<div class="news-meta">' + where + "</div>"
+            + '<div class="news-line news-line-tweet">' + esc(it.league_line) + "</div>"
+            + foot
             + "</div>";
         }
         return safe
@@ -4742,12 +4731,9 @@ for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
 for (const need of ["esc(it.manager)", "esc(it.league_line)", "esc(it.headline)", "esc(it.player)",
   "esc(it.source_label || it.source)", "esc(it.player_team)", "esc(it.player_position)",
   "esc(cat)", "esc(also)", "esc(when)", 'esc(safe) + \'" target="_blank"',
-  // The shared-tweet fields. tweet_text is the single most exposed string this app renders: it
-  // is written by a stranger on X and it arrives through a table anyone holding the anon key can
-  // insert into, so it is third-party input twice over. tweet_handle goes into text (the @by
-  // line), and esc() covers both text and attributes because it escapes quotes as well as
-  // angle brackets.
-  "esc(it.tweet_text)", "esc(it.tweet_author)", "esc(it.tweet_handle)",
+  // Shared-tweet citation. The full tweet_text stays off the row (link-out only); the handle
+  // still ships in text and must be escaped. tweet_text remains a branch gate on the item.
+  "esc(it.tweet_handle)",
   "esc(it.note)", "esc(it.submitted_by || \"Someone\")"]) {
   if (!newsBody.includes(need)) throw new Error(`renderNews stopped escaping a news field: ${need}`);
 }
@@ -4766,55 +4752,59 @@ if (!/news-tweet-link" href="' \+ esc\(xLink\)/.test(newsBody)
   || !/news-tweet-link[\s\S]{0,200}rel="noopener noreferrer"/.test(newsBody)) {
   throw new Error("the shared tweet's link out lost its esc()'d, scheme-gated href or its rel=noopener noreferrer");
 }
-// ...and a stricter gate than the row's, because its label promises X. `safe` admits any
-// http(s) URL, which would let a row reading "Open on X" open evil.com in a new tab. The
-// backslashes have to survive the template literal, so the literal string is asserted rather
-// than the behaviour -- this is the /^pick:\d{4}:4:/ hazard, and a swallowed backslash here
-// turns x\.com into the single-character class x.com, which matches xacom and xbcom too.
+// ...and a stricter gate than the row's, because its label promises a tweet on X. `safe`
+// admits any http(s) URL, which would let a row reading "See tweet" open evil.com in a new
+// tab. The backslashes have to survive the template literal, so the literal string is
+// asserted rather than the behaviour -- this is the /^pick:\d{4}:4:/ hazard.
 if (!newsBody.includes('/^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : ""')) {
   throw new Error("the tweet link-out lost its x.com-only gate, or the template swallowed its escapes");
 }
 if (/news-tweet-link" href="' \+ esc\(safe\)/.test(newsBody)) {
-  throw new Error("the tweet link-out reverted to the row's any-http gate, which lets a row labelled Open on X open another domain");
+  throw new Error("the tweet link-out reverted to the row's any-http gate, which lets a row labelled See tweet open another domain");
 }
-// 1b. The shared tweet is always visible -- compact, no expander.
+// 1b. Shared tweets are compact: locker-room line + citation, not the full tweet body.
 //
-// The requirement is that the tweet text ships in the row itself, that the row is a <div> (so
-// Open on X is not nested inside a link -- defect A1), and that there is no Show/Hide toggle
-// reintroducing open-state that a full #app rebuild would have to preserve. Each of these has
-// a specific way of silently regressing:
+// The requirement is that the row is a <div> (so See tweet is not nested inside a link --
+// defect A1), that the summary ships escaped, that the citation is handle/time/link, and that
+// the full tweet_text is NOT painted into the row (it ate the viewport). tweet_text still
+// gates the branch so a row without oEmbed cannot ship. Each of these has a silent regression:
 //
-//   * Putting the tweet behind a button again is the previous design; the caption and the
-//     guards must refuse it.
-//   * The row reverting to <a class="news-row"> for tweets would put Open on X inside a link.
-//   * Dropping esc(it.tweet_text) from the visible branch would ship third-party prose raw.
+//   * Putting the full tweet back in .news-tweet-text reintroduces the sprawl.
+//   * The row reverting to <a class="news-row"> for tweets would put See tweet inside a link.
+//   * Dropping esc(it.league_line) would ship the roast raw or empty.
 const tweetBranch = newsBody.slice(newsBody.indexOf('if (it.category === "tweet" && it.tweet_text) {'));
 const tweetRender = tweetBranch.slice(0, tweetBranch.indexOf("\n        }"));
 if (!tweetRender || tweetRender.length < 200) throw new Error("the shared tweet branch of renderNews() did not ship");
 if (!tweetRender.includes("'<div class=\"news-row news-row-tweet\">'")) {
-  throw new Error("a shared tweet row must be a <div>: an <a> around it would nest Open on X inside a link (defect A1)");
+  throw new Error("a shared tweet row must be a <div>: an <a> around it would nest See tweet inside a link (defect A1)");
 }
 if (/<a class="news-row"/.test(tweetRender)) {
-  throw new Error("a shared tweet row became a link, which nests Open on X inside another control (defect A1)");
+  throw new Error("a shared tweet row became a link, which nests See tweet inside another control (defect A1)");
 }
-if (!tweetRender.includes('esc(it.tweet_text)')) {
-  throw new Error("the shared tweet must render tweet_text in the compact row, escaped");
+if (!tweetRender.includes('esc(it.league_line)')) {
+  throw new Error("the shared tweet must render the locker-room league_line, escaped");
 }
-if (!tweetRender.includes('class="news-detail"')) {
-  throw new Error("the shared tweet must ship inside .news-detail, always visible");
+if (!tweetRender.includes('class="news-line news-line-tweet"')) {
+  throw new Error("the shared tweet summary must use the compact .news-line-tweet class");
 }
-if (/data-news-expand|news-more|aria-expanded|Show the tweet|Hide the tweet/.test(tweetRender)) {
-  throw new Error("the shared tweet must not ship an expander; the tweet is always shown");
+if (tweetRender.includes('esc(it.tweet_text)') || tweetRender.includes("news-tweet-text")) {
+  throw new Error("the full tweet_text must stay off the compact row; link out instead");
 }
-if (/ hidden/.test(tweetRender) || /\[hidden\]/.test(tweetRender)) {
-  throw new Error("the shared tweet panel must not toggle hidden; compact means always on");
+if (!tweetRender.includes('class="news-tweet-foot"')) {
+  throw new Error("the shared tweet must ship a citation foot (handle · time · See tweet)");
+}
+if (!tweetRender.includes(">See tweet</a>")) {
+  throw new Error('the tweet link-out must be labelled "See tweet"');
+}
+if (/data-news-expand|news-more|aria-expanded|Show the tweet|Hide the tweet|news-detail/.test(tweetRender)) {
+  throw new Error("the shared tweet must not ship an expander or quoted detail block");
 }
 const linkRule = html.slice(html.indexOf("    .news-tweet-link {"));
 if (!linkRule.slice(0, 300).includes("min-height: 44px")) {
   throw new Error("the tweet's link out is a tap target and must declare min-height: 44px");
 }
-if (html.includes("    .news-more {")) {
-  throw new Error("the tweet expander stylesheet must be gone once the expander is gone");
+if (html.includes("    .news-more {") || html.includes("    .news-tweet-text {") || html.includes("    .news-detail {")) {
+  throw new Error("obsolete tweet expander / full-text / detail stylesheet must be gone");
 }
 // Admin soft-delete. Gated in the UI to TrumanCooper; the control must be a real button
 // with an esc()'d item id, and its tap target must clear 44px. Absent until the admin

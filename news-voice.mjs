@@ -216,20 +216,22 @@ const TEMPLATES = {
    * that is safe here because the line is the app's voice, not the sharer's note (which ships
    * in its own field and is attributed to them).
    */
+  // Compact locker-room jabs for the feed row — one breath, no essay. The full tweet is a
+  // link-out now, so this line has to carry the roast by itself.
   tweet: [
-    "{who}, somebody went out of their way to make sure you saw this {player} take.",
-    "This got shared into the feed specifically so {who} would have to read it. {player}, of course.",
-    "{who}, the league found a {player} take and thought of you immediately.",
-    "Someone shared this at {who} on purpose, and it is about {player}.",
-    "{who}, this landed in the feed with your name on it. {player}.",
-    "The group chat could not hold this one, {who}. It is about {player}.",
+    "{who}, {player} just walked into the group chat and sat on your roster.",
+    "Yo {who} — {player} trending and it is not the cute kind.",
+    "{who}, the tape on {player} is doing numbers. How's the stomach.",
+    "League found {player} and thought of {who} immediately. Correct.",
+    "{who}, somebody put {player} on blast and cc'd the whole league.",
+    "Run it back, {who}. {player} is the plot again.",
   ],
   tweet_who: [
-    "{who}, somebody went out of their way to make sure you saw this one.",
-    "This got shared into the feed specifically so {who} would have to read it.",
-    "Someone shared this at {who} on purpose. That is the whole message.",
-    "{who}, this landed in the feed with your name on it.",
-    "The group chat could not hold this one, {who}.",
+    "{who}, this one has your name on it. Don't act surprised.",
+    "Group chat could not hold this, {who}. So here it is.",
+    "{who}, somebody shared this at your forehead on purpose.",
+    "Eyes up, {who}. The league wanted you to see this one.",
+    "{who}, this is not a drill. Read it.",
   ],
 };
 

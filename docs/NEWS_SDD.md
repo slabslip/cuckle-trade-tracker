@@ -652,14 +652,13 @@ the automated row is dropped, the opposite of `dedupe()`'s earliest-published ru
 
 ### The UI
 
-The row is a `<div>` and never an `<a>`. Every other row in this feed wraps its whole body in a
-link, and putting **Open on X** (or **Remove**) inside one would be **defect A1** — an interactive
-control nested in another interactive control. So those controls are siblings inside the quoted
-block, and nothing on the row nests a control in a control.
+The row is a `<div>` and never an `<a>`. Putting **See tweet** (or **Remove**) inside a
+row-level link would be **defect A1** — an interactive control nested in another interactive
+control. Those controls sit in the citation foot as siblings.
 
-The tweet is always visible under the sharer's note — no Show/Hide expander. Compact means the
-note, the tweet, who posted it, and the link out, with no open-state to keep across `#app`
-rebuilds. The link out is ≥44px and keyboard operable.
+The tweet row shows the **manager tag**, a compact locker-room `league_line`, and a citation
+foot (`@handle · relative time · See tweet`). The full `tweet_text` is kept on the item for
+matching/oEmbed but is **not** painted into the row. The link out is ≥44px and keyboard operable.
 
 **Admin Remove.** Soft-delete via `deleted_at` / `deleted_by` — anon still has no hard DELETE.
 The button is offered only when this device's remembered seat is TrumanCooper (pick yourself

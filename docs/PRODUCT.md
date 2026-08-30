@@ -90,6 +90,8 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 
 - **Best 10 / Worst 10.** Removed once, restored by an agent on the audit's recommendation,
   removed again on sight. `Most lopsided trades` on league home is the permanent replacement.
+- **The league screen entirely.** `renderLeague()` and the `Traders` / `Drafters` lists it still
+  held went on a second ruling. There is no `league` view.
 - **`realized_*`.** The stored `realized_total` / `realized_per_trade` described a book no longer
   in the file — up to ~37,000 off, with sign flips on four seats. Deleted rather than repaired.
 

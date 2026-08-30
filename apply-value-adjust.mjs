@@ -374,7 +374,9 @@ function main() {
   check("no aged on a same-day trade", sameDay.every((r) => r.aged == null || Math.abs(r.aged) < 1e-6));
   check("realized_* gone", !sides.some((r) => "realized_per_trade" in r)
     && league.traders.every((t) => !("realized_per_trade" in t) && !("realized_total" in t)));
-  check("drafters_rookie survives for the board screen", (league.drafters_rookie || []).length > 0);
+  // Its last reader went with renderLeague(). Kept only so the payload cut stays deliberate:
+  // revalue.mjs still emits it, so dropping it belongs to a payload pass, not to a delete here.
+  check("drafters_rookie still present", (league.drafters_rookie || []).length > 0);
   check("marks cover every seat and clock", Object.keys(marks.seats).length === seats.length
     && Object.values(marks.seats).every((m) => LENSES.every((k) => m.lens[k])));
   check("marks partner counts add up", Object.values(marks.seats).every((m) => {

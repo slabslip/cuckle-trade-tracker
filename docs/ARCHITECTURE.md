@@ -121,7 +121,7 @@ Latest-board pick shape (2026-08-28): current-year exact slots (`2026 Pick 1.01`
   traders: [ { user_id, name, two_way, incomplete, pick_total, pick_per_trade,
                even_total, even_per_trade, style: { label, now_share, horizon,
                sold_picks_for_players, sold_players_for_picks } } ],
-  drafters_rookie,
+  drafters_rookie,             // no reader since renderLeague() was deleted
   player_lists,
   trade_boards: {
     sides: [ { transaction_id, date, user_id, name, other, headline,
@@ -241,7 +241,6 @@ lopsided trades, and the four player packs. After `?me=` or a pick in the header
 | **partners** | 2-team pair grades from `partnerPer()`. Open partner → their deals with you on the selected clock. |
 | **drafts** | Rookie 2020–26 surplus; startup picks toggled in, priced against their real `pick_cost`. Pins the clock to `all`. |
 | **titles** | Champions Path. Outside the trade needle. |
-| **league** | `Traders · per complete two-way` and `Drafters · rookie surplus per pick`. **No visible control routes here** since Best/Worst was removed; only `?view=league` reaches it. Awaiting a user ruling. |
 
 One **Score as** dropdown, five windows: `t0` At trade · `y1`/`y2`/`y3` First N years ·
 `all` Since trade (default). `t0` and `all` are unfiltered; the year windows hide deals that have
@@ -252,7 +251,10 @@ not a child, so the pick legs inside it can be real buttons.
 
 **Deleted:** the Best 10 / Worst 10 board (`renderTradeBoards`, `rankSides`, `monthsAgo`,
 `boardScore`, `boardClock`, `boardWindow`), by user decision, twice. `Most lopsided trades` is the
-permanent replacement.
+permanent replacement. Then `renderLeague()` and its `Traders` / `Drafters` lists, by a second
+ruling. `league` is out of `VIEWS`, so `?view=league` is an unknown view and lands on league home.
+
+`boardTape` survives both deletions — Most lopsided and the Recent Trade card render it.
 
 ---
 
@@ -294,9 +296,16 @@ Still open:
 12. **The global click handler is one long if-chain.** Adding a `data-*` name that a prior branch
     already matches will silently shadow it.
 13. **No publish cadence.** Rebuild is manual. `players.nfl.json` caches 24h; past-season tx weeks
-    stay cached forever.
-14. **`renderLeague()` has no entry point.** Its two lists are unreachable in the UI pending a user
-    ruling (see §6).
+    stay cached forever. `league.today` can sit a day behind the newest trade on the tape, so that
+    trade is priced on yesterday's board. The Recent Trade card handles the display side by taking
+    the later of the two dates; the pricing clock is unhandled.
+14. **`league.drafters_rookie` has no reader** (~2.5 KB). It lost its last one when
+    `renderLeague()` was deleted. `revalue.mjs` still emits it.
+15. **The browser still recomputes VA.** `applyVa` is a hand-kept clone of `value-adjust.mjs`,
+    because the payload ships five near-duplicate leg lists per trade instead of one list with
+    five values. The plan to collapse it is `DASHBOARD_AUDIT.md` §8b / D3a; ~1.2 MB and the
+    deletion of `applyVa` are on the other side of it.
+16. **The 40/60 today blend has no reader** (§5, `DASHBOARD_AUDIT.md` §8c). Open user decision.
 
 ---
 
@@ -316,7 +325,8 @@ From `apply-value-adjust.mjs` (throw = failed rebuild):
 - CeeDee's Value Adjustment is ~3,322 after the today blend with extras capped at 3.
 - Zeke prices 0; Hill prices 1,798 (**not** floored); Baker prices 4,597.
 - `realized_*` is gone from every side and every trader row.
-- `drafters_rookie` survives; `review_trades`, `drafters_startup` and `trade_boards.today` /
+- `drafters_rookie` is still present (no reader, but `revalue.mjs` still emits it — dropping it
+  belongs to a payload pass); `review_trades`, `drafters_startup` and `trade_boards.today` /
   `.aged` are gone.
 - `marks.json` covers every seat on every clock, its partner counts add up to the graded partners,
   and its `all` totals match the `windows.all` deltas (**not** the `even` blend — see §5 and

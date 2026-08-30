@@ -161,7 +161,7 @@ The pipeline owns all arithmetic. The browser formats.
 | File | Size | Holds |
 | --- | --- | --- |
 | `members.json` | <1 KB | the ten seats |
-| `league.json` | 266 KB | `today`, `traders`, `drafters_rookie`, `player_lists`, `trade_boards.sides` |
+| `league.json` | 266 KB | `today`, `traders`, `player_lists`, `trade_boards.sides` (plus `drafters_rookie`, now unread) |
 | `marks.json` | 6 KB | 10 seats × 6 metrics × 5 clocks — everything the tiles and the chart need |
 | `me/<user_id>.json` | 156–602 KB | that seat's trades, partners, drafts |
 | `picks.json` | 111 KB | hop tape per asset key |
@@ -184,21 +184,31 @@ clock — it used to be called inside sort comparators, roughly 2,000 recomputat
 Nothing the UI does not read should ship. `other_bags` on two-team trades, `realized`,
 `recent_trades`, `year_ends`, `partner_headlines`, `legs[].drafted_by`, `hero` beyond `two_way`,
 `partners[].grade`, `league.review_trades` and `drafters_startup` were all removed for this reason.
-Before deleting a field, check it against the current generator, not against a snapshot.
+`league.drafters_rookie` (~2.5 KB) is the one that got away — it lost its last reader when the
+league screen was deleted, and `revalue.mjs` still emits it.
+
+Before deleting a field, check it against the current generator, not against a snapshot. That is
+not a style note: `drafters_rookie` was **kept** during the payload cut precisely because
+`renderLeague()` read it at the time.
 
 ---
 
-## 8. Best 10 / Worst 10 — removed, twice
+## 8. There is no league screen
 
 The board screen (`renderTradeBoards`, `rankSides`, `monthsAgo`, `boardScore`, the `boardClock` /
 `boardWindow` state and their handlers) is **deleted**. The user removed it once before the audit
 was written, an agent restored it on the audit's recommendation, and the user removed it again on
 sight. **Most lopsided trades is the permanent replacement. Do not propose it a third time.**
 
-`renderLeague()` survives, but only for two lists nobody objected to: `Traders · per complete
-two-way` and `Drafters · rookie surplus per pick`. **No visible control routes there.** Only
-`?view=league` reaches it. Giving those lists an entry point, folding them into another screen, or
-deleting them along with `league.traders` / `league.drafters_rookie` is an open user decision.
+`renderLeague()` and the two lists it held — `Traders · per complete two-way` and
+`Drafters · rookie surplus per pick` — are **also deleted**, by a separate user ruling. `league`
+is no longer in `VIEWS`; `?view=league` is an unknown view and falls through to league home like
+any other. `boardTape` outlived the board it is named for: it is what Most lopsided and the
+Recent Trade card both render.
+
+`league.traders` still ships because `leagueBubbles()` reads it for the Most active / Least
+active ticker pills. `league.drafters_rookie` now has **no reader at all** and is the one piece of
+known-dead payload still on the wire.
 
 ---
 

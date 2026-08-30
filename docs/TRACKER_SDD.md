@@ -70,7 +70,7 @@ generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 | Trades | Your tape. Filter icon + “Filter by year” (All or one season, checkbox list). Open = **You received** / **You gave up**. 2-team does **not** render the other seat’s bag. 3-team still shows `{name} received`. Aged caption when T0 exists. |
 | Partners | 2-team pair grade (±100 DP / trade). |
 | Drafts | Rookie picks this seat used (startup off by default). No Score as chip — always since-trade vs pick-at-draft. Filter icon: Newest/Oldest, value high↔low, 1st–4th, include startup. Own pick vs someone else’s pick is colored. Caption is average surplus. |
-| League | **Best 10 / Worst 10 is deleted** — removed by user decision, twice; `Most lopsided trades` on league home is the permanent replacement. `renderLeague()` still holds the per-trader and per-drafter lists, but no visible control routes there; only `?view=league` reaches it, pending a user ruling. |
+| League | **There is no league screen.** Best 10 / Worst 10 was removed by user decision, twice — `Most lopsided trades` on league home is the permanent replacement. `renderLeague()` and its per-trader / per-drafter lists were then deleted on a second ruling; `league` is out of `VIEWS` and `?view=league` lands on league home. |
 
 **Score as (default Since trade):** chip on home / trades / partners — `Score as · {clock} ▾`. Not on drafts. Full list, no expand: At trade · First 1 year · First 2 years · First 3 years · Since trade. Gold dot when not Since trade. Home caption says `27 of 86 lived 3 years` when the clock hides young deals. **At trade** is accept day, not calendar today. Same even-flatten book. No KTC mix. No steep DP chip. Year funnel stays a separate control.
 

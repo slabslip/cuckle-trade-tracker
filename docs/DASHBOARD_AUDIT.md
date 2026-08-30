@@ -30,13 +30,18 @@ Every heading below carries its own **FIXED** annotation with the commit; this i
 | D — dead code and payload | `4653091`, `3474f51`, `64f55b0` | §3 dead UI, §3 dead payload |
 | E — one source per number | `96d9218`, `ec088f6` | P0-4, P1-4, P1-7, P1-12 (D3), §4.3, §4.4, §6b |
 | F — phone and keyboard | `f9fdb39`, `d4997a2` | A1, A2, A3, A4, A5, A7, A7b, A7c, §6 year-filter semantics |
+| Delete the league screen (D4b ruling) | `8cdbb3d` | §3 dead UI, §10.2 |
 | G — docs | this commit | §7 docs drift |
 
 **Still open, deliberately.** P1-8 (back button / `pushState` + `popstate`), §4.2 posture vocabulary,
 §5.1–5.2 ticker duplication, §5.3 the constant `1st` column, A6 (marquee pause), A8 (three colour
 languages in a Drafts row), and the `DATA_V` hand-edit hazard in §6b. None were in the approved
-slice list. Plus two user decisions: the Home hero (§10.1), the orphaned Traders/Drafters lists
-(§10.2), and one new one raised by the work itself — **D5, the KTC blend has no reader** (§8c).
+slice list. Plus the `windows` restructure (D3a), which was scoped and written up rather than
+half-landed.
+
+**User decisions.** The Home hero is still open (§10.1). The Traders/Drafters lists were ruled on
+during this pass — delete (§8b D4b). And the work raised one new one: **D5, the 40/60 KTC blend
+has no reader on any reachable screen** (§8c).
 
 ---
 
@@ -464,9 +469,11 @@ also silently breaks the click handlers that read those datasets.
 
 ### Dead UI: the entire league board screen is unreachable — **boards DELETED 2026-08-30 (D4a)**
 
-*Update: the Best/Worst board described below was briefly made reachable, then removed for good
-by user decision — see D4a. `renderLeague()` survives for its Traders/Drafters lists, which are
-now themselves unreachable and awaiting a user ruling. The rest of this section still stands.*
+*Update: the Best/Worst board described below was briefly made reachable, then removed for good by
+user decision (D4a). `renderLeague()` and its Traders/Drafters lists went with it on a second
+ruling (D4b). **This entire dead screen is gone**, along with `draftTab`, the dead
+`pickWindowEnd` branches and the unreachable `pieceWeight` label branch. `boardTape` is the one
+survivor — Most lopsided and the Recent Trade card render it. Original finding below.*
 
 `renderLeague()` (`:1391`), `renderTradeBoards()` (`:1437`), `rankSides()` (`:1422`) and
 `monthsAgo()` (`:1413`) implement Best 10 / Worst 10 with an As-of-today vs Aged toggle and
@@ -503,8 +510,10 @@ Measured on disk after the cut:
 A **60% cut** to what a phone downloads, with no visible change. Every screen was re-rendered
 against the trimmed payload before it shipped.
 
-`drafters_rookie` and `league.traders` were **not** deleted: `renderLeague()` still reads them,
-and its fate is an open user decision (§10.2).
+`drafters_rookie` and `league.traders` were **not** deleted, because `renderLeague()` read them at
+the time. That screen has since been deleted too (D4b), so `league.traders` survives on a
+different reader — `leagueBubbles()`, for the ticker pills — and `drafters_rookie` (~2.5 KB) now
+has none. It is the last known dead field on the wire.
 
 The `windows` restructure — one leg list plus five values instead of five near-duplicate leg
 lists, worth roughly another 1.2 MB — was **not** attempted. It changes the data contract the
@@ -911,6 +920,24 @@ Removed in `main` (`cursor/drop-best-worst-af37`, `DATA_V = 20260829t`): the lea
 state, the `[data-board]` / `[data-window]` / `[data-open-me]` handlers, and the now-unreachable
 `button.chip.on` rule. This closes most of the §3 "dead UI" item and the boards part of Slice 2.
 
+### D4b — the Traders and Drafters lists: ruled, delete. 2026-08-30
+
+The question raised below was put to the user and answered: **delete.** `renderLeague()`, the
+back-to-league-home chip, the dispatch branch, `league` in `VIEWS`, the boot branch honouring
+`?view=league` and the two `view !== "league"` exemptions in `render()` are all gone (`8cdbb3d`).
+`?view=league` is now an unknown view and lands on league home like any other.
+
+`league.traders` **stays** — `leagueBubbles()` reads it for the Most active / Least active ticker
+pills. `league.drafters_rookie` (~2.5 KB) now has no reader at all and is the last known piece of
+dead payload on the wire; `revalue.mjs` still emits it, so removing it is a payload pass.
+
+This closes §10.2. It also closes the loop on the payload cut: `drafters_rookie` was deliberately
+**kept** in `4653091` *because* `renderLeague()` read it then. A field's readers are a moving
+target, which is why "check it against the current generator, not against a snapshot" is written
+into `UI_SDD.md` rather than left as a habit.
+
+The original open question follows.
+
 **Open, and a user decision — not a worker decision.** `renderLeague()` was never only Best/Worst.
 It also renders two league-wide lists that nobody objected to and that the user may never have
 seen: `Traders · per complete two-way` and `Drafters · rookie surplus per pick`. Those are left
@@ -993,12 +1020,13 @@ decide VA on N-way trades (P0-6) · recompute totals when any side has priced le
 prefer the rostered id on name collisions and give `ktcValue` a name fallback (P1-13) ·
 `aged` from one price book (P1-10) · delete `realized_*` rather than repair it.
 
-**Slice 2 — delete the dead**
-Remove ~~`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`~~ (**done
-2026-08-30, D4a**), `renderLeague` (**blocked — still holds the Traders/Drafters lists; needs
-the D4a ruling first**), `draftTab` and the dead `pickWindowEnd` branches. Stop shipping `other_bags` on 2-team trades,
-`realized`, `recent_trades`, `year_ends`, `partner_headlines`, `drafted_by`, `review_trades`,
-`trade_boards.today`/`.aged`, `drafters_*`.
+**Slice 2 — delete the dead** — **shipped**, except the `windows` restructure (D3a).
+~~`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`~~ (D4a) ·
+~~`renderLeague`~~ (D4b, `8cdbb3d`) · ~~`draftTab` and the dead `pickWindowEnd` branches~~ ·
+~~`other_bags` on 2-team trades, `realized`, `recent_trades`, `year_ends`, `partner_headlines`,
+`drafted_by`, `review_trades`, `trade_boards.today`/`.aged`, `drafters_startup`~~.
+`drafters_rookie` is the one left: it was kept because `renderLeague` read it, and lost that
+reader afterwards.
 
 **Slice 3 — one source per number**
 `partnerPer()` helper feeding home tile and Partners tab (P0-4) · single grade threshold constant ·
@@ -1018,9 +1046,10 @@ Champions Path "1st" column earns its keep.
 
 **Slice 6 — what is left after this pass.** In the order I would take it:
 `windows` restructure and delete the browser's `applyVa` (D3a, needs the invariant rewritten
-first) · the D5 ruling on the KTC blend (§8c) · the `renderLeague` ruling (§10.2) ·
+first) · the D5 ruling on the KTC blend (§8c) · drop `drafters_rookie` from `revalue.mjs` ·
 back-button history (P1-8) · derive `DATA_V` instead of hand-editing it (§6b) ·
-seat-switch race (§6) · the cosmetic set in §5 · posture vocabulary · A6 and A8.
+seat-switch race (§6) · price the newest trade on its own date (§10.5) ·
+the cosmetic set in §5 · posture vocabulary · A6 and A8.
 
 ---
 
@@ -1030,8 +1059,9 @@ seat-switch race (§6) · the cosmetic set in §5 · posture vocabulary · A6 an
    panel the answer now?
 2. ~~**Should Best 10 / Worst 10 return** as a real screen, or is Most lopsided the permanent
    replacement?~~ **Answered 2026-08-30: Most lopsided is the permanent replacement; the board is
-   deleted (D4a).** Replaced by a new question — the Traders and Drafters lists inside the old
-   league screen now have no entry point. Give them one, fold them elsewhere, or delete them?
+   deleted (D4a).** ~~And the orphaned Traders / Drafters lists?~~ **Also answered: delete
+   (D4b, `8cdbb3d`).** There is no league screen. Only `league.drafters_rookie` outlives it, with
+   no reader, pending a payload pass.
 3. **Drafts on a lens.** Today the Drafts tab pins Since-trade and hides the dropdown. Should
    rookie surplus respond to the lens, given "got" would be a windowed mean while "sent" stays
    draft-day cost — two clocks in one number?

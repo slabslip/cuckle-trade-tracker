@@ -295,7 +295,9 @@ const html = `<!DOCTYPE html>
       height: 26px; padding: 0 9px; cursor: pointer; white-space: nowrap;
       touch-action: manipulation;
     }
-    button.all-trades::after { content: ""; position: absolute; inset: -10px; border-radius: 999px; }
+    /* Deliberately square: this box is never painted, and a radius here only kills the corners
+       of the tap area. Measured -- a 999px radius on the 113x44 region left its corners dead. */
+    button.all-trades::after { content: ""; position: absolute; inset: -10px; }
     button.all-trades:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
     /* Nowrap plus ellipsis: a long manager or player name shortens instead of wrapping,
        which is what would break the two gold cards' equal height. */

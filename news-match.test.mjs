@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 /**
- * The validation harness for the tweet matcher, the X ingest and the Discord sender.
+ * The validation harness for the tweet matcher.
+ *
+ * Cherry-picked from `cursor/x-discord-pipeline-af37` (PR #15) along with `news-match.mjs` and
+ * the two fixture files. The X-ingest and Discord-sender suites that sat in the same file on
+ * that branch are **not** here, because neither module is: this task brings across the matcher
+ * and only the matcher. The `--notify` half of the matcher's own contract (NOTIFY_MIN, the
+ * evidence tiers that may and may not ring a phone) is still asserted, because that ordering is
+ * what bounds surname evidence, and it holds whether or not anything ever reads it.
  *
  *   node --test news-match.test.mjs
  *   node news-match.test.mjs --report      # the same numbers, printed for a human
@@ -43,8 +50,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readJson } from "./lib.mjs";
 import { matchText, loadIndex, normText, looksTitleCased, capitalisedIn, explainName, teamsNamed, PUBLISH_MIN, NOTIFY_MIN, MAX_SUBJECTS, CATEGORY_IDS, scoreCorpus } from "./news-match.mjs";
-import { buildPayload, assertInertMentions, sanitiseText, storyKey, isRealDiscordId, createLimiter, post, alertsFrom, selfTest } from "./discord-notify.mjs";
-import { plan, timelineUrl, userLookupUrl, normalisePost, budgetFor, pull, MAX_READS_PER_RUN, MAX_READS_PER_MONTH } from "./x-source.mjs";
 import { stripAttribution } from "./news-fixtures.mjs";
 
 const index = loadIndex();
@@ -477,253 +482,6 @@ test("the entry-point guard survives every way the file gets invoked", (t) => {
   } finally {
     fs.rmSync(spaced, { recursive: true, force: true });
   }
-});
-
-/* ----------------------------------------------------------- X ingest ---- */
-
-test("x-source does nothing at all without a token", async () => {
-  const before = process.env.X_BEARER_TOKEN;
-  delete process.env.X_BEARER_TOKEN;
-  try {
-    const r = await pull({ token: "", persist: false });
-    assert.equal(r.ok, true, "a missing token is a success, not a failure — the cron must stay green");
-    assert.equal(r.skipped, true);
-    assert.deepEqual(r.items, []);
-    assert.equal(r.cost.post_reads, 0);
-    assert.equal(r.cost.usd, 0);
-    assert.match(r.reason, /no X_BEARER_TOKEN/);
-  } finally {
-    if (before !== undefined) process.env.X_BEARER_TOKEN = before;
-  }
-});
-
-test("the timeline request matches X's OpenAPI document", () => {
-  const url = new URL(timelineUrl("12345", { sinceId: "1700000000000000000", budget: 50 }));
-  assert.equal(url.origin, "https://api.x.com");
-  assert.equal(url.pathname, "/2/users/12345/tweets");
-  assert.equal(url.searchParams.get("exclude"), "retweets,replies");
-  assert.equal(url.searchParams.get("since_id"), "1700000000000000000");
-  // Renamed from tweet.fields in spec 2.168; tweet.fields now appears only on streaming routes.
-  assert.ok(url.searchParams.has("post.fields"));
-  assert.ok(!url.searchParams.has("tweet.fields"));
-  assert.equal(userLookupUrl("AdamSchefter"), "https://api.x.com/2/users/by/username/AdamSchefter");
-});
-
-test("max_results is clamped to the spec's 5..100", () => {
-  assert.equal(new URL(timelineUrl("1", { budget: 1 })).searchParams.get("max_results"), "5");
-  assert.equal(new URL(timelineUrl("1", { budget: 5000 })).searchParams.get("max_results"), "100");
-  assert.equal(new URL(timelineUrl("1", { budget: 50 })).searchParams.get("max_results"), "50");
-});
-
-test("the read budget is a real ceiling and is stated in dollars", () => {
-  assert.equal(MAX_READS_PER_RUN, 50);
-  assert.equal(MAX_READS_PER_MONTH, 1200);
-  const worstCase = MAX_READS_PER_MONTH * 0.005;
-  assert.equal(worstCase, 6, "the monthly ceiling is $6.00 against a ~$4.50 estimate");
-  const spent = budgetFor({ month: new Date().toISOString().slice(0, 7), month_reads: 1195 });
-  assert.equal(spent.run_budget, 5, "a nearly-spent month clamps the run");
-  const done = budgetFor({ month: new Date().toISOString().slice(0, 7), month_reads: 1200 });
-  assert.equal(done.run_budget, 0);
-  const rolled = budgetFor({ month: "2020-01", month_reads: 1200 });
-  assert.equal(rolled.run_budget, 50, "and a new billing cycle resets it");
-});
-
-test("a post normalises into the shape the pipeline already reads", () => {
-  const row = normalisePost({ id: "1900000000000000001", text: "Kittle (Achilles) is expected to practice this week.", created_at: "2026-08-30T12:34:56.000Z" }, "AdamSchefter");
-  assert.equal(row.source, "x:adamschefter");
-  assert.equal(row.source_url, "https://x.com/AdamSchefter/status/1900000000000000001");
-  assert.equal(row.title, "Kittle (Achilles) is expected to practice this week.");
-  assert.equal(row.summary, "", "a post has no summary, and inventing one would invite the title-only rule");
-  assert.equal(row.published, Date.parse("2026-08-30T12:34:56.000Z"));
-  assert.equal(row.player_id, null);
-  // An unparseable date is null, never Date.now().
-  assert.equal(normalisePost({ id: "1", text: "x", created_at: "not a date" }, "a").published, null);
-  assert.equal(normalisePost({ id: "1", text: "   " }, "a"), null, "an empty post is dropped");
-});
-
-test("--plan discloses the whole request without a token", () => {
-  const p = plan();
-  assert.equal(p.token_present, false);
-  assert.equal(p.account, "AdamSchefter");
-  assert.equal(p.budget.worst_case_month_usd, 6);
-  assert.equal(p.unit_costs_usd.post_read, 0.005);
-  assert.equal(p.unit_costs_usd.user_read, 0.01);
-  assert.match(p.spec, /openapi\.json/);
-});
-
-/* --------------------------------------------------------- Discord sender ---- */
-
-test("an @everyone headline cannot ping anything but the intended manager", () => {
-  const intended = "111111111111111111";
-  const payload = buildPayload({
-    player: "George Kittle",
-    headline: "@everyone @here <@&123456789012345678> Kittle ruled out — <@987654321098765432> confirms",
-    source_label: "Rotowire",
-    source_url: "https://example.com/x",
-    league_line: "Bad news travels fast, @everyone.",
-  }, intended);
-
-  // The only thing Discord is permitted to resolve.
-  assert.deepEqual(payload.allowed_mentions, { parse: [], users: [intended] });
-  // And the content it would parse contains nothing else to resolve, independently of that.
-  assert.deepEqual(payload.content.match(/<@!?&?\d+>|<#\d+>/g), [`<@${intended}>`]);
-  assert.equal(/@everyone|@here/.test(payload.content), false);
-  assert.match(payload.content, /@\u200beveryone/, "it still reads as @everyone to a human");
-  assert.match(payload.content, /@\u200bhere/);
-  assert.match(payload.content, /@\u200b123456789012345678/, "the role mention lost its brackets");
-  assert.ok(payload.content.length <= 2000);
-});
-
-test("every clause of the mention guard can fail", () => {
-  const report = selfTest();
-  assert.equal(report.guard_clauses.length, 6);
-  for (const c of report.guard_clauses) {
-    assert.equal(c.refused, true, `${c.clause} must refuse`);
-  }
-  assert.equal(report.everyone_tokens_in_content, 0);
-  assert.deepEqual(report.mention_tokens_in_content, ["<@111111111111111111>"]);
-  assert.equal(report.third_party_at_signs_all_defused, true);
-});
-
-test("the guard is checked on the finished payload, so a careless caller is caught too", () => {
-  const intended = "111111111111111111";
-  // A payload assembled without sanitising: correct allowed_mentions, hostile content.
-  assert.throws(
-    () => assertInertMentions({ content: `<@${intended}> @everyone Kittle is out`, allowed_mentions: { parse: [], users: [intended] } }, intended),
-    /live @everyone/,
-  );
-  assert.throws(() => assertInertMentions({ content: "no mention at all", allowed_mentions: { parse: [], users: [intended] } }, intended), /exactly one mention token/);
-  assert.throws(() => assertInertMentions({ content: `<@${intended}>`, allowed_mentions: { parse: ["everyone"], users: [intended] } }, intended), /parse must be an empty array/);
-  assert.throws(() => assertInertMentions({ content: `<@${intended}> ${"x".repeat(2100)}`, allowed_mentions: { parse: [], users: [intended] } }, intended), /over Discord's 2000/);
-});
-
-test("sanitising is readable and total", () => {
-  assert.equal(sanitiseText("@everyone"), "@\u200beveryone");
-  assert.equal(sanitiseText("<@&999>"), "@\u200b999");
-  assert.equal(sanitiseText("<@!999>"), "@\u200b999");
-  assert.equal(sanitiseText("<#999>"), "#999");
-  assert.equal(sanitiseText("plain text"), "plain text");
-  for (const hostile of ["@everyone", "@here", "<@1>", "<@&1>", "<@!1>", "<#1>", "@EVERYONE", "@\u200b@everyone"]) {
-    assert.equal(/(<@|<#)|(@(?!\u200b))/.test(sanitiseText(hostile)), false, `${hostile} is defused`);
-  }
-});
-
-test("a placeholder discord id refuses loudly instead of skipping quietly", () => {
-  assert.equal(isRealDiscordId("000000000000000000"), false);
-  assert.equal(isRealDiscordId("12345"), false);
-  assert.equal(isRealDiscordId("111111111111111111"), true);
-  assert.throws(() => buildPayload({ player: "x", headline: "y" }, "000000000000000000"), /fill in data\/discord-members\.json/);
-  const config = readJson("discord-members.json", null);
-  assert.ok(config, "data/discord-members.json is committed");
-  assert.equal(config.members.length, 10, "one row per seat");
-  const members = readJson("ui/members.json", []);
-  assert.deepEqual(
-    config.members.map((m) => m.user_id).sort(),
-    members.map((m) => m.user_id).sort(),
-    "and the seats match members.json, so nobody is silently absent",
-  );
-  // Shipped as placeholders. If this ever fails, somebody committed a real id — which is not a
-  // secret, but it should be a deliberate act rather than a surprise in a diff.
-  for (const m of config.members) assert.equal(isRealDiscordId(m.discord_id), false, `${m.manager} ships as a placeholder`);
-  assert.equal(/discord\.com\/api\/webhooks/.test(JSON.stringify(config)), false, "and no webhook URL is in the file");
-});
-
-test("only items above the notify threshold become alerts", () => {
-  const book = {
-    items: [
-      { id: "a", match: "player_id", user_id: "u1", player_id: "1", headline: "h", published: 0 },
-      { id: "b", match: "name", user_id: "u1", player_id: "2", headline: "h", published: 0 },
-      { id: "c", match: "name", user_id: "u1", player_id: "3", headline: "h", published: 0, confidence: 0.65 },
-      { id: "d", match: "text", user_id: "u1", player_id: "4", headline: "h", published: 0, confidence: 0.85 },
-    ],
-  };
-  const ids = alertsFrom(book).map((a) => a.id);
-  assert.deepEqual(ids, ["a", "b", "d"], "0.65 publishes but does not notify");
-  assert.equal(alertsFrom(book, { minConfidence: 1 }).length, 0);
-});
-
-test("the same story from two sources notifies once", () => {
-  // The real cross-source shape, taken from the harvest: an aggregator restates a report and
-  // appends a credit clause. Same first six meaningful words, hours apart, one story.
-  const fromSleeper = { user_id: "u1", player_id: "3321", published: Date.parse("2026-08-30T08:00:00Z"), headline: "Kittle (Achilles) is expected to practice this week" };
-  const fromX = { user_id: "u1", player_id: "3321", published: Date.parse("2026-08-30T19:00:00Z"), headline: "Kittle (Achilles) is expected to practice this week, Adam Schefter of ESPN reports" };
-  assert.equal(storyKey(fromSleeper), storyKey(fromX), "one story, two sources");
-  const differentStory = { ...fromSleeper, headline: "Kittle placed on injured reserve, out four weeks" };
-  assert.notEqual(storyKey(fromSleeper), storyKey(differentStory), "and two stories about one player on one day both survive");
-  const otherManager = { ...fromSleeper, user_id: "u2" };
-  assert.notEqual(storyKey(fromSleeper), storyKey(otherManager), "a trade legitimately notifies two people");
-  const nextDay = { ...fromSleeper, published: Date.parse("2026-09-01T08:00:00Z") };
-  assert.notEqual(storyKey(fromSleeper), storyKey(nextDay), "and a genuine follow-up two days later is not suppressed");
-});
-
-test("the dry run is the default and writes no secret", async () => {
-  const { run } = await import("./discord-notify.mjs");
-  const out = await run({ target: "dry-run", book: readJson("ui/news.json", { items: [] }), now: 1756569600000 });
-  assert.equal(out.dry_run, true);
-  assert.equal(out.dry_run_reason, "default");
-  assert.deepEqual(out.results, [], "nothing was sent");
-  assert.ok(out.messages.length > 0, "and a reviewer can read what would have been");
-  for (const m of out.messages) assert.equal(assertInertMentions(m.payload, m.discord_id), true);
-  assert.equal(/discord\.com\/api\/webhooks|https:\/\/discordapp\.com/.test(JSON.stringify(out)), false, "no webhook URL anywhere in the artifact");
-  assert.equal(out.webhook_env, null);
-});
-
-test("a configured target with no secret behind it degrades to a dry run", async () => {
-  const { run } = await import("./discord-notify.mjs");
-  const before = process.env.DISCORD_WEBHOOK_STAGING;
-  delete process.env.DISCORD_WEBHOOK_STAGING;
-  try {
-    const out = await run({ target: "staging", book: { items: [] }, now: 1 });
-    assert.equal(out.dry_run, true);
-    assert.equal(out.dry_run_reason, "DISCORD_WEBHOOK_STAGING is not set");
-    assert.equal(out.webhook_env, "DISCORD_WEBHOOK_STAGING");
-  } finally {
-    if (before !== undefined) process.env.DISCORD_WEBHOOK_STAGING = before;
-  }
-});
-
-test("a 429 is obeyed, then retried", async () => {
-  const waits = [];
-  // The clock has to advance with the waits, or the limiter's hold never expires.
-  let clock = 0;
-  const wait = async (ms) => { waits.push(Math.round(ms)); clock += ms; };
-  let call = 0;
-  const fetchImpl = async () => {
-    call++;
-    if (call === 1) {
-      return {
-        status: 429,
-        headers: new Headers({ "retry-after": "2", "x-ratelimit-remaining": "0", "x-ratelimit-reset-after": "2" }),
-        json: async () => ({ retry_after: 1.5, global: false }),
-      };
-    }
-    return { status: 204, headers: new Headers({ "x-ratelimit-remaining": "4", "x-ratelimit-reset-after": "1" }) };
-  };
-  const limiter = createLimiter({ wait, now: () => clock });
-  const res = await post("https://example.invalid/webhook", { content: "x" }, { limiter, wait, fetchImpl });
-  assert.equal(res.ok, true);
-  assert.equal(res.attempts, 2);
-  // The server said 2 seconds via the header, which beats the body's 1.5.
-  assert.ok(waits.includes(2000), `waited ${JSON.stringify(waits)}`);
-});
-
-test("the rate limiter holds the burst floor without real time passing", async () => {
-  const waits = [];
-  let clock = 0;
-  const wait = async (ms) => { waits.push(Math.round(ms)); clock += ms; };
-  const limiter = createLimiter({ wait, now: () => clock });
-  for (let i = 0; i < 6; i++) await limiter.take();
-  assert.equal(waits.length, 1, "the sixth request in a 2s window waits once");
-  assert.ok(waits[0] >= 2000 && waits[0] <= 2100, `waited ${waits[0]}ms`);
-});
-
-test("a webhook that 404s is not retried", async () => {
-  let calls = 0;
-  const fetchImpl = async () => { calls++; return { status: 404, headers: new Headers() }; };
-  const res = await post("https://example.invalid/gone", { content: "x" }, { fetchImpl, wait: async () => {} });
-  assert.equal(res.ok, false);
-  assert.equal(res.terminal, true);
-  assert.equal(calls, 1, "Discord restricts IPs that keep calling a dead webhook");
 });
 
 /* ----------------------------------------------------------------- report ---- */

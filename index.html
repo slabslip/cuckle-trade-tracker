@@ -97,7 +97,7 @@
     button.tab, button.chip {
       border-radius: 999px; padding: 10px 14px; color: var(--muted);
     }
-    button.tab.on, button.chip.on { color: var(--text); background: #1c1c22; }
+    button.tab.on { color: var(--text); background: #1c1c22; }
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -410,7 +410,7 @@
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260829r";
+    const DATA_V = "20260829t";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -433,8 +433,6 @@
     let openPick = null;
     let openDraft = null;
     let partnerName = null;
-    let boardClock = "today";
-    let boardWindow = "all";
     let titleYear = null;
     const seatCache = {};
     // Committed league tallies from data/ui/votes.json, or null when that file is absent
@@ -1041,7 +1039,6 @@
       return dayAlert()
         + lensRow()
         + pack("wide", "Most lopsided trades", rankWide().map((r) => boardTape(r)).join(""))
-        + '<div class="toggle"><button type="button" class="chip" data-view="league">Best 10 · Worst 10</button></div>'
         + renderPlayerLists();
     }
 
@@ -1710,63 +1707,8 @@
         + (t.best ? " · hit " + esc(t.best.player) : "") + "</div>"
       ).join("");
       return '<div class="toggle"><button type="button" class="chip" data-view="home">← League home</button></div>'
-        + renderTradeBoards()
         + "<h2>Traders · per complete two-way</h2>" + traders
         + "<h2>Drafters · rookie surplus per pick</h2>" + d;
-    }
-
-    function monthsAgo(ymd, months) {
-      const parts = (ymd || "").split("-").map(Number);
-      if (parts.length < 3) return ymd;
-      let y = parts[0], m = parts[1] - months, d = parts[2];
-      while (m <= 0) { m += 12; y -= 1; }
-      const dim = new Date(y, m, 0).getDate();
-      return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
-    }
-
-    // Same rounding rule as every other margin in the app: round each bag, then subtract.
-    function boardScore(r, clock) {
-      if (clock === "aged") return r.aged == null ? null : Math.round(r.aged);
-      return displayDelta(r.today_got, r.today_sent);
-    }
-
-    function rankSides(clock, window) {
-      const boards = league && league.trade_boards;
-      if (!boards) return { best: [], worst: [] };
-      const asOf = league.today || "";
-      const months = window === "3m" ? 3 : window === "6m" ? 6 : window === "1y" ? 12 : window === "3y" ? 36 : 0;
-      const cut = months ? monthsAgo(asOf, months) : null;
-      let pool = boards.sides || [];
-      if (cut) pool = pool.filter((r) => r.date >= cut);
-      pool = pool.filter((r) => boardScore(r, clock) != null);
-      const best = pool.slice().sort((a, b) => boardScore(b, clock) - boardScore(a, clock)).slice(0, 10);
-      const worst = pool.slice().sort((a, b) => boardScore(a, clock) - boardScore(b, clock)).slice(0, 10);
-      return { best, worst };
-    }
-
-    function renderTradeBoards() {
-      const boards = league && league.trade_boards;
-      if (!boards) return '<p class="caption">No trade boards in this build.</p>';
-      const pack = rankSides(boardClock, boardWindow);
-      const you = me && me.name;
-      const scoreOf = (r) => boardScore(r, boardClock);
-      const list = (title, rows) => "<h2>" + esc(title) + "</h2>" + (rows || []).map((r) =>
-        '<button type="button" class="row" data-open-me="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
-        + '<div class="row-top"><div><div class="names' + (r.name === you ? " you" : "") + '">'
-        + esc(r.name) + (r.name === you ? " · you" : "") + " vs " + esc(r.other) + "</div>"
-        + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
-        + '<div class="margin ' + (scoreOf(r) === 0 ? "" : cls(scoreOf(r))) + '">' + fmt(scoreOf(r)) + "</div></div></button>"
-      ).join("");
-      const empty = pack.best.length ? "" : '<p class="caption">No complete deals in this window.</p>';
-      const windows = [["3m","3 months"],["6m","6 months"],["1y","1 year"],["3y","3 years"],["all","All time"]];
-      return '<div class="toggle">'
-        + '<button type="button" class="chip' + (boardClock === "today" ? " on" : "") + '" data-board="today">As of today</button>'
-        + '<button type="button" class="chip' + (boardClock === "aged" ? " on" : "") + '" data-board="aged">Aged after accept</button>'
-        + "</div>"
-        + '<div class="toggle">'
-        + windows.map((w) => '<button type="button" class="chip' + (boardWindow === w[0] ? " on" : "") + '" data-window="' + w[0] + '">' + w[1] + "</button>").join("")
-        + "</div>"
-        + (empty || (list("Best 10", pack.best) + list("Worst 10", pack.worst)));
     }
 
     function renderPartners() {
@@ -1961,18 +1903,6 @@
         seatData(uid).then(() => render());
         return;
       }
-      const boardRow = e.target.closest("[data-open-me]");
-      if (boardRow) {
-        const uid = boardRow.dataset.openMe;
-        const tx = boardRow.dataset.id;
-        Promise.resolve(me && me.user_id === uid ? null : selectMe(uid, true)).then(() => {
-          view = "trades";
-          openId = tx;
-          partnerName = null;
-          render();
-        });
-        return;
-      }
       const markBtn = e.target.closest("[data-mark]");
       if (markBtn) {
         const id = markBtn.dataset.mark;
@@ -1981,10 +1911,6 @@
         render();
         return;
       }
-      const boardBtn = e.target.closest("[data-board]");
-      if (boardBtn) { boardClock = boardBtn.dataset.board; view = "league"; openId = null; render(); return; }
-      const windowBtn = e.target.closest("[data-window]");
-      if (windowBtn) { boardWindow = windowBtn.dataset.window; view = "league"; openId = null; render(); return; }
       const titleBtn = e.target.closest("[data-title]");
       if (titleBtn) {
         view = "titles";

@@ -89,6 +89,28 @@ function placesFromBracket(wb) {
 }
 
 /**
+ * One row per roster for a season: who they are and the regular-season record the standings
+ * are then ordered by. Split out of standingsFor so that the championship final can name the
+ * runner-up's record from the same derivation the standings use, rather than reading
+ * `settings` a second time and risking a card that disagrees with the table beside it.
+ */
+function recordRowsFor(s, nameByUser) {
+  return s.rosters.map((r) => {
+    const uid = s.owner[r.roster_id] || null;
+    const st = r.settings || {};
+    return {
+      roster_id: r.roster_id,
+      user_id: uid,
+      name: (uid && (nameByUser[uid] || s.names[uid])) || `roster ${r.roster_id}`,
+      wins: st.wins || 0,
+      losses: st.losses || 0,
+      ties: st.ties || 0,
+      fpts: fptsOf(st),
+    };
+  });
+}
+
+/**
  * Final 1..N for one completed season. Two sources, in this order:
  *
  *   1. **The winners bracket.** Its placement games carry `p` — 1 settles 1st and 2nd, 3 settles
@@ -110,20 +132,9 @@ function standingsFor(s, nameByUser) {
   const placed = placesFromBracket(s.wb);
   const fromBracket = [];
   const fromRecord = [];
-  for (const r of s.rosters) {
-    const uid = s.owner[r.roster_id] || null;
-    const st = r.settings || {};
-    const row = {
-      roster_id: r.roster_id,
-      user_id: uid,
-      name: (uid && (nameByUser[uid] || s.names[uid])) || `roster ${r.roster_id}`,
-      wins: st.wins || 0,
-      losses: st.losses || 0,
-      ties: st.ties || 0,
-      fpts: fptsOf(st),
-    };
-    if (placed[r.roster_id]) {
-      row.place = placed[r.roster_id];
+  for (const row of recordRowsFor(s, nameByUser)) {
+    if (placed[row.roster_id]) {
+      row.place = placed[row.roster_id];
       row.from = "bracket";
       fromBracket.push(row);
     } else {
@@ -190,6 +201,10 @@ function championshipFinal(s, rid, players, nameByUser) {
   const uid = s.owner[row.l];
   const champPoints = money(mine.points);
   const oppPoints = money(theirs.points);
+  // The runner-up's regular-season record, off the same rows the standings are built from.
+  // The card puts it opposite the champion's own record, so the two have to be the same
+  // quantity from the same place -- a second read of `settings` here is how they drift.
+  const oppRow = recordRowsFor(s, nameByUser).find((r) => r.roster_id === row.l) || null;
   return {
     ok: true,
     week,
@@ -198,6 +213,7 @@ function championshipFinal(s, rid, players, nameByUser) {
     opponent: nameByUser[uid] || s.names[uid] || `roster ${row.l}`,
     opponent_user_id: uid || null,
     opponent_roster_id: row.l,
+    opponent_record: oppRow ? { wins: oppRow.wins, losses: oppRow.losses, ties: oppRow.ties } : null,
     champ_points: champPoints,
     opponent_points: oppPoints,
     margin: money(champPoints - oppPoints),
@@ -801,10 +817,23 @@ async function main() {
     if (f.top && f.top.points > f.champ_points) {
       throw new Error(`self-check: ${t.season} top starter outscored the team total`);
     }
+    // The card prints this beside the champion's own record, so an absent or nonsense one
+    // would render as a blank half of a row rather than fail here.
+    const orec = f.opponent_record;
+    if (!orec) throw new Error(`self-check: ${t.season} final has no opponent_record`);
+    if (orec.wins + orec.losses + orec.ties !== t.record.wins + t.record.losses + t.record.ties) {
+      throw new Error(`self-check: ${t.season} runner-up played ${orec.wins}-${orec.losses}-${orec.ties},`
+        + ` a different number of games than the champion's ${t.record.wins}-${t.record.losses}-${t.record.ties}`);
+    }
   }
   const f25 = titles.find((t) => t.season === "2025").final;
   if (!f25 || f25.opponent !== "TipsUp" || f25.champ_points !== 189.98 || f25.opponent_points !== 162.82) {
     throw new Error(`self-check: 2025 final ${JSON.stringify(f25)}`);
+  }
+  // 2025's runner-up matched the champion at 11-3-0. Both cards reading 11–3 is the data,
+  // not a copy-paste, and this is what says so out loud.
+  if (f25.opponent_record.wins !== 11 || f25.opponent_record.losses !== 3 || f25.opponent_record.ties !== 0) {
+    throw new Error(`self-check: 2025 TipsUp record ${JSON.stringify(f25.opponent_record)}, expected 11-3-0`);
   }
   if (f25.top.player !== "Derrick Henry" || f25.top.points !== 45.6) {
     throw new Error(`self-check: 2025 top starter ${JSON.stringify(f25.top)}`);
@@ -825,6 +854,22 @@ async function main() {
   }
   if (standings[0].from !== "bracket") {
     throw new Error(`self-check: ${lastSeason} first place came from ${standings[0].from}, not the bracket`);
+  }
+  // The runner-up's record reaches the card through final.opponent_record. Assert it is the
+  // same row this table's second place is built from, so the card and the standings cannot
+  // print two different records for one team.
+  const runnerUp = standings[1];
+  const lastFinal = titles[0].final;
+  if (lastFinal && runnerUp) {
+    if (runnerUp.roster_id !== lastFinal.opponent_roster_id) {
+      throw new Error(`self-check: ${lastSeason} second place is roster ${runnerUp.roster_id},`
+        + ` but the final was lost by roster ${lastFinal.opponent_roster_id}`);
+    }
+    const o = lastFinal.opponent_record;
+    if (o.wins !== runnerUp.wins || o.losses !== runnerUp.losses || o.ties !== runnerUp.ties) {
+      throw new Error(`self-check: ${lastSeason} opponent_record ${o.wins}-${o.losses}-${o.ties}`
+        + ` disagrees with standings ${runnerUp.wins}-${runnerUp.losses}-${runnerUp.ties}`);
+    }
   }
 
   // revalue.mjs owns members.json; build.mjs runs it before this script, so the places land on
@@ -872,7 +917,9 @@ async function main() {
       fpts_rank: t.record.fpts_rank,
       used: t.draft.used.length,
       final: t.final
-        ? `wk${t.final.week} beat ${t.final.opponent} ${t.final.champ_points}-${t.final.opponent_points}`
+        ? `wk${t.final.week} beat ${t.final.opponent}`
+          + ` (${t.final.opponent_record.wins}-${t.final.opponent_record.losses}-${t.final.opponent_record.ties})`
+          + ` ${t.final.champ_points}-${t.final.opponent_points}`
           + ` · top ${t.final.top ? t.final.top.player + " " + t.final.top.points : "—"}`
         : `none (${t.final_missing})`,
       thesis: t.thesis,

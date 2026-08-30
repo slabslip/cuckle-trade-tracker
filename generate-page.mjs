@@ -2877,6 +2877,17 @@ const html = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// The whole page is one template literal, so a git conflict marker landing inside it is valid
+// JavaScript -- a string is a string -- and `node --check` passes. That happened during this
+// change's second rebase: `<<<<<<< HEAD`, two DATA_V lines and `>>>>>>>` shipped into index.html
+// without a single error. Nothing may leave here carrying one.
+for (const marker of ["<<<<<<<", ">>>>>>>", "\n=======\n"]) {
+  if (html.includes(marker)) throw new Error(`generated page carries a git conflict marker: ${marker.trim()}`);
+}
+// One DATA_V, or the cache key is whichever line the browser reached last.
+const dataVs = html.match(/const DATA_V = "[^"]*"/g) || [];
+if (dataVs.length !== 1) throw new Error(`expected exactly one DATA_V, found ${dataVs.length}: ${dataVs.join(", ")}`);
+
 // A lone backslash inside the template literal above is swallowed before it reaches the browser,
 // which once turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its
 // late-4th half weight. Escapes are written \\ in the template; assert they survived.

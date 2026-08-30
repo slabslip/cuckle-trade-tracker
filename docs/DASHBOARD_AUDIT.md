@@ -608,7 +608,7 @@ Worth remembering when reading any clean bill of health: verify the specific cla
 
 ---
 
-## 3a. Two verification traps — read before trusting any "no overflow" claim
+## 3a. Verification traps — read before trusting any "no overflow" or "it builds" claim
 
 Both of these produced **false all-clears** during this project's fix passes. They are recorded
 because several earlier "verified, no problems" reports were measured with the broken method.
@@ -636,6 +636,19 @@ not match the on-disk `index.html` and the build's `DATA_V` was absent from the 
 is what caught it. **Both checks are needed:** confirm the listening PID on the port is yours
 (`netstat -ltnp | grep ':<port> '`), and assert the served page carries your unique `DATA_V`.
 A 200 with sensible-looking HTML is not evidence of anything.
+
+### A git conflict marker inside the template literal is valid JavaScript
+The whole page is one template literal in `generate-page.mjs`, so `<<<<<<< HEAD` landing inside it
+is just string content. `node --check` passes. The generator runs. `index.html` ships carrying
+`<<<<<<< HEAD`, **two** `DATA_V` lines and `>>>>>>>`, and the only visible symptom is whichever
+cache key the browser reached last.
+
+This happened during the signed-delta pass, 2026-08-30, on the second rebase onto a moving `main`
+— and `node generate-page.mjs && node --check` reported success on the broken file. The guard is
+now in `generate-page.mjs`: it refuses to write a page containing any conflict marker, and asserts
+**exactly one** `DATA_V`. Both were verified to fire, and both were verified to be invisible to
+`node --check`. **`node --check` is not a merge check.** After any rebase that touches the
+generator, regenerate and confirm the guards ran.
 
 ### `scrollWidth` is 0 on an inline element, so the ellipsis test passes vacuously
 `el.scrollWidth > el.clientWidth` is the usual "is this ellipsized" test, but a non-replaced

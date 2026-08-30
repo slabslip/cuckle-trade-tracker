@@ -88,6 +88,73 @@ function placesFromBracket(wb) {
   return place;
 }
 
+/**
+ * The championship game itself: who the champion beat, the final score, and the
+ * champion's top scorer in that game. The bracket row with p === 1 is the title match;
+ * its round maps onto a week via playoff_week_start, and that week's matchup carries
+ * points and players_points. Returns { ok: false, reason } when a season cannot supply it
+ * rather than guessing.
+ */
+function championshipFinal(s, rid, players, nameByUser) {
+  const row = (s.wb || []).find((r) => r.p === 1);
+  if (!row || row.w == null) return { ok: false, reason: "no_final_in_bracket" };
+  if (row.w !== rid) return { ok: false, reason: "final_winner_is_not_champion" };
+  if (row.l == null) return { ok: false, reason: "final_has_no_recorded_loser" };
+  const round = Number(row.r);
+  if (!round) return { ok: false, reason: "final_has_no_round" };
+  if (!s.pws) return { ok: false, reason: "no_playoff_week_start" };
+  const week = s.pws + (round - 1);
+  const mus = s.weeks[week];
+  if (!mus || !mus.length) return { ok: false, reason: `no_matchups_for_week_${week}` };
+  const mine = mus.find((m) => m.roster_id === rid);
+  const theirs = mus.find((m) => m.roster_id === row.l);
+  if (!mine || !theirs) return { ok: false, reason: `roster_absent_from_week_${week}` };
+  if (mine.points == null || theirs.points == null) return { ok: false, reason: "week_has_no_points" };
+
+  const pp = mine.players_points || {};
+  const starters = (mine.starters || []).filter((id) => id && id !== "0");
+  let top = null;
+  for (const pid of starters) {
+    const pts = pp[pid];
+    if (pts == null) continue;
+    if (!top || pts > top.points) {
+      top = { player_id: String(pid), player: playerName(players, pid), points: money(pts) };
+    }
+  }
+  let topBench = null;
+  const started = new Set(starters.map(String));
+  for (const [pid, pts] of Object.entries(pp)) {
+    if (started.has(String(pid)) || pts == null) continue;
+    if (!topBench || pts > topBench.points) {
+      topBench = { player_id: String(pid), player: playerName(players, pid), points: money(pts) };
+    }
+  }
+  if (topBench && top && topBench.points <= top.points) topBench = null;
+
+  const uid = s.owner[row.l];
+  const champPoints = money(mine.points);
+  const oppPoints = money(theirs.points);
+  return {
+    ok: true,
+    week,
+    round,
+    paired: mine.matchup_id != null && mine.matchup_id === theirs.matchup_id,
+    opponent: nameByUser[uid] || s.names[uid] || `roster ${row.l}`,
+    opponent_user_id: uid || null,
+    opponent_roster_id: row.l,
+    champ_points: champPoints,
+    opponent_points: oppPoints,
+    margin: money(champPoints - oppPoints),
+    tie: champPoints === oppPoints,
+    top,
+    top_bench: topBench,
+  };
+}
+
+function money(n) {
+  return Math.round(Number(n) * 100) / 100;
+}
+
 function overlap(now, then) {
   if (!now || !then || !then.size) {
     return { kept: 0, now: now ? now.size : 0, then: then ? then.size : 0, retention: null, new_share: null };
@@ -599,6 +666,7 @@ async function main() {
     };
 
     const coreNow = new Set(openingStarters);
+    const finalGame = championshipFinal(s, rid, players, nameByUser);
     const row = {
       season: s.season,
       user_id: uid,
@@ -617,6 +685,8 @@ async function main() {
         league_mean_trades: s.leagueMeanTrades,
       },
       place: 1,
+      final: finalGame.ok ? finalGame : null,
+      final_missing: finalGame.ok ? null : finalGame.reason,
       prior,
       repeat,
       draft: { used, startup },
@@ -664,6 +734,26 @@ async function main() {
   }
   if (titles.length !== 7) throw new Error(`self-check: expected 7 titles, got ${titles.length}`);
 
+  for (const t of titles) {
+    const f = t.final;
+    if (!f) continue;
+    if (f.champ_points < f.opponent_points) {
+      throw new Error(`self-check: ${t.season} champion lost the final ${f.champ_points}-${f.opponent_points}`);
+    }
+    if (!f.paired) throw new Error(`self-check: ${t.season} final pair has no shared matchup_id`);
+    if (f.opponent_user_id === t.user_id) throw new Error(`self-check: ${t.season} beat themselves`);
+    if (f.top && f.top.points > f.champ_points) {
+      throw new Error(`self-check: ${t.season} top starter outscored the team total`);
+    }
+  }
+  const f25 = titles.find((t) => t.season === "2025").final;
+  if (!f25 || f25.opponent !== "TipsUp" || f25.champ_points !== 189.98 || f25.opponent_points !== 162.82) {
+    throw new Error(`self-check: 2025 final ${JSON.stringify(f25)}`);
+  }
+  if (f25.top.player !== "Derrick Henry" || f25.top.points !== 45.6) {
+    throw new Error(`self-check: 2025 top starter ${JSON.stringify(f25.top)}`);
+  }
+
   const payload = {
     as_of: ymd(Date.now()),
     league_id: LEAGUE_ID,
@@ -677,6 +767,10 @@ async function main() {
       record: `${t.record.wins}-${t.record.losses}`,
       fpts_rank: t.record.fpts_rank,
       used: t.draft.used.length,
+      final: t.final
+        ? `wk${t.final.week} beat ${t.final.opponent} ${t.final.champ_points}-${t.final.opponent_points}`
+          + ` · top ${t.final.top ? t.final.top.player + " " + t.final.top.points : "—"}`
+        : `none (${t.final_missing})`,
       thesis: t.thesis,
     })),
     out: "data/ui/titles.json",

@@ -1,0 +1,41 @@
+n,player,pos,raw_dp_sf,current_flatten,ktc_sf_last_snap,ktc_sf_today,curve_band,on_cuckle_roster,on_cuckle_tape,notes
+1,Josh Allen,QB,10232,10000,9986,,elite,yes,yes,Board top / flatten anchor (raw DP max)
+2,Lamar Jackson,QB,9184,9013,7517,,elite,yes,yes,Elite SF QB; tape max in TRACKER
+3,Ja'Marr Chase,WR,9055,8897,9975,,elite,yes,yes,Elite WR; Cuckle tape
+4,Jaxon Smith-Njigba,WR,8498,8408,9221,,elite,yes,no,Elite young WR
+5,Joe Burrow,QB,8262,8207,7248,,elite,yes,yes,Elite QB; Cuckle hit
+6,Bijan Robinson,RB,8127,8094,9994,,elite,yes,yes,Elite RB
+7,Jahmyr Gibbs,RB,7486,7575,9998,,elite,yes,yes,Elite RB; SF69erss title lineup
+8,Ashton Jeanty,RB,6440,6792,7381,,high,yes,yes,Young RB just under elite
+9,Drake Maye,QB,6380,6749,8984,,high,yes,no,Young QB high
+10,Brock Purdy,QB,5686,6277,5630,,high,yes,yes,Cuckle title QB
+11,De'Von Achane,RB,4635,5627,6859,,high,yes,yes,Cuckle title RB
+12,Brock Bowers,TE,4485,5541,8219,,high,yes,no,TE1
+13,Trey McBride,TE,4229,5397,7350,,high,yes,yes,TE2
+14,Jared Goff,QB,3613,5068,4606,,mid-starter,yes,yes,Mid starter QB
+15,Christian McCaffrey,RB,3571,5046,5279,,mid-starter,yes,yes,Aging star still mid-board
+16,Ladd McConkey,WR,3407,4962,5723,,mid-starter,yes,yes,Young mid WR
+17,Tee Higgins,WR,3094,4807,5083,,mid-starter,yes,yes,Mid WR
+18,Sam LaPorta,TE,3022,4772,4559,,mid-starter,yes,no,Mid TE
+19,Baker Mayfield,QB,2588,4563,4620,,mid-starter,yes,yes,Named Baker-range calibration QB
+20,Saquon Barkley,RB,2226,4391,5281,,mid-starter,yes,yes,Mid RB; Cuckle tape (Chief–ARae bag)
+21,Quinshon Judkins,RB,2154,4357,5298,,mid-starter,yes,yes,Young RB; Cuckle title draft
+22,Matthew Stafford,QB,1511,4036,3721,,aging-but-real,yes,yes,Aging starter QB
+23,Alec Pierce,WR,1356,3951,3693,,low-starter,yes,no,Cuckle tape WR; fills 1.3k gap
+24,Derrick Henry,RB,1206,3862,4223,,aging-but-real,yes,yes,Aging RB still a real piece
+25,Bryce Young,QB,1124,3811,3740,,low-starter,yes,yes,Cuckle title QB; low-starter range
+26,Davante Adams,WR,899,3652,3415,,aging-but-real,yes,no,Aging WR still starting
+27,George Kittle,TE,830,3597,3320,,aging-but-real,yes,yes,Aging TE still starting
+28,Jake Ferguson,TE,572,3346,3118,,low-starter,yes,yes,Fills ~500–700 TE gap; Cuckle tape
+29,Zach Charbonnet,RB,388,3091,3248,,young-near-hill,yes,yes,Young RB at Hill-ish raw DP (KTC much higher)
+30,Shedeur Sanders,QB,314,2954,2467,,young-near-hill,yes,no,Young QB at Hill-ish raw DP
+31,Stefon Diggs,WR,287,2896,2659,,hill-class,yes,yes,Same DP neighborhood as Hill; KTC snap much higher
+32,Tyreek Hill,WR,285,2892,1069,,hill-class,yes,yes,KNOWN TOO HIGH — flatten ~2892 vs KTC snap 1069
+33,Aaron Rodgers,QB,275,2869,1979,,hill-class,yes,no,"Aging QB, Hill-class raw DP"
+34,Brandon Aiyuk,WR,265,2846,1036,,hill-class,yes,no,Hill-like KTC snap (~1.0k) at similar raw DP
+35,Travis Kelce,TE,225,2743,2515,,hill-class,yes,yes,Aging TE still real
+36,Dalton Schultz,TE,121,2367,2317,,young-depth,yes,no,Cuckle tape TE; Bigsby-class raw
+37,Tyjae Spears,RB,92,2211,2525,,young-depth,yes,no,Young RB depth
+38,Tank Bigsby,RB,83,2154,2542,,young-depth,yes,no,Named young-depth calibration RB
+39,Jalen Milroe,QB,49,1878,2101,,taxi,yes,no,"Young taxi QB (cheap live name, not retired)"
+40,Keon Coleman,WR,44,1825,2357,,taxi,yes,no,Young taxi WR

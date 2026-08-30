@@ -64,7 +64,7 @@ export const SKILL_POS = new Set(["QB", "RB", "WR", "TE"]);
  * instead of the KC back, which then missed KTC and priced flatten-only.
  * Rank candidates: on the Superflex board, on a roster, still active.
  */
-function nameCandidateScore(p) {
+export function nameCandidateScore(p) {
   let score = 0;
   if (SKILL_POS.has(String(p?.position || "").toUpperCase())) score += 8;
   if (hasNflTeam(p)) score += 4;

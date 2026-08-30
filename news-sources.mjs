@@ -473,20 +473,37 @@ function supabaseHeaders(extra) {
 }
 
 /**
- * Submissions nobody has published yet, oldest first — the partial index in db/schema.sql 5a
- * covers exactly this predicate.
+ * The submission queue.
  *
  * Returns `{ ok, rows, error }` and never throws. A paused free-tier Supabase project can hang
- * rather than refuse, so this is on a timeout: the shared-tweet path going quiet must cost the
- * shared tweets and leave the 60 automated items alone.
+ * rather than refuse, so this is on a timeout: the queue going quiet must cost the feed's
+ * freshness, never the build.
+ *
+ * ## `unprocessedOnly`, and why the feed does not use it
+ *
+ * The original caller wanted the *new* rows: submissions were an addition to sixty automated
+ * items, `processed_at` marked one as already published, and re-reading a stamped row would
+ * have published it twice. The partial index in db/schema.sql 5a covers exactly that predicate.
+ *
+ * The feed is now built from submissions and nothing else, which inverts the requirement.
+ * `news.json` is rebuilt from scratch on every run, so "only the rows nobody has published yet"
+ * means the *entire feed* on run one and an **empty file** on run two — every row published,
+ * every row stamped, nothing left to read. The whole table is the feed's content, so the whole
+ * table is what the feed reads, and `processed_at` degrades to bookkeeping (see
+ * markSubmissionProcessed). The option stays because the predicate is still the right one for
+ * anything that wants the delta rather than the state, and because the index is still there.
  */
-export async function fetchSubmissions({ limit = 50, timeoutMs = 10000 } = {}) {
+export async function fetchSubmissions({
+  limit = 50, timeoutMs = 10000, unprocessedOnly = true, newestFirst = false,
+} = {}) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const url = `${SUPABASE}/news_submissions`
-      + "?select=id,url,note,target_name,submitted_by,created_at"
-      + "&processed_at=is.null&order=created_at.asc&limit=" + (Number(limit) || 50);
+      + "?select=id,url,note,target_name,submitted_by,created_at,processed_at"
+      + (unprocessedOnly ? "&processed_at=is.null" : "")
+      + "&order=created_at." + (newestFirst ? "desc" : "asc")
+      + "&limit=" + (Number(limit) || 50);
     const res = await fetch(url, { headers: supabaseHeaders(), signal: ac.signal });
     if (!res.ok) return { ok: false, rows: [], error: `HTTP ${res.status}` };
     const rows = await res.json();
@@ -499,7 +516,16 @@ export async function fetchSubmissions({ limit = 50, timeoutMs = 10000 } = {}) {
 }
 
 /**
- * Stamp one submission as published, so it is never ingested twice.
+ * Stamp one submission with the time it first reached the feed.
+ *
+ * **This no longer gates anything.** It used to mean "never ingest this again", which was the
+ * right rule when submissions were an addition to an automated feed; now that they *are* the
+ * feed, fetchSubmissions() reads the whole table on every run and the stamp is a record rather
+ * than a filter. It is still written, and still worth writing: it is the only durable evidence
+ * of when a shared tweet actually became visible, it is what a person reads when a share does
+ * not show up, and the "updated 0 rows" check below is the only thing in this project that can
+ * tell you the anon role is missing its UPDATE policy. A row that already carries a stamp is
+ * not re-stamped by the caller, so the value keeps meaning *first* published.
  *
  * The payload is `{processed_at}` and nothing else, deliberately: anon holds a column-level
  * grant on that column alone (db/schema.sql 5d), so a payload naming any other column would be
@@ -514,14 +540,16 @@ export async function fetchSubmissions({ limit = 50, timeoutMs = 10000 } = {}) {
  * invisible to a status check.
  *
  * This was not theoretical. With `return=minimal` and an `res.ok` test, the pipeline reported
- * every row stamped while stamping none of them. `news.json` is rebuilt from scratch each run, so
- * this does not duplicate a row inside one file — the harm is that the queue never drains. Every
- * submission ever made is re-fetched and re-published on every build, so the shared tweets grow
- * without bound against a 60-row cap and eventually crowd the automated feed out entirely, and
- * "mark it processed so it is never ingested twice" quietly means nothing.
+ * every row stamped while stamping none of them. The only thing that catches it is asking the
+ * database what it actually changed. So: ask for the row back, and treat "no row came back" as
+ * the failure it is.
  *
- * The only thing that catches it is asking the database what it actually changed. So: ask for the
- * row back, and treat "no row came back" as the failure it is.
+ * The consequence has changed with the stamp's meaning and is worth restating, because it is now
+ * much milder. It used to be unbounded growth: every submission ever made re-published on every
+ * build until the shared tweets crowded sixty automated rows out. Reading the whole table by
+ * design removes that failure mode entirely — the feed is the same either way. What is lost when
+ * this silently fails is only the record of when each share first appeared, which is why the
+ * warning still goes to stderr rather than being downgraded.
  */
 export async function markSubmissionProcessed(id, timeoutMs = 10000) {
   const ac = new AbortController();
@@ -538,9 +566,10 @@ export async function markSubmissionProcessed(id, timeoutMs = 10000) {
     if (!Array.isArray(rows) || rows.length === 0) {
       return {
         ok: false,
-        error: "updated 0 rows — the anon role has no UPDATE policy on news_submissions, "
-          + "so submissions would be re-ingested on every run. Run db/schema.sql (see "
-          + "docs/SUPABASE_SETUP.md section 3b).",
+        error: "updated 0 rows — the anon role has no UPDATE policy on news_submissions, so "
+          + "processed_at is never written and there is no record of when a share first "
+          + "appeared. The feed itself is unaffected: it reads the whole table. Run "
+          + "db/schema.sql (see docs/SUPABASE_SETUP.md section 3b).",
       };
     }
     return { ok: true, error: null };

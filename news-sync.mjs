@@ -11,6 +11,15 @@
  *   node news-sync.mjs --report        # fetch live, print the match report, write nothing
  *   node news-sync.mjs --voice         # print every voice variant, fetch nothing
  *   node news-sync.mjs --empty         # write a valid empty file (no network)
+ *   node news-sync.mjs --with-automated  # turn the automated sources back on for this run
+ *
+ * ## The feed is manual submissions only
+ *
+ * As of 2026-08-30 the rendered feed carries **only** tweets league members shared in from X.
+ * The automated sources below still work, are still tested and are still wired up — they are
+ * behind the AUTOMATED_SOURCES switch, which is off. Read the note on that constant before
+ * changing anything here; the short version is that the code stays because Path A is the only
+ * attribution in this project that cannot be wrong, and deleting it would throw that away.
  *
  * ## Rosters and the mapping
  *
@@ -46,8 +55,46 @@ import { SKILL_POS, nameCandidateScore } from "./price-today.mjs";
 
 /** Bump when the shape of news.json changes. The UI refuses a version it does not know. */
 const SCHEMA_VERSION = 1;
+
+/**
+ * **The off switch for the automated sources.** Off. `--with-automated` turns it on for one run.
+ *
+ * When this is false, neither Path A (Sleeper's GraphQL `get_player_news`) nor Path B (the five
+ * RSS feeds) is fetched at all, and no row from either reaches `news.json`. The feed is the
+ * submission queue and nothing else. That is what was asked for: *"wipe the news feed now, and
+ * only have it include what i share through our new shortcut"*.
+ *
+ * ## Why the code is still here
+ *
+ * It is a switch and not a deletion, and that is a deliberate choice rather than timidity:
+ *
+ * **Path A cannot mis-attribute, and nothing else in this project can say that.** Sleeper's
+ * `get_player_news` is asked about one `player_id` and answers about that player, so the owner
+ * is known before a word of the text is read. Every other way this app decides who a story is
+ * about — the RSS name matcher, the tweet matcher, `target_name` — is an inference over prose
+ * or over a name somebody typed on a phone, and each can be wrong. Deleting Path A would throw
+ * away the one source in the feature that is right by construction, to save a function call.
+ *
+ * **The stated reason for turning it off is temporary.** The feed went manual because the
+ * shared-tweet path had just landed and the automated rows were drowning it, not because the
+ * automated rows were wrong. The Schefter path is the thing being built towards; when it is
+ * wired, coverage is wanted back. A switch makes that one word. A deletion makes it a rewrite
+ * of 300 lines that already work and are already documented against real failures.
+ *
+ * **Off means off, not filtered.** The check is at the fetch, so a build in this state makes no
+ * request to Sleeper, to ESPN, to Rotowire, to CBS, to Yahoo or to ProFootballTalk. There is no
+ * path by which an automated row can appear in the file while this is false, and main()'s
+ * self-check asserts exactly that rather than trusting it.
+ */
+const AUTOMATED_SOURCES = false;
+
 /** Rows kept in the shipped file. The feed is a scroll box, not an archive. */
 const MAX_ITEMS = 60;
+/**
+ * How many submissions to read. Above MAX_ITEMS because rejected URLs and tweets shared twice
+ * both cost a row here and none in the feed, so reading exactly MAX_ITEMS could ship fewer.
+ */
+const SUBMISSION_FETCH_LIMIT = 200;
 /** Nothing older than this is news. */
 const MAX_AGE_DAYS = 10;
 /**
@@ -67,6 +114,9 @@ function clip(s, n = MAX_SUMMARY) {
 }
 
 const args = new Set(process.argv.slice(2));
+
+/** The switch above, with the per-run override applied. Read this, never the constant. */
+const automatedOn = AUTOMATED_SOURCES || args.has("--with-automated");
 
 /* ------------------------------------------------------------- rosters ---- */
 
@@ -192,19 +242,61 @@ function matchPlayer(title, index) {
  * `target_name` carries a NAME rather than a `user_id` — the inversion of the rule the rest of
  * this repo follows, argued in db/schema.sql section 5 — because the writer is a phone share
  * sheet and nobody is picking an 18-digit snowflake out of a list on a phone. The cost of that
- * choice is paid here, and it is paid loudly: a name that matches nothing resolves to null and
- * the item publishes addressed to nobody, rather than being quietly handed to the nearest match.
+ * choice is paid here.
  *
- * Matching is deliberately forgiving about case and punctuation only. It will not accept a
- * prefix or a nickname, because "Bubba" matching `BubbaCuckShremp` today is "Josh" matching the
- * wrong Allen tomorrow, and the whole point of a curated submission is that its attribution is
- * certain.
+ * ## The rule, in the order it is applied
+ *
+ * The input is normalised with normName() first, which lower-cases, strips punctuation and
+ * suffixes, collapses runs of whitespace and trims. So `"  SF69erss  "` and `"sf69erss"` are
+ * already the same string as `"SF69erss"` before any comparison happens. Then:
+ *
+ *   1. **Exact**, against the normalised member name. One hit wins.
+ *   2. **Prefix**, if nothing was exact: members whose normalised name *starts with* the input.
+ *      `big` -> `bigjberg`.
+ *   3. **Substring**, if nothing was a prefix: members whose normalised name *contains* it.
+ *      `berg` -> `bigjberg`.
+ *
+ * Two rules bound it. **Any tier that produces more than one candidate resolves to null** — the
+ * item publishes addressed to nobody rather than to a coin flip. And **tiers 2 and 3 need at
+ * least three characters**, because a one- or two-letter fragment is not a person's name, it is
+ * a typo, and it would match half the league.
+ *
+ * ## This reverses an earlier decision, on purpose
+ *
+ * The first version of this function refused partial matches outright, arguing that "Bubba"
+ * matching `BubbaCuckShremp` today is "Josh" matching the wrong Allen tomorrow. That argument is
+ * about matchPlayer(), and it does not carry here, because the two searches are not alike:
+ *
+ *   * matchPlayer() searches an **open** set — 12,225 names in Sleeper's dictionary, growing
+ *     every week, containing two Josh Allens and two Michael Carters. A surname there is
+ *     genuinely ambiguous and the ambiguity is invisible until it is wrong.
+ *   * This searches a **closed** set of ten, fixed, known, and inspectable at build time. There
+ *     is no unseen eleventh member for `big` to collide with, and if there ever is, rule one
+ *     catches it and refuses.
+ *
+ * And the failure modes are opposite in cost. There, a wrong match tells the wrong manager his
+ * running back tore an ACL. Here, the worst case is a jab aimed at the wrong seat — and the
+ * realistic case, the one actually seen, is a Shortcut sending `"  sf69erss  "` and the feed
+ * silently addressing it to nobody because of two spaces. Refusing was costing real attribution
+ * to prevent a collision that cannot occur in a ten-name set.
  */
 function resolveTarget(targetName, members) {
   const want = normName(targetName);
   if (!want) return null;
-  const hit = (members || []).find((m) => normName(m.name) === want);
-  return hit ? { user_id: hit.user_id, manager: hit.name } : null;
+  const list = (members || []).map((m) => ({ m, key: normName(m.name) })).filter((x) => x.key);
+  const pick = (hits) => (hits.length === 1
+    ? { user_id: hits[0].m.user_id, manager: hits[0].m.name }
+    : null);
+
+  const exact = list.filter((x) => x.key === want);
+  if (exact.length) return pick(exact);
+  if (want.length < 3) return null;
+
+  const prefix = list.filter((x) => x.key.startsWith(want));
+  if (prefix.length) return pick(prefix);
+
+  const inside = list.filter((x) => x.key.includes(want));
+  return inside.length ? pick(inside) : null;
 }
 
 /**
@@ -249,96 +341,207 @@ function matchTweetPlayer(text, index) {
 }
 
 /**
+ * One share per tweet.
+ *
+ * A phone's share sheet appends its own tracking — the two real submissions in the table arrived
+ * as `.../status/2094028581080834282?s=12&t=6MCtlgACvPE2VEY3UhiZeA` — so the same tweet shared
+ * twice is two different strings and, without this, two identical rows in a feed of two items.
+ * `parseTweetUrl()` already rebuilds the URL from the captured handle and id and throws the
+ * query string away, so the canonical form is the key and no stripping happens here.
+ *
+ * **The newest share wins.** The feed is newest-first, so the story belongs at the position of
+ * the share that just happened, carrying that sharer's jab; keeping the first share would pin a
+ * live story to a stale timestamp under an older note. The rows this drops are counted in the
+ * report rather than lost silently.
+ *
+ * Rows whose URL is not a tweet are dropped here, before any network call: they are reported by
+ * the caller as rejections. Input must be newest-first.
+ */
+function collapseShares(subs) {
+  const bySource = new Map();
+  const rejected = [];
+  const duplicates = [];
+  for (const sub of subs) {
+    // Re-validated here even though the table constrains it, because the table is write-open to
+    // anyone holding the anon key and a check that runs in only one place is a check that can be
+    // walked around. This is also the gate the XSS probes in rows 1, 5 and 6 hit: `evil.com`,
+    // `javascript:` and `evil.example.com` never become a URL, never get fetched, and never
+    // reach a row.
+    const parsed = parseTweetUrl(sub.url);
+    if (!parsed) { rejected.push(sub); continue; }
+    if (bySource.has(parsed.canonical)) {
+      duplicates.push({ id: sub.id, kept: bySource.get(parsed.canonical).sub.id });
+      continue;
+    }
+    bySource.set(parsed.canonical, { sub, canonical: parsed.canonical });
+  }
+  return { kept: [...bySource.values()], rejected, duplicates };
+}
+
+/**
  * The submission queue, turned into feed rows.
  *
- * One row per submission that resolves. Every failure is recorded rather than thrown: a tweet
- * that has been deleted, a Supabase that is asleep and a URL somebody hand-edited must each cost
- * their own row and leave the 60 automated items untouched.
+ * Every failure is recorded rather than thrown: a tweet that has been deleted, a Supabase that
+ * is asleep and a URL somebody hand-edited must each cost their own row and nothing else. That
+ * mattered less when sixty automated items were underneath; now that these rows *are* the feed,
+ * it is the difference between one missing story and a blank page, so there is a second
+ * defence — see `previousTweets`.
  *
- * A submission is stamped `processed_at` **only after** its row has been built, and a row is
- * built for every outcome that is not "we could not read the tweet". The distinction matters:
- * a deleted tweet is stamped, because retrying it forever would mean fetching a 404 on every
- * build until the heat death of the league; a network failure is *not* stamped, because that is
- * a transient we want to retry on the next run.
+ * A submission is stamped `processed_at` only if it does not already carry one, so the value
+ * keeps meaning "first published". Nothing is gated on the stamp any more; see
+ * markSubmissionProcessed().
+ *
+ * @param previousTweets Map of canonical URL -> the tweet body already in `news.json`, used when
+ *   oEmbed fails *transiently*. A timeout against publish.twitter.com used to cost that row; in
+ *   a manual-only feed of two items, two timeouts cost the whole page. A tweet's text and author
+ *   do not change, so the last known good copy is a correct answer rather than a stale one, and
+ *   the row around it is still rebuilt from the current submission. A tweet that is genuinely
+ *   *gone* (404, or no readable body) is not carried forward — that is a permanent answer, and
+ *   showing a deleted tweet forever would be the feed lying rather than degrading.
  */
-async function ingestSubmissions(ownership, index, members, { stampRows = true } = {}) {
+async function ingestSubmissions(ownership, index, members, {
+  stampRows = true, previousTweets = new Map(),
+} = {}) {
   const report = {
     queue_ok: false, queue_error: null, seen: 0, published: 0,
-    targeted: 0, matched: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0,
+    rejected_url: 0, duplicate_shares: 0, carried_forward: 0,
+    // targeted        — target_name resolved to a seat; the row is addressed
+    // player_only     — no target, but a rostered player was named; the row ships unaddressed
+    //                   and carries the player in its meta line
+    // target_unresolved — a target_name was given and matched no member, or matched two
+    targeted: 0, player_only: 0, target_unresolved: 0,
+    unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0,
     failures: [],
   };
-  const queue = await fetchSubmissions();
+  const queue = await fetchSubmissions({
+    limit: SUBMISSION_FETCH_LIMIT,
+    // The feed is the whole table now, not the rows nobody has published yet — see
+    // fetchSubmissions(). Newest first, because collapseShares() keeps the first it sees.
+    unprocessedOnly: false,
+    newestFirst: true,
+  });
   report.queue_ok = queue.ok;
   report.queue_error = queue.error;
   if (!queue.ok) return { rows: [], report };
   report.seen = queue.rows.length;
 
+  const { kept, rejected, duplicates } = collapseShares(queue.rows);
+  report.rejected_url = rejected.length;
+  report.duplicate_shares = duplicates.length;
+  for (const sub of rejected) report.failures.push({ id: sub.id, reason: "bad_url", url: String(sub.url).slice(0, 60) });
+  for (const d of duplicates) report.failures.push({ id: d.id, reason: `duplicate_of:${d.kept}` });
+  // Stamped: a URL this shape can never become valid, so it will never publish and the stamp is
+  // the honest record of that. Duplicates are left unstamped — the tweet published, just under
+  // another row's id, and stamping them would claim they appeared on their own.
+  for (const sub of rejected) await stamp(sub, report, stampRows);
+
   const rows = [];
-  for (const sub of queue.rows) {
-    // Re-validated here even though the table constrains it, because the table is write-open to
-    // anyone holding the anon key and a check that runs in only one place is a check that can be
-    // walked around. `parseTweetUrl` also canonicalises, so what gets fetched and what gets
-    // rendered is rebuilt from the captured handle and id rather than passed through.
-    const parsed = parseTweetUrl(sub.url);
-    if (!parsed) {
-      report.failed++;
-      report.failures.push({ id: sub.id, reason: "bad_url" });
-      // Stamped: a URL this shape can never become valid, so retrying it is pure waste.
-      await stamp(sub.id, report, stampRows);
-      continue;
-    }
-    const tweet = await fetchTweet(parsed.canonical);
+  for (const { sub, canonical } of kept) {
+    let tweet = await fetchTweet(canonical);
     if (!tweet.ok) {
-      report.failed++;
-      report.failures.push({ id: sub.id, reason: tweet.reason, status: tweet.status });
-      // A deleted or protected tweet is permanent; a timeout or a network blip is not.
-      if (tweet.reason === "not_found" || tweet.reason === "no_tweet_text" || tweet.reason === "bad_url") {
-        await stamp(sub.id, report, stampRows);
+      const permanent = tweet.reason === "not_found" || tweet.reason === "no_tweet_text" || tweet.reason === "bad_url";
+      const cached = permanent ? null : previousTweets.get(canonical);
+      if (!cached) {
+        report.failed++;
+        report.failures.push({ id: sub.id, reason: tweet.reason, status: tweet.status });
+        if (permanent) await stamp(sub, report, stampRows);
+        continue;
       }
-      continue;
+      report.carried_forward++;
+      report.failures.push({ id: sub.id, reason: `carried_forward:${tweet.reason}` });
+      tweet = { ...cached, ok: true, url: canonical };
     }
 
-    // Attribution, in priority order. A named target is authoritative and ends the question —
-    // that is the entire point of a person curating the item instead of a matcher inferring it.
+    /**
+     * Attribution. **`target_name` is the only thing that can address a row to a manager.**
+     *
+     * The player in the text is still resolved, and still ships — it is what the row's meta line
+     * prints, `Keenan Allen · IND WR`, and it is a fact about the tweet rather than a claim about
+     * a person. What it no longer does is pick a seat.
+     *
+     * This reverses the fallback that shipped with the submission path, where an unaddressed
+     * share was handed to whoever owned the player named in it. Two things changed:
+     *
+     * **The feed is curated now.** When sixty automated rows sat underneath, inferring an owner
+     * made a share behave like the rest of the feed. With submissions as the whole feed, the
+     * premise is that a person decided both what to share and who to aim it at, and inferring
+     * the second half of that from prose is the pipeline overruling the curator.
+     *
+     * **The inference is wrong in a way that reads as the app inventing things.** Both real
+     * submissions in the queue arrived with `target_name` null while the Shortcut is still being
+     * debugged, and both name a rostered player. Under the fallback, TrumanCooper's note on a
+     * Schefter tweet — *"lol suck it Brad"* — was published under the name of whoever happens to
+     * roster Keenan Allen. Those are somebody's words pointed at a seat they never chose. A
+     * player match is evidence about a *story*; it is not consent to address a person.
+     *
+     * So an untargeted share publishes as the league's, under "The league", with the player and
+     * the tweet intact. Nothing is dropped and nothing is guessed. The moment `target_name`
+     * arrives, resolveTarget() is forgiving about how it was typed — that is where the effort
+     * belongs, because that field is the sharer actually saying who they meant.
+     */
     let own = null;
     let player = null;
     const target = resolveTarget(sub.target_name, members);
+    const hit = matchTweetPlayer(tweet.text, index);
+    if (hit.row) player = hit.row;
     if (target) {
       own = target;
       report.targeted++;
-      // A player name in the text is still worth having for the row's metadata and for dedupe,
-      // but it cannot override the human's choice of who this is aimed at.
-      const hit = matchTweetPlayer(tweet.text, index);
-      if (hit.row) player = hit.row;
-    } else {
-      const hit = matchTweetPlayer(tweet.text, index);
-      if (hit.row) {
-        const owner = ownership.owner.get(hit.row.player_id);
-        if (owner) {
-          own = owner;
-          player = hit.row;
-          report.matched++;
-        }
-      }
+    } else if (player) {
+      report.player_only++;
     }
+    if (String(sub.target_name || "").trim() && !target) report.target_unresolved++;
     if (!own) report.unaddressed++;
 
     rows.push(toTweetRow(sub, tweet, own, player));
     report.published++;
-    await stamp(sub.id, report, stampRows);
+    await stamp(sub, report, stampRows);
   }
   return { rows, report };
 }
 
 /**
- * Mark one submission published.
+ * The tweet bodies already on disk, by canonical URL, for ingestSubmissions()' carry-forward.
  *
- * `--report` documents itself as writing nothing, and stamping a row is a write — a loud one,
- * because a stamped submission is never ingested again. Running `--report` to preview the queue
- * would have silently consumed it, so every caller passes the flag through and this is the one
- * place that decides.
+ * Only rows that still satisfy every rule this pipeline enforces are offered back: the URL must
+ * still parse as a tweet and must already be in canonical form. A file hand-edited to carry a
+ * `javascript:` source_url therefore feeds nothing, so reading yesterday's output cannot become
+ * a way around today's validation.
  */
-async function stamp(id, report, stampRows = true) {
+function previousTweetBodies() {
+  const book = readJson("ui/news.json", null);
+  const out = new Map();
+  if (!book || !Array.isArray(book.items)) return out;
+  for (const it of book.items) {
+    if (it.category !== "tweet" || !it.tweet_text || !it.tweet_handle) continue;
+    const parsed = parseTweetUrl(it.source_url);
+    if (!parsed || parsed.canonical !== it.source_url) continue;
+    out.set(parsed.canonical, {
+      text: it.tweet_text,
+      author_name: it.tweet_author || "",
+      author_handle: it.tweet_handle,
+    });
+  }
+  return out;
+}
+
+/**
+ * Record when one submission first reached the feed.
+ *
+ * `--report` documents itself as writing nothing, and stamping a row is a write, so every caller
+ * passes the flag through and this is the one place that decides. That was load-bearing when the
+ * stamp consumed the queue; it is now simply the documented behaviour of the flag, and worth
+ * keeping for that reason alone.
+ *
+ * A row that already carries a stamp is left alone, so `processed_at` keeps meaning *first*
+ * published rather than "last time a build ran".
+ */
+async function stamp(sub, report, stampRows = true) {
+  const id = sub && typeof sub === "object" ? sub.id : sub;
+  if (sub && typeof sub === "object" && sub.processed_at) {
+    report.stamp_already = (report.stamp_already || 0) + 1;
+    return true;
+  }
   if (!stampRows) { report.stamp_skipped = (report.stamp_skipped || 0) + 1; return true; }
   const res = await markSubmissionProcessed(id);
   if (res.ok) { report.stamped++; return true; }
@@ -400,7 +603,10 @@ function toTweetRow(sub, tweet, own, player) {
     summary: "",
     league_line: leagueLine(item, { manager: own ? own.manager : "" }),
     trending_add: 0,
-    match: own ? (sub.target_name ? "target_name" : "name") : "none",
+    // How the ROW was addressed, not how the player was found. "player" means a rostered player
+    // was identified and deliberately not turned into an addressee — see the attribution note in
+    // ingestSubmissions().
+    match: own ? "target_name" : (player ? "player" : "none"),
     also: [],
     // The expandable detail. Present only on this path; renderNews() treats their absence as
     // "this is an ordinary news row" and renders no expander at all.
@@ -544,11 +750,20 @@ async function build() {
   const players = JSON.parse(fs.readFileSync(playersPath, "utf8"));
   const index = buildPlayerIndex(ownership.owner, players);
 
-  const trending = await fetchTrending();
-  const sleeper = await fetchSleeperPlayerNews([...ownership.owner.keys()]);
-  const rssResults = await fetchRss();
+  // The switch is enforced at the fetch, not at a filter downstream: with AUTOMATED_SOURCES off
+  // this build makes no request to Sleeper's news graph, to any of the five RSS feeds, or to the
+  // trending endpoint that only ever ranked their rows. An off switch that still fetches is a
+  // switch somebody will later mistake for a display toggle.
+  const trending = automatedOn ? await fetchTrending() : { add: new Map(), drop: new Map(), errors: [] };
+  const sleeper = automatedOn
+    ? await fetchSleeperPlayerNews([...ownership.owner.keys()])
+    : { ok: false, items: [], errors: [], skipped: true };
+  const rssResults = automatedOn
+    ? await fetchRss()
+    : RSS_FEEDS.map((f) => ({ feed: f, ok: false, items: [], error: "off: AUTOMATED_SOURCES" }));
 
   const report = {
+    automated_sources: automatedOn ? "on" : "off",
     rosters: ownership.rosters,
     managers: ownership.managers,
     rostered_players: ownership.owner.size,
@@ -604,14 +819,23 @@ async function build() {
     }
   }
 
-  // Shared tweets, last, because they get to displace an automated row rather than compete with
-  // one. A queue that is unreachable costs its own rows and nothing else — every failure inside
+  // Shared tweets. With the automated sources off these are the whole feed; with them on they
+  // still come last, because they get to displace an automated row rather than compete with one.
+  // A queue that is unreachable costs its own rows and nothing else — every failure inside
   // ingestSubmissions() is recorded and returned, never thrown.
   const members = readJson("ui/members.json", []) || [];
+  // Read before anything is written, so a run that fails an oEmbed can still show yesterday's
+  // copy of that tweet rather than dropping the row. writeBook() is the only writer and it runs
+  // after every check in main() has passed.
+  const previousTweets = previousTweetBodies();
   const submissions = args.has("--no-submissions")
-    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, targeted: 0, matched: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [] } }
-    : await ingestSubmissions(ownership, index, members, { stampRows: !args.has("--report") });
+    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, rejected_url: 0, duplicate_shares: 0, carried_forward: 0, targeted: 0, player_only: 0, target_unresolved: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [] } }
+    : await ingestSubmissions(ownership, index, members, {
+      stampRows: !args.has("--report"),
+      previousTweets,
+    });
   report.submissions = submissions.report;
+  report.previous_tweets_on_disk = previousTweets.size;
 
   const deduped = dedupe(rows);
   const against = dedupeAgainstTweets(deduped, submissions.rows);
@@ -650,8 +874,9 @@ async function build() {
  * {
  *   "v": 1,                     // SCHEMA_VERSION. The UI ignores a file whose v it does not know.
  *   "generated": 1756569600000, // epoch ms this file was built
- *   "sources": [                // which feeds answered on this run, for the footer and for triage
- *     { "id": "espn", "label": "ESPN", "ok": true, "items": 18 }
+ *   "automated": "off",         // the AUTOMATED_SOURCES switch, as it stood for this build
+ *   "sources": [                // which sources actually contributed, for triage. Empty of feeds
+ *     { "id": "espn", "label": "ESPN", "ok": true, "items": 18 }   // while "automated" is "off"
  *   ],
  *   "items": [{
  *     "id":              "2026-08-30:4046:1a2b3c4d",  // stable: day + player + headline hash
@@ -700,29 +925,35 @@ async function build() {
  * one. `headline` and `summary` are `""` — the tweet is the content, and it lives behind the
  * expander rather than in the collapsed row.
  *
- * **`v` stays 1 deliberately.** These fields are purely additive and every one of them is
- * optional, so a page built before they existed ignores them and renders these rows as ordinary
- * news rows with no expander. Bumping to 2 would make the *current* deployed page reject the
- * whole file on its version gate and drop all 60 items to add a feature to a handful — a
- * strictly worse failure than the one it would be protecting against. The version gate is for
- * changes that would make an old reader render something *wrong*, and there is no such change
- * here.
+ * **`v` stays 1 deliberately.** These fields, and the top-level `automated`, are purely additive
+ * and every one of them is optional, so a page built before they existed ignores them and
+ * renders these rows as ordinary news rows with no expander. Bumping to 2 would make the
+ * *current* deployed page reject the whole file on its version gate — and with the feed now
+ * built from submissions alone, "reject the whole file" is a blank feed rather than a degraded
+ * one. The version gate is for changes that would make an old reader render something *wrong*,
+ * and there is no such change here.
  *
  * `tweet_topic` exists on the row inside the pipeline and is **not** shipped: it only feeds
  * dedupeAgainstTweets(), and the UI has no use for it.
  */
 function bookOf(items, rssResults, sleeper) {
-  const sources = [
-    {
-      id: "sleeper:graphql",
-      label: "Sleeper",
-      ok: sleeper ? sleeper.ok : false,
-      items: sleeper ? sleeper.items.length : 0,
-    },
-    ...(rssResults || []).map((r) => ({
-      id: r.feed.id, label: r.feed.label, ok: r.ok, items: r.items.length,
-    })),
-  ];
+  // `sources` is a record of what actually contributed, so with the automated sources switched
+  // off it lists only the submission queue. Six entries reading `ok: false, items: 0` would say
+  // "every feed in this app is down" to whoever reads this file for triage, which is the exact
+  // opposite of what is true: nothing asked them anything. `automated` says which it is.
+  const sources = automatedOn
+    ? [
+      {
+        id: "sleeper:graphql",
+        label: "Sleeper",
+        ok: sleeper ? sleeper.ok : false,
+        items: sleeper ? sleeper.items.length : 0,
+      },
+      ...(rssResults || []).map((r) => ({
+        id: r.feed.id, label: r.feed.label, ok: r.ok, items: r.items.length,
+      })),
+    ]
+    : [];
   if (items.some((it) => it.category === "tweet")) {
     sources.push({ id: "x:submission", label: "Shared from X", ok: true,
       items: items.filter((it) => it.category === "tweet").length });
@@ -730,7 +961,13 @@ function bookOf(items, rssResults, sleeper) {
   // `tweet_topic` is pipeline-internal — see the schema note above. Stripped here rather than
   // never being set, because dedupeAgainstTweets() runs after the rows are built.
   const shipped = items.map(({ tweet_topic, ...rest }) => rest);
-  return { v: SCHEMA_VERSION, generated: Date.now(), sources, items: shipped };
+  return {
+    v: SCHEMA_VERSION,
+    generated: Date.now(),
+    automated: automatedOn ? "on" : "off",
+    sources,
+    items: shipped,
+  };
 }
 
 function writeBook(book) {
@@ -742,7 +979,111 @@ function writeBook(book) {
 
 /* ---------------------------------------------------------------- main ---- */
 
+/**
+ * `--selftest`: the two rules that decide who a shared tweet is addressed to and which tweet it
+ * is, run against the real functions and the real members file, with no network.
+ *
+ * These are the cases the rules were written for, and several of them are transcriptions of what
+ * the Shortcut actually sent. They live here rather than in a scratch file because a rule that is
+ * only ever exercised by the live queue is a rule nobody notices breaking: `target_name` is null
+ * on every real submission today, so the entire resolver could stop working and every build would
+ * still look correct. Each case therefore has to be able to fail — the refusals are asserted as
+ * loudly as the matches.
+ */
+function selfTest() {
+  const members = readJson("ui/members.json", []) || [];
+  const name = (t) => { const r = resolveTarget(t, members); return r ? r.manager : null; };
+  const cases = [
+    // Exact, and the whitespace and case the Shortcut sends.
+    ["SF69erss", "SF69erss"], ["sf69erss", "SF69erss"], ["  SF69erss  ", "SF69erss"],
+    ["\tBUBBACUCKSHREMP\n", "BubbaCuckShremp"],
+    // Prefix, three characters or more.
+    ["big", "bigjberg"], ["Tips", "TipsUp"], ["darkwing", "DarkWingDucks2023"],
+    // Substring, when nothing is a prefix.
+    ["berg", "bigjberg"], ["henry", "KingHenryXXVI"],
+    // Refusals. Two candidates, too short to be a name, empty, and no such member.
+    ["cu", null],            // under three characters, so no partial tier runs at all
+    ["cum", "TedCumberbatch"], // ...and at three it is unambiguous again
+    ["uc", null],
+    ["s", null], ["", null], ["   ", null], [null, null], [undefined, null],
+    ["NotAManager", null],
+    ["<script>window.__XSS_TARGET=1</script>", null],
+    // "u" appears inside six members; a three-character fragment that still hits two must refuse.
+    ["ber", null],           // TedCumBERbatch and bigjBERg
+  ];
+  const bad = [];
+  for (const [input, want] of cases) {
+    const got = name(input);
+    if (got !== want) bad.push(`resolveTarget(${JSON.stringify(input)}) = ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+  }
+
+  /**
+   * The prefix tier, against a membership that can see it.
+   *
+   * Every case above passes with the prefix tier deleted, because in *this* league nothing that
+   * starts with a fragment is also contained in a second name — `big` reaches `bigjberg` through
+   * the substring tier just as well. Verified by deleting the tier and watching all twenty cases
+   * still pass, which is exactly the §3a failure the audit names: a check that cannot fail.
+   *
+   * The tier is still right, and it is asserted here on a membership where it decides the answer.
+   * `berg` starts one name and sits inside another; preferring the one it starts is what a person
+   * means, and without the tier both are candidates and the row goes unaddressed. resolveTarget()
+   * takes its members as an argument, so this is the real function on different data rather than
+   * a copy of the rule.
+   */
+  const SYNTHETIC = [
+    { user_id: "s1", name: "Bergman" }, { user_id: "s2", name: "bigjberg" },
+    { user_id: "s3", name: "Tank" }, { user_id: "s4", name: "TankDell" },
+  ];
+  const synth = [
+    ["berg", "Bergman"],    // prefix wins over the substring inside bigjberg
+    ["bigj", "bigjberg"],   // and the other one is still reachable by its own prefix
+    ["Tank", "Tank"],       // exact beats a longer name that merely starts the same way
+    ["tankd", "TankDell"],
+    ["ank", null],          // no prefix, two substrings: refuse
+  ];
+  for (const [input, want] of synth) {
+    const hit = resolveTarget(input, SYNTHETIC);
+    const got = hit ? hit.manager : null;
+    if (got !== want) bad.push(`resolveTarget(${JSON.stringify(input)}, synthetic) = ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+  }
+
+  // Canonicalisation: what a phone share sheet appends must not survive into the feed, or the
+  // same tweet shared twice is two stories.
+  const CANON = "https://x.com/adamschefter/status/2094028581080834282";
+  const urls = [
+    ["https://x.com/adamschefter/status/2094028581080834282?s=12&t=6MCtlgACvPE2VEY3UhiZeA", CANON],
+    ["https://x.com/adamschefter/status/2094028581080834282", CANON],
+    ["https://twitter.com/adamschefter/status/2094028581080834282?s=20", CANON],
+    ["https://www.x.com/adamschefter/status/2094028581080834282/photo/1", CANON],
+    ["https://x.com/adamschefter/statuses/2094028581080834282#anchor", CANON],
+    ["https://evil.com/a/status/1", null],
+    ["https://evil.example.com/a/status/1", null],
+    ["javascript:window.__XSS_URL=1", null],
+    ["https://x.com/jack", null],
+    // Host confusions. `www.` is the only subdomain allowed, so an attacker-controlled label on
+    // either side of x.com must be refused — these are the two shapes a loosened host pattern
+    // lets through, and neither is caught by simply testing that evil.com fails.
+    ["https://x.evil.com/a/status/1", null],
+    ["https://evil.x.com/adamschefter/status/2094028581080834282", null],
+    ["https://x.com.evil.com/a/status/1", null],
+  ];
+  for (const [input, want] of urls) {
+    const got = parseTweetUrl(input);
+    const canonical = got ? got.canonical : null;
+    if (canonical !== want) bad.push(`parseTweetUrl(${JSON.stringify(input)}) = ${JSON.stringify(canonical)}, want ${JSON.stringify(want)}`);
+  }
+
+  const total = cases.length + synth.length + urls.length;
+  if (bad.length) {
+    console.error(bad.map((b) => `FAIL ${b}`).join("\n"));
+    throw new Error(`${bad.length} of ${total} self-test cases failed`);
+  }
+  console.log(`ok: ${cases.length} name-resolution, ${synth.length} prefix-tier and ${urls.length} url-canonicalisation cases`);
+}
+
 async function main() {
+  if (args.has("--selftest")) { selfTest(); return; }
   if (args.has("--voice")) {
     for (const s of voiceSamples("BubbaCuckShremp", "Patrick Mahomes", "KC")) {
       console.log(`[${s.category}] ${s.line}`);
@@ -785,10 +1126,40 @@ async function main() {
       if (!it.tweet_text || !it.tweet_handle) {
         throw new Error(`self-check failed: shared tweet ${it.id} has no text or no handle`);
       }
-      if (!parseTweetUrl(it.source_url)) {
+      // Canonical, not merely valid. `parseTweetUrl()` accepts the tracking parameters a share
+      // sheet appends and strips them, so a URL that parses but is not equal to its own
+      // canonical form means something bypassed the canonicaliser and reached the row raw —
+      // which is exactly how the same tweet shared twice becomes two stories.
+      const parsed = parseTweetUrl(it.source_url);
+      if (!parsed) {
         throw new Error(`self-check failed: shared tweet ${it.id} has a non-tweet source_url ${it.source_url}`);
       }
+      if (parsed.canonical !== it.source_url) {
+        throw new Error(`self-check failed: shared tweet ${it.id} ships an uncanonical url ${it.source_url} (should be ${parsed.canonical})`);
+      }
     }
+  }
+
+  // Manual-only, asserted rather than assumed. AUTOMATED_SOURCES gates two fetches, and a later
+  // edit that reads a cached feed, or a path that slips past the gate, would put automated rows
+  // back into a file the user asked to contain only their own shares. This is the one check that
+  // states the product decision, so it is written as a refusal to write the file.
+  if (!automatedOn) {
+    const stray = book.items.find((it) => it.category !== "tweet" || it.source !== "x:submission");
+    if (stray) {
+      throw new Error(`self-check failed: AUTOMATED_SOURCES is off but item ${stray.id} came from ${stray.source} — the feed is submissions only`);
+    }
+  }
+  // One story per tweet. collapseShares() is the only thing standing between "shared twice" and
+  // two identical rows in a feed that may only have two rows in it, and a duplicate is invisible
+  // in a count — both files have the right length.
+  const seenUrls = new Set();
+  for (const it of book.items) {
+    if (it.category !== "tweet") continue;
+    if (seenUrls.has(it.source_url)) {
+      throw new Error(`self-check failed: ${it.source_url} appears twice — the same tweet shared twice must be one story`);
+    }
+    seenUrls.add(it.source_url);
   }
 
   if (args.has("--report")) {
@@ -798,9 +1169,20 @@ async function main() {
   writeBook(book);
   console.log(JSON.stringify({
     out: "data/ui/news.json",
+    automated_sources: automatedOn ? "on" : "off",
     items: book.items.length,
     managers_addressed: Object.keys(report.by_manager).length,
     by_category: report.by_category,
+    submissions: {
+      seen: report.submissions.seen,
+      published: report.submissions.published,
+      rejected_url: report.submissions.rejected_url,
+      duplicate_shares: report.submissions.duplicate_shares,
+      targeted: report.submissions.targeted,
+      target_unresolved: report.submissions.target_unresolved,
+      unaddressed: report.submissions.unaddressed,
+      carried_forward: report.submissions.carried_forward,
+    },
     rss_matched: report.rss.matched,
     rss_total: report.rss.total,
     rss_ambiguous: report.rss.ambiguous,

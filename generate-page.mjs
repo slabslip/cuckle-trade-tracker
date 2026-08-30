@@ -174,10 +174,14 @@ const html = `<!DOCTYPE html>
        375px, which clears the longest league name by more than 100px and leaves the
        figures untouched. Stacked, both sides read left to right, so neither is mirrored and
        the bag totals right-align into one column.
-       The switch back to the wide tape is at 640px rather than at a phone width because
-       that is where the inline arrangement measurably fits: at 561px it still gave
-       DarkWingDucks2023 152px against the 165px it needs. */
-    @media (max-width: 640px) {
+       The switch back to the wide tape is at 700px, not at a phone width, because that is
+       where the inline arrangement measurably fits. It moved up from 640px when each side
+       gained a signed delta: at 641px DarkWingDucks2023 came 2.1px short and ellipsised,
+       and the inline form only clears the name from 650px. 700px is that measured floor
+       plus real headroom -- 27px spare per side against today's longest name and widest
+       delta -- and below it the stacked form handles any name at any width. Measure, do
+       not guess, if either side gains another figure. */
+    @media (max-width: 700px) {
       .row-top.tape { grid-template-columns: minmax(0, 1fr); gap: 3px; }
       .row-top.tape .side.right { text-align: left; }
       .row-top.tape .side-line,
@@ -2900,7 +2904,7 @@ for (const need of ['cls(dlt)', 'cls(s)', 'cls(-s)', 'cls(-dlt)', 'cls(p.per)', 
   if (inline.includes(need)) throw new Error(`a delta is formatted by hand instead of by tapeMargin: ${need}`);
 }
 // The stacked phone tape and the wide tape are one rule set; either half alone is broken.
-for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".row-top.tape .val { margin-left: auto; }",
+for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-top.tape .val { margin-left: auto; }",
   "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere",
   "white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;",
   ".delta.pos { color: var(--green); }", ".delta.neg { color: var(--red); }"]) {

@@ -943,10 +943,16 @@ and stands. What shipped:
   1,298 rendered names and 2,040 figures, at 375, 390, 431, 480, 561, 768 and 1280.
   640px is where the inline arrangement measurably fits; at 561px it still gave
   `DarkWingDucks2023` 152px against the 165px it needs.
-  The arrow is direction, not data, so both glyph pairs ship and CSS shows the pair that
-  matches the arrangement — `←`/`→` on the wide tape, `↑`/`↓` when the margin sits between two
-  stacked sides. `tradeRow`, `boardTape` and `pickRow` share one `tapeMargin()`, so the sign
-  convention cannot drift between the trades list, the board and the drafts tab.
+  **The breakpoint moved to 700px on 2026-08-30**, when each side gained a signed delta (§4a):
+  the wide tape then came 2.1px short at 641px and only cleared the longest name from 650px, so
+  the threshold is that measured floor plus headroom — 27px spare per side against today's
+  longest name and widest delta. It is a measured number, not a round one; re-measure it if
+  either side ever gains another figure. Re-verified over 641, 660, 700, 760, 820, 880, 920,
+  1024, 1280 and 1600px: zero manager names ellipsized, zero figures spilled.
+  The arrow was direction rather than data, and it is **gone** as of §4a: once both sides carry
+  a signed figure the glyph was a third encoding of what the sign and the colour already say.
+  `tapeMargin()` survives as the single emitter, now shared by every screen and not just the
+  three tape rows, so the convention cannot drift between them.
   `.day-in-vals` in the Recent Trade card carries the same name-and-figure pair and was fixed
   with it: the pair now wraps, so the figure drops to its own line only when the name needs the
   width. Stress-testing that card also turned up the one box on home with no wrap guard at all —

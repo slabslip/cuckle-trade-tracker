@@ -107,6 +107,16 @@ const html = `<!DOCTYPE html>
       border-radius: 999px; padding: 10px 14px; color: var(--muted);
     }
     button.tab.on { color: var(--text); background: #1c1c22; }
+    /* A screen that replaces the page instead of expanding inside it needs its own way out.
+       The home icon in the header is the constant; this is the one step back. */
+    button.chip.back { color: var(--text); margin: 0 0 2px; }
+    h2.screen-h { margin-top: 14px; }
+    h2.screen-h:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
+    .screen-foot { margin: 20px 0 0; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; margin: -1px;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -188,8 +198,13 @@ const html = `<!DOCTYPE html>
       min-height: 44px; padding: 12px; cursor: pointer; touch-action: manipulation;
     }
     button.row-x-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
+    /* The same row on a screen that is already only this trade: nothing to toggle, so the
+       summary is not a control. Same padding as the button it replaces. */
+    .row-x-head { padding: 12px; }
     .row-x > .detail { margin: 0; padding: 12px; border-top: 1px solid var(--line); }
     .row-x.open > .detail { display: block; }
+    /* Rows this device has voted on, in the gold the vote buttons already use. */
+    button.row.voted { border-color: #6b5a2e; }
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
     .bag h3 { margin: 0 0 6px; font-size: 0.92rem; }
@@ -310,9 +325,19 @@ const html = `<!DOCTYPE html>
     button.vote-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.vote-opt b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     button.vote-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
-    .home-tape { margin: 0 0 14px; }
-    .day-alert .row, .home-tape .row,
-    .day-alert .row-x, .home-tape .row-x { margin-top: 10px; }
+    /* On the trade's own screen the vote is a section of the page, not a tail on a row. */
+    .vote-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin: 12px 0 0;
+    }
+    .vote-card .vote { margin: 0; }
+    /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
+    .vote-note {
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
+      color: var(--text); font-size: 0.875rem; line-height: 1.45;
+      padding: 10px 12px; margin: 0 0 12px;
+    }
+    .vote-note b { font-weight: 650; }
     .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
     button.mark {
       flex: 1 1 calc(50% - 8px); min-width: 140px;
@@ -459,7 +484,7 @@ const html = `<!DOCTYPE html>
   </h1>
   <p id="lead"></p>
   <div id="feed" hidden></div>
-  <div id="app" hidden></div>
+  <div id="app" tabindex="-1" hidden></div>
   <script>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
     // Fantasy scores are conventionally one decimal. Sleeper stores two.
@@ -482,7 +507,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830tr";
+    const DATA_V = "20260830nv";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -506,6 +531,14 @@ const html = `<!DOCTYPE html>
     let openDraft = null;
     let partnerName = null;
     let titleYear = null;
+    // The seat whose side frames the full-screen trade. A trade has two sides and the board
+    // rows are per seat, so the screen needs to know which one it is reading from. Deliberately
+    // not the selected seat: the full-screen trade is league-wide and must not select one.
+    let tradeSeat = null;
+    // Set when a vote navigates the user to the league list, so the list can say the vote landed.
+    let voteToast = null;
+    // The screen heading to move focus to after the next render, or null to keep focus put.
+    let focusNext = null;
     const seatCache = {};
     // Committed league tallies from data/ui/votes.json, or null when that file is absent
     // or not schema v1. Votes are opinion and live only here — never in league or seat data.
@@ -598,7 +631,11 @@ const html = `<!DOCTYPE html>
       document.getElementById("lead").textContent = msg || "";
     }
 
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles"];
+    // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
+    // set, and the league-wide list of every trade when none is. "trade" is one trade as its
+    // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade"];
+    const SEATLESS = ["home", "titles", "trades", "trade"];
 
     async function loadMembers() {
       members = await getJson("data/ui/members.json");
@@ -614,11 +651,17 @@ const html = `<!DOCTYPE html>
       } catch (err) { voteBook = null; }
       const startTitle = params.get("title");
       const startView = params.get("view");
-      // titles is a league-wide screen: it resolves without a seat, so honour it before
-      // the ?me lookup or the URL lands back on league home.
+      tradeSeat = params.get("seat") || null;
+      // The league-wide screens resolve without a seat, so honour them before the ?me lookup
+      // or the URL lands back on league home (P1-1).
       if (startView === "titles") {
         view = "titles";
         titleYear = startTitle || null;
+      } else if (startView === "trade") {
+        view = "trade";
+        openId = params.get("t") || null;
+      } else if (startView === "trades") {
+        view = "trades";
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
@@ -628,12 +671,33 @@ const html = `<!DOCTYPE html>
       if (seat) {
         view = VIEWS.indexOf(startView) >= 0 ? startView : "home";
         openId = params.get("t") || null;
+        if (view === "trade") await ensureTradeSeat();
         await selectMe(seat.user_id, true);
         return;
+      }
+      if (view === "trade") {
+        // ?view=trade with no trade is not a screen. The list it belongs to is.
+        if (!openId) view = "trades";
+        else await ensureTradeSeat();
       }
       paintWho();
       document.getElementById("app").hidden = false;
       render();
+    }
+
+    /**
+     * Resolve and load the seat that frames the open full-screen trade. The board tape names
+     * both sides of every trade, so ?t= alone is enough — the seat param only picks which side
+     * frames it. Returns true once the seat file is in hand.
+     */
+    async function ensureTradeSeat() {
+      if (!openId) return false;
+      if (!tradeSeat) {
+        const row = tradeSide(openId, null);
+        tradeSeat = row ? row.user_id : null;
+      }
+      if (!tradeSeat) return false;
+      return !!(await seatData(tradeSeat));
     }
 
     function paintWho() {
@@ -664,6 +728,8 @@ const html = `<!DOCTYPE html>
       openDraft = null;
       markOpen = null;
       titleYear = null;
+      tradeSeat = null;
+      voteToast = null;
       // Filters are per-seat state. Leaving them set filtered the next seat to a season it may not have.
       year = "all";
       lens = "all";
@@ -675,25 +741,161 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       openPacks.clear();
       say("");
+      // League home has no screen heading, so this only asks render() for the scroll to top.
+      focusNext = ".screen-h";
       paintWho();
       syncUrl();
       render();
     }
 
-    // Safari throttles history writes around 100 per 30 s. render() calls this every time,
-    // so only write when a URL-bearing piece of state actually moved.
-    let lastUrl = null;
-    function syncUrl() {
+    function urlNow() {
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
       if (view && view !== "home") q.set("view", view);
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
+      if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
       if (lens && lens !== "all") q.set("lens", lens);
-      const url = "?" + q.toString();
-      if (url === lastUrl) return;
+      return "?" + q.toString();
+    }
+
+    /**
+     * Which screen you are on — not what is expanded on it. Moving between screens pushes a
+     * history entry, so browser Back retraces the same steps the in-app back chip does.
+     * Expanding a row or moving the clock only replaces: Safari throttles history writes
+     * around 100 per 30 s and an accordion used to spend one on every toggle (P1-12).
+     */
+    function screenKey() {
+      return [
+        (me && me.user_id) || "",
+        view,
+        view === "titles" ? (titleYear || "") : "",
+        view === "trade" ? (openId || "") + "/" + (tradeSeat || "") : "",
+      ].join("|");
+    }
+
+    // Depth of the current history entry among the entries this document pushed. Only when it
+    // is above zero does the app own something behind it, so only then may back() be trusted
+    // not to walk off the site. Read back out of the popped entry, so Forward is exact too.
+    let depth = 0;
+    let restoring = false;
+    let lastUrl = null;
+    let lastScreen = null;
+
+    function stateNow() {
+      return {
+        me: (me && me.user_id) || null,
+        view: view,
+        titleYear: titleYear,
+        openId: openId,
+        tradeSeat: tradeSeat,
+        lens: lens,
+        d: depth,
+      };
+    }
+
+    function syncUrl() {
+      const url = urlNow();
+      const screen = screenKey();
+      if (url === lastUrl && screen === lastScreen) return;
+      const push = lastScreen !== null && screen !== lastScreen;
       lastUrl = url;
-      history.replaceState(null, "", url);
+      lastScreen = screen;
+      // popstate already moved the browser to this URL. Writing history again would either
+      // duplicate the entry or clobber the one we just arrived at.
+      if (restoring) return;
+      if (push) {
+        depth += 1;
+        history.pushState(stateNow(), "", url);
+      } else {
+        history.replaceState(stateNow(), "", url);
+      }
+    }
+
+    function stateFromUrl() {
+      const q = new URLSearchParams(location.search);
+      const name = q.get("me");
+      const seat = name ? members.find((m) => m.user_id === name || m.name === name) : null;
+      return {
+        me: (seat && seat.user_id) || null,
+        view: q.get("view") || "home",
+        titleYear: q.get("title") || null,
+        openId: q.get("t") || null,
+        tradeSeat: q.get("seat") || null,
+        lens: q.get("lens") || "all",
+        d: 0,
+      };
+    }
+
+    /**
+     * Browser Back and Forward. The address bar is already the destination, so this only has
+     * to put the app back into the state that URL describes and repaint.
+     */
+    async function applyState(st) {
+      const want = st || {};
+      restoring = true;
+      try {
+        depth = want.d || 0;
+        lens = want.lens && WINDOWS.some((w) => w[0] === want.lens) ? want.lens : "all";
+        view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
+        titleYear = want.titleYear || null;
+        openId = want.openId || null;
+        tradeSeat = want.tradeSeat || null;
+        // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
+        partnerName = null;
+        openPick = null;
+        openDraft = null;
+        markOpen = null;
+        whoOpen = false;
+        lensOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        voteToast = null;
+        const wantMe = want.me || null;
+        if (((me && me.user_id) || null) !== wantMe) {
+          if (!wantMe) {
+            me = null;
+            data = null;
+          } else {
+            const seat = members.find((m) => m.user_id === wantMe);
+            try {
+              if (!seat) throw new Error("unknown seat " + wantMe);
+              data = seatCache[wantMe] || await getJson("data/ui/me/" + wantMe + ".json");
+              seatCache[wantMe] = data;
+              me = seat;
+            } catch (err) {
+              console.error(err);
+              me = null;
+              data = null;
+              if (view !== "titles" && view !== "trade" && view !== "trades") view = "home";
+            }
+          }
+        }
+        if (view === "trade" && tradeSeat) await seatData(tradeSeat);
+        say("");
+        paintWho();
+        focusNext = ".screen-h";
+        render();
+      } finally {
+        restoring = false;
+      }
+    }
+
+    window.addEventListener("popstate", (e) => {
+      applyState(e.state || stateFromUrl());
+    });
+
+    /**
+     * In-app Back. Where the app owns a history entry it uses the real one, so the chip and
+     * the browser button can never disagree. A cold deep link has nothing behind it, so it
+     * gets an explicit parent screen instead of being bounced off the site.
+     */
+    function goBack(fallback) {
+      if (depth > 0) {
+        history.back();
+        return;
+      }
+      fallback();
     }
 
     async function selectMe(id, keep) {
@@ -720,9 +922,12 @@ const html = `<!DOCTYPE html>
       if (!keep) {
         view = "home";
         openId = null;
+        tradeSeat = null;
         partnerName = null;
         openPick = null;
         openDraft = null;
+        voteToast = null;
+        focusNext = ".screen-h";
       }
       syncUrl();
       render();
@@ -890,10 +1095,24 @@ const html = `<!DOCTYPE html>
       return fmt(d);
     }
 
+    /** The trade_boards side row that frames one trade, preferring a named seat's side. */
+    function tradeSide(tx, uid) {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let first = null;
+      for (const s of sides) {
+        if (s.transaction_id !== tx) continue;
+        if (uid && s.user_id === uid) return s;
+        if (!first) first = s;
+      }
+      return first;
+    }
+
+    /**
+     * One collapsed trade on a league-wide list. It used to swap itself for an expanded
+     * tradeRow in place; it now opens the trade as its own screen, so a league row and the
+     * screen it leads to are two things instead of one thing in two states.
+     */
     function boardTape(r) {
-      const cached = seatCache[r.user_id];
-      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
-      if (openId === r.transaction_id && hit) return tradeRow(hit);
       const w = (r.windows && r.windows[lens]) || {};
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
@@ -902,15 +1121,19 @@ const html = `<!DOCTYPE html>
       const leftCls = s == null || s === 0 ? "" : cls(s);
       const rightCls = s == null || s === 0 ? "" : cls(-s);
       const midCls = s == null || s === 0 ? "" : cls(s);
-      return '<button type="button" class="row" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
-        + ' aria-expanded="false">'
+      // Gold outline for a trade this device has voted on. Colour alone is not a message,
+      // so the same fact goes to a screen reader as text.
+      const voted = !!readVotes(r.transaction_id).choice;
+      return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names ' + leftCls + '">' + esc(r.name) + '</span><span class="val">' + got + "</span></div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
         + '<div class="side right"><div class="side-line"><span class="names ' + rightCls + '">' + esc(r.other) + '</span><span class="val">' + sent + "</span></div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
-        + "</div></div></button>";
+        + "</div></div>"
+        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+        + "</button>";
     }
 
     function yearsOn(days) {
@@ -1074,9 +1297,12 @@ const html = `<!DOCTYPE html>
         + originLab(p.origin) + "</b></div>"
       ).join("");
       const winHow = rec.fpts_rank === 1 ? "Won the points race" : "Won the bracket";
-      return '<button type="button" class="chip" data-title="">All champions</button>'
+      // Routed through the one back handler, not through data-title="": clicking it used to
+      // push a fresh titles entry, so the browser's Back then returned to this detail while the
+      // chip claimed to have left it. Both now pop the same entry.
+      return '<button type="button" class="chip back" data-back="1">← All champions</button>'
         + '<div class="path-hero"><div class="kicker">' + esc(t.season) + " champion</div>"
-        + "<h2>" + esc(t.name) + "</h2>"
+        + '<h2 class="screen-h" tabindex="-1">' + esc(t.name) + "</h2>"
         + '<p class="thesis">' + esc(t.thesis || "") + "</p></div>"
         + '<div class="stats">'
         + statBox(rec.wins + "–" + rec.losses, winHow + " · " + rec.fpts_rank + " of " + rec.teams + " in points")
@@ -1114,7 +1340,7 @@ const html = `<!DOCTYPE html>
       if (!list.length) return '<p class="caption">No championship path yet. Run <code>node title-path.mjs</code>.</p>';
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
-      return "<h2>Champions Path</h2>"
+      return '<h2 class="screen-h" tabindex="-1">Champions Path</h2>'
         + '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
         + list.map((t) => {
           const rec = t.record || {};
@@ -1128,10 +1354,94 @@ const html = `<!DOCTYPE html>
     }
 
     function renderLeagueHome() {
+      const n = leagueTrades().length;
       return dayAlert()
         + lensRow()
+        // The list needs a visible door, or it is a screen only a typed URL can reach (§8a).
+        + '<button type="button" class="chip" data-trades-list="1">All league trades'
+        + (n ? " · " + n : "") + "</button>"
         + pack("wide", "Most lopsided trades", rankWide().map((r) => boardTape(r)).join(""))
         + renderPlayerLists();
+    }
+
+    function backChip(label) {
+      return '<button type="button" class="chip back" data-back="1">← ' + esc(label || "Back") + "</button>";
+    }
+
+    /**
+     * Every trade in the league, newest first. trade_boards.sides holds one row per seat per
+     * trade, so this dedupes to one row per transaction_id. The side kept is the first one the
+     * data lists rather than the winning one, so the left/right framing follows the tape
+     * instead of painting every row's left name green.
+     */
+    function leagueTrades() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const by = new Map();
+      for (const r of sides) if (!by.has(r.transaction_id)) by.set(r.transaction_id, r);
+      return [...by.values()].sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+        // Sleeper transaction ids climb with time, so they order a single day truthfully.
+        return a.transaction_id < b.transaction_id ? 1 : a.transaction_id > b.transaction_id ? -1 : 0;
+      });
+    }
+
+    function renderLeagueTrades() {
+      const all = leagueTrades();
+      // The same clock filter the per-seat tab and the home tiles use, so the three agree.
+      const lived = all.filter((r) => chipLived(r.date));
+      const toast = voteToast
+        ? '<p class="vote-note">Vote recorded'
+          + (voteToast.name ? " — you have <b>" + esc(voteToast.name) + "</b> winning that one" : "")
+          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
+        : "";
+      const empty = !all.length
+        ? '<p class="caption">No trades on the league tape yet.</p>'
+        : !lived.length
+          ? '<p class="caption">No trade in the league has lived ' + esc(clockName())
+            + " yet. Score as Since trade to see them.</p>"
+          : "";
+      // No back chip here on purpose. This screen's parent is always league home, which is
+      // exactly what the home icon in the header does — a second control beside it would say
+      // the same thing twice. The trade screen does get one, because its parent varies.
+      return '<h2 class="screen-h" tabindex="-1">League trades</h2>'
+        // "the tape" is trade_boards.sides, and it carries only complete two-team trades: the
+        // league's two three-team deals have no row there, so this is 288 of 290. Saying "the
+        // tape" rather than "the league" is the difference between a claim and a fact.
+        + '<p class="caption">Every trade on the league tape, newest first. Tap one to review it'
+        + " and vote on who actually won. A gold outline is a trade you have voted on.</p>"
+        + toast
+        + lensRow()
+        + '<div class="caption">' + esc(livedHint(lived.length, all.length, "trade")) + "</div>"
+        + empty
+        + lived.map((r) => boardTape(r)).join("");
+    }
+
+    /**
+     * One trade, as the whole screen. Built on tradeRow / tradeBags rather than a second
+     * renderer, so the row layout and the bag arithmetic stay in one place.
+     */
+    function renderTradeScreen() {
+      const r = tradeSide(openId, tradeSeat);
+      if (!openId || !r) {
+        return backChip("Back")
+          + '<h2 class="screen-h" tabindex="-1">Trade not found</h2>'
+          + '<p class="caption">That trade is not on the league tape.</p>'
+          + '<button type="button" class="chip" data-trades-list="1">All league trades</button>';
+      }
+      const uid = tradeSeat || r.user_id;
+      const cached = seatCache[uid];
+      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === openId);
+      return backChip("Back")
+        + '<h2 class="screen-h" tabindex="-1">' + esc(r.name) + " vs " + esc(r.other) + "</h2>"
+        + '<p class="caption">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</p>"
+        + lensRow()
+        + (hit
+          ? tradeRow(hit, null, true)
+          : boardTape(r) + '<p class="caption">Loading both bags…</p>')
+        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + '<div class="screen-foot">'
+        + '<button type="button" class="chip" data-trades-list="1">All league trades</button>'
+        + "</div>";
     }
 
     function partnerLine(p) {
@@ -1679,13 +1989,13 @@ const html = `<!DOCTYPE html>
 
     function dayAlert() {
       const tape = daySides();
+      // The card is a doorway now, not an accordion: it opens the trade as a whole screen.
       const chips = tape.rows.map((r) => {
-        const on = openId === r.transaction_id;
         // Same windows[lens] and the same rounding the trades list uses, so the card cannot drift.
         const w = (r.windows && r.windows[lens]) || {};
         const got = w.incomplete && !w.got ? "—" : fmt(w.got);
         const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-        return '<button type="button" class="day-in' + (on ? " on" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '" aria-expanded="' + (on ? "true" : "false") + '">'
+        return '<button type="button" class="day-in" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
           + "<b>" + esc(r.name) + " vs " + esc(r.other) + "</b>"
           + '<span class="day-in-vals">'
           + '<span class="day-in-val"><i>' + esc(r.name) + "</i><em>" + got + "</em></span>"
@@ -1693,7 +2003,6 @@ const html = `<!DOCTYPE html>
           + "</span></button>";
       }).join("")
         || '<div class="date">No trades on the tape yet.</div>';
-      const open = tape.rows.find((r) => r.transaction_id === openId);
       const champ = ((titles && titles.titles) || [])[0];
       const rec = champ && champ.record || {};
       const fin = champFinalCaption(champ, rec);
@@ -1708,8 +2017,7 @@ const html = `<!DOCTYPE html>
       return '<div class="alert-row"><div class="day-alert">'
         + '<div class="day-alert-h">Recent Trade' + (tape.day ? "<span>" + esc(tape.day) + "</span>" : "") + "</div>"
         + chips
-        + "</div>" + champBox + "</div>"
-        + (open ? '<div class="home-tape">' + boardTape(open) + voteBlock(open) + "</div>" : "");
+        + "</div>" + champBox + "</div>";
     }
 
     function renderTeamHome() {
@@ -1773,9 +2081,14 @@ const html = `<!DOCTYPE html>
         + spark((sparkSrc || []).map((row) => ({ as_of: row.as_of, ...row.points })));
     }
 
-    function tradeRow(t, extra) {
+    /**
+     * A trade as a row. The flat form renders it for a screen that is already only this trade:
+     * always open, and the summary is not a toggle, because there is nothing on that screen to
+     * collapse back to. The layout and the bags are the same code either way.
+     */
+    function tradeRow(t, extra, flat) {
       const p = tradeParties(t, extra);
-      const open = openId === t.transaction_id;
+      const open = !!flat || openId === t.transaction_id;
       const incomplete = t.incomplete || p.s.incomplete;
       const gotShow = p.s.unpriced && !p.s.today ? "—" : fmt(p.s.today);
       const sentShow = p.s.sent_unpriced && !p.s.sent_today ? "—" : fmt(p.s.sent_today);
@@ -1784,16 +2097,23 @@ const html = `<!DOCTYPE html>
       const otherCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
       const mid = tapeMargin(incomplete ? null : dlt);
       const midCls = dlt == null || incomplete || dlt === 0 ? "" : cls(dlt);
-      return '<div class="row-x' + (open ? " open" : "") + '">'
-        + '<button type="button" class="row-x-btn" data-id="' + esc(t.transaction_id) + '"'
-        + ' aria-expanded="' + (open ? "true" : "false") + '">'
-        + '<div class="row-top tape">'
+      const top = '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.mine) + '</span><span class="val">' + gotShow + "</span></div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
         + '<div class="side right"><div class="side-line"><span class="names ' + otherCls + '">' + esc(p.other) + '</span><span class="val">' + sentShow + "</span></div></div>"
-        + '<div class="tape-sub"><span class="date sub-when">' + esc(t.date) + "</span>"
-        + (incomplete ? '<span class="badge sub-note">no DP row</span>' : "")
-        + "</div></div></button>"
+        // On the trade's own screen the caption above already dates it, so the flat form drops
+        // the second copy. The incomplete badge is a warning rather than a repeat and stays.
+        + (flat
+          ? (incomplete ? '<div class="tape-sub"><span class="badge sub-when">no DP row</span></div>' : "")
+          : '<div class="tape-sub"><span class="date sub-when">' + esc(t.date) + "</span>"
+            + (incomplete ? '<span class="badge sub-note">no DP row</span>' : "")
+            + "</div>")
+        + "</div>";
+      return '<div class="row-x' + (open ? " open" : "") + '">'
+        + (flat
+          ? '<div class="row-x-head">' + top + "</div>"
+          : '<button type="button" class="row-x-btn" data-id="' + esc(t.transaction_id) + '"'
+            + ' aria-expanded="' + (open ? "true" : "false") + '">' + top + "</button>")
         + (open ? '<div class="detail">' + tradeBags(t, extra) + "</div>" : "")
         + "</div>";
     }
@@ -2052,9 +2372,10 @@ const html = `<!DOCTYPE html>
 
     function render() {
       const app = document.getElementById("app");
-      const tabs = me && view !== "titles" ? ["home", "trades", "partners", "drafts"] : [];
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
-      if (!me && view !== "home" && view !== "titles") view = "home";
+      if (!me && SEATLESS.indexOf(view) < 0) view = "home";
+      // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
+      const tabs = me && view !== "titles" && view !== "trade" ? ["home", "trades", "partners", "drafts"] : [];
       const nav = (tabs.length
         ? '<div class="nav" role="tablist" aria-label="Sections">'
           + tabs.map((v) =>
@@ -2065,7 +2386,10 @@ const html = `<!DOCTYPE html>
           + "</div>"
         : "");
       const body = view === "home" ? renderHome()
-        : view === "trades" ? renderTrades()
+        // ?view=trades means this seat's Trades tab when a seat is set, and the league-wide
+        // list of every trade when none is.
+        : view === "trades" ? (me && data ? renderTrades() : renderLeagueTrades())
+        : view === "trade" ? renderTradeScreen()
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
@@ -2074,17 +2398,78 @@ const html = `<!DOCTYPE html>
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
       const keep = focusSelector(document.activeElement);
       app.innerHTML = nav + body;
-      if (keep) {
+      // A new screen puts focus on its own heading and starts at the top, so a keyboard or a
+      // screen reader lands on the new content instead of holding the old screen's place.
+      const navigated = focusNext !== null;
+      const land = focusNext ? app.querySelector(focusNext) : null;
+      focusNext = null;
+      if (land) land.focus({ preventScroll: true });
+      // League home and a seat's home lead with cards rather than a title, so there is no
+      // heading to land on. The panel itself is the defined start of the new content.
+      else if (navigated) app.focus({ preventScroll: true });
+      else if (keep) {
         const back = app.querySelector(keep);
         if (back) back.focus({ preventScroll: true });
       }
+      if (navigated) window.scrollTo(0, 0);
       paintFeed();
       syncUrl();
+    }
+
+    /** Open one trade as its own screen. uid is the seat whose side frames it. */
+    function openTrade(tx, uid) {
+      if (!tx) return;
+      view = "trade";
+      openId = tx;
+      tradeSeat = uid || null;
+      partnerName = null;
+      openPick = null;
+      openDraft = null;
+      markOpen = null;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      titleYear = null;
+      voteToast = null;
+      focusNext = ".screen-h";
+      if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
+      render();
+    }
+
+    /**
+     * The league-wide trades list: ?view=trades with no seat. Any selected seat is dropped,
+     * because with a seat that same view means the seat's own Trades tab. In practice nothing
+     * reaches here with a seat set — every door to it is on a league-wide screen.
+     */
+    function openTradesList(toast) {
+      me = null;
+      data = null;
+      view = "trades";
+      openId = null;
+      tradeSeat = null;
+      partnerName = null;
+      openPick = null;
+      openDraft = null;
+      markOpen = null;
+      titleYear = null;
+      year = "all";
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      lensOpen = false;
+      voteToast = toast || null;
+      focusNext = ".screen-h";
+      say("");
+      paintWho();
+      render();
     }
 
     /** A selector that survives an innerHTML rebuild: the tag plus every data-* attribute. */
     function focusSelector(el) {
       if (!el || !el.closest || !el.closest("#app")) return null;
+      // A screen heading carries no data-* of its own, and a screen usually has a second render
+      // behind it — the seat file arriving, or a vote settling. Without this, that render threw
+      // focus back to <body> a moment after a navigation had just placed it.
+      if (el.classList && el.classList.contains("screen-h")) return ".screen-h";
       const parts = [...el.attributes]
         .filter((a) => a.name.startsWith("data-"))
         .map((a) => "[" + a.name + '="' + a.value.replace(/["\\\\]/g, "\\\\$&") + '"]');
@@ -2125,7 +2510,11 @@ const html = `<!DOCTYPE html>
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
       if (openDraft) { openDraft = null; render(); return true; }
+      // On the trade's own screen openId is the screen, not an open row, so Escape leaves the
+      // screen the same way the back chip does rather than blanking it.
+      if (view === "trade") { goBack(() => openTradesList()); return true; }
       if (openId) { openId = null; render(); return true; }
+      if (partnerName) { partnerName = null; render(); return true; }
       return false;
     }
 
@@ -2172,8 +2561,11 @@ const html = `<!DOCTYPE html>
       view = "titles";
       titleYear = null;
       openId = null;
+      tradeSeat = null;
       markOpen = null;
       lensOpen = false;
+      voteToast = null;
+      focusNext = ".screen-h";
       render();
     }
 
@@ -2184,6 +2576,19 @@ const html = `<!DOCTYPE html>
       if (btn) togglePack(btn.dataset.pack);
     });
     document.getElementById("app").addEventListener("click", (e) => {
+      // Before everything: leaving a screen must not read as a click on what is on it.
+      const backBtn = e.target.closest("[data-back]");
+      if (backBtn) {
+        // Only ever reached on a cold deep link, where there is no entry behind us to pop.
+        goBack(() => {
+          if (view === "trade") openTradesList();
+          else if (view === "titles" && titleYear) openTitles();
+          else clearLeague();
+        });
+        return;
+      }
+      const listBtn = e.target.closest("[data-trades-list]");
+      if (listBtn) { openTradesList(); return; }
       const packBtn = e.target.closest("[data-pack]");
       if (packBtn) { togglePack(packBtn.dataset.pack); return; }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
@@ -2192,8 +2597,17 @@ const html = `<!DOCTYPE html>
       if (voteBtn) {
         const tx = voteBtn.dataset.vote;
         const pick = voteBtn.dataset.voteSeat;
-        writeVote(tx, readVotes(tx).choice === pick ? null : pick);
-        render();
+        const next = readVotes(tx).choice === pick ? null : pick;
+        writeVote(tx, next);
+        // Casting a vote is the last thing the trade's own screen is for, so it hands the user
+        // the league list — named, so being moved does not read as being thrown out. Clearing a
+        // vote is not casting one and stays put, or the screen would vanish under the user.
+        if (view === "trade" && next) {
+          const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
+          openTradesList({ tx: tx, name: (won && won.name) || "" });
+        } else {
+          render();
+        }
         return;
       }
       const pickBtn = e.target.closest("[data-pick]");
@@ -2202,14 +2616,11 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      // Every league-wide row — the Recent Trade card, Most lopsided, the league trades list —
+      // opens the trade as a whole screen instead of expanding inside its card.
       const boardOpen = e.target.closest("[data-board-open]");
       if (boardOpen) {
-        const uid = boardOpen.dataset.boardOpen;
-        const tx = boardOpen.dataset.id;
-        if (openId === tx) { openId = null; render(); return; }
-        openId = tx;
-        partnerName = null;
-        seatData(uid).then(() => render());
+        openTrade(boardOpen.dataset.id, boardOpen.dataset.boardOpen);
         return;
       }
       const markBtn = e.target.closest("[data-mark]");
@@ -2225,8 +2636,11 @@ const html = `<!DOCTYPE html>
         view = "titles";
         titleYear = titleBtn.dataset.title || null;
         openId = null;
+        tradeSeat = null;
         markOpen = null;
         lensOpen = false;
+        voteToast = null;
+        focusNext = ".screen-h";
         render();
         return;
       }
@@ -2235,19 +2649,25 @@ const html = `<!DOCTYPE html>
         if (viewBtn.tagName === "A") e.preventDefault();
         view = viewBtn.dataset.view;
         openId = null;
+        tradeSeat = null;
         openDraft = null;
         if (view !== "home") markOpen = null;
         if (view !== "drafts") draftFilterOpen = false;
         if (view !== "trades") yearFilterOpen = false;
-        if (view !== "partners") partnerName = null;
+        partnerName = null;
         titleYear = null;
         lensOpen = false;
+        voteToast = null;
         render();
         return;
       }
       const partnerBtn = e.target.closest("[data-partner]");
       if (partnerBtn) {
-        partnerName = partnerBtn.dataset.partner;
+        // A second tap on the open partner closes its detail. That is this screen's way out:
+        // the list stays on screen above the detail, so there is nothing to navigate back to,
+        // and the four tabs could not clear it before because view was already "partners".
+        const want = partnerBtn.dataset.partner;
+        partnerName = partnerName === want ? null : want;
         view = "partners";
         openId = null;
         render();
@@ -2362,6 +2782,20 @@ for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".dir-v 
 const brandRule = html.slice(html.indexOf("    h1.brand {"));
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
   throw new Error("h1.brand must declare overflow: visible -- a clip here hides #whoMenu");
+}
+// Navigation is the one thing a user cannot work around if it fails to ship: without real
+// history entries Back leaves the site, and without a back chip the full-screen trade is a
+// dead end. Assert both halves, and the arrow glyph the chips are labelled with.
+for (const need of [
+  "history.pushState(stateNow()",
+  'window.addEventListener("popstate"',
+  "function goBack(fallback)",
+  "function renderTradeScreen()",
+  "function renderLeagueTrades()",
+  'class="chip back" data-back="1"',
+  "← ",
+]) {
+  if (!inline.includes(need)) throw new Error(`generated script lost navigation: ${need}`);
 }
 
 fs.writeFileSync(`${ROOT}index.html`, html);

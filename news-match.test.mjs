@@ -35,6 +35,10 @@
  *   would undo that.
  */
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import fs from "node:fs";
+import os from "node:os";
+import nodePath from "node:path";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readJson } from "./lib.mjs";
@@ -441,6 +445,38 @@ test("news-sync.mjs still runs as a script after being made importable", () => {
   assert.equal(r.status, 0, r.stderr);
   assert.ok(r.stdout.split("\n").length > 40, `--voice printed ${r.stdout.split("\n").length} lines`);
   assert.match(r.stdout, /\[injury\]/);
+});
+
+/**
+ * The guard has to survive being invoked the four ways a human or a runner actually invokes it, and
+ * from a directory whose name contains a space. That last one is not hypothetical fussiness: the
+ * first version compared `fs.realpathSync(argv[1])` against `new URL(import.meta.url).pathname`,
+ * which leaves percent-escapes in, so under "/tmp/space dir" it compared "/tmp/space%20dir/..."
+ * against "/tmp/space dir/..." and quietly declined to run. Exit code 0, no output, no refresh —
+ * a green cron over a feed going stale, which is the hardest kind of failure to notice.
+ */
+test("the entry-point guard survives every way the file gets invoked", (t) => {
+  const repo = fileURLToPath(new URL(".", import.meta.url));
+  const ran = (r) => r.status === 0 && /\[injury\]/.test(r.stdout || "");
+  const run = (args, cwd) => spawnSync(process.execPath, args, { cwd, encoding: "utf8" });
+
+  assert.ok(ran(run([nodePath.join(repo, "news-sync.mjs"), "--voice"], "/")), "absolute path");
+  assert.ok(ran(run(["./news-sync.mjs", "--voice"], repo)), "relative path from the repo");
+  assert.ok(
+    ran(run([nodePath.join(nodePath.basename(repo), "news-sync.mjs"), "--voice"], nodePath.dirname(repo.replace(/\/$/, "")))),
+    "path relative to the parent directory",
+  );
+
+  const spaced = fs.mkdtempSync(nodePath.join(os.tmpdir(), "guard space "));
+  try {
+    for (const f of ["news-sync.mjs", "lib.mjs", "news-voice.mjs", "news-sources.mjs", "price-today.mjs"]) {
+      fs.copyFileSync(nodePath.join(repo, f), nodePath.join(spaced, f));
+    }
+    fs.symlinkSync(nodePath.join(repo, "data"), nodePath.join(spaced, "data"));
+    assert.ok(ran(run(["./news-sync.mjs", "--voice"], spaced)), "a checkout path containing a space");
+  } finally {
+    fs.rmSync(spaced, { recursive: true, force: true });
+  }
 });
 
 /* ----------------------------------------------------------- X ingest ---- */

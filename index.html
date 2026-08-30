@@ -778,14 +778,22 @@
     /* Anchored to the trigger's own box rather than to a fixed 52px, because the trigger now
        sits in the brand row instead of at the top of a screen. The cap is the room below the
        header on the shortest phone -- 16px of body padding, the 44px row, the 4px offset and
-       24px of clearance -- and only bites in landscape, where the five options do not fit. */
+       24px of clearance -- and only bites in landscape, where the five options do not fit.
+       display:flex must NOT live on the base rule: an id-level display beats [hidden]'s
+       display:none in engines that do not mark [hidden] as !important, and the empty panel
+       then paints as a thin card bar under the brand header -- the "weird box" on league home.
+       Flex is applied only when the panel is open; hidden/empty stay display:none !important. */
     #scoreAs {
       position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
       width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
       max-height: calc(100dvh - 88px); overflow-y: auto;
-      display: flex; flex-direction: column; gap: 4px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
+    #scoreAs:not([hidden]) {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    #scoreAs[hidden], #scoreAs:empty { display: none !important; }
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
@@ -865,7 +873,7 @@
     <a href="./">CuckleChunckle</a>
     <span class="lens-wrap" id="lensWrap">
       <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div class="filter-panel" id="scoreAs" hidden></div>
+      <div id="scoreAs" hidden></div>
     </span>
   </h1>
   <p id="lead"></p>
@@ -958,7 +966,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830233421";
+    const DATA_V = "20260830nobar3";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

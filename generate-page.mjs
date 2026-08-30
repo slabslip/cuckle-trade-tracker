@@ -783,14 +783,22 @@ const html = `<!DOCTYPE html>
     /* Anchored to the trigger's own box rather than to a fixed 52px, because the trigger now
        sits in the brand row instead of at the top of a screen. The cap is the room below the
        header on the shortest phone -- 16px of body padding, the 44px row, the 4px offset and
-       24px of clearance -- and only bites in landscape, where the five options do not fit. */
+       24px of clearance -- and only bites in landscape, where the five options do not fit.
+       display:flex must NOT live on the base rule: an id-level display beats [hidden]'s
+       display:none in engines that do not mark [hidden] as !important, and the empty panel
+       then paints as a thin card bar under the brand header -- the "weird box" on league home.
+       Flex is applied only when the panel is open; hidden/empty stay display:none !important. */
     #scoreAs {
       position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
       width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
       max-height: calc(100dvh - 88px); overflow-y: auto;
-      display: flex; flex-direction: column; gap: 4px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
+    #scoreAs:not([hidden]) {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    #scoreAs[hidden], #scoreAs:empty { display: none !important; }
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
@@ -870,7 +878,7 @@ const html = `<!DOCTYPE html>
     <a href="./">CuckleChunckle</a>
     <span class="lens-wrap" id="lensWrap">
       <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div class="filter-panel" id="scoreAs" hidden></div>
+      <div id="scoreAs" hidden></div>
     </span>
   </h1>
   <p id="lead"></p>
@@ -963,7 +971,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830233421";
+    const DATA_V = "20260830nobar3";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4257,7 +4265,7 @@ for (const need of ['<span class="lens-wrap" id="lensWrap">',
   'class="score-btn" id="lensBtn" data-score="1"',
   'aria-label="Score as Since trade"',
   'aria-expanded="false">Since trade <span class="chev">▾</span></button>',
-  '<div class="filter-panel" id="scoreAs" hidden></div>']) {
+  '<div id="scoreAs" hidden></div>']) {
   if (!html.includes(need)) {
     throw new Error(`the brand header's clock trigger must ship: ${need}`);
   }
@@ -4346,6 +4354,18 @@ if (!(lensZ > filterZ && filterZ > dsZ)) {
 // row at the top of a screen and is not where the trigger sits now.
 if (!html.includes("      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;")) {
   throw new Error("#scoreAs must hang off the trigger's own box -- a fixed top belongs to the row it left");
+}
+// display:flex on the base #scoreAs rule overrides [hidden] on engines without !important, and
+// the empty panel paints as the thin card bar under the brand header. Flex only when open.
+if (html.includes("    #scoreAs {\n") && /#scoreAs \{[^}]*display:\s*flex/.test(html)) {
+  throw new Error("#scoreAs must not set display:flex on the base rule -- it overrides [hidden] and paints the empty bar");
+}
+if (!html.includes("    #scoreAs:not([hidden]) {")
+  || !html.includes("    #scoreAs[hidden], #scoreAs:empty { display: none !important; }")) {
+  throw new Error("#scoreAs must hide when [hidden]/empty and only flex when open");
+}
+if (html.includes('class="filter-panel" id="scoreAs"')) {
+  throw new Error("#scoreAs must not carry .filter-panel -- that class's in-flow margin/padding is the empty bar");
 }
 // 6. The 44px rule, on the trigger and on all five options. A formatting pass took 312 sub-44px
 //    targets to zero and none may come back.

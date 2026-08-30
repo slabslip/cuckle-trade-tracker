@@ -30,6 +30,15 @@ Header: home button · `CuckleChunckle` · team picker. The picker is a `listbox
 children, arrow keys, `Home`/`End`, `Escape` returns focus to the button. Selecting a name is not
 "view as": it swaps the whole app to that seat.
 
+**The trigger always reads "Teams"**, whether or not a seat is taken. It used to swap to the
+selected manager's name, which made the one door to the other nine seats read as the current
+seat's own button. The seat is not lost to a screen reader by that: the accessible name is
+`Teams, TrumanCooper selected` with a seat and `Teams` without one, and the chosen option in the
+list still carries `aria-selected="true"`. A generate-time assertion pins the visible label to the
+constant, and the button sizes to that label rather than to the widest manager name. Note "Teams"
+on the trigger is a different string from the removed "Team" option below, and the assertion for
+that option matches its whole call so the two cannot be confused.
+
 **The picker lists managers and nothing else**, in **last season's finishing order**, and the
 champion carries a gold crown. Three rules hold it together:
 

@@ -1,0 +1,17 @@
+{
+  "v": 1,
+  "note": "Sleeper user_id -> Discord user id, for the @mention in a news alert. Discord user ids are NOT secrets: every member of a server can see them, so this file is committed. Webhook URLs ARE secrets and live only in the environment (DISCORD_WEBHOOK_STAGING / DISCORD_WEBHOOK_LIVE) — never put one here.",
+  "how_to_fill": "In Discord: User Settings -> Advanced -> Developer Mode on, then right-click a member -> Copy User ID. Paste it over the placeholder. 17-20 digits. discord-notify.mjs refuses to build a payload for an all-zero id, so a half-filled map fails loudly instead of quietly skipping somebody.",
+  "members": [
+    { "user_id": "457779824002330624", "manager": "SF69erss", "discord_id": "000000000000000000" },
+    { "user_id": "457784547094818816", "manager": "TipsUp", "discord_id": "000000000000000000" },
+    { "user_id": "470311990468800512", "manager": "TedCumberbatch", "discord_id": "000000000000000000" },
+    { "user_id": "458715702119886848", "manager": "KingHenryXXVI", "discord_id": "000000000000000000" },
+    { "user_id": "458342725222133760", "manager": "TrumanCooper", "discord_id": "000000000000000000" },
+    { "user_id": "458766127967760384", "manager": "DarkWingDucks2023", "discord_id": "000000000000000000" },
+    { "user_id": "458315051980288000", "manager": "bigjberg", "discord_id": "000000000000000000" },
+    { "user_id": "457945712932417536", "manager": "ChiefGumby", "discord_id": "000000000000000000" },
+    { "user_id": "458004578168729600", "manager": "ARae", "discord_id": "000000000000000000" },
+    { "user_id": "458723431387492352", "manager": "BubbaCuckShremp", "discord_id": "000000000000000000" }
+  ]
+}

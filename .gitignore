@@ -3,3 +3,4 @@ data/.dp-repo/
 data/dp/history/
 data/tx_cache/
 node_modules/
+data/discord-outbox.json

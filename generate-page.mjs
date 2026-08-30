@@ -815,7 +815,7 @@ const html = `<!DOCTYPE html>
     let marks = null;
     let news = null;
     let lens = "all";
-    const DATA_V = "20260830news1";
+    const DATA_V = "20260830nodefault1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -833,10 +833,13 @@ const html = `<!DOCTYPE html>
       ["forever", "Forever players", "Every player still on the team that drafted them in 2019."],
       ["home", "Homesteaders", "The five longest stays, forever players aside."],
     ];
-    // One set at a time, and one is always chosen: league home would otherwise open as a lone
-    // dropdown over an empty screen. Most lopsided is the default because it is the pack the
-    // lens above it acts on, and it is what replaced the old Best/Worst boards.
-    let dataSet = "wide";
+    // One set at a time, and none to begin with. League home opens as the dropdown alone with
+    // nothing rendered under it: the sets are reachable by opening the menu, or by a ticker
+    // pill, and by nothing else. An earlier build pre-selected Most lopsided so home would not
+    // read as a lone control over empty space; the user asked for the empty space.
+    // null is the "nothing selected" state and the "None" option at the top of the menu is the
+    // way back to it, so the choice is reversible without a reload.
+    let dataSet = null;
     let dsOpen = false;
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1102,7 +1105,9 @@ const html = `<!DOCTYPE html>
       draftFilterOpen = false;
       lensOpen = false;
       dsOpen = false;
-      dataSet = "wide";
+      // The home icon returns league home to exactly what a cold load shows, which is now the
+      // dropdown with nothing under it. It used to reset to Most lopsided.
+      dataSet = null;
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
       focusNext = ".screen-h";
@@ -1564,8 +1569,22 @@ const html = `<!DOCTYPE html>
         + "<b>" + esc(row[1]) + "</b><span>" + esc(row[2]) + "</span></button>";
     }
 
+    /**
+     * The way back to nothing selected, first in the menu so it is the option a user meets
+     * rather than one they have to know about. It is a real option in the listbox -- same
+     * role, same 44px target, same arrow-key run as the five sets -- so a keyboard reaches it
+     * on ArrowDown/Home like any other, and aria-selected marks it when it is the live state.
+     */
+    function dsNoneOpt() {
+      const on = !dataSet;
+      return '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
+        + ' class="ds-opt' + (on ? " on" : "") + '" data-dset-none="1">'
+        + "<b>None</b><span>Hide the data set and show the dropdown alone.</span></button>";
+    }
+
     function dsMenu() {
       return '<div class="filter-panel" id="dataSets" role="listbox" aria-label="League Data Sets">'
+        + dsNoneOpt()
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
@@ -1579,19 +1598,32 @@ const html = `<!DOCTYPE html>
      * picker settled on that convention for the same reason, and the chosen set is named by the
      * heading immediately below and by aria-selected inside the menu. The accessible name carries
      * the selection so nothing is lost to a screen reader.
+     *
+     * With nothing selected there is no heading below and nothing else on screen says so, so the
+     * accessible name says "none selected" -- the one state where the label's silence would
+     * otherwise leave a screen reader with no reading at all.
      */
     function dataSetRow() {
-      const cur = dataSetDef(dataSet);
+      const cur = dataSet ? dataSetDef(dataSet) : null;
+      const named = cur
+        ? ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected"'
+        : ' aria-label="League Data Sets, none selected"';
       return '<div class="ds-wrap">'
         + '<button type="button" class="ds-btn' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
         + ' aria-haspopup="listbox" aria-expanded="' + (dsOpen ? "true" : "false") + '"'
-        + ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected">'
+        + named + ">"
         + "League Data Sets" + ' <span class="chev">▾</span></button>'
         + (dsOpen ? dsMenu() : "")
         + "</div>";
     }
 
+    /**
+     * The selected set, or nothing at all. Empty is the first-load state and the state the
+     * "None" option and the home icon return to, so this renders no box, no heading and no
+     * placeholder -- the dropdown stands alone over the news feed.
+     */
     function dataSetPanel() {
+      if (!dataSet) return "";
       const cur = dataSetDef(dataSet);
       const rows = dataSetRows(cur[0]);
       // The data-* is what focusSelector() re-finds after a render this screen did not ask for --
@@ -3192,6 +3224,20 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    /**
+     * Back to nothing selected, from the "None" option at the top of the menu. The heading that
+     * selectDataSet() focuses is about to stop existing, so focus goes to the trigger instead --
+     * a keyboard that opened the menu with Enter ends up back on the control it opened, rather
+     * than on <body> with the page scrolled somewhere.
+     */
+    function clearDataSet() {
+      dataSet = null;
+      dsOpen = false;
+      render();
+      const btn = document.querySelector("[data-dset-open]");
+      if (btn) btn.focus({ preventScroll: true });
+    }
+
     function closeDataSets() {
       dsOpen = false;
       render();
@@ -3245,6 +3291,10 @@ const html = `<!DOCTYPE html>
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
+      // Before [data-dset]: "None" carries no set id, and an empty data-dset would be the dead
+      // pill defect all over again. It is its own attribute, so it can never read as a set.
+      const dsNoneBtn = e.target.closest("[data-dset-none]");
+      if (dsNoneBtn) { clearDataSet(); return; }
       const dsetBtn = e.target.closest("[data-dset]");
       if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
@@ -3579,9 +3629,61 @@ for (const need of ['["wide", "Most lopsided trades"', '["passed", "Most passed 
 const dsBlock = inline.slice(inline.indexOf("    const DATA_SETS = ["));
 const dsIds = (dsBlock.slice(0, dsBlock.indexOf("\n    ];")).match(/\["\w+", "/g) || []).length;
 if (dsIds !== 5) throw new Error(`DATA_SETS must hold exactly five sets, found ${dsIds}`);
-// One set is always chosen, or league home opens as a lone dropdown over nothing.
-if (!inline.includes('let dataSet = "wide";')) {
-  throw new Error("league home must open on a selected data set");
+// No set is chosen on a cold load: league home opens as the dropdown alone. This guard used to
+// assert the opposite -- `let dataSet = "wide";`, so home would not be a lone control over empty
+// space -- and the user asked for the empty space, so it now asserts the default it once forbade.
+if (!inline.includes("let dataSet = null;")) {
+  throw new Error("league home must open with no data set selected");
+}
+if (/let dataSet = "/.test(inline)) {
+  throw new Error("a data set is pre-selected on load -- league home opens on the dropdown alone");
+}
+// The empty state is the panel emitting nothing, not a placeholder box. Scoped to the function,
+// because `if (!dataSet) return "";` anywhere else would satisfy a whole-script check.
+if (!fnSrc("dataSetPanel").includes('if (!dataSet) return "";')) {
+  throw new Error("dataSetPanel must render nothing when no set is selected");
+}
+// The home icon returns league home to what a cold load shows. It used to reset to "wide"; that
+// reset target moved with the default, and the two must not drift apart.
+const clearFn = fnSrc("clearLeague");
+if (!clearFn.includes("dataSet = null;")) {
+  throw new Error("clearLeague must reset to no data set selected -- the home icon has to match a cold load");
+}
+if (/dataSet = "/.test(clearFn)) {
+  throw new Error("the home icon resets to a selected data set -- it must match the empty first load");
+}
+// Nothing selected is reversible without a reload: a "None" option, first in the menu, at the
+// same 44px as the five sets and in the same arrow-key run, so a keyboard reaches it.
+for (const need of ['data-dset-none="1"', "function clearDataSet()",
+  'e.target.closest("[data-dset-none]")', "if (dsNoneBtn) { clearDataSet(); return; }",
+  "<b>None</b><span>"]) {
+  if (!inline.includes(need)) throw new Error(`the clear-selection path lost a part: ${need}`);
+}
+// It is an option in the listbox, not a bare button, or a screen reader gets an unmarked control
+// in a list of marked ones -- and it carries its own attribute rather than an empty data-dset,
+// which is the dead-pill defect the ticker already shipped once.
+for (const need of ['role="option"', 'aria-selected="\' + (on ? "true" : "false") + \'"',
+  'class="ds-opt']) {
+  if (!fnSrc("dsNoneOpt").includes(need)) throw new Error(`the None option lost ${need}`);
+}
+if (fnSrc("dsNoneOpt").includes('data-dset="')) {
+  throw new Error("the None option must not carry a data-dset -- it names no set");
+}
+if (!fnSrc("dsMenu").includes("dsNoneOpt()")) {
+  throw new Error("the None option must be composed into the menu, first, or the selection cannot be cleared");
+}
+const dsMenuSrc = fnSrc("dsMenu");
+if (dsMenuSrc.indexOf("dsNoneOpt()") > dsMenuSrc.indexOf("DATA_SETS.map(dsOpt)")) {
+  throw new Error("the None option must come before the five sets in the menu");
+}
+// With nothing selected there is no heading, so the trigger's accessible name is the only thing
+// that says so. The label itself stays the constant, asserted above.
+if (!fnSrc("dataSetRow").includes('aria-label="League Data Sets, none selected"')) {
+  throw new Error("the trigger must say \"none selected\" when no set is on screen");
+}
+// Clearing removes the heading selectDataSet() focuses, so focus has to land on the trigger.
+if (!fnSrc("clearDataSet").includes("btn.focus({ preventScroll: true })")) {
+  throw new Error("clearDataSet must return focus to the trigger -- the heading it came from is gone");
 }
 // The accordion is gone. Any survivor of it is a second way to reach a list that the dropdown
 // is now the only door to, and openPacks allowed several at once -- the thing being replaced.

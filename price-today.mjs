@@ -63,8 +63,12 @@ export const SKILL_POS = new Set(["QB", "RB", "WR", "TE"]);
  * 357 Sleeper names collide. First-id-wins handed "Kenneth Walker" to a retired WR
  * instead of the KC back, which then missed KTC and priced flatten-only.
  * Rank candidates: on the Superflex board, on a roster, still active.
+ *
+ * Exported because news-match.mjs faces the same 357 collisions from the other direction — a
+ * headline naming "Josh Allen" has to pick between the Bills quarterback and a Jaguars
+ * linebacker — and a second ranking function would be a second thing to keep in agreement.
  */
-function nameCandidateScore(p) {
+export function nameCandidateScore(p) {
   let score = 0;
   if (SKILL_POS.has(String(p?.position || "").toUpperCase())) score += 8;
   if (hasNflTeam(p)) score += 4;

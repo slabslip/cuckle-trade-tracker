@@ -428,7 +428,7 @@
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830tf";
+    const DATA_V = "20260830votes";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1227,6 +1227,32 @@
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;
 
+    // Supabase is the league store, superseding the Cloudflare Worker this feature's SDD first
+    // recommended — see docs/SUPABASE_SETUP.md. Plain fetch, no SDK: there is no npm here.
+    // The anon key belongs in the page. This site is static on GitHub Pages, so there is nowhere
+    // to hide a secret, and the Row Level Security in db/schema.sql is the boundary — not the key.
+    // A service_role / sb_secret_ key must NEVER appear here: it bypasses RLS entirely.
+    const VOTE_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/rest/v1";
+    // A legacy anon JWT, so Authorization: Bearer is valid alongside the always-required apikey
+    // header. A newer sb_publishable_... key is not a JWT and is rejected on Bearer with
+    // "Invalid JWT" — if this key is ever replaced with one of those, send apikey alone.
+    const VOTE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0cXl2bmtramlrc21tdG16dWJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMjk2MzMsImV4cCI6MjEwMzYwNTYzM30.cyEU9bWTkRWTJxlwwPKEgXNT9WJukSluNcsj56WZib8";
+    // Clearing a vote cannot delete the row: anon has no DELETE privilege, deliberately, because
+    // a delete verb would let any league member erase everybody else's votes. A cleared vote is
+    // this sentinel, which trade_vote_tallies filters out — see db/schema.sql section 3.
+    const VOTE_CLEARED = "__none__";
+    // A paused free-tier project can hang rather than refuse. Nothing about a vote may wait
+    // forever on it.
+    const VOTE_TIMEOUT = 8000;
+    // The league tally as Supabase reports it. Stays null on any failure, so the UI falls back to
+    // the committed book or to this device alone rather than inventing a count.
+    //   { asOf, totals: { tx: { choice: n } }, mine: { tx: choice } }
+    let voteLive = null;
+    let voteLiveState = "idle";
+    // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
+    // the vote itself is already in localStorage, so nothing here can lose it.
+    const votePending = new Set();
+
     function voteDeviceId() {
       try {
         const found = localStorage.getItem(VOTE_DEVICE_KEY);
@@ -1274,36 +1300,227 @@
       catch (err) { console.error(err); }
     }
 
-    // readVotes(transactionId) -> { choice, tally, votes, league, asOf, seat }
+    // ---- Supabase transport ----------------------------------------------------
+    // Two doors above, one wire here. Nothing outside this block knows Supabase exists.
+
+    function voteHeaders(extra) {
+      return Object.assign({ apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON }, extra || {});
+    }
+
+    // AbortSignal.timeout is missing on Safari before 16, where undefined just means no timeout.
+    function voteAbort() {
+      try { return AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(VOTE_TIMEOUT) : undefined; }
+      catch (err) { return undefined; }
+    }
+
+    async function voteGet(url) {
+      const res = await fetch(url, { headers: voteHeaders(), signal: voteAbort() });
+      if (!res.ok) throw new Error(url + " " + res.status);
+      return res.json();
+    }
+
+    // Local time of day. The committed book renders an ISO date; a live tally is minutes old at
+    // most, so a clock reads truer than a timestamp.
+    function voteStamp(d) {
+      try { return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
+      catch (err) { return d.toISOString(); }
+    }
+
+    // The voter recorded with a vote is the seat picked at vote time, or the device otherwise, so
+    // one device can own more than one voter id over its life and a seat picked later must not
+    // orphan an earlier vote. This is every id we might have written as.
+    // The charset guard keeps a hand-edited localStorage value from breaking out of the in.()
+    // list below; ids are Sleeper snowflakes or uuids, so nothing real is filtered.
+    function voteVoterIds() {
+      const ids = [voteDeviceId()];
+      const seat = voteSeatId();
+      if (seat) ids.push(seat);
+      const votes = voteBoxRead().votes;
+      for (const tx of Object.keys(votes)) {
+        const s = votes[tx].seat;
+        if (s && ids.indexOf(s) < 0) ids.push(s);
+      }
+      return ids.filter((x) => x && x !== "device-unavailable" && /^[\w.-]+$/.test(x));
+    }
+
+    // One read of the whole tally per page load — the view returns every trade at once and it is
+    // a handful of rows, so no card ever fires its own request.
+    //
+    // Plus one narrow read of our own ballots. That second read is load bearing: the view has
+    // aggregated the ballots away, so there is no way to tell from it whether the total for a
+    // trade already counts us. Without it the choice is between double-counting our own vote and
+    // hiding it, and both are wrong.
+    async function voteLoad() {
+      voteLiveState = "loading";
+      const ids = voteVoterIds();
+      try {
+        const [rows, mineRows] = await Promise.all([
+          voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
+          ids.length
+            ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
+            : Promise.resolve([]),
+        ]);
+        const totals = {};
+        for (const r of rows || []) {
+          // The view already excludes the sentinel. Dropped again here so the percentages stay
+          // right on a project whose view has not been re-run since the fix.
+          if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
+          const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+          box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+        }
+        const mine = {};
+        for (const r of mineRows || []) {
+          if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
+          mine[r.transaction_id] = r.choice;
+        }
+        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine };
+        voteLiveState = "ok";
+      } catch (err) {
+        // Unreachable, blocked, offline, or a paused project. Degrade to exactly the behaviour
+        // that shipped before Supabase existed, and keep the copy honest: never render a league
+        // tally we did not actually receive.
+        console.error(err);
+        voteLive = null;
+        voteLiveState = "fail";
+      }
+      voteHeal();
+      render();
+    }
+
+    // localStorage owns "my vote", so a trade where Supabase disagrees gets the local vote pushed
+    // again. This is the retry for a write that failed while offline.
+    //
+    // Deliberately one-directional: a trade with no local vote is NOT cleared on the server just
+    // because this device has not heard of it. The same person on a phone and a laptop resolves to
+    // the same voter once they pick a seat, and inferring a clear from local absence would have
+    // the second device silently delete the first device's vote. A clear is only ever sent when
+    // someone actually taps to clear.
+    function voteHeal() {
+      if (voteLiveState !== "ok") return;
+      const votes = voteBoxRead().votes;
+      for (const tx of Object.keys(votes)) {
+        const local = votes[tx].choice || null;
+        if (local && voteLive.mine[tx] !== local) votePush(tx, local, votes[tx].seat);
+      }
+    }
+
+    // Optimistic: the vote is in localStorage and on screen before this runs. The upsert names
+    // its conflict target explicitly because PostgREST otherwise infers the primary key, which is
+    // the surrogate id — leave it off and a second vote fails on the unique constraint.
+    function votePush(transactionId, choice, seat) {
+      const voter = seat || voteDeviceId();
+      const sent = choice == null ? VOTE_CLEARED : choice;
+      votePending.add(transactionId);
+      fetch(VOTE_API + "/trade_votes?on_conflict=transaction_id,voter", {
+        method: "POST",
+        headers: voteHeaders({
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=representation",
+        }),
+        body: JSON.stringify({ transaction_id: transactionId, choice: sent, voter: voter }),
+        signal: voteAbort(),
+      }).then((res) => {
+        if (!res.ok) throw new Error("vote write " + res.status);
+        return res.json();
+      }).then((rows) => {
+        // Settle on the row the database echoed, not on what we hoped we sent.
+        const row = (rows || [])[0];
+        voteSettle(transactionId, row && row.choice ? row.choice : sent);
+      }).catch((err) => {
+        // The vote is already saved locally, so this loses nothing. The trade stays pending and
+        // the caption says so; the next page load retries it through voteHeal.
+        console.error(err);
+        render();
+      });
+    }
+
+    // Fold a confirmed write into the cached tally so the count converges without a second read.
+    // Only our own contribution moves; everyone else's stands.
+    function voteSettle(transactionId, choice) {
+      votePending.delete(transactionId);
+      if (voteLive) {
+        const totals = voteLive.totals[transactionId] || (voteLive.totals[transactionId] = {});
+        const was = voteLive.mine[transactionId] || null;
+        const now = choice === VOTE_CLEARED ? null : choice;
+        if (was !== now) {
+          if (was) totals[was] = Math.max(0, (totals[was] || 0) - 1);
+          if (now) totals[now] = (totals[now] || 0) + 1;
+        }
+        if (now) voteLive.mine[transactionId] = now;
+        else delete voteLive.mine[transactionId];
+        // asOf is deliberately NOT advanced. It dates the league read, and our own vote landing
+        // says nothing about anyone else's. Moving it would claim the other counts were rechecked.
+      }
+      render();
+    }
+
+    // ---- The two doors ---------------------------------------------------------
+    // readVotes(transactionId) -> { choice, seat, tally, votes, league, asOf, source, pending }
     // choice is the seat user_id this device voted for, or null. tally maps seat user_id to a
-    // count. A committed voters map tells us our vote is already in the league totals, so it is
-    // added locally only when it is not.
+    // count. Precedence for that count: a live Supabase tally, else the committed
+    // data/ui/votes.json, else this device alone. localStorage is the source of truth for
+    // "my vote"; Supabase is the source of truth for "the league tally".
     function readVotes(transactionId) {
       const mine = voteBoxRead().votes[transactionId] || null;
-      const entry = (voteBook && voteBook.votes && voteBook.votes[transactionId]) || null;
-      const tally = Object.assign({}, (entry && entry.totals) || {});
-      const alreadyCounted = !!(entry && entry.voters && mine && mine.seat && entry.voters[mine.seat]);
-      if (mine && mine.choice && !alreadyCounted) tally[mine.choice] = (tally[mine.choice] || 0) + 1;
+      const local = (mine && mine.choice) || null;
+      let tally, league, asOf, source;
+      if (voteLive) {
+        tally = Object.assign({}, voteLive.totals[transactionId] || {});
+        // Where the server's record of our ballot disagrees with localStorage, localStorage wins
+        // on screen and the difference is exactly what is still in flight. This is what makes a
+        // fresh vote show up at once and a failed write show up as ours rather than as nobody's.
+        const onServer = voteLive.mine[transactionId] || null;
+        if (onServer !== local) {
+          if (onServer) tally[onServer] = Math.max(0, (tally[onServer] || 0) - 1);
+          if (local) tally[local] = (tally[local] || 0) + 1;
+        }
+        league = true;
+        asOf = voteLive.asOf;
+        source = "live";
+      } else {
+        const entry = (voteBook && voteBook.votes && voteBook.votes[transactionId]) || null;
+        tally = Object.assign({}, (entry && entry.totals) || {});
+        // A committed voters map tells us our vote is already in the league totals, so it is
+        // added locally only when it is not.
+        const alreadyCounted = !!(entry && entry.voters && mine && mine.seat && entry.voters[mine.seat]);
+        if (local && !alreadyCounted) tally[local] = (tally[local] || 0) + 1;
+        league = !!entry;
+        asOf = (voteBook && voteBook.generated_at) || null;
+        source = entry ? "book" : "local";
+      }
       let votes = 0;
-      for (const k of Object.keys(tally)) votes += tally[k];
+      // Object.keys snapshots, so dropping the emptied seats mid-loop is safe. A seat at zero is
+      // not a seat with no votes to show — it must not sit in the denominator.
+      for (const k of Object.keys(tally)) {
+        if (!tally[k]) delete tally[k];
+        else votes += tally[k];
+      }
       return {
-        choice: (mine && mine.choice) || null,
+        choice: local,
         seat: (mine && mine.seat) || null,
         tally: tally,
         votes: votes,
-        league: !!entry,
-        asOf: (voteBook && voteBook.generated_at) || null,
+        league: league,
+        asOf: asOf,
+        source: source,
+        pending: votePending.has(transactionId),
       };
     }
 
     // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
-    // The selected seat rides along as the voter identity so a future store can show the tally
-    // per manager, but voting is not gated on picking a seat.
+    // The selected seat rides along as the voter identity so the store can key on a manager
+    // rather than a device, but voting is not gated on picking a seat.
     function writeVote(transactionId, choice) {
       const box = voteBoxRead();
+      const prev = box.votes[transactionId] || null;
+      // On a clear the local entry is about to go, so the voter it was written under has to be
+      // read first — otherwise a vote cast as a seat would be cleared under the device id and the
+      // real row would survive.
+      const seat = choice == null ? (prev && prev.seat) || voteSeatId() : voteSeatId();
       if (choice == null) delete box.votes[transactionId];
-      else box.votes[transactionId] = { choice: choice, seat: voteSeatId(), ts: new Date().toISOString() };
+      else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
       voteBoxWrite(box);
+      votePush(transactionId, choice, seat);
     }
 
     function voteSeats(r) {
@@ -1342,9 +1559,19 @@
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
           + "<b>" + esc(s.name) + "</b><span>" + line + "</span></button>";
       }).join("");
+      // Only ever claims a league tally we actually received. A live tally counts votes as they
+      // land; the committed book counts them as of the last rebuild; with neither, this is one
+      // device's opinion and says so.
       const note = v.league
-        ? "League tally as of " + esc(v.asOf || "the last rebuild") + "; your vote joins it on the next rebuild."
-        : "Your vote, on this device only — the league tally lights up once the vote store is connected.";
+        ? "League tally as of " + esc(v.asOf || "the last rebuild") + "; "
+          + (v.source === "live"
+            ? (v.pending
+              ? "your vote is saved here and still on its way to it."
+              : "votes join it as they land.")
+            : "your vote joins it on the next rebuild.")
+        : voteLiveState === "fail"
+          ? "Your vote, on this device only — the league tally is out of reach right now."
+          : "Your vote, on this device only — the league tally lights up once the vote store answers.";
       return head
         + '<div class="vote-opts">' + opts + "</div>"
         + '<p class="caption">' + note + " Opinion only: votes never enter the value book.</p></div>";
@@ -2054,11 +2281,17 @@
         render();
       }
     });
-    loadMembers().catch((err) => {
-      document.getElementById("app").hidden = false;
-      document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
-      console.error(err);
-    });
+    // The live tally is read after the page has painted, not before it. Awaiting Supabase here
+    // would put a paused free-tier project between the reader and the whole dashboard, and votes
+    // are the least important thing on it. Its own .catch keeps a vote failure out of the fatal
+    // path below — a missing tally is a caption, not a broken page.
+    loadMembers()
+      .then(() => voteLoad().catch((err) => console.error(err)))
+      .catch((err) => {
+        document.getElementById("app").hidden = false;
+        document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
+        console.error(err);
+      });
   </script>
 </body>
 </html>

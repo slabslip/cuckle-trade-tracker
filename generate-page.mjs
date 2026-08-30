@@ -44,6 +44,9 @@ const html = `<!DOCTYPE html>
     h1.brand a {
       color: inherit; text-decoration: none; margin-right: auto;
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      /* It is a link home, so it is a target as well as a title. The line box carries the
+         44px rather than padding, which would push the ellipsis off the text. */
+      min-height: 44px; line-height: 44px;
     }
     button.go-home {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
@@ -54,6 +57,16 @@ const html = `<!DOCTYPE html>
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
+    /* Every sentence that explains a value: a style tile, a stat box, a Score as option,
+       a vote caption, a chart header. They all wrap, and they all stranded one short word
+       on a last line -- "Fair.", "deals.", "out" -- inside a box small enough that the
+       orphan reads as a rendering fault rather than as prose. This balances the last lines
+       instead; where the property is unsupported the text wraps exactly as it does now. */
+    .caption, .thesis,
+    button.mark span, .stat span, .mark-chart-h span,
+    #scoreAs button.score-opt span, button.vote-opt span, .day-alert-h span {
+      text-wrap: pretty;
+    }
     #lead:empty { display: none; }
     .who-wrap { position: relative; flex: 0 0 auto; }
     /* The 158px here was room for the longest manager name to ellipsize into, because the button
@@ -76,6 +89,17 @@ const html = `<!DOCTYPE html>
       h1.brand { font-size: 1.2rem; gap: 8px; }
       button.who { font-size: 0.75rem; }
     }
+    /* 320px is the narrowest phone still in use and nothing here had been checked at it.
+       The row is 288px after the body padding: 44 for the home icon, the picker, two gaps,
+       and whatever is left for the title -- which was 100px against the 147px the word
+       needs, so the app's own name read "CuckleChunc…". This used to pin the picker to
+       108px to buy that back; the picker is width: max-content on a constant "Teams" label
+       now and asks for far less than 108px, so pinning it would only hand the space back.
+       The gaps pay the remaining 4px and the title takes the rest at a size that fits it
+       whole -- measured at 320px, not assumed. */
+    @media (max-width: 360px) {
+      h1.brand { font-size: 1rem; gap: 6px; }
+    }
     /* All ten managers have to be on screen at once -- this is the most-used control in the app
        and a list you have to scroll to reach half of is the thing being fixed. Ten options at the
        44px minimum plus the menu's 4px padding and 1px border is 450px, so the cap is that plus a
@@ -86,7 +110,11 @@ const html = `<!DOCTYPE html>
        scrollHeight == clientHeight at 568px, which is the shortest phone we care about. */
     .who-menu {
       position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
-      width: 168px; max-width: calc(100vw - 32px);
+      /* 168px cut a 27-character seat name to "BartholomewCuckl…", and the crown now takes
+         19px more of that row. The menu is anchored to the right edge and floats over the
+         page, so it can take the width the trigger cannot, and it still yields to the
+         viewport on the narrowest phone. */
+      width: 220px; max-width: calc(100vw - 32px);
       max-height: min(calc(10 * 44px + 16px), calc(100dvh - 88px)); overflow-y: auto;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       padding: 4px 0; margin: 0;
@@ -121,6 +149,10 @@ const html = `<!DOCTYPE html>
     /* Four tabs at 375px wrapped onto two lines. They share the row instead. */
     .nav { display: flex; gap: 8px; flex-wrap: nowrap; margin: 12px 0 16px; }
     .nav button.tab { flex: 1 1 0; min-width: 0; text-align: center; padding: 10px 6px; }
+    /* At 320px a quarter of the row is 66px and "partners" needs 60px of the 54px the
+       padding left it, so the longest tab label spilled its own pill. The gaps and the
+       side padding pay for it; the label keeps its size. */
+    @media (max-width: 360px) { .nav { gap: 4px; } .nav button.tab { padding: 10px 2px; } }
     @media (min-width: 560px) { .nav { justify-content: flex-start; } .nav button.tab { flex: 0 0 auto; padding: 10px 18px; } }
     button.tab, button.chip {
       border-radius: 999px; padding: 10px 14px; color: var(--muted);
@@ -148,6 +180,13 @@ const html = `<!DOCTYPE html>
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    /* Same rule as the tape below, applied to the plain row: a flex item's automatic minimum
+       is min-content, so without this the text column refuses to shrink and pushes the figure
+       out of the card. The figure is the one thing that must not give, so it also never wraps
+       -- "-1,234" has a break opportunity after the sign, and a value split across two lines
+       is a worse failure than a name that ellipsises. */
+    .row-top > * { min-width: 0; }
+    .row-top > .margin { flex: 0 0 auto; white-space: nowrap; }
     /* min-width: 0 everywhere a track holds text. Without it a grid track cannot shrink
        below its longest word, so a name like DarkWingDucks2023 pushed the value it sits
        next to past the card edge at 375px. Names ellipsize; figures never do. */
@@ -260,13 +299,26 @@ const html = `<!DOCTYPE html>
     button.row.voted { border-color: #6b5a2e; }
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
-    .bag h3 { margin: 0 0 6px; font-size: 0.92rem; }
+    .bags > * { min-width: 0; }
+    .bag h3 { margin: 0 0 6px; font-size: 0.92rem; overflow-wrap: anywhere; }
     .leg {
       display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
       font-size: 0.84rem; padding: 3px 0; color: var(--muted); min-width: 0;
     }
     .leg > span { min-width: 0; overflow-wrap: anywhere; }
     .leg > b { flex: 0 0 auto; white-space: nowrap; }
+    /* A .leg's <b> is a figure everywhere else, so it is nowrap and never shrinks -- which is
+       right until Champions Path puts a whole draft's worth of picks in one. Thirty picks joined
+       by "·" cannot be a single unbreakable token: it measured 1,051px inside a 320px viewport
+       and took the document's width with it, invisibly, because documentElement.scrollWidth
+       clamps and reported 320. A list is not a number, so it stacks under its label and wraps;
+       nothing here is a figure that truncating would damage. */
+    .leg.list { display: block; }
+    .leg.list > span { display: block; }
+    .leg.list > b {
+      display: block; margin-top: 2px;
+      white-space: normal; overflow-wrap: anywhere;
+    }
     button.leg[data-pick] {
       width: 100%; appearance: none; font: inherit; font-size: 0.84rem;
       color: var(--muted); text-align: left; background: none; border: 0;
@@ -277,6 +329,8 @@ const html = `<!DOCTYPE html>
     .leg[data-pick].on { color: var(--text); }
     .hops { margin: 2px 0 10px 8px; padding-left: 10px; border-left: 2px solid var(--line); }
     .hop { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8125rem; padding: 4px 0; color: var(--dim); }
+    .hop > span { min-width: 0; overflow-wrap: anywhere; }
+    .hop > b { flex: 0 0 auto; white-space: nowrap; }
     .hop b { color: var(--text); font-variant-numeric: tabular-nums; }
     .leg b { color: var(--text); font-variant-numeric: tabular-nums; }
     .leg.va { color: var(--text); border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
@@ -302,7 +356,7 @@ const html = `<!DOCTYPE html>
     button.bubble {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-      padding: 8px 14px; min-height: 40px; white-space: nowrap; cursor: pointer;
+      padding: 8px 14px; min-height: 44px; white-space: nowrap; cursor: pointer;
     }
     button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.bubble b { font-weight: 650; }
@@ -362,6 +416,18 @@ const html = `<!DOCTYPE html>
       line-height: 1.35; margin-top: 1px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    /* The championship and top-scorer lines each end in a score. On one nowrap line the
+       score is furthest from the left edge, so it is what a long opponent or player name
+       pushes off first. As a pair the figure is pinned and the name is the only thing that
+       gives, which is the rule everywhere else in this app. */
+    a.champ-alert .champ-fig { display: flex; gap: 6px; align-items: baseline; }
+    a.champ-alert .champ-fig > span {
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    a.champ-alert .champ-fig > b {
+      flex: 0 0 auto; margin-left: auto; white-space: nowrap;
+      font-weight: 650; font-variant-numeric: tabular-nums; color: var(--muted);
+    }
     button.day-in {
       display: block; width: 100%; appearance: none; font: inherit; color: inherit;
       text-align: left; background: none; border: 0; padding: 6px 0 0; margin: 2px 0 0;
@@ -392,6 +458,10 @@ const html = `<!DOCTYPE html>
     .vote { margin: 10px 0 0; }
     .vote-h { font-weight: 650; }
     .vote-opts { display: flex; gap: 8px; margin-top: 8px; }
+    /* Two names side by side leaves each about 114px at 320px, which clipped
+       KingHenryXXVI. Stacked, each gets the full 240px and no manager in the league
+       comes close -- the same trade the tape row makes one screen up. */
+    @media (max-width: 360px) { .vote-opts { flex-direction: column; } }
     button.vote-opt {
       flex: 1 1 0; min-width: 0; min-height: 48px;
       appearance: none; font: inherit; color: inherit; text-align: left;
@@ -438,7 +508,8 @@ const html = `<!DOCTYPE html>
     .mark-bar:last-child { margin-bottom: 0; }
     .mark-bar.you .names { color: var(--text); font-weight: 650; }
     .mark-bar-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-    .mark-bar-top .lab { font-weight: 650; font-size: 0.85rem; }
+    .mark-bar-top .names { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mark-bar-top .lab { font-weight: 650; font-size: 0.85rem; flex: 0 0 auto; white-space: nowrap; }
     .mark-bar-track { height: 8px; background: #1c1c22; border-radius: 99px; margin: 5px 0 4px; overflow: hidden; }
     .mark-bar-track i { display: block; height: 100%; width: 0; background: #6b6b78; border-radius: 99px; }
     .mark-bar-track i.pos { background: var(--green); }
@@ -451,10 +522,19 @@ const html = `<!DOCTYPE html>
       min-height: 44px; padding: 12px; cursor: pointer;
     }
     button.pack-head:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.pack-head h2 { margin: 0; font-size: 1.05rem; }
-    .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; }
+    button.pack-head h2 { margin: 0; font-size: 1.05rem; min-width: 0; }
+    .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
     .pack-body { margin-top: 8px; }
     .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
+    /* The filter icon, its label and the Score as button do not share 288px: the label
+       was cut to "Filter by ye…", which names nothing. The Score as button takes its own
+       line instead, which is the same trade as stacking anywhere else here -- height for
+       a label that reads. */
+    @media (max-width: 360px) {
+      .lens-row { flex-wrap: wrap; }
+      .lens-row-left { flex: 1 1 100%; }
+      .lens-row-left .caption { white-space: normal; }
+    }
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -535,8 +615,10 @@ const html = `<!DOCTYPE html>
     .stat {
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
       padding: 10px 12px; min-height: 64px;
+      /* Half a 320px viewport is 140px of box for a value plus a sentence about it. */
+      min-width: 0;
     }
-    .stat b { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+    .stat b { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
     .stat span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.35; }
     .chapter { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 0 0 12px; }
     .chapter h3 { margin: 0 0 8px; font-size: 1rem; }
@@ -584,7 +666,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830seatnameh2";
+    const DATA_V = "20260830fmt3";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1363,9 +1445,10 @@ const html = `<!DOCTYPE html>
       return '<div class="stat"><b>' + title + "</b><span>" + sub + "</span></div>";
     }
 
+    /** A label and a run of pick names. Not a leg-and-figure pair — see .leg.list. */
     function bagLine(label, items) {
       if (!items || !items.length) return "";
-      return '<div class="leg"><span>' + esc(label) + "</span><b>" + items.map(esc).join(" · ") + "</b></div>";
+      return '<div class="leg list"><span>' + esc(label) + "</span><b>" + items.map(esc).join(" · ") + "</b></div>";
     }
 
     function chapterHtml(title, ch, extra) {
@@ -2102,14 +2185,18 @@ const html = `<!DOCTYPE html>
     function champFinalCaption(champ, rec) {
       const f = champ && champ.final;
       if (!f || f.champ_points == null || f.opponent_points == null) {
-        return { tail: rec.fpts_rank === 1 ? " · points race" : " · bracket", top: "" };
+        return { tail: rec.fpts_rank === 1 ? " · points race" : " · bracket", tailNum: "", top: "", topNum: "" };
       }
-      const tail = " · " + (f.tie ? "tied" : "beat") + " " + esc(f.opponent)
-        + " " + score1(f.champ_points) + "–" + score1(f.opponent_points);
-      const top = f.top && f.top.points != null
-        ? "Top scorer · " + esc(f.top.player) + " " + score1(f.top.points)
-        : "";
-      return { tail, top };
+      // Words and figure are returned apart so the card can pin the figure and let only the
+      // name ellipsise. Joined into one nowrap string, the score was at the far end of the
+      // line and so was the first thing off the edge: a 33-character player name took
+      // "45.0" with it, which is the one thing on this line that had to survive.
+      return {
+        tail: " · " + (f.tie ? "tied" : "beat") + " " + esc(f.opponent),
+        tailNum: score1(f.champ_points) + "–" + score1(f.opponent_points),
+        top: f.top && f.top.points != null ? "Top scorer · " + esc(f.top.player) : "",
+        topNum: f.top && f.top.points != null ? score1(f.top.points) : "",
+      };
     }
 
     function dayAlert() {
@@ -2136,8 +2223,9 @@ const html = `<!DOCTYPE html>
         ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
           + '<div class="day-alert-h">Champions Path</div>'
           + '<div class="champ-line">' + esc(champ.season) + " champion · " + esc(champ.name) + "</div>"
-          + '<div class="date">' + rec.wins + "–" + rec.losses + fin.tail + "</div>"
-          + (fin.top ? '<div class="date">' + fin.top + "</div>" : "")
+          + '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
+          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>"
+          + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
           + "</a>"
         : "";
       // The door to every league trade sits in the header row, a sibling of the trade buttons
@@ -3087,6 +3175,28 @@ for (const need of [
   "← ",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost navigation: ${need}`);
+}
+// Text fitting, asserted rather than trusted. Each of these was a measured defect, and each
+// is one deletion away from returning silently, because none of them changes what the page
+// says -- only whether you can read all of it.
+//   .leg.list      a pick list is not a figure; nowrap made it 1,051px wide inside 320px
+//   champ-fig      the score is pinned so a long name, not the number, is what gives
+//   min-width: 0   a grid or flex track will not shrink below min-content without it
+for (const need of ['class="leg list"', 'class="date champ-fig"', "fin.tailNum", "fin.topNum"]) {
+  if (!inline.includes(need)) throw new Error(`generated script lost a text-fitting fix: ${need}`);
+}
+for (const need of [".leg.list > b {", "a.champ-alert .champ-fig > b {",
+  ".row-top > * { min-width: 0; }", ".bags > * { min-width: 0; }",
+  ".mark-bar-top .names {", "@media (max-width: 360px)"]) {
+  if (!html.includes(need)) throw new Error(`generated stylesheet lost a text-fitting rule: ${need}`);
+}
+// Numbers never truncate: every rule that pins a figure against a name that may ellipsise.
+// Losing any one of them puts a value back in the position of first casualty.
+const PINNED = [".row-top > .margin { flex: 0 0 auto; white-space: nowrap; }",
+  ".hop > b { flex: 0 0 auto; white-space: nowrap; }",
+  ".mark-bar-top .lab { font-weight: 650; font-size: 0.85rem; flex: 0 0 auto; white-space: nowrap; }"];
+for (const need of PINNED) {
+  if (!html.includes(need)) throw new Error(`generated stylesheet unpinned a figure: ${need}`);
 }
 
 fs.writeFileSync(`${ROOT}index.html`, html);

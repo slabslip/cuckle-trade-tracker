@@ -283,8 +283,19 @@ function main() {
       });
     }
   }
-  // The board screen ranks from sides itself, so only sides ship. best/worst stay local
-  // for the self-checks below.
+  // The page reads six fields off a side plus got/sent/incomplete per window. Everything
+  // else here exists for the self-checks below, so it stays local instead of shipping.
+  const shipSide = (r) => ({
+    transaction_id: r.transaction_id,
+    date: r.date,
+    user_id: r.user_id,
+    name: r.name,
+    other: r.other,
+    headline: r.headline,
+    windows: Object.fromEntries(Object.entries(r.windows).map(([k, w]) =>
+      [k, { got: w.got, sent: w.sent, incomplete: w.incomplete }])),
+  });
+
   const best = (list, key) => list.slice().sort((a, b) => (b[key] ?? -1e15) - (a[key] ?? -1e15)).slice(0, 10);
   const worst = (list, key) => list.slice().sort((a, b) => (a[key] ?? 1e15) - (b[key] ?? 1e15)).slice(0, 10);
   const agedRows = sides.filter((r) => r.aged != null);
@@ -292,7 +303,7 @@ function main() {
     today: { best: best(sides, "today_delta"), worst: worst(sides, "today_delta") },
     aged: { best: best(agedRows, "aged"), worst: worst(agedRows, "aged") },
   };
-  league.trade_boards = { sides };
+  league.trade_boards = { sides: sides.map(shipSide) };
   delete league.review_trades;
   delete league.drafters_startup;
 

@@ -134,11 +134,10 @@ const html = `<!DOCTYPE html>
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
-    img.seat-flair {
+    img.seat-flair, svg.crown {
       display: inline-block; width: 1.15em; height: 1.15em;
-      vertical-align: -0.2em; object-fit: contain;
+      vertical-align: -0.2em; object-fit: contain; flex: 0 0 auto;
     }
-    .who-menu .crown { flex: 0 0 auto; display: block; }
     .who-menu button[aria-selected="true"] { color: var(--text); }
     .who-menu button.on { color: var(--text); }
     .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
@@ -895,12 +894,24 @@ const html = `<!DOCTYPE html>
     /**
      * Seat flair on the painted name only. Matching, data-who, data-partner and the news
      * matcher keep the bare Sleeper name; this is what the eye reads next to it.
-     * glyph = emoji; img = emoji-sized mark (SF69erss), which sits before the crown in whoOptions.
+     * Order: name → glyph/img flair → reigning-champ crown (most recent title year).
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
       TrumanCooper: { glyph: "🤢" },
       SF69erss: { img: "data/ui/flair-sf69erss.png" },
     });
+    // Gold, the same #e0b44c the alert cards and the vote outline use. Decorates the
+    // reigning champion beside their name everywhere seatLabel paints — never the name itself.
+    const CROWN = ' <svg class="crown" viewBox="0 0 24 24" width="16" height="16"'
+      + ' aria-hidden="true" focusable="false">'
+      + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
+    /** Most recent title year from titles.json; falls back to members.place === 1. */
+    function reigningChampName() {
+      const t = titles && Array.isArray(titles.titles) && titles.titles[0];
+      if (t && t.name) return String(t.name);
+      const m = (members || []).find((x) => x && x.place === 1);
+      return m && m.name ? String(m.name) : "";
+    }
     function seatFlairHtml(name) {
       const f = SEAT_FLAIR[name];
       if (!f) return "";
@@ -911,7 +922,7 @@ const html = `<!DOCTYPE html>
       }
       return "";
     }
-    /** Plain-text flair for aria-labels (no markup). Image flair is silent. */
+    /** Plain-text flair for aria-labels (no markup). Image flair / crown are silent. */
     function seatFlairText(name) {
       const f = SEAT_FLAIR[name];
       return f && f.glyph ? " " + f.glyph : "";
@@ -920,12 +931,17 @@ const html = `<!DOCTYPE html>
       const n = String(name == null ? "" : name);
       // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
       if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
-      return esc(n) + seatFlairHtml(n);
+      const crown = reigningChampName() === n ? CROWN : "";
+      return esc(n) + seatFlairHtml(n) + crown;
     }
     /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
     function seatTitle(title) {
       const s = String(title == null ? "" : title);
-      for (const name of Object.keys(SEAT_FLAIR)) {
+      // Flair seats plus the reigning champ — so bag headings crown the title holder even
+      // when they have no glyph/img flair of their own.
+      const names = [...new Set([...Object.keys(SEAT_FLAIR), reigningChampName()].filter(Boolean))]
+        .sort((a, b) => b.length - a.length);
+      for (const name of names) {
         if (s === name || s.startsWith(name + " ")) {
           return seatLabel(name) + esc(s.slice(name.length));
         }
@@ -947,7 +963,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830225858";
+    const DATA_V = "20260830crown3";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1184,15 +1200,9 @@ const html = `<!DOCTYPE html>
       return !!(await seatData(tradeSeat));
     }
 
-    // Gold, the same #e0b44c the alert cards and the vote outline use. It is decoration beside a
-    // name, never the name itself, so it is aria-hidden and the option still announces "SF69erss".
-    const CROWN = '<svg class="crown" viewBox="0 0 24 24" width="13" height="13"'
-      + ' aria-hidden="true" focusable="false">'
-      + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
-
     /**
      * The league's ten managers as listbox options: last season's finishing order, the champion
-     * crowned, the taken seat marked, one 44px target each.
+     * crowned (via seatLabel), the taken seat marked, one 44px target each.
      *
      * One emitter, and now one mount: league home's Teams chip renders it into #teamMenu. The
      * brand header used to paint the same options into a second menu of its own, and the emitter
@@ -1201,16 +1211,15 @@ const html = `<!DOCTYPE html>
      * single now for the next second mount rather than for the one that was removed.
      */
     function whoOptions() {
-      const opt = (on, id, label, champ) =>
+      const opt = (on, id, label) =>
         '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
         + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
-        + '<span class="who-name">' + seatLabel(label) + "</span>"
-        + (champ ? CROWN : "") + "</button>";
+        + '<span class="who-name">' + seatLabel(label) + "</span></button>";
       // Managers only. The list used to open with a "Team" option that cleared the seat; the home
       // icon in the header does exactly that, and dropping the option is what lets all ten names
-      // show without scrolling.
+      // show without scrolling. Crown rides seatLabel for the reigning champ — not a second paint.
       return members
-        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name, m.place === 1))
+        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name))
         .join("");
     }
 
@@ -4506,8 +4515,12 @@ const optEmits = (inline.match(/data-who="' \+ esc\(id\) \+ '"/g) || []).length;
 if (optEmits !== 1) throw new Error(`a seat option is built in ${optEmits} places, want 1`);
 const whoOptSrc = fnBody("whoOptions");
 for (const need of ['role="option"', 'aria-selected="\' + (on ? "true" : "false") + \'"',
-  '<span class="who-name">', "CROWN", "m.place === 1"]) {
+  '<span class="who-name">', "seatLabel(label)"]) {
   if (!whoOptSrc.includes(need)) throw new Error(`the seat option emitter lost ${need}`);
+}
+// Crown is painted by seatLabel for the reigning champ — whoOptions must not paint a second one.
+if (whoOptSrc.includes("CROWN") || whoOptSrc.includes("m.place === 1")) {
+  throw new Error("whoOptions must not paint the crown itself — seatLabel owns the reigning-champ mark");
 }
 // The same CSS box as well as the same markup: the 220px width, the 44px options and the
 // no-scroll cap are all .who-menu, so the chip's mount carries the class rather than a copy.
@@ -4565,7 +4578,7 @@ if (!teamsChipSrc.includes('"Teams, " + me.name + seatFlairText(me.name) + " sel
   throw new Error("the Teams chip's accessible name must still say which seat is selected");
 }
 for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="true" focusable="false"',
-  "m.place === 1", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {
+  "reigningChampName", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a seat-menu part: ${need}`);
 }
 // Seat flair is display-only. Bare Sleeper names stay in data; glyphs/images are painted.
@@ -4575,13 +4588,13 @@ if (!inline.includes('TrumanCooper: { glyph: "🤢" }') || !inline.includes("fun
 if (!inline.includes('SF69erss: { img: "data/ui/flair-sf69erss.png" }') || !inline.includes("function seatFlairHtml(name)")) {
   throw new Error("SF69erss seat flair must ship as an emoji-sized img via seatFlairHtml()");
 }
-if (!html.includes("img.seat-flair {") || !html.includes("width: 1.15em; height: 1.15em;")) {
-  throw new Error("seat-flair img must be emoji-sized (1.15em) to match 🤢");
+if (!html.includes("img.seat-flair, svg.crown {") || !html.includes("width: 1.15em; height: 1.15em;")) {
+  throw new Error("seat-flair and crown must be emoji-sized (1.15em) beside the name");
 }
-// whoOptions paints name+flair, then the crown -- flair before crown for the champion.
-if (!fnSrc("whoOptions").includes("seatLabel(label) + \"</span>\"")
-  || !fnSrc("whoOptions").includes("(champ ? CROWN : \"\")")) {
-  throw new Error("whoOptions must paint seat flair before the championship crown");
+// Reigning champ crown rides seatLabel everywhere: name → flair → crown.
+if (!inline.includes("function reigningChampName()")
+  || !fnSrc("seatLabel").includes("reigningChampName() === n ? CROWN")) {
+  throw new Error("seatLabel must crown the most recent title winner everywhere names are painted");
 }
 if (!inline.includes("function seatTitle(title)")) {
   throw new Error("bag headings must flair seat names through seatTitle()");

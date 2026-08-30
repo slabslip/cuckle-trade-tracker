@@ -239,12 +239,17 @@ Still shipped and still unread, kept for the reasons above or as too small to be
 
 One `index.html`. After `?me=` / tile pick:
 
-With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), the
-`Score as` clock, one **box of four equal chips**, and the News and Alerts feed. Two chips lead
-somewhere: **Teams**, a second trigger for the header's seat picker, and **League Data Sets**,
+The **brand header** carries the home icon, the wordmark and, top right, the `Score as` clock —
+persistent chrome, because the clock is a global setting rather than one screen's control. It is
+static markup painted by `paintLens()`, and it hides itself on the two screens the clock cannot
+move: **titles**, which reads no clock, and **drafts**, which pins it.
+
+With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), one
+**box of four equal chips**, and the News and Alerts feed. Two chips lead
+somewhere: **Teams**, the only way into a seat, and **League Data Sets**,
 holding five lists (Most lopsided trades · Most passed around · Least traded · Forever players ·
 Homesteaders), one on screen at a time and none on a cold load. The other two cells are inert
-placeholders. After `?me=` or a pick in the header:
+placeholders. After `?me=` or a pick in the Teams chip:
 
 | Tab | What it shows |
 | --- | --- |
@@ -254,9 +259,11 @@ placeholders. After `?me=` or a pick in the header:
 | **drafts** | Rookie 2020–26 surplus; startup picks toggled in, priced against their real `pick_cost`. Pins the clock to `all`. |
 | **titles** | Champions Path. Outside the trade needle. |
 
-One **Score as** dropdown, five windows: `t0` At trade · `y1`/`y2`/`y3` First N years ·
-`all` Since trade (default). `t0` and `all` are unfiltered; the year windows hide deals that have
-not lived the clock.
+One **Score as** dropdown in the brand header, five windows: `t0` At trade · `y1`/`y2`/`y3`
+First N years · `all` Since trade (default). `t0` and `all` are unfiltered; the year windows hide
+deals that have not lived the clock. The trigger reads the window alone — `Since trade ▾` — because
+the `Score as` prefix costs 54px the 320px brand row does not have; the words stay in its
+accessible name. `UI_SDD.md` §2a has the measurements and the two screens it hides on.
 
 Open pick leg → hop tape from `picks.json`. The expanded detail is a **sibling** of the row button,
 not a child, so the pick legs inside it can be real buttons.

@@ -1183,6 +1183,73 @@ lens windows, `today_delta` or a partner grade; `apply-value-adjust.mjs` was not
 carries a gold `#e0b44c` crown that is `aria-hidden`, so the option's accessible name is still
 exactly the manager's name — confirmed against the computed accessibility tree, all ten.
 
+**A12 — the `Score as` clock moved into the brand header, and it re-arms A9. Done, this pass.**
+The user circled the control on league home and asked for it top right, in the space the seat
+picker vacated in `11e5401`. Six screens each rendered their own `lensRow()`; the clock is a
+global setting, so all six copies are gone and the emitter with them — there is one control, in
+one place, and the guard asserts the *emitter* is absent rather than the call sites, so a re-added
+one has to be rewritten to get past it.
+
+**The label is the window alone.** `Score as Since trade ▾` measures **157.8px** and the prefix
+alone **54px**; the brand row is **288px** at 320px, of which the home icon takes 44, two gaps 12
+and the wordmark 122.9 at 1rem. With the prefix the wordmark ellipsises at **320, 375 and 390** —
+measured, all five windows. Without it the widest window name (`First 2 years`, both `y2` and `y3`)
+takes **107.7px of the 109.1px** left, so it fits by **1.4px**. That is under one character, and it
+is deliberate which way it gives: `h1.brand a` carries the ellipsis and the trigger does not, so a
+wider font fallback truncates the wordmark rather than the control. The trigger takes the same
+`0.75rem` step at 460px that `button.who` did, and that step is load-bearing — at `0.8125rem` the
+same label needs 116.7px and the row is 7.5px short. Asserted, scoped to the 460px block.
+
+**It re-arms the A9 guard.** The removal pass kept `h1.brand { overflow: visible }` while it
+protected nothing, noting so. `#scoreAs` is now absolutely positioned against `.lens-wrap` inside
+that `h1`, so a clip there would cut a 418px panel to the 44px header — one option of five — and
+`getBoundingClientRect` would still report the full panel, exactly as it reported 472.6px of a
+44px-visible seat menu. The guard's message names the panel again, and a clip on either box fails
+the build.
+
+| Viewport | `body.scrollWidth` | `documentElement` | panel | scrolls | options ≥44px | hit-testable | in viewport |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 320 × 568 | 320 | 320 | 280 × 393 | no (391/391) | 5 of 5 | **5 of 5** | 5 of 5 |
+| 320 × 844 | 320 | 320 | 280 × 393 | no (391/391) | 5 of 5 | **5 of 5** | 5 of 5 |
+| 375 × 568 | 375 | 375 | 280 × 418 | no (416/416) | 5 of 5 | **5 of 5** | 5 of 5 |
+| 375 × 844 | 375 | 375 | 280 × 418 | no (416/416) | 5 of 5 | **5 of 5** | 5 of 5 |
+| 390 × 568 | 390 | 390 | 280 × 418 | no (416/416) | 5 of 5 | **5 of 5** | 5 of 5 |
+| 390 × 844 | 390 | 390 | 280 × 418 | no (416/416) | 5 of 5 | **5 of 5** | 5 of 5 |
+
+Hit-testing is `elementFromPoint` at each option's centre with the option scrolled into view, not
+a rect — the A9 method note. The ancestor chain was walked for `overflow`, `transform`, `contain`,
+`clip-path`, `filter` and `perspective`: `span#lensWrap.lens-wrap` (visible, `position: relative`,
+`z-index: 5`) → `h1.brand` (visible) → `body`/`html`, whose `overflow-x: hidden` is the app's own
+and which the 280px panel is nowhere near. Nothing on the chain transforms, contains, clips or
+filters.
+
+**Stacking, hit-tested rather than read.** `.lens-wrap` is 5, `.filter-wrap` 4, `.ds-wrap` 3, so
+the open panel paints over the chip box it drops across: at 390px the panel occupies 64–482 and the
+chip box 424–570, and `elementFromPoint(104, 434)` lands on `button.score-opt.on` inside `#scoreAs`.
+The two menus also cannot be open together — opening the clock closes the data set menu and the
+Teams menu, and opening either closes the clock, verified in both orders. Note the header scrolls
+out of view when the data set menu opens, because `showMenu()` scrolls that menu into view; with the
+page at the top the trigger hit-tests as itself, and the two boxes never overlap at all.
+
+**It hides where the clock does nothing.** `renderTitles()` reads no `lens`, `chipLived()` or
+`clockName()`, and `renderDrafts()` pins the clock to `all` for its own render. A visible control
+that moves no number is the ticker's dead-pill defect, so `lensApplies()` hides it on those two and
+the build fails if either gate goes, if `renderDrafts` stops pinning, or if Champions Path starts
+reading the clock. The set of screens the clock is offered on is unchanged by the move.
+
+**Moving it changed no number.** Driven from the header trigger, `all → t0 → y1 → all`: a seat's
+home moves 2 of 4 margins, 6 of 8 deltas and 4 of 4 totals; the seat's Trades tab 258 of 262
+deltas and 131 → 110 rows on `y1`; the league trades list 574 of 576 deltas and 576 → 452 rows;
+Most lopsided 20 of 22 deltas. Returning to `all` reproduces the original page exactly.
+`apply-value-adjust.mjs` was not run. The two gold cards still measure 136/136, the champ
+scoreboard's five cells and their two rect tops are identical, the four chip cells are still
+162 × 56 each, the home icon is still 44 × 44 at 16,16 and still clears a seat, the seat heading,
+the signed deltas, the full-screen trade and its back navigation are byte-identical to
+`origin/main`, and the news feed is 60 rows. Measured on a server whose pid owned its port, whose
+served md5 matched the on-disk build before and after, and whose bytes carried `20260830lenshdr1`
+(§3a trap 2 — the first attempt at this measured an empty response from a server that never
+started, and the checksum is what said so).
+
 **Keyboard and focus on the new screens — what was done, and what was not.** Done: every new
 control is a real `<button>`, so it is in the tab order and fires on Enter and Space with no extra
 code; a navigation moves focus to the destination screen's `<h2 class="screen-h" tabindex="-1">`

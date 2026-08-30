@@ -12,8 +12,9 @@ Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Known defects → [`DASHBOARD_AUDIT.
 
 ## 1. Two rooms
 
-**League home** is what you get with no seat picked: the gold alert row, the `Score as` clock, one
-**box of four chips**, and the News and Alerts feed. It is the water cooler.
+**League home** is what you get with no seat picked: the gold alert row, one **box of four chips**,
+and the News and Alerts feed. It is the water cooler. The `Score as` clock is not on it, because it
+is not on any screen — it is in the brand header, top right, on every screen it applies to (§2a).
 
 **Team home** is what you get after picking a name in league home's **Teams** chip. **You are that
 seat.** Six style
@@ -101,7 +102,8 @@ Under the header, a ticker of league bubbles (champion, most lopsided, most acti
 **Tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They are a
 `tablist` with roving `tabindex` and arrow keys. There is **no `league` tab** — see §8.
 
-**Score as** is a dropdown, not a row of chips, and it is the only clock control. Five windows:
+**Score as** is a dropdown, not a row of chips, and it is the only clock control. It lives in the
+brand header, top right (§2a). Five windows:
 
 | Key | Label | What it scores |
 | --- | --- | --- |
@@ -113,6 +115,42 @@ Under the header, a ticker of league bubbles (champion, most lopsided, most acti
 
 `t0` and `all` are unfiltered; `y1`/`y2`/`y3` hide a deal that has not lived the clock and say so
 above the list (`livedHint`). The dropdown button carries a dot when the clock is not `all`.
+
+### 2a. Where the clock lives, and where it does not
+
+It is **persistent chrome in the brand header, top right**, in the space the seat picker held until
+`11e5401`. Six screens each rendered their own copy of it before; a global setting rendered six
+times is one control with six chances to disagree with itself, and the user asked for it in the
+header. The trigger is static markup inside `h1.brand` and is **painted, not rendered** —
+`render()` replaces `#app` wholesale, and a control that has to survive every navigation cannot
+live inside it. `paintLens()` runs after the body is built, because `renderDrafts()` pins the clock
+for its own render and restores it on the way out.
+
+The visible label is **the window alone** — `Since trade ▾`, not `Score as Since trade ▾`. The
+prefix measures 54px, and the 288px brand row at 320px does not have it: with the prefix the app's
+own name ellipsises at 320, 375 *and* 390. Without it the widest window name (`First 2 years`)
+takes 107.7px of the 109.1px the row leaves, and the wordmark stays whole. `Score as` moved into
+the accessible name, where it costs nothing. If that 1.4px ever goes, **the title gives way, not
+the control**: `h1.brand a` carries the ellipsis and the trigger does not, because a control never
+truncates before a wordmark does.
+
+It **hides on Champions Path and on Drafts**, which are the two screens the clock cannot move.
+`renderTitles()` reads no clock at all — no `lens`, no `chipLived()`, no `clockName()` — and the
+Drafts tab pins the clock to `all` for the whole of its render, so every pick is graded from accept
+day whatever the control says. Leaving it visible there would put a control on screen that visibly
+does nothing, which is the ticker's dead-pill defect (§below) in a new place. The set of screens the
+clock is *offered* on is therefore exactly the set that rendered it before: league home, a seat's
+home, both trades lists, partners and the full-screen trade. The selected window is state, not
+markup, so a trip through Drafts or Champions Path brings the control back reading what it read on
+the way in.
+
+Its panel is absolutely positioned against `.lens-wrap` inside the `h1`, which is why
+`h1.brand { overflow: visible }` is **load-bearing again** and still asserted: a clip there would
+cut a 418px panel down to the 44px header, which is exactly how the seat picker shipped unusable
+twice (A9). `.lens-wrap` stacks at `z-index: 5`, above `.filter-wrap` at 4 and `.ds-wrap` at 3, so
+an open panel paints over the chip box it drops across — verified by hit-testing the overlap point,
+not by reading the sheet. Opening it closes every other popup and opening any of them closes it, so
+two menus can never be open over each other.
 
 All five are flatten-only. **The 40/60 KTC blend is not on this menu and is not on any screen** —
 it lives in each trade's `even` bag, which `sideOf()` never reaches because every trade has a
@@ -183,8 +221,9 @@ because a placeholder is not a reading. This is the ticker's dead-pill rule (bel
 control four times the size: an inert cell that looks pressable is a defect, and the generate-time
 guard that closed it for the pills now covers the chip grid too.
 
-`Score as` is a **separate** control and stays one. It picks the clock the figures are computed on;
-this picks which list is on screen. Two axes, two menus.
+`Score as` is a **separate** control and stays one, and now in a separate place: the clock is a
+global setting in the brand header, this picks which list is on this one screen. Two axes, two
+menus, two homes.
 
 **Most lopsided trades** — top 10 sides by absolute margin on the selected clock, deduped to one
 side per transaction. This is the **permanent** replacement for the old Best 10 / Worst 10 board
@@ -347,7 +386,8 @@ known-dead payload still on the wire.
 - Every grid track that holds text gets `min-width: 0`. Names ellipsize; **figures never truncate**.
 - The four tabs share one row and never wrap.
 - 44px minimum on every tap target, including the team menu, the year filter rows, the chips and
-  the Score as button. When a list of them stops fitting, the list's cap gives way, not the 44px.
+  the Score as trigger and all five of its options. When a list of them stops fitting, the list's
+  cap gives way, not the 44px.
   The chips' own floor is 56px, because the longest label needs two lines in a 127px cell.
 - One column of bags on a phone, two at `min-width: 640px`.
 - `aria-expanded` on every expandable row. `Escape` closes whatever is topmost: the seat menu,

@@ -557,7 +557,7 @@ caught in review before it reaches the page.
 ## 10. Shared tweets — the curated path
 
 The user is on X all day. They tap Share on a tweet, pick an iOS Shortcut, and it lands in the
-feed: a locker-room summary on top, the tweet itself behind an expander.
+feed: a locker-room summary on top, the tweet itself right under it — compact, no expander.
 
 **Why this is a different feature from §2 and not a fix to it.** The automated feed finds stories
 and infers who they are about, and that inference is the most dangerous thing it does. The curated
@@ -575,10 +575,11 @@ who it is aimed at. So it does not need discovery, and it does not need to guess
    because it documents itself as writing nothing and consuming the queue is very much a write.
 
 `v` stays `1`. The new fields are additive and every one is optional, so a page built before they
-existed ignores them and renders these rows as ordinary news rows with no expander. Bumping to `2`
-would make the deployed page reject the whole file on its version gate and drop all 60 items in
-order to add a feature affecting a handful — a strictly worse failure than the one it would guard
-against. The version gate is for changes that would make an old reader render something *wrong*.
+existed ignores them and renders these rows as ordinary news rows with no tweet body. Bumping to
+`2` would make the deployed page reject the whole file on its version gate and drop all 60 items
+in order to add a feature affecting a handful — a strictly worse failure than the one it would
+guard against. The version gate is for changes that would make an old reader render something
+*wrong*.
 
 ### Attribution — authoritative, then matched, then nobody
 
@@ -589,17 +590,28 @@ a list on a phone. The cost is paid server-side and paid loudly — a name match
 to null and the item publishes addressed to nobody, rather than being handed to the nearest match.
 
 **Amended 2026-08-30.** Two rules here were rewritten by the scope change; both reversals are
-argued in full at the functions themselves, and summarised in §10a.
+argued in full at the functions themselves, and summarised in §10a. A third amendment the same
+day wires historical names in:
 
 1. **Resolution is forgiving about partial names**, not only about case and space. Exact, then
-   prefix, then substring, each tier refusing outright if it produces more than one candidate, and
+   prefix, then substring, each tier refusing outright if it produces more than one *seat*, and
    the partial tiers requiring at least three characters. `  SF69erss  ` and `sf69erss` resolve;
    `big` resolves to `bigjberg`; `ber` refuses, because it is inside both `TedCumberbatch` and
-   `bigjberg`. The earlier refusal to accept a prefix borrowed `matchPlayer()`'s argument, which
-   does not carry: that matcher searches an open dictionary of 12,225 names containing two Josh
-   Allens, and this searches a closed, known set of ten.
-2. **`target_name` is now the only thing that can address a row to a manager.** The fallback that
+   `bigjberg`. Hits are collapsed by `user_id` before the ambiguity check, so two aliases of the
+   same seat are not a refusal.
+2. **Every name a seat has ever worn counts.** `resolveTarget()` searches `data/aliases.json`
+   (written by `sleeper-sync.mjs` from every season's `display_name`, `username` and
+   `team_name`) alongside the pinned name in `members.json`. `"The Tips"`, `"Evil Ducks"` and
+   `"San Francisco 69ers"` resolve to the same seats as `TipsUp`, `DarkWingDucks2023` and
+   `SF69erss`. When someone renames their team, the new Sleeper name is added on the next sync;
+   the old one stays. The Shortcut can list either and the feed still points at the same seat.
+3. **`target_name` is now the only thing that can address a row to a manager.** The fallback that
    handed an untargeted share to whoever owned the player named in its text is gone.
+
+**Shortcut diagnosis (2026-08-30).** Every live share from the phone (ids 14–22) arrived with
+`target_name: null`. That is not a mistyped list: the Choose-from-List / Chosen Item value never
+reached the POST body. Test rows that *did* send a name (`TipsUp`, `bigjberg`, `  sf69erss  `)
+resolve correctly. Fix the Shortcut variable, not the spelling of the members list.
 
 `matchPlayer()` still runs over the tweet text, and the player it finds still ships — it is what
 the row's meta line prints, `Keenan Allen · IND WR`. What it no longer does is pick a seat. Reading
@@ -641,15 +653,13 @@ the automated row is dropped, the opposite of `dedupe()`'s earliest-published ru
 ### The UI
 
 The row is a `<div>` and never an `<a>`. Every other row in this feed wraps its whole body in a
-link, and putting the expander inside one would be **defect A1** — an interactive control nested
-in another interactive control. That is not a style note: it is the same mistake that makes a
-click inside an expanded trade row collapse it, because the inner control's event is also a click
-on the outer one. So the link to the tweet is a separate `<a>` inside the panel, a sibling of the
-button, and the click handler returns early rather than falling through to the row handler.
+link, and putting **Open on X** inside one would be **defect A1** — an interactive control nested
+in another interactive control. So the link to the tweet is a separate `<a>` inside the quoted
+block, and nothing on the row nests a control in a control.
 
-The panel always renders and toggles `hidden` rather than being omitted when closed, so
-`aria-controls` never dangles. `aria-expanded` follows the open state. The button and the link out
-are both ≥44px, and both are keyboard operable.
+The tweet is always visible under the sharer's note — no Show/Hide expander. Compact means the
+note, the tweet, who posted it, and the link out, with no open-state to keep across `#app`
+rebuilds. The link out is ≥44px and keyboard operable.
 
 ### What this costs, honestly
 

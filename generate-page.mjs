@@ -719,25 +719,13 @@ const html = `<!DOCTYPE html>
       margin-top: 4px; color: var(--dim); font-size: 0.75rem; line-height: 1.4;
       overflow-wrap: anywhere;
     }
-    /* A shared tweet's row is a plain container, not a link -- the expander below it is a real
-       button and nesting one control inside another is defect A1. */
+    /* A shared tweet's row is a plain container, not a link -- Open on X is a real <a> and
+       nesting one control inside another is defect A1. The tweet itself is always visible;
+       there is no expander. */
     .news-row-tweet { display: block; }
-    /* The expander. 44px is the floor a finger needs, and this control is the only way to reach
-       the tweet, so it is the one target on the row that cannot be short. Full width so the
-       target is the whole line rather than the words. */
-    .news-more {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      width: 100%; min-height: 44px; margin: 6px 0 0; padding: 6px 0;
-      background: none; border: 0; color: var(--muted);
-      font: inherit; font-size: 0.8125rem; font-weight: 650; text-align: left; cursor: pointer;
-    }
-    .news-more:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .news-more-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .news-more-c { flex: 0 0 auto; font-size: 0.9rem; line-height: 1; }
     /* The tweet, quoted. Indented by a rule rather than by a card, so it reads as somebody
        else's words inside our row instead of as a second box inside the box. */
-    .news-detail { margin: 2px 0 4px; padding-left: 10px; border-left: 2px solid var(--line); }
-    .news-detail[hidden] { display: none; }
+    .news-detail { margin: 4px 0 2px; padding-left: 10px; border-left: 2px solid var(--line); }
     .news-tweet-text {
       margin: 0; color: var(--text); font-size: 0.8125rem; line-height: 1.45;
       overflow-wrap: anywhere; text-wrap: pretty; white-space: pre-wrap;
@@ -746,8 +734,8 @@ const html = `<!DOCTYPE html>
       margin: 6px 0 0; color: var(--dim); font-size: 0.75rem; line-height: 1.4;
       overflow-wrap: anywhere;
     }
-    /* Its own 44px target: it is a second control inside the panel and a finger has to find it
-       without hitting the expander above. */
+    /* Its own 44px target: it is the one interactive control on the row and a finger has to
+       find it without hunting. */
     .news-tweet-link {
       display: inline-flex; align-items: center; min-height: 44px;
       color: var(--muted); font-size: 0.75rem; font-weight: 650; text-decoration: underline;
@@ -2022,14 +2010,6 @@ const html = `<!DOCTYPE html>
       trade: "Trade", depth_chart: "Depth chart", breakout: "Breakout", news: "News",
       tweet: "From X",
     };
-    /**
-     * Which shared tweets are expanded, by item id.
-     *
-     * State rather than a direct DOM toggle, because render() rebuilds #app wholesale and a
-     * class flipped in place would be undone by the next unrelated render -- a vote settling, a
-     * seat file arriving. Keyed by id and not by index so it survives the list reordering.
-     */
-    let newsOpen = Object.create(null);
 
     /**
      * News and Alerts, below the league data sets.
@@ -2076,7 +2056,7 @@ const html = `<!DOCTYPE html>
           : "The feed could not be loaded. Nothing else on this page is affected.";
         return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
-      const rows = items.map((it, i) => {
+      const rows = items.map((it) => {
         const url = String(it.source_url || "");
         // Only http(s) becomes a link. Anything else -- and a feed is fully capable of shipping
         // "javascript:" -- renders as a plain row instead.
@@ -2100,25 +2080,23 @@ const html = `<!DOCTYPE html>
           + '<div class="news-meta">' + where + "</div>";
 
         /**
-         * A tweet somebody shared in: the jab on top, the tweet itself behind an expander.
+         * A tweet somebody shared in: the jab on top, the tweet itself always visible under it.
          *
          * **The row is a <div> and never an <a>.** Every other row in this feed wraps its whole
-         * body in a link, and putting this button inside one of those would be defect A1 -- an
-         * interactive control nested in another interactive control. That is not a style note
-         * here: it is the same mistake that makes a click inside an expanded trade row collapse
-         * it, because the inner control's event is also a click on the outer one. So the link to
-         * the tweet is a separate <a> inside the detail panel, a sibling of the button, and
-         * nothing on this row nests a control in a control.
+         * body in a link, and putting Open on X inside one of those would be defect A1 -- an
+         * interactive control nested in another interactive control. So the link to the tweet is
+         * a separate <a> inside the quoted block, and nothing on this row nests a control in a
+         * control.
          *
-         * The panel is always rendered and toggled with the hidden attribute rather than being
-         * omitted when closed, so aria-controls always resolves to a real element.
+         * There is no expander. The earlier Show/Hide button was one more tap on every post in a
+         * feed that is already short; the tweet is the post. Compact means the note, the tweet,
+         * who posted it, and the link out, with no toggle state to keep across renders.
          *
          * (No backticks in this comment, and none anywhere else inside this template literal:
          * the whole page is one, so a backtick in a comment ends the string and the generator
          * fails to parse -- which is the same class of hazard as the swallowed backslash.)
          */
         if (it.category === "tweet" && it.tweet_text) {
-          const open = !!newsOpen[it.id];
           /**
            * The link out of a tweet row is labelled "Open on X", so it may only go to X.
            *
@@ -2136,21 +2114,13 @@ const html = `<!DOCTYPE html>
            * /^pick:d{4}:4:/. A build guard asserts this exact string survived.
            */
           const xLink = /^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : "";
-          // Ours, from the render index -- never the item's own id, which is data and could be
-          // anything. It only has to be unique within this one render, which an index is.
-          const panel = "news-tweet-" + i;
           const handle = it.tweet_handle ? "@" + esc(it.tweet_handle) : "";
           const by = [esc(it.tweet_author), handle].filter(Boolean).join(" \\u00b7 ");
           return '<div class="news-row news-row-tweet">'
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
             + '<div class="news-line">' + esc(it.league_line) + "</div>"
-            + '<button type="button" class="news-more" data-news-expand="' + esc(it.id) + '"'
-            + ' aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + panel + '">'
-            + '<span class="news-more-t">' + (open ? "Hide the tweet" : "Show the tweet") + "</span>"
-            + '<span class="news-more-c" aria-hidden="true">' + (open ? "\\u2303" : "\\u2304") + "</span>"
-            + "</button>"
-            + '<div class="news-detail" id="' + panel + '"' + (open ? "" : " hidden") + ">"
+            + '<div class="news-detail">'
             + '<p class="news-tweet-text">' + esc(it.tweet_text) + "</p>"
             + (by ? '<p class="news-tweet-by">Posted by ' + by + "</p>" : "")
             + (xLink
@@ -3334,8 +3304,9 @@ const html = `<!DOCTYPE html>
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
       const keep = focusSelector(document.activeElement);
       // The news feed is its own scroll container, and innerHTML resets it to the top. Without
-      // this, expanding the ninth shared tweet throws the reader back to the first row -- the
-      // rebuild is invisible to them, so it reads as the page jumping for no reason.
+      // this, any re-render (a vote settling, a seat file arriving) throws the reader back to
+      // the first row -- the rebuild is invisible to them, so it reads as the page jumping for
+      // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
       app.innerHTML = seatName + nav + body;
@@ -3703,19 +3674,6 @@ const html = `<!DOCTYPE html>
       if (dsOpenBtn) {
         if (dsOpen) closeDataSets();
         else openDataSets();
-        return;
-      }
-      // A shared tweet's expander. Early and returning, so it can never fall through to the
-      // row handler at the bottom of this function -- that fall-through is exactly what makes a
-      // click inside an expanded trade row collapse it (defect A1), and the news feed is not
-      // going to reproduce it. Nothing else on the row is interactive, so there is no control
-      // nested inside another one here.
-      const newsBtn = e.target.closest("[data-news-expand]");
-      if (newsBtn) {
-        const id = newsBtn.dataset.newsExpand;
-        if (newsOpen[id]) delete newsOpen[id];
-        else newsOpen[id] = true;
-        render();
         return;
       }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
@@ -4638,11 +4596,10 @@ for (const need of ["esc(it.manager)", "esc(it.league_line)", "esc(it.headline)"
   "esc(cat)", "esc(also)", "esc(when)", 'esc(safe) + \'" target="_blank"',
   // The shared-tweet fields. tweet_text is the single most exposed string this app renders: it
   // is written by a stranger on X and it arrives through a table anyone holding the anon key can
-  // insert into, so it is third-party input twice over. tweet_handle and it.id go into
-  // attributes rather than text, which is defect P1-14 -- attribute injection, not just element
-  // injection -- and esc() covers both because it escapes quotes as well as angle brackets.
-  "esc(it.tweet_text)", "esc(it.tweet_author)", "esc(it.tweet_handle)",
-  'data-news-expand="\' + esc(it.id)']) {
+  // insert into, so it is third-party input twice over. tweet_handle goes into text (the @by
+  // line), and esc() covers both text and attributes because it escapes quotes as well as
+  // angle brackets.
+  "esc(it.tweet_text)", "esc(it.tweet_author)", "esc(it.tweet_handle)"]) {
   if (!newsBody.includes(need)) throw new Error(`renderNews stopped escaping a news field: ${need}`);
 }
 // A feed can ship "javascript:alert(1)" as an item link, and an <a href> is the one place on
@@ -4656,7 +4613,6 @@ if (!newsBody.includes('rel="noopener noreferrer"')) {
   throw new Error("a news row opens a third-party URL in a new tab and must carry rel=noopener noreferrer");
 }
 // The shared tweet's link out is a second <a> on the same page and needs the same two guards.
-// It is inside the expandable panel, so the row-level assertions above cannot see it.
 if (!/news-tweet-link" href="' \+ esc\(xLink\)/.test(newsBody)
   || !/news-tweet-link[\s\S]{0,200}rel="noopener noreferrer"/.test(newsBody)) {
   throw new Error("the shared tweet's link out lost its esc()'d, scheme-gated href or its rel=noopener noreferrer");
@@ -4672,50 +4628,44 @@ if (!newsBody.includes('/^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0
 if (/news-tweet-link" href="' \+ esc\(safe\)/.test(newsBody)) {
   throw new Error("the tweet link-out reverted to the row's any-http gate, which lets a row labelled Open on X open another domain");
 }
-// 1b. The expandable tweet detail, asserted as STRUCTURE rather than as presence.
+// 1b. The shared tweet is always visible -- compact, no expander.
 //
-// The requirement is not "an expander exists" -- it is that the expander is a real button, that
-// it is not nested inside the row's link, and that assistive tech is told what it does. Each of
-// these has a specific way of silently regressing:
+// The requirement is that the tweet text ships in the row itself, that the row is a <div> (so
+// Open on X is not nested inside a link -- defect A1), and that there is no Show/Hide toggle
+// reintroducing open-state that a full #app rebuild would have to preserve. Each of these has
+// a specific way of silently regressing:
 //
-//   * A <div> with a click handler looks identical and is unreachable by keyboard.
-//   * aria-expanded that is hardcoded rather than bound to the open state announces "collapsed"
-//     forever, which is worse than announcing nothing.
-//   * The row reverting to <a class="news-row"> for tweets would put the button inside a link,
-//     which is defect A1 -- the invalid pattern that makes a click inside an expanded trade row
-//     collapse it. That is why the negative assertion below exists: it is not enough for the
-//     <div> to be present, no <a> may wrap this button.
-if (!newsBody.includes('<button type="button" class="news-more" data-news-expand=')) {
-  throw new Error("the shared tweet expander must be a real <button>, not a div with a handler");
-}
-if (!newsBody.includes('aria-expanded="\' + (open ? "true" : "false") + \'"')) {
-  throw new Error("the tweet expander's aria-expanded must follow the open state, not be hardcoded");
-}
-if (!/aria-controls="' \+ panel \+ '"[\s\S]{0,400}id="' \+ panel \+ '"/.test(newsBody)) {
-  throw new Error("the tweet expander's aria-controls must name the panel it actually toggles");
-}
+//   * Putting the tweet behind a button again is the previous design; the caption and the
+//     guards must refuse it.
+//   * The row reverting to <a class="news-row"> for tweets would put Open on X inside a link.
+//   * Dropping esc(it.tweet_text) from the visible branch would ship third-party prose raw.
 const tweetBranch = newsBody.slice(newsBody.indexOf('if (it.category === "tweet" && it.tweet_text) {'));
 const tweetRender = tweetBranch.slice(0, tweetBranch.indexOf("\n        }"));
-if (!tweetRender || tweetRender.length < 300) throw new Error("the shared tweet branch of renderNews() did not ship");
+if (!tweetRender || tweetRender.length < 200) throw new Error("the shared tweet branch of renderNews() did not ship");
 if (!tweetRender.includes("'<div class=\"news-row news-row-tweet\">'")) {
-  throw new Error("a shared tweet row must be a <div>: an <a> around it would nest the expander inside a link (defect A1)");
+  throw new Error("a shared tweet row must be a <div>: an <a> around it would nest Open on X inside a link (defect A1)");
 }
 if (/<a class="news-row"/.test(tweetRender)) {
-  throw new Error("a shared tweet row became a link, which nests its expander inside another control (defect A1)");
+  throw new Error("a shared tweet row became a link, which nests Open on X inside another control (defect A1)");
 }
-// The panel is rendered whether or not it is open, and hidden with the `hidden` attribute, so
-// aria-controls always resolves. Omitting it when closed would point aria-controls at nothing.
-if (!tweetRender.includes('(open ? "" : " hidden")')) {
-  throw new Error("the tweet panel must always render and toggle `hidden`, or aria-controls dangles when closed");
+if (!tweetRender.includes('esc(it.tweet_text)')) {
+  throw new Error("the shared tweet must render tweet_text in the compact row, escaped");
 }
-// The expander is the only way to reach the tweet, so it is the one target that cannot be short.
-const moreRule = html.slice(html.indexOf("    .news-more {"));
-if (!moreRule.slice(0, 400).includes("min-height: 44px")) {
-  throw new Error("the tweet expander is a tap target and must declare min-height: 44px");
+if (!tweetRender.includes('class="news-detail"')) {
+  throw new Error("the shared tweet must ship inside .news-detail, always visible");
+}
+if (/data-news-expand|news-more|aria-expanded|Show the tweet|Hide the tweet/.test(tweetRender)) {
+  throw new Error("the shared tweet must not ship an expander; the tweet is always shown");
+}
+if (/ hidden/.test(tweetRender) || /\[hidden\]/.test(tweetRender)) {
+  throw new Error("the shared tweet panel must not toggle hidden; compact means always on");
 }
 const linkRule = html.slice(html.indexOf("    .news-tweet-link {"));
 if (!linkRule.slice(0, 300).includes("min-height: 44px")) {
   throw new Error("the tweet's link out is a tap target and must declare min-height: 44px");
+}
+if (html.includes("    .news-more {")) {
+  throw new Error("the tweet expander stylesheet must be gone once the expander is gone");
 }
 // Rendering X's own embed would mean running their script on this page. The whole detail panel
 // exists so that the tweet can be shown as our own escaped text instead.

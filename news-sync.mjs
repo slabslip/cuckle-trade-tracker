@@ -248,18 +248,29 @@ function matchPlayer(title, index) {
  *
  * The input is normalised with normName() first, which lower-cases, strips punctuation and
  * suffixes, collapses runs of whitespace and trims. So `"  SF69erss  "` and `"sf69erss"` are
- * already the same string as `"SF69erss"` before any comparison happens. Then:
+ * already the same string as `"SF69erss"` before any comparison happens. Then, against every
+ * key this seat is known by (canonical name plus every string in `data/aliases.json`):
  *
- *   1. **Exact**, against the normalised member name. One hit wins.
- *   2. **Prefix**, if nothing was exact: members whose normalised name *starts with* the input.
- *      `big` -> `bigjberg`.
- *   3. **Substring**, if nothing was a prefix: members whose normalised name *contains* it.
- *      `berg` -> `bigjberg`.
+ *   1. **Exact**. One seat wins.
+ *   2. **Prefix**, if nothing was exact: keys that *start with* the input. `big` -> `bigjberg`.
+ *   3. **Substring**, if nothing was a prefix: keys that *contain* it. `berg` -> `bigjberg`.
  *
- * Two rules bound it. **Any tier that produces more than one candidate resolves to null** — the
- * item publishes addressed to nobody rather than to a coin flip. And **tiers 2 and 3 need at
- * least three characters**, because a one- or two-letter fragment is not a person's name, it is
- * a typo, and it would match half the league.
+ * Two rules bound it. **Any tier that produces more than one seat resolves to null** — the item
+ * publishes addressed to nobody rather than to a coin flip. Hits are collapsed by `user_id`
+ * before that check, so two aliases of the *same* seat ("San Francisco 69ers" and
+ * "SanFrancisco69ers") counting as two keys is not a refusal. And **tiers 2 and 3 need at least
+ * three characters**, because a one- or two-letter fragment is not a person's name, it is a
+ * typo, and it would match half the league.
+ *
+ * ## Why aliases are part of the search, not a side table
+ *
+ * Members rename themselves. Sleeper's current `display_name` and `team_name` change; the pinned
+ * name in `aliases.overrides.json` does not. `sleeper-sync.mjs` already accumulates every name a
+ * seat has ever worn into `data/aliases.json` — "The Tips", "Evil Ducks", "San Francisco 69ers",
+ * old usernames, trophy-emoji display names. A Shortcut list that offers those strings (or a
+ * sharer who types the team name they remember from last year) must still land on the same seat.
+ * Searching only `members.json` was why a correctly chosen historical name could publish under
+ * "The league": the name was right, the resolver had never heard of it.
  *
  * ## This reverses an earlier decision, on purpose
  *
@@ -279,23 +290,52 @@ function matchPlayer(title, index) {
  * realistic case, the one actually seen, is a Shortcut sending `"  sf69erss  "` and the feed
  * silently addressing it to nobody because of two spaces. Refusing was costing real attribution
  * to prevent a collision that cannot occur in a ten-name set.
+ *
+ * @param {string|null|undefined} targetName
+ * @param {Array<{user_id:string,name:string}>} members
+ * @param {Record<string, string[]>|null} [aliasesByCanon] canonical display name -> known names
  */
-function resolveTarget(targetName, members) {
+function resolveTarget(targetName, members, aliasesByCanon = null) {
   const want = normName(targetName);
   if (!want) return null;
-  const list = (members || []).map((m) => ({ m, key: normName(m.name) })).filter((x) => x.key);
-  const pick = (hits) => (hits.length === 1
-    ? { user_id: hits[0].m.user_id, manager: hits[0].m.name }
-    : null);
 
-  const exact = list.filter((x) => x.key === want);
+  // Every string this seat answers to, all pointing at the same pinned manager name. The
+  // canonical name is always first so an exact match on today's members.json wins without
+  // needing the alias file present (self-test and synthetic fixtures pass aliases as null).
+  const keys = [];
+  for (const m of members || []) {
+    if (!m || !m.user_id || !m.name) continue;
+    const seen = new Set();
+    const push = (raw) => {
+      const key = normName(raw);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      keys.push({ user_id: m.user_id, manager: m.name, key });
+    };
+    push(m.name);
+    const extras = aliasesByCanon && aliasesByCanon[m.name];
+    if (Array.isArray(extras)) for (const a of extras) push(a);
+  }
+
+  // Collapse to unique seats. Two keys of one manager are one candidate; two managers are a
+  // refusal. Length-of-key-rows was enough when each seat had one key; with aliases it would
+  // refuse "san" against SF69erss's two San Francisco spellings.
+  const pick = (hits) => {
+    const bySeat = new Map();
+    for (const h of hits) bySeat.set(h.user_id, h);
+    if (bySeat.size !== 1) return null;
+    const one = [...bySeat.values()][0];
+    return { user_id: one.user_id, manager: one.manager };
+  };
+
+  const exact = keys.filter((x) => x.key === want);
   if (exact.length) return pick(exact);
   if (want.length < 3) return null;
 
-  const prefix = list.filter((x) => x.key.startsWith(want));
+  const prefix = keys.filter((x) => x.key.startsWith(want));
   if (prefix.length) return pick(prefix);
 
-  const inside = list.filter((x) => x.key.includes(want));
+  const inside = keys.filter((x) => x.key.includes(want));
   return inside.length ? pick(inside) : null;
 }
 
@@ -404,7 +444,7 @@ function collapseShares(subs) {
  *   showing a deleted tweet forever would be the feed lying rather than degrading.
  */
 async function ingestSubmissions(ownership, index, members, {
-  stampRows = true, previousTweets = new Map(),
+  stampRows = true, previousTweets = new Map(), aliasesByCanon = null,
 } = {}) {
   const report = {
     queue_ok: false, queue_error: null, seen: 0, published: 0,
@@ -485,7 +525,7 @@ async function ingestSubmissions(ownership, index, members, {
      */
     let own = null;
     let player = null;
-    const target = resolveTarget(sub.target_name, members);
+    const target = resolveTarget(sub.target_name, members, aliasesByCanon);
     const hit = matchTweetPlayer(tweet.text, index);
     if (hit.row) player = hit.row;
     if (target) {
@@ -828,6 +868,10 @@ async function build() {
   // A queue that is unreachable costs its own rows and nothing else — every failure inside
   // ingestSubmissions() is recorded and returned, never thrown.
   const members = readJson("ui/members.json", []) || [];
+  // Every name a seat has ever worn on Sleeper — display names, usernames, team names — keyed
+  // by the pinned canonical in members.json. resolveTarget() searches these so a renamed team
+  // still addresses the same seat. Written by sleeper-sync.mjs; never overwrite by hand.
+  const aliasesByCanon = readJson("aliases.json", {}) || {};
   // Read before anything is written, so a run that fails an oEmbed can still show yesterday's
   // copy of that tweet rather than dropping the row. writeBook() is the only writer and it runs
   // after every check in main() has passed.
@@ -837,6 +881,7 @@ async function build() {
     : await ingestSubmissions(ownership, index, members, {
       stampRows: !args.has("--report"),
       previousTweets,
+      aliasesByCanon,
     });
   report.submissions = submissions.report;
   report.previous_tweets_on_disk = previousTweets.size;
@@ -996,7 +1041,11 @@ function writeBook(book) {
  */
 function selfTest() {
   const members = readJson("ui/members.json", []) || [];
-  const name = (t) => { const r = resolveTarget(t, members); return r ? r.manager : null; };
+  const aliasesByCanon = readJson("aliases.json", {}) || {};
+  const name = (t) => {
+    const r = resolveTarget(t, members, aliasesByCanon);
+    return r ? r.manager : null;
+  };
   const cases = [
     // Exact, and the whitespace and case the Shortcut sends.
     ["SF69erss", "SF69erss"], ["sf69erss", "SF69erss"], ["  SF69erss  ", "SF69erss"],
@@ -1005,6 +1054,17 @@ function selfTest() {
     ["big", "bigjberg"], ["Tips", "TipsUp"], ["darkwing", "DarkWingDucks2023"],
     // Substring, when nothing is a prefix.
     ["berg", "bigjberg"], ["henry", "KingHenryXXVI"],
+    // Historical / team-name aliases from aliases.json. These are what a sharer types when they
+    // remember the team, not the pinned Sleeper display name — and what a rename leaves behind.
+    ["The Tips", "TipsUp"], ["Just the Tip", "TipsUp"], ["JustThaTip", "TipsUp"],
+    ["Evil Ducks", "DarkWingDucks2023"], ["MightyDucks420", "DarkWingDucks2023"],
+    ["San Francisco 69ers", "SF69erss"], ["TonyGalliani", "SF69erss"],
+    ["The IceBerg", "bigjberg"], ["420MiaKhalifaGuy69", "ChiefGumby"],
+    ["OKC The Business", "TedCumberbatch"], ["Milky Milfys", "BubbaCuckShremp"],
+    ["The Morning Chubbs", "ARae"], ["DuckTipsYumm", "TrumanCooper"],
+    ["King Henry XXVI", "KingHenryXXVI"], ["ZachDaDakSlayer", "KingHenryXXVI"],
+    // Same seat under two spellings of one alias must still resolve (collapse by user_id).
+    ["SanFrancisco69ers", "SF69erss"],
     // Refusals. Two candidates, too short to be a name, empty, and no such member.
     ["cu", null],            // under three characters, so no partial tier runs at all
     ["cum", "TedCumberbatch"], // ...and at three it is unambiguous again
@@ -1014,6 +1074,11 @@ function selfTest() {
     ["<script>window.__XSS_TARGET=1</script>", null],
     // "u" appears inside six members; a three-character fragment that still hits two must refuse.
     ["ber", null],           // TedCumBERbatch and bigjBERg
+    // Ambiguous across seats once aliases are in play: "the" starts/contains several team names.
+    ["the", null],
+    // Prefix beats substring: DuckTipsYumm starts with "duck"; DarkWingDucks2023 only contains it.
+    ["duck", "TrumanCooper"],
+    ["ducks", "DarkWingDucks2023"],
   ];
   const bad = [];
   for (const [input, want] of cases) {

@@ -372,12 +372,17 @@ omitted or `null`. A successful POST answers **201** with an empty body.
 * **`note`** — the sharer's own jab. **If present it becomes the summary line
   verbatim**, and no template runs. Their words beat ours. Up to 500 characters,
   trimmed to 240 in the feed.
-* **`target_name`** — a manager's display name exactly as it appears in
-  `data/ui/members.json` (case and surrounding spaces do not matter, but
-  nicknames and prefixes are not accepted). **Send the name, not a `user_id`**:
+* **`target_name`** — who the jab is aimed at. Send a **name**, not a `user_id`:
   picking an 18-digit snowflake out of a list on a phone is how a feature goes
-  unused. If it is supplied it is authoritative and no name matching runs at all.
-  If it matches nothing, the item still publishes, addressed to nobody.
+  unused. Case and surrounding spaces do not matter. Exact, prefix and substring
+  matches against the ten pinned names in `data/ui/members.json` **and** every
+  historical display / team / username in `data/aliases.json` all resolve — so
+  `"The Tips"`, `"Evil Ducks"` and `"SF69erss"` land on the same seats, and a
+  rename still connects after the next `sleeper-sync`. Ambiguous fragments
+  (`"the"`, `"ber"`) refuse rather than guess; the item still publishes under
+  "The league". **Wire the Shortcut's Choose-from-List result into this field** —
+  live shares that arrived with `target_name: null` were not mistyped names;
+  the Chosen Item never reached the JSON body.
 * **`submitted_by`** — who shared it. Only used for the uniqueness rule above.
 
 `resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second tap

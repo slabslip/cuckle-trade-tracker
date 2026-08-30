@@ -363,6 +363,13 @@ omitted or `null`. A successful POST answers **201** with an empty body.
 on Share answers 201 with an empty body instead of a `409` the Shortcut would
 surface as a failure. It needs `INSERT` only.
 
+**Run the SQL above before building the Shortcut.** `on_conflict=url,submitted_by`
+names a constraint, and until that constraint exists PostgREST answers **400**
+`42P10 there is no unique or exclusion constraint matching the ON CONFLICT
+specification` — verified against this project on 2026-08-30. Dropping the
+`?on_conflict=…` query and the `Prefer` header makes it a plain insert that works
+today, at the cost of a duplicate row per extra tap.
+
 Nothing appears in the feed until `news-sync.mjs` runs and the page is rebuilt —
 this is a static site, so the feed is baked at build time, not fetched live.
 

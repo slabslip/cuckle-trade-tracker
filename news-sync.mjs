@@ -377,11 +377,11 @@ function resolveTarget(targetName, members, aliasesByCanon = null) {
  *    a full name unique in the dictionary is 0.90, a collision settled by explicit team context
  *    0.85, a collision settled by ranking alone 0.65, an alias 0.70, a bare surname 0.58. Below
  *    the line the evidence is a guess and the row publishes under "The league".
- * 2. **Exactly one manager.** `matchText()` emits one subject per rostered player, because a
- *    trade has two sides and both managers' rosters are genuinely affected. That is right for a
- *    *notification*; it is wrong for a single `user_id` on a single row. Two managers means the
- *    row is the league's. Two *players* owned by one manager is still one manager, and still
- *    addressed — the tag says the story concerns their roster, and it does.
+ * 2. **One or more managers above the line.** A single seat is addressed with the locker-room
+ *    "you" voice. Two or more seats (a roundup naming several rostered players) tag **every**
+ *    matched manager on the row — the header lists them, the summary stays impersonal so we
+ *    do not roast the wrong person in second person. `addressable` is still the single-seat
+ *    case; `multi` carries the full set when `seats.size > 1`.
  *
  * `reason: "roundup"` (more than MAX_SUBJECTS rostered names) and `reason: "refused"` both arrive
  * here as an empty subject list, so they fall through to "The league" without a special case.
@@ -390,6 +390,14 @@ function matchTweetSubjects(text, matchIndex) {
   const res = matchText(text, matchIndex);
   const publishable = (res.subjects || []).filter((s) => s.publish);
   const seats = new Set(publishable.map((s) => s.user_id));
+  // One subject per seat, confidence order preserved (publishable is already sorted).
+  const bySeat = [];
+  const seen = new Set();
+  for (const s of publishable) {
+    if (seen.has(s.user_id)) continue;
+    seen.add(s.user_id);
+    bySeat.push(s);
+  }
   return {
     res,
     publishable,
@@ -401,6 +409,7 @@ function matchTweetSubjects(text, matchIndex) {
     best: (res.subjects || [])[0] || null,
     seats,
     addressable: seats.size === 1 ? publishable[0] : null,
+    multi: seats.size > 1 ? bySeat : null,
   };
 }
 
@@ -480,7 +489,7 @@ async function ingestSubmissions(ownership, index, members, {
     // player_only     — a rostered player was named but the row is NOT addressed: below the
     //                   publish threshold, or two managers, or the player is unrostered
     // target_unresolved — a target_name was given and matched no member, or matched two
-    targeted: 0, auto_tagged: 0, player_only: 0, target_unresolved: 0,
+    targeted: 0, auto_tagged: 0, auto_tagged_multi: 0, player_only: 0, target_unresolved: 0,
     unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0,
     failures: [],
     /**
@@ -583,15 +592,18 @@ async function ingestSubmissions(ownership, index, members, {
     let own = null;
     let player = null;
     let how = "none";
+    let taggedManagers = null;
     const target = resolveTarget(sub.target_name, members, aliasesByCanon);
     // Always run the matcher: even when target_name is authoritative for the *seat*, the player
     // in the text still fills the meta line and the locker-room summary. Addressing still only
-    // comes from target_name or from subjects.addressable below — never from a below-threshold hit.
+    // comes from target_name or from subjects.addressable / subjects.multi below — never from a
+    // below-threshold hit.
     const subjects = matchTweetSubjects(tweet.text, matchIndex);
 
     if (target) {
       own = target;
       how = "target_name";
+      taggedManagers = [target.manager];
       report.targeted++;
       if (subjects.top) {
         const s = subjects.top;
@@ -602,7 +614,19 @@ async function ingestSubmissions(ownership, index, members, {
       own = { user_id: s.user_id, manager: s.manager };
       player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
       how = "player_auto";
+      taggedManagers = [s.manager];
       report.auto_tagged++;
+    } else if (subjects.multi) {
+      // Several seats cleared the bar (roundup naming multiple rostered players). Tag them all;
+      // the header lists every name, the summary stays impersonal (no second-person roast aimed
+      // at one of them). Primary own/user_id is the strongest seat for any single-id consumers.
+      const tagged = subjects.multi;
+      own = { user_id: tagged[0].user_id, manager: tagged[0].manager };
+      const s = subjects.top || tagged[0];
+      player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
+      how = "player_auto_multi";
+      taggedManagers = tagged.map((t) => t.manager);
+      report.auto_tagged_multi = (report.auto_tagged_multi || 0) + 1;
     } else {
       // Not addressed, but a player above the threshold still identifies the story.
       if (subjects.top) {
@@ -622,6 +646,7 @@ async function ingestSubmissions(ownership, index, members, {
       target_name: String(sub.target_name || "") || null,
       resolved_by: how,
       manager: own ? own.manager : "(the league)",
+      managers: taggedManagers,
       player: player ? player.name : null,
       // The score, and the distance to the line. `best` is the top subject whether or not it
       // published, so a refusal below the threshold reports the number it was refused at.
@@ -636,6 +661,7 @@ async function ingestSubmissions(ownership, index, members, {
 
     rows.push(await toTweetRow(sub, tweet, own, player, how, {
       managers: members.map((m) => m.name),
+      taggedManagers,
       cachedLine: previousLines.get(`tweet:${sub.id}`),
     }));
     report.published++;
@@ -756,6 +782,11 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     title: tweet.text,
     tweet_handle: tweet.author_handle,
   };
+  // Multi-tag rows speak about the story, not at one seat — empty manager forces summariseTweet().
+  const voiceManager = how === "player_auto_multi" ? "" : (own ? own.manager : "");
+  const tagged = Array.isArray(opts.taggedManagers) && opts.taggedManagers.length
+    ? opts.taggedManagers.filter(Boolean)
+    : (own && own.manager ? [own.manager] : []);
   return {
     id,
     published: Date.parse(sub.created_at) || Date.now(),
@@ -768,6 +799,10 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     player_position: player ? player.position : null,
     user_id: own ? own.user_id : "",
     manager: own ? own.manager : "",
+    // Every seat tagged on this row. One name for player_auto / target_name; several for
+    // player_auto_multi. The UI header joins them; older pages that only read `manager` still
+    // see the primary seat.
+    managers: tagged,
     category: "tweet",
     severity: 4,
     upbeat: false,
@@ -778,34 +813,26 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     headline: "",
     summary: "",
     note,
-    league_line: await leagueLineAsync(item, { manager: own ? own.manager : "" }, {
+    league_line: await leagueLineAsync(item, { manager: voiceManager }, {
       managers: opts.managers,
       cachedLine: opts.cachedLine,
     }),
     trending_add: 0,
     /**
      * How the ROW was addressed, which is not the same question as how the player was found.
-     * Four values, and the UI renders the first two differently on purpose:
      *
-     *   target_name  the sharer named the seat. "For TedCumberbatch."
-     *   player_auto  the matcher resolved the seat from the player in the text, above threshold
-     *                and unambiguous. "TedCumberbatch's player" — a tag on the story.
-     *   player       a rostered player was identified and deliberately NOT turned into an
-     *                addressee: below threshold, two managers, or a roundup.
-     *   none         nothing was identified.
+     *   target_name         the sharer named the seat
+     *   player_auto         one seat matched from the text, above threshold
+     *   player_auto_multi   two or more seats matched — all listed in `managers`
+     *   player              a rostered player was identified but not turned into an addressee
+     *   none                nothing was identified
      */
     match: how,
     also: [],
-    // The expandable detail. Present only on this path; renderNews() treats their absence as
-    // "this is an ordinary news row" and renders no expander at all.
     tweet_text: tweet.text,
     tweet_author: tweet.author_name,
     tweet_handle: tweet.author_handle,
     submitted_by: String(sub.submitted_by == null ? "" : sub.submitted_by),
-    // What the tweet is *about*, as distinct from `category`, which is always "tweet" on this
-    // path. Used only by dedupeAgainstTweets() to decide whether an automated row is the same
-    // story; it never picks a voice line and it is not shown. Not shipped in news.json — the UI
-    // has no use for it — see bookOf().
     tweet_topic: classify(tweet.text).category,
   };
 }
@@ -1030,7 +1057,7 @@ async function build() {
   const previousTweets = previousTweetBodies();
   const previousLines = previousLeagueLines();
   const submissions = args.has("--no-submissions")
-    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, rejected_url: 0, duplicate_shares: 0, carried_forward: 0, targeted: 0, auto_tagged: 0, player_only: 0, target_unresolved: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [], attribution: [] } }
+    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, rejected_url: 0, duplicate_shares: 0, carried_forward: 0, targeted: 0, auto_tagged: 0, auto_tagged_multi: 0, player_only: 0, target_unresolved: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [], attribution: [] } }
     : await ingestSubmissions(ownership, index, members, {
       stampRows: !args.has("--report"),
       previousTweets,
@@ -1429,19 +1456,34 @@ async function main() {
       }
     }
     /**
-     * A row may only be addressed by a rule that exists, and `player_auto` is the new one. It
-     * says the matcher — not a person — picked the seat, and the UI renders it as a possessive
-     * tag rather than as "For <name>". A row addressed with `match: "player"` would mean the
-     * pipeline decided not to address it and then addressed it anyway.
+     * A row may only be addressed by a rule that exists. `player_auto_multi` tags every seat
+     * that cleared the bar on a roundup; the UI lists them all in the header.
      */
-    if (!["target_name", "player_auto", "player_id", "name", "player", "none"].includes(it.match)) {
+    if (!["target_name", "player_auto", "player_auto_multi", "player_id", "name", "player", "none"].includes(it.match)) {
       throw new Error(`self-check failed: item ${it.id} records an unknown attribution route ${it.match}`);
     }
     if (it.manager && (it.match === "player" || it.match === "none")) {
       throw new Error(`self-check failed: item ${it.id} is addressed to ${it.manager} on route ${it.match}, which means "not addressed"`);
     }
-    if (!it.manager && (it.match === "target_name" || it.match === "player_auto")) {
+    if (!it.manager && (it.match === "target_name" || it.match === "player_auto" || it.match === "player_auto_multi")) {
       throw new Error(`self-check failed: item ${it.id} claims route ${it.match} but names no manager`);
+    }
+    if (it.match === "player_auto_multi") {
+      if (!Array.isArray(it.managers) || it.managers.length < 2) {
+        throw new Error(`self-check failed: item ${it.id} is player_auto_multi but managers[] is missing or too short`);
+      }
+      // Multi-tag summaries must stay impersonal — the header already lists every seat.
+      const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
+      if (offence) {
+        throw new Error(`self-check failed: multi-tag ${it.id}'s summary ${offence}`);
+      }
+    }
+    if (Array.isArray(it.managers)) {
+      for (const name of it.managers) {
+        if (!knownNames.has(name)) {
+          throw new Error(`self-check failed: item ${it.id} tags unknown manager ${JSON.stringify(name)}`);
+        }
+      }
     }
     // The expandable detail is third-party prose. It must arrive as text, never as markup —
     // news-sources.mjs strips the oEmbed HTML rather than trusting it, and this is the assertion

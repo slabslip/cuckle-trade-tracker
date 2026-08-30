@@ -704,6 +704,11 @@ const html = `<!DOCTYPE html>
       min-width: 0; flex: 1 1 auto; font-weight: 650;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    /* Multi-tag headers list several seats — allow wrap so the second name is not clipped. */
+    .news-row-tweet .news-who {
+      white-space: normal; overflow: visible; text-overflow: unset;
+      line-height: 1.25;
+    }
     /* Same gold as button.all-trades. Not --red/--green: those mean "you are down or up value"
        on every other screen in this app, and a hamstring is not a value delta. */
     .news-cat {
@@ -2101,8 +2106,14 @@ const html = `<!DOCTYPE html>
           when ? esc(when) : "",
         ].filter(Boolean).join(" \\u00b7 ");
         // An unaddressed shared tweet matched nobody, so there is no name to print. The label
-        // says so rather than leaving an empty slot that reads as a rendering fault.
-        const who = it.manager ? esc(it.manager) : (it.category === "tweet" ? "The league" : "");
+        // says so rather than leaving an empty slot that reads as a rendering fault. Multi-tag
+        // rows list every matched seat in the header (managers[]); single-tag rows use manager.
+        const whoNames = (Array.isArray(it.managers) && it.managers.length)
+          ? it.managers.filter(Boolean)
+          : (it.manager ? [it.manager] : []);
+        const who = whoNames.length
+          ? whoNames.map((n) => esc(n)).join(" \\u00b7 ")
+          : (it.category === "tweet" ? "The league" : "");
         // Sharer's note, attributed, then the locker-room / factual summary. Both may be absent
         // on older rows; either alone is enough for the top of the post.
         const noteBit = it.note
@@ -4728,9 +4739,11 @@ for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   if (/it\.(also|published)\b/.test(raw)) continue;
   throw new Error(`renderNews interpolates a news field without esc(): ${raw.trim()}`);
 }
-for (const need of ["esc(it.manager)", "esc(it.league_line)", "esc(it.headline)", "esc(it.player)",
+for (const need of ["esc(it.league_line)", "esc(it.headline)", "esc(it.player)",
   "esc(it.source_label || it.source)", "esc(it.player_team)", "esc(it.player_position)",
   "esc(cat)", "esc(also)", "esc(when)", 'esc(safe) + \'" target="_blank"',
+  // Manager tags: single or multi. Names go through esc(n) in the whoNames map.
+  "whoNames.map((n) => esc(n))",
   // Shared-tweet citation. The full tweet_text stays off the row (link-out only); the handle
   // still ships in text and must be escaped. tweet_text remains a branch gate on the item.
   "esc(it.tweet_handle)",

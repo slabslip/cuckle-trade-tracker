@@ -2096,8 +2096,14 @@
           when ? esc(when) : "",
         ].filter(Boolean).join(" \u00b7 ");
         // An unaddressed shared tweet matched nobody, so there is no name to print. The label
-        // says so rather than leaving an empty slot that reads as a rendering fault.
-        const who = it.manager ? esc(it.manager) : (it.category === "tweet" ? "The league" : "");
+        // says so rather than leaving an empty slot that reads as a rendering fault. Multi-tag
+        // rows list every matched seat in the header (managers[]); single-tag rows use manager.
+        const whoNames = (Array.isArray(it.managers) && it.managers.length)
+          ? it.managers.filter(Boolean)
+          : (it.manager ? [it.manager] : []);
+        const who = whoNames.length
+          ? whoNames.map((n) => esc(n)).join(" \u00b7 ")
+          : (it.category === "tweet" ? "The league" : "");
         // Sharer's note, attributed, then the locker-room / factual summary. Both may be absent
         // on older rows; either alone is enough for the top of the post.
         const noteBit = it.note

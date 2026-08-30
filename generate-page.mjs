@@ -137,22 +137,23 @@ const html = `<!DOCTYPE html>
     /* min-width: 0 everywhere a track holds text. Without it a grid track cannot shrink
        below its longest word, so a name like DarkWingDucks2023 pushed the value it sits
        next to past the card edge at 375px. Names ellipsize; figures never do. */
-    .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 2px 8px; width: 100%; align-items: start; }
+    /* Two columns, no middle track. The margin used to live in a centre column as one
+       unsigned number with an arrow for direction; it is now a signed figure on each side,
+       so the column it sat in has nothing left to hold and the date/caption already spans
+       the full row below. */
+    .row-top.tape { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px 14px; width: 100%; align-items: start; }
     .row-top.tape > * { min-width: 0; }
     .row-top.tape .side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .row-top.tape .side-line { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
     .row-top.tape .side.right { text-align: right; }
-    /* Both sides write the name first so the stacked phone row reads name-then-figure on
-       every line; row-reverse is what puts the figure inboard again on the wide tape. */
+    /* Both sides write name, then signed delta, then bag total, so the stacked phone row
+       reads the same way on every line; row-reverse is what mirrors the pair on the wide
+       tape, which puts each delta beside its own name and both totals inboard. */
     .row-top.tape .side.right .side-line { flex-direction: row-reverse; justify-content: flex-start; }
     .row-top.tape .names {
       min-width: 0; flex: 0 1 auto;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .row-top.tape .mid { text-align: center; font-variant-numeric: tabular-nums; }
-    .row-top.tape .mid .margin { white-space: nowrap; }
-    .row-top.tape .margin i { font-style: normal; }
-    .row-top.tape .margin .dir-v { display: none; }
     /* The caption spans the whole row instead of sharing the middle column. Sitting in
        that auto track it sized the track to its own max-content, and on the lopsided
        board -- where the caption carries a headline -- that left the 1fr name tracks 0px. */
@@ -171,8 +172,8 @@ const html = `<!DOCTYPE html>
        place, against 155px for DarkWingDucks2023 -- so stacking within the three columns
        is not enough either. One full-width line per side gives every name ~258px at
        375px, which clears the longest league name by more than 100px and leaves the
-       figures untouched. Stacked, the margin sits between the two sides, so its arrow
-       points up or down rather than left or right: same direction, same number.
+       figures untouched. Stacked, both sides read left to right, so neither is mirrored and
+       the bag totals right-align into one column.
        The switch back to the wide tape is at 640px rather than at a phone width because
        that is where the inline arrangement measurably fits: at 561px it still gave
        DarkWingDucks2023 152px against the 165px it needs. */
@@ -180,10 +181,10 @@ const html = `<!DOCTYPE html>
       .row-top.tape { grid-template-columns: minmax(0, 1fr); gap: 3px; }
       .row-top.tape .side.right { text-align: left; }
       .row-top.tape .side-line,
-      .row-top.tape .side.right .side-line { flex-direction: row; justify-content: space-between; gap: 12px; }
-      .row-top.tape .mid { display: flex; justify-content: flex-start; text-align: left; }
-      .row-top.tape .margin .dir-h { display: none; }
-      .row-top.tape .margin .dir-v { display: inline; }
+      .row-top.tape .side.right .side-line { flex-direction: row; justify-content: flex-start; gap: 10px; }
+      /* The delta stays with its name; only the bag total is pushed out, so the two side
+         lines end in one right-aligned column of totals instead of two ragged ones. */
+      .row-top.tape .val { margin-left: auto; }
       .row-top.tape .tape-sub { justify-content: flex-start; }
     }
     @media (max-width: 430px) { .row-top.tape { font-size: 0.9375rem; } }
@@ -195,6 +196,13 @@ const html = `<!DOCTYPE html>
     .names { font-weight: 600; }
     .date { color: var(--dim); font-size: 0.8125rem; }
     .margin { font-variant-numeric: tabular-nums; font-weight: 650; }
+    /* Every signed delta in the app is this one span, emitted by tapeMargin(). The colour
+       is written as .delta.pos / .delta.neg rather than borrowing the bare .pos and .neg
+       so it survives inside containers that set their own colour on a descendant element
+       -- .day-in-val dims its spans, and a one-class .pos would lose to that. */
+    .delta { font-variant-numeric: tabular-nums; font-weight: 650; white-space: nowrap; flex: 0 0 auto; }
+    .delta.pos { color: var(--green); }
+    .delta.neg { color: var(--red); }
     .detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
     .row.open .detail { display: block; }
     /* An expandable row: the summary is the button, the detail is its sibling. The detail
@@ -348,6 +356,8 @@ const html = `<!DOCTYPE html>
     }
     button.day-in .day-in-val i { font-style: normal; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     button.day-in .day-in-val em { font-style: normal; font-weight: 650; color: var(--text); flex: 0 0 auto; margin-left: auto; }
+    /* button.day-in span is a block-level dim caption; the delta is neither. */
+    button.day-in .day-in-val .delta { display: inline; margin: 0; font-size: inherit; }
     .vote { margin: 10px 0 0; }
     .vote-h { font-weight: 650; }
     .vote-opts { display: flex; gap: 8px; margin-top: 8px; }
@@ -543,7 +553,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830seatorder";
+    const DATA_V = "20260830signed";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -648,8 +658,10 @@ const html = `<!DOCTYPE html>
         }
         return '<div class="leg">' + body + "</div>";
       }).join("");
+      // Signed by the same rule as every other delta, but it keeps its gold ink rather than
+      // green/red: this is an adjustment inside one bag, not a result against another side.
       const adj = va && Math.round(va)
-        ? '<div class="leg va"><span>Value Adjustment</span><b>' + (va > 0 ? "+" : "") + fmt(va) + "</b></div>"
+        ? '<div class="leg va"><span>Value Adjustment</span><b>' + signedNum(va) + "</b></div>"
         : "";
       const warn = unpriced ? '<div class="warn">' + unpriced + " no DP row</div>" : "";
       const shown = unpriced && !total ? "—" : fmt(total);
@@ -1134,17 +1146,37 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The margin between the two sides of a tape row, and which side it flowed to.
-     * The arrow is direction, not data: the wide tape runs left to right and the phone
-     * tape stacks top to bottom, so both glyphs ship and CSS shows the one that matches
-     * the arrangement. All three tape rows call this, so the sign convention and the
-     * rounding cannot drift apart between the trades list, the board and the drafts tab.
+     * ONE convention for every value delta on this dashboard: a signed, coloured figure
+     * sitting next to the thing it describes. Positive is "+N" in green, negative is
+     * "−N" in red, and the sign is always explicit. A tie is a bare 0 in neutral ink.
+     * A delta that does not exist stays an em dash and never gets a sign invented for it.
+     *
+     * This replaced four conventions for the same quantity: an arrow glyph in a middle
+     * column, an explicit "+" prefix, colour with no sign, and a bare number. Both sides
+     * of a two-team trade now carry the delta, mirrored, which is redundant by
+     * construction -- zero-sum holds -- and deliberately so: the redundancy is what makes
+     * "who won by how much" readable without decoding a glyph.
+     *
+     * signedNum is the text, signedCls is the colour, tapeMargin is the only markup.
+     * Anything that renders a delta calls tapeMargin; anything that names a delta inside
+     * a sentence calls signedNum and takes its ink from the sentence.
      */
+    function signedNum(d) {
+      if (d == null || Number.isNaN(d)) return "—";
+      const r = Math.round(d);
+      if (r === 0) return "0";
+      return (r > 0 ? "+" : "−") + fmt(Math.abs(r));
+    }
+
+    function signedCls(d) {
+      return d == null || Number.isNaN(d) || Math.round(d) === 0 ? "" : cls(d);
+    }
+
+    // Keeps the tapeMargin name because the three tape rows -- trades, lopsided board and
+    // drafts -- were already funnelled through it so the convention could not drift between
+    // them. Now every screen shares it, and none of them formats a delta by hand.
     function tapeMargin(d) {
-      if (d == null) return "—";
-      if (d > 0) return '<i class="dir-h">←</i><i class="dir-v">↑</i> ' + fmt(d);
-      if (d < 0) return fmt(Math.abs(d)) + ' <i class="dir-h">→</i><i class="dir-v">↓</i>';
-      return fmt(d);
+      return '<span class="delta ' + signedCls(d) + '">' + signedNum(d) + "</span>";
     }
 
     /** The trade_boards side row that frames one trade, preferring a named seat's side. */
@@ -1169,18 +1201,16 @@ const html = `<!DOCTYPE html>
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-      const mid = tapeMargin(s);
-      const leftCls = s == null || s === 0 ? "" : cls(s);
-      const rightCls = s == null || s === 0 ? "" : cls(-s);
-      const midCls = s == null || s === 0 ? "" : cls(s);
       // Gold outline for a trade this device has voted on. Colour alone is not a message,
       // so the same fact goes to a screen reader as text.
       const voted = !!readVotes(r.transaction_id).choice;
+      // The two sides are exact mirrors, so one score signs both: the seat carries s, the
+      // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
+      // figure it describes, not on the label beside it.
       return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names ' + leftCls + '">' + esc(r.name) + '</span><span class="val">' + got + "</span></div></div>"
-        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
-        + '<div class="side right"><div class="side-line"><span class="names ' + rightCls + '">' + esc(r.other) + '</span><span class="val">' + sent + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + esc(r.name) + "</span>" + tapeMargin(s) + '<span class="val">' + got + "</span></div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + esc(r.other) + "</span>" + tapeMargin(s == null ? null : -s) + '<span class="val">' + sent + "</span></div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
@@ -1227,7 +1257,7 @@ const html = `<!DOCTYPE html>
       const champ = ((titles && titles.titles) || [])[0];
       if (champ) items.push({ view: "titles", kicker: "Champion", line: champ.season + " · " + champ.name });
       const wide = rankWide()[0];
-      if (wide) items.push({ pack: "wide", kicker: "Most lopsided trades", line: wide.name + " vs " + wide.other + " · " + fmt(windowScore(wide)) });
+      if (wide) items.push({ pack: "wide", kicker: "Most lopsided trades", line: wide.name + " vs " + wide.other + " · " + signedNum(windowScore(wide)) });
       const traders = ((league && league.traders) || []).slice().sort((a, b) => (b.two_way || 0) - (a.two_way || 0));
       if (traders[0]) items.push({ pack: "", kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
       if (traders.length > 1) {
@@ -1420,7 +1450,8 @@ const html = `<!DOCTYPE html>
      * Every trade in the league, newest first. trade_boards.sides holds one row per seat per
      * trade, so this dedupes to one row per transaction_id. The side kept is the first one the
      * data lists rather than the winning one, so the left/right framing follows the tape
-     * instead of painting every row's left name green.
+     * rather than putting the winner on the left of every row. Which side won is carried by
+     * the signed delta beside each name, so the order does not have to carry it.
      */
     function leagueTrades() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
@@ -1496,14 +1527,14 @@ const html = `<!DOCTYPE html>
       return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
         + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
-        + '<div class="margin ' + cls(p.per) + '">' + fmt(p.per) + "</div></div></button>";
+        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></button>";
     }
 
     function draftLine(p, tag) {
       if (!p) return "";
       return '<div class="row"><div class="row-top"><div><div class="names">' + esc(p.player) + "</div>"
         + '<div class="date">' + esc(tag) + " · " + esc(p.season) + " R" + esc(p.round) + "</div></div>"
-        + '<div class="margin ' + cls(p.surplus) + '">' + fmt(p.surplus) + "</div></div></div>";
+        + '<div class="margin">' + tapeMargin(p.surplus) + "</div></div></div>";
     }
 
     function mark(id, title, sub, tone) {
@@ -1568,8 +1599,8 @@ const html = `<!DOCTYPE html>
       if (manners === "Gets extracted") mannersSub = farmed + " partners came out ahead vs you. You came out ahead vs " + extract + ".";
       else if (manners === "Extracts") mannersSub = "You came out ahead vs " + extract + " partners. Partners came out ahead vs you on " + farmed + ".";
       let agingSub = "No accept-day value to compare.";
-      if (ageMean != null && aging === "Aged up") agingSub = "Trades got better after you accepted (" + fmt(ageMean) + " on average).";
-      else if (ageMean != null && aging === "Aged down") agingSub = "Trades got worse after you accepted (" + fmt(ageMean) + " on average).";
+      if (ageMean != null && aging === "Aged up") agingSub = "Trades got better after you accepted (" + signedNum(ageMean) + " on average).";
+      else if (ageMean != null && aging === "Aged down") agingSub = "Trades got worse after you accepted (" + signedNum(ageMean) + " on average).";
       else if (ageMean != null) agingSub = "Trades are worth about the same as the day you accepted.";
       let draftSub = "No graded rookie picks yet.";
       if (draftMean != null && draft === "Hit factory") draftSub = "Rookie picks usually turn into more than the pick was worth (" + rook.length + " graded).";
@@ -1577,19 +1608,23 @@ const html = `<!DOCTYPE html>
       else if (draftMean != null) draftSub = "Some rookies hit, some missed. Net is about even (" + rook.length + " graded).";
       const runSub = per == null
         ? "No complete deals to total yet."
-        : (total > 0 ? "+" : "") + fmt(total) + " net, about " + fmt(per) + " per deal.";
+        : signedNum(total) + " net, about " + signedNum(per) + " per deal.";
+      // statHtml, not stat: these lines carry a coloured delta span, so they ship as markup and
+      // are rendered unescaped. Every part of them is a number or a literal from this function --
+      // no manager, player or partner name may ever be concatenated in here. Counts are counts
+      // and stay unsigned; only a value delta gets a sign.
       return {
         run: { title: run, tone: runTone, sort: total == null ? 0 : total, sub: runSub,
-          stat: per == null ? "No complete deals" : (total > 0 ? "+" : "") + fmt(total) + " net · " + fmt(per) + " / deal" },
-        volume: { title: volume, tone: "", sort: n, sub: volumeSub, stat: n + " two-way" },
+          statHtml: per == null ? "No complete deals" : tapeMargin(total) + " net · " + tapeMargin(per) + " / deal" },
+        volume: { title: volume, tone: "", sort: n, sub: volumeSub, statHtml: n + " two-way" },
         posture: { title: posture, tone: "", sort: soldPicks - soldPlayers, sub: postureSub,
-          stat: soldPicks + " picks for players · " + soldPlayers + " players for picks" },
+          statHtml: soldPicks + " picks for players · " + soldPlayers + " players for picks" },
         manners: { title: manners, tone: mannersTone, sort: extract - farmed, sub: mannersSub,
-          stat: extract + " extracts · " + farmed + " extracted" + (even ? " · " + even + " even" : "") },
+          statHtml: extract + " extracts · " + farmed + " extracted" + (even ? " · " + even + " even" : "") },
         aging: { title: aging, tone: agingTone, sort: ageMean == null ? 0 : ageMean, sub: agingSub,
-          stat: ageMean == null ? "No accept-day compare" : fmt(ageMean) + " after accept · " + aged.length + " deals" },
+          statHtml: ageMean == null ? "No accept-day compare" : tapeMargin(ageMean) + " after accept · " + aged.length + " deals" },
         draft: { title: draft, tone: draftTone, sort: draftMean == null ? 0 : draftMean, sub: draftSub,
-          stat: draftMean == null ? "No graded rookies" : fmt(draftMean) + " / pick · " + rook.length + " graded" },
+          statHtml: draftMean == null ? "No graded rookies" : tapeMargin(draftMean) + " / pick · " + rook.length + " graded" },
       };
     }
 
@@ -1635,7 +1670,7 @@ const html = `<!DOCTYPE html>
             + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + esc(r.name) + "</span>"
             + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
             + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
-            + '<div class="date">' + esc(r.stat) + "</div></div>";
+            + '<div class="date">' + r.statHtml + "</div></div>";
         }).join("")
         + "</div>";
     }
@@ -2043,11 +2078,12 @@ const html = `<!DOCTYPE html>
         const w = (r.windows && r.windows[lens]) || {};
         const got = w.incomplete && !w.got ? "—" : fmt(w.got);
         const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
+        const s = windowScore(r);
         return '<button type="button" class="day-in" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
           + "<b>" + esc(r.name) + " vs " + esc(r.other) + "</b>"
           + '<span class="day-in-vals">'
-          + '<span class="day-in-val"><i>' + esc(r.name) + "</i><em>" + got + "</em></span>"
-          + '<span class="day-in-val"><i>' + esc(r.other) + "</i><em>" + sent + "</em></span>"
+          + '<span class="day-in-val"><i>' + esc(r.name) + "</i>" + tapeMargin(s) + "<em>" + got + "</em></span>"
+          + '<span class="day-in-val"><i>' + esc(r.other) + "</i>" + tapeMargin(s == null ? null : -s) + "<em>" + sent + "</em></span>"
           + "</span></button>";
       }).join("")
         || '<div class="date">No trades on the tape yet.</div>';
@@ -2155,19 +2191,27 @@ const html = `<!DOCTYPE html>
       const gotShow = p.s.unpriced && !p.s.today ? "—" : fmt(p.s.today);
       const sentShow = p.s.sent_unpriced && !p.s.sent_today ? "—" : fmt(p.s.sent_today);
       const dlt = incomplete ? null : displayDelta(p.s.today, p.s.sent_today);
-      const mineCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
-      const otherCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
-      const mid = tapeMargin(incomplete ? null : dlt);
-      const midCls = dlt == null || incomplete || dlt === 0 ? "" : cls(dlt);
+      // Above two seats the mirror property does not hold per seat -- but this row's right
+      // column is not one seat. Its label is every counterparty joined and its bag total is
+      // already what this seat sent, which is exactly what those seats received between them.
+      // So -dlt is that column's true combined net by conservation, not an invented per-seat
+      // figure, and the caption says "combined" so it cannot be read as one seat's result.
+      // Per-seat bags stay in the expanded detail, where each is titled with its own name.
       const top = '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.mine) + '</span><span class="val">' + gotShow + "</span></div></div>"
-        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
-        + '<div class="side right"><div class="side-line"><span class="names ' + otherCls + '">' + esc(p.other) + '</span><span class="val">' + sentShow + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.mine) + "</span>" + tapeMargin(dlt) + '<span class="val">' + gotShow + "</span></div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + esc(p.other) + "</span>" + tapeMargin(dlt == null ? null : -dlt) + '<span class="val">' + sentShow + "</span></div></div>"
         // On the trade's own screen the caption above already dates it, so the flat form drops
-        // the second copy. The incomplete badge is a warning rather than a repeat and stays.
+        // the second copy. The incomplete badge is a warning rather than a repeat and stays,
+        // and so does the multi-seat note: it is what makes the right column's sign readable.
         + (flat
-          ? (incomplete ? '<div class="tape-sub"><span class="badge sub-when">no DP row</span></div>' : "")
+          ? ((p.multi || incomplete)
+            ? '<div class="tape-sub">'
+              + (p.multi ? '<span class="date sub-when">' + ((t.others || []).length + 1) + "-team · combined</span>" : "")
+              + (incomplete ? '<span class="badge ' + (p.multi ? "sub-note" : "sub-when") + '">no DP row</span>' : "")
+              + "</div>"
+            : "")
           : '<div class="tape-sub"><span class="date sub-when">' + esc(t.date) + "</span>"
+            + (p.multi ? '<span class="date sub-note">' + ((t.others || []).length + 1) + "-team · combined</span>" : "")
             + (incomplete ? '<span class="badge sub-note">no DP row</span>' : "")
             + "</div>")
         + "</div>";
@@ -2241,11 +2285,9 @@ const html = `<!DOCTYPE html>
       const got = pickGot(p);
       const gotShow = got == null ? "—" : fmt(got);
       const sentShow = p.pick_cost == null ? "—" : fmt(p.pick_cost);
+      // The two sides here are what the pick became and what the pick cost at the draft, so
+      // the surplus signs the player and its negative signs the slot. Same mirror, same helper.
       const dlt = pickDelta(p);
-      const mineCls = dlt == null || dlt === 0 ? "" : cls(dlt);
-      const otherCls = dlt == null || dlt === 0 ? "" : cls(-dlt);
-      const mid = tapeMargin(dlt);
-      const midCls = dlt == null || dlt === 0 ? "" : cls(dlt);
       const clock = clockName();
       let detail = "";
       if (open) {
@@ -2266,9 +2308,8 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="row-x-btn" data-draft="' + esc(key) + '"'
         + ' aria-expanded="' + (open ? "true" : "false") + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.player) + '</span><span class="val">' + gotShow + "</span></div></div>"
-        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
-        + '<div class="side right"><div class="side-line"><span class="names ' + otherCls + '">' + esc(slot) + '</span><span class="val">' + sentShow + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.player) + "</span>" + tapeMargin(dlt) + '<span class="val">' + gotShow + "</span></div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + esc(slot) + "</span>" + tapeMargin(dlt == null ? null : -dlt) + '<span class="val">' + sentShow + "</span></div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(p.as_of || "") + "</span>"
         + '<span class="date origin sub-note ' + (own ? "own" : "away") + '">' + esc(origin) + "</span></div>"
         + "</div></button>"
@@ -2383,7 +2424,7 @@ const html = `<!DOCTYPE html>
         + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
         + (filtered ? '<span class="dot"></span>' : "")
         + "</button>"
-        + '<div class="caption"><span class="' + cls(avg) + '">' + fmt(avg) + "</span> / pick"
+        + '<div class="caption">' + tapeMargin(avg) + " / pick"
         + " · " + graded.length + " graded · " + esc(livedHint(list.length, raw.length, "pick")) + "</div>";
       const html = '<div class="lens-row"><div class="lens-row-left">' + draftBtn + "</div></div>"
         + (draftFilterOpen
@@ -2415,7 +2456,7 @@ const html = `<!DOCTYPE html>
           + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
           + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
-          + '<div class="margin ' + cls(per) + '">' + fmt(per) + "</div></div></button>";
+          + '<div class="margin">' + tapeMargin(per) + "</div></div></button>";
       }).join("");
       let detail = "";
       if (partnerName) {
@@ -2832,16 +2873,26 @@ for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
 for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)", "Top scorer · "]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the champ final caption: ${need}`);
 }
-// A tape row reads correctly only if both arrow glyphs and the full-width caption row
-// ship together: lose the vertical pair and the stacked phone row points sideways at
-// nothing, lose the caption row and the middle column swallows the name tracks again.
-for (const need of ['<i class="dir-h">←</i>', '<i class="dir-v">↑</i>', '<i class="dir-h">→</i>',
-  '<i class="dir-v">↓</i>', '"tape-sub"', 'date sub-when']) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a tape-row part: ${need}`);
+// One signed-delta convention, one emitter. If any of these goes missing the dashboard is
+// back to a bare or unsigned number somewhere, which is the defect this replaced: the
+// explicit signs, the em dash for a delta that does not exist, and the single tapeMargin
+// span every screen renders. The full-width caption row ships with them -- lose it and the
+// tape's grid swallows the name tracks again.
+for (const need of ['return (r > 0 ? "+" : "−") + fmt(Math.abs(r));', 'if (d == null || Number.isNaN(d)) return "—";',
+  'return \'<span class="delta \' + signedCls(d) + \'">\' + signedNum(d) + "</span>";',
+  '"tape-sub"', 'date sub-when']) {
+  if (!inline.includes(need)) throw new Error(`generated script lost a signed-delta part: ${need}`);
+}
+// Every delta figure goes through tapeMargin(). Nothing may format one by hand again, which
+// is how four conventions for the same quantity accumulated in the first place.
+for (const need of ['cls(dlt)', 'cls(s)', 'cls(-s)', 'cls(-dlt)', 'cls(p.per)', 'cls(p.surplus)',
+  'cls(avg)', 'cls(per)', '(total > 0 ? "+" : "")', '(va > 0 ? "+" : "")']) {
+  if (inline.includes(need)) throw new Error(`a delta is formatted by hand instead of by tapeMargin: ${need}`);
 }
 // The stacked phone tape and the wide tape are one rule set; either half alone is broken.
-for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".dir-v { display: inline; }",
-  "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere"]) {
+for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".row-top.tape .val { margin-left: auto; }",
+  "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere",
+  ".delta.pos { color: var(--green); }", ".delta.neg { color: var(--red); }"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
 }
 // A clip on h1.brand hides the seat picker, the most-used control in the app. It has been

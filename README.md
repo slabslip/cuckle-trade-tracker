@@ -42,6 +42,36 @@ The voice lives behind one seam, `leagueLine()` in `news-voice.mjs`, so it can b
 without touching ingest or UI. See `docs/NEWS_SDD.md` for the sources actually reachable, the
 Twitter/X finding, and the plan for the daily agent.
 
+### X and Discord — built, unwired, nothing scheduled
+
+An X (@AdamSchefter) ingest and a Discord notifier exist and are **inert without credentials**.
+Neither is in `build.mjs`, neither is on a cron, and no workflow file is committed. `news.json` and
+`index.html` are untouched by them. `docs/NEWS_SDD.md` §10 has the design, the secret names and a
+ten-step promotion checklist.
+
+```bash
+node --test news-match.test.mjs   # 35 tests, offline, against committed real-text fixtures
+node news-match.mjs --report      # score the matcher against the frozen 139-item RSS corpus
+node news-match.mjs --text "…"    # match one string and print the working
+node x-source.mjs                 # no-op without X_BEARER_TOKEN. --plan prints the request
+node discord-notify.mjs           # DRY RUN by default: writes data/discord-outbox.json, sends nothing
+node discord-notify.mjs --self-test   # the @everyone injection proofs
+```
+
+Refreshing the fixtures (network, only when you want a newer day of news):
+
+```bash
+node news-sync.mjs --corpus       # data/fixtures/rss-corpus.json, with the shipping matcher's verdicts
+node news-fixtures.mjs --harvest  # data/fixtures/schefter-quotes.json, real Schefter-credited sentences
+```
+
+Both write exact-count assertions' inputs, so re-harvesting will fail `news-match.test.mjs` until
+the new numbers are read and re-justified. That is deliberate.
+
+Secrets, none of which exist yet and none of which may be committed: `X_BEARER_TOKEN`,
+`DISCORD_WEBHOOK_STAGING`, `DISCORD_WEBHOOK_LIVE`. Committed config that must be filled in:
+`data/discord-members.json` (Discord user ids are not secrets; webhook URLs are).
+
 `apply-value-adjust.mjs` is not optional. It owns the today clock (40% flatten + 60% KTC,
 retired → 0), the Value Adjustment, every `trade_boards` row and `marks.json`. Skipping it ships
 the flatten-only book with stale boards. It reprices from the committed UI JSON, so it is

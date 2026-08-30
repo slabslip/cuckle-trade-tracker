@@ -699,6 +699,11 @@
       min-width: 0; flex: 1 1 auto; font-weight: 650;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    /* Multi-tag headers list several seats — allow wrap so the second name is not clipped. */
+    .news-row-tweet .news-who {
+      white-space: normal; overflow: visible; text-overflow: unset;
+      line-height: 1.25;
+    }
     /* Same gold as button.all-trades. Not --red/--green: those mean "you are down or up value"
        on every other screen in this app, and a hamstring is not a value delta. */
     .news-cat {
@@ -909,7 +914,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830221024";
+    const DATA_V = "news20260830222812";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

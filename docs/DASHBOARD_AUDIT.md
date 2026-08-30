@@ -273,7 +273,12 @@ also silently breaks the click handlers that read those datasets.
 
 ## 3. Dead code and dead payload
 
-### Dead UI: the entire league board screen is unreachable
+### Dead UI: the entire league board screen is unreachable — **boards DELETED 2026-08-30 (D4a)**
+
+*Update: the Best/Worst board described below was briefly made reachable, then removed for good
+by user decision — see D4a. `renderLeague()` survives for its Traders/Drafters lists, which are
+now themselves unreachable and awaiting a user ruling. The rest of this section still stands.*
+
 `renderLeague()` (`:1391`), `renderTradeBoards()` (`:1437`), `rankSides()` (`:1422`) and
 `monthsAgo()` (`:1413`) implement Best 10 / Worst 10 with an As-of-today vs Aged toggle and
 3m/6m/1y/3y/all window chips. The only buttons that set `view = "league"` live **inside**
@@ -536,7 +541,36 @@ is unambiguous repair.
 | D1 | **Rostered cheap players: 0 or flatten?** `isRetired` ORs `tinyFlat <= 1200`, so Mason Rudolph (PIT), Andy Dalton (PHI) and 29 others price at 0 despite having a team. | Change to `noTeam && (tinyRaw \|\| tinyFlat)`. A rostered QB2 prices at his flatten value (761–1137), not 0. Explicit retired set still wins. |
 | D2 | **VA on 3-team trades.** Per-seat bags do not mirror, so VA never cancels: +424.09 league-wide. | Compute each seat's VA against the **union** of the other bags, restoring zero-sum. Alternative — exclude N-way trades from VA and caption it. |
 | D3 | **Where does derived value live?** VA, partner means, and grade thresholds are each implemented two or three times. | Pipeline owns all arithmetic; ships one flat row per trade per lens; browser only formats. Kills P0-4, most of §4, ~70% of bytes. |
-| D4 | **Does the Home hero return, and do Best 10 / Worst 10 come back?** The board screen already works and is merely unreachable; `.hero` CSS survives with nothing emitting it. | Restore Best/Worst as a real screen (cheap — delete the two lines that force `view = "home"`), and either restore the hero or formally retire it. |
+| D4 | **Does the Home hero return, and do Best 10 / Worst 10 come back?** The board screen already works and is merely unreachable; `.hero` CSS survives with nothing emitting it. | ~~Restore Best/Worst as a real screen (cheap — delete the two lines that force `view = "home"`), and either restore the hero or formally retire it.~~ **Best/Worst half REVERSED by user decision 2026-08-30 — see D4a. The hero question is still open.** |
+
+### D4a — Best 10 / Worst 10: reversed by user decision, 2026-08-30
+
+This recommendation was implemented and then **rejected on sight by the user**, who had already
+removed Best/Worst from league home once before this audit was written. Seeing the restored
+`Best 10 · Worst 10` chip under Most lopsided, they said: *"idk where this came from we removed
+it. remove again. keep just most lopsided trade."*
+
+**"Most lopsided trades" is the permanent replacement for Best/Worst on league home.** The
+preference has now been stated twice. Do not propose restoring the board a third time.
+
+Removed in `main` (`cursor/drop-best-worst-af37`, `DATA_V = 20260829t`): the league-home chip,
+`renderTradeBoards`, `rankSides`, `monthsAgo`, `boardScore`, the `boardClock` / `boardWindow`
+state, the `[data-board]` / `[data-window]` / `[data-open-me]` handlers, and the now-unreachable
+`button.chip.on` rule. This closes most of the §3 "dead UI" item and the boards part of Slice 2.
+
+**Open, and a user decision — not a worker decision.** `renderLeague()` was never only Best/Worst.
+It also renders two league-wide lists that nobody objected to and that the user may never have
+seen: `Traders · per complete two-way` and `Drafters · rookie surplus per pick`. Those are left
+intact and `renderLeague()` still renders them, but with the chip gone **no visible control routes
+there** — only a hand-typed `?me=<seat>&view=league` reaches it (boot ignores `?view=` without a
+seat, §P1-1). So the two lists are now **unreachable in the UI, pending a ruling**: give them
+their own entry point, fold them into an existing screen, or delete them with
+`league.traders` / `league.drafters_rookie`. This is exactly the §8a trap in reverse — the
+destination outlived its only link — so it is logged rather than silently resolved.
+
+Consequently `league.json`'s `trade_boards.today` / `.aged` and `drafters_startup` now have **no
+reader at all**, and `sides` is read only by `rankWide` / `daySides`. §P1-10 (`aged` subtracts two
+price books) is now fully latent: nothing renders `aged`.
 
 ---
 
@@ -557,8 +591,9 @@ prefer the rostered id on name collisions and give `ktcValue` a name fallback (P
 `aged` from one price book (P1-10) · delete `realized_*` rather than repair it.
 
 **Slice 2 — delete the dead**
-Remove `renderLeague`/`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`/
-`draftTab` and the dead `pickWindowEnd` branches. Stop shipping `other_bags` on 2-team trades,
+Remove ~~`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`~~ (**done
+2026-08-30, D4a**), `renderLeague` (**blocked — still holds the Traders/Drafters lists; needs
+the D4a ruling first**), `draftTab` and the dead `pickWindowEnd` branches. Stop shipping `other_bags` on 2-team trades,
 `realized`, `recent_trades`, `year_ends`, `partner_headlines`, `drafted_by`, `review_trades`,
 `trade_boards.today`/`.aged`, `drafters_*`.
 
@@ -583,8 +618,10 @@ year filter becomes radios · back-button history (P1-8) · stop `replaceState` 
 
 1. **Is the Home hero coming back?** One number for "how you have done", or is the six-tile
    panel the answer now?
-2. **Should Best 10 / Worst 10 return** as a real screen, or is Most lopsided the permanent
-   replacement? (The code for boards already exists and works — it is just unreachable.)
+2. ~~**Should Best 10 / Worst 10 return** as a real screen, or is Most lopsided the permanent
+   replacement?~~ **Answered 2026-08-30: Most lopsided is the permanent replacement; the board is
+   deleted (D4a).** Replaced by a new question — the Traders and Drafters lists inside the old
+   league screen now have no entry point. Give them one, fold them elsewhere, or delete them?
 3. **Drafts on a lens.** Today the Drafts tab pins Since-trade and hides the dropdown. Should
    rookie surplus respond to the lens, given "got" would be a windowed mean while "sent" stays
    draft-day cost — two clocks in one number?

@@ -392,9 +392,10 @@ does that: it listens for `repository_dispatch` with `event_type: news-submissio
 runs the sync, and pushes when the feed changed. A one-minute cron is the backup
 if a ping is missed; Actions → news-refresh → Run workflow is the manual path.
 
-**You still have to wire Supabase → GitHub once.** GitHub will not accept the
-default Database Webhook body (it expects `{ "event_type": "…" }`), so use a
-small `pg_net` trigger. Paste this in the SQL editor after you have a PAT.
+**You still have to wire Supabase → GitHub once.** Use the one-file paste
+[`db/news-github-dispatch.sql`](../db/news-github-dispatch.sql) (same SQL as below).
+GitHub will not accept the default Database Webhook body (it expects
+`{ "event_type": "…" }`), so this `pg_net` trigger posts the right payload.
 
 1. GitHub → Settings → Developer settings → Personal access tokens.
    Fine-grained: this repo only, **Contents: Read and write**, **Metadata: Read**.

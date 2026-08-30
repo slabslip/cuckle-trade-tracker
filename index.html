@@ -1831,7 +1831,9 @@
       const book = news && news.v === 1 ? news : null;
       const items = (book && book.items) || [];
       const head = '<h2>News and Alerts</h2>'
-        + '<p class="caption">NFL news, only for players on this league\u2019s rosters, aimed at whoever owns them. Newest first. Tap a row for the source.</p>';
+        // Not "tap a row for the source": Sleeper's Rotowire-sourced items ship without a url in
+        // their metadata, so about a third of rows have nothing to open and render as plain rows.
+        + '<p class="caption">NFL news, only for players on this league\u2019s rosters, aimed at whoever owns them. Newest first. Rows with a linked source open it in a new tab.</p>';
       if (!items.length) {
         return head + '<div class="news-box"><p class="news-empty">Nothing breaking. When a story lands on someone\u2019s roster it shows up here.</p></div>';
       }

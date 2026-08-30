@@ -1836,7 +1836,9 @@ const html = `<!DOCTYPE html>
       const book = news && news.v === 1 ? news : null;
       const items = (book && book.items) || [];
       const head = '<h2>News and Alerts</h2>'
-        + '<p class="caption">NFL news, only for players on this league\\u2019s rosters, aimed at whoever owns them. Newest first. Tap a row for the source.</p>';
+        // Not "tap a row for the source": Sleeper's Rotowire-sourced items ship without a url in
+        // their metadata, so about a third of rows have nothing to open and render as plain rows.
+        + '<p class="caption">NFL news, only for players on this league\\u2019s rosters, aimed at whoever owns them. Newest first. Rows with a linked source open it in a new tab.</p>';
       if (!items.length) {
         return head + '<div class="news-box"><p class="news-empty">Nothing breaking. When a story lands on someone\\u2019s roster it shows up here.</p></div>';
       }
@@ -3766,6 +3768,21 @@ for (const need of PINNED) {
 const newsFn = inline.slice(inline.indexOf("    function renderNews()"));
 const newsBody = newsFn.slice(0, newsFn.indexOf("\n    function renderLeagueHome()"));
 if (!newsBody || newsBody.length < 400) throw new Error("renderNews() did not ship");
+// 0. It is actually called, and called inside the return rather than after it.
+//
+// This exact defect shipped once. Rebasing onto the League Data Sets dropdown left
+// renderLeagueHome as "+ dataSetPanel();" followed by "+ renderNews();" -- a terminated return
+// and then a dead expression statement. Valid JavaScript, `node --check` clean, every other
+// guard below satisfied, and the feed simply absent from the page. Only the screenshot showed
+// it. Assert the composition, not just the function's existence.
+const homeCompose = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
+const homeReturn = homeCompose.slice(0, homeCompose.indexOf("\n    }"));
+if (!/return[\s\S]*\+ renderNews\(\);/.test(homeReturn)) {
+  throw new Error("renderLeagueHome must compose renderNews() inside its return -- a stray semicolon before it makes the feed dead code");
+}
+if (/;[\s\S]*\+ renderNews\(\)/.test(homeReturn)) {
+  throw new Error("renderNews() sits after a terminated statement in renderLeagueHome -- it would never run");
+}
 for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   // it.also and it.published are read into locals and formatted by ago()/length before use;
   // everything else must be inside esc() at the point of concatenation.

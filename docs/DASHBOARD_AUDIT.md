@@ -33,9 +33,15 @@ Every heading below carries its own **FIXED** annotation with the commit; this i
 | Delete the league screen (D4b ruling) | `8cdbb3d` | §3 dead UI, §10.2 |
 | G — docs | this commit | §7 docs drift |
 
+**Signed deltas, 2026-08-30, `DATA_V = 20260830sd`.** The margin between two sides no longer sits
+between them as one unsigned number with an arrow. It is attached to each side and signed: the
+winner carries `+648`, the loser `−648`, and every side keeps its bag total as well. That folded
+four sign conventions for the same quantity into one (§4.8), and the one convention is written
+down in **§4a** so it cannot drift back. It also closes A8.
+
 **Still open, deliberately.** §4.2 posture vocabulary,
-§5.1–5.2 ticker duplication, §5.3 the constant `1st` column, A6 (marquee pause), A8 (three colour
-languages in a Drafts row), and the `DATA_V` hand-edit hazard in §6b. None were in the approved
+§5.1–5.2 ticker duplication, §5.3 the constant `1st` column, A6 (marquee pause),
+and the `DATA_V` hand-edit hazard in §6b. None were in the approved
 slice list. Plus the `windows` restructure (D3a), which was scoped and written up rather than
 half-landed.
 
@@ -623,6 +629,14 @@ positives (`padding: 10px 12px` also matches `button.mark`) that made the wrong 
 **Require provenance**, not just a number: confirm the port is yours, and checksum the served bytes
 against the bytes on disk before believing a measurement.
 
+*This reproduced again during the signed-delta pass, 2026-08-30.* A `python3 -m http.server 8791`
+died on `OSError: [Errno 98] Address already in use` because another agent already held 8791 — and
+`curl` on that port still answered `200` with a complete, plausible dashboard. The served md5 did
+not match the on-disk `index.html` and the build's `DATA_V` was absent from the served bytes, which
+is what caught it. **Both checks are needed:** confirm the listening PID on the port is yours
+(`netstat -ltnp | grep ':<port> '`), and assert the served page carries your unique `DATA_V`.
+A 200 with sensible-looking HTML is not evidence of anything.
+
 ### `scrollWidth` is 0 on an inline element, so the ellipsis test passes vacuously
 `el.scrollWidth > el.clientWidth` is the usual "is this ellipsized" test, but a non-replaced
 **inline** box has no scroll box and reports `scrollWidth` **0**. During the A7d pass this made
@@ -708,7 +722,7 @@ is exactly the kind of field §3 recommends deleting rather than repairing.
 
 ## 4. Inconsistencies that should be identical
 
-**Status:** 1, 3, 4, 6 and 7 are fixed; 2 and 5 are not.
+**Status:** 1, 3, 4, 6, 7 and 8 are fixed; 2 and 5 are not.
 
 1. **Margin colour** — **FIXED, `2f22d5f`** (§P1-3).
 2. **Posture vocabulary** — **STILL OPEN.** Champions Path still says "Bought players" while
@@ -731,6 +745,86 @@ is exactly the kind of field §3 recommends deleting rather than repairing.
 7. **Delta rounding** — **RESOLVED.** `rankSides` was unified onto `displayDelta` rounding in
    `4653091` and then deleted with the board in `3474f51`, so `displayDelta` is now the only
    rule in the file.
+8. **Four sign conventions for the same quantity** — **FIXED, 2026-08-30, `DATA_V = 20260830sd`.**
+   The same number — a value delta — was written four different ways: an arrow glyph beside an
+   unsigned figure in a tape row's middle column, an explicit `+` prefix on the Value Adjustment
+   leg and the "Ahead" tile, colour with no sign at all on the Partners tab and the Drafts
+   average, and a bare number in the mark-chart stat lines. The user's report was about the
+   consequence rather than the cause: the margin sat between the two sides as one number, so
+   *who* won had to be decoded from a glyph. §4a is the single convention that replaced all four.
+
+   *A note on numbering.* This item was requested as "P1-11". P1-11 in this file is
+   **filter state leaks across seats**, fixed in `2f22d5f`; the sign-convention finding had no
+   number of its own, so it is recorded here as §4.8 with §4a as its resolution.
+
+---
+
+## 4a. The signed-delta convention — one rule, do not let it drift back
+
+**A signed, coloured value sits next to the thing it describes.** Positive is `+N` in
+`--green`, negative is `−N` in `--red`, and the sign is always explicit.
+
+| Case | Renders as | Ink |
+| --- | --- | --- |
+| Gain | `+648` | `--green` |
+| Loss | `−648` | `--red` |
+| Tie | `0` — no sign | neutral (`--text`) |
+| No delta (incomplete / unpriced) | `—` | neutral. **Never invent a sign for a number that does not exist.** |
+
+**Three functions, and nothing else may format a delta.** All three are in the inline script:
+
+- `signedNum(d)` — the text. One `Math.round`, one glyph pair (`+` and U+2212), one em dash.
+- `signedCls(d)` — the colour class, `cls(d)` with 0 and null forced neutral.
+- `tapeMargin(d)` — the **only** emitter of the markup: `<span class="delta pos">+648</span>`.
+
+`tapeMargin` kept its old name deliberately. The three tape rows were already funnelled through
+it so the convention could not drift between the trades list, the lopsided board and the Drafts
+tab; every screen now shares the same funnel. Where a delta appears inside a prose sentence (the
+style tiles' captions) `signedNum` supplies the text and the sentence keeps its own ink, because
+colouring one word inside a grey caption is less legible, not more.
+
+**What a side's delta means.** Each side's delta is its own bag minus the other bag on that row.
+On a complete two-team trade those bags are the two seats, so each side's delta is that seat's
+result and the pair is an exact mirror — `+648` against `−648`. That redundancy is the point: it
+is what makes "who won, by how much" readable without decoding a glyph. Zero-sum holds, so the
+mirror is a property of the data and not a display trick (§3b: 0 breaks across 288 pairs).
+
+**Three-team trades.** The mirror does not hold per seat above two seats, and the row does not
+pretend otherwise. The right column is the counterparties *together* — their names joined, and
+the bag this seat gave up between them — so its delta is this seat's result negated, which by
+conservation is also those two seats' combined result, exact to within the ±1 that rounding
+three bags separately can leave. The caption carries `3-team · combined` so it cannot be read as
+one seat's individual result, and the expanded detail breaks out each seat's own bag by name.
+Verified on both of the league's N-way trades across all five clocks: seat deltas sum to 0 or −1.
+
+**The arrow is gone, and so is the middle column.** Once both sides are signed, `←` / `→` (and
+the stacked `↑` / `↓`) was a third encoding of a fact the sign and the colour already carry.
+Removing it also removed the centre grid track, so a tape row is `1fr 1fr` and the date/caption
+row that already spanned the full width below it is all that remains of the middle. A tape row
+is one line shorter on phones than it was.
+
+**Names are no longer coloured by who won.** The colour moved onto the figure it describes.
+This is what closes A8: a red *player* name in a Drafts row read as "bad player" rather than
+"the pick underperformed". The Drafts row still has a second colour language — the origin label,
+green for own and gold for acquired — and that one is deliberate: it is provenance, not value.
+
+**Enforced at generate time.** `generate-page.mjs` asserts the three helpers survived into the
+generated page, and asserts the *absence* of every hand-rolled form it replaced: `cls(dlt)`,
+`cls(s)`, `cls(-s)`, `cls(-dlt)`, `cls(p.per)`, `cls(p.surplus)`, `cls(avg)`, `cls(per)`,
+`(total > 0 ? "+" : "")` and `(va > 0 ? "+" : "")`. Adding a delta site that formats its own
+sign fails the build. Do not weaken these; extend them.
+
+**One deliberate exception.** The Value Adjustment leg takes the sign rule but keeps its gold
+ink (`#d4c07a`), because it is an adjustment *inside one bag*, not a result against another
+side. Counts are not deltas and stay unsigned — "56 two-way", "27 graded", "4 extracts".
+
+**Where a signed delta renders.** Every one of these goes through `tapeMargin`:
+`tradeRow` (trades list, Best/Worst deal, the expanded header, and the full-screen trade
+review's flat form) · `boardTape` (Most lopsided, the row under the Recent Trade card, and the
+league-wide trades list) · `pickRow` (Drafts, where the two sides are the player and the pick's
+draft-day cost) · the Recent Trade card's own two chips · `partnerLine` and the Partners tab ·
+`draftLine` · the Drafts average caption · the six style tiles' captions and the mark-chart stat
+lines · `bagBlock`'s Value Adjustment leg · the Most-lopsided league bubble.
 
 ---
 
@@ -817,8 +911,9 @@ serves stale data with no signal. Derive it from `league.today` or a content has
 
 ## 6c. Accessibility and mobile
 
-**A1–A5, A7, A7b and A7c are fixed in `f9fdb39`** (spacing follow-up in `d4997a2`). A6 and A8
-were not in the approved slice list and stand. What shipped:
+**A1–A5, A7, A7b and A7c are fixed in `f9fdb39`** (spacing follow-up in `d4997a2`). **A8 is
+fixed by the signed-delta convention (§4a), 2026-08-30.** A6 was not in the approved slice list
+and stands. What shipped:
 
 - **A1** — `tradeRow` and `pickRow` wrap `row-top` in a `button.row-x-btn` and place `.detail`
   as its **sibling** inside a `.row-x` wrapper, so no button contains a button. Pick legs became
@@ -989,7 +1084,7 @@ Original findings below.
 | A7 | **P1** | **Grid overflow clips real numbers at true phone width.** `.row-top.tape` is `1fr auto 1fr` (`:96`) and `.names` has no `min-width: 0` or ellipsis. Reproduced in `preview.html` at 390px with a desktop scrollbar present (375px usable): the trade row for BubbaCuckShremp rendered its value as **"8,96"** and DarkWingDucks2023 as **"3,0"** — the figures the whole product exists to show, truncated. At a full 390px the numbers fit but `DarkWingDucks2023` sits flush against the edge, one character from clipping. Any longer display name, or a user with larger text, clips. `overflow-x: hidden` (`:22`) then hides the evidence. |
 | A7b | P2 | **The four nav tabs wrap onto two lines at 390px** (`home trades partners` / `drafts`), which reads as a rendering accident rather than a layout. Reproduced in `preview.html`. |
 | A7c | **P1** | **The brand header overflows the viewport at 390px.** The "Team" seat picker's right edge measures **410px** on a 390px viewport, so the most-used control in the app hangs off the screen. `overflow-x: hidden` on `html, body` hides the evidence rather than fixing it, and `button.who` already caps at `min(158px, calc(100vw - 120px))`, so the overflow is coming from the flex row (`h1.brand` with `overflow: visible`), not the button's own width. Measured on `main` before and after an unrelated change, so it is pre-existing and not a regression. |
-| A8 | P2 | **Three colour languages in one Drafts row.** `pickRow` colours the player's name by pick surplus (`:1268`), the origin label by own-vs-acquired (`:1271`), and the middle number always green (`:1249`). A red player name reads as "bad player", not "the pick underperformed". |
+| A8 | P2 | **Three colour languages in one Drafts row — FIXED 2026-08-30 (§4a).** Was: `pickRow` coloured the player's name by pick surplus, the origin label by own-vs-acquired, and the middle number always green, so a red player name read as "bad player" rather than "the pick underperformed". Now the name is plain ink, the middle number is gone, and green/red belongs to the signed surplus alone. The origin label keeps its green/gold because that is provenance, not value. |
 | — | — | **Contrast is fine.** `--muted` 6.59:1, `--dim` 5.38:1, `--red` 4.91:1, `--green` 10.41:1, gold 9.46:1 — all clear AA. Safe-area handling and `viewport-fit=cover` are correct. |
 
 Also dead CSS: `.hero` / `.hero b` (`:91`) is never emitted — the original product promise of one
@@ -1261,7 +1356,8 @@ Champions Path "1st" column earns its keep.
 first) · the D5 ruling on the KTC blend (§8c) · drop `drafters_rookie` from `revalue.mjs` ·
 ~~back-button history (P1-8)~~ **shipped, `20260830nv`** · derive `DATA_V` instead of hand-editing it (§6b) ·
 seat-switch race (§6) · price the newest trade on its own date (§10.5) ·
-the cosmetic set in §5 · posture vocabulary · A6 and A8.
+the cosmetic set in §5 · posture vocabulary · A6 · ~~A8~~ **shipped with the signed-delta
+convention, `20260830sd`** (§4a).
 
 ---
 

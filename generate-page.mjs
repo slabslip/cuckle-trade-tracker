@@ -2199,12 +2199,14 @@ const html = `<!DOCTYPE html>
       const gotShow = p.s.unpriced && !p.s.today ? "—" : fmt(p.s.today);
       const sentShow = p.s.sent_unpriced && !p.s.sent_today ? "—" : fmt(p.s.sent_today);
       const dlt = incomplete ? null : displayDelta(p.s.today, p.s.sent_today);
-      // Above two seats the mirror property does not hold per seat -- but this row's right
-      // column is not one seat. Its label is every counterparty joined and its bag total is
-      // already what this seat sent, which is exactly what those seats received between them.
-      // So -dlt is that column's true combined net by conservation, not an invented per-seat
-      // figure, and the caption says "combined" so it cannot be read as one seat's result.
-      // Per-seat bags stay in the expanded detail, where each is titled with its own name.
+      // A side's delta is always its own bag minus the other bag on this row. On a two-team
+      // trade those two bags are the two seats, so each side's delta is that seat's result and
+      // the pair is an exact mirror. Above two seats no single counterparty mirrors this seat,
+      // so the right column is the counterparties together: their names joined, and the bag
+      // this seat gave up between them. Its delta is therefore this seat's result negated,
+      // which by conservation is also those seats' combined result -- exact to within the +-1
+      // that rounding three bags separately can leave. It is not any one of them alone, so the
+      // caption says "combined", and the expanded detail below breaks out each seat's own bag.
       const top = '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + esc(p.mine) + "</span>" + tapeMargin(dlt) + '<span class="val">' + gotShow + "</span></div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + esc(p.other) + "</span>" + tapeMargin(dlt == null ? null : -dlt) + '<span class="val">' + sentShow + "</span></div></div>"

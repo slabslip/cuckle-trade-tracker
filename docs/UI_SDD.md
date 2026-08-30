@@ -15,7 +15,8 @@ Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Known defects → [`DASHBOARD_AUDIT.
 **League home** is what you get with no seat picked: the gold alert row, the `Score as` clock, one
 **box of four chips**, and the News and Alerts feed. It is the water cooler.
 
-**Team home** is what you get after picking a name in the header. **You are that seat.** Six style
+**Team home** is what you get after picking a name in league home's **Teams** chip. **You are that
+seat.** Six style
 tiles, an optional league chart, your best and worst deal, your two edge partners, your best and
 worst rookie pick. Every number is first-person for that `user_id`.
 
@@ -26,29 +27,45 @@ league recap.
 
 ## 2. Chrome
 
-Header: home button · `CuckleChunckle` · team picker. The picker is a `listbox` — `role="option"`
-children, arrow keys, `Home`/`End`, `Escape` returns focus to the button. Selecting a name is not
-"view as": it swaps the whole app to that seat.
+Header: home button · `CuckleChunckle`. That is all of it. **There is no seat picker in the
+header** — league home's **Teams** chip (§3) is the only way into a seat, on the ruling that the
+chips are the access points. Both items in the row go home: the icon and the brand link share one
+handler, and either clears the seat from any screen.
+
+**The flow is two taps, deliberately.** Home icon to leave the seat you are in, Teams chip to enter
+another, where the header picker did it in one. That cost was stated and accepted. What makes it
+safe is that the home icon leaves a seat from *every* screen — a seat's four tabs, the full-screen
+trade, a deep-linked seat — which was verified on the shipped build before the picker was removed,
+not assumed. `clearLeague()` is the only exit now, so a generate-time assertion covers both the
+listener and that the function still drops `me`, `data` and the view rather than only repainting.
+
+`h1.brand` keeps `overflow: visible` and keeps its assertion, even though no menu opens from the
+header any more. The row still holds two focusable targets with outline rings, a clip here turns it
+into a scroll box, and it has been re-clipped twice already (7f97711, then f9fdb39). The invariant
+is cheaper to keep than to rediscover.
+
+**The seat menu**, mounted on the Teams chip, is a `listbox` — `role="option"` children, arrow
+keys, `Home`/`End`, `Escape` returns focus to the chip. Selecting a name is not "view as": it swaps
+the whole app to that seat.
 
 **The trigger always reads "Teams"**, whether or not a seat is taken. It used to swap to the
 selected manager's name, which made the one door to the other nine seats read as the current
 seat's own button. The seat is not lost to a screen reader by that: the accessible name is
 `Teams, TrumanCooper selected` with a seat and `Teams` without one, and the chosen option in the
 list still carries `aria-selected="true"`. A generate-time assertion pins the visible label to the
-constant, and the button sizes to that label rather than to the widest manager name. Note "Teams"
-on the trigger is a different string from the removed "Team" option below, and the assertion for
-that option matches its whole call so the two cannot be confused.
+constant. Note "Teams" on the trigger is a different string from the removed "Team" option below,
+and the assertion for that option matches its whole call so the two cannot be confused.
 
-**The picker lists managers and nothing else**, in **last season's finishing order**, and the
+**The menu lists managers and nothing else**, in **last season's finishing order**, and the
 champion carries a gold crown. Three rules hold it together:
 
 - **No "Team" option.** It used to head the list and clearing the seat was all it did. The home
-  button in this same header does that, so the option was a second control saying what the home
-  icon already says — and dropping it is what takes the list from 11 rows to 10. That makes the
-  home icon the *only* way out of a seat, so a generate-time assertion keeps it wired.
+  button does that, so the option was a second control saying what the home icon already says —
+  and dropping it is what takes the list from 11 rows to 10. The home icon is the *only* way out
+  of a seat, so a generate-time assertion keeps it wired.
 - **The order is derived, never written down.** `title-path.mjs` is the only script that walks
   `previous_league_id`, so it derives the standings there and writes `place` onto
-  `data/ui/members.json`, which is the file the picker reads. The rule: **the winners bracket's
+  `data/ui/members.json`, which is the file the menu reads. The rule: **the winners bracket's
   placement games (`p`) settle every team they place, then regular-season record — standings
   points, then points for, then `roster_id` — orders the rest.** The losers bracket is not read;
   its `p` is a place inside the consolation round, not a league place. When 2026 completes it
@@ -63,18 +80,23 @@ champion carries a gold crown. Three rules hold it together:
 The crown is an inline SVG in the `#e0b44c` the gold cards already use, `aria-hidden`, so an
 option's accessible name stays exactly the manager's name.
 
-**There are two triggers for this one menu.** The header's picker is persistent across every
-screen; league home's **Teams** chip (§4) is a second door to the same list. They are not two
-controls — `whoOptions()` is the only place a seat option is built, both mounts carry class
-`.who-menu`, and the listbox keyboard matches that class rather than either id, so the order, the
-crown, the 220px width, the 44px rows and the no-scroll cap cannot drift apart. Generate-time
-assertions pin all of that, including that a seat option is emitted in exactly one place.
+**One list, one mount, and the seams stay welded anyway.** `whoOptions()` is the only place a seat
+option is built, the chip's menu carries class `.who-menu` rather than a copy of its rules, and the
+listbox keyboard matches that class rather than the menu's id. That was written when there were two
+mounts and it survives the removal of one: a build asserts a seat option is emitted in exactly one
+place, and that `whoOptions()` is mounted in exactly one — a second mount has to be declared, not
+assumed. The header picker's own guards were **re-pointed onto the chip**, not dropped: the
+constant label, the accessible name carrying the seat, the ten options, the crown on first place,
+the 44px rows and the no-scroll cap.
 
-**Open question:** the chip and the header picker now say the same thing on league home. Keeping
-both was the conservative call — the chip was asked for and the picker was not asked to go — but
-one of them is redundant there and it is a product decision, not a rendering one.
+**A menu that opens from the middle of the page is not on screen just because it is in the DOM.**
+The header picker never needed to care — it sat in the brand row at the top. Both chip menus do:
+focusing an option scrolls *that option* into view and nothing else, which left 1 of 10 managers
+and 2 of 6 data sets visible at 375px. `showMenu()` scrolls by the least amount that puts the whole
+panel inside the viewport, and both openers call it. It is asserted, along with the
+`focus({ preventScroll: true })` that has to come first.
 
-Under it, a ticker of league bubbles (champion, most lopsided, most active …).
+Under the header, a ticker of league bubbles (champion, most lopsided, most active …).
 
 **Tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They are a
 `tablist` with roving `tabindex` and arrow keys. There is **no `league` tab** — see §8.
@@ -131,7 +153,7 @@ against one ancestor: they drop the full width of the card instead of the width 
 were opened from, and there is a single overflow chain to keep open. A clip anywhere up that chain
 is what made the seat picker unusable twice, and it is asserted at generate time.
 
-**Teams** — a second trigger for the header's seat picker, not a second picker. See §2.
+**Teams** — the only door into a seat, since the header's picker was removed. See §2.
 
 **League Data Sets** — one chip, one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. It replaced five collapsible packs
@@ -141,9 +163,19 @@ and the selected set is named by the `h2` directly below the box, which is the o
 screen that says which set you are looking at. **Nothing is selected on a cold load**, and the
 home icon and the menu's `None` option both return to that.
 
-It is a popup listbox with the seat picker's keyboard: arrows, `Home`, `End`, `Escape` back to the
+It is a popup listbox with the seat menu's keyboard: arrows, `Home`, `End`, `Escape` back to the
 trigger. The panel takes the box's full width; capped narrower, it left half of each trade row
 visible beside it.
+
+**Its height is capped to its own list, not to a slice of the viewport.** The old cap,
+`min(100dvh - 96px, 480px)`, was a number six options never reach, so it never bit: the panel
+measured 439px at 320px and simply hung off the bottom of the screen. The cap is now
+`min(calc(6 * 76px + 34px), calc(100dvh - 96px))` — six rows at the 76px a two-line option takes at
+320px, five 4px gaps, 12px of padding and 2px of border — which is the same rule the seat menu is
+held to, and the build checks the option count against it, so a sixth set fails rather than ships.
+With `showMenu()` (§2) the whole panel is on screen when it opens: **6 of 6 options inside the
+viewport at 320, 375, 390 and desktop, `scrollHeight == clientHeight` at all four**, against 4, 1,
+3 and 6 before.
 
 **The two blank chips are `span`s, not `button`s.** No `tabindex`, no `data-*`, no role, nothing
 for a handler to find — a dashed edge, a dimmed em dash and `cursor: default`, and `aria-hidden`
@@ -167,6 +199,16 @@ looked pressable and were ignored on every tap.
 ---
 
 ## 4. Team home
+
+**The seat is named on screen, once, above the tab row.** `h2.screen-h.seat-h` carries an `.sr-only`
+`Team: ` prefix and the manager's display name, on all four tabs and on none of the league-wide
+screens, which title themselves. With no picker in the header this heading is the **only** thing on
+those four screens that says whose seat you are in — the partners and drafts tabs named the seat
+zero times in the page body before it existed — so it is a blocker rather than a nicety, and it is
+asserted at generate time along with the `tabs.length` gate that keeps it off Champions Path and
+the full-screen trade. It is also where `focusNext` lands after a seat is taken. `overflow-wrap:
+anywhere`, because a heading has no ellipsis to fall back on and `DarkWingDucks2023` is 17
+characters with no break opportunity.
 
 **Six style tiles**, all read from `data/ui/marks.json` (§7). Tapping one opens a ten-row league
 chart for that metric, sorted, with your seat highlighted. The chart draws from the rows already
@@ -304,11 +346,14 @@ known-dead payload still on the wire.
 - 375px is the target, not 390px: a 390px device with a scrollbar leaves 375px usable.
 - Every grid track that holds text gets `min-width: 0`. Names ellipsize; **figures never truncate**.
 - The four tabs share one row and never wrap.
-- 44px minimum on every tap target, including the team menu, the year filter rows, the picker and
+- 44px minimum on every tap target, including the team menu, the year filter rows, the chips and
   the Score as button. When a list of them stops fitting, the list's cap gives way, not the 44px.
+  The chips' own floor is 56px, because the longest label needs two lines in a 127px cell.
 - One column of bags on a phone, two at `min-width: 640px`.
-- `aria-expanded` on every expandable row. `Escape` closes whatever is topmost: picker, then the
-  clock menu, then a filter panel, then an open pick, draft or trade.
+- `aria-expanded` on every expandable row. `Escape` closes whatever is topmost: the seat menu,
+  then the clock menu, then a filter panel, then an open pick, draft or trade.
+- A popup opened from mid-page is scrolled into view as a whole (`showMenu()`), never left to the
+  browser's scroll-the-focused-option behaviour.
 - `render()` replaces the whole subtree, so it re-finds the focused control by its `data-*`
   attributes afterwards.
 - Existing variables only (`--bg --card --line --text --muted --dim --green --red`). No Tailwind,

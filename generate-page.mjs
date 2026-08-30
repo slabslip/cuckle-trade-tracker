@@ -4036,10 +4036,11 @@ for (const need of ["if (teamsOpen) { closeTeams(); return true; }",
 // The Teams chip is a trigger for a popup listbox, announced as one, and it carries the seat in
 // its accessible name for the same reason the header's picker does: the visible label is the
 // constant "Teams" and says nothing about which seat is taken.
+// The label and the accessible name are asserted below with the rest of the seat-menu rules,
+// where the guards the removed header trigger used to carry were re-pointed onto this chip.
 const teamsChipSrc = fnBody("teamsChip");
 for (const need of ['data-teams-open="1"', 'aria-haspopup="listbox"',
-  'aria-expanded="\' + (teamsOpen ? "true" : "false") + \'"', '"Teams, " + me.name + " selected"',
-  '+ "Teams" + \' <span class="chev">']) {
+  'aria-expanded="\' + (teamsOpen ? "true" : "false") + \'"']) {
   if (!teamsChipSrc.includes(need)) throw new Error(`the Teams chip lost ${need}`);
 }
 
@@ -4078,10 +4079,13 @@ for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="tr
 if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => clearLeague());')) {
   throw new Error("the home icon must clear the seat -- it is the only exit from a seat now");
 }
+// Newline-anchored, because "me = null;" is a substring of "partnerName = null;" two lines below
+// it -- a guard that cannot fail is the thing this file has the most of already.
 const clearSrc = fnBody("clearLeague");
-for (const need of ["me = null;", "data = null;", 'view = "home";', "teamsOpen = false;", "render();"]) {
+for (const need of ["\n      me = null;", "\n      data = null;", '\n      view = "home";',
+  "\n      teamsOpen = false;", "\n      render();"]) {
   if (!clearSrc.includes(need)) {
-    throw new Error(`clearLeague must still leave the seat entirely -- it is the only exit: ${need}`);
+    throw new Error(`clearLeague must still leave the seat entirely -- it is the only exit: ${need.trim()}`);
   }
 }
 // The brand link is the second half of the same door and shares the handler.
@@ -4115,10 +4119,7 @@ if (seats.length * SEAT_MIN_H + SEAT_MENU_CHROME > SEAT_CAP) {
 // against it, so a seventh set fails the build rather than shipping a menu you have to scroll.
 const DS_ROW_H = 76;
 const DS_MENU_CHROME = 34; // five 4px gaps, 6px padding top and bottom, 1px border top and bottom
-// Scoped to the DATA_SETS literal: WINDOWS is a list of the same shape a few lines below it.
-const dsList = inline.slice(inline.indexOf("    const DATA_SETS = ["));
-const dsCount = (dsList.slice(0, dsList.indexOf("];")).match(/\["[a-z]+", "/g) || []).length + 1;
-if (dsCount !== 6) throw new Error(`expected 6 data set options including None, found ${dsCount}`);
+const dsCount = dsIds + 1; // the five sets, plus the None option above them
 if (!html.includes(`max-height: min(calc(${dsCount} * ${DS_ROW_H}px + ${DS_MENU_CHROME}px), calc(100dvh - 96px));`)) {
   throw new Error("the League Data Sets menu lost its list-sized cap -- a viewport-fraction cap never bites");
 }

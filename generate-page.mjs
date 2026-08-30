@@ -31,13 +31,13 @@ const html = `<!DOCTYPE html>
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
     }
-    /* This header must never clip. It held the seat picker until the Teams chip replaced it, and
-       overflow: hidden here clipped that menu to the 44px header twice -- 44px of a 472px menu.
-       Nothing opens from the header now, so this rule protects no menu; it is kept, and asserted,
-       because the row still carries the home icon and the brand link, both of which are targets
-       with focus rings, and re-clipping the row is a regression with no symptom until something
-       is mounted here again. What keeps the row inside the viewport is the ellipsis on
-       h1.brand a, not a clip. */
+    /* This header must never clip, and the rule is load-bearing again. It held the seat picker
+       until the Teams chip replaced it, and overflow: hidden here clipped that menu to the 44px
+       header twice -- 44px of a 472px menu, one option of eleven hit-testable. The removal pass
+       kept the rule while it protected nothing; #scoreAs is now absolutely positioned against
+       .lens-wrap inside this h1, so a clip here would hide the clock control's whole panel and
+       reproduce that defect exactly. What keeps the row inside the viewport is the ellipsis on
+       h1.brand a plus the trigger's own font step, not a clip. */
     h1.brand {
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
@@ -71,21 +71,31 @@ const html = `<!DOCTYPE html>
       text-wrap: pretty;
     }
     #lead:empty { display: none; }
+    /* The clock control's mount, in the space the seat picker used to hold. Its own stacking
+       context above every panel inside #app -- .filter-wrap is 4 and .ds-wrap is 3 -- because
+       this control is persistent chrome and its panel drops down over whatever screen is below
+       it. Nothing here may clip: #scoreAs is absolutely positioned against it, and a hidden
+       overflow anywhere up this chain is what made the seat picker unusable twice. */
+    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; }
     /* The brand plus the seat picker needed 394px of a 343px row at 375px, so the picker ran off
-       the right edge and the title stepped down to buy it back. The picker is gone -- league
-       home's Teams chip is the only way into a seat -- and the step is kept: the row still has to
-       hold a 44px home icon beside a title that has clipped twice. */
+       the right edge and the title stepped down to buy it back. The picker is gone and the clock
+       control took its place, so the row is carrying a control again and the step still earns its
+       keep. The trigger takes the same step the picker did, and at 320px that step is what makes
+       the row fit: the widest of the five labels measures 107.7px at 0.75rem, leaving 1.4px of
+       the 288px row, and 116.7px at 0.8125rem, which would ellipsise the title. */
     @media (max-width: 460px) {
       h1.brand { font-size: 1.2rem; gap: 8px; }
+      #lensBtn { font-size: 0.75rem; }
     }
     /* 320px is the narrowest phone still in use and nothing here had been checked at it.
-       The row is 288px after the body padding: 44 for the home icon, one gap, and the rest
-       for the title -- which was 100px against the 147px the word needs when the seat picker
-       took the other half of the row, so the app's own name read "CuckleChunc…". With the
-       picker gone the title has 238px and fits at any of these sizes. The step to 1rem is kept
-       anyway: this exact line has clipped twice (A7c), a font fallback can measure wider than
-       the one measured here, and the step is one more rung in the ladder the 460px rule already
-       starts rather than a size invented for this screen. */
+       The row is 288px after the body padding: 44 for the home icon, two 6px gaps, the clock
+       trigger, and the rest for the title -- which was 100px against the 147px the word needs
+       when the seat picker took the other half of the row, so the app's own name read
+       "CuckleChunc…". At 1rem the title needs 122.9px and the widest trigger label takes
+       107.7px, which fits by 1.4px. That is under one character, and it is the title that gives
+       when a font fallback eats it: h1.brand a carries the ellipsis and the trigger does not,
+       because a control never truncates before a wordmark does. Measured, not assumed --
+       body.scrollWidth equals 320 on all five labels. */
     @media (max-width: 360px) {
       h1.brand { font-size: 1rem; gap: 6px; }
     }
@@ -710,11 +720,10 @@ const html = `<!DOCTYPE html>
       overflow-wrap: anywhere;
     }
     .news-empty { color: var(--dim); font-size: 0.8125rem; line-height: 1.45; padding: 10px 0; }
+    /* What is left of this row now that the clock control moved to the brand header: the year
+       filter on the Trades tab and the round filter on Drafts, each with its caption. Both are
+       screen-local, so both stay on the screen they filter. */
     .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
-    /* The filter icon, its label and the Score as button do not share 288px: the label
-       was cut to "Filter by ye…", which names nothing. The Score as button takes its own
-       line instead, which is the same trade as stacking anywhere else here -- height for
-       a label that reads. */
     @media (max-width: 360px) {
       .lens-row { flex-wrap: wrap; }
       .lens-row-left { flex: 1 1 100%; }
@@ -723,8 +732,12 @@ const html = `<!DOCTYPE html>
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* The clock trigger. It reads the selected window alone -- "Since trade ▾" -- and not
+       "Score as Since trade": at 0.8125rem the prefix costs 54px of measured width, which the
+       320px brand row does not have, and the five window names are self-describing without it.
+       The words "Score as" stay in the accessible name, where they cost nothing. */
     button.score-btn {
-      flex: 0 0 auto; margin-left: auto; appearance: none; font: inherit;
+      flex: 0 0 auto; appearance: none; font: inherit;
       font-size: 0.8125rem; color: var(--text);
       background: var(--card); border: 1px solid var(--line); border-radius: 999px;
       min-height: 44px; padding: 6px 12px; position: relative; cursor: pointer;
@@ -732,15 +745,19 @@ const html = `<!DOCTYPE html>
     }
     button.score-btn.on { border-color: #6b5a2e; }
     button.score-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.score-btn .score-k { color: var(--dim); }
     button.score-btn .chev { color: var(--muted); }
     button.score-btn .dot {
       position: absolute; top: 6px; right: 6px;
       width: 7px; height: 7px; border-radius: 50%; background: #e0b44c;
     }
+    /* Anchored to the trigger's own box rather than to a fixed 52px, because the trigger now
+       sits in the brand row instead of at the top of a screen. The cap is the room below the
+       header on the shortest phone -- 16px of body padding, the 44px row, the 4px offset and
+       24px of clearance -- and only bites in landscape, where the five options do not fit. */
     #scoreAs {
-      position: absolute; top: 52px; right: 0; left: auto; z-index: 12;
+      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
       width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
+      max-height: calc(100dvh - 88px); overflow-y: auto;
       display: flex; flex-direction: column; gap: 4px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
@@ -821,6 +838,10 @@ const html = `<!DOCTYPE html>
       </svg>
     </button>
     <a href="./">CuckleChunckle</a>
+    <span class="lens-wrap" id="lensWrap">
+      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
+      <div class="filter-panel" id="scoreAs" hidden></div>
+    </span>
   </h1>
   <p id="lead"></p>
   <div id="feed" hidden></div>
@@ -852,7 +873,7 @@ const html = `<!DOCTYPE html>
     let marks = null;
     let news = null;
     let lens = "all";
-    const DATA_V = "20260830chiponly1";
+    const DATA_V = "20260830lenshdr1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2016,14 +2037,15 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Two controls, deliberately separate. lensRow() picks the clock the numbers are computed on
-     * -- At trade, first 1/2/3 years, since trade -- and dataSetRow() picks which list is on
-     * screen. Folding one into the other would put two unrelated axes in one menu and would take
-     * the lens away from Most lopsided, which is the set that reads it.
+     * Two controls, deliberately separate, and now in two different places. The clock -- At
+     * trade, first 1/2/3 years, since trade -- is persistent chrome in the brand header, because
+     * it is a global setting that six screens read. dataSetRow() picks which list is on this one
+     * screen and is one cell of the chip box below. Folding them together would put two
+     * unrelated axes in one menu and would take the clock away from Most lopsided, which is the
+     * set that reads it.
      */
     function renderLeagueHome() {
       return dayAlert()
-        + lensRow()
         + homeChips()
         + dataSetPanel()
         + renderNews();
@@ -2076,7 +2098,6 @@ const html = `<!DOCTYPE html>
         + '<p class="caption">Every trade on the league tape, newest first. Tap one to review it'
         + " and vote on who actually won. A gold outline is a trade you have voted on.</p>"
         + toast
-        + lensRow()
         + '<div class="caption">' + esc(livedHint(lived.length, all.length, "trade")) + "</div>"
         + empty
         + lived.map((r) => boardTape(r)).join("");
@@ -2100,7 +2121,6 @@ const html = `<!DOCTYPE html>
       return backChip("Back")
         + '<h2 class="screen-h" tabindex="-1">' + esc(r.name) + " vs " + esc(r.other) + "</h2>"
         + '<p class="caption">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</p>"
-        + lensRow()
         + (hit
           ? tradeRow(hit, null, true)
           : boardTape(r) + '<p class="caption">Loading both bags…</p>')
@@ -2760,7 +2780,6 @@ const html = `<!DOCTYPE html>
         : '<p class="caption">No trades on this seat yet.</p>');
       return teamMarks()
         + markChart()
-        + lensRow()
         + empty
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
         + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
@@ -2963,7 +2982,7 @@ const html = `<!DOCTYPE html>
             ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
             : "";
       return '<div class="filter-wrap">'
-        + lensRow(yearBtn)
+        + filterRow(yearBtn)
         + (yearFilterOpen
           // Exactly one year at a time, so these are radios, not checkboxes.
           ? '<div class="filter-panel" id="yearFilters" role="radiogroup" aria-label="Year">'
@@ -2997,24 +3016,64 @@ const html = `<!DOCTYPE html>
         + "<b>" + row[1] + "</b><span>" + row[2] + "</span></button>";
     }
 
-    function scoreMenu() {
-      return '<div class="filter-panel" id="scoreAs">'
-        + WINDOWS.map(scoreOpt).join("")
-        + "</div>";
+    /**
+     * The two screens the clock cannot move, and therefore the two the header control hides on.
+     *
+     * Champions Path reads no clock at all: renderTitles() never calls lens, chipLived() or
+     * clockName(), so every figure on it is a finals score. The Drafts tab pins lens to "all"
+     * for the whole of its render and puts it back afterwards, so every pick is graded from
+     * accept day to today whatever the control says.
+     *
+     * Showing it there would leave a control on screen that visibly does nothing, which is the
+     * defect this app has already removed once -- the ticker shipped "Most active" and "Least
+     * active" as buttons carrying an empty destination, and every tap on them was ignored. The
+     * set of screens the clock is offered on is therefore exactly the set it was offered on
+     * before it moved: league home, a seat's home, both trades lists, partners and the
+     * full-screen trade. The move changed where the control lives, not where it applies.
+     *
+     * The selected window survives a trip through either screen -- lens is state, not markup --
+     * so leaving Drafts brings the control back reading whatever it read on the way in.
+     */
+    function lensApplies() {
+      return view !== "titles" && view !== "drafts";
     }
 
-    function lensRow(left) {
+    /**
+     * The clock control lives in the brand header, outside #app, so it is painted rather than
+     * rendered -- render() replaces #app's whole subtree and would destroy a control that has
+     * to survive every navigation. Only the trigger's own state passes through here; changing
+     * the window calls render(), because that is what moves the figures.
+     */
+    function paintLens() {
+      const wrap = document.getElementById("lensWrap");
+      const btn = document.getElementById("lensBtn");
+      const panel = document.getElementById("scoreAs");
+      if (!lensApplies()) {
+        lensOpen = false;
+        wrap.hidden = true;
+        panel.hidden = true;
+        panel.innerHTML = "";
+        return;
+      }
+      wrap.hidden = false;
       const name = clockName();
-      const on = lens !== "all" || lensOpen;
-      return '<div class="filter-wrap">'
-        + '<div class="lens-row">'
-        + (left ? '<div class="lens-row-left">' + left + "</div>" : "")
-        + '<button type="button" class="score-btn' + (on ? " on" : "") + '" data-score="1" aria-label="Score as ' + name + '" aria-expanded="' + (lensOpen ? "true" : "false") + '">'
-        + '<span class="score-k">Score as</span> ' + name + ' <span class="chev">▾</span>'
-        + (lens !== "all" ? '<span class="dot"></span>' : "")
-        + "</button></div>"
-        + (lensOpen ? scoreMenu() : "")
-        + "</div>";
+      btn.className = "score-btn" + (lens !== "all" || lensOpen ? " on" : "");
+      btn.setAttribute("aria-label", "Score as " + name);
+      btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
+      // The label is the window alone; "Score as" is in the accessible name above.
+      btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
+        + (lens !== "all" ? '<span class="dot"></span>' : "");
+      panel.hidden = !lensOpen;
+      panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
+    }
+
+    /**
+     * The screen-local filter row the clock control used to share: the year filter on the Trades
+     * tab and the round filter on Drafts. One emitter, because both were typing the same two
+     * divs and the clock's departure left them identical.
+     */
+    function filterRow(left) {
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
     }
 
     function renderDrafts() {
@@ -3052,7 +3111,7 @@ const html = `<!DOCTYPE html>
         + "</button>"
         + '<div class="caption">' + tapeMargin(avg) + " / pick"
         + " · " + graded.length + " graded · " + esc(livedHint(list.length, raw.length, "pick")) + "</div>";
-      const html = '<div class="lens-row"><div class="lens-row-left">' + draftBtn + "</div></div>"
+      const html = filterRow(draftBtn)
         + (draftFilterOpen
           ? '<div class="filter-panel" id="draftFilters">'
             + '<div class="filter-h">Date</div>'
@@ -3096,7 +3155,7 @@ const html = `<!DOCTYPE html>
           : "";
       }
       const empty = list.length ? "" : '<p class="caption">No trade partners yet on this seat.</p>';
-      return lensRow() + empty + rows + detail;
+      return empty + rows + detail;
     }
 
     function render() {
@@ -3157,6 +3216,9 @@ const html = `<!DOCTYPE html>
       }
       if (navigated) window.scrollTo(0, 0);
       paintFeed();
+      // After the body, not before: renderDrafts() pins lens to "all" for its own render and
+      // restores it on the way out, so the trigger must be painted from the settled value.
+      paintLens();
       syncUrl();
     }
 
@@ -3225,6 +3287,48 @@ const html = `<!DOCTYPE html>
 
     document.getElementById("goHome").addEventListener("click", () => clearLeague());
     document.querySelector("h1.brand a").addEventListener("click", (e) => { e.preventDefault(); clearLeague(); });
+    /**
+     * The clock control's own listener. It has to be its own, because #app's delegated handler
+     * cannot see a control that lives in the brand header -- the same split the seat picker had
+     * while it was mounted there.
+     */
+    document.getElementById("lensWrap").addEventListener("click", (e) => {
+      const opt = e.target.closest("[data-lens]");
+      if (opt) {
+        lens = opt.dataset.lens;
+        lensOpen = false;
+        render();
+        // The option that was clicked no longer exists and was never inside #app, so
+        // focusSelector() cannot put the keyboard back. The trigger is where it came from.
+        document.getElementById("lensBtn").focus({ preventScroll: true });
+        return;
+      }
+      if (!e.target.closest("[data-score]")) return;
+      lensOpen = !lensOpen;
+      if (!lensOpen) {
+        // Closing changes nothing a screen renders, so it does not pay for a full render.
+        paintLens();
+        return;
+      }
+      // Every other popup is exclusive with this one, and this one paints above all of them,
+      // so opening from the header has to close them rather than cover an open menu.
+      teamsOpen = false;
+      dsOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      render();
+    });
+    /**
+     * An outside click closes it. Capture phase, and paint rather than render: #app's handler
+     * returns early on a dozen paths, and an open panel must not survive over the screen the
+     * click just navigated to. Running first also means the fall-through branch at the bottom of
+     * #app's handler sees the flag already cleared and does not schedule a second render.
+     */
+    document.addEventListener("click", (e) => {
+      if (!lensOpen || e.target.closest("#lensWrap")) return;
+      lensOpen = false;
+      paintLens();
+    }, true);
     // An outside click closes the seat menu. #app's own handler runs first and has already
     // cleared the flag for a click on the chip or on an option, so this only ever fires for a
     // click that landed somewhere else on the page.
@@ -3270,7 +3374,12 @@ const html = `<!DOCTYPE html>
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
       if (teamsOpen) { closeTeams(); return true; }
-      if (lensOpen) { lensOpen = false; render(); return true; }
+      if (lensOpen) {
+        lensOpen = false;
+        paintLens();
+        document.getElementById("lensBtn").focus({ preventScroll: true });
+        return true;
+      }
       if (dsOpen) { closeDataSets(); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
@@ -3536,21 +3645,12 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const lensBtn = e.target.closest("[data-lens]");
-      if (lensBtn) { lens = lensBtn.dataset.lens; lensOpen = false; render(); return; }
-      const scoreBtn = e.target.closest("[data-score]");
-      if (scoreBtn) {
-        lensOpen = !lensOpen;
-        if (lensOpen) { yearFilterOpen = false; draftFilterOpen = false; }
-        render();
-        return;
-      }
       const filterBtn = e.target.closest("[data-dfilter]");
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
       const yfilterBtn = e.target.closest("[data-yfilter]");
       if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
       if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters")
-        || e.target.closest("#scoreAs") || e.target.closest("#dataSets")) return;
+        || e.target.closest("#dataSets")) return;
       let closedFilter = false;
       if (dsOpen) {
         dsOpen = false;
@@ -3562,10 +3662,6 @@ const html = `<!DOCTYPE html>
       }
       if (yearFilterOpen && !e.target.closest("#yearFilters")) {
         yearFilterOpen = false;
-        closedFilter = true;
-      }
-      if (lensOpen && !e.target.closest("#scoreAs") && !e.target.closest("[data-score]")) {
-        lensOpen = false;
         closedFilter = true;
       }
       const draftBtn = e.target.closest("[data-draft]");
@@ -3710,15 +3806,16 @@ for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-to
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
 }
 // A clip on h1.brand hid the seat picker, the most-used control in the app, twice (fixed in
-// 7f97711, reintroduced by f9fdb39). No menu opens from the header any more, so this rule now
-// protects nothing that would visibly break -- and it is kept, deliberately, along with this
-// guard: the row still holds the home icon and the brand link, both focusable targets with
-// outline rings that a scroll box would clip, and the next thing mounted here would inherit the
-// old defect with no test to catch it. Keeping a cheap invariant is cheaper than rediscovering it.
+// 7f97711, reintroduced by f9fdb39). The picker's removal left this guard protecting nothing and
+// it was kept anyway; the clock control's move back into the header makes it load-bearing again.
+// #scoreAs is absolutely positioned against .lens-wrap inside this h1, so overflow: hidden here
+// would clip a 418px panel to the 44px header and reproduce the original defect exactly -- and
+// getBoundingClientRect would still report the full panel, so only a hit test would show it.
 const brandRule = html.slice(html.indexOf("    h1.brand {"));
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
-  throw new Error("h1.brand must declare overflow: visible -- a clip here makes the header a scroll box");
+  throw new Error("h1.brand must declare overflow: visible -- a clip here hides #scoreAs");
 }
+
 // The Recent Trade card is now the only door on league home to the league-wide list, so losing
 // any part of that button strands the screen a vote lands on. The 44px tap area is a painted
 // ::after rather than layout, which no source read would reveal is load-bearing -- assert both
@@ -3880,7 +3977,7 @@ if (/(pack|dset|view): ""/.test(inline)) {
 // were nearly merged into one menu; keep them apart.
 const homeBody = inline.slice(inline.indexOf("    function renderLeagueHome()"));
 const homeSrc = homeBody.slice(0, homeBody.indexOf("\n    function "));
-for (const need of ["lensRow()", "homeChips()", "dataSetPanel()"]) {
+for (const need of ["homeChips()", "dataSetPanel()"]) {
   if (!homeSrc.includes(need)) throw new Error(`renderLeagueHome lost ${need} -- the lens and the data set are separate controls`);
 }
 // The data set trigger is one cell of the chip box now, so the composition is two hops. Assert
@@ -3915,6 +4012,154 @@ if (!html.includes("z-index: 3; overflow: visible;")) {
 // As a class the panel would inherit .filter-panel's 14px bottom margin and 4px 12px padding.
 if (!html.includes("    #dataSets {")) {
   throw new Error("#dataSets must be addressed by id -- .filter-panel is declared after it and would win");
+}
+
+// ---- The clock control, in the brand header ---------------------------------------------------
+// It moved out of the six screens that each rendered their own copy and into the header, where it
+// is persistent chrome. Everything below is one deletion away from failing silently, because none
+// of it changes what the page says -- only whether the control is there, reachable and honest.
+//
+// 1. The trigger ships in the served markup, so a cold load has it before any script runs. This
+//    is the guard the task asked for by name: the control cannot silently revert to the body.
+for (const need of ['<span class="lens-wrap" id="lensWrap">',
+  'class="score-btn" id="lensBtn" data-score="1"',
+  'aria-label="Score as Since trade"',
+  'aria-expanded="false">Since trade <span class="chev">▾</span></button>',
+  '<div class="filter-panel" id="scoreAs" hidden></div>']) {
+  if (!html.includes(need)) {
+    throw new Error(`the brand header's clock trigger must ship: ${need}`);
+  }
+}
+// It is inside the h1, not merely somewhere on the page: the whole point is the top right of the
+// brand row, and the h1 is the box the overflow guard above protects.
+const brandMarkup = html.slice(html.indexOf('<h1 class="brand">'), html.indexOf("</h1>"));
+if (!brandMarkup.includes('id="lensWrap"') || !brandMarkup.includes('id="lensBtn"')
+  || !brandMarkup.includes('id="scoreAs"')) {
+  throw new Error("the clock control must be mounted inside h1.brand -- that is the top right of the header");
+}
+// The trigger comes after the brand link, which carries margin-right: auto, so it is the last
+// thing in the row and therefore on the right. Order in the markup is what puts it there.
+if (brandMarkup.indexOf('id="lensWrap"') < brandMarkup.indexOf('href="./"')) {
+  throw new Error("the clock trigger must come after the brand link, or it does not sit on the right");
+}
+// 2. One control, one place. Six screens used to render lensRow() and the user asked for a move,
+//    not a copy. Assert the emitter is gone rather than that the call sites are: a re-added
+//    lensRow() would have to be re-written from scratch to get past this.
+for (const gone of ["lensRow", "scoreMenu", "score-k"]) {
+  if (html.includes(gone)) {
+    throw new Error(`the in-body clock control must stay removed -- one control, one place: ${gone}`);
+  }
+}
+// The trigger is painted, never rendered, so nothing inside #app may emit one. data-score is the
+// attribute its handler matches on, and a second one would give the header a rival.
+const scoreTriggers = (inline.match(/data-score="1"/g) || []).length;
+if (scoreTriggers !== 0) {
+  throw new Error(`a screen renders its own clock trigger: ${scoreTriggers} in the script, want 0 -- the header's is static markup`);
+}
+// 3. It is painted from render(), after the body. renderDrafts() pins lens to "all" for its own
+//    render and restores it on the way out, so painting first would show the pinned value.
+const renderSrc = fnBody("render");
+if (!renderSrc.includes("paintLens();")) {
+  throw new Error("render() must paint the header clock -- without it the trigger never follows the page");
+}
+if (renderSrc.indexOf("app.innerHTML = seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
+  throw new Error("paintLens() must run after the body is built -- renderDrafts pins lens and restores it");
+}
+// 4. It hides where the clock has no effect, and it must not be hidden anywhere else. Champions
+//    Path reads no clock; Drafts pins it. A control that visibly does nothing is the dead-pill
+//    defect the ticker already shipped once.
+const appliesSrc = fnBody("lensApplies");
+for (const need of ['view !== "titles"', 'view !== "drafts"']) {
+  if (!appliesSrc.includes(need)) {
+    throw new Error(`the header clock must hide where it changes nothing: ${need}`);
+  }
+}
+if (!fnBody("paintLens").includes("if (!lensApplies()) {")) {
+  throw new Error("paintLens must gate on lensApplies() -- the control would show on Champions Path and Drafts");
+}
+// Champions Path really does read no clock. If it ever starts, the gate above is wrong rather
+// than the screen, and this is the assertion that says so before a user finds out.
+const titlesSrc = fnSrc("renderTitles");
+for (const banned of ["chipLived(", "clockName(", "lens "]) {
+  if (titlesSrc.includes(banned)) {
+    throw new Error(`Champions Path started reading the clock (${banned.trim()}) -- lensApplies() must stop hiding the control`);
+  }
+}
+// Drafts pins the clock for the whole of its render. That pin is why the control hides there.
+const draftsSrc = fnBody("renderDrafts");
+if (!draftsSrc.includes('lens = "all";') || !draftsSrc.includes("lens = prev;")) {
+  throw new Error("renderDrafts must pin and restore the clock -- the header control hides there because of this pin");
+}
+// 5. The panel is absolutely positioned against .lens-wrap, so a clip anywhere up that chain
+//    hides options that are in the DOM and untappable. This is the A9 defect, and the chain is
+//    one element long: .lens-wrap itself, inside the h1 already guarded above.
+const lensWrapRule = html.slice(html.indexOf("    .lens-wrap {"));
+if (lensWrapRule === html) throw new Error("the .lens-wrap lost its rule");
+const lensWrapDecl = lensWrapRule.slice(0, lensWrapRule.indexOf("}"));
+if (!lensWrapDecl.includes("position: relative")) {
+  throw new Error("the .lens-wrap must be position: relative -- #scoreAs is positioned against it");
+}
+if (/overflow: *(hidden|clip)|clip-path|transform:|contain:|filter:|perspective:/.test(lensWrapDecl)) {
+  throw new Error(".lens-wrap must not clip or contain -- #scoreAs is absolutely positioned against it");
+}
+// It stacks above every panel inside #app. .filter-wrap is 4 and .ds-wrap is 3, so the open
+// clock panel paints over the year filter's trigger and over the chip box it drops across.
+const lensZ = Number((lensWrapDecl.match(/z-index: *(\d+)/) || [])[1]);
+const dsZ = Number((html.match(/\.ds-wrap \{[^}]*z-index: *(\d+)/) || [])[1]);
+const filterZ = Number((html.match(/\.filter-wrap \{[^}]*z-index: *(\d+)/) || [])[1]);
+if (!(lensZ > filterZ && filterZ > dsZ)) {
+  throw new Error(`the clock panel must stack above the screens it drops over: .lens-wrap ${lensZ} > .filter-wrap ${filterZ} > .ds-wrap ${dsZ}`);
+}
+// Anchored to the trigger's own box. It used to be a fixed top: 52px, which was the height of a
+// row at the top of a screen and is not where the trigger sits now.
+if (!html.includes("      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;")) {
+  throw new Error("#scoreAs must hang off the trigger's own box -- a fixed top belongs to the row it left");
+}
+// 6. The 44px rule, on the trigger and on all five options. A formatting pass took 312 sub-44px
+//    targets to zero and none may come back.
+const scoreBtnRule = html.slice(html.indexOf("    button.score-btn {"));
+if (!scoreBtnRule.slice(0, scoreBtnRule.indexOf("}")).includes("min-height: 44px")) {
+  throw new Error("the clock trigger must stay a 44px target");
+}
+const scoreOptRule = html.slice(html.indexOf("    #scoreAs button.score-opt {"));
+if (!scoreOptRule.slice(0, scoreOptRule.indexOf("}")).includes("min-height: 44px")) {
+  throw new Error("a clock option must stay a 44px target");
+}
+// 7. The label is the window alone. At 0.8125rem the "Score as" prefix costs a measured 54px,
+//    which the 288px brand row at 320px does not have -- with it, the app's own name ellipsises
+//    on every phone. The words stay in the accessible name, and the font step is what makes even
+//    the widest window name fit: 107.7px of a 109.1px slot at 320px, against 116.7px without it.
+if (!fnBody("paintLens").includes('btn.innerHTML = esc(name) + \' <span class="chev">▾</span>\'')) {
+  throw new Error("the clock trigger's label must be the window alone -- the prefix does not fit at 320px");
+}
+if (!fnBody("paintLens").includes('btn.setAttribute("aria-label", "Score as " + name);')) {
+  throw new Error("the clock trigger must keep \"Score as\" in its accessible name -- the visible label drops it");
+}
+// Scoped to the 460px block, not to the sheet: the step only exists to buy the phone widths, and
+// a bare `#lensBtn { font-size` anywhere would satisfy a whole-sheet check while shrinking the
+// trigger on the desktop too.
+const brandMedia = html.slice(html.indexOf("    @media (max-width: 460px) {"));
+if (!brandMedia.slice(0, brandMedia.indexOf("\n    }")).includes("#lensBtn { font-size: 0.75rem; }")) {
+  throw new Error("the clock trigger must keep its 460px font step -- without it the brand row overflows at 320px");
+}
+// 8. Its own listener, because #app's delegated handler cannot see the header, and an outside
+//    click and Escape both close it. All three were true of the control in the body; a control
+//    that moved out of the delegated handler's reach has to bring them with it.
+for (const need of ['document.getElementById("lensWrap").addEventListener("click"',
+  'if (!lensOpen || e.target.closest("#lensWrap")) return;',
+  'document.getElementById("lensBtn").focus({ preventScroll: true });']) {
+  if (!inline.includes(need)) throw new Error(`the header clock lost a handler: ${need}`);
+}
+if (!inline.includes("if (lensOpen) {\n        lensOpen = false;\n        paintLens();")) {
+  throw new Error("Escape must close the header clock");
+}
+// 9. The screen-local filter row it used to share is one emitter now. Two screens were typing
+//    the same two divs, and the clock's departure left them identical.
+if (!fnBody("renderTrades").includes("filterRow(yearBtn)")) {
+  throw new Error("the Trades tab lost its year filter row");
+}
+if (!fnBody("renderDrafts").includes("filterRow(draftBtn)")) {
+  throw new Error("the Drafts tab lost its round filter row");
 }
 
 // ---- League home's box of four chips ---------------------------------------------------------

@@ -48,7 +48,8 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { DATA, readJson } from "./lib.mjs";
-import { CATEGORIES, classify, leagueLine, voiceSamples } from "./news-voice.mjs";
+import { CATEGORIES, classify, leagueLine, leagueLineAsync, noteFreeOfAddress, trimNote, voiceSamples } from "./news-voice.mjs";
+import { PUBLISH_MIN, buildMatchIndex, matchText } from "./news-match.mjs";
 import {
   RSS_FEEDS,
   fetchRss,
@@ -308,44 +309,59 @@ function resolveTarget(targetName, members) {
 }
 
 /**
- * Which rostered player a shared tweet is about, when the sharer did not say.
+ * Who a shared tweet is about, and — when the sharer did not say — which single manager it may be
+ * addressed to.
  *
- * Runs the **existing** matcher over the tweet's text. That is a change of input for
- * matchPlayer(), which is documented as reading a title and never a summary, so it is worth
- * saying why it is sound here: the reason summaries are banned is that a summary names
- * teammates, coaches and the reporter alongside its actual subject, so a match inside one is
- * probably not the story's subject. A tweet is not a summary — it is one short post, usually one
- * or two sentences, and a rostered player named in it is overwhelmingly what it is about. The
- * refusal rules still apply unchanged: full names only, never a surname, and two different
- * rostered players means no match rather than a guess.
+ * ## This is `news-match.mjs`, cherry-picked, not a new matcher
  *
- * The one case this resolves that matchPlayer() will not is a **namesake collision**: two
- * genuinely different rostered players whose names normalise to the same string. `normName()`
- * strips suffixes, so "Michael Carter" and "Michael Carter II" collapse together, and the
- * matcher sees two candidates for what is textually one name and refuses. Refusing there is
- * over-cautious — the text named one name, not two people — so the collision-aware scoring from
- * price-today.mjs breaks that specific tie the same way the value book does: prefer the skill
- * position, then a live NFL team, then an active player. This is the P1-13 lesson applied to
- * attribution rather than to pricing.
+ * `matchText()` came across from `cursor/x-discord-pipeline-af37` (PR #15) with its fixtures and
+ * its test suite, because it was built and measured for exactly this input. Against 139 real RSS
+ * items it agreed with `matchPlayer()` on all 27 of that matcher's matches, **lost none and
+ * re-attributed none**, and added 18 deliberate refusals — including the *"Jalon Daniels: Wins
+ * backup QB job"* headline that this repo mis-attributed in production. Writing a second matcher
+ * here would have been a second thing to keep in agreement with that measurement.
  *
- * Two candidates with *different* names are still refused, because that is a tweet about two
- * people and there is no non-guess available.
+ * It replaces the local `matchTweetPlayer()`, which is gone. That function existed to add one
+ * thing to `matchPlayer()`: a namesake collision (`Michael Carter` / `Michael Carter II`) broken
+ * with `nameCandidateScore()`. `matchText()` does that and more — it re-opens **every** name hit
+ * against the whole 12,225-player dictionary rather than against the roster, so a post about the
+ * Jaguars linebacker Josh Allen is refused instead of being handed with total confidence to
+ * whoever owns the Bills quarterback. The old function could not see that case at all, because
+ * the linebacker was never a candidate.
+ *
+ * ## What it takes to address a row
+ *
+ * Two conditions, both required, and neither is negotiable downstream:
+ *
+ * 1. **At or above PUBLISH_MIN (0.55).** The matcher scores its evidence rather than voting:
+ *    a full name unique in the dictionary is 0.90, a collision settled by explicit team context
+ *    0.85, a collision settled by ranking alone 0.65, an alias 0.70, a bare surname 0.58. Below
+ *    the line the evidence is a guess and the row publishes under "The league".
+ * 2. **Exactly one manager.** `matchText()` emits one subject per rostered player, because a
+ *    trade has two sides and both managers' rosters are genuinely affected. That is right for a
+ *    *notification*; it is wrong for a single `user_id` on a single row. Two managers means the
+ *    row is the league's. Two *players* owned by one manager is still one manager, and still
+ *    addressed — the tag says the story concerns their roster, and it does.
+ *
+ * `reason: "roundup"` (more than MAX_SUBJECTS rostered names) and `reason: "refused"` both arrive
+ * here as an empty subject list, so they fall through to "The league" without a special case.
  */
-function matchTweetPlayer(text, index) {
-  const hit = matchPlayer(text, index);
-  if (hit.row || hit.reason !== "ambiguous") return hit;
-  const names = new Set((hit.candidates || []).map((c) => normName(c.name)));
-  if (names.size !== 1) return hit;
-  const ranked = [...hit.candidates].sort((a, b) => {
-    const d = nameCandidateScore(b.raw) - nameCandidateScore(a.raw);
-    if (d) return d;
-    return Number(b.player_id) - Number(a.player_id);
-  });
-  // Only when the scoring actually separates them. A tie means the helpers had no opinion, and
-  // an arbitrary pick is exactly the guess this file refuses to make.
-  const top = nameCandidateScore(ranked[0].raw);
-  if (ranked.length > 1 && nameCandidateScore(ranked[1].raw) === top) return hit;
-  return { row: ranked[0], reason: "matched_collision" };
+function matchTweetSubjects(text, matchIndex) {
+  const res = matchText(text, matchIndex);
+  const publishable = (res.subjects || []).filter((s) => s.publish);
+  const seats = new Set(publishable.map((s) => s.user_id));
+  return {
+    res,
+    publishable,
+    // The strongest publishable subject, which is what the row's meta line prints. Subjects come
+    // back sorted by confidence, so this is subjects[0] of the publishable set.
+    top: publishable[0] || null,
+    // Below-threshold evidence still gets reported, so "where does the line fall in practice" is
+    // answerable from --report rather than by guessing.
+    best: (res.subjects || [])[0] || null,
+    seats,
+    addressable: seats.size === 1 ? publishable[0] : null,
+  };
 }
 
 /**
@@ -412,18 +428,27 @@ function collapseShares(subs) {
  *   showing a deleted tweet forever would be the feed lying rather than degrading.
  */
 async function ingestSubmissions(ownership, index, members, {
-  stampRows = true, previousTweets = new Map(),
+  stampRows = true, previousTweets = new Map(), matchIndex = null, previousLines = new Map(),
 } = {}) {
   const report = {
     queue_ok: false, queue_error: null, seen: 0, published: 0,
     rejected_url: 0, duplicate_shares: 0, carried_forward: 0,
-    // targeted        — target_name resolved to a seat; the row is addressed
-    // player_only     — no target, but a rostered player was named; the row ships unaddressed
-    //                   and carries the player in its meta line
+    // targeted        — target_name resolved to a seat; the row is addressed, authoritatively
+    // auto_tagged     — no target, and the matcher resolved the text to exactly one manager
+    //                   at or above PUBLISH_MIN; the row is addressed to them
+    // player_only     — a rostered player was named but the row is NOT addressed: below the
+    //                   publish threshold, or two managers, or the player is unrostered
     // target_unresolved — a target_name was given and matched no member, or matched two
-    targeted: 0, player_only: 0, target_unresolved: 0,
+    targeted: 0, auto_tagged: 0, player_only: 0, target_unresolved: 0,
     unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0,
     failures: [],
+    /**
+     * One entry per published submission: the score the matcher gave it, what it resolved to, and
+     * why. This is the surface the user asked for — "report the score for each of the user's real
+     * submissions so they can see where the line falls in practice" — and it exists because a
+     * threshold nobody can see the distance to is a threshold nobody can calibrate.
+     */
+    attribution: [],
   };
   const queue = await fetchSubmissions({
     limit: SUBMISSION_FETCH_LIMIT,
@@ -465,47 +490,98 @@ async function ingestSubmissions(ownership, index, members, {
     }
 
     /**
-     * Attribution. **`target_name` is the only thing that can address a row to a manager.**
+     * Attribution, in three tiers with the strongest first.
      *
-     * The player in the text is still resolved, and still ships — it is what the row's meta line
-     * prints, `Keenan Allen · IND WR`, and it is a fact about the tweet rather than a claim about
-     * a person. What it no longer does is pick a seat.
+     * ## 1. `target_name` is authoritative, and no matching runs at all
      *
-     * This reverses the fallback that shipped with the submission path, where an unaddressed
-     * share was handed to whoever owned the player named in it. Two things changed:
+     * The sharer said who they meant. resolveTarget() is forgiving about how it was typed, and
+     * that is where the forgiveness belongs. When it resolves, `matchText()` is **not called** —
+     * not "called and ignored". A matcher that runs on an input whose answer is already known is
+     * a matcher whose refusals and scores are noise in the report, and it is one careless edit
+     * from becoming a tie-break against the person who actually chose.
      *
-     * **The feed is curated now.** When sixty automated rows sat underneath, inferring an owner
-     * made a share behave like the rest of the feed. With submissions as the whole feed, the
-     * premise is that a person decided both what to share and who to aim it at, and inferring
-     * the second half of that from prose is the pipeline overruling the curator.
+     * ## 2. No target: the matcher may address the row, at or above the publish threshold
      *
-     * **The inference is wrong in a way that reads as the app inventing things.** Both real
-     * submissions in the queue arrived with `target_name` null while the Shortcut is still being
-     * debugged, and both name a rostered player. Under the fallback, TrumanCooper's note on a
-     * Schefter tweet — *"lol suck it Brad"* — was published under the name of whoever happens to
-     * roster Keenan Allen. Those are somebody's words pointed at a seat they never chose. A
-     * player match is evidence about a *story*; it is not consent to address a person.
+     * This reinstates the fallback a previous pass removed. Its argument was good and is worth
+     * restating rather than deleting, because the guardrail exists to answer it:
      *
-     * So an untargeted share publishes as the league's, under "The league", with the player and
-     * the tweet intact. Nothing is dropped and nothing is guessed. The moment `target_name`
-     * arrives, resolveTarget() is forgiving about how it was typed — that is where the effort
-     * belongs, because that field is the sharer actually saying who they meant.
+     * > A player match is evidence about a *story*; it is not consent to address a person.
+     * > TrumanCooper's *"lol suck it Brad"* on a Schefter tweet published under the name of
+     * > whoever happens to roster Keenan Allen.
+     *
+     * The user has overruled the conclusion — they want the tag — and the concern was never
+     * about the *tag*, it was about the tag making somebody else's jab read as though it had
+     * been aimed at the tagged manager. So both halves are addressed, in different places:
+     *
+     *   - **Here**, the inference is only made on evidence that has been measured. `matchText()`
+     *     scores rather than votes, and only a single manager at or above PUBLISH_MIN can be
+     *     addressed; ambiguity, a roundup, a below-threshold surname, two owners or an unrostered
+     *     player all fall through to "The league" exactly as before. Never a guess.
+     *   - **In news-voice.mjs and the UI**, the note and the summary are separated so the row
+     *     cannot read as "TrumanCooper said this to TedCumberbatch". The note is prefixed with
+     *     its author's name, the summary never names a manager or uses second person, and the
+     *     manager reaches the row only as a possessive tag in the label row. That is the whole of
+     *     the previous pass's objection, answered in the layer where it actually applies.
+     *
+     * `match` records which tier decided, so the UI can render two different claims: "the sharer
+     * aimed this at you" and "this story concerns your player" are not the same sentence.
+     *
+     * ## 3. Neither: the row is the league's
+     *
+     * Unchanged. The player still ships when one was identified — it is what the meta line prints,
+     * `Keenan Allen · IND WR`, and it is a fact about the tweet rather than a claim about a person.
      */
     let own = null;
     let player = null;
+    let how = "none";
     const target = resolveTarget(sub.target_name, members);
-    const hit = matchTweetPlayer(tweet.text, index);
-    if (hit.row) player = hit.row;
+    const subjects = target ? null : matchTweetSubjects(tweet.text, matchIndex);
+
     if (target) {
       own = target;
+      how = "target_name";
       report.targeted++;
-    } else if (player) {
-      report.player_only++;
+    } else if (subjects.addressable) {
+      const s = subjects.addressable;
+      own = { user_id: s.user_id, manager: s.manager };
+      player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
+      how = "player_auto";
+      report.auto_tagged++;
+    } else {
+      // Not addressed, but a player above the threshold still identifies the story.
+      if (subjects.top) {
+        const s = subjects.top;
+        player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
+        how = "player";
+        report.player_only++;
+      }
     }
     if (String(sub.target_name || "").trim() && !target) report.target_unresolved++;
     if (!own) report.unaddressed++;
 
-    rows.push(toTweetRow(sub, tweet, own, player));
+    report.attribution.push({
+      id: sub.id,
+      submitted_by: String(sub.submitted_by || "") || null,
+      note: trimNote(sub.note) || null,
+      target_name: String(sub.target_name || "") || null,
+      resolved_by: how,
+      manager: own ? own.manager : "(the league)",
+      player: player ? player.name : null,
+      // The score, and the distance to the line. `best` is the top subject whether or not it
+      // published, so a refusal below the threshold reports the number it was refused at.
+      confidence: subjects && subjects.best ? subjects.best.confidence : null,
+      publish_min: PUBLISH_MIN,
+      evidence: subjects && subjects.best ? subjects.best.evidence : null,
+      matcher_reason: subjects ? subjects.res.reason : "not run (target_name is authoritative)",
+      managers_above_threshold: subjects ? subjects.seats.size : null,
+      why: subjects && subjects.best ? subjects.best.why : null,
+      refusals: subjects ? (subjects.res.notes || []) : [],
+    });
+
+    rows.push(await toTweetRow(sub, tweet, own, player, how, {
+      managers: members.map((m) => m.name),
+      cachedLine: previousLines.get(`tweet:${sub.id}`),
+    }));
     report.published++;
     await stamp(sub, report, stampRows);
   }
@@ -533,6 +609,24 @@ function previousTweetBodies() {
       author_name: it.tweet_author || "",
       author_handle: it.tweet_handle,
     });
+  }
+  return out;
+}
+
+/**
+ * The `league_line` already on disk, by row id, for `leagueLineAsync()`'s cache.
+ *
+ * **Only consulted when the LLM is configured**, which it is not by default — see the note on
+ * `leagueLineAsync()`. A template line must never be cached, because the templates are edited and
+ * a cached copy would keep shipping yesterday's wording; a *generated* line must never be
+ * regenerated, because that is the whole cost control (docs/NEWS_SDD.md §6a).
+ */
+function previousLeagueLines() {
+  const book = readJson("ui/news.json", null);
+  const out = new Map();
+  if (!book || !Array.isArray(book.items)) return out;
+  for (const it of book.items) {
+    if (it.id && it.league_line) out.set(it.id, it.league_line);
   }
   return out;
 }
@@ -582,16 +676,29 @@ async function stamp(sub, report, stampRows = true) {
  * whose `user_id` is not a known member, and "" is checked for explicitly there — a null would
  * have to be special-cased in the same place, and "" keeps every id in this file a string.
  */
-function toTweetRow(sub, tweet, own, player) {
+async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
   const id = `tweet:${sub.id}`;
-  const note = String(sub.note == null ? "" : sub.note);
+  /**
+   * **The note no longer suppresses the line.** It used to *be* the line: leagueLine() returned a
+   * member's note verbatim and no template ran, so a row carrying "Woof" said nothing about the
+   * tweet at all. Both ship now, in two fields, and the UI renders them as two things:
+   *
+   *   `note`        the member's words, verbatim inside a length cap, attributed to them
+   *   `league_line` the summary, which is the seam's output and never names a manager
+   *
+   * Additive and optional, so `v` stays 1 — a page built before `note` existed ignores it and
+   * renders the summary alone, which is a degraded row rather than a wrong one.
+   */
+  const note = trimNote(sub.note);
   const item = {
     id,
     player: player ? player.name : "",
+    team: player ? player.team : null,
+    position: player ? player.position : null,
     category: "tweet",
     upbeat: false,
     title: tweet.text,
-    note,
+    tweet_handle: tweet.author_handle,
   };
   return {
     id,
@@ -609,16 +716,29 @@ function toTweetRow(sub, tweet, own, player) {
     severity: 4,
     upbeat: false,
     // A shared tweet's headline is the tweet, and the expander below it shows the same text in
-    // full. Leaving `headline` empty keeps the collapsed row to the summary line, which is what
-    // the feature asked for: a jab on top, the detail behind a control.
+    // full. Leaving `headline` empty keeps the collapsed row to the note and the summary, which
+    // is what the feature asked for: their words on top, the read beneath, the detail behind a
+    // control.
     headline: "",
     summary: "",
-    league_line: leagueLine(item, { manager: own ? own.manager : "" }),
+    note,
+    league_line: await leagueLineAsync(item, { manager: own ? own.manager : "" }, {
+      managers: opts.managers,
+      cachedLine: opts.cachedLine,
+    }),
     trending_add: 0,
-    // How the ROW was addressed, not how the player was found. "player" means a rostered player
-    // was identified and deliberately not turned into an addressee — see the attribution note in
-    // ingestSubmissions().
-    match: own ? "target_name" : (player ? "player" : "none"),
+    /**
+     * How the ROW was addressed, which is not the same question as how the player was found.
+     * Four values, and the UI renders the first two differently on purpose:
+     *
+     *   target_name  the sharer named the seat. "For TedCumberbatch."
+     *   player_auto  the matcher resolved the seat from the player in the text, above threshold
+     *                and unambiguous. "TedCumberbatch's player" — a tag on the story.
+     *   player       a rostered player was identified and deliberately NOT turned into an
+     *                addressee: below threshold, two managers, or a roundup.
+     *   none         nothing was identified.
+     */
+    match: how,
     also: [],
     // The expandable detail. Present only on this path; renderNews() treats their absence as
     // "this is an ordinary news row" and renders no expander at all.
@@ -761,6 +881,14 @@ async function build() {
   }
   const players = JSON.parse(fs.readFileSync(playersPath, "utf8"));
   const index = buildPlayerIndex(ownership.owner, players);
+  /**
+   * The cherry-picked matcher's index, built from the **whole dictionary** rather than from the
+   * roster, which is the difference that makes it worth having: a collision is only visible if
+   * the same-named stranger is a candidate. `buildPlayerIndex()` above still exists and is still
+   * what the RSS path uses, because RSS should keep refusing on ambiguity and nothing on the
+   * shared-tweet path should be able to change what the automated feed does.
+   */
+  const matchIndex = buildMatchIndex(ownership.owner, players);
 
   // The switch is enforced at the fetch, not at a filter downstream: with AUTOMATED_SOURCES off
   // this build makes no request to Sleeper's news graph, to any of the five RSS feeds, or to the
@@ -840,11 +968,14 @@ async function build() {
   // copy of that tweet rather than dropping the row. writeBook() is the only writer and it runs
   // after every check in main() has passed.
   const previousTweets = previousTweetBodies();
+  const previousLines = previousLeagueLines();
   const submissions = args.has("--no-submissions")
-    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, rejected_url: 0, duplicate_shares: 0, carried_forward: 0, targeted: 0, player_only: 0, target_unresolved: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [] } }
+    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, rejected_url: 0, duplicate_shares: 0, carried_forward: 0, targeted: 0, auto_tagged: 0, player_only: 0, target_unresolved: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [], attribution: [] } }
     : await ingestSubmissions(ownership, index, members, {
       stampRows: !args.has("--report"),
       previousTweets,
+      matchIndex,
+      previousLines,
     });
   report.submissions = submissions.report;
   report.previous_tweets_on_disk = previousTweets.size;
@@ -928,9 +1059,20 @@ async function build() {
  *                                       //   never forwarded. Third-party prose; escaped at render.
  *     "tweet_author": "Adam Schefter",  // the posting account's display name
  *     "tweet_handle": "AdamSchefter",   // the @, without the @
- *     "submitted_by": "BubbaCuckShremp" // who shared it in, "" when they did not say.
+ *     "submitted_by": "BubbaCuckShremp",// who shared it in, "" when they did not say.
  *                                       //   Client-asserted and unverifiable — see db/schema.sql.
+ *     "note":         "lol suck it Brad"// the sharer's own words, verbatim inside a 240-char cap,
+ *                                       //   "" when they typed none. Third-party text.
  * ```
+ *
+ * `note` is a **fifth** field and the newest. It used to be folded into `league_line`, which meant
+ * a note suppressed the summary entirely; they are two fields now because they are two voices, and
+ * the UI renders the note attributed to its author and the summary beneath it. Additive and
+ * optional like the four above, so `v` stays 1.
+ *
+ * `match` gains `"player_auto"` on this path — the matcher, rather than the sharer, picked the
+ * seat. The UI renders that as a possessive tag on the story rather than as an address to a
+ * person, which is the difference the value exists to carry.
  *
  * On such an item `user_id` and `manager` may both be `""`, meaning nobody was attributed:
  * curation is the point, so an unmatched share still publishes and is simply addressed to no
@@ -1176,6 +1318,7 @@ async function main() {
   // it means the ownership map and the members file disagree, and the feed would be lying about
   // who owns whom. Refuse to write rather than ship it.
   const known = new Set((readJson("ui/members.json", []) || []).map((m) => m.user_id));
+  const knownNames = new Set((readJson("ui/members.json", []) || []).map((m) => m.name).filter(Boolean));
   for (const it of book.items) {
     // "" is the deliberate unaddressed case, and only a shared tweet may use it: an automated
     // row always knows its owner, because it was matched from a roster in the first place. Any
@@ -1192,6 +1335,39 @@ async function main() {
     }
     if (!CATEGORIES.some((c) => c.id === it.category)) {
       throw new Error(`self-check failed: item ${it.id} has unknown category ${it.category}`);
+    }
+    /**
+     * **The summary may not address anybody.** This is the guardrail the previous pass's
+     * objection earned, written as a refusal to write the file rather than as a comment.
+     *
+     * An auto-tagged row carries a manager's name in its label row and somebody *else's* jab in
+     * its note. If the summary between them says "you", or names the tagged manager, the row
+     * reads as the sharer speaking to that manager — which is exactly what was argued against,
+     * and it is the one way the reinstated fallback can still go wrong. The check is on the
+     * finished row, so it catches a template edit, a new category bank and a generated line
+     * alike; `leagueLineAsync()` already discards an LLM line that fails it, and this is what
+     * stops that discard from being the only thing standing in the way.
+     */
+    if (it.category === "tweet") {
+      const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
+      if (offence) {
+        throw new Error(`self-check failed: shared tweet ${it.id}'s summary ${offence} — a summary must not address a person, because the note beside it is somebody else's words`);
+      }
+    }
+    /**
+     * A row may only be addressed by a rule that exists, and `player_auto` is the new one. It
+     * says the matcher — not a person — picked the seat, and the UI renders it as a possessive
+     * tag rather than as "For <name>". A row addressed with `match: "player"` would mean the
+     * pipeline decided not to address it and then addressed it anyway.
+     */
+    if (!["target_name", "player_auto", "player_id", "name", "player", "none"].includes(it.match)) {
+      throw new Error(`self-check failed: item ${it.id} records an unknown attribution route ${it.match}`);
+    }
+    if (it.manager && (it.match === "player" || it.match === "none")) {
+      throw new Error(`self-check failed: item ${it.id} is addressed to ${it.manager} on route ${it.match}, which means "not addressed"`);
+    }
+    if (!it.manager && (it.match === "target_name" || it.match === "player_auto")) {
+      throw new Error(`self-check failed: item ${it.id} claims route ${it.match} but names no manager`);
     }
     // The expandable detail is third-party prose. It must arrive as text, never as markup —
     // news-sources.mjs strips the oEmbed HTML rather than trusting it, and this is the assertion
@@ -1256,10 +1432,20 @@ async function main() {
       rejected_url: report.submissions.rejected_url,
       duplicate_shares: report.submissions.duplicate_shares,
       targeted: report.submissions.targeted,
+      auto_tagged: report.submissions.auto_tagged,
+      player_only: report.submissions.player_only,
       target_unresolved: report.submissions.target_unresolved,
       unaddressed: report.submissions.unaddressed,
       carried_forward: report.submissions.carried_forward,
     },
+    // One line per published share: the score, the route and the seat it landed on. Printed on a
+    // normal run and not only under --report, because "which of my shares got tagged, and how
+    // sure was it" is the question this feature raises every time it runs.
+    attribution: (report.submissions.attribution || []).map((a) => ({
+      id: a.id, by: a.submitted_by, note: a.note, route: a.resolved_by,
+      manager: a.manager, player: a.player, confidence: a.confidence, evidence: a.evidence,
+      managers_above_threshold: a.managers_above_threshold,
+    })),
     rss_matched: report.rss.matched,
     rss_total: report.rss.total,
     rss_ambiguous: report.rss.ambiguous,

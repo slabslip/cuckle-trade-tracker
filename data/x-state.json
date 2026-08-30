@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "note": "x-source.mjs persistence. user_id is @AdamSchefter's numeric X id, cached because a user read costs $0.010 against a post read's $0.005 and the number never changes. since_id is the newest post id already seen, so a run is billed only for new posts. month/month_reads enforce the monthly read ceiling. runs is cost telemetry, newest last, capped at 30 entries — check it against the ~$4.50/month estimate rather than trusting the estimate.",
+  "account": "AdamSchefter",
+  "user_id": null,
+  "since_id": null,
+  "month": null,
+  "month_reads": 0,
+  "runs": []
+}

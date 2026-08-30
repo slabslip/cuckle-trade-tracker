@@ -1,0 +1,2137 @@
+{
+ "v": 1,
+ "harvested": 1788106815334,
+ "note": "One live day of the five RSS feeds, with news-sync.mjs's own matchPlayer() verdict per item. Third-party text, verbatim; summaries clipped to 500 chars.",
+ "feeds": [
+  {
+   "id": "espn",
+   "label": "ESPN",
+   "ok": true,
+   "items": 18
+  },
+  {
+   "id": "rotowire",
+   "label": "Rotowire",
+   "ok": true,
+   "items": 5
+  },
+  {
+   "id": "cbs",
+   "label": "CBS Sports",
+   "ok": true,
+   "items": 36
+  },
+  {
+   "id": "yahoo",
+   "label": "Yahoo",
+   "ok": true,
+   "items": 50
+  },
+  {
+   "id": "pft",
+   "label": "ProFootballTalk",
+   "ok": true,
+   "items": 30
+  }
+ ],
+ "rostered_players": 337,
+ "items": [
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49679696/2026-nfl-roster-cuts-live-updates-trades-signings-moves",
+   "title": "Tracking NFL roster cuts, moves: Steelers move OT Jones; Jags trade for QB Ewers",
+   "summary": "We're following releases, trades, signings, practice squad additions and other intriguing moves for all 32 NFL teams.",
+   "published": 1788054416000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/48915601/2026-nfl-offseason-trade-grades-best-worst-moves-training-camp-preseason",
+   "title": "Grading NFL offseason trades: Sizing up Broderick Jones to Dallas",
+   "summary": "We're making sense of seven big preseason deals, including Broderick Jones to the Cowboys.",
+   "published": 1788054416000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49771289/colts-wr-keenan-allen-arrested-drunk-driving-charges",
+   "title": "Colts WR Allen arrested on drunk driving charges",
+   "summary": "Colts wide receiver Keenan Allen was arrested early Sunday morning on drunken driving charges.",
+   "published": 1788109203000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49773349/sources-dolphins-acquire-qb-kyle-mccord-trade-packers",
+   "title": "Sources: Fins trade for Pack's McCord to be QB2",
+   "summary": "The Dolphins acquired quarterback Kyle McCord in a trade with the Packers on Sunday, sources told ESPN's Adam Schefter.",
+   "published": 1788109202000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49772519/source-bucs-tab-undrafted-rookie-jalon-daniels-backup-qb",
+   "title": "Source: Undrafted rookie lands Bucs' QB2 role",
+   "summary": "The Buccaneers have decided that Jalon Daniels, an undrafted rookie free agent, will be their backup quarterback to start the season, a source told NFL Network.",
+   "published": 1788109203000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49773129/sources-dolphins-releasing-ex-starting-lb-tyrel-dodson",
+   "title": "Sources: Dolphins release ex-starting LB Dodson",
+   "summary": "The Dolphins are releasing linebacker Tyrel Dodson, a source confirmed Sunday to ESPN, after two seasons with the team.",
+   "published": 1788109203000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49771892/sources-falcons-add-gervon-dexter-sr-trade-bears",
+   "title": "Sources: Falcons add Dexter in trade with Bears",
+   "summary": "The Falcons traded for defensive tackle Gervon Dexter Sr. in a deal with the Bears, sources told ESPN.",
+   "published": 1788109202000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49766035/jacksonville-jaguars-acquire-quinn-ewers-miami-dolphins",
+   "title": "Dolphins trade QB Ewers to Jaguars for draft pick",
+   "summary": "The Jaguars have traded for quarterback Quinn Ewers, who played in four games for the Dolphins last season and completed 66.3% of his passes, sending a 2018 sixth-round pick to Miami in return.",
+   "published": 1788109202000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49766398/sources-cowboys-acquire-ot-jones-exchange-two-draft-picks",
+   "title": "Cowboys trade for Steelers OT Jones, send picks",
+   "summary": "The Steelers are sending 2023 first-round pick Broderick Jones and a fourth-round pick in 2027 to the Cowboys in exchange for a 2027 third- and sixth-round pick.",
+   "published": 1788109202000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49764268/source-panthers-agree-veteran-lb-bobby-okereke",
+   "title": "Source: Panthers agree with veteran LB Okereke",
+   "summary": "The Carolina Panthers agreed to terms on a one-year deal with veteran inside linebacker Bobby Okereke on Saturday, a source told ESPN's Jeremy Fowler.",
+   "published": 1788109202000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49734084/2026-nfl-season-most-watchable-teams-ranking-excitement-bears-rams-lions-chargers",
+   "title": "📊 Ranking every team by watchability, excitement",
+   "summary": "Which NFL teams are must-watches every Sunday? Ben Solak stacked all 32 by excitement, fun and intrigue, starting with Chicago.",
+   "published": 1788109202000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49756779/why-new-england-patriots-qb-drake-maye-didnt-play-preseason-matter-week-1-vs-seattle-seahawks",
+   "title": "Patriots notebook: Will not playing QB Drake Maye in preseason matter for Week 1?",
+   "summary": "New England will kick off the season in Seattle for a Super Bowl rematch on Wednesday, Sept. 9.",
+   "published": 1788092049000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Drake Maye",
+    "player_id": "11564",
+    "manager": "DarkWingDucks2023",
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49747060/first-green-bay-packers-arizona-cardinals-matt-mike-lafleur-family-matchup-michigan-brothers-nfl-head-coaches",
+   "title": "Raised by teachers, bonded by football: Inside Mike and Matt LaFleur's shared journey",
+   "summary": "No one in the family ever expected it. Now the LaFleurs are the league's newest brother head coaches, with a Lambeau Field reunion set for Friday.",
+   "published": 1788092049000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/fantasy/football/story/_/id/49734267/2026-fantasy-football-sleepers-cheat-sheet-adam-schefter",
+   "title": "Adam Schefter's cheat sheet: The players our NFL insider is most excited about this season",
+   "summary": "The annual favorite is back, featuring Adam's favorite picks at each level of the draft, including sleepers.",
+   "published": 1788096012000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/fantasy/football/story/_/id/49734412/2026-fantasy-football-breakout-stars-league-winners-michael-florio",
+   "title": "Michael Florio predicts this year's fantasy football 'league winners'",
+   "summary": "Michael F. Florio shares his players with breakout potential who could lead fantasy managers to titles in 2026.",
+   "published": 1788096011000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49744451/nfl-sack-projections-2026-season-top-50-pass-rushers",
+   "title": "Projecting the NFL's sack leaders for 2026: Which pass rushers will wreak the most havoc?",
+   "summary": "Will Aidan Hutchinson topple Myles Garrett as the sack champion? What about Micah Parsons? Seth Walder projects this season's top sack-getters.",
+   "published": 1788096039000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49725881/nfl-teams-using-gopro-cameras-quarterbacks",
+   "title": "Why more NFL teams than ever are using GoPros on their QBs",
+   "summary": "Six NFL teams are using GoPro cameras on their quarterbacks, but not always for the reasons you might think.",
+   "published": 1788092064000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "espn",
+   "source_label": "ESPN",
+   "source_url": "https://www.espn.com/nfl/story/_/id/49717208/nfl-rookie-2026-nfl-draft-training-camp-preseason-257-picks-report-cards",
+   "title": "The NFL Rookie Progress Report: How all 257 draft picks are faring with their new teams",
+   "summary": "When will Fernando Mendoza start? Should we expect big things for Sonny Styles, Ja'Kobi Lane and Cashius Howell? We checked in on all 32 NFL teams' rookie classes.",
+   "published": 1788051204000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "rotowire",
+   "source_label": "Rotowire",
+   "source_url": "https://www.rotowire.com//football/player/george-kittle-11892",
+   "title": "George Kittle: Expected to practice this week",
+   "summary": "Kittle (Achilles) is expected to practice this week as he continues his push to play in the 49ers' season opener against the Rams in Australia, Adam Schefter of ESPN reports. Visit RotoWire.com for more analysis on this update.",
+   "published": 1788101880000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "George Kittle",
+    "player_id": "4217",
+    "manager": "SF69erss",
+    "candidates": []
+   }
+  },
+  {
+   "source": "rotowire",
+   "source_label": "Rotowire",
+   "source_url": "https://www.rotowire.com//football/player/jalon-daniels-19292",
+   "title": "Jalon Daniels: Wins backup QB job",
+   "summary": "Daniels is moving forward as Tampa Bay's backup quarterback behind Baker Mayfield after impressing throughout training camp, Ian Rapoport of NFL Network reports. Visit RotoWire.com for more analysis on this update.",
+   "published": 1788099600000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "rotowire",
+   "source_label": "Rotowire",
+   "source_url": "https://www.rotowire.com//football/player/keenan-allen-8627",
+   "title": "Keenan Allen: Arrested on DUI charges",
+   "summary": "Allen was arrested early Sunday morning and charged with DUI, FOX59 reports. Visit RotoWire.com for more analysis on this update.",
+   "published": 1788092040000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Keenan Allen",
+    "player_id": "1479",
+    "manager": "TedCumberbatch",
+    "candidates": []
+   }
+  },
+  {
+   "source": "rotowire",
+   "source_label": "Rotowire",
+   "source_url": "https://www.rotowire.com//football/player/luther-burden-18548",
+   "title": "Luther Burden: Runs routes Saturday",
+   "summary": "Burden (groin) did not suit up for Saturday's preseason victory over the Titans but did run routes pregame, according to Brad Biggs of the Chicago Tribune. Visit RotoWire.com for more analysis on this update.",
+   "published": 1788054300000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Luther Burden",
+    "player_id": "12519",
+    "manager": "ChiefGumby",
+    "candidates": []
+   }
+  },
+  {
+   "source": "rotowire",
+   "source_label": "Rotowire",
+   "source_url": "https://www.rotowire.com//football/player/carnell-tate-19268",
+   "title": "Carnell Tate: One target to close out preseason",
+   "summary": "Tate failed to bring in his only target in the Titans' 24-15 preseason loss to the Bears on Saturday. Visit RotoWire.com for more analysis on this update.",
+   "published": 1788053400000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Carnell Tate",
+    "player_id": "13279",
+    "manager": "SF69erss",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/betting/news/week-1-nfl-2026-odds-picks-predictions-lines-spreads-bets/",
+   "title": "Week 1 NFL odds, lines, best bets, predictions: Computer model backs Eagles and Jaguars",
+   "summary": "SportsLine's advanced model has simulated every game 10,000 times and locked in its NFL best bets today",
+   "published": 1788102653000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/nfl-cut-tracker-team-by-team-breakdown/",
+   "title": "NFL roster cuts tracker 2026: Players released by all 32 teams at 53-man roster cutdown deadline",
+   "summary": "All 32 teams must trim their rosters to 53 players by Aug. 30 at 6 p.m. ET",
+   "published": 1788106254000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/bears-falcons-trade-grades-gervon-dexter-sr/",
+   "title": "Bears-Falcons trade grades: Gervon Dexter Sr. bolsters Atlanta's defensive front, Chicago adds CB depth",
+   "summary": "The Bears also receive a fifth-round pick in the deal",
+   "published": 1788101349000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/betting/news/nfl-survivor-pool-picks-advice-optimal-knockout-strategy-week-1-2026-fade-the-dallas-cowboys/",
+   "title": "NFL survivor pool picks, advice, optimal knockout strategy, Week 1, 2026: Fade the Dallas Cowboys",
+   "summary": "SportsLine's advanced computer model just locked in its top Week 1 NFL survivor picks",
+   "published": 1788100414000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/colts-keenan-allen-arrested-sunday-morning-dwi-charges/",
+   "title": "Colts' Keenan Allen arrested Sunday morning in Indianapolis on DWI charges",
+   "summary": "The six-time Pro Bowler was signed to a one-year deal less than two weeks ago to bolster a revamped wide receiver room alongside Alec Pierce and Josh Downs",
+   "published": 1788097271000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Keenan Allen",
+    "player_id": "1479",
+    "manager": "TedCumberbatch",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/2026-nfl-preseason-rookie-qb-grades/",
+   "title": "2026 NFL preseason Week 3 rookie QB grades: Ravens undrafted signal caller shines",
+   "summary": "Rams first-round pick Ty Simpson and Ravens undrafted rookie Joe Fagnano earned the highest marks",
+   "published": 1788052120000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/dolphins-trade-qb-quinn-ewers-jaguars/",
+   "title": "Dolphins trade QB Quinn Ewers to Jaguars: Miami, Jacksonville earn middling grades",
+   "summary": "Miami is sending Ewers to Jacksonville for a Day 3 selection in the 2028 NFL Draft",
+   "published": 1788047282000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/cowboys-steelers-trade-broderick-jones/",
+   "title": "Steelers trade Broderick Jones to Cowboys: Pick compensation, trade grades",
+   "summary": "Pittsburgh is moving on from Jones after declining his fifth-year option and selecting Max Ihenachor in the first round",
+   "published": 1788053939000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/raiders-starting-qb-kirk-cousins-fernando-mendoza/",
+   "title": "Raiders expected to name Kirk Cousins Week 1 starter over No. 1 pick Fernando Mendoza",
+   "summary": "The Raiders plan to open the season with the 38-year-old Cousins under center while Mendoza begins his NFL career as a backup",
+   "published": 1788040583000,
+   "baseline": {
+    "verdict": "ambiguous",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": [
+     "Fernando Mendoza",
+     "Kirk Cousins"
+    ]
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/terrion-arnold-nfl-commissioners-exempt-list-seahawks/",
+   "title": "NFL places new Seahawks cornerback Terrion Arnold on the commissioner's exempt list, per report",
+   "summary": "Arnold is not permitted to practice or play while on the commissioner's exempt list",
+   "published": 1788036495000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/how-jordan-love-helped-packers-win-preseason-game-without-playing/",
+   "title": "How Jordan Love helped Packers win preseason game over Cardinals without playing",
+   "summary": "Green Bay ended the game with consecutive drives that ended with touchdowns",
+   "published": 1788028092000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Jordan Love",
+    "player_id": "6804",
+    "manager": "TedCumberbatch",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/cam-skattebo-ruffles-feathers-at-giants-practice/",
+   "title": "Infectious energy? More like 'infectious disease' as Cam Skattebo ruffles feathers at Giants practice",
+   "summary": "Skattebo's play style is not always well-received, especially during training camp",
+   "published": 1788019362000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Cam Skattebo",
+    "player_id": "12481",
+    "manager": "TrumanCooper",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/giants-ravens-trade-grades-cj-okoye/",
+   "title": "Giants-Ravens trade grades: New York aces trade by acquiring promising young defender at minimal cost",
+   "summary": "C.J. Okoye is reuniting with John Harbaugh in the Big Apple",
+   "published": 1788015452000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/seahawks-new-owner-vinod-khosla-fandom-afc-team/",
+   "title": "Seahawks new owner Vinod Khosla defends still being a fan of this AFC team",
+   "summary": "The two teams play each other in 2027",
+   "published": 1787958660000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/raiders-klint-kubiak-still-wont-name-week-1-qb-starter-kirk-cousins/",
+   "title": "Raiders' Klint Kubiak still won't name Week 1 QB starter, here's why all signs point to Kirk Cousins",
+   "summary": "Kubiak has said it's Cousins' job to lose, but won't officially name a QB1",
+   "published": 1787954779000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Kirk Cousins",
+    "player_id": "1166",
+    "manager": "bigjberg",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/steelers-quarterbacks-predictions-bench-trade-keep/",
+   "title": "Start, Bench, Cut: If Steelers don't roster 4 QBs, who's the odd man out?",
+   "summary": "A hypothetical look at Pittsburgh's QB quandary",
+   "published": 1787962660000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/predicting-nfl-all-pros-defense-jared-verse-byron-murphy-ii/",
+   "title": "Predicting NFL All-Pros at every defensive position: Young Browns, Seahawks stars among those to watch in 2026",
+   "summary": "Jared Verse, Byron Murphy II lead a crop of rising defensive stars poised to make the leap to first-team honors this season",
+   "published": 1787951020000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/betting/news/todays-top-games-to-watch-best-bets-odds-skubal-returns-to-detroit-giants-vs-jets-and-more/",
+   "title": "Today's top games to watch, best bets, odds: Skubal returns to Detroit, Giants vs. Jets and more",
+   "summary": "Find best bets and props for the biggest games in sports on Friday from the SportsLine Projection Model and top CBS Sports experts",
+   "published": 1787954543000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/christian-gonzalez-landing-spots-cowboys-giants/",
+   "title": "Christian Gonzalez landing spots: Cowboys, Giants among trade candidates as Patriots CB seeks record contract",
+   "summary": "Gonzalez and the Patriots are reportedly not close to striking a long-term deal",
+   "published": 1787934775000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/kayshon-boutte-trade-analysis-patriots-texans/",
+   "title": "One team's healthy scratch is another's treasure: Making sense of why Patriots traded Kayshon Boutte to Texans",
+   "summary": "Boutte led all Patriots wide receivers in touchdowns last year, but didn't fit into New England's plans this season",
+   "published": 1787931695000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Kayshon Boutte",
+    "player_id": "9504",
+    "manager": "ChiefGumby",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/jakobi-lane-ravens-rookie-lamar-jackson-wr2/",
+   "title": "The Ja'Kobi Lane hype is real: Ravens rookie could quickly become Lamar Jackson's WR2",
+   "summary": "The mid-round rookie has already earned a starting role in three-receiver sets, and uncertainty surrounding Rashod Bateman could create an even bigger opportunity",
+   "published": 1787931639000,
+   "baseline": {
+    "verdict": "ambiguous",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": [
+     "Lamar Jackson",
+     "Ja'Kobi Lane"
+    ]
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/why-nfls-2026-cut-deadline-is-being-held-on-a-sunday-for-the-first-time-in-22-years/",
+   "title": "Rare change: Why the NFL's 2026 cut deadline is being held on a Sunday for the first time in 22 years",
+   "summary": "The league shifted the 53-man roster deadline to Sunday for the first time since 2004 to accommodate the 49ers and Rams traveling to Australia for their Week 1 matchup",
+   "published": 1787930611000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/nfl-wide-receiver-room-rankings-2026/",
+   "title": "Ranking every NFL team's WR room: Cowboys and Bengals battle for top spot; Chiefs not helping Patrick Mahomes",
+   "summary": "Good luck to opposing defenses trying to stop Dallas and Cincinnati this season",
+   "published": 1787929077000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Patrick Mahomes",
+    "player_id": "4046",
+    "manager": "BubbaCuckShremp",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/man-posing-49ers-player-arrested-defrauding-women/",
+   "title": "Man posing as 49ers player arrested after defrauding women of $1.3 million",
+   "summary": "The fake football player convinced many of the victims that they were in a romantic relationship with him before asking them for money for investment opportunities",
+   "published": 1787925525000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/nfl-all-pro-predictions-offense-caleb-williams-jahmyr-gibbs/",
+   "title": "Predicting first-time NFL All-Pros at every offensive position: Caleb Williams, Jahmyr Gibbs among young stars",
+   "summary": "Let's break down the players primed to make the leap and earn their first All-Pro recognition this season",
+   "published": 1787924100000,
+   "baseline": {
+    "verdict": "ambiguous",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": [
+     "Jahmyr Gibbs",
+     "Caleb Williams"
+    ]
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/college-football/news/college-football-week-0-picks-nfl-roster-cutdown-mlb-candidates/",
+   "title": "College football Week 0 picks; NFL roster cutdown day looming; MLB call-up candidates",
+   "summary": "Plus the latest buzz from NFL preseason games and training camps",
+   "published": 1787921142000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/betting/news/cfl-odds-picks-predictions-toronto-vs-saskatchewan-featured-in-experts-best-bets-for-week-13/",
+   "title": "CFL odds, picks, predictions: Toronto vs. Saskatchewan featured in expert's best bets for Week 13",
+   "summary": "SportsLine football expert Emory Hunt gives his best bets for Week 13 of the 2026 CFL season",
+   "published": 1787911259000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/taylen-green-makes-nfl-preseason-debut/",
+   "title": "Taylen Green has our attention after NFL preseason debut: Rookie makes Browns' QB room even more complicated",
+   "summary": "Now the waiting game begins to see if Green will make Cleveland's roster",
+   "published": 1787923196000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Taylen Green",
+    "player_id": "13306",
+    "manager": "BubbaCuckShremp",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/latest-nfl-injury-updates/",
+   "title": "Latest NFL injury updates: Ashton Jeanty avoids major injury, other running backs uncertain for Week 1",
+   "summary": "Who will be ready for season openers, and who's trying to get there?",
+   "published": 1787871835000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Ashton Jeanty",
+    "player_id": "12527",
+    "manager": "bigjberg",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/packers-josh-jacobs-charged-misdemeanors-suspension-possible/",
+   "title": "Packers' Josh Jacobs charged with two misdemeanors after May arrest; GM addresses possible NFL suspension",
+   "summary": "Green Bay's star running back was charged with battery and damage to property stemming from a May arrest",
+   "published": 1787865932000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Josh Jacobs",
+    "player_id": "5850",
+    "manager": "TedCumberbatch",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/titans-bears-fight-wandale-robinson-concussion/",
+   "title": "Former Titan's 'cheap' hit on Wan'Dale Robinson sparks Bears fight in joint practice; WR tested for concussion",
+   "summary": "Robert Saleh ripped the hit by safety Xavier Woods that led to the benches clearing",
+   "published": 1787864256000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Wan'Dale Robinson",
+    "player_id": "8126",
+    "manager": "TrumanCooper",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/tutu-atwell-trade-grades-rams-dolphins/",
+   "title": "Tutu Atwell trade grades: Rams reunite with speedy WR, Dolphins take chance on Jarquez Hunter, per report",
+   "summary": "It's a one-for-one trade between South Beach and Southern California",
+   "published": 1787861154000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Jarquez Hunter",
+    "player_id": "11569",
+    "manager": "KingHenryXXVI",
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/betting/news/todays-top-games-to-watch-best-bets-odds-dodgers-vs-braves-rams-vs-chargers-and-more/",
+   "title": "Today's top games to watch, best bets, odds: Dodgers vs. Braves, Rams vs. Chargers and more",
+   "summary": "Find best bets and props for the biggest games in sports on Thursday from the SportsLine Projection Model and top CBS Sports experts",
+   "published": 1787859045000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/draft/news/2027-nfl-draft-edge-rankings-dylan-stewart-colin-simmons/",
+   "title": "Renner's 2027 NFL Draft scouting series: Who's the No. 1 EDGE between Dylan Stewart and Colin Simmons?",
+   "summary": "Stewart and Simmons could both sit out the 2026 season and still be first-round picks in April",
+   "published": 1787851570000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/nfl-trade-candidates-for-cutdown-day-plus-pro-bowl-gets-canceled-and-ranking-every-roster-1-32/",
+   "title": "NFL trade candidates for cutdown day, plus Pro Bowl gets canceled and ranking every roster 1-32",
+   "summary": "Here's everything you need to know about the NFL for Aug. 27",
+   "published": 1787849869000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "cbs",
+   "source_label": "CBS Sports",
+   "source_url": "https://www.cbssports.com/nfl/news/patrick-mahomes-status-week-1-chiefs-qb/",
+   "title": "Patrick Mahomes' status for Week 1 is still up in the air: Why Chiefs QB isn't a lock to play vs. the Broncos",
+   "summary": "Patrick Mahomes is still waiting for full medical clearance after a December knee injury, leaving Justin Fields in line to start if he is not ready for Week 1",
+   "published": 1787848809000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Patrick Mahomes",
+    "player_id": "4046",
+    "manager": "BubbaCuckShremp",
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/dolphins-trade-quarterback-kyle-mccord-160802768.html",
+   "title": "Dolphins trade for quarterback Kyle McCord",
+   "summary": "The Dolphins filled their vacant backup quarterback position in a trade with the Green Bay Packers.",
+   "published": 1788106082000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/patriots-date-depth-chart-roster-202222083.html",
+   "title": "Patriots up-to-date depth chart: Who is on the roster right now?",
+   "summary": "An updated look at the Patriots’ roster in 2026.",
+   "published": 1788105996000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/patriots-roster-cuts-tracker-latest-040000073.html",
+   "title": "Patriots roster cuts tracker: All the latest moves, news, rumors, and more",
+   "summary": "Tracking New England’s transactions ahead of the upcoming roster deadline",
+   "published": 1788105978000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/packers-roster-cut-tracker-2026-140000423.html",
+   "title": "Packers Roster Cut Tracker 2026",
+   "summary": "Let’s follow along with all the news leading up to the cut-down deadline on Sunday afternoon.",
+   "published": 1788105959000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/nfl/live/nfl-news-injury-updates-preseason-week-3-schedule-whos-playing-starters-tv-channels-143714619.html",
+   "title": "NFL news, live updates: Odell Beckham Jr. has done 'enough' to make an NFL roster; Cowboys reportedly trade for Steelers OT Broderick Jones",
+   "summary": "Follow along with the latest NFL news and injury updates after the preseason wrapped up.",
+   "published": 1787236634000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/dolphins-trade-packers-preseason-standout-160118166.html",
+   "title": "Dolphins trade for Packers' preseason standout quarterback",
+   "summary": "The Dolphins stripped their roster down to the studs, but made a move for a potential QB2. Here are the details.",
+   "published": 1788105678000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/falcons-2026-practice-squad-tracker-160000420.html",
+   "title": "Falcons 2026 practice squad tracker",
+   "summary": "The Falcons can begin establishing a practice squad Monday afternoon. Stay tuned here for the latest updates.",
+   "published": 1788105600000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/minnesota-vikings-practice-squad-tracker-160000596.html",
+   "title": "Minnesota Vikings Practice Squad Tracker and Practice Squad Rules",
+   "summary": "Another important part of roster cutdown weekend",
+   "published": 1788105600000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/patriots-practice-squad-waiver-wire-160000332.html",
+   "title": "Patriots practice squad and waiver wire tracker: Signings, losses and rumors",
+   "summary": "Keeping track of all of the Patriots’ moves after the NFL roster deadline.",
+   "published": 1788105600000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/cleveland-browns-practice-squad-tracker-160000732.html",
+   "title": "Cleveland Browns practice squad tracker",
+   "summary": "Tracking who the Browns will sign to their practice squad.",
+   "published": 1788105600000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/ongoing-dallas-cowboys-practice-squad-160000433.html",
+   "title": "Here is the ongoing Dallas Cowboys practice squad",
+   "summary": "We are tracking all Dallas Cowboys practice squad signings right here.",
+   "published": 1788105600000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/nfl/article/dolphins-reportedly-acquire-kyle-mccord-from-packers-after-depleting-qb-depth-on-nfl-roster-cutdown-day-154639229.html",
+   "title": "Dolphins reportedly acquire Kyle McCord from Packers after depleting QB depth on NFL roster cutdown day",
+   "summary": "Miami adds McCord to back up Malik Willis after trading away Quinn Ewers and releasing Cam Miller and Mark Gronowski.",
+   "published": 1788104799000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/bengals-release-josh-johnson-155518246.html",
+   "title": "Bengals will release Josh Johnson",
+   "summary": "Quarterback Josh Johnson will have a chance to add to the long list of teams that have employed him over the course of his NFL career.",
+   "published": 1788105318000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/jaguars-release-nick-mullens-quinn-155314710.html",
+   "title": "Jaguars to release Nick Mullens after Quinn Ewers trade",
+   "summary": "In the aftermath of the Quinn Ewers trade, the Jaguars are letting go of one of their quarterbacks.",
+   "published": 1788105194000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/dolphins-waive-mark-gronowski-add-155021299.html",
+   "title": "Dolphins will waive Mark Gronowski, add Kyle McCord",
+   "summary": "As of Saturday, Dolphins coach Jeff Hafley said he thinks it's likely the team will keep two quarterbacks on the 53-man roster.",
+   "published": 1788105021000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/former-eagles-roster-cuts-practice-154716076.html",
+   "title": "Former Eagles roster cuts and practice squad tracker",
+   "summary": "Here’s a look at former Eagles players affected by 2026 roster cuts.",
+   "published": 1788104916000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/patriots-reportedly-cut-tight-end-153935931.html",
+   "title": "Patriots reportedly cut tight end Jack Westover, linebacker Chad Muma",
+   "summary": "By 6 p.m. ET Sunday, active rosters around the NFL will stand at 53.",
+   "published": 1788104915000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/chicago-bears-2026-53-man-013000132.html",
+   "title": "Chicago Bears 2026 53-Man Roster Transaction Tracker",
+   "summary": "NFL teams need to be down to 53 players by 5:00 CT on Sunday, August 30, and @wiltfongjr is tracking all the Bears moves here.",
+   "published": 1788104804000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/nfl/article/bucs-cut-jake-browning-elevating-udfa-jalon-daniels-to-qb2-behind-baker-mayfield-151614591.html",
+   "title": "Bucs cut Jake Browning, elevating UDFA Jalon Daniels to QB2 behind Baker Mayfield",
+   "summary": "Daniels started 45 games in college for Kansas, but the rookie has no regular-season experience.",
+   "published": 1788102974000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Baker Mayfield",
+    "player_id": "4892",
+    "manager": "DarkWingDucks2023",
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/giants-practice-squad-tracker-2026-154500212.html",
+   "title": "Giants practice squad tracker 2026: Predictions, signings, analysis",
+   "summary": "Tracking who the Giants sign to their 2026 practice squad",
+   "published": 1788104700000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/buccaneers-2026-practice-squad-tracker-154239972.html",
+   "title": "Buccaneers 2026 practice squad tracker",
+   "summary": "With the Tampa Bay Buccaneers’ initial 53-man roster taking shape, attention also turns to the practice squad. Tampa Bay can begin assembling its practice squad after players clear waivers, giving the team an opportunity to retain developmental prospects and add depth across the roster. Several players released during final cuts could return if they go […]",
+   "published": 1788104559000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/nfl-waiver-wire-rules-order-154025161.html",
+   "title": "NFL waiver wire rules and order for Colts fans",
+   "summary": "Here’s a helpful resource for those Colts fans following the waiver wire after final 53-man roster cuts.",
+   "published": 1788104425000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/george-kittle-not-had-setback-153753215.html",
+   "title": "George Kittle has not had a setback, will practice this week",
+   "summary": "The 49ers have a big decision to make with Kittle ahead of Week 1.",
+   "published": 1788104273000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "George Kittle",
+    "player_id": "4217",
+    "manager": "SF69erss",
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/packers-special-teams-units-passed-153631315.html",
+   "title": "Packers’ special teams units passed their preseason test",
+   "summary": "The Packers’ special teams units did exactly what they needed to do in the preseason.",
+   "published": 1788104191000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/watch-zavion-thomas-film-vs-153342555.html",
+   "title": "Watch: Zavion Thomas Film vs. Tennessee Titans",
+   "summary": "Zavion Thomas had a breakout preseason game for the Chicago Bears this week.",
+   "published": 1788104022000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Zavion Thomas",
+    "player_id": "13411",
+    "manager": "DarkWingDucks2023",
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/tracking-2026-buccaneers-roster-cuts-153231990.html",
+   "title": "Tracking the 2026 Buccaneers roster cuts",
+   "summary": "The Tampa Bay Buccaneers are continuing to trim their roster ahead of Sunday’s deadline to reach the NFL-mandated 53 players. According to FOX Sports’ Greg Auman, Tampa Bay has now made 20 cuts. The group includes quarterbacks Jake Browning and Connor Bazelak, running back Barika Kpeenu, wide receivers Dean Patterson, Eric Rivers and Jha’Quan Jackson, […]",
+   "published": 1788103951000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/suspension-formula-few-more-wrinkles-153055741.html",
+   "title": "The new suspension formula has a few more wrinkles to keep in mind",
+   "summary": "The NFL and NFL Players Association announced this week, out of the blue, a new procedure for imposing automatic suspensions on players who commit three violations of one of five specific safety rules: hip-drop tackles, horse-collar tackles, launching, hits on defenseless players, and blindside blocks.",
+   "published": 1788103855000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/2026-chicago-bears-practice-squad-153000706.html",
+   "title": "2026 Chicago Bears Practice Squad Rules, News, and Rumor Tracker",
+   "summary": "Not only are we tracking all the news and rumors about the Chicago Bears practice squad, but @wiltfongjr also has all the eligibility and rules.",
+   "published": 1788103800000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/kansas-city-chiefs-roster-003019778.html",
+   "title": "Kansas City Chiefs roster",
+   "summary": "The up-to-date team roster, including contract and salary cap information.",
+   "published": 1788103800000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/nfl/article/colts-receiver-keenan-allen-arrested-on-charges-of-driving-while-intoxicated-120420216.html",
+   "title": "Colts receiver Keenan Allen arrested on charges of driving while intoxicated",
+   "summary": "The arrest occurred in downtown Indianapolis at approximately 1 a.m., according to local police reports.",
+   "published": 1788091460000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Keenan Allen",
+    "player_id": "1479",
+    "manager": "TedCumberbatch",
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/2026-colts-unofficial-final-53-152840750.html",
+   "title": "2026 Colts unofficial final 53-man roster cut tracker",
+   "summary": "With final 53-man roster cuts due, the Colts are already underway with waiving players.",
+   "published": 1788103720000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/colts-announce-trade-bills-much-152022720.html",
+   "title": "Colts announce trade with Bills for much needed backup center",
+   "summary": "The Colts landed a young center who immediately slots as a 2nd-string backup.",
+   "published": 1788103222000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/nfl/article/nfl-roster-cuts-tracker-2026-53-man-due-sunday-as-rosters-take-shape-at-the-cutdown-deadline-160435884.html",
+   "title": "NFL roster cuts 2026: Look at how 53-man rosters are taking shape at the cutdown deadline",
+   "summary": "Plenty of decisions are being made at football headquarters in order to trim the roster from the 90-man squad mandated during training camp to 53 players.",
+   "published": 1787933075000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/former-cyclones-performed-week-3-151554237.html",
+   "title": "How former Cyclones performed in Week 3 of the NFL Preseason",
+   "summary": "Dylan Barrett – Green Bay Packers In a 42-38 win against the Arizona Cardinals, Barrett didn’t start. However, he played 36 of the 59 offensive snaps and six special teams snaps. Julian Good-Jones – Washington Commanders In a 41-3 loss to the Baltimore Ravens, Good-Jones did not start and played 21 snaps – 20 offense, one […]",
+   "published": 1788102954000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/chiefs-final-cutdown-tracker-know-050000876.html",
+   "title": "Chiefs final cutdown tracker: Reports and rumors ahead of Sunday’s deadline",
+   "summary": "Following the moves Kansas City makes as it brings its roster down to 53 players before Sunday’s deadline.",
+   "published": 1788102900000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/does-waiver-wire-cutdown-day-151228376.html",
+   "title": "How does the waiver wire work after cutdown day for the Jets?",
+   "summary": "Today is cutdown day in the NFL. Teams must have their rosters at 53 players by 6:00 pm Eastern Time. Over the next day or two, you will hear a lot about the waiver wire. You might be curious what that is. Inevitably, players who are released today will generate interest from other teams across […]",
+   "published": 1788102748000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/patriots-cut-2025-draft-pick-150821553.html",
+   "title": "Patriots cut 2025 draft pick Bradyn Swinson prior to 53-man deadline, per report",
+   "summary": "The NFL cutdown deadline arrives Sunday at 6 p.m. ET.",
+   "published": 1788102501000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/nfl-cuts-tracker-live-53-150725579.html",
+   "title": "NFL cuts tracker LIVE as 53-man roster deadline arrives",
+   "summary": "NFL teams must have no more than 53 men on their active rosters by 6 p.m. ET on Sunday, Aug. 30. Here are the latest roster cuts and releases.",
+   "published": 1788102445000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/report-george-kittle-expected-practice-150643570.html",
+   "title": "Report: George Kittle is expected to practice this week",
+   "summary": "49ers head coach Kyle Shanahan said after the team's final preseason game that tight end George Kittle had \"taken a step back\" when discussing Kittle's return from a torn Achilles, but Shanahan didn't elaborate on what that meant for his availability for the start of the regular season.",
+   "published": 1788102403000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "George Kittle",
+    "player_id": "4217",
+    "manager": "SF69erss",
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/miami-dolphins-2026-roster-cuts-024700177.html",
+   "title": "Miami Dolphins 2026 roster cuts tracker: Miller, Gronowski cut leaving Willis only QB",
+   "summary": "The Miami Dolphins must drop to the NFL’s regular season roster limit by Sunday evening. We keep up with all the cuts.",
+   "published": 1788102057000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/seattle-seahawks-2026-practice-squad-150000485.html",
+   "title": "Seattle Seahawks 2026 practice squad tracker",
+   "summary": "Once the Seahawks have their 53-man roster, it’s time to build their initial practice squad.",
+   "published": 1788102000000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/miami-dolphins-practice-squad-2026-150000092.html",
+   "title": "Miami Dolphins practice squad 2026: Tracking the rumors, reports, and signings",
+   "summary": "The Miami Dolphins can start building their practice squad on Monday. We track all the reports and rumors here.",
+   "published": 1788102000000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/jaguars-trade-te-hunter-long-145717044.html",
+   "title": "Jaguars to trade TE Hunter Long to Cardinals",
+   "summary": "The Jaguars and Cardinals have agreed to a trade.",
+   "published": 1788101837000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/jets-fans-expect-nate-lynn-145550832.html",
+   "title": "Jets fans expect Nate Lynn to make the 53 man roster",
+   "summary": "One of the surprises of Jets preseason has been the play of Nate Lynn. A late training camp signing, Lynn made a late push to make the 53 man roster with 3 sacks in the team’s final 2 exhibition games. At the very least, Lynn coming from completely off the radar to have a legitimate […]",
+   "published": 1788101750000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/aaron-donalds-contract-looms-over-143515691.html",
+   "title": "Aaron Donald's contract looms over his potential return",
+   "summary": "If the two sides can't reach a deal as to what he'd be paid, things could get very interesting.",
+   "published": 1788100515000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/eagles-news-philadelphia-most-likely-143430543.html",
+   "title": "Eagles News: Philadelphia’s most likely first-time Pro Bowl candidate",
+   "summary": "Philadelphia Eagles news and links for 8/30/26.",
+   "published": 1788100470000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/patriots-reportedly-waive-defensive-tackle-143306405.html",
+   "title": "Patriots reportedly waive defensive tackle Eric Gregory ahead of NFL roster deadline",
+   "summary": "The NFL’s 53-man roster deadline arrives at 6 p.m. ET Sunday.",
+   "published": 1788100386000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/cowboys-don-t-down-without-143000470.html",
+   "title": "Cowboys don’t go down without 2nd-half fight in preseason finale vs Saints",
+   "summary": "A final look back at the Saints preseason game",
+   "published": 1788100200000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/nfl/betting/article/2026-nfl-playoff-divisional-odds-why-the-new-england-patriots-to-miss-the-playoffs-is-among-my-5-favorite-futures-bets-145325947.html",
+   "title": "2026 NFL playoff, divisional odds: Why the New England Patriots to miss the playoffs is among my 5 favorite futures bets",
+   "summary": "Our NFL handicapper gives five futures wagers that he likes this preseason, including New England to miss the playoffs.",
+   "published": 1787324005000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "yahoo",
+   "source_label": "Yahoo",
+   "source_url": "https://sports.yahoo.com/articles/bears-vs-titans-inside-snap-141500511.html",
+   "title": "Bears vs Titans: Inside the snap counts, stats, and an injury update",
+   "summary": "Here are the snap counts and a few stats from the Bears' preseason win in Tennessee from @wiltfongjr. Plus the latest on some injuries.",
+   "published": 1788099300000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/dolphins-will-waive-mark-gronowski-add-kyle-mccord",
+   "title": "Dolphins will waive Mark Gronowski, add Kyle McCord",
+   "summary": "As of Saturday, Dolphins coach Jeff Hafley said he thinks it's likely the team will keep two quarterbacks on the 53-man roster.",
+   "published": 1788105021000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/bengals-will-release-josh-johnson",
+   "title": "Bengals will release Josh Johnson",
+   "summary": "Quarterback Josh Johnson will have a chance to add to the long list of teams that have employed him over the course of his NFL career.",
+   "published": 1788105318000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/jaguars-to-release-nick-mullens-after-quinn-ewers-trade",
+   "title": "Jaguars to release Nick Mullens after Quinn Ewers trade",
+   "summary": "In the aftermath of the Quinn Ewers trade, the Jaguars are letting go of one of their quarterbacks.",
+   "published": 1788105194000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/dolphins-release-lb-tyrel-dodson",
+   "title": "Dolphins release LB Tyrel Dodson",
+   "summary": "The Dolphins are parting ways with veteran linebacker Tyrel Dodson.",
+   "published": 1788104614000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/the-new-suspension-formula-has-a-few-more-wrinkles-to-keep-in-mind",
+   "title": "The new suspension formula has a few more wrinkles to keep in mind",
+   "summary": "The NFL and NFL Players Association announced this week, out of the blue, a new procedure for imposing automatic suspensions on players who commit three violations of one of five specific safety rules: hip-drop tackles, horse-collar tackles, launching, hits on defenseless players, and blindside blocks.",
+   "published": 1788103855000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/jaguars-to-trade-te-hunter-long-to-cardinals",
+   "title": "Jaguars to trade TE Hunter Long to Cardinals",
+   "summary": "The Jaguars and Cardinals have agreed to a trade.",
+   "published": 1788101837000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/report-george-kittle-is-expected-to-practice-this-week",
+   "title": "Report: George Kittle is expected to practice this week",
+   "summary": "49ers head coach Kyle Shanahan said after the team's final preseason game that tight end George Kittle had \"taken a step back\" when discussing Kittle's return from a torn Achilles, but Shanahan didn't elaborate on what that meant for his availability for the start of the regular season.",
+   "published": 1788102403000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "George Kittle",
+    "player_id": "4217",
+    "manager": "SF69erss",
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/buccaneers-to-release-jake-browning-jalon-daniels-set-to-be-no-2-qb",
+   "title": "Buccaneers to release Jake Browning; Jalon Daniels set to be No. 2 QB",
+   "summary": "The Buccaneers gave undrafted rookie Jalon Daniels a shot to win the backup quarterback job and he took full advantage of it.",
+   "published": 1788100777000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/aaron-donalds-contract-looms-over-his-potential-return",
+   "title": "Aaron Donald's contract looms over his potential return",
+   "summary": "If the two sides can't reach a deal as to what he'd be paid, things could get very interesting.",
+   "published": 1788100515000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/north-dakota-state-wins-first-game-as-fbs-program",
+   "title": "North Dakota State wins first game as FBS program",
+   "summary": "The Fargodome was a-rockin'.",
+   "published": 1788097761000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/dolphins-waive-qb-cam-miller",
+   "title": "Dolphins waive QB Cam Miller",
+   "summary": "The Dolphins traded Quinn Ewers to the Jaguars on Saturday and they've parted ways with another backup quarterback on Sunday.",
+   "published": 1788096765000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/bills-agree-to-trade-c-sedrick-van-pran-granger-to-colts",
+   "title": "Bills agree to trade C Sedrick Van Pran-Granger to Colts",
+   "summary": "The Colts are adding an offensive lineman to the roster on Sunday.",
+   "published": 1788096400000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/acc-debuted-fifa-style-ref-cam-on-saturday",
+   "title": "ACC debuted FIFA-style ref cam on Saturday",
+   "summary": "The NFL is lagging when it comes to innovation.",
+   "published": 1788095550000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/colts-wr-keenan-allen-arrested-for-dwi",
+   "title": "Colts WR Keenan Allen arrested for DWI",
+   "summary": "Colts wide receiver Keenan Allen was arrested in Indianapolis early on Sunday morning.",
+   "published": 1788090667000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Keenan Allen",
+    "player_id": "1479",
+    "manager": "TedCumberbatch",
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/bears-to-trade-dt-gervon-dexter-to-falcons-for-cb-clark-phillips-and-fifth-round-pick",
+   "title": "Bears to trade DT Gervon Dexter to Falcons for CB Clark Phillips and fifth-round pick",
+   "summary": "Defensive tackle Gervon Dexter is on the move ahead of Sunday afternoon's deadline to set 53-man rosters around the league.",
+   "published": 1788093892000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/dan-campbell-comfortable-with-jacob-saylors-as-lions-no-2-running-back",
+   "title": "Dan Campbell \"comfortable\" with Jacob Saylors as Lions' No. 2 running back",
+   "summary": "The Lions came into the summer with a plan for Isiah Pacheco to be their No. 2 running back behind Jahmyr Gibbs, but Pacheco has dealt with multiple injuries this month and that may lead them in a different direction.",
+   "published": 1788091432000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/12-nfl-teams-did-not-play-their-starting-quarterbacks-in-the-preseason",
+   "title": "12 NFL teams did not play their starting quarterbacks in the preseason",
+   "summary": "The growing trend of NFL teams keeping their quarterbacks out of the preseason has reached the point where more than one-third of starting quarterbacks did not take a single snap in this year's preseason.",
+   "published": 1788088221000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/bears-third-round-pick-zavion-thomas-scores-97-yard-touchdown-on-his-first-nfl-play",
+   "title": "Bears third-round pick Zavion Thomas scores 97-yard touchdown on his first NFL play",
+   "summary": "Thomas made his preseason debut on Saturday and put on a show.",
+   "published": 1788083904000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Zavion Thomas",
+    "player_id": "13411",
+    "manager": "DarkWingDucks2023",
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/dan-campbell-not-worried-about-his-kicker-after-jake-bates-misses-two-extra-points",
+   "title": "Dan Campbell not worried about his kicker after Jake Bates misses two extra points",
+   "summary": "Lions kicker Jake Bates did not finish the preseason strong on Saturday.",
+   "published": 1788080930000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/unc-g-m-michael-lombardis-lawyer-calls-ongoing-investigation-a-witch-hunt",
+   "title": "UNC G.M. Michael Lombardi's lawyer calls ongoing investigation a \"witch hunt\"",
+   "summary": "UNC G.M.",
+   "published": 1788058241000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/report-saints-will-keep-spencer-rattler-despite-trade-interest",
+   "title": "Report: Saints will keep Spencer Rattler despite trade interest",
+   "summary": "The Saints waived fourth quarterback Hunter Dekkers on Saturday, leaving Spencer Rattler and Zach Wilson behind Tyler Shough.",
+   "published": 1788057726000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/kyle-shanahan-vaguely-suggests-george-kittle-has-taken-a-step-back",
+   "title": "Kyle Shanahan vaguely suggests George Kittle has \"taken a step back\"",
+   "summary": "When 49ers tight end George Kittle recently emerged from the active/physically unable to perform list, many assumed it meant he'd be available to play in the Week 1 game against the Rams in Australia.",
+   "published": 1788056833000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "George Kittle",
+    "player_id": "4217",
+    "manager": "SF69erss",
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/college-running-back-micahjo-barnett-dies-after-medical-emergency-on-sideline",
+   "title": "College running back MicahJo Barnett dies after medical emergency on sideline",
+   "summary": "MicahJo Barnett, a junior running back at William Jewell College in Missouri, died Saturday after experiencing a medical emergency on the sideline during a game, via the Associated Press.",
+   "published": 1788051245000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/anthony-richardson-the-favorite-to-win-backup-qb-job-after-preseason-finale",
+   "title": "Anthony Richardson the favorite to win backup QB job after preseason finale",
+   "summary": "Anthony Richardson lost his starting job last year.",
+   "published": 1788049888000,
+   "baseline": {
+    "verdict": "matched",
+    "player": "Anthony Richardson",
+    "player_id": "9229",
+    "manager": "ARae",
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/todd-monken-continues-wrestling-somewhat-with-fates-of-dillon-gabriel-and-taylen-green",
+   "title": "Todd Monken continues wrestling \"somewhat\" with fates of Dillon Gabriel and Taylen Green",
+   "summary": "The Browns know what they'll be doing as to the top two quarterbacks on the depth chart.",
+   "published": 1788027494000,
+   "baseline": {
+    "verdict": "ambiguous",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": [
+     "Taylen Green",
+     "Dillon Gabriel"
+    ]
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/the-annual-frenzy-of-nfl-transactions-happens-this-weekend",
+   "title": "The annual frenzy of NFL transactions happens this weekend",
+   "summary": "Rosters must cut from 90 to 53 by Sunday at 4:00 p.m. ET.",
+   "published": 1788000396000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/giants-cut-eight-including-wr-isaiah-hodgins",
+   "title": "Giants cut eight, including WR Isaiah Hodgins",
+   "summary": "The Giants have begun reducing their roster to 53 players.",
+   "published": 1788045215000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/report-jets-waive-dt-mazi-smith",
+   "title": "Report: Jets waive DT Mazi Smith",
+   "summary": "The Jets are releasing defensive tackle Mazi Smith, Adam Schefter of ESPN reports.",
+   "published": 1788043827000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/steelers-trade-broderick-jones-to-cowboys",
+   "title": "Steelers trade Broderick Jones to Cowboys",
+   "summary": "After three seasons in Pittsburgh, offensive tackle Broderick Jones will be moving to Dallas.",
+   "published": 1788041036000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  },
+  {
+   "source": "pft",
+   "source_label": "ProFootballTalk",
+   "source_url": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/cardinals-trade-rb-corey-kiner-to-patriots-for-a-2028-seventh-round-pick",
+   "title": "Cardinals trade RB Corey Kiner to Patriots for a 2028 seventh-round pick",
+   "summary": "The Patriots have added some depth at running back through a trade with the Cardinals.",
+   "published": 1788025989000,
+   "baseline": {
+    "verdict": "no_player",
+    "player": null,
+    "player_id": null,
+    "manager": null,
+    "candidates": []
+   }
+  }
+ ]
+}

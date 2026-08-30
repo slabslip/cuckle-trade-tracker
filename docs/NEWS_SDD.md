@@ -101,6 +101,12 @@ attribution. An RSS path gets the substance, a few minutes later, for free and w
 only they can make. Nothing here signs up for anything. It would also not change the feed much: the
 same facts already arrive through the free path.
 
+**Update: the user has decided to pay** — X's 2026 pay-per-use tier, ~$4.50/month at this volume.
+The findings above are unchanged and still the reason there is no scraper: what is now possible is
+the *paid, documented, in-terms* API and nothing else. The ingest module is built and inert in
+[§10.3](#103-x-ingest--x-sourcemjs); the token is not provisioned, and until it is, the free RSS
+path above is still what the feed runs on.
+
 ### Sleeper's other endpoints — signal, not stories
 
 - `/v1/players/nfl/trending/add` and `/trending/drop` are free and real, returning
@@ -491,3 +497,505 @@ caught in review before it reaches the page.
    rows already carry `user_id`.
 5. **Whether "Ruled out" should supersede "Questionable"** rather than sit beside it. That is the
    thread model in §7, and a `v: 2`.
+6. **Whether `contract` should be its own category.** §10.1: it needs a `news-voice.mjs` entry, a
+   template bank *and* a `NEWS_CATS` label in `generate-page.mjs`, and without the third it would
+   render as "News" on screen while passing every assertion. Contract news currently classifies as
+   `trade`. Say the word and it is three small edits and a regenerate.
+7. **Whether the notify threshold is in the right place.** 0.80 means a nickname, a bare surname
+   and a collision resolved by ranking can all print but never ping. That is a judgement about how
+   much a wrong ping costs relative to a missed one, and it is the user's to make — one constant,
+   `NOTIFY_MIN` in `news-match.mjs`.
+
+---
+
+## 10. Phase 3 — @AdamSchefter on X, and @mentions in the league Discord
+
+**Status: built, unwired, and deliberately not scheduled.** Both credentials are outstanding, and
+the user asked to review before anything runs automatically. Nothing in this section is on a cron,
+no workflow file is committed, and with no credentials present every part of it is a no-op.
+
+Four new files, and one flag on an existing one:
+
+| File | What it is | Runs today? |
+| --- | --- | --- |
+| [`news-match.mjs`](../news-match.mjs) | free text → rostered players, with confidence | On demand: `--corpus-score`, `--text` |
+| [`x-source.mjs`](../x-source.mjs) | X timeline ingest | No-op without `X_BEARER_TOKEN` |
+| [`discord-notify.mjs`](../discord-notify.mjs) | webhook sender | Dry run by default |
+| [`news-fixtures.mjs`](../news-fixtures.mjs) | harvests real Schefter wording into fixtures | Only on `--harvest` |
+| `news-sync.mjs --corpus` | freezes a live RSS day with its own verdicts | Only on `--corpus` |
+
+`news-sync.mjs` is otherwise unchanged in behaviour. `matchPlayer()` and the index builders are now
+exported and `main()` is guarded to the direct invocation, so a test can run the shipping matcher
+without firing a live build.
+
+### 10.1 The matcher, and why it is a second one
+
+§4 records the two mis-attributions this feature shipped and the fix both pushed towards: **read the
+title only**. An RSS item is a title plus a summary, and a summary names teammates, coaches and the
+reporter who broke it — which is exactly how "Jalon Daniels: Wins backup QB job" reached Baker
+Mayfield's owner.
+
+**A post on X has no title/summary split.** There is one blob of text, so the title-only defence
+does not transfer and something has to replace it. `news-match.mjs` is that replacement, and it is a
+separate matcher on purpose: RSS should keep refusing on ambiguity, and nothing in the new path
+should be able to change what the shipping feed does today.
+
+Four things replace the title-only rule.
+
+**1. Only rostered players are indexed.** 337 of 12,225. Inherited from `matchPlayer()`, which is
+right about it.
+
+**2. Collisions are resolved against the whole dictionary, not the roster.** This is the part
+`matchPlayer()` cannot do and the part that matters most. Sleeper has **357 colliding normalised
+names**. Indexing rosters only means a post about the *Jaguars linebacker* Josh Allen would be
+addressed with total confidence to whoever owns the *Bills quarterback*, because the linebacker was
+never a candidate. So every name hit is re-opened against all 12,225 players and ranked with
+`nameCandidateScore()` from `price-today.mjs` — the same ranking whose absence mispriced four
+players — plus a roster bonus and team context. **If the winner is not rostered here, the item is
+refused.** A same-named stranger costs a drop, not a wrong address.
+
+**3. Team context, weighted heavier than the roster bonus.** Rostered is +12; a named team is +14
+and a contradicted team is −12. The asymmetry is the design, and it was sized against a real
+collision rather than chosen: Justin Jefferson is a Vikings receiver this league rosters **and** a
+Browns linebacker it does not. At equal weights, "the Browns say Justin Jefferson will not play"
+tied 16–16 and fell through to a player-id tie-break — a coin toss deciding whose phone rings.
+Weighted this way the Browns linebacker wins the sentence outright and the item is refused.
+
+| Sentence | Winner | Verdict |
+| --- | --- | --- |
+| "Justin Jefferson will not play Sunday" | Vikings WR, 26–6 | matched, 0.65 — published, no ping |
+| "The **Vikings** say Justin Jefferson will not play Sunday" | Vikings WR, 40–−6 | matched, 0.85 — ping |
+| "The **Browns** say Justin Jefferson will not play Sunday" | Browns LB, 20–14 | **refused** |
+
+**4. Confidence, with two thresholds**, because "put this in a scrolling feed" and "ring somebody's
+phone" are different bets. **Publish ≥ 0.55. Notify ≥ 0.80.**
+
+| Evidence | Confidence | Publishes | Pings |
+| --- | ---: | :---: | :---: |
+| Full name, unique in the dictionary | 0.90 | yes | **yes** |
+| Full name, collision settled by team context | 0.85 | yes | **yes** |
+| Surname plus team context | 0.72 | yes | no |
+| Alias ("Zeke", "CMC", "AJB") | 0.70 | yes | no |
+| Full name, collision settled by ranking alone | 0.65 | yes | no |
+| Surname alone | 0.58 | yes | no |
+| Own team also named | +0.05 | | |
+| Non-news wording (promo, mock draft, condolence) | −0.20 | | |
+
+The notify line sits **above every form of evidence that involved a judgement call**. Only a name
+that needed no interpretation can ping anyone, because a notification is the one output that cannot
+be quietly corrected after it lands on ten phones. Publish-but-don't-notify is the normal state for
+weaker matches, not an error. The −0.20 non-news penalty is sized so the strongest evidence lands at
+0.70: a listicle naming your player still reaches the feed and cannot reach your phone.
+
+**Several rostered players in one post emit one item per manager.** The RSS path drops these and for
+RSS that is right — a *title* naming two owned players has one subject and picking it would be a
+guess. For free text the drop is the wrong trade: the most valuable posts name two players by
+construction (a trade has two sides and genuinely affects two managers), and the claim a per-manager
+row makes is weaker — *"this story mentions your player"*, not *"this story is about your player"* —
+which is true for both. The voice supports it, because `leagueLine()` is keyed on category and
+frames the headline printed beside it rather than asserting a subject. It is bounded at
+**MAX_SUBJECTS = 3**: past that the text is a cut tracker or an inactives list, which is not news
+for anyone in particular, and it is refused outright rather than fanned out to six managers.
+
+**Surnames are allowed, under three conditions at once.** `matchPlayer()` never matches a bare
+surname and on headlines that is correct, but real reporter wording is full of them — "Kittle
+(Achilles) is expected to practice", "The Texans placed Higgins (knee) on IR" — and refusing all of
+them drops most of the corpus. So a surname needs: unique among the 337 rostered players; **no
+dictionary namesake currently holding an NFL team** (the Josh Allen guard, and what stops "the Jets
+are releasing defensive tackle Mazi Smith" from reaching a different Smith's owner); and
+**capitalised in the raw text**. That last one earns its place on live data: the corpus contains
+*"Eagles News: Philadelphia's most likely first-time Pro Bowl candidate"*, where lower-case "likely"
+is the only thing between Isaiah Likely's owner and a wrong row. Where the text is **title-cased**,
+capitalisation says nothing at all, so surname matching switches off entirely rather than run a
+check that cannot fail — §3a of the audit, applied before it bit.
+
+A surname beside a full name is treated as **context, not subject**, and the surname pass only runs
+when no full name matched. That is the §4 lesson in a new place: the weakest evidence in a text that
+already has strong evidence is usually a teammate. The cost is that one phrasing of a story can
+reach fewer managers than another; the notifier's dedupe absorbs it.
+
+**Categories are the existing vocabulary**, imported from `news-voice.mjs` — `injury` (with
+`upbeat` selecting the `injury_good` template bank), `off_field`, `suspension`, `trade`,
+`depth_chart`, `breakout`, `news`. `news-match.mjs` exports `CATEGORY_IDS` from `CATEGORIES` and the
+test asserts every category the fixtures produce is in it, so the matcher cannot invent one the
+voice and the UI do not know. **There is no `contract` category and this change does not add one**;
+contract news currently classifies as `trade`, since `CATEGORIES.trade` already tests "agree to
+terms" and "signs with". Adding one is a `news-voice.mjs` entry *and* a template bank *and* a
+`NEWS_CATS` label in `generate-page.mjs`, and without the third it would render as "News" on screen
+while passing every assertion — precisely the §6d.1 failure mode. It is listed in §9 as an open
+question rather than half-done here.
+
+### 10.2 Validation — 139 real items, 24 real Schefter sentences
+
+The matcher cannot be exercised against tweets: there is no token. The tempting move is to invent
+fixtures in an imagined Schefter register and report a pass rate against them, which measures the
+imagination and nothing else. Two committed corpora instead, both third-party text.
+
+**`data/fixtures/rss-corpus.json`** — one live day of the five RSS feeds, verbatim, **with
+`news-sync.mjs`'s own `matchPlayer()` verdict on every item**, written by `news-sync.mjs --corpus`.
+The answer set is produced by the code that ships, per item rather than in aggregate, so a
+divergence reads as a specific headline. Feeds churn hourly, so freezing it is also the only way the
+comparison is reproducible tomorrow.
+
+| | Shipping RSS matcher | `news-match.mjs` on the same 139 titles |
+| --- | ---: | ---: |
+| Attributed to a rostered player | **27** | **32** (28 single-subject, 4 multi) |
+| Named nobody | 108 | 108 (89 no candidate, **19 refused with a stated reason**) |
+| Dropped as ambiguous | 4 | 0 — all four resolve |
+| Baseline matches lost | — | **0** |
+| Baseline matches re-attributed to someone else | — | **0** |
+
+*(NEWS_SDD §4 records 25/108/4 from the run that day. This corpus was harvested later the same day
+and the feeds had moved: `news-sync.mjs --report` reads 27 matched / 107 no-player / 4 ambiguous /
+1 stale over the same 139. The corpus applies no age cutoff, so its 108 is the 107 plus the stale
+item, which also named nobody. Same code, same day, different hour.)*
+
+The five gains, all read by hand and all named in the test so a future gain cannot slide in unread:
+
+- Four are the items the RSS path dropped as ambiguous. Three are genuinely about two owned players
+  ("Raiders expected to name Kirk Cousins Week 1 starter over No. 1 pick Fernando Mendoza") and now
+  reach both managers; one is *"Predicting first-time NFL All-Pros … Caleb Williams, Jahmyr Gibbs
+  among young stars"*, which reaches both at 0.70 — published, unable to ping.
+- One is new: *"Miami Dolphins 2026 roster cuts tracker: Miller, Gronowski cut leaving Willis only
+  QB"*. "Willis" plus "Dolphins" identifies Malik Willis, and him being the only quarterback left
+  is real news for his owner. 0.72, so it publishes and does not ping.
+
+The 19 refusals all name their reason, and they include every headline this document already
+flags as a required drop: *"Jalon Daniels: Wins backup QB job"* (the mis-attribution), *"Colts WR
+Allen arrested on drunk driving charges"* (§4's deliberate surname drop), *"Report: Jets waive DT
+Mazi Smith"*, *"Jaguars to trade TE Hunter Long to Cardinals"*.
+
+**`data/fixtures/schefter-quotes.json`** — **24 sentences** that quote or credit Adam Schefter,
+harvested by `news-fixtures.mjs --harvest` from a live fetch of the five RSS feeds plus Sleeper's
+`get_player_news` over the rostered players. Sources: Rotowire via Sleeper (11), RotoBaller via
+Sleeper (8), ESPN (2), Rotowire direct (1), FantasyPros via Sleeper (1), ProFootballTalk (1) —
+six publishers, so the wording is not one outlet's house style.
+
+**What is honest to claim about them.** They are **not tweets**. They are third parties restating
+his reports and crediting him — *"The Jets are releasing defensive tackle Mazi Smith, Adam Schefter
+of ESPN reports."* The useful part is that the player names, team names, positions, injury nouns and
+transaction verbs are real. Each fixture stores `verbatim` (the publisher's text, untouched) and
+`tweet_form` (that text with **one** credit clause removed and nothing else changed), and records
+the exact clause removed in `stripped`, so the transform is reversible by inspection. 20 of 24 were
+derived this way; the other 4 matched no listed clause and `tweet_form` equals `verbatim`. No
+fixture invents words.
+
+Against the 24: **19 reach at least one manager, 12 clear the notify line**, and eight hand-checked
+attributions are pinned by name in the test. The five that reach nobody are correct — a promo
+("Adam Schefter's cheat sheet"), two players nobody rosters (Kyle McCord, Mazi Smith), and two
+surnames the guards refuse ("Kamara" with only the Cowboys named as the practice partner;
+"Robinson" with three Falcons Robinsons on NFL rosters).
+
+**The adversarial probes** — 15, in `news-match.test.mjs`, each declaring on its own row whether its
+text is `real` (verbatim from a committed fixture) or `written` (composed there). The test asserts
+that declaration and refuses to let a probe claim real text that is not findable in a fixture. Nine
+are real. Every collision used is real in Sleeper's dictionary today.
+
+| Probe | Text | Result |
+| --- | --- | --- |
+| Two rostered players | *real* — "Raiders expected to name Kirk Cousins Week 1 starter over No. 1 pick Fernando Mendoza" | two items, two managers, 0.95 each |
+| Collision, no team context | Justin Jefferson | Vikings WR at 0.65 — published, no ping |
+| Collision, team confirms | "The **Vikings** say…" | 0.85 — ping |
+| Collision, team contradicts | "The **Browns** say…" | **refused** |
+| Surname ambiguous | "Hunter is expected to miss a month" (two rostered Hunters) | **refused** |
+| Surname unique + team | *real* — "The Texans placed Higgins (knee) on IR" | Jayden Higgins, 0.72, no ping |
+| Non-news: promo | *real* — "Adam Schefter's cheat sheet…" | names nobody |
+| Non-news: condolence | "Thoughts and prayers to Kirk Cousins and his family" | published, **no ping** |
+| Non-news: draft chatter | "Mock draft season: where does Fernando Mendoza land…" | published, **no ping** |
+| Nobody rosters him | *real* — "The Dolphins acquired quarterback Kyle McCord…" | names nobody |
+| Roundup at the limit | *real* — the Commanders' three starters | three items |
+| Roundup over the limit | four owned names | **refused as a roundup** |
+| Ambiguous alias | "Big year coming for JJ" (J.J. McCarthy and Justin Jefferson, both MIN) | **refused** |
+| Possessive | *real* — "…become Lamar Jackson's WR2" | both players |
+| The Jalon Daniels headline | *real* | **refused** |
+
+**The assertions are exact counts, not floors, and they were mutation-tested.** §3a: a check that
+cannot fail is worse than no check. Dropping `normText`'s possessive step, setting
+`allowed_mentions` to the webhook default, skipping headline sanitising and raising the read budget
+each fail between one and three tests.
+
+**One trap was fallen into and is recorded because of it.** The three collision probes passed *with
+the weights tied*, because the player-id tie-break happened to land on the right player — so
+reverting the weights failed nothing at all. That is §3a's rule in the form it actually takes: not a
+check that cannot fail, but a check that **passes for a reason you did not intend**. The fix was to
+assert the resolution *margin* (`scored[0].score > scored[1].score`) rather than the winner, and
+reverting the weights now fails.
+
+### 10.3 X ingest — `x-source.mjs`
+
+**Nothing calls it, and without `X_BEARER_TOKEN` it does nothing:** one log line, exit 0, zero
+reads, zero dollars. A missing token is deliberately a *successful* outcome rather than an error,
+because a cron that goes red over a credential that does not exist yet is noise.
+
+**The endpoint shape was checked, not remembered.** `https://api.x.com/2/openapi.json`, fetched from
+the build VM on 2026-08-30: `openapi: 3.0.0`, `info.version: 2.168`,
+`servers: [{ url: "https://api.x.com" }]`.
+
+- **`GET /2/users/{id}/tweets`** — `operationId: getUsersPosts`. `security` lists `BearerToken`,
+  defined in `components.securitySchemes` as `{ type: http, scheme: bearer }`: app-only
+  `Authorization: Bearer …`, no OAuth dance. Query parameters: `max_results` (integer, **minimum 5,
+  maximum 100**), `pagination_token`, `start_time`, `end_time`, `since_id`, `until_id`, and
+  `exclude` (array, enum exactly `["replies","retweets"]`).
+- **The field selector on this route is `post.fields`, not `tweet.fields`.** This is the one detail
+  memory would have got wrong. In 2.168 the timeline route resolves `$ref: PostFieldsParameter`,
+  whose `name` is `post.fields`; a parameter literally named `tweet.fields` survives only on the ten
+  streaming routes (`/2/tweets/search/stream`, `/2/tweets/firehose/stream`, …). It is the constant
+  `FIELDS_PARAM`, so changing it back is one line.
+- **`referenced_posts` is an expansion, not a post field** — and reading the spec is what caught it.
+  The first draft of `x-source.mjs` asked for it inside `post.fields`. The name is real, so it looks
+  right, but in 2.168 it is a member of the `expansions` enum and is *absent* from the `post.fields`
+  enum. X would have answered `400` and the X ingest would have been dead on its first real run,
+  with nothing in the repo able to notice, because no test can call X without a token. We never
+  consumed the value — `exclude=retweets,replies` already drops the referencing cases the feed cares
+  about — so it is simply gone. This is the second time on this feature that a plausible-from-memory
+  identifier was wrong (see also `post.fields`), which is the argument for the next paragraph.
+- **The spec's enums are pinned, so the request is checked offline.** `post.fields`, `expansions`,
+  `exclude`, the documented query-parameter list and the `max_results` bounds are committed to
+  `data/fixtures/x-post-fields.json` together with their provenance (`spec_url`, `fetched`,
+  `info.version`). The test suite asserts every parameter `x-source.mjs` sends is a member of the
+  matching enum. That check earns its keep: reinstating `referenced_posts` fails it with
+  `post.fields=referenced_posts is not in the spec's enum`, which was verified by doing exactly
+  that. Re-pin the fixture by re-fetching the spec; do not hand-edit it to make a test go green.
+- **`GET /2/users/by/username/{username}`** — `operationId: getUsersByUsername`. The only way to
+  turn "AdamSchefter" into the numeric id the timeline route wants.
+
+**Money.** X moved to pay-per-use in 2026: no free tier, prepaid credits, billed **per resource
+returned**. Published rates, cross-checked 2026-08-30 against `console.x.com/pricing`: a **post read
+is $0.005**, a **user read is $0.010**, and pay-per-use is capped at 3,000,000 post reads a monthly
+cycle. Three consequences, all implemented:
+
+1. **The user id is resolved once and cached in `data/x-state.json` forever.** It costs twice what a
+   post costs and it never changes.
+2. **`since_id` is persisted**, so a run is billed for new posts and not for the same fifty again.
+   This is the difference between a few dollars a month and a few dollars a day.
+3. **Two hard ceilings.** `X_MAX_READS_PER_RUN` defaults to **50 posts**; `X_MAX_READS_PER_MONTH`
+   defaults to **1,200 posts**. The monthly one is the real guard: 1,200 × $0.005 = **$6.00**, a
+   third above the ~$4.50 estimate the user is working to, so normal running is unaffected and a bug
+   that loops cannot produce a surprise invoice. Past the ceiling the module no-ops exactly as if
+   the token were missing, until the billing month rolls over. `X_MAX_PAGES_PER_RUN` defaults to
+   **1**, because paging on a bug is how a read budget gets spent in a loop.
+
+The estimate those defend: ~30 original posts a day at two runs a day is ~900 reads a month, ×
+$0.005 = **$4.50**. Every run appends its actual `post_reads`, `user_reads` and `usd` to
+`data/x-state.json` (last 30 runs), so the estimate can be checked against reality rather than
+trusted. `node x-source.mjs --plan` prints the exact request, the cached id, the watermark and the
+whole budget, with no token and no network.
+
+A post normalises into the raw shape the `news-sources.mjs` adapters already return, with the whole
+text in `title` and `summary` empty — the honest mapping, since a post has no split and inventing
+one would invite the title-only rule to be applied to text it was never designed for. An unparseable
+`created_at` becomes `null`, never `Date.now()`, per §8.4.
+
+### 10.4 Discord — `discord-notify.mjs`
+
+Plain HTTPS POST of a webhook payload with `fetch`. No dependencies.
+
+**Dry run is the default.** With no `--target` and no webhook in the environment it writes what it
+*would* have sent to `data/discord-outbox.json` (gitignored) and sends nothing. Promotion is
+`--target=staging`, then `--target=live` — both settings, neither a code change. An explicit target
+whose secret is not set **degrades to a dry run** rather than failing, so a cron that has not been
+given its secret yet is quiet rather than red. Because the shipped member map is all placeholders,
+the dry run substitutes a marked stand-in id so the outbox is readable; a real send still refuses a
+placeholder.
+
+**Mention injection.** Every string in a news item is third-party text from the open internet. A
+headline containing `@everyone` must not ping the server. **Two independent defences**, because
+either alone has a way to be wrong:
+
+1. **`allowed_mentions: { parse: [], users: [<one id>] }` on every payload.** Discord's message
+   documentation gives this as the surgical form: an empty `parse` resolves *nothing* from the
+   content, while the explicit `users` array overrides `parse` for exactly those ids. So `@everyone`
+   renders as text, a role mention renders as an unclickable name, and only the intended manager is
+   notified. The docs are also explicit that `parse` and the type arrays conflict **per type** —
+   `parse: ["users"]` together with `users: […]` is a 400 — so `parse` stays empty.
+2. **The third-party text is neutralised before it is placed in `content`.** Relying on
+   `allowed_mentions` alone means trusting a remote parser on a field whose semantics the docs
+   themselves call "more complex than it seems". So raw mention syntax loses its angle brackets
+   first (`<@&999>` → `@999`), then every `@` gains a zero-width space. The outgoing string contains
+   **no mention token at all**, and still reads as `@everyone` to a person. The intended `<@id>` is
+   prepended *after* sanitising, so it is the only one that exists.
+
+`assertInertMentions()` then checks the **finished payload**, not the inputs, so a future caller that
+forgets to sanitise is caught too. Given the headline
+`@everyone @here <@&123456789012345678> Kittle ruled out — <@987654321098765432> confirms`:
+
+```json
+{
+  "username": "CuckleChunckle",
+  "content": "<@111111111111111111> **George Kittle** — Rotowire\n@​everyone @​here @​123456789012345678 Kittle ruled out — @​987654321098765432 confirms\n> …\n<https://example.com/story>",
+  "allowed_mentions": { "parse": [], "users": ["111111111111111111"] }
+}
+```
+
+Live `@everyone`/`@here` tokens in `content`: **0**. Mention tokens in `content`: **exactly one**,
+the intended manager. All six guard clauses are shown refusing by `node discord-notify.mjs
+--self-test` and asserted in the test suite.
+
+**Rate limits.** Discord's own documentation says not to hard-code limits and to read the
+`x-ratelimit-*` headers instead, so the limiter is header-driven — `x-ratelimit-remaining: 0` plus
+`x-ratelimit-reset-after` holds the queue — with the community-known webhook floors underneath
+(**5 requests per 2 seconds, 30 per minute**) and exponential backoff on top of the server's own
+`retry_after` on a 429, to five attempts. Our volume never engages any of it. The run *after* an
+outage is exactly when it matters, and Discord restricts IP addresses that accumulate 429s. A
+**404, 401 or 403 is terminal and not retried**, because the docs say a webhook that 404s must not
+be called again.
+
+**Secrets versus config.** Webhook URLs **are** secrets — the URL *is* the credential, anyone
+holding it can post as the webhook. They come from the environment only, and no code path writes one
+to disk: the dry-run artifact records the target by *name* (`webhook_env`), and the test asserts no
+webhook URL appears anywhere in it. Discord **user ids are not secrets** — every member of a server
+can see them — so the map lives in the committed `data/discord-members.json`, one row per seat, all
+ten shipped as `000000000000000000`. A placeholder is **refused at send time**, so a half-filled map
+fails loudly instead of quietly never pinging somebody. The test asserts the ten seats match
+`members.json` exactly, that every id ships as a placeholder, and that no webhook URL is in the file.
+
+**Only above the notify threshold.** `alertsFrom()` takes `NOTIFY_MIN` (0.80). Rows already in
+`news.json` carry no `confidence`, so it is derived from how they were attributed: `player_id` →
+0.99 (Sleeper's per-player endpoint answered, so who owns the player cannot be wrong) and `name` →
+0.90 (the RSS full-name-in-the-title rule, which refuses on any ambiguity). Nothing invents a
+confidence for an item that has one.
+
+**Deduplication is on a story key, not an item id.** `news-sync.mjs` ids hash the exact headline, so
+the same report arriving from Sleeper and from a post has two ids and would ping twice. The key is
+the same shape as `news-sync`'s own dedupe — player, calendar day, first six meaningful words —
+plus the manager, since a trade legitimately notifies two people about one story. Deliveries are
+recorded in `data/discord-delivered.json`, pruned at 21 days, so a story is never notified twice
+across runs either.
+
+### 10.5 What the user has to supply
+
+Nothing here signs up for anything, and nothing runs until all of this exists.
+
+**Repository secrets** (Settings → Secrets and variables → Actions → New repository secret). All
+three are secrets and none may be committed:
+
+| Secret | What it is | Needed for |
+| --- | --- | --- |
+| `X_BEARER_TOKEN` | App-only bearer token from the X developer console, with prepaid credits on the account | X ingest. Absent → no-op |
+| `DISCORD_WEBHOOK_STAGING` | Webhook URL for a private staging channel | Staging sends. Absent → dry run |
+| `DISCORD_WEBHOOK_LIVE` | Webhook URL for the league channel | Live sends. Absent → dry run |
+
+**Committed config**, in the repo, not secret:
+
+| Where | What | Default shipped |
+| --- | --- | --- |
+| `data/discord-members.json` | ten `sleeper user_id` → Discord user id rows | all `000000000000000000` — **must be filled** |
+| `data/x-state.json` | cached user id, `since_id`, monthly read counter, cost telemetry | empty; written by the first real run |
+
+To read a Discord user id: User Settings → Advanced → Developer Mode on, then right-click a member
+→ Copy User ID. 17–20 digits.
+
+**Optional environment overrides**, all with working defaults: `X_ACCOUNT` (`AdamSchefter`),
+`X_MAX_READS_PER_RUN` (50), `X_MAX_READS_PER_MONTH` (1200), `X_MAX_PAGES_PER_RUN` (1),
+`DISCORD_TARGET` (`dry-run`).
+
+### 10.6 The workflow, when the user wants it
+
+**Not committed.** This extends §7's proposal; the same rules apply — no `generate-page.mjs`, no
+`apply-value-adjust.mjs`, and the value book must not move on a cron.
+
+```yaml
+# .github/workflows/news.yml — NOT COMMITTED. This is the proposal.
+      # … §7's steps up to and including `node news-sync.mjs` …
+
+      # Inert until X_BEARER_TOKEN exists. Not in news-sync.mjs yet: wiring it in is Phase 4,
+      # and it must not be able to change today's feed.
+      - run: node x-source.mjs
+        env: { X_BEARER_TOKEN: "${{ secrets.X_BEARER_TOKEN }}" }
+
+      # Dry run unless a webhook secret exists, whatever the target says.
+      - run: node discord-notify.mjs --target=staging
+        env:
+          DISCORD_WEBHOOK_STAGING: "${{ secrets.DISCORD_WEBHOOK_STAGING }}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: discord-outbox, path: data/discord-outbox.json, if-no-files-found: ignore }
+
+      - run: |
+          git add data/ui/news.json data/x-state.json data/discord-delivered.json
+          git diff --staged --quiet || git commit -m "News: $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
+```
+
+`data/x-state.json` and `data/discord-delivered.json` **must** be committed back, or `since_id`
+resets and every run pays for the same posts, and the delivery ledger resets and every run re-pings
+the same stories. `data/discord-outbox.json` is gitignored and goes out as an artifact instead.
+
+### 10.7 Promotion checklist
+
+Each step is reversible and each one is a setting. Do not skip to the last.
+
+1. **Read the dry run.** `node discord-notify.mjs` with no secrets, then read
+   `data/discord-outbox.json` end to end. Not the counts — the message bodies. §6d.1: a thing can
+   pass every assertion while being wrong on screen.
+2. **Run the suite.** `node --test news-match.test.mjs` — 36 tests, no network. Then
+   `node news-match.mjs --corpus-score` and read the refusals; a refusal with a reason you disagree
+   with is the cheapest bug report available.
+3. **Fill `data/discord-members.json`.** Ten real ids, committed. Re-run the dry run and confirm
+   every `discord_id_is_placeholder` is now `false`.
+4. **Create the staging webhook** in a channel only the user is in. Add `DISCORD_WEBHOOK_STAGING`.
+   Run `node discord-notify.mjs --target=staging` **by hand**, once. Confirm in Discord that the
+   mention resolves to the right person and pings only them.
+5. **Post an `@everyone` headline through staging on purpose.** The unit test proves the payload;
+   this proves the server agrees. Nobody should be pinged but the one intended member.
+6. **Leave staging alone for a few days** with the workflow still uncommitted, running by hand.
+   Watch for a wrong manager. That is failure mode §8.1 and it is the only one that matters.
+7. **Re-pin X's spec before you pay for anything.** Re-fetch `https://api.x.com/2/openapi.json`,
+   regenerate `data/fixtures/x-post-fields.json`, and re-run the suite. `referenced_posts` proves
+   the request shape can be wrong in a way only the spec reveals, and X is still renaming things.
+   Doing this while the account has no credit is free; doing it after is a 400 on a paid run.
+8. **Provision `X_BEARER_TOKEN`** with a small credit balance. Run `node x-source.mjs --report` by
+   hand and read `data/x-state.json`: `post_reads` and `usd` against the $4.50 estimate. Do this
+   before anything is scheduled, so the first bill is one the user chose.
+9. **Wire X into `news-sync.mjs`** — Phase 4, not built here. `x-source.mjs` returns raw items and
+   `news-match.mjs` turns them into per-manager subjects; joining them is the remaining work, and it
+   needs the `confidence` field, which is a **`v: 2`** for `news.json`.
+10. **Only then** commit the workflow, still pointing at staging.
+11. **Last:** switch to `DISCORD_WEBHOOK_LIVE`. One line of YAML, and reversible.
+
+### 10.8 What was checked on screen, and the check that can fail
+
+This branch adds no rendered field, so the page ought to be untouched — but "ought to be" is
+precisely the claim §6d.1 says not to accept. Two things were established, and one of them is the
+negative control that makes the other worth anything.
+
+**The feed still composes with `main` merged in.** A throwaway merge of `origin/main` into this
+branch was regenerated and served, then Chrome was driven over the DevTools Protocol to ask the
+*running* DOM what it had rendered at 390 px. All 60 items were present as `.news-row`, and — the
+part that matters — **60 of 60 carried a non-empty headline, manager, league line and category**,
+all with a non-zero box, with no horizontal overflow and no console error other than a missing
+`favicon.ico`. Counting rows alone would not have been enough: the failure this guards against is a
+feed that renders empty shells or loses the manager attribution, which a row count cannot see.
+
+**The probe can fail, and was made to.** A copy of `index.html` was mutated in exactly the way the
+audit records — `+ renderNews()` turned into `; renderNews()`, dead-coding the feed below a
+terminated statement — and the probe reported 0 rows, 0 league lines, no `.news-box` at all, and
+exited non-zero. A check that cannot fail is worse than no check, so this one was shown failing
+before its passing result was believed.
+
+**Provenance was not assumed either.** The first attempt served on a port that another process had
+already taken, so the server never bound and Chrome was reading *someone else's stale build* — a
+193 KB `index.html` from an unrelated worktree, which would have produced a perfectly green result
+about the wrong artifact. The run now picks a verified-free port and refuses to probe until the
+bytes served over HTTP hash-match the local `index.html`. That is failure mode §6d.1 in its most
+literal form, and it very nearly landed.
+
+Separately, `price-today.mjs` gained one `export` keyword, which needs to be inert. It was compared
+against `origin/main`'s copy of the same module: identical export surface but for the added
+`nameCandidateScore`, `normName` agreeing across 4,000 dictionary names, and `priceTodayValue`
+returning the same number for **36,579 priced legs** — zero differences. The value book does not
+move.
+
+### 10.9 What is deliberately not built
+
+- **No workflow file.** Nothing is scheduled. Every part of this runs only when invoked by hand.
+- **X is not wired into `news-sync.mjs`.** `news.json` is byte-identical on this branch and no new
+  field is rendered, so `generate-page.mjs` and `index.html` are untouched — verified byte-identical
+  by regenerating.
+- **No `contract` category.** §10.1 says why, and §9 carries it as an open question.
+- **No `confidence` field in `news.json`.** The notifier derives one from `match`; storing it is the
+  `v: 2` that Phase 4 needs.
+- **Nothing near the value book.** No file this change touches reads or writes a value, the Value
+  Adjustment, a lens window, `today_delta`, a partner grade or `marks.json`.
+  `apply-value-adjust.mjs` was not run.

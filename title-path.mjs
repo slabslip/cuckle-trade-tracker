@@ -89,6 +89,62 @@ function placesFromBracket(wb) {
 }
 
 /**
+ * Final 1..N for one completed season. Two sources, in this order:
+ *
+ *   1. **The winners bracket.** Its placement games carry `p` — 1 settles 1st and 2nd, 3 settles
+ *      3rd and 4th, 5 settles 5th and 6th. That is the season's own answer and it wins even when
+ *      a placed team's record was worse than an unplaced team's.
+ *   2. **Regular-season record**, for everyone the bracket does not place. Standings points
+ *      (`wins * 2 + ties`) first, then points for, then `roster_id` as a deterministic last
+ *      resort so two identical teams cannot swap between builds.
+ *
+ * The **losers bracket is deliberately not read.** Its `p` is a place inside the consolation
+ * round rather than a league place, the direction of that mapping is a league setting Sleeper
+ * does not expose here, and this league's 2025 consolation rows carry `t2_original`
+ * substitutions. Reading it would be a guess; regular-season order is a stated rule.
+ *
+ * A season with no bracket at all degrades to pure record order and every row says so in `from`,
+ * rather than inventing playoff results.
+ */
+function standingsFor(s, nameByUser) {
+  const placed = placesFromBracket(s.wb);
+  const fromBracket = [];
+  const fromRecord = [];
+  for (const r of s.rosters) {
+    const uid = s.owner[r.roster_id] || null;
+    const st = r.settings || {};
+    const row = {
+      roster_id: r.roster_id,
+      user_id: uid,
+      name: (uid && (nameByUser[uid] || s.names[uid])) || `roster ${r.roster_id}`,
+      wins: st.wins || 0,
+      losses: st.losses || 0,
+      ties: st.ties || 0,
+      fpts: fptsOf(st),
+    };
+    if (placed[r.roster_id]) {
+      row.place = placed[r.roster_id];
+      row.from = "bracket";
+      fromBracket.push(row);
+    } else {
+      row.from = "record";
+      fromRecord.push(row);
+    }
+  }
+  fromBracket.sort((a, b) => a.place - b.place);
+  // The bracket must hand back 1..k with no gaps and no repeats, or it is not the shape we read.
+  fromBracket.forEach((r, i) => {
+    if (r.place !== i + 1) {
+      throw new Error(`standings ${s.season}: bracket gave place ${r.place} at slot ${i + 1}`);
+    }
+  });
+  const pts = (r) => r.wins * 2 + r.ties;
+  fromRecord.sort((a, b) => (pts(b) - pts(a)) || (b.fpts - a.fpts) || (a.roster_id - b.roster_id));
+  fromRecord.forEach((r, i) => { r.place = fromBracket.length + i + 1; });
+  return fromBracket.concat(fromRecord);
+}
+
+/**
  * The championship game itself: who the champion beat, the final score, and the
  * champion's top scorer in that game. The bracket row with p === 1 is the title match;
  * its round maps onto a week via playoff_week_start, and that week's matchup carries
@@ -754,6 +810,48 @@ async function main() {
     throw new Error(`self-check: 2025 top starter ${JSON.stringify(f25.top)}`);
   }
 
+  // The seat picker lists managers in last season's finishing order, so that order has to be
+  // derived here: this is the only script that walks previous_league_id, and re-walking it
+  // somewhere else would be a second traversal that could disagree with this one. `titles` is
+  // sorted newest first and only holds completed seasons, so titles[0] is the season to use —
+  // 2026 slots in on its own the first time it completes, with no code change.
+  const lastSeason = titles[0].season;
+  const standings = standingsFor(seasons[lastSeason], nameByUser);
+  const places = standings.map((r) => r.place);
+  if (new Set(places).size !== places.length) throw new Error(`standings ${lastSeason}: duplicate place`);
+  if (places.some((p, i) => p !== i + 1)) throw new Error(`standings ${lastSeason}: places are not 1..n`);
+  if (standings[0].user_id !== titles[0].user_id) {
+    throw new Error(`self-check: ${lastSeason} first place ${standings[0].name} is not the champion ${titles[0].name}`);
+  }
+  if (standings[0].from !== "bracket") {
+    throw new Error(`self-check: ${lastSeason} first place came from ${standings[0].from}, not the bracket`);
+  }
+
+  // revalue.mjs owns members.json; build.mjs runs it before this script, so the places land on
+  // the list it just wrote and a full rebuild always produces both halves. The picker reads the
+  // array in order, so write it in order too. Only `place` and `place_season` go on the wire:
+  // the record each place was derived from is printed below and documented in UI_SDD §2, not
+  // shipped to a browser that has no screen for it.
+  const members = readJson("ui/members.json", null);
+  if (!Array.isArray(members) || !members.length) {
+    throw new Error("members.json is missing or empty -- run revalue.mjs before title-path.mjs");
+  }
+  const standByUser = Object.fromEntries(standings.filter((r) => r.user_id).map((r) => [r.user_id, r]));
+  const absent = [];
+  const seated = members.map((m) => {
+    const row = standByUser[m.user_id];
+    if (row) return { ...m, place: row.place, place_season: lastSeason };
+    absent.push(m.name);
+    return { ...m, place: null, place_season: lastSeason };
+  });
+  // A manager who joined after last season has no finish. Park them after everyone who does,
+  // by name, rather than guessing a place for them.
+  const missing = seated.filter((m) => m.place == null).sort((a, b) => a.name.localeCompare(b.name));
+  missing.forEach((m, i) => { m.place = standings.length + i + 1; });
+  seated.sort((a, b) => a.place - b.place);
+  if (absent.length) console.error(`note: no ${lastSeason} roster for ${absent.join(", ")} -- parked at the end`);
+  writeUi("members.json", seated);
+
   const payload = {
     as_of: ymd(Date.now()),
     league_id: LEAGUE_ID,
@@ -761,6 +859,12 @@ async function main() {
   };
   writeUi("titles.json", payload);
   console.log(JSON.stringify({
+    standings: {
+      season: lastSeason,
+      rule: "winners-bracket placement games, then wins*2+ties, then points for, then roster_id",
+      order: standings.map((r) => `${r.place}. ${r.name} (${r.from}) ${r.wins}-${r.losses}-${r.ties} ${r.fpts.toFixed(2)}`),
+      out: "data/ui/members.json",
+    },
     titles: titles.map((t) => ({
       season: t.season,
       name: t.name,

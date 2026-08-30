@@ -126,6 +126,15 @@
     button.chip.back { color: var(--text); margin: 0 0 2px; }
     h2.screen-h { margin-top: 14px; }
     h2.screen-h:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
+    /* Whose page this is. The header's picker names the control rather than the selection, so
+       on a seat's four tabs this is the only thing on screen that says which manager you are
+       looking at. It sits above the tab row so it frames the tabs instead of reading as the
+       first item of whichever one is open. A display name is one unbroken word -- 17 characters
+       for DarkWingDucks2023, which has pushed this app past its own viewport twice -- and a
+       heading has no ellipsis to fall back on, so it is allowed to break mid-word. */
+    h2.seat-h {
+      margin: 2px 0 0; font-size: 1.15rem; overflow-wrap: anywhere;
+    }
     .screen-foot { margin: 20px 0 0; }
     .sr-only {
       position: absolute; width: 1px; height: 1px; margin: -1px;
@@ -570,7 +579,7 @@
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830teamslabel";
+    const DATA_V = "20260830seatnameh2";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -2509,6 +2518,17 @@
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
       const tabs = me && view !== "titles" && view !== "trade" ? ["home", "trades", "partners", "drafts"] : [];
+      // The four tabs are sections of one manager's page and none of them names that manager,
+      // so this does -- once, above the row, on every one of them. It doubles as the screen
+      // heading those four screens never had: focusNext = ".screen-h" now lands on the name of
+      // the seat you just took instead of falling through to the panel, and the outline no
+      // longer skips from the brand h1 straight to an h2 inside the body. Gated on tabs, so
+      // Champions Path and a full-screen trade -- both league-wide, both already titled -- are
+      // untouched, and league home with no seat gains nothing.
+      const seatName = tabs.length
+        ? '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>'
+          + esc(me.name) + "</h2>"
+        : "";
       const nav = (tabs.length
         ? '<div class="nav" role="tablist" aria-label="Sections">'
           + tabs.map((v) =>
@@ -2530,15 +2550,15 @@
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
       const keep = focusSelector(document.activeElement);
-      app.innerHTML = nav + body;
+      app.innerHTML = seatName + nav + body;
       // A new screen puts focus on its own heading and starts at the top, so a keyboard or a
       // screen reader lands on the new content instead of holding the old screen's place.
       const navigated = focusNext !== null;
       const land = focusNext ? app.querySelector(focusNext) : null;
       focusNext = null;
       if (land) land.focus({ preventScroll: true });
-      // League home and a seat's home lead with cards rather than a title, so there is no
-      // heading to land on. The panel itself is the defined start of the new content.
+      // League home leads with cards rather than a title, so there is no heading to land on.
+      // The panel itself is the defined start of the new content. A seat always has one now.
       else if (navigated) app.focus({ preventScroll: true });
       else if (keep) {
         const back = app.querySelector(keep);

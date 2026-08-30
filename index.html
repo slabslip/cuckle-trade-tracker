@@ -1569,12 +1569,17 @@
      * rather than one they have to know about. It is a real option in the listbox -- same
      * role, same 44px target, same arrow-key run as the five sets -- so a keyboard reaches it
      * on ArrowDown/Home like any other, and aria-selected marks it when it is the live state.
+     *
+     * Its line is deliberately short enough to stay one line at 320px, where every set's line
+     * wraps to two. A sixth option pushes the tail of an already tall panel further below the
+     * fold -- three of five were already under it at 320px before this option existed -- and one
+     * line rather than two is the whole of what this function can do about that.
      */
     function dsNoneOpt() {
       const on = !dataSet;
       return '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
         + ' class="ds-opt' + (on ? " on" : "") + '" data-dset-none="1">'
-        + "<b>None</b><span>Hide the data set and show the dropdown alone.</span></button>";
+        + "<b>None</b><span>Hide the set below the dropdown.</span></button>";
     }
 
     function dsMenu() {

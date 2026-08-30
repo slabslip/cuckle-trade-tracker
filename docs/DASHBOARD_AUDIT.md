@@ -348,6 +348,37 @@ Worth remembering when reading any clean bill of health: verify the specific cla
 
 ---
 
+## 3a. Two verification traps — read before trusting any "no overflow" claim
+
+Both of these produced **false all-clears** during this project's fix passes. They are recorded
+because several earlier "verified, no problems" reports were measured with the broken method.
+
+### `documentElement.scrollWidth` clamps
+`document.documentElement.scrollWidth` silently reports the viewport width even when content
+overflows. A card was measured "no overflow" at 375px while actually rendering **589px wide**.
+Only `document.body.scrollWidth` reported honestly.
+
+**Use `body.scrollWidth`**, and stress-test with a name far longer than any real one — the real
+worst case (`DarkWingDucks2023`) fits, so real data hides the bug.
+
+### A dead server means you are measuring someone else's build
+An agent's `python3 -m http.server` exited instantly because another agent already held the port.
+It then spent a full measurement round reading **a different build**, and its greps returned false
+positives (`padding: 10px 12px` also matches `button.mark`) that made the wrong build look correct.
+
+**Require provenance**, not just a number: confirm the port is yours, and checksum the served bytes
+against the bytes on disk before believing a measurement.
+
+### The systemic cause behind §6c A7
+A `1fr` grid track's automatic minimum is `min-content`, so a grid item refuses to shrink and
+`text-overflow: ellipsis` never engages without an explicit `min-width: 0`. This is why trade
+**values** clipped to `8,96` at phone width, and the same omission was independently rediscovered
+in the Champions Path caption. It is **systemic across this app's grid layouts**, not one
+component — fix it everywhere, not at each reported site. As of `20260830tf` the live page carries
+14 `min-width: 0` guards.
+
+---
+
 ## 3b. Data integrity — what passed
 
 Scripted over all 10 seats, 586 trade sides, recomputing from legs with the live modules:

@@ -36,8 +36,13 @@ import {
   RSS_FEEDS,
   fetchRss,
   fetchSleeperPlayerNews,
+  fetchSubmissions,
   fetchTrending,
+  fetchTweet,
+  markSubmissionProcessed,
+  parseTweetUrl,
 } from "./news-sources.mjs";
+import { SKILL_POS, nameCandidateScore } from "./price-today.mjs";
 
 /** Bump when the shape of news.json changes. The UI refuses a version it does not know. */
 const SCHEMA_VERSION = 1;
@@ -127,6 +132,9 @@ function buildPlayerIndex(owner, players) {
       name: full,
       team: p.team || null,
       position: p.position || (p.fantasy_positions || [])[0] || null,
+      // The dictionary entry itself, for nameCandidateScore() in matchTweetPlayer(): it reads
+      // `active` and the raw `team`, which the flattened fields above do not carry.
+      raw: p,
       keys: new Set([normName(full)]),
     };
     // Sleeper's own search key, which already drops punctuation and suffixes.
@@ -174,6 +182,267 @@ function matchPlayer(title, index) {
   if (hits.size === 0) return { row: null, reason: "no_player" };
   if (hits.size > 1) return { row: null, reason: "ambiguous", candidates: [...hits.values()] };
   return { row: [...hits.values()][0], reason: "matched" };
+}
+
+/* --------------------------------------------------- shared tweets (X) ---- */
+
+/**
+ * A manager display name, as typed into an iOS Shortcut, to a Sleeper `user_id`.
+ *
+ * `target_name` carries a NAME rather than a `user_id` — the inversion of the rule the rest of
+ * this repo follows, argued in db/schema.sql section 5 — because the writer is a phone share
+ * sheet and nobody is picking an 18-digit snowflake out of a list on a phone. The cost of that
+ * choice is paid here, and it is paid loudly: a name that matches nothing resolves to null and
+ * the item publishes addressed to nobody, rather than being quietly handed to the nearest match.
+ *
+ * Matching is deliberately forgiving about case and punctuation only. It will not accept a
+ * prefix or a nickname, because "Bubba" matching `BubbaCuckShremp` today is "Josh" matching the
+ * wrong Allen tomorrow, and the whole point of a curated submission is that its attribution is
+ * certain.
+ */
+function resolveTarget(targetName, members) {
+  const want = normName(targetName);
+  if (!want) return null;
+  const hit = (members || []).find((m) => normName(m.name) === want);
+  return hit ? { user_id: hit.user_id, manager: hit.name } : null;
+}
+
+/**
+ * Which rostered player a shared tweet is about, when the sharer did not say.
+ *
+ * Runs the **existing** matcher over the tweet's text. That is a change of input for
+ * matchPlayer(), which is documented as reading a title and never a summary, so it is worth
+ * saying why it is sound here: the reason summaries are banned is that a summary names
+ * teammates, coaches and the reporter alongside its actual subject, so a match inside one is
+ * probably not the story's subject. A tweet is not a summary — it is one short post, usually one
+ * or two sentences, and a rostered player named in it is overwhelmingly what it is about. The
+ * refusal rules still apply unchanged: full names only, never a surname, and two different
+ * rostered players means no match rather than a guess.
+ *
+ * The one case this resolves that matchPlayer() will not is a **namesake collision**: two
+ * genuinely different rostered players whose names normalise to the same string. `normName()`
+ * strips suffixes, so "Michael Carter" and "Michael Carter II" collapse together, and the
+ * matcher sees two candidates for what is textually one name and refuses. Refusing there is
+ * over-cautious — the text named one name, not two people — so the collision-aware scoring from
+ * price-today.mjs breaks that specific tie the same way the value book does: prefer the skill
+ * position, then a live NFL team, then an active player. This is the P1-13 lesson applied to
+ * attribution rather than to pricing.
+ *
+ * Two candidates with *different* names are still refused, because that is a tweet about two
+ * people and there is no non-guess available.
+ */
+function matchTweetPlayer(text, index) {
+  const hit = matchPlayer(text, index);
+  if (hit.row || hit.reason !== "ambiguous") return hit;
+  const names = new Set((hit.candidates || []).map((c) => normName(c.name)));
+  if (names.size !== 1) return hit;
+  const ranked = [...hit.candidates].sort((a, b) => {
+    const d = nameCandidateScore(b.raw) - nameCandidateScore(a.raw);
+    if (d) return d;
+    return Number(b.player_id) - Number(a.player_id);
+  });
+  // Only when the scoring actually separates them. A tie means the helpers had no opinion, and
+  // an arbitrary pick is exactly the guess this file refuses to make.
+  const top = nameCandidateScore(ranked[0].raw);
+  if (ranked.length > 1 && nameCandidateScore(ranked[1].raw) === top) return hit;
+  return { row: ranked[0], reason: "matched_collision" };
+}
+
+/**
+ * The submission queue, turned into feed rows.
+ *
+ * One row per submission that resolves. Every failure is recorded rather than thrown: a tweet
+ * that has been deleted, a Supabase that is asleep and a URL somebody hand-edited must each cost
+ * their own row and leave the 60 automated items untouched.
+ *
+ * A submission is stamped `processed_at` **only after** its row has been built, and a row is
+ * built for every outcome that is not "we could not read the tweet". The distinction matters:
+ * a deleted tweet is stamped, because retrying it forever would mean fetching a 404 on every
+ * build until the heat death of the league; a network failure is *not* stamped, because that is
+ * a transient we want to retry on the next run.
+ */
+async function ingestSubmissions(ownership, index, members, { stampRows = true } = {}) {
+  const report = {
+    queue_ok: false, queue_error: null, seen: 0, published: 0,
+    targeted: 0, matched: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0,
+    failures: [],
+  };
+  const queue = await fetchSubmissions();
+  report.queue_ok = queue.ok;
+  report.queue_error = queue.error;
+  if (!queue.ok) return { rows: [], report };
+  report.seen = queue.rows.length;
+
+  const rows = [];
+  for (const sub of queue.rows) {
+    // Re-validated here even though the table constrains it, because the table is write-open to
+    // anyone holding the anon key and a check that runs in only one place is a check that can be
+    // walked around. `parseTweetUrl` also canonicalises, so what gets fetched and what gets
+    // rendered is rebuilt from the captured handle and id rather than passed through.
+    const parsed = parseTweetUrl(sub.url);
+    if (!parsed) {
+      report.failed++;
+      report.failures.push({ id: sub.id, reason: "bad_url" });
+      // Stamped: a URL this shape can never become valid, so retrying it is pure waste.
+      await stamp(sub.id, report, stampRows);
+      continue;
+    }
+    const tweet = await fetchTweet(parsed.canonical);
+    if (!tweet.ok) {
+      report.failed++;
+      report.failures.push({ id: sub.id, reason: tweet.reason, status: tweet.status });
+      // A deleted or protected tweet is permanent; a timeout or a network blip is not.
+      if (tweet.reason === "not_found" || tweet.reason === "no_tweet_text" || tweet.reason === "bad_url") {
+        await stamp(sub.id, report, stampRows);
+      }
+      continue;
+    }
+
+    // Attribution, in priority order. A named target is authoritative and ends the question —
+    // that is the entire point of a person curating the item instead of a matcher inferring it.
+    let own = null;
+    let player = null;
+    const target = resolveTarget(sub.target_name, members);
+    if (target) {
+      own = target;
+      report.targeted++;
+      // A player name in the text is still worth having for the row's metadata and for dedupe,
+      // but it cannot override the human's choice of who this is aimed at.
+      const hit = matchTweetPlayer(tweet.text, index);
+      if (hit.row) player = hit.row;
+    } else {
+      const hit = matchTweetPlayer(tweet.text, index);
+      if (hit.row) {
+        const owner = ownership.owner.get(hit.row.player_id);
+        if (owner) {
+          own = owner;
+          player = hit.row;
+          report.matched++;
+        }
+      }
+    }
+    if (!own) report.unaddressed++;
+
+    rows.push(toTweetRow(sub, tweet, own, player));
+    report.published++;
+    await stamp(sub.id, report, stampRows);
+  }
+  return { rows, report };
+}
+
+/**
+ * Mark one submission published.
+ *
+ * `--report` documents itself as writing nothing, and stamping a row is a write — a loud one,
+ * because a stamped submission is never ingested again. Running `--report` to preview the queue
+ * would have silently consumed it, so every caller passes the flag through and this is the one
+ * place that decides.
+ */
+async function stamp(id, report, stampRows = true) {
+  if (!stampRows) { report.stamp_skipped = (report.stamp_skipped || 0) + 1; return true; }
+  const res = await markSubmissionProcessed(id);
+  if (res.ok) report.stamped++;
+  else { report.stamp_errors++; report.failures.push({ id, reason: `stamp_failed:${res.error}` }); }
+  return res.ok;
+}
+
+/**
+ * One submission to one feed row, in the same schema every other item uses.
+ *
+ * The row carries three fields no automated item has — `tweet_text`, `tweet_author` and
+ * `tweet_handle` — and they are the only place third-party prose reaches the expandable detail.
+ * They are stored as plain text (news-sources.mjs strips the oEmbed HTML rather than trusting
+ * it) and escaped again at render.
+ *
+ * `user_id` is `""` rather than null on an unaddressed row. main()'s self-check refuses any row
+ * whose `user_id` is not a known member, and "" is checked for explicitly there — a null would
+ * have to be special-cased in the same place, and "" keeps every id in this file a string.
+ */
+function toTweetRow(sub, tweet, own, player) {
+  const id = `tweet:${sub.id}`;
+  const note = String(sub.note == null ? "" : sub.note);
+  const item = {
+    id,
+    player: player ? player.name : "",
+    category: "tweet",
+    upbeat: false,
+    title: tweet.text,
+    note,
+  };
+  return {
+    id,
+    published: Date.parse(sub.created_at) || Date.now(),
+    source: "x:submission",
+    source_label: `@${tweet.author_handle}`,
+    source_url: tweet.url,
+    player: player ? player.name : "",
+    player_id: player ? player.player_id : "",
+    player_team: player ? player.team : null,
+    player_position: player ? player.position : null,
+    user_id: own ? own.user_id : "",
+    manager: own ? own.manager : "",
+    category: "tweet",
+    severity: 4,
+    upbeat: false,
+    // A shared tweet's headline is the tweet, and the expander below it shows the same text in
+    // full. Leaving `headline` empty keeps the collapsed row to the summary line, which is what
+    // the feature asked for: a jab on top, the detail behind a control.
+    headline: "",
+    summary: "",
+    league_line: leagueLine(item, { manager: own ? own.manager : "" }),
+    trending_add: 0,
+    match: own ? (sub.target_name ? "target_name" : "name") : "none",
+    also: [],
+    // The expandable detail. Present only on this path; renderNews() treats their absence as
+    // "this is an ordinary news row" and renders no expander at all.
+    tweet_text: tweet.text,
+    tweet_author: tweet.author_name,
+    tweet_handle: tweet.author_handle,
+    submitted_by: String(sub.submitted_by == null ? "" : sub.submitted_by),
+    // What the tweet is *about*, as distinct from `category`, which is always "tweet" on this
+    // path. Used only by dedupeAgainstTweets() to decide whether an automated row is the same
+    // story; it never picks a voice line and it is not shown. Not shipped in news.json — the UI
+    // has no use for it — see bookOf().
+    tweet_topic: classify(tweet.text).category,
+  };
+}
+
+/**
+ * Drop a shared tweet that restates an automated item already in the feed.
+ *
+ * A Schefter tweet and the Rotowire write-up of it are one story, and the feed showing both
+ * reads as a stutter. Same player and same category inside a few hours is the test — the same
+ * reasoning dedupe() uses for three outlets carrying one report, with a window instead of a
+ * calendar day because a share arrives whenever somebody happened to see it.
+ *
+ * "Same category" cannot mean the row's own `category`, which is always "tweet" here and would
+ * therefore never equal an automated row's. It means what the tweet is *about*: `tweet_topic`,
+ * from running the same classify() over the tweet's text. Matching on the player alone was the
+ * first version and it was too broad — a shared trade rumour would have swallowed an unrelated
+ * injury note about the same player from the same afternoon, which is two stories, not one.
+ *
+ * **The submission wins and the automated row is dropped**, which is the opposite of dedupe()'s
+ * earliest-published rule and is deliberate: a person chose this one, it carries their jab, and
+ * it has the tweet itself behind the expander. An unattributed share is never deduped against
+ * anything, because with no player it has no story to be the same as.
+ */
+const TWEET_DEDUPE_WINDOW_MS = 6 * 3600 * 1000;
+
+function dedupeAgainstTweets(rows, tweetRows) {
+  const keys = tweetRows
+    .filter((t) => t.player_id)
+    .map((t) => ({ player_id: t.player_id, topic: t.tweet_topic, at: t.published || 0 }));
+  if (!keys.length) return { kept: rows, dropped: 0 };
+  let dropped = 0;
+  const kept = rows.filter((r) => {
+    const clash = keys.some((k) =>
+      k.player_id === r.player_id
+      && k.topic === r.category
+      && Math.abs((r.published || 0) - k.at) <= TWEET_DEDUPE_WINDOW_MS);
+    if (clash) dropped++;
+    return !clash;
+  });
+  return { kept, dropped };
 }
 
 /* ------------------------------------------------------------ assembly ---- */
@@ -326,8 +595,19 @@ async function build() {
     }
   }
 
+  // Shared tweets, last, because they get to displace an automated row rather than compete with
+  // one. A queue that is unreachable costs its own rows and nothing else — every failure inside
+  // ingestSubmissions() is recorded and returned, never thrown.
+  const members = readJson("ui/members.json", []) || [];
+  const submissions = args.has("--no-submissions")
+    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, targeted: 0, matched: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [] } }
+    : await ingestSubmissions(ownership, index, members, { stampRows: !args.has("--report") });
+  report.submissions = submissions.report;
+
   const deduped = dedupe(rows);
-  const merged = deduped
+  const against = dedupeAgainstTweets(deduped, submissions.rows);
+  report.submissions.displaced_automated = against.dropped;
+  const merged = [...against.kept, ...submissions.rows]
     .sort((a, b) => {
       const at = a.published || 0;
       const bt = b.published || 0;
@@ -340,7 +620,12 @@ async function build() {
   report.rows_after_dedupe = deduped.length;
   report.rows_shipped = merged.length;
   report.by_manager = {};
-  for (const r of merged) report.by_manager[r.manager] = (report.by_manager[r.manager] || 0) + 1;
+  // A shared tweet that matched nobody is addressed to nobody, so it belongs under no manager
+  // rather than under an empty-string one that would read as an eleventh member.
+  for (const r of merged) {
+    const key = r.manager || "(unaddressed)";
+    report.by_manager[key] = (report.by_manager[key] || 0) + 1;
+  }
   report.by_category = {};
   for (const r of merged) report.by_category[r.category] = (report.by_category[r.category] || 0) + 1;
 
@@ -386,6 +671,36 @@ async function build() {
  *
  * Every string field is third-party input except `league_line`, `category` and `match`. The UI
  * escapes all of them anyway.
+ *
+ * ## Shared tweets — four extra fields, and why `v` stays 1
+ *
+ * An item that came in through the submission queue carries `category: "tweet"` and four fields
+ * no automated item has:
+ *
+ * ```
+ *     "tweet_text":   "…",              // the tweet, as PLAIN TEXT — the oEmbed HTML is stripped,
+ *                                       //   never forwarded. Third-party prose; escaped at render.
+ *     "tweet_author": "Adam Schefter",  // the posting account's display name
+ *     "tweet_handle": "AdamSchefter",   // the @, without the @
+ *     "submitted_by": "BubbaCuckShremp" // who shared it in, "" when they did not say.
+ *                                       //   Client-asserted and unverifiable — see db/schema.sql.
+ * ```
+ *
+ * On such an item `user_id` and `manager` may both be `""`, meaning nobody was attributed:
+ * curation is the point, so an unmatched share still publishes and is simply addressed to no
+ * one. `headline` and `summary` are `""` — the tweet is the content, and it lives behind the
+ * expander rather than in the collapsed row.
+ *
+ * **`v` stays 1 deliberately.** These fields are purely additive and every one of them is
+ * optional, so a page built before they existed ignores them and renders these rows as ordinary
+ * news rows with no expander. Bumping to 2 would make the *current* deployed page reject the
+ * whole file on its version gate and drop all 60 items to add a feature to a handful — a
+ * strictly worse failure than the one it would be protecting against. The version gate is for
+ * changes that would make an old reader render something *wrong*, and there is no such change
+ * here.
+ *
+ * `tweet_topic` exists on the row inside the pipeline and is **not** shipped: it only feeds
+ * dedupeAgainstTweets(), and the UI has no use for it.
  */
 function bookOf(items, rssResults, sleeper) {
   const sources = [
@@ -399,7 +714,14 @@ function bookOf(items, rssResults, sleeper) {
       id: r.feed.id, label: r.feed.label, ok: r.ok, items: r.items.length,
     })),
   ];
-  return { v: SCHEMA_VERSION, generated: Date.now(), sources, items };
+  if (items.some((it) => it.category === "tweet")) {
+    sources.push({ id: "x:submission", label: "Shared from X", ok: true,
+      items: items.filter((it) => it.category === "tweet").length });
+  }
+  // `tweet_topic` is pipeline-internal — see the schema note above. Stripped here rather than
+  // never being set, because dedupeAgainstTweets() runs after the rows are built.
+  const shipped = items.map(({ tweet_topic, ...rest }) => rest);
+  return { v: SCHEMA_VERSION, generated: Date.now(), sources, items: shipped };
 }
 
 function writeBook(book) {
@@ -431,14 +753,32 @@ async function main() {
   // who owns whom. Refuse to write rather than ship it.
   const known = new Set((readJson("ui/members.json", []) || []).map((m) => m.user_id));
   for (const it of book.items) {
-    if (!known.has(it.user_id)) {
+    // "" is the deliberate unaddressed case, and only a shared tweet may use it: an automated
+    // row always knows its owner, because it was matched from a roster in the first place. Any
+    // other empty user_id is the ownership map and the members file disagreeing.
+    const unaddressed = it.user_id === "" && it.category === "tweet";
+    if (!unaddressed && !known.has(it.user_id)) {
       throw new Error(`self-check failed: item ${it.id} is addressed to unknown user ${it.user_id}`);
+    }
+    if (unaddressed && it.manager !== "") {
+      throw new Error(`self-check failed: item ${it.id} names a manager but is addressed to nobody`);
     }
     if (!it.league_line) {
       throw new Error(`self-check failed: item ${it.id} has no league line`);
     }
     if (!CATEGORIES.some((c) => c.id === it.category)) {
       throw new Error(`self-check failed: item ${it.id} has unknown category ${it.category}`);
+    }
+    // The expandable detail is third-party prose. It must arrive as text, never as markup —
+    // news-sources.mjs strips the oEmbed HTML rather than trusting it, and this is the assertion
+    // that the stripping actually ran before anything was written to disk.
+    if (it.category === "tweet") {
+      if (!it.tweet_text || !it.tweet_handle) {
+        throw new Error(`self-check failed: shared tweet ${it.id} has no text or no handle`);
+      }
+      if (!parseTweetUrl(it.source_url)) {
+        throw new Error(`self-check failed: shared tweet ${it.id} has a non-tweet source_url ${it.source_url}`);
+      }
     }
   }
 

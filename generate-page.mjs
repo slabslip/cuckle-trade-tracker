@@ -64,7 +64,8 @@ const html = `<!DOCTYPE html>
        instead; where the property is unsupported the text wraps exactly as it does now. */
     .caption, .thesis,
     button.mark span, .stat span, .mark-chart-h span,
-    #scoreAs button.score-opt span, button.vote-opt span, .day-alert-h span {
+    #scoreAs button.score-opt span, button.vote-opt span, .day-alert-h span,
+    .leg > span, .hop > span {
       text-wrap: pretty;
     }
     #lead:empty { display: none; }
@@ -187,6 +188,13 @@ const html = `<!DOCTYPE html>
        is a worse failure than a name that ellipsises. */
     .row-top > * { min-width: 0; }
     .row-top > .margin { flex: 0 0 auto; white-space: nowrap; }
+    /* min-width: 0 lets the text column shrink, but a name with no space in it has no
+       soft wrap opportunity to shrink to, so it spilled the card anyway. These rows carry
+       one name and one figure and can afford a second line, so they wrap rather than
+       ellipsise -- the opposite of the tape, which is dense and has two names to place.
+       anywhere rather than break-word because only anywhere lowers the min-content size,
+       which is the measurement the track is sized from. */
+    .row-top:not(.tape) .names { overflow-wrap: anywhere; }
     /* min-width: 0 everywhere a track holds text. Without it a grid track cannot shrink
        below its longest word, so a name like DarkWingDucks2023 pushed the value it sits
        next to past the card edge at 375px. Names ellipsize; figures never do. */
@@ -300,7 +308,12 @@ const html = `<!DOCTYPE html>
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
     .bags > * { min-width: 0; }
-    .bag h3 { margin: 0 0 6px; font-size: 0.92rem; overflow-wrap: anywhere; }
+    .bag h3 {
+      margin: 0 0 6px; font-size: 0.92rem;
+      display: flex; gap: 8px; align-items: baseline; justify-content: space-between;
+    }
+    .bag h3 > span { min-width: 0; overflow-wrap: anywhere; }
+    .bag h3 > b { flex: 0 0 auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .leg {
       display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
       font-size: 0.84rem; padding: 3px 0; color: var(--muted); min-width: 0;
@@ -778,7 +791,11 @@ const html = `<!DOCTYPE html>
         : "";
       const warn = unpriced ? '<div class="warn">' + unpriced + " no DP row</div>" : "";
       const shown = unpriced && !total ? "—" : fmt(total);
-      return '<div class="bag"><h3>' + esc(title) + " · " + shown + "</h3>" + warn + items + adj + "</div>";
+      // Name and total as a pinned pair, the same shape as every other row in the app that
+      // pairs a label with a figure. Joined by "·" in one wrapping heading, a long name put
+      // the bag's total alone on a second line, reading as though it belonged to nothing.
+      return '<div class="bag"><h3><span>' + esc(title) + "</span><b>" + shown + "</b></h3>"
+        + warn + items + adj + "</div>";
     }
 
     // GitHub Pages answers a missing file with an HTML 404, so res.json() would throw a parse error.
@@ -3182,7 +3199,8 @@ for (const need of [
 //   .leg.list      a pick list is not a figure; nowrap made it 1,051px wide inside 320px
 //   champ-fig      the score is pinned so a long name, not the number, is what gives
 //   min-width: 0   a grid or flex track will not shrink below min-content without it
-for (const need of ['class="leg list"', 'class="date champ-fig"', "fin.tailNum", "fin.topNum"]) {
+for (const need of ['class="leg list"', 'class="date champ-fig"', "fin.tailNum", "fin.topNum",
+  '<div class="bag"><h3><span>']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a text-fitting fix: ${need}`);
 }
 for (const need of [".leg.list > b {", "a.champ-alert .champ-fig > b {",

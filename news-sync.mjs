@@ -45,6 +45,21 @@ const SCHEMA_VERSION = 1;
 const MAX_ITEMS = 60;
 /** Nothing older than this is news. */
 const MAX_AGE_DAYS = 10;
+/**
+ * Summaries are trimmed to this before they ship. RotoBaller's `analysis` runs to full
+ * paragraphs, and the feed row shows two lines of it, so the untrimmed field was most of a
+ * 70KB payload for text no one would read on a phone.
+ */
+const MAX_SUMMARY = 240;
+
+/** Trim to a word boundary and mark it, so a cut sentence does not read as a source's own. */
+function clip(s, n = MAX_SUMMARY) {
+  const text = String(s == null ? "" : s).trim();
+  if (text.length <= n) return text;
+  const cut = text.slice(0, n);
+  const space = cut.lastIndexOf(" ");
+  return (space > n * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.]+$/, "") + "\u2026";
+}
 
 const args = new Set(process.argv.slice(2));
 
@@ -230,8 +245,8 @@ function toRow(raw, own, player, trending) {
     category: kind.category,
     severity: kind.severity,
     upbeat: kind.upbeat,
-    headline: raw.title,
-    summary: raw.summary || "",
+    headline: clip(raw.title, 180),
+    summary: clip(raw.summary),
     league_line: leagueLine(item, { manager: own.manager }),
     trending_add: trending.add.get(player.player_id) || 0,
     match: raw.player_id ? "player_id" : "name",

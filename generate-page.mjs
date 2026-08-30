@@ -619,6 +619,56 @@ const html = `<!DOCTYPE html>
     h2.ds-h { margin: 0 0 2px; font-size: 1.05rem; overflow-wrap: anywhere; }
     h2.ds-h:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
     #dsBody .caption { margin: 0 0 8px; }
+    /* News and Alerts. The user asked for "scrolling", and this scrolls because a finger or a
+       wheel moves it -- there is no animation here at all.
+       League home already carries one auto-scrolling element, the #feed marquee, and the audit
+       has it recorded as a WCAG 2.2.2 failure: a 48s loop with no pause control. A second
+       self-moving region would double that defect, and a news row is text a person needs time
+       to read rather than a pill they glance at. So this is a plain overflow box: capped height,
+       newest at the top, and it stays where it is put. Nothing here needs a
+       prefers-reduced-motion branch because nothing here moves. */
+    .news-box {
+      max-height: 420px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 4px 12px;
+    }
+    /* The box is a scroll container, so it is a tab stop and it is named -- otherwise a
+       keyboard cannot reach the rows below the fold and a screen reader gets an unlabelled
+       region. */
+    .news-box:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-row {
+      display: block; width: 100%; padding: 12px 0; margin: 0;
+      color: inherit; text-decoration: none;
+      /* Every row is a link to the source, so every row is a target. */
+      min-height: 44px;
+    }
+    .news-row + .news-row { border-top: 1px solid var(--line); }
+    a.news-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-top { display: flex; align-items: baseline; gap: 10px; }
+    /* The manager's name also appears inside the voice line directly below, so this label is
+       the one thing in the row that can afford to shorten. min-width: 0 is what lets it --
+       a flex item's automatic minimum is min-content (§3a). */
+    .news-who {
+      min-width: 0; flex: 1 1 auto; font-weight: 650;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* Same gold as button.all-trades. Not --red/--green: those mean "you are down or up value"
+       on every other screen in this app, and a hamstring is not a value delta. */
+    .news-cat {
+      flex: 0 0 auto; font-size: 0.6875rem; font-weight: 650; white-space: nowrap;
+      color: #e0b44c; border: 1px solid #6b5a2e; border-radius: 999px; padding: 2px 8px;
+    }
+    .news-line { margin-top: 5px; line-height: 1.4; overflow-wrap: anywhere; text-wrap: pretty; }
+    .news-head {
+      margin-top: 4px; color: var(--muted); font-size: 0.8125rem; line-height: 1.4;
+      overflow-wrap: anywhere; text-wrap: pretty;
+    }
+    .news-meta {
+      margin-top: 4px; color: var(--dim); font-size: 0.75rem; line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .news-empty { color: var(--dim); font-size: 0.8125rem; line-height: 1.45; padding: 10px 0; }
     .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
     /* The filter icon, its label and the Score as button do not share 288px: the label
        was cut to "Filter by ye…", which names nothing. The Score as button takes its own
@@ -763,8 +813,9 @@ const html = `<!DOCTYPE html>
     let picks = null;
     let titles = null;
     let marks = null;
+    let news = null;
     let lens = "all";
-    const DATA_V = "20260830lds2";
+    const DATA_V = "20260830news1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -932,6 +983,14 @@ const html = `<!DOCTYPE html>
       catch (err) { titles = { titles: [] }; }
       try { marks = await getJson("data/ui/marks.json"); }
       catch (err) { marks = { seats: {} }; }
+      // News is additive and third-party. A missing, stale or malformed file must cost the news
+      // section and nothing else, so this never throws and never blocks the page -- the same
+      // rule the vote tallies follow below. An unknown v is treated as absent rather than
+      // read optimistically, because a schema change could move the field the UI escapes.
+      try {
+        const book = await getJson("data/ui/news.json");
+        news = book && book.v === 1 && Array.isArray(book.items) ? book : null;
+      } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
         const book = await getJson("data/ui/votes.json");
@@ -1746,6 +1805,69 @@ const html = `<!DOCTYPE html>
         }).join("");
     }
 
+    /** "3h ago". Null means the source's own date was unparseable, so say nothing rather than lie. */
+    function ago(ms) {
+      if (!ms) return "";
+      const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+      if (s < 90) return "just now";
+      const m = Math.round(s / 60);
+      if (m < 60) return m + "m ago";
+      const h = Math.round(m / 60);
+      if (h < 36) return h + "h ago";
+      return Math.round(h / 24) + "d ago";
+    }
+
+    const NEWS_CATS = {
+      injury: "Injury", suspension: "Suspension", off_field: "Off the field",
+      trade: "Trade", depth_chart: "Depth chart", breakout: "Breakout", news: "News",
+    };
+
+    /**
+     * News and Alerts, below the league data sets.
+     *
+     * Every string in a row comes from the open internet -- a headline, a summary and a source
+     * label written by somebody else's CMS -- which makes this the most exposed surface in the
+     * app. Every one of them goes through esc(), in text and in attributes alike, and the href
+     * is additionally gated to http/https so a "javascript:" URL in a feed cannot become a link.
+     * The only field this repo authors is league_line, and that is escaped too rather than
+     * trusted for being ours.
+     */
+    function renderNews() {
+      const book = news && news.v === 1 ? news : null;
+      const items = (book && book.items) || [];
+      const head = '<h2>News and Alerts</h2>'
+        + '<p class="caption">NFL news, only for players on this league\\u2019s rosters, aimed at whoever owns them. Newest first. Tap a row for the source.</p>';
+      if (!items.length) {
+        return head + '<div class="news-box"><p class="news-empty">Nothing breaking. When a story lands on someone\\u2019s roster it shows up here.</p></div>';
+      }
+      const rows = items.map((it) => {
+        const url = String(it.source_url || "");
+        // Only http(s) becomes a link. Anything else -- and a feed is fully capable of shipping
+        // "javascript:" -- renders as a plain row instead.
+        const safe = /^https?:\\/\\//i.test(url) ? url : "";
+        const when = ago(it.published);
+        const cat = NEWS_CATS[it.category] || "News";
+        const also = (it.also || []).length ? " +" + (it.also || []).length + " more" : "";
+        const where = [
+          esc(it.player) + (it.player_team ? " \\u00b7 " + esc(it.player_team) : "")
+            + (it.player_position ? " " + esc(it.player_position) : ""),
+          esc(it.source_label || it.source) + esc(also),
+          when ? esc(when) : "",
+        ].filter(Boolean).join(" \\u00b7 ");
+        const inner = '<div class="news-top"><span class="news-who">' + esc(it.manager) + "</span>"
+          + '<span class="news-cat">' + esc(cat) + "</span></div>"
+          + '<div class="news-line">' + esc(it.league_line) + "</div>"
+          + (it.headline ? '<div class="news-head">\\u201c' + esc(it.headline) + "\\u201d</div>" : "")
+          + '<div class="news-meta">' + where + "</div>";
+        return safe
+          ? '<a class="news-row" href="' + esc(safe) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>"
+          : '<div class="news-row">' + inner + "</div>";
+      }).join("");
+      return head
+        + '<div class="news-box" tabindex="0" role="region" aria-label="News and alerts, ' + items.length + ' items">'
+        + rows + "</div>";
+    }
+
     /**
      * Two controls, deliberately separate. lensRow() picks the clock the numbers are computed on
      * -- At trade, first 1/2/3 years, since trade -- and dataSetRow() picks which list is on
@@ -1756,7 +1878,8 @@ const html = `<!DOCTYPE html>
       return dayAlert()
         + lensRow()
         + dataSetRow()
-        + dataSetPanel();
+        + dataSetPanel()
+        + renderNews();
     }
 
     function backChip(label) {
@@ -3629,6 +3752,79 @@ const PINNED = [".row-top > .margin { flex: 0 0 auto; white-space: nowrap; }",
   ".mark-bar-top .lab { font-weight: 650; font-size: 0.85rem; flex: 0 0 auto; white-space: nowrap; }"];
 for (const need of PINNED) {
   if (!html.includes(need)) throw new Error(`generated stylesheet unpinned a figure: ${need}`);
+}
+
+// News and Alerts. Every headline in this section is written by a stranger on the open internet,
+// which makes it the highest-risk text this page renders. The guards below are in three groups
+// and each one has already been a real defect somewhere in this app.
+//
+// 1. Escaping. Every field of a news row is third-party -- headline, summary, source label,
+//    player and even the manager name, which comes from Sleeper. There is exactly one way any
+//    of them may reach the DOM. Rather than list the fields, assert the negative: no
+//    interpolation inside renderNews() may skip esc(). A `+ it.something +` that is not
+//    wrapped is an injection, and it is one careless edit away at all times.
+const newsFn = inline.slice(inline.indexOf("    function renderNews()"));
+const newsBody = newsFn.slice(0, newsFn.indexOf("\n    function renderLeagueHome()"));
+if (!newsBody || newsBody.length < 400) throw new Error("renderNews() did not ship");
+for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
+  // it.also and it.published are read into locals and formatted by ago()/length before use;
+  // everything else must be inside esc() at the point of concatenation.
+  if (/it\.(also|published)\b/.test(raw)) continue;
+  throw new Error(`renderNews interpolates a news field without esc(): ${raw.trim()}`);
+}
+for (const need of ["esc(it.manager)", "esc(it.league_line)", "esc(it.headline)", "esc(it.player)",
+  "esc(it.source_label || it.source)", "esc(it.player_team)", "esc(it.player_position)",
+  "esc(cat)", "esc(also)", "esc(when)", 'esc(safe) + \'" target="_blank"']) {
+  if (!newsBody.includes(need)) throw new Error(`renderNews stopped escaping a news field: ${need}`);
+}
+// A feed can ship "javascript:alert(1)" as an item link, and an <a href> is the one place on
+// this page where a string becomes executable. The scheme gate is what stops it, and the
+// regex's escapes have to survive the template literal -- the exact hazard that once turned
+// /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and silently broke applyVa in the shipped page only.
+if (!newsBody.includes('/^https?:\\/\\//i.test(url) ? url : ""')) {
+  throw new Error("renderNews lost the http(s)-only href gate, or the template swallowed its escapes");
+}
+if (!newsBody.includes('rel="noopener noreferrer"')) {
+  throw new Error("a news row opens a third-party URL in a new tab and must carry rel=noopener noreferrer");
+}
+// 2. No second marquee. The user asked for "scrolling" and league home already animates one
+//    region: #feed loops on a 48s ticker with no pause control, which the audit records as a
+//    WCAG 2.2.2 failure. The news box scrolls because a finger moves it. If an animation ever
+//    lands on it, it must at minimum be pausable -- so the honest guard is that there is none.
+const newsRule = html.slice(html.indexOf("    .news-box {"));
+const newsCss = newsRule.slice(0, newsRule.indexOf("\n    .news-empty"));
+if (/animation|@keyframes|transition: *transform/.test(newsCss)) {
+  throw new Error("the news feed grew an animation -- league home already has one unpausable marquee (WCAG 2.2.2)");
+}
+for (const need of ["max-height: 420px; overflow-y: auto;", "overscroll-behavior: contain;"]) {
+  if (!newsCss.includes(need)) throw new Error(`the news box lost its scroll containment: ${need}`);
+}
+// A scroll container that is not a tab stop is unreachable by keyboard below its fold, and an
+// unnamed region is an unlabelled landmark to a screen reader.
+if (!newsBody.includes('tabindex="0" role="region" aria-label="News and alerts, ')) {
+  throw new Error("the news box must stay a named, focusable scroll region");
+}
+// 3. The 44px rule. A pass took 312 sub-44px targets to zero and none may come back. Every
+//    news row is a link, so every news row is a target.
+if (!html.includes(".news-row {") || !html.slice(html.indexOf(".news-row {")).slice(0, 260).includes("min-height: 44px")) {
+  throw new Error("a news row is a tap target and must declare min-height: 44px");
+}
+// News is additive. It must never be able to take the page down with it, and it must never be
+// read from a schema this UI does not know.
+if (!inline.includes("news = book && book.v === 1 && Array.isArray(book.items) ? book : null;")) {
+  throw new Error("news.json must be version-gated on load");
+}
+const newsLoad = inline.slice(inline.indexOf('const book = await getJson("data/ui/news.json");'));
+if (!newsLoad.slice(0, 200).includes("catch (err) { news = null; }")) {
+  throw new Error("a missing or malformed news.json must cost the news section and nothing else");
+}
+// News must never touch a value, a delta, a lens window or a grade. The whole point of the
+// separate payload is that a headline cannot move a number, so assert the section does not
+// reach for one -- this is the guard that keeps a future edit from blending news into the book.
+for (const banned of ["today_delta", "value_adjust", "applyVa", "windowScore", "tapeMargin", "signedNum", "fmt("]) {
+  if (newsBody.includes(banned)) {
+    throw new Error(`renderNews touched the value book: ${banned} -- news is not allowed to move a number`);
+  }
 }
 
 fs.writeFileSync(`${ROOT}index.html`, html);

@@ -71,21 +71,35 @@ const html = `<!DOCTYPE html>
       h1.brand { font-size: 1.2rem; gap: 8px; }
       button.who { width: 128px; font-size: 0.75rem; }
     }
+    /* All ten managers have to be on screen at once -- this is the most-used control in the app
+       and a list you have to scroll to reach half of is the thing being fixed. Ten options at the
+       44px minimum plus the menu's 4px padding and 1px border is 450px, so the cap is that plus a
+       few pixels of slack. The second term is the room actually below the button: 16px of body
+       padding, the 44px brand row, the 4px offset, and 24px so the menu never touches the bottom
+       edge. It only bites in landscape, where nothing could fit ten rows anyway.
+       Do not lower the 44px to make a longer list fit -- raise this instead, and check
+       scrollHeight == clientHeight at 568px, which is the shortest phone we care about. */
     .who-menu {
       position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
       width: 168px; max-width: calc(100vw - 32px);
-      max-height: min(56dvh, calc(100dvh - 72px)); overflow-y: auto;
+      max-height: min(calc(10 * 44px + 16px), calc(100dvh - 88px)); overflow-y: auto;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       padding: 4px 0; margin: 0;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
+    /* A flex row so the crown can sit beside the name. The name keeps the ellipsis, and it needs
+       min-width: 0 to get it -- a flex item's automatic minimum is min-content (§3a). */
     .who-menu button {
-      display: block; width: 100%; appearance: none; font: inherit;
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; appearance: none; font: inherit;
       font-size: 0.8125rem; color: var(--muted); text-align: left;
       background: transparent; border: 0;
       min-height: 44px; padding: 6px 12px; cursor: pointer;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .who-menu .who-name {
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .who-menu .crown { flex: 0 0 auto; display: block; }
     .who-menu button[aria-selected="true"] { color: var(--text); }
     .who-menu button.on { color: var(--text); }
     .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
@@ -529,7 +543,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830icon";
+    const DATA_V = "20260830seatorder";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -661,6 +675,10 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       members = await getJson("data/ui/members.json");
+      // Last season's finishing order, derived by title-path.mjs. The file already ships in
+      // this order; sorting again is what keeps the picker right if anything ever reorders it,
+      // and a build with no places sorts to a no-op and keeps the file's own order.
+      members.sort((a, b) => (a.place || 99) - (b.place || 99));
       league = await getJson("data/ui/league.json");
       try { titles = await getJson("data/ui/titles.json"); }
       catch (err) { titles = { titles: [] }; }
@@ -722,6 +740,12 @@ const html = `<!DOCTYPE html>
       return !!(await seatData(tradeSeat));
     }
 
+    // Gold, the same #e0b44c the alert cards and the vote outline use. It is decoration beside a
+    // name, never the name itself, so it is aria-hidden and the option still announces "SF69erss".
+    const CROWN = '<svg class="crown" viewBox="0 0 24 24" width="13" height="13"'
+      + ' aria-hidden="true" focusable="false">'
+      + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
+
     function paintWho() {
       const btn = document.getElementById("who");
       const menu = document.getElementById("whoMenu");
@@ -729,11 +753,17 @@ const html = `<!DOCTYPE html>
       btn.setAttribute("aria-label", me ? "Team, " + me.name : "Team");
       btn.setAttribute("aria-expanded", whoOpen ? "true" : "false");
       menu.hidden = !whoOpen;
-      const opt = (on, id, label) =>
+      const opt = (on, id, label, champ) =>
         '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">' + esc(label) + "</button>";
-      menu.innerHTML = opt(!me, "", "Team")
-        + members.map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name)).join("");
+        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
+        + '<span class="who-name">' + esc(label) + "</span>"
+        + (champ ? CROWN : "") + "</button>";
+      // Managers only. The list used to open with a "Team" option that cleared the seat; the home
+      // icon in this same header does exactly that, and dropping the option is what lets all ten
+      // names show without scrolling.
+      menu.innerHTML = members
+        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name, m.place === 1))
+        .join("");
       if (whoOpen) {
         const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
         if (sel) sel.focus({ preventScroll: false });
@@ -2522,9 +2552,10 @@ const html = `<!DOCTYPE html>
       const pick = e.target.closest("[data-who]");
       if (!pick) return;
       whoOpen = false;
+      // Every option is a manager now, so the only thing the menu does is take a seat.
+      // Giving one up is the home icon's job.
       const id = pick.dataset.who;
-      if (!id) clearLeague();
-      else selectMe(id);
+      if (id) selectMe(id);
     });
     document.addEventListener("click", (e) => {
       if (!whoOpen || e.target.closest(".who-wrap")) return;
@@ -2836,6 +2867,42 @@ for (const need of ["button.all-trades::after", "inset: -10px", ".day-alert-top 
 const homeFn = inline.slice(inline.indexOf("function renderLeagueHome()"));
 if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-list")) {
   throw new Error("renderLeagueHome grew a standalone trades-list control -- the card's icon is the door");
+}
+// The seat menu lists the managers in last season's order, crowns the champion, and must show
+// every one of them without scrolling. Each half can break the other: a "Team" option back at
+// the top pushes the list over the cap, and lowering the 44px target to fit is the fix that is
+// explicitly not allowed. Assert the shape, then measure the list against the cap from the data.
+if (/opt\(!me, "", "Team"\)/.test(inline)) {
+  throw new Error('the seat menu must not carry a "Team" option -- the home icon clears the seat');
+}
+for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="true" focusable="false"',
+  "m.place === 1", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {
+  if (!inline.includes(need)) throw new Error(`generated script lost a seat-menu part: ${need}`);
+}
+// Removing the "Team" option leaves the home icon as the only way out of a seat, so it is now
+// load-bearing rather than a convenience.
+if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => clearLeague());')) {
+  throw new Error("the home icon must clear the seat -- it is the only exit from a seat now");
+}
+const SEAT_MIN_H = 44;
+const SEAT_MENU_CHROME = 10; // 4px padding top and bottom, 1px border top and bottom
+const SEAT_CAP = 10 * SEAT_MIN_H + 16;
+if (!html.includes(`max-height: min(calc(10 * ${SEAT_MIN_H}px + 16px), calc(100dvh - 88px));`)) {
+  throw new Error("the seat menu lost its no-scroll cap");
+}
+if (!html.includes(`min-height: ${SEAT_MIN_H}px; padding: 6px 12px; cursor: pointer;`)) {
+  throw new Error(`a seat option must stay ${SEAT_MIN_H}px -- raise the cap instead of shrinking the target`);
+}
+const seats = JSON.parse(fs.readFileSync(`${ROOT}data/ui/members.json`, "utf8"));
+const seatPlaces = seats.map((m) => m.place);
+if (seatPlaces.some((p) => !Number.isInteger(p)) || new Set(seatPlaces).size !== seats.length) {
+  throw new Error("every member needs a unique integer place -- run title-path.mjs");
+}
+if (seatPlaces.filter((p) => p === 1).length !== 1) {
+  throw new Error("exactly one member wears the crown");
+}
+if (seats.length * SEAT_MIN_H + SEAT_MENU_CHROME > SEAT_CAP) {
+  throw new Error(`${seats.length} seats need ${seats.length * SEAT_MIN_H + SEAT_MENU_CHROME}px, cap is ${SEAT_CAP}px`);
 }
 // Navigation is the one thing a user cannot work around if it fails to ship: without real
 // history entries Back leaves the site, and without a back chip the full-screen trade is a

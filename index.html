@@ -66,21 +66,35 @@
       h1.brand { font-size: 1.2rem; gap: 8px; }
       button.who { width: 128px; font-size: 0.75rem; }
     }
+    /* All ten managers have to be on screen at once -- this is the most-used control in the app
+       and a list you have to scroll to reach half of is the thing being fixed. Ten options at the
+       44px minimum plus the menu's 4px padding and 1px border is 450px, so the cap is that plus a
+       few pixels of slack. The second term is the room actually below the button: 16px of body
+       padding, the 44px brand row, the 4px offset, and 24px so the menu never touches the bottom
+       edge. It only bites in landscape, where nothing could fit ten rows anyway.
+       Do not lower the 44px to make a longer list fit -- raise this instead, and check
+       scrollHeight == clientHeight at 568px, which is the shortest phone we care about. */
     .who-menu {
       position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
       width: 168px; max-width: calc(100vw - 32px);
-      max-height: min(56dvh, calc(100dvh - 72px)); overflow-y: auto;
+      max-height: min(calc(10 * 44px + 16px), calc(100dvh - 88px)); overflow-y: auto;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       padding: 4px 0; margin: 0;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
+    /* A flex row so the crown can sit beside the name. The name keeps the ellipsis, and it needs
+       min-width: 0 to get it -- a flex item's automatic minimum is min-content (§3a). */
     .who-menu button {
-      display: block; width: 100%; appearance: none; font: inherit;
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; appearance: none; font: inherit;
       font-size: 0.8125rem; color: var(--muted); text-align: left;
       background: transparent; border: 0;
       min-height: 44px; padding: 6px 12px; cursor: pointer;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .who-menu .who-name {
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .who-menu .crown { flex: 0 0 auto; display: block; }
     .who-menu button[aria-selected="true"] { color: var(--text); }
     .who-menu button.on { color: var(--text); }
     .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
@@ -524,7 +538,7 @@
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830icon";
+    const DATA_V = "20260830seatorder";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -656,6 +670,10 @@
 
     async function loadMembers() {
       members = await getJson("data/ui/members.json");
+      // Last season's finishing order, derived by title-path.mjs. The file already ships in
+      // this order; sorting again is what keeps the picker right if anything ever reorders it,
+      // and a build with no places sorts to a no-op and keeps the file's own order.
+      members.sort((a, b) => (a.place || 99) - (b.place || 99));
       league = await getJson("data/ui/league.json");
       try { titles = await getJson("data/ui/titles.json"); }
       catch (err) { titles = { titles: [] }; }
@@ -717,6 +735,12 @@
       return !!(await seatData(tradeSeat));
     }
 
+    // Gold, the same #e0b44c the alert cards and the vote outline use. It is decoration beside a
+    // name, never the name itself, so it is aria-hidden and the option still announces "SF69erss".
+    const CROWN = '<svg class="crown" viewBox="0 0 24 24" width="13" height="13"'
+      + ' aria-hidden="true" focusable="false">'
+      + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
+
     function paintWho() {
       const btn = document.getElementById("who");
       const menu = document.getElementById("whoMenu");
@@ -724,11 +748,17 @@
       btn.setAttribute("aria-label", me ? "Team, " + me.name : "Team");
       btn.setAttribute("aria-expanded", whoOpen ? "true" : "false");
       menu.hidden = !whoOpen;
-      const opt = (on, id, label) =>
+      const opt = (on, id, label, champ) =>
         '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">' + esc(label) + "</button>";
-      menu.innerHTML = opt(!me, "", "Team")
-        + members.map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name)).join("");
+        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
+        + '<span class="who-name">' + esc(label) + "</span>"
+        + (champ ? CROWN : "") + "</button>";
+      // Managers only. The list used to open with a "Team" option that cleared the seat; the home
+      // icon in this same header does exactly that, and dropping the option is what lets all ten
+      // names show without scrolling.
+      menu.innerHTML = members
+        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name, m.place === 1))
+        .join("");
       if (whoOpen) {
         const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
         if (sel) sel.focus({ preventScroll: false });
@@ -2517,9 +2547,10 @@
       const pick = e.target.closest("[data-who]");
       if (!pick) return;
       whoOpen = false;
+      // Every option is a manager now, so the only thing the menu does is take a seat.
+      // Giving one up is the home icon's job.
       const id = pick.dataset.who;
-      if (!id) clearLeague();
-      else selectMe(id);
+      if (id) selectMe(id);
     });
     document.addEventListener("click", (e) => {
       if (!whoOpen || e.target.closest(".who-wrap")) return;

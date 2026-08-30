@@ -690,6 +690,28 @@ screenshot, and then confirmed by grouping each side's children by their `top` a
 delta and its total share a line. **Read the screenshots.** Then, once the eye finds a defect,
 write the geometric assertion that would have caught it.
 
+### An ellipsised cell reports two client rects on one line
+`Range.getClientRects()` is the right way to measure inline ink (above), but a `nowrap` cell
+that is actually ellipsising returns **two** rects — the full text and the clipped box — with
+identical `top` and `bottom`. Counting rects therefore reads every truncated name as a wrapped
+one, which is the §3a "row that measures fine and still reads wrong" probe firing backwards:
+it invents a wrap on exactly the cells that are behaving correctly.
+
+Count **distinct rect tops**, not rects. Found while stress-testing the champ card's scoreboard
+with `DarkWingDucks2023`; the real layout was one line in every case.
+
+### A cell that ellipsises has no baseline to align to
+`text-overflow: ellipsis` requires `overflow: hidden`, which makes the box a scroll container,
+and a scroll container has no baseline of its own — CSS Box Alignment synthesizes one from its
+**border box**. So `align-items: baseline` across such cells is really aligning border boxes,
+and cells with different `font-size` or `line-height` end up on visibly different baselines.
+
+Measured on the champ card's scoreboard: a 16px score between two 15px names sat **1px** off
+them, invisible to the eye and to `body.scrollWidth`, and caught only by comparing each cell's
+ink bottom. The fix is not a nudge — it is to make every cell on such a line share a font-size
+and line-height, so the synthesized baselines are identical by construction. **A row of
+ellipsising cells cannot mix type sizes and stay aligned.**
+
 ### The systemic cause behind §6c A7
 A `1fr` grid track's automatic minimum is `min-content`, so a grid item refuses to shrink and
 `text-overflow: ellipsis` never engages without an explicit `min-width: 0`. This is why trade

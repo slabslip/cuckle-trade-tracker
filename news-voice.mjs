@@ -82,6 +82,18 @@ export const CATEGORIES = [
     severity: 2,
     test: /\b(breakout|impress\w+|standout|turning heads|best shape|buzz|sleeper|hype|explod\w+|dominat\w+|career[- ]high|stock (?:is )?(?:up|rising)|shines?|stars?\b)\b/i,
   },
+  /**
+   * A tweet a league member shared in by hand. **Never reached by classify()** — its test is
+   * `/(?!)/`, which cannot match anything — because this category is not inferred from words, it
+   * is assigned by news-sync.mjs to items that came through the submission queue. It is listed
+   * here so the shipped `category` is one CATEGORIES knows, which is what news-sync.mjs's
+   * self-check and the UI's label table both read.
+   *
+   * Severity 4 puts a hand-picked item above the generic `news` bank it would otherwise sort
+   * among. Somebody chose to send this one; that is more signal than an aggregator restating a
+   * depth chart. It is still only a sort weight, and still not a colour.
+   */
+  { id: "tweet", label: "From X", severity: 4, test: /(?!)/ },
   { id: "news", label: "News", severity: 1, test: /.*/ },
 ];
 
@@ -166,6 +178,47 @@ const TEMPLATES = {
     "{who} is going to screenshot this one. {player} looked good.",
     "Reluctantly, credit to {who}: the {player} news is positive.",
   ],
+  /**
+   * A tweet a league member shared in from X, when they did not type their own jab.
+   *
+   * Its own bank because the other categories all assume the feed found the story: "there's
+   * news on {player}" reads wrong above a row that exists because a person went and got it.
+   * These name the act of sharing instead, which is the one fact a shared tweet always carries
+   * even when nothing else about it is known.
+   *
+   * **Three banks, not one, because both slots are independently optional here.** A shared
+   * tweet may name a manager and a player, a manager only, or neither — attribution is a human
+   * choice on this path rather than something the pipeline always knows. One bank with `{player}`
+   * in it cannot serve all three: the first version filled the empty slot with a placeholder and
+   * shipped "This got shared into the feed specifically so SF69erss would have to read it. This
+   * content." A template whose sentence collapses when a slot is empty needs a different
+   * template, not a cleverer placeholder.
+   *
+   *   tweet       — a manager and a player are both known
+   *   tweet_who   — a manager, but no player was matched in the text
+   *   tweet_open  — nobody was attributed; no name is invented
+   */
+  tweet: [
+    "{who}, somebody went out of their way to make sure you saw this {player} take.",
+    "This got shared into the feed specifically so {who} would have to read it. {player}, of course.",
+    "{who}, the league found a {player} take and thought of you immediately.",
+    "Someone shared this at {who} on purpose, and it is about {player}.",
+    "{who}, this landed in the feed with your name on it. {player}.",
+    "The group chat could not hold this one, {who}. It is about {player}.",
+  ],
+  tweet_who: [
+    "{who}, somebody went out of their way to make sure you saw this one.",
+    "This got shared into the feed specifically so {who} would have to read it.",
+    "Someone shared this at {who} on purpose. That is the whole message.",
+    "{who}, this landed in the feed with your name on it.",
+    "The group chat could not hold this one, {who}.",
+  ],
+  tweet_open: [
+    "Somebody shared this into the feed. No notes.",
+    "This got sent in without comment, which is its own comment.",
+    "Straight from somebody's timeline into yours.",
+    "Shared in by a league member. Make of it what you will.",
+  ],
   /** Nobody in the league owns the player. These never ship — see news-sync.mjs. */
   orphan: ["{player} is in the news and nobody in this league owns him."],
 };
@@ -214,6 +267,35 @@ export function classify(title) {
 export function leagueLine(item, ctx) {
   const manager = String((ctx && ctx.manager) || "").trim();
   const player = String((item && item.player) || "").trim();
+
+  // **A member's own words beat ours, always.** When somebody shares a tweet in and types a
+  // jab with it, that jab is the summary line and no template runs. They know the league and
+  // the grudge; the table above only knows a category. This is checked before anything else so
+  // there is no path where a generated line can override a written one.
+  //
+  // It is third-party text like every other field — typed by a person, arriving through a table
+  // anyone with the anon key can write to — so it is trimmed, length-capped and escaped at
+  // render exactly like a headline. Being "ours" earns it no trust.
+  const note = String((item && item.note) || "").replace(/\s+/g, " ").trim();
+  if (note) return note.length > 240 ? note.slice(0, 239).replace(/[\s,;:.]+$/, "") + "\u2026" : note;
+
+  // A shared tweet is the one item that can ship without a player or a manager: curation is the
+  // point, so an unmatched share still publishes, addressed to nobody. Every other category
+  // still requires both, and news-sync.mjs refuses to write an automated row with no line.
+  if (item && item.category === "tweet") {
+    // Both slots are optional here, so the bank is chosen by which of them are actually filled
+    // rather than by patching a placeholder into a sentence that needed a real noun.
+    const bank = !manager ? TEMPLATES.tweet_open
+      : player ? TEMPLATES.tweet
+      : TEMPLATES.tweet_who;
+    const pick = bank[hash(item.id || item.title || manager || "tweet") % bank.length];
+    return pick
+      .replace(/\{who\}/g, manager)
+      .replace(/\{player\}/g, player)
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   if (!manager || !player) return "";
   const key = item.upbeat && (item.category === "injury" || item.category === "news")
     ? `${item.category}_good`

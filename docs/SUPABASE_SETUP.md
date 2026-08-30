@@ -394,49 +394,60 @@ does that on `repository_dispatch` (`news-submission`).
 Supabase Edge Function `dispatch-news` + Database Webhook + `GITHUB_PAT` secret.
 (The older `pg_net` SQL path was returning HTTP 401 to GitHub in this project.)
 
-### What the Shortcut POSTs
+### One-tap Shortcut — “Send to Cuckle” (the intended path)
 
-One `Get Contents of URL` action. Method `POST`, and note the two `Prefer`
-values on one header.
+**Share on X → Send to Cuckle → done.** No Ask, no Choose from List, no If, no
+note, no target picker. The feed auto-tags whoever rosters the player(s).
+
+1. New Shortcut named **Send to Cuckle**.
+2. Details → **Show in Share Sheet** → accept **URLs** (and Safari web pages if
+   offered).
+3. Optional but tidy: **Set Variable** `Tweet URL` = **Shortcut Input**
+   (or **Get URLs from Input** → that URL, if Share sometimes sends text).
+4. One action: **Get Contents of URL**.
 
 ```
-URL     https://<project>.supabase.co/rest/v1/news_submissions?on_conflict=url,submitted_by
+URL     https://gtqyvnkkjiksmmtmzubw.supabase.co/rest/v1/news_submissions?on_conflict=url,submitted_by
+
+Method  POST
 
 Headers
-  apikey         <anon key>
-  Authorization  Bearer <anon key>
+  apikey         <anon key from the live page / news-sources.mjs>
+  Authorization  Bearer <same anon key>
   Content-Type   application/json
   Prefer         resolution=ignore-duplicates,return=minimal
 
-Body (JSON)
+Request Body     JSON
   {
-    "url":          "https://x.com/AdamSchefter/status/1234567890",
-    "note":         "your TE is cooked",
-    "target_name":  "SF69erss",
-    "submitted_by": "BubbaCuckShremp"
+    "url":          <Tweet URL / Shortcut Input>,
+    "submitted_by": "TrumanCooper"
   }
 ```
 
-Only `url` is required; `note`, `target_name` and `submitted_by` may each be
-omitted or `null`. A successful POST answers **201** with an empty body.
+**Do not send `target_name` or `note`.** Leave those keys out of the JSON
+entirely. Empty/`null` is fine too; the matcher fills the manager header.
+
+5. No further actions. (Optional: **Show Notification** “Sent to Cuckle”.)
+
+That is the whole Shortcut — three taps on the phone become two: Share, then
+Send to Cuckle. Instant publish is §3d (webhook → `news-refresh` → `main`).
+
+### Optional fields (only if you want them later)
+
+Only `url` is required. A successful POST answers **201** with an empty body.
 
 * **`url`** — whatever the share sheet gives you. `twitter.com` or `x.com`, with
   `?s=20&t=…` or a `/photo/1` suffix, all fine; the pipeline canonicalises it.
-* **`note`** — the sharer's own jab. **If present it becomes the summary line
-  verbatim**, and no template runs. Their words beat ours. Up to 500 characters,
-  trimmed to 240 in the feed.
-* **`target_name`** — who the jab is aimed at. Send a **name**, not a `user_id`:
-  picking an 18-digit snowflake out of a list on a phone is how a feature goes
-  unused. Case and surrounding spaces do not matter. Exact, prefix and substring
-  matches against the ten pinned names in `data/ui/members.json` **and** every
-  historical display / team / username in `data/aliases.json` all resolve — so
-  `"The Tips"`, `"Evil Ducks"` and `"SF69erss"` land on the same seats, and a
-  rename still connects after the next `sleeper-sync`. Ambiguous fragments
-  (`"the"`, `"ber"`) refuse rather than guess; the item still publishes under
-  "The league". **Wire the Shortcut's Choose-from-List result into this field** —
-  live shares that arrived with `target_name: null` were not mistyped names;
-  the Chosen Item never reached the JSON body.
-* **`submitted_by`** — who shared it. Only used for the uniqueness rule above.
+* **`submitted_by`** — who shared it. Used for the uniqueness rule (same person
+  re-sharing the same tweet is a no-op). Hard-code your seat name.
+* **`note`** — optional jab. Ships in its **own** attributed field on the row;
+  it does not replace the locker-room summary. Up to 500 characters, trimmed to
+  240 in the feed. Skip it for one-tap.
+* **`target_name`** — optional manual override of who the row is aimed at. Send
+  a **name**, not a `user_id`. Case and spaces do not matter; aliases resolve.
+  Ambiguous fragments refuse; the item still publishes under "The league".
+  **Omit for Auto** — that is the one-tap path. If you add a Choose-from-List,
+  wire **Chosen Item** into this field or it arrives as `null`.
 
 `resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second tap
 on Share answers 201 with an empty body instead of a `409` the Shortcut would

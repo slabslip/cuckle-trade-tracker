@@ -566,8 +566,9 @@ who it is aimed at. So it does not need discovery, and it does not need to guess
 
 ### The shape
 
-1. The Shortcut POSTs `{url, note?, target_name?, submitted_by?}` to `news_submissions`.
-   `docs/SUPABASE_SETUP.md` §3b has the exact request and the SQL.
+1. The Shortcut POSTs `{url, submitted_by}` (one-tap) — or optionally adds `note` /
+   `target_name`. `docs/SUPABASE_SETUP.md` §3b has the exact request and the SQL.
+   Omitting `target_name` is Auto: the matcher tags every seat above threshold.
 2. `news-sync.mjs` reads unprocessed rows, fetches each tweet's text via oEmbed (§2 amendment),
    and publishes it as an ordinary `news.json` row with `category: "tweet"` plus `tweet_text`,
    `tweet_author`, `tweet_handle` and `submitted_by`.

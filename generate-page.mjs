@@ -133,6 +133,11 @@ const html = `<!DOCTYPE html>
     .who-menu .who-name {
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
+    img.seat-flair {
+      display: inline-block; width: 1.15em; height: 1.15em;
+      vertical-align: -0.2em; object-fit: contain;
+    }
     .who-menu .crown { flex: 0 0 auto; display: block; }
     .who-menu button[aria-selected="true"] { color: var(--text); }
     .who-menu button.on { color: var(--text); }
@@ -890,16 +895,32 @@ const html = `<!DOCTYPE html>
     /**
      * Seat flair on the painted name only. Matching, data-who, data-partner and the news
      * matcher keep the bare Sleeper name; this is what the eye reads next to it.
+     * glyph = emoji; img = emoji-sized mark (SF69erss), which sits before the crown in whoOptions.
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
-      TrumanCooper: "🤢",
+      TrumanCooper: { glyph: "🤢" },
+      SF69erss: { img: "data/ui/flair-sf69erss.png" },
     });
+    function seatFlairHtml(name) {
+      const f = SEAT_FLAIR[name];
+      if (!f) return "";
+      if (f.glyph) return " " + f.glyph;
+      if (f.img) {
+        return ' <img class="seat-flair" src="' + esc(f.img) + "?" + DATA_V
+          + '" width="16" height="16" alt="" decoding="async" />';
+      }
+      return "";
+    }
+    /** Plain-text flair for aria-labels (no markup). Image flair is silent. */
+    function seatFlairText(name) {
+      const f = SEAT_FLAIR[name];
+      return f && f.glyph ? " " + f.glyph : "";
+    }
     function seatLabel(name) {
       const n = String(name == null ? "" : name);
       // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
       if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
-      const f = SEAT_FLAIR[n];
-      return f ? esc(n) + " " + f : esc(n);
+      return esc(n) + seatFlairHtml(n);
     }
     /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
     function seatTitle(title) {
@@ -926,7 +947,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830225150";
+    const DATA_V = "20260830sfflair1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1761,7 +1782,7 @@ const html = `<!DOCTYPE html>
      */
     function teamsChip() {
       const named = me && me.name
-        ? "Teams, " + me.name + (SEAT_FLAIR[me.name] ? " " + SEAT_FLAIR[me.name] : "") + " selected"
+        ? "Teams, " + me.name + seatFlairText(me.name) + " selected"
         : "Teams, none selected";
       return '<button type="button" class="home-chip' + (teamsOpen ? " on" : "") + '" data-teams-open="1"'
         + ' aria-haspopup="listbox" aria-expanded="' + (teamsOpen ? "true" : "false") + '"'
@@ -4540,16 +4561,27 @@ if (!teamsChipSrc.includes('+ "Teams" + \' <span class="chev">▾</span></span><
 if (/<span class="chip-lab">'\s*\n?\s*\+ (?!")/.test(teamsChipSrc)) {
   throw new Error("the Teams chip's visible label went back to being computed from the selected seat");
 }
-if (!teamsChipSrc.includes('"Teams, " + me.name + (SEAT_FLAIR[me.name] ? " " + SEAT_FLAIR[me.name] : "") + " selected"')) {
+if (!teamsChipSrc.includes('"Teams, " + me.name + seatFlairText(me.name) + " selected"')) {
   throw new Error("the Teams chip's accessible name must still say which seat is selected");
 }
 for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="true" focusable="false"',
   "m.place === 1", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a seat-menu part: ${need}`);
 }
-// Seat flair is display-only. TrumanCooper keeps the bare name in data; the emoji is painted.
-if (!inline.includes('TrumanCooper: "🤢"') || !inline.includes("function seatLabel(name)")) {
+// Seat flair is display-only. Bare Sleeper names stay in data; glyphs/images are painted.
+if (!inline.includes('TrumanCooper: { glyph: "🤢" }') || !inline.includes("function seatLabel(name)")) {
   throw new Error("TrumanCooper seat flair (🤢) must ship as display-only seatLabel()");
+}
+if (!inline.includes('SF69erss: { img: "data/ui/flair-sf69erss.png" }') || !inline.includes("function seatFlairHtml(name)")) {
+  throw new Error("SF69erss seat flair must ship as an emoji-sized img via seatFlairHtml()");
+}
+if (!html.includes("img.seat-flair {") || !html.includes("width: 1.15em; height: 1.15em;")) {
+  throw new Error("seat-flair img must be emoji-sized (1.15em) to match 🤢");
+}
+// whoOptions paints name+flair, then the crown -- flair before crown for the champion.
+if (!fnSrc("whoOptions").includes("seatLabel(label) + \"</span>\"")
+  || !fnSrc("whoOptions").includes("(champ ? CROWN : \"\")")) {
+  throw new Error("whoOptions must paint seat flair before the championship crown");
 }
 if (!inline.includes("function seatTitle(title)")) {
   throw new Error("bag headings must flair seat names through seatTitle()");

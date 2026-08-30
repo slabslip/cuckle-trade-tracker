@@ -175,7 +175,7 @@ create trigger trade_votes_touch_updated_at
 -- Note this section only describes THIS table. RLS is per-table: another table
 -- in `public` is only protected if it enables RLS too. A table with RLS left
 -- off and the default Supabase grants in place is readable and writable by the
--- anon key with no policy involved at all. That is why the pattern in section 5
+-- anon key with no policy involved at all. That is why the pattern in section 6
 -- puts `enable row level security` on every new table.
 --
 -- WHAT THESE POLICIES DO **NOT** PROTECT — STATED PLAINLY
@@ -318,7 +318,229 @@ revoke delete, truncate on table public.trade_votes from anon;
 
 
 -- ============================================================================
--- 5. PATTERN FOR FUTURE TABLES  (nothing below this line executes)
+-- 5. news_submissions — a tweet a league member shared into the feed
+-- ============================================================================
+-- One row per "I saw this on X and the league should see it". An iOS Shortcut
+-- POSTs here from the share sheet; news-sync.mjs reads the unprocessed rows,
+-- fetches the tweet's text from X's oEmbed endpoint, and publishes the result
+-- into data/ui/news.json alongside the automated items.
+--
+-- THE ANON KEY IS NOT A SECURITY BOUNDARY ON THIS TABLE EITHER, and it matters
+-- more here than it does for votes. A vote is a number in a tally. This table
+-- feeds TEXT THAT GETS RENDERED ON THE PAGE. Anyone holding the anon key —
+-- which is in the page source, so: anyone — can insert a row, and that row's
+-- URL will be fetched by the build and its tweet text will be published. There
+-- is no author check, because without Supabase Auth there is nothing to check
+-- against. The mitigations are downstream, not here:
+--
+--   * `url` must match an x.com/twitter.com status URL (constraint below), so
+--     the build cannot be pointed at an arbitrary host to fetch.
+--   * The published text is whatever X returns for a real public tweet. It is
+--     escaped at render time, in text and in attributes, and the tweet's HTML
+--     is never injected — news-sync.mjs strips it to text.
+--   * A submission publishes; it does not move a number. PRODUCT LAW holds.
+--
+-- Acceptable for ten friends who all know each other, on the same reasoning as
+-- votes. Not a pattern to copy where the data matters.
+--
+-- `target_name` holds a MANAGER DISPLAY NAME, not a `user_id`, which is a
+-- deliberate inversion of the rule `trade_votes.choice` follows. The reason is
+-- the client: this row is written by an iOS Shortcut off a share sheet, and
+-- making a human pick a 18-digit snowflake out of a list on a phone is how the
+-- feature goes unused. The name is resolved to a `user_id` server-side in
+-- news-sync.mjs, which is the one place that can fail loudly and fall back to
+-- publishing the item addressed to nobody. A name that no longer matches a
+-- member therefore costs attribution on one row, not a wrong attribution.
+
+create table if not exists public.news_submissions (
+  id           bigint generated always as identity primary key,
+  url          text        not null,
+  note         text,
+  target_name  text,
+  submitted_by text,
+  created_at   timestamptz not null default now(),
+  -- NULL until news-sync.mjs has published this row. The pipeline stamps it so
+  -- a submission is ingested exactly once; see the column-level grant below for
+  -- why this is the only column anon is allowed to change.
+  processed_at timestamptz,
+
+  -- http(s) only, and only a tweet permalink on a host we recognise. This is
+  -- the constraint that keeps the build from being aimed at an arbitrary URL:
+  -- news-sync.mjs re-validates the same shape before it fetches, but a row that
+  -- could never satisfy this check cannot reach the pipeline in the first
+  -- place. `~*` is a case-insensitive POSIX regex.
+  --
+  -- The tail is enumerated rather than left as `([?#/].*)?$`. The looser
+  -- version accepted `…/status/12/../../evil`, because a traversal is just more
+  -- path. It could not have escaped the host, so it was never an SSRF, but a
+  -- URL that is not a permalink has no business being stored as one.
+  --
+  -- Two real share-sheet forms have to survive that tightening: `?s=20&t=…`,
+  -- which iOS appends to every share, and `/photo/1` or `/video/1`, which is
+  -- what the sheet produces when the share starts from the media rather than
+  -- the tweet. Both still identify the same tweet, and news-sync.mjs rebuilds
+  -- the canonical `https://x.com/<handle>/status/<id>` from the captured parts
+  -- before it fetches anything, so the stored suffix is never what gets used.
+  constraint news_submissions_url_len check (length(url) between 12 and 500),
+  constraint news_submissions_url_shape check (
+    url ~* '^https?://(www\.)?(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status(es)?/[0-9]{1,25}(/(photo|video)/[0-9]{1,2})?/?([?#].*)?$'
+  ),
+  -- Length bounds only. Not an identity check, and not a content check: `note`
+  -- is free text a person typed and is escaped at render time, never trusted.
+  constraint news_submissions_note_len         check (note         is null or length(note)         between 1 and 500),
+  constraint news_submissions_target_name_len  check (target_name  is null or length(target_name)  between 1 and 64),
+  constraint news_submissions_submitted_by_len check (submitted_by is null or length(submitted_by) between 1 and 64)
+);
+
+
+-- --------------------------------------------------------------------------
+-- 5a. Uniqueness: (url, submitted_by), NOT url alone
+-- --------------------------------------------------------------------------
+-- THE DECISION, AND WHY.
+--
+-- A unique constraint on `url` alone would stop the same tweet ever being
+-- added twice. It would also stop two league members putting their own jab on
+-- the same tweet — and the second person's row is not a duplicate, it is the
+-- content. Two managers reacting to one Schefter tweet is the feature working.
+--
+-- The duplicate that actually happens is narrower than that: one person taps
+-- Share twice, or the Shortcut retries on a flaky LTE connection and POSTs the
+-- identical body again. That collision is (same url, same submitter), so that
+-- is what the constraint covers.
+--
+-- `nulls not distinct` is required and is the whole reason this works. By the
+-- SQL default, two NULLs are distinct, so without it a submitter who does not
+-- send `submitted_by` — which is optional, and a Shortcut may well not send it
+-- — would defeat the constraint entirely and every retry would insert a new
+-- row. Requires PostgreSQL 15+; Supabase is well past that.
+--
+-- What this deliberately does NOT do is collapse two people's takes on one
+-- tweet into one feed row. That is handled downstream in news-sync.mjs, which
+-- dedupes a submission against automated items about the same player and
+-- category within a few hours, and can be tuned without a migration.
+--
+-- Naming the constraint (rather than creating a bare unique index) is what lets
+-- the client send `?on_conflict=url,submitted_by`, which is how a retry becomes
+-- a no-op instead of an error — see 5c.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.news_submissions'::regclass
+      and conname  = 'news_submissions_url_submitted_by_key'
+  ) then
+    alter table public.news_submissions
+      add constraint news_submissions_url_submitted_by_key
+      unique nulls not distinct (url, submitted_by);
+  end if;
+end $$;
+
+-- The pipeline's only query is "rows not yet published, oldest first". A
+-- partial index over exactly those rows stays small no matter how long the
+-- table grows, because a row leaves the index as soon as it is processed.
+create index if not exists news_submissions_unprocessed_idx
+  on public.news_submissions (created_at)
+  where processed_at is null;
+
+
+-- --------------------------------------------------------------------------
+-- 5b. Row Level Security
+-- --------------------------------------------------------------------------
+-- Same shape as trade_votes, with one difference that is the point of the
+-- table: there is NO general UPDATE grant, so a submission's url, note and
+-- target cannot be rewritten after the fact. The only column anon may change is
+-- `processed_at`, and that is enforced by a COLUMN-LEVEL GRANT in section 5c
+-- rather than by the policy, because RLS cannot see which columns a statement
+-- touched.
+--
+-- And, as with trade_votes: NO DELETE. Nobody can erase another member's
+-- submission through the REST API.
+alter table public.news_submissions enable row level security;
+
+-- INSERT: anyone with the anon key may submit. This is the write-open surface
+-- described in the header. The table's own constraints are the only filter.
+drop policy if exists news_submissions_anon_insert on public.news_submissions;
+create policy news_submissions_anon_insert
+  on public.news_submissions
+  for insert
+  to anon
+  with check (true);
+
+-- SELECT: the build reads the queue with the anon key, so it needs this. It
+-- also means submissions are public to anyone with the key, including the
+-- private jab in `note` before it is published. That is true of everything in
+-- this database and is stated here so it is not a surprise.
+drop policy if exists news_submissions_anon_select on public.news_submissions;
+create policy news_submissions_anon_select
+  on public.news_submissions
+  for select
+  to anon
+  using (true);
+
+-- UPDATE: exists only so the pipeline can stamp `processed_at`. Both halves
+-- are `true` for the same reason they are on trade_votes — the row must be
+-- visible before the update and acceptable after it — and the actual narrowing
+-- is the column grant below, not this policy.
+drop policy if exists news_submissions_anon_update on public.news_submissions;
+create policy news_submissions_anon_update
+  on public.news_submissions
+  for update
+  to anon
+  using (true)
+  with check (true);
+
+
+-- --------------------------------------------------------------------------
+-- 5c. Grants
+-- --------------------------------------------------------------------------
+-- The column-level UPDATE grant is the load-bearing line: anon may write
+-- `processed_at` and nothing else. An attempt to PATCH `url` or `note` fails on
+-- privileges before RLS is consulted.
+--
+-- Section 1b warns off column-level grants on the votes path, and that warning
+-- does not apply here — it is worth saying why, because the two paths
+-- look similar. The votes path is `INSERT ... ON CONFLICT DO UPDATE`, and
+-- PostgREST generates a `DO UPDATE SET` listing every column in the payload,
+-- so any column outside the grant list fails the whole statement. This table
+-- never does that: submissions insert with `ON CONFLICT DO NOTHING` (5d), which
+-- performs no update at all, and the pipeline's stamp is a plain PATCH whose
+-- payload is `{"processed_at": ...}` and nothing else. Neither statement can
+-- touch a column outside the grant.
+grant select, insert on table public.news_submissions to anon;
+grant update (processed_at) on table public.news_submissions to anon;
+
+-- DELETE stays revoked so no member can erase another's submission — the same
+-- trade trade_votes makes. TRUNCATE is not subject to RLS, so revoking it is
+-- the one that closes a real hole rather than restating a closed one.
+revoke delete, truncate on table public.news_submissions from anon;
+
+
+-- --------------------------------------------------------------------------
+-- 5d. The exact request the iOS Shortcut sends
+-- --------------------------------------------------------------------------
+-- POST https://<project>.supabase.co/rest/v1/news_submissions
+--        ?on_conflict=url,submitted_by
+--   apikey:        <anon key>
+--   Authorization: Bearer <anon key>
+--   Content-Type:  application/json
+--   Prefer:        resolution=ignore-duplicates,return=minimal
+--
+--   { "url": "https://x.com/AdamSchefter/status/123",
+--     "note": "your TE is cooked",          -- optional
+--     "target_name": "SF69erss",            -- optional, a members.json name
+--     "submitted_by": "BubbaCuckShremp" }   -- optional
+--
+-- `resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second
+-- tap on Share answers 201 with an empty body instead of a 409 the Shortcut
+-- would surface as a failure. It needs INSERT only — no UPDATE privilege is
+-- consulted — which is what keeps the table write-once for its real columns.
+--
+-- The pipeline's stamp, for the record:
+--   PATCH .../news_submissions?id=eq.<id>   {"processed_at": "<iso8601>"}
+
+
+-- ============================================================================
+-- 6. PATTERN FOR FUTURE TABLES  (nothing below this line executes)
 -- ============================================================================
 -- This database is meant to hold more than votes. Every future table should
 -- repeat the same five moves, in this order:

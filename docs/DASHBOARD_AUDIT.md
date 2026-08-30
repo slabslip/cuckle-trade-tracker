@@ -31,7 +31,10 @@ Every heading below carries its own **FIXED** annotation with the commit; this i
 | E — one source per number | `96d9218`, `ec088f6` | P0-4, P1-4, P1-7, P1-12 (D3), §4.3, §4.4, §6b |
 | F — phone and keyboard | `f9fdb39`, `d4997a2` | A1, A2, A3, A4, A5, A7, A7b, A7c, §6 year-filter semantics |
 | Delete the league screen (D4b ruling) | `8cdbb3d` | §3 dead UI, §10.2 |
-| G — docs | this commit | §7 docs drift |
+| G — docs | `c36976c` | §7 docs drift |
+| Tape restack at phone width | `ab7ef73` | A7d |
+| Full-screen trade and real history | `047f573` | P1-8, the back-affordance sweep |
+| Formatting pass — text fitting | this commit | A10, §6d F1–F9 |
 
 **Signed deltas, 2026-08-30, `DATA_V = 20260830sd`.** The margin between two sides no longer sits
 between them as one unsigned number with an arrow. It is attached to each side and signed: the
@@ -43,7 +46,8 @@ down in **§4a** so it cannot drift back. It also closes A8.
 §5.1–5.2 ticker duplication, §5.3 the constant `1st` column, A6 (marquee pause),
 and the `DATA_V` hand-edit hazard in §6b. None were in the approved
 slice list. Plus the `windows` restructure (D3a), which was scoped and written up rather than
-half-landed.
+half-landed. And the `+`/`−` prefix drift found by the formatting pass (§6d.4), left to
+`cursor/signed-deltas-af37`, which is rewriting how a margin's sign is rendered.
 
 **User decisions.** The Home hero is still open (§10.1). The Traders/Drafters lists were ruled on
 during this pass — delete (§8b D4b). And the work raised one new one: **D5, the 40/60 KTC blend
@@ -692,7 +696,8 @@ A `1fr` grid track's automatic minimum is `min-content`, so a grid item refuses 
 **values** clipped to `8,96` at phone width, and the same omission was independently rediscovered
 in the Champions Path caption. It is **systemic across this app's grid layouts**, not one
 component — fix it everywhere, not at each reported site. As of `20260830tr` the live page carries
-16 `min-width: 0` guards.
+16 `min-width: 0` guards; as of `20260830fm1`, **25** — the formatting pass swept the grids and
+flex rows the earlier reports had not named (§6d, F3).
 
 The guard is necessary and **not sufficient**. It decides *who* gives way when a row does not fit;
 it cannot make a row fit. Once `min-width: 0` let the figures win, the names lost by exactly as
@@ -1053,7 +1058,11 @@ moves. And `getBoundingClientRect()` does **not** reflect ancestor clipping — 
 full 472.6px box while only 44px was on screen. What caught it was `elementFromPoint` at each
 option's centre (1 of 11 hittable, 11 of 11 with the clip removed, 1 again when it was restored).
 
-**A10 — the Champions Path detail runs 1,051px wide at a 375px viewport. NEW, and not fixed.**
+**A10 — the Champions Path detail runs 1,051px wide at a 375px viewport. FIXED in the formatting
+pass — see §6d, defect F1.** The ruling asked for below was taken: a pick list is not a figure, so
+it stacks under its label and wraps, in a `.leg.list` variant that leaves the trade bags' rule
+alone. Re-measured at every width: `body.scrollWidth` equals the viewport on that screen at 320,
+375, 390, 430, 768 and 1280. The original finding follows.
 Found while sweeping every screen during the navigation pass, on a screen that pass did not
 otherwise change. `bagLine` puts a `·`-joined pick list into a `<b>` inside `.leg`, and
 `.leg > b { flex: 0 0 auto; white-space: nowrap; }` — the rule that keeps a *figure* from
@@ -1168,6 +1177,204 @@ Also dead CSS: `.hero` / `.hero b` (`:91`) is never emitted — the original pro
 big number survives only as a stylesheet rule. Plus `a.back`, `.day-scroller`, `.day-chip`,
 `.draft-head`, `.filter-hint`. **All removed in `4653091`.** Note that deleting `.hero` does not
 answer the hero question — it only stops pretending the answer is already in the file (§10.1).
+
+---
+
+## 6d. The formatting pass — every box, button and cell, measured
+
+Asked for as *"ensure that text on each box and button and cell is formatted properly to fit and
+show all of the text clearly and consistently"*. Done as a measurement, not a look: the real page
+driven through **22 screen states at 320 / 375 / 390 / 430 / 768 / 1280**, twice — once on the
+committed data and once with a 27-character manager name and a 33-character player name
+substituted, because the league's real worst case (`DarkWingDucks2023`) happens to fit in several
+places where the layout is still broken.
+
+**Sequencing.** Two other passes were in flight when this was scoped. `cursor/trade-row-layout-af37`
+(the tape restack, A7d) and `cursor/trade-screen-nav-af37` (the full-screen trade, the league
+trades list, P1-8) both landed on `main` mid-inventory, at `ab7ef73` and `047f573`. This branch was
+rebased onto them and re-baselined against `66d924b` rather than measuring the older page; the two
+new screens are in the numbers below. A third branch, `cursor/signed-deltas-af37`, is rewriting how
+a margin's sign is rendered, so the `+`/`−` prefix drift in §6d.4 was deliberately left to it.
+The row restack is why the tape rows are absent from the table: it had already fixed them, taking
+clipped names from 1,054 findings to 24.
+
+### 6d.1 Method, and why it is stated
+
+Every trap in §3a applies to this pass, so each one has a specific counter:
+
+| Trap | Counter used here |
+| --- | --- |
+| `documentElement.scrollWidth` clamps to the viewport | Every overflow number below is `document.body.scrollWidth`. The `documentElement` figure is printed beside it in the table, and it reads a clean 320/375/390 over a document that is genuinely 1,051px wide. |
+| A dead server means measuring another build | A purpose-built static server that exits non-zero on `EADDRINUSE` instead of dying quietly, stamps `x-serve-root` and its pid on every response, on a port confirmed free. The served bytes are md5-checksummed against the on-disk `index.html` **before and after** every run, and every screen state records the `DATA_V` it saw. A run that saw two different values fails rather than reporting. |
+| `scrollWidth` is 0 on an inline box | Clipping is only asserted where the element's own computed `overflow-x` is `hidden` or `clip`; wrapping defects are measured from `Range.getClientRects()`, which gives a real ink box for inline content. |
+| A clipped element's ink legitimately exceeds its border box | Container overflow is only reported where `overflow-x` is `visible`, so an ellipsized name is not counted as a spill. |
+| `preview.html` renders its iframe at 366px, not 390px | Not used. All widths are true viewports via `Emulation.setDeviceMetricsOverride`. |
+
+A build was **not** measured while it was being edited: the baseline lives in its own worktree on
+its own port and is never written to. The first attempt at this got that wrong — the working build
+was rebuilt underneath a running measurement — which is why the end-of-run checksum exists.
+
+### 6d.2 The inventory, before
+
+`DATA_V = 20260830nv`, `main` at `66d924b`. Severity is by the house rule: a clipped **figure**
+first, then anything escaping the viewport, then text truncated past usefulness, then awkward
+wrapping. *(synthetic only)* marks a defect that real data hides.
+
+#### Document wider than the viewport
+
+| Screen | Data | Viewport | `body.scrollWidth` | `documentElement.scrollWidth` |
+| --- | --- | ---: | ---: | ---: |
+| Champions Path · detail | real | 320 | **1051** | 320 |
+| Champions Path · detail | real | 375 | **1051** | 375 |
+| Champions Path · detail | real | 390 | **1051** | 390 |
+| Champions Path · detail | real | 430 | **1051** | 430 |
+| Champions Path · detail | real | 768 | **1051** | 768 |
+| Champions Path · detail | 30-char names | 320 | **1051** | 320 |
+| Manager home · style tile | 30-char names | 320 | **339** | 320 |
+| Champions Path · detail | 30-char names | 375 | **1051** | 375 |
+| Champions Path · detail | 30-char names | 390 | **1051** | 390 |
+| Champions Path · detail | 30-char names | 430 | **1051** | 430 |
+| Champions Path · detail | 30-char names | 768 | **1051** | 768 |
+
+#### Elements
+
+| Sev | Element | Defect | Screens | Widths | Worst measurement | Sample |
+| --- | --- | --- | --- | ---: | --- | --- |
+| P0 | `div#app > div.chapter` | overflows its box | Champions Path · detail | 320 375 390 430 768 1280 | 1034px of content in a 286px box @320px | Previous season 18 trades · league |
+| P0 | `body > div#app` | overflows its box | Champions Path · detail, Manager home · style tile +2 more | 320 375 390 430 768 1280 | 1035px of content in a 288px box @320px | ← All champions 2025 champion SF69 |
+| P0 | `div.chapter > div.leg` | overflows its box | Champions Path · detail | 320 375 390 430 768 1280 | 684px of content in a 258px box @320px | Picks in 2027 2nd · 2027 2nd · 202 |
+| P0 | `div.leg > b` | escapes the viewport | Champions Path · detail | 320 375 390 430 768 | right edge 715px in a 320px viewport @320px | 2027 2nd · 2027 2nd · 2024 4th · 2 |
+| P0 | `div.mark-chart > div.mark-bar` | overflows its box *(synthetic only)* | Manager home · style tile | 320 | 310px of content in a 262px box @320px | 5. BartholomewCuckleshremp2026 Ahe |
+| P0 | `div.mark-bar > div.mark-bar-top` | overflows its box *(synthetic only)* | Manager home · style tile | 320 | 310px of content in a 262px box @320px | 5. BartholomewCuckleshremp2026 Ahe |
+| P0 | `div#app > div.mark-chart` | overflows its box *(synthetic only)* | Manager home · style tile | 320 | 322px of content in a 286px box @320px | Ahead or behind Since trade 1. Bub |
+| P0 | `button.row > div.row-top` | overflows its box *(synthetic only)* | Partners tab, Partners tab · detail | 320 | 285px of content in a 262px box @320px | BartholomewCuckleshremp2026 5 comp |
+| P0 | `div.mark-bar-top > span.lab.pos` | escapes the viewport *(synthetic only)* | Manager home · style tile | 320 | right edge 339px in a 320px viewport @320px | Ahead |
+| P0 | `div#app > button.row` | overflows its box *(synthetic only)* | Partners tab, Partners tab · detail | 320 | 297px of content in a 286px box @320px | BartholomewCuckleshremp2026 5 comp |
+| P0 | `div.nav > button.tab` | overflows its box | Manager home, Manager home · style tile +8 more | 320 | 70px of content in a 64px box @320px | partners |
+| P0 | `div.nav > button.tab.on` | overflows its box | Partners tab, Partners tab · detail | 320 | 70px of content in a 64px box @320px | partners |
+| P1 | `a.champ-alert > div.date` | clipped *(synthetic only)* | League home, Brand header · seat menu +2 more | 320 375 | needs 331px, has 262px @320px | Top scorer · Christopher Vanderhoo |
+| P1 | `div#whoMenu.who-menu > button` | clipped *(synthetic only)* | Brand header · seat menu | 320 375 390 430 768 1280 | needs 234px, has 166px @320px | BartholomewCuckleshremp2026 |
+| P1 | `div.side-line > span.names.neg` | clipped *(synthetic only)* | League trades list, League home · packs +4 more | 320 375 768 | needs 278px, has 211px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `div.side-line > span.names.pos` | clipped *(synthetic only)* | League trades list, League home · packs +4 more | 320 375 768 | needs 278px, has 211px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `div.side-line > span.names` | clipped *(synthetic only)* | Drafts tab, Drafts tab · filter +2 more | 320 375 | needs 278px, has 211px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `h1.brand > a` | clipped | League home, Brand header · seat menu +20 more | 320 | needs 147px, has 100px @320px | CuckleChunckle |
+| P1 | `button.vote-opt > b` | clipped | Trade review screen, Trade review · hops, League trades · row open | 320 | needs 123px, has 101px @320px | KingHenryXXVI |
+| P1 | `div.lens-row-left > div.caption` | clipped | Trades tab, Trades tab · year filter +2 more | 320 | needs 79px, has 66px @320px | Filter by year |
+| P2 | `h1.brand > a` | tap target under 44px | League home, Brand header · seat menu +20 more | 320 375 390 430 768 1280 | 100×27px @320px | CuckleChunckle |
+| P2 | `div.ticker-track > button.bubble` | tap target under 44px | League home, Brand header · seat menu +2 more | 320 375 390 430 768 1280 | 231×40px @320px | Champion 2025 · SF69erss |
+| P2 | `button.score-opt > span` | orphan last line | League home · Score as | 320 375 390 430 768 1280 | 2 lines, last is "deals." at 33px of 215px @320px | Who won after 2 years. Hides young |
+| P2 | `div.vote > p.caption` | orphan last line | Trade review · hops, Trade review screen, League trades · row open | 320 375 | 4 lines, last is "book." at 34px of 251px @320px | Your vote, on this device only — t |
+| P2 | `div#app > p.caption` | orphan last line | League trades list | 320 430 768 | 4 lines, last is "on." at 19px of 274px @320px | Every trade on the league tape, ne |
+| P2 | `div.stat > span` | orphan last line | Champions Path · detail | 320 375 390 430 | 2 lines, last is "out" at 19px of 90px @320px | player 17 in / 11 out |
+| P2 | `button.mark > span` | orphan last line | Manager home, Manager home · style tile | 320 375 430 1280 | 7 lines, last is "Fair." at 22px of 106px @320px | You came out ahead vs 4 partners.  |
+| P2 | `div.hop > span` | orphan last line | Trades tab · hops, Drafts tab · pick open, Trade review · hops | 320 430 768 1280 | 3 lines, last is "held" at 27px of 163px @320px | 2026-08-19 · TedCumberbatch → ARae |
+| P2 | `button.leg > span` | orphan last line | Drafts tab · pick open | 320 | 2 lines, last is "(ARae)" at 40px of 181px @320px | 2026 3rd · became Ted Hurst (ARae) |
+| P2 | `div.path-hero > p.thesis` | orphan last line | Champions Path · detail | 390 | 3 lines, last is "roster." at 47px of 315px @390px | Finished 2nd in points. Repeat cha |
+| P2 | `div.chapter > div.caption` | orphan last line | Champions Path · detail | 320 430 | 2 lines, last is "×2" at 70px of 338px @430px | Traded with TrumanCooper ×5 · Bubb |
+| P2 | `button.mark.neg > span` | orphan last line | Manager home, Manager home · style tile | 430 768 | 2 lines, last is "deal." at 27px of 152px @430px | -18,028 net, about -291 per deal. |
+| P2 | `button.mark.neg.on > span` | orphan last line | Manager home · style tile | 430 | 2 lines, last is "deal." at 27px of 152px @430px | -18,028 net, about -291 per deal. |
+| P2 | `div.hops > div.date` | orphan last line *(synthetic only)* | Drafts tab · pick open | 375 390 | 2 lines, last is "ARae" at 31px of 286px @375px | Christopher Vanderhoosenbergerson  |
+| P2 | `div.bag > h3` | orphan last line *(synthetic only)* | Drafts tab · pick open | 430 | 2 lines, last is "2,500" at 46px of 367px @430px | Christopher Vanderhoosenbergerson  |
+
+### 6d.3 What was fixed
+
+| # | Defect | Fix |
+| --- | --- | --- |
+| **F1** | **A10.** `bagLine` puts a `·`-joined pick list into `.leg > b`, which is `white-space: nowrap; flex: 0 0 auto` because everywhere else that `<b>` is a figure. Neither wrapped nor shrank: **1,051px inside every viewport from 320 to 768**, and the `Picks in` label beside it collapsed to `min-content` and rendered **one letter per line**. | `.leg.list` — the list stacks under its label and wraps. Scoped to the variant, so the trade bags' "figures never wrap" rule is untouched. |
+| **F2** | The champion card's championship and top-scorer lines each end in a **score**, on one `nowrap` line. The figure is furthest from the left edge, so it is what a long name pushes off first: a 33-character player name took `45.6` with it entirely. | `champFinalCaption` returns the words and the figure separately; `.champ-fig` pins the figure and lets only the name ellipsize. Both lines still say what they said. |
+| **F3** | `min-width: 0` coverage. The guards existed on the tape row and the gold cards only. Without one, a 30-character name pushed the mark chart's label to **339px in a 320px viewport** and spilled the Partners row out of its own card. | Guards added to `.row-top`, `.bags`, `.hop`, `.mark-bar-top`, `.pack-head` and `.stats`. The live page now carries **25**, up from 16. |
+| **F3b** | The guard is necessary, not sufficient: a name with no space in it offers no soft wrap opportunity, so `.row-top` still spilled 23px. | `.row-top:not(.tape) .names { overflow-wrap: anywhere }`. These rows carry one name and one figure and can afford a second line — the opposite call from the tape, which is dense and ellipsizes. |
+| **F4** | Figures that could wrap after their own minus sign: `.row-top`'s margin, `.hop`'s value, the mark chart's label. | `flex: 0 0 auto; white-space: nowrap` on each, asserted at generate time. |
+| **F5** | **320px, which nothing here had ever been checked at.** The brand read `CuckleChunc…` (100px of the 147px it needs); `partners` spilled its own nav tab by 6px; `Filter by year` was cut to `Filter by ye…`, which names nothing; the two vote buttons side by side clipped `KingHenryXXVI`. | One `max-width: 360px` block. The picker gives 20px and the gaps 4px so the title fits whole; the nav gaps and tab padding shrink; the Score as button takes its own line; the vote options stack. No font was shrunk to win space except the brand's own. |
+| **F6** | A bag heading was `<who> received · 12,345` in one wrapping line, so a long name put the bag's **total alone on a second line**, reading as a figure belonging to nothing. | Built as the same pinned label-and-figure pair as a tape row, a partner row, a hop and the champion card. One shape for one role. |
+| **F7** | The seat menu cut a 27-character name to `BartholomewCuckl…` at 168px, at every width. | 220px. It floats over the page and is anchored to the right edge, so it is not bound by its trigger, and it still yields to the viewport. |
+| **F8** | Two sub-44px targets in a file that enforces 44px everywhere else (A5's rule): the ticker pills at **40px**, and the brand link at **27px tall** next to a 44px home button. | 44px on both. The line box carries it on the brand link rather than padding, which would push the ellipsis off the text. |
+| **F9** | Sentences that explain a value — style tiles, stat boxes, Score as options, vote captions — stranded a single short word on the last line (`Fair.`, `deals.`, `out`) inside boxes small enough that the orphan reads as a fault. | `text-wrap: pretty` on those roles. Where it is unsupported the text wraps exactly as it does today, so this can only improve. |
+
+### 6d.4 What was deliberately left
+
+- **`+` prefix drift.** A positive figure is `+1,234` on the style tiles and the Value Adjustment
+  line, and `1,234` on the Partners tab, the home partner teaser, the Drafts header and Best/Worst
+  deal — all of them green either way. Real drift, and worth one `signed()` helper. Left because
+  `cursor/signed-deltas-af37` is actively rewriting exactly this, and two branches editing the sign
+  of the same numbers is how a value ends up rendered twice.
+- **Dates and thousands separators are already consistent** and were checked rather than assumed:
+  every date on screen is ISO `YYYY-MM-DD` through `esc()`, and every figure goes through one
+  `fmt()`. Nothing to fix.
+- **Names still ellipsize under synthetic 30-character stress** on the tape rows, the seat menu and
+  the champion card. That is the house rule working, not a defect: the figure is intact in every
+  one of those cases, and a long proper noun is the thing that is supposed to give.
+- **Orphans in flowing prose** — the league trades intro, the vote caption at one width. A
+  paragraph ending in a short word is typography, not a rendering fault; only the ones inside small
+  fixed boxes were treated.
+- **A6** (marquee pause) and **A8** (three colour languages in a Drafts row) are unchanged: both are
+  behaviour and colour, not text fitting.
+
+### 6d.5 After, and the assertions that hold it
+
+#### Document wider than the viewport
+
+| Screen | Data | Viewport | `body.scrollWidth` | `documentElement.scrollWidth` |
+| --- | --- | ---: | ---: | ---: |
+
+#### Elements
+
+| Sev | Element | Defect | Screens | Widths | Worst measurement | Sample |
+| --- | --- | --- | --- | ---: | --- | --- |
+| P1 | `div.date.champ-fig > span` | clipped *(synthetic only)* | League home, Brand header · seat menu +2 more | 320 375 390 | needs 302px, has 230px @320px | Top scorer · Christopher Vanderhoo |
+| P1 | `div.side-line > span.names.neg` | clipped *(synthetic only)* | League trades list, League home · packs +4 more | 320 375 768 | needs 278px, has 211px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `div.side-line > span.names.pos` | clipped *(synthetic only)* | League trades list, League home · packs +4 more | 320 375 768 | needs 278px, has 211px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `div.side-line > span.names` | clipped *(synthetic only)* | Drafts tab, Drafts tab · filter +2 more | 320 375 | needs 278px, has 211px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `div.mark-bar-top > span.names` | clipped *(synthetic only)* | Manager home · style tile | 320 375 | needs 277px, has 211px @320px | 5. BartholomewCuckleshremp2026 |
+| P1 | `div#whoMenu.who-menu > button` | clipped *(synthetic only)* | Brand header · seat menu | 320 375 390 430 768 1280 | needs 234px, has 218px @320px | BartholomewCuckleshremp2026 |
+| P2 | `div#app > p.caption` | orphan last line | League trades list | 320 430 768 | 4 lines, last is "on." at 57px of 274px @320px | Every trade on the league tape, ne |
+| P2 | `div.leg.list > b` | orphan last line | Champions Path · detail | 320 375 390 430 1280 | 5 lines, last is "2nd" at 59px of 238px @320px | 2025 3rd · 2025 3rd · 2026 4th · 2 |
+| P2 | `div.hop > span` | orphan last line | Drafts tab · pick open, Trade review · hops, Trades tab · hops | 320 430 768 1280 | 3 lines, last is "sold" at 32px of 133px @320px | 2023-09-24 · TipsUp → BubbaCuckShr |
+| P2 | `div.vote > p.caption` | orphan last line | Trade review screen, Trade review · hops, League trades · row open | 375 | 3 lines, last is "book." at 70px of 278px @375px | League tally as of 02:21 AM; votes |
+| P2 | `button.mark > span` | orphan last line | Manager home, Manager home · style tile | 375 1280 | 5 lines, last is "Fair." at 34px of 140px @375px | You came out ahead vs 4 partners.  |
+| P2 | `div.chapter > div.caption` | orphan last line | Champions Path · detail | 430 | 2 lines, last is "×2" at 70px of 338px @430px | Traded with TrumanCooper ×5 · Bubb |
+| P2 | `button.mark.neg > span` | orphan last line | Manager home, Manager home · style tile | 768 | 2 lines, last is "graded)." at 68px of 327px @768px | Rookie picks usually turn into les |
+| P2 | `h3 > span` | orphan last line *(synthetic only)* | Drafts tab · pick open | 375 430 | 3 lines, last is "trade" at 40px of 232px @375px | Christopher Vanderhoosenbergerson  |
+| P2 | `div.hops > div.date` | orphan last line *(synthetic only)* | Drafts tab · pick open | 375 390 | 2 lines, last is "ARae" at 31px of 286px @375px | Christopher Vanderhoosenbergerson  |
+
+Across all six widths, both data sets, every screen:
+
+| Measure | Before | After |
+| --- | ---: | ---: |
+| Screens where `body.scrollWidth` exceeds the viewport | 11 | **0** |
+| Worst `body.scrollWidth` | **1,051px** | 0 over |
+| Elements escaping the viewport | 11 | **0** |
+| Elements overflowing their own box | 70 | **0** |
+| Tap targets under 44px | 312 | **0** |
+| Clipped **figures** | 0 | **0** |
+| Clipped text elements | 112 | 60 |
+| Orphaned last lines | 87 | 52 |
+
+Per width, worst case of the real and synthetic runs:
+
+| Viewport | max `body.scrollWidth` | escapes | box overflows | clips | sub-44px | orphans |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 320px | 1051 → **320** | 3 → **0** | 40 → **0** | 81 → **24** | 52 → **0** | 18 → **6** |
+| 375px | 1051 → **375** | 2 → **0** | 6 → **0** | 17 → **18** | 52 → **0** | 17 → **14** |
+| 390px | 1051 → **390** | 2 → **0** | 6 → **0** | 1 → **5** | 52 → **0** | 9 → **3** |
+
+**Clips rise at 375 and 390 and that is the fix, not a regression.** Read the selectors, not the
+count: `a.champ-alert > div.date` clipped as a whole line and the score was the part lost;
+`.champ-fig > span` now clips the *name* by 17px with the score pinned and whole. `.mark-bar-top`
+stopped spilling 48px past the viewport and started ellipsizing a name by 11px. Both are a worse
+number and a better page. Nothing numeric clips in either column.
+
+**Held by assertions, not by care.** Every rule above is one deletion away from returning silently,
+because none of them changes what the page *says* — only whether you can read all of it. So
+`generate-page.mjs` now fails the build if `.leg.list`, `.champ-fig`, the bag header pair, the
+`max-width: 360px` block or any of the `min-width: 0` guards go missing, and separately if any of
+the three rules that **pin a figure** is removed. Verified by deleting one and watching the build
+fail. And in the page, 24 checks at 320/375/390/430 for what this pass was told not to break —
+`h1.brand` unclipped, all eleven seat options laid out at 44px, the two gold cards equal to the
+pixel, both champion lines with their figures whole, no green loss margin across 288 league rows,
+no sub-44px target, `body.scrollWidth` equal to the viewport. The same script fails **8 of those
+24** against the build before this branch, so the checks have teeth.
+
 
 ---
 

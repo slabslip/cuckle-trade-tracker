@@ -265,8 +265,9 @@ including everything from 2025-08-29 onward. The trades list shows those same de
 *Fix:* use `chipLived` in `rankWide`. Generator-only.
 
 ### P1-3 — The middle margin number is always green — **FIXED, `2f22d5f`**
-Shipped: `tradeRow` and `pickRow` use `cls(delta)`, so the middle follows its sign and `—` / `0`
-are neutral. `boardTape` was fixed the same way and then removed entirely with the board (D4a).
+Shipped: `tradeRow`, `pickRow` and `boardTape` all use `cls(delta)`, so the middle follows its
+sign, and `—` / `0` are explicitly neutral rather than green. `boardTape` outlived the board it
+was named for — it is what the Recent Trade card expands into.
 Original finding below.
 
 `tradeRow` (`:1163`), `boardTape` (`:658`) and `pickRow` (`:1249`) hardcode
@@ -741,8 +742,7 @@ were not in the approved slice list and stand. What shipped:
   real `<button>` elements. Clicking a player name in an open row no longer collapses it.
 - **A2** — a global `keydown` handler, `Escape` closing whatever is topmost, and focus preserved
   across the wholesale `innerHTML` rebuild by re-finding the control by its `data-*` attributes.
-- **A3** — `aria-expanded` on `tradeRow` and `pickRow`. (`boardTape` was fixed and then deleted
-  with the board.)
+- **A3** — `aria-expanded` on `tradeRow`, `pickRow` and `boardTape`.
 - **A4** — `#whoMenu` is a real listbox: `role="option"` children, arrow keys, `Home`/`End`,
   `Escape`, focus restored to the trigger. The four tabs are a `tablist` with roving `tabindex`.
 - **A5** — 44px minimum on `.who-menu button` (was 28), `#yearFilters label` (was 26),

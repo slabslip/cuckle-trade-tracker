@@ -67,7 +67,9 @@ Boot reads every one of them; an unknown value falls back to league home rather 
   no "today" that can disagree with `league.today` and no empty state to caption. Each deal on
   that date shows both seats and both bag totals on the selected clock. Tapping one expands the
   full tape row plus the vote block.
-- **Champions Path** · the most recent title, linking to the Champions Path screen.
+- **Champions Path** · the most recent title, its record, and how the title game went — who they
+  beat, the final score, and their top scorer that week. A season with no usable final falls back
+  to `· bracket` or `· points race`. Links to the Champions Path screen.
 
 **Most lopsided trades** — a collapsible pack, top 10 sides by absolute margin on the selected
 clock, deduped to one side per transaction. This is the **permanent** replacement for the old
@@ -164,7 +166,11 @@ The pipeline owns all arithmetic. The browser formats.
 | `me/<user_id>.json` | 156–602 KB | that seat's trades, partners, drafts |
 | `picks.json` | 111 KB | hop tape per asset key |
 | `titles.json` | 4 KB | Champions Path |
-| `votes.json` | <1 KB | committed vote tallies (opinion only — never value) |
+| `votes.json` | <1 KB | fallback vote tallies when Supabase is unreachable (opinion only — never value) |
+
+Votes are the one number that does **not** come from the pipeline. The live league tally is read
+from Supabase and `localStorage` is the source of truth for this device's own ballot; committed
+`votes.json` is the fallback. See [`VOTES_SDD.md`](./VOTES_SDD.md).
 
 A `trade_boards.sides` row ships exactly what the page reads: `transaction_id`, `date`, `user_id`,
 `name`, `other`, `headline`, and `windows[lens].{got, sent, incomplete}`. The full row, with

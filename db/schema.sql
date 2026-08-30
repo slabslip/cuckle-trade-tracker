@@ -352,6 +352,28 @@ revoke delete, truncate on table public.trade_votes from anon;
 -- publishing the item addressed to nobody. A name that no longer matches a
 -- member therefore costs attribution on one row, not a wrong attribution.
 
+-- WHY THIS SECTION IS WRITTEN AS create-THEN-CONVERGE, AND NOT AS ONE
+-- create table WITH THE CONSTRAINTS INLINE
+--
+-- `create table if not exists` does exactly nothing when a table of that name
+-- already exists — including when that table is missing every constraint below
+-- it. It does not compare shapes and it does not warn. So a file that declares
+-- its constraints inline is idempotent in the trivial sense (it runs twice
+-- without erroring) while being useless in the sense that matters: run it
+-- against a project where a `news_submissions` already exists and you get a
+-- clean "success" and none of the protection.
+--
+-- That is not hypothetical here. On 2026-08-30 this project already had a
+-- `news_submissions` with exactly these seven column names and NONE of the
+-- constraints, policies or grants: it accepted `https://evil.com/a/status/1`,
+-- had no unique constraint, and let the anon key rewrite the `url` of an
+-- existing row. An inline-only version of this file would have reported
+-- success against it and changed nothing.
+--
+-- So every constraint, index, policy and grant below is applied SEPARATELY and
+-- idempotently, and the create is only responsible for the columns. Running
+-- this file brings a pre-existing table up to spec rather than skipping it.
+
 create table if not exists public.news_submissions (
   id           bigint generated always as identity primary key,
   url          text        not null,
@@ -362,39 +384,86 @@ create table if not exists public.news_submissions (
   -- NULL until news-sync.mjs has published this row. The pipeline stamps it so
   -- a submission is ingested exactly once; see the column-level grant below for
   -- why this is the only column anon is allowed to change.
-  processed_at timestamptz,
-
-  -- http(s) only, and only a tweet permalink on a host we recognise. This is
-  -- the constraint that keeps the build from being aimed at an arbitrary URL:
-  -- news-sync.mjs re-validates the same shape before it fetches, but a row that
-  -- could never satisfy this check cannot reach the pipeline in the first
-  -- place. `~*` is a case-insensitive POSIX regex.
-  --
-  -- The tail is enumerated rather than left as `([?#/].*)?$`. The looser
-  -- version accepted `…/status/12/../../evil`, because a traversal is just more
-  -- path. It could not have escaped the host, so it was never an SSRF, but a
-  -- URL that is not a permalink has no business being stored as one.
-  --
-  -- Two real share-sheet forms have to survive that tightening: `?s=20&t=…`,
-  -- which iOS appends to every share, and `/photo/1` or `/video/1`, which is
-  -- what the sheet produces when the share starts from the media rather than
-  -- the tweet. Both still identify the same tweet, and news-sync.mjs rebuilds
-  -- the canonical `https://x.com/<handle>/status/<id>` from the captured parts
-  -- before it fetches anything, so the stored suffix is never what gets used.
-  constraint news_submissions_url_len check (length(url) between 12 and 500),
-  constraint news_submissions_url_shape check (
-    url ~* '^https?://(www\.)?(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status(es)?/[0-9]{1,25}(/(photo|video)/[0-9]{1,2})?/?([?#].*)?$'
-  ),
-  -- Length bounds only. Not an identity check, and not a content check: `note`
-  -- is free text a person typed and is escaped at render time, never trusted.
-  constraint news_submissions_note_len         check (note         is null or length(note)         between 1 and 500),
-  constraint news_submissions_target_name_len  check (target_name  is null or length(target_name)  between 1 and 64),
-  constraint news_submissions_submitted_by_len check (submitted_by is null or length(submitted_by) between 1 and 64)
+  processed_at timestamptz
 );
+
+-- Converge the columns, for a table that predates this file. `add column if not
+-- exists` is a no-op on a fresh create and fills the gaps on an older one.
+alter table public.news_submissions add column if not exists note         text;
+alter table public.news_submissions add column if not exists target_name  text;
+alter table public.news_submissions add column if not exists submitted_by text;
+alter table public.news_submissions add column if not exists created_at   timestamptz not null default now();
+alter table public.news_submissions add column if not exists processed_at timestamptz;
 
 
 -- --------------------------------------------------------------------------
--- 5a. Uniqueness: (url, submitted_by), NOT url alone
+-- 5a. The check constraints, applied separately so they reach an old table too
+-- --------------------------------------------------------------------------
+-- `url` is http(s) only and only a tweet permalink on a host we recognise.
+-- This is the constraint that keeps the build from being aimed at an arbitrary
+-- URL: news-sync.mjs re-validates the same shape before it fetches, but a row
+-- that could never satisfy this check cannot reach the pipeline in the first
+-- place. `~*` is a case-insensitive POSIX regex.
+--
+-- The tail is enumerated rather than left as `([?#/].*)?$`. The looser version
+-- accepted `…/status/12/../../evil`, because a traversal is just more path. It
+-- could not have escaped the host, so it was never an SSRF, but a URL that is
+-- not a permalink has no business being stored as one.
+--
+-- Two real share-sheet forms have to survive that tightening: `?s=20&t=…`,
+-- which iOS appends to every share, and `/photo/1` or `/video/1`, which is what
+-- the sheet produces when the share starts from the media rather than the
+-- tweet. Both still identify the same tweet, and news-sync.mjs rebuilds the
+-- canonical `https://x.com/<handle>/status/<id>` from the captured parts before
+-- it fetches anything, so the stored suffix is never what gets used.
+--
+-- Each is added NOT VALID and then validated in a separate step that downgrades
+-- failure to a warning. The reason is the pre-existing table described above:
+-- it may already hold rows that violate these checks, and a plain `add
+-- constraint` against one of them aborts the whole script — which would mean a
+-- single junk row from before this file existed permanently blocks the setup
+-- that would have prevented it. NOT VALID still enforces the check on every
+-- INSERT and UPDATE from this moment on, so the protection is live either way;
+-- validation only decides whether the *existing* rows are certified. If it
+-- fails you get a WARNING naming the constraint, and the query to find the
+-- offending rows is in docs/SUPABASE_SETUP.md.
+do $$
+declare
+  c record;
+begin
+  for c in
+    select * from (values
+      ('news_submissions_url_len',
+       'check (length(url) between 12 and 500)'),
+      ('news_submissions_url_shape',
+       'check (url ~* ''^https?://(www\.)?(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status(es)?/[0-9]{1,25}(/(photo|video)/[0-9]{1,2})?/?([?#].*)?$'')'),
+      -- Length bounds only. Not an identity check, and not a content check:
+      -- `note` is free text a person typed and is escaped at render time.
+      ('news_submissions_note_len',
+       'check (note is null or length(note) between 1 and 500)'),
+      ('news_submissions_target_name_len',
+       'check (target_name is null or length(target_name) between 1 and 64)'),
+      ('news_submissions_submitted_by_len',
+       'check (submitted_by is null or length(submitted_by) between 1 and 64)')
+    ) as t(name, body)
+  loop
+    if not exists (
+      select 1 from pg_constraint
+      where conrelid = 'public.news_submissions'::regclass and conname = c.name
+    ) then
+      execute format('alter table public.news_submissions add constraint %I %s not valid', c.name, c.body);
+    end if;
+    begin
+      execute format('alter table public.news_submissions validate constraint %I', c.name);
+    exception when check_violation then
+      raise warning 'news_submissions: existing rows violate %; it is enforced for new rows only. See docs/SUPABASE_SETUP.md to find them.', c.name;
+    end;
+  end loop;
+end $$;
+
+
+-- --------------------------------------------------------------------------
+-- 5b. Uniqueness: (url, submitted_by), NOT url alone
 -- --------------------------------------------------------------------------
 -- THE DECISION, AND WHY.
 --
@@ -421,7 +490,14 @@ create table if not exists public.news_submissions (
 --
 -- Naming the constraint (rather than creating a bare unique index) is what lets
 -- the client send `?on_conflict=url,submitted_by`, which is how a retry becomes
--- a no-op instead of an error — see 5c.
+-- a no-op instead of an error — see 5e.
+--
+-- A unique constraint cannot be added NOT VALID, so unlike the checks above
+-- this one can genuinely fail on a pre-existing table that already holds
+-- duplicates. That is trapped and downgraded to a warning for the same reason:
+-- old junk must not block the rest of the setup. Without the constraint the
+-- Shortcut's `on_conflict` request is the thing that breaks, loudly, rather
+-- than anything silently going unprotected.
 do $$
 begin
   if not exists (
@@ -429,9 +505,13 @@ begin
     where conrelid = 'public.news_submissions'::regclass
       and conname  = 'news_submissions_url_submitted_by_key'
   ) then
-    alter table public.news_submissions
-      add constraint news_submissions_url_submitted_by_key
-      unique nulls not distinct (url, submitted_by);
+    begin
+      alter table public.news_submissions
+        add constraint news_submissions_url_submitted_by_key
+        unique nulls not distinct (url, submitted_by);
+    exception when unique_violation then
+      raise warning 'news_submissions: existing duplicate (url, submitted_by) rows blocked the unique constraint. De-duplicate them and re-run this file; until then the Shortcut must POST without on_conflict.';
+    end;
   end if;
 end $$;
 
@@ -444,12 +524,12 @@ create index if not exists news_submissions_unprocessed_idx
 
 
 -- --------------------------------------------------------------------------
--- 5b. Row Level Security
+-- 5c. Row Level Security
 -- --------------------------------------------------------------------------
 -- Same shape as trade_votes, with one difference that is the point of the
 -- table: there is NO general UPDATE grant, so a submission's url, note and
 -- target cannot be rewritten after the fact. The only column anon may change is
--- `processed_at`, and that is enforced by a COLUMN-LEVEL GRANT in section 5c
+-- `processed_at`, and that is enforced by a COLUMN-LEVEL GRANT in section 5d
 -- rather than by the policy, because RLS cannot see which columns a statement
 -- touched.
 --
@@ -491,11 +571,20 @@ create policy news_submissions_anon_update
 
 
 -- --------------------------------------------------------------------------
--- 5c. Grants
+-- 5d. Grants
 -- --------------------------------------------------------------------------
 -- The column-level UPDATE grant is the load-bearing line: anon may write
 -- `processed_at` and nothing else. An attempt to PATCH `url` or `note` fails on
 -- privileges before RLS is consulted.
+--
+-- The `revoke update` immediately before it is not decoration and must not be
+-- deleted as redundant. A table-wide `grant update` and a column-level one are
+-- separate entries in the privilege list, and granting the column does NOT
+-- remove the table-wide grant — so on the pre-existing table described at the
+-- top of this section, which had table-wide UPDATE, `grant update
+-- (processed_at)` alone would leave `url` rewritable and this file would again
+-- report success while changing nothing that mattered. Revoke first, then
+-- grant the one column.
 --
 -- Section 1b warns off column-level grants on the votes path, and that warning
 -- does not apply here — it is worth saying why, because the two paths
@@ -507,6 +596,7 @@ create policy news_submissions_anon_update
 -- payload is `{"processed_at": ...}` and nothing else. Neither statement can
 -- touch a column outside the grant.
 grant select, insert on table public.news_submissions to anon;
+revoke update on table public.news_submissions from anon;
 grant update (processed_at) on table public.news_submissions to anon;
 
 -- DELETE stays revoked so no member can erase another's submission — the same
@@ -516,7 +606,7 @@ revoke delete, truncate on table public.news_submissions from anon;
 
 
 -- --------------------------------------------------------------------------
--- 5d. The exact request the iOS Shortcut sends
+-- 5e. The exact request the iOS Shortcut sends
 -- --------------------------------------------------------------------------
 -- POST https://<project>.supabase.co/rest/v1/news_submissions
 --        ?on_conflict=url,submitted_by

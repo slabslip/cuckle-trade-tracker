@@ -41,12 +41,10 @@
  *   - **The member's note is data, not copy.** It ships on the row as `note` and is rendered in
  *     its own element, prefixed by the name of whoever wrote it. leagueLine() never sees it as
  *     something to return, and no generated line can replace it or be replaced by it.
- *   - **A shared tweet's line is a summary**, produced by summariseTweet() below. It states what
- *     the tweet says and who reported it, and it **never names a manager and never uses second
- *     person** — because a shared tweet's addressee may have been resolved by a matcher rather
- *     than chosen by a person, and a summary that says "you" would turn somebody else's jab into
- *     an accusation aimed at whoever happens to roster the player. The manager reaches the row as
- *     a possessive tag in the label row and nowhere else. `noteFreeOfAddress()` asserts it.
+ *   - **A shared tweet's line is fact + poke.** summariseTweet() states what the tweet said;
+ *     a short bank poke follows for attitude. Single-seat rows may say "you"; multi-tag and
+ *     The league stay impersonal (`tweet_league`). Never repeat the manager name in the line —
+ *     that lives in the header. `noteFreeOfAddress()` asserts the multi/unaddressed cases.
  *
  * ## The rules the lines follow
  *
@@ -211,26 +209,35 @@ const TEMPLATES = {
   /** Nobody in the league owns the player. These never ship — see news-sync.mjs. */
   orphan: ["{player} is in the news and nobody in this league owns him."],
   /**
-   * Shared-tweet banks: locker-room smack when a seat is known. The manager name is the
-   * **row header only** — these lines speak to them as "you" and never repeat the seat name.
-   * summariseTweet() stays for unaddressed rows so "The league" never gets second-person
-   * trash talk aimed at nobody.
+   * Shared-tweet banks: short **pokes** appended after the factual summariseTweet() line.
+   * The manager name stays in the row header; these speak as "you" and never repeat the seat.
+   * Facts come from summariseTweet(); these lines are attitude only.
    */
-  // Compact locker-room jabs — one breath. Full tweet is a link-out.
   tweet: [
-    "{player} just walked into the group chat and sat on your roster.",
-    "{player} is trending and it is not the cute kind. How's the stomach.",
-    "The tape on {player} is doing numbers. You drafted this plot.",
-    "League found {player} and thought of your bench immediately. Correct.",
-    "Somebody put {player} on blast and cc'd the whole league. Eyes up.",
-    "Run it back. {player} is the plot again, and it's your plot.",
+    "Your roster. Your problem.",
+    "How's the stomach.",
+    "You drafted this plot.",
+    "Don't refresh the waivers too hard.",
+    "The group chat is already typing.",
+    "Sleep tight.",
+    "Hope you liked that pick.",
+    "Tell the bench it might be starting.",
   ],
   tweet_who: [
-    "This one has your name on it. Don't act surprised.",
-    "Group chat could not hold this. So here it is.",
-    "Somebody shared this at your forehead on purpose.",
-    "Eyes up. The league wanted you to see this one.",
-    "This is not a drill. Read it.",
+    "Don't act surprised.",
+    "Eyes up.",
+    "Read it twice.",
+    "This one's aimed at your forehead.",
+    "Not a drill.",
+    "You're welcome.",
+  ],
+  /** Impersonal tags for The league / multi-tag rows — no "you". */
+  tweet_league: [
+    "Pass it around.",
+    "Group chat fuel.",
+    "Everybody see this?",
+    "File under: league business.",
+    "No notes. Just vibes.",
   ],
 };
 
@@ -528,6 +535,39 @@ export function classify(title) {
 }
 
 /**
+ * Glue a factual tweet summary to a short poke without blowing MAX_LINE.
+ * Fact first (the news), poke second (the attitude).
+ */
+function joinFactAndPoke(fact, poke) {
+  const f = String(fact || "").replace(/\s+/g, " ").trim();
+  const p = String(poke || "").replace(/\s+/g, " ").trim();
+  if (!p) return f;
+  if (!f) return p;
+  const budget = Math.max(72, MAX_LINE - p.length - 1);
+  const head = clipAt(f, budget);
+  const base = /[.!?…]$/.test(head) ? head : `${head}.`;
+  return clipAt(`${base} ${p}`, MAX_LINE);
+}
+
+function tweetPoke(item, manager) {
+  const player = String((item && item.player) || "").trim();
+  const seed = item && (item.id || item.title || player || manager) || "poke";
+  if (manager && player) {
+    const bank = TEMPLATES.tweet;
+    return bank[hash(seed) % bank.length]
+      .replace(/\{player\}/g, player)
+      .replace(/\{team\}/g, String((item && item.team) || "his old spot"))
+      .trim();
+  }
+  if (manager) {
+    const bank = TEMPLATES.tweet_who;
+    return bank[hash(seed) % bank.length].trim();
+  }
+  const bank = TEMPLATES.tweet_league;
+  return bank[hash(seed) % bank.length].trim();
+}
+
+/**
  * **The seam.** Turn one matched news item into one line of league voice.
  *
  * @param item {{ id, player, team, position, category, upbeat, title, tweet_handle }} the story
@@ -537,41 +577,25 @@ export function classify(title) {
  * Replacing the voice means replacing this function's body and the tables above it. Its inputs
  * and its return type are the contract with news-sync.mjs; keep those and nothing else breaks.
  *
- * **A shared tweet's line is a summary and takes no notice of `ctx.manager`.** Read the header
- * note before changing that: the member's note is a separate field on the row now, and the
- * addressee may have been resolved by a matcher rather than named by a person.
+ * **Shared tweets:** factual summariseTweet() first, then a short poke. Manager name stays in
+ * the row header; pokes use "you" only when a single seat is addressed. Multi-tag / The league
+ * get an impersonal tag so nobody is roasted by mistake.
  */
 export function leagueLine(item, ctx) {
   const manager = String((ctx && ctx.manager) || "").trim();
   const player = String((item && item.player) || "").trim();
 
   /**
-   * Shared tweets: locker-room voice when a seat is known; factual summary when not.
+   * Shared tweets: news first, attitude second.
    *
-   * The manager name is already the row header. These lines speak TO that seat as "you"
-   * and must not repeat the name — the feed was reading "TipsUp … TipsUp, your guy…" twice.
-   * Only the tweet / tweet_who banks are used here (not the RSS category banks, which lead
-   * with {who}). summariseTweet() stays for unaddressed rows so "The league" never gets
-   * second-person trash talk aimed at nobody.
-   *
-   * The sharer's note is a separate field. It is never returned from this seam.
+   * summariseTweet() carries what happened. The tweet / tweet_who / tweet_league banks are
+   * short pokes only — they used to *replace* the fact and the feed lost the story. The
+   * sharer's note is a separate field and never returned from this seam.
    */
   if (item && item.category === "tweet") {
-    if (manager && player) {
-      const bank = TEMPLATES.tweet;
-      const pick = bank[hash(item.id || item.title || player) % bank.length];
-      return pick
-        .replace(/\{player\}/g, player)
-        .replace(/\{team\}/g, String((item && item.team) || "his old spot"))
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-    if (manager) {
-      const bank = TEMPLATES.tweet_who;
-      const pick = bank[hash(item.id || item.title || manager) % bank.length];
-      return pick.replace(/\s+/g, " ").trim();
-    }
-    return summariseTweet(item);
+    const fact = summariseTweet(item);
+    const poke = tweetPoke(item, manager);
+    return joinFactAndPoke(fact, poke);
   }
 
   if (!manager || !player) return "";
@@ -689,16 +713,19 @@ export function voiceSamples(manager, player, team) {
     }
   }
   for (const s of TWEET_SAMPLES) {
+    const sample = {
+      id: `sample:${s.tweet_handle}:${s.player}`,
+      category: "tweet",
+      player: s.player,
+      team: s.team,
+      position: s.position,
+      title: s.text,
+      tweet_handle: s.tweet_handle,
+    };
     out.push({
       category: "tweet",
-      line: summariseTweet({
-        id: `sample:${s.tweet_handle}:${s.player}`,
-        player: s.player,
-        team: s.team,
-        position: s.position,
-        title: s.text,
-        tweet_handle: s.tweet_handle,
-      }),
+      // Show the shipped shape: fact then poke (manager optional so both banks appear).
+      line: leagueLine(sample, { manager: s.player ? manager : "" }),
     });
   }
   return out;

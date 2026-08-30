@@ -37,6 +37,7 @@
  * *refuse* rather than to guess, and every refusal is counted in the report.
  */
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { DATA, readJson } from "./lib.mjs";
 import { CATEGORIES, classify, leagueLine, voiceSamples } from "./news-voice.mjs";
 import {
@@ -535,11 +536,21 @@ async function main() {
  * would run, print nothing and refresh nothing — so news-match.test.mjs spawns
  * `node news-sync.mjs --voice` and asserts it produces output.
  */
+/**
+ * This module is imported by news-match.mjs for its ownership index and its matcher, so main()
+ * cannot run on import. It must still run when the workflow invokes it as a script, and getting
+ * that backwards silently switches the live feed off — the failure would look like news simply
+ * going stale, with a green cron.
+ *
+ * fileURLToPath, not `new URL(...).pathname`: the latter leaves percent-escapes in place, so a
+ * checkout under a path containing a space would compare "/a%20b/news-sync.mjs" against
+ * "/a b/news-sync.mjs", never match, and disable the sync.
+ */
 function invokedDirectly() {
   const entry = process.argv[1];
   if (!entry) return false;
   try {
-    return fs.realpathSync(entry) === fs.realpathSync(new URL(import.meta.url).pathname);
+    return fs.realpathSync(entry) === fs.realpathSync(fileURLToPath(import.meta.url));
   } catch {
     return false;
   }

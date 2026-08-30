@@ -56,8 +56,13 @@ const html = `<!DOCTYPE html>
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
     #lead:empty { display: none; }
     .who-wrap { position: relative; flex: 0 0 auto; }
+    /* The 158px here was room for the longest manager name to ellipsize into, because the button
+       used to show the selected seat. It reads the constant "Teams" now, so that width left about
+       50px of dead space between the word and the caret. max-content sizes it to the label at
+       either font size, which is why the media query below only changes the font. The max-width is
+       what keeps the header row inside a 375px viewport; the ellipsis is its fallback. */
     button.who {
-      display: block; width: 158px; max-width: min(158px, calc(100vw - 120px));
+      display: block; width: max-content; min-width: 44px; max-width: calc(100vw - 120px);
       appearance: none; font: inherit; font-size: 0.8125rem; color: var(--text); text-align: left;
       background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a9aa3' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center;
       border: 1px solid var(--line); border-radius: 8px;
@@ -69,7 +74,7 @@ const html = `<!DOCTYPE html>
        off the right edge. Both give ground on a phone. */
     @media (max-width: 460px) {
       h1.brand { font-size: 1.2rem; gap: 8px; }
-      button.who { width: 128px; font-size: 0.75rem; }
+      button.who { font-size: 0.75rem; }
     }
     /* All ten managers have to be on screen at once -- this is the most-used control in the app
        and a list you have to scroll to reach half of is the thing being fixed. Ten options at the
@@ -541,7 +546,7 @@ const html = `<!DOCTYPE html>
     </button>
     <a href="./">CuckleChunckle</a>
     <span class="who-wrap">
-      <button type="button" class="who" id="who" aria-label="Team" aria-haspopup="listbox" aria-expanded="false">Team</button>
+      <button type="button" class="who" id="who" aria-label="Teams" aria-haspopup="listbox" aria-expanded="false">Teams</button>
       <div class="who-menu" id="whoMenu" hidden role="listbox"></div>
     </span>
   </h1>
@@ -570,7 +575,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830signed";
+    const DATA_V = "20260830teamslabel";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -778,8 +783,11 @@ const html = `<!DOCTYPE html>
     function paintWho() {
       const btn = document.getElementById("who");
       const menu = document.getElementById("whoMenu");
-      btn.textContent = (me && me.name) || "Team";
-      btn.setAttribute("aria-label", me ? "Team, " + me.name : "Team");
+      // The visible label names the control, not the selection: it reads "Teams" whether or not a
+      // seat is taken. That costs a screen-reader user the seat the button used to announce, so the
+      // accessible name carries it instead -- and the chosen option is still aria-selected below.
+      btn.textContent = "Teams";
+      btn.setAttribute("aria-label", me && me.name ? "Teams, " + me.name + " selected" : "Teams");
       btn.setAttribute("aria-expanded", whoOpen ? "true" : "false");
       menu.hidden = !whoOpen;
       const opt = (on, id, label, champ) =>
@@ -2978,6 +2986,23 @@ if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-lis
 // explicitly not allowed. Assert the shape, then measure the list against the cap from the data.
 if (/opt\(!me, "", "Team"\)/.test(inline)) {
   throw new Error('the seat menu must not carry a "Team" option -- the home icon clears the seat');
+}
+// The trigger names the control, never the selection. It used to swap to the selected manager's
+// name, which read as that manager's own button rather than as the way to reach the other nine.
+// The label is the constant "Teams" in the served markup and in every repaint -- note this is a
+// different string from the removed "Team" option above, and the guard for that option matches
+// its whole call so the two cannot be confused. The seat moves to the accessible name instead.
+if (!html.includes('aria-haspopup="listbox" aria-expanded="false">Teams</button>')) {
+  throw new Error('the seat picker trigger must ship reading "Teams"');
+}
+if (!inline.includes('btn.textContent = "Teams";')) {
+  throw new Error('paintWho must set the trigger to the constant "Teams", not to the seat');
+}
+if (/btn\.textContent = [^"]/.test(inline)) {
+  throw new Error("the trigger label went back to being computed from the selected seat");
+}
+if (!inline.includes('"Teams, " + me.name + " selected"')) {
+  throw new Error("the trigger's accessible name must still say which seat is selected");
 }
 for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="true" focusable="false"',
   "m.place === 1", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {

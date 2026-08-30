@@ -93,11 +93,17 @@ const html = `<!DOCTYPE html>
     /* 320px is the narrowest phone still in use and nothing here had been checked at it.
        The row is 288px after the body padding: 44 for the home icon, the picker, two gaps,
        and whatever is left for the title -- which was 100px against the 147px the word
-       needs, so the app's own name read "CuckleChunc…". This used to pin the picker to
-       108px to buy that back; the picker is width: max-content on a constant "Teams" label
-       now and asks for far less than 108px, so pinning it would only hand the space back.
-       The gaps pay the remaining 4px and the title takes the rest at a size that fits it
-       whole -- measured at 320px, not assumed. */
+       needs, so the app's own name read "CuckleChunc…". This block used to pin the picker
+       to 108px to buy that back. It no longer does: the picker is width: max-content on a
+       constant "Teams" label and measures 78px, where it used to be 128px, so pinning it
+       would only hand the space back.
+       That leaves the title 158px against the 147px it needs at the 1.2rem it would
+       otherwise take -- it does fit, by 11px. The step to 1rem is kept anyway, because 11px
+       is under one character of headroom against a font fallback that measures wider than
+       the one measured here, and this exact line has clipped twice before (A7c). It is one
+       more step in the ladder the 460px rule already starts, not a size invented for this
+       screen. Re-measure before removing it, and note the 78px assumes the trigger keeps
+       its constant label -- the build asserts that separately. */
     @media (max-width: 360px) {
       h1.brand { font-size: 1rem; gap: 6px; }
     }

@@ -1198,9 +1198,16 @@ only, last season's order, the champion crowned), which touches the one control 
 widened, so this branch was rebased a second time and every number below is from the merged result.
 The two changes turned out to want the same thing from different directions — F7 widened the menu
 so a long name is not cut, and `dcbb6cd` capped its height so all ten fit without scrolling — so
-the merge keeps both the 220px width and the no-scroll cap. A third branch,
-`cursor/signed-deltas-af37`, is rewriting how a margin's sign is rendered, so the `+`/`−` prefix
-drift in §6d.4 was deliberately left to it.
+the merge keeps both the 220px width and the no-scroll cap.
+
+`cursor/signed-deltas-af37` then landed as well (`cd49002`), which is the branch §6d.4 had
+deliberately left the `+`/`−` prefix drift to. It restacks the tape row around a signed delta per
+side and relabels the seat trigger to a constant "Teams" at `width: max-content`. That last part
+retired one of this pass's own fixes: F5 pinned the picker to 108px at 320px to buy the brand back
+the width it needed, and a `max-content` picker on a five-letter label asks for 78px where it used
+to take 128px, so the pin would only have handed the space back. It was removed rather than left
+to fight the new rule, and the numbers below were taken again on the merged result — a third full
+sweep, not an edit of the second.
 The row restack is why the tape rows are absent from the table: it had already fixed them, taking
 clipped names from 1,054 findings to 24.
 
@@ -1214,6 +1221,7 @@ Every trap in §3a applies to this pass, so each one has a specific counter:
 | A dead server means measuring another build | A purpose-built static server that exits non-zero on `EADDRINUSE` instead of dying quietly, stamps `x-serve-root` and its pid on every response, on a port confirmed free. The served bytes are md5-checksummed against the on-disk `index.html` **before and after** every run, and every screen state records the `DATA_V` it saw. A run that saw two different values fails rather than reporting. |
 | `scrollWidth` is 0 on an inline box | Clipping is only asserted where the element's own computed `overflow-x` is `hidden` or `clip`; wrapping defects are measured from `Range.getClientRects()`, which gives a real ink box for inline content. |
 | A clipped element's ink legitimately exceeds its border box | Container overflow is only reported where `overflow-x` is `visible`, so an ellipsized name is not counted as a spill. |
+| A visually-hidden box is clipped on purpose | New. `.sr-only` on the seat heading is the standard screen-reader pattern: a 1px box with its overflow hidden, so the words reach a screen reader without reaching the screen. Read naively it is the worst clip in the app — 55px of text in 1px, on twelve screens at every width, 144 findings and 144 more as a vertical clip. A box a pixel wide or tall is not showing text to anyone, so the probe skips it. |
 | An invisible hit area reads as both an overflow and a small target | New, and it produced eight false P0s on the first post-rebase run. `button.all-trades` is a 26px pill whose 44px tap area is an unpainted `::after { content: ""; inset: -10px }`, which is real to a finger and invisible to an eye. Naively that pill measures a 10px spill it has no content for, and a 26×95px target, and its parent row inherits the spill. The probe now discounts an absolutely positioned pseudo-element that paints nothing — no background, border, shadow or content — from overflow, and counts it towards the tap target instead. Both readings were wrong in opposite directions, and the label was in fact fitting exactly: 93px of content in 93px of box. |
 | `preview.html` renders its iframe at 366px, not 390px | Not used. All widths are true viewports via `Emulation.setDeviceMetricsOverride`. |
 
@@ -1292,7 +1300,7 @@ wrapping. *(synthetic only)* marks a defect that real data hides.
 | **F3** | `min-width: 0` coverage. The guards existed on the tape row and the gold cards only. Without one, a 30-character name pushed the mark chart's label to **339px in a 320px viewport** and spilled the Partners row out of its own card. | Guards added to `.row-top`, `.bags`, `.hop`, `.mark-bar-top`, `.pack-head` and `.stats`. The live page now carries **25**, up from 16. |
 | **F3b** | The guard is necessary, not sufficient: a name with no space in it offers no soft wrap opportunity, so `.row-top` still spilled 23px. | `.row-top:not(.tape) .names { overflow-wrap: anywhere }`. These rows carry one name and one figure and can afford a second line — the opposite call from the tape, which is dense and ellipsizes. |
 | **F4** | Figures that could wrap after their own minus sign: `.row-top`'s margin, `.hop`'s value, the mark chart's label. | `flex: 0 0 auto; white-space: nowrap` on each, asserted at generate time. |
-| **F5** | **320px, which nothing here had ever been checked at.** The brand read `CuckleChunc…` (100px of the 147px it needs); `partners` spilled its own nav tab by 6px; `Filter by year` was cut to `Filter by ye…`, which names nothing; the two vote buttons side by side clipped `KingHenryXXVI`. | One `max-width: 360px` block. The picker gives 20px and the gaps 4px so the title fits whole; the nav gaps and tab padding shrink; the Score as button takes its own line; the vote options stack. No font was shrunk to win space except the brand's own. |
+| **F5** | **320px, which nothing here had ever been checked at.** The brand read `CuckleChunc…` (100px of the 147px it needs); `partners` spilled its own nav tab by 6px; `Filter by year` was cut to `Filter by ye…`, which names nothing; the two vote buttons side by side clipped `KingHenryXXVI`. | One `max-width: 360px` block: the nav gaps and tab padding shrink, the Score as button takes its own line, the vote options stack, and the brand steps down one size. No font was shrunk to win space except the brand's own. The part that pinned the picker to 108px was **removed on the final rebase** — the trigger became `width: max-content` on a constant label and now measures 78px, so pinning it would only give the space back. The brand's step is kept: at 1.2rem the title needs 147px of the 158px now available, which fits by 11px, and 11px is under one character of headroom on a line that has clipped twice (A7c). |
 | **F6** | A bag heading was `<who> received · 12,345` in one wrapping line, so a long name put the bag's **total alone on a second line**, reading as a figure belonging to nothing. | Built as the same pinned label-and-figure pair as a tape row, a partner row, a hop and the champion card. One shape for one role. |
 | **F7** | The seat menu cut a 27-character name to `BartholomewCuckl…` at 168px, at every width. | 220px. It floats over the page and is anchored to the right edge, so it is not bound by its trigger, and it still yields to the viewport. |
 | **F8** | Two sub-44px targets in a file that enforces 44px everywhere else (A5's rule): the ticker pills at **40px**, and the brand link at **27px tall** next to a 44px home button. | 44px on both. The line box carries it on the brand link rather than padding, which would push the ellipsis off the text. |
@@ -1300,11 +1308,15 @@ wrapping. *(synthetic only)* marks a defect that real data hides.
 
 ### 6d.4 What was deliberately left
 
-- **`+` prefix drift.** A positive figure is `+1,234` on the style tiles and the Value Adjustment
-  line, and `1,234` on the Partners tab, the home partner teaser, the Drafts header and Best/Worst
-  deal — all of them green either way. Real drift, and worth one `signed()` helper. Left because
-  `cursor/signed-deltas-af37` is actively rewriting exactly this, and two branches editing the sign
-  of the same numbers is how a value ends up rendered twice.
+- **`+` prefix drift — left to another branch, and that branch has since landed.** A positive
+  figure was `+1,234` on the style tiles and the Value Adjustment line, and `1,234` on the Partners
+  tab, the home partner teaser, the Drafts header and Best/Worst deal — all of them green either
+  way. Real drift, and worth one helper. It was left alone because `cursor/signed-deltas-af37` was
+  actively rewriting exactly these numbers, and two branches editing the sign of the same value is
+  how it ends up rendered twice. That branch merged during this pass and did it properly: one
+  `tapeMargin()` emits every delta in the app as a single `.delta.pos` / `.delta.neg` span. The
+  drift is closed, by the branch that owned it. Deferring it was the right call and is recorded
+  here so the deferral is not mistaken for an oversight.
 - **Dates and thousands separators are already consistent** and were checked rather than assumed:
   every date on screen is ISO `YYYY-MM-DD` through `esc()`, and every figure goes through one
   `fmt()`. Nothing to fix.
@@ -1329,15 +1341,13 @@ wrapping. *(synthetic only)* marks a defect that real data hides.
 | Sev | Element | Defect | Screens | Widths | Worst measurement | Sample |
 | --- | --- | --- | --- | ---: | --- | --- |
 | P1 | `div.date.champ-fig > span` | clipped *(synthetic only)* | League home, League home · seat picker open +2 more | 320 375 390 | needs 302px, has 230px @320px | Top scorer · Christopher Vanderhoo |
-| P1 | `div.side-line > span.names.pos` | clipped | Trades tab, Trades tab · year filter open +8 more | 320 375 768 | needs 278px, has 211px @320px | ChiefGumby · TrumanCooper |
-| P1 | `div.side-line > span.names.neg` | clipped *(synthetic only)* | League trades list, League home · every pack expanded +4 more | 320 375 768 | needs 278px, has 211px @320px | BartholomewCuckleshremp2026 |
 | P1 | `div.mark-bar-top > span.names` | clipped *(synthetic only)* | Manager home · style tile open | 320 375 | needs 277px, has 211px @320px | 5. BartholomewCuckleshremp2026 |
-| P1 | `div.side-line > span.names` | clipped *(synthetic only)* | Drafts tab · startup picks on | 320 | needs 278px, has 235px @320px | Christopher Vanderhoosenbergerson |
+| P1 | `div.side-line > span.names` | clipped *(synthetic only)* | Drafts tab, Drafts tab · filter panel open +4 more | 320 768 | needs 296px, has 258px @768px | Christopher Vanderhoosenbergerson |
 | P1 | `button > span.who-name` | clipped *(synthetic only)* | League home · seat picker open | 320 375 390 430 768 1280 | needs 210px, has 194px @320px | BartholomewCuckleshremp2026 |
 | P2 | `div#app > p.caption` | orphan last line | League trades list | 320 430 768 | 4 lines, last is "on." at 57px of 274px @320px | Every trade on the league tape, ne |
 | P2 | `div.leg.list > b` | orphan last line | Champions Path · detail | 320 375 390 430 1280 | 5 lines, last is "2nd" at 59px of 238px @320px | 2025 3rd · 2025 3rd · 2026 4th · 2 |
 | P2 | `button.mark.neg > span` | orphan last line | Manager home, Manager home · style tile open | 320 430 768 | 4 lines, last is "3." at 25px of 114px @320px | 5 partners came out ahead vs you.  |
-| P2 | `div.vote > p.caption` | orphan last line | Trade review · full screen, Trade review · leg hops open +1 more | 375 | 3 lines, last is "book." at 70px of 278px @375px | League tally as of 03:01 AM; votes |
+| P2 | `div.vote > p.caption` | orphan last line | Trade review · full screen, Trade review · leg hops open +1 more | 375 | 3 lines, last is "book." at 70px of 278px @375px | League tally as of 03:27 AM; votes |
 | P2 | `div.hop > span` | orphan last line | Drafts tab · pick expanded, Trade review · leg hops open +1 more | 375 430 1280 | 3 lines, last is "used" at 36px of 189px @375px | 2025-08-14 · DarkWingDucks2023 → T |
 | P2 | `div.chapter > div.caption` | orphan last line | Champions Path · detail | 430 | 2 lines, last is "×2" at 70px of 338px @430px | Traded with TrumanCooper ×5 · Bubb |
 | P2 | `button.mark.pos > span` | orphan last line | Manager home, Manager home · style tile open | 768 | 2 lines, last is "graded)." at 68px of 336px @768px | Rookie picks usually turn into mor |
@@ -1355,24 +1365,31 @@ Across all six widths, both data sets, every screen:
 | Elements overflowing their own box | 70 | **0** |
 | Tap targets under 44px | 312 | **0** |
 | Clipped **figures** | 0 | **0** |
-| Clipped text elements | 112 | 61 |
+| Clipped text elements | 112 | 31 |
 | Orphaned last lines | 87 | 56 |
+| Vertically clipped elements | 0 | **0** |
 
 Per width, worst case of the real and synthetic runs:
 
 | Viewport | max `body.scrollWidth` | escapes | box overflows | clips | sub-44px | orphans |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 320px | 1051 → **320** | 3 → **0** | 40 → **0** | 81 → **29** | 52 → **0** | 18 → **8** |
-| 375px | 1051 → **375** | 2 → **0** | 6 → **0** | 17 → **14** | 52 → **0** | 17 → **12** |
+| 320px | 1051 → **320** | 3 → **0** | 40 → **0** | 81 → **10** | 52 → **0** | 18 → **8** |
+| 375px | 1051 → **375** | 2 → **0** | 6 → **0** | 17 → **6** | 52 → **0** | 17 → **12** |
 | 390px | 1051 → **390** | 2 → **0** | 6 → **0** | 1 → **5** | 52 → **0** | 9 → **3** |
 | 430px | 0 over | 2 → **0** | 6 → **0** | 0 → **1** | 52 → **0** | 12 → **15** |
-| 768px | 1051 → **768** | 1 → **0** | 6 → **0** | 12 → **11** | 52 → **0** | 15 → **10** |
+| 768px | 1051 → **768** | 1 → **0** | 6 → **0** | 12 → **8** | 52 → **0** | 15 → **10** |
 | 1280px | 0 over | 1 → **0** | 6 → **0** | 1 → **1** | 52 → **0** | 16 → **8** |
 
 Every remaining clip is a **proper noun with a real ellipsis**, and none is truncated past
-recognition: the eleven distinct clipped elements show between **76% and 94%** of their string
-(worst: `Christopher Vanderhoosenberge…` at 211 of 278px). Nothing numeric clips anywhere, in
-either data set, at any width.
+recognition: the six distinct clipped elements show between **76% and 95%** of their string, the
+worst being `Top scorer · Christopher Vanderhoosenbergers…` at 230 of the 302px it wants — with
+its score pinned and whole beside it, which is the entire point of F2. **Nothing numeric clips
+anywhere, in either data set, at any width**, and nothing clips vertically.
+
+Four of the six only appear under the synthetic 27- and 33-character names; the real league
+produces two, both at 768px only. The count fell from 61 to 31 between the two final runs without
+this branch changing: the signed-delta tape restack that landed on `main` in between moved the
+stacked-row breakpoint to 700px, which fixed side-line names this pass had left ellipsizing.
 
 **Where the clip count rises it is the fix, not a regression.** Read the selectors, not the count:
 `a.champ-alert > div.date` clipped as a whole line and the *score* was the part lost;

@@ -185,6 +185,14 @@ const html = `<!DOCTYPE html>
       /* The delta stays with its name; only the bag total is pushed out, so the two side
          lines end in one right-aligned column of totals instead of two ragged ones. */
       .row-top.tape .val { margin-left: auto; }
+      /* At 320px the line runs ~15px short once each side carries a delta as well as a
+         total, and DarkWingDucks2023 is the name that loses. It gives way by wrapping
+         rather than by ellipsising: a wrapped name still reads in full, the figures still
+         never shrink, and nothing wraps at 375px or above -- the name has ~194px there
+         against the 155px it needs. Same call the gold card already makes for its pair. */
+      .row-top.tape .names {
+        white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+      }
       .row-top.tape .tape-sub { justify-content: flex-start; }
     }
     @media (max-width: 430px) { .row-top.tape { font-size: 0.9375rem; } }
@@ -2892,6 +2900,7 @@ for (const need of ['cls(dlt)', 'cls(s)', 'cls(-s)', 'cls(-dlt)', 'cls(p.per)', 
 // The stacked phone tape and the wide tape are one rule set; either half alone is broken.
 for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".row-top.tape .val { margin-left: auto; }",
   "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere",
+  "white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;",
   ".delta.pos { color: var(--green); }", ".delta.neg { color: var(--red); }"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
 }

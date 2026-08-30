@@ -216,7 +216,7 @@ const TEMPLATES = {
   tweet: [
     "Your roster. Your problem.",
     "How's the stomach.",
-    "You drafted this plot.",
+    "Even a blind squirrel finds a nut.",
     "Don't refresh the waivers too hard.",
     "The group chat is already typing.",
     "Sleep tight.",

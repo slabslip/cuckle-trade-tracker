@@ -946,6 +946,15 @@ editorial rather than wrong-number defects, which is why they were left.
    league-wide Traders list, was deleted in D4b and nothing replaced it, so they are static
    `span` pills now rather than dead buttons. A generate-time assertion refuses to ship a pill
    carrying an empty destination.
+
+   **The same rule now covers league home's chip box (`20260830chipbox1`).** The dropdown became
+   one card of four equal cells, and two of them are slots nobody has decided on yet. A slot is a
+   `span` with no `tabindex`, no `data-*`, no role and no handler, painted as a dashed outline
+   with a dimmed em dash and `cursor: default` — the dead-pill defect at four times the size is
+   exactly what a blank chip would have been. Proven rather than reviewed: both slots measure
+   `tabIndex: -1` with no `tabindex` attribute, refuse `focus()`, change nothing in the DOM when
+   clicked, and a 40-stop keyboard walk of league home's tab order stops on both live chips and
+   on neither slot.
 2. **The ticker DOM is emitted twice** (`row + row`, `:747`) for the marquee loop, so screen
    readers read the whole feed twice.
 3. **Every Champions Path row is labelled "1st"** (`:871`) — a constant in a column that

@@ -240,9 +240,11 @@ Still shipped and still unread, kept for the reasons above or as too small to be
 One `index.html`. After `?me=` / tile pick:
 
 With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), the
-`Score as` clock, and one **League Data Sets** dropdown holding five lists (Most lopsided trades ·
-Most passed around · Least traded · Forever players · Homesteaders), one on screen at a time. It
-replaced five collapsible packs. After `?me=` or a pick in the header:
+`Score as` clock, one **box of four equal chips**, and the News and Alerts feed. Two chips lead
+somewhere: **Teams**, a second trigger for the header's seat picker, and **League Data Sets**,
+holding five lists (Most lopsided trades · Most passed around · Least traded · Forever players ·
+Homesteaders), one on screen at a time and none on a cold load. The other two cells are inert
+placeholders. After `?me=` or a pick in the header:
 
 | Tab | What it shows |
 | --- | --- |

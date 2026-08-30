@@ -12,8 +12,8 @@ Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Known defects → [`DASHBOARD_AUDIT.
 
 ## 1. Two rooms
 
-**League home** is what you get with no seat picked: the gold alert row, the `Score as` clock, and
-one **League Data Sets** dropdown holding the five lists. It is the water cooler.
+**League home** is what you get with no seat picked: the gold alert row, the `Score as` clock, one
+**box of four chips**, and the News and Alerts feed. It is the water cooler.
 
 **Team home** is what you get after picking a name in the header. **You are that seat.** Six style
 tiles, an optional league chart, your best and worst deal, your two edge partners, your best and
@@ -63,6 +63,17 @@ champion carries a gold crown. Three rules hold it together:
 The crown is an inline SVG in the `#e0b44c` the gold cards already use, `aria-hidden`, so an
 option's accessible name stays exactly the manager's name.
 
+**There are two triggers for this one menu.** The header's picker is persistent across every
+screen; league home's **Teams** chip (§4) is a second door to the same list. They are not two
+controls — `whoOptions()` is the only place a seat option is built, both mounts carry class
+`.who-menu`, and the listbox keyboard matches that class rather than either id, so the order, the
+crown, the 220px width, the 44px rows and the no-scroll cap cannot drift apart. Generate-time
+assertions pin all of that, including that a seat option is emitted in exactly one place.
+
+**Open question:** the chip and the header picker now say the same thing on league home. Keeping
+both was the conservative call — the chip was asked for and the picker was not asked to go — but
+one of them is redundant there and it is a product decision, not a rendering one.
+
 Under it, a ticker of league bubbles (champion, most lopsided, most active …).
 
 **Tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They are a
@@ -104,16 +115,41 @@ Boot reads every one of them; an unknown value falls back to league home rather 
   beat, the final score, and their top scorer that week. A season with no usable final falls back
   to `· bracket` or `· points race`. Links to the Champions Path screen.
 
-**League Data Sets** — one dropdown, one list on screen. Five sets: Most lopsided trades · Most
+**The chip box** — one card holding **four cells of equal size**: 2×2 below 560px, four across
+above it. Two lead somewhere and two are slots nobody has decided on yet.
+
+Equal is a grid property here, not something to eyeball. The columns are `repeat(n, minmax(0, 1fr))`
+— `minmax(0, …)` because a track's automatic minimum is `min-content`, so a plain `1fr` would let
+`League Data Sets` widen the row instead of wrapping inside its cell — and `grid-auto-rows: 1fr`
+is what makes the phone layout's two rows equal to each other rather than each sized to its own
+tallest chip. Measured at 320 / 375 / 390 / 1280 the four cells are 127×56, 154.5×56, 162×56 and
+209.5×56, identical within each width. The floor is 56px, not 44px, because the longest label has
+to hold two lines in a 127px cell at 320px.
+
+Both menus are emitted by the box rather than by their triggers, so both are absolutely positioned
+against one ancestor: they drop the full width of the card instead of the width of the cell they
+were opened from, and there is a single overflow chain to keep open. A clip anywhere up that chain
+is what made the seat picker unusable twice, and it is asserted at generate time.
+
+**Teams** — a second trigger for the header's seat picker, not a second picker. See §2.
+
+**League Data Sets** — one chip, one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. It replaced five collapsible packs
 stacked down the screen, any number of which could be open at once. The trigger's label is the
 constant `League Data Sets`, never the selection — the same convention the seat picker settled on —
-and the selected set is named by the `h2` directly below it. **Most lopsided trades** is the
-default, so the screen is never a lone dropdown over nothing.
+and the selected set is named by the `h2` directly below the box, which is the only thing on
+screen that says which set you are looking at. **Nothing is selected on a cold load**, and the
+home icon and the menu's `None` option both return to that.
 
 It is a popup listbox with the seat picker's keyboard: arrows, `Home`, `End`, `Escape` back to the
-trigger. The panel takes the trigger's full width; capped narrower, it left half of each trade row
+trigger. The panel takes the box's full width; capped narrower, it left half of each trade row
 visible beside it.
+
+**The two blank chips are `span`s, not `button`s.** No `tabindex`, no `data-*`, no role, nothing
+for a handler to find — a dashed edge, a dimmed em dash and `cursor: default`, and `aria-hidden`
+because a placeholder is not a reading. This is the ticker's dead-pill rule (below) applied to a
+control four times the size: an inert cell that looks pressable is a defect, and the generate-time
+guard that closed it for the pills now covers the chip grid too.
 
 `Score as` is a **separate** control and stays one. It picks the clock the figures are computed on;
 this picks which list is on screen. Two axes, two menus.

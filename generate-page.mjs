@@ -31,10 +31,15 @@ const html = `<!DOCTYPE html>
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
     }
+    /* This header must never clip. .who-menu is absolutely positioned against .who-wrap,
+       which lives in here, so overflow: hidden on the h1 clips the seat picker to the 44px
+       header -- 44px of a 472px menu, one manager of eleven -- and makes the h1 a scroll
+       box that focus() then scrolls the brand out of. What keeps the row inside the viewport
+       is the ellipsis on h1.brand a plus the picker's own max-width, not a clip here. */
     h1.brand {
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
-      overflow: hidden;
+      overflow: visible;
     }
     h1.brand a {
       color: inherit; text-decoration: none; margin-right: auto;
@@ -2351,6 +2356,12 @@ for (const need of ['<i class="dir-h">←</i>', '<i class="dir-v">↑</i>', '<i 
 for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".dir-v { display: inline; }",
   "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
+}
+// A clip on h1.brand hides the seat picker, the most-used control in the app. It has been
+// introduced twice (fixed in 7f97711, reintroduced by f9fdb39), so assert it stays open.
+const brandRule = html.slice(html.indexOf("    h1.brand {"));
+if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
+  throw new Error("h1.brand must declare overflow: visible -- a clip here hides #whoMenu");
 }
 
 fs.writeFileSync(`${ROOT}index.html`, html);

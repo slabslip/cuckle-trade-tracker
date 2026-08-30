@@ -351,35 +351,13 @@ const html = `<!DOCTYPE html>
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
     svg.spark { width: 100%; height: 72px; margin-top: 8px; }
-    #feed { overflow: hidden; margin: 0 0 14px; }
-    #feed:empty, #feed[hidden] { display: none; }
-    .ticker {
-      overflow: hidden;
-      mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-    }
-    .ticker-track {
-      display: flex; gap: 8px; width: max-content;
-      animation: ticker 48s linear infinite;
-    }
-    @keyframes ticker { to { transform: translateX(-50%); } }
-    @media (prefers-reduced-motion: reduce) {
-      .ticker { overflow-x: auto; mask-image: none; }
-      .ticker-track { animation: none; }
-    }
-    /* A pill that leads somewhere is a button; a pill that is only a reading is a span, so the
-       two Most/Least active pills stop looking pressable. One box for both: a flex row, because
-       a span is not a button and would not centre its own text vertically. The 5px gap replaces
-       the literal space that used to separate the kicker from the line, which flex would drop. */
-    .bubble {
-      flex: 0 0 auto; display: flex; align-items: center; gap: 5px;
-      appearance: none; font: inherit; color: inherit;
-      background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-      padding: 8px 14px; min-height: 44px; white-space: nowrap;
-    }
-    button.bubble { cursor: pointer; }
-    button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .bubble b { font-weight: 650; }
-    .bubble span { color: var(--dim); }
+    /* The league ticker stood here: a feed div, a masked track, its pills and a 48-second loop.
+       It is gone, and with it the last animation in this stylesheet -- there are now no
+       keyframes and no animation property anywhere on the page, which the generator asserts as
+       a negative rather than as a list of names. Do not reintroduce one without a pause
+       control; the audit's only WCAG 2.2.2 failure was that marquee. The generator also refuses
+       any page that so much as names the removed selectors, so this note spells them out in
+       words -- write them as code and the build stops. */
     .alert-row {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
       align-items: stretch; margin: 0 0 14px;
@@ -672,12 +650,11 @@ const html = `<!DOCTYPE html>
     #dsBody .caption { margin: 0 0 8px; }
     /* News and Alerts. The user asked for "scrolling", and this scrolls because a finger or a
        wheel moves it -- there is no animation here at all.
-       League home already carries one auto-scrolling element, the #feed marquee, and the audit
-       has it recorded as a WCAG 2.2.2 failure: a 48s loop with no pause control. A second
-       self-moving region would double that defect, and a news row is text a person needs time
-       to read rather than a pill they glance at. So this is a plain overflow box: capped height,
-       newest at the top, and it stays where it is put. Nothing here needs a
-       prefers-reduced-motion branch because nothing here moves. */
+       This was written when league home still carried the league ticker, which the audit
+       recorded as a WCAG 2.2.2 failure: a 48s loop with no pause control. That ticker is gone,
+       and a news row is text a person needs time to read rather than a pill they glance at. So
+       this is a plain overflow box: capped height, newest at the top, and it stays where it is
+       put. Nothing here needs a prefers-reduced-motion branch because nothing here moves. */
     .news-box {
       max-height: 420px; overflow-y: auto; -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -886,7 +863,6 @@ const html = `<!DOCTYPE html>
     </span>
   </h1>
   <p id="lead"></p>
-  <div id="feed" hidden></div>
   <div id="app" tabindex="-1" hidden></div>
   <script>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
@@ -919,12 +895,13 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260830223845";
+    const DATA_V = "20260830noticker2";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
-     * one "League Data Sets" dropdown with exactly one set on screen. The id is what the ticker
-     * pills and the menu options both carry, so the two cannot drift apart.
+     * one "League Data Sets" dropdown with exactly one set on screen. The id is what the menu
+     * options carry, and it is now the only thing that does: the ticker pills carried it too
+     * until the ticker was removed, so the dropdown is the sole door to all five.
      *
      * The third column is why you would pick it. Each one states what the list is actually built
      * from -- see playerLists() in revalue.mjs -- because the titles alone do not distinguish
@@ -938,9 +915,9 @@ const html = `<!DOCTYPE html>
       ["home", "Homesteaders", "The five longest stays, forever players aside."],
     ];
     // One set at a time, and none to begin with. League home opens as the dropdown alone with
-    // nothing rendered under it: the sets are reachable by opening the menu, or by a ticker
-    // pill, and by nothing else. An earlier build pre-selected Most lopsided so home would not
-    // read as a lone control over empty space; the user asked for the empty space.
+    // nothing rendered under it: the sets are reachable by opening the menu and by nothing else
+    // now that the ticker's pills are gone. An earlier build pre-selected Most lopsided so home
+    // would not read as a lone control over empty space; the user asked for the empty space.
     // null is the "nothing selected" state and the "None" option at the top of the menu is the
     // way back to it, so the choice is reversible without a reload.
     let dataSet = null;
@@ -1816,66 +1793,6 @@ const html = `<!DOCTYPE html>
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
         + "</div></div>";
-    }
-
-    function leagueBubbles() {
-      const items = [];
-      const champ = ((titles && titles.titles) || [])[0];
-      if (champ) items.push({ view: "titles", kicker: "Champion", line: champ.season + " · " + champ.name });
-      const wide = rankWide()[0];
-      if (wide) items.push({ dset: "wide", kicker: "Most lopsided trades", line: wide.name + " vs " + wide.other + " · " + signedNum(windowScore(wide)) });
-      const traders = ((league && league.traders) || []).slice().sort((a, b) => (b.two_way || 0) - (a.two_way || 0));
-      // Most / Least active have no data set behind them -- the league-wide Traders list was
-      // deleted (D4b) and nothing replaced it. They used to ship as buttons carrying an empty
-      // destination, which emitted no data attribute at all, so they looked pressable and did
-      // nothing on every tap. The reading stays; the false affordance does not. A pill with no
-      // destination is a static pill now rather than a dead button.
-      if (traders[0]) items.push({ kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
-      if (traders.length > 1) {
-        const quiet = traders[traders.length - 1];
-        items.push({ kicker: "Least active", line: quiet.name + " · " + quiet.two_way + " trades" });
-      }
-      const p = (league && league.player_lists) || {};
-      const hot = (p.most_traded || [])[0];
-      const cold = (p.least_traded || [])[0];
-      const stay = (p.homesteaders || [])[0];
-      if (hot) items.push({ dset: "passed", kicker: "Most passed around", line: hot.name + " · " + hot.trades + " trades" });
-      if (cold) items.push({ dset: "least", kicker: "Least traded", line: cold.name + " · " + cold.team });
-      if ((p.forever || []).length) items.push({ dset: "forever", kicker: "Forever players", line: p.forever.length + " still on their startup team" });
-      if (p.forever && p.forever[0]) items.push({ dset: "forever", kicker: "Forever", line: p.forever[0].name + " · " + p.forever[0].team });
-      if (stay) items.push({ dset: "home", kicker: "Homesteader", line: stay.name + " · " + yearsOn(stay.days) });
-      return items;
-    }
-
-    function paintFeed() {
-      const el = document.getElementById("feed");
-      if (me || view !== "home") {
-        el.hidden = true;
-        el.innerHTML = "";
-        el.dataset.key = "";
-        return;
-      }
-      const items = leagueBubbles();
-      const key = lens + ":" + items.map((b) => b.kicker + b.line).join("|");
-      if (el.dataset.key === key) { el.hidden = false; return; }
-      el.dataset.key = key;
-      el.hidden = !items.length;
-      // A pill is a button only when it leads somewhere: a view, or a data set to select below.
-      // The rest are readings, and they ship as a static pill so nothing on the ticker invites a
-      // tap it will not answer.
-      const pill = (b) => {
-        const to = b.view ? ' data-view="' + esc(b.view) + '"'
-          : b.dset ? ' data-dset="' + esc(b.dset) + '"' : "";
-        // The space between the two is whitespace-only, so flex drops it from layout and the
-        // gap does that job -- but it stays in the accessible text, where "Most active" and the
-        // name it belongs to must not run together into one word.
-        const inner = "<b>" + esc(b.kicker) + "</b> <span>" + esc(b.line) + "</span>";
-        return to
-          ? '<button type="button" class="bubble"' + to + ">" + inner + "</button>"
-          : '<span class="bubble static">' + inner + "</span>";
-      };
-      const row = items.map(pill).join("");
-      el.innerHTML = '<div class="ticker" aria-label="League feed"><div class="ticker-track">' + row + row + "</div></div>";
     }
 
     function nth(n) {
@@ -3468,7 +3385,6 @@ const html = `<!DOCTYPE html>
         if (back) back.focus({ preventScroll: true });
       }
       if (navigated) window.scrollTo(0, 0);
-      paintFeed();
       // After the body, not before: renderDrafts() pins lens to "all" for its own render and
       // restores it on the way out, so the trigger must be painted from the settled value.
       paintLens();
@@ -3697,25 +3613,17 @@ const html = `<!DOCTYPE html>
       }
     });
     /**
-     * Put one data set on screen. reveal is set when the request came from a ticker pill, which
-     * may be scrolled well above the panel: the set is named by a heading, so move to it rather
-     * than swapping the content of a box the user cannot see.
+     * Put one data set on screen. The menu is the only caller now that the ticker is gone, so
+     * the heading is focused without scrolling -- the panel opens under the trigger the user
+     * just pressed.
      */
-    function selectDataSet(id, reveal) {
+    function selectDataSet(id) {
       if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
       dataSet = id;
       dsOpen = false;
       render();
       const head = document.querySelector("#dsBody .ds-h");
-      if (!head) return;
-      if (reveal) {
-        head.focus({ preventScroll: true });
-        head.scrollIntoView({ block: "start" });
-      } else {
-        // Chosen from the menu: the trigger is already in view and the panel closed underneath
-        // it, so take focus to the heading without moving the page.
-        head.focus({ preventScroll: true });
-      }
+      if (head) head.focus({ preventScroll: true });
     }
 
     /**
@@ -3767,14 +3675,6 @@ const html = `<!DOCTYPE html>
       render();
     }
 
-    document.getElementById("feed").addEventListener("click", (e) => {
-      const pathBtn = e.target.closest("[data-view=titles]");
-      if (pathBtn) { openTitles(); return; }
-      // A pill naming a data set selects it in the League Data Sets dropdown and takes the page
-      // to it. It used to expand one of five packs in place.
-      const btn = e.target.closest("[data-dset]");
-      if (btn) selectDataSet(btn.dataset.dset, true);
-    });
     document.getElementById("app").addEventListener("click", (e) => {
       // Before everything: leaving a screen must not read as a click on what is on it.
       const backBtn = e.target.closest("[data-back]");
@@ -4214,15 +4114,15 @@ if (!fnSrc("clearDataSet").includes("btn.focus({ preventScroll: true })")) {
 for (const gone of ["openPacks", "togglePack", "data-pack", "pack-head"]) {
   if (inline.includes(gone)) throw new Error(`the accordion packs must not survive the dropdown: ${gone}`);
 }
-// The ticker's pills are the other way into a data set, and they carry the same ids. Two of them
-// shipped as buttons with pack: "" -- no data attribute at all, so every tap was ignored. A pill
-// with no destination is a span now; assert no pill can go back to being a dead button.
-for (const need of ["selectDataSet(btn.dataset.dset, true)", 'b.dset ? \' data-dset="\' + esc(b.dset) + \'"\'',
-  '\'<span class="bubble static">\'',
-  // Whitespace-only, so flex drops it from layout, but it is the only thing keeping the kicker
-  // and the reading from running together in the accessible text.
-  '"<b>" + esc(b.kicker) + "</b> <span>"']) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a ticker rewiring: ${need}`);
+// The ticker was the other way into a data set and it is gone, so the menu option's call is the
+// only one left. Without this, deleting the option handler would leave every set unreachable and
+// no guard above would notice: they all assert the menu's *markup*, not that pressing it does
+// anything. Asserted where it lives, not against the whole script.
+if (!fnSrc("selectDataSet").includes("function selectDataSet(id)")) {
+  throw new Error("selectDataSet lost its signature -- the reveal parameter went with the ticker and must not come back unused");
+}
+if (!inline.includes("if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }")) {
+  throw new Error("the data set menu lost its selectDataSet() call -- it is the only route into a set now");
 }
 // Selecting a set moves focus to the name of the set. A render this screen did not ask for --
 // votes.json landing -- rebuilds the subtree, and without a data-* for focusSelector() to
@@ -4231,7 +4131,7 @@ for (const need of ['data-dset-head="1"', 'head.focus({ preventScroll: true })']
   if (!inline.includes(need)) throw new Error(`the selected set's heading lost its focus handle: ${need}`);
 }
 if (/(pack|dset|view): ""/.test(inline)) {
-  throw new Error("a ticker pill carries an empty destination -- drop it or make it a static pill");
+  throw new Error("a control carries an empty destination -- drop it or make it a static element");
 }
 // Two controls on one screen, two unrelated axes. Score as picks the clock the figures are
 // computed on and Most lopsided reads it; League Data Sets picks which list is on screen. They
@@ -4510,6 +4410,35 @@ for (const gone of ['id="who"', 'id="whoMenu"', "who-wrap", "paintWho", "whoOpen
 if (/button\.who[\s:.,{]/.test(html)) {
   throw new Error("the brand header's seat picker must stay removed -- button.who has no trigger to style");
 }
+// ---------------------------------------------------------------------------------------------
+// The league ticker must stay removed. Same shape as the seat-picker guard above, and for the
+// same reason: it was reviewed and deleted on the user's instruction, so putting any one piece
+// of it back is a decision this file has to be edited to make.
+//
+// Every part is named because each one alone brings it back: the shell node the marquee mounted
+// in, the two functions that built it, the paint call in render(), the classes, and the
+// keyframes that moved it. Seven of the nine pills led to a data set the League Data Sets menu
+// still opens, or to Champions Path, which the gold card still opens; the other two led nowhere.
+//
+// These run against the raw page, comments included, so a comment may not spell a removed token
+// the way code would. That is deliberate and the surviving notes are written around it -- a
+// blunt check has no branch that can be wrong, and prose has no reason to type the function names.
+for (const gone of ['id="feed"', "paintFeed", "leagueBubbles", "ticker-track", "@keyframes ticker",
+  "getElementById(\"feed\")", "class=\"bubble", "class=\"ticker"]) {
+  if (html.includes(gone)) {
+    throw new Error(`the league ticker must stay removed: ${gone}`);
+  }
+}
+// The class selectors, which the substrings above would miss in a stylesheet.
+for (const re of [/\.ticker[\s:.,{]/, /\.bubble[\s:.,{]/, /#feed[\s:.,{]/]) {
+  if (re.test(html)) throw new Error(`the league ticker's stylesheet rules must stay removed: ${re}`);
+}
+// The whole-sheet "nothing animates" assertion that this removal makes possible is NOT here.
+// It subsumes the scoped .news-box animation guard further down, and a guard that runs before
+// the specific one makes the specific one incapable of failing -- the exact defect 3a records.
+// It runs last instead, after every scoped animation check has had its chance. See the end of
+// this file.
+// ---------------------------------------------------------------------------------------------
 // Only one place may build an option, so the crown and the 44px row cannot be re-typed elsewhere.
 const optEmits = (inline.match(/data-who="' \+ esc\(id\) \+ '"/g) || []).length;
 if (optEmits !== 1) throw new Error(`a seat option is built in ${optEmits} places, want 1`);
@@ -4843,14 +4772,13 @@ for (const banned of ["platform.twitter.com", "twitter-tweet", "widgets.js", "bl
     throw new Error(`the page reaches for X's embed script or markup (${banned}) -- the tweet must be rendered as our own escaped text`);
   }
 }
-// 2. No second marquee. The user asked for "scrolling" and league home already animates one
-//    region: #feed loops on a 48s ticker with no pause control, which the audit records as a
-//    WCAG 2.2.2 failure. The news box scrolls because a finger moves it. If an animation ever
-//    lands on it, it must at minimum be pausable -- so the honest guard is that there is none.
+// 2. No marquee on the news box. League home has been animation-free since the ticker was
+//    removed. The news box scrolls because a finger moves it. If an animation ever lands on it,
+//    it must at minimum be pausable -- so the honest guard is that there is none.
 const newsRule = html.slice(html.indexOf("    .news-box {"));
 const newsCss = newsRule.slice(0, newsRule.indexOf("\n    .news-empty"));
 if (/animation|@keyframes|transition: *transform/.test(newsCss)) {
-  throw new Error("the news feed grew an animation -- league home already has one unpausable marquee (WCAG 2.2.2)");
+  throw new Error("the news feed grew an animation -- league home has been animation-free since the ticker was removed, and a self-moving region needs a pause control (WCAG 2.2.2)");
 }
 for (const need of ["max-height: 420px; overflow-y: auto;", "overscroll-behavior: contain;"]) {
   if (!newsCss.includes(need)) throw new Error(`the news box lost its scroll containment: ${need}`);
@@ -4944,6 +4872,39 @@ for (const banned of ["today_delta", "value_adjust", "applyVa", "windowScore", "
     throw new Error(`renderNews touched the value book: ${banned} -- news is not allowed to move a number`);
   }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Nothing on this page may move itself. This is the claim the ticker's removal buys, and it is
+// the last check in the file on purpose.
+//
+// Before the removal, league home ran a 48-second marquee with no pause control -- the app's
+// only WCAG 2.2.2 failure and, measured across the whole document, its only running animation.
+// With it gone the count is zero, which means the guard can be a negative over the entire
+// stylesheet instead of a list of animation names that could never be complete.
+//
+// It runs LAST because it subsumes every scoped animation guard above it -- the .news-box one in
+// particular. Placed earlier it would answer first, and the scoped guard would become a check
+// that cannot fail, which is the failure mode 3a exists to record. Ordered this way each scoped
+// guard still fires on its own region with its own message, and this one catches the rest of the
+// page.
+//
+// Comments are stripped first: the notes above .alert-row and .news-box both discuss animation
+// at length, and a naive substring check would be satisfied by prose forever.
+const sheetRules = html
+  .slice(html.indexOf("<style>"), html.indexOf("</style>"))
+  .replace(/\/\*[\s\S]*?\*\//g, "");
+if (/@keyframes/.test(sheetRules)) {
+  throw new Error("the stylesheet grew a @keyframes -- this page has had no self-animating region since the ticker was removed, and a new one needs a pause control (WCAG 2.2.2)");
+}
+if (/(^|[;{\s])animation(-[a-z]+)?\s*:/.test(sheetRules)) {
+  throw new Error("the stylesheet grew an animation property -- nothing on this page may move itself without a pause control (WCAG 2.2.2)");
+}
+// The reduced-motion branch existed only to stop the ticker. An empty one left behind would read
+// as though something still moves, and the next author would write into it.
+if (/prefers-reduced-motion/.test(sheetRules)) {
+  throw new Error("a prefers-reduced-motion branch survived the ticker -- there is no motion left for it to reduce; delete it, or the motion it guards is unasserted");
+}
+// ---------------------------------------------------------------------------------------------
 
 fs.writeFileSync(`${ROOT}index.html`, html);
 console.log(JSON.stringify({ page: `${ROOT}index.html` }, null, 2));

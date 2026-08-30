@@ -94,7 +94,6 @@ const html = `<!DOCTYPE html>
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     .you { color: var(--text); font-weight: 650; }
-    .toggle { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
     /* Four tabs at 375px wrapped onto two lines. They share the row instead. */
     .nav { display: flex; gap: 8px; flex-wrap: nowrap; margin: 12px 0 16px; }
     .nav button.tab { flex: 1 1 0; min-width: 0; text-align: center; padding: 10px 6px; }
@@ -433,7 +432,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830votes";
+    const DATA_V = "20260830lg";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -549,7 +548,7 @@ const html = `<!DOCTYPE html>
       document.getElementById("lead").textContent = msg || "";
     }
 
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "league"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles"];
 
     async function loadMembers() {
       members = await getJson("data/ui/members.json");
@@ -565,13 +564,11 @@ const html = `<!DOCTYPE html>
       } catch (err) { voteBook = null; }
       const startTitle = params.get("title");
       const startView = params.get("view");
-      // titles and league are league-wide screens: they resolve without a seat, so honour
-      // them before the ?me lookup or the URL lands back on league home.
+      // titles is a league-wide screen: it resolves without a seat, so honour it before
+      // the ?me lookup or the URL lands back on league home.
       if (startView === "titles") {
         view = "titles";
         titleYear = startTitle || null;
-      } else if (startView === "league") {
-        view = "league";
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
@@ -1965,28 +1962,6 @@ const html = `<!DOCTYPE html>
       return html;
     }
 
-    function renderLeague() {
-      const you = me && me.name;
-      const traders = ((league && league.traders) || []).map((t) =>
-        '<div class="row-top" style="padding:8px 0"><div class="names' + (t.name === you ? " you" : "") + '">'
-        + esc(t.name) + (t.name === you ? " · you" : "")
-        + (t.style && t.style.label ? " · " + esc(t.style.label) : "") + "</div>"
-        + '<div class="margin ' + cls(t.even_per_trade) + '">' + fmt(t.even_per_trade) + " / trade</div></div>"
-        + '<div class="date">' + t.two_way + " complete"
-        + (t.incomplete ? " · " + t.incomplete + " incomplete" : "") + "</div>"
-      ).join("");
-      const d = ((league && league.drafters_rookie) || []).map((t) =>
-        '<div class="row-top" style="padding:8px 0"><div class="names' + (t.name === you ? " you" : "") + '">'
-        + esc(t.name) + (t.name === you ? " · you" : "") + "</div>"
-        + '<div class="margin ' + cls(t.per_pick) + '">' + fmt(t.per_pick) + " / pick</div></div>"
-        + '<div class="date">' + t.used + " used · " + t.graded + " graded"
-        + (t.best ? " · hit " + esc(t.best.player) : "") + "</div>"
-      ).join("");
-      return '<div class="toggle"><button type="button" class="chip" data-view="home">← League home</button></div>'
-        + "<h2>Traders · per complete two-way</h2>" + traders
-        + "<h2>Drafters · rookie surplus per pick</h2>" + d;
-    }
-
     function renderPartners() {
       const list = (data && data.partners) || [];
       // One per-partner number, scored once. Sorting used to call it twice per comparison.
@@ -2017,10 +1992,9 @@ const html = `<!DOCTYPE html>
 
     function render() {
       const app = document.getElementById("app");
-      // "league" is a league-wide screen: it needs no seat, and it owns its own chrome.
-      const tabs = me && view !== "titles" && view !== "league" ? ["home", "trades", "partners", "drafts"] : [];
+      const tabs = me && view !== "titles" ? ["home", "trades", "partners", "drafts"] : [];
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
-      if (!me && view !== "home" && view !== "titles" && view !== "league") view = "home";
+      if (!me && view !== "home" && view !== "titles") view = "home";
       const nav = (tabs.length
         ? '<div class="nav" role="tablist" aria-label="Sections">'
           + tabs.map((v) =>
@@ -2035,7 +2009,6 @@ const html = `<!DOCTYPE html>
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
-        : view === "league" ? renderLeague()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.

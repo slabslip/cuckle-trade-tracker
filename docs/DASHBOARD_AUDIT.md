@@ -918,6 +918,47 @@ second control that says what the home icon already says*.
 The home icon was checked as present, 44×44 and at 16,16 on **every** screen above, at 375px and
 390px, and it clears the seat and returns to league home from all of them.
 
+**A11 — the seat menu scrolled on a short phone, and the option that scrolled it was redundant.
+FIXED, this pass.** The picker carried eleven options: a `Team` row whose only job was
+`clearLeague()`, then the ten managers. Eleven at the A5 minimum of 44px is 494px of content
+against a `max-height: min(56dvh, calc(100dvh - 72px))` cap, which is **473px on an 844px phone
+and 373px on a 667px one** — so on the most common phone in the league fewer than nine of eleven
+managers were reachable without scrolling a 168px-wide menu.
+
+Both halves were wrong, and the redundant one is what made the other affordable. `Team` is the
+back-affordance ruling above in miniature: a second control saying what the home icon already
+says. Dropping it takes the list to 10 × 44 + 10 = **450px**, and the cap is now sized to that
+list — `min(calc(10 * 44px + 16px), calc(100dvh - 88px))` — rather than to a fraction of the
+screen. The second term is the room genuinely below the button (16px body padding, the 44px brand
+row, the 4px offset, 24px of clearance) and only bites in landscape, where nothing fits ten rows.
+
+**The 44px did not move, and must not.** A5 raised these from 28px precisely because this is the
+most-used control in the app; shrinking them is the cheapest way to make any future list fit and
+it is the wrong one. The build now fails if `.who-menu button` stops declaring 44px, if the cap
+reverts, if a `Team` option reappears, or if an eleventh seat would need more than the cap allows.
+
+Measured with the menu open, on a server whose bytes were checksummed against the on-disk build
+(§3a trap 2) and whose page carried this pass's `DATA_V`:
+
+| Viewport | `scrollHeight` | `clientHeight` | Options ≥ 44px | Hit-testable | Fully in viewport |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 375 × 568 | 448 | 448 | 10 of 10 | 10 of 10 | 10 of 10 |
+| 390 × 667 | 448 | 448 | 10 of 10 | 10 of 10 | 10 of 10 |
+| 390 × 844 | 448 | 448 | 10 of 10 | 10 of 10 | 10 of 10 |
+| 1280 × 900 | 448 | 448 | 10 of 10 | 10 of 10 | 10 of 10 |
+
+Hit-testing is `elementFromPoint` at each option's centre, not `getBoundingClientRect` — the A9
+method note again: the rect reported a full 472.6px box while 44px was on screen. `1 of 11` is
+what A9 looked like; `10 of 10` is what this looks like. `body.scrollWidth` equals the viewport
+at 375 and 390 throughout (`documentElement.scrollWidth` would have, too, and proves nothing).
+
+The order is now last season's finish, derived in `title-path.mjs` from the winners bracket's
+placement games with regular-season record for the teams it does not place, and written as
+`place` onto `members.json`. It is **not** needle data and never enters the value book, VA, the
+lens windows, `today_delta` or a partner grade; `apply-value-adjust.mjs` was not run. First place
+carries a gold `#e0b44c` crown that is `aria-hidden`, so the option's accessible name is still
+exactly the manager's name — confirmed against the computed accessibility tree, all ten.
+
 **Keyboard and focus on the new screens — what was done, and what was not.** Done: every new
 control is a real `<button>`, so it is in the tab order and fires on Enter and Space with no extra
 code; a navigation moves focus to the destination screen's `<h2 class="screen-h" tabindex="-1">`

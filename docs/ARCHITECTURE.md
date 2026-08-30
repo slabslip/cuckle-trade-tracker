@@ -23,6 +23,7 @@ revalue.mjs
   → data/ui/members.json, league.json, picks.json, me/<user_id>.json
 title-path.mjs
   → data/ui/titles.json                       (Champions Path)
+  → adds `place` to data/ui/members.json      (last season's finish, for the seat picker)
 apply-value-adjust.mjs
   → rewrites data/ui/league.json + me/<user_id>.json in place
   → data/ui/marks.json
@@ -112,7 +113,14 @@ Latest-board pick shape (2026-08-28): current-year exact slots (`2026 Pick 1.01`
 
 ### `data/ui/members.json`
 
-`[{ user_id, name }]`
+`[{ user_id, name, place, place_season }]`, in `place` order.
+
+`revalue.mjs` writes the `user_id` / `name` pair; `title-path.mjs`, which runs after it, adds
+`place` — where that manager finished in `place_season`, the most recent completed season. The
+seat picker lists the array in that order and crowns `place === 1`. The rule is the winners
+bracket's placement games first, then regular-season record (standings points, points for,
+`roster_id`) for the teams the bracket does not place; see `UI_SDD.md` §2. This is presentation
+only and never reaches the value book.
 
 ### `data/ui/league.json`
 

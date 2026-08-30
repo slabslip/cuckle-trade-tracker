@@ -1038,6 +1038,9 @@ async function main() {
   });
 
   const pickIndex = buildPicks();
+  // title-path.mjs runs next in build.mjs and adds `place` to each of these -- last season's
+  // finish, which is the order the seat picker lists them in. It derives that from the season
+  // walk it already does, so do not try to compute it here.
   writeUi("members.json", members.map((m) => ({ user_id: m.user_id, name: m.canonical_name })));
   writeUi("league.json", {
     traders: leaderboard,

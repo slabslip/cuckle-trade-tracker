@@ -30,6 +30,30 @@ Header: home button · `CuckleChunckle` · team picker. The picker is a `listbox
 children, arrow keys, `Home`/`End`, `Escape` returns focus to the button. Selecting a name is not
 "view as": it swaps the whole app to that seat.
 
+**The picker lists managers and nothing else**, in **last season's finishing order**, and the
+champion carries a gold crown. Three rules hold it together:
+
+- **No "Team" option.** It used to head the list and clearing the seat was all it did. The home
+  button in this same header does that, so the option was a second control saying what the home
+  icon already says — and dropping it is what takes the list from 11 rows to 10. That makes the
+  home icon the *only* way out of a seat, so a generate-time assertion keeps it wired.
+- **The order is derived, never written down.** `title-path.mjs` is the only script that walks
+  `previous_league_id`, so it derives the standings there and writes `place` onto
+  `data/ui/members.json`, which is the file the picker reads. The rule: **the winners bracket's
+  placement games (`p`) settle every team they place, then regular-season record — standings
+  points, then points for, then `roster_id` — orders the rest.** The losers bracket is not read;
+  its `p` is a place inside the consolation round, not a league place. When 2026 completes it
+  becomes the order with no code change. 2025 reads SF69erss, TipsUp, TedCumberbatch,
+  KingHenryXXVI, TrumanCooper, DarkWingDucks2023, bigjberg, ChiefGumby, ARae, BubbaCuckShremp.
+- **All ten show without scrolling.** Ten options at the 44px minimum plus the menu's padding and
+  border is 450px, and the menu is capped just above that rather than at a fraction of the
+  screen — `min(56dvh, …)` was 373px on a 667px phone, so the list scrolled. **Do not lower the
+  44px to fit a longer list**; raise the cap and re-measure `scrollHeight == clientHeight` at
+  568px, the shortest height that has to work. An eleventh seat fails the build.
+
+The crown is an inline SVG in the `#e0b44c` the gold cards already use, `aria-hidden`, so an
+option's accessible name stays exactly the manager's name.
+
 Under it, a ticker of league bubbles (champion, most lopsided, most active …).
 
 **Tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They are a
@@ -218,7 +242,7 @@ known-dead payload still on the wire.
 - Every grid track that holds text gets `min-width: 0`. Names ellipsize; **figures never truncate**.
 - The four tabs share one row and never wrap.
 - 44px minimum on every tap target, including the team menu, the year filter rows, the picker and
-  the Score as button.
+  the Score as button. When a list of them stops fitting, the list's cap gives way, not the 44px.
 - One column of bags on a phone, two at `min-width: 640px`.
 - `aria-expanded` on every expandable row. `Escape` closes whatever is topmost: picker, then the
   clock menu, then a filter panel, then an open pick, draft or trade.

@@ -341,9 +341,18 @@ async function ingestSubmissions(ownership, index, members, { stampRows = true }
 async function stamp(id, report, stampRows = true) {
   if (!stampRows) { report.stamp_skipped = (report.stamp_skipped || 0) + 1; return true; }
   const res = await markSubmissionProcessed(id);
-  if (res.ok) report.stamped++;
-  else { report.stamp_errors++; report.failures.push({ id, reason: `stamp_failed:${res.error}` }); }
-  return res.ok;
+  if (res.ok) { report.stamped++; return true; }
+  report.stamp_errors++;
+  report.failures.push({ id, reason: `stamp_failed:${res.error}` });
+  // Warned once per run, on stderr, rather than left as a number in a report nobody reads. A
+  // queue that never drains is not visibly broken from the feed -- the rows look right -- so
+  // this is the only place it can announce itself. The item still publishes: it is a real
+  // submission and news.json is rebuilt each run, so nothing is duplicated by shipping it.
+  if (!report.stamp_warned) {
+    report.stamp_warned = true;
+    console.error(`WARNING: could not mark submission ${id} processed: ${res.error}`);
+  }
+  return false;
 }
 
 /**

@@ -502,8 +502,26 @@ export async function fetchSubmissions({ limit = 50, timeoutMs = 10000 } = {}) {
  * Stamp one submission as published, so it is never ingested twice.
  *
  * The payload is `{processed_at}` and nothing else, deliberately: anon holds a column-level
- * grant on that column alone (db/schema.sql 5c), so a payload naming any other column would be
+ * grant on that column alone (db/schema.sql 5d), so a payload naming any other column would be
  * refused on privileges. That is the intended behaviour, not a limitation to work around.
+ *
+ * ## `Prefer: return=representation`, and why `res.ok` is not enough
+ *
+ * **A PATCH that updates nothing succeeds.** PostgREST answers `200` with an empty array `[]`
+ * when RLS filters every candidate row away, because from SQL's point of view an UPDATE that
+ * matches no rows is not an error. So a missing UPDATE policy — exactly the state this project's
+ * `news_submissions` was in on 2026-08-30, before db/schema.sql had been run against it — is
+ * invisible to a status check.
+ *
+ * This was not theoretical. With `return=minimal` and an `res.ok` test, the pipeline reported
+ * every row stamped while stamping none of them. `news.json` is rebuilt from scratch each run, so
+ * this does not duplicate a row inside one file — the harm is that the queue never drains. Every
+ * submission ever made is re-fetched and re-published on every build, so the shared tweets grow
+ * without bound against a 60-row cap and eventually crowd the automated feed out entirely, and
+ * "mark it processed so it is never ingested twice" quietly means nothing.
+ *
+ * The only thing that catches it is asking the database what it actually changed. So: ask for the
+ * row back, and treat "no row came back" as the failure it is.
  */
 export async function markSubmissionProcessed(id, timeoutMs = 10000) {
   const ac = new AbortController();
@@ -511,11 +529,21 @@ export async function markSubmissionProcessed(id, timeoutMs = 10000) {
   try {
     const res = await fetch(`${SUPABASE}/news_submissions?id=eq.${encodeURIComponent(id)}`, {
       method: "PATCH",
-      headers: supabaseHeaders({ "content-type": "application/json", Prefer: "return=minimal" }),
+      headers: supabaseHeaders({ "content-type": "application/json", Prefer: "return=representation" }),
       body: JSON.stringify({ processed_at: new Date().toISOString() }),
       signal: ac.signal,
     });
-    return { ok: res.ok, error: res.ok ? null : `HTTP ${res.status}` };
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const rows = await res.json().catch(() => null);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return {
+        ok: false,
+        error: "updated 0 rows — the anon role has no UPDATE policy on news_submissions, "
+          + "so submissions would be re-ingested on every run. Run db/schema.sql (see "
+          + "docs/SUPABASE_SETUP.md section 3b).",
+      };
+    }
+    return { ok: true, error: null };
   } catch (err) {
     return { ok: false, error: String(err && err.message || err) };
   } finally {

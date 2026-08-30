@@ -389,7 +389,7 @@ The public site is static GitHub Pages. A share only becomes visible after
 `news-sync.mjs` rebuilds `data/ui/news.json` and that file is on `main`. The
 workflow [`.github/workflows/news-refresh.yml`](../.github/workflows/news-refresh.yml)
 does that: it listens for `repository_dispatch` with `event_type: news-submission`,
-runs the sync, and pushes when the feed changed. A five-minute cron is the backup
+runs the sync, and pushes when the feed changed. A one-minute cron is the backup
 if a ping is missed; Actions → news-refresh → Run workflow is the manual path.
 
 **You still have to wire Supabase → GitHub once.** GitHub will not accept the
@@ -443,7 +443,7 @@ create trigger news_submissions_dispatch
 
 INSERT (share) and UPDATE of `deleted_at` (admin Remove) both fire it. Expect the
 public feed within about a minute: Action run + Pages deploy. Until this SQL
-runs, the five-minute cron is what publishes.
+runs, the one-minute cron is what publishes.
 
 Smoke-test without waiting for a share (replace the token):
 

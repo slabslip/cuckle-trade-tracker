@@ -3,7 +3,8 @@
 # Immediate path: Supabase INSERT/UPDATE on news_submissions → repository_dispatch
 # with event_type `news-submission`. Setup: docs/SUPABASE_SETUP.md §3d.
 #
-# Backup: every 5 minutes, in case a webhook is missed. workflow_dispatch for manual runs.
+# Backup: every minute if the Supabase ping (§3d) is not wired yet.
+# workflow_dispatch for a manual Actions → Run workflow.
 name: news-refresh
 
 on:
@@ -11,7 +12,7 @@ on:
     types: [news-submission]
   workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "* * * * *"
 
 permissions:
   contents: write

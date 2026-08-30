@@ -818,6 +818,18 @@ sign fails the build. Do not weaken these; extend them.
 ink (`#d4c07a`), because it is an adjustment *inside one bag*, not a result against another
 side. Counts are not deltas and stay unsigned — "56 two-way", "27 graded", "4 extracts".
 
+**How the crowding was absorbed.** A tape side now states three things rather than two, so the
+row was re-measured rather than assumed. Stacked (≤700px) a side's two figures travel together at
+the right of its line — one auto margin, on the delta — so the deltas line up in one column and
+the totals in another and a pair of side lines is comparable at a glance. The pair also *wraps*
+as a pair: at 320px the line runs ~15px short, and the figures drop beneath the name rather than
+the name truncating. `overflow-wrap: anywhere` on the name was tried first and rejected — it
+rendered `DarkWingDucks2023` as `DarkWingDucks20 / 23`, which reads as a rendering accident. The
+base nowrap ellipsis on `.names` stays as the last resort for a name wider than a whole line.
+Verified at 320, 360, 375, 390, 430, 640, 641 and 1280px, with real names and with a stress name
+2.4× the longest real one plus a six-digit delta: **zero figures wrapped, zero clipped, zero
+manager names ellipsized, `body.scrollWidth` equal to the viewport in every case.**
+
 **Where a signed delta renders.** Every one of these goes through `tapeMargin`:
 `tradeRow` (trades list, Best/Worst deal, the expanded header, and the full-screen trade
 review's flat form) · `boardTape` (Most lopsided, the row under the Recent Trade card, and the

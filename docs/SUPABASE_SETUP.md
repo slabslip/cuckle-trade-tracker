@@ -172,30 +172,41 @@ order by id;
 ```
 
 Anon has no `DELETE` here either, by the same deliberate trade as votes, so
-clearing those out needs the SQL editor. Marking them processed is enough to
-stop the pipeline retrying them:
+clearing those out needs the SQL editor.
 
-```sql
-update public.news_submissions set processed_at = now() where id in (…);
-```
+**Marking a row processed no longer suppresses it.** That instruction was
+correct when the feed read `processed_at is null`; since the feed became manual
+submissions only it reads the whole table, because reading only the unpublished
+rows would empty the feed on the second build. `processed_at` is now a record of
+when a share first appeared. Deleting is the only way to take a row out of the
+feed.
 
 ### One-time: clear the rows this feature was built against
 
-Building this left real rows in the queue. Ids 1–13 are test submissions —
+**Run this. It is the only thing on this page the feed still needs from you.**
+
+Building this left rows in the queue. Ids 1–13 are test submissions —
 `jack/status/20`, two Obama tweets, a park photo, and four deliberately hostile
 ones used for the XSS proof (`https://evil.com/...`, a `javascript:` url, a
-`<script>` in `note`). They are harmless, but they would publish as nonsense in
-the feed on the first run after the policies above exist. **Id 14 is a genuine
-submission** — an Adam Schefter tweet about Keenan Allen, sent from the
-Shortcut — and should be left alone so it lands.
+`<script>` in `note`). **Ids 14 and up are genuine submissions** sent from the
+Shortcut and must be left alone.
 
 ```sql
 delete from public.news_submissions where id between 1 and 13;
 ```
 
-`data/ui/news.json` was committed built with `--no-submissions` for the same
-reason, so the shipped feed carries no test rows. After the delete, a plain
-`node news-sync.mjs` picks up id 14 and anything shared since.
+Until that runs, four of them publish: ids 3, 11, 12 and 13. The rest are
+removed by the pipeline on its own — ids 1, 5 and 6 are rejected because their
+URLs are not X permalinks, ids 2, 7, 8, 9, 10 share a tweet with a later row and
+collapse into it, and id 4's tweet is deleted. The four that do publish are
+inert: id 3's `note` is an attribute-breakout payload and renders as the visible
+characters `" onmouseover="window.__XSS_ATTR=1" data-x="`, which is ugly and
+harmless. This was verified in a browser rather than argued — see NEWS_SDD §10a.
+
+They are also obviously not league news, which is the point of leaving the
+pipeline to handle them rather than depending on this delete having happened:
+the ingest must be safe against a hostile row arriving at any time, not only
+against the ones somebody remembered to remove.
 
 ### The uniqueness rule, and why it is not `url` alone
 
@@ -214,9 +225,18 @@ collision is (same url, same submitter), so that is what the constraint covers.
 are distinct, so without it a submitter who does not send `submitted_by` — which
 is optional — would defeat the constraint entirely and every retry would insert.
 
+**It was not firing, and 5a.1 is the fix.** Every URL an iOS share sheet
+produces carries `?s=12&t=…`, and `t` is regenerated on every share, so two taps
+on the same tweet are two different strings and the constraint never sees a
+collision. Ids 14 and 16 in this project's table are that exact case: same
+tweet, same submitter, minutes apart, both stored. A `before insert` trigger now
+rewrites `url` to `https://x.com/<handle>/status/<id>` — the same rewrite
+`parseTweetUrl()` performs, so the stored value and the value the build derives
+cannot disagree — and uniqueness compares tweets instead of strings.
+
 Collapsing two people's takes on one tweet into one feed row is a *display*
-decision, and it is handled downstream in `news-sync.mjs`, which can be tuned
-without a migration.
+decision, and it is handled downstream in `news-sync.mjs`, keyed on the tweet's
+numeric id, and can be tuned without a migration.
 
 ### The honest limits, same as votes but they matter more here
 
@@ -235,9 +255,10 @@ page**, so the mitigations are downstream and each one is real:
   refuses a page that interpolates a news field without `esc()`.
 * A submission publishes; it cannot move a number. PRODUCT LAW still holds.
 
-Anyone with the key can also stamp `processed_at`, which would suppress a
-pending submission. Acceptable for ten friends, on the same reasoning as votes.
-Worth saying rather than implying otherwise.
+Anyone with the key can also stamp `processed_at`. That used to suppress a
+pending submission; since the feed reads the whole table it only writes a wrong
+timestamp on a bookkeeping column. Acceptable for ten friends, on the same
+reasoning as votes. Worth saying rather than implying otherwise.
 
 ### The SQL
 

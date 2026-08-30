@@ -463,6 +463,59 @@ end $$;
 
 
 -- --------------------------------------------------------------------------
+-- 5a.1. Canonicalise `url` on write, so the uniqueness rule below can work
+-- --------------------------------------------------------------------------
+-- Every URL an iOS share sheet produces carries tracking:
+--
+--   https://x.com/adamschefter/status/2094028581080834282?s=12&t=6MCtlgACvPE…
+--
+-- `t` is regenerated per share. So one person tapping Share twice on the same
+-- tweet produces two different strings, and the (url, submitted_by) constraint
+-- in 5b — whose entire stated purpose is to make a double tap or a Shortcut
+-- retry a no-op — never fires. It was not firing: ids 14 and 16 in this
+-- project's own table are the same tweet, from the same submitter, minutes
+-- apart, both stored, because their `t` values differ.
+--
+-- The shape check in 5a deliberately *accepts* those suffixes, because
+-- rejecting a real share is worse than storing a noisy one. Accepting them and
+-- then treating them as identifying is the mistake. So the row is normalised
+-- before it is stored, and uniqueness compares tweets rather than strings.
+--
+-- The rewrite is the same one news-sources.mjs `parseTweetUrl()` performs, and
+-- deliberately so: both rebuild `https://x.com/<handle>/status/<id>` from the
+-- captured parts, so the value in the table equals the value the pipeline
+-- derives and the build's canonical-form self-check cannot disagree with the
+-- database. Case is preserved for the same reason — the pipeline preserves it,
+-- and the two must not diverge. Two spellings of one handle are collapsed
+-- downstream, on the tweet id, where a display detail cannot cause a duplicate.
+--
+-- A URL the pattern does not match is left exactly as submitted: normalising is
+-- not this trigger's opinion about validity. 5a's check constraint is what
+-- refuses a bad row, and it runs regardless.
+create or replace function public.news_submissions_canonical_url()
+returns trigger
+language plpgsql
+as $$
+declare
+  parts text[];
+begin
+  parts := regexp_match(
+    new.url,
+    '^https?://(?:www\.)?(?:x|twitter)\.com/([A-Za-z0-9_]{1,15})/status(?:es)?/([0-9]{1,25})',
+    'i');
+  if parts is not null then
+    new.url := 'https://x.com/' || parts[1] || '/status/' || parts[2];
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists news_submissions_canonical_url_t on public.news_submissions;
+create trigger news_submissions_canonical_url_t
+  before insert or update of url on public.news_submissions
+  for each row execute function public.news_submissions_canonical_url();
+
+
+-- --------------------------------------------------------------------------
 -- 5b. Uniqueness: (url, submitted_by), NOT url alone
 -- --------------------------------------------------------------------------
 -- THE DECISION, AND WHY.
@@ -515,9 +568,17 @@ begin
   end if;
 end $$;
 
--- The pipeline's only query is "rows not yet published, oldest first". A
--- partial index over exactly those rows stays small no matter how long the
--- table grows, because a row leaves the index as soon as it is processed.
+-- The feed reads the whole table, newest first, capped: since the feed became
+-- manual submissions only, "rows nobody has published yet" is the wrong set —
+-- news.json is rebuilt from scratch each run, so reading only the unpublished
+-- rows would empty the feed on the second build. See fetchSubmissions() in
+-- news-sources.mjs.
+create index if not exists news_submissions_created_idx
+  on public.news_submissions (created_at desc);
+
+-- Kept for the "what is still unpublished" query, which is now bookkeeping
+-- rather than the feed's read path. A partial index over exactly those rows
+-- stays small no matter how long the table grows.
 create index if not exists news_submissions_unprocessed_idx
   on public.news_submissions (created_at)
   where processed_at is null;

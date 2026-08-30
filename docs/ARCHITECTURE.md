@@ -245,7 +245,9 @@ static markup painted by `paintLens()`, and it hides itself on the two screens t
 move: **titles**, which reads no clock, and **drafts**, which pins it.
 
 With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), one
-**box of four equal chips**, and the News and Alerts feed. Two chips lead
+**box of four equal chips**, and the News and Alerts feed — which as of 2026-08-30 carries **only
+tweets league members share in from X**, the automated sources being switched off in
+`news-sync.mjs` rather than removed (NEWS_SDD §10a). Two chips lead
 somewhere: **Teams**, the only way into a seat, and **League Data Sets**,
 holding five lists (Most lopsided trades · Most passed around · Least traded · Forever players ·
 Homesteaders), one on screen at a time and none on a cold load. The other two cells are inert

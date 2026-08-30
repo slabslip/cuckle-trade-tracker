@@ -7,6 +7,20 @@ the scrollable feed on league home, and a template-based voice behind one replac
 — the agent that refreshes the feed daily — is **specified here and deliberately not built**, because
 the user asked for the feed first and for the automation to be strategised before it is written.
 
+> **Scope change, 2026-08-30 — the feed is manual submissions only.**
+>
+> *"ok wipe the news feed now. and only have it include what i share through our new shortcut!"*
+>
+> The rendered feed carries **only** tweets league members share in from X (§10). The automated
+> sources in §2 — Sleeper's GraphQL `get_player_news` and the five RSS feeds — no longer contribute
+> and are **not fetched**, behind the `AUTOMATED_SOURCES` switch in `news-sync.mjs`. The sixty
+> automated rows that were in `news.json` are gone.
+>
+> Everything in §2, §3, §4 and §7 below still describes working, tested, present code. It is kept
+> in full rather than trimmed to a footnote, because the switch is expected to be reversed: the
+> reason for turning the sources off was that the freshly-landed shared-tweet path was being
+> drowned by them, not that they were wrong. §10a records what the scope change actually changed.
+
 Companion files: [`news-sources.mjs`](../news-sources.mjs) (the adapters and the probe results),
 [`news-voice.mjs`](../news-voice.mjs) (the seam), [`news-sync.mjs`](../news-sync.mjs) (the pipeline
 and the schema).
@@ -573,15 +587,27 @@ repo follows (`trade_votes.choice` stores the id precisely because names change)
 the client: the writer is a phone share sheet, and nobody is picking an 18-digit snowflake out of
 a list on a phone. The cost is paid server-side and paid loudly — a name matching nothing resolves
 to null and the item publishes addressed to nobody, rather than being handed to the nearest match.
-Matching is forgiving about case and surrounding space only; a prefix or a nickname is refused,
-because "Bubba" matching `BubbaCuckShremp` today is "Josh" matching the wrong Allen tomorrow.
 
-With no target, the existing `matchPlayer()` runs over the tweet text. That is a change of input
-for a function documented as reading a title and never a summary, and it is sound here: summaries
-are banned because they name teammates, coaches and the reporter alongside the actual subject,
-whereas a tweet is one short post and a rostered player named in it is overwhelmingly what it is
-about. Every refusal rule is unchanged — full names only, never a surname, and two different
-rostered players means no match rather than a guess.
+**Amended 2026-08-30.** Two rules here were rewritten by the scope change; both reversals are
+argued in full at the functions themselves, and summarised in §10a.
+
+1. **Resolution is forgiving about partial names**, not only about case and space. Exact, then
+   prefix, then substring, each tier refusing outright if it produces more than one candidate, and
+   the partial tiers requiring at least three characters. `  SF69erss  ` and `sf69erss` resolve;
+   `big` resolves to `bigjberg`; `ber` refuses, because it is inside both `TedCumberbatch` and
+   `bigjberg`. The earlier refusal to accept a prefix borrowed `matchPlayer()`'s argument, which
+   does not carry: that matcher searches an open dictionary of 12,225 names containing two Josh
+   Allens, and this searches a closed, known set of ten.
+2. **`target_name` is now the only thing that can address a row to a manager.** The fallback that
+   handed an untargeted share to whoever owned the player named in its text is gone.
+
+`matchPlayer()` still runs over the tweet text, and the player it finds still ships — it is what
+the row's meta line prints, `Keenan Allen · IND WR`. What it no longer does is pick a seat. Reading
+a tweet is a change of input for a function documented as reading a title and never a summary, and
+that part is still sound: summaries are banned because they name teammates, coaches and the
+reporter alongside the actual subject, whereas a tweet is one short post. Every refusal rule is
+unchanged — full names only, never a surname, and two different rostered players means no match
+rather than a guess.
 
 The one case resolved beyond `matchPlayer()` is a **namesake collision**: two different rostered
 players whose names normalise identically, e.g. Michael Carter and Michael Carter II, since
@@ -632,6 +658,82 @@ the same trade votes make, but it matters more here because this table feeds tex
 rendered rather than a number in a tally. The mitigations are downstream and each is real: the URL
 is constrained to an X permalink at both ends and canonicalised from the captured parts, the tweet
 HTML is never forwarded, every field is escaped in text and in attributes, and a build guard
-refuses a page that interpolates a news field without `esc()`. Anyone with the key can also stamp
-`processed_at`, suppressing a pending submission. Acceptable for ten friends; not a pattern to
-copy where the data matters.
+refuses a page that interpolates a news field without `esc()`. Acceptable for ten friends; not a
+pattern to copy where the data matters.
+
+One line of that paragraph is now obsolete and worth correcting rather than deleting: it said
+anyone with the key can stamp `processed_at` and thereby suppress a pending submission. Stamping no
+longer suppresses anything — the feed reads the whole table (§10a) — so the worst that grants
+buys is a wrong timestamp on a bookkeeping column.
+
+---
+
+## 10a. The scope change, 2026-08-30 — what "submissions only" actually changed
+
+The decision is quoted at the top of this file. Turning the automated sources off was one line;
+making a feed *of submissions* work was not, because three things in §10 were built on the
+assumption that submissions were an addition to sixty rows that would always be there.
+
+**The queue read had to invert.** `fetchSubmissions()` asked for `processed_at is null` — the new
+rows — because a stamped row had already been published and re-reading it would publish it twice.
+With the feed rebuilt from scratch each run *and* built only from submissions, that predicate
+returns the entire feed on the first run and **nothing at all** on the second: every row published,
+every row stamped, no rows left. The read is now the whole table, newest first, capped at
+`MAX_ITEMS`. `db/schema.sql` gains a matching `(created_at desc)` index; the partial index stays
+for the bookkeeping query it still serves.
+
+**`processed_at` degraded to a record.** It no longer gates anything. It is still written, still
+only on rows that do not already carry one, so it keeps meaning *first* published — and the
+`return=representation` check on the PATCH is still the only thing in this project that can detect
+a missing anon UPDATE policy. Probed against the live project on 2026-08-30: the PATCH answers
+`200` with `[]`, so the policy still does not exist and the stamp is not being written at all. The
+feed is correct regardless, which is the point of not depending on it.
+
+**A transient oEmbed failure became a blank page.** One row failing used to cost one row out of
+sixty. In a feed of two, two timeouts against `publish.twitter.com` are the whole feature. So a
+tweet whose fetch fails *transiently* is carried forward from the copy already in `news.json`: a
+tweet's text and author do not change, so the last known good copy is a correct answer rather than
+a stale one, and the row around it is still rebuilt from the current submission. A tweet that is
+genuinely gone — 404, or no readable body — is **not** carried forward, because showing a deleted
+tweet forever is the feed lying rather than degrading.
+
+**One tweet, one story.** Every URL an iOS share sheet produces carries `?s=12&t=…`, and `t` is
+regenerated per share, so the same tweet shared twice is two different strings. Shares are now
+collapsed on the tweet's **numeric id** — not on the canonical URL, because the URL still carries
+the handle as typed and two spellings of one handle are one tweet. The newest share wins: the feed
+is newest-first, so the story belongs at the position of the share that just happened, carrying
+that sharer's jab. `db/schema.sql` 5a.1 adds a trigger that canonicalises `url` before it is
+stored, which is what makes the `(url, submitted_by)` uniqueness rule in 5b work at all — it was
+not firing, and ids 14 and 16 in this project's own table are the proof: same tweet, same
+submitter, minutes apart, both stored, differing only in `t`.
+
+**Attribution stopped inferring an addressee.** All of the real submissions arrived with
+`target_name` null while the Shortcut was still being debugged, and most named a rostered player.
+Under the old fallback, `"lol suck it Brad"` — one member's words on a Schefter tweet — published
+under the name of whoever happens to roster Keenan Allen. A player match is evidence about a
+*story*; it is not consent to address a person. With the feed curated, the premise is that a human
+decided both what to share and who to aim it at, and inferring the second half from prose is the
+pipeline overruling the curator. Untargeted shares read as the league's, under "The league".
+
+**The empty state became load-bearing.** It used to be a state nobody saw. It is now the state
+every league member is in before their first share. It says how an item gets here, because sharing
+from X is the whole mechanism and nothing else on the page reveals it — and it is *two* states, not
+one, because "the file failed to load" and "nobody has shared anything" both used to print
+*"Nothing breaking."* Telling a user their Shortcut is fine when the page could not read the file
+is a reassuring lie. Build guards refuse one sentence used for both, and refuse an empty state that
+does not name X.
+
+### What was checked, and how
+
+Each rule below was verified by breaking it and watching something fail, because a check that
+cannot fail is worse than no check (`DASHBOARD_AUDIT.md` §3a).
+
+| Rule | How it can fail |
+| --- | --- |
+| Name resolution, all four tiers | `node news-sync.mjs --selftest`, 25 cases. Mutation-tested: deleting any tier, widening the length floor, or letting an ambiguous tier pick the first candidate all fail it. The prefix tier is invisible to the real ten-name roster — every case passed with it deleted — so it is additionally asserted against a synthetic membership where it decides the answer. |
+| URL canonicalisation and host gating | Same self-test, 12 cases, including `evil.x.com` and `x.com.evil.com`. Mutation-tested: passing the input through instead of rebuilding it, and two loosenings of the host pattern, are all caught. |
+| Manual-only | `main()` refuses to write a `news.json` containing any row that is not a submission, while the switch is off. |
+| One story per tweet | `main()` refuses a file in which two rows carry the same tweet id. |
+| Canonical form on disk | `main()` refuses a shared tweet whose `source_url` is not equal to its own canonical form — "parses" is not enough, since the parser accepts the tracking it strips. |
+| The feed is on the page | Composition, not existence: `renderLeagueHome()` must compose `renderNews()` *inside* its return, and confirmed on screen at 320/375/390/1280. The feed vanished once when a rebase left it after a `return`, with `node --check` clean and nine guards satisfied. |
+| Nothing rendered is executable | An adversarial `news.json` carrying every payload from the test rows in every field the feed renders, opened in a real browser with all panels expanded: no global set, no title change, no injected element, no stray event attribute, and every payload visible as characters. |

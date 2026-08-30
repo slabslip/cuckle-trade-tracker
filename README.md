@@ -26,27 +26,37 @@ node generate-page.mjs
 node news-sync.mjs               # news.json for News and Alerts (not in build.mjs)
 ```
 
-`news-sync.mjs` builds the News and Alerts feed: NFL news filtered to players on this league's
-rosters, addressed to whoever owns them. It reads the rosters `sleeper-sync.mjs` already wrote
-and **touches no value, no Value Adjustment, no lens window and no ranking**, which is why it is
-outside `build.mjs` — it is a data-only refresh and the page reads `news.json` at runtime, so it
-needs no regenerate.
+`news-sync.mjs` builds the News and Alerts feed. It reads the rosters `sleeper-sync.mjs` already
+wrote and **touches no value, no Value Adjustment, no lens window and no ranking**, which is why
+it is outside `build.mjs` — it is a data-only refresh and the page reads `news.json` at runtime,
+so it needs no regenerate.
+
+**The feed is manual submissions only.** A league member taps Share on a tweet in X, picks an iOS
+Shortcut, and the Shortcut POSTs the URL — plus an optional jab and an optional target manager —
+to the `news_submissions` table. Each run reads that table, fetches every tweet's text from X's
+free oEmbed endpoint, and rebuilds `news.json` from it. In the feed the jab is the line on top and
+the tweet itself sits behind an expander.
+
+The automated sources — Sleeper's GraphQL `get_player_news` and RSS from ESPN, Rotowire, CBS,
+Yahoo and ProFootballTalk — are **off**, behind `AUTOMATED_SOURCES` in `news-sync.mjs`. Off means
+not fetched: no request is made to any of them. The code is switched rather than deleted, because
+the Sleeper path is asked about one `player_id` and answers about that player, which makes it the
+only attribution in this project that cannot be wrong. Read the note on the constant before
+turning it back on.
 
 ```bash
-node news-sync.mjs --report          # the match report: sources, hit rate, ambiguous drops
+node news-sync.mjs --selftest        # name resolution + url canonicalisation, no network
+node news-sync.mjs --report          # the match report: queue, rejects, duplicates, attribution
 node news-sync.mjs --voice           # every voice variant, no network
 node news-sync.mjs --empty           # a valid empty news.json, no network
-node news-sync.mjs --no-submissions  # automated sources only, skip the shared-tweet queue
+node news-sync.mjs --with-automated  # turn the automated sources on for this run
+node news-sync.mjs --no-submissions  # skip the queue (with the switch off, this writes an
+                                     #   empty feed — it is a diagnostic, not a build)
 ```
 
-It also drains the **shared-tweet queue**: a league member taps Share on a tweet in X, picks an
-iOS Shortcut, and the Shortcut POSTs the URL (plus an optional jab and an optional target
-manager) to the `news_submissions` table. This run fetches each tweet's text from X's free
-oEmbed endpoint, publishes it into the feed, and stamps the row so it is never ingested twice.
-In the feed the jab is the summary line and the tweet itself sits behind an expander.
-
-`--report` deliberately stamps nothing, so it can preview the queue without consuming it. The
-Shortcut recipe, the exact request body and the SQL are in `docs/SUPABASE_SETUP.md` §3b.
+`--report` deliberately writes nothing, including the `processed_at` stamp, so it can preview the
+queue without touching it. The Shortcut recipe, the exact request body and the SQL are in
+`docs/SUPABASE_SETUP.md` §3b.
 
 The voice lives behind one seam, `leagueLine()` in `news-voice.mjs`, so it can be rewritten
 without touching ingest or UI. See `docs/NEWS_SDD.md` for the sources actually reachable, the

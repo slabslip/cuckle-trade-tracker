@@ -358,7 +358,7 @@ function matchTweetPlayer(text, index) {
  * the caller as rejections. Input must be newest-first.
  */
 function collapseShares(subs) {
-  const bySource = new Map();
+  const byTweet = new Map();
   const rejected = [];
   const duplicates = [];
   for (const sub of subs) {
@@ -369,13 +369,17 @@ function collapseShares(subs) {
     // reach a row.
     const parsed = parseTweetUrl(sub.url);
     if (!parsed) { rejected.push(sub); continue; }
-    if (bySource.has(parsed.canonical)) {
-      duplicates.push({ id: sub.id, kept: bySource.get(parsed.canonical).sub.id });
+    // Keyed on the tweet's numeric id, not on the canonical URL, because the URL still carries
+    // the handle as it was typed and `x.com/AdamSchefter/status/123` and
+    // `x.com/adamschefter/status/123` are one tweet. The id is globally unique on X and is the
+    // only part of the permalink that identifies the post rather than describing it.
+    if (byTweet.has(parsed.id)) {
+      duplicates.push({ id: sub.id, kept: byTweet.get(parsed.id).sub.id });
       continue;
     }
-    bySource.set(parsed.canonical, { sub, canonical: parsed.canonical });
+    byTweet.set(parsed.id, { sub, canonical: parsed.canonical, tweetId: parsed.id });
   }
-  return { kept: [...bySource.values()], rejected, duplicates };
+  return { kept: [...byTweet.values()], rejected, duplicates };
 }
 
 /**
@@ -1152,14 +1156,17 @@ async function main() {
   }
   // One story per tweet. collapseShares() is the only thing standing between "shared twice" and
   // two identical rows in a feed that may only have two rows in it, and a duplicate is invisible
-  // in a count — both files have the right length.
-  const seenUrls = new Set();
+  // in a count — both files have the right length. Compared on the tweet id rather than on the
+  // URL string, for the same reason collapseShares() keys on it: two spellings of one handle
+  // are two strings and one tweet, and a check on the string would miss exactly that case.
+  const seenTweets = new Map();
   for (const it of book.items) {
     if (it.category !== "tweet") continue;
-    if (seenUrls.has(it.source_url)) {
-      throw new Error(`self-check failed: ${it.source_url} appears twice — the same tweet shared twice must be one story`);
+    const tid = parseTweetUrl(it.source_url).id;
+    if (seenTweets.has(tid)) {
+      throw new Error(`self-check failed: tweet ${tid} appears twice (${seenTweets.get(tid)} and ${it.id}) — the same tweet shared twice must be one story`);
     }
-    seenUrls.add(it.source_url);
+    seenTweets.set(tid, it.id);
   }
 
   if (args.has("--report")) {

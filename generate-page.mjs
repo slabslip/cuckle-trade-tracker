@@ -150,6 +150,10 @@ const html = `<!DOCTYPE html>
        reads the same way on every line; row-reverse is what mirrors the pair on the wide
        tape, which puts each delta beside its own name and both totals inboard. */
     .row-top.tape .side.right .side-line { flex-direction: row-reverse; justify-content: flex-start; }
+    /* The delta and the bag total are one flex child, not two, so a line too short for all
+       three drops the pair together instead of orphaning the total. */
+    .row-top.tape .figs { display: flex; gap: 6px; align-items: baseline; flex: 0 0 auto; }
+    .row-top.tape .side.right .figs { flex-direction: row-reverse; }
     .row-top.tape .names {
       min-width: 0; flex: 0 1 auto;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -186,10 +190,9 @@ const html = `<!DOCTYPE html>
       .row-top.tape .side.right { text-align: left; }
       .row-top.tape .side-line,
       .row-top.tape .side.right .side-line { flex-direction: row; justify-content: flex-start; gap: 4px 10px; flex-wrap: wrap; }
-      /* Stacked, a side's two figures travel together at the right of its line: the deltas
-         line up in one column and the bag totals in another, which is what makes a pair of
-         side lines comparable at a glance. One auto margin, on the delta, does that -- two
-         would split the free space between them.
+      /* Stacked, both sides read delta then total, so the deltas line up in one column and
+         the bag totals in another, which is what makes a pair of side lines comparable at a
+         glance. One auto margin, on the figure pair, pushes it to the right of the line.
          The pair also wraps as a pair. At 320px the line runs ~15px short once each side
          carries a delta as well as a total, and the figures drop beneath the name rather
          than the name truncating or breaking mid-word: overflow-wrap: anywhere would have
@@ -197,7 +200,8 @@ const html = `<!DOCTYPE html>
          accident. Nothing wraps at 375px or above. This is the call the Recent Trade card
          already makes for the same name-and-figure hazard. The base nowrap ellipsis on
          .names stays as the last resort for a name wider than a whole line. */
-      .row-top.tape .delta { margin-left: auto; }
+      .row-top.tape .side.right .figs { flex-direction: row; }
+      .row-top.tape .figs { margin-left: auto; }
       .row-top.tape .tape-sub { justify-content: flex-start; }
     }
     @media (max-width: 430px) { .row-top.tape { font-size: 0.9375rem; } }
@@ -1192,6 +1196,14 @@ const html = `<!DOCTYPE html>
       return '<span class="delta ' + signedCls(d) + '">' + signedNum(d) + "</span>";
     }
 
+    // A side's delta and its bag total are one unit, so the narrow layout wraps them
+    // together beneath the name. Emitted as two separate flex children they wrapped
+    // separately, which stranded the total alone on a line and left-aligned under a
+    // right-aligned side -- a bare 12,621 reading as though it belonged to nothing.
+    function tapeFigures(d, valHtml) {
+      return '<span class="figs">' + tapeMargin(d) + '<span class="val">' + valHtml + "</span></span>";
+    }
+
     /** The trade_boards side row that frames one trade, preferring a named seat's side. */
     function tradeSide(tx, uid) {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
@@ -1222,8 +1234,8 @@ const html = `<!DOCTYPE html>
       // figure it describes, not on the label beside it.
       return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names">' + esc(r.name) + "</span>" + tapeMargin(s) + '<span class="val">' + got + "</span></div></div>"
-        + '<div class="side right"><div class="side-line"><span class="names">' + esc(r.other) + "</span>" + tapeMargin(s == null ? null : -s) + '<span class="val">' + sent + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + esc(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + esc(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
@@ -2213,8 +2225,8 @@ const html = `<!DOCTYPE html>
       // that rounding three bags separately can leave. It is not any one of them alone, so the
       // caption says "combined", and the expanded detail below breaks out each seat's own bag.
       const top = '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.mine) + "</span>" + tapeMargin(dlt) + '<span class="val">' + gotShow + "</span></div></div>"
-        + '<div class="side right"><div class="side-line"><span class="names">' + esc(p.other) + "</span>" + tapeMargin(dlt == null ? null : -dlt) + '<span class="val">' + sentShow + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.mine) + "</span>" + tapeFigures(dlt, gotShow) + "</div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + esc(p.other) + "</span>" + tapeFigures(dlt == null ? null : -dlt, sentShow) + "</div></div>"
         // On the trade's own screen the caption above already dates it, so the flat form drops
         // the second copy. The incomplete badge is a warning rather than a repeat and stays,
         // and so does the multi-seat note: it is what makes the right column's sign readable.
@@ -2323,8 +2335,8 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="row-x-btn" data-draft="' + esc(key) + '"'
         + ' aria-expanded="' + (open ? "true" : "false") + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.player) + "</span>" + tapeMargin(dlt) + '<span class="val">' + gotShow + "</span></div></div>"
-        + '<div class="side right"><div class="side-line"><span class="names">' + esc(slot) + "</span>" + tapeMargin(dlt == null ? null : -dlt) + '<span class="val">' + sentShow + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.player) + "</span>" + tapeFigures(dlt, gotShow) + "</div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + esc(slot) + "</span>" + tapeFigures(dlt == null ? null : -dlt, sentShow) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(p.as_of || "") + "</span>"
         + '<span class="date origin sub-note ' + (own ? "own" : "away") + '">' + esc(origin) + "</span></div>"
         + "</div></button>"
@@ -2906,8 +2918,19 @@ for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)
 // tape's grid swallows the name tracks again.
 for (const need of ['return (r > 0 ? "+" : "−") + fmt(Math.abs(r));', 'if (d == null || Number.isNaN(d)) return "—";',
   'return \'<span class="delta \' + signedCls(d) + \'">\' + signedNum(d) + "</span>";',
+  'return \'<span class="figs">\' + tapeMargin(d) + \'<span class="val">\' + valHtml + "</span></span>";',
   '"tape-sub"', 'date sub-when']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a signed-delta part: ${need}`);
+}
+// A tape side's delta and bag total must be the one .figs child, or the narrow layout wraps
+// them apart and strands the total on a line of its own, left-aligned under a right-aligned
+// side. tapeFigures() is the only place the pair is built, so .val is emitted exactly once.
+const valEmits = (inline.match(/<span class="val">/g) || []).length;
+if (valEmits !== 1) {
+  throw new Error(`a tape side builds its own total instead of calling tapeFigures: ${valEmits} .val emitters, want 1`);
+}
+for (const sideLine of inline.match(/<div class="side(?: right)?"><div class="side-line">[^\n]*?<\/div><\/div>/g) || []) {
+  if (!sideLine.includes("tapeFigures(")) throw new Error(`a tape side skips tapeFigures: ${sideLine.slice(0, 120)}`);
 }
 // Every delta figure goes through tapeMargin(). Nothing may format one by hand again, which
 // is how four conventions for the same quantity accumulated in the first place.
@@ -2916,9 +2939,12 @@ for (const need of ['cls(dlt)', 'cls(s)', 'cls(-s)', 'cls(-dlt)', 'cls(p.per)', 
   if (inline.includes(need)) throw new Error(`a delta is formatted by hand instead of by tapeMargin: ${need}`);
 }
 // The stacked phone tape and the wide tape are one rule set; either half alone is broken.
-for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-top.tape .delta { margin-left: auto; }",
+for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-top.tape .figs { margin-left: auto; }",
   "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere",
   "justify-content: flex-start; gap: 4px 10px; flex-wrap: wrap;",
+  ".row-top.tape .figs { display: flex; gap: 6px; align-items: baseline; flex: 0 0 auto; }",
+  ".row-top.tape .side.right .figs { flex-direction: row-reverse; }",
+  ".row-top.tape .side.right .figs { flex-direction: row; }",
   ".delta.pos { color: var(--green); }", ".delta.neg { color: var(--red); }"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
 }

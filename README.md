@@ -33,10 +33,20 @@ outside `build.mjs` — it is a data-only refresh and the page reads `news.json`
 needs no regenerate.
 
 ```bash
-node news-sync.mjs --report      # the match report: sources, hit rate, ambiguous drops
-node news-sync.mjs --voice       # every voice variant, no network
-node news-sync.mjs --empty       # a valid empty news.json, no network
+node news-sync.mjs --report          # the match report: sources, hit rate, ambiguous drops
+node news-sync.mjs --voice           # every voice variant, no network
+node news-sync.mjs --empty           # a valid empty news.json, no network
+node news-sync.mjs --no-submissions  # automated sources only, skip the shared-tweet queue
 ```
+
+It also drains the **shared-tweet queue**: a league member taps Share on a tweet in X, picks an
+iOS Shortcut, and the Shortcut POSTs the URL (plus an optional jab and an optional target
+manager) to the `news_submissions` table. This run fetches each tweet's text from X's free
+oEmbed endpoint, publishes it into the feed, and stamps the row so it is never ingested twice.
+In the feed the jab is the summary line and the tweet itself sits behind an expander.
+
+`--report` deliberately stamps nothing, so it can preview the queue without consuming it. The
+Shortcut recipe, the exact request body and the SQL are in `docs/SUPABASE_SETUP.md` §3b.
 
 The voice lives behind one seam, `leagueLine()` in `news-voice.mjs`, so it can be rewritten
 without touching ingest or UI. See `docs/NEWS_SDD.md` for the sources actually reachable, the

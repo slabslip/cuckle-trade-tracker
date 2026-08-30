@@ -133,6 +133,52 @@ Quotes and ampersands *are* decoded, because they are ordinary prose (`SportsLin
 `&#039;`) and `esc()` escapes them at the point of use, so dropping them costs readability for no
 security gain.
 
+### Amendment, 2026-08-30 — one free path to a tweet's text does exist
+
+Everything under "Adam Schefter's Twitter/X is not possible" stands for *discovering* tweets:
+there is no free way to ask "what did Schefter post today", and no scraper is built. But there is
+a free, unauthenticated way to read **one specific tweet you already have the URL for**, and it is
+X's own:
+
+```
+https://publish.twitter.com/oembed?url=<tweet_url>&omit_script=1
+```
+
+This is the endpoint intended for any site that wants to display a tweet. It is not a scrape and
+it needs no token. It changes nothing about the automated feed — you still cannot enumerate — but
+it is exactly enough for a *curated* path, where a person picks the tweet. See §10.
+
+Verified from the build VM, and each of these shapes the code:
+
+| Probe | Result |
+| --- | --- |
+| Live tweet, `twitter.com` or `x.com` URL | **200 JSON**: `url`, `author_name`, `author_url`, `html`, `width`, `height`, `type`, `cache_age`, `provider_name`, `provider_url`, `version` |
+| `publish.twitter.com` | **301** to `publish.x.com` — redirects must be followed |
+| Deleted / non-existent tweet | **404 with an HTML body**, not JSON |
+| Protected account | **404 with an HTML body** — indistinguishable from deleted |
+| Non-X host in `url` | **404 with an HTML body** |
+| Malformed URL | **400 JSON** `{"message":"bad url, reason: no protocol: …"}` |
+| Missing `url` param | **400 JSON** `{"errors":[{"code":357,…}]}` — a *different* shape |
+| `javascript:` in `url` | **403**, Cloudflare HTML block page |
+| **Profile URL, not a tweet** | **200 JSON** with `title:""`, **no `author_name`**, and a timeline widget instead of a blockquote |
+| 12 sequential calls, no delay | 12 × 200, ~110ms each, **no rate-limit headers, no throttling** |
+| `cache_age` | `3153600000` — 100 years |
+
+Three of those are traps rather than facts:
+
+1. **A missing tweet does not return JSON.** `res.json()` on a 404 throws on `<!DOCTYPE`, so the
+   status must be checked before the body is parsed.
+2. **A profile URL returns 200 with no tweet in it.** A naive `res.ok` check followed by "read
+   `html`" publishes a row whose text is the string "Posts by jack". A result is therefore
+   accepted only when it has an author **and** a tweet body was actually extracted.
+3. **The two 400s have different bodies**, so neither shape is relied on beyond "this failed".
+
+The `html` field is markup, and markup is the one thing this pipeline must never pass along. The
+tweet body is the first `<p>` of the blockquote; it goes through the same `plainText()` above,
+which strips `<script>`/`<style>` bodies, drops every tag, and decodes through the same narrow
+table. **The oEmbed HTML is never injected anywhere**, and X's embed script is not loaded — a
+build guard refuses a page containing `platform.twitter.com`, `widgets.js` or `twitter-tweet`.
+
 ---
 
 ## 3. The player → manager mapping
@@ -491,3 +537,101 @@ caught in review before it reaches the page.
    rows already carry `user_id`.
 5. **Whether "Ruled out" should supersede "Questionable"** rather than sit beside it. That is the
    thread model in §7, and a `v: 2`.
+
+---
+
+## 10. Shared tweets — the curated path
+
+The user is on X all day. They tap Share on a tweet, pick an iOS Shortcut, and it lands in the
+feed: a locker-room summary on top, the tweet itself behind an expander.
+
+**Why this is a different feature from §2 and not a fix to it.** The automated feed finds stories
+and infers who they are about, and that inference is the most dangerous thing it does. The curated
+path inverts both halves: a person already decided the item is interesting, and a person can say
+who it is aimed at. So it does not need discovery, and it does not need to guess.
+
+### The shape
+
+1. The Shortcut POSTs `{url, note?, target_name?, submitted_by?}` to `news_submissions`.
+   `docs/SUPABASE_SETUP.md` §3b has the exact request and the SQL.
+2. `news-sync.mjs` reads unprocessed rows, fetches each tweet's text via oEmbed (§2 amendment),
+   and publishes it as an ordinary `news.json` row with `category: "tweet"` plus `tweet_text`,
+   `tweet_author`, `tweet_handle` and `submitted_by`.
+3. `processed_at` is stamped so a submission is never ingested twice. `--report` stamps nothing,
+   because it documents itself as writing nothing and consuming the queue is very much a write.
+
+`v` stays `1`. The new fields are additive and every one is optional, so a page built before they
+existed ignores them and renders these rows as ordinary news rows with no expander. Bumping to `2`
+would make the deployed page reject the whole file on its version gate and drop all 60 items in
+order to add a feature affecting a handful — a strictly worse failure than the one it would guard
+against. The version gate is for changes that would make an old reader render something *wrong*.
+
+### Attribution — authoritative, then matched, then nobody
+
+`target_name` carries a **manager name, not a `user_id`**, which inverts the rule the rest of this
+repo follows (`trade_votes.choice` stores the id precisely because names change). The reason is
+the client: the writer is a phone share sheet, and nobody is picking an 18-digit snowflake out of
+a list on a phone. The cost is paid server-side and paid loudly — a name matching nothing resolves
+to null and the item publishes addressed to nobody, rather than being handed to the nearest match.
+Matching is forgiving about case and surrounding space only; a prefix or a nickname is refused,
+because "Bubba" matching `BubbaCuckShremp` today is "Josh" matching the wrong Allen tomorrow.
+
+With no target, the existing `matchPlayer()` runs over the tweet text. That is a change of input
+for a function documented as reading a title and never a summary, and it is sound here: summaries
+are banned because they name teammates, coaches and the reporter alongside the actual subject,
+whereas a tweet is one short post and a rostered player named in it is overwhelmingly what it is
+about. Every refusal rule is unchanged — full names only, never a surname, and two different
+rostered players means no match rather than a guess.
+
+The one case resolved beyond `matchPlayer()` is a **namesake collision**: two different rostered
+players whose names normalise identically, e.g. Michael Carter and Michael Carter II, since
+`normName()` strips suffixes. The matcher sees two candidates for what is textually one name and
+refuses, which is over-cautious, so `nameCandidateScore()` from `price-today.mjs` breaks that tie
+the way P1-13 taught — skill position, then a live NFL team, then active. Two candidates with
+*different* names are still refused, and a tie in the scoring is still refused.
+
+### The voice
+
+Same seam, `leagueLine()`. No second voice system. **The sharer's `note` wins outright if
+present**, checked before anything else so no generated line can override a written one — their
+words know the league and the grudge, the templates only know a category.
+
+Three template banks, not one, because both slots are independently optional here: a manager and a
+player, a manager only, or neither. The first version used one bank with `{player}` in it and
+shipped *"This got shared into the feed specifically so SF69erss would have to read it. This
+content."* A template whose sentence collapses when a slot is empty needs a different template,
+not a cleverer placeholder.
+
+### Dedupe
+
+A Schefter tweet and the Rotowire restatement of it are one story. The test is same player **and**
+same topic within six hours, where topic is `classify()` run over the tweet text — the row's own
+`category` is always `"tweet"` and would never match an automated row's. Matching on the player
+alone was the first version and was too broad: a shared trade rumour swallowed an unrelated injury
+note about the same player from the same afternoon, which is two stories. The submission wins and
+the automated row is dropped, the opposite of `dedupe()`'s earliest-published rule and deliberate
+— a person chose this one, it carries their jab, and it has the tweet behind it.
+
+### The UI
+
+The row is a `<div>` and never an `<a>`. Every other row in this feed wraps its whole body in a
+link, and putting the expander inside one would be **defect A1** — an interactive control nested
+in another interactive control. That is not a style note: it is the same mistake that makes a
+click inside an expanded trade row collapse it, because the inner control's event is also a click
+on the outer one. So the link to the tweet is a separate `<a>` inside the panel, a sibling of the
+button, and the click handler returns early rather than falling through to the row handler.
+
+The panel always renders and toggles `hidden` rather than being omitted when closed, so
+`aria-controls` never dangles. `aria-expanded` follows the open state. The button and the link out
+are both ≥44px, and both are keyboard operable.
+
+### What this costs, honestly
+
+`news_submissions` is **write-open to anyone holding the anon key**, which is in the page. That is
+the same trade votes make, but it matters more here because this table feeds text that gets
+rendered rather than a number in a tally. The mitigations are downstream and each is real: the URL
+is constrained to an X permalink at both ends and canonicalised from the captured parts, the tweet
+HTML is never forwarded, every field is escaped in text and in attributes, and a build guard
+refuses a page that interpolates a news field without `esc()`. Anyone with the key can also stamp
+`processed_at`, suppressing a pending submission. Acceptable for ten friends; not a pattern to
+copy where the data matters.

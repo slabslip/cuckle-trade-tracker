@@ -129,6 +129,227 @@ create or replace view public.trade_vote_tallies with (security_invoker = true) 
 
 ---
 
+## 3b. Run needed: `news_submissions`, for tweets shared in from X
+
+This is the intake table for the "share a tweet from X into the feed" flow. The
+iOS Shortcut POSTs a row here; `news-sync.mjs` reads the unprocessed rows,
+fetches each tweet's text from X's oEmbed endpoint, and publishes it into
+`data/ui/news.json`.
+
+**Re-running the whole of `db/schema.sql` does all of this** and is still safe to
+run twice. The standalone snippet is below if you would rather paste just this
+part.
+
+### Why this section is written as create-then-converge
+
+On 2026-08-30 this project already had a `news_submissions` with exactly the
+right seven column names and **none** of the constraints, policies or grants. It
+accepted `https://evil.com/a/status/1`, had no unique constraint, and let the
+anon key rewrite the `url` of a row that was already stored.
+
+`create table if not exists` does nothing when a table of that name exists,
+whatever shape it is in, and reports success. So a version of this that declared
+its constraints inline would be idempotent in the trivial sense and useless in
+the sense that matters. Every constraint, index, policy and grant below is
+therefore applied separately, and two details are load-bearing:
+
+* **`revoke update` before `grant update (processed_at)`.** A table-wide grant
+  and a column-level grant are separate privilege entries; granting the column
+  does not remove the table-wide one. Without the revoke, `url` stays rewritable.
+* **Check constraints go on `not valid`, then validate in a block that
+  downgrades failure to a warning.** A legacy row violating a new check would
+  otherwise abort the whole script, letting one piece of junk permanently block
+  the setup that prevents more of it. `not valid` still enforces on every insert
+  and update from that moment; validation only certifies the *old* rows.
+
+If you see a warning about existing rows violating `news_submissions_url_shape`,
+this finds them:
+
+```sql
+select id, url, created_at from public.news_submissions
+where url !~* '^https?://(www\.)?(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status(es)?/[0-9]{1,25}(/(photo|video)/[0-9]{1,2})?/?([?#].*)?$'
+order by id;
+```
+
+Anon has no `DELETE` here either, by the same deliberate trade as votes, so
+clearing those out needs the SQL editor. Marking them processed is enough to
+stop the pipeline retrying them:
+
+```sql
+update public.news_submissions set processed_at = now() where id in (…);
+```
+
+### The uniqueness rule, and why it is not `url` alone
+
+Unique on **`(url, submitted_by)` with `nulls not distinct`**.
+
+A unique constraint on `url` alone would stop the same tweet ever being added
+twice — and would also stop two league members putting their own jab on the same
+tweet. The second person's row is not a duplicate, it is the content. Two
+managers reacting to one Schefter tweet is the feature working.
+
+The duplicate that actually happens is narrower: one person taps Share twice, or
+the Shortcut retries on flaky LTE and POSTs the identical body again. That
+collision is (same url, same submitter), so that is what the constraint covers.
+
+`nulls not distinct` is required, not decorative. By the SQL default two NULLs
+are distinct, so without it a submitter who does not send `submitted_by` — which
+is optional — would defeat the constraint entirely and every retry would insert.
+
+Collapsing two people's takes on one tweet into one feed row is a *display*
+decision, and it is handled downstream in `news-sync.mjs`, which can be tuned
+without a migration.
+
+### The honest limits, same as votes but they matter more here
+
+The anon key is in the page, so **anyone who can read the site can insert a row
+into this table.** There is no author check because without Supabase Auth there
+is nothing to check against; `submitted_by` is client-asserted and unverifiable.
+A vote is a number in a tally. This table feeds **text that gets rendered on the
+page**, so the mitigations are downstream and each one is real:
+
+* `url` must match an x.com/twitter.com status permalink, so the build cannot be
+  aimed at another host.
+* `news-sync.mjs` re-validates the same shape and rebuilds the canonical URL from
+  the captured handle and id, so the stored string is never what gets fetched.
+* The oEmbed **HTML is never forwarded** — the tweet is stripped to plain text.
+* Every field is escaped at render, in text and in attributes, and a build guard
+  refuses a page that interpolates a news field without `esc()`.
+* A submission publishes; it cannot move a number. PRODUCT LAW still holds.
+
+Anyone with the key can also stamp `processed_at`, which would suppress a
+pending submission. Acceptable for ten friends, on the same reasoning as votes.
+Worth saying rather than implying otherwise.
+
+### The SQL
+
+```sql
+create table if not exists public.news_submissions (
+  id           bigint generated always as identity primary key,
+  url          text        not null,
+  note         text,
+  target_name  text,
+  submitted_by text,
+  created_at   timestamptz not null default now(),
+  processed_at timestamptz
+);
+
+alter table public.news_submissions add column if not exists note         text;
+alter table public.news_submissions add column if not exists target_name  text;
+alter table public.news_submissions add column if not exists submitted_by text;
+alter table public.news_submissions add column if not exists created_at   timestamptz not null default now();
+alter table public.news_submissions add column if not exists processed_at timestamptz;
+
+do $$
+declare c record;
+begin
+  for c in
+    select * from (values
+      ('news_submissions_url_len',   'check (length(url) between 12 and 500)'),
+      ('news_submissions_url_shape', 'check (url ~* ''^https?://(www\.)?(x|twitter)\.com/[A-Za-z0-9_]{1,15}/status(es)?/[0-9]{1,25}(/(photo|video)/[0-9]{1,2})?/?([?#].*)?$'')'),
+      ('news_submissions_note_len',         'check (note is null or length(note) between 1 and 500)'),
+      ('news_submissions_target_name_len',  'check (target_name is null or length(target_name) between 1 and 64)'),
+      ('news_submissions_submitted_by_len', 'check (submitted_by is null or length(submitted_by) between 1 and 64)')
+    ) as t(name, body)
+  loop
+    if not exists (select 1 from pg_constraint
+                   where conrelid = 'public.news_submissions'::regclass and conname = c.name) then
+      execute format('alter table public.news_submissions add constraint %I %s not valid', c.name, c.body);
+    end if;
+    begin
+      execute format('alter table public.news_submissions validate constraint %I', c.name);
+    exception when check_violation then
+      raise warning 'news_submissions: existing rows violate %; enforced for new rows only.', c.name;
+    end;
+  end loop;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint
+                 where conrelid = 'public.news_submissions'::regclass
+                   and conname  = 'news_submissions_url_submitted_by_key') then
+    begin
+      alter table public.news_submissions
+        add constraint news_submissions_url_submitted_by_key
+        unique nulls not distinct (url, submitted_by);
+    exception when unique_violation then
+      raise warning 'news_submissions: existing duplicate (url, submitted_by) rows blocked the unique constraint.';
+    end;
+  end if;
+end $$;
+
+create index if not exists news_submissions_unprocessed_idx
+  on public.news_submissions (created_at) where processed_at is null;
+
+alter table public.news_submissions enable row level security;
+
+drop policy if exists news_submissions_anon_insert on public.news_submissions;
+create policy news_submissions_anon_insert on public.news_submissions
+  for insert to anon with check (true);
+
+drop policy if exists news_submissions_anon_select on public.news_submissions;
+create policy news_submissions_anon_select on public.news_submissions
+  for select to anon using (true);
+
+drop policy if exists news_submissions_anon_update on public.news_submissions;
+create policy news_submissions_anon_update on public.news_submissions
+  for update to anon using (true) with check (true);
+
+grant select, insert on table public.news_submissions to anon;
+revoke update on table public.news_submissions from anon;
+grant update (processed_at) on table public.news_submissions to anon;
+revoke delete, truncate on table public.news_submissions from anon;
+```
+
+### What the Shortcut POSTs
+
+One `Get Contents of URL` action. Method `POST`, and note the two `Prefer`
+values on one header.
+
+```
+URL     https://<project>.supabase.co/rest/v1/news_submissions?on_conflict=url,submitted_by
+
+Headers
+  apikey         <anon key>
+  Authorization  Bearer <anon key>
+  Content-Type   application/json
+  Prefer         resolution=ignore-duplicates,return=minimal
+
+Body (JSON)
+  {
+    "url":          "https://x.com/AdamSchefter/status/1234567890",
+    "note":         "your TE is cooked",
+    "target_name":  "SF69erss",
+    "submitted_by": "BubbaCuckShremp"
+  }
+```
+
+Only `url` is required; `note`, `target_name` and `submitted_by` may each be
+omitted or `null`. A successful POST answers **201** with an empty body.
+
+* **`url`** — whatever the share sheet gives you. `twitter.com` or `x.com`, with
+  `?s=20&t=…` or a `/photo/1` suffix, all fine; the pipeline canonicalises it.
+* **`note`** — the sharer's own jab. **If present it becomes the summary line
+  verbatim**, and no template runs. Their words beat ours. Up to 500 characters,
+  trimmed to 240 in the feed.
+* **`target_name`** — a manager's display name exactly as it appears in
+  `data/ui/members.json` (case and surrounding spaces do not matter, but
+  nicknames and prefixes are not accepted). **Send the name, not a `user_id`**:
+  picking an 18-digit snowflake out of a list on a phone is how a feature goes
+  unused. If it is supplied it is authoritative and no name matching runs at all.
+  If it matches nothing, the item still publishes, addressed to nobody.
+* **`submitted_by`** — who shared it. Only used for the uniqueness rule above.
+
+`resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second tap
+on Share answers 201 with an empty body instead of a `409` the Shortcut would
+surface as a failure. It needs `INSERT` only.
+
+Nothing appears in the feed until `news-sync.mjs` runs and the page is rebuilt —
+this is a static site, so the feed is baked at build time, not fetched live.
+
+---
+
 ## 4. What is safe to commit, and what is not
 
 **Safe to commit, and we need them in the page:** the Project URL and the

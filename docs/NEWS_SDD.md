@@ -656,9 +656,11 @@ The row is a `<div>` and never an `<a>`. Putting **See tweet** (or **Remove**) i
 row-level link would be **defect A1** — an interactive control nested in another interactive
 control. Those controls sit in the citation foot as siblings.
 
-The tweet row shows the **manager tag**, a compact locker-room `league_line`, and a citation
-foot (`@handle · relative time · See tweet`). The full `tweet_text` is kept on the item for
-matching/oEmbed but is **not** painted into the row. The link out is ≥44px and keyboard operable.
+The tweet row shows the **manager tag**, a compact `league_line` (**tweet fact first**, then a
+short poke / trash-talk), and a citation foot (`@handle · relative time · See tweet`). The full
+`tweet_text` is kept on the item for matching/oEmbed but is **not** painted into the row. The
+link out is ≥44px and keyboard operable. Multi-tag / The league rows keep impersonal pokes
+(no “you”); single-seat rows may needle in second person without repeating the manager name.
 
 **Admin Remove.** Soft-delete via `deleted_at` / `deleted_by` — anon still has no hard DELETE.
 The button is offered only when this device's remembered seat is TrumanCooper (pick yourself

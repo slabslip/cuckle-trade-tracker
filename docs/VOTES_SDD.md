@@ -1,11 +1,17 @@
 # CuckleChunckle — Trade votes SDD
 
 Who actually won a trade, as an **opinion**. Shipped 2026-08-29 on the Recent Trade card.
+Connected to a real cross-user store 2026-08-30.
+
+**The store is Supabase.** §3 below recommended a Cloudflare Worker with KV; that
+recommendation is **superseded** and kept only as the record of why. Setup, keys and the
+verification walkthrough live in [`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md); the schema is
+[`db/schema.sql`](../db/schema.sql); the adapter is §5.
 
 **Hard rule: a vote is not a value.** Votes never enter the needle, the even book, Value
 Adjustment, the lens windows, `today_delta`, partner grades, `aged`, or any board ranking. One
-identity per number. Votes live in their own file, behind their own two functions, in their own UI
-block. Nothing in the value spine may read them, now or later.
+identity per number. Votes live in their own table, their own file, behind their own two
+functions, in their own UI block. Nothing in the value spine may read them, now or later.
 
 ---
 
@@ -17,11 +23,15 @@ and only there, sits the vote block:
 ```
 Who actually won it?
 [ SF69erss        1 vote · 100% ]   [ KingHenryXXVI   tap to vote ]
-Your vote, on this device only — the league tally lights up once the vote store is
-connected. Opinion only: votes never enter the value book.
+League tally as of 00:21; votes join it as they land. Opinion only: votes never
+enter the value book.
 ```
 
-- One vote per trade per person. Tapping the other side moves the vote; tapping the same side
+The caption above is the connected case. All five variants, and the rule that decides between
+them, are in **Honest copy** below.
+
+- One vote per trade per person, enforced in the database by a unique constraint on
+  `(transaction_id, voter)`. Tapping the other side moves the vote; tapping the same side
   clears it.
 - Choices are the **two seat `user_id`s** of the trade, not display names, so a rename on Sleeper
   does not orphan a vote.
@@ -50,14 +60,19 @@ function bodies and nothing else.
 readVotes(transactionId) -> {
   choice,   // seat user_id this device voted for, or null
   seat,     // voter identity recorded at vote time, or null
-  tally,    // { [seat user_id]: count }  — committed totals plus this device's vote
+  tally,    // { [seat user_id]: count }
   votes,    // sum of tally
-  league,   // true when data/ui/votes.json has an entry for this trade
-  asOf,     // votes.json generated_at, or null
+  league,   // true when the tally is a real league count rather than this device alone
+  asOf,     // when that league count was read, or null
+  source,   // "live" | "book" | "local" — where tally came from
+  pending,  // true while this device's vote has not been confirmed by the store
 }
 
 writeVote(transactionId, choice) -> void   // choice === null clears the vote
 ```
+
+`source` and `pending` were added when Supabase was connected; they exist so the caption can
+state which of three things the reader is looking at rather than implying the best case.
 
 `localStorage` payload, versioned so a migration is possible:
 
@@ -76,18 +91,32 @@ than breaking the render.
 
 ### Honest copy
 
-With local-only storage the tally a user sees is **their own device's vote**. The UI says so and
-does not render a fake league-wide count. It only claims a league tally when
-`data/ui/votes.json` actually carries an entry for that trade.
+The block never claims a league tally it did not receive. Three captions, one per `source`:
+
+| `source` | Caption |
+| --- | --- |
+| `live` | League tally as of *HH:MM*; votes join it as they land. |
+| `live`, `pending` | League tally as of *HH:MM*; your vote is saved here and still on its way to it. |
+| `book` | League tally as of *generated_at*; your vote joins it on the next rebuild. |
+| `local`, read failed | Your vote, on this device only — the league tally is out of reach right now. |
+| `local`, not read yet | Your vote, on this device only — the league tally lights up once the vote store answers. |
+
+`asOf` on a live tally is the clock time of the read, and it is **not** advanced when your own
+vote lands. Your vote landing says nothing about anybody else's, and moving the timestamp would
+claim the other counts had been rechecked.
 
 ---
 
-## 2. The reader that is already in place (Phase 2, front-end done)
+## 2. The committed-file reader (Phase 2)
 
 At boot the page fetches `data/ui/votes.json`, tolerating a 404 and a malformed or wrong-version
 file (either leaves `voteBook = null` and the local-only copy stands). A committed file is merged
-with the local vote for display. **No further front-end work is needed** when a backend starts
+with the local vote for display. **No further front-end work is needed** if a backend ever starts
 writing that file.
+
+Since 2026-08-30 this is the **middle** tier of three: the live Supabase tally outranks it and
+local-only sits below it (§5.3). It is what the card paints when Supabase is unreachable or the
+free-tier project is paused, so it is kept rather than deleted — last-known totals beat nothing.
 
 ### `data/ui/votes.json` schema (v1)
 
@@ -120,11 +149,20 @@ Without a `voters` map the local vote is always added, which can double-count by
 whose vote has already been pulled. Ship `voters` and the count is exact.
 
 The file committed today is the empty, valid case: `v: 1`, `source: "none"`, `votes: {}`. Every
-trade therefore falls back to the local-only copy.
+trade therefore falls back to the local-only copy. Its role is now **paint-first fallback** for a
+paused or unreachable Supabase project rather than the primary source — see §5.
 
 ---
 
 ## 3. Real cross-user capture — options and recommendation
+
+> **Superseded 2026-08-30.** The user chose **Supabase**, which is Option B below rather than the
+> recommended Option A. This section is kept as the record of what was weighed. What actually
+> shipped is §5, and the reasons Supabase beat the Worker in practice are not in this section at
+> all: the project already existed, the schema was already applied and verified, and PostgREST
+> gave a working upsert and a tally view for zero lines of server code. Note also that Option B as
+> written below is not what shipped — it proposed no `SELECT` policy for `anon` and a scheduled
+> service-role pull, whereas the shipped design reads the tally **directly from the browser**.
 
 The site is static on GitHub Pages: no server, no database. Capturing ten managers' votes needs
 exactly one writable endpoint somewhere. Three shapes, cheapest first.
@@ -184,14 +222,154 @@ the page source can post votes. For a ten-person private league that means:
 
 **Recommendation:** Option A. One Worker, one KV namespace, one scheduled pull into
 `data/ui/votes.json` — the front end is already written against that file, so connecting it is a
-backend-only change, and the site stays static.
+backend-only change, and the site stays static. *(Not taken — see the note at the top of §3 and
+what shipped in §5.)*
 
 ---
 
 ## 4. What is deliberately not built
 
-- No league tally is live. Until a store is connected, every user sees their own device's votes.
-- No per-manager breakdown on screen yet, though the voter identity is recorded for it.
+- No per-manager breakdown on screen yet, though the voter identity is recorded for it. It would
+  be a list of unverified claims (§5.5), so it needs copy that says so before it earns a screen.
 - No vote on N-way trades (§1).
 - No vote on the Trades tab rows — only the Recent Trade card. Trades-tab rows are `<button>`s
   with the detail nested inside (audit A1); adding a control there means fixing that first.
+- No scheduled pull into `data/ui/votes.json`. The page reads the live tally directly, so the
+  committed file has no writer and stays the empty valid case. §5.3 explains why it is kept.
+- No rate limiting. Supabase's platform limits are the only cap (§5.5).
+
+---
+
+## 5. What shipped: the Supabase adapter
+
+Plain `fetch` against PostgREST. No npm, no SDK, no bundler — same constraint as the rest of the
+repo. Everything lives inside the two doors of §1; no render code changed.
+
+The project URL and the **`anon`** key are committed in `generate-page.mjs`. That is what those
+values are for: the site is static on GitHub Pages, so there is nowhere to hide a secret, and the
+Row Level Security in `db/schema.sql` is the boundary rather than the key. The key on this project
+is a **legacy anon JWT**, so `Authorization: Bearer <key>` is valid alongside the always-required
+`apikey` header. A newer `sb_publishable_...` key is **not** a JWT and is rejected on the Bearer
+header with `Invalid JWT` — if the key is ever replaced with one of those, send `apikey` alone.
+A `service_role` / `sb_secret_` key must never appear anywhere in this repo: it bypasses RLS.
+
+### 5.1 Reads — two requests per page load, none per card
+
+```
+GET /rest/v1/trade_vote_tallies?select=*
+GET /rest/v1/trade_votes?select=transaction_id,choice&voter=in.(<our ids>)
+```
+
+The first returns `{ transaction_id, choice, votes }` for **every** trade at once and is cached in
+memory for the session. The table is tiny and the view is an aggregate, so this stays cheap as
+votes accumulate. Nothing fires a request per rendered card.
+
+The second is not tidiness, it is required. The view has aggregated the ballots away, so there is
+no way to tell from it whether the total for a trade already counts **us**. Without it the only
+options are double-counting our own vote or hiding it, and both are wrong. It is bounded by our
+own vote count, and `voter=in.(...)` lists every id this device might have voted under — the
+device uuid, the seat picked now, and the seat recorded with each stored vote — because `voter` is
+decided at vote time and picking a seat later must not orphan an earlier vote.
+
+Both reads carry an 8 s abort. A paused free-tier project can hang rather than refuse, and they
+are fired **after** first paint, so Supabase is never between the reader and the dashboard.
+
+### 5.2 Writes — upsert, optimistically
+
+```
+POST /rest/v1/trade_votes?on_conflict=transaction_id,voter
+Prefer: resolution=merge-duplicates,return=representation
+{ "transaction_id": "...", "choice": "...", "voter": "..." }
+```
+
+`?on_conflict=transaction_id,voter` is **not optional**. PostgREST infers the conflict target from
+the primary key unless told otherwise, and the primary key is the surrogate `id` — leave it off
+and a second vote fails on the unique constraint instead of updating the row.
+
+The vote is written to `localStorage` and on screen **before** the request leaves. The response
+then reconciles: the echoed row's `choice` is folded into the cached tally, moving only our own
+contribution. On failure the vote stays where it is, the trade is marked `pending`, and the
+caption says so — nothing is lost and nothing wedges. The next page load retries it.
+
+That retry is **one-directional by design**: a trade with a local vote the server disagrees with
+gets the local vote pushed again, but a trade with *no* local vote is never cleared on the server.
+The same person on a phone and a laptop resolves to the same `voter` once they pick a seat, so
+inferring a clear from local absence would have the second device silently delete the first
+device's vote. A clear is only ever sent when somebody actually taps to clear.
+
+### 5.3 Precedence
+
+**live Supabase tally > committed `data/ui/votes.json` > local-only.**
+
+Where the live tally is available it is the whole league count, and our own ballot row is what
+tells us whether we are already in it. Where it is not — offline, blocked, paused project, an
+error — the reader falls back to the committed book, and failing that to this device alone. The
+committed file is kept as the paint-first/offline fallback exactly as `SUPABASE_SETUP.md` §6
+recommends: last-known totals beat nothing. It currently has no writer, so it is the empty valid
+case and the live tally always wins.
+
+`localStorage` is the source of truth for **"my vote"**. Supabase is the source of truth for
+**"the league tally"**. Neither overrides the other; where they disagree, the difference is
+precisely what is still in flight, and that is what the optimistic adjustment renders.
+
+### 5.4 The sentinel-clear rule
+
+`writeVote(tx, null)` clears a vote, but **anon has no `DELETE`** — verified against the live
+project, it returns `401`. That is deliberate and must stay: a delete verb reachable from the page
+would let any league member erase everybody else's votes.
+
+So clearing is an **UPDATE to the reserved `choice` value `__none__`**, and the tally view filters
+it:
+
+```sql
+create or replace view public.trade_vote_tallies with (security_invoker = true) as
+  select transaction_id, choice, count(*)::int as votes
+  from public.trade_votes
+  where choice <> '__none__'
+  group by transaction_id, choice;
+```
+
+Without that predicate the sentinel is counted as a vote for a side called `__none__`. Reproduced
+live — two votes for one side, one of them cleared — the view returned
+`[{choice:"__none__",votes:1},{choice:"SEATX",votes:1}]`, so a trade with one real vote would have
+rendered 50% / 50%. The fix is the schema's, not the client's.
+
+The reader **also** drops `__none__`, and any seat whose count reaches zero, before summing the
+denominator. That is belt-and-braces, not the fix: it keeps the percentages right on a project
+whose view has not been re-run since, and it costs one condition.
+
+`__none__` cannot collide with a real answer because `choice` only ever holds a Sleeper `user_id`,
+which is a decimal snowflake string. It is stored rather than nulled because `choice` is
+`not null`, and because one row per `(trade, voter)` for the whole life of an opinion — including
+the fact that it was withdrawn — is the more useful record.
+
+### 5.5 `voter` is client-asserted. Say it out loud.
+
+There is no Supabase Auth on this project. There is no logged-in user, so there is no `auth.uid()`
+to compare anything against, and the `voter` column is **asserted by the browser and unverifiable
+by the database**. The RLS policies are `using (true)` / `with check (true)`; they gate *which
+verbs* are reachable, not *who* is calling.
+
+Concretely, a league member who opens dev tools can:
+
+- **vote as someone else.** Seat `user_id`s are public — they are in `data/ui/members.json`.
+- **overwrite or clear another member's vote**, because the UPDATE policy cannot tell one caller
+  from another.
+- **stuff the ballot**, since a fresh uuid is a new voter as far as the unique constraint knows.
+
+No policy fixes this while the identity is client-asserted, and a header or a client-supplied
+check would only look like a control. **The anon key is not a security boundary** — it is a
+routing token, and the security boundary is RLS, which stops none of the above.
+
+This is acceptable *here and only here*: about ten people in a private dynasty league who all know
+each other, the stakes are an opinion counter next to a trade, and the votes are firewalled from
+every number that matters — they never enter the needle math, the even book, Value Adjustment, the
+lens windows, `today_delta`, partner grades, `aged`, or any ranking. It is a low-value target
+guarded by social trust. It is not a model to copy for anything where the data matters.
+
+The fix, if it ever matters, is Supabase Auth: narrow the policies to `auth.uid()` and drop the
+client-asserted `voter` column. That is a much larger change than this feature deserves today.
+
+Two more, for completeness. **Nothing rate-limits** — Supabase's platform limits are the only cap,
+which a ten-person league will never approach. And there is **no PII**: a vote is a transaction id,
+a seat id and two timestamps.

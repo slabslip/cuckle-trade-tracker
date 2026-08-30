@@ -12,8 +12,8 @@ Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Known defects → [`DASHBOARD_AUDIT.
 
 ## 1. Two rooms
 
-**League home** is what you get with no seat picked: the gold alert row, Most lopsided trades, and
-the four player packs. It is the water cooler.
+**League home** is what you get with no seat picked: the gold alert row, the `Score as` clock, and
+one **League Data Sets** dropdown holding the five lists. It is the water cooler.
 
 **Team home** is what you get after picking a name in the header. **You are that seat.** Six style
 tiles, an optional league chart, your best and worst deal, your two edge partners, your best and
@@ -104,11 +104,29 @@ Boot reads every one of them; an unknown value falls back to league home rather 
   beat, the final score, and their top scorer that week. A season with no usable final falls back
   to `· bracket` or `· points race`. Links to the Champions Path screen.
 
-**Most lopsided trades** — a collapsible pack, top 10 sides by absolute margin on the selected
-clock, deduped to one side per transaction. This is the **permanent** replacement for the old
-Best 10 / Worst 10 board (§8). Filtered by the lived clock, so `all` shows the newest deals.
+**League Data Sets** — one dropdown, one list on screen. Five sets: Most lopsided trades · Most
+passed around · Least traded · Forever players · Homesteaders. It replaced five collapsible packs
+stacked down the screen, any number of which could be open at once. The trigger's label is the
+constant `League Data Sets`, never the selection — the same convention the seat picker settled on —
+and the selected set is named by the `h2` directly below it. **Most lopsided trades** is the
+default, so the screen is never a lone dropdown over nothing.
 
-**Player packs** — Most passed around · Least traded · Forever players · Homesteaders.
+It is a popup listbox with the seat picker's keyboard: arrows, `Home`, `End`, `Escape` back to the
+trigger. The panel takes the trigger's full width; capped narrower, it left half of each trade row
+visible beside it.
+
+`Score as` is a **separate** control and stays one. It picks the clock the figures are computed on;
+this picks which list is on screen. Two axes, two menus.
+
+**Most lopsided trades** — top 10 sides by absolute margin on the selected clock, deduped to one
+side per transaction. This is the **permanent** replacement for the old Best 10 / Worst 10 board
+(§8). Filtered by the lived clock, so `all` shows the newest deals, and it is the one set the
+`Score as` clock acts on.
+
+**The ticker** carries a pill per set, which selects it and scrolls to it. A pill with no
+destination — `Most active`, `Least active`, whose league-wide Traders list was deleted in D4b —
+is a static `span`, not a `button`: they shipped as buttons carrying an empty destination, so they
+looked pressable and were ignored on every tap.
 
 ---
 

@@ -934,6 +934,18 @@ editorial rather than wrong-number defects, which is why they were left.
 1. **The league ticker duplicates every pack.** `leagueBubbles` (`:705`) emits Most passed around,
    Least traded, Forever players, Homesteader — each of which is also a pack directly below it.
    It also pushes **two** Forever bubbles: a count and then the first name (`:723-724`).
+   **Changed shape, 2026-08-30 (`20260830lds2`).** The five packs are one **League Data Sets**
+   dropdown with one list on screen, so a pill is no longer beside the list it names — it is now
+   the shortcut that *selects* that list. The duplication is gone by construction for four of the
+   five; only the set currently chosen is on screen under its own pill. The two Forever pills
+   remain, and both select the same set.
+
+   The pill defect underneath this one **is** fixed. `Most active` and `Least active` carried
+   `pack: ""`, which emitted no data attribute at all, so they rendered as buttons and were
+   ignored on every tap — a control that looks pressable and is not. Their destination, the
+   league-wide Traders list, was deleted in D4b and nothing replaced it, so they are static
+   `span` pills now rather than dead buttons. A generate-time assertion refuses to ship a pill
+   carrying an empty destination.
 2. **The ticker DOM is emitted twice** (`row + row`, `:747`) for the marquee loop, so screen
    readers read the whole feed twice.
 3. **Every Champions Path row is labelled "1st"** (`:871`) — a constant in a column that

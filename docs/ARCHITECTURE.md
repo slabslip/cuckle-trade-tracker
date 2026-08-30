@@ -239,8 +239,10 @@ Still shipped and still unread, kept for the reasons above or as too small to be
 
 One `index.html`. After `?me=` / tile pick:
 
-With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), Most
-lopsided trades, and the four player packs. After `?me=` or a pick in the header:
+With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), the
+`Score as` clock, and one **League Data Sets** dropdown holding five lists (Most lopsided trades ·
+Most passed around · Least traded · Forever players · Homesteaders), one on screen at a time. It
+replaced five collapsible packs. After `?me=` or a pick in the header:
 
 | Tab | What it shows |
 | --- | --- |

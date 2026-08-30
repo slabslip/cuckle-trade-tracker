@@ -273,11 +273,12 @@ also silently breaks the click handlers that read those datasets.
 
 ## 3. Dead code and dead payload
 
-### Dead UI: the entire league board screen is unreachable — **boards DELETED 2026-08-30 (D4a)**
+### Dead UI: the entire league board screen is unreachable — **SCREEN DELETED 2026-08-30 (D4a, D4b)**
 
 *Update: the Best/Worst board described below was briefly made reachable, then removed for good
-by user decision — see D4a. `renderLeague()` survives for its Traders/Drafters lists, which are
-now themselves unreachable and awaiting a user ruling. The rest of this section still stands.*
+by user decision — see D4a. `renderLeague()` survived a few hours longer for its Traders/Drafters
+lists; the user then ruled delete on those too, so the whole `league` view is gone — see D4b.
+This item is now closed. The `draftTab` and `pickWindowEnd` notes below still stand.*
 
 `renderLeague()` (`:1391`), `renderTradeBoards()` (`:1437`), `rankSides()` (`:1422`) and
 `monthsAgo()` (`:1413`) implement Best 10 / Worst 10 with an As-of-today vs Aged toggle and
@@ -313,7 +314,13 @@ Per-seat files (10 seats, **7.4 MB** total):
 | `trade_boards.sides` | 524,596 | Yes — `rankWide`, `daySides`. |
 | `review_trades` | 141,587 | **No.** |
 | `trade_boards.today` / `.aged` | 39,224 | **No** (only the dead board screen). |
-| `drafters_rookie` / `drafters_startup` | 5,010 | **No** (only the dead board screen). |
+| `drafters_rookie` / `drafters_startup` | 5,010 | **No** — see the correction under D4b. |
+
+Correction to that last row, measured 2026-08-30 against the committed `league.json`:
+`drafters_startup` is **already stripped** from the shipped file by `apply-value-adjust.mjs:297`,
+so the on-disk dead weight is `drafters_rookie` alone at **2,539 bytes**. `revalue.mjs` still
+*builds* both (`:1036-1037`, `:1044-1045`), so `drafters_startup` is wasted pipeline work rather
+than wasted bytes. `league.traders` (3,418 bytes) is **not** dead — `leagueBubbles` reads it.
 
 **Roughly 4.2 MB of 7.4 MB in seat files and 185 KB of 717 KB in `league.json` is never read.**
 Restructuring `windows` to one leg list plus five values per trade saves ~1.2 MB more.
@@ -541,7 +548,7 @@ is unambiguous repair.
 | D1 | **Rostered cheap players: 0 or flatten?** `isRetired` ORs `tinyFlat <= 1200`, so Mason Rudolph (PIT), Andy Dalton (PHI) and 29 others price at 0 despite having a team. | Change to `noTeam && (tinyRaw \|\| tinyFlat)`. A rostered QB2 prices at his flatten value (761–1137), not 0. Explicit retired set still wins. |
 | D2 | **VA on 3-team trades.** Per-seat bags do not mirror, so VA never cancels: +424.09 league-wide. | Compute each seat's VA against the **union** of the other bags, restoring zero-sum. Alternative — exclude N-way trades from VA and caption it. |
 | D3 | **Where does derived value live?** VA, partner means, and grade thresholds are each implemented two or three times. | Pipeline owns all arithmetic; ships one flat row per trade per lens; browser only formats. Kills P0-4, most of §4, ~70% of bytes. |
-| D4 | **Does the Home hero return, and do Best 10 / Worst 10 come back?** The board screen already works and is merely unreachable; `.hero` CSS survives with nothing emitting it. | ~~Restore Best/Worst as a real screen (cheap — delete the two lines that force `view = "home"`), and either restore the hero or formally retire it.~~ **Best/Worst half REVERSED by user decision 2026-08-30 — see D4a. The hero question is still open.** |
+| D4 | **Does the Home hero return, and do Best 10 / Worst 10 come back?** The board screen already works and is merely unreachable; `.hero` CSS survives with nothing emitting it. | ~~Restore Best/Worst as a real screen (cheap — delete the two lines that force `view = "home"`), and either restore the hero or formally retire it.~~ **Best/Worst half REVERSED by user decision 2026-08-30 — see D4a; the rest of the league screen deleted the same day, see D4b. The hero question is still open.** |
 
 ### D4a — Best 10 / Worst 10: reversed by user decision, 2026-08-30
 
@@ -558,19 +565,61 @@ Removed in `main` (`cursor/drop-best-worst-af37`, `DATA_V = 20260829t`): the lea
 state, the `[data-board]` / `[data-window]` / `[data-open-me]` handlers, and the now-unreachable
 `button.chip.on` rule. This closes most of the §3 "dead UI" item and the boards part of Slice 2.
 
-**Open, and a user decision — not a worker decision.** `renderLeague()` was never only Best/Worst.
-It also renders two league-wide lists that nobody objected to and that the user may never have
-seen: `Traders · per complete two-way` and `Drafters · rookie surplus per pick`. Those are left
-intact and `renderLeague()` still renders them, but with the chip gone **no visible control routes
-there** — only a hand-typed `?me=<seat>&view=league` reaches it (boot ignores `?view=` without a
-seat, §P1-1). So the two lists are now **unreachable in the UI, pending a ruling**: give them
-their own entry point, fold them into an existing screen, or delete them with
-`league.traders` / `league.drafters_rookie`. This is exactly the §8a trap in reverse — the
-destination outlived its only link — so it is logged rather than silently resolved.
+~~**Open, and a user decision — not a worker decision.**~~ **ANSWERED — see D4b.**
+`renderLeague()` was never only Best/Worst. It also renders two league-wide lists that nobody
+objected to and that the user may never have seen: `Traders · per complete two-way` and
+`Drafters · rookie surplus per pick`. Those were left intact and `renderLeague()` still rendered
+them, but with the chip gone **no visible control routed there** — only a hand-typed
+`?view=league` reached it. So the two lists were **unreachable in the UI, pending a ruling**: give
+them their own entry point, fold them into an existing screen, or delete them. This is exactly the
+§8a trap in reverse — the destination outlived its only link — so it was logged rather than
+silently resolved. **The user ruled delete on 2026-08-30; D4b records what came out.**
 
 Consequently `league.json`'s `trade_boards.today` / `.aged` and `drafters_startup` now have **no
 reader at all**, and `sides` is read only by `rankWide` / `daySides`. §P1-10 (`aged` subtracts two
 price books) is now fully latent: nothing renders `aged`.
+
+### D4b — the Traders and Drafters lists: deleted by user ruling, 2026-08-30
+
+Asked whether to give the two orphaned lists an entry point or delete them, the user answered
+**delete them for now.** So the `league` view no longer exists at all.
+
+Removed (`cursor/drop-league-screen-af37`, `DATA_V = 20260830lg`):
+
+| Removed | Was at | Note |
+| --- | --- | --- |
+| `renderLeague()` | `:1697-1717` | Both `<h2>` lists and the `← League home` chip. |
+| `: view === "league" ? renderLeague()` | `render()` dispatch | Chain now ends `renderTitles()` → `renderLeagueHome()`. |
+| `"league"` in `VIEWS` | `:534` | `?view=league` is now an unknown view. |
+| `else if (startView === "league")` boot branch | `loadMembers` | Added when the board was briefly restored; had no other purpose. |
+| `view !== "league"` in the tabs expression and the `!me` guard | `render()` | Both exemptions existed only to let the seatless league view through. |
+| `.toggle { … }` | CSS `:97` | Only `renderLeague` emitted `class="toggle"`. `.chip` stays — `renderTitles` still uses it. |
+
+**Kept deliberately.** `league.traders` stays in the payload: `leagueBubbles` (`:873-880`) reads
+it for the **Most active** / **Least active** ticker pills, verified rendering after the change
+("Most active SF69erss · 130 trades", "Least active KingHenryXXVI · 26 trades"). `.you` in CSS
+stays: `markChart` still emits `class="mark-bar you"`.
+
+**How `?view=league` degrades.** It is now indistinguishable from `?view=bogus`. Verified in a
+headless browser at 390px, both before and after:
+
+| URL | Before (`main` `3474f51`) | After |
+| --- | --- | --- |
+| `?view=league` | Traders + Drafters lists, no chrome | League home — screenshot **byte-identical** to `/index.html` |
+| `?me=TrumanCooper&view=league` | Traders + Drafters lists | That seat's home, four tabs — screenshot **byte-identical** to `?me=TrumanCooper&view=home` |
+
+No thrown errors, no blank render, no console output on either URL. League home, `?view=bogus`,
+all four manager screens and Champions Path screenshot byte-identical before and after.
+
+**Dead payload this creates — for the payload slice, not done here.**
+`league.drafters_rookie` (**2,539 bytes**, 10 rows) now has **zero readers** anywhere in
+`generate-page.mjs`; it was the last thing reading it. `league.drafters_startup` is built by
+`revalue.mjs` (`:1037`, `:1045`) and then deleted by `apply-value-adjust.mjs` (`:297`), so it
+costs pipeline work but no bytes. Dropping both belongs to a `revalue.mjs` /
+`apply-value-adjust.mjs` change and was deliberately **not** made here.
+Note also that `apply-value-adjust.mjs:366` still asserts
+`check("drafters_rookie survives for the board screen", …)` — the assertion still passes, but its
+stated reason no longer exists, so retire it in the same slice.
 
 ---
 
@@ -592,10 +641,12 @@ prefer the rostered id on name collisions and give `ktcValue` a name fallback (P
 
 **Slice 2 — delete the dead**
 Remove ~~`renderTradeBoards`/`rankSides`/`monthsAgo`/`boardClock`/`boardWindow`~~ (**done
-2026-08-30, D4a**), `renderLeague` (**blocked — still holds the Traders/Drafters lists; needs
-the D4a ruling first**), `draftTab` and the dead `pickWindowEnd` branches. Stop shipping `other_bags` on 2-team trades,
+2026-08-30, D4a**), ~~`renderLeague`~~ (**done 2026-08-30, D4b — with the `league` view, its boot
+branch, its two `render()` exemptions and the `.toggle` rule**), `draftTab` and the dead
+`pickWindowEnd` branches. Stop shipping `other_bags` on 2-team trades,
 `realized`, `recent_trades`, `year_ends`, `partner_headlines`, `drafted_by`, `review_trades`,
-`trade_boards.today`/`.aged`, `drafters_*`.
+`trade_boards.today`/`.aged`, `drafters_*` (`drafters_rookie` lost its last reader in D4b; keep
+`traders`, the ticker reads it).
 
 **Slice 3 — one source per number**
 `partnerPer()` helper feeding home tile and Partners tab (P0-4) · single grade threshold constant ·
@@ -619,9 +670,13 @@ year filter becomes radios · back-button history (P1-8) · stop `replaceState` 
 1. **Is the Home hero coming back?** One number for "how you have done", or is the six-tile
    panel the answer now?
 2. ~~**Should Best 10 / Worst 10 return** as a real screen, or is Most lopsided the permanent
-   replacement?~~ **Answered 2026-08-30: Most lopsided is the permanent replacement; the board is
-   deleted (D4a).** Replaced by a new question — the Traders and Drafters lists inside the old
-   league screen now have no entry point. Give them one, fold them elsewhere, or delete them?
+   replacement?~~ ~~Replaced by a new question — the Traders and Drafters lists inside the old
+   league screen now have no entry point. Give them one, fold them elsewhere, or delete them?~~
+   **Closed 2026-08-30.** Most lopsided is the permanent replacement and the board is deleted
+   (D4a); the user then ruled *"delete them for now"* on the Traders and Drafters lists, so the
+   whole `league` view is gone (D4b). Nothing here is open. If the per-manager and per-drafter
+   league tables are ever wanted back, they are recoverable from git — and they would need an
+   entry point designed with them, which is the mistake §8a and D4a were both logged for.
 3. **Drafts on a lens.** Today the Drafts tab pins Since-trade and hides the dropdown. Should
    rookie surplus respond to the lens, given "got" would be a windowed mean while "sent" stays
    draft-day cost — two clocks in one number?

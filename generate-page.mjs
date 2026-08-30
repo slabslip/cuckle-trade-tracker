@@ -447,6 +447,34 @@ const html = `<!DOCTYPE html>
       flex: 0 0 auto; margin-left: auto; white-space: nowrap;
       font-weight: 650; font-variant-numeric: tabular-nums; color: var(--muted);
     }
+    /* The scoreboard: champion, final score, runner-up, with each team's record directly
+       under its own name. One grid for both rows is what keeps the records under the names
+       -- as two separate rows they drift apart the moment a name ellipsises. The centre
+       track is auto so the score sizes to itself and never truncates; the two 1fr tracks
+       are equal, which centres the score, and minmax(0, ...) is what lets a long name give
+       way instead of widening the card (a 1fr track's automatic minimum is min-content). */
+    a.champ-alert .champ-bout {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: baseline; column-gap: 8px; margin-top: 4px;
+      /* Uniform on the scoreboard line, and not by taste. Ellipsis makes each cell a scroll
+         container, and a scroll container has no baseline of its own -- alignment synthesizes
+         one from its border box. Mixed sizes therefore sat the score a pixel off the names it
+         was between. Equal font-size and line-height make the synthesized baselines identical. */
+      font-size: 0.9375rem; line-height: 1.3;
+    }
+    a.champ-alert .champ-bout > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Both right-hand cells, name and record, are pinned to the third track. Without this the
+       record auto-places into the middle and sits under the score. */
+    a.champ-alert .bout-r { grid-column: 3; text-align: right; }
+    a.champ-alert .bout-team { font-weight: 650; }
+    a.champ-alert .bout-score {
+      grid-column: 2; justify-self: center; overflow: visible;
+      font-weight: 700; color: #e0b44c; font-variant-numeric: tabular-nums;
+    }
+    a.champ-alert .bout-rec {
+      color: var(--dim); font-size: 0.8125rem; line-height: 1.35; margin-top: 1px;
+      font-variant-numeric: tabular-nums;
+    }
     button.day-in {
       display: block; width: 100%; appearance: none; font: inherit; color: inherit;
       text-align: left; background: none; border: 0; padding: 6px 0 0; margin: 2px 0 0;
@@ -667,6 +695,10 @@ const html = `<!DOCTYPE html>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
     // Fantasy scores are conventionally one decimal. Sleeper stores two.
     const score1 = (n) => n == null || Number.isNaN(Number(n)) ? "—" : Number(n).toFixed(1);
+    // The scoreboard on the champ card: one decimal, and a trailing .0 dropped, so 189.98
+    // and 162.82 read as "190" and "162.8". Same rule on both halves of a score, and only
+    // here -- the Champions Path screen still prints the finals to two decimals.
+    const scoreShort = (n) => score1(n).replace(/\\.0$/, "");
     const cls = (n) => n == null ? "" : n >= 0 ? "pos" : "neg";
     // Sleeper display names and player labels are user data. Escape text and attributes alike.
     const esc = (s) => String(s == null ? "" : s)
@@ -685,7 +717,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830fmt3";
+    const DATA_V = "20260830cp1";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -2201,20 +2233,38 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The championship game replaces the bracket / points-race token in the champ card
-     * caption: who they beat, the final score, and their top scorer in that game.
-     * Returns escaped HTML fragments. Seasons with no usable final keep the old token.
+     * The championship game, as the card reads it: the two teams, their records, the final
+     * score and the champion's top scorer in that game. Returns escaped HTML fragments.
+     *
+     * The bout is the scoreboard row -- champion, score, runner-up -- and is null for a season
+     * with no usable final, which falls back to the tail pair and the old one-line caption
+     * rather than rendering half a scoreboard.
      */
     function champFinalCaption(champ, rec) {
       const f = champ && champ.final;
+      // The sketch reads "190 - 162.8" against true values of 189.98 and 162.82: one decimal,
+      // and a trailing .0 dropped. Applied to both figures so the pair cannot read as though
+      // one were rounded harder than the other. The detail screen keeps full precision.
+      const rec2 = (r) => r && r.wins != null ? r.wins + "–" + r.losses : "";
       if (!f || f.champ_points == null || f.opponent_points == null) {
-        return { tail: rec.fpts_rank === 1 ? " · points race" : " · bracket", tailNum: "", top: "", topNum: "" };
+        return {
+          bout: null,
+          tail: rec.fpts_rank === 1 ? " · points race" : " · bracket",
+          tailNum: "", top: "", topNum: "",
+        };
       }
       // Words and figure are returned apart so the card can pin the figure and let only the
       // name ellipsise. Joined into one nowrap string, the score was at the far end of the
       // line and so was the first thing off the edge: a 33-character player name took
       // "45.0" with it, which is the one thing on this line that had to survive.
       return {
+        bout: {
+          champName: esc(champ.name),
+          champRec: rec2(rec),
+          oppName: esc(f.opponent),
+          oppRec: rec2(f.opponent_record),
+          score: scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points),
+        },
         tail: " · " + (f.tie ? "tied" : "beat") + " " + esc(f.opponent),
         tailNum: score1(f.champ_points) + "–" + score1(f.opponent_points),
         top: f.top && f.top.points != null ? "Top scorer · " + esc(f.top.player) : "",
@@ -2242,12 +2292,26 @@ const html = `<!DOCTYPE html>
       const champ = ((titles && titles.titles) || [])[0];
       const rec = champ && champ.record || {};
       const fin = champFinalCaption(champ, rec);
+      // Four rows: the heading, the season, the scoreboard, the two records under the names
+      // they belong to. The top scorer stays as a fifth -- it was asked for, and a sketch
+      // that does not draw a line is not a request to delete it.
+      const bout = fin.bout
+        ? '<div class="champ-bout">'
+          + '<span class="bout-team">' + fin.bout.champName + "</span>"
+          + '<b class="bout-score">' + fin.bout.score + "</b>"
+          + '<span class="bout-team bout-r">' + fin.bout.oppName + "</span>"
+          + '<span class="bout-rec">' + fin.bout.champRec + "</span>"
+          + '<span class="bout-rec bout-r">' + fin.bout.oppRec + "</span>"
+          + "</div>"
+        // No final on file for this season, so there is no scoreboard to draw. Falls back to
+        // the caption this replaced rather than to an empty row.
+        : '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
+          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>";
       const champBox = champ
         ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
           + '<div class="day-alert-h">Champions Path</div>'
-          + '<div class="champ-line">' + esc(champ.season) + " champion · " + esc(champ.name) + "</div>"
-          + '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
-          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>"
+          + '<div class="champ-line">' + esc(champ.season) + " Championship</div>"
+          + bout
           + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
           + "</a>"
         : "";
@@ -3050,6 +3114,34 @@ for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
 for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)", "Top scorer · "]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the champ final caption: ${need}`);
 }
+// The scoreboard row. Each of these is one deletion away from a card that still renders and
+// still says something plausible, which is exactly the failure mode worth asserting against:
+//   scoreShort      the sketch's format -- one decimal, trailing .0 dropped, both halves alike
+//   .bout-rec x2    the runner-up's record is the half of the row that did not exist before,
+//                   and an absent one leaves a row that looks deliberate and is not
+//   .bout-r         both right-hand cells pinned to track 3; lose it and the record slides
+//                   under the score instead of under the name it belongs to
+for (const need of ["const scoreShort =", 'scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)',
+  '<div class="champ-bout">', '<span class="bout-team">', '<span class="bout-team bout-r">',
+  '<span class="bout-rec">', '<span class="bout-rec bout-r">', '<b class="bout-score">',
+  "fin.bout.champRec", "fin.bout.oppRec", "f.opponent_record"]) {
+  if (!inline.includes(need)) throw new Error(`generated script lost a champ scoreboard part: ${need}`);
+}
+// The .0 strip is a lone backslash inside the template literal, the exact hazard that shipped
+// /^pick:d{4}:4:/. yearsOn() carries the same escape, so the shared list above cannot tell the
+// two apart -- assert this one against its own call site.
+if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
+  throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
+}
+// Both records ellipsise and the score does not, and the two rows are one grid so a record
+// stays under its own name. Losing any of these is how a scoreboard silently becomes a stack.
+for (const need of ["a.champ-alert .champ-bout {",
+  "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);",
+  "a.champ-alert .champ-bout > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }",
+  "a.champ-alert .bout-r { grid-column: 3; text-align: right; }",
+  "a.champ-alert .bout-score {"]) {
+  if (!html.includes(need)) throw new Error(`generated stylesheet lost a champ scoreboard rule: ${need}`);
+}
 // One signed-delta convention, one emitter. If any of these goes missing the dashboard is
 // back to a bare or unsigned number somewhere, which is the defect this replaced: the
 // explicit signs, the em dash for a delta that does not exist, and the single tapeMargin
@@ -3218,6 +3310,9 @@ for (const need of [".leg.list > b {", "a.champ-alert .champ-fig > b {",
 // Losing any one of them puts a value back in the position of first casualty.
 const PINNED = [".row-top > .margin { flex: 0 0 auto; white-space: nowrap; }",
   ".hop > b { flex: 0 0 auto; white-space: nowrap; }",
+  // The champ scoreboard's centre cell. `overflow: visible` is what exempts the score from
+  // the ellipsis its two neighbours carry, so the names give way and the figure never does.
+  "grid-column: 2; justify-self: center; overflow: visible;",
   ".mark-bar-top .lab { font-weight: 650; font-size: 0.85rem; flex: 0 0 auto; white-space: nowrap; }"];
 for (const need of PINNED) {
   if (!html.includes(need)) throw new Error(`generated stylesheet unpinned a figure: ${need}`);

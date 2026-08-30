@@ -447,8 +447,15 @@ const html = `<!DOCTYPE html>
     a.champ-alert .bout-team { font-weight: 650; }
     a.champ-alert .bout-score {
       grid-column: 2; justify-self: center; overflow: visible;
-      font-weight: 700; color: #e0b44c; font-variant-numeric: tabular-nums;
+      font-weight: 700; font-variant-numeric: tabular-nums;
+      /* Default (no half coloured yet) stays the gold the card already used. */
+      color: #e0b44c;
     }
+    /* Winner / loser halves of the final. Same green and red the rest of the app uses for
+       up/down value, because a final is a result and not a mood. */
+    a.champ-alert .bout-score .bout-w { color: var(--green); }
+    a.champ-alert .bout-score .bout-l { color: var(--red); }
+    a.champ-alert .bout-score .bout-dash { color: var(--muted); }
     a.champ-alert .bout-rec {
       color: var(--dim); font-size: 0.8125rem; line-height: 1.35; margin-top: 1px;
       font-variant-numeric: tabular-nums;
@@ -895,7 +902,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "20260830noticker2";
+    const DATA_V = "20260830champcolor1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2850,7 +2857,12 @@ const html = `<!DOCTYPE html>
           champRec: rec2(rec),
           oppName: esc(f.opponent),
           oppRec: rec2(f.opponent_record),
-          score: scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points),
+          // Winner green, loser red. A tie leaves both halves uncoloured (the gold default).
+          score: f.tie
+            ? scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)
+            : '<span class="bout-w">' + scoreShort(f.champ_points) + "</span>"
+              + '<span class="bout-dash">–</span>'
+              + '<span class="bout-l">' + scoreShort(f.opponent_points) + "</span>",
         },
         tail: " · " + (f.tie ? "tied" : "beat") + " " + esc(f.opponent),
         tailNum: score1(f.champ_points) + "–" + score1(f.opponent_points),
@@ -3911,6 +3923,7 @@ for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)
 for (const need of ["const scoreShort =", 'scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)',
   '<div class="champ-bout">', '<span class="bout-team">', '<span class="bout-team bout-r">',
   '<span class="bout-rec">', '<span class="bout-rec bout-r">', '<b class="bout-score">',
+  'class="bout-w"', 'class="bout-l"', 'class="bout-dash"',
   "fin.bout.champRec", "fin.bout.oppRec", "f.opponent_record"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a champ scoreboard part: ${need}`);
 }
@@ -3926,7 +3939,9 @@ for (const need of ["a.champ-alert .champ-bout {",
   "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);",
   "a.champ-alert .champ-bout > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }",
   "a.champ-alert .bout-r { grid-column: 3; text-align: right; }",
-  "a.champ-alert .bout-score {"]) {
+  "a.champ-alert .bout-score {",
+  "a.champ-alert .bout-score .bout-w { color: var(--green); }",
+  "a.champ-alert .bout-score .bout-l { color: var(--red); }"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a champ scoreboard rule: ${need}`);
 }
 // One signed-delta convention, one emitter. If any of these goes missing the dashboard is

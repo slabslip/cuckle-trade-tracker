@@ -23,10 +23,15 @@
  * - **The field selector on this route is `post.fields`, not `tweet.fields`.** In 2.168
  *   `tweet.fields` survives only on the streaming routes (`/2/tweets/search/stream`,
  *   `/2/tweets/firehose/stream`, …); the timeline route resolves
- *   `$ref: PostFieldsParameter`, whose `name` is `post.fields`. Available values include
- *   `created_at`, `text`, `entities`, `lang`, `referenced_posts`, `public_metrics`. This rename is
- *   the single most likely thing to be wrong from memory, so it is the constant FIELDS_PARAM
- *   below and changing it back is one line.
+ *   `$ref: PostFieldsParameter`, whose `name` is `post.fields`. This rename is the single most
+ *   likely thing to be wrong from memory, so it is the constant FIELDS_PARAM below and changing
+ *   it back is one line.
+ * - **`referenced_posts` is an expansion, not a post field.** It appears in the `expansions` enum
+ *   and *not* in the `post.fields` enum, so sending it as a field is a 400 that would have taken
+ *   the whole ingest down on the first run after a token arrived. We do not need it — `exclude`
+ *   already drops retweets and replies — so it is gone. The spec's `post.fields` enum is committed
+ *   to `data/fixtures/x-post-fields.json` and the test suite checks every value FIELDS asks for
+ *   against it, offline, so this cannot quietly come back.
  * - **`GET /2/users/by/username/{username}`** — `operationId: getUsersByUsername`. This is the
  *   only way to turn "AdamSchefter" into the numeric id the timeline route wants.
  *
@@ -60,7 +65,11 @@ import { DATA } from "./lib.mjs";
 const API = "https://api.x.com";
 /** Renamed from `tweet.fields` in the current spec. One line to change if it moves back. */
 const FIELDS_PARAM = "post.fields";
-const FIELDS = "created_at,text,lang,entities,referenced_posts,public_metrics";
+/**
+ * Every name here is a member of the spec's `post.fields` enum, pinned in
+ * `data/fixtures/x-post-fields.json`. Adding one without checking that file is how you buy a 400.
+ */
+export const FIELDS = "created_at,text,lang,entities,public_metrics";
 const UA = "cuckle-trade-tracker/1.0 (league news feed; +https://github.com/slabslip/cuckle-trade-tracker)";
 
 export const COST_PER_POST_READ = 0.005;

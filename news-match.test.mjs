@@ -40,7 +40,7 @@ import test from "node:test";
 import { readJson } from "./lib.mjs";
 import { matchText, loadIndex, normText, looksTitleCased, capitalisedIn, explainName, teamsNamed, PUBLISH_MIN, NOTIFY_MIN, MAX_SUBJECTS, CATEGORY_IDS, scoreCorpus } from "./news-match.mjs";
 import { buildPayload, assertInertMentions, sanitiseText, storyKey, isRealDiscordId, createLimiter, post, alertsFrom, selfTest } from "./discord-notify.mjs";
-import { plan, timelineUrl, userLookupUrl, normalisePost, budgetFor, pull, MAX_READS_PER_RUN, MAX_READS_PER_MONTH } from "./x-source.mjs";
+import { plan, timelineUrl, userLookupUrl, normalisePost, budgetFor, pull, FIELDS, MAX_READS_PER_RUN, MAX_READS_PER_MONTH } from "./x-source.mjs";
 import { stripAttribution } from "./news-fixtures.mjs";
 
 const index = loadIndex();
@@ -471,6 +471,47 @@ test("the timeline request matches X's OpenAPI document", () => {
   assert.ok(url.searchParams.has("post.fields"));
   assert.ok(!url.searchParams.has("tweet.fields"));
   assert.equal(userLookupUrl("AdamSchefter"), "https://api.x.com/2/users/by/username/AdamSchefter");
+});
+
+/**
+ * The first draft of this module asked for `referenced_posts` in `post.fields`. That name is real,
+ * but it is an *expansion*, not a field, so X would have answered 400 and the ingest would have
+ * been dead on the first run after the token arrived — with nothing in the repo able to notice,
+ * because no test can call X without a token. So the spec's own enums are pinned to a fixture and
+ * every parameter we send is checked against them offline. This is the check that would have caught
+ * it, and the reason a wrong field name cannot come back quietly.
+ */
+test("every field and parameter we send is a member of the spec's own enum", () => {
+  const spec = readJson("fixtures/x-post-fields.json", null);
+  assert.ok(spec, "data/fixtures/x-post-fields.json is missing — re-pin it from X's OpenAPI spec");
+  assert.equal(spec.field_param_name, "post.fields");
+  assert.equal(spec.timeline_operation_id, "getUsersPosts");
+  assert.equal(spec.user_lookup_operation_id, "getUsersByUsername");
+  assert.ok(spec.post_fields_enum.length > 20, "the pinned enum looks like the real thing");
+
+  const allowed = new Set(spec.post_fields_enum);
+  const asked = FIELDS.split(",");
+  assert.ok(asked.length > 0);
+  for (const f of asked) {
+    assert.ok(allowed.has(f), `post.fields=${f} is not in the spec's enum — X answers 400`);
+  }
+
+  // The specific mistake, nailed down so the fixture itself cannot be edited to excuse it.
+  assert.ok(!allowed.has("referenced_posts"), "referenced_posts is an expansion, not a field");
+  assert.ok(spec.expansions_enum.includes("referenced_posts"));
+  assert.ok(!asked.includes("referenced_posts"));
+
+  // And the rest of the query string, against the same document.
+  const url = new URL(timelineUrl("12345", { sinceId: "1", budget: 50 }));
+  for (const key of url.searchParams.keys()) {
+    if (key === "post.fields") continue;
+    assert.ok(spec.query_params.includes(key), `${key} is not a documented query parameter`);
+  }
+  for (const v of url.searchParams.get("exclude").split(",")) {
+    assert.ok(spec.exclude_enum.includes(v), `exclude=${v} is not in the spec's enum`);
+  }
+  const mr = Number(url.searchParams.get("max_results"));
+  assert.ok(mr >= spec.max_results.minimum && mr <= spec.max_results.maximum);
 });
 
 test("max_results is clamped to the spec's 5..100", () => {

@@ -23,7 +23,24 @@ node revalue.mjs
 node title-path.mjs              # titles.json for Champions Path
 node apply-value-adjust.mjs      # today blend + Value Adjustment + trade boards + marks.json
 node generate-page.mjs
+node news-sync.mjs               # news.json for News and Alerts (not in build.mjs)
 ```
+
+`news-sync.mjs` builds the News and Alerts feed: NFL news filtered to players on this league's
+rosters, addressed to whoever owns them. It reads the rosters `sleeper-sync.mjs` already wrote
+and **touches no value, no Value Adjustment, no lens window and no ranking**, which is why it is
+outside `build.mjs` — it is a data-only refresh and the page reads `news.json` at runtime, so it
+needs no regenerate.
+
+```bash
+node news-sync.mjs --report      # the match report: sources, hit rate, ambiguous drops
+node news-sync.mjs --voice       # every voice variant, no network
+node news-sync.mjs --empty       # a valid empty news.json, no network
+```
+
+The voice lives behind one seam, `leagueLine()` in `news-voice.mjs`, so it can be rewritten
+without touching ingest or UI. See `docs/NEWS_SDD.md` for the sources actually reachable, the
+Twitter/X finding, and the plan for the daily agent.
 
 `apply-value-adjust.mjs` is not optional. It owns the today clock (40% flatten + 60% KTC,
 retired → 0), the Value Adjustment, every `trade_boards` row and `marks.json`. Skipping it ships

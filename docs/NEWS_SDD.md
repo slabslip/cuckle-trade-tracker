@@ -518,7 +518,7 @@ Four new files, and one flag on an existing one:
 
 | File | What it is | Runs today? |
 | --- | --- | --- |
-| [`news-match.mjs`](../news-match.mjs) | free text → rostered players, with confidence | On demand: `--report`, `--text` |
+| [`news-match.mjs`](../news-match.mjs) | free text → rostered players, with confidence | On demand: `--corpus-score`, `--text` |
 | [`x-source.mjs`](../x-source.mjs) | X timeline ingest | No-op without `X_BEARER_TOKEN` |
 | [`discord-notify.mjs`](../discord-notify.mjs) | webhook sender | Dry run by default |
 | [`news-fixtures.mjs`](../news-fixtures.mjs) | harvests real Schefter wording into fixtures | Only on `--harvest` |
@@ -741,6 +741,21 @@ the build VM on 2026-08-30: `openapi: 3.0.0`, `info.version: 2.168`,
   whose `name` is `post.fields`; a parameter literally named `tweet.fields` survives only on the ten
   streaming routes (`/2/tweets/search/stream`, `/2/tweets/firehose/stream`, …). It is the constant
   `FIELDS_PARAM`, so changing it back is one line.
+- **`referenced_posts` is an expansion, not a post field** — and reading the spec is what caught it.
+  The first draft of `x-source.mjs` asked for it inside `post.fields`. The name is real, so it looks
+  right, but in 2.168 it is a member of the `expansions` enum and is *absent* from the `post.fields`
+  enum. X would have answered `400` and the X ingest would have been dead on its first real run,
+  with nothing in the repo able to notice, because no test can call X without a token. We never
+  consumed the value — `exclude=retweets,replies` already drops the referencing cases the feed cares
+  about — so it is simply gone. This is the second time on this feature that a plausible-from-memory
+  identifier was wrong (see also `post.fields`), which is the argument for the next paragraph.
+- **The spec's enums are pinned, so the request is checked offline.** `post.fields`, `expansions`,
+  `exclude`, the documented query-parameter list and the `max_results` bounds are committed to
+  `data/fixtures/x-post-fields.json` together with their provenance (`spec_url`, `fetched`,
+  `info.version`). The test suite asserts every parameter `x-source.mjs` sends is a member of the
+  matching enum. That check earns its keep: reinstating `referenced_posts` fails it with
+  `post.fields=referenced_posts is not in the spec's enum`, which was verified by doing exactly
+  that. Re-pin the fixture by re-fetching the spec; do not hand-edit it to make a test go green.
 - **`GET /2/users/by/username/{username}`** — `operationId: getUsersByUsername`. The only way to
   turn "AdamSchefter" into the numeric id the timeline route wants.
 
@@ -914,9 +929,9 @@ Each step is reversible and each one is a setting. Do not skip to the last.
 1. **Read the dry run.** `node discord-notify.mjs` with no secrets, then read
    `data/discord-outbox.json` end to end. Not the counts — the message bodies. §6d.1: a thing can
    pass every assertion while being wrong on screen.
-2. **Run the suite.** `node --test news-match.test.mjs` — 35 tests, no network. Then
-   `node news-match.mjs --report` and read the refusals; a refusal with a reason you disagree with
-   is the cheapest bug report available.
+2. **Run the suite.** `node --test news-match.test.mjs` — 36 tests, no network. Then
+   `node news-match.mjs --corpus-score` and read the refusals; a refusal with a reason you disagree
+   with is the cheapest bug report available.
 3. **Fill `data/discord-members.json`.** Ten real ids, committed. Re-run the dry run and confirm
    every `discord_id_is_placeholder` is now `false`.
 4. **Create the staging webhook** in a channel only the user is in. Add `DISCORD_WEBHOOK_STAGING`.
@@ -926,16 +941,53 @@ Each step is reversible and each one is a setting. Do not skip to the last.
    this proves the server agrees. Nobody should be pinged but the one intended member.
 6. **Leave staging alone for a few days** with the workflow still uncommitted, running by hand.
    Watch for a wrong manager. That is failure mode §8.1 and it is the only one that matters.
-7. **Provision `X_BEARER_TOKEN`** with a small credit balance. Run `node x-source.mjs --report` by
+7. **Re-pin X's spec before you pay for anything.** Re-fetch `https://api.x.com/2/openapi.json`,
+   regenerate `data/fixtures/x-post-fields.json`, and re-run the suite. `referenced_posts` proves
+   the request shape can be wrong in a way only the spec reveals, and X is still renaming things.
+   Doing this while the account has no credit is free; doing it after is a 400 on a paid run.
+8. **Provision `X_BEARER_TOKEN`** with a small credit balance. Run `node x-source.mjs --report` by
    hand and read `data/x-state.json`: `post_reads` and `usd` against the $4.50 estimate. Do this
    before anything is scheduled, so the first bill is one the user chose.
-8. **Wire X into `news-sync.mjs`** — Phase 4, not built here. `x-source.mjs` returns raw items and
+9. **Wire X into `news-sync.mjs`** — Phase 4, not built here. `x-source.mjs` returns raw items and
    `news-match.mjs` turns them into per-manager subjects; joining them is the remaining work, and it
    needs the `confidence` field, which is a **`v: 2`** for `news.json`.
-9. **Only then** commit the workflow, still pointing at staging.
-10. **Last:** switch to `DISCORD_WEBHOOK_LIVE`. One line of YAML, and reversible.
+10. **Only then** commit the workflow, still pointing at staging.
+11. **Last:** switch to `DISCORD_WEBHOOK_LIVE`. One line of YAML, and reversible.
 
-### 10.8 What is deliberately not built
+### 10.8 What was checked on screen, and the check that can fail
+
+This branch adds no rendered field, so the page ought to be untouched — but "ought to be" is
+precisely the claim §6d.1 says not to accept. Two things were established, and one of them is the
+negative control that makes the other worth anything.
+
+**The feed still composes with `main` merged in.** A throwaway merge of `origin/main` into this
+branch was regenerated and served, then Chrome was driven over the DevTools Protocol to ask the
+*running* DOM what it had rendered at 390 px. All 60 items were present as `.news-row`, and — the
+part that matters — **60 of 60 carried a non-empty headline, manager, league line and category**,
+all with a non-zero box, with no horizontal overflow and no console error other than a missing
+`favicon.ico`. Counting rows alone would not have been enough: the failure this guards against is a
+feed that renders empty shells or loses the manager attribution, which a row count cannot see.
+
+**The probe can fail, and was made to.** A copy of `index.html` was mutated in exactly the way the
+audit records — `+ renderNews()` turned into `; renderNews()`, dead-coding the feed below a
+terminated statement — and the probe reported 0 rows, 0 league lines, no `.news-box` at all, and
+exited non-zero. A check that cannot fail is worse than no check, so this one was shown failing
+before its passing result was believed.
+
+**Provenance was not assumed either.** The first attempt served on a port that another process had
+already taken, so the server never bound and Chrome was reading *someone else's stale build* — a
+193 KB `index.html` from an unrelated worktree, which would have produced a perfectly green result
+about the wrong artifact. The run now picks a verified-free port and refuses to probe until the
+bytes served over HTTP hash-match the local `index.html`. That is failure mode §6d.1 in its most
+literal form, and it very nearly landed.
+
+Separately, `price-today.mjs` gained one `export` keyword, which needs to be inert. It was compared
+against `origin/main`'s copy of the same module: identical export surface but for the added
+`nameCandidateScore`, `normName` agreeing across 4,000 dictionary names, and `priceTodayValue`
+returning the same number for **36,579 priced legs** — zero differences. The value book does not
+move.
+
+### 10.9 What is deliberately not built
 
 - **No workflow file.** Nothing is scheduled. Every part of this runs only when invoked by hand.
 - **X is not wired into `news-sync.mjs`.** `news.json` is byte-identical on this branch and no new

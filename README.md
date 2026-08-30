@@ -47,11 +47,11 @@ Twitter/X finding, and the plan for the daily agent.
 An X (@AdamSchefter) ingest and a Discord notifier exist and are **inert without credentials**.
 Neither is in `build.mjs`, neither is on a cron, and no workflow file is committed. `news.json` and
 `index.html` are untouched by them. `docs/NEWS_SDD.md` §10 has the design, the secret names and a
-ten-step promotion checklist.
+eleven-step promotion checklist.
 
 ```bash
-node --test news-match.test.mjs   # 35 tests, offline, against committed real-text fixtures
-node news-match.mjs --report      # score the matcher against the frozen 139-item RSS corpus
+node --test news-match.test.mjs   # 36 tests, offline, against committed real-text fixtures
+node news-match.mjs --corpus-score # score the matcher against the frozen 139-item RSS corpus
 node news-match.mjs --text "…"    # match one string and print the working
 node x-source.mjs                 # no-op without X_BEARER_TOKEN. --plan prints the request
 node discord-notify.mjs           # DRY RUN by default: writes data/discord-outbox.json, sends nothing

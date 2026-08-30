@@ -2067,8 +2067,13 @@ const html = `<!DOCTYPE html>
          *
          * (No backticks in this comment: the whole page is one template literal.)
          */
+        // The empty sentence is short on purpose. The caption directly above already says what
+        // the feed is and what the top line of a row means, and repeating that here made the
+        // empty box read as two paragraphs of instructions for a section with nothing in it.
+        // What the caption does not say, and what a reader staring at an empty box needs, is
+        // the one action that fills it.
         const blank = book
-          ? "Nothing shared yet. Send a tweet in from X with the league shortcut \\u2014 whatever you type when you share it lands here as the line on top."
+          ? "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here."
           : "The feed could not be loaded. Nothing else on this page is affected.";
         return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
@@ -2115,6 +2120,23 @@ const html = `<!DOCTYPE html>
          */
         if (it.category === "tweet" && it.tweet_text) {
           const open = !!newsOpen[it.id];
+          /**
+           * The link out of a tweet row is labelled "Open on X", so it may only go to X.
+           *
+           * The row-level gate above admits any http(s) URL, which is right for a news row whose
+           * source genuinely is ESPN or Rotowire. It is not right here: a row promising X and
+           * opening somebody else's domain in a new tab is a phishing affordance, and the label
+           * is the part the reader trusts. news-sync.mjs refuses to write a shared tweet whose
+           * source_url is not already the canonical x.com form, so the pipeline cannot produce
+           * one -- but this is the point at which a string becomes clickable, and that check
+           * lives in a different program. Verified against a news.json hand-built to carry
+           * https://evil.com/a/status/1, which linked before this gate and does not after.
+           *
+           * The escapes are doubled because this whole page is one template literal: a lone
+           * backslash is swallowed, which is how /^pick:\\d{4}:4:/ once shipped as
+           * /^pick:d{4}:4:/. A build guard asserts this exact string survived.
+           */
+          const xLink = /^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : "";
           // Ours, from the render index -- never the item's own id, which is data and could be
           // anything. It only has to be unique within this one render, which an index is.
           const panel = "news-tweet-" + i;
@@ -2132,8 +2154,8 @@ const html = `<!DOCTYPE html>
             + '<div class="news-detail" id="' + panel + '"' + (open ? "" : " hidden") + ">"
             + '<p class="news-tweet-text">' + esc(it.tweet_text) + "</p>"
             + (by ? '<p class="news-tweet-by">Posted by ' + by + "</p>" : "")
-            + (safe
-              ? '<a class="news-tweet-link" href="' + esc(safe) + '" target="_blank" rel="noopener noreferrer">Open on X</a>'
+            + (xLink
+              ? '<a class="news-tweet-link" href="' + esc(xLink) + '" target="_blank" rel="noopener noreferrer">Open on X</a>'
               : "")
             + "</div>"
             + '<div class="news-meta">' + where + "</div>"
@@ -4636,9 +4658,20 @@ if (!newsBody.includes('rel="noopener noreferrer"')) {
 }
 // The shared tweet's link out is a second <a> on the same page and needs the same two guards.
 // It is inside the expandable panel, so the row-level assertions above cannot see it.
-if (!/news-tweet-link" href="' \+ esc\(safe\)/.test(newsBody)
+if (!/news-tweet-link" href="' \+ esc\(xLink\)/.test(newsBody)
   || !/news-tweet-link[\s\S]{0,200}rel="noopener noreferrer"/.test(newsBody)) {
   throw new Error("the shared tweet's link out lost its esc()'d, scheme-gated href or its rel=noopener noreferrer");
+}
+// ...and a stricter gate than the row's, because its label promises X. `safe` admits any
+// http(s) URL, which would let a row reading "Open on X" open evil.com in a new tab. The
+// backslashes have to survive the template literal, so the literal string is asserted rather
+// than the behaviour -- this is the /^pick:\d{4}:4:/ hazard, and a swallowed backslash here
+// turns x\.com into the single-character class x.com, which matches xacom and xbcom too.
+if (!newsBody.includes('/^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : ""')) {
+  throw new Error("the tweet link-out lost its x.com-only gate, or the template swallowed its escapes");
+}
+if (/news-tweet-link" href="' \+ esc\(safe\)/.test(newsBody)) {
+  throw new Error("the tweet link-out reverted to the row's any-http gate, which lets a row labelled Open on X open another domain");
 }
 // 1b. The expandable tweet detail, asserted as STRUCTURE rather than as presence.
 //

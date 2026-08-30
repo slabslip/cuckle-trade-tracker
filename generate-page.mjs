@@ -143,8 +143,11 @@ const html = `<!DOCTYPE html>
        is not enough either. One full-width line per side gives every name ~258px at
        375px, which clears the longest league name by more than 100px and leaves the
        figures untouched. Stacked, the margin sits between the two sides, so its arrow
-       points up or down rather than left or right: same direction, same number. */
-    @media (max-width: 560px) {
+       points up or down rather than left or right: same direction, same number.
+       The switch back to the wide tape is at 640px rather than at a phone width because
+       that is where the inline arrangement measurably fits: at 561px it still gave
+       DarkWingDucks2023 152px against the 165px it needs. */
+    @media (max-width: 640px) {
       .row-top.tape { grid-template-columns: minmax(0, 1fr); gap: 3px; }
       .row-top.tape .side.right { text-align: left; }
       .row-top.tape .side-line,
@@ -271,7 +274,12 @@ const html = `<!DOCTYPE html>
     }
     button.day-in + button.day-in { border-top: 1px solid #6b5a2e; padding-top: 10px; }
     button.day-in:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.day-in b { display: block; font-weight: 650; }
+    /* Two names and a "vs", so real pairs wrap at the spaces and cost no extra height.
+       anywhere rather than break-word because only anywhere lowers the min-content size:
+       without it a single unbreakable name escapes the card and widens the document.
+       Wrapping rather than ellipsis here on purpose -- this line is where the pair is
+       named in full, and truncating it is the defect being fixed everywhere else. */
+    button.day-in b { display: block; font-weight: 650; overflow-wrap: anywhere; }
     button.day-in span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
     button.day-in .day-in-vals { margin-top: 4px; }
     /* Same name-and-figure pair as a tape row, and the same hazard: side by side, a long
@@ -2340,8 +2348,8 @@ for (const need of ['<i class="dir-h">←</i>', '<i class="dir-v">↑</i>', '<i 
   if (!inline.includes(need)) throw new Error(`generated script lost a tape-row part: ${need}`);
 }
 // The stacked phone tape and the wide tape are one rule set; either half alone is broken.
-for (const need of ["grid-column: 1 / -1", "@media (max-width: 560px)", ".dir-v { display: inline; }",
-  "grid-template-columns: minmax(0, 1fr)"]) {
+for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".dir-v { display: inline; }",
+  "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
 }
 

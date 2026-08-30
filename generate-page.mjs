@@ -209,6 +209,9 @@ const html = `<!DOCTYPE html>
       display: flex; flex-direction: column; justify-content: center;
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
       padding: 10px 12px; margin: 0; min-height: 88px; height: 100%;
+      /* A 1fr track's automatic minimum is min-content, so nowrap text below would widen
+         the card past the viewport instead of ellipsising. min-width: 0 lets it clip. */
+      min-width: 0;
     }
     /* Champions Path has less content than its twin, so its slack belongs at the bottom, not above the header. */
     a.champ-alert {

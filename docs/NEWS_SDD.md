@@ -723,6 +723,22 @@ one, because "the file failed to load" and "nobody has shared anything" both use
 is a reassuring lie. Build guards refuse one sentence used for both, and refuse an empty state that
 does not name X.
 
+**And then the caption went, 2026-08-30.** The paragraph under the heading was rewritten twice in
+one day — first from *"NFL news, only for players on this league's rosters, aimed at whoever owns
+them"* when the automated sources went off, then to *"Tweets league members share in from X,
+newest first…"* — and the user's ruling on the second was that the description is not needed. It
+is removed. The heading now sits directly on the box.
+
+The rows are what made it redundant: each one already prints the sharer, a `From X` category and
+a timestamp, so a sentence saying the feed is shared tweets in newest-first order restated the
+first row. The one fact the rows *cannot* carry is how an item gets into an empty feed, and that
+lives in the empty state, which is why the empty copy stayed exactly as it is. The guard that used
+to assert the caption's wording was **inverted rather than deleted** — it now fails the build if a
+descriptive paragraph reappears between the heading and the box, and additionally pins `head` to
+the heading alone and asserts both branches of `renderNews()` still return it, so removing the
+caption cannot later be widened into removing the title. All four failure modes were confirmed by
+breaking them.
+
 ### What was checked, and how
 
 Each rule below was verified by breaking it and watching something fail, because a check that
@@ -736,4 +752,5 @@ cannot fail is worse than no check (`DASHBOARD_AUDIT.md` §3a).
 | One story per tweet | `main()` refuses a file in which two rows carry the same tweet id. |
 | Canonical form on disk | `main()` refuses a shared tweet whose `source_url` is not equal to its own canonical form — "parses" is not enough, since the parser accepts the tracking it strips. |
 | The feed is on the page | Composition, not existence: `renderLeagueHome()` must compose `renderNews()` *inside* its return, and confirmed on screen at 320/375/390/1280. The feed vanished once when a rebase left it after a `return`, with `node --check` clean and nine guards satisfied. |
+| The heading stands alone | Four assertions, each mutation-tested: a `<p class="caption">` anywhere in `renderNews()` fails the build, `head` must be exactly `<h2>News and Alerts</h2>`, and the empty and populated branches must each still return it. Measured on screen as what sits *between* the heading and the box — zero nodes at 320/375/390/1280, against one on `main` — so the check is the rendered gap, not the source text. |
 | Nothing rendered is executable | An adversarial `news.json` carrying every payload from the test rows in every field the feed renders, opened in a real browser with all panels expanded: no global set, no title change, no injected element, no stray event attribute, and every payload visible as characters. |

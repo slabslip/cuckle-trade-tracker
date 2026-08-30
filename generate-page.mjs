@@ -907,7 +907,7 @@ const html = `<!DOCTYPE html>
     let marks = null;
     let news = null;
     let lens = "all";
-    const DATA_V = "20260830manualnews1";
+    const DATA_V = "20260830dropnewscaption1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2044,11 +2044,10 @@ const html = `<!DOCTYPE html>
     function renderNews() {
       const book = news && news.v === 1 ? news : null;
       const items = (book && book.items) || [];
-      const head = '<h2>News and Alerts</h2>'
-        // Describes what the feed IS, not what it once was. The automated sources are switched
-        // off in news-sync.mjs, so promising NFL news for every rostered player would be a
-        // caption over an empty box for anyone who has not shared anything.
-        + '<p class="caption">Tweets league members share in from X, newest first. The line on top is the sharer\\u2019s own, when they wrote one. Open a row to read the tweet and see who posted it.</p>';
+      // Heading only. The rows carry their own sharer, category and timestamp, so a paragraph
+      // describing the feed was restating what the first row already shows. The empty state
+      // still explains how an item gets here, which is the one thing a row cannot.
+      const head = '<h2>News and Alerts</h2>';
       if (!items.length) {
         /**
          * Two different nothings, and they must not read the same.
@@ -2067,11 +2066,11 @@ const html = `<!DOCTYPE html>
          *
          * (No backticks in this comment: the whole page is one template literal.)
          */
-        // The empty sentence is short on purpose. The caption directly above already says what
-        // the feed is and what the top line of a row means, and repeating that here made the
-        // empty box read as two paragraphs of instructions for a section with nothing in it.
-        // What the caption does not say, and what a reader staring at an empty box needs, is
-        // the one action that fills it.
+        // The empty sentence is short on purpose, and it is now the only prose in this section:
+        // the descriptive caption that used to sit above the box is gone, so this sentence is
+        // the one place the mechanism is written down. It stays one line because a reader
+        // staring at an empty box needs the action that fills it, not a description of the
+        // feed they can already see is bare.
         const blank = book
           ? "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here."
           : "The feed could not be loaded. Nothing else on this page is affected.";
@@ -4770,12 +4769,33 @@ if (!/Nothing shared yet[\s\S]{0,200}from X/.test(emptyRender)) {
 if (!/could not be loaded/.test(emptyRender)) {
   throw new Error("the failed-load state must say the feed failed rather than that it is empty");
 }
-// The caption sits above the box in both states, so a caption describing the automated feed
-// would be a promise of NFL news over an empty box. It must describe what this feed is.
-const captionMatch = newsBody.match(/<p class="caption">([^<]*)<\/p>/);
-if (!captionMatch) throw new Error("the news section lost its caption");
-if (!/share/i.test(captionMatch[1]) || /rosters/i.test(captionMatch[1])) {
-  throw new Error("the news caption still describes the automated roster feed, which no longer ships: " + captionMatch[1].slice(0, 80));
+// 2c. The heading stands alone: no descriptive paragraph between it and the box.
+//
+// This guard used to assert the opposite -- that a caption existed and described the manual
+// feed rather than the automated roster feed it replaced. The caption is now removed, so the
+// guard is inverted rather than dropped: the section had two successive rewrites of this
+// sentence, and each was wrong about the feed by the time it shipped. Asserting its absence is
+// what stops a third from arriving.
+//
+// Absence alone is a weak thing to assert, so this also pins what must still be there. `head`
+// has to be exactly the heading, and both branches of renderNews() -- empty and populated --
+// have to return it, or removing the caption would have taken the heading with it.
+const newsCaption = newsBody.match(/<p class="caption">([^<]*)<\/p>/);
+if (newsCaption) {
+  throw new Error("a descriptive caption came back to the news section, which was deliberately removed: " + newsCaption[1].slice(0, 80));
+}
+const headDecl = newsBody.match(/const head = ('|")(.*?)\1;/);
+if (!headDecl) throw new Error("renderNews() lost its `head` declaration");
+if (headDecl[2] !== "<h2>News and Alerts</h2>") {
+  throw new Error("the news heading is no longer the whole of `head`: " + headDecl[2].slice(0, 80));
+}
+// Both exits compose `head`. The empty branch returns `head + ...` and the populated branch
+// returns `head` as its first term; a heading dropped from either is a section with no title.
+if (!/return head \+ '<div class="news-box"><p class="news-empty">/.test(newsBody)) {
+  throw new Error("the empty news state must still return the heading above the box");
+}
+if (!/return head\s*\n\s*\+ '<div class="news-box" tabindex="0"/.test(newsBody)) {
+  throw new Error("the populated news feed must still return the heading above the box");
 }
 // 3. The 44px rule. A pass took 312 sub-44px targets to zero and none may come back. Every
 //    news row is a link, so every news row is a target.

@@ -210,6 +210,27 @@ const TEMPLATES = {
   ],
   /** Nobody in the league owns the player. These never ship — see news-sync.mjs. */
   orphan: ["{player} is in the news and nobody in this league owns him."],
+  /**
+   * Shared-tweet banks: locker-room smack when a seat is known. The factual summariseTweet()
+   * path is for unaddressed rows only — see leagueLine(). These banks speak TO the manager;
+   * that is safe here because the line is the app's voice, not the sharer's note (which ships
+   * in its own field and is attributed to them).
+   */
+  tweet: [
+    "{who}, somebody went out of their way to make sure you saw this {player} take.",
+    "This got shared into the feed specifically so {who} would have to read it. {player}, of course.",
+    "{who}, the league found a {player} take and thought of you immediately.",
+    "Someone shared this at {who} on purpose, and it is about {player}.",
+    "{who}, this landed in the feed with your name on it. {player}.",
+    "The group chat could not hold this one, {who}. It is about {player}.",
+  ],
+  tweet_who: [
+    "{who}, somebody went out of their way to make sure you saw this one.",
+    "This got shared into the feed specifically so {who} would have to read it.",
+    "Someone shared this at {who} on purpose. That is the whole message.",
+    "{who}, this landed in the feed with your name on it.",
+    "The group chat could not hold this one, {who}.",
+  ],
 };
 
 /* ------------------------------------------------- summarising a tweet ---- */
@@ -523,10 +544,44 @@ export function leagueLine(item, ctx) {
   const manager = String((ctx && ctx.manager) || "").trim();
   const player = String((item && item.player) || "").trim();
 
-  // A shared tweet is the one item that can ship without a player or a manager: curation is the
-  // point, so an unmatched share still publishes, addressed to nobody. Every other category
-  // still requires both, and news-sync.mjs refuses to write an automated row with no line.
-  if (item && item.category === "tweet") return summariseTweet(item);
+  /**
+   * Shared tweets: locker-room voice when a seat is known; factual summary when not.
+   *
+   * When the matcher (or target_name) addressed a manager, speak TO them — that is the product.
+   * Prefer a category bank classified from the tweet (injury, trade, …) so the jab fits the
+   * news; fall back to the tweet / tweet_who banks. summariseTweet() stays for unaddressed rows
+   * so "The league" never gets second-person trash talk aimed at nobody.
+   *
+   * The sharer's note is a separate field. It is never returned from this seam.
+   */
+  if (item && item.category === "tweet") {
+    if (manager && player) {
+      const topic = classify(String(item.title || ""));
+      const key = topic.upbeat && (topic.category === "injury" || topic.category === "news")
+        ? `${topic.category}_good`
+        : topic.category;
+      const bank = (TEMPLATES[key] && TEMPLATES[key].length && key !== "tweet")
+        ? TEMPLATES[key]
+        : TEMPLATES.tweet;
+      const pick = bank[hash(item.id || item.title || player) % bank.length];
+      return pick
+        .replace(/\{who\}/g, manager)
+        .replace(/\{player\}/g, player)
+        .replace(/\{team\}/g, String((item && item.team) || "his old spot"))
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    if (manager) {
+      const bank = TEMPLATES.tweet_who;
+      const pick = bank[hash(item.id || item.title || manager) % bank.length];
+      return pick
+        .replace(/\{who\}/g, manager)
+        .replace(/\{player\}/g, player)
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    return summariseTweet(item);
+  }
 
   if (!manager || !player) return "";
   const key = item.upbeat && (item.category === "injury" || item.category === "news")
@@ -563,6 +618,7 @@ export function leagueLine(item, ctx) {
  */
 export async function leagueLineAsync(item, ctx, opts = {}) {
   const fallback = leagueLine(item, ctx);
+  const manager = String((ctx && ctx.manager) || "").trim();
   let llm;
   try {
     llm = await import("./news-llm.mjs");
@@ -579,7 +635,10 @@ export async function leagueLineAsync(item, ctx, opts = {}) {
     return fallback;
   }
   if (!line || line.length > MAX_LINE) return fallback;
-  if (item && item.category === "tweet" && noteFreeOfAddress(line, opts.managers)) return fallback;
+  // Unaddressed tweet summaries must stay impersonal. Addressed ones may talk to {who} —
+  // that is the locker-room product. Without a manager, refuse a line that says "you".
+  if (item && item.category === "tweet" && !manager
+    && noteFreeOfAddress(line, opts.managers)) return fallback;
   return line;
 }
 

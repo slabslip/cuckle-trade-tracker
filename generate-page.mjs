@@ -711,6 +711,13 @@ const html = `<!DOCTYPE html>
       color: #e0b44c; border: 1px solid #6b5a2e; border-radius: 999px; padding: 2px 8px;
     }
     .news-line { margin-top: 5px; line-height: 1.4; overflow-wrap: anywhere; text-wrap: pretty; }
+    /* The sharer's own jab, attributed. Sits above the locker-room summary so their words and
+       the app's voice stay two different things. */
+    .news-note {
+      margin-top: 5px; color: var(--muted); font-size: 0.8125rem; line-height: 1.4;
+      overflow-wrap: anywhere; text-wrap: pretty;
+    }
+    .news-note-by { font-weight: 650; color: var(--dim); }
     .news-head {
       margin-top: 4px; color: var(--muted); font-size: 0.8125rem; line-height: 1.4;
       overflow-wrap: anywhere; text-wrap: pretty;
@@ -910,7 +917,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "20260830admindeletenews1";
+    const DATA_V = "20260830autotagship1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2099,8 +2106,15 @@ const html = `<!DOCTYPE html>
         // An unaddressed shared tweet matched nobody, so there is no name to print. The label
         // says so rather than leaving an empty slot that reads as a rendering fault.
         const who = it.manager ? esc(it.manager) : (it.category === "tweet" ? "The league" : "");
+        // Sharer's note, attributed, then the locker-room / factual summary. Both may be absent
+        // on older rows; either alone is enough for the top of the post.
+        const noteBit = it.note
+          ? '<div class="news-note"><span class="news-note-by">'
+            + esc(it.submitted_by || "Someone") + ":</span> " + esc(it.note) + "</div>"
+          : "";
         const inner = '<div class="news-top"><span class="news-who">' + who + "</span>"
           + '<span class="news-cat">' + esc(cat) + "</span></div>"
+          + noteBit
           + '<div class="news-line">' + esc(it.league_line) + "</div>"
           + (it.headline ? '<div class="news-head">\\u201c' + esc(it.headline) + "\\u201d</div>" : "")
           + '<div class="news-meta">' + where + "</div>";
@@ -2153,6 +2167,7 @@ const html = `<!DOCTYPE html>
           return '<div class="news-row news-row-tweet">'
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
+            + noteBit
             + '<div class="news-line">' + esc(it.league_line) + "</div>"
             + '<div class="news-detail">'
             + '<p class="news-tweet-text">' + esc(it.tweet_text) + "</p>"
@@ -4732,7 +4747,8 @@ for (const need of ["esc(it.manager)", "esc(it.league_line)", "esc(it.headline)"
   // insert into, so it is third-party input twice over. tweet_handle goes into text (the @by
   // line), and esc() covers both text and attributes because it escapes quotes as well as
   // angle brackets.
-  "esc(it.tweet_text)", "esc(it.tweet_author)", "esc(it.tweet_handle)"]) {
+  "esc(it.tweet_text)", "esc(it.tweet_author)", "esc(it.tweet_handle)",
+  "esc(it.note)", "esc(it.submitted_by || \"Someone\")"]) {
   if (!newsBody.includes(need)) throw new Error(`renderNews stopped escaping a news field: ${need}`);
 }
 // A feed can ship "javascript:alert(1)" as an item link, and an <a href> is the one place on

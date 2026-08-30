@@ -584,12 +584,19 @@ async function ingestSubmissions(ownership, index, members, {
     let player = null;
     let how = "none";
     const target = resolveTarget(sub.target_name, members, aliasesByCanon);
-    const subjects = target ? null : matchTweetSubjects(tweet.text, matchIndex);
+    // Always run the matcher: even when target_name is authoritative for the *seat*, the player
+    // in the text still fills the meta line and the locker-room summary. Addressing still only
+    // comes from target_name or from subjects.addressable below — never from a below-threshold hit.
+    const subjects = matchTweetSubjects(tweet.text, matchIndex);
 
     if (target) {
       own = target;
       how = "target_name";
       report.targeted++;
+      if (subjects.top) {
+        const s = subjects.top;
+        player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
+      }
     } else if (subjects.addressable) {
       const s = subjects.addressable;
       own = { user_id: s.user_id, manager: s.manager };
@@ -1411,21 +1418,14 @@ async function main() {
       throw new Error(`self-check failed: item ${it.id} has unknown category ${it.category}`);
     }
     /**
-     * **The summary may not address anybody.** This is the guardrail the previous pass's
-     * objection earned, written as a refusal to write the file rather than as a comment.
-     *
-     * An auto-tagged row carries a manager's name in its label row and somebody *else's* jab in
-     * its note. If the summary between them says "you", or names the tagged manager, the row
-     * reads as the sharer speaking to that manager — which is exactly what was argued against,
-     * and it is the one way the reinstated fallback can still go wrong. The check is on the
-     * finished row, so it catches a template edit, a new category bank and a generated line
-     * alike; `leagueLineAsync()` already discards an LLM line that fails it, and this is what
-     * stops that discard from being the only thing standing in the way.
+     * Unaddressed summaries (The league) must not second-person anyone. Addressed rows use the
+     * locker-room banks on purpose — that is the app speaking TO the manager, separate from the
+     * sharer's note in its own field. The check only applies when nobody was tagged.
      */
-    if (it.category === "tweet") {
+    if (it.category === "tweet" && !it.manager) {
       const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
       if (offence) {
-        throw new Error(`self-check failed: shared tweet ${it.id}'s summary ${offence} — a summary must not address a person, because the note beside it is somebody else's words`);
+        throw new Error(`self-check failed: shared tweet ${it.id}'s summary ${offence} — an unaddressed summary must not address a person`);
       }
     }
     /**

@@ -474,7 +474,7 @@ test("the entry-point guard survives every way the file gets invoked", (t) => {
 
   const spaced = fs.mkdtempSync(nodePath.join(os.tmpdir(), "guard space "));
   try {
-    for (const f of ["news-sync.mjs", "lib.mjs", "news-voice.mjs", "news-sources.mjs", "price-today.mjs"]) {
+    for (const f of ["news-sync.mjs", "lib.mjs", "news-voice.mjs", "news-sources.mjs", "price-today.mjs", "news-match.mjs", "news-llm.mjs"]) {
       fs.copyFileSync(nodePath.join(repo, f), nodePath.join(spaced, f));
     }
     fs.symlinkSync(nodePath.join(repo, "data"), nodePath.join(spaced, "data"));

@@ -12,7 +12,8 @@ on:
     types: [news-submission]
   workflow_dispatch:
   schedule:
-    - cron: "* * * * *"
+    # GitHub may delay schedules; repository_dispatch (§3d / db/news-github-dispatch.sql) is the real path.
+    - cron: "*/5 * * * *"
 
 permissions:
   contents: write

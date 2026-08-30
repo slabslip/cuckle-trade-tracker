@@ -793,7 +793,26 @@ were not in the approved slice list and stand. What shipped:
   round, because the figure is the product.
 - **A7b** — the four tabs are `flex: 1 1 0` with `flex-wrap: nowrap` and share one row at 375px.
 - **A7c** — a `max-width: 460px` media query shrinks the brand and the picker so the header's
-  right edge sits inside the viewport.
+  right edge sits inside the viewport. Re-measured on the deployed page after the fact: the
+  Team button's right edge is **374px of 390** and **359px of 375**, and `body.scrollWidth`
+  equals the viewport at both. A7c is genuinely closed and was **not** implicated in A9 below.
+
+**A9 — the same slice regressed the seat picker, and it is fixed in `f21a64b`.** `f9fdb39` also
+changed `h1.brand` from `overflow: visible` to `overflow: hidden`, in the same hunk that gave
+`h1.brand a` its ellipsis. `#whoMenu` is absolutely positioned against `.who-wrap`, which lives
+inside `h1.brand`, so the clip cut a **472.6px** menu down to the header's **44px** content box:
+one option of eleven painted and hit-testable. The clip also made `h1.brand` a scroll box, so
+`paintWho`'s `focus()` on the selected option scrolled it **53px** and took the home icon and the
+brand out of view. Note `7f97711` had already set `overflow: visible` for exactly this reason
+("keep the team list on screen"), making this the second landing of the same clip — so the fix
+adds a generate-time assertion beside the regex-escape guards. Neither the ellipsis nor A7c needs
+the clip: with it removed, `body.scrollWidth` still equals the viewport at 375px and 390px.
+
+*Method note, for §3a.* `document.documentElement.scrollWidth` reported the viewport width at
+every step here and would have hidden any overflow; `document.body.scrollWidth` is the one that
+moves. And `getBoundingClientRect()` does **not** reflect ancestor clipping — the menu reported a
+full 472.6px box while only 44px was on screen. What caught it was `elementFromPoint` at each
+option's centre (1 of 11 hittable, 11 of 11 with the clip removed, 1 again when it was restored).
 
 Original findings below.
 

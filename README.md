@@ -21,27 +21,34 @@ node value-snapshot.mjs          # latest + monthly git history
 node ktc-snapshot.mjs            # weekly Superflex snap → data/ktc/ (not in build.mjs)
 node revalue.mjs
 node title-path.mjs              # titles.json for Champions Path
-node apply-value-adjust.mjs      # today blend + Value Adjustment + trade boards
+node apply-value-adjust.mjs      # today blend + Value Adjustment + trade boards + marks.json
 node generate-page.mjs
 ```
 
 `apply-value-adjust.mjs` is not optional. It owns the today clock (40% flatten + 60% KTC,
-retired → 0), the Value Adjustment, and every `trade_boards` row. Skipping it ships the
-flatten-only book with stale boards.
+retired → 0), the Value Adjustment, every `trade_boards` row and `marks.json`. Skipping it ships
+the flatten-only book with stale boards. It reprices from the committed UI JSON, so it is
+idempotent and runs in a checkout with no `value_curve.json`.
 
 Dashboard windows (`t0` / `y1` / `y2` / `y3` / `all`) are **even-flatten DynastyProcess** and
 never see KTC: day of trade / 1 year / 2 years / 3 years / all time, as the mean of year-ends in
-that window. The today clock is the 40/60 blend. See `docs/VALUE_SDD.md`.
+that window. See `docs/VALUE_SDD.md`.
+
+The 40/60 today blend is a **sixth** price, not one of those five, and no screen currently draws
+it — `docs/DASHBOARD_AUDIT.md` §8c has the measurement and the open question.
 
 Serve the folder over HTTP so each person’s slice can load:
 
 ```bash
 python3 -m http.server 8766
 # http://localhost:8766/?me=TipsUp
-# http://localhost:8766/?me=TipsUp&view=review
+# http://localhost:8766/?me=TipsUp&view=trades&lens=y3
+# http://localhost:8766/preview.html      framed at 375 / 390 / 402 / 430
 ```
 
-Live: [Home](https://slabslip.github.io/cuckle-trade-tracker/) · [Review 10](https://slabslip.github.io/cuckle-trade-tracker/?me=TipsUp&view=review)
+Live: [Home](https://slabslip.github.io/cuckle-trade-tracker/) ·
+[Champions Path](https://slabslip.github.io/cuckle-trade-tracker/?view=titles) ·
+[Phone preview](https://slabslip.github.io/cuckle-trade-tracker/preview.html)
 
 Pin display names in `data/aliases.overrides.json` — re-sync will not overwrite it.
 

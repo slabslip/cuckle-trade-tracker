@@ -1,8 +1,11 @@
 # CuckleChunckle — Architecture (HAVE)
 
-**Role:** What is actually built on **2026-08-28**. Never invent want from this file. Want → [`PRODUCT.md`](./PRODUCT.md).
+**Role:** What is actually built on **2026-08-30**. Never invent want from this file. Want → [`PRODUCT.md`](./PRODUCT.md). What the screens must do → [`UI_SDD.md`](./UI_SDD.md).
 
-**Not a git repo.** Vanilla Node. No `package.json`. Rebuild is `node build.mjs` (or the five scripts in order). Serve `index.html` via `python3 -m http.server` from the tracker folder.
+**Repo:** `github.com/slabslip/cuckle-trade-tracker`, public, GitHub Pages deploys from `main`.
+(Earlier revisions of this file said "not a git repo" — stale since 2026-08-28.)
+Vanilla Node. No `package.json`. Rebuild is `node build.mjs` (or the seven scripts in order).
+Serve `index.html` via `python3 -m http.server` from the tracker folder.
 
 ---
 
@@ -18,13 +21,24 @@ value-snapshot.mjs
 revalue.mjs
   → trade_meter.json, leaderboard.json, draft_skill.json
   → data/ui/members.json, league.json, picks.json, me/<user_id>.json
+title-path.mjs
+  → data/ui/titles.json                       (Champions Path)
+apply-value-adjust.mjs
+  → rewrites data/ui/league.json + me/<user_id>.json in place
+  → data/ui/marks.json
 generate-page.mjs
   → index.html  (inline CSS + JS; fetches data/ui/*.json)
 ```
 
-`build.mjs` runs those five in order. `value-snapshot.mjs --latest-only` skips git history.
+`build.mjs` runs those seven in order. `value-snapshot.mjs --latest-only` skips git history.
 
-**IN FLIGHT (present in tree + rebuilt JSON, not WANT-canon until open questions land):** First-3-years lens (`MIN_ACTIVE = 300`) in `revalue.mjs` (`lenses.y3`) and a third chip in `generate-page.mjs` / `index.html`. Home hero still uses `realized_per_trade` / `pick_per_trade` only. Do not revert.
+**`apply-value-adjust.mjs` is not optional.** It owns the today blend (40% flatten / 60% KTC
+Superflex, retired → 0), the Value Adjustment, `trade_boards` and `marks.json`. A build without it
+ships the flatten-only book. It reprices from the committed UI JSON, so it is idempotent and runs
+in a checkout that has no `value_curve.json` — which is why it, and not `revalue.mjs`, is the
+canonical builder of the today numbers. `revalue.mjs` no longer builds `trade_boards` at all.
+
+`ktc-snapshot.mjs` writes the weekly KTC Superflex file and is **not** in `build.mjs`.
 
 ---
 
@@ -104,20 +118,41 @@ Latest-board pick shape (2026-08-28): current-year exact slots (`2026 Pick 1.01`
 
 ```text
 {
-  traders: [ { user_id, name, two_way, incomplete, realized_total, realized_per_trade,
-               pick_total, pick_per_trade, style: { label, now_share, horizon,
+  traders: [ { user_id, name, two_way, incomplete, pick_total, pick_per_trade,
+               even_total, even_per_trade, style: { label, now_share, horizon,
                sold_picks_for_players, sold_players_for_picks } } ],
-  drafters_rookie, drafters_startup,
+  drafters_rookie,
+  player_lists,
   trade_boards: {
-    sides: [ { transaction_id, date, user_id, name, other, today_delta, t0_delta, aged, headline } ],
-    today: { best[10], worst[10] },
-    aged:  { best[10], worst[10] }
+    sides: [ { transaction_id, date, user_id, name, other, headline,
+               windows: { t0|y1|y2|y3|all: { got, sent, incomplete } } } ]
   },
   today: "YYYY-MM-DD"
 }
 ```
 
-~131 KB. `sides` is the bulk.
+266 KB, 576 sides; `sides` is 258 KB of it. A side ships only what the page reads. The pipeline's
+own copy also carries `today_delta`, `today_got`, `today_sent`, `t0_delta`, `aged` and per-window
+`delta` / `snaps` / `value_adjust` / `value_adjust_sent`, but those stay in the process.
+
+`trade_boards.today` / `.aged`, `review_trades`, `drafters_startup` and `realized_*` were deleted:
+nothing read them, and `realized_*` described a book no longer in the file.
+
+### `data/ui/marks.json`
+
+```text
+{
+  as_of: "YYYY-MM-DD",
+  seats: { "<user_id>": {
+    name, two_way, sold_picks, sold_players,
+    aging: { mean, n }, draft: { mean, n },
+    lens: { t0|y1|y2|y3|all: { n, total, per, extract, farmed, even } }
+  } }
+}
+```
+
+6 KB. Every number behind the six home style tiles and the ten-row league chart, for all ten seats
+on all five clocks. Before it existed, tapping one tile downloaded every seat file.
 
 ### `data/ui/picks.json`
 
@@ -137,10 +172,10 @@ Latest-board pick shape (2026-08-28): current-year exact slots (`2026 Pick 1.01`
 ```text
 {
   user_id, name,
-  hero: { …leaderboard row + incomplete },
+  hero: { two_way },
   style, hit, miss,
-  partners[], partner_headlines: { best, worst, most },
-  recent_trades[5], recent_rookies[5],
+  partners: [ { name, trades, complete, even_total, even_per_trade, … } ],
+  recent_rookies[5],
   trades: [ slimTrade ],
   drafts: { rookie, startup }
 }
@@ -151,19 +186,37 @@ Latest-board pick shape (2026-08-28): current-year exact slots (`2026 Pick 1.01`
 ```text
 {
   transaction_id, date, season, others[], incomplete,
-  realized, pick, y3,          // side objects for *you*
-  other_bags: [ { name, realized, pick, y3 } ],  // still shipped for 2-team
-  year_ends, pick_year_ends    // [{ as_of, points: { Name: receivedBag } }]
+  even,                        // the today-blend side object for *you* — see note below
+  windows: { t0, y1, y2, y3, all },   // flatten-only side objects
+  even_year_ends,              // [{ as_of, points: { Name: receivedBag } }]
+  other_bags: [ { name, even, windows } ]   // only when others.length > 1
 }
 ```
 
-Side object (`realized` / `pick`): `name, today, sent_today, today_delta, t0, t0_delta, unpriced, sent_unpriced, t0_unpriced, incomplete, legs[], sent[], t0_legs[]`.
+Side object: `name, today, sent_today, today_delta, t0, t0_delta, unpriced, sent_unpriced,
+incomplete, legs[], sent[], value_adjust, value_adjust_sent, t0_value_adjust`.
 
-`y3` side reuses `today` / `sent_today` / `today_delta` for the **window mean** (name collision). No T0 fields.
+Leg: `{ label, kind, asset_key, value, flag, became, value_flat }`. `value_flat` is the pre-blend
+flatten price and is kept deliberately: without `value_curve.json` in the checkout it is the only
+record of it, and `apply-value-adjust.mjs` reprices idempotently from it.
 
-Leg: `{ label, kind, asset_key, value, flag, became, drafted_by }`.
+**`even` still ships but no screen draws it.** `sideOf(t)` is
+`(t.windows && t.windows[lens]) || t.even || t.realized`, and all 586 trades carry `windows.all`,
+so the fallback never fires. `even` remains the basis of the pipeline's own aggregates
+(`league.traders[].even_per_trade`, board headlines, the zero-sum checks). Measured gap between
+`even.today_delta` and the `windows.all.today_delta` the page renders: mean **975** over 582
+sides, max **5,715**. Logged as `DASHBOARD_AUDIT.md` §8c / D5 — a user decision, not a defect to
+patch.
 
-File sizes 157–561 KB (SF69erss largest). `year_ends` on a 2019 trade is 8 points through today.
+File sizes 156–602 KB (SF69erss largest), 3.0 MB for all ten.
+
+Removed from the shipped seat file because nothing reads them: `other_bags` on two-team trades
+(3.06 MB — present on 580 of 586 trades, rendered on 6), `realized`, `recent_trades`, `year_ends`,
+`partner_headlines`, `legs[].drafted_by`, `hero` beyond `two_way`, and `partners[].grade` (a frozen
+one-clock grade that disagreed with the Partners tab on 20 of 82 partners).
+
+Still shipped and still unread, kept for the reasons above or as too small to be worth the churn:
+`legs[].value_flat` (~36 KB), `recent_rookies` (~23 KB), `t0_value_adjust` (~13 KB).
 
 ### Verified fixtures (code = HAVE)
 
@@ -178,38 +231,72 @@ File sizes 157–561 KB (SF69erss largest). `year_ends` on a 2019 trade is 8 poi
 
 One `index.html`. After `?me=` / tile pick:
 
+With no seat picked: **league home** — the gold alert row (Recent Trade + Champions Path), Most
+lopsided trades, and the four player packs. After `?me=` or a pick in the header:
+
 | Tab | What it shows |
 | --- | --- |
-| **home** | Hero = **your** `realized_per_trade` (or pick-lens per-trade). Style caption. Rookie hit/miss. League teaser chips = all-time today Best smash / Worst. Partner Best / Worst / Most. Latest 5 trades. Latest 5 rookie picks (green player / blue pick-cost spark). |
-| **trades** | Your tape, season chips. Open row = You received / You gave up. 3-team adds other received bags. Aged caption when T0 exists. Spark = each side’s **received** bag at year-end. |
-| **partners** | 2-team pair grades. Open partner → their 2-team deals with you. |
-| **drafts** | Rookie 2020–26 surplus; Startup 2019 by player today. |
-| **league** | Best/Worst 10 with today/aged clocks and 3m/6m/1y/3y/all windows (trade date). Then traders / drafters lists. You highlighted. |
+| **home** | Six style tiles from `marks.json` (Run · Volume · Posture · Manners · Aging · Draft), each opening a ten-row league chart. Then Best deal, Worst deal, two edge partners, rookie hit/miss. **No hero number.** |
+| **trades** | Your tape, year filter (radios), lived-clock filter with `livedHint`. Open row = You received / You gave up + Value Adjustment. N-way adds one bag per other seat. Spark = each side's **received** bag at year-end, nulls as gaps. |
+| **partners** | 2-team pair grades from `partnerPer()`. Open partner → their deals with you on the selected clock. |
+| **drafts** | Rookie 2020–26 surplus; startup picks toggled in, priced against their real `pick_cost`. Pins the clock to `all`. |
+| **titles** | Champions Path. Outside the trade needle. |
+| **league** | `Traders · per complete two-way` and `Drafters · rookie surplus per pick`. **No visible control routes here** since Best/Worst was removed; only `?view=league` reaches it. Awaiting a user ruling. |
 
-Lens chips (global): **Became the player** · **Pick at trade day** · **First 3 years** (IN FLIGHT). y3 changes trade-row margins via `sideOf`; it does **not** change the Home hero or Best/Worst.
+One **Score as** dropdown, five windows: `t0` At trade · `y1`/`y2`/`y3` First N years ·
+`all` Since trade (default). `t0` and `all` are unfiltered; the year windows hide deals that have
+not lived the clock.
 
-Open pick leg → hop tape from `picks.json`.
+Open pick leg → hop tape from `picks.json`. The expanded detail is a **sibling** of the row button,
+not a child, so the pick legs inside it can be real buttons.
+
+**Deleted:** the Best 10 / Worst 10 board (`renderTradeBoards`, `rankSides`, `monthsAgo`,
+`boardScore`, `boardClock`, `boardWindow`), by user decision, twice. `Most lopsided trades` is the
+permanent replacement.
 
 ---
 
 ## 7. Known gaps (HAVE bugs / edges / waste)
 
-1. **`other_bags` still shipped on every 2-team `slimTrade`.** UI only renders them when `others.length > 1`. Pure duplicate of the other seat’s received bag (= your `sent` on 2-team). Inflates every `me/*.json`.
-2. **`league.json` carries all 574 `trade_boards.sides`** so the browser can re-window. Precomputed top-10 already exist for all-time. Fine at 131 KB; do not grow this with y3 clocks until asked.
-3. **`off_board` is dead.** Last-known DP value is carried to “today” forever (Zeke = 3). The 300 floor is the only retirement hammer, and only on y3.
-4. **300 on y3 hits picks too.** IN FLIGHT: future 3rds/4ths and a 215-point 2028 2nd become 0, so a 4-day-old trade’s “3-year mean” is floored-today, not a window.
-5. **Year-end grid vs accept date.** `windowAsOfs` keeps Dec 31s in `[t0, t0+3y]` and does **not** insert the cap date. July 2019 → 2019/20/21 YE only (2019 YE empty). Window not elapsed → snaps = `{today}` only, still marked complete.
-6. **Unpriced snaps dropped, not zeroed.** Pre-curve 2019-12-31 disappears; the mean is over surviving dates (2 years, hence `.5` on Chief y3). Different from “retired year = 0.”
-7. **3-team “receiver-only” seat** can post a positive delta with empty `sent` (2023-01-06). Filter is “everyone received,” not “everyone sent.”
-8. **Home hero ignores the y3 chip.** Trade rows do not. Easy to read as “the big number is 3-year” when it is still today-per-trade.
-9. **`?me=` race.** `selectMe` has no abort. Auto-select + a second tile click (or a Best-board `data-open-me`) can finish out of order.
-10. **Trade row is a `<button>` wrapping hop controls.** Apostrophe-in-caption **script** break is fixed (data is `fetch` + JSON; labels are HTML text). Hazard returns if anyone interpolates `Ja'Marr` / `Wan'Dale` into a single-quoted JS string. `headline` on boards already contains `Wan'Dale Robinson`.
-11. **Duplicate work.** `partnersFor` is recomputed inside the invert self-check (O(members × trades) twice). `priceLeg` runs per lens × per as-of × per bag. `year_ends` stored twice (`realized` + `pick`) on every slim trade. Full `value_curve.json` is 6.9 MB; used is 4.5 MB; `trade_meter.json` is 3.5 MB (not fetched by the page).
-12. **Latest `as_of` can duplicate the newest git month** (two `2026-08-28` Hill rows). Harmless for `asofRow`.
-13. **IDP / no Sleeper map** → unpriced, incomplete, off needle. No separate IDP book.
-14. **Spark treats missing points as 0** (`p[k] || 0`), so a null year-end draws a crash to the axis.
-15. **Nested leftover:** global click handler is a long if-chain; Home teaser chips reuse `data-board` and force `view = "league"` (intentional, but easy to break when adding a third clock).
-16. **No publish cadence.** Rebuild is manual. `players.nfl.json` caches 24h; past-season tx weeks stay cached forever.
+Fixed and shipped since the audit: `other_bags` on two-team trades, `realized_*`, the spark's
+`|| 0` null crash, escaping, the nested `<button>`, the missing keyboard layer, the split partner
+grade, `trade_boards` being built twice, `aged` mixing two price books, `build.mjs` omitting
+`title-path` and `apply-value-adjust`, and the oversized `trade_boards.sides` rows. See
+`DASHBOARD_AUDIT.md` for the annotated list with commits.
+
+Still open:
+
+1. **`league.json` carries all 576 `trade_boards.sides`** so the browser can re-window. 266 KB
+   after the projection; do not grow the row without checking what reads it.
+2. **`off_board` is dead.** The retirement test is now "off the KTC Superflex board **and** off an
+   NFL roster → 0" in `price-today.mjs`, plus the explicit `RETIRED_SLEEPER_IDS` set. The 300
+   activity floor still applies only to the year windows, never to the today clock.
+3. **300 on the year windows hits picks too.** Future 3rds/4ths and a 215-point 2028 2nd become 0,
+   so a four-day-old trade's "3-year mean" is floored-today, not a window.
+4. **Year-end grid vs accept date.** `windowAsOfs` keeps Dec 31s in `[t0, t0+Ny]` and does **not**
+   insert the cap date. July 2019 → 2019/20/21 YE only (2019 YE empty). Window not elapsed →
+   snaps = `{today}` only, still marked complete. The UI hides those deals via `chipLived`.
+5. **Unpriced snaps dropped, not zeroed.** Pre-curve 2019-12-31 disappears; the mean is over
+   surviving dates. Different from "retired year = 0".
+6. **N-way "receiver-only" seat** can post a positive delta with empty `sent` (2023-01-06). The
+   filter is "everyone received", not "everyone sent". Its Value Adjustment is 0 either way.
+7. **`?me=` race.** `selectMe` has no abort; two seat picks can finish out of order.
+8. **Apostrophe hazard.** Data reaches the page as `fetch` + JSON and labels go through `esc()`.
+   The hazard returns the moment anyone interpolates `Ja'Marr` / `Wan'Dale` into a single-quoted JS
+   string inside the template. Board headlines already contain `Wan'Dale Robinson`.
+9. **The generator is one template literal.** A backslash in a regex written there is swallowed
+   unless doubled, and `pieceWeight` and `yearsOn` both shipped broken regexes for a while as a
+   result. Check regexes against `index.html`, never against `generate-page.mjs`.
+10. **Duplicate work in `revalue.mjs`.** `partnersFor` is recomputed inside the invert self-check;
+    `priceLeg` runs per lens × per as-of × per bag. Full `value_curve.json` is 6.9 MB and is absent
+    from this checkout, which is why `revalue.mjs` cannot run here.
+11. **IDP / no Sleeper map** → unpriced, incomplete, off the needle. No separate IDP book.
+12. **The global click handler is one long if-chain.** Adding a `data-*` name that a prior branch
+    already matches will silently shadow it.
+13. **No publish cadence.** Rebuild is manual. `players.nfl.json` caches 24h; past-season tx weeks
+    stay cached forever.
+14. **`renderLeague()` has no entry point.** Its two lists are unreachable in the UI pending a user
+    ruling (see §6).
 
 ---
 
@@ -218,13 +305,32 @@ Open pick leg → hop tape from `picks.json`.
 From `revalue.mjs` (throw = failed rebuild):
 
 - No FAAB legs; every meter trade has a received bag per seat; year-ends ≤ `today`.
-- Complete 2-team today-deltas zero-sum; partner `realized_per_trade` pairs invert.
+- Complete 2-team today-deltas zero-sum; partner per-trade pairs invert.
 - Wilson hops = 5, one drafted exit, flip `out` ≠ player-today; Breece hops = 6.
 - Truman–Bubba complete; Bubba received 3 picks; 2029 4th `priced_as_2028`.
-- Boards: 10 best/worst, sorted; every `sides` row is a complete 2-team pair with a headline.
-- `MIN_ACTIVE === 300`.
-- **`y3 leaves realized_per_trade`** — Home/League today math unchanged.
-- Zeke exists on Chief–ARae today **and** y3; y3 value ≠ leftover 3 when today < 300.
-- No y3 snap with `0 < floored < 300`; raw `< 300` ⇒ floored 0.
+- `MIN_ACTIVE === 300`; no year-window snap with `0 < floored < 300`; raw `< 300` ⇒ floored 0.
+- Zeke exists on Chief–ARae on the today clock **and** on the year windows.
 
-Do not add a check that forces y3 onto Best/Worst or the Home hero.
+From `apply-value-adjust.mjs` (throw = failed rebuild):
+
+- CeeDee's Value Adjustment is ~3,322 after the today blend with extras capped at 3.
+- Zeke prices 0; Hill prices 1,798 (**not** floored); Baker prices 4,597.
+- `realized_*` is gone from every side and every trader row.
+- `drafters_rookie` survives; `review_trades`, `drafters_startup` and `trade_boards.today` /
+  `.aged` are gone.
+- `marks.json` covers every seat on every clock, its partner counts add up to the graded partners,
+  and its `all` totals match the `windows.all` deltas (**not** the `even` blend — see §5 and
+  `DASHBOARD_AUDIT.md` §8c).
+
+And, as a standing script over all ten seats after any change to the book:
+
+- `today == sum(priced legs) + value_adjust`; `today_delta == today − sent_today`.
+- Stored Value Adjustment matches a fresh `value-adjust.mjs` recompute (0 on N-way, 0 on
+  incomplete); stored today values match a fresh `price-today.mjs` recompute.
+- Zero-sum on the 288 complete two-team trades **and** on the 2 N-way trades.
+- The inline `applyVa` **read out of `index.html`** agrees with `value-adjust.mjs` on all 3,528
+  sides, to 0.
+- No NaN, no Infinity in any shipped UI JSON.
+
+Do not add a check that forces a year window onto the today clock, and do not weaken a check into
+a tautology — if a fixture number moves, state the new number and why.

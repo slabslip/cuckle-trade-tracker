@@ -32,14 +32,37 @@ That is the product. Style labels (Win-now / Investor / Balanced) describe bag m
 
 ## 3. Clocks (do not mix)
 
-| Clock | Question it answers | On the needle? |
+Five windows ship, chosen in one **Score as** dropdown. `Since trade` is the default.
+
+| Clock | Question it answers | Price book |
 | --- | --- | --- |
-| **Today** (default) | What is that bag worth **now**, became-player? | Yes — Home hero, trade row, Best/Worst “as of today” |
-| **T0** (toggle: Pick at trade day) | What did they accept **that day** (pick still a pick)? | Yes — as a second lens, not a second hero |
-| **Aged** | Today Δ − T0 Δ (how the deal moved after accept) | Yes — Best/Worst “aged”; caption on an open row when T0 exists |
-| **First 3 years** | Mean of year-end (became-player) values in `[accept, accept+3y]`, with the activity floor | Yes — **third chip only**. Must not replace Today or T0. Must not become a second Home hero. |
+| **Since trade** (`all`, default) | Mean of year-end (became-player) values from accept through today | Flatten only |
+| **At trade** (`t0`) | What did they accept **that day** (pick still a pick)? | Flatten only |
+| **First 1 / 2 / 3 years** (`y1` `y2` `y3`) | Mean of year-end (became-player) values in `[accept, accept+Ny]`, with the activity floor | Flatten only |
+| **Aged** | `all` Δ − `t0` Δ, how the deal moved after accept | Derived — both terms from the **same** book, never by subtracting two |
+
+**All five windows are flatten-only.** Do not backfill KTC onto a clock that predates the
+snapshot, and never average two clocks into one figure.
+
+**The today blend is a sixth price, and it is not one of the five windows.** A trade's `even` bag
+prices each leg as a **40/60 blend** of its flatten value and its KeepTradeCut Superflex value as
+of `ktc_as_of`, and an asset that is **off the KTC Superflex board and off an NFL roster** prices
+at **0**. That rule is the whole retirement test: a cheap rostered QB2 is not retired, and an
+expensive stale row with no team and no KTC line is. The explicit `RETIRED_SLEEPER_IDS` set still
+wins outright.
+
+`even` is what the pipeline's own aggregates are built on. **No reachable screen renders it** —
+`sideOf()` reads `windows[lens]`, which every trade has, so the `even` fallback never fires. That
+is a live gap, not a design: see `DASHBOARD_AUDIT.md` §8c / D5, which measures the difference at a
+mean of 975 across 582 sides and asks whether the blend should get a named clock of its own.
+Until that is answered, **do not describe "Since trade" to a user as a today price.**
 
 Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the needle. One-ways and FAAB-only never enter the meter.
+
+**Value Adjustment** (rate 0.15, extras capped at 3, a late 4th counting 0.5) prices the stud-for-
+quantity premium on a two-team swap. It is **0 on any trade with more than two seats**: an N-way
+seat's `sent` bag does not correspond to any single other seat's `got` bag, so there is no
+non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomplete side.
 
 ---
 
@@ -63,9 +86,15 @@ Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the
 - Applying the 300 activity floor to the **today** clock (Hill is 285 — still a real player).
 - Letting Win-now / Investor change any delta.
 
+**Removed by user decision — do not re-propose**
+
+- **Best 10 / Worst 10.** Removed once, restored by an agent on the audit's recommendation,
+  removed again on sight. `Most lopsided trades` on league home is the permanent replacement.
+- **`realized_*`.** The stored `realized_total` / `realized_per_trade` described a book no longer
+  in the file — up to ~37,000 off, with sign flips on four seats. Deleted rather than repaired.
+
 **PARKED** (honest later, not now)
 
-- Best/Worst (and `realized_per_trade`) on the 3-year clock — only after that lens is trusted.
 - Weekly/monthly spark (full git density) instead of year-end + today.
 - Peak-in-window, AUC, or “years above 300” as the **headline** over-time number.
 - Flip P&L as the default over-time identity (hop tape already exists; do not merge it into the trade needle).
@@ -75,10 +104,26 @@ Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the
 
 ## 5. Build order
 
-1. **Keep Today + T0 + hops + Best/Worst frozen.** Do not “fix” needle math in passing.
-2. **Finish First 3 years as a chip** — compose with `MIN_ACTIVE` on **that** clock only; self-checks in `revalue.mjs` must keep passing (`y3 leaves realized_per_trade`, Zeke 3y ≠ leftover 3, no sub-300 positive 3y snap).
-3. **Make the 3-year window readable** on the existing spark (caption + shade). No new chart stack.
-4. Only then: decide Best/Worst / partner averages on 3y, denser dates, or a different aggregator (see `OPEN_QUESTIONS.md`).
+`node build.mjs` is the whole rebuild and it is the only rebuild:
+`sleeper-sync` → `draft-resolve` → `value-snapshot` → `revalue` → `title-path` →
+`apply-value-adjust` → `generate-page`.
+
+`apply-value-adjust.mjs` is not optional. It owns the today blend, the Value Adjustment, the trade
+boards and `marks.json`, so a build without it ships the flatten-only book. `title-path.mjs` writes
+`titles.json`. Both were missing from the list, which is why `titles.json.as_of` and `league.today`
+could disagree in production.
+
+Standing checks after any change to the book, over all ten seats:
+
+1. Every side's `today` equals `sum(priced legs) + value_adjust`, and `today_delta` equals
+   `today − sent_today`.
+2. Stored Value Adjustment matches a fresh `value-adjust.mjs` recompute; stored today values match
+   a fresh `price-today.mjs` recompute.
+3. Zero-sum on the 288 complete two-team trades **and** on the 2 N-way trades.
+4. The generator's inline `applyVa` agrees numerically with `value-adjust.mjs` on every side —
+   read it out of `index.html`, not out of `generate-page.mjs`, or a template literal that swallows
+   a regex backslash will pass a check it should fail.
+5. No NaN, no Infinity, and the self-checks in `apply-value-adjust.mjs` pass.
 
 ---
 
@@ -91,4 +136,9 @@ Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the
 - **No silent Mid** on a slotted pick when Early/Late/slot exists; Mid is only the no-slot fallback and must flag `priced_as_mid`.
 - **Drafter name in parentheses** is who **used** the pick, not who received it in this trade.
 - **Zero-sum on complete 2-team** today-deltas. Partner per-trade numbers invert.
+- **Value Adjustment is 0 on N-way trades.** Zero-sum needs `sum(gotVA) == sum(sentVA)` across
+  seats, and with three bags there is no non-arbitrary attribution.
+- **Pipeline owns all arithmetic; the browser only formats.** One helper per number. If a figure
+  is computed in two places it will disagree in production — the home tile and the Partners tab
+  did, on 20 of 82 graded partners.
 - **Ponytail:** rebuild pipeline, don’t add a web app. Mark ceilings with `ponytail:`.

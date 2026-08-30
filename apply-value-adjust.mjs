@@ -382,7 +382,8 @@ function main() {
     const graded = (seat.partners || []).filter((p) => p.complete >= 1).length;
     return LENSES.every((k) => m.lens[k].extract + m.lens[k].farmed + m.lens[k].even === graded);
   }));
-  check("marks 'all' total matches the even deltas", Object.values(marks.seats).every((m) => {
+  // "all" is the flatten windows.all delta, not the today blend in `even` — see AUDIT §8c.
+  check("marks 'all' total matches the windows.all deltas", Object.values(marks.seats).every((m) => {
     const seat = seats.find((s) => s.name === m.name);
     const ds = (seat.trades || []).map((t) => tradeDelta(t, "all")).filter((d) => d != null);
     const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;

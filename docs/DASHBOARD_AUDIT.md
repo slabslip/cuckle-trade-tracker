@@ -16,6 +16,30 @@ Where this file and `docs/UI_SDD.md` disagree about what exists, **this file is 
 
 ---
 
+## 0. Status — what shipped, 2026-08-29 / 30
+
+The audit was worked in seven slices, one PR each, each merged to `main` so Pages deployed it.
+Every heading below carries its own **FIXED** annotation with the commit; this is the index.
+
+| Slice | Commit | Closes |
+| --- | --- | --- |
+| Name collisions (pre-audit fix) | `fdec099` | P1-13 |
+| A — pricing | `452d5db` | P0-5 (D1), P0-6 (D2), P1-9 |
+| B — generator correctness | `2f22d5f`, `38885d1` | P0-1, P0-3, P0-7, P1-1, P1-2, P1-3, P1-5, P1-6, P1-11, P1-14, §6 fetch/guards/empty states |
+| C — pipeline truth | `7812573` | P0-2, P1-10, `realized_*` |
+| D — dead code and payload | `4653091`, `3474f51`, `64f55b0` | §3 dead UI, §3 dead payload |
+| E — one source per number | `96d9218`, `ec088f6` | P0-4, P1-4, P1-7, P1-12 (D3), §4.3, §4.4, §6b |
+| F — phone and keyboard | `f9fdb39`, `d4997a2` | A1, A2, A3, A4, A5, A7, A7b, A7c, §6 year-filter semantics |
+| G — docs | this commit | §7 docs drift |
+
+**Still open, deliberately.** P1-8 (back button / `pushState` + `popstate`), §4.2 posture vocabulary,
+§5.1–5.2 ticker duplication, §5.3 the constant `1st` column, A6 (marquee pause), A8 (three colour
+languages in a Drafts row), and the `DATA_V` hand-edit hazard in §6b. None were in the approved
+slice list. Plus two user decisions: the Home hero (§10.1), the orphaned Traders/Drafters lists
+(§10.2), and one new one raised by the work itself — **D5, the KTC blend has no reader** (§8c).
+
+---
+
 ## 1. What we have shipped so far (review)
 
 | Slice | State | Notes |
@@ -38,7 +62,15 @@ almost all presentation and plumbing, not pricing.
 
 Each of these was reproduced with a script against the committed data.
 
-### P0-1 — "Include startup picks" flips the Drafts headline sign
+### P0-1 — "Include startup picks" flips the Drafts headline sign — **FIXED, `2f22d5f`**
+Shipped: `pickDelta` returns `displayDelta(pickGot(p), p.pick_cost)` for startup picks and
+`pickRow` prints the cost. Recomputed on the committed data, SF69erss's Drafts header with
+startup ticked goes **962 / pick → 89 / pick · 54 graded** (rookie-only stays −18 / pick · 27).
+The 28 startup rows now print a cost instead of `—`. Ticking the box still moves the sign, but
+now it says something true — this seat's startup picks beat their cost by 89 apiece — instead of
+reporting raw player value as if it were surplus.
+Original finding below.
+
 `pickDelta` returns early for startup picks with the **raw player value** instead of a surplus
 (`generate-page.mjs:1226`), and `pickRow:1241` blanks the cost column. But startup picks
 **do** carry `pick_cost` — 28 of 28 for SF69erss — and the pipeline already ships a correct
@@ -57,7 +89,15 @@ visible denominator — while every other row in the tab means "surplus" in that
 *Fix:* `if (p.startup) return displayDelta(pickGot(p), p.pick_cost)` and stop blanking the cost.
 Generator-only.
 
-### P0-2 — `node build.mjs` does not reproduce the deployed site
+### P0-2 — `node build.mjs` does not reproduce the deployed site — **FIXED, `7812573`**
+Shipped: `build.mjs` now runs `sleeper-sync → draft-resolve → value-snapshot → revalue →
+title-path → apply-value-adjust → generate-page`. The duplicate boards builder is gone —
+`revalue.mjs` no longer emits `trade_boards`, `partner_headlines`, `hero.even_*` or
+`realized_*`; `apply-value-adjust.mjs` is the single builder. `revalue.mjs` still runs in a
+checkout that has `value_curve.json`; only its board half was removed. `README.md` and
+`docs/TRACKER_SDD.md` updated to the seven-step list.
+Original finding below.
+
 `build.mjs` runs five scripts: `sleeper-sync`, `draft-resolve`, `value-snapshot`, `revalue`,
 `generate-page`. It does **not** run `apply-value-adjust.mjs` (which is what actually patched the
 committed UI JSON with the today blend and VA, because `value_curve.json` is absent from this
@@ -70,7 +110,16 @@ Live evidence the two paths are already out of step: `titles.json.as_of` is `202
 paths, so which one ran last silently determines what the site shows.
 *Fix:* one canonical build list; delete the duplicate boards builder. Pipeline-only.
 
-### P0-3 — Third-party bags hide their Value Adjustment
+### P0-3 — Third-party bags hide their Value Adjustment — **FIXED, `2f22d5f`**
+Shipped: `tradeBags` routes every other-party side through `applyVa` and passes
+`side.value_adjust` as the fifth argument, so the line prints. Verified in a headless harness
+with all ten seats loaded — 12 third-party bags render, 12 of 12 now have header == legs + VA.
+Note that Slice A (`452d5db`) then made VA **0 on every N-way trade**, and all 12 of these bags
+belong to the two 3-team trades, so the line they now correctly print reads 0. The fix is what
+keeps the header honest if VA policy ever changes; the 712-point gap on
+`1277511518384037888` closed because VA went to 0 there, not because the line appeared.
+Original finding below.
+
 `tradeBags` passes five arguments to `bagBlock` for the two primary bags (`:1137-1138`) but only
 **four** for every other party's bag (`:1142`) — `va` is omitted. `bagBlock` therefore prints no
 Value Adjustment line while the header total it prints already contains VA.
@@ -81,7 +130,16 @@ Measured: 12 third-party bags exist in the data; **4 carry non-zero invisible VA
 committed value while the primary bags recompute.
 *Fix:* pass `side.value_adjust`; route the side through `applyVa`. Generator-only.
 
-### P0-4 — The manners tile and the Partners tab disagree on 1 partner in 4
+### P0-4 — The manners tile and the Partners tab disagree on 1 partner in 4 — **FIXED, `96d9218`**
+Shipped: one `partnerPer(seat, name, lens)` helper feeds the Partners tab, the home partner
+teaser and the manners tile, and one `GRADE_EVEN = 100` replaces the three copies of the
+threshold. The tile is now a tally of exactly the grades the tab prints, so they cannot diverge.
+`partners[].grade` was deleted from the payload rather than left as a fourth answer.
+The manners counts come from `marks.json`, which the pipeline builds with the same
+`partnerGrade` over the same per-lens means. Verified by recomputing all 82 partner grades in
+the browser against `marks.json`: **0 disagreements on all five lenses** (was 20 of 82 on `all`).
+Original finding below.
+
 `marksOf` reads the committed `p.grade` (`:920`), which the pipeline derives from the **today**
 clock. The Partners tab recomputes the grade from the **selected lens** (`:1470`).
 Measured against lens `all`: **20 of 82 partner grades disagree.** Both screens carry a
@@ -89,7 +147,31 @@ Measured against lens `all`: **20 of 82 partner grades disagree.** Both screens 
 *Fix:* one `partnerPer(seat, name, lens)` helper; delete or explicitly label the stored grade.
 Both.
 
-### P0-5 — 31 rostered NFL players are valued at zero
+### P0-5 — 31 rostered NFL players are valued at zero — **FIXED, `452d5db`** (decision D1)
+Shipped rule: **not on the KTC Superflex board *and* no NFL team → 0.** The `tinyRaw` and
+`tinyFlat` branches are gone, along with the `TINY_RAW_MAX` / `TINY_FLAT_MAX` constants;
+`RETIRED_SLEEPER_IDS` and the `onKtcBoard` early return are untouched.
+
+Not the `noTeam && (tinyRaw || tinyFlat)` the recommendation below proposed — plain AND would
+have broken genuine retirement detection for expensive stale rows. Ryan Fitzpatrick carries
+flatten **2,014** with no team and no KTC row; under AND he would price at 2,014 instead of 0.
+
+Measured over all 1,736 priced legs in the committed `even` bags:
+
+| | |
+| --- | ---: |
+| Legs that went 0 → value | **108** |
+| Legs that went value → 0 | **0** |
+| Distinct names restored | **29** |
+
+Mason Rudolph and Andy Dalton now price **761**, Austin Hooper **856**. Ryan Fitzpatrick,
+Ezekiel Elliott, Joe Mixon, Nick Chubb, Adam Thielen and DeAndre Hopkins all still price **0**.
+
+The unresolved-`sid` path was checked because it falls through to `noTeam === true` and zeroes:
+**2 legs, 1 name — D'Wayne Eskridge**, who is genuinely out of the league. So no rostered player
+reaches 0 through a failed id lookup.
+Original finding below.
+
 `isRetired` returns `noTeam || tinyRaw || tinyFlat` (`price-today.mjs:118`). Because the
 conditions are OR'd, the `tinyFlat <= 1200` branch zeroes any player under that flatten value
 **even when he has a live NFL team**.
@@ -105,7 +187,32 @@ still a claim the book should not be making, and it is invisible on screen.
 *Fix:* require `noTeam && (tinyRaw || tinyFlat)`, or drop `tinyFlat` and lean on the explicit
 retired set plus the KTC-board test. Pipeline-only.
 
-### P0-6 — Value Adjustment breaks zero-sum on 3-team trades
+### P0-6 — Value Adjustment breaks zero-sum on 3-team trades — **FIXED, `452d5db`** (decision D2)
+Shipped: **VA is 0 on any trade with more than two seats.**
+
+Not the "union of the other bags" the recommendation below proposed. That does not restore
+zero-sum: the property needs `sum(gotVA) == sum(sentVA)` across seats, and in an N-way trade a
+seat's `sent` bag does not correspond to any single other seat's `got` bag, so there is no
+non-arbitrary attribution. VA's whole rationale is a pairwise stud-for-quantity swap; on three
+seats the premise is absent, so the honest number is 0.
+
+Threaded as an option rather than guessed inside the function: `applyToSide(side, opts)` takes
+`opts.noVa`, which forces `value_adjust` and `value_adjust_sent` to 0 while still recomputing
+totals. `applyTrade` computes `const multi = (t.others || []).length > 1` once and passes it to
+every side of that trade including `other_bags` and all five windows. The browser's inline
+`applyVa(s, noVa)` takes the same flag from `isMulti(t)`.
+
+Re-measured on the shipped data:
+
+| | Before | After |
+| --- | ---: | ---: |
+| tx `916914658962112512` sum of `today_delta` | +397.39 | **0.00** |
+| tx `1277511518384037888` | +26.70 | **0.00** |
+| League-wide sum over fully-observed trades | +424.09 | **0.00** |
+| Zero-sum breaks across 288 two-team pairs | 0 | **0** |
+
+Original finding below.
+
 VA is computed per seat against **that seat's own counter-bag**. In an N-way trade those bags do
 not mirror, so the adjustments never cancel.
 
@@ -115,7 +222,11 @@ Two-team zero-sum remains perfect (0 breaks across 288 pairs), so this is specif
 *Fix:* define VA for N-way trades against the union of the other bags, or exclude N-way trades
 from VA and say so. Pipeline; product decision first.
 
-### P0-7 — The Trades tab scores trades on clocks they have not lived
+### P0-7 — The Trades tab scores trades on clocks they have not lived — **FIXED, `2f22d5f`**
+Shipped: `renderTrades` filters with `chipLived` and prints `livedHint` above the list, so its
+disclosure branch is finally reachable. The tab and the home tiles now hide the same set.
+Original finding below.
+
 `renderTrades` never filters by `chipLived` (`:1279`). On the `y3` lens a two-week-old trade
 renders a "First 3 years" number built from a single snapshot, while Home's tiles exclude exactly
 those trades via `windowTotal` → `chipLived`. `livedHint` — the function written to disclose this —
@@ -127,59 +238,109 @@ branch is unreachable.
 
 ## 2b. P1 defects (confirmed, with line numbers)
 
-### P1-1 — Shareable links are broken; `?me=` is written but never read
+### P1-1 — Shareable links are broken; `?me=` is written but never read — **FIXED, `2f22d5f`**
+Shipped: boot resolves `?me=` against **both** display name and `user_id` (`syncUrl` writes the
+name, `selectMe` keys on the id), then honours `?t=` to open that trade. An unrecognised value
+falls back to league home without throwing. `96d9218` added the matching `?view=league` case, so
+that URL no longer needs a seat.
+Original finding below.
+
 `syncUrl()` (`generate-page.mjs:497`) writes `?me=<name>&view=trades&t=<tx>&lens=<lens>` on every render.
 Boot only reads `lens`, `title`, `view` (`:391`, `:456-457`). **`me` and `t` are never read.**
 Because `render()` forces `view = "home"` when there is no `me` (`:1489`), reloading or sharing
 any manager URL silently lands on **league home**.
 *Fix:* on boot, resolve `me` by name or id, then honour `t`. Generator-only.
 
-### P1-2 — "Most lopsided trades" silently hides the last 12 months on the default lens
+### P1-2 — "Most lopsided trades" silently hides the last 12 months on the default lens — **FIXED, `2f22d5f`**
+Shipped: `rankWide` gates on `chipLived`, not `windowLived`. The candidate pool on the default
+lens went **452 → 576 sides**. Note what did *not* change: the 2026-08-29 trade still does not
+appear in Most lopsided, because it is not lopsided enough for a top 10 — the ranking is by
+margin, not recency. The bug was that 124 sides could not be ranked at all.
+Original finding below.
+
 `rankWide()` (`:634`) gates rows with `windowLived(r.date)`, but `windowLived` maps
 `all → 1 year` (`:624`). `chipLived()` (`:599`) deliberately returns `true` for `t0`/`all`;
 `rankWide` bypasses it. **124 of 576 sides are excluded** on the default Since-trade lens,
 including everything from 2025-08-29 onward. The trades list shows those same deals.
 *Fix:* use `chipLived` in `rankWide`. Generator-only.
 
-### P1-3 — The middle margin number is always green
+### P1-3 — The middle margin number is always green — **FIXED, `2f22d5f`**
+Shipped: `tradeRow` and `pickRow` use `cls(delta)`, so the middle follows its sign and `—` / `0`
+are neutral. `boardTape` was fixed the same way and then removed entirely with the board (D4a).
+Original finding below.
+
 `tradeRow` (`:1163`), `boardTape` (`:658`) and `pickRow` (`:1249`) hardcode
 `midCls = "pos"` for any non-zero delta. A deal you lost by 7,292 renders its margin in
 the same green as one you won. Direction is carried only by the `←` / `→` glyph, while the
 left/right **names** are correctly red/green — so one row shows two different colour languages.
 *Fix:* `cls(dlt)` for the middle, or make the middle deliberately neutral everywhere. Generator-only.
 
-### P1-4 — Home partner teaser and the Partners tab compute different numbers
+### P1-4 — Home partner teaser and the Partners tab compute different numbers — **FIXED, `96d9218`**
+Shipped with P0-4: both screens call `partnerPer()`. The third number,
+`partners[].even_per_trade`, no longer ships to the browser.
+Original finding below.
+
 `renderTeamHome` (`:1095-1105`) builds its own per-partner mean from `tradeDelta`.
 `renderPartners` (`:1464`) builds another from `windowPer` with a different filter (`!t.incomplete`).
 Same partner, same lens, two code paths — they can disagree. `data.partners[].even_per_trade`
 from the pipeline is a **third** number, now unused on both screens.
 *Fix:* one `partnerPer(seat, name, lens)` helper, used by both. Generator-only.
 
-### P1-5 — Null year-ends plot as zero
+### P1-5 — Null year-ends plot as zero — **FIXED, `2f22d5f`**
+Shipped: `spark()` treats a missing year-end as a gap — the path breaks rather than dropping to
+the floor — and a run of one surviving point draws a `<circle>` so it is still visible.
+Original finding below.
+
 `spark()` (`:397`) uses `p[k] || 0`. A missing year-end draws a line to the floor, which reads as
 "this asset went to zero" rather than "no snapshot". Already flagged as later-slice item 6 in
 `UI_SDD.md`; still shipped.
 *Fix:* skip the point or break the path. Generator-only.
 
-### P1-6 — Raw data is interpolated into HTML with no escaping
+### P1-6 — Raw data is interpolated into HTML with no escaping — **FIXED, `2f22d5f`**
+Shipped with P1-14: one `esc()` helper, applied to every data interpolation in text and in
+attributes.
+Original finding below.
+
 Every render concatenates Sleeper-supplied strings into markup (`l.label`, `p.mine`, `r.name`,
 `p.player`, champion `thesis`). A display name or player label containing `<` executes.
 The apostrophe hazard is handled; angle brackets are not.
 *Fix:* one `esc()` on every data interpolation. Generator-only.
 
-### P1-7 — Tapping a style tile downloads the whole league
+### P1-7 — Tapping a style tile downloads the whole league — **FIXED, `96d9218`**
+Shipped: `data/ui/marks.json`, **6 KB**, 10 seats × 6 metrics × 5 clocks, loaded once at boot.
+`marksOf`, `teamMarks` and `markChart` all read it; `markChart` no longer calls `seatData` at
+all. The most expensive interaction in the app went from **~7.4 MB** of seat JSON to **0 bytes**.
+Original finding below.
+
 `markChart` → `Promise.all(members.map(seatData))` (`:1591`) fetches all ten seat files,
 **~7.4 MB of JSON**, to draw one bar chart. On a phone that is the single most expensive
 interaction in the app.
 *Fix:* ship a small precomputed `marks.json` (10 rows × 6 metrics), or lazy-load on demand
 with a skeleton. Pipeline + generator.
 
-### P1-8 — Browser back does not work
+### P1-8 — Browser back does not work — **STILL OPEN**
+Not in the approved slice list, and untouched. `syncUrl` still only calls `replaceState`
+(now guarded, see P1-12); there is no `pushState` and no `popstate` listener.
+
 `syncUrl` only ever calls `history.replaceState` (`:504`). There is no `pushState` and no
 `popstate` listener, so back leaves the app entirely from any depth.
 *Fix:* push on view/seat/trade change, restore on `popstate`. Generator-only.
 
-### P1-9 — A receiver-only side shows a total that contradicts its own legs
+### P1-9 — A receiver-only side shows a total that contradicts its own legs — **FIXED, `452d5db`**
+Shipped: `applyToSide` refreshes `today` / `sent_today` / `today_delta` when **either** bag has
+priced legs, and for `incomplete` sides too; `value_adjust` stays 0 whenever the side is
+incomplete. The browser's `applyVa` mirrors it — the early return is now
+`if (!got.length && !sent.length) return s;`.
+
+Verified over every side of all 586 trades — five windows plus `even`, both bags, `other_bags`
+included, incomplete and one-way included: **3,528 sides, 7,176 bag totals, 0 violations** of
+`today == sum(priced legs) + value_adjust` (was 5 across 3 transactions), and 0 violations of
+`today_delta == today − sent_today`.
+tx `567502131945091072` / TipsUp now reads **0** over legs that all price 0, instead of 1,692.
+tx `916914658962112512` / SF69erss reads **3,185**, matching its single Zach Charbonnet line,
+instead of 3,091.
+Original finding below.
+
 `applyToSide` (`value-adjust.mjs:68`) only refreshes `today` / `sent_today` / `today_delta`
 when **both** sides have priced legs:
 
@@ -207,7 +368,12 @@ incomplete side inherits it, and any change to the today book widens the gap.
 *Fix:* recompute totals whenever **either** side has priced legs; treat the empty side as 0 and
 say "sent nothing" rather than `0` (already listed as `UI_SDD.md` later-slice item 11). Pipeline + generator.
 
-### P1-10 — `aged` subtracts two different price books
+### P1-10 — `aged` subtracts two different price books — **FIXED, `7812573`**
+Shipped: `aged` is `windows.all.today_delta − windows.t0.today_delta`, both flatten, so it
+measures elapsed time and nothing else. Both sides of the 2026-08-29 trade now report `aged` of
+**0** instead of ±25.
+Original finding below.
+
 `sides[].aged` is `even.today_delta − even.t0_delta`, but `today_delta` is now the **40/60 KTC
 blend** while `t0_delta` comes from the **flatten-only** `windows.t0`. The number therefore
 measures the pricing model as much as the passage of time.
@@ -220,7 +386,12 @@ Live impact is currently **nil**, because the only screen that displayed `aged` 
 unreachable board screen (§3). It is latent, and it is in the data.
 *Fix:* compute `aged` from one book, or ship a flatten `today_delta_flat` for it. Pipeline-only.
 
-### P1-11 — Filter state leaks across seats
+### P1-11 — Filter state leaks across seats — **FIXED, `2f22d5f`**
+Shipped: `clearLeague` also resets `year`, `lens`, `draftSort`, `draftRounds`, `draftStartup`
+and `openPacks`. Empty-state copy was added at the same time, so a genuinely empty list now says
+so instead of showing a bare filter bar.
+Original finding below.
+
 `clearLeague` (`:481`) resets `me`, `data`, `view`, `openId`, `partnerName`, `openPick`,
 `openDraft`, `markOpen`, `titleYear` — but **not** `year`, `lens`, `draftSort`, `draftRounds`,
 `draftStartup`, or `openPacks`. Pick 2019 in one seat's Trades, go home, pick a different seat:
@@ -228,7 +399,11 @@ its Trades tab is filtered to a season it may not have, the filter dot stays lit
 reads as checked, and there is no "no trades in 2019" copy — just an empty list.
 *Fix:* reset filters in `clearLeague`, and add empty-state copy. Generator-only.
 
-### P1-12 — `history.replaceState` fires on every render
+### P1-12 — `history.replaceState` fires on every render — **FIXED, `96d9218`**
+Shipped: `syncUrl` builds the URL string, compares it to the current one, and returns without
+touching history when nothing changed. Expanding rows no longer writes history at all.
+Original finding below.
+
 `render` (`:1506`) calls `syncUrl` unconditionally and `syncUrl` (`:504`) calls `replaceState`,
 so every accordion toggle is a history write. Safari throttles around 100 calls per 30 s and
 begins dropping them with a console warning; opening trade rows quickly reaches that.
@@ -262,7 +437,20 @@ A spelling difference there and a rostered starter would price at **0**.
 *Fix:* prefer the active/rostered id on collision, and give `ktcValue` the same name-index
 fallback `isRetired` already uses. Pipeline-only.
 
-### P1-14 — Attribute injection, not just element injection
+### P1-14 — Attribute injection, not just element injection — **FIXED, `2f22d5f`**
+Shipped: `esc()` covers `data-partner`, `data-who`, `data-title`, `data-pick`, `data-year` and
+every other data-bearing attribute, so the datasets the click handlers read stay intact.
+
+A second escaping bug surfaced while verifying this one and is worth recording, because it had
+been shipping silently and no source-level review would have caught it. `generate-page.mjs`
+builds `index.html` from a template literal, so a `\d` written in the generator arrived in the
+browser as a bare `d`. Two regexes were affected: `pieceWeight`'s late-4th test
+`/^pick:\d{4}:4:/` and `yearsOn`'s `/\.0$/`. The first meant the **browser** weighted late 4ths
+at 1 while the **pipeline** weighted them at 0.5, so the inline `applyVa` and `value-adjust.mjs`
+disagreed on any bag containing one. Fixed in `38885d1` by double-escaping. The lesson: the
+standing "inline `applyVa` matches `value-adjust.mjs`" check must extract the function from the
+**generated `index.html`**, not from `generate-page.mjs`. It now does.
+
 Extending §P1-6: unescaped data also lands **inside attribute values** —
 `data-partner="` (`:884`, `:1471`), `data-who="` (`:476`), `data-title="`. A Sleeper display name
 containing a double quote breaks out of the attribute, which is a second injection vector and
@@ -288,7 +476,41 @@ Also dead: `boardClock`, `boardWindow`, `draftTab` (`:371`, set at `:1660`, neve
 and the `y1/y2/y3/t0` branches of `pickWindowEnd` (`:1206`) because `renderDrafts` pins
 `lens = "all"` (`:1339-1340`, restored at `:1387`).
 
-### Dead payload — measured
+### Dead payload — **CUT, `4653091` + `64f55b0`**
+
+Removed from the seat files: `other_bags` on two-team trades (kept only where
+`others.length > 1`, which is 6 of 586), `realized`, `recent_trades`, `year_ends`,
+`partner_headlines`, `legs[].drafted_by`, `hero` beyond `two_way`, and `partners[].grade`.
+`legs[].value_flat` was **kept** deliberately: in a checkout without `value_curve.json` it is
+the only record of the flatten price, and repricing from it is idempotent.
+
+Removed from `league.json`: `review_trades`, `drafters_startup`, and — after the board was
+deleted (D4a) — `trade_boards.today` / `.aged`. A `trade_boards.sides` row now ships exactly the
+six things the page reads: `transaction_id`, `date`, `user_id`, `name`, `other`, `headline`, and
+`windows[lens].{got, sent, incomplete}`. The full row, with `today_delta`, `t0_delta`, `aged`,
+`snaps` and per-window VA, still exists inside the pipeline for its own self-checks — it is just
+not shipped.
+
+Measured on disk after the cut:
+
+| | Audited | Now |
+| --- | ---: | ---: |
+| Seat files, all ten | 7.4 MB | **2.94 MB** |
+| `league.json` | 717 KB | **266 KB** |
+| `marks.json` (new) | — | 5.9 KB |
+
+A **60% cut** to what a phone downloads, with no visible change. Every screen was re-rendered
+against the trimmed payload before it shipped.
+
+`drafters_rookie` and `league.traders` were **not** deleted: `renderLeague()` still reads them,
+and its fate is an open user decision (§10.2).
+
+The `windows` restructure — one leg list plus five values instead of five near-duplicate leg
+lists, worth roughly another 1.2 MB — was **not** attempted. It changes the data contract the
+browser reads on every row and could not be landed safely alongside the generator slices. It is
+written up as the remaining half of D3 in §8b.
+
+Original measurements below.
 
 Per-seat files (10 seats, **7.4 MB** total):
 
@@ -334,6 +556,13 @@ All five reproduce:
 | League home → Most lopsided trades, default Since-trade lens | Dates run 2019-09-16 … **2024-02-13**. Nothing from the last 12 months, while the gold card above it shows a 2026-08-29 trade. (P1-2) |
 | Expand a trade → click a player name | **Row collapses.** Drag-selecting the text does not collapse it, so the defect is specifically the click target. (A1) |
 
+**Re-tested on the deployed site after Slices A–F, `DATA_V=20260829u`.** All five are gone:
+the manager URL reloads onto that seat's Trades tab with the picker showing the name; the Drafts
+header reads 89 / pick with startup ticked and every startup row prints a cost; losing rows
+render a red middle; Most lopsided ranks over the full 576-side pool; and clicking a player name
+inside an open row no longer collapses it, because the detail is a sibling of the button rather
+than its child.
+
 An earlier automated pass over the same screens reported "zero defects, production-ready".
 It tested deep links with a **fake** id (`?me=999999999`), saw the fallback to league home, and
 recorded that as graceful error handling — the fallback *is* the bug, and real ids hit it too.
@@ -358,6 +587,28 @@ Scripted over all 10 seats, 586 trade sides, recomputing from legs with the live
 | `today == sum(priced legs) + value_adjust` | **5 violations** (§P1-9) |
 | Zero-sum on **3-team** trades | **2 of 2 broken** (§P0-6) |
 
+**Re-run after Slices A–F**, same script over the same 10 seats, plus the checks the slices
+added. Every line is clean:
+
+| Invariant | Result |
+| --- | --- |
+| `today == sum(priced legs) + value_adjust`, every side and window | **3,528 sides / 7,176 bag totals, 0 violations** |
+| `today_delta == today − sent_today` | 0 violations |
+| Stored VA matches a fresh `value-adjust.mjs` recompute | 0 stale |
+| Stored today values match a fresh `price-today.mjs` recompute | 0 stale |
+| Zero-sum on complete 2-team trades | 0 breaks across **288** pairs |
+| Zero-sum on N-way trades | **2 of 2 exact** (0.00, 0.00) |
+| League-wide sum of fully-observed `today_delta` | **0.00** (was +424.09) |
+| Generated `index.html`'s inline `applyVa` vs `value-adjust.mjs`, every side | identical |
+| `marks.json` vs a browser recompute of all six metrics × 10 seats × 5 clocks | identical |
+| NaN / Infinity anywhere in the shipped payload | 0 |
+| `apply-value-adjust.mjs` self-checks | pass |
+
+Two self-check expectations were **updated, not weakened**, because Slice A legitimately moved
+them: the CeeDee VA check now expects ~3,322 rather than the pre-blend 5,500–6,000 band, and the
+board checks read from `sides` directly instead of the trimmed `league.trade_boards`. Both still
+assert a specific number.
+
 **Leg-level pricing is sound — the wrappers are not.** Every value the book computes for an
 individual asset is correct and current: no stale VA, no stale blends, no drift. What fails is
 what surrounds the legs — totals on degenerate sides (§P1-9), VA on N-way trades (§P0-6),
@@ -373,27 +624,36 @@ is exactly the kind of field §3 recommends deleting rather than repairing.
 
 ## 4. Inconsistencies that should be identical
 
-1. **Margin colour** — names use `cls(delta)`, middle uses hardcoded `pos` (§P1-3).
-2. **Posture vocabulary** — Champions Path says "Bought players" (`postureLab`, `:766`);
-   manager home says "Buys players" (`marksOf`, `:917`). Same concept, two labels.
-3. **Partner grade threshold ±100** — implemented three times: `partnerLine` (`:883`),
-   `renderPartners` (`:1470`), and the pipeline's `partnerGrade` (`apply-value-adjust.mjs:30`).
-   The stored `grade` field is then ignored by both screens.
-4. **Two "today" clocks** — `dayAlert` uses the browser clock (`tapeDay()`, `:1039`), everything
-   else uses `league.today` (`:624`). Data already contains a side dated `2026-08-29` while
-   `league.today` is `2026-08-28`, so the two disagree in production right now.
-5. **VA computed twice** — pipeline `value-adjust.mjs` bakes it into the JSON; the browser
-   recomputes it in `applyVa` (`:543`). They agree today (verified: cap 3, `pieceWeight`,
-   equal-length early return, damp). Nothing keeps them in sync but discipline.
-6. **Guard style** — `data.trades.map` unguarded in `renderTrades` (`:1278`) and
-   `data.trades.filter` in `renderPartners` (`:1480`), versus `(data.trades || [])` elsewhere.
-   `t.others.length` is read without a guard in both partner paths.
-7. **Delta rounding** — `displayDelta` rounds each side before subtracting (deliberate, commented).
-   `rankSides` (dead) sorted on raw unrounded `today_delta`. Keep one rule when boards return.
+**Status:** 1, 3, 4, 6 and 7 are fixed; 2 and 5 are not.
+
+1. **Margin colour** — **FIXED, `2f22d5f`** (§P1-3).
+2. **Posture vocabulary** — **STILL OPEN.** Champions Path still says "Bought players" while
+   manager home says "Buys players". Cosmetic, not in the approved slice list.
+3. **Partner grade threshold ±100** — **FIXED, `96d9218`.** One `GRADE_EVEN` in the browser and
+   one `EVEN` in `apply-value-adjust.mjs`; the stored `grade` field was deleted.
+4. **Two "today" clocks** — **FIXED, `96d9218` + `ec088f6`.** `dayAlert` no longer reads the
+   browser clock. It takes the later of `league.today` and the newest trade date on the tape, so
+   a user west of UTC never sees "0 trades today" and the 2026-08-29 side is not orphaned by a
+   `league.today` of 2026-08-28. The card was then renamed **Recent Trade** — named for recency
+   rather than for a clock — which removes the disagreement rather than papering over it.
+5. **VA computed twice** — **STILL OPEN by design.** The pipeline bakes VA into the JSON and the
+   browser recomputes it in `applyVa`. Removing the duplication is the remaining half of D3 and
+   needs the `windows` data contract to change first. What did change: the two are now held
+   equal by an invariant that extracts `applyVa` from the **generated `index.html`** and
+   compares it to `value-adjust.mjs` over every side. That check found the escaped-backslash
+   divergence in §P1-14 that reading the source never would have.
+6. **Guard style** — **FIXED, `2f22d5f`.** `data.trades`, `t.others` and the partner paths are
+   all guarded.
+7. **Delta rounding** — **RESOLVED.** `rankSides` was unified onto `displayDelta` rounding in
+   `4653091` and then deleted with the board in `3474f51`, so `displayDelta` is now the only
+   rule in the file.
 
 ---
 
 ## 5. Redundant information
+
+**Status: none of these were in the approved slice list. All five stand.** They are cosmetic or
+editorial rather than wrong-number defects, which is why they were left.
 
 1. **The league ticker duplicates every pack.** `leagueBubbles` (`:705`) emits Most passed around,
    Least traded, Forever players, Homesteader — each of which is also a pack directly below it.
@@ -412,6 +672,18 @@ is exactly the kind of field §3 recommends deleting rather than repairing.
 ---
 
 ## 6. Edge cases and error handling
+
+**Fixed in `2f22d5f`:** `selectMe` and `seatData` route through one `getJson()` that checks
+`res.ok` before parsing — GitHub Pages returns an HTML 404 body, so the old code threw inside
+`.json()` and froze the app mid-interaction — and shows a visible message on failure.
+`chapterHtml` guards `picks_in` / `picks_out`. Empty seats get copy on all four tabs instead of
+a bare filter bar.
+**Fixed in `f9fdb39`:** the year filter is `type="radio"` in a `role="radiogroup"`, matching the
+behaviour it always had.
+**Still open:** the rapid seat-switching race. Two `selectMe` calls still resolve in arbitrary
+order and the last write wins. It was not in the approved slice list.
+
+Original findings below.
 
 - `selectMe` (`:507`) and `seatData` (`:643`) have **no `catch`**. A failed seat fetch leaves the
   app half-rendered with no message. Only `loadMembers` has a fallback (`:1700`).
@@ -446,13 +718,44 @@ calls `windowScore` inside both the dedupe and the sort. Each `applyVa` compiles
 spreads two `Math.max` calls.
 *Fix:* memoize by `(transaction_id, lens)` and sort on precomputed keys.
 
+**FIXED, `96d9218`.** `tradeDelta` memoises per `(trade, lens)` in a `WeakMap`, the tiles read
+`marks.json` instead of recomputing, and `rankWide` computes each side's score once before the
+dedupe and sorts on the stored key. `markChart`'s ~1,160 `applyVa` calls went to **0** — it now
+reads ten precomputed rows. The remaining calls are the rows actually on screen.
+
 `DATA_V` is also a hand-edited string literal (`:361`), so cache correctness depends on a human
 bumping a letter in the same commit as a data rebuild. With a 600 s CDN cache, a forgotten bump
 serves stale data with no signal. Derive it from `league.today` or a content hash at generate time.
+**Still open** — it was not in the approved slice list, and every slice bumped the letter by hand
+(`20260829k` → `u`), which is exactly the discipline the finding says should not be load-bearing.
 
 ---
 
 ## 6c. Accessibility and mobile
+
+**A1–A5, A7, A7b and A7c are fixed in `f9fdb39`** (spacing follow-up in `d4997a2`). A6 and A8
+were not in the approved slice list and stand. What shipped:
+
+- **A1** — `tradeRow` and `pickRow` wrap `row-top` in a `button.row-x-btn` and place `.detail`
+  as its **sibling** inside a `.row-x` wrapper, so no button contains a button. Pick legs became
+  real `<button>` elements. Clicking a player name in an open row no longer collapses it.
+- **A2** — a global `keydown` handler, `Escape` closing whatever is topmost, and focus preserved
+  across the wholesale `innerHTML` rebuild by re-finding the control by its `data-*` attributes.
+- **A3** — `aria-expanded` on `tradeRow` and `pickRow`. (`boardTape` was fixed and then deleted
+  with the board.)
+- **A4** — `#whoMenu` is a real listbox: `role="option"` children, arrow keys, `Home`/`End`,
+  `Escape`, focus restored to the trigger. The four tabs are a `tablist` with roving `tabindex`.
+- **A5** — 44px minimum on `.who-menu button` (was 28), `#yearFilters label` (was 26),
+  `button.who` and `.score-btn` (were 36), `button.pack-head` and `#scoreAs button.score-opt`.
+- **A7** — `min-width: 0` on every grid track that holds text, ellipsis on names,
+  `white-space: nowrap` and `flex: 0 0 auto` on the figures. Re-measured at 375px: no numeric
+  cell truncates on any screen. **Names ellipsize; figures never do** — which is the right way
+  round, because the figure is the product.
+- **A7b** — the four tabs are `flex: 1 1 0` with `flex-wrap: nowrap` and share one row at 375px.
+- **A7c** — a `max-width: 460px` media query shrinks the brand and the picker so the header's
+  right edge sits inside the viewport.
+
+Original findings below.
 
 | # | Sev | Issue |
 | --- | --- | --- |
@@ -470,11 +773,21 @@ serves stale data with no signal. Derive it from `league.today` or a content has
 
 Also dead CSS: `.hero` / `.hero b` (`:91`) is never emitted — the original product promise of one
 big number survives only as a stylesheet rule. Plus `a.back`, `.day-scroller`, `.day-chip`,
-`.draft-head`, `.filter-hint`.
+`.draft-head`, `.filter-hint`. **All removed in `4653091`.** Note that deleting `.hero` does not
+answer the hero question — it only stops pretending the answer is already in the file (§10.1).
 
 ---
 
-## 7. Docs drift (what the SDD says vs what ships)
+## 7. Docs drift (what the SDD says vs what ships) — **FIXED, this commit**
+
+`docs/UI_SDD.md` was rewritten against the shipped generator rather than patched: five windows in
+a Score as dropdown, four tabs, the gold alert row, packs, Champions Path, VA, the row structure,
+the deep-link contract, the trimmed payload, and the phone/keyboard rules. `PRODUCT.md`'s today
+clock now states the 40/60 KTC blend and retired→0, and its VA section states the N-way rule.
+`ARCHITECTURE.md` was updated to the seven-step pipeline and the current data shapes.
+`TRACKER_SDD.md` had its Best/Worst row corrected.
+
+Original finding below.
 
 `docs/UI_SDD.md` is materially out of date:
 
@@ -538,10 +851,50 @@ is unambiguous repair.
 
 | # | Decision | Recommendation |
 | --- | --- | --- |
-| D1 | **Rostered cheap players: 0 or flatten?** `isRetired` ORs `tinyFlat <= 1200`, so Mason Rudolph (PIT), Andy Dalton (PHI) and 29 others price at 0 despite having a team. | Change to `noTeam && (tinyRaw \|\| tinyFlat)`. A rostered QB2 prices at his flatten value (761–1137), not 0. Explicit retired set still wins. |
-| D2 | **VA on 3-team trades.** Per-seat bags do not mirror, so VA never cancels: +424.09 league-wide. | Compute each seat's VA against the **union** of the other bags, restoring zero-sum. Alternative — exclude N-way trades from VA and caption it. |
-| D3 | **Where does derived value live?** VA, partner means, and grade thresholds are each implemented two or three times. | Pipeline owns all arithmetic; ships one flat row per trade per lens; browser only formats. Kills P0-4, most of §4, ~70% of bytes. |
+| D1 | **Rostered cheap players: 0 or flatten?** | **RULED, shipped `452d5db`.** ~~`noTeam && (tinyRaw \|\| tinyFlat)`~~ — plain AND would have priced Ryan Fitzpatrick at 2,014. Shipped rule is **not on the KTC board AND no NFL team → 0**. See P0-5. |
+| D2 | **VA on 3-team trades.** | **RULED, shipped `452d5db`.** ~~Union of the other bags~~ — that does not restore zero-sum. **VA is 0 on any trade with more than two seats.** See P0-6. |
+| D3 | **Where does derived value live?** | **RULED: pipeline owns all arithmetic, browser only formats.** Half shipped in `96d9218` — one `partnerPer`, one grade threshold, one today clock, precomputed `marks.json`, memoised `tradeDelta`. See D3a for the half that did not. |
 | D4 | **Does the Home hero return, and do Best 10 / Worst 10 come back?** The board screen already works and is merely unreachable; `.hero` CSS survives with nothing emitting it. | ~~Restore Best/Worst as a real screen (cheap — delete the two lines that force `view = "home"`), and either restore the hero or formally retire it.~~ **Best/Worst half REVERSED by user decision 2026-08-30 — see D4a. The hero question is still open.** |
+
+### D3a — the half of D3 that did not ship: one flat row per trade per lens
+
+The single-source **helpers** landed. The single-source **data contract** did not, and the split
+is deliberate rather than an oversight, so here is exactly what remains and why.
+
+**Shipped.** `partnerPer()` feeds every partner number. `GRADE_EVEN` is the only threshold in the
+browser. `dayAlert` and everything else read one clock. `marks.json` replaced the ten-seat
+download. `tradeDelta` is memoised. Those are the wins that do not require the browser and the
+pipeline to renegotiate what a trade looks like.
+
+**Not shipped.** The browser still recomputes VA from legs in `applyVa`, because the payload
+still ships five near-duplicate leg lists per trade — one per window — rather than one leg list
+plus five values. Collapsing that is worth roughly another 1.2 MB and would let `applyVa` be
+deleted outright, but it changes the shape every render path reads, and Slices B, D, E and F were
+already all editing `generate-page.mjs` in sequence. Landing a contract change on top of them
+would have meant re-verifying every screen against a payload no invariant script yet understood.
+
+**The concrete proposal, for a later pass.** A trade ships:
+
+```
+{ transaction_id, date, others, incomplete,
+  legs: [ { key, label, kind, became, flag,
+            v: { t0, y1, y2, y3, all }, today } ],
+  sent: [ ...same shape... ],
+  w:    { t0: {got, sent, va, va_sent}, y1: {...}, ... } }
+```
+
+One leg list. Five values per leg instead of five copies of the leg. The per-window totals and
+VA are precomputed, so `sideOf(t)` becomes an index into `w[lens]` and `applyVa` disappears from
+the browser along with the standing "must stay numerically identical" check.
+
+**Do this only with the invariant script rewritten first**, against the new shape, and only when
+no other slice is touching `generate-page.mjs`. The single check that caught the worst bug of
+this whole pass — inline `applyVa` extracted from the generated `index.html` versus
+`value-adjust.mjs` — is exactly the check that the new contract removes, so its replacement
+(shipped `w[lens]` versus a fresh `value-adjust.mjs` recompute) has to exist before the cutover,
+not after.
+
+---
 
 ### D4a — Best 10 / Worst 10: reversed by user decision, 2026-08-30
 
@@ -570,11 +923,61 @@ destination outlived its only link — so it is logged rather than silently reso
 
 Consequently `league.json`'s `trade_boards.today` / `.aged` and `drafters_startup` now have **no
 reader at all**, and `sides` is read only by `rankWide` / `daySides`. §P1-10 (`aged` subtracts two
-price books) is now fully latent: nothing renders `aged`.
+price books) is now fully latent: nothing renders `aged`. Those three fields were dropped from the
+shipped `league.json` in `64f55b0`.
+
+---
+
+## 8c. D5 — the 40/60 KTC blend has no reader left. New, and a user decision.
+
+Found while writing §7, not during the audit. It is the one thing in this pass that I do not
+think should be resolved by a worker, so it ships unresolved and flagged.
+
+**The blend lives in `even`. The UI renders `windows[lens]`.** `sideOf(t)` is
+`applyVa((t.windows && t.windows[lens]) || t.even || t.realized)`. Every one of the 586 trades
+carries `windows.all`, so the `t.even` fallback **never fires** — measured, 0 of 586. And the
+windows are flatten-only by product law: `apply-value-adjust.mjs` says so on line 2, and the rule
+"windows never get the KTC blend" is explicit canon.
+
+So the 40/60 blend, which is what the KTC snapshot work exists for, currently reaches the screen
+**nowhere**. The one remaining reader is `league.traders[].even_per_trade`, which renders only
+inside `renderLeague()` — itself unreachable since D4a.
+
+Measured, `even.today_delta` against the `windows.all.today_delta` the page actually draws:
+
+| | |
+| --- | ---: |
+| Complete sides compared | 582 |
+| Mean absolute difference | **975** |
+| Largest | **5,715** on tx `784631189796454400` |
+
+This is not a bug to fix in passing — every available fix changes numbers on screen:
+
+1. **Accept it.** The blend is a pricing-quality improvement to a book the UI does not surface,
+   and "Since trade" honestly means *a mean over year-ends*, not *today*. Then say so in
+   `PRODUCT.md` and stop describing the blend as if users see it.
+2. **Add a sixth clock, "Today".** `even` becomes a selectable window alongside the five. Costs a
+   dropdown entry and a `windows.today` key; violates nothing, because it is a named clock rather
+   than a blend into an existing one.
+3. **Make `all` mean today rather than a mean.** Cheapest to implement, and the one I would not
+   do without an explicit ruling: it silently redefines the default clock every number on the
+   site is currently computed under.
+
+**Recommendation: 2.** It is the only option that surfaces the blend without redefining anything
+already on screen, and a named clock is how this product has handled every other price question.
+But it adds a clock, and "do not add a fourth clock" is standing law in `TRACKER_SDD.md` §8 —
+which is exactly why this is Truman's call and not mine.
 
 ---
 
 ## 9. Proposed fix order
+
+**All of Slices 1, 1b and 3 shipped, and Slice 2 shipped except the `windows` restructure.**
+Slice 5 is this commit. Slice 4 shipped only its accessibility half. The order below is kept as
+written for the record; §0 is the index of what actually landed and in which commit. Note that
+the executed order was A (pricing) → B (generator) → C (pipeline) → D (dead code) → E (one
+source) → F (phone) → G (docs), which puts 1b's pricing changes **before** Slice 1 — deliberately,
+so the generator work was verified against the final book rather than a book about to move.
 
 **Slice 1 — wrong numbers, generator-only, no data change**
 Startup surplus (P0-1) · third-party bag VA line (P0-3) · `rankWide` uses `chipLived` (P1-2) ·
@@ -603,14 +1006,21 @@ single "today" clock (`league.today`) · decide VA ownership · precomputed `mar
 memoize `tradeDelta` and sort on precomputed keys (§6b).
 
 **Slice 4 — consistency and a11y**
-One posture vocabulary · ticker stops duplicating packs and stops double-rendering ·
-year filter becomes radios · back-button history (P1-8) · stop `replaceState` on every render
-(P1-12) · unnest interactive controls from buttons (A1) · keyboard and focus (A2–A4) ·
-44px targets (A5) · Champions Path "1st" column earns its keep.
+~~year filter becomes radios~~ · ~~stop `replaceState` on every render (P1-12)~~ ·
+~~unnest interactive controls from buttons (A1)~~ · ~~keyboard and focus (A2–A4)~~ ·
+~~44px targets (A5)~~ — **all shipped**. Still open: one posture vocabulary · ticker stops
+duplicating packs and stops double-rendering · back-button history (P1-8) ·
+Champions Path "1st" column earns its keep.
 
-**Slice 5 — rewrite the specs**
+**Slice 5 — rewrite the specs** — **shipped, this commit.**
 `UI_SDD.md` to match five windows, four tabs, gold cards, packs, Champions Path.
 `PRODUCT.md` today-clock definition to include the KTC blend and retired→0.
+
+**Slice 6 — what is left after this pass.** In the order I would take it:
+`windows` restructure and delete the browser's `applyVa` (D3a, needs the invariant rewritten
+first) · the D5 ruling on the KTC blend (§8c) · the `renderLeague` ruling (§10.2) ·
+back-button history (P1-8) · derive `DATA_V` instead of hand-editing it (§6b) ·
+seat-switch race (§6) · the cosmetic set in §5 · posture vocabulary · A6 and A8.
 
 ---
 
@@ -626,6 +1036,11 @@ year filter becomes radios · back-button history (P1-8) · stop `replaceState` 
    rookie surplus respond to the lens, given "got" would be a windowed mean while "sent" stays
    draft-day cost — two clocks in one number?
 4. **Retired detection.** The current rule is "not on KTC + no NFL team", plus an explicit list.
-   Do you want an explicit retired list as the only source of truth instead?
+   Do you want an explicit retired list as the only source of truth instead? Now shipped as
+   stated, and the unresolved-id path was checked: **2 legs, 1 name**, genuinely retired (P0-5).
 5. **Publish cadence.** `league.today` is `2026-08-28` while the tape already has a
-   `2026-08-29` trade. Automate the rebuild, or caption the staleness?
+   `2026-08-29` trade. Automate the rebuild, or caption the staleness? The **display** half is
+   handled — the Recent Trade card takes the later of the two dates (§4.4) — but the **pricing**
+   clock is still a day behind the tape, so the newest trade is priced on yesterday's board.
+6. **NEW — does the KTC blend get a screen?** See §8c / D5. It has no reader on any reachable
+   screen, and the gap between it and what the page draws averages 975 across 582 sides.

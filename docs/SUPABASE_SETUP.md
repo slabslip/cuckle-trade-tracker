@@ -383,6 +383,81 @@ create index if not exists news_submissions_alive_idx
   where deleted_at is null;
 ```
 
+### 3d. Run needed: ping GitHub when a row lands (immediate publish)
+
+The public site is static GitHub Pages. A share only becomes visible after
+`news-sync.mjs` rebuilds `data/ui/news.json` and that file is on `main`. The
+workflow [`.github/workflows/news-refresh.yml`](../.github/workflows/news-refresh.yml)
+does that: it listens for `repository_dispatch` with `event_type: news-submission`,
+runs the sync, and pushes when the feed changed. A five-minute cron is the backup
+if a ping is missed; Actions → news-refresh → Run workflow is the manual path.
+
+**You still have to wire Supabase → GitHub once.** GitHub will not accept the
+default Database Webhook body (it expects `{ "event_type": "…" }`), so use a
+small `pg_net` trigger. Paste this in the SQL editor after you have a PAT.
+
+1. GitHub → Settings → Developer settings → Personal access tokens.
+   Fine-grained: this repo only, **Contents: Read and write**, **Metadata: Read**.
+   Classic: `repo` scope. Copy the token once; it is never committed.
+2. Replace `ghp_REPLACE_ME` below and run:
+
+```sql
+create extension if not exists pg_net with schema extensions;
+
+create or replace function public.dispatch_news_refresh()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- PAT lives here on purpose: one admin, rotate if it ever leaks. Prefer Vault
+  -- (vault.create_secret + vault.decrypted_secrets) when you are ready.
+  perform net.http_post(
+    url := 'https://api.github.com/repos/slabslip/cuckle-trade-tracker/dispatches',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Accept', 'application/vnd.github+json',
+      'X-GitHub-Api-Version', '2022-11-28',
+      'Authorization', 'Bearer ghp_REPLACE_ME'
+    ),
+    body := jsonb_build_object(
+      'event_type', 'news-submission',
+      'client_payload', jsonb_build_object(
+        'id', NEW.id,
+        'op', TG_OP
+      )
+    ),
+    timeout_milliseconds := 5000
+  );
+  return NEW;
+end;
+$$;
+
+drop trigger if exists news_submissions_dispatch on public.news_submissions;
+create trigger news_submissions_dispatch
+  after insert or update of deleted_at on public.news_submissions
+  for each row
+  execute function public.dispatch_news_refresh();
+```
+
+INSERT (share) and UPDATE of `deleted_at` (admin Remove) both fire it. Expect the
+public feed within about a minute: Action run + Pages deploy. Until this SQL
+runs, the five-minute cron is what publishes.
+
+Smoke-test without waiting for a share (replace the token):
+
+```bash
+curl -sS -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer ghp_REPLACE_ME" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/slabslip/cuckle-trade-tracker/dispatches \
+  -d '{"event_type":"news-submission","client_payload":{"source":"manual"}}'
+```
+
+A `204` means GitHub accepted it; then check the Actions tab for `news-refresh`.
+
 ### What the Shortcut POSTs
 
 One `Get Contents of URL` action. Method `POST`, and note the two `Prefer`
@@ -438,8 +513,10 @@ specification` — verified against this project on 2026-08-30. Dropping the
 `?on_conflict=…` query and the `Prefer` header makes it a plain insert that works
 today, at the cost of a duplicate row per extra tap.
 
-Nothing appears in the feed until `news-sync.mjs` runs and the page is rebuilt —
-this is a static site, so the feed is baked at build time, not fetched live.
+Nothing appears in the feed until `news-sync.mjs` runs and `news.json` is on
+`main` — this is a static site, so the feed is a committed file, not a live
+query. With §3d wired, that happens on every share (and every admin Remove);
+without it, the workflow's five-minute cron is the fallback.
 
 ---
 

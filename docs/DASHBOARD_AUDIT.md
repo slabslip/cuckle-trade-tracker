@@ -601,13 +601,34 @@ positives (`padding: 10px 12px` also matches `button.mark`) that made the wrong 
 **Require provenance**, not just a number: confirm the port is yours, and checksum the served bytes
 against the bytes on disk before believing a measurement.
 
+### `scrollWidth` is 0 on an inline element, so the ellipsis test passes vacuously
+`el.scrollWidth > el.clientWidth` is the usual "is this ellipsized" test, but a non-replaced
+**inline** box has no scroll box and reports `scrollWidth` **0**. During the A7d pass this made
+"clipped numbers: 0" meaningless for `.margin`, which is a plain `<span>` inside `.mid` — the test
+could not have failed. `.names` and `.val` happened to answer honestly only because they are flex
+items, and flex items are blockified.
+
+Either check `display` first, or measure the text itself: `Range.selectNodeContents(el)` then
+`getBoundingClientRect()` gives the real ink box for any element, inline included. Compare that
+against the nearest ancestor whose `overflow-x` is not `visible` and you get an answer that holds
+for every box in the row.
+
+**And a clipped element's ink box is not evidence of overflow** — if the element clips its own
+overflow, its ink legitimately extends past its border box. Skip those, or every ellipsized name
+reports as a spill. `body.scrollWidth` is the arbiter for whether anything actually escaped.
+
 ### The systemic cause behind §6c A7
 A `1fr` grid track's automatic minimum is `min-content`, so a grid item refuses to shrink and
 `text-overflow: ellipsis` never engages without an explicit `min-width: 0`. This is why trade
 **values** clipped to `8,96` at phone width, and the same omission was independently rediscovered
 in the Champions Path caption. It is **systemic across this app's grid layouts**, not one
-component — fix it everywhere, not at each reported site. As of `20260830tf` the live page carries
-14 `min-width: 0` guards.
+component — fix it everywhere, not at each reported site. As of `20260830tr` the live page carries
+16 `min-width: 0` guards.
+
+The guard is necessary and **not sufficient**. It decides *who* gives way when a row does not fit;
+it cannot make a row fit. Once `min-width: 0` let the figures win, the names lost by exactly as
+much — see A7d, where the answer was to change the arrangement rather than to keep choosing which
+half of the row to sacrifice.
 
 ---
 
@@ -791,6 +812,30 @@ were not in the approved slice list and stand. What shipped:
   `white-space: nowrap` and `flex: 0 0 auto` on the figures. Re-measured at 375px: no numeric
   cell truncates on any screen. **Names ellipsize; figures never do** — which is the right way
   round, because the figure is the product.
+- **A7d** — the other half of A7, and the reason "names ellipsize" was only ever half an
+  answer: with the figures safe, **all ten** display names ellipsized at 375px and 390px.
+  `SF69erss`, the second-shortest name in the league, rendered as `SF69e...`; on the lopsided
+  board `DarkWingDucks2023` was allotted **0px**, because the caption sharing the middle
+  column sized that `auto` track to its own max-content and the two `1fr` tracks, now free to
+  shrink, gave up everything. Neither state was acceptable: the row simply cannot fit
+  `name + figure | margin | figure + name` inline at 390px, so the arrangement changed rather
+  than the content. Below 640px the tape is one column — one full-width line per side — and
+  the caption spans the row instead of sitting in the middle column. Measured per name against
+  the space its line offers: **257px at 375px and 272px at 390px against 155px for the longest
+  name**, versus −9px to 65px before. Zero ellipsized names and zero clipped figures across
+  1,298 rendered names and 2,040 figures, at 375, 390, 431, 480, 561, 768 and 1280.
+  640px is where the inline arrangement measurably fits; at 561px it still gave
+  `DarkWingDucks2023` 152px against the 165px it needs.
+  The arrow is direction, not data, so both glyph pairs ship and CSS shows the pair that
+  matches the arrangement — `←`/`→` on the wide tape, `↑`/`↓` when the margin sits between two
+  stacked sides. `tradeRow`, `boardTape` and `pickRow` share one `tapeMargin()`, so the sign
+  convention cannot drift between the trades list, the board and the drafts tab.
+  `.day-in-vals` in the Recent Trade card carries the same name-and-figure pair and was fixed
+  with it: the pair now wraps, so the figure drops to its own line only when the name needs the
+  width. Stress-testing that card also turned up the one box on home with no wrap guard at all —
+  the card's `X vs Y` headline, whose ink escaped and took `body.scrollWidth` to **447 at a
+  375px viewport** while `documentElement.scrollWidth` still read 375. Pre-existing, identical
+  on `main`, fixed here with `overflow-wrap: anywhere`. The two gold cards still measure 136/136.
 - **A7b** — the four tabs are `flex: 1 1 0` with `flex-wrap: nowrap` and share one row at 375px.
 - **A7c** — a `max-width: 460px` media query shrinks the brand and the picker so the header's
   right edge sits inside the viewport. Re-measured on the deployed page after the fact: the

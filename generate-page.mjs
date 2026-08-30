@@ -113,20 +113,56 @@ const html = `<!DOCTYPE html>
     /* min-width: 0 everywhere a track holds text. Without it a grid track cannot shrink
        below its longest word, so a name like DarkWingDucks2023 pushed the value it sits
        next to past the card edge at 375px. Names ellipsize; figures never do. */
-    .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; width: 100%; align-items: start; }
+    .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 2px 8px; width: 100%; align-items: start; }
     .row-top.tape > * { min-width: 0; }
     .row-top.tape .side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .row-top.tape .side-line { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
     .row-top.tape .side.right { text-align: right; }
-    .row-top.tape .side.right .side-line { justify-content: flex-end; }
+    /* Both sides write the name first so the stacked phone row reads name-then-figure on
+       every line; row-reverse is what puts the figure inboard again on the wide tape. */
+    .row-top.tape .side.right .side-line { flex-direction: row-reverse; justify-content: flex-start; }
     .row-top.tape .names {
       min-width: 0; flex: 0 1 auto;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .row-top.tape .mid { text-align: center; font-variant-numeric: tabular-nums; }
     .row-top.tape .mid .margin { white-space: nowrap; }
-    .row-top.tape .mid .date { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    @media (max-width: 430px) { .row-top.tape { gap: 6px; font-size: 0.9375rem; } }
+    .row-top.tape .margin i { font-style: normal; }
+    .row-top.tape .margin .dir-v { display: none; }
+    /* The caption spans the whole row instead of sharing the middle column. Sitting in
+       that auto track it sized the track to its own max-content, and on the lopsided
+       board -- where the caption carries a headline -- that left the 1fr name tracks 0px. */
+    .row-top.tape .tape-sub {
+      grid-column: 1 / -1; display: flex; justify-content: center;
+      gap: 6px; min-width: 0; margin-top: 2px;
+    }
+    .row-top.tape .tape-sub > * + *::before { content: "· "; color: var(--dim); }
+    .row-top.tape .tape-sub .sub-when { flex: 0 0 auto; white-space: nowrap; }
+    .row-top.tape .tape-sub .sub-note {
+      flex: 0 1 auto; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* Phone: name + figure | margin | figure + name does not fit inline. At 390px each
+       name track is ~70px inline, and only ~120px even with the two sides stacked in
+       place, against 155px for DarkWingDucks2023 -- so stacking within the three columns
+       is not enough either. One full-width line per side gives every name ~258px at
+       375px, which clears the longest league name by more than 100px and leaves the
+       figures untouched. Stacked, the margin sits between the two sides, so its arrow
+       points up or down rather than left or right: same direction, same number.
+       The switch back to the wide tape is at 640px rather than at a phone width because
+       that is where the inline arrangement measurably fits: at 561px it still gave
+       DarkWingDucks2023 152px against the 165px it needs. */
+    @media (max-width: 640px) {
+      .row-top.tape { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+      .row-top.tape .side.right { text-align: left; }
+      .row-top.tape .side-line,
+      .row-top.tape .side.right .side-line { flex-direction: row; justify-content: space-between; gap: 12px; }
+      .row-top.tape .mid { display: flex; justify-content: flex-start; text-align: left; }
+      .row-top.tape .margin .dir-h { display: none; }
+      .row-top.tape .margin .dir-v { display: inline; }
+      .row-top.tape .tape-sub { justify-content: flex-start; }
+    }
+    @media (max-width: 430px) { .row-top.tape { font-size: 0.9375rem; } }
     .row.own-pick { border-color: #2e6b4f; }
     .row.away-pick { border-color: #6b5a2e; }
     .origin.own { color: var(--green); font-weight: 650; }
@@ -243,15 +279,24 @@ const html = `<!DOCTYPE html>
     }
     button.day-in + button.day-in { border-top: 1px solid #6b5a2e; padding-top: 10px; }
     button.day-in:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.day-in b { display: block; font-weight: 650; }
+    /* Two names and a "vs", so real pairs wrap at the spaces and cost no extra height.
+       anywhere rather than break-word because only anywhere lowers the min-content size:
+       without it a single unbreakable name escapes the card and widens the document.
+       Wrapping rather than ellipsis here on purpose -- this line is where the pair is
+       named in full, and truncating it is the defect being fixed everywhere else. */
+    button.day-in b { display: block; font-weight: 650; overflow-wrap: anywhere; }
     button.day-in span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
     button.day-in .day-in-vals { margin-top: 4px; }
+    /* Same name-and-figure pair as a tape row, and the same hazard: side by side, a long
+       name would have to ellipsize to leave the figure room. Wrapping instead drops the
+       figure onto its own line only when the name actually needs the width, so today's
+       names cost no extra height and the two gold cards keep matching. */
     button.day-in .day-in-val {
-      display: flex; justify-content: space-between; gap: 12px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px;
       color: var(--muted); font-size: 0.8125rem; margin-top: 2px;
     }
     button.day-in .day-in-val i { font-style: normal; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    button.day-in .day-in-val em { font-style: normal; font-weight: 650; color: var(--text); flex: 0 0 auto; }
+    button.day-in .day-in-val em { font-style: normal; font-weight: 650; color: var(--text); flex: 0 0 auto; margin-left: auto; }
     .vote { margin: 10px 0 0; }
     .vote-h { font-weight: 650; }
     .vote-opts { display: flex; gap: 8px; margin-top: 8px; }
@@ -437,7 +482,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830lh";
+    const DATA_V = "20260830tr";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -831,6 +876,20 @@ const html = `<!DOCTYPE html>
       return seatCache[uid];
     }
 
+    /**
+     * The margin between the two sides of a tape row, and which side it flowed to.
+     * The arrow is direction, not data: the wide tape runs left to right and the phone
+     * tape stacks top to bottom, so both glyphs ship and CSS shows the one that matches
+     * the arrangement. All three tape rows call this, so the sign convention and the
+     * rounding cannot drift apart between the trades list, the board and the drafts tab.
+     */
+    function tapeMargin(d) {
+      if (d == null) return "—";
+      if (d > 0) return '<i class="dir-h">←</i><i class="dir-v">↑</i> ' + fmt(d);
+      if (d < 0) return fmt(Math.abs(d)) + ' <i class="dir-h">→</i><i class="dir-v">↓</i>';
+      return fmt(d);
+    }
+
     function boardTape(r) {
       const cached = seatCache[r.user_id];
       const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
@@ -839,7 +898,7 @@ const html = `<!DOCTYPE html>
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-      const mid = s == null ? "—" : s > 0 ? "← " + fmt(s) : s < 0 ? fmt(Math.abs(s)) + " →" : fmt(s);
+      const mid = tapeMargin(s);
       const leftCls = s == null || s === 0 ? "" : cls(s);
       const rightCls = s == null || s === 0 ? "" : cls(-s);
       const midCls = s == null || s === 0 ? "" : cls(s);
@@ -847,10 +906,11 @@ const html = `<!DOCTYPE html>
         + ' aria-expanded="false">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names ' + leftCls + '">' + esc(r.name) + '</span><span class="val">' + got + "</span></div></div>"
-        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
-        + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
-        + '<div class="side right"><div class="side-line"><span class="val">' + sent + '</span><span class="names ' + rightCls + '">' + esc(r.other) + "</span></div></div>"
-        + "</div></button>";
+        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
+        + '<div class="side right"><div class="side-line"><span class="names ' + rightCls + '">' + esc(r.other) + '</span><span class="val">' + sent + "</span></div></div>"
+        + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
+        + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
+        + "</div></div></button>";
     }
 
     function yearsOn(days) {
@@ -1722,20 +1782,18 @@ const html = `<!DOCTYPE html>
       const dlt = incomplete ? null : displayDelta(p.s.today, p.s.sent_today);
       const mineCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "pos" : "neg";
       const otherCls = incomplete || dlt == null || dlt === 0 ? "" : dlt > 0 ? "neg" : "pos";
-      const mid = dlt == null || incomplete ? "—"
-        : dlt > 0 ? "← " + fmt(dlt)
-        : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
-        : fmt(dlt);
+      const mid = tapeMargin(incomplete ? null : dlt);
       const midCls = dlt == null || incomplete || dlt === 0 ? "" : cls(dlt);
       return '<div class="row-x' + (open ? " open" : "") + '">'
         + '<button type="button" class="row-x-btn" data-id="' + esc(t.transaction_id) + '"'
         + ' aria-expanded="' + (open ? "true" : "false") + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.mine) + '</span><span class="val">' + gotShow + "</span></div></div>"
-        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
-        + '<div class="date">' + esc(t.date) + (incomplete ? ' <span class="badge">no DP row</span>' : "") + "</div></div>"
-        + '<div class="side right"><div class="side-line"><span class="val">' + sentShow + '</span><span class="names ' + otherCls + '">' + esc(p.other) + "</span></div></div>"
-        + "</div></button>"
+        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
+        + '<div class="side right"><div class="side-line"><span class="names ' + otherCls + '">' + esc(p.other) + '</span><span class="val">' + sentShow + "</span></div></div>"
+        + '<div class="tape-sub"><span class="date sub-when">' + esc(t.date) + "</span>"
+        + (incomplete ? '<span class="badge sub-note">no DP row</span>' : "")
+        + "</div></div></button>"
         + (open ? '<div class="detail">' + tradeBags(t, extra) + "</div>" : "")
         + "</div>";
     }
@@ -1804,10 +1862,7 @@ const html = `<!DOCTYPE html>
       const dlt = pickDelta(p);
       const mineCls = dlt == null || dlt === 0 ? "" : cls(dlt);
       const otherCls = dlt == null || dlt === 0 ? "" : cls(-dlt);
-      const mid = dlt == null ? "—"
-        : dlt > 0 ? "← " + fmt(dlt)
-        : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
-        : fmt(dlt);
+      const mid = tapeMargin(dlt);
       const midCls = dlt == null || dlt === 0 ? "" : cls(dlt);
       const clock = clockName();
       let detail = "";
@@ -1829,11 +1884,11 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="row-x-btn" data-draft="' + esc(key) + '"'
         + ' aria-expanded="' + (open ? "true" : "false") + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.player) + '</span><span class="val">' + gotShow + "</span></div>"
-        + '<div class="date">' + esc(p.as_of || "") + "</div></div>"
-        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
-        + '<div class="date origin ' + (own ? "own" : "away") + '">' + esc(origin) + "</div></div>"
-        + '<div class="side right"><div class="side-line"><span class="val">' + sentShow + '</span><span class="names ' + otherCls + '">' + esc(slot) + "</span></div></div>"
+        + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.player) + '</span><span class="val">' + gotShow + "</span></div></div>"
+        + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span></div>"
+        + '<div class="side right"><div class="side-line"><span class="names ' + otherCls + '">' + esc(slot) + '</span><span class="val">' + sentShow + "</span></div></div>"
+        + '<div class="tape-sub"><span class="date sub-when">' + esc(p.as_of || "") + "</span>"
+        + '<span class="date origin sub-note ' + (own ? "own" : "away") + '">' + esc(origin) + "</span></div>"
         + "</div></button>"
         + detail + "</div>";
     }
@@ -2289,6 +2344,18 @@ for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
 // The champ card caption reads titles.json at runtime, so assert the builder shipped at all.
 for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)", "Top scorer · "]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the champ final caption: ${need}`);
+}
+// A tape row reads correctly only if both arrow glyphs and the full-width caption row
+// ship together: lose the vertical pair and the stacked phone row points sideways at
+// nothing, lose the caption row and the middle column swallows the name tracks again.
+for (const need of ['<i class="dir-h">←</i>', '<i class="dir-v">↑</i>', '<i class="dir-h">→</i>',
+  '<i class="dir-v">↓</i>', '"tape-sub"', 'date sub-when']) {
+  if (!inline.includes(need)) throw new Error(`generated script lost a tape-row part: ${need}`);
+}
+// The stacked phone tape and the wide tape are one rule set; either half alone is broken.
+for (const need of ["grid-column: 1 / -1", "@media (max-width: 640px)", ".dir-v { display: inline; }",
+  "grid-template-columns: minmax(0, 1fr)", "overflow-wrap: anywhere"]) {
+  if (!html.includes(need)) throw new Error(`generated stylesheet lost a tape-row rule: ${need}`);
 }
 // A clip on h1.brand hides the seat picker, the most-used control in the app. It has been
 // introduced twice (fixed in 7f97711, reintroduced by f9fdb39), so assert it stays open.

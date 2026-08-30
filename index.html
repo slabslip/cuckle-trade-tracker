@@ -29,9 +29,12 @@
     h1.brand {
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
-      overflow: visible;
+      overflow: hidden;
     }
-    h1.brand a { color: inherit; text-decoration: none; margin-right: auto; }
+    h1.brand a {
+      color: inherit; text-decoration: none; margin-right: auto;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     button.go-home {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -48,10 +51,16 @@
       appearance: none; font: inherit; font-size: 0.8125rem; color: var(--text); text-align: left;
       background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a9aa3' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center;
       border: 1px solid var(--line); border-radius: 8px;
-      min-height: 36px; padding: 6px 28px 6px 10px; margin: 0; cursor: pointer;
+      min-height: 44px; padding: 6px 28px 6px 10px; margin: 0; cursor: pointer;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     button.who:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* The brand plus the picker needed 394px of a 343px row at 375px, so the picker ran
+       off the right edge. Both give ground on a phone. */
+    @media (max-width: 460px) {
+      h1.brand { font-size: 1.2rem; gap: 8px; }
+      button.who { width: 128px; font-size: 0.75rem; }
+    }
     .who-menu {
       position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
       width: 168px; max-width: calc(100vw - 32px);
@@ -62,10 +71,12 @@
     }
     .who-menu button {
       display: block; width: 100%; appearance: none; font: inherit;
-      font-size: 0.75rem; color: var(--muted); text-align: left;
+      font-size: 0.8125rem; color: var(--muted); text-align: left;
       background: transparent; border: 0;
-      min-height: 28px; padding: 3px 10px; cursor: pointer;
+      min-height: 44px; padding: 6px 12px; cursor: pointer;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .who-menu button[aria-selected="true"] { color: var(--text); }
     .who-menu button.on { color: var(--text); }
     .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
     button.row, button.chip, button.tab, .row {
@@ -78,7 +89,11 @@
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     .you { color: var(--text); font-weight: 650; }
-    .nav, .toggle { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
+    .toggle { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
+    /* Four tabs at 375px wrapped onto two lines. They share the row instead. */
+    .nav { display: flex; gap: 8px; flex-wrap: nowrap; margin: 12px 0 16px; }
+    .nav button.tab { flex: 1 1 0; min-width: 0; text-align: center; padding: 10px 6px; }
+    @media (min-width: 560px) { .nav { justify-content: flex-start; } .nav button.tab { flex: 0 0 auto; padding: 10px 18px; } }
     button.tab, button.chip {
       border-radius: 999px; padding: 10px 14px; color: var(--muted);
     }
@@ -86,27 +101,66 @@
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    /* min-width: 0 everywhere a track holds text. Without it a grid track cannot shrink
+       below its longest word, so a name like DarkWingDucks2023 pushed the value it sits
+       next to past the card edge at 375px. Names ellipsize; figures never do. */
     .row-top.tape { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; width: 100%; align-items: start; }
+    .row-top.tape > * { min-width: 0; }
+    .row-top.tape .side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .row-top.tape .side-line { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
     .row-top.tape .side.right { text-align: right; }
+    .row-top.tape .side.right .side-line { justify-content: flex-end; }
+    .row-top.tape .names {
+      min-width: 0; flex: 0 1 auto;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .row-top.tape .mid { text-align: center; font-variant-numeric: tabular-nums; }
+    .row-top.tape .mid .margin { white-space: nowrap; }
+    .row-top.tape .mid .date { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @media (max-width: 430px) { .row-top.tape { gap: 6px; font-size: 0.9375rem; } }
     .row.own-pick { border-color: #2e6b4f; }
     .row.away-pick { border-color: #6b5a2e; }
     .origin.own { color: var(--green); font-weight: 650; }
     .origin.away { color: #e0b44c; font-weight: 650; }
-    .row-top.tape .val { font-variant-numeric: tabular-nums; font-weight: 650; }
+    .row-top.tape .val { font-variant-numeric: tabular-nums; font-weight: 650; flex: 0 0 auto; white-space: nowrap; }
     .names { font-weight: 600; }
     .date { color: var(--dim); font-size: 0.8125rem; }
     .margin { font-variant-numeric: tabular-nums; font-weight: 650; }
     .detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
     .row.open .detail { display: block; }
+    /* An expandable row: the summary is the button, the detail is its sibling. The detail
+       holds clickable .leg elements, and a button may not contain a button -- nesting them
+       made clicking a player name inside an open row collapse the row. */
+    .row-x {
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      margin: 0 0 8px;
+    }
+    .row-x.own-pick { border-color: #2e6b4f; }
+    .row-x.away-pick { border-color: #6b5a2e; }
+    button.row-x-btn {
+      display: block; width: 100%; appearance: none; font: inherit; color: inherit;
+      text-align: left; background: none; border: 0; border-radius: 10px;
+      min-height: 44px; padding: 12px; cursor: pointer; touch-action: manipulation;
+    }
+    button.row-x-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
+    .row-x > .detail { margin: 0; padding: 12px; border-top: 1px solid var(--line); }
+    .row-x.open > .detail { display: block; }
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
     .bag h3 { margin: 0 0 6px; font-size: 0.92rem; }
-    .leg { display: flex; justify-content: space-between; gap: 8px; font-size: 0.84rem; padding: 3px 0; color: var(--muted); }
-    .leg[data-pick] {
-      width: 100%; padding: 8px 0; cursor: pointer; min-height: 44px;
+    .leg {
+      display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
+      font-size: 0.84rem; padding: 3px 0; color: var(--muted); min-width: 0;
+    }
+    .leg > span { min-width: 0; overflow-wrap: anywhere; }
+    .leg > b { flex: 0 0 auto; white-space: nowrap; }
+    button.leg[data-pick] {
+      width: 100%; appearance: none; font: inherit; font-size: 0.84rem;
+      color: var(--muted); text-align: left; background: none; border: 0;
+      padding: 8px 0; cursor: pointer; min-height: 44px;
       touch-action: manipulation;
     }
+    .leg[data-pick]:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .leg[data-pick].on { color: var(--text); }
     .hops { margin: 2px 0 10px 8px; padding-left: 10px; border-left: 2px solid var(--line); }
     .hop { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8125rem; padding: 4px 0; color: var(--dim); }
@@ -235,7 +289,7 @@
       flex: 0 0 auto; margin-left: auto; appearance: none; font: inherit;
       font-size: 0.8125rem; color: var(--text);
       background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-      min-height: 36px; padding: 6px 12px; position: relative; cursor: pointer;
+      min-height: 44px; padding: 6px 12px; position: relative; cursor: pointer;
       white-space: nowrap;
     }
     button.score-btn.on { border-color: #6b5a2e; }
@@ -289,16 +343,17 @@
     .filter-wrap { position: relative; z-index: 4; }
     #yearFilters {
       position: absolute; top: 52px; left: 0; z-index: 12;
-      width: 108px; margin: 0; padding: 4px 8px;
+      width: 132px; max-height: min(60dvh, 420px); overflow-y: auto;
+      margin: 0; padding: 4px 8px;
       display: flex; flex-direction: column;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
     #yearFilters label {
-      min-height: 26px; gap: 6px; font-size: 0.75rem; color: var(--muted);
+      min-height: 44px; gap: 10px; font-size: 0.8125rem; color: var(--muted);
       cursor: pointer;
     }
     #yearFilters label:has(input:checked) { color: var(--text); }
-    #yearFilters input { width: 13px; height: 13px; }
+    #yearFilters input { width: 16px; height: 16px; }
     .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
     .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
     .path-hero h2 { margin: 0 0 6px; }
@@ -447,8 +502,9 @@
         const body = "<span>" + esc(l.label) + "</span><b>" + val + "</b>";
         if (l.kind === "pick" && l.asset_key) {
           const open = openPick === l.asset_key;
-          return '<div class="leg' + (open ? " on" : "") + '" data-pick="' + esc(l.asset_key) + '">'
-            + body + "</div>" + (open ? hopHtml(l.asset_key) : "");
+          return '<button type="button" class="leg' + (open ? " on" : "") + '" data-pick="' + esc(l.asset_key) + '"'
+            + ' aria-expanded="' + (open ? "true" : "false") + '">'
+            + body + "</button>" + (open ? hopHtml(l.asset_key) : "");
         }
         return '<div class="leg">' + body + "</div>";
       }).join("");
@@ -487,9 +543,13 @@
       } catch (err) { voteBook = null; }
       const startTitle = params.get("title");
       const startView = params.get("view");
+      // titles and league are league-wide screens: they resolve without a seat, so honour
+      // them before the ?me lookup or the URL lands back on league home.
       if (startView === "titles") {
         view = "titles";
         titleYear = startTitle || null;
+      } else if (startView === "league") {
+        view = "league";
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
@@ -514,11 +574,15 @@
       btn.setAttribute("aria-label", me ? "Team, " + me.name : "Team");
       btn.setAttribute("aria-expanded", whoOpen ? "true" : "false");
       menu.hidden = !whoOpen;
-      menu.innerHTML = '<button type="button" class="' + (!me ? "on" : "") + '" data-who="">Team</button>'
-        + members.map((m) =>
-          '<button type="button" class="' + (me && me.user_id === m.user_id ? "on" : "") + '" data-who="' + esc(m.user_id) + '">'
-          + esc(m.name) + "</button>"
-        ).join("");
+      const opt = (on, id, label) =>
+        '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
+        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">' + esc(label) + "</button>";
+      menu.innerHTML = opt(!me, "", "Team")
+        + members.map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name)).join("");
+      if (whoOpen) {
+        const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
+        if (sel) sel.focus({ preventScroll: false });
+      }
     }
 
     function clearLeague() {
@@ -755,12 +819,13 @@
       const leftCls = s == null || s === 0 ? "" : cls(s);
       const rightCls = s == null || s === 0 ? "" : cls(-s);
       const midCls = s == null || s === 0 ? "" : cls(s);
-      return '<button type="button" class="row" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      return '<button type="button" class="row" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
+        + ' aria-expanded="false">'
         + '<div class="row-top tape">'
-        + '<div class="side"><span class="names ' + leftCls + '">' + esc(r.name) + '</span> <span class="val">' + got + "</span></div>"
+        + '<div class="side"><div class="side-line"><span class="names ' + leftCls + '">' + esc(r.name) + '</span><span class="val">' + got + "</span></div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
         + '<div class="date">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</div></div>"
-        + '<div class="side right"><span class="val">' + sent + '</span> <span class="names ' + rightCls + '">' + esc(r.other) + "</span></div>"
+        + '<div class="side right"><div class="side-line"><span class="val">' + sent + '</span><span class="names ' + rightCls + '">' + esc(r.other) + "</span></div></div>"
         + "</div></button>";
     }
 
@@ -1386,15 +1451,17 @@
         : dlt < 0 ? fmt(Math.abs(dlt)) + " →"
         : fmt(dlt);
       const midCls = dlt == null || incomplete || dlt === 0 ? "" : cls(dlt);
-      return '<button type="button" class="row' + (open ? " open" : "") + '" data-id="' + esc(t.transaction_id) + '">'
+      return '<div class="row-x' + (open ? " open" : "") + '">'
+        + '<button type="button" class="row-x-btn" data-id="' + esc(t.transaction_id) + '"'
+        + ' aria-expanded="' + (open ? "true" : "false") + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><span class="names ' + mineCls + '">' + esc(p.mine) + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.mine) + '</span><span class="val">' + gotShow + "</span></div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
         + '<div class="date">' + esc(t.date) + (incomplete ? ' <span class="badge">no DP row</span>' : "") + "</div></div>"
-        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + esc(p.other) + "</span></div>"
-        + "</div>"
+        + '<div class="side right"><div class="side-line"><span class="val">' + sentShow + '</span><span class="names ' + otherCls + '">' + esc(p.other) + "</span></div></div>"
+        + "</div></button>"
         + (open ? '<div class="detail">' + tradeBags(t, extra) + "</div>" : "")
-        + "</button>";
+        + "</div>";
     }
 
     function draftKey(p) {
@@ -1482,15 +1549,17 @@
           + "</div>";
       }
       const own = origin === "Own pick";
-      return '<button type="button" class="row' + (open ? " open" : "") + (own ? " own-pick" : " away-pick") + '" data-draft="' + esc(key) + '">'
+      return '<div class="row-x' + (open ? " open" : "") + (own ? " own-pick" : " away-pick") + '">'
+        + '<button type="button" class="row-x-btn" data-draft="' + esc(key) + '"'
+        + ' aria-expanded="' + (open ? "true" : "false") + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div><span class="names ' + mineCls + '">' + esc(p.player) + '</span> <span class="val">' + gotShow + "</span></div>"
+        + '<div class="side"><div class="side-line"><span class="names ' + mineCls + '">' + esc(p.player) + '</span><span class="val">' + gotShow + "</span></div>"
         + '<div class="date">' + esc(p.as_of || "") + "</div></div>"
         + '<div class="mid"><span class="margin ' + midCls + '">' + mid + "</span>"
         + '<div class="date origin ' + (own ? "own" : "away") + '">' + esc(origin) + "</div></div>"
-        + '<div class="side right"><span class="val">' + sentShow + '</span> <span class="names ' + otherCls + '">' + esc(slot) + "</span></div>"
-        + "</div>"
-        + detail + "</button>";
+        + '<div class="side right"><div class="side-line"><span class="val">' + sentShow + '</span><span class="names ' + otherCls + '">' + esc(slot) + "</span></div></div>"
+        + "</div></button>"
+        + detail + "</div>";
     }
 
     function renderTrades() {
@@ -1516,9 +1585,11 @@
       return '<div class="filter-wrap">'
         + lensRow(yearBtn)
         + (yearFilterOpen
-          ? '<div class="filter-panel" id="yearFilters" role="group" aria-label="Year">'
+          // Exactly one year at a time, so these are radios, not checkboxes.
+          ? '<div class="filter-panel" id="yearFilters" role="radiogroup" aria-label="Year">'
             + [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
-              '<label data-year="' + esc(row[0]) + '"><input type="checkbox"' + (year === row[0] ? " checked" : "") + "> " + esc(row[1]) + "</label>"
+              '<label data-year="' + esc(row[0]) + '"><input type="radio" name="yearFilter" value="' + esc(row[0]) + '"'
+              + (year === row[0] ? " checked" : "") + "> " + esc(row[1]) + "</label>"
             ).join("")
             + "</div>"
           : "")
@@ -1732,9 +1803,11 @@
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && view !== "home" && view !== "titles" && view !== "league") view = "home";
       const nav = (tabs.length
-        ? '<div class="nav">'
+        ? '<div class="nav" role="tablist" aria-label="Sections">'
           + tabs.map((v) =>
-            '<button type="button" class="tab' + (view === v ? " on" : "") + '" data-view="' + v + '">' + v + "</button>"
+            '<button type="button" role="tab" aria-selected="' + (view === v ? "true" : "false") + '"'
+            + ' tabindex="' + (view === v ? "0" : "-1") + '"'
+            + ' class="tab' + (view === v ? " on" : "") + '" data-view="' + v + '">' + v + "</button>"
           ).join("")
           + "</div>"
         : "");
@@ -1745,9 +1818,25 @@
         : view === "titles" ? renderTitles()
         : view === "league" ? renderLeague()
         : renderLeagueHome();
+      // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
+      // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
+      const keep = focusSelector(document.activeElement);
       app.innerHTML = nav + body;
+      if (keep) {
+        const back = app.querySelector(keep);
+        if (back) back.focus({ preventScroll: true });
+      }
       paintFeed();
       syncUrl();
+    }
+
+    /** A selector that survives an innerHTML rebuild: the tag plus every data-* attribute. */
+    function focusSelector(el) {
+      if (!el || !el.closest || !el.closest("#app")) return null;
+      const parts = [...el.attributes]
+        .filter((a) => a.name.startsWith("data-"))
+        .map((a) => "[" + a.name + '="' + a.value.replace(/["\\]/g, "\\$&") + '"]');
+      return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
     }
 
     document.getElementById("goHome").addEventListener("click", () => clearLeague());
@@ -1768,6 +1857,57 @@
       if (!whoOpen || e.target.closest(".who-wrap")) return;
       whoOpen = false;
       paintWho();
+    });
+
+    function closeWho() {
+      whoOpen = false;
+      paintWho();
+      document.getElementById("who").focus();
+    }
+
+    /** Everything the app pops open, closed by Escape in the order a user expects. */
+    function closeTopmost() {
+      if (whoOpen) { closeWho(); return true; }
+      if (lensOpen) { lensOpen = false; render(); return true; }
+      if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
+      if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
+      if (openPick) { openPick = null; render(); return true; }
+      if (openDraft) { openDraft = null; render(); return true; }
+      if (openId) { openId = null; render(); return true; }
+      return false;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (closeTopmost()) e.preventDefault();
+        return;
+      }
+      // Team picker: a listbox, so the arrows move between options and never scroll the page.
+      const inWho = e.target.closest && e.target.closest("#whoMenu");
+      if (whoOpen && inWho) {
+        const opts = [...document.querySelectorAll("#whoMenu button")];
+        const i = opts.indexOf(document.activeElement);
+        let next = -1;
+        if (e.key === "ArrowDown") next = (i + 1) % opts.length;
+        else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = opts.length - 1;
+        else if (e.key === "Tab") { closeWho(); return; }
+        if (next >= 0) { e.preventDefault(); opts[next].focus(); }
+        return;
+      }
+      // Roving tabs: one stop in the tab order, arrows move between the four sections.
+      const tab = e.target.closest && e.target.closest('[role="tab"]');
+      if (tab) {
+        const tabs = [...document.querySelectorAll('.nav [role="tab"]')];
+        const i = tabs.indexOf(tab);
+        let next = -1;
+        if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
+        else if (e.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = tabs.length - 1;
+        if (next >= 0) { e.preventDefault(); tabs[next].focus(); tabs[next].click(); }
+      }
     });
     function togglePack(id) {
       if (!id) return;
@@ -1911,7 +2051,7 @@
         render();
         return;
       }
-      const row = e.target.closest(".row[data-id]");
+      const row = e.target.closest(".row[data-id], .row-x-btn[data-id]");
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
       else if (closedFilter) render();
     });

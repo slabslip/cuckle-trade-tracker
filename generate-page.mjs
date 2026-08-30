@@ -2819,13 +2819,10 @@ const brandRule = html.slice(html.indexOf("    h1.brand {"));
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
   throw new Error("h1.brand must declare overflow: visible -- a clip here hides #whoMenu");
 }
-// Navigation is the one thing a user cannot work around if it fails to ship: without real
-// history entries Back leaves the site, and without a back chip the full-screen trade is a
-// dead end. Assert both halves, and the arrow glyph the chips are labelled with.
-// The Recent Trade card is now the only door to the league-wide list, so losing any part of
-// that button strands the screen a vote lands on. The 44px tap area is a painted ::after
-// rather than layout, which no source read would reveal is load-bearing -- assert both halves,
-// and assert nothing put the standalone control back on league home beside it.
+// The Recent Trade card is now the only door on league home to the league-wide list, so losing
+// any part of that button strands the screen a vote lands on. The 44px tap area is a painted
+// ::after rather than layout, which no source read would reveal is load-bearing -- assert both
+// halves, and assert nothing put the standalone control back on league home beside it.
 for (const need of ['class="all-trades" data-trades-list="1"',
   'aria-label="All trades in the league"', "<span>All trades</span>", '"day-alert-top"']) {
   if (!inline.includes(need)) throw new Error(`generated script lost the all-trades icon: ${need}`);
@@ -2840,6 +2837,9 @@ const homeFn = inline.slice(inline.indexOf("function renderLeagueHome()"));
 if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-list")) {
   throw new Error("renderLeagueHome grew a standalone trades-list control -- the card's icon is the door");
 }
+// Navigation is the one thing a user cannot work around if it fails to ship: without real
+// history entries Back leaves the site, and without a back chip the full-screen trade is a
+// dead end. Assert both halves, and the arrow glyph the chips are labelled with.
 for (const need of [
   "history.pushState(stateNow()",
   'window.addEventListener("popstate"',

@@ -587,14 +587,18 @@ const html = `<!DOCTYPE html>
     button.ds-btn.on { border-color: #6b5a2e; }
     button.ds-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Five options at 44px minimum, each with a line saying what the set is built from, so the
-       panel is about 320px. It floats rather than shoving the open set down the page, which is
-       what the Score as panel does. The cap is the room below the trigger on a short phone; the
-       width can never exceed the body's own content box, so it cannot widen the document. */
+       panel is about 340px tall. It floats rather than shoving the open set down the page, which
+       is what the Score as panel does.
+       The width is the trigger's width and not a fixed 340px. Capped, it left half of every trade
+       row visible beside it at 375px and wider -- figures and names floating to the right of a
+       menu that was covering the rest of their row, which measured perfectly and read as a
+       rendering fault. Full width also means the panel cannot be wider than the body's content
+       box, so it can never widen the document. */
     /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
        .filter-panel box rules that are declared further down the sheet. */
     #dataSets {
-      position: absolute; top: calc(100% + 4px); left: 0; right: auto; z-index: 12;
-      width: min(340px, 100%); margin: 0; padding: 6px;
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 12;
+      width: auto; margin: 0; padding: 6px;
       max-height: min(calc(100dvh - 96px), 480px); overflow-y: auto;
       display: flex; flex-direction: column; gap: 4px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
@@ -1531,8 +1535,12 @@ const html = `<!DOCTYPE html>
     function dataSetPanel() {
       const cur = dataSetDef(dataSet);
       const rows = dataSetRows(cur[0]);
+      // The data-* is what focusSelector() re-finds after a render this screen did not ask for --
+      // a vote settling, or votes.json arriving. Selecting a set puts focus here, and without a
+      // handle a late render dropped it to <body> a moment later, which is the same defect the
+      // .screen-h special case exists for.
       return '<div class="pack" id="dsBody">'
-        + '<h2 class="ds-h" tabindex="-1">' + esc(cur[1]) + "</h2>"
+        + '<h2 class="ds-h" tabindex="-1" data-dset-head="1">' + esc(cur[1]) + "</h2>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
@@ -1587,7 +1595,10 @@ const html = `<!DOCTYPE html>
       const pill = (b) => {
         const to = b.view ? ' data-view="' + esc(b.view) + '"'
           : b.dset ? ' data-dset="' + esc(b.dset) + '"' : "";
-        const inner = "<b>" + esc(b.kicker) + "</b><span>" + esc(b.line) + "</span>";
+        // The space between the two is whitespace-only, so flex drops it from layout and the
+        // gap does that job -- but it stays in the accessible text, where "Most active" and the
+        // name it belongs to must not run together into one word.
+        const inner = "<b>" + esc(b.kicker) + "</b> <span>" + esc(b.line) + "</span>";
         return to
           ? '<button type="button" class="bubble"' + to + ">" + inner + "</button>"
           : '<span class="bubble static">' + inner + "</span>";
@@ -3456,8 +3467,17 @@ for (const gone of ["openPacks", "togglePack", "data-pack", "pack-head"]) {
 // shipped as buttons with pack: "" -- no data attribute at all, so every tap was ignored. A pill
 // with no destination is a span now; assert no pill can go back to being a dead button.
 for (const need of ["selectDataSet(btn.dataset.dset, true)", 'b.dset ? \' data-dset="\' + esc(b.dset) + \'"\'',
-  '\'<span class="bubble static">\'']) {
+  '\'<span class="bubble static">\'',
+  // Whitespace-only, so flex drops it from layout, but it is the only thing keeping the kicker
+  // and the reading from running together in the accessible text.
+  '"<b>" + esc(b.kicker) + "</b> <span>"']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a ticker rewiring: ${need}`);
+}
+// Selecting a set moves focus to the name of the set. A render this screen did not ask for --
+// votes.json landing -- rebuilds the subtree, and without a data-* for focusSelector() to
+// re-find, focus fell to <body> a moment after it had just been placed.
+for (const need of ['data-dset-head="1"', 'head.focus({ preventScroll: true })']) {
+  if (!inline.includes(need)) throw new Error(`the selected set's heading lost its focus handle: ${need}`);
 }
 if (/(pack|dset|view): ""/.test(inline)) {
   throw new Error("a ticker pill carries an empty destination -- drop it or make it a static pill");

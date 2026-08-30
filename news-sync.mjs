@@ -12,6 +12,7 @@
  *   node news-sync.mjs --voice         # print every voice variant, fetch nothing
  *   node news-sync.mjs --empty         # write a valid empty file (no network)
  *   node news-sync.mjs --with-automated  # turn the automated sources back on for this run
+ *   node news-sync.mjs --corpus        # fetch RSS live, write data/fixtures/rss-corpus.json
  *
  * ## The feed is manual submissions only
  *
@@ -20,6 +21,12 @@
  * behind the AUTOMATED_SOURCES switch, which is off. Read the note on that constant before
  * changing anything here; the short version is that the code stays because Path A is the only
  * attribution in this project that cannot be wrong, and deleting it would throw that away.
+ *
+ * `matchPlayer` and the index builders are exported so a test can run *this* matcher — the one
+ * that ships — over the committed corpus rather than over a reimplementation of it. main() is
+ * therefore guarded to the direct invocation; `--voice` in the test suite proves that guard
+ * still resolves true, because a guard that silently stopped matching would silently stop the
+ * daily refresh.
  *
  * ## Rosters and the mapping
  *
@@ -127,7 +134,7 @@ const automatedOn = AUTOMATED_SOURCES || args.has("--with-automated");
  * A player on two rosters is impossible in Sleeper, so a collision here means the roster file
  * is stale rather than that a choice has to be made. It is counted and the first owner wins.
  */
-function buildOwnership() {
+export function buildOwnership() {
   const rosters = readJson("rosters_now.json", []) || [];
   const members = readJson("ui/members.json", []) || [];
   const nameById = new Map(members.map((m) => [m.user_id, m.name]));
@@ -149,7 +156,7 @@ function buildOwnership() {
 }
 
 /** Normalise a name for comparison: lower case, no punctuation, no suffix, single spaces. */
-function normName(s) {
+export function normName(s) {
   return String(s == null ? "" : s)
     .toLowerCase()
     .normalize("NFKD")
@@ -169,7 +176,7 @@ function normName(s) {
  * happen. The famous one is real: "Josh Allen" is both the Bills quarterback and an inactive
  * offensive guard, and the dictionary has both.
  */
-function buildPlayerIndex(owner, players) {
+export function buildPlayerIndex(owner, players) {
   const byName = new Map();
   const rows = [];
   for (const pid of owner.keys()) {
@@ -222,7 +229,7 @@ function buildPlayerIndex(owner, players) {
  * tie-break better than silence: "Raiders expected to name Kirk Cousins Week 1 starter over No. 1
  * pick Fernando Mendoza" is genuinely about two owned players, and picking one would be a guess.
  */
-function matchPlayer(title, index) {
+export function matchPlayer(title, index) {
   const hay = ` ${normName(title)} `;
   const hits = new Map();
   for (const [key, rows] of index.byName) {
@@ -1034,6 +1041,64 @@ function writeBook(book) {
   return path;
 }
 
+/* -------------------------------------------------------------- corpus ---- */
+
+/**
+ * Freeze one live day of RSS into data/fixtures/rss-corpus.json, **with this matcher's own
+ * verdict on every item**.
+ *
+ * The point is not to have test data. It is that any new matcher can be scored against a real
+ * third-party corpus whose answer set was produced by the code that actually ships, per item
+ * rather than in aggregate — so a divergence can be read as a specific headline rather than as
+ * a number that moved. Feeds churn hourly, so an offline corpus is also the only way the
+ * comparison is reproducible tomorrow.
+ */
+async function writeCorpus() {
+  const ownership = buildOwnership();
+  const playersPath = `${DATA}/players.nfl.json`;
+  if (!ownership.owner.size || !fs.existsSync(playersPath)) {
+    throw new Error("run `node sleeper-sync.mjs` first — corpus needs rosters and the dictionary");
+  }
+  const players = JSON.parse(fs.readFileSync(playersPath, "utf8"));
+  const index = buildPlayerIndex(ownership.owner, players);
+  const results = await fetchRss();
+  const items = [];
+  for (const result of results) {
+    for (const raw of result.items) {
+      const hit = matchPlayer(raw.title, index);
+      const own = hit.row ? ownership.owner.get(hit.row.player_id) : null;
+      items.push({
+        source: raw.source,
+        source_label: raw.source_label,
+        source_url: raw.source_url,
+        title: raw.title,
+        summary: clip(raw.summary, 500),
+        published: raw.published,
+        baseline: {
+          verdict: hit.reason,
+          player: hit.row ? hit.row.name : null,
+          player_id: hit.row ? hit.row.player_id : null,
+          manager: own ? own.manager : null,
+          candidates: (hit.candidates || []).map((c) => c.name),
+        },
+      });
+    }
+  }
+  const book = {
+    v: 1,
+    harvested: Date.now(),
+    note: "One live day of the five RSS feeds, with news-sync.mjs's own matchPlayer() verdict per item. Third-party text, verbatim; summaries clipped to 500 chars.",
+    feeds: results.map((r) => ({ id: r.feed.id, label: r.feed.label, ok: r.ok, items: r.items.length })),
+    rostered_players: ownership.owner.size,
+    items,
+  };
+  fs.mkdirSync(`${DATA}/fixtures`, { recursive: true });
+  fs.writeFileSync(`${DATA}/fixtures/rss-corpus.json`, JSON.stringify(book, null, 1) + "\n");
+  const tally = {};
+  for (const it of items) tally[it.baseline.verdict] = (tally[it.baseline.verdict] || 0) + 1;
+  return { out: "data/fixtures/rss-corpus.json", items: items.length, baseline: tally };
+}
+
 /* ---------------------------------------------------------------- main ---- */
 
 /**
@@ -1161,6 +1226,10 @@ function selfTest() {
 
 async function main() {
   if (args.has("--selftest")) { selfTest(); return; }
+  if (args.has("--corpus")) {
+    console.log(JSON.stringify(await writeCorpus(), null, 2));
+    return;
+  }
   if (args.has("--voice")) {
     for (const s of voiceSamples("BubbaCuckShremp", "Patrick Mahomes", "KC")) {
       console.log(`[${s.category}] ${s.line}`);
@@ -1271,7 +1340,25 @@ async function main() {
   }, null, 2));
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+/**
+ * Run only when this file is the process entry point, so a test can import matchPlayer() without
+ * firing a live build. A guard like this fails silently if it ever stops resolving — the cron
+ * would run, print nothing and refresh nothing — so news-match.test.mjs spawns
+ * `node news-sync.mjs --voice` and asserts it produces output.
+ */
+function invokedDirectly() {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return fs.realpathSync(entry) === fs.realpathSync(new URL(import.meta.url).pathname);
+  } catch {
+    return false;
+  }
+}
+
+if (invokedDirectly()) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

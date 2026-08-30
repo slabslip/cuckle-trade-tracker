@@ -179,6 +179,24 @@ stop the pipeline retrying them:
 update public.news_submissions set processed_at = now() where id in (…);
 ```
 
+### One-time: clear the rows this feature was built against
+
+Building this left real rows in the queue. Ids 1–13 are test submissions —
+`jack/status/20`, two Obama tweets, a park photo, and four deliberately hostile
+ones used for the XSS proof (`https://evil.com/...`, a `javascript:` url, a
+`<script>` in `note`). They are harmless, but they would publish as nonsense in
+the feed on the first run after the policies above exist. **Id 14 is a genuine
+submission** — an Adam Schefter tweet about Keenan Allen, sent from the
+Shortcut — and should be left alone so it lands.
+
+```sql
+delete from public.news_submissions where id between 1 and 13;
+```
+
+`data/ui/news.json` was committed built with `--no-submissions` for the same
+reason, so the shipped feed carries no test rows. After the delete, a plain
+`node news-sync.mjs` picks up id 14 and anything shared since.
+
 ### The uniqueness rule, and why it is not `url` alone
 
 Unique on **`(url, submitted_by)` with `nulls not distinct`**.

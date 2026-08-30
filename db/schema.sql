@@ -394,6 +394,11 @@ alter table public.news_submissions add column if not exists target_name  text;
 alter table public.news_submissions add column if not exists submitted_by text;
 alter table public.news_submissions add column if not exists created_at   timestamptz not null default now();
 alter table public.news_submissions add column if not exists processed_at timestamptz;
+-- Soft-delete. Anon has no DELETE (see 5d); removing a post from the feed is a stamp on
+-- these columns, the same shape as clearing a vote with `__none__`. news-sync skips any row
+-- with deleted_at set, and the page hides it as soon as the admin PATCH lands.
+alter table public.news_submissions add column if not exists deleted_at   timestamptz;
+alter table public.news_submissions add column if not exists deleted_by   text;
 
 
 -- --------------------------------------------------------------------------
@@ -444,7 +449,9 @@ begin
       ('news_submissions_target_name_len',
        'check (target_name is null or length(target_name) between 1 and 64)'),
       ('news_submissions_submitted_by_len',
-       'check (submitted_by is null or length(submitted_by) between 1 and 64)')
+       'check (submitted_by is null or length(submitted_by) between 1 and 64)'),
+      ('news_submissions_deleted_by_len',
+       'check (deleted_by is null or length(deleted_by) between 1 and 64)')
     ) as t(name, body)
   loop
     if not exists (
@@ -589,13 +596,13 @@ create index if not exists news_submissions_unprocessed_idx
 -- --------------------------------------------------------------------------
 -- Same shape as trade_votes, with one difference that is the point of the
 -- table: there is NO general UPDATE grant, so a submission's url, note and
--- target cannot be rewritten after the fact. The only column anon may change is
--- `processed_at`, and that is enforced by a COLUMN-LEVEL GRANT in section 5d
--- rather than by the policy, because RLS cannot see which columns a statement
--- touched.
+-- target cannot be rewritten after the fact. The only columns anon may change
+-- are `processed_at` (the pipeline stamp) and `deleted_at` / `deleted_by` (the
+-- admin soft-delete), enforced by the COLUMN-LEVEL GRANT in section 5d rather
+-- than by the policy, because RLS cannot see which columns a statement touched.
 --
--- And, as with trade_votes: NO DELETE. Nobody can erase another member's
--- submission through the REST API.
+-- And, as with trade_votes: NO DELETE. Nobody can erase a row through the REST
+-- API. Removing a post from the feed is a soft-delete stamp, not a DELETE.
 alter table public.news_submissions enable row level security;
 
 -- INSERT: anyone with the anon key may submit. This is the write-open surface
@@ -635,8 +642,8 @@ create policy news_submissions_anon_update
 -- 5d. Grants
 -- --------------------------------------------------------------------------
 -- The column-level UPDATE grant is the load-bearing line: anon may write
--- `processed_at` and nothing else. An attempt to PATCH `url` or `note` fails on
--- privileges before RLS is consulted.
+-- `processed_at`, `deleted_at` and `deleted_by`, and nothing else. An attempt
+-- to PATCH `url` or `note` fails on privileges before RLS is consulted.
 --
 -- The `revoke update` immediately before it is not decoration and must not be
 -- deleted as redundant. A table-wide `grant update` and a column-level one are
@@ -645,25 +652,38 @@ create policy news_submissions_anon_update
 -- top of this section, which had table-wide UPDATE, `grant update
 -- (processed_at)` alone would leave `url` rewritable and this file would again
 -- report success while changing nothing that mattered. Revoke first, then
--- grant the one column.
+-- grant the allowed columns.
 --
 -- Section 1b warns off column-level grants on the votes path, and that warning
 -- does not apply here — it is worth saying why, because the two paths
 -- look similar. The votes path is `INSERT ... ON CONFLICT DO UPDATE`, and
 -- PostgREST generates a `DO UPDATE SET` listing every column in the payload,
 -- so any column outside the grant list fails the whole statement. This table
--- never does that: submissions insert with `ON CONFLICT DO NOTHING` (5d), which
--- performs no update at all, and the pipeline's stamp is a plain PATCH whose
--- payload is `{"processed_at": ...}` and nothing else. Neither statement can
--- touch a column outside the grant.
+-- never does that: submissions insert with `ON CONFLICT DO NOTHING` (5e), which
+-- performs no update at all, and the pipeline's stamp / the admin soft-delete
+-- are plain PATCHes whose payloads name only granted columns. Neither statement
+-- can touch a column outside the grant.
+--
+-- Soft-delete is not real auth. The UI only offers Remove to TrumanCooper's
+-- remembered seat; anyone holding the anon key can still PATCH these columns.
+-- That is the same honesty as the insert surface, stated here so it is not a
+-- surprise. Acceptable for ten friends; not a pattern to copy where the data
+-- matters.
 grant select, insert on table public.news_submissions to anon;
 revoke update on table public.news_submissions from anon;
-grant update (processed_at) on table public.news_submissions to anon;
+grant update (processed_at, deleted_at, deleted_by) on table public.news_submissions to anon;
 
--- DELETE stays revoked so no member can erase another's submission — the same
--- trade trade_votes makes. TRUNCATE is not subject to RLS, so revoking it is
--- the one that closes a real hole rather than restating a closed one.
+-- Hard DELETE stays revoked so no member can erase a row — the same trade
+-- trade_votes makes. Soft-delete is the remove path. TRUNCATE is not subject
+-- to RLS, so revoking it is the one that closes a real hole rather than
+-- restating a closed one.
 revoke delete, truncate on table public.news_submissions from anon;
+
+-- Partial index for the feed's "still visible" read. Soft-deleted rows stay in
+-- the table for audit; the build and the page both ask for deleted_at is null.
+create index if not exists news_submissions_alive_idx
+  on public.news_submissions (created_at desc)
+  where deleted_at is null;
 
 
 -- --------------------------------------------------------------------------

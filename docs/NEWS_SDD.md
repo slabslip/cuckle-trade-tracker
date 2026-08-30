@@ -653,13 +653,19 @@ the automated row is dropped, the opposite of `dedupe()`'s earliest-published ru
 ### The UI
 
 The row is a `<div>` and never an `<a>`. Every other row in this feed wraps its whole body in a
-link, and putting **Open on X** inside one would be **defect A1** — an interactive control nested
-in another interactive control. So the link to the tweet is a separate `<a>` inside the quoted
+link, and putting **Open on X** (or **Remove**) inside one would be **defect A1** — an interactive
+control nested in another interactive control. So those controls are siblings inside the quoted
 block, and nothing on the row nests a control in a control.
 
 The tweet is always visible under the sharer's note — no Show/Hide expander. Compact means the
 note, the tweet, who posted it, and the link out, with no open-state to keep across `#app`
 rebuilds. The link out is ≥44px and keyboard operable.
+
+**Admin Remove.** Soft-delete via `deleted_at` / `deleted_by` — anon still has no hard DELETE.
+The button is offered only when this device's remembered seat is TrumanCooper (pick yourself
+via Teams once; league home clears `me` but keeps the vote seat key). The page hides the row as
+soon as the PATCH lands; `news-sync` skips it on the next build. UI gate among friends, not real
+auth — same honesty as the insert surface. SQL: `docs/SUPABASE_SETUP.md` §3c.
 
 ### What this costs, honestly
 

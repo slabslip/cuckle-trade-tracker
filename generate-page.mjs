@@ -741,6 +741,17 @@ const html = `<!DOCTYPE html>
       color: var(--muted); font-size: 0.75rem; font-weight: 650; text-decoration: underline;
     }
     .news-tweet-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Admin remove. Only rendered for TrumanCooper's remembered seat. Plain text control, not
+       a chip or a card — it is a destructive action on a short row and must not look like a
+       primary CTA. 44px so a finger finds it without hunting the word. */
+    .news-del {
+      display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding: 0 2px;
+      background: none; border: 0; color: var(--dim);
+      font: inherit; font-size: 0.75rem; font-weight: 650; text-decoration: underline;
+      cursor: pointer;
+    }
+    .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-del[disabled] { opacity: 0.5; cursor: wait; }
     .news-empty { color: var(--dim); font-size: 0.8125rem; line-height: 1.45; padding: 10px 0; }
     /* What is left of this row now that the clock control moved to the brand header: the year
        filter on the Trades tab and the round filter on Drafts, each with its caption. Both are
@@ -894,8 +905,12 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let news = null;
+    // Soft-deleted shared tweets, by item id (tweet:22). Filled from Supabase on load and on
+    // each successful admin Remove, so a delete hides the row without waiting for a Pages rebuild.
+    const newsGone = new Set();
+    let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "20260830dropnewscaption1";
+    const DATA_V = "20260830admindeletenews1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2023,7 +2038,11 @@ const html = `<!DOCTYPE html>
      */
     function renderNews() {
       const book = news && news.v === 1 ? news : null;
-      const items = (book && book.items) || [];
+      const raw = (book && book.items) || [];
+      // Soft-deleted posts stay in news.json until the next sync rebuild; newsGone is what
+      // makes Remove take effect on this device immediately, and for every visitor once the
+      // deleted_at stamp has been read from Supabase.
+      const items = raw.filter((it) => !newsGone.has(it.id));
       // Heading only. The rows carry their own sharer, category and timestamp, so a paragraph
       // describing the feed was restating what the first row already shows. The empty state
       // still explains how an item gets here, which is the one thing a row cannot.
@@ -2051,11 +2070,18 @@ const html = `<!DOCTYPE html>
         // the one place the mechanism is written down. It stays one line because a reader
         // staring at an empty box needs the action that fills it, not a description of the
         // feed they can already see is bare.
-        const blank = book
-          ? "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here."
-          : "The feed could not be loaded. Nothing else on this page is affected.";
+        // A third case: the book has rows but every one is soft-deleted. That is not "nothing
+        // shared yet" and not a load failure — it is an emptied feed.
+        const blank = !book
+          ? "The feed could not be loaded. Nothing else on this page is affected."
+          : (raw.length
+            ? "No posts in the feed right now."
+            : "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here.");
         return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
+      // Remove is admin-only in the UI. League home clears me, so this reads the remembered
+      // seat (same key votes use) — pick TrumanCooper once via Teams, then Home still unlocks it.
+      const admin = isNewsAdmin();
       const rows = items.map((it) => {
         const url = String(it.source_url || "");
         // Only http(s) becomes a link. Anything else -- and a feed is fully capable of shipping
@@ -2083,9 +2109,9 @@ const html = `<!DOCTYPE html>
          * A tweet somebody shared in: the jab on top, the tweet itself always visible under it.
          *
          * **The row is a <div> and never an <a>.** Every other row in this feed wraps its whole
-         * body in a link, and putting Open on X inside one of those would be defect A1 -- an
-         * interactive control nested in another interactive control. So the link to the tweet is
-         * a separate <a> inside the quoted block, and nothing on this row nests a control in a
+         * body in a link, and putting Open on X (or Remove) inside one of those would be defect
+         * A1 -- an interactive control nested in another interactive control. So those controls
+         * are siblings inside the quoted block, and nothing on this row nests a control in a
          * control.
          *
          * There is no expander. The earlier Show/Hide button was one more tap on every post in a
@@ -2116,6 +2142,14 @@ const html = `<!DOCTYPE html>
           const xLink = /^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : "";
           const handle = it.tweet_handle ? "@" + esc(it.tweet_handle) : "";
           const by = [esc(it.tweet_author), handle].filter(Boolean).join(" \\u00b7 ");
+          const subId = newsSubmissionId(it.id);
+          const del = (admin && subId)
+            ? '<button type="button" class="news-del" data-news-del="' + esc(it.id) + '"'
+              + (newsDelPending === it.id ? " disabled" : "")
+              + ' aria-label="Remove this post from the feed">'
+              + (newsDelPending === it.id ? "Removing\\u2026" : "Remove")
+              + "</button>"
+            : "";
           return '<div class="news-row news-row-tweet">'
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
@@ -2126,6 +2160,7 @@ const html = `<!DOCTYPE html>
             + (xLink
               ? '<a class="news-tweet-link" href="' + esc(xLink) + '" target="_blank" rel="noopener noreferrer">Open on X</a>'
               : "")
+            + del
             + "</div>"
             + '<div class="news-meta">' + where + "</div>"
             + "</div>";
@@ -2448,6 +2483,96 @@ const html = `<!DOCTYPE html>
       if (me && me.user_id) return me.user_id;
       try { return localStorage.getItem(VOTE_SEAT_KEY) || null; }
       catch (err) { return null; }
+    }
+
+    /**
+     * Soft-delete for the alert feed. UI-gated to TrumanCooper; the write is a stamp on
+     * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). League home clears
+     * me, so this uses the remembered seat the same way votes do: pick TrumanCooper via
+     * Teams once, then Home still unlocks Remove.
+     *
+     * This is not real auth. Anyone with the anon key can PATCH those columns. Acceptable for
+     * ten friends; the button simply is not offered to anyone else.
+     */
+    const NEWS_ADMIN_UID = "458342725222133760";
+    const NEWS_ADMIN_NAME = "TrumanCooper";
+
+    function isNewsAdmin() {
+      return voteSeatId() === NEWS_ADMIN_UID;
+    }
+
+    function newsSubmissionId(itemId) {
+      const m = /^tweet:(\\d+)$/.exec(String(itemId || ""));
+      return m ? m[1] : null;
+    }
+
+    async function loadNewsDeleted() {
+      try {
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), VOTE_TIMEOUT);
+        const res = await fetch(
+          VOTE_API + "/news_submissions?select=id&deleted_at=not.is.null&order=id.desc&limit=200",
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON },
+            signal: ac.signal,
+          },
+        );
+        clearTimeout(timer);
+        if (!res.ok) return;
+        const rows = await res.json();
+        if (!Array.isArray(rows)) return;
+        let changed = false;
+        for (const row of rows) {
+          const id = "tweet:" + row.id;
+          if (!newsGone.has(id)) { newsGone.add(id); changed = true; }
+        }
+        if (changed) render();
+      } catch (err) {
+        // Column missing until §3c SQL runs, or a paused project: the committed news.json still
+        // shows. Remove will alert if the stamp cannot land.
+      }
+    }
+
+    async function deleteNewsItem(itemId) {
+      if (!isNewsAdmin()) return;
+      const sid = newsSubmissionId(itemId);
+      if (!sid || newsGone.has(itemId) || newsDelPending) return;
+      if (!window.confirm("Remove this post from the alert feed?")) return;
+      newsDelPending = itemId;
+      render();
+      try {
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), VOTE_TIMEOUT);
+        const res = await fetch(VOTE_API + "/news_submissions?id=eq." + encodeURIComponent(sid), {
+          method: "PATCH",
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + VOTE_ANON,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify({
+            deleted_at: new Date().toISOString(),
+            deleted_by: NEWS_ADMIN_NAME,
+          }),
+          signal: ac.signal,
+        });
+        clearTimeout(timer);
+        const rows = res.ok ? await res.json().catch(() => null) : null;
+        if (!res.ok || !Array.isArray(rows) || rows.length === 0) {
+          window.alert(
+            "Could not remove that post. Paste the soft-delete SQL from docs/SUPABASE_SETUP.md "
+            + "(section 3c) into the Supabase SQL editor, then try again.",
+          );
+          return;
+        }
+        newsGone.add(itemId);
+      } catch (err) {
+        window.alert("Could not reach the feed store to remove that post.");
+      } finally {
+        newsDelPending = null;
+        render();
+      }
     }
 
     function voteBoxRead() {
@@ -3676,6 +3801,13 @@ const html = `<!DOCTYPE html>
         else openDataSets();
         return;
       }
+      // Admin soft-delete on a shared tweet. Early return so it cannot fall through to any
+      // row handler — same defect-A1 discipline as every other control nested near a list.
+      const newsDelBtn = e.target.closest("[data-news-del]");
+      if (newsDelBtn) {
+        deleteNewsItem(newsDelBtn.dataset.newsDel);
+        return;
+      }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
       // so a vote must not read as a click on the accordion.
       const voteBtn = e.target.closest("[data-vote]");
@@ -3822,6 +3954,7 @@ const html = `<!DOCTYPE html>
     // path below — a missing tally is a caption, not a broken page.
     loadMembers()
       .then(() => voteLoad().catch((err) => console.error(err)))
+      .then(() => loadNewsDeleted().catch((err) => console.error(err)))
       .catch((err) => {
         document.getElementById("app").hidden = false;
         document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
@@ -4667,6 +4800,23 @@ if (!linkRule.slice(0, 300).includes("min-height: 44px")) {
 if (html.includes("    .news-more {")) {
   throw new Error("the tweet expander stylesheet must be gone once the expander is gone");
 }
+// Admin soft-delete. Gated in the UI to TrumanCooper; the control must be a real button
+// with an esc()'d item id, and its tap target must clear 44px. Absent until the admin
+// seat is remembered — the markup is conditional — so assert the emitter and the CSS,
+// not that every render contains the button.
+if (!newsBody.includes('data-news-del="\' + esc(it.id)')) {
+  throw new Error("admin Remove must put esc(it.id) in data-news-del");
+}
+if (!newsBody.includes("isNewsAdmin()")) {
+  throw new Error("admin Remove must be gated on isNewsAdmin()");
+}
+if (!inline.includes('NEWS_ADMIN_UID = "458342725222133760"')) {
+  throw new Error("news admin must stay pinned to TrumanCooper's Sleeper user_id");
+}
+const delRule = html.slice(html.indexOf("    .news-del {"));
+if (!delRule.slice(0, 400).includes("min-height: 44px")) {
+  throw new Error("admin Remove is a tap target and must declare min-height: 44px");
+}
 // Rendering X's own embed would mean running their script on this page. The whole detail panel
 // exists so that the tweet can be shown as our own escaped text instead.
 for (const banned of ["platform.twitter.com", "twitter-tweet", "widgets.js", "blockquote class"]) {
@@ -4704,12 +4854,18 @@ if (!emptyRender || emptyRender.length < 200) throw new Error("renderNews() lost
 // Two distinct strings on the two branches of `book`. One string for both would mean the page
 // tells a user "nothing has been shared yet" when what actually happened is that news.json
 // failed to load -- reassuring, and false.
-if (!/const blank = book\s*\n?\s*\?/.test(emptyRender)) {
+// Three distinct strings: load failed, book empty, book full of soft-deleted rows. Collapsing
+// any two would mean the page lies about why the box is blank.
+if (!/const blank = !book\s*\n?\s*\?/.test(emptyRender) && !/const blank = book\s*\n?\s*\?/.test(emptyRender)) {
   throw new Error("the empty state must distinguish an empty feed from a feed that failed to load");
 }
 const emptyStrings = emptyRender.match(/"[^"]{20,}"/g) || [];
-if (emptyStrings.length < 2 || emptyStrings[0] === emptyStrings[1]) {
+if (emptyStrings.length < 2 || new Set(emptyStrings).size < 2) {
   throw new Error("the empty feed and the failed-load feed must not print the same sentence");
+}
+// Soft-delete emptied the book: that is not "nothing shared yet" and not a load failure.
+if (!/No posts in the feed right now/.test(emptyRender)) {
+  throw new Error("the empty state must name the all-deleted case separately from never-shared");
 }
 // The one fact the empty state exists to carry. A member looking at a blank feed has no other
 // way to learn that sharing from X is what fills it.

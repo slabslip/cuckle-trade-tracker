@@ -499,8 +499,12 @@ export async function fetchSubmissions({
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
   try {
+    // Soft-deleted rows stay in the table for audit but never re-enter the feed. The filter is
+    // on the query rather than post-hoc so a long history of removals cannot crowd live shares
+    // out of the limit window.
     const url = `${SUPABASE}/news_submissions`
-      + "?select=id,url,note,target_name,submitted_by,created_at,processed_at"
+      + "?select=id,url,note,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by"
+      + "&deleted_at=is.null"
       + (unprocessedOnly ? "&processed_at=is.null" : "")
       + "&order=created_at." + (newestFirst ? "desc" : "asc")
       + "&limit=" + (Number(limit) || 50);
@@ -570,6 +574,48 @@ export async function markSubmissionProcessed(id, timeoutMs = 10000) {
           + "processed_at is never written and there is no record of when a share first "
           + "appeared. The feed itself is unaffected: it reads the whole table. Run "
           + "db/schema.sql (see docs/SUPABASE_SETUP.md section 3b).",
+      };
+    }
+    return { ok: true, error: null };
+  } catch (err) {
+    return { ok: false, error: String(err && err.message || err) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Soft-delete one submission so it leaves the feed without a hard DELETE.
+ *
+ * Anon has no DELETE privilege on this table (db/schema.sql 5d) — same trade as votes — so a
+ * remove is a stamp on `deleted_at` / `deleted_by`. The page hides the row as soon as this
+ * returns; news-sync skips it on the next build. `Prefer: return=representation` and the empty
+ * array check are the same load-bearing pattern as markSubmissionProcessed(): a missing column
+ * grant answers 200 with `[]`, and `res.ok` alone would lie.
+ *
+ * @param {string|number} id
+ * @param {string} by  canonical admin display name (audit only; not an auth check)
+ */
+export async function markSubmissionDeleted(id, by = "TrumanCooper", timeoutMs = 10000) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${SUPABASE}/news_submissions?id=eq.${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: supabaseHeaders({ "content-type": "application/json", Prefer: "return=representation" }),
+      body: JSON.stringify({
+        deleted_at: new Date().toISOString(),
+        deleted_by: String(by || "TrumanCooper").slice(0, 64),
+      }),
+      signal: ac.signal,
+    });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const rows = await res.json().catch(() => null);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return {
+        ok: false,
+        error: "updated 0 rows — run db/schema.sql so anon can UPDATE deleted_at "
+          + "(see docs/SUPABASE_SETUP.md section 3c).",
       };
     }
     return { ok: true, error: null };

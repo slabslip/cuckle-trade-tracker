@@ -178,8 +178,8 @@ clearing those out needs the SQL editor.
 correct when the feed read `processed_at is null`; since the feed became manual
 submissions only it reads the whole table, because reading only the unpublished
 rows would empty the feed on the second build. `processed_at` is now a record of
-when a share first appeared. Deleting is the only way to take a row out of the
-feed.
+when a share first appeared. Soft-delete (`deleted_at`) is how a post leaves the
+feed — see §3c. Hard DELETE stays revoked for anon.
 
 ### One-time: clear the rows this feature was built against
 
@@ -337,8 +337,50 @@ create policy news_submissions_anon_update on public.news_submissions
 
 grant select, insert on table public.news_submissions to anon;
 revoke update on table public.news_submissions from anon;
-grant update (processed_at) on table public.news_submissions to anon;
+grant update (processed_at, deleted_at, deleted_by) on table public.news_submissions to anon;
 revoke delete, truncate on table public.news_submissions from anon;
+```
+
+### 3c. Run needed: soft-delete for admin Remove on the alert feed
+
+**Paste this if you have already run §3b and only need the delete columns.** Re-running
+the whole of `db/schema.sql` also applies it.
+
+Anon still has **no hard DELETE**. Removing a post stamps `deleted_at` / `deleted_by`.
+The page hides the row as soon as the stamp lands; `news-sync.mjs` skips it on the
+next build. The Remove button is offered only when this device's remembered seat is
+`TrumanCooper` (pick yourself once via Teams, then Home). That is a UI gate among
+friends — anyone holding the anon key can still PATCH these columns, the same honesty
+as the insert surface.
+
+```sql
+alter table public.news_submissions add column if not exists deleted_at timestamptz;
+alter table public.news_submissions add column if not exists deleted_by text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.news_submissions'::regclass
+      and conname = 'news_submissions_deleted_by_len'
+  ) then
+    alter table public.news_submissions
+      add constraint news_submissions_deleted_by_len
+      check (deleted_by is null or length(deleted_by) between 1 and 64) not valid;
+  end if;
+  begin
+    alter table public.news_submissions validate constraint news_submissions_deleted_by_len;
+  exception when check_violation then
+    raise warning 'news_submissions: existing rows violate deleted_by length; enforced for new rows only.';
+  end;
+end $$;
+
+revoke update on table public.news_submissions from anon;
+grant update (processed_at, deleted_at, deleted_by) on table public.news_submissions to anon;
+
+create index if not exists news_submissions_alive_idx
+  on public.news_submissions (created_at desc)
+  where deleted_at is null;
 ```
 
 ### What the Shortcut POSTs

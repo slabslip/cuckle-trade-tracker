@@ -481,6 +481,14 @@ async function ingestSubmissions(ownership, index, members, {
 
   const rows = [];
   for (const { sub, canonical } of kept) {
+    // Soft-deleted rows must not publish even if a caller forgot the query filter — the stamp
+    // is the source of truth for "this post is gone", and a bug that re-ships a removed jab
+    // is worse than dropping one row.
+    if (sub.deleted_at) {
+      report.failures.push({ id: sub.id, reason: "already_deleted" });
+      continue;
+    }
+
     let tweet = await fetchTweet(canonical);
     if (!tweet.ok) {
       const permanent = tweet.reason === "not_found" || tweet.reason === "no_tweet_text" || tweet.reason === "bad_url";

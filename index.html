@@ -128,6 +128,11 @@
     .who-menu .who-name {
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
+    img.seat-flair {
+      display: inline-block; width: 1.15em; height: 1.15em;
+      vertical-align: -0.2em; object-fit: contain;
+    }
     .who-menu .crown { flex: 0 0 auto; display: block; }
     .who-menu button[aria-selected="true"] { color: var(--text); }
     .who-menu button.on { color: var(--text); }
@@ -885,16 +890,32 @@
     /**
      * Seat flair on the painted name only. Matching, data-who, data-partner and the news
      * matcher keep the bare Sleeper name; this is what the eye reads next to it.
+     * glyph = emoji; img = emoji-sized mark (SF69erss), which sits before the crown in whoOptions.
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
-      TrumanCooper: "🤢",
+      TrumanCooper: { glyph: "🤢" },
+      SF69erss: { img: "data/ui/flair-sf69erss.png" },
     });
+    function seatFlairHtml(name) {
+      const f = SEAT_FLAIR[name];
+      if (!f) return "";
+      if (f.glyph) return " " + f.glyph;
+      if (f.img) {
+        return ' <img class="seat-flair" src="' + esc(f.img) + "?" + DATA_V
+          + '" width="16" height="16" alt="" decoding="async" />';
+      }
+      return "";
+    }
+    /** Plain-text flair for aria-labels (no markup). Image flair is silent. */
+    function seatFlairText(name) {
+      const f = SEAT_FLAIR[name];
+      return f && f.glyph ? " " + f.glyph : "";
+    }
     function seatLabel(name) {
       const n = String(name == null ? "" : name);
       // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
       if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
-      const f = SEAT_FLAIR[n];
-      return f ? esc(n) + " " + f : esc(n);
+      return esc(n) + seatFlairHtml(n);
     }
     /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
     function seatTitle(title) {
@@ -1756,7 +1777,7 @@
      */
     function teamsChip() {
       const named = me && me.name
-        ? "Teams, " + me.name + (SEAT_FLAIR[me.name] ? " " + SEAT_FLAIR[me.name] : "") + " selected"
+        ? "Teams, " + me.name + seatFlairText(me.name) + " selected"
         : "Teams, none selected";
       return '<button type="button" class="home-chip' + (teamsOpen ? " on" : "") + '" data-teams-open="1"'
         + ' aria-haspopup="listbox" aria-expanded="' + (teamsOpen ? "true" : "false") + '"'

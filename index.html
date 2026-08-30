@@ -367,14 +367,20 @@
       .ticker { overflow-x: auto; mask-image: none; }
       .ticker-track { animation: none; }
     }
-    button.bubble {
-      flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
+    /* A pill that leads somewhere is a button; a pill that is only a reading is a span, so the
+       two Most/Least active pills stop looking pressable. One box for both: a flex row, because
+       a span is not a button and would not centre its own text vertically. The 5px gap replaces
+       the literal space that used to separate the kicker from the line, which flex would drop. */
+    .bubble {
+      flex: 0 0 auto; display: flex; align-items: center; gap: 5px;
+      appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 999px;
-      padding: 8px 14px; min-height: 44px; white-space: nowrap; cursor: pointer;
+      padding: 8px 14px; min-height: 44px; white-space: nowrap;
     }
+    button.bubble { cursor: pointer; }
     button.bubble:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.bubble b { font-weight: 650; }
-    button.bubble span { color: var(--dim); }
+    .bubble b { font-weight: 650; }
+    .bubble span { color: var(--dim); }
     .alert-row {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
       align-items: stretch; margin: 0 0 14px;
@@ -557,16 +563,53 @@
     .mark-bar-track i.pos { background: var(--green); }
     .mark-bar-track i.neg { background: var(--red); }
     .pack { margin: 0 0 8px; }
-    button.pack-head {
-      display: flex; justify-content: space-between; align-items: center; gap: 10px;
-      width: 100%; appearance: none; font: inherit; color: inherit; text-align: left;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      min-height: 44px; padding: 12px; cursor: pointer;
-    }
-    button.pack-head:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.pack-head h2 { margin: 0; font-size: 1.05rem; min-width: 0; }
-    .pack-head .chev { color: var(--muted); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
     .pack-body { margin-top: 8px; }
+    /* The League Data Sets dropdown. Its own stacking context, at a lower z-index than the
+       .filter-wrap holding Score as, which sits directly above it: the two controls are
+       mutually exclusive but an open Score as panel is 300px tall and reaches down over this
+       trigger, and the trigger must not paint through it. Nothing here may clip -- the panel is
+       absolutely positioned against this box, and a hidden overflow anywhere up the chain is
+       exactly what made the seat picker unusable twice. */
+    .ds-wrap { position: relative; z-index: 3; overflow: visible; margin: 0 0 12px; }
+    button.ds-btn {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; appearance: none; font: inherit; color: var(--text); text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 10px 12px; cursor: pointer;
+      font-size: 0.9375rem; font-weight: 650;
+    }
+    button.ds-btn .chev { color: var(--muted); margin-left: auto; flex: 0 0 auto; }
+    button.ds-btn.on { border-color: #6b5a2e; }
+    button.ds-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Five options at 44px minimum, each with a line saying what the set is built from, so the
+       panel is about 320px. It floats rather than shoving the open set down the page, which is
+       what the Score as panel does. The cap is the room below the trigger on a short phone; the
+       width can never exceed the body's own content box, so it cannot widen the document. */
+    /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
+       .filter-panel box rules that are declared further down the sheet. */
+    #dataSets {
+      position: absolute; top: calc(100% + 4px); left: 0; right: auto; z-index: 12;
+      width: min(340px, 100%); margin: 0; padding: 6px;
+      max-height: min(calc(100dvh - 96px), 480px); overflow-y: auto;
+      display: flex; flex-direction: column; gap: 4px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #dataSets button.ds-opt {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
+      min-height: 44px; padding: 8px 10px; cursor: pointer;
+    }
+    #dataSets button.ds-opt.on { border-color: #6b5a2e; }
+    #dataSets button.ds-opt b { display: block; font-weight: 650; }
+    #dataSets button.ds-opt span {
+      display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; text-wrap: pretty;
+    }
+    #dataSets button.ds-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* The name of the set on screen. The trigger above reads the constant "League Data Sets", so
+       this is the only thing that says which one you are looking at. */
+    h2.ds-h { margin: 0 0 2px; font-size: 1.05rem; overflow-wrap: anywhere; }
+    h2.ds-h:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
+    #dsBody .caption { margin: 0 0 8px; }
     .lens-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
     /* The filter icon, its label and the Score as button do not share 288px: the label
        was cut to "Filter by ye…", which names nothing. The Score as button takes its own
@@ -712,8 +755,29 @@
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830cp1";
-    const openPacks = new Set();
+    const DATA_V = "20260830lds2";
+    /**
+     * League home's five lists, in one place. They used to be five accordion packs stacked down
+     * the screen, each with its own header and any number of them expanded at once; they are now
+     * one "League Data Sets" dropdown with exactly one set on screen. The id is what the ticker
+     * pills and the menu options both carry, so the two cannot drift apart.
+     *
+     * The third column is why you would pick it. Each one states what the list is actually built
+     * from -- see playerLists() in revalue.mjs -- because the titles alone do not distinguish
+     * "least traded" from "forever", which overlap by construction.
+     */
+    const DATA_SETS = [
+      ["wide", "Most lopsided trades", "The ten widest margins, on the clock set above."],
+      ["passed", "Most passed around", "The five players traded the most times."],
+      ["least", "Least traded", "The five rostered players who have moved least."],
+      ["forever", "Forever players", "Every player still on the team that drafted them in 2019."],
+      ["home", "Homesteaders", "The five longest stays, forever players aside."],
+    ];
+    // One set at a time, and one is always chosen: league home would otherwise open as a lone
+    // dropdown over an empty screen. Most lopsided is the default because it is the pack the
+    // lens above it acts on, and it is what replaced the old Best/Worst boards.
+    let dataSet = "wide";
+    let dsOpen = false;
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
       ["y1", "First 1 year", "Who won after 1 year. Hides younger deals."],
@@ -969,7 +1033,8 @@
       yearFilterOpen = false;
       draftFilterOpen = false;
       lensOpen = false;
-      openPacks.clear();
+      dsOpen = false;
+      dataSet = "wide";
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
       focusNext = ".screen-h";
@@ -1405,25 +1470,68 @@
         + '<div class="margin">' + right + "</div></div></div>";
     }
 
-    function pack(id, title, inner) {
-      const on = openPacks.has(id);
-      return '<div class="pack">'
-        + '<button type="button" class="pack-head" data-pack="' + id + '" aria-expanded="' + on + '">'
-        + "<h2>" + title + "</h2><span class='chev'>" + (on ? "-" : "+") + "</span></button>"
-        + (on ? '<div class="pack-body">' + inner + "</div>" : "")
+    function dataSetDef(id) {
+      return DATA_SETS.find((d) => d[0] === id) || DATA_SETS[0];
+    }
+
+    /**
+     * The rows of one data set. Every list is rendered exactly as its pack rendered it -- the
+     * same listRow, the same right-hand figure, the same boardTape for the lopsided board. This
+     * change swapped the container, not the lists.
+     */
+    function dataSetRows(id) {
+      const p = (league && league.player_lists) || {};
+      const trades = (r) => r.trades + (r.trades === 1 ? " trade" : " trades");
+      if (id === "wide") return rankWide().map((r) => boardTape(r)).join("");
+      if (id === "passed") return (p.most_traded || []).map((r) => listRow(r, trades(r))).join("");
+      if (id === "least") return (p.least_traded || []).map((r) => listRow(r, trades(r))).join("");
+      if (id === "forever") return (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
+      return (p.homesteaders || []).map((r) => listRow(r, yearsOn(r.days))).join("");
+    }
+
+    function dsOpt(row) {
+      const on = dataSet === row[0];
+      return '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
+        + ' class="ds-opt' + (on ? " on" : "") + '" data-dset="' + esc(row[0]) + '">'
+        + "<b>" + esc(row[1]) + "</b><span>" + esc(row[2]) + "</span></button>";
+    }
+
+    function dsMenu() {
+      return '<div class="filter-panel" id="dataSets" role="listbox" aria-label="League Data Sets">'
+        + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
 
-    function renderPlayerLists() {
-      const p = (league && league.player_lists) || {};
-      const most = (p.most_traded || []).map((r) => listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"))).join("");
-      const least = (p.least_traded || []).map((r) => listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"))).join("");
-      const forever = (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
-      const stay = (p.homesteaders || []).map((r) => listRow(r, yearsOn(r.days))).join("");
-      return pack("passed", "Most passed around", most)
-        + pack("least", "Least traded", least)
-        + pack("forever", "Forever players", forever)
-        + pack("home", "Homesteaders", stay);
+    /**
+     * The one control that replaced the five pack headers. Same shape as the Score as button and
+     * the seat picker: a trigger, an absolutely positioned panel of options, outside-click and
+     * Escape to close.
+     *
+     * The visible label is the constant "League Data Sets" and never the selection -- the seat
+     * picker settled on that convention for the same reason, and the chosen set is named by the
+     * heading immediately below and by aria-selected inside the menu. The accessible name carries
+     * the selection so nothing is lost to a screen reader.
+     */
+    function dataSetRow() {
+      const cur = dataSetDef(dataSet);
+      return '<div class="ds-wrap">'
+        + '<button type="button" class="ds-btn' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
+        + ' aria-haspopup="listbox" aria-expanded="' + (dsOpen ? "true" : "false") + '"'
+        + ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected">'
+        + "League Data Sets" + ' <span class="chev">▾</span></button>'
+        + (dsOpen ? dsMenu() : "")
+        + "</div>";
+    }
+
+    function dataSetPanel() {
+      const cur = dataSetDef(dataSet);
+      const rows = dataSetRows(cur[0]);
+      return '<div class="pack" id="dsBody">'
+        + '<h2 class="ds-h" tabindex="-1">' + esc(cur[1]) + "</h2>"
+        + '<p class="caption">' + esc(cur[2]) + "</p>"
+        + '<div class="pack-body">'
+        + (rows || '<p class="caption">Nothing in this data set yet.</p>')
+        + "</div></div>";
     }
 
     function leagueBubbles() {
@@ -1431,22 +1539,27 @@
       const champ = ((titles && titles.titles) || [])[0];
       if (champ) items.push({ view: "titles", kicker: "Champion", line: champ.season + " · " + champ.name });
       const wide = rankWide()[0];
-      if (wide) items.push({ pack: "wide", kicker: "Most lopsided trades", line: wide.name + " vs " + wide.other + " · " + signedNum(windowScore(wide)) });
+      if (wide) items.push({ dset: "wide", kicker: "Most lopsided trades", line: wide.name + " vs " + wide.other + " · " + signedNum(windowScore(wide)) });
       const traders = ((league && league.traders) || []).slice().sort((a, b) => (b.two_way || 0) - (a.two_way || 0));
-      if (traders[0]) items.push({ pack: "", kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
+      // Most / Least active have no data set behind them -- the league-wide Traders list was
+      // deleted (D4b) and nothing replaced it. They used to ship as buttons carrying an empty
+      // destination, which emitted no data attribute at all, so they looked pressable and did
+      // nothing on every tap. The reading stays; the false affordance does not. A pill with no
+      // destination is a static pill now rather than a dead button.
+      if (traders[0]) items.push({ kicker: "Most active", line: traders[0].name + " · " + traders[0].two_way + " trades" });
       if (traders.length > 1) {
         const quiet = traders[traders.length - 1];
-        items.push({ pack: "", kicker: "Least active", line: quiet.name + " · " + quiet.two_way + " trades" });
+        items.push({ kicker: "Least active", line: quiet.name + " · " + quiet.two_way + " trades" });
       }
       const p = (league && league.player_lists) || {};
       const hot = (p.most_traded || [])[0];
       const cold = (p.least_traded || [])[0];
       const stay = (p.homesteaders || [])[0];
-      if (hot) items.push({ pack: "passed", kicker: "Most passed around", line: hot.name + " · " + hot.trades + " trades" });
-      if (cold) items.push({ pack: "least", kicker: "Least traded", line: cold.name + " · " + cold.team });
-      if ((p.forever || []).length) items.push({ pack: "forever", kicker: "Forever players", line: p.forever.length + " still on their startup team" });
-      if (p.forever && p.forever[0]) items.push({ pack: "forever", kicker: "Forever", line: p.forever[0].name + " · " + p.forever[0].team });
-      if (stay) items.push({ pack: "home", kicker: "Homesteader", line: stay.name + " · " + yearsOn(stay.days) });
+      if (hot) items.push({ dset: "passed", kicker: "Most passed around", line: hot.name + " · " + hot.trades + " trades" });
+      if (cold) items.push({ dset: "least", kicker: "Least traded", line: cold.name + " · " + cold.team });
+      if ((p.forever || []).length) items.push({ dset: "forever", kicker: "Forever players", line: p.forever.length + " still on their startup team" });
+      if (p.forever && p.forever[0]) items.push({ dset: "forever", kicker: "Forever", line: p.forever[0].name + " · " + p.forever[0].team });
+      if (stay) items.push({ dset: "home", kicker: "Homesteader", line: stay.name + " · " + yearsOn(stay.days) });
       return items;
     }
 
@@ -1463,10 +1576,17 @@
       if (el.dataset.key === key) { el.hidden = false; return; }
       el.dataset.key = key;
       el.hidden = !items.length;
-      const pill = (b) => '<button type="button" class="bubble"'
-        + (b.view ? ' data-view="' + esc(b.view) + '"' : "")
-        + (b.pack ? ' data-pack="' + esc(b.pack) + '"' : "") + ">"
-        + "<b>" + esc(b.kicker) + "</b> <span>" + esc(b.line) + "</span></button>";
+      // A pill is a button only when it leads somewhere: a view, or a data set to select below.
+      // The rest are readings, and they ship as a static pill so nothing on the ticker invites a
+      // tap it will not answer.
+      const pill = (b) => {
+        const to = b.view ? ' data-view="' + esc(b.view) + '"'
+          : b.dset ? ' data-dset="' + esc(b.dset) + '"' : "";
+        const inner = "<b>" + esc(b.kicker) + "</b><span>" + esc(b.line) + "</span>";
+        return to
+          ? '<button type="button" class="bubble"' + to + ">" + inner + "</button>"
+          : '<span class="bubble static">' + inner + "</span>";
+      };
       const row = items.map(pill).join("");
       el.innerHTML = '<div class="ticker" aria-label="League feed"><div class="ticker-track">' + row + row + "</div></div>";
     }
@@ -1610,11 +1730,17 @@
         }).join("");
     }
 
+    /**
+     * Two controls, deliberately separate. lensRow() picks the clock the numbers are computed on
+     * -- At trade, first 1/2/3 years, since trade -- and dataSetRow() picks which list is on
+     * screen. Folding one into the other would put two unrelated axes in one menu and would take
+     * the lens away from Most lopsided, which is the set that reads it.
+     */
     function renderLeagueHome() {
       return dayAlert()
         + lensRow()
-        + pack("wide", "Most lopsided trades", rankWide().map((r) => boardTape(r)).join(""))
-        + renderPlayerLists();
+        + dataSetRow()
+        + dataSetPanel();
     }
 
     function backChip(label) {
@@ -2691,6 +2817,10 @@
       const app = document.getElementById("app");
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
+      // The League Data Sets dropdown exists on league home and nowhere else, so an open one
+      // cannot survive a navigation off it. Done here rather than in each of the six functions
+      // that leave, so the next one added cannot forget. Same condition as the renderer below.
+      if (!(view === "home" && !(me && data))) dsOpen = false;
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
       const tabs = me && view !== "titles" && view !== "trade" ? ["home", "trades", "partners", "drafts"] : [];
       // The four tabs are sections of one manager's page and none of them names that manager,
@@ -2839,6 +2969,7 @@
     function closeTopmost() {
       if (whoOpen) { closeWho(); return true; }
       if (lensOpen) { lensOpen = false; render(); return true; }
+      if (dsOpen) { closeDataSets(); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
@@ -2870,6 +3001,21 @@
         if (next >= 0) { e.preventDefault(); opts[next].focus(); }
         return;
       }
+      // League Data Sets: the same listbox keyboard as the seat picker above, for the same
+      // reason -- five options in a popup are a list to move through, not five tab stops.
+      const inDs = e.target.closest && e.target.closest("#dataSets");
+      if (dsOpen && inDs) {
+        const opts = [...document.querySelectorAll("#dataSets button")];
+        const i = opts.indexOf(document.activeElement);
+        let next = -1;
+        if (e.key === "ArrowDown") next = (i + 1) % opts.length;
+        else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = opts.length - 1;
+        else if (e.key === "Tab") { closeDataSets(); return; }
+        if (next >= 0) { e.preventDefault(); opts[next].focus(); }
+        return;
+      }
       // Roving tabs: one stop in the tab order, arrows move between the four sections.
       const tab = e.target.closest && e.target.closest('[role="tab"]');
       if (tab) {
@@ -2883,11 +3029,45 @@
         if (next >= 0) { e.preventDefault(); tabs[next].focus(); tabs[next].click(); }
       }
     });
-    function togglePack(id) {
-      if (!id) return;
-      if (openPacks.has(id)) openPacks.delete(id);
-      else openPacks.add(id);
+    /**
+     * Put one data set on screen. reveal is set when the request came from a ticker pill, which
+     * may be scrolled well above the panel: the set is named by a heading, so move to it rather
+     * than swapping the content of a box the user cannot see.
+     */
+    function selectDataSet(id, reveal) {
+      if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
+      dataSet = id;
+      dsOpen = false;
       render();
+      const head = document.querySelector("#dsBody .ds-h");
+      if (!head) return;
+      if (reveal) {
+        head.focus({ preventScroll: true });
+        head.scrollIntoView({ block: "start" });
+      } else {
+        // Chosen from the menu: the trigger is already in view and the panel closed underneath
+        // it, so take focus to the heading without moving the page.
+        head.focus({ preventScroll: true });
+      }
+    }
+
+    function closeDataSets() {
+      dsOpen = false;
+      render();
+      const btn = document.querySelector("[data-dset-open]");
+      if (btn) btn.focus({ preventScroll: true });
+    }
+
+    function openDataSets() {
+      dsOpen = true;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      render();
+      const menu = document.getElementById("dataSets");
+      if (!menu) return;
+      const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
+      if (sel) sel.focus();
     }
 
     function openTitles() {
@@ -2905,8 +3085,10 @@
     document.getElementById("feed").addEventListener("click", (e) => {
       const pathBtn = e.target.closest("[data-view=titles]");
       if (pathBtn) { openTitles(); return; }
-      const btn = e.target.closest("[data-pack]");
-      if (btn) togglePack(btn.dataset.pack);
+      // A pill naming a data set selects it in the League Data Sets dropdown and takes the page
+      // to it. It used to expand one of five packs in place.
+      const btn = e.target.closest("[data-dset]");
+      if (btn) selectDataSet(btn.dataset.dset, true);
     });
     document.getElementById("app").addEventListener("click", (e) => {
       // Before everything: leaving a screen must not read as a click on what is on it.
@@ -2922,8 +3104,14 @@
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
-      const packBtn = e.target.closest("[data-pack]");
-      if (packBtn) { togglePack(packBtn.dataset.pack); return; }
+      const dsetBtn = e.target.closest("[data-dset]");
+      if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }
+      const dsOpenBtn = e.target.closest("[data-dset-open]");
+      if (dsOpenBtn) {
+        if (dsOpen) closeDataSets();
+        else openDataSets();
+        return;
+      }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
       // so a vote must not read as a click on the accordion.
       const voteBtn = e.target.closest("[data-vote]");
@@ -3019,8 +3207,13 @@
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
       const yfilterBtn = e.target.closest("[data-yfilter]");
       if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
-      if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters") || e.target.closest("#scoreAs")) return;
+      if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters")
+        || e.target.closest("#scoreAs") || e.target.closest("#dataSets")) return;
       let closedFilter = false;
+      if (dsOpen) {
+        dsOpen = false;
+        closedFilter = true;
+      }
       if (draftFilterOpen && !e.target.closest("#draftFilters")) {
         draftFilterOpen = false;
         closedFilter = true;

@@ -564,23 +564,71 @@
     .mark-bar-track i.neg { background: var(--red); }
     .pack { margin: 0 0 8px; }
     .pack-body { margin-top: 8px; }
-    /* The League Data Sets dropdown. Its own stacking context, at a lower z-index than the
-       .filter-wrap holding Score as, which sits directly above it: the two controls are
-       mutually exclusive but an open Score as panel is 300px tall and reaches down over this
-       trigger, and the trigger must not paint through it. Nothing here may clip -- the panel is
-       absolutely positioned against this box, and a hidden overflow anywhere up the chain is
-       exactly what made the seat picker unusable twice. */
-    .ds-wrap { position: relative; z-index: 3; overflow: visible; margin: 0 0 12px; }
-    button.ds-btn {
-      display: flex; align-items: center; gap: 8px;
-      width: 100%; appearance: none; font: inherit; color: var(--text); text-align: left;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      min-height: 44px; padding: 10px 12px; cursor: pointer;
-      font-size: 0.9375rem; font-weight: 650;
+    /* The anchor both of league home's menus hang from. Its own stacking context, at a lower
+       z-index than the .filter-wrap holding Score as, which sits directly above it: the two
+       controls are mutually exclusive but an open Score as panel is 300px tall and reaches down
+       over this box, and the box must not paint through it. Nothing here may clip -- the panels
+       are absolutely positioned against it, and a hidden overflow anywhere up the chain is
+       exactly what made the seat picker unusable twice.
+       It is the chip box itself rather than a wrapper around one trigger, so both panels drop
+       the full width of the box instead of the width of the cell they were opened from, and
+       there is one ancestor chain to keep open rather than two. */
+    .ds-wrap { position: relative; z-index: 3; overflow: visible; margin: 0; }
+    /* League home's four chips, in one card in the app's existing card idiom. Four cells of
+       equal size: 2x2 on a phone, four across from 560px.
+       The columns are minmax(0, 1fr) and not 1fr because a grid track's automatic minimum is
+       min-content (§3a) -- without it "League Data Sets" refuses to wrap inside its cell and
+       widens the whole row instead. grid-auto-rows: 1fr is what makes the two phone rows equal
+       to each other: in an auto-height grid every 1fr row resolves to the tallest row's base
+       size, so a two-line label does not leave the bottom pair shorter than the top pair. */
+    .chip-box {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin: 0 0 14px;
     }
-    button.ds-btn .chev { color: var(--muted); margin-left: auto; flex: 0 0 auto; }
-    button.ds-btn.on { border-color: #6b5a2e; }
-    button.ds-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .chip-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: 1fr; gap: 8px;
+    }
+    @media (min-width: 560px) {
+      .chip-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    /* 56px, not 44px: the cell has to hold "League Data Sets" on two lines at 320px, where a
+       half-width cell leaves 106px for the text. Every cell takes the tallest one's height, so
+       this is the floor rather than the height. */
+    .home-chip {
+      display: flex; align-items: center; width: 100%; min-width: 0;
+      appearance: none; font: inherit; font-size: 0.875rem; font-weight: 650;
+      color: var(--text); text-align: left;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 10px;
+      min-height: 56px; padding: 8px 10px; margin: 0; touch-action: manipulation;
+    }
+    button.home-chip { cursor: pointer; }
+    button.home-chip.on { border-color: #6b5a2e; }
+    button.home-chip:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* The caret rides with the last word rather than pinning to the right edge: pinned, it would
+       sit alone beside a two-line label and read as a second control in the cell. */
+    .home-chip .chip-lab { min-width: 0; overflow-wrap: anywhere; text-wrap: pretty; }
+    .home-chip .chev { color: var(--muted); }
+    /* The two cells nobody has decided on yet. They are spans, not buttons. The ticker shipped
+       "Most active" and "Least active" as <button> pills carrying an empty destination, so every
+       tap on them was silently ignored, and the fix was to make a pill with nowhere to go a
+       static span. Four chips is a bigger surface for exactly that defect. A span has no tab
+       stop and no activation behaviour; the dashed edge, the dimmed dash and the default cursor
+       say "slot" rather than "control"; and aria-hidden keeps an em dash out of a screen
+       reader's way, because it is a placeholder and not a reading. */
+    .home-chip.slot {
+      justify-content: center; color: var(--dim); font-weight: 500;
+      background: transparent; border-style: dashed; cursor: default;
+    }
+    /* The Teams chip mounts the same .who-menu the brand header does -- same 220px width, same
+       44px options, same no-scroll cap, all from that one rule. The only thing that differs is
+       which edge it hangs from: the header's picker is the right-most thing in its row, this
+       chip is the left-most thing in its box. Anchoring is the whole of the override, and it is
+       two properties so that nothing about the menu itself can drift between the two mounts. */
+    .chip-box .who-menu { left: 0; right: auto; }
+    /* The League Data Sets trigger has no rules of its own any more: it is one of the four
+       .home-chip cells above, and giving it a second, more specific rule set is how the four
+       cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
     /* Five options at 44px minimum, each with a line saying what the set is built from, so the
        panel is about 340px tall. It floats rather than shoving the open set down the page, which
        is what the Score as panel does.
@@ -810,7 +858,7 @@
     let marks = null;
     let news = null;
     let lens = "all";
-    const DATA_V = "20260830nodefault1";
+    const DATA_V = "20260830chipbox1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -851,6 +899,9 @@
     let year = "all";
     let yearFilterOpen = false;
     let whoOpen = false;
+    // League home's Teams chip. A separate flag from whoOpen because the two are separate
+    // triggers that can be open at different moments -- the list inside them is the same one.
+    let teamsOpen = false;
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -1051,6 +1102,30 @@
       + ' aria-hidden="true" focusable="false">'
       + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
 
+    /**
+     * The league's ten managers as listbox options: last season's finishing order, the champion
+     * crowned, the taken seat marked, one 44px target each.
+     *
+     * One emitter, two mounts. The brand header's picker paints it into #whoMenu, and league
+     * home's Teams chip renders it into #teamMenu, because two controls that claim to be the
+     * same list are exactly how the finishing order or the crown ends up disagreeing between
+     * them. The CSS is shared the same way: both mounts carry class .who-menu, so the width,
+     * the option height and the no-scroll cap come from one rule as well.
+     */
+    function whoOptions() {
+      const opt = (on, id, label, champ) =>
+        '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
+        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
+        + '<span class="who-name">' + esc(label) + "</span>"
+        + (champ ? CROWN : "") + "</button>";
+      // Managers only. The list used to open with a "Team" option that cleared the seat; the home
+      // icon in the header does exactly that, and dropping the option is what lets all ten names
+      // show without scrolling.
+      return members
+        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name, m.place === 1))
+        .join("");
+    }
+
     function paintWho() {
       const btn = document.getElementById("who");
       const menu = document.getElementById("whoMenu");
@@ -1061,17 +1136,7 @@
       btn.setAttribute("aria-label", me && me.name ? "Teams, " + me.name + " selected" : "Teams");
       btn.setAttribute("aria-expanded", whoOpen ? "true" : "false");
       menu.hidden = !whoOpen;
-      const opt = (on, id, label, champ) =>
-        '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
-        + '<span class="who-name">' + esc(label) + "</span>"
-        + (champ ? CROWN : "") + "</button>";
-      // Managers only. The list used to open with a "Team" option that cleared the seat; the home
-      // icon in this same header does exactly that, and dropping the option is what lets all ten
-      // names show without scrolling.
-      menu.innerHTML = members
-        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name, m.place === 1))
-        .join("");
+      menu.innerHTML = whoOptions();
       if (whoOpen) {
         const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
         if (sel) sel.focus({ preventScroll: false });
@@ -1100,8 +1165,9 @@
       draftFilterOpen = false;
       lensOpen = false;
       dsOpen = false;
+      teamsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
-      // dropdown with nothing under it. It used to reset to Most lopsided.
+      // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
@@ -1282,6 +1348,9 @@
       document.getElementById("app").hidden = false;
       paintWho();
       voteSeatRemember(id);
+      // Whichever trigger opened it, the menu is spent once a seat is taken -- and league home's
+      // mount is inside the subtree render() is about to replace.
+      teamsOpen = false;
       if (!keep) {
         view = "home";
         openId = null;
@@ -1608,11 +1677,62 @@
       const named = cur
         ? ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected"'
         : ' aria-label="League Data Sets, none selected"';
-      return '<div class="ds-wrap">'
-        + '<button type="button" class="ds-btn' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
+      return '<button type="button" class="home-chip' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
         + ' aria-haspopup="listbox" aria-expanded="' + (dsOpen ? "true" : "false") + '"'
-        + named + ">"
-        + "League Data Sets" + ' <span class="chev">▾</span></button>'
+        + named + '><span class="chip-lab">'
+        + "League Data Sets" + ' <span class="chev">▾</span></span></button>';
+    }
+
+    /**
+     * The other live chip. It opens the same list of managers the brand header's picker opens --
+     * the same options, from whoOptions(), inside the same .who-menu box -- because this is a
+     * second trigger for one control rather than a second control.
+     *
+     * Note that the header's picker is still there and still does this. The duplication is
+     * deliberate for now and is the user's call to make, not this branch's.
+     */
+    function teamsChip() {
+      const named = me && me.name ? "Teams, " + me.name + " selected" : "Teams, none selected";
+      return '<button type="button" class="home-chip' + (teamsOpen ? " on" : "") + '" data-teams-open="1"'
+        + ' aria-haspopup="listbox" aria-expanded="' + (teamsOpen ? "true" : "false") + '"'
+        + ' aria-label="' + esc(named) + '"><span class="chip-lab">'
+        + "Teams" + ' <span class="chev">▾</span></span></button>';
+    }
+
+    function teamsMenu() {
+      return '<div class="who-menu" id="teamMenu" role="listbox" aria-label="Teams">'
+        + whoOptions() + "</div>";
+    }
+
+    /**
+     * A cell nobody has decided on yet. Deliberately not a button and deliberately not
+     * addressable: no tabindex, no data-*, no role, nothing for a handler to find. The ticker
+     * shipped two <button> pills with an empty destination and every tap on them did nothing;
+     * an inert cell that looks pressable is the defect this app removed tonight, and four large
+     * chips would be a far bigger version of it. It is aria-hidden because an em dash is a
+     * placeholder, not a reading.
+     */
+    function chipSlot() {
+      return '<span class="home-chip slot" aria-hidden="true">—</span>';
+    }
+
+    /**
+     * League home's box of four equal chips. Two lead somewhere, two are slots.
+     *
+     * Both menus are emitted here rather than inside their triggers, so both are absolutely
+     * positioned against this one box: they drop the full width of the card instead of the
+     * width of the cell they were opened from, and there is a single ancestor chain to keep
+     * free of overflow, transform, contain and clip-path.
+     */
+    function homeChips() {
+      return '<div class="chip-box ds-wrap">'
+        + '<div class="chip-grid">'
+        + teamsChip()
+        + dataSetRow()
+        + chipSlot()
+        + chipSlot()
+        + "</div>"
+        + (teamsOpen ? teamsMenu() : "")
         + (dsOpen ? dsMenu() : "")
         + "</div>";
     }
@@ -1911,7 +2031,7 @@
     function renderLeagueHome() {
       return dayAlert()
         + lensRow()
-        + dataSetRow()
+        + homeChips()
         + dataSetPanel()
         + renderNews();
     }
@@ -3131,6 +3251,15 @@
       whoOpen = false;
       paintWho();
     });
+    // The chip's mount, same rule. #app's own handler runs first and has already cleared the
+    // flag for a click on the chip or on an option, so this only ever fires for a click that
+    // landed somewhere else on the page.
+    document.addEventListener("click", (e) => {
+      if (!teamsOpen) return;
+      if (e.target.closest("#teamMenu") || e.target.closest("[data-teams-open]")) return;
+      teamsOpen = false;
+      render();
+    });
 
     function closeWho() {
       whoOpen = false;
@@ -3138,9 +3267,35 @@
       document.getElementById("who").focus();
     }
 
+    /**
+     * The Teams chip's mount of the same menu. It lives inside #app, so it is rendered rather
+     * than painted, and closing it returns focus to the chip -- the menu it came from is about
+     * to stop existing, and #app's innerHTML rebuild would otherwise drop focus to <body>.
+     */
+    function openTeams() {
+      teamsOpen = true;
+      dsOpen = false;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      render();
+      const menu = document.getElementById("teamMenu");
+      if (!menu) return;
+      const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
+      if (sel) sel.focus();
+    }
+
+    function closeTeams() {
+      teamsOpen = false;
+      render();
+      const btn = document.querySelector("[data-teams-open]");
+      if (btn) btn.focus({ preventScroll: true });
+    }
+
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
       if (whoOpen) { closeWho(); return true; }
+      if (teamsOpen) { closeTeams(); return true; }
       if (lensOpen) { lensOpen = false; render(); return true; }
       if (dsOpen) { closeDataSets(); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
@@ -3161,16 +3316,19 @@
         return;
       }
       // Team picker: a listbox, so the arrows move between options and never scroll the page.
-      const inWho = e.target.closest && e.target.closest("#whoMenu");
-      if (whoOpen && inWho) {
-        const opts = [...document.querySelectorAll("#whoMenu button")];
+      // Matched on the class, not on either id, so the header's mount and league home's chip
+      // run the same keys off the same code -- a second copy of this block is how one of the
+      // two mounts quietly loses Home/End.
+      const inWho = e.target.closest && e.target.closest(".who-menu");
+      if ((whoOpen || teamsOpen) && inWho) {
+        const opts = [...inWho.querySelectorAll("button")];
         const i = opts.indexOf(document.activeElement);
         let next = -1;
         if (e.key === "ArrowDown") next = (i + 1) % opts.length;
         else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
         else if (e.key === "Home") next = 0;
         else if (e.key === "End") next = opts.length - 1;
-        else if (e.key === "Tab") { closeWho(); return; }
+        else if (e.key === "Tab") { if (inWho.id === "teamMenu") closeTeams(); else closeWho(); return; }
         if (next >= 0) { e.preventDefault(); opts[next].focus(); }
         return;
       }
@@ -3247,6 +3405,7 @@
 
     function openDataSets() {
       dsOpen = true;
+      teamsOpen = false;
       lensOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
@@ -3291,6 +3450,21 @@
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
+      // The Teams chip and the menu it opens. Both live inside #app, unlike the header's picker,
+      // which has its own listener on #whoMenu -- the option markup and the handler contract
+      // ([data-who] carrying a user_id) are the same, so selecting a seat is the same call.
+      const teamsBtn = e.target.closest("[data-teams-open]");
+      if (teamsBtn) {
+        if (teamsOpen) closeTeams();
+        else openTeams();
+        return;
+      }
+      const seatPick = e.target.closest("[data-who]");
+      if (seatPick) {
+        teamsOpen = false;
+        if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
+        return;
+      }
       // Before [data-dset]: "None" carries no set id, and an empty data-dset would be the dead
       // pill defect all over again. It is its own attribute, so it can never read as a set.
       const dsNoneBtn = e.target.closest("[data-dset-none]");

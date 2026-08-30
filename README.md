@@ -30,11 +30,11 @@ node news-sync.mjs               # news.json for News and Alerts (not in build.m
 wrote and **touches no value, no Value Adjustment, no lens window and no ranking**, which is why
 it is outside `build.mjs` — it is a data-only refresh and the page reads `news.json` at runtime.
 
-**The feed is manual submissions only.** A league member taps Share on a tweet in X, picks an iOS
-Shortcut, and the Shortcut POSTs the URL — plus an optional jab and an optional target manager —
-to the `news_submissions` table. GitHub Action `news-refresh` rebuilds `news.json` and pushes
-`main` when Supabase pings `repository_dispatch` (see `docs/SUPABASE_SETUP.md` §3d), with a
-one-minute cron as backup. Each run fetches every tweet's text from X's free oEmbed endpoint.
+**The feed is manual submissions only.** Share a tweet → **Send to Cuckle** → done. The Shortcut
+POSTs only `{url, submitted_by}`; the matcher tags the roster owner(s). Optional `note` /
+`target_name` exist but are not part of the one-tap path (`docs/SUPABASE_SETUP.md` §3b).
+GitHub Action `news-refresh` rebuilds `news.json` and pushes `main` when Supabase pings
+`repository_dispatch` (§3d), with a one-minute cron as backup.
 
 The automated sources — Sleeper's GraphQL `get_player_news` and RSS from ESPN, Rotowire, CBS,
 Yahoo and ProFootballTalk — are **off**, behind `AUTOMATED_SOURCES` in `news-sync.mjs`. Off means

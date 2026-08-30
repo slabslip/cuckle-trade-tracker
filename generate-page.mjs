@@ -887,6 +887,30 @@ const html = `<!DOCTYPE html>
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+    /**
+     * Seat flair on the painted name only. Matching, data-who, data-partner and the news
+     * matcher keep the bare Sleeper name; this is what the eye reads next to it.
+     */
+    const SEAT_FLAIR = Object.assign(Object.create(null), {
+      TrumanCooper: "🤢",
+    });
+    function seatLabel(name) {
+      const n = String(name == null ? "" : name);
+      // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
+      if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
+      const f = SEAT_FLAIR[n];
+      return f ? esc(n) + " " + f : esc(n);
+    }
+    /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
+    function seatTitle(title) {
+      const s = String(title == null ? "" : title);
+      for (const name of Object.keys(SEAT_FLAIR)) {
+        if (s === name || s.startsWith(name + " ")) {
+          return seatLabel(name) + esc(s.slice(name.length));
+        }
+      }
+      return esc(s);
+    }
     // One threshold for "even", used by every screen that grades a partner.
     const GRADE_EVEN = 100;
     let members = [];
@@ -902,7 +926,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "20260830champcolor1";
+    const DATA_V = "20260830trumanflair1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1044,7 +1068,7 @@ const html = `<!DOCTYPE html>
       // Name and total as a pinned pair, the same shape as every other row in the app that
       // pairs a label with a figure. Joined by "·" in one wrapping heading, a long name put
       // the bag's total alone on a second line, reading as though it belonged to nothing.
-      return '<div class="bag"><h3><span>' + esc(title) + "</span><b>" + shown + "</b></h3>"
+      return '<div class="bag"><h3><span>' + seatTitle(title) + "</span><b>" + shown + "</b></h3>"
         + warn + items + adj + "</div>";
     }
 
@@ -1159,7 +1183,7 @@ const html = `<!DOCTYPE html>
       const opt = (on, id, label, champ) =>
         '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
         + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
-        + '<span class="who-name">' + esc(label) + "</span>"
+        + '<span class="who-name">' + seatLabel(label) + "</span>"
         + (champ ? CROWN : "") + "</button>";
       // Managers only. The list used to open with a "Team" option that cleared the seat; the home
       // icon in the header does exactly that, and dropping the option is what lets all ten names
@@ -1625,8 +1649,8 @@ const html = `<!DOCTYPE html>
       // figure it describes, not on the label beside it.
       return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names">' + esc(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
-        + '<div class="side right"><div class="side-line"><span class="names">' + esc(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
@@ -1736,7 +1760,9 @@ const html = `<!DOCTYPE html>
      * it on screen.
      */
     function teamsChip() {
-      const named = me && me.name ? "Teams, " + me.name + " selected" : "Teams, none selected";
+      const named = me && me.name
+        ? "Teams, " + me.name + (SEAT_FLAIR[me.name] ? " " + SEAT_FLAIR[me.name] : "") + " selected"
+        : "Teams, none selected";
       return '<button type="button" class="home-chip' + (teamsOpen ? " on" : "") + '" data-teams-open="1"'
         + ' aria-haspopup="listbox" aria-expanded="' + (teamsOpen ? "true" : "false") + '"'
         + ' aria-label="' + esc(named) + '"><span class="chip-lab">'
@@ -1836,7 +1862,7 @@ const html = `<!DOCTYPE html>
       if (!ch) return '<div class="chapter"><h3>' + title + "</h3><p class='caption'>No prior season in this league.</p></div>";
       const mean = ch.league_mean_trades;
       const vs = mean == null ? "" : " · league mean " + mean.toFixed(1);
-      const partners = (ch.partners || []).slice(0, 3).map((p) => esc(p.name) + " ×" + p.n).join(" · ");
+      const partners = (ch.partners || []).slice(0, 3).map((p) => seatLabel(p.name) + " ×" + p.n).join(" · ");
       const big = (ch.big || []).map((b) => {
         return '<div class="row"><div class="row-top"><div><div class="names">'
           + (b.partners || []).map(esc).join(" · ") + "</div>"
@@ -1890,7 +1916,7 @@ const html = `<!DOCTYPE html>
       // chip claimed to have left it. Both now pop the same entry.
       return '<button type="button" class="chip back" data-back="1">← All champions</button>'
         + '<div class="path-hero"><div class="kicker">' + esc(t.season) + " champion</div>"
-        + '<h2 class="screen-h" tabindex="-1">' + esc(t.name) + "</h2>"
+        + '<h2 class="screen-h" tabindex="-1">' + seatLabel(t.name) + "</h2>"
         + '<p class="thesis">' + esc(t.thesis || "") + "</p></div>"
         + '<div class="stats">'
         + statBox(rec.wins + "–" + rec.losses, winHow + " · " + rec.fpts_rank + " of " + rec.teams + " in points")
@@ -1902,7 +1928,7 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + (t.final
           ? '<p class="caption">Championship, week ' + esc(t.final.week) + ": "
-            + (t.final.tie ? "tied " : "beat ") + esc(t.final.opponent) + " "
+            + (t.final.tie ? "tied " : "beat ") + seatLabel(t.final.opponent) + " "
             + esc(t.final.champ_points) + "–" + esc(t.final.opponent_points) + "."
             + (t.final.top ? " Top scorer " + esc(t.final.top.player) + " " + esc(t.final.top.points) + "." : "")
             + "</p>"
@@ -1934,7 +1960,7 @@ const html = `<!DOCTYPE html>
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
           return '<button type="button" class="row" data-title="' + esc(t.season) + '">'
-            + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + esc(t.name) + "</div>"
+            + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + seatLabel(t.name) + "</div>"
             + '<div class="date">' + rec.wins + "–" + rec.losses + " · " + how
             + " · " + ((t.draft && t.draft.used) || []).length + " pick" + (((t.draft && t.draft.used) || []).length === 1 ? "" : "s") + " used</div></div>"
             + '<div class="margin">1st</div></div></button>';
@@ -2036,13 +2062,13 @@ const html = `<!DOCTYPE html>
           ? it.managers.filter(Boolean)
           : (it.manager ? [it.manager] : []);
         const who = whoNames.length
-          ? whoNames.map((n) => esc(n)).join(" \\u00b7 ")
+          ? whoNames.map((n) => seatLabel(n)).join(" \\u00b7 ")
           : (it.category === "tweet" ? "The league" : "");
         // Sharer's note, attributed, then the locker-room / factual summary. Both may be absent
         // on older rows; either alone is enough for the top of the post.
         const noteBit = it.note
           ? '<div class="news-note"><span class="news-note-by">'
-            + esc(it.submitted_by || "Someone") + ":</span> " + esc(it.note) + "</div>"
+            + (it.submitted_by ? seatLabel(it.submitted_by) : esc("Someone")) + ":</span> " + esc(it.note) + "</div>"
           : "";
         const inner = '<div class="news-top"><span class="news-who">' + who + "</span>"
           + '<span class="news-cat">' + esc(cat) + "</span></div>"
@@ -2156,7 +2182,7 @@ const html = `<!DOCTYPE html>
       const lived = all.filter((r) => chipLived(r.date));
       const toast = voteToast
         ? '<p class="vote-note">Vote recorded'
-          + (voteToast.name ? " — you have <b>" + esc(voteToast.name) + "</b> winning that one" : "")
+          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
           + ". Open it again to change your vote, or tap the same side to clear it.</p>"
         : "";
       const empty = !all.length
@@ -2196,7 +2222,7 @@ const html = `<!DOCTYPE html>
       const cached = seatCache[uid];
       const hit = cached && (cached.trades || []).find((t) => t.transaction_id === openId);
       return backChip("Back")
-        + '<h2 class="screen-h" tabindex="-1">' + esc(r.name) + " vs " + esc(r.other) + "</h2>"
+        + '<h2 class="screen-h" tabindex="-1">' + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</h2>"
         + '<p class="caption">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</p>"
         + (hit
           ? tradeRow(hit, null, true)
@@ -2209,7 +2235,7 @@ const html = `<!DOCTYPE html>
 
     function partnerLine(p) {
       return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
-        + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
+        + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
         + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
         + '<div class="margin">' + tapeMargin(p.per) + "</div></div></button>";
     }
@@ -2351,7 +2377,7 @@ const html = `<!DOCTYPE html>
           const you = me && me.user_id === r.uid;
           const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
           return '<div class="mark-bar' + (you ? " you" : "") + '">'
-            + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + esc(r.name) + "</span>"
+            + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + seatLabel(r.name) + "</span>"
             + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
             + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
             + '<div class="date">' + r.statHtml + "</div></div>";
@@ -2791,7 +2817,7 @@ const html = `<!DOCTYPE html>
         return '<button type="button" class="vote-opt' + (on ? " on" : "") + '"'
           + ' data-vote="' + esc(r.transaction_id) + '" data-vote-seat="' + esc(s.uid) + '"'
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
-          + "<b>" + esc(s.name) + "</b><span>" + line + "</span></button>";
+          + "<b>" + seatLabel(s.name) + "</b><span>" + line + "</span></button>";
       }).join("");
       // Only ever claims a league tally we actually received. A live tally counts votes as they
       // land; the committed book counts them as of the last rebuild; with neither, this is one
@@ -2853,9 +2879,9 @@ const html = `<!DOCTYPE html>
       // "45.0" with it, which is the one thing on this line that had to survive.
       return {
         bout: {
-          champName: esc(champ.name),
+          champName: seatLabel(champ.name),
           champRec: rec2(rec),
-          oppName: esc(f.opponent),
+          oppName: seatLabel(f.opponent),
           oppRec: rec2(f.opponent_record),
           // Winner green, loser red. A tie leaves both halves uncoloured (the gold default).
           score: f.tie
@@ -2864,7 +2890,7 @@ const html = `<!DOCTYPE html>
               + '<span class="bout-dash">–</span>'
               + '<span class="bout-l">' + scoreShort(f.opponent_points) + "</span>",
         },
-        tail: " · " + (f.tie ? "tied" : "beat") + " " + esc(f.opponent),
+        tail: " · " + (f.tie ? "tied" : "beat") + " " + seatLabel(f.opponent),
         tailNum: score1(f.champ_points) + "–" + score1(f.opponent_points),
         top: f.top && f.top.points != null ? "Top scorer · " + esc(f.top.player) : "",
         topNum: f.top && f.top.points != null ? score1(f.top.points) : "",
@@ -2881,10 +2907,10 @@ const html = `<!DOCTYPE html>
         const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
         const s = windowScore(r);
         return '<button type="button" class="day-in" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
-          + "<b>" + esc(r.name) + " vs " + esc(r.other) + "</b>"
+          + "<b>" + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</b>"
           + '<span class="day-in-vals">'
-          + '<span class="day-in-val"><i>' + esc(r.name) + "</i>" + tapeMargin(s) + "<em>" + got + "</em></span>"
-          + '<span class="day-in-val"><i>' + esc(r.other) + "</i>" + tapeMargin(s == null ? null : -s) + "<em>" + sent + "</em></span>"
+          + '<span class="day-in-val"><i>' + seatLabel(r.name) + "</i>" + tapeMargin(s) + "<em>" + got + "</em></span>"
+          + '<span class="day-in-val"><i>' + seatLabel(r.other) + "</i>" + tapeMargin(s == null ? null : -s) + "<em>" + sent + "</em></span>"
           + "</span></button>";
       }).join("")
         || '<div class="date">No trades on the tape yet.</div>';
@@ -3015,8 +3041,8 @@ const html = `<!DOCTYPE html>
       // that rounding three bags separately can leave. It is not any one of them alone, so the
       // caption says "combined", and the expanded detail below breaks out each seat's own bag.
       const top = '<div class="row-top tape">'
-        + '<div class="side"><div class="side-line"><span class="names">' + esc(p.mine) + "</span>" + tapeFigures(dlt, gotShow) + "</div></div>"
-        + '<div class="side right"><div class="side-line"><span class="names">' + esc(p.other) + "</span>" + tapeFigures(dlt == null ? null : -dlt, sentShow) + "</div></div>"
+        + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(p.mine) + "</span>" + tapeFigures(dlt, gotShow) + "</div></div>"
+        + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(p.other) + "</span>" + tapeFigures(dlt == null ? null : -dlt, sentShow) + "</div></div>"
         // On the trade's own screen the caption above already dates it, so the flat form drops
         // the second copy. The incomplete badge is a warning rather than a repeat and stays,
         // and so does the multi-seat note: it is what makes the right column's sign readable.
@@ -3310,7 +3336,7 @@ const html = `<!DOCTYPE html>
       const rows = scored.map((row) => {
         const p = row.p, per = row.w.per;
         return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
-          + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
+          + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
           + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
           + '<div class="margin">' + tapeMargin(per) + "</div></div></button>";
@@ -3321,9 +3347,9 @@ const html = `<!DOCTYPE html>
         const deals = ((data && data.trades) || [])
           .filter((t) => (t.others || []).length === 1 && t.others[0] === partnerName && chipLived(t.date));
         detail = p
-          ? "<h2>" + esc(p.name) + "</h2>"
+          ? "<h2>" + seatLabel(p.name) + "</h2>"
             + (deals.length ? deals.map((t) => tradeRow(t)).join("")
-              : '<p class="caption">No deal with ' + esc(p.name) + " has lived " + esc(clockName()) + " yet.</p>")
+              : '<p class="caption">No deal with ' + seatLabel(p.name) + " has lived " + esc(clockName()) + " yet.</p>")
           : "";
       }
       const empty = list.length ? "" : '<p class="caption">No trade partners yet on this seat.</p>';
@@ -3349,7 +3375,7 @@ const html = `<!DOCTYPE html>
       // untouched, and league home with no seat gains nothing.
       const seatName = tabs.length
         ? '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>'
-          + esc(me.name) + "</h2>"
+          + seatLabel(me.name) + "</h2>"
         : "";
       const nav = (tabs.length
         ? '<div class="nav" role="tablist" aria-label="Sections">'
@@ -4514,12 +4540,19 @@ if (!teamsChipSrc.includes('+ "Teams" + \' <span class="chev">▾</span></span><
 if (/<span class="chip-lab">'\s*\n?\s*\+ (?!")/.test(teamsChipSrc)) {
   throw new Error("the Teams chip's visible label went back to being computed from the selected seat");
 }
-if (!teamsChipSrc.includes('"Teams, " + me.name + " selected"')) {
+if (!teamsChipSrc.includes('"Teams, " + me.name + (SEAT_FLAIR[me.name] ? " " + SEAT_FLAIR[me.name] : "") + " selected"')) {
   throw new Error("the Teams chip's accessible name must still say which seat is selected");
 }
 for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="true" focusable="false"',
   "m.place === 1", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a seat-menu part: ${need}`);
+}
+// Seat flair is display-only. TrumanCooper keeps the bare name in data; the emoji is painted.
+if (!inline.includes('TrumanCooper: "🤢"') || !inline.includes("function seatLabel(name)")) {
+  throw new Error("TrumanCooper seat flair (🤢) must ship as display-only seatLabel()");
+}
+if (!inline.includes("function seatTitle(title)")) {
+  throw new Error("bag headings must flair seat names through seatTitle()");
 }
 // The home icon is the only way out of a seat. That was already true once the menu's "Team"
 // option went, and removing the header picker makes it the only way out of anything: the flow is
@@ -4595,7 +4628,7 @@ for (const opener of ["openTeams", "openDataSets"]) {
 // it off the seatless and already-titled screens, and its place ahead of the tab row.
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
-  "+ esc(me.name) + \"</h2>\"",
+  "+ seatLabel(me.name) + \"</h2>\"",
   "app.innerHTML = seatName + nav + body;",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the seat heading: ${need}`);
@@ -4686,12 +4719,13 @@ for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
 for (const need of ["esc(it.league_line)", "esc(it.headline)", "esc(it.player)",
   "esc(it.source_label || it.source)", "esc(it.player_team)", "esc(it.player_position)",
   "esc(cat)", "esc(also)", "esc(when)", 'esc(safe) + \'" target="_blank"',
-  // Manager tags: single or multi. Names go through esc(n) in the whoNames map.
-  "whoNames.map((n) => esc(n))",
+  // Manager tags: single or multi. Names go through seatLabel (esc + optional flair).
+  "whoNames.map((n) => seatLabel(n))",
   // Shared-tweet citation. The full tweet_text stays off the row (link-out only); the handle
   // still ships in text and must be escaped. tweet_text remains a branch gate on the item.
   "esc(it.tweet_handle)",
-  "esc(it.note)", "esc(it.submitted_by || \"Someone\")"]) {
+  "esc(it.note)",
+  '(it.submitted_by ? seatLabel(it.submitted_by) : esc("Someone"))']) {
   if (!newsBody.includes(need)) throw new Error(`renderNews stopped escaping a news field: ${need}`);
 }
 // A feed can ship "javascript:alert(1)" as an item link, and an <a href> is the one place on

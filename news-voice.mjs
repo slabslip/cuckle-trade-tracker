@@ -211,27 +211,26 @@ const TEMPLATES = {
   /** Nobody in the league owns the player. These never ship — see news-sync.mjs. */
   orphan: ["{player} is in the news and nobody in this league owns him."],
   /**
-   * Shared-tweet banks: locker-room smack when a seat is known. The factual summariseTweet()
-   * path is for unaddressed rows only — see leagueLine(). These banks speak TO the manager;
-   * that is safe here because the line is the app's voice, not the sharer's note (which ships
-   * in its own field and is attributed to them).
+   * Shared-tweet banks: locker-room smack when a seat is known. The manager name is the
+   * **row header only** — these lines speak to them as "you" and never repeat the seat name.
+   * summariseTweet() stays for unaddressed rows so "The league" never gets second-person
+   * trash talk aimed at nobody.
    */
-  // Compact locker-room jabs for the feed row — one breath, no essay. The full tweet is a
-  // link-out now, so this line has to carry the roast by itself.
+  // Compact locker-room jabs — one breath. Full tweet is a link-out.
   tweet: [
-    "{who}, {player} just walked into the group chat and sat on your roster.",
-    "Yo {who} — {player} trending and it is not the cute kind.",
-    "{who}, the tape on {player} is doing numbers. How's the stomach.",
-    "League found {player} and thought of {who} immediately. Correct.",
-    "{who}, somebody put {player} on blast and cc'd the whole league.",
-    "Run it back, {who}. {player} is the plot again.",
+    "{player} just walked into the group chat and sat on your roster.",
+    "{player} is trending and it is not the cute kind. How's the stomach.",
+    "The tape on {player} is doing numbers. You drafted this plot.",
+    "League found {player} and thought of your bench immediately. Correct.",
+    "Somebody put {player} on blast and cc'd the whole league. Eyes up.",
+    "Run it back. {player} is the plot again, and it's your plot.",
   ],
   tweet_who: [
-    "{who}, this one has your name on it. Don't act surprised.",
-    "Group chat could not hold this, {who}. So here it is.",
-    "{who}, somebody shared this at your forehead on purpose.",
-    "Eyes up, {who}. The league wanted you to see this one.",
-    "{who}, this is not a drill. Read it.",
+    "This one has your name on it. Don't act surprised.",
+    "Group chat could not hold this. So here it is.",
+    "Somebody shared this at your forehead on purpose.",
+    "Eyes up. The league wanted you to see this one.",
+    "This is not a drill. Read it.",
   ],
 };
 
@@ -549,25 +548,19 @@ export function leagueLine(item, ctx) {
   /**
    * Shared tweets: locker-room voice when a seat is known; factual summary when not.
    *
-   * When the matcher (or target_name) addressed a manager, speak TO them — that is the product.
-   * Prefer a category bank classified from the tweet (injury, trade, …) so the jab fits the
-   * news; fall back to the tweet / tweet_who banks. summariseTweet() stays for unaddressed rows
-   * so "The league" never gets second-person trash talk aimed at nobody.
+   * The manager name is already the row header. These lines speak TO that seat as "you"
+   * and must not repeat the name — the feed was reading "TipsUp … TipsUp, your guy…" twice.
+   * Only the tweet / tweet_who banks are used here (not the RSS category banks, which lead
+   * with {who}). summariseTweet() stays for unaddressed rows so "The league" never gets
+   * second-person trash talk aimed at nobody.
    *
    * The sharer's note is a separate field. It is never returned from this seam.
    */
   if (item && item.category === "tweet") {
     if (manager && player) {
-      const topic = classify(String(item.title || ""));
-      const key = topic.upbeat && (topic.category === "injury" || topic.category === "news")
-        ? `${topic.category}_good`
-        : topic.category;
-      const bank = (TEMPLATES[key] && TEMPLATES[key].length && key !== "tweet")
-        ? TEMPLATES[key]
-        : TEMPLATES.tweet;
+      const bank = TEMPLATES.tweet;
       const pick = bank[hash(item.id || item.title || player) % bank.length];
       return pick
-        .replace(/\{who\}/g, manager)
         .replace(/\{player\}/g, player)
         .replace(/\{team\}/g, String((item && item.team) || "his old spot"))
         .replace(/\s+/g, " ")
@@ -576,11 +569,7 @@ export function leagueLine(item, ctx) {
     if (manager) {
       const bank = TEMPLATES.tweet_who;
       const pick = bank[hash(item.id || item.title || manager) % bank.length];
-      return pick
-        .replace(/\{who\}/g, manager)
-        .replace(/\{player\}/g, player)
-        .replace(/\s+/g, " ")
-        .trim();
+      return pick.replace(/\s+/g, " ").trim();
     }
     return summariseTweet(item);
   }
@@ -637,10 +626,18 @@ export async function leagueLineAsync(item, ctx, opts = {}) {
     return fallback;
   }
   if (!line || line.length > MAX_LINE) return fallback;
-  // Unaddressed tweet summaries must stay impersonal. Addressed ones may talk to {who} —
-  // that is the locker-room product. Without a manager, refuse a line that says "you".
-  if (item && item.category === "tweet" && !manager
-    && noteFreeOfAddress(line, opts.managers)) return fallback;
+  // Unaddressed tweet summaries must stay impersonal (no you / no manager names).
+  // Addressed ones may say "you", but must not repeat the seat name — that is the header.
+  if (item && item.category === "tweet") {
+    if (!manager) {
+      if (noteFreeOfAddress(line, opts.managers)) return fallback;
+    } else {
+      const names = opts.managers && opts.managers.length ? opts.managers : [manager];
+      for (const m of names) {
+        if (m && line.toLowerCase().includes(String(m).toLowerCase())) return fallback;
+      }
+    }
+  }
   return line;
 }
 

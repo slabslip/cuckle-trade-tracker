@@ -666,6 +666,26 @@ for every box in the row.
 overflow, its ink legitimately extends past its border box. Skip those, or every ellipsized name
 reports as a spill. `body.scrollWidth` is the arbiter for whether anything actually escaped.
 
+### A control's border box is not its tap target
+The 44px sweep read `getBoundingClientRect().height` on every button, and reported the `All
+trades` icon as a 26px violation on three screens. It is not one: it grows its own target with
+`button.all-trades::after { position: absolute; inset: -10px; }`, which a rect on the *button*
+cannot see. Hit-testing outward from the centre with `elementFromPoint` measures the target a
+finger actually finds — 114×44 — and it is identical on `origin/main`, so the sweep was inventing
+a defect rather than finding one. This is the mirror image of the traps above: a harness that
+lies in the safe direction still costs a real fix somewhere else. Any 44px check must fall back
+to hit-testing before it calls a short box a defect.
+
+### The row that measures fine and still reads wrong
+Every numeric check can pass on a row a person would call broken. The signed-delta pass had
+`body.scrollWidth` equal to the viewport, zero clipped figures and zero ellipsized names at
+320px — and the rows were still wrong, because the delta and the total wrapped onto *different*
+lines and the orphaned total left-aligned under a right-aligned side. No spill, no clip, no
+ellipsis: nothing in the harness had an opinion about it. It was visible immediately in a
+screenshot, and then confirmed by grouping each side's children by their `top` and asserting the
+delta and its total share a line. **Read the screenshots.** Then, once the eye finds a defect,
+write the geometric assertion that would have caught it.
+
 ### The systemic cause behind §6c A7
 A `1fr` grid track's automatic minimum is `min-content`, so a grid item refuses to shrink and
 `text-overflow: ellipsis` never engages without an explicit `min-width: 0`. This is why trade
@@ -784,11 +804,14 @@ is exactly the kind of field §3 recommends deleting rather than repairing.
 | Tie | `0` — no sign | neutral (`--text`) |
 | No delta (incomplete / unpriced) | `—` | neutral. **Never invent a sign for a number that does not exist.** |
 
-**Three functions, and nothing else may format a delta.** All three are in the inline script:
+**Four functions, and nothing else may format a delta.** All four are in the inline script:
 
 - `signedNum(d)` — the text. One `Math.round`, one glyph pair (`+` and U+2212), one em dash.
 - `signedCls(d)` — the colour class, `cls(d)` with 0 and null forced neutral.
 - `tapeMargin(d)` — the **only** emitter of the markup: `<span class="delta pos">+648</span>`.
+- `tapeFigures(d, valHtml)` — the **only** emitter of a tape side's delta-and-total pair, which
+  it wraps in one `.figs` span so the two cannot be separated by a line break. Every `.side-line`
+  goes through it; see "How the crowding was absorbed" below for why that matters.
 
 `tapeMargin` kept its old name deliberately. The three tape rows were already funnelled through
 it so the convention could not drift between the trades list, the lopsided board and the Drafts
@@ -824,8 +847,10 @@ green for own and gold for acquired — and that one is deliberate: it is proven
 **Enforced at generate time.** `generate-page.mjs` asserts the three helpers survived into the
 generated page, and asserts the *absence* of every hand-rolled form it replaced: `cls(dlt)`,
 `cls(s)`, `cls(-s)`, `cls(-dlt)`, `cls(p.per)`, `cls(p.surplus)`, `cls(avg)`, `cls(per)`,
-`(total > 0 ? "+" : "")` and `(va > 0 ? "+" : "")`. Adding a delta site that formats its own
-sign fails the build. Do not weaken these; extend them.
+`(total > 0 ? "+" : "")` and `(va > 0 ? "+" : "")`. It also asserts the tape's own CSS survived,
+including both `.figs` directions and the auto margin that pushes the pair right. Adding a delta
+site that formats its own sign, or that builds its own `.val`, fails the build. Do not weaken
+these; extend them.
 
 **One deliberate exception.** The Value Adjustment leg takes the sign rule but keeps its gold
 ink (`#d4c07a`), because it is an adjustment *inside one bag*, not a result against another
@@ -833,15 +858,36 @@ side. Counts are not deltas and stay unsigned — "56 two-way", "27 graded", "4 
 
 **How the crowding was absorbed.** A tape side now states three things rather than two, so the
 row was re-measured rather than assumed. Stacked (≤700px) a side's two figures travel together at
-the right of its line — one auto margin, on the delta — so the deltas line up in one column and
-the totals in another and a pair of side lines is comparable at a glance. The pair also *wraps*
-as a pair: at 320px the line runs ~15px short, and the figures drop beneath the name rather than
-the name truncating. `overflow-wrap: anywhere` on the name was tried first and rejected — it
-rendered `DarkWingDucks2023` as `DarkWingDucks20 / 23`, which reads as a rendering accident. The
-base nowrap ellipsis on `.names` stays as the last resort for a name wider than a whole line.
-Verified at 320, 360, 375, 390, 430, 640, 641 and 1280px, with real names and with a stress name
-2.4× the longest real one plus a six-digit delta: **zero figures wrapped, zero clipped, zero
-manager names ellipsized, `body.scrollWidth` equal to the viewport in every case.**
+the right of its line — one auto margin, on the figure pair — so the deltas line up in one column
+and the totals in another and a pair of side lines is comparable at a glance.
+
+The pair also *wraps* as a pair, and this took a fourth element to get right. At 320px the widest
+rows run ~15px short, so the figures drop beneath the name rather than the name truncating —
+`overflow-wrap: anywhere` on the name was tried first and rejected, because it rendered
+`DarkWingDucks2023` as `DarkWingDucks20 / 23`, which reads as a rendering accident. But emitted as
+two loose flex children the delta and the total then wrapped *independently*: the delta stayed up
+on the name's line and the total dropped alone onto the next one, left-aligned at x=29 while the
+rest of its right-aligned side sat at x=291. A bare `12,621` under a name, at the opposite edge
+from every other figure, reads as belonging to nothing. Twelve sides did this — three on the
+lopsided board, eight in the trades tab, one in Drafts.
+
+`tapeFigures(d, valHtml)` fixes it by emitting the delta and the total inside one `.figs` span, so
+the pair is a single flex child and wraps as a unit, right-aligning to the same edge as an
+unwrapped side. `.figs` is `row-reverse` on the right side of the wide tape (so each delta stays
+beside its own name with the totals inboard) and plain `row` when stacked (so both sides read
+name → delta → total). The base nowrap ellipsis on `.names` stays as the last resort for a name
+wider than a whole line.
+
+Verified at 320, 360, 375, 390, 430, 640, 641, 660, 700, 720 and 1280px, with real names and with
+a stress name 2.4× the longest real one plus a six-digit delta: **zero figures clipped, zero
+manager names ellipsized, zero sides with the delta split from its own total,
+`body.scrollWidth` equal to the viewport in every case.** Figures do wrap at 320px on the widest
+rows — that is the intended relief valve — but only ever as a pair.
+
+Two generate-time guards keep it that way: `.val` must be emitted exactly once in the whole
+inline script (i.e. only from inside `tapeFigures`), and every `.side-line` the generator emits
+must contain a `tapeFigures(` call. Both were confirmed to fire on a deliberately broken build
+that `node --check` accepted.
 
 **Where a signed delta renders.** Every one of these goes through `tapeMargin`:
 `tradeRow` (trades list, Best/Worst deal, the expanded header, and the full-screen trade

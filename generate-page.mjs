@@ -507,7 +507,7 @@ const html = `<!DOCTYPE html>
     let titles = null;
     let marks = null;
     let lens = "all";
-    const DATA_V = "20260830nv";
+    const DATA_V = "20260830drop";
     const openPacks = new Set();
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
@@ -1354,12 +1354,8 @@ const html = `<!DOCTYPE html>
     }
 
     function renderLeagueHome() {
-      const n = leagueTrades().length;
       return dayAlert()
         + lensRow()
-        // The list needs a visible door, or it is a screen only a typed URL can reach (§8a).
-        + '<button type="button" class="chip" data-trades-list="1">All league trades'
-        + (n ? " · " + n : "") + "</button>"
         + pack("wide", "Most lopsided trades", rankWide().map((r) => boardTape(r)).join(""))
         + renderPlayerLists();
     }
@@ -2439,7 +2435,11 @@ const html = `<!DOCTYPE html>
     /**
      * The league-wide trades list: ?view=trades with no seat. Any selected seat is dropped,
      * because with a seat that same view means the seat's own Trades tab. In practice nothing
-     * reaches here with a seat set — every door to it is on a league-wide screen.
+     * reaches here with a seat set — every door to it is on a league-wide screen. Those doors
+     * are the vote cast on a trade's own screen, that screen's footer chip, its back chip on a
+     * cold deep link, and ?view=trades typed with no seat. League home deliberately has none:
+     * this list is where a vote lands, not a place to browse to (§8a is satisfied because
+     * renderLeagueTrades carries its own <h2>, so the destination is still named).
      */
     function openTradesList(toast) {
       me = null;

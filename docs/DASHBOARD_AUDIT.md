@@ -33,7 +33,7 @@ Every heading below carries its own **FIXED** annotation with the commit; this i
 | Delete the league screen (D4b ruling) | `8cdbb3d` | §3 dead UI, §10.2 |
 | G — docs | this commit | §7 docs drift |
 
-**Still open, deliberately.** P1-8 (back button / `pushState` + `popstate`), §4.2 posture vocabulary,
+**Still open, deliberately.** §4.2 posture vocabulary,
 §5.1–5.2 ticker duplication, §5.3 the constant `1st` column, A6 (marquee pause), A8 (three colour
 languages in a Drafts row), and the `DATA_V` hand-edit hazard in §6b. None were in the approved
 slice list. Plus the `windows` restructure (D3a), which was scoped and written up rather than
@@ -324,9 +324,31 @@ interaction in the app.
 *Fix:* ship a small precomputed `marks.json` (10 rows × 6 metrics), or lazy-load on demand
 with a skeleton. Pipeline + generator.
 
-### P1-8 — Browser back does not work — **STILL OPEN**
-Not in the approved slice list, and untouched. `syncUrl` still only calls `replaceState`
-(now guarded, see P1-12); there is no `pushState` and no `popstate` listener.
+### P1-8 — Browser back does not work — **FIXED, `20260830nv`**
+Shipped: a `screenKey()` — seat, view, title year, and the open full-screen trade — decides
+`pushState` versus `replaceState`, and a `popstate` listener rebuilds state from the entry.
+Moving between screens pushes; expanding a row or moving the clock still only replaces, so
+**P1-12 stays closed**: measured, twelve trade-row toggles leave `history.length` unchanged.
+
+Each pushed entry carries its own depth in `history.state.d`, read back out of the popped entry
+rather than counted locally, so Forward is as exact as Back. That number is what lets the in-app
+back chip call `history.back()` only where the app owns an entry behind the current one and fall
+back to a named parent screen on a cold deep link — the chip and the browser button therefore
+cannot land in different places. Walked from three depths:
+
+| | |
+| --- | --- |
+| home → list → trade, Back ×2, Forward ×2 | depth 0→1→2→1→0→1→2, URL and heading correct at each stop |
+| seat → trades tab → partners tab, Back ×3 | returns through both tabs to league home |
+| titles → title detail, Back vs the "All champions" chip | both land on the list at depth 1 |
+| Escape on the full-screen trade | same destination as the chip |
+| Back at depth 0 | leaves the site, which is correct, and is exactly what the chip guards against |
+
+The "All champions" chip was a real disagreement found while verifying this: it ran through
+`data-title=""`, which **pushed a fresh titles entry**, so the browser's Back then returned to the
+detail the chip claimed to have left. It routes through the one back handler now.
+
+Original finding below.
 
 `syncUrl` only ever calls `history.replaceState` (`:504`). There is no `pushState` and no
 `popstate` listener, so back leaves the app entirely from any depth.
@@ -859,6 +881,60 @@ moves. And `getBoundingClientRect()` does **not** reflect ancestor clipping — 
 full 472.6px box while only 44px was on screen. What caught it was `elementFromPoint` at each
 option's centre (1 of 11 hittable, 11 of 11 with the clip removed, 1 again when it was restored).
 
+**A10 — the Champions Path detail runs 1,051px wide at a 375px viewport. NEW, and not fixed.**
+Found while sweeping every screen during the navigation pass, on a screen that pass did not
+otherwise change. `bagLine` puts a `·`-joined pick list into a `<b>` inside `.leg`, and
+`.leg > b { flex: 0 0 auto; white-space: nowrap; }` — the rule that keeps a *figure* from
+ellipsizing — refuses to wrap it. "Picks in" for the 2025 chapter measures **1,012px** on its own.
+
+Measured on `origin/main` (`b57c820`) and on the navigation branch: `body.scrollWidth` **1051**
+at both 375px and 390px, identical on both builds, so it is **pre-existing and not a regression**.
+`documentElement.scrollWidth` reads 375 throughout — §3a again.
+
+Left unfixed deliberately. `.leg > b` is shared with the trade bags, where "figures never
+ellipsize" is the point, so the fix has to be scoped to the chapter (`overflow-wrap: anywhere`
+on a `.chapter .leg > b`, or a wrapping list rather than one nowrap string) and that is a change
+to a screen the navigation pass was not given. It needs a ruling, not a drive-by.
+
+### The back-affordance sweep, 2026-08-30
+
+Every place a user drills in, and whether they can get out. Done as part of the full-screen trade
+work; the ruling applied was *add a control only where a user is genuinely stuck, and never a
+second control that says what the home icon already says*.
+
+| Drill-in | Before | Now |
+| --- | --- | --- |
+| Full-screen trade (`?view=trade`) | did not exist | **`← Back` chip added.** Its parent varies — league home or the trades list — so it cannot be inferred from the screen. Escape does the same thing. |
+| League trades list (`?view=trades`, no seat) | did not exist | **Nothing added, on purpose.** Its parent is always league home, which is what the home icon in the header already does. |
+| Champions Path detail | `All champions` chip | **Kept, rewired.** It pushed a fresh titles entry, so browser Back returned to the detail the chip claimed to have left. Both pop the same entry now. |
+| Champions Path list | home icon only | Unchanged. Parent is league home; the home icon is that. |
+| Partner detail (`partnerName`) | **stuck.** No toggle, and the Partners tab could not clear it because `render()` only reset `partnerName` when `view !== "partners"` — which it never was. | **Second tap on the open partner closes it**, the Partners tab clears it, and Escape closes it. No new chrome: the partner list stays on screen above the detail, so this is a dismiss, not a navigation. |
+| Expanded trade row, per-seat Trades tab | toggle + Escape | Unchanged, and deliberately still inline — see the note in §10.7. |
+| Expanded draft pick / draft row | toggle + Escape | Unchanged. Not stuck. |
+| Year filter, Drafts filter, Score as | outside click + Escape | Unchanged. Not stuck. |
+| Packs, style tiles, mark chart | toggle + Escape | Unchanged. Not stuck. |
+| A selected seat | home icon | Unchanged, plus browser Back now leaves the seat. |
+
+The home icon was checked as present, 44×44 and at 16,16 on **every** screen above, at 375px and
+390px, and it clears the seat and returns to league home from all of them.
+
+**Keyboard and focus on the new screens — what was done, and what was not.** Done: every new
+control is a real `<button>`, so it is in the tab order and fires on Enter and Space with no extra
+code; a navigation moves focus to the destination screen's `<h2 class="screen-h" tabindex="-1">`
+and scrolls to the top; `focusSelector` recognises that heading, which fixed a bug the pass
+introduced and then measured — the *second* render behind a screen (the seat file arriving, a vote
+settling) threw focus back to `<body>` a moment after the navigation had placed it, so the
+observed landing was `BODY` on four of six steps and is `H2.screen-h` on all of them now; a screen
+with no heading of its own (league home, a seat's home) lands on `#app`, which is now
+`tabindex="-1"`, rather than on `<body>`; Escape leaves the full-screen trade and closes an open
+partner detail.
+
+Not done, and still open from A2–A4: `render()` still replaces `app.innerHTML` wholesale rather
+than patching, so focus survives only by being re-found afterwards. There is no focus trap and no
+`aria-live` region, so the vote acknowledgement on the league list is announced only because focus
+lands on the heading above it. The 288-row list has no roving `tabindex` — it is 288 tab stops.
+None of that was in scope here.
+
 Original findings below.
 
 | # | Sev | Issue |
@@ -1132,7 +1208,7 @@ memoize `tradeDelta` and sort on precomputed keys (§6b).
 ~~year filter becomes radios~~ · ~~stop `replaceState` on every render (P1-12)~~ ·
 ~~unnest interactive controls from buttons (A1)~~ · ~~keyboard and focus (A2–A4)~~ ·
 ~~44px targets (A5)~~ — **all shipped**. Still open: one posture vocabulary · ticker stops
-duplicating packs and stops double-rendering · back-button history (P1-8) ·
+duplicating packs and stops double-rendering · ~~back-button history (P1-8)~~ ·
 Champions Path "1st" column earns its keep.
 
 **Slice 5 — rewrite the specs** — **shipped, this commit.**
@@ -1142,7 +1218,7 @@ Champions Path "1st" column earns its keep.
 **Slice 6 — what is left after this pass.** In the order I would take it:
 `windows` restructure and delete the browser's `applyVa` (D3a, needs the invariant rewritten
 first) · the D5 ruling on the KTC blend (§8c) · drop `drafters_rookie` from `revalue.mjs` ·
-back-button history (P1-8) · derive `DATA_V` instead of hand-editing it (§6b) ·
+~~back-button history (P1-8)~~ **shipped, `20260830nv`** · derive `DATA_V` instead of hand-editing it (§6b) ·
 seat-switch race (§6) · price the newest trade on its own date (§10.5) ·
 the cosmetic set in §5 · posture vocabulary · A6 and A8.
 
@@ -1169,3 +1245,29 @@ the cosmetic set in §5 · posture vocabulary · A6 and A8.
    clock is still a day behind the tape, so the newest trade is priced on yesterday's board.
 6. **NEW — does the KTC blend get a screen?** See §8c / D5. It has no reader on any reachable
    screen, and the gap between it and what the page draws averages 975 across 582 sides.
+7. **NEW — a trade now opens two different ways depending on where you tapped it.** The
+   navigation pass was told to make the Recent Trade card and the new league trades list open a
+   trade **full screen**, and to leave the per-seat Trades tab's inline expansion alone. It did
+   both, so the app now has two vocabularies for the same object:
+
+   | Where you tap a trade | What happens |
+   | --- | --- |
+   | Recent Trade card, Most lopsided, league trades list | opens `?view=trade` as its own screen |
+   | A seat's Trades tab, Best/Worst deal on a seat's home, a partner's deals | expands inline in place |
+
+   Most lopsided was folded into the full-screen half rather than left as a third case: it is a
+   league-wide list rendered by the same `boardTape` as the new list, and splitting them would
+   have meant two behaviours for one component. The remaining split is league-wide versus
+   per-seat, which is at least a line you can state — but nobody asked for it, so it is logged
+   rather than resolved. Ruling wanted: does the per-seat Trades tab go full screen too, or is
+   inline-inside-a-seat the deliberate difference?
+8. **NEW — the league trades list is 288 of the league's 290 trades.** It is sourced from
+   `league.trade_boards.sides`, which is 576 rows and carries **only complete two-team trades**:
+   the two three-team deals (`916914658962112512`, `1277511518384037888`) have no row there, on
+   any lens. The list's caption says "every trade on **the league tape**" rather than "every trade
+   in the league" for that reason. Shipping the missing two means either putting N-way trades on
+   the tape or reading the 2.94 MB of seat files, so it is a payload decision.
+
+   Related, and worth knowing: `voteBlock`'s "three-team trade, voting is off here" branch is
+   therefore **unreachable from every screen that renders it** — no board row can name an N-way
+   trade. The guard is kept because it is the correct guard, not because it currently fires.

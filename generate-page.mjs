@@ -907,7 +907,7 @@ const html = `<!DOCTYPE html>
     let marks = null;
     let news = null;
     let lens = "all";
-    const DATA_V = "20260830tweetintake2";
+    const DATA_V = "20260830manualnews1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2045,11 +2045,32 @@ const html = `<!DOCTYPE html>
       const book = news && news.v === 1 ? news : null;
       const items = (book && book.items) || [];
       const head = '<h2>News and Alerts</h2>'
-        // Not "tap a row for the source": Sleeper's Rotowire-sourced items ship without a url in
-        // their metadata, so about a third of rows have nothing to open and render as plain rows.
-        + '<p class="caption">NFL news, only for players on this league\\u2019s rosters, aimed at whoever owns them. Newest first. Rows with a linked source open it in a new tab, and a tweet somebody shared in opens where it stands.</p>';
+        // Describes what the feed IS, not what it once was. The automated sources are switched
+        // off in news-sync.mjs, so promising NFL news for every rostered player would be a
+        // caption over an empty box for anyone who has not shared anything.
+        + '<p class="caption">Tweets league members share in from X, newest first. The line on top is the sharer\\u2019s own, when they wrote one. Open a row to read the tweet and see who posted it.</p>';
       if (!items.length) {
-        return head + '<div class="news-box"><p class="news-empty">Nothing breaking. When a story lands on someone\\u2019s roster it shows up here.</p></div>';
+        /**
+         * Two different nothings, and they must not read the same.
+         *
+         * A null book is the load having failed -- the file missing, unreadable, or a version
+         * this page does not know -- and the loader deliberately swallows all three so the feed
+         * cannot take the page down. Printing "nothing has been shared yet" over that is the
+         * page stating something it does not know, and stating it reassuringly: the user would
+         * go looking at their Shortcut for a fault that is on this end.
+         *
+         * A book that loaded and holds no items is the real empty state, and it is the normal
+         * one right now -- the feed is manual submissions only, so it is genuinely bare until
+         * somebody shares. It has to read as a feed waiting for its first item rather than as a
+         * feature that broke, and it has to say how an item gets here, because sharing from X
+         * is the entire mechanism and it is not discoverable from this page.
+         *
+         * (No backticks in this comment: the whole page is one template literal.)
+         */
+        const blank = book
+          ? "Nothing shared yet. Send a tweet in from X with the league shortcut \\u2014 whatever you type when you share it lands here as the line on top."
+          : "The feed could not be loaded. Nothing else on this page is affected.";
+        return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
       const rows = items.map((it, i) => {
         const url = String(it.source_url || "");
@@ -4687,6 +4708,41 @@ for (const need of ["max-height: 420px; overflow-y: auto;", "overscroll-behavior
 // unnamed region is an unlabelled landmark to a screen reader.
 if (!newsBody.includes('tabindex="0" role="region" aria-label="News and alerts, ')) {
   throw new Error("the news box must stay a named, focusable scroll region");
+}
+// 2b. The empty state, which is now the state this feed is *expected* to be in.
+//
+// The feed is manual submissions only, so it is genuinely bare for any member who has not
+// shared anything, and it will be bare on a fresh league forever until somebody does. That
+// makes the empty copy load-bearing rather than a fallback nobody sees, and it has to do two
+// things a generic "nothing here" cannot: distinguish an empty feed from a broken one, and say
+// how an item gets into it.
+const emptyBranch = newsBody.slice(newsBody.indexOf("      if (!items.length) {"));
+const emptyRender = emptyBranch.slice(0, emptyBranch.indexOf("\n      }"));
+if (!emptyRender || emptyRender.length < 200) throw new Error("renderNews() lost its empty state");
+// Two distinct strings on the two branches of `book`. One string for both would mean the page
+// tells a user "nothing has been shared yet" when what actually happened is that news.json
+// failed to load -- reassuring, and false.
+if (!/const blank = book\s*\n?\s*\?/.test(emptyRender)) {
+  throw new Error("the empty state must distinguish an empty feed from a feed that failed to load");
+}
+const emptyStrings = emptyRender.match(/"[^"]{20,}"/g) || [];
+if (emptyStrings.length < 2 || emptyStrings[0] === emptyStrings[1]) {
+  throw new Error("the empty feed and the failed-load feed must not print the same sentence");
+}
+// The one fact the empty state exists to carry. A member looking at a blank feed has no other
+// way to learn that sharing from X is what fills it.
+if (!/Nothing shared yet[\s\S]{0,200}from X/.test(emptyRender)) {
+  throw new Error("the empty state must tell the reader that shares from X are what fill this feed");
+}
+if (!/could not be loaded/.test(emptyRender)) {
+  throw new Error("the failed-load state must say the feed failed rather than that it is empty");
+}
+// The caption sits above the box in both states, so a caption describing the automated feed
+// would be a promise of NFL news over an empty box. It must describe what this feed is.
+const captionMatch = newsBody.match(/<p class="caption">([^<]*)<\/p>/);
+if (!captionMatch) throw new Error("the news section lost its caption");
+if (!/share/i.test(captionMatch[1]) || /rosters/i.test(captionMatch[1])) {
+  throw new Error("the news caption still describes the automated roster feed, which no longer ships: " + captionMatch[1].slice(0, 80));
 }
 // 3. The 44px rule. A pass took 312 sub-44px targets to zero and none may come back. Every
 //    news row is a link, so every news row is a target.

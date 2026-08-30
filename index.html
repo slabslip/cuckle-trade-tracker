@@ -902,7 +902,7 @@
     let marks = null;
     let news = null;
     let lens = "all";
-    const DATA_V = "20260830tweetintake2";
+    const DATA_V = "20260830manualnews1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2040,11 +2040,32 @@
       const book = news && news.v === 1 ? news : null;
       const items = (book && book.items) || [];
       const head = '<h2>News and Alerts</h2>'
-        // Not "tap a row for the source": Sleeper's Rotowire-sourced items ship without a url in
-        // their metadata, so about a third of rows have nothing to open and render as plain rows.
-        + '<p class="caption">NFL news, only for players on this league\u2019s rosters, aimed at whoever owns them. Newest first. Rows with a linked source open it in a new tab, and a tweet somebody shared in opens where it stands.</p>';
+        // Describes what the feed IS, not what it once was. The automated sources are switched
+        // off in news-sync.mjs, so promising NFL news for every rostered player would be a
+        // caption over an empty box for anyone who has not shared anything.
+        + '<p class="caption">Tweets league members share in from X, newest first. The line on top is the sharer\u2019s own, when they wrote one. Open a row to read the tweet and see who posted it.</p>';
       if (!items.length) {
-        return head + '<div class="news-box"><p class="news-empty">Nothing breaking. When a story lands on someone\u2019s roster it shows up here.</p></div>';
+        /**
+         * Two different nothings, and they must not read the same.
+         *
+         * A null book is the load having failed -- the file missing, unreadable, or a version
+         * this page does not know -- and the loader deliberately swallows all three so the feed
+         * cannot take the page down. Printing "nothing has been shared yet" over that is the
+         * page stating something it does not know, and stating it reassuringly: the user would
+         * go looking at their Shortcut for a fault that is on this end.
+         *
+         * A book that loaded and holds no items is the real empty state, and it is the normal
+         * one right now -- the feed is manual submissions only, so it is genuinely bare until
+         * somebody shares. It has to read as a feed waiting for its first item rather than as a
+         * feature that broke, and it has to say how an item gets here, because sharing from X
+         * is the entire mechanism and it is not discoverable from this page.
+         *
+         * (No backticks in this comment: the whole page is one template literal.)
+         */
+        const blank = book
+          ? "Nothing shared yet. Send a tweet in from X with the league shortcut \u2014 whatever you type when you share it lands here as the line on top."
+          : "The feed could not be loaded. Nothing else on this page is affected.";
+        return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
       const rows = items.map((it, i) => {
         const url = String(it.source_url || "");

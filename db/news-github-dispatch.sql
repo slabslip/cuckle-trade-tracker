@@ -1,10 +1,12 @@
--- Ping GitHub Actions whenever a news share lands (or is soft-deleted).
--- One-time setup. Requires a GitHub fine-grained PAT with Contents: Read and write
--- on slabslip/cuckle-trade-tracker. Never commit the PAT.
+-- Ping GitHub Actions when a news share lands (or is soft-deleted).
 --
--- 1. Replace BOTH copies of ghp_REPLACE_ME below with your PAT.
--- 2. Run this whole file in the Supabase SQL editor.
--- 3. Share a tweet (or wait for the agent test insert). Actions → news-refresh should start.
+-- SETUP
+-- 1. Create a classic PAT as user slabslip with the `repo` scope
+--    (or fine-grained: this repo, Contents: Read and write).
+-- 2. In the Authorization line below, replace PASTE_NEW_PAT_HERE with that
+--    token. That is the ONLY place to put it. Do not paste the token into chat.
+-- 3. Run this whole file in the Supabase SQL editor.
+-- 4. Share a tweet → GitHub Actions → news-refresh should start within seconds.
 
 create extension if not exists pg_net with schema extensions;
 
@@ -22,7 +24,8 @@ begin
       'Accept', 'application/vnd.github+json',
       'X-GitHub-Api-Version', '2022-11-28',
       'User-Agent', 'cuckle-news-dispatch',
-      'Authorization', 'Bearer ghp_REPLACE_ME'
+      -- ↓↓↓ put the PAT only here ↓↓↓
+      'Authorization', 'Bearer PASTE_NEW_PAT_HERE'
     ),
     body := jsonb_build_object(
       'event_type', 'news-submission',
@@ -42,12 +45,3 @@ create trigger news_submissions_dispatch
   after insert or update of deleted_at on public.news_submissions
   for each row
   execute function public.dispatch_news_refresh();
-
--- Sanity: the function body must not still say REPLACE_ME after you edit it.
-do $$
-begin
-  if pg_get_functiondef('public.dispatch_news_refresh()'::regprocedure)
-       like '%ghp_REPLACE_ME%' then
-    raise exception 'Replace ghp_REPLACE_ME with your GitHub PAT before running this file.';
-  end if;
-end $$;

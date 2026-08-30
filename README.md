@@ -34,7 +34,7 @@ it is outside `build.mjs` — it is a data-only refresh and the page reads `news
 Shortcut, and the Shortcut POSTs the URL — plus an optional jab and an optional target manager —
 to the `news_submissions` table. GitHub Action `news-refresh` rebuilds `news.json` and pushes
 `main` when Supabase pings `repository_dispatch` (see `docs/SUPABASE_SETUP.md` §3d), with a
-five-minute cron as backup. Each run fetches every tweet's text from X's free oEmbed endpoint.
+one-minute cron as backup. Each run fetches every tweet's text from X's free oEmbed endpoint.
 
 The automated sources — Sleeper's GraphQL `get_player_news` and RSS from ESPN, Rotowire, CBS,
 Yahoo and ProFootballTalk — are **off**, behind `AUTOMATED_SOURCES` in `news-sync.mjs`. Off means

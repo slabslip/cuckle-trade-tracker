@@ -5,7 +5,17 @@
 --
 -- Vote writes resolve voter from league_memberships for sleeper_league_id on the
 -- ballot — not a single global seat_profiles row.
+--
+-- IMPORTANT: drop the force_voter trigger BEFORE backfilling sleeper_league_id.
+-- The SQL editor has no auth.uid(), so the Phase 1 trigger would raise
+-- "no claimed seat for this session" on UPDATE.
 -- ============================================================================
+
+
+-- --------------------------------------------------------------------------
+-- 0. Drop trigger so backfill can run as the SQL editor role
+-- --------------------------------------------------------------------------
+drop trigger if exists trade_votes_force_voter on public.trade_votes;
 
 
 -- --------------------------------------------------------------------------
@@ -58,6 +68,11 @@ as $$
 declare
   sid text;
 begin
+  -- SQL editor / service_role migrations have no JWT — leave the row alone.
+  if auth.uid() is null then
+    return new;
+  end if;
+
   if new.sleeper_league_id is null or length(new.sleeper_league_id) < 1 then
     raise exception 'trade_votes: sleeper_league_id required';
   end if;
@@ -75,7 +90,6 @@ begin
   return new;
 end $$;
 
-drop trigger if exists trade_votes_force_voter on public.trade_votes;
 create trigger trade_votes_force_voter
   before insert or update on public.trade_votes
   for each row execute function public.trade_votes_force_voter();

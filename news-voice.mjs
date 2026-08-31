@@ -240,7 +240,69 @@ const TEMPLATES = {
    * The manager name stays in the row header; these speak as "you" and never repeat the seat.
    * Facts come from summariseTweet(); these lines are attitude only.
    * Keep them short — a long poke starves the fact under MAX_LINE.
+   *
+   * Themed banks (`tweet_injury` / `tweet_cut` / `tweet_retire` / `tweet_off`) are preferred
+   * when tweetPoke() can classify the story; `tweet` is the fallback mix.
    */
+  tweet_injury: [
+    "The IR fairy strikes again.",
+    "That's a bruise on the depth chart.",
+    "Somebody check the practice report twice.",
+    "The trainers are writing the story now.",
+    "Your Sunday just got a plot twist.",
+    "Hope the bench is ready for its close-up.",
+    "Ouch. For him and for you.",
+    "Congrats — {player} joined IR, the only place he's been consistent.",
+    "{player} sat out to help your team. Selfless.",
+    "Next time draft someone whose body doesn't fold like a lawn chair.",
+    "More fragile than your playoff hopes: {player}'s hamstring.",
+    "The injury fairy has your number on speed dial.",
+    "RIP to {player}'s season and your hopes.",
+    "Another one bites the dust. And the IR.",
+    "Your team is currently sponsored by Ace Bandage.",
+    "Skill issue. (And also injury issue.)",
+    "Brutal break. At least you can stop pretending he was helping.",
+    "Sorry about {player}. The league will miss you missing him.",
+    "Starting to feel bad about your lineup… almost.",
+    "This is why we can't have nice things. Or healthy players.",
+    "At least now you have one more excuse for that loss.",
+  ],
+  tweet_cut: [
+    "Cutdown casualty. Condolences.",
+    "Released into the wild. Your problem now.",
+    "Waiver wire just cleared its throat.",
+    "Time to find a warm body.",
+    "That's gonna leave a mark on the roster.",
+    "Don't refresh the waivers too hard.",
+    "Your roster. Your problem.",
+    "Even their real team knew {player} was a liability.",
+    "Waiver claim denied by the universe. {player} can underperform elsewhere.",
+    "Dropped by the team that drafted him. Evacuation order.",
+    "You just got out-transacted by an actual NFL franchise.",
+    "The team cut him before you could. Efficiency!",
+    "Your roster got healthier: that dead weight is finally off it.",
+    "Waiver wire called. They laughed.",
+    "Free roster spot — go make the same mistake again.",
+    "{player} is unavailable due to being bad at football.",
+    "Don't worry — the free agent pool is still deeper than your bench.",
+  ],
+  tweet_retire: [
+    "He retired rather than keep carrying your team.",
+    "{player} looked at your record and said I'm out.",
+    "Career over. Just like your shot at the championship.",
+    "RIP to {player}'s season and your hopes.",
+    "Released into the wild. Permanently.",
+  ],
+  tweet_off: [
+    "That's gonna leave a mark on the roster.",
+    "How's the stomach.",
+    "The group chat is already typing.",
+    "Sleep tight.",
+    "Not a drill.",
+    "Your roster. Your problem.",
+    "At least now you have one more excuse for that loss.",
+  ],
+  /** Fallback mix when the themed bank is empty or the story is mixed. */
   tweet: [
     "Your roster. Your problem.",
     "How's the stomach.",
@@ -251,45 +313,8 @@ const TEMPLATES = {
     "Hope you liked that pick.",
     "Tell the bench it might be starting.",
     "That's gonna leave a mark on the roster.",
-    "Waiver wire just cleared its throat.",
     "Time to find a warm body.",
-    "Your Sunday just got a plot twist.",
-    "The IR fairy strikes again.",
-    "Cutdown casualty. Condolences.",
-    "Hope the bench is ready for its close-up.",
-    "That's a bruise on the depth chart.",
-    "Somebody check the practice report twice.",
-    "The trainers are writing the story now.",
-    "Released into the wild. Your problem now.",
     "Ouch. For him and for you.",
-    // Ingested league smack — short enough to append after the fact.
-    "Congrats — {player} joined IR, the only place he's been consistent.",
-    "{player} sat out to help your team. Selfless.",
-    "Your roster got healthier: that dead weight is finally off it.",
-    "Next time draft someone whose body doesn't fold like a lawn chair.",
-    "More fragile than your playoff hopes: {player}'s hamstring.",
-    "Even their real team knew {player} was a liability.",
-    "Waiver claim denied by the universe. {player} can underperform elsewhere.",
-    "Dropped by the team that drafted him. Evacuation order.",
-    "You just got out-transacted by an actual NFL franchise.",
-    "The team cut him before you could. Efficiency!",
-    "He retired rather than keep carrying your team.",
-    "{player} looked at your record and said I'm out.",
-    "Career over. Just like your shot at the championship.",
-    "{player} is unavailable due to being bad at football.",
-    "Don't worry — the free agent pool is still deeper than your bench.",
-    "At least now you have one more excuse for that loss.",
-    "The injury fairy has your number on speed dial.",
-    "Starting to feel bad about your lineup… almost.",
-    "This is why we can't have nice things. Or healthy players.",
-    "RIP to {player}'s season and your hopes.",
-    "Another one bites the dust. And the IR.",
-    "Your team is currently sponsored by Ace Bandage.",
-    "Waiver wire called. They laughed.",
-    "Skill issue. (And also injury issue.)",
-    "Brutal break. At least you can stop pretending he was helping.",
-    "Free roster spot — go make the same mistake again.",
-    "Sorry about {player}. The league will miss you missing him.",
   ],
   tweet_who: [
     "Don't act surprised.",
@@ -304,25 +329,12 @@ const TEMPLATES = {
     "Have a seat — the medical staff has the floor.",
     "Congrats on the IR consistency.",
     "Selfless of him to sit out for you.",
-    "Dead weight: cleared.",
     "Lawn-chair body. Noted.",
-    "Playoff hopes and hamstrings: both fragile.",
     "Even the NFL team gave up first.",
-    "Universe denied your waiver claim.",
-    "Evacuation order from the franchise that drafted him.",
     "Out-transacted by a real NFL team.",
     "They cut him before you could.",
     "He retired on your watch.",
-    "He looked at your record and left.",
-    "Career over. Championship shot too.",
-    "Unavailable: bad at football.",
-    "Free agent pool > your bench.",
-    "One more excuse, coming right up.",
     "Injury fairy has you on speed dial.",
-    "Feel bad… almost.",
-    "No nice things. No healthy players.",
-    "RIP season. RIP hopes.",
-    "Another one for the IR.",
     "Sponsored by Ace Bandage.",
     "Waiver wire laughed.",
     "Skill issue + injury issue.",
@@ -340,31 +352,17 @@ const TEMPLATES = {
     "Someone's Sunday just got interesting.",
     "The waiver wire sends its regards.",
     "IR consistency award pending.",
-    "Selfless sit-out energy.",
-    "Dead weight, cleared.",
     "Lawn-chair durability.",
-    "Fragile hamstrings season.",
     "Even the NFL franchise knew.",
-    "Universe-level waiver denial.",
     "Full evacuation order.",
     "Out-transacted by the league.",
-    "Cut before the fantasy manager could.",
     "Retired rather than keep carrying.",
-    "Looked at the record and left.",
     "Career over. Title hopes too.",
-    "Unavailable: bad at football.",
-    "FA pool still deeper than that bench.",
-    "One more excuse unlocked.",
     "Injury fairy on speed dial.",
-    "Feel bad… almost.",
-    "No nice things. No healthy players.",
-    "RIP season and hopes.",
-    "Another one bites the IR.",
     "Ace Bandage era.",
     "Waiver wire laughed.",
-    "Skill issue. Injury issue.",
-    "Stop pretending he was helping.",
-    "Free roster spot incoming.",
+    "RIP season and hopes.",
+    "Another one bites the IR.",
   ],
 };
 
@@ -687,26 +685,56 @@ function joinFactAndPoke(fact, poke) {
  * Trade-category rows only poke when the wording is an actual waive/release/cut, not
  * "despite trade speculation, kept" which classify() still lands in `trade`.
  */
-export function tweetWantsPoke(text) {
+/** True retirement / walk-away — not "coming out of retirement". */
+function isRetirementExit(text) {
   const s = String(text == null ? "" : text);
-  if (!s.trim()) return false;
-  const { category, upbeat } = classify(s);
-  if (category === "injury") return !upbeat;
-  if (category === "suspension" || category === "off_field") return true;
-  if (/\b(retir\w*|announced (?:his )?retirement)\b/i.test(s)) return true;
-  if (category === "trade") {
-    const cut = /\b(waiv\w*|released|cut\b|claim\w* off waivers)\b/i.test(s);
-    const kept = /\b(kept|keeping|made the (?:final )?roster|made the 53|on the 53|53-man roster|finished (?:cutdown|cuts)|survived (?:the )?cut|staying (?:put)?)\b/i.test(s);
-    return cut && !kept;
+  if (/\b(coming out of retirement|out of retirement|unretir\w*|return(?:ing)? from retirement)\b/i.test(s)) {
+    return false;
   }
-  return false;
+  return /\b(retir\w*|announced (?:his )?retirement)\b/i.test(s);
+}
+
+/** Cut / waive / release wording that is not a "kept on the 53" story. */
+function isCutAction(text) {
+  const s = String(text == null ? "" : text);
+  const cut = /\b(waiv\w*|released|cut\b|claim\w* off waivers)\b/i.test(s);
+  const kept = /\b(kept|keeping|made the (?:final )?roster|made the 53|on the 53|53-man roster|finished (?:cutdown|cuts)|survived (?:the )?cut|staying (?:put)?)\b/i.test(s);
+  return cut && !kept;
+}
+
+/**
+ * Which themed poke bank a shared tweet should draw from.
+ * @returns {"injury"|"cut"|"retire"|"off"|""} empty means no poke
+ */
+export function tweetPokeKind(text) {
+  const s = String(text == null ? "" : text);
+  if (!s.trim()) return "";
+  if (isRetirementExit(s)) return "retire";
+  const { category, upbeat } = classify(s);
+  if (category === "injury") return upbeat ? "" : "injury";
+  if (category === "suspension" || category === "off_field") return "off";
+  if (category === "trade" && isCutAction(s)) return "cut";
+  return "";
+}
+
+export function tweetWantsPoke(text) {
+  return tweetPokeKind(text) !== "";
+}
+
+function tweetPokeBank(kind) {
+  if (kind === "injury") return TEMPLATES.tweet_injury || TEMPLATES.tweet;
+  if (kind === "cut") return TEMPLATES.tweet_cut || TEMPLATES.tweet;
+  if (kind === "retire") return TEMPLATES.tweet_retire || TEMPLATES.tweet;
+  if (kind === "off") return TEMPLATES.tweet_off || TEMPLATES.tweet;
+  return TEMPLATES.tweet;
 }
 
 function tweetPoke(item, manager) {
   const player = String((item && item.player) || "").trim();
   const seed = item && (item.id || item.title || player || manager) || "poke";
+  const kind = tweetPokeKind(item && item.title);
   if (manager && player) {
-    const bank = TEMPLATES.tweet;
+    const bank = tweetPokeBank(kind);
     return bank[hash(seed) % bank.length]
       .replace(/\{player\}/g, player)
       .replace(/\{team\}/g, String((item && item.team) || "his old spot"))

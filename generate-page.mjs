@@ -944,9 +944,9 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="Home">
+    <button type="button" class="go-home" id="goHome" aria-label="Your leagues">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path fill="currentColor" d="M12 3.2l9 7.4h-2.4V21h-5.2v-6.2H10.6V21H5.4v-10.4H3L12 3.2z"/>
+        <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
       </svg>
     </button>
     <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
@@ -4713,9 +4713,9 @@ const html = `<!DOCTYPE html>
     }
 
     document.getElementById("goHome").addEventListener("click", () => {
-      if (authSession && (appScreen === "settings" || appScreen === "create"
-        || appScreen === "invites" || appScreen === "redeem" || appScreen === "home"
-        || appScreen === "gate")) {
+      // Back to Your leagues (one league or many). Still clears any open seat first.
+      if (authSession) {
+        clearLeague();
         goAppHome();
         return;
       }
@@ -6027,15 +6027,24 @@ if (!inline.includes("function reigningChampName()")
 if (!inline.includes("function seatTitle(title)")) {
   throw new Error("bag headings must flair seat names through seatTitle()");
 }
-// The home icon leaves a seat (clearLeague) or returns to Your leagues from app shell screens.
+// Header back arrow: leave a seat and return to Your leagues.
 if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => {')) {
-  throw new Error("the home icon must clear the seat -- it is the only exit from a seat now");
+  throw new Error("the leagues back control must clear the seat -- it is the only exit from a seat now");
 }
 if (!inline.includes("clearLeague()") || !fnBody("clearLeague").includes("\n      me = null;")) {
-  throw new Error("the home icon path must still call clearLeague to leave a seat");
+  throw new Error("the leagues back path must still call clearLeague to leave a seat");
+}
+if (!html.includes('id="goHome"') || !html.includes('aria-label="Your leagues"')) {
+  throw new Error("header back control must be labeled Your leagues");
+}
+if (!html.includes("M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z")) {
+  throw new Error("header home glyph must be a back arrow");
 }
 if (!html.includes('id="goSettings"') || !inline.includes("function openSettings()")) {
-  throw new Error("Settings control next to Home is required for commissioner admin");
+  throw new Error("Settings control next to leagues back is required for commissioner admin");
+}
+if (!inline.includes("goAppHome();")) {
+  throw new Error("signed-in back control must open Your leagues via goAppHome()");
 }
 if (!inline.includes("function renderSettings()")) {
   throw new Error("Settings screen renderer missing");
@@ -6054,23 +6063,15 @@ if (!inline.includes("function inviteCodeVisible(")) {
 }
 // The page HTML is a template literal: a lone "\n" inside client JS becomes a real newline and
 // blanks the browser. Keep the inline script parseable.
+// The page HTML is a template literal: a lone "\n" inside client JS becomes a real newline and
+// blanks the browser. Keep the inline script parseable.
 try {
   const start = html.indexOf("<script>") + "<script>".length;
   const end = html.indexOf("</script>", start);
-  const body = html.slice(start, end);
-  try { new Function(body); }
-  catch (err) {
-    // locate rough offset
-    let lo = 0, hi = body.length;
-    while (hi - lo > 80) {
-      const mid = (lo + hi) >> 1;
-      try { new Function(body.slice(0, mid)); lo = mid; } catch { hi = mid; }
-    }
-    const snippet = body.slice(Math.max(0, lo - 60), lo + 80);
-    throw new Error("generated inline script does not parse: " + err.message + " near: " + JSON.stringify(snippet));
-  }
+  // eslint-disable-next-line no-new-func
+  new Function(html.slice(start, end));
 } catch (err) {
-  throw new Error(err && err.message);
+  throw new Error("generated inline script does not parse: " + (err && err.message));
 }
 // Newline-anchored, because "me = null;" is a substring of "partnerName = null;" two lines below
 // it -- a guard that cannot fail is the thing this file has the most of already.

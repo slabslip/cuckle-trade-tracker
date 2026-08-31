@@ -1,6 +1,6 @@
 /* Chuckle Fantasy — installable shell. Cache the app shell; network-first for JSON. */
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
-const CACHE = "chuckle-shell-v8-champ-week";
+const CACHE = "chuckle-shell-v9-news-feed";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
 
 self.addEventListener("install", (event) => {

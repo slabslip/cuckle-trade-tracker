@@ -1,5 +1,6 @@
 /* Chuckle Fantasy — installable shell. Cache the app shell; network-first for JSON. */
-const CACHE = "chuckle-shell-v1";
+/* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
+const CACHE = "chuckle-shell-v2-psa-home";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -20,8 +21,20 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   // Live API / Edge always network.
   if (url.hostname.includes("supabase.co")) return;
-  const isShell = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html")
-    || url.pathname.endsWith("manifest.webmanifest") || url.pathname.includes("/icon-");
+  // index.html / app root: network-first so Design Mode and deploys are not stuck on a
+  // cache-first shell (that is how the pre-PSA home kept showing after a redesign).
+  const isAppHtml = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
+  if (isAppHtml) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
+        return res;
+      }).catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html"))),
+    );
+    return;
+  }
+  const isShell = url.pathname.endsWith("manifest.webmanifest") || url.pathname.includes("/icon-");
   if (isShell) {
     event.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {

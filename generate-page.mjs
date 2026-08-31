@@ -5591,9 +5591,20 @@ const html = `<!DOCTYPE html>
           await onRedeemInvite();
           return;
         }
-        await loadMemberships().catch((err) => console.error(err));
+        // Design Mode entry (design-league-home.html): skip the memberships API — the
+        // design-mode token cannot fetch remote rows, and without a local match boot used to
+        // fall through to Your leagues (the old app home) instead of the PSA league home.
+        let designLeagueHome = false;
+        try {
+          designLeagueHome = sessionStorage.getItem("cuckle.design.league_home") === "1"
+            || (params.get("design") || "") === "league-home";
+          if (designLeagueHome) sessionStorage.removeItem("cuckle.design.league_home");
+        } catch (err) { /* private mode */ }
+        if (!designLeagueHome) {
+          await loadMemberships().catch((err) => console.error(err));
+        }
         if (activeLeague && activeLeague.sleeper_league_id) {
-          const m = memberships.find((x) => x.sleeper_league_id === activeLeague.sleeper_league_id);
+          const m = (memberships || []).find((x) => x.sleeper_league_id === activeLeague.sleeper_league_id);
           if (m) {
             activeLeague = Object.assign({}, activeLeague, {
               name: m.name,
@@ -5602,6 +5613,8 @@ const html = `<!DOCTYPE html>
               team_name: m.team_name,
             });
             saveActiveLeague(activeLeague);
+          }
+          if (m || designLeagueHome) {
             try {
               await openLeagueDashboard(activeLeague);
               return;

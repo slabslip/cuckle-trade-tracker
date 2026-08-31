@@ -776,13 +776,15 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
    */
   const note = trimNote(sub.note);
   const agentTip = trimAgentTip(sub.agent_tip);
+  // Topic polarity for the *story* (cleared / avoided IR / …). Row category stays "tweet".
+  const topic = classify(tweet.text);
   const item = {
     id,
     player: player ? player.name : "",
     team: player ? player.team : null,
     position: player ? player.position : null,
     category: "tweet",
-    upbeat: false,
+    upbeat: topic.upbeat,
     title: tweet.text,
     tweet_handle: tweet.author_handle,
   };
@@ -828,7 +830,7 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     managers: tagged,
     category: "tweet",
     severity: 4,
-    upbeat: false,
+    upbeat: topic.upbeat,
     // A shared tweet's headline is the tweet, and the expander below it shows the same text in
     // full. Leaving `headline` empty keeps the collapsed row to the note and the summary, which
     // is what the feature asked for: their words on top, the read beneath, the detail behind a

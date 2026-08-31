@@ -132,6 +132,38 @@ export const CATEGORIES = [
 const UPBEAT = /\b(returns?|returning|cleared|activated|full (?:go|participant|practice)|expected to (?:play|practice|start|suit up)|no structural damage|avoided|good to go|will play|upgraded|back at practice|resumed|progressing|ahead of schedule|out of the (?:boot|walking boot))\b/i;
 
 /**
+ * Negated IR / injured-reserve placement.
+ *
+ * "Keaton Mitchell is not going to start on IR" is *good* news — healthy enough to be
+ * active, maybe available week one — but classify() still lands on `injury` because of the
+ * bare `IR` token. Without this, tweetPokeKind() needles the owner ("Ouch…") for a win.
+ * Plain "placed on IR" / "starts the season on IR" stay negative and still poke.
+ */
+const UPBEAT_IR_AVOID = new RegExp(
+  String.raw`\b(?:` +
+    // "is not going to start on IR" / "won't begin the season on injured reserve"
+    String.raw`(?:(?:is|are|was|were|will)\s+)?not\s+(?:going\s+to\s+|gonna\s+)?` +
+      String.raw`(?:start(?:ing)?|begin(?:ning)?|open(?:ing)?|placed|going)\s+` +
+      String.raw`(?:(?:the|this)\s+season\s+)?on\s+(?:IR|injured\s+reserve)` +
+    String.raw`|` +
+    String.raw`(?:won'?t|will\s+not)\s+(?:start|begin|open)\s+(?:(?:the|this)\s+season\s+)?on\s+(?:IR|injured\s+reserve)` +
+    String.raw`|` +
+    // "avoided IR", "not on the IR", "activated off IR"
+    String.raw`avoid(?:ed|ing|s)?\s+(?:the\s+)?(?:IR|injured\s+reserve)` +
+    String.raw`|` +
+    String.raw`not\s+on\s+(?:the\s+)?(?:IR|injured\s+reserve)` +
+    String.raw`|` +
+    String.raw`off\s+(?:the\s+)?(?:IR|injured\s+reserve)` +
+  String.raw`)\b`,
+  "i",
+);
+
+function readsUpbeat(text) {
+  const s = String(text == null ? "" : text);
+  return UPBEAT.test(s) || UPBEAT_IR_AVOID.test(s);
+}
+
+/**
  * The templates. `{who}` is the manager, `{player}` the player, `{team}` their NFL team.
  *
  * Every slot is filled with plain text and the result is escaped with esc() at render time —
@@ -656,7 +688,7 @@ function hash(s) {
 export function classify(title) {
   const s = String(title == null ? "" : title);
   const cat = CATEGORIES.find((c) => c.test.test(s)) || CATEGORIES[CATEGORIES.length - 1];
-  return { category: cat.id, label: cat.label, severity: cat.severity, upbeat: UPBEAT.test(s) };
+  return { category: cat.id, label: cat.label, severity: cat.severity, upbeat: readsUpbeat(s) };
 }
 
 /**
@@ -679,8 +711,8 @@ function joinFactAndPoke(fact, poke) {
  *
  * Cuts, injuries, suspensions and off-field hits get needled. Strictly informational posts
  * (made the roster, kept on the 53, generic buzz, depth-chart notes without hurt wording)
- * ship the fact alone. Good-injury news (cleared / returning) is informational in spirit —
- * the owner already got the upside; no jab.
+ * ship the fact alone. Good-injury news (cleared / returning / not starting on IR) is
+ * informational in spirit — the owner already got the upside; no jab.
  *
  * Trade-category rows only poke when the wording is an actual waive/release/cut, not
  * "despite trade speculation, kept" which classify() still lands in `trade`.
@@ -871,6 +903,9 @@ export const TWEET_SAMPLES = [
     text: "Sounds like TreVeyon Henderson is going to be fine - just rolled his ankle \u201cIt\u2019s not significant\u201d via @_AndrewCallahan" },
   { player: "Tank Dell", team: "HOU", position: "WR", tweet_handle: "DhananiZain",
     text: "On Tank Dell via @AaronWilson_NFL : Somewhat speculative but thinks that Dell goes on IR-R to start the year He\u2019s been off my board for a while" },
+  // Negated IR: healthy enough to be active — must summarise as Good injury news, no poke.
+  { player: "Keaton Mitchell", team: "BAL", position: "RB", tweet_handle: "NFL_DovKleiman",
+    text: "Keaton Mitchell is not going to start on IR to start the season as of right now and Jaret Patterson is not on the initial 53 man roster per this post" },
   // Surname-only wording, which is where the subject clause earns its place: the fact never says
   // "George Kittle", so the summary has to.
   { player: "George Kittle", team: "SF", position: "TE", tweet_handle: "AdamSchefter",

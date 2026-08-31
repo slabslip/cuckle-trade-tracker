@@ -45,12 +45,15 @@
          44px rather than padding, which would push the ellipsis off the text. */
       min-height: 44px; line-height: 44px;
     }
-    button.go-home {
+    button.go-home, button.go-settings {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
     }
-    button.go-home:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.go-home:focus-visible, button.go-settings:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    button.go-settings[hidden] { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
@@ -939,6 +942,11 @@
     <button type="button" class="go-home" id="goHome" aria-label="Home">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path fill="currentColor" d="M12 3.2l9 7.4h-2.4V21h-5.2v-6.2H10.6V21H5.4v-10.4H3L12 3.2z"/>
+      </svg>
+    </button>
+    <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
       </svg>
     </button>
     <a href="./">Chuckle Fantasy</a>
@@ -2550,7 +2558,7 @@
     let authBusy = false;
     let authError = "";
     // Multi-league app shell. "dash" = existing meter for the active league.
-    // gate | home | create | invites | redeem | dash
+    // gate | home | create | invites | redeem | settings | dash
     let appScreen = "gate";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
@@ -2564,6 +2572,7 @@
     let inviteCodesVisible = false; // true only right after mint/rotate
     let redeemCode = "";
     let gateMode = "signup"; // signup | signin — get started first
+    let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
 
     function voteDeviceId() {
       try {
@@ -2643,6 +2652,85 @@
       authError = "";
       appScreen = "gate";
       gateMode = "signup";
+      paintSettingsBtn();
+    }
+
+    function paintSettingsBtn() {
+      const btn = document.getElementById("goSettings");
+      if (!btn) return;
+      btn.hidden = !authSession;
+    }
+
+    function appPublicUrl() {
+      try {
+        const u = new URL(window.location.href);
+        u.hash = "";
+        u.search = "";
+        let path = u.pathname || "/";
+        if (path.endsWith("index.html")) path = path.slice(0, -10) || "/";
+        if (!path.endsWith("/")) path += "/";
+        return u.origin + path;
+      } catch (err) {
+        return "https://slabslip.github.io/cuckle-trade-tracker/";
+      }
+    }
+
+    function inviteDmText(teamName, code) {
+      return "Your Chuckle Fantasy invite for " + teamName + " is " + code
+        + ". Open " + appPublicUrl()
+        + " → Create account → Redeem invite → paste that code (only yours).";
+    }
+
+    function copyText(text) {
+      settingsCopyNote = "";
+      const done = () => {
+        settingsCopyNote = "Copied.";
+        render();
+        setTimeout(() => {
+          if (settingsCopyNote === "Copied.") {
+            settingsCopyNote = "";
+            render();
+          }
+        }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(done).catch(() => {
+          settingsCopyNote = "Copy failed — select the code manually.";
+          render();
+        });
+      }
+      settingsCopyNote = "Copy failed — select the code manually.";
+      render();
+      return Promise.resolve();
+    }
+
+    function openSettings() {
+      if (!authSession) {
+        appScreen = "gate";
+        gateMode = "signin";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      joinError = "";
+      settingsCopyNote = "";
+      appScreen = "settings";
+      focusNext = ".screen-h";
+      loadMemberships().then(() => render()).catch((err) => {
+        console.error(err);
+        render();
+      });
+    }
+
+    function goAppHome() {
+      appScreen = "home";
+      joinError = "";
+      settingsCopyNote = "";
+      focusNext = ".screen-h";
+      loadMemberships().then(() => render()).catch((err) => {
+        console.error(err);
+        render();
+      });
     }
 
     function saveActiveLeague(league) {
@@ -2924,6 +3012,7 @@
         seat_user_id: null,
         seat_name: null,
       });
+      paintSettingsBtn();
     }
 
     async function authSignIn(username, password) {
@@ -2957,6 +3046,7 @@
         seat_user_id: null,
         seat_name: null,
       });
+      paintSettingsBtn();
     }
 
     async function loadMemberships() {
@@ -4164,33 +4254,92 @@
             ? "Already claimed"
             : (showCode
               ? 'Invite code: <code style="user-select:all">' + esc(inv.code) + "</code>"
-                + ' <button type="button" class="linkish" data-copy-code="' + esc(inv.code) + '">Copy</button>'
               : "Unclaimed — rotate to reveal a new code"))
           + "</p>"
+          + (showCode
+            ? '<div class="app-actions">'
+              + '<button type="button" class="linkish" data-copy-code="' + esc(inv.code) + '">Copy code</button>'
+              + '<button type="button" class="linkish" data-copy-dm="'
+              + esc(inv.team_name) + '" data-copy-dm-code="' + esc(inv.code) + '">Copy DM text</button>'
+              + "</div>"
+            : "")
           + (!inv.claimed && !myMembership
             ? '<button type="button" class="chip" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">Claim this seat</button>"
             : "")
           + "</div>";
       }).join("");
+      const visibleCodes = (createdInvites || []).filter(
+        (inv) => inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0 && !inv.claimed,
+      );
       return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
+        + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
         + '<p class="caption"><b>' + esc(L.name || "League") + "</b> — "
         + minted + " seat invite" + (minted === 1 ? "" : "s")
         + (total ? " (league has " + total + " roster" + (total === 1 ? "" : "s") + ")" : "")
-        + ". DM each manager <b>only their</b> code. Codes are tied to the Sleeper team.</p>"
+        + ". DM each manager <b>only their</b> code. Chuckle Fantasy does not email invites.</p>"
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + rows
         + '<div class="app-actions" style="margin-top:12px">'
         + '<button type="button" class="chip" data-rotate-invites="1"' + (joinBusy ? " disabled" : "") + ">"
         + (joinBusy ? "Working…" : "Rotate unclaimed") + "</button>"
+        + (visibleCodes.length
+          ? '<button type="button" class="chip" data-copy-all-dms="1">Copy all DM texts</button>'
+          : "")
         + (myMembership
           ? '<button type="button" class="chip" data-open-league="' + esc(L.sleeper_league_id) + '">Open dashboard</button>'
           : '<p class="caption">Claim your own seat above so this league appears on Your leagues.</p>')
         + "</div>"
         + '<p class="caption">Rotate only when a code was lost or leaked. Claimed seats are never rotated.</p>'
         + "</div>";
+    }
+
+    function renderSettings() {
+      const uname = (authSession && authSession.username) || "—";
+      const email = authEmailForUsername(uname);
+      const owned = ownedLeagues || [];
+      const memById = {};
+      for (const m of memberships || []) memById[m.sleeper_league_id] = m;
+      const adminRows = owned.length
+        ? owned.map((o) => {
+          const mem = memById[o.sleeper_league_id];
+          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+          return '<div class="app-card">'
+            + "<h3>" + esc(o.name) + "</h3>"
+            + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
+            + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
+            + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
+            + "</p>"
+            + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
+            + '">Send / manage invites</button>'
+            + (mem
+              ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
+                + '">Open dashboard</button>'
+              : "")
+            + "</div></div>";
+        }).join("")
+        : '<p class="caption">You have not created a league yet. Create one from Your leagues to become commissioner and mint seat invites.</p>';
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
+        + '<div class="app-card"><h3>Account</h3>'
+        + '<p class="caption" style="margin:0">Signed in as <b>' + esc(uname) + "</b></p>"
+        + '<p class="caption">Auth email (synthetic, never mailed): <code>' + esc(email) + "</code></p>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
+        + "</div></div>"
+        + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
+        + '<p class="caption">As commissioner you mint one invite per Sleeper seat and DM each manager their code. They redeem it to join.</p>'
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
+        + adminRows
+        + '<div class="app-actions" style="margin-top:8px">'
+        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div></div>";
     }
 
     function renderRedeemInvite() {
@@ -4225,14 +4374,16 @@
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
-          || appScreen === "invites" || appScreen === "redeem") {
+          || appScreen === "invites" || appScreen === "redeem" || appScreen === "settings") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
         app.innerHTML = appScreen === "gate" ? renderAppGate()
           : appScreen === "create" ? renderCreateLeague()
           : appScreen === "invites" ? renderInvites()
           : appScreen === "redeem" ? renderRedeemInvite()
+          : appScreen === "settings" ? renderSettings()
           : renderAppHome();
+        paintSettingsBtn();
         const land = focusNext ? app.querySelector(focusNext) : null;
         focusNext = null;
         if (land) land.focus({ preventScroll: true });
@@ -4249,10 +4400,12 @@
         // Non-Cuckle leagues without a ready sync get the pending screen, not a broken meter.
         const hasBook = !!(league && members);
         if (!hasBook) {
+          paintSettingsBtn();
           app.innerHTML = renderPendingLeague();
           return;
         }
       }
+      paintSettingsBtn();
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
@@ -4398,8 +4551,24 @@
       return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
     }
 
-    document.getElementById("goHome").addEventListener("click", () => clearLeague());
-    document.querySelector("h1.brand a").addEventListener("click", (e) => { e.preventDefault(); clearLeague(); });
+    document.getElementById("goHome").addEventListener("click", () => {
+      if (authSession && (appScreen === "settings" || appScreen === "create"
+        || appScreen === "invites" || appScreen === "redeem" || appScreen === "home"
+        || appScreen === "gate")) {
+        goAppHome();
+        return;
+      }
+      clearLeague();
+    });
+    document.getElementById("goSettings").addEventListener("click", () => openSettings());
+    document.querySelector("h1.brand a").addEventListener("click", (e) => {
+      e.preventDefault();
+      if (authSession && appScreen !== "dash") {
+        goAppHome();
+        return;
+      }
+      clearLeague();
+    });
     /**
      * The clock control's own listener. It has to be its own, because #app's delegated handler
      * cannot see a control that lives in the brand header -- the same split the seat picker had
@@ -4695,10 +4864,12 @@
       }
       const appHome = e.target.closest("[data-app-home]");
       if (appHome) {
-        appScreen = "home";
-        joinError = "";
-        focusNext = ".screen-h";
-        loadMemberships().then(() => render()).catch((err) => { console.error(err); render(); });
+        goAppHome();
+        return;
+      }
+      const appSettings = e.target.closest("[data-app-settings]");
+      if (appSettings) {
+        openSettings();
         return;
       }
       const appCreate = e.target.closest("[data-app-create]");
@@ -4746,10 +4917,22 @@
       }
       const copyCode = e.target.closest("[data-copy-code]");
       if (copyCode) {
-        const code = copyCode.dataset.copyCode;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(code).catch(() => {});
-        }
+        copyText(copyCode.dataset.copyCode);
+        return;
+      }
+      const copyDm = e.target.closest("[data-copy-dm]");
+      if (copyDm) {
+        copyText(inviteDmText(copyDm.dataset.copyDm, copyDm.dataset.copyDmCode));
+        return;
+      }
+      const copyAllDms = e.target.closest("[data-copy-all-dms]");
+      if (copyAllDms) {
+        const lines = (createdInvites || [])
+          .filter((inv) => inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0 && !inv.claimed)
+          .map((inv) => inviteDmText(inv.team_name, inv.code));
+        copyText(lines.join("
+
+"));
         return;
       }
       const openLeagueBtn = e.target.closest("[data-open-league]");
@@ -4941,6 +5124,7 @@
     // App boot: account gate → league home → dashboard. The meter only loads after a league
     // is selected. Vote tallies still load after paint when we enter a ready league.
     authLoad();
+    paintSettingsBtn();
     document.getElementById("app").hidden = false;
     (async () => {
       try {

@@ -75,9 +75,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Hop tape for a pick (who held it, flip vs used).
 - Rookie surplus (player today − pick cost on draft day) and a separate 2019 startup tab (player today; DP has no 2019 startup pick prices).
 - Phone-first static page, existing CSS, no new packages.
-- **Multi-league app shell** — one home, add Sleeper league ID, username/password, seat
-  claim per league. Shared meter infrastructure; Cuckle is the first ready league.
-  See [`APP_SDD.md`](APP_SDD.md).
+- **Chuckle Fantasy multi-league app** — get started with Sleeper and/or ESPN
+  user ID, username/password, join by Sleeper league ID. CuckleChunckle is the
+  first ready league. See [`APP_SDD.md`](APP_SDD.md).
 
 **Out (CUT)**
 

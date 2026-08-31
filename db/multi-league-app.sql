@@ -4,8 +4,10 @@
 -- Paste after db/phase1-seat-auth.sql (Auth + seat_profiles for votes may already
 -- exist). Idempotent. Walkthrough: docs/APP_SDD.md and docs/SUPABASE_SETUP.md §8.
 --
--- Product shape:
---   App home → add Sleeper league ID → pick team → username/password
+-- Product shape (Chuckle Fantasy):
+--   Get started → Sleeper and/or ESPN user ID + username/password
+--   Add league → Sleeper league ID → seat matched from Sleeper user ID
+--   CuckleChunckle: enter league ID 1315431339301806080, then account → dashboard
 --   One Auth user can join many leagues; one seat per league is unique.
 -- ============================================================================
 
@@ -16,10 +18,18 @@
 create table if not exists public.app_profiles (
   auth_user_id uuid primary key references auth.users (id) on delete cascade,
   username     text        not null,
+  sleeper_user_id text,
+  espn_user_id    text,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
   constraint app_profiles_username_len check (length(username) between 3 and 32),
-  constraint app_profiles_username_shape check (username ~ '^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$')
+  constraint app_profiles_username_shape check (username ~ '^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$'),
+  constraint app_profiles_sleeper_len check (sleeper_user_id is null or length(sleeper_user_id) between 1 and 64),
+  constraint app_profiles_espn_len check (espn_user_id is null or length(espn_user_id) between 1 and 64),
+  -- At least one platform identity is required to get started.
+  constraint app_profiles_platform_required check (
+    sleeper_user_id is not null or espn_user_id is not null
+  )
 );
 
 do $$
@@ -215,3 +225,65 @@ on conflict (sleeper_league_id) do update
   set name = excluded.name,
       season = excluded.season,
       status = 'ready';
+
+
+-- --------------------------------------------------------------------------
+-- 6. Platform IDs on existing app_profiles (idempotent converge)
+-- --------------------------------------------------------------------------
+alter table public.app_profiles add column if not exists sleeper_user_id text;
+alter table public.app_profiles add column if not exists espn_user_id text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.app_profiles'::regclass
+      and conname = 'app_profiles_sleeper_len'
+  ) then
+    alter table public.app_profiles
+      add constraint app_profiles_sleeper_len
+      check (sleeper_user_id is null or length(sleeper_user_id) between 1 and 64) not valid;
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.app_profiles'::regclass
+      and conname = 'app_profiles_espn_len'
+  ) then
+    alter table public.app_profiles
+      add constraint app_profiles_espn_len
+      check (espn_user_id is null or length(espn_user_id) between 1 and 64) not valid;
+  end if;
+  begin
+    alter table public.app_profiles validate constraint app_profiles_sleeper_len;
+  exception when check_violation then
+    raise warning 'app_profiles_sleeper_len: existing rows violate; enforced for new rows only';
+  end;
+  begin
+    alter table public.app_profiles validate constraint app_profiles_espn_len;
+  exception when check_violation then
+    raise warning 'app_profiles_espn_len: existing rows violate; enforced for new rows only';
+  end;
+  -- Platform-required: only add if no orphan profiles lack both IDs.
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.app_profiles'::regclass
+      and conname = 'app_profiles_platform_required'
+  ) then
+    begin
+      alter table public.app_profiles
+        add constraint app_profiles_platform_required
+        check (sleeper_user_id is not null or espn_user_id is not null) not valid;
+      alter table public.app_profiles validate constraint app_profiles_platform_required;
+    exception when check_violation then
+      raise warning 'app_profiles_platform_required blocked by rows missing both platform IDs; fill them then re-run';
+    end;
+  end if;
+end $$;
+
+create unique index if not exists app_profiles_sleeper_user_uidx
+  on public.app_profiles (sleeper_user_id)
+  where sleeper_user_id is not null;
+
+create unique index if not exists app_profiles_espn_user_uidx
+  on public.app_profiles (espn_user_id)
+  where espn_user_id is not null;

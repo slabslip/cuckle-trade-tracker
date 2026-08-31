@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta name="theme-color" content="#0b0b0d" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <title>CuckleChunckle</title>
+  <title>Chuckle Fantasy</title>
   <style>
     :root {
       --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
@@ -938,7 +938,7 @@
         <path fill="currentColor" d="M12 3.2l9 7.4h-2.4V21h-5.2v-6.2H10.6V21H5.4v-10.4H3L12 3.2z"/>
       </svg>
     </button>
-    <a href="./">CuckleChunckle</a>
+    <a href="./">Chuckle Fantasy</a>
     <span class="lens-wrap" id="lensWrap">
       <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
       <div id="scoreAs" hidden></div>
@@ -2852,12 +2852,23 @@
       return data;
     }
 
-    async function authSignUp(username, password) {
+    async function authSignUp(username, password, sleeperUserId, espnUserId) {
       const name = normalizeUsername(username);
       if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
         throw new Error("Username: 3–32 chars, letters/numbers/_ . -");
       }
       if (String(password || "").length < 6) throw new Error("Password must be at least 6 characters.");
+      const sleeperId = String(sleeperUserId || "").trim() || null;
+      const espnId = String(espnUserId || "").trim() || null;
+      if (!sleeperId && !espnId) {
+        throw new Error("Enter your Sleeper user ID, ESPN user ID, or both.");
+      }
+      if (sleeperId && !/^d{6,64}$/.test(sleeperId)) {
+        throw new Error("Sleeper user ID should be digits (from your Sleeper profile URL).");
+      }
+      if (espnId && !/^[A-Za-z0-9_-]{3,64}$/.test(espnId)) {
+        throw new Error("ESPN user ID looks off — use the ID from your ESPN fantasy profile.");
+      }
       const email = authEmailForUsername(name);
       const res = await fetch(AUTH_API + "/signup", {
         method: "POST",
@@ -2869,7 +2880,11 @@
         body: JSON.stringify({
           email: email,
           password: password,
-          data: { username: name },
+          data: {
+            username: name,
+            sleeper_user_id: sleeperId,
+            espn_user_id: espnId,
+          },
         }),
         signal: voteAbort(),
       });
@@ -2885,7 +2900,7 @@
       }
       const userId = (session.user && session.user.id) || (data.user && data.user.id);
       if (!userId || !session.access_token) throw new Error("Sign-up did not return a session. Check Confirm email is OFF.");
-      // Profile row — username uniqueness enforced in DB.
+      // Profile row — username + platform IDs; uniqueness enforced in DB.
       const prof = await fetch(VOTE_API + "/app_profiles", {
         method: "POST",
         headers: {
@@ -2894,13 +2909,23 @@
           "Content-Type": "application/json",
           Prefer: "return=minimal",
         },
-        body: JSON.stringify({ auth_user_id: userId, username: name }),
+        body: JSON.stringify({
+          auth_user_id: userId,
+          username: name,
+          sleeper_user_id: sleeperId,
+          espn_user_id: espnId,
+        }),
         signal: voteAbort(),
       });
       if (!prof.ok) {
         const t = await prof.text();
         if (t.indexOf("app_profiles_username_key") >= 0) throw new Error("That username is taken.");
-        throw new Error("Could not save username (" + prof.status + ").");
+        if (t.indexOf("app_profiles_sleeper_user") >= 0) throw new Error("That Sleeper user ID is already linked to an account.");
+        if (t.indexOf("app_profiles_espn_user") >= 0) throw new Error("That ESPN user ID is already linked to an account.");
+        if (t.indexOf("app_profiles_platform_required") >= 0) {
+          throw new Error("Enter your Sleeper user ID, ESPN user ID, or both.");
+        }
+        throw new Error("Could not save profile (" + prof.status + ").");
       }
       authSave({
         access_token: session.access_token,
@@ -2909,7 +2934,9 @@
           || Math.floor(Date.now() / 1000) + (Number(session.expires_in) || 3600),
         user_id: userId,
         username: name,
-        seat_user_id: null,
+        sleeper_user_id: sleeperId,
+        espn_user_id: espnId,
+        seat_user_id: sleeperId,
         seat_name: null,
       });
     }
@@ -2920,9 +2947,12 @@
       const data = await authPasswordGrant(authEmailForUsername(name), password);
       const userId = data.user && data.user.id;
       let uname = name;
+      let sleeperId = null;
+      let espnId = null;
       try {
         const pr = await fetch(
-          VOTE_API + "/app_profiles?select=username&auth_user_id=eq." + encodeURIComponent(userId),
+          VOTE_API + "/app_profiles?select=username,sleeper_user_id,espn_user_id&auth_user_id=eq."
+            + encodeURIComponent(userId),
           {
             headers: { apikey: VOTE_ANON, Authorization: "Bearer " + data.access_token },
             signal: voteAbort(),
@@ -2930,7 +2960,11 @@
         );
         if (pr.ok) {
           const rows = await pr.json();
-          if (rows[0] && rows[0].username) uname = rows[0].username;
+          if (rows[0]) {
+            if (rows[0].username) uname = rows[0].username;
+            sleeperId = rows[0].sleeper_user_id || null;
+            espnId = rows[0].espn_user_id || null;
+          }
         }
       } catch (err) { /* username from form is fine */ }
       authSave({
@@ -2940,7 +2974,9 @@
           || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
         user_id: userId,
         username: uname,
-        seat_user_id: null,
+        sleeper_user_id: sleeperId,
+        espn_user_id: espnId,
+        seat_user_id: sleeperId,
         seat_name: null,
       });
     }
@@ -3003,13 +3039,17 @@
       if (authBusy) return;
       const userEl = document.getElementById("gateUser");
       const passEl = document.getElementById("gatePass");
+      const sleeperEl = document.getElementById("gateSleeper");
+      const espnEl = document.getElementById("gateEspn");
       const username = userEl && userEl.value;
       const password = passEl && passEl.value;
+      const sleeperId = sleeperEl && sleeperEl.value;
+      const espnId = espnEl && espnEl.value;
       authBusy = true;
       authError = "";
       render();
       try {
-        if (gateMode === "signup") await authSignUp(username, password);
+        if (gateMode === "signup") await authSignUp(username, password, sleeperId, espnId);
         else await authSignIn(username, password);
         await loadMemberships();
         appScreen = "home";
@@ -3035,6 +3075,15 @@
       try {
         const data = await joinLeagueCall("preview", joinLeagueId);
         joinPreview = data.league;
+        // Auto-match seat from the Sleeper user ID collected at signup.
+        const mine = authSession && authSession.sleeper_user_id;
+        if (mine && (joinPreview.teams || []).some((t) => t.sleeper_user_id === mine)) {
+          joinSeatId = mine;
+        } else if (mine) {
+          joinError = "Your Sleeper user ID is not a seat in this league. Check the ID or pick your team below.";
+        } else {
+          joinError = "No Sleeper user ID on your account — pick your team below, or add a Sleeper ID under a new signup.";
+        }
       } catch (err) {
         joinError = (err && err.message) || "Could not load that league.";
         console.error(err);
@@ -3901,13 +3950,23 @@
     }
 
     function renderAppGate() {
-      const title = gateMode === "signup" ? "Create account" : "Sign in";
+      const title = gateMode === "signup" ? "Get started" : "Sign in";
       const go = gateMode === "signup" ? "Create account" : "Sign in";
+      const platformFields = gateMode === "signup"
+        ? '<p class="caption" style="margin:0">Required: your <b>Sleeper user ID</b>, <b>ESPN user ID</b>, or both if you moved leagues and still have data on each.</p>'
+          + '<label>Sleeper user ID<input id="gateSleeper" name="sleeperId" inputmode="numeric" autocomplete="off"'
+          + ' placeholder="Digits from sleeper.app" autocapitalize="off"'
+          + (authBusy ? " disabled" : "") + " /></label>"
+          + '<label>ESPN user ID<input id="gateEspn" name="espnId" autocomplete="off"'
+          + ' placeholder="Optional if you entered Sleeper" autocapitalize="off"'
+          + (authBusy ? " disabled" : "") + " /></label>"
+        : "";
       return '<div class="app-shell">'
-        + '<h2 class="screen-h" tabindex="-1">Cuckle</h2>'
-        + '<p class="caption">Trade meter for Sleeper leagues. One account — join any league by ID, pick your team, vote and track deals.</p>'
+        + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
+        + '<p class="caption">Trade meter for fantasy leagues. Link your Sleeper and/or ESPN ID, join a league by ID, then open your dashboard.</p>'
         + '<div class="app-card"><h3>' + title + "</h3>"
         + '<div class="app-form">'
+        + platformFields
         + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
         + ' autocapitalize="off" spellcheck="false"' + (authBusy ? " disabled" : "") + " /></label>"
         + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
@@ -3921,12 +3980,18 @@
         + '<p class="caption" style="margin:12px 0 0">'
         + (gateMode === "signup"
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
-        + "</p></div></div>";
+          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Get started</button>')
+        + "</p></div>"
+        + '<p class="caption">CuckleChunckle managers: after you create an account, add league ID '
+        + "<code>" + CUCKLE_LEAGUE_ID + "</code> to open the dashboard.</p>"
+        + "</div>";
     }
 
     function renderAppHome() {
       const uname = (authSession && authSession.username) || "you";
+      const plat = [];
+      if (authSession && authSession.sleeper_user_id) plat.push("Sleeper " + authSession.sleeper_user_id);
+      if (authSession && authSession.espn_user_id) plat.push("ESPN " + authSession.espn_user_id);
       const rows = (memberships || []).map((m) => {
         const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
         return '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
@@ -3937,9 +4002,12 @@
       }).join("");
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your leagues</h2>'
-        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
+        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>"
+        + (plat.length ? " · " + esc(plat.join(" · ")) : "")
+        + ". "
         + '<button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (rows || '<p class="caption">No leagues yet. Add a Sleeper league ID to get started.</p>')
+        + (rows || '<p class="caption">No leagues yet. For CuckleChunckle, add Sleeper league ID '
+          + "<code>" + CUCKLE_LEAGUE_ID + "</code>.</p>")
         + '<div class="app-actions" style="margin-top:12px">'
         + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
         + "</div></div>";
@@ -3947,12 +4015,17 @@
 
     function renderJoinLeague() {
       const teams = (joinPreview && joinPreview.teams) || [];
+      const mine = authSession && authSession.sleeper_user_id;
+      const matched = mine && joinSeatId === mine
+        && teams.some((t) => t.sleeper_user_id === mine);
       const teamBtns = teams.map((t) => {
         const on = joinSeatId === t.sleeper_user_id;
+        const isMine = mine && t.sleeper_user_id === mine;
         return '<button type="button" class="team-opt' + (on ? " on" : "") + '"'
           + ' data-join-seat="' + esc(t.sleeper_user_id) + '"'
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
           + esc(t.team_name)
+          + (isMine ? " · your Sleeper ID" : "")
           + (t.display_name && t.display_name !== t.team_name
             ? ' <span class="caption" style="display:inline;margin:0">(' + esc(t.display_name) + ")</span>"
             : "")
@@ -3961,11 +4034,13 @@
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Add a league</h2>'
-        + '<p class="caption">Paste the Sleeper league ID. Then pick the team that is yours — that seat is tied to your account for votes and the dashboard.</p>'
+        + '<p class="caption">Enter the Sleeper <b>league</b> ID. We match your seat from the Sleeper <b>user</b> ID on your account'
+        + (mine ? " (<code>" + esc(mine) + "</code>)" : "")
+        + ". CuckleChunckle uses <code>" + CUCKLE_LEAGUE_ID + "</code>.</p>"
         + '<div class="app-card"><h3>Sleeper league ID</h3>'
         + '<div class="app-form">'
         + '<label>League ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
-        + ' placeholder="e.g. 1315431339301806080" value="' + esc(joinLeagueId) + '"'
+        + ' placeholder="' + CUCKLE_LEAGUE_ID + '" value="' + esc(joinLeagueId) + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-join-preview="1"' + (joinBusy ? " disabled" : "") + ">"
@@ -3975,12 +4050,14 @@
           ? '<div class="app-card"><h3>' + esc(joinPreview.name) + "</h3>"
             + '<p class="caption" style="margin:0 0 8px">'
             + (joinPreview.season ? "Season " + esc(joinPreview.season) + " · " : "")
-            + (joinPreview.total_rosters || teams.length) + " teams</p>"
+            + (joinPreview.total_rosters || teams.length) + " teams"
+            + (matched ? " · matched to your Sleeper ID" : "")
+            + "</p>"
             + '<div class="team-pick">' + teamBtns + "</div>"
             + '<div class="app-actions" style="margin-top:10px">'
             + '<button type="button" class="chip" data-join-confirm="1"'
             + (joinBusy || !joinSeatId ? " disabled" : "") + ">"
-            + (joinBusy ? "Joining…" : "Join as this team") + "</button>"
+            + (joinBusy ? "Joining…" : "Join & open dashboard") + "</button>"
             + "</div></div>"
           : "")
         + (joinError ? '<p class="err" role="alert" style="color:var(--red)">' + esc(joinError) + "</p>" : "")

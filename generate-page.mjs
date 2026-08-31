@@ -802,40 +802,69 @@ const html = `<!DOCTYPE html>
       text-align: left; cursor: pointer; touch-action: manipulation;
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    /* Latest trade: dark charcoal chip, three left-aligned rows (title / matchup / meta+delta).
+    /* Latest trade: Sleeper-style completed-trade card (title above, navy asset card below).
        Triple class beats button.champ-alert.lh-progress { display:block; padding… }. */
     button.champ-alert.lh-progress.lh-latest-trade {
       display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
-      gap: 6px; width: 100%; box-sizing: border-box;
+      gap: 10px; width: 100%; box-sizing: border-box;
       appearance: none; font: inherit; color: inherit; text-align: left;
       cursor: pointer; touch-action: manipulation;
-      background: #1c1c22; border: 1px solid var(--line); border-radius: 16px;
-      padding: 14px 16px; margin: 0 0 12px; min-height: 0; height: auto;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0; margin: 0 0 16px; min-height: 0; height: auto;
     }
+    button.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.lh-latest-trade .day-alert-h {
       font-weight: 700; color: var(--text); line-height: 1.3; margin: 0;
     }
-    button.lh-latest-trade .champ-line {
-      color: var(--text); font-weight: 650; line-height: 1.35; margin: 0;
+    .lh-trade-card {
+      background: #0c1018; border: 1px solid #3d4a6b; border-radius: 14px;
+      padding: 14px 14px 8px; box-sizing: border-box;
+    }
+    .lh-trade-side { margin: 0 0 14px; }
+    .lh-trade-side:last-child { margin-bottom: 6px; }
+    .lh-trade-handle {
+      color: #8b9bb8; font-size: 0.875rem; font-weight: 500;
+      line-height: 1.3; margin: 0 0 10px;
+    }
+    .lh-trade-assets {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px;
+    }
+    .lh-trade-asset {
+      display: flex; align-items: center; gap: 8px; min-width: 0;
+    }
+    .lh-trade-ico {
+      position: relative; flex: 0 0 auto; width: 36px; height: 36px;
+    }
+    .lh-trade-ico > img {
+      width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+      display: block; background: #1a1f2e;
+    }
+    .lh-trade-pick {
+      width: 36px; height: 36px; border-radius: 50%; box-sizing: border-box;
+      display: grid; place-items: center;
+      background: #1a1f2e; color: #fff;
+      font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .lh-trade-plus {
+      position: absolute; right: -2px; bottom: -2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #2ccb9f; color: #0c1018;
+      font-size: 0.6875rem; font-weight: 800; line-height: 1;
+      display: grid; place-items: center;
+      border: 1.5px solid #0c1018; box-sizing: border-box;
+    }
+    .lh-trade-lab { min-width: 0; }
+    .lh-trade-lab b {
+      display: block; color: #fff; font-weight: 700;
+      font-size: 0.8125rem; line-height: 1.2;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    button.lh-latest-trade .lh-lt-vs {
-      color: var(--muted); font-weight: 500;
+    .lh-trade-lab span {
+      display: block; color: #717d8e; font-size: 0.6875rem; line-height: 1.25;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    button.lh-latest-trade .champ-fig {
-      display: flex; align-items: baseline; gap: 10px; margin: 0; min-width: 0;
-      color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
-      white-space: nowrap; overflow: hidden;
-    }
-    button.lh-latest-trade .champ-fig > span {
-      flex: 0 1 auto; min-width: 0;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: var(--dim);
-    }
-    /* Delta stays visible; long date/headline ellipsises. Colour comes from .delta.pos/.neg. */
-    button.lh-latest-trade .champ-fig > b {
-      flex: 0 0 auto; margin-left: 0; white-space: nowrap;
-      font-weight: 650; font-variant-numeric: tabular-nums; color: inherit;
+    @media (max-width: 360px) {
+      .lh-trade-assets { grid-template-columns: 1fr; }
     }
     .lh-week-h {
       font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
@@ -1270,7 +1299,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "latestTradeChip20260831231600";
+    const DATA_V = "latestTradeSleeperCard20260831232000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1312,6 +1341,12 @@ const html = `<!DOCTYPE html>
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
     let weekMatchupsLoading = false;
+    // Full bags for the Latest trade Sleeper card (lazy-filled from one seat file).
+    let latestTradeHit = null; // seat trade object for latestTradeHitTx
+    let latestTradeHitTx = null;
+    let latestTradeBagsLoading = false;
+    // KTC book keyed by sleeper_id — pos/team for player secondary labels.
+    let ktcBySleeper = null;
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
@@ -3865,6 +3900,9 @@ const html = `<!DOCTYPE html>
       dataSet = null;
       weekMatchups = null;
       weekMatchupsLoading = false;
+      latestTradeHit = null;
+      latestTradeHitTx = null;
+      latestTradeBagsLoading = false;
       focusNext = null;
       syncUrl();
       await loadMembers();
@@ -4358,6 +4396,147 @@ const html = `<!DOCTYPE html>
       return best;
     }
 
+    /** Sleeper-style short name: "Blake Corum" → "B. Corum". */
+    function shortPlayerName(name) {
+      const parts = String(name || "").trim().split(/\\s+/).filter(Boolean);
+      if (parts.length < 2) return parts[0] || "";
+      return parts[0].charAt(0) + ". " + parts.slice(1).join(" ");
+    }
+
+    /** "2027 2nd (SF69erss)" → { primary: "2027 2nd Rd", secondary: "(SF69erss)" }. */
+    function formatPickLabels(label) {
+      const raw = String(label || "").trim();
+      const m = raw.match(/^(.*?)(?:\\s*\\(([^)]+)\\))?\\s*$/);
+      let primary = ((m && m[1]) || raw).trim();
+      const secondary = m && m[2] ? "(" + m[2] + ")" : "";
+      if (/^\\d{4}\\s+\\d+(?:st|nd|rd|th)$/i.test(primary)) primary += " Rd";
+      return { primary: primary, secondary: secondary };
+    }
+
+    function guessLegFromHeadline(headline) {
+      const label = String(headline || "").trim();
+      if (!label) return null;
+      if (/^\\d{4}\\b/.test(label) || /\\b\\d+(?:st|nd|rd|th)\\b/i.test(label)) {
+        return { label: label, kind: "pick" };
+      }
+      return { label: label, kind: "player", asset_key: null };
+    }
+
+    function latestTradeAssetHtml(leg) {
+      if (!leg) return "";
+      if (leg.kind === "pick") {
+        const lab = formatPickLabels(leg.label);
+        return '<div class="lh-trade-asset">'
+          + '<div class="lh-trade-ico"><div class="lh-trade-pick">PICK</div>'
+          + '<span class="lh-trade-plus" aria-hidden="true">+</span></div>'
+          + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
+          + (lab.secondary ? "<span>" + esc(lab.secondary) + "</span>" : "")
+          + "</div></div>";
+      }
+      const pid = String(leg.asset_key || "").replace(/^player:/, "");
+      const meta = pid && ktcBySleeper ? ktcBySleeper[pid] : null;
+      const primary = shortPlayerName(leg.label);
+      const secondary = meta && meta.pos
+        ? meta.pos + (meta.team ? " - " + meta.team : "")
+        : "";
+      const ico = pid
+        ? '<img src="https://sleepercdn.com/content/nfl/players/thumb/' + esc(pid)
+          + '.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">'
+        : '<div class="lh-trade-pick">PLY</div>';
+      return '<div class="lh-trade-asset">'
+        + '<div class="lh-trade-ico">' + ico
+        + '<span class="lh-trade-plus" aria-hidden="true">+</span></div>'
+        + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
+        + (secondary ? "<span>" + esc(secondary) + "</span>" : "")
+        + "</div></div>";
+    }
+
+    /**
+     * Two stacked receive-sides for the Sleeper card. Prefer full bags from the seat file
+     * (legs = this seat received; sent = counterparty received). Until that loads, fall back
+     * to each tape row's headline so the card still matches the layout.
+     */
+    function latestTradeReceiveSides(latest) {
+      const seats = voteSeats(latest);
+      if (latestTradeHit && latestTradeHitTx === latest.transaction_id) {
+        const bag = (latestTradeHit.windows && latestTradeHit.windows[lens])
+          || latestTradeHit.even || latestTradeHit.realized || null;
+        const other = seats.find((s) => s.uid !== latest.user_id);
+        return [
+          { name: latest.name, uid: latest.user_id, legs: (bag && bag.legs) || [] },
+          {
+            name: latest.other,
+            uid: other ? other.uid : null,
+            legs: (bag && bag.sent) || [],
+          },
+        ];
+      }
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const out = [];
+      for (const s of seats) {
+        const row = sides.find((r) => r.transaction_id === latest.transaction_id && r.user_id === s.uid);
+        const leg = guessLegFromHeadline(row && row.headline);
+        out.push({ name: s.name, uid: s.uid, legs: leg ? [leg] : [] });
+      }
+      if (!out.length) {
+        out.push({ name: latest.name, uid: latest.user_id, legs: [] });
+        out.push({ name: latest.other, uid: null, legs: [] });
+      }
+      return out;
+    }
+
+    function ensureLatestTradeBags() {
+      const latest = latestTradeSide();
+      if (!latest) {
+        latestTradeHit = null;
+        latestTradeHitTx = null;
+        return;
+      }
+      // Already loading or resolved for this transaction (hit may be null if the seat file missed it).
+      if (latestTradeHitTx === latest.transaction_id) return;
+      latestTradeBagsLoading = true;
+      latestTradeHitTx = latest.transaction_id;
+      (async () => {
+        try {
+          if (!ktcBySleeper) {
+            ktcBySleeper = Object.create(null);
+            try {
+              const book = await getJson("data/ktc/latest.json");
+              for (const p of (book && book.players) || []) {
+                if (p.sleeper_id) ktcBySleeper[String(p.sleeper_id)] = p;
+              }
+            } catch (ktcErr) {
+              console.error(ktcErr);
+            }
+          }
+          const seat = await seatData(latest.user_id);
+          const hit = seat && (seat.trades || [])
+            .find((t) => t.transaction_id === latest.transaction_id);
+          if (latestTradeHitTx === latest.transaction_id) {
+            latestTradeHit = hit || null;
+          }
+        } catch (err) {
+          console.error(err);
+          if (latestTradeHitTx === latest.transaction_id) latestTradeHit = null;
+        }
+        latestTradeBagsLoading = false;
+        if (appScreen === "dash" && view === "home" && !me) render();
+      })();
+    }
+
+    function latestTradeCardHtml(latest) {
+      const sides = latestTradeReceiveSides(latest);
+      const body = sides.map((side) => {
+        const assets = (side.legs || []).map(latestTradeAssetHtml).join("");
+        return '<div class="lh-trade-side">'
+          + '<div class="lh-trade-handle">@' + esc(side.name) + "</div>"
+          + '<div class="lh-trade-assets">'
+          + (assets || '<div class="lh-trade-asset"><div class="lh-trade-lab"><b>…</b></div></div>')
+          + "</div></div>";
+      }).join("");
+      return '<div class="lh-trade-card">' + body + "</div>";
+    }
+
     function matchupStripHtml() {
       if (weekMatchupsLoading && !weekMatchups) {
         return '<div class="lh-week-h">Recent matches</div>'
@@ -4526,23 +4705,17 @@ const html = `<!DOCTYPE html>
      */
     function leagueInProgress() {
       ensureWeekMatchups();
+      ensureLatestTradeBags();
       const latest = latestTradeSide();
       let tradeBox = "";
       if (latest) {
-        const s = windowScore(latest);
-        // Latest league trade — replaces the old Champions Path home card.
+        // Sleeper-style completed-trade card — clickable Latest trade control.
         tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
           + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
           + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
           + '<div class="day-alert-h">Latest trade</div>'
-          + '<div class="champ-line">' + seatLabel(latest.name)
-          + ' <span class="lh-lt-vs">vs</span> ' + seatLabel(latest.other) + "</div>"
-          + '<div class="date champ-fig"><span>'
-          + (latest.date ? esc(latest.date) : "Recent")
-          + (latest.headline ? " · " + esc(latest.headline) : "")
-          + "</span>"
-          + (s != null ? "<b>" + tapeMargin(s) + "</b>" : "")
-          + "</div></button>";
+          + latestTradeCardHtml(latest)
+          + "</button>";
       }
       const strip = matchupStripHtml();
       if (!tradeBox && !strip) return "";
@@ -6052,6 +6225,7 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
 for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
+  "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "lh-trade-card",
   "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
   'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id"]) {
   if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
@@ -6066,8 +6240,14 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (!prog.includes('day-alert-h">Latest trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must mount Latest trade (lh-latest-trade) that opens via data-board-open");
   }
-  if (!prog.includes('class="lh-lt-vs">vs</span>') || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
-    throw new Error("Latest trade chip must keep muted vs + charcoal column layout CSS");
+  if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
+    || !inline.includes("function latestTradeCardHtml(") || !inline.includes("lh-trade-handle")
+    || !html.includes(".lh-trade-card") || !html.includes(".lh-trade-plus")
+    || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
+    throw new Error("Latest trade must be the Sleeper completed-trade card (lh-trade-card), not a 3-line chip");
+  }
+  if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig")) {
+    throw new Error("Latest trade must not keep the old 3-line vs/delta chip markup");
   }
   if (prog.includes("?view=titles") || prog.includes('data-view="titles"') || prog.includes(">Champions Path<")) {
     throw new Error("leagueInProgress must not link to Champions Path / titles");
@@ -6965,9 +7145,9 @@ for (const need of [
 // is one deletion away from returning silently, because none of them changes what the page
 // says -- only whether you can read all of it.
 //   .leg.list      a pick list is not a figure; nowrap made it 1,051px wide inside 320px
-//   champ-fig      the score/margin is pinned so a long name, not the number, is what gives
+//   champ-fig CSS  keeps pinned score/margin rules for any remaining a.champ-alert chrome
 //   min-width: 0   a grid or flex track will not shrink below min-content without it
-for (const need of ['class="leg list"', 'class="date champ-fig"', "tailNum:", "topNum:",
+for (const need of ['class="leg list"', "tailNum:", "topNum:",
   '<div class="bag"><h3><span>']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a text-fitting fix: ${need}`);
 }

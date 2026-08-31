@@ -900,8 +900,14 @@
      * Order: name → glyph/img flair → reigning-champ crown (most recent title year).
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
-      TrumanCooper: { glyph: "🤢" },
       SF69erss: { img: "data/ui/flair-sf69erss.png" },
+      BubbaCuckShremp: { img: "data/ui/flair-bubbacuckshremp.png" },
+      TedCumberbatch: { img: "data/ui/flair-tedcumberbatch.png" },
+      TrumanCooper: { img: "data/ui/flair-trumancooper.png" },
+      DarkWingDucks2023: { img: "data/ui/flair-darkwingducks2023.png" },
+      ARae: { img: "data/ui/flair-arae.png" },
+      ChiefGumby: { img: "data/ui/flair-chiefgumby.png" },
+      KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" },
     });
     // Gold, the same #e0b44c the alert cards and the vote outline use. Decorates the
     // reigning champion beside their name everywhere seatLabel paints — never the name itself.
@@ -966,7 +972,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260831000031";
+    const DATA_V = "20260830seatlogos3";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

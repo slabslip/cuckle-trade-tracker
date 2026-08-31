@@ -902,7 +902,7 @@ const html = `<!DOCTYPE html>
     /**
      * Seat flair on the painted name only. Matching, data-who, data-partner and the news
      * matcher keep the bare Sleeper name; this is what the eye reads next to it.
-     * Order: name → glyph/img flair → reigning-champ crown (most recent title year).
+     * Order: reigning-champ crown (most recent title year) → name → glyph/img flair.
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
       SF69erss: { img: "data/ui/flair-sf69erss.png" },
@@ -918,7 +918,7 @@ const html = `<!DOCTYPE html>
     });
     // Gold, the same #e0b44c the alert cards and the vote outline use. Decorates the
     // reigning champion beside their name everywhere seatLabel paints — never the name itself.
-    const CROWN = ' <svg class="crown" viewBox="0 0 24 24" width="16" height="16"'
+    const CROWN = '<svg class="crown" viewBox="0 0 24 24" width="16" height="16"'
       + ' aria-hidden="true" focusable="false">'
       + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
     /** Most recent title year from titles.json; falls back to members.place === 1. */
@@ -947,8 +947,8 @@ const html = `<!DOCTYPE html>
       const n = String(name == null ? "" : name);
       // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
       if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
-      const crown = reigningChampName() === n ? CROWN : "";
-      return esc(n) + seatFlairHtml(n) + crown;
+      const crown = reigningChampName() === n ? CROWN + " " : "";
+      return crown + esc(n) + seatFlairHtml(n);
     }
     /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
     function seatTitle(title) {
@@ -4630,10 +4630,11 @@ for (const need of [
 if (!html.includes("img.seat-flair, svg.crown {") || !html.includes("width: 1.15em; height: 1.15em;")) {
   throw new Error("seat-flair and crown must be emoji-sized (1.15em) beside the name");
 }
-// Reigning champ crown rides seatLabel everywhere: name → flair → crown.
+// Reigning champ crown rides seatLabel everywhere: crown → name → flair.
 if (!inline.includes("function reigningChampName()")
-  || !fnSrc("seatLabel").includes("reigningChampName() === n ? CROWN")) {
-  throw new Error("seatLabel must crown the most recent title winner everywhere names are painted");
+  || !fnSrc("seatLabel").includes("reigningChampName() === n ? CROWN + \" \"")
+  || !fnSrc("seatLabel").includes("return crown + esc(n) + seatFlairHtml(n)")) {
+  throw new Error("seatLabel must crown the most recent title winner before the name everywhere");
 }
 if (!inline.includes("function seatTitle(title)")) {
   throw new Error("bag headings must flair seat names through seatTitle()");

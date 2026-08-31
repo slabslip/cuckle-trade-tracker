@@ -2,8 +2,9 @@
 
 Sleeper league `1315431339301806080`. Superflex dynasty, 2019–2026. Official Sleeper GETs + DynastyProcess CSVs (GPL-3). Not SlabSlip.
 
-**Votes:** claim your seat once (team name + invite code) to cast a ballot. Setup:
-[`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) §7a. Custom domain:
+**App:** one home for many Sleeper leagues — create account, add league ID, pick your team.
+See [`docs/APP_SDD.md`](docs/APP_SDD.md). Votes need a joined seat
+([`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) §7a–§8). Custom domain:
 [`docs/CUSTOM_DOMAIN.md`](docs/CUSTOM_DOMAIN.md).
 
 **Default:** a pick that has already been drafted is the player it became, priced today.

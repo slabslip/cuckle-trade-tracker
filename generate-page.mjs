@@ -538,6 +538,50 @@ const html = `<!DOCTYPE html>
       min-height: 44px;
     }
     button.linkish:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* App shell — multi-league home / join / account gate */
+    .app-shell { max-width: 420px; margin: 24px auto 0; }
+    .app-shell h2 { margin-top: 0; }
+    .app-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 14px; margin: 0 0 12px;
+    }
+    .app-card h3 { font-size: 1rem; font-weight: 650; margin: 0 0 8px; }
+    .app-form { display: grid; gap: 8px; margin-top: 8px; }
+    .app-form label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
+    .app-form input, .app-form select {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 0 12px; width: 100%;
+    }
+    .app-form input:focus-visible, .app-form select:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .app-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+    .app-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; flex: 1 1 100%; }
+    .league-row {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin: 0 0 8px; cursor: pointer; min-height: 56px;
+    }
+    .league-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .league-row b { display: block; font-weight: 650; }
+    .league-row span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    .league-row .chev { margin-left: auto; color: var(--muted); }
+    .team-pick {
+      display: grid; gap: 6px; max-height: 280px; overflow: auto; margin-top: 8px;
+    }
+    button.team-opt {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; cursor: pointer; min-height: 44px;
+    }
+    button.team-opt.on { border-color: #6b5a2e; background: #1a1810; }
+    button.team-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .sync-banner {
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
+      padding: 10px 12px; margin: 0 0 12px; font-size: 0.875rem; line-height: 1.45;
+    }
     /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
     .vote-note {
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
@@ -1167,27 +1211,27 @@ const html = `<!DOCTYPE html>
     const SEATLESS = ["home", "titles", "trades", "trade"];
 
     async function loadMembers() {
-      members = await getJson("data/ui/members.json");
+      members = await getLeagueJson("members.json");
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
       // and a build with no places sorts to a no-op and keeps the file's own order.
       members.sort((a, b) => (a.place || 99) - (b.place || 99));
-      league = await getJson("data/ui/league.json");
-      try { titles = await getJson("data/ui/titles.json"); }
+      league = await getLeagueJson("league.json");
+      try { titles = await getLeagueJson("titles.json"); }
       catch (err) { titles = { titles: [] }; }
-      try { marks = await getJson("data/ui/marks.json"); }
+      try { marks = await getLeagueJson("marks.json"); }
       catch (err) { marks = { seats: {} }; }
       // News is additive and third-party. A missing, stale or malformed file must cost the news
       // section and nothing else, so this never throws and never blocks the page -- the same
       // rule the vote tallies follow below. An unknown v is treated as absent rather than
       // read optimistically, because a schema change could move the field the UI escapes.
       try {
-        const book = await getJson("data/ui/news.json");
+        const book = await getLeagueJson("news.json");
         news = book && book.v === 1 && Array.isArray(book.items) ? book : null;
       } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
-        const book = await getJson("data/ui/votes.json");
+        const book = await getLeagueJson("votes.json");
         voteBook = book && book.v === 1 && book.votes ? book : null;
       } catch (err) { voteBook = null; }
       const startTitle = params.get("title");
@@ -1426,7 +1470,7 @@ const html = `<!DOCTYPE html>
             const seat = members.find((m) => m.user_id === wantMe);
             try {
               if (!seat) throw new Error("unknown seat " + wantMe);
-              data = seatCache[wantMe] || await getJson("data/ui/me/" + wantMe + ".json");
+              data = seatCache[wantMe] || await getLeagueJson("me/" + wantMe + ".json");
               seatCache[wantMe] = data;
               me = seat;
             } catch (err) {
@@ -1467,10 +1511,10 @@ const html = `<!DOCTYPE html>
       const prev = me;
       try {
         me = members.find((m) => m.user_id === id);
-        data = seatCache[id] || await getJson("data/ui/me/" + id + ".json");
+        data = seatCache[id] || await getLeagueJson("me/" + id + ".json");
         seatCache[id] = data;
-        if (!league) league = await getJson("data/ui/league.json");
-        if (!picks) picks = await getJson("data/ui/picks.json");
+        if (!league) league = await getLeagueJson("league.json");
+        if (!picks) picks = await getLeagueJson("picks.json");
       } catch (err) {
         console.error(err);
         me = prev;
@@ -1637,8 +1681,8 @@ const html = `<!DOCTYPE html>
 
     async function seatData(uid) {
       try {
-        if (!seatCache[uid]) seatCache[uid] = await getJson("data/ui/me/" + uid + ".json");
-        if (!picks) picks = await getJson("data/ui/picks.json");
+        if (!seatCache[uid]) seatCache[uid] = await getLeagueJson("me/" + uid + ".json");
+        if (!picks) picks = await getLeagueJson("picks.json");
       } catch (err) {
         console.error(err);
         say("Could not load that team's trades. Check your connection and try again.");
@@ -2476,8 +2520,13 @@ const html = `<!DOCTYPE html>
     // A service_role / sb_secret_ key must NEVER appear here: it bypasses RLS entirely.
     const VOTE_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/rest/v1";
     const AUTH_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/auth/v1";
-    // Synthetic emails created by seed-seat-auth.mjs. Never mailed; password = invite code.
-    const AUTH_EMAIL_DOMAIN = "seats.cuckle.invalid";
+    const FN_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/functions/v1";
+    // App accounts use username → synthetic email. Confirm email must be OFF.
+    const AUTH_EMAIL_DOMAIN = "users.cuckle.invalid";
+    // First hosted league — legacy data/ui is its ready dataset.
+    const CUCKLE_LEAGUE_ID = "1315431339301806080";
+    const LEAGUE_KEY = "cuckle.active_league.v1";
+    const MEMBERSHIPS_KEY = "cuckle.memberships.v1";
     // A legacy anon JWT, so Authorization: Bearer is valid alongside the always-required apikey
     // header. A newer sb_publishable_... key is not a JWT and is rejected on Bearer with
     // "Invalid JWT" — if this key is ever replaced with one of those, send apikey alone.
@@ -2497,11 +2546,22 @@ const html = `<!DOCTYPE html>
     // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
     // the vote itself is already in localStorage, so nothing here can lose it.
     const votePending = new Set();
-    // Claimed-seat session: { access_token, refresh_token, expires_at, seat_user_id, seat_name }
+    // Claimed-seat session: { access_token, refresh_token, expires_at, user_id, username, seat_user_id, seat_name }
     let authSession = null;
     let authBusy = false;
     let authError = "";
     let claimPrompt = false;
+    // Multi-league app shell. "dash" = existing meter for the active league.
+    // gate | home | join | dash
+    let appScreen = "gate";
+    let memberships = [];
+    let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
+    let joinPreview = null; // league preview from Edge Function
+    let joinLeagueId = "";
+    let joinSeatId = "";
+    let joinBusy = false;
+    let joinError = "";
+    let gateMode = "signin"; // signin | signup
 
     function voteDeviceId() {
       try {
@@ -2531,10 +2591,12 @@ const html = `<!DOCTYPE html>
     }
 
     function authSeatId() {
+      if (activeLeague && activeLeague.sleeper_user_id) return activeLeague.sleeper_user_id;
       return (authSession && authSession.seat_user_id) || null;
     }
 
     function authSeatName() {
+      if (activeLeague && activeLeague.team_name) return activeLeague.team_name;
       return (authSession && authSession.seat_name) || null;
     }
 
@@ -2542,11 +2604,21 @@ const html = `<!DOCTYPE html>
       try {
         const raw = localStorage.getItem(AUTH_KEY);
         const found = raw ? JSON.parse(raw) : null;
-        if (found && found.access_token && found.seat_user_id) authSession = found;
+        if (found && found.access_token) authSession = found;
         else authSession = null;
       } catch (err) {
         authSession = null;
       }
+      try {
+        const raw = localStorage.getItem(LEAGUE_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (found && found.sleeper_league_id) activeLeague = found;
+      } catch (err) { /* ignore */ }
+      try {
+        const raw = localStorage.getItem(MEMBERSHIPS_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(found)) memberships = found;
+      } catch (err) { /* ignore */ }
     }
 
     function authSave(session) {
@@ -2559,12 +2631,38 @@ const html = `<!DOCTYPE html>
 
     function authClear() {
       authSave(null);
+      activeLeague = null;
+      memberships = [];
+      try {
+        localStorage.removeItem(LEAGUE_KEY);
+        localStorage.removeItem(MEMBERSHIPS_KEY);
+      } catch (err) { /* ignore */ }
       authError = "";
       claimPrompt = false;
+      appScreen = "gate";
+      gateMode = "signin";
     }
 
-    function authEmailForSeat(userId) {
-      return "seat-" + userId + "@" + AUTH_EMAIL_DOMAIN;
+    function saveActiveLeague(league) {
+      activeLeague = league;
+      try {
+        if (league) localStorage.setItem(LEAGUE_KEY, JSON.stringify(league));
+        else localStorage.removeItem(LEAGUE_KEY);
+      } catch (err) { /* ignore */ }
+    }
+
+    function saveMemberships(list) {
+      memberships = list || [];
+      try { localStorage.setItem(MEMBERSHIPS_KEY, JSON.stringify(memberships)); }
+      catch (err) { /* ignore */ }
+    }
+
+    function authEmailForUsername(username) {
+      return String(username || "").trim().toLowerCase() + "@" + AUTH_EMAIL_DOMAIN;
+    }
+
+    function normalizeUsername(raw) {
+      return String(raw || "").trim();
     }
 
     /**
@@ -2729,8 +2827,10 @@ const html = `<!DOCTYPE html>
           refresh_token: data.refresh_token || authSession.refresh_token,
           expires_at: data.expires_at
             || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
-          seat_user_id: authSession.seat_user_id,
-          seat_name: authSession.seat_name,
+          user_id: authSession.user_id || (data.user && data.user.id) || null,
+          username: authSession.username || null,
+          seat_user_id: authSession.seat_user_id || null,
+          seat_name: authSession.seat_name || null,
         });
       } catch (err) {
         console.error(err);
@@ -2738,11 +2838,7 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    async function authClaimSeat(seatUserId, code) {
-      const seat = (members || []).find((m) => m.user_id === seatUserId);
-      if (!seat) throw new Error("Unknown seat.");
-      const trimmed = String(code || "").trim();
-      if (!trimmed) throw new Error("Enter your invite code.");
+    async function authPasswordGrant(email, password) {
       const res = await fetch(AUTH_API + "/token?grant_type=password", {
         method: "POST",
         headers: {
@@ -2750,10 +2846,7 @@ const html = `<!DOCTYPE html>
           Authorization: "Bearer " + VOTE_ANON,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: authEmailForSeat(seat.user_id),
-          password: trimmed,
-        }),
+        body: JSON.stringify({ email: email, password: password }),
         signal: voteAbort(),
       });
       const data = await res.json().catch(() => ({}));
@@ -2761,56 +2854,260 @@ const html = `<!DOCTYPE html>
         const msg = data.error_description || data.msg || data.message || ("Sign-in failed (" + res.status + ")");
         throw new Error(msg);
       }
-      // Confirm the profile row exists and matches — never trust client metadata alone.
-      const profRes = await fetch(
-        VOTE_API + "/seat_profiles?select=seat_user_id,seat_name&auth_user_id=eq."
-          + encodeURIComponent(data.user.id),
-        {
-          headers: {
-            apikey: VOTE_ANON,
-            Authorization: "Bearer " + data.access_token,
-          },
-          signal: voteAbort(),
-        },
-      );
-      if (!profRes.ok) throw new Error("Could not load seat profile (" + profRes.status + ").");
-      const rows = await profRes.json();
-      const prof = Array.isArray(rows) && rows[0];
-      if (!prof || prof.seat_user_id !== seat.user_id) {
-        throw new Error("That code is not linked to this seat. Ask Truman for a fresh invite.");
+      return data;
+    }
+
+    async function authSignUp(username, password) {
+      const name = normalizeUsername(username);
+      if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
+        throw new Error("Username: 3–32 chars, letters/numbers/_ . -");
       }
+      if (String(password || "").length < 6) throw new Error("Password must be at least 6 characters.");
+      const email = authEmailForUsername(name);
+      const res = await fetch(AUTH_API + "/signup", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + VOTE_ANON,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          data: { username: name },
+        }),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error_description || data.msg || data.message || ("Sign-up failed (" + res.status + ")");
+        throw new Error(msg);
+      }
+      // Some projects return a session immediately; others require a password grant after.
+      let session = data;
+      if (!session.access_token) {
+        session = await authPasswordGrant(email, password);
+      }
+      const userId = (session.user && session.user.id) || (data.user && data.user.id);
+      if (!userId || !session.access_token) throw new Error("Sign-up did not return a session. Check Confirm email is OFF.");
+      // Profile row — username uniqueness enforced in DB.
+      const prof = await fetch(VOTE_API + "/app_profiles", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ auth_user_id: userId, username: name }),
+        signal: voteAbort(),
+      });
+      if (!prof.ok) {
+        const t = await prof.text();
+        if (t.indexOf("app_profiles_username_key") >= 0) throw new Error("That username is taken.");
+        throw new Error("Could not save username (" + prof.status + ").");
+      }
+      authSave({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at
+          || Math.floor(Date.now() / 1000) + (Number(session.expires_in) || 3600),
+        user_id: userId,
+        username: name,
+        seat_user_id: null,
+        seat_name: null,
+      });
+    }
+
+    async function authSignIn(username, password) {
+      const name = normalizeUsername(username);
+      if (!name || !password) throw new Error("Enter username and password.");
+      const data = await authPasswordGrant(authEmailForUsername(name), password);
+      const userId = data.user && data.user.id;
+      let uname = name;
+      try {
+        const pr = await fetch(
+          VOTE_API + "/app_profiles?select=username&auth_user_id=eq." + encodeURIComponent(userId),
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + data.access_token },
+            signal: voteAbort(),
+          },
+        );
+        if (pr.ok) {
+          const rows = await pr.json();
+          if (rows[0] && rows[0].username) uname = rows[0].username;
+        }
+      } catch (err) { /* username from form is fine */ }
       authSave({
         access_token: data.access_token,
         refresh_token: data.refresh_token,
         expires_at: data.expires_at
           || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
-        seat_user_id: prof.seat_user_id,
-        seat_name: prof.seat_name || seat.name,
+        user_id: userId,
+        username: uname,
+        seat_user_id: null,
+        seat_name: null,
       });
-      voteSeatRemember(prof.seat_user_id);
-      authError = "";
-      claimPrompt = false;
     }
 
-    async function onClaimSubmit() {
+    async function loadMemberships() {
+      if (!authSession || !authSession.access_token) {
+        saveMemberships([]);
+        return [];
+      }
+      await authRefreshIfNeeded();
+      const res = await fetch(
+        VOTE_API + "/league_memberships?select=*,leagues(name,status,season,total_rosters)&order=created_at.asc",
+        {
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + authSession.access_token,
+          },
+          signal: voteAbort(),
+        },
+      );
+      if (!res.ok) throw new Error("memberships " + res.status);
+      const rows = await res.json();
+      const list = (rows || []).map((r) => ({
+        sleeper_league_id: r.sleeper_league_id,
+        sleeper_user_id: r.sleeper_user_id,
+        team_name: r.team_name,
+        name: (r.leagues && r.leagues.name) || r.sleeper_league_id,
+        status: (r.leagues && r.leagues.status) || "pending_sync",
+        season: (r.leagues && r.leagues.season) || null,
+      }));
+      saveMemberships(list);
+      return list;
+    }
+
+    async function joinLeagueCall(action, sleeperLeagueId, sleeperUserId) {
+      await authRefreshIfNeeded();
+      if (!authSession || !authSession.access_token) throw new Error("Sign in required.");
+      const res = await fetch(FN_API + "/join-league", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + authSession.access_token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: action,
+          sleeper_league_id: sleeperLeagueId,
+          sleeper_user_id: sleeperUserId || undefined,
+        }),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || ("Join failed (" + res.status + ")"));
+      }
+      return data;
+    }
+
+    async function onGateSubmit() {
       if (authBusy) return;
-      const sel = document.getElementById("claimSeat");
-      const codeEl = document.getElementById("claimCode");
-      const seatUserId = sel && sel.value;
-      const code = codeEl && codeEl.value;
+      const userEl = document.getElementById("gateUser");
+      const passEl = document.getElementById("gatePass");
+      const username = userEl && userEl.value;
+      const password = passEl && passEl.value;
       authBusy = true;
       authError = "";
       render();
       try {
-        await authClaimSeat(seatUserId, code);
-        await voteLoad();
+        if (gateMode === "signup") await authSignUp(username, password);
+        else await authSignIn(username, password);
+        await loadMemberships();
+        appScreen = "home";
+        authError = "";
       } catch (err) {
-        authError = (err && err.message) || "Could not claim that seat.";
+        authError = (err && err.message) || "Could not sign in.";
         console.error(err);
       } finally {
         authBusy = false;
         render();
       }
+    }
+
+    async function onJoinPreview() {
+      if (joinBusy) return;
+      const el = document.getElementById("joinLeagueId");
+      joinLeagueId = el ? String(el.value || "").trim() : joinLeagueId;
+      joinBusy = true;
+      joinError = "";
+      joinPreview = null;
+      joinSeatId = "";
+      render();
+      try {
+        const data = await joinLeagueCall("preview", joinLeagueId);
+        joinPreview = data.league;
+      } catch (err) {
+        joinError = (err && err.message) || "Could not load that league.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onJoinConfirm() {
+      if (joinBusy || !joinPreview || !joinSeatId) return;
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinLeagueCall("join", joinPreview.sleeper_league_id, joinSeatId);
+        await loadMemberships();
+        const mem = data.membership;
+        const league = {
+          sleeper_league_id: data.league.sleeper_league_id,
+          name: data.league.name,
+          status: data.league.status || "pending_sync",
+          sleeper_user_id: mem.sleeper_user_id,
+          team_name: mem.team_name,
+        };
+        // Keep vote seat_profiles aligned with this membership (trigger also writes).
+        if (authSession) {
+          authSave(Object.assign({}, authSession, {
+            seat_user_id: mem.sleeper_user_id,
+            seat_name: mem.team_name,
+          }));
+        }
+        voteSeatRemember(mem.sleeper_user_id);
+        await openLeagueDashboard(league);
+      } catch (err) {
+        joinError = (err && err.message) || "Could not join.";
+        console.error(err);
+        joinBusy = false;
+        render();
+      }
+    }
+
+    function leagueDataPrefix(leagueId) {
+      return "data/leagues/" + leagueId + "/ui";
+    }
+
+    // Prefer league-scoped UI JSON; fall back to legacy data/ui for Cuckle.
+    async function getLeagueJson(name) {
+      const id = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      try {
+        return await getJson(leagueDataPrefix(id) + "/" + name);
+      } catch (err) {
+        if (id === CUCKLE_LEAGUE_ID) return getJson("data/ui/" + name);
+        throw err;
+      }
+    }
+
+    async function openLeagueDashboard(leagueInfo) {
+      saveActiveLeague(leagueInfo);
+      joinBusy = false;
+      joinError = "";
+      joinPreview = null;
+      appScreen = "dash";
+      members = null;
+      data = null;
+      await loadMembers();
+      voteLoad().catch((err) => console.error(err));
+      loadNewsDeleted().catch((err) => console.error(err));
     }
 
     // Phase 1: voter identity is the claimed seat only. Legacy device ids remain in local
@@ -3034,22 +3331,11 @@ const html = `<!DOCTYPE html>
     }
 
     function claimFormHtml() {
-      const opts = (members || []).map((m) => {
-        const sel = (authSeatId() || voteSeatId()) === m.user_id ? " selected" : "";
-        return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name) + "</option>";
-      }).join("");
       return '<div class="claim-box">'
-        + '<p class="caption" style="margin:0">Claim your seat once with the invite code Truman sent you. '
-        + "This phone remembers it. Voting is one seat, one ballot — no shared league password.</p>"
-        + '<label>Team name<select id="claimSeat" name="claimSeat"'
-        + (authBusy ? " disabled" : "") + ">" + opts + "</select></label>"
-        + '<label>Invite code<input id="claimCode" name="claimCode" type="password" autocomplete="current-password"'
-        + ' placeholder="CUCK-XXXX-XXXX"' + (authBusy ? " disabled" : "") + " /></label>"
+        + '<p class="caption" style="margin:0">Sign in and join this league from the app home to vote. '
+        + "One account, one seat per league.</p>"
         + '<div class="claim-actions">'
-        + '<button type="button" class="chip" data-claim-go="1"'
-        + (authBusy ? " disabled" : "") + ">"
-        + (authBusy ? "Claiming…" : "Claim seat") + "</button>"
-        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + '<button type="button" class="chip" data-app-home="1">App home</button>'
         + "</div></div>";
     }
 
@@ -3061,9 +3347,9 @@ const html = `<!DOCTYPE html>
       if (seats.length !== 2 || voteParties(r) > 2) {
         return head + '<p class="caption">Three-team trade. There is no two-sided answer to score, so voting is off here.</p></div>';
       }
-      if (!authSeatId()) {
+      if (!authSeatId() || !authSession) {
         return head
-          + '<p class="caption">Claim your seat to cast a league vote. Tallies stay visible either way.</p>'
+          + '<p class="caption">Join this league with your account to cast a vote. Tallies stay visible either way.</p>'
           + claimFormHtml()
           + "</div>";
       }
@@ -3619,8 +3905,133 @@ const html = `<!DOCTYPE html>
       return empty + rows + detail;
     }
 
+    function renderAppGate() {
+      const title = gateMode === "signup" ? "Create account" : "Sign in";
+      const go = gateMode === "signup" ? "Create account" : "Sign in";
+      return '<div class="app-shell">'
+        + '<h2 class="screen-h" tabindex="-1">Cuckle</h2>'
+        + '<p class="caption">Trade meter for Sleeper leagues. One account — join any league by ID, pick your team, vote and track deals.</p>'
+        + '<div class="app-card"><h3>' + title + "</h3>"
+        + '<div class="app-form">'
+        + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
+        + ' autocapitalize="off" spellcheck="false"' + (authBusy ? " disabled" : "") + " /></label>"
+        + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
+        + (gateMode === "signup" ? "new-password" : "current-password") + '"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
+        + (authBusy ? "Working…" : go) + "</button>"
+        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + "</div></div>"
+        + '<p class="caption" style="margin:12px 0 0">'
+        + (gateMode === "signup"
+          ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
+          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
+        + "</p></div></div>";
+    }
+
+    function renderAppHome() {
+      const uname = (authSession && authSession.username) || "you";
+      const rows = (memberships || []).map((m) => {
+        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
+        return '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
+          + "<div><b>" + esc(m.name) + "</b>"
+          + "<span>" + esc(m.team_name) + " · " + st
+          + (m.season ? " · " + esc(m.season) : "") + "</span></div>"
+          + '<span class="chev" aria-hidden="true">›</span></button>';
+      }).join("");
+      return '<div class="app-shell">'
+        + '<h2 class="screen-h" tabindex="-1">Your leagues</h2>'
+        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
+        + '<button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
+        + (rows || '<p class="caption">No leagues yet. Add a Sleeper league ID to get started.</p>')
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
+        + "</div></div>";
+    }
+
+    function renderJoinLeague() {
+      const teams = (joinPreview && joinPreview.teams) || [];
+      const teamBtns = teams.map((t) => {
+        const on = joinSeatId === t.sleeper_user_id;
+        return '<button type="button" class="team-opt' + (on ? " on" : "") + '"'
+          + ' data-join-seat="' + esc(t.sleeper_user_id) + '"'
+          + ' aria-pressed="' + (on ? "true" : "false") + '">'
+          + esc(t.team_name)
+          + (t.display_name && t.display_name !== t.team_name
+            ? ' <span class="caption" style="display:inline;margin:0">(' + esc(t.display_name) + ")</span>"
+            : "")
+          + "</button>";
+      }).join("");
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Add a league</h2>'
+        + '<p class="caption">Paste the Sleeper league ID. Then pick the team that is yours — that seat is tied to your account for votes and the dashboard.</p>'
+        + '<div class="app-card"><h3>Sleeper league ID</h3>'
+        + '<div class="app-form">'
+        + '<label>League ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
+        + ' placeholder="e.g. 1315431339301806080" value="' + esc(joinLeagueId) + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-preview="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy && !joinPreview ? "Looking up…" : "Find league") + "</button>"
+        + "</div></div></div>"
+        + (joinPreview
+          ? '<div class="app-card"><h3>' + esc(joinPreview.name) + "</h3>"
+            + '<p class="caption" style="margin:0 0 8px">'
+            + (joinPreview.season ? "Season " + esc(joinPreview.season) + " · " : "")
+            + (joinPreview.total_rosters || teams.length) + " teams</p>"
+            + '<div class="team-pick">' + teamBtns + "</div>"
+            + '<div class="app-actions" style="margin-top:10px">'
+            + '<button type="button" class="chip" data-join-confirm="1"'
+            + (joinBusy || !joinSeatId ? " disabled" : "") + ">"
+            + (joinBusy ? "Joining…" : "Join as this team") + "</button>"
+            + "</div></div>"
+          : "")
+        + (joinError ? '<p class="err" role="alert" style="color:var(--red)">' + esc(joinError) + "</p>" : "")
+        + "</div>";
+    }
+
+    function renderPendingLeague() {
+      const L = activeLeague || {};
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(L.name || "League") + "</h2>"
+        + '<div class="sync-banner">You are in as <b>' + esc(L.team_name || "your team") + "</b>. "
+        + "This league is registered. The full trade meter syncs next — Cuckle-ready leagues open the dashboard immediately; new leagues show here until their data is built.</div>"
+        + '<p class="caption">League ID <code>' + esc(L.sleeper_league_id || "") + "</code></p>"
+        + "</div>";
+    }
+
     function render() {
       const app = document.getElementById("app");
+      // Multi-league app shell — before the per-league dashboard.
+      if (appScreen === "gate" || appScreen === "home" || appScreen === "join") {
+        const keep = focusSelector(document.activeElement);
+        const navigated = focusNext !== null;
+        app.innerHTML = appScreen === "gate" ? renderAppGate()
+          : appScreen === "join" ? renderJoinLeague()
+          : renderAppHome();
+        const land = focusNext ? app.querySelector(focusNext) : null;
+        focusNext = null;
+        if (land) land.focus({ preventScroll: true });
+        else if (navigated) app.focus({ preventScroll: true });
+        else if (keep) {
+          const back = app.querySelector(keep);
+          if (back) back.focus({ preventScroll: true });
+        }
+        if (navigated) window.scrollTo(0, 0);
+        return;
+      }
+      if (appScreen === "dash" && activeLeague && activeLeague.status && activeLeague.status !== "ready"
+          && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID) {
+        // Non-Cuckle leagues without a ready sync get the pending screen, not a broken meter.
+        const hasBook = !!(league && members);
+        if (!hasBook) {
+          app.innerHTML = renderPendingLeague();
+          return;
+        }
+      }
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
@@ -3639,6 +4050,17 @@ const html = `<!DOCTYPE html>
       const seatName = tabs.length
         ? '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>'
           + seatLabel(me.name) + "</h2>"
+        : "";
+      const leagueChip = (activeLeague && appScreen === "dash")
+        ? '<p class="caption" style="margin:0 0 8px">'
+          + '<button type="button" class="linkish" data-app-home="1">← Leagues</button>'
+          + " · " + esc(activeLeague.name || "League")
+          + (authSession && authSession.username ? " · " + esc(authSession.username) : "")
+          + "</p>"
+        : "";
+      const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready"
+        && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID)
+        ? '<div class="sync-banner">Meter sync still pending for this league. Showing what is available.</div>'
         : "";
       const nav = (tabs.length
         ? '<div class="nav" role="tablist" aria-label="Sections">'
@@ -3667,7 +4089,7 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
-      app.innerHTML = seatName + nav + body;
+      app.innerHTML = leagueChip + syncNote + seatName + nav + body;
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
@@ -3979,9 +4401,16 @@ const html = `<!DOCTYPE html>
     document.getElementById("app").addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       const t = e.target;
-      if (!t || (t.id !== "claimCode" && t.id !== "claimSeat")) return;
-      e.preventDefault();
-      onClaimSubmit();
+      if (!t) return;
+      if (t.id === "gateUser" || t.id === "gatePass") {
+        e.preventDefault();
+        onGateSubmit();
+        return;
+      }
+      if (t.id === "joinLeagueId") {
+        e.preventDefault();
+        onJoinPreview();
+      }
     });
     document.getElementById("app").addEventListener("click", (e) => {
       // Before everything: leaving a screen must not read as a click on what is on it.
@@ -4024,24 +4453,97 @@ const html = `<!DOCTYPE html>
         else openDataSets();
         return;
       }
-      // Admin soft-delete on a shared tweet. Early return so it cannot fall through to any
-      // row handler — same defect-A1 discipline as every other control nested near a list.
-      const newsDelBtn = e.target.closest("[data-news-del]");
-      if (newsDelBtn) {
-        deleteNewsItem(newsDelBtn.dataset.newsDel);
+      // App shell navigation (multi-league home / join / account).
+      const gateModeBtn = e.target.closest("[data-gate-mode]");
+      if (gateModeBtn) {
+        gateMode = gateModeBtn.dataset.gateMode === "signup" ? "signup" : "signin";
+        authError = "";
+        focusNext = ".screen-h";
+        render();
         return;
       }
-      // Claim seat (Phase 1) and sign out — before vote buttons so a form submit cannot
-      // also read as a ballot.
-      const claimGo = e.target.closest("[data-claim-go]");
-      if (claimGo) {
-        onClaimSubmit();
+      const gateGo = e.target.closest("[data-gate-go]");
+      if (gateGo) {
+        onGateSubmit();
+        return;
+      }
+      const appHome = e.target.closest("[data-app-home]");
+      if (appHome) {
+        appScreen = "home";
+        focusNext = ".screen-h";
+        loadMemberships().then(() => render()).catch((err) => { console.error(err); render(); });
+        return;
+      }
+      const appJoin = e.target.closest("[data-app-join]");
+      if (appJoin) {
+        appScreen = "join";
+        joinError = "";
+        joinPreview = null;
+        joinSeatId = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const joinPreviewBtn = e.target.closest("[data-join-preview]");
+      if (joinPreviewBtn) {
+        onJoinPreview();
+        return;
+      }
+      const joinSeatBtn = e.target.closest("[data-join-seat]");
+      if (joinSeatBtn) {
+        joinSeatId = joinSeatBtn.dataset.joinSeat;
+        render();
+        return;
+      }
+      const joinConfirmBtn = e.target.closest("[data-join-confirm]");
+      if (joinConfirmBtn) {
+        onJoinConfirm();
+        return;
+      }
+      const openLeagueBtn = e.target.closest("[data-open-league]");
+      if (openLeagueBtn) {
+        const id = openLeagueBtn.dataset.openLeague;
+        const m = (memberships || []).find((x) => x.sleeper_league_id === id);
+        if (m) {
+          const leagueInfo = {
+            sleeper_league_id: m.sleeper_league_id,
+            name: m.name,
+            status: m.status || "pending_sync",
+            sleeper_user_id: m.sleeper_user_id,
+            team_name: m.team_name,
+          };
+          if (authSession) {
+            authSave(Object.assign({}, authSession, {
+              seat_user_id: m.sleeper_user_id,
+              seat_name: m.team_name,
+            }));
+          }
+          voteSeatRemember(m.sleeper_user_id);
+          openLeagueDashboard(leagueInfo).catch((err) => {
+            console.error(err);
+            // No UI book yet — still enter pending screen.
+            saveActiveLeague(leagueInfo);
+            appScreen = "dash";
+            members = null;
+            league = null;
+            render();
+          });
+        }
         return;
       }
       const signOut = e.target.closest("[data-auth-signout]");
       if (signOut) {
         authClear();
+        document.getElementById("app").hidden = false;
+        focusNext = ".screen-h";
         render();
+        return;
+      }
+      // Admin soft-delete on a shared tweet. Early return so it cannot fall through to any
+      // row handler — same defect-A1 discipline as every other control nested near a list.
+      const newsDelBtn = e.target.closest("[data-news-del]");
+      if (newsDelBtn) {
+        deleteNewsItem(newsDelBtn.dataset.newsDel);
         return;
       }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
@@ -4185,19 +4687,56 @@ const html = `<!DOCTYPE html>
         render();
       }
     });
-    // The live tally is read after the page has painted, not before it. Awaiting Supabase here
-    // would put a paused free-tier project between the reader and the whole dashboard, and votes
-    // are the least important thing on it. Its own .catch keeps a vote failure out of the fatal
-    // path below — a missing tally is a caption, not a broken page.
+    // App boot: account gate → league home → dashboard. The meter only loads after a league
+    // is selected. Vote tallies still load after paint when we enter a ready league.
     authLoad();
-    loadMembers()
-      .then(() => voteLoad().catch((err) => console.error(err)))
-      .then(() => loadNewsDeleted().catch((err) => console.error(err)))
-      .catch((err) => {
-        document.getElementById("app").hidden = false;
-        document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
+    document.getElementById("app").hidden = false;
+    (async () => {
+      try {
+        if (!authSession) {
+          appScreen = "gate";
+          focusNext = ".screen-h";
+          render();
+          return;
+        }
+        await authRefreshIfNeeded();
+        if (!authSession) {
+          appScreen = "gate";
+          render();
+          return;
+        }
+        await loadMemberships().catch((err) => console.error(err));
+        if (activeLeague && activeLeague.sleeper_league_id) {
+          const m = memberships.find((x) => x.sleeper_league_id === activeLeague.sleeper_league_id);
+          if (m) {
+            activeLeague = Object.assign({}, activeLeague, {
+              name: m.name,
+              status: m.status,
+              sleeper_user_id: m.sleeper_user_id,
+              team_name: m.team_name,
+            });
+            saveActiveLeague(activeLeague);
+            try {
+              await openLeagueDashboard(activeLeague);
+              return;
+            } catch (err) {
+              console.error(err);
+              appScreen = "dash";
+              render();
+              return;
+            }
+          }
+        }
+        appScreen = "home";
+        focusNext = ".screen-h";
+        render();
+      } catch (err) {
+        document.getElementById("lead").textContent = "Could not start the app. Hard-refresh and try again.";
         console.error(err);
-      });
+        appScreen = "gate";
+        render();
+      }
+    })();
   </script>
 </body>
 </html>`;
@@ -4549,7 +5088,7 @@ const renderSrc = fnBody("render");
 if (!renderSrc.includes("paintLens();")) {
   throw new Error("render() must paint the header clock -- without it the trigger never follows the page");
 }
-if (renderSrc.indexOf("app.innerHTML = seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
+if (renderSrc.indexOf("app.innerHTML = leagueChip + syncNote + seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
   throw new Error("paintLens() must run after the body is built -- renderDrafts pins lens and restores it");
 }
 // 4. It hides where the clock has no effect, and it must not be hidden anywhere else. Champions
@@ -4953,7 +5492,7 @@ for (const opener of ["openTeams", "openDataSets"]) {
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
   "+ seatLabel(me.name) + \"</h2>\"",
-  "app.innerHTML = seatName + nav + body;",
+  "app.innerHTML = leagueChip + syncNote + seatName + nav + body;",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the seat heading: ${need}`);
 }
@@ -5233,7 +5772,7 @@ if (!html.includes(".news-row {") || !html.slice(html.indexOf(".news-row {")).sl
 if (!inline.includes("news = book && book.v === 1 && Array.isArray(book.items) ? book : null;")) {
   throw new Error("news.json must be version-gated on load");
 }
-const newsLoad = inline.slice(inline.indexOf('const book = await getJson("data/ui/news.json");'));
+const newsLoad = inline.slice(inline.indexOf('const book = await getLeagueJson("news.json");'));
 if (!newsLoad.slice(0, 200).includes("catch (err) { news = null; }")) {
   throw new Error("a missing or malformed news.json must cost the news section and nothing else");
 }

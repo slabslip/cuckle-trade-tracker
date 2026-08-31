@@ -765,7 +765,22 @@ Claim + vote in the browser is the real test.
 
 ---
 
-## 8. Hand back — done
+## 8. Multi-league app
+
+See [`APP_SDD.md`](APP_SDD.md). After Phase 1 SQL:
+
+1. Paste [`db/multi-league-app.sql`](../db/multi-league-app.sql)
+2. Deploy Edge Function `supabase/functions/join-league`
+3. Auth Confirm email stays **OFF**; Site URL includes your app origin
+4. Open the site → **Create account** (username + password) → **Add a league** → paste Sleeper ID → pick team
+5. Cuckle (`1315431339301806080`) is seeded `ready` and uses existing `data/ui`
+6. Other leagues join as `pending_sync` until you run the pipeline for that ID
+
+Username emails are synthetic: `{username}@users.cuckle.invalid`.
+
+---
+
+## 9. Hand back — done
 
 Both values were handed over and are wired into `generate-page.mjs`:
 

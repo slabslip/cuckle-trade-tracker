@@ -94,7 +94,7 @@ export const CATEGORIES = [
     id: "trade",
     label: "Trade",
     severity: 4,
-    test: /\b(traded?|trade|acquir\w+|dealt|shipped to|sent to|released|waiv\w*|cut\b|signs? with|signed with|claim\w+ off waivers|agree\w* to terms)\b/i,
+    test: /\b(traded?|trade|acquir\w+|dealt|shipped to|sent to|released|waiv\w*|cut\b|signs? with|signed with|claim\w+ off waivers|agree\w* to terms|retir\w*|announced (?:his )?retirement)\b/i,
   },
   {
     id: "depth_chart",
@@ -146,6 +146,19 @@ const TEMPLATES = {
     "Somebody check on {who}. {player} is hurt and the waiver wire is not going to be kind.",
     "{who}, this is your reminder that {player} has a body. The body has opinions.",
     "The medical staff has thoughts about {player}, {who}. None of them are the ones you wanted.",
+    // Ingested league smack — injury.
+    "Congrats, {who}: {player} just joined IR… the only place he's been more consistent than your lineup.",
+    "Looks like {player} decided the best way to help {who} was to sit out. Selfless.",
+    "{who}, fantasy tip: next time draft someone whose body doesn't fold like a cheap lawn chair. ({player}.)",
+    "Plot twist, {who}: the only thing more fragile than your playoff hopes is {player}'s hamstring.",
+    "I'm not saying {who}'s team is cursed, but the injury fairy has {player} on speed dial.",
+    "Your lineup is so depleted, {who}, I'm starting to feel bad… almost. ({player}.)",
+    "RIP to {player}'s season and {who}'s hopes.",
+    "Another one bites the dust — and the IR. Looking at you, {who}.",
+    "{who}'s team is currently sponsored by Ace Bandage. Exhibit A: {player}.",
+    "Skill issue. (And also injury issue.) {player} is out, {who}.",
+    "Brutal break on {player}, {who}. At least you can finally stop pretending he was helping.",
+    "Sorry about {player}, {who}. The league will miss… well, mostly just you missing him.",
   ],
   injury_good: [
     "Exhale, {who}. {player} is trending the right way for once.",
@@ -171,6 +184,17 @@ const TEMPLATES = {
     "{who} did not consent to this trade and it happened anyway. {player} is out of {team}.",
     "Somebody traded {player} and it wasn't {who}, which is somehow worse.",
     "{who}, your guy {player} just got moved. The league does not check with you first.",
+    // Ingested league smack — cut / waive / release / retire.
+    "Even their real team realized what the rest of us knew, {who} — {player} is a liability.",
+    "Your waiver claim just got denied by the universe, {who}. {player} is free to underperform elsewhere.",
+    "Dropped by the team that drafted him. That's not a red flag, {who} — that's an evacuation order. ({player}.)",
+    "Congratulations, {who}: you just got out-transacted by an actual NFL franchise. ({player}.)",
+    "The team cut {player} before you could, {who}. Efficiency!",
+    "{player} retired rather than keep carrying {who}. Respect the self-preservation.",
+    "{player} looked at {who}'s record and said \"I'm out.\"",
+    "Career over for {player}. Just like {who}'s shot at the championship.",
+    "{who}'s roster just got healthier… because that dead weight ({player}) is finally off it.",
+    "On the bright side, {who}: free roster spot to make the same mistake again. ({player}.)",
   ],
   depth_chart: [
     "Depth chart movement on {player}, {who}. Read it before you set a lineup you regret.",
@@ -215,6 +239,7 @@ const TEMPLATES = {
    * Shared-tweet banks: short **pokes** appended after the factual summariseTweet() line.
    * The manager name stays in the row header; these speak as "you" and never repeat the seat.
    * Facts come from summariseTweet(); these lines are attitude only.
+   * Keep them short — a long poke starves the fact under MAX_LINE.
    */
   tweet: [
     "Your roster. Your problem.",
@@ -225,7 +250,6 @@ const TEMPLATES = {
     "Sleep tight.",
     "Hope you liked that pick.",
     "Tell the bench it might be starting.",
-    // Cut / hurt oriented — only appended when tweetWantsPoke() says so.
     "That's gonna leave a mark on the roster.",
     "Waiver wire just cleared its throat.",
     "Time to find a warm body.",
@@ -238,6 +262,34 @@ const TEMPLATES = {
     "The trainers are writing the story now.",
     "Released into the wild. Your problem now.",
     "Ouch. For him and for you.",
+    // Ingested league smack — short enough to append after the fact.
+    "Congrats — {player} joined IR, the only place he's been consistent.",
+    "{player} sat out to help your team. Selfless.",
+    "Your roster got healthier: that dead weight is finally off it.",
+    "Next time draft someone whose body doesn't fold like a lawn chair.",
+    "More fragile than your playoff hopes: {player}'s hamstring.",
+    "Even their real team knew {player} was a liability.",
+    "Waiver claim denied by the universe. {player} can underperform elsewhere.",
+    "Dropped by the team that drafted him. Evacuation order.",
+    "You just got out-transacted by an actual NFL franchise.",
+    "The team cut him before you could. Efficiency!",
+    "He retired rather than keep carrying your team.",
+    "{player} looked at your record and said I'm out.",
+    "Career over. Just like your shot at the championship.",
+    "{player} is unavailable due to being bad at football.",
+    "Don't worry — the free agent pool is still deeper than your bench.",
+    "At least now you have one more excuse for that loss.",
+    "The injury fairy has your number on speed dial.",
+    "Starting to feel bad about your lineup… almost.",
+    "This is why we can't have nice things. Or healthy players.",
+    "RIP to {player}'s season and your hopes.",
+    "Another one bites the dust. And the IR.",
+    "Your team is currently sponsored by Ace Bandage.",
+    "Waiver wire called. They laughed.",
+    "Skill issue. (And also injury issue.)",
+    "Brutal break. At least you can stop pretending he was helping.",
+    "Free roster spot — go make the same mistake again.",
+    "Sorry about {player}. The league will miss you missing him.",
   ],
   tweet_who: [
     "Don't act surprised.",
@@ -250,6 +302,32 @@ const TEMPLATES = {
     "Feel that one in the depth chart.",
     "Waivers are calling. Pick up.",
     "Have a seat — the medical staff has the floor.",
+    "Congrats on the IR consistency.",
+    "Selfless of him to sit out for you.",
+    "Dead weight: cleared.",
+    "Lawn-chair body. Noted.",
+    "Playoff hopes and hamstrings: both fragile.",
+    "Even the NFL team gave up first.",
+    "Universe denied your waiver claim.",
+    "Evacuation order from the franchise that drafted him.",
+    "Out-transacted by a real NFL team.",
+    "They cut him before you could.",
+    "He retired on your watch.",
+    "He looked at your record and left.",
+    "Career over. Championship shot too.",
+    "Unavailable: bad at football.",
+    "Free agent pool > your bench.",
+    "One more excuse, coming right up.",
+    "Injury fairy has you on speed dial.",
+    "Feel bad… almost.",
+    "No nice things. No healthy players.",
+    "RIP season. RIP hopes.",
+    "Another one for the IR.",
+    "Sponsored by Ace Bandage.",
+    "Waiver wire laughed.",
+    "Skill issue + injury issue.",
+    "Stop pretending he was helping.",
+    "Free spot. Same mistake. Go.",
   ],
   /** Impersonal tags for The league / multi-tag rows — no "you". */
   tweet_league: [
@@ -261,6 +339,32 @@ const TEMPLATES = {
     "Collective oof.",
     "Someone's Sunday just got interesting.",
     "The waiver wire sends its regards.",
+    "IR consistency award pending.",
+    "Selfless sit-out energy.",
+    "Dead weight, cleared.",
+    "Lawn-chair durability.",
+    "Fragile hamstrings season.",
+    "Even the NFL franchise knew.",
+    "Universe-level waiver denial.",
+    "Full evacuation order.",
+    "Out-transacted by the league.",
+    "Cut before the fantasy manager could.",
+    "Retired rather than keep carrying.",
+    "Looked at the record and left.",
+    "Career over. Title hopes too.",
+    "Unavailable: bad at football.",
+    "FA pool still deeper than that bench.",
+    "One more excuse unlocked.",
+    "Injury fairy on speed dial.",
+    "Feel bad… almost.",
+    "No nice things. No healthy players.",
+    "RIP season and hopes.",
+    "Another one bites the IR.",
+    "Ace Bandage era.",
+    "Waiver wire laughed.",
+    "Skill issue. Injury issue.",
+    "Stop pretending he was helping.",
+    "Free roster spot incoming.",
   ],
 };
 
@@ -589,6 +693,7 @@ export function tweetWantsPoke(text) {
   const { category, upbeat } = classify(s);
   if (category === "injury") return !upbeat;
   if (category === "suspension" || category === "off_field") return true;
+  if (/\b(retir\w*|announced (?:his )?retirement)\b/i.test(s)) return true;
   if (category === "trade") {
     const cut = /\b(waiv\w*|released|cut\b|claim\w* off waivers)\b/i.test(s);
     const kept = /\b(kept|keeping|made the (?:final )?roster|made the 53|on the 53|53-man roster|finished (?:cutdown|cuts)|survived (?:the )?cut|staying (?:put)?)\b/i.test(s);

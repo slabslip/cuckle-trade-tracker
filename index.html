@@ -704,11 +704,12 @@
       background: transparent; border-style: dashed; cursor: default;
     }
     /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
-       Hero announcement, four circular quick actions, and an “In the league” strip. */
-    .lh-hero.day-alert {
+       News & Alerts hero (rotates in JS), four circular quick actions, “In the league” strip. */
+    .lh-hero.day-alert, .lh-hero.news-hero {
       position: relative; overflow: hidden;
       border-radius: 20px; padding: 16px 16px 14px; margin: 0 0 20px;
       min-height: 0; height: auto; justify-content: flex-start;
+      background: #1a1810; border: 1px solid #6b5a2e;
     }
     .lh-hero-visual {
       position: absolute; right: -12px; top: 0; bottom: 0; width: 44%;
@@ -717,10 +718,40 @@
         linear-gradient(145deg, #2c2618 0%, #141416 55%);
       border-radius: 18px 0 0 18px; pointer-events: none;
     }
-    .lh-hero .day-alert-top,
-    .lh-hero button.day-in,
+    .lh-hero .day-alert-top {
+      position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px;
+      margin-bottom: 8px;
+    }
+    .lh-hero .day-alert-top .day-alert-h { min-width: 0; }
+    .lh-hero .day-alert-h span {
+      display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 2px;
+    }
+    button.news-hero-pause {
+      position: relative; z-index: 2; flex: 0 0 auto; margin-left: auto;
+      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
+      color: #e0b44c; background: none; border: 1px solid #6b5a2e; border-radius: 999px;
+      height: 26px; padding: 0 10px; cursor: pointer; touch-action: manipulation;
+    }
+    button.news-hero-pause:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.news-hero-body {
+      position: relative; z-index: 1; display: block; width: 100%; max-width: 62%;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; padding: 4px 0 0; margin: 0;
+      cursor: pointer; touch-action: manipulation; min-height: 72px;
+    }
+    button.news-hero-body:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-hero-slide b {
+      display: block; font-weight: 650; line-height: 1.3; margin: 0 0 4px;
+    }
+    .news-hero-slide span {
+      display: block; color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
+    }
+    .news-hero-live {
+      position: relative; z-index: 1; margin-top: 8px;
+      font-size: 0.75rem; color: var(--dim);
+    }
+    .lh-hero .day-in,
     .lh-hero .date { position: relative; z-index: 1; max-width: 62%; }
-    .lh-hero .day-alert-top { margin-bottom: 8px; }
     .lh-hero button.day-in {
       background: transparent; border: 0; padding: 8px 0; margin: 0;
       width: 100%; text-align: left; cursor: pointer; color: inherit;
@@ -1214,6 +1245,10 @@
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
+    // News hero carousel (league home). Advanced in JS every 2s; Pause stops it (WCAG 2.2.2).
+    let newsHeroIdx = 0;
+    let newsHeroPaused = false;
+    let newsHeroTimer = null;
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
@@ -1462,6 +1497,7 @@
     }
 
     function clearLeague() {
+      clearNewsHero();
       me = null;
       data = null;
       view = "home";
@@ -2223,7 +2259,7 @@
      * The only field this repo authors is league_line, and that is escaped too rather than
      * trusted for being ours.
      */
-    function renderNews() {
+    function renderNewsBody() {
       const book = news && news.v === 1 ? news : null;
       const raw = (book && book.items) || [];
       // Soft-deleted posts stay in news.json until the next sync rebuild; newsGone is what
@@ -2376,11 +2412,26 @@
      * set that reads it.
      */
     function renderLeagueHome() {
+      // News & Alerts hero rotates on the chip; the full feed is its own screen (view=news).
       return dayAlert()
         + homeChips()
         + leagueInProgress()
-        + dataSetPanel()
-        + renderNews();
+        + dataSetPanel();
+    }
+
+    function renderNews() {
+      return renderNewsBody();
+    }
+
+    function renderNewsPage() {
+      // Same feed the hero opens. Heading comes from renderNewsBody(); replace it with a
+      // screen heading and a way back to league home.
+      return renderNewsBody().replace(
+        "<h2>News and Alerts</h2>",
+        '<button type="button" class="chip" data-view="home" style="margin:0 0 10px">← League home</button>'
+          + '<h2 class="screen-h" tabindex="-1">News and Alerts</h2>'
+          + '<p class="caption">Everything shared into this league. Tap a row for the source.</p>'
+      );
     }
 
     function renderAccountPage() {
@@ -4058,44 +4109,86 @@
       };
     }
 
+    function newsItemsLive() {
+      const book = news && news.v === 1 ? news : null;
+      const raw = (book && book.items) || [];
+      return raw.filter((it) => !newsGone.has(it.id));
+    }
+
+    /** Compact one-line copy for the rotating hero chip. */
+
+    function clearNewsHero() {
+      if (newsHeroTimer) { clearInterval(newsHeroTimer); newsHeroTimer = null; }
+    }
+
+    function paintNewsHeroSlide() {
+      const root = document.querySelector(".news-hero");
+      if (!root) return;
+      const slides = [...root.querySelectorAll("[data-news-slide]")];
+      if (!slides.length) return;
+      newsHeroIdx = ((newsHeroIdx % slides.length) + slides.length) % slides.length;
+      slides.forEach((el, i) => { el.hidden = i !== newsHeroIdx; });
+      const live = root.querySelector("[data-news-live]");
+      if (live) live.textContent = (newsHeroIdx + 1) + " of " + slides.length;
+    }
+
+    /** Rotate hero alerts every 2s. Pause / reduced-motion stop the timer (WCAG 2.2.2). */
+    function armNewsHero() {
+      clearNewsHero();
+      const root = document.querySelector(".news-hero");
+      if (!root) return;
+      paintNewsHeroSlide();
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce || newsHeroPaused) return;
+      const slides = root.querySelectorAll("[data-news-slide]");
+      if (slides.length < 2) return;
+      newsHeroTimer = setInterval(() => {
+        newsHeroIdx += 1;
+        paintNewsHeroSlide();
+      }, 2000);
+    }
+
+    function newsHeroLine(it) {
+      if (!it) return { cat: "News", line: "Nothing shared yet." };
+      const cat = NEWS_CATS[it.category] || "News";
+      const line = it.league_line || it.headline || it.note || "Open the full feed.";
+      return { cat: cat, line: line };
+    }
+
+    /**
+     * League-home hero: News & Alerts chip. Rotates every 2s in JS (Pause stops it).
+     * The whole body opens the full news screen. All-trades lives under In the league.
+     */
     function dayAlert() {
-      const tape = daySides();
-      // The card is a doorway now, not an accordion: it opens the trade as a whole screen.
-      const chips = tape.rows.map((r) => {
-        // Same windows[lens] and the same rounding the trades list uses, so the card cannot drift.
-        const w = (r.windows && r.windows[lens]) || {};
-        const got = w.incomplete && !w.got ? "—" : fmt(w.got);
-        const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-        const s = windowScore(r);
-        return '<button type="button" class="day-in" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
-          + "<b>" + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</b>"
-          + '<span class="day-in-vals">'
-          + '<span class="day-in-val"><i>' + seatLabel(r.name) + "</i>" + tapeMargin(s) + "<em>" + got + "</em></span>"
-          + '<span class="day-in-val"><i>' + seatLabel(r.other) + "</i>" + tapeMargin(s == null ? null : -s) + "<em>" + sent + "</em></span>"
-          + "</span></button>";
-      }).join("")
-        || '<div class="date">No trades on the tape yet.</div>';
-      // The door to every league trade sits in the header row, a sibling of the trade buttons
-      // rather than inside one. That is what keeps one tap from meaning two things: the #app
-      // handler tests [data-trades-list] before [data-board-open], and because no trade button
-      // is an ancestor of this one, only one of those branches can ever match a given click.
-      // A list of rows says "all of them" where a bare arrow would read as "the next one".
-      const allBtn = '<button type="button" class="all-trades" data-trades-list="1"'
-        + ' aria-label="All trades in the league">'
-        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
-        + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
-        + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
-        + "<span>All trades</span></button>";
-      // Single hero announcement (PSA pattern). Champions Path moved to leagueInProgress().
-      return '<div class="lh-hero day-alert">'
+      const items = newsItemsLive();
+      const slides = (items.length ? items : [null]).map((it, i) => {
+        const bit = newsHeroLine(it);
+        return '<div class="news-hero-slide" data-news-slide="' + i + '"'
+          + (i === 0 ? "" : " hidden") + '>'
+          + "<b>" + esc(bit.cat) + "</b>"
+          + "<span>" + esc(bit.line) + "</span>"
+          + "</div>";
+      }).join("");
+      const n = items.length || 1;
+      const pauseLab = newsHeroPaused ? "Play" : "Pause";
+      // day-alert-top kept so existing layout chrome / smoke still find the header row.
+      return '<section class="lh-hero day-alert news-hero" aria-label="News and Alerts">'
         + '<div class="lh-hero-visual" aria-hidden="true"></div>'
         + '<div class="day-alert-top">'
-        + '<div class="day-alert-h">Recent Trade' + (tape.day ? "<span>" + esc(tape.day) + "</span>" : "") + "</div>"
-        + allBtn
+        + '<div class="day-alert-h">News &amp; Alerts'
+        + "<span>Updates every 2 seconds · tap for full feed</span></div>"
+        + '<button type="button" class="news-hero-pause" data-news-pause="1"'
+        + ' aria-pressed="' + (newsHeroPaused ? "true" : "false") + '">'
+        + pauseLab + "</button>"
         + "</div>"
-        + chips
-        + "</div>";
+        + '<button type="button" class="news-hero-body" data-view="news"'
+        + ' aria-label="Open the News and Alerts feed">'
+        + slides
+        + "</button>"
+        + '<div class="news-hero-live" data-news-live aria-live="polite">1 of ' + n + "</div>"
+        + "</section>";
     }
+
 
     /**
      * “In the league” — Champions Path summary + horizontal recent-trade strip (PSA “in progress”).
@@ -4146,7 +4239,11 @@
       if (!champBox && !strip) return "";
       return '<section class="lh-section">'
         + '<div class="lh-section-h"><h2>In the league</h2>'
-        + '<button type="button" class="lh-see-all" data-trades-list="1">See all</button></div>'
+        + '<button type="button" class="all-trades" data-trades-list="1" aria-label="All trades in the league">'
+        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
+        + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
+        + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
+        + "<span>All trades</span></button></div>"
         + champBox
         + strip
         + "</section>";
@@ -4906,6 +5003,7 @@
         : view === "titles" ? renderTitles()
         : view === "account" ? renderAccountPage()
         : view === "teams" ? renderTeamsPage()
+        : view === "news" ? renderNewsPage()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -4940,6 +5038,7 @@
       paintLens();
       paintBottomNav();
       syncUrl();
+      armNewsHero();
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
@@ -5218,6 +5317,18 @@
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
+
+      const newsPause = e.target.closest("[data-news-pause]");
+      if (newsPause) {
+        newsHeroPaused = !newsHeroPaused;
+        armNewsHero();
+        // Re-render so the Pause/Play label stays honest after the next paint;
+        // for now update the control in place so the carousel does not restart from zero.
+        newsPause.setAttribute("aria-pressed", newsHeroPaused ? "true" : "false");
+        newsPause.textContent = newsHeroPaused ? "Play" : "Pause";
+        return;
+      }
+
       // League-home quick actions: same destinations as bottom nav.
       const lhNav = e.target.closest("[data-lh-nav]");
       if (lhNav) {

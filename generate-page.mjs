@@ -708,6 +708,101 @@ const html = `<!DOCTYPE html>
       justify-content: center; color: var(--dim); font-weight: 500;
       background: transparent; border-style: dashed; cursor: default;
     }
+    /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
+       Hero announcement, four circular quick actions, “In the league” strip, one light CTA. */
+    .lh-hero.day-alert {
+      position: relative; overflow: hidden;
+      border-radius: 20px; padding: 16px 16px 14px; margin: 0 0 20px;
+      min-height: 0; height: auto; justify-content: flex-start;
+    }
+    .lh-hero-visual {
+      position: absolute; right: -12px; top: 0; bottom: 0; width: 44%;
+      background:
+        radial-gradient(ellipse at 65% 35%, rgba(224,180,76,0.22), transparent 68%),
+        linear-gradient(145deg, #2c2618 0%, #141416 55%);
+      border-radius: 18px 0 0 18px; pointer-events: none;
+    }
+    .lh-hero .day-alert-top,
+    .lh-hero button.day-in,
+    .lh-hero .date { position: relative; z-index: 1; max-width: 62%; }
+    .lh-hero .day-alert-top { margin-bottom: 8px; }
+    .lh-hero button.day-in {
+      background: transparent; border: 0; padding: 8px 0; margin: 0;
+      width: 100%; text-align: left; cursor: pointer; color: inherit;
+      appearance: none; font: inherit; touch-action: manipulation;
+    }
+    .lh-hero button.day-in + button.day-in { border-top: 1px solid #3a3428; padding-top: 10px; }
+    .lh-actions {
+      margin: 0 0 22px;
+    }
+    .lh-action-row {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px 8px; align-items: start;
+    }
+    button.lh-action {
+      appearance: none; font: inherit; color: var(--text);
+      background: transparent; border: 0; padding: 4px 0; margin: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
+    }
+    button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-action .lh-ico {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #1c1c22; border: 1px solid var(--line);
+      display: grid; place-items: center; color: var(--text); flex: 0 0 auto;
+    }
+    button.lh-action.on .lh-ico { border-color: #6b5a2e; }
+    button.lh-action .lh-lab {
+      font-size: 0.6875rem; font-weight: 600; line-height: 1.25;
+      text-align: center; color: var(--muted); max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+    .lh-section { margin: 0 0 18px; }
+    .lh-section-h {
+      display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px;
+    }
+    .lh-section-h h2 {
+      font-size: 1.05rem; font-weight: 700; margin: 0; letter-spacing: -0.01em;
+    }
+    button.lh-see-all {
+      margin-left: auto; appearance: none; font: inherit;
+      font-size: 0.8125rem; font-weight: 600; color: var(--muted);
+      background: none; border: 0; padding: 8px 0; cursor: pointer;
+      touch-action: manipulation;
+    }
+    button.lh-see-all:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    a.champ-alert.lh-progress {
+      background: var(--card); border-color: var(--line); border-radius: 16px;
+      min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
+    }
+    .lh-strip {
+      display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    }
+    button.lh-strip-card {
+      flex: 0 0 128px; scroll-snap-align: start;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
+      padding: 10px; min-height: 92px; cursor: pointer; touch-action: manipulation;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    button.lh-strip-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-strip-card b {
+      font-size: 0.8125rem; font-weight: 650; line-height: 1.25;
+      overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    button.lh-strip-card span {
+      font-size: 0.75rem; color: var(--dim); margin-top: auto;
+    }
+    button.lh-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; min-height: 52px; margin: 2px 0 22px;
+      appearance: none; font: inherit; font-size: 1rem; font-weight: 700;
+      color: #0b0b0d; background: #f0f0f0; border: 0; border-radius: 999px;
+      cursor: pointer; touch-action: manipulation;
+    }
+    button.lh-cta:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 3px; }
+    button.lh-cta svg { flex: 0 0 auto; }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
        cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
@@ -1905,41 +2000,50 @@ const html = `<!DOCTYPE html>
       const named = cur
         ? ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected"'
         : ' aria-label="League Data Sets, none selected"';
-      return '<button type="button" class="home-chip' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
+      // Circular quick-action cell; accessible name still says "League Data Sets".
+      return '<button type="button" class="lh-action' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
         + ' aria-haspopup="listbox" aria-expanded="' + (dsOpen ? "true" : "false") + '"'
-        + named + '><span class="chip-lab">'
-        + "League Data Sets" + ' <span class="chev">▾</span></span></button>';
+        + named + '>'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
+        + '<span class="lh-lab">League Data Sets</span></button>';
     }
 
     /**
      * A cell nobody has decided on yet. Deliberately not a button and deliberately not
-     * addressable: no tabindex, no data-*, no role, nothing for a handler to find. The ticker
-     * shipped two <button> pills with an empty destination and every tap on them did nothing;
-     * an inert cell that looks pressable is the defect this app removed tonight, and four large
-     * chips would be a far bigger version of it. It is aria-hidden because an em dash is a
-     * placeholder, not a reading.
+     * addressable: no tabindex, no data-*, no role, nothing for a handler to find. Kept for
+     * smoke/history; league home no longer mounts empty slots beside Data Sets.
      */
     function chipSlot() {
       return '<span class="home-chip slot" aria-hidden="true">—</span>';
     }
 
+    /** One circular quick-action cell (Trades / Teams). */
+    function lhNavAction(nav, lab, path) {
+      return '<button type="button" class="lh-action" data-lh-nav="' + esc(nav) + '"'
+        + ' aria-label="' + esc(lab) + '">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<path fill="currentColor" d="' + path + '"/></svg></span>'
+        + '<span class="lh-lab">' + esc(lab) + "</span></button>";
+    }
+
     /**
-     * League home's box of four equal chips. League Data Sets is the live control; the other
-     * three are undecided slots. The Teams chip used to sit here as a seat-picker dropdown —
-     * that job moved to the bottom-nav Teams page, so this box no longer mounts a team list.
-     *
+     * PSA-style quick actions: Trades, Teams, Champions, League Data Sets.
      * The Data Sets menu is emitted here rather than inside its trigger, so it is absolutely
-     * positioned against this one box: it drops the full width of the card instead of the
-     * width of the cell it was opened from, and there is a single ancestor chain to keep
-     * free of overflow, transform, contain and clip-path.
+     * positioned against this .ds-wrap and drops the full width of the row.
      */
     function homeChips() {
-      return '<div class="chip-box ds-wrap">'
-        + '<div class="chip-grid">'
+      return '<div class="lh-actions ds-wrap">'
+        + '<div class="lh-action-row">'
+        + lhNavAction("trades", "Trades",
+          "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z")
+        + lhNavAction("teams", "Teams",
+          "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
+        + '<button type="button" class="lh-action" data-view="titles" aria-label="Champions Path">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<path fill="currentColor" d="M7 4h10v2.2l-1.2.8V10c0 2.1-1.4 3.9-3.3 4.5V17H15v2H9v-2h2.5v-2.5C9.6 13.9 8.2 12.1 8.2 10V7l-1.2-.8z"/></svg></span>'
+        + '<span class="lh-lab">Champions</span></button>'
         + dataSetRow()
-        + chipSlot()
-        + chipSlot()
-        + chipSlot()
         + "</div>"
         + (dsOpen ? dsMenu() : "")
         + "</div>";
@@ -2288,6 +2392,8 @@ const html = `<!DOCTYPE html>
     function renderLeagueHome() {
       return dayAlert()
         + homeChips()
+        + leagueInProgress()
+        + homePrimaryCta()
         + dataSetPanel()
         + renderNews();
     }
@@ -3984,32 +4090,6 @@ const html = `<!DOCTYPE html>
           + "</span></button>";
       }).join("")
         || '<div class="date">No trades on the tape yet.</div>';
-      const champ = ((titles && titles.titles) || [])[0];
-      const rec = champ && champ.record || {};
-      const fin = champFinalCaption(champ, rec);
-      // Four rows: the heading, the season, the scoreboard, the two records under the names
-      // they belong to. The top scorer stays as a fifth -- it was asked for, and a sketch
-      // that does not draw a line is not a request to delete it.
-      const bout = fin.bout
-        ? '<div class="champ-bout">'
-          + '<span class="bout-team">' + fin.bout.champName + "</span>"
-          + '<b class="bout-score">' + fin.bout.score + "</b>"
-          + '<span class="bout-team bout-r">' + fin.bout.oppName + "</span>"
-          + '<span class="bout-rec">' + fin.bout.champRec + "</span>"
-          + '<span class="bout-rec bout-r">' + fin.bout.oppRec + "</span>"
-          + "</div>"
-        // No final on file for this season, so there is no scoreboard to draw. Falls back to
-        // the caption this replaced rather than to an empty row.
-        : '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
-          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>";
-      const champBox = champ
-        ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
-          + '<div class="day-alert-h">Champions Path</div>'
-          + '<div class="champ-line">' + esc(champ.season) + " Championship</div>"
-          + bout
-          + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
-          + "</a>"
-        : "";
       // The door to every league trade sits in the header row, a sibling of the trade buttons
       // rather than inside one. That is what keeps one tap from meaning two things: the #app
       // handler tests [data-trades-list] before [data-board-open], and because no trade button
@@ -4021,13 +4101,86 @@ const html = `<!DOCTYPE html>
         + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
         + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
         + "<span>All trades</span></button>";
-      return '<div class="alert-row"><div class="day-alert">'
+      // Single hero announcement (PSA pattern). Champions Path moved to leagueInProgress().
+      return '<div class="lh-hero day-alert">'
+        + '<div class="lh-hero-visual" aria-hidden="true"></div>'
         + '<div class="day-alert-top">'
         + '<div class="day-alert-h">Recent Trade' + (tape.day ? "<span>" + esc(tape.day) + "</span>" : "") + "</div>"
         + allBtn
         + "</div>"
         + chips
-        + "</div>" + champBox + "</div>";
+        + "</div>";
+    }
+
+    /**
+     * “In the league” — Champions Path summary + horizontal recent-trade strip (PSA “in progress”).
+     */
+    function leagueInProgress() {
+      const champ = ((titles && titles.titles) || [])[0];
+      const rec = champ && champ.record || {};
+      const fin = champFinalCaption(champ, rec);
+      const bout = fin.bout
+        ? '<div class="champ-bout">'
+          + '<span class="bout-team">' + fin.bout.champName + "</span>"
+          + '<b class="bout-score">' + fin.bout.score + "</b>"
+          + '<span class="bout-team bout-r">' + fin.bout.oppName + "</span>"
+          + '<span class="bout-rec">' + fin.bout.champRec + "</span>"
+          + '<span class="bout-rec bout-r">' + fin.bout.oppRec + "</span>"
+          + "</div>"
+        : '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
+          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>";
+      const champBox = champ
+        ? '<a class="champ-alert lh-progress" href="?view=titles" data-view="titles">'
+          + '<div class="day-alert-h">Champions Path</div>'
+          + '<div class="champ-line">' + esc(champ.season) + " Championship</div>"
+          + bout
+          + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
+          + "</a>"
+        : "";
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const seen = new Set();
+      const recent = [];
+      for (const r of sides.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""))) {
+        if (seen.has(r.transaction_id)) continue;
+        seen.add(r.transaction_id);
+        recent.push(r);
+        if (recent.length >= 8) break;
+      }
+      const strip = recent.length
+        ? '<div class="lh-strip" role="list">'
+          + recent.map((r) => {
+            const s = windowScore(r);
+            return '<button type="button" class="lh-strip-card" role="listitem"'
+              + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+              + "<b>" + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</b>"
+              + "<span>" + (r.date ? esc(r.date) : "") + (s != null ? " · " + tapeMargin(s) : "") + "</span>"
+              + "</button>";
+          }).join("")
+          + "</div>"
+        : "";
+      if (!champBox && !strip) return "";
+      return '<section class="lh-section">'
+        + '<div class="lh-section-h"><h2>In the league</h2>'
+        + '<button type="button" class="lh-see-all" data-trades-list="1">See all</button></div>'
+        + champBox
+        + strip
+        + "</section>";
+    }
+
+    /** Primary light CTA — open claimed seat, or find a team on the Teams page. */
+    function homePrimaryCta() {
+      const id = authSeatId();
+      const name = authSeatName();
+      if (id) {
+        return '<button type="button" class="lh-cta" data-lh-seat="' + esc(id) + '">'
+          + '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
+          + '<path fill="currentColor" d="M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z"/></svg>'
+          + "Open " + esc(name || "your team") + "</button>";
+      }
+      return '<button type="button" class="lh-cta" data-lh-nav="teams">'
+        + '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
+        + '<path fill="currentColor" d="M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z"/></svg>'
+        + "Find your team</button>";
     }
 
     function renderTeamHome() {
@@ -5096,6 +5249,17 @@ const html = `<!DOCTYPE html>
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
+      // League-home quick actions / CTA: same destinations as bottom nav or selectMe.
+      const lhNav = e.target.closest("[data-lh-nav]");
+      if (lhNav) {
+        goBottomNav(lhNav.dataset.lhNav);
+        return;
+      }
+      const lhSeat = e.target.closest("[data-lh-seat]");
+      if (lhSeat && lhSeat.dataset.lhSeat) {
+        selectMe(lhSeat.dataset.lhSeat);
+        return;
+      }
       // Bottom-nav Teams page rows (and any future seat pick): data-who loads that team's home.
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
@@ -5597,7 +5761,7 @@ if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' select
 }
 // The label is a constant, the way the seat picker's is. If it starts reflecting the selection
 // the two dropdowns on the same screen stop reading as the same kind of control.
-if (!inline.includes('+ "League Data Sets" + \' <span class="chev">')) {
+if (!inline.includes('<span class="lh-lab">League Data Sets</span>')) {
   throw new Error("the League Data Sets trigger label must stay a constant, not the selected set");
 }
 // A popup listbox, matching the seat picker rather than inventing a third, less accessible
@@ -5926,29 +6090,25 @@ if (!fnBody("renderDrafts").includes("filterRow(draftBtn)")) {
   throw new Error("the Drafts tab lost its round filter row");
 }
 
-// ---- League home's box of four chips ---------------------------------------------------------
-// Four cells of equal size. League Data Sets is the live control; the other three are undecided
-// slots. The Teams chip dropdown used to sit here — that job moved to the bottom-nav Teams page.
+// ---- League home's PSA quick-action row ------------------------------------------------------
+// Four circular actions: Trades, Teams, Champions, League Data Sets. Empty chip slots are gone.
+// The Teams seat list stays on bottom-nav Teams — not a dropdown here.
 const chipSrc = fnBody("homeChips");
-for (const need of ['<div class="chip-box ds-wrap">', '<div class="chip-grid">',
-  "dataSetRow()", "chipSlot()", "dsMenu()"]) {
-  if (!chipSrc.includes(need)) throw new Error(`the chip box lost ${need}`);
+for (const need of ['<div class="lh-actions ds-wrap">', '<div class="lh-action-row">',
+  "dataSetRow()", "lhNavAction(", "dsMenu()", 'data-view="titles"']) {
+  if (!chipSrc.includes(need)) throw new Error(`the quick-action row lost ${need}`);
 }
 if (chipSrc.includes("teamsChip()") || chipSrc.includes("teamsMenu()") || chipSrc.includes("teamsOpen")) {
   throw new Error("the Teams chip dropdown must stay removed -- bottom-nav Teams is the seat list");
 }
-const cells = (chipSrc.match(/\+ (?:dataSetRow|chipSlot)\(\)/g) || []).length;
-if (cells !== 4) throw new Error(`the chip box must hold exactly four cells, found ${cells}`);
-const slotCells = (chipSrc.match(/\+ chipSlot\(\)/g) || []).length;
-if (slotCells !== 3) throw new Error(`the chip box must hold exactly three undecided slots, found ${slotCells}`);
-// Data Sets menu is emitted by the box, not by its trigger, so it hangs off one anchor.
+if (chipSrc.includes("chipSlot()")) {
+  throw new Error("league home must not mount empty chip slots -- quick actions replaced them");
+}
+// Data Sets menu is emitted by the row, not by its trigger, so it hangs off one anchor.
 if (!/\+ \(dsOpen \? dsMenu\(\) : ""\)/.test(chipSrc)) {
   throw new Error("a chip menu is emitted inside its own cell -- it would drop at the cell's width and clip against it");
 }
-// A slot is a span with no tab stop, no role and nothing for a handler to find. This is the
-// dead-pill guard above, applied to the control that replaced the dropdown: the ticker shipped
-// two <button> pills carrying an empty destination and every tap on them was ignored, and four
-// large chips are a far bigger surface for the same defect.
+// A slot helper remains (inert span) for history, but must stay unaddressable if ever reused.
 const slotSrc = fnBody("chipSlot");
 if (!slotSrc.includes('<span class="home-chip slot"')) {
   throw new Error("an undecided chip must be a <span> -- a button that goes nowhere is the dead-pill defect");
@@ -5966,19 +6126,25 @@ for (const need of ["border-style: dashed", "cursor: default", "background: tran
     throw new Error(`an undecided chip must not look pressable: ${need}`);
   }
 }
-// Equal cells, asserted as a grid property rather than left to the eye. minmax(0, 1fr) and not
-// 1fr because a track's automatic minimum is min-content (§3a) -- "League Data Sets" would
-// otherwise widen the row instead of wrapping inside its cell. grid-auto-rows: 1fr is what makes
-// the phone layout's two rows equal to each other rather than each sized to its own tallest chip.
-for (const need of ["grid-template-columns: repeat(2, minmax(0, 1fr));", "grid-auto-rows: 1fr;",
-  "grid-template-columns: repeat(4, minmax(0, 1fr));"]) {
-  if (!html.includes(need)) throw new Error(`the chip grid lost its equal-cell sizing: ${need}`);
+// Quick-action grid: four equal columns on every width (PSA pattern).
+if (!html.includes("grid-template-columns: repeat(4, minmax(0, 1fr));")) {
+  throw new Error("the quick-action row lost its equal four-column sizing");
 }
-// The box is the anchor for the Data Sets menu, so it is the ancestor chain that has to stay open.
-const chipBoxRule = html.slice(html.indexOf("    .chip-box {"));
-if (chipBoxRule === html) throw new Error("the chip box lost its card rules");
-if (/overflow: *(hidden|clip)|clip-path|transform:|contain:/.test(chipBoxRule.slice(0, chipBoxRule.indexOf("}")))) {
-  throw new Error(".chip-box must not clip or contain -- the Data Sets menu is absolutely positioned against it");
+// Legacy chip-box rules may remain unused; the live Data Sets menu anchor is .lh-actions.ds-wrap.
+const lhActionsRule = html.slice(html.indexOf("    .lh-actions {"));
+if (lhActionsRule === html) throw new Error("the quick-action row lost its .lh-actions rules");
+// Equal cells on the legacy chip grid (kept for stylesheet continuity) still assert if present.
+if (html.includes("    .chip-grid {")) {
+  for (const need of ["grid-template-columns: repeat(2, minmax(0, 1fr));", "grid-auto-rows: 1fr;",
+    "grid-template-columns: repeat(4, minmax(0, 1fr));"]) {
+    if (!html.includes(need)) throw new Error(`the chip grid lost its equal-cell sizing: ${need}`);
+  }
+}
+// The ds-wrap ancestor must stay free of clip so the Data Sets menu is tappable.
+const dsWrapOpen = html.slice(html.indexOf("    .ds-wrap {"));
+if (dsWrapOpen === html) throw new Error("the .ds-wrap lost its card rules");
+if (/overflow: *(hidden|clip)|clip-path:/.test(dsWrapOpen.slice(0, dsWrapOpen.indexOf("}")))) {
+  throw new Error(".ds-wrap must not clip -- the Data Sets menu is absolutely positioned against it");
 }
 
 // ---- One team list: bottom-nav Teams page -----------------------------------------------------

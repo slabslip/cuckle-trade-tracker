@@ -905,8 +905,14 @@ const html = `<!DOCTYPE html>
      * Order: name → glyph/img flair → reigning-champ crown (most recent title year).
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
-      TrumanCooper: { glyph: "🤢" },
       SF69erss: { img: "data/ui/flair-sf69erss.png" },
+      BubbaCuckShremp: { img: "data/ui/flair-bubbacuckshremp.png" },
+      TedCumberbatch: { img: "data/ui/flair-tedcumberbatch.png" },
+      TrumanCooper: { img: "data/ui/flair-trumancooper.png" },
+      DarkWingDucks2023: { img: "data/ui/flair-darkwingducks2023.png" },
+      ARae: { img: "data/ui/flair-arae.png" },
+      ChiefGumby: { img: "data/ui/flair-chiefgumby.png" },
+      KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" },
     });
     // Gold, the same #e0b44c the alert cards and the vote outline use. Decorates the
     // reigning champion beside their name everywhere seatLabel paints — never the name itself.
@@ -971,7 +977,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260831000031";
+    const DATA_V = "20260830seatlogos3";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4602,11 +4608,20 @@ for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="tr
   if (!inline.includes(need)) throw new Error(`generated script lost a seat-menu part: ${need}`);
 }
 // Seat flair is display-only. Bare Sleeper names stay in data; glyphs/images are painted.
-if (!inline.includes('TrumanCooper: { glyph: "🤢" }') || !inline.includes("function seatLabel(name)")) {
-  throw new Error("TrumanCooper seat flair (🤢) must ship as display-only seatLabel()");
+if (!inline.includes("function seatLabel(name)") || !inline.includes("function seatFlairHtml(name)")) {
+  throw new Error("seat flair must ship as display-only seatLabel() / seatFlairHtml()");
 }
-if (!inline.includes('SF69erss: { img: "data/ui/flair-sf69erss.png" }') || !inline.includes("function seatFlairHtml(name)")) {
-  throw new Error("SF69erss seat flair must ship as an emoji-sized img via seatFlairHtml()");
+for (const need of [
+  'SF69erss: { img: "data/ui/flair-sf69erss.png" }',
+  'BubbaCuckShremp: { img: "data/ui/flair-bubbacuckshremp.png" }',
+  'TedCumberbatch: { img: "data/ui/flair-tedcumberbatch.png" }',
+  'TrumanCooper: { img: "data/ui/flair-trumancooper.png" }',
+  'DarkWingDucks2023: { img: "data/ui/flair-darkwingducks2023.png" }',
+  'ARae: { img: "data/ui/flair-arae.png" }',
+  'ChiefGumby: { img: "data/ui/flair-chiefgumby.png" }',
+  'KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" }',
+]) {
+  if (!inline.includes(need)) throw new Error(`seat flair map missing: ${need}`);
 }
 if (!html.includes("img.seat-flair, svg.crown {") || !html.includes("width: 1.15em; height: 1.15em;")) {
   throw new Error("seat-flair and crown must be emoji-sized (1.15em) beside the name");

@@ -2575,11 +2575,15 @@ const html = `<!DOCTYPE html>
     let joinError = "";
     let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id, claimed_username? }]
     let leagueMembers = []; // members of the invite-console league (for transfer)
-    let inviteCodesVisible = false; // true only right after mint/rotate/reissue
+    let inviteTab = "unclaimed"; // unclaimed | claimed
     let redeemCode = "";
     let gateMode = "signup"; // signup | signin — get started first
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
+
+    function inviteCodeVisible(inv) {
+      return !!(inv && !inv.claimed && inv.code && String(inv.code).indexOf("(") !== 0);
+    }
 
     function voteDeviceId() {
       try {
@@ -3140,7 +3144,7 @@ const html = `<!DOCTYPE html>
       joinError = "";
       createdInvites = null;
       leagueMembers = [];
-      inviteCodesVisible = false;
+      inviteTab = "unclaimed";
       render();
       try {
         await authRefreshIfNeeded();
@@ -3151,7 +3155,7 @@ const html = `<!DOCTYPE html>
         createdInvites = data.invites || [];
         leagueMembers = data.members || [];
         joinPreview = data.league;
-        inviteCodesVisible = !data.already_exists;
+        inviteTab = "unclaimed";
         await loadMemberships().catch(() => {});
         appScreen = "invites";
         focusNext = ".screen-h";
@@ -3168,8 +3172,8 @@ const html = `<!DOCTYPE html>
       if (joinBusy) return;
       joinBusy = true;
       joinError = "";
-      inviteCodesVisible = false;
       transferPickId = "";
+      inviteTab = "unclaimed";
       render();
       try {
         const data = await joinLeagueCall("list_invites", { sleeper_league_id: leagueId });
@@ -3177,6 +3181,8 @@ const html = `<!DOCTYPE html>
         leagueMembers = data.members || [];
         joinPreview = data.league;
         joinLeagueId = leagueId;
+        const hasUnclaimed = (createdInvites || []).some((inv) => !inv.claimed);
+        inviteTab = hasUnclaimed ? "unclaimed" : "claimed";
         appScreen = "invites";
         focusNext = ".screen-h";
       } catch (err) {
@@ -3200,7 +3206,7 @@ const html = `<!DOCTYPE html>
         createdInvites = data.invites || [];
         if (data.members) leagueMembers = data.members;
         joinPreview = data.league || joinPreview;
-        inviteCodesVisible = true;
+        inviteTab = "unclaimed";
       } catch (err) {
         joinError = (err && err.message) || "Could not rotate invites.";
         console.error(err);
@@ -3233,7 +3239,7 @@ const html = `<!DOCTYPE html>
         createdInvites = data.invites || [];
         leagueMembers = data.members || [];
         joinPreview = data.league || joinPreview;
-        inviteCodesVisible = true;
+        inviteTab = "unclaimed";
         settingsCopyNote = data.note || "New invite ready — copy and DM the new manager.";
         await loadMemberships().catch(() => {});
         const lid = joinPreview && joinPreview.sleeper_league_id;
@@ -3284,7 +3290,7 @@ const html = `<!DOCTYPE html>
         createdInvites = null;
         leagueMembers = [];
         joinPreview = null;
-        inviteCodesVisible = false;
+        inviteTab = "unclaimed";
         await loadMemberships();
         appScreen = "settings";
         focusNext = ".screen-h";
@@ -4341,14 +4347,18 @@ const html = `<!DOCTYPE html>
     function renderInvites() {
       const L = joinPreview || {};
       const total = L.total_rosters || (createdInvites || []).length;
-      const minted = (createdInvites || []).length;
       const myMembership = (memberships || []).find(
         (m) => m.sleeper_league_id === L.sleeper_league_id,
       );
       const meId = authSession && authSession.user_id;
       const transferCandidates = (leagueMembers || []).filter((m) => m.auth_user_id && m.auth_user_id !== meId);
-      const rows = (createdInvites || []).map((inv) => {
-        const showCode = inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0;
+      const all = createdInvites || [];
+      const unclaimed = all.filter((inv) => !inv.claimed);
+      const claimed = all.filter((inv) => inv.claimed);
+      const tab = inviteTab === "claimed" ? "claimed" : "unclaimed";
+      const list = tab === "claimed" ? claimed : unclaimed;
+      const rows = list.map((inv) => {
+        const showCode = inviteCodeVisible(inv);
         const claimer = inv.claimed_username
           ? "@" + inv.claimed_username
           : (inv.claimed ? "a member" : null);
@@ -4356,10 +4366,10 @@ const html = `<!DOCTYPE html>
           + "<b>" + esc(inv.team_name) + "</b>"
           + '<p class="caption" style="margin:4px 0 0">'
           + (inv.claimed
-            ? ("Claimed" + (claimer ? " by " + esc(claimer) : ""))
+            ? ("Joined" + (claimer ? " as " + esc(claimer) : ""))
             : (showCode
               ? 'Invite code: <code style="user-select:all">' + esc(inv.code) + "</code>"
-              : "Unclaimed — rotate to reveal a new code"))
+              : "Unclaimed — run wave5 SQL / redeploy if codes stay hidden"))
           + "</p>"
           + (showCode
             ? '<div class="app-actions">'
@@ -4380,9 +4390,18 @@ const html = `<!DOCTYPE html>
             : "")
           + "</div>";
       }).join("");
-      const visibleCodes = (createdInvites || []).filter(
-        (inv) => inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0 && !inv.claimed,
-      );
+      const empty = tab === "claimed"
+        ? '<p class="caption">No one has redeemed yet. Share codes from the Unclaimed tab.</p>'
+        : '<p class="caption">Every seat is claimed. Use the Claimed tab to reissue if a manager leaves.</p>';
+      const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
+        + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
+        + ' aria-selected="' + (tab === "unclaimed" ? "true" : "false") + '"'
+        + ' data-invite-tab="unclaimed">Unclaimed (' + unclaimed.length + ")</button>"
+        + '<button type="button" role="tab" class="tab' + (tab === "claimed" ? " on" : "") + '"'
+        + ' aria-selected="' + (tab === "claimed" ? "true" : "false") + '"'
+        + ' data-invite-tab="claimed">Claimed (' + claimed.length + ")</button>"
+        + "</div>";
+      const visibleCodes = unclaimed.filter(inviteCodeVisible);
       const transferBlock = '<div class="app-card" style="margin-top:12px">'
         + "<h3>Transfer commissioner</h3>"
         + '<p class="caption" style="margin:0 0 8px">Give dashboard admin to another league member. '
@@ -4409,23 +4428,30 @@ const html = `<!DOCTYPE html>
         + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
         + '<p class="caption"><b>' + esc(L.name || "League") + "</b> — "
-        + minted + " seat invite" + (minted === 1 ? "" : "s")
-        + (total ? " (league has " + total + " roster" + (total === 1 ? "" : "s") + ")" : "")
-        + ". DM each manager <b>only their</b> code. Chuckle Fantasy does not email invites.</p>"
+        + unclaimed.length + " unclaimed · " + claimed.length + " claimed"
+        + (total ? " · " + total + " roster" + (total === 1 ? "" : "s") : "")
+        + ". Codes for open seats load automatically. DM each manager <b>only their</b> code.</p>"
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
-        + rows
+        + tabs
+        + (rows || empty)
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-rotate-invites="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy ? "Working…" : "Rotate unclaimed") + "</button>"
-        + (visibleCodes.length
-          ? '<button type="button" class="chip" data-copy-all-dms="1">Copy all DM texts</button>'
+        + (tab === "unclaimed"
+          ? ('<button type="button" class="chip" data-rotate-invites="1"' + (joinBusy ? " disabled" : "") + ">"
+            + (joinBusy ? "Working…" : "Rotate unclaimed") + "</button>"
+            + (visibleCodes.length
+              ? '<button type="button" class="chip" data-copy-all-dms="1">Copy all DM texts</button>'
+              : ""))
           : "")
         + (myMembership
           ? '<button type="button" class="chip" data-open-league="' + esc(L.sleeper_league_id) + '">Open dashboard</button>'
-          : '<p class="caption">Claim your own seat above so this league appears on Your leagues.</p>')
+          : (tab === "unclaimed"
+            ? '<p class="caption">Claim your own seat above so this league appears on Your leagues.</p>'
+            : ""))
         + "</div>"
-        + '<p class="caption">Rotate only when a code was lost or leaked. For a claimed seat when a manager leaves, use <b>Reissue for new manager</b>.</p>'
+        + (tab === "unclaimed"
+          ? '<p class="caption">Rotate only when a code was lost or leaked — that replaces unclaimed codes.</p>'
+          : '<p class="caption">If a manager leaves, <b>Reissue for new manager</b> clears their seat and puts a fresh code on Unclaimed.</p>')
         + transferBlock
         + "</div>";
     }
@@ -5012,7 +5038,7 @@ const html = `<!DOCTYPE html>
         appScreen = "create";
         joinError = "";
         createdInvites = null;
-        inviteCodesVisible = false;
+        inviteTab = "unclaimed";
         focusNext = ".screen-h";
         render();
         return;
@@ -5038,6 +5064,12 @@ const html = `<!DOCTYPE html>
       const manageInvites = e.target.closest("[data-manage-invites]");
       if (manageInvites) {
         openInviteConsole(manageInvites.dataset.manageInvites).catch((err) => console.error(err));
+        return;
+      }
+      const inviteTabBtn = e.target.closest("[data-invite-tab]");
+      if (inviteTabBtn) {
+        inviteTab = inviteTabBtn.dataset.inviteTab === "claimed" ? "claimed" : "unclaimed";
+        render();
         return;
       }
       const rotateInvites = e.target.closest("[data-rotate-invites]");
@@ -5073,7 +5105,7 @@ const html = `<!DOCTYPE html>
       const copyAllDms = e.target.closest("[data-copy-all-dms]");
       if (copyAllDms) {
         const lines = (createdInvites || [])
-          .filter((inv) => inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0 && !inv.claimed)
+          .filter(inviteCodeVisible)
           .map((inv) => inviteDmText(inv.team_name, inv.code));
         copyText(lines.join(String.fromCharCode(10, 10)));
         return;
@@ -6013,6 +6045,32 @@ if (!inline.includes("function onReissueSeat(") || !inline.includes("function on
 }
 if (!inline.includes('data-reissue-seat="') || !inline.includes('data-transfer-comm="1"')) {
   throw new Error("invite console must expose reissue + transfer controls");
+}
+if (!inline.includes('data-invite-tab="unclaimed"') || !inline.includes('data-invite-tab="claimed"')) {
+  throw new Error("invite console must tab Unclaimed vs Claimed");
+}
+if (!inline.includes("function inviteCodeVisible(")) {
+  throw new Error("unclaimed invite codes must auto-show via inviteCodeVisible()");
+}
+// The page HTML is a template literal: a lone "\n" inside client JS becomes a real newline and
+// blanks the browser. Keep the inline script parseable.
+try {
+  const start = html.indexOf("<script>") + "<script>".length;
+  const end = html.indexOf("</script>", start);
+  const body = html.slice(start, end);
+  try { new Function(body); }
+  catch (err) {
+    // locate rough offset
+    let lo = 0, hi = body.length;
+    while (hi - lo > 80) {
+      const mid = (lo + hi) >> 1;
+      try { new Function(body.slice(0, mid)); lo = mid; } catch { hi = mid; }
+    }
+    const snippet = body.slice(Math.max(0, lo - 60), lo + 80);
+    throw new Error("generated inline script does not parse: " + err.message + " near: " + JSON.stringify(snippet));
+  }
+} catch (err) {
+  throw new Error(err && err.message);
 }
 // Newline-anchored, because "me = null;" is a substring of "partnerName = null;" two lines below
 // it -- a guard that cannot fail is the thing this file has the most of already.

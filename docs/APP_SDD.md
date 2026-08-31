@@ -121,14 +121,14 @@ Auth: caller JWT required. Writes: **service role** only (clients cannot insert 
 | --- | --- | --- |
 | `preview` | Signed-in | Sleeper roster preview |
 | `create` | Commissioner | First claim of `created_by`: upsert league + mint codes. Same commissioner again: `already_exists` + status list (**no remint**) |
-| `list_invites` | Creator | Claimed / unclaimed + member list; no plaintext codes |
+| `list_invites` | Creator | Unclaimed codes returned (stored `code_plain`); claimed seats + member list |
 | `rotate_invites` | Creator | New codes for **unclaimed** seats only |
 | `reissue_seat` | Creator | Clear membership for a **claimed** seat + mint a new code (manager left / new manager) |
 | `transfer_commissioner` | Creator | Set `created_by` to another **league member**; former commissioner keeps their seat |
-| `redeem` | Member | RPC `redeem_seat_invite` — atomic membership + claim |
+| `redeem` | Member | RPC `redeem_seat_invite` — atomic membership + claim (clears `code_plain`) |
 | `claim_seat` | Creator | RPC `claim_commissioner_seat` — consume own seat invite |
 
-Invite format: `CF-XXXX-XXXX` (SHA-256 stored). Shown **once** after mint/rotate.
+Invite format: `CF-XXXX-XXXX` (SHA-256 + `code_plain` while unclaimed). Console tabs: **Unclaimed** / **Claimed**.
 
 ---
 
@@ -179,6 +179,7 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 3. [`db/commissioner-invites.sql`](../db/commissioner-invites.sql) — invites, optional platform IDs
 4. [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql) — redeem/claim RPCs, tighten RLS
 5. [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) — per-league votes
+6. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
@@ -241,6 +242,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | [`supabase/functions/join-league/index.ts`](../supabase/functions/join-league/index.ts) | Create / invites / redeem |
 | [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql) | Atomic redeem / claim / RLS |
 | [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) | Per-league votes |
+| [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) | Unclaimed `code_plain` for invite console |
 | [`build.mjs`](../build.mjs) / [`lib.mjs`](../lib.mjs) | Scoped pipeline |
 | [`mark-league-ready.mjs`](../mark-league-ready.mjs) | Status flip |
 | [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md) | Same-day operator path |

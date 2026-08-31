@@ -85,6 +85,7 @@ cuckle-trade-tracker/db/
 | 3 | `db/commissioner-invites.sql` | Select all → Copy |
 | 4 | `db/wave1-invite-hardening.sql` | Select all → Copy |
 | 5 | `db/wave2-vote-identity.sql` | Select all → Copy |
+| 6 | `db/wave5-invite-plain.sql` | Select all → Copy (unclaimed codes stay visible in console) |
 
 **For each file:**
 
@@ -255,7 +256,7 @@ For a **claimed** seat (manager left), use **Reissue for new manager** — that 
 ## Done when all of these are true
 
 - [ ] Terminal is on branch `cursor/multi-league-app-878c`
-- [ ] All **five** SQL files ran in Supabase SQL Editor
+- [ ] All **six** SQL files ran in Supabase SQL Editor (through `wave5-invite-plain.sql`)
 - [ ] Confirm email is **OFF**; Site URL set
 - [ ] Edge Functions list shows **`join-league`**
 - [ ] Commissioner claimed a seat and sees the meter

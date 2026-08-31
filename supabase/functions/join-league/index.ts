@@ -7,7 +7,7 @@
 //   preview         { sleeper_league_id }
 //   create          { sleeper_league_id, espn_league_id? }
 //                   → first time: mint codes; revisit by same commissioner: status only (no remint)
-//   list_invites    { sleeper_league_id }  → claimed/unclaimed + members (no plaintext)
+//   list_invites    { sleeper_league_id }  → unclaimed codes + claimed seats + members
 //   rotate_invites  { sleeper_league_id }  → new codes for unclaimed seats
 //   reissue_seat    { sleeper_league_id, sleeper_user_id }
 //                   → clear membership + mint new code for a claimed seat (manager left)
@@ -17,6 +17,7 @@
 //   claim_seat      { sleeper_league_id, sleeper_user_id }  → commissioner claims own seat
 //
 // Deploy: supabase functions deploy join-league
+// SQL: also apply db/wave5-invite-plain.sql (code_plain column)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -101,7 +102,7 @@ async function mintUnclaimed(
 
   for (const team of preview!.teams) {
     const { data: existing } = await admin.from("seat_invites")
-      .select("id, claimed_by, team_name")
+      .select("id, claimed_by, team_name, code_plain")
       .eq("sleeper_league_id", preview!.sleeper_league_id)
       .eq("sleeper_user_id", team.sleeper_user_id)
       .maybeSingle();
@@ -123,6 +124,7 @@ async function mintUnclaimed(
       sleeper_user_id: team.sleeper_user_id,
       team_name: team.team_name,
       code_hash,
+      code_plain: code,
       created_by: userId,
       claimed_by: null,
       claimed_at: null,
@@ -141,12 +143,32 @@ async function mintUnclaimed(
 async function listInviteRows(
   admin: ReturnType<typeof createClient>,
   leagueId: string,
+  opts: { backfillMissingPlain?: boolean; createdBy?: string } = {},
 ) {
   const { data: rows, error } = await admin.from("seat_invites")
-    .select("sleeper_user_id, team_name, claimed_by, claimed_at, created_at")
+    .select("id, sleeper_user_id, team_name, claimed_by, claimed_at, created_at, code_plain")
     .eq("sleeper_league_id", leagueId)
     .order("team_name");
   if (error) throw new Error(error.message);
+
+  // One-time / on-open: seats minted before code_plain get a fresh code so the console can show it.
+  if (opts.backfillMissingPlain) {
+    for (const r of rows || []) {
+      if (r.claimed_by || (r.code_plain && String(r.code_plain).indexOf("CF-") === 0)) continue;
+      const code = makeCode();
+      const code_hash = await sha256Hex(code);
+      const patch: Record<string, unknown> = {
+        code_hash,
+        code_plain: code,
+        claimed_by: null,
+        claimed_at: null,
+      };
+      if (opts.createdBy) patch.created_by = opts.createdBy;
+      const { error: upErr } = await admin.from("seat_invites").update(patch).eq("id", r.id);
+      if (upErr) throw new Error(upErr.message);
+      r.code_plain = code;
+    }
+  }
 
   const claimerIds = [...new Set(
     (rows || []).map((r) => r.claimed_by).filter(Boolean),
@@ -161,15 +183,23 @@ async function listInviteRows(
     }
   }
 
-  return (rows || []).map((r) => ({
-    team_name: r.team_name,
-    sleeper_user_id: r.sleeper_user_id,
-    claimed: !!r.claimed_by,
-    claimed_by: r.claimed_by || null,
-    claimed_username: r.claimed_by ? (usernames[r.claimed_by] || null) : null,
-    claimed_at: r.claimed_at,
-    code: r.claimed_by ? "(already claimed)" : "(hidden — rotate to reissue)",
-  }));
+  return (rows || []).map((r) => {
+    const claimed = !!r.claimed_by;
+    const plain = !claimed && r.code_plain && String(r.code_plain).indexOf("CF-") === 0
+      ? String(r.code_plain)
+      : null;
+    return {
+      team_name: r.team_name,
+      sleeper_user_id: r.sleeper_user_id,
+      claimed,
+      claimed_by: r.claimed_by || null,
+      claimed_username: r.claimed_by ? (usernames[r.claimed_by] || null) : null,
+      claimed_at: r.claimed_at,
+      code: claimed
+        ? "(already claimed)"
+        : (plain || "(hidden — rotate to reissue)"),
+    };
+  });
 }
 
 async function listLeagueMembers(
@@ -280,11 +310,14 @@ Deno.serve(async (req) => {
       return json(409, { ok: false, error: "This league already has a commissioner on Chuckle Fantasy" });
     }
 
-    // Idempotent create: same commissioner revisiting — open console, do not remint.
+    // Idempotent create: same commissioner revisiting — open console with stored codes.
     if (action === "create" && prior && prior.created_by === user.id) {
       let invites;
       try {
-        invites = await listInviteRows(admin, preview.sleeper_league_id);
+        invites = await listInviteRows(admin, preview.sleeper_league_id, {
+          backfillMissingPlain: true,
+          createdBy: user.id,
+        });
       } catch (err) {
         return json(500, { ok: false, error: String((err as Error).message || err) });
       }
@@ -302,7 +335,7 @@ Deno.serve(async (req) => {
           teams: preview.teams,
         },
         invites,
-        note: "League already exists. Codes are hidden after first mint — use Rotate unclaimed to reissue.",
+        note: "League already exists. Unclaimed codes load automatically — rotate only if a code leaked.",
       });
     }
 
@@ -338,11 +371,11 @@ Deno.serve(async (req) => {
         espn_league_id: espnId,
       },
       invites: invitesOut,
-      note: "DM each manager their code. Codes are shown once — rotate to reissue unclaimed seats.",
+      note: "DM each manager their code. Unclaimed codes stay visible in the invite console until redeemed.",
     });
   }
 
-  // ---- list invites (no plaintext codes) ----
+  // ---- list invites (plaintext for unclaimed) ----
   if (action === "list_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
     const { data: league } = await admin.from("leagues")
@@ -355,10 +388,20 @@ Deno.serve(async (req) => {
     let invites;
     let members;
     try {
-      invites = await listInviteRows(admin, leagueId);
+      invites = await listInviteRows(admin, leagueId, {
+        backfillMissingPlain: true,
+        createdBy: user.id,
+      });
       members = await listLeagueMembers(admin, leagueId);
     } catch (err) {
-      return json(500, { ok: false, error: String((err as Error).message || err) });
+      const msg = String((err as Error).message || err);
+      if (msg.includes("code_plain")) {
+        return json(500, {
+          ok: false,
+          error: "Run db/wave5-invite-plain.sql in the Supabase SQL Editor, then try again.",
+        });
+      }
+      return json(500, { ok: false, error: msg });
     }
     let teams = [];
     try {
@@ -421,6 +464,7 @@ Deno.serve(async (req) => {
     const code_hash = await sha256Hex(code);
     const { error: updErr } = await admin.from("seat_invites").update({
       code_hash,
+      code_plain: code,
       claimed_by: null,
       claimed_at: null,
       created_by: user.id,
@@ -577,6 +621,7 @@ Deno.serve(async (req) => {
         await admin.from("seat_invites").update({
           claimed_by: user.id,
           claimed_at: new Date().toISOString(),
+          code_plain: null,
         }).eq("id", invite.id);
         const { data: leagueRow } = await admin.from("leagues")
           .select("name, status, season")
@@ -653,6 +698,7 @@ Deno.serve(async (req) => {
         await admin.from("seat_invites").update({
           claimed_by: user.id,
           claimed_at: new Date().toISOString(),
+          code_plain: null,
         }).eq("id", invite.id);
         const { data: leagueRow } = await admin.from("leagues")
           .select("name, status, season")

@@ -1236,7 +1236,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "noAllTrades20260831230554";
+    const DATA_V = "newsHeroFullBleed20260831230640";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6117,8 +6117,24 @@ for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "function match
 if (inline.includes("lh-hero-visual") || inline.includes("News &amp; Alerts")) {
   throw new Error("News Feed hero must not keep the split visual panel or News & Alerts copy");
 }
-if (inline.includes("← Leagues") && inline.includes('class="caption" style="margin:0 0 8px"')) {
+if (html.includes("ellipse at 88%") || html.includes("lh-hero-visual")) {
+  throw new Error("News Feed hero must be one continuous dark plane — no right-half glow or visual panel");
+}
+if (!html.includes("button.news-hero-body") || !html.includes(".news-hero-slide {\n      display: block; width: 100%; max-width: none")) {
+  throw new Error("News Feed ticker viewport must span full chip width (max-width: none)");
+}
+// League dash must not mount the old ← Leagues · name · username caption under the brand
+// (p.caption margin:0 0 8px as the first child of #app). Removed; keep the forbid tight.
+if (inline.includes("← Leagues")) {
   throw new Error("league dash must not show the ← Leagues caption under the brand");
+}
+if (inline.includes("const leagueChip") || inline.includes("leagueChip +")
+    || inline.includes("syncNote + leagueChip")
+    || /class="caption" style="margin:0 0 8px"[\s\S]{0,160}data-app-home="1"/.test(inline)) {
+  throw new Error("league dash must not rebuild the leagues caption row inside #app");
+}
+if (!inline.includes("app.innerHTML = syncNote + seatName + nav + body;")) {
+  throw new Error("league dash render must compose syncNote + seatName + nav + body with no caption row");
 }
 // day-alert-top header row still hosts Pause; keep its min-width guard.
 for (const need of [".day-alert-top .day-alert-h { min-width: 0; }"]) {

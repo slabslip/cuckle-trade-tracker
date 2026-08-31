@@ -1239,7 +1239,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsHeroTallHandle20260831231315";
+    const DATA_V = "champWeekStrip20260831231430";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4413,35 +4413,8 @@ const html = `<!DOCTYPE html>
               });
             }
             if (scored.some((p) => p.sum > 0)) {
-              const season = String(meta.season || state.league_season || state.season || "");
-              const rec = meta.scoring_settings && Number(meta.scoring_settings.rec);
-              const ptsKey = rec === 1 ? "pts_ppr" : rec === 0.5 ? "pts_half_ppr" : "pts_std";
-              let projBy = Object.create(null);
-              try {
-                const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
-                const qs = positions.map((p) => "position[]=" + p).join("&");
-                const projs = await fetch(
-                  "https://api.sleeper.app/projections/nfl/" + season + "/" + tryWeek
-                    + "?season_type=regular&" + qs
-                ).then((r) => r.json());
-                for (const p of projs || []) {
-                  const st = p.stats || {};
-                  projBy[p.player_id] = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
-                }
-              } catch (projErr) {
-                console.error(projErr);
-              }
-              const sumProj = (ids) => (ids || []).reduce((n, id) => n + (projBy[id] || 0), 0);
-              for (const p of scored) {
-                p.aProj = Math.round(sumProj(p.aStarters) * 10) / 10;
-                p.bProj = Math.round(sumProj(p.bStarters) * 10) / 10;
-                delete p.aStarters;
-                delete p.bStarters;
-              }
-              pairs = scored.sort((x, y) => y.sum - x.sum);
-              seasonYear = season;
-              label = "Week " + tryWeek + (season ? " " + season : "");
-              // Championship week (e.g. Week 17 after a 6-team bracket) gets an explicit title.
+              // Championship week (e.g. Week 17 after a 6-team bracket) — also used when
+              // walking previous_league_id so consolation weeks after the title game are skipped.
               const pws = Number(meta.settings && meta.settings.playoff_week_start) || 0;
               const playoffTeams = Number(meta.settings && meta.settings.playoff_teams) || 0;
               let champWeek = 0;
@@ -4460,10 +4433,41 @@ const html = `<!DOCTYPE html>
                   champWeek = pws + rounds - 1;
                 }
               }
-              if (champWeek && tryWeek === champWeek) {
-                label += " · Championship week";
+              // Finished season: toilet-bowl / consolation after the final is not the strip week.
+              if (!(champWeek && tryWeek > champWeek && String(meta.status || "") === "complete")) {
+                const season = String(meta.season || state.league_season || state.season || "");
+                const rec = meta.scoring_settings && Number(meta.scoring_settings.rec);
+                const ptsKey = rec === 1 ? "pts_ppr" : rec === 0.5 ? "pts_half_ppr" : "pts_std";
+                let projBy = Object.create(null);
+                try {
+                  const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+                  const qs = positions.map((p) => "position[]=" + p).join("&");
+                  const projs = await fetch(
+                    "https://api.sleeper.app/projections/nfl/" + season + "/" + tryWeek
+                      + "?season_type=regular&" + qs
+                  ).then((r) => r.json());
+                  for (const p of projs || []) {
+                    const st = p.stats || {};
+                    projBy[p.player_id] = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
+                  }
+                } catch (projErr) {
+                  console.error(projErr);
+                }
+                const sumProj = (ids) => (ids || []).reduce((n, id) => n + (projBy[id] || 0), 0);
+                for (const p of scored) {
+                  p.aProj = Math.round(sumProj(p.aStarters) * 10) / 10;
+                  p.bProj = Math.round(sumProj(p.bStarters) * 10) / 10;
+                  delete p.aStarters;
+                  delete p.bStarters;
+                }
+                pairs = scored.sort((x, y) => y.sum - x.sum);
+                seasonYear = season;
+                label = "Week " + tryWeek + (season ? " " + season : "");
+                if (champWeek && tryWeek === champWeek) {
+                  label += " · Championship week";
+                }
+                break;
               }
-              break;
             }
             // No points this week — step back; empty playoff weeks (e.g. 18) skip the same way.
             if (week > 1) week -= 1;
@@ -6016,7 +6020,8 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
 for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
-  "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket"]) {
+  "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
+  'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id"]) {
   if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
 }
 if (inline.includes('day-alert-h">Champions Path')) {

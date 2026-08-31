@@ -10,9 +10,9 @@
 --   3. Forces voter = the caller's claimed seat (client cannot assert another)
 --   4. Leaves tallies publicly readable (anon SELECT stays)
 --
--- After this file: run `node seed-seat-auth.mjs` with SUPABASE_SERVICE_ROLE_KEY
--- to create the ten Auth users and print invite codes. Walkthrough:
--- docs/SUPABASE_SETUP.md §7 and docs/CUSTOM_DOMAIN.md.
+-- After this file: apply multi-league SQL + commissioner invites (docs/SUPABASE_SETUP.md §8).
+-- Do NOT run seed-seat-auth.mjs for Cuckle — CUCK codes are retired in favor of CF invites.
+-- Walkthrough: docs/SUPABASE_SETUP.md §8 and docs/APP_SDD.md.
 -- ============================================================================
 
 

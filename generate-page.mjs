@@ -564,6 +564,9 @@ const html = `<!DOCTYPE html>
       background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
       padding: 12px; margin: 0 0 8px; cursor: pointer; min-height: 56px;
     }
+    .league-row.static { cursor: default; margin-bottom: 0; }
+    .league-block { margin-bottom: 10px; }
+    .league-block .linkish, .league-block .chip { margin-top: 6px; }
     .league-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .league-row b { display: block; font-weight: 650; }
     .league-row span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
@@ -2550,23 +2553,21 @@ const html = `<!DOCTYPE html>
     let authSession = null;
     let authBusy = false;
     let authError = "";
-    let claimPrompt = false;
     // Multi-league app shell. "dash" = existing meter for the active league.
-    // gate | home | join | dash
+    // gate | home | create | invites | redeem | dash
     let appScreen = "gate";
     let memberships = [];
+    let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
     let joinPreview = null; // league preview from Edge Function
     let joinLeagueId = "";
     let joinEspnId = "";
-    let joinSeatId = "";
     let joinBusy = false;
     let joinError = "";
-    let createdInvites = null; // [{ team_name, code, claimed }] after create
+    let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id }]
+    let inviteCodesVisible = false; // true only right after mint/rotate
     let redeemCode = "";
     let gateMode = "signup"; // signup | signin — get started first
-    // home | create | invites | redeem | join(legacy unused) | gate | dash
-    // appScreen already declared above — extend values: create | redeem | invites
 
     function voteDeviceId() {
       try {
@@ -2638,12 +2639,12 @@ const html = `<!DOCTYPE html>
       authSave(null);
       activeLeague = null;
       memberships = [];
+      ownedLeagues = [];
       try {
         localStorage.removeItem(LEAGUE_KEY);
         localStorage.removeItem(MEMBERSHIPS_KEY);
       } catch (err) { /* ignore */ }
       authError = "";
-      claimPrompt = false;
       appScreen = "gate";
       gateMode = "signup";
     }
@@ -2962,21 +2963,28 @@ const html = `<!DOCTYPE html>
     async function loadMemberships() {
       if (!authSession || !authSession.access_token) {
         saveMemberships([]);
+        ownedLeagues = [];
         return [];
       }
       await authRefreshIfNeeded();
-      const res = await fetch(
-        VOTE_API + "/league_memberships?select=*,leagues(name,status,season,total_rosters)&order=created_at.asc",
-        {
-          headers: {
-            apikey: VOTE_ANON,
-            Authorization: "Bearer " + authSession.access_token,
-          },
-          signal: voteAbort(),
-        },
-      );
-      if (!res.ok) throw new Error("memberships " + res.status);
-      const rows = await res.json();
+      const headers = {
+        apikey: VOTE_ANON,
+        Authorization: "Bearer " + authSession.access_token,
+      };
+      const [memRes, ownRes] = await Promise.all([
+        fetch(
+          VOTE_API + "/league_memberships?select=*,leagues(name,status,season,total_rosters)&order=created_at.asc",
+          { headers: headers, signal: voteAbort() },
+        ),
+        fetch(
+          VOTE_API + "/leagues?select=sleeper_league_id,name,status,season,total_rosters,created_by&created_by=eq."
+            + encodeURIComponent(authSession.user_id)
+            + "&order=created_at.asc",
+          { headers: headers, signal: voteAbort() },
+        ),
+      ]);
+      if (!memRes.ok) throw new Error("memberships " + memRes.status);
+      const rows = await memRes.json();
       const list = (rows || []).map((r) => ({
         sleeper_league_id: r.sleeper_league_id,
         sleeper_user_id: r.sleeper_user_id,
@@ -2984,8 +2992,21 @@ const html = `<!DOCTYPE html>
         name: (r.leagues && r.leagues.name) || r.sleeper_league_id,
         status: (r.leagues && r.leagues.status) || "pending_sync",
         season: (r.leagues && r.leagues.season) || null,
+        role: "member",
       }));
       saveMemberships(list);
+      if (ownRes.ok) {
+        const owned = await ownRes.json();
+        ownedLeagues = (owned || []).map((r) => ({
+          sleeper_league_id: r.sleeper_league_id,
+          name: r.name || r.sleeper_league_id,
+          status: r.status || "pending_sync",
+          season: r.season || null,
+          role: "commissioner",
+        }));
+      } else {
+        ownedLeagues = [];
+      }
       return list;
     }
 
@@ -3022,33 +3043,98 @@ const html = `<!DOCTYPE html>
       joinBusy = true;
       joinError = "";
       createdInvites = null;
+      inviteCodesVisible = false;
       render();
       try {
         await authRefreshIfNeeded();
-        const res = await fetch(FN_API + "/join-league", {
-          method: "POST",
-          headers: {
-            apikey: VOTE_ANON,
-            Authorization: "Bearer " + authSession.access_token,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "create",
-            sleeper_league_id: joinLeagueId,
-            espn_league_id: joinEspnId || undefined,
-          }),
-          signal: voteAbort(),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.ok) throw new Error(data.error || ("Create failed (" + res.status + ")"));
+        const data = await joinLeagueCall("create", joinLeagueId, null, null, joinEspnId || undefined);
         createdInvites = data.invites || [];
         joinPreview = data.league;
+        inviteCodesVisible = !data.already_exists;
+        await loadMemberships().catch(() => {});
         appScreen = "invites";
         focusNext = ".screen-h";
       } catch (err) {
         joinError = (err && err.message) || "Could not create that league.";
         console.error(err);
       } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function openInviteConsole(leagueId) {
+      if (joinBusy) return;
+      joinBusy = true;
+      joinError = "";
+      inviteCodesVisible = false;
+      render();
+      try {
+        const data = await joinLeagueCall("list_invites", leagueId);
+        createdInvites = data.invites || [];
+        joinPreview = data.league;
+        joinLeagueId = leagueId;
+        appScreen = "invites";
+        focusNext = ".screen-h";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not load invites.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onRotateInvites() {
+      if (joinBusy || !joinPreview) return;
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinLeagueCall("rotate_invites", joinPreview.sleeper_league_id);
+        createdInvites = data.invites || [];
+        joinPreview = data.league || joinPreview;
+        inviteCodesVisible = true;
+      } catch (err) {
+        joinError = (err && err.message) || "Could not rotate invites.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onClaimSeat(sleeperUserId) {
+      if (joinBusy || !joinPreview) return;
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinLeagueCall(
+          "claim_seat",
+          joinPreview.sleeper_league_id,
+          sleeperUserId,
+        );
+        await loadMemberships();
+        const L = data.league;
+        const leagueInfo = {
+          sleeper_league_id: L.sleeper_league_id,
+          name: L.name,
+          status: L.status || "pending_sync",
+          sleeper_user_id: L.sleeper_user_id,
+          team_name: L.team_name,
+        };
+        if (authSession) {
+          authSave(Object.assign({}, authSession, {
+            seat_user_id: L.sleeper_user_id,
+            seat_name: L.team_name,
+          }));
+        }
+        voteSeatRemember(L.sleeper_user_id);
+        await openLeagueDashboard(leagueInfo);
+      } catch (err) {
+        joinError = (err && err.message) || "Could not claim that seat.";
+        console.error(err);
         joinBusy = false;
         render();
       }
@@ -3095,9 +3181,14 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    async function joinLeagueCall(action, sleeperLeagueId, sleeperUserId, code) {
+    async function joinLeagueCall(action, sleeperLeagueId, sleeperUserId, code, espnLeagueId) {
       await authRefreshIfNeeded();
       if (!authSession || !authSession.access_token) throw new Error("Sign in required.");
+      const body = { action: action };
+      if (sleeperLeagueId) body.sleeper_league_id = sleeperLeagueId;
+      if (sleeperUserId) body.sleeper_user_id = sleeperUserId;
+      if (code) body.code = code;
+      if (espnLeagueId) body.espn_league_id = espnLeagueId;
       const res = await fetch(FN_API + "/join-league", {
         method: "POST",
         headers: {
@@ -3105,12 +3196,7 @@ const html = `<!DOCTYPE html>
           Authorization: "Bearer " + authSession.access_token,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          action: action,
-          sleeper_league_id: sleeperLeagueId || undefined,
-          sleeper_user_id: sleeperUserId || undefined,
-          code: code || undefined,
-        }),
+        body: JSON.stringify(body),
         signal: voteAbort(),
       });
       const data = await res.json().catch(() => ({}));
@@ -3144,6 +3230,14 @@ const html = `<!DOCTYPE html>
       members = null;
       data = null;
       await loadMembers();
+      // Auto-select this membership's Teams seat when it matches a manager.
+      if (leagueInfo && leagueInfo.sleeper_user_id && members && !me) {
+        const seat = members.find((m) => m.user_id === leagueInfo.sleeper_user_id);
+        if (seat) {
+          try { await selectMe(seat.user_id, true); }
+          catch (err) { console.error(err); }
+        }
+      }
       voteLoad().catch((err) => console.error(err));
       loadNewsDeleted().catch((err) => console.error(err));
     }
@@ -3173,17 +3267,36 @@ const html = `<!DOCTYPE html>
       voteLiveState = "loading";
       await authRefreshIfNeeded();
       const ids = voteVoterIds();
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       try {
-        const [rows, mineRows] = await Promise.all([
-          voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
-          ids.length
-            ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
-            : Promise.resolve([]),
-        ]);
+        const tallyQ = VOTE_API + "/trade_vote_tallies?select=*&sleeper_league_id=eq."
+          + encodeURIComponent(leagueId);
+        const mineQ = ids.length
+          ? VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",")
+            + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
+          : null;
+        let rows;
+        let mineRows = [];
+        try {
+          const parts = [voteGet(tallyQ)];
+          if (mineQ) parts.push(voteGet(mineQ));
+          const got = await Promise.all(parts);
+          rows = got[0];
+          mineRows = got[1] || [];
+        } catch (scopedErr) {
+          // Wave 2 SQL not applied yet — fall back to unscoped tallies.
+          console.warn("scoped vote load failed; falling back", scopedErr);
+          const got = await Promise.all([
+            voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
+            ids.length
+              ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
+              : Promise.resolve([]),
+          ]);
+          rows = got[0];
+          mineRows = got[1] || [];
+        }
         const totals = {};
         for (const r of rows || []) {
-          // The view already excludes the sentinel. Dropped again here so the percentages stay
-          // right on a project whose view has not been re-run since the fix.
           if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
           const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
           box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
@@ -3196,9 +3309,6 @@ const html = `<!DOCTYPE html>
         voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine };
         voteLiveState = "ok";
       } catch (err) {
-        // Unreachable, blocked, offline, or a paused project. Degrade to exactly the behaviour
-        // that shipped before Supabase existed, and keep the copy honest: never render a league
-        // tally we did not actually receive.
         console.error(err);
         voteLive = null;
         voteLiveState = "fail";
@@ -3234,30 +3344,33 @@ const html = `<!DOCTYPE html>
     function votePush(transactionId, choice, seat) {
       if (!authSession || !authSession.access_token || !seat) {
         votePending.delete(transactionId);
-        claimPrompt = true;
         render();
         return;
       }
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       const sent = choice == null ? VOTE_CLEARED : choice;
       votePending.add(transactionId);
+      const payload = {
+        transaction_id: transactionId,
+        choice: sent,
+        voter: seat,
+        sleeper_league_id: leagueId,
+      };
       fetch(VOTE_API + "/trade_votes?on_conflict=transaction_id,voter", {
         method: "POST",
         headers: voteHeaders({
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=representation",
         }, true),
-        body: JSON.stringify({ transaction_id: transactionId, choice: sent, voter: seat }),
+        body: JSON.stringify(payload),
         signal: voteAbort(),
       }).then((res) => {
         if (!res.ok) throw new Error("vote write " + res.status);
         return res.json();
       }).then((rows) => {
-        // Settle on the row the database echoed, not on what we hoped we sent.
         const row = (rows || [])[0];
         voteSettle(transactionId, row && row.choice ? row.choice : sent);
       }).catch((err) => {
-        // The vote is already saved locally, so this loses nothing. The trade stays pending and
-        // the caption says so; the next page load retries it through voteHeal.
         console.error(err);
         render();
       });
@@ -3341,7 +3454,6 @@ const html = `<!DOCTYPE html>
     function writeVote(transactionId, choice) {
       const seat = authSeatId();
       if (!seat) {
-        claimPrompt = true;
         render();
         return;
       }
@@ -3972,19 +4084,41 @@ const html = `<!DOCTYPE html>
 
     function renderAppHome() {
       const uname = (authSession && authSession.username) || "you";
+      const memIds = new Set((memberships || []).map((m) => m.sleeper_league_id));
       const rows = (memberships || []).map((m) => {
         const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
-        return '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
+        const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
+        return '<div class="league-block">'
+          + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
           + "<div><b>" + esc(m.name) + "</b>"
           + "<span>" + esc(m.team_name) + " · " + st
-          + (m.season ? " · " + esc(m.season) : "") + "</span></div>"
-          + '<span class="chev" aria-hidden="true">›</span></button>';
+          + (m.season ? " · " + esc(m.season) : "")
+          + (isComm ? " · Commissioner" : "")
+          + "</span></div>"
+          + '<span class="chev" aria-hidden="true">›</span></button>'
+          + (isComm
+            ? '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
+              + '">Manage invites</button>'
+            : "")
+          + "</div>";
       }).join("");
+      const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
+        const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+        return '<div class="league-block">'
+          + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
+          + "<span>Commissioner · " + st
+          + (o.season ? " · " + esc(o.season) : "")
+          + " · claim your seat to open the meter</span></div></div>"
+          + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
+          + '">Invites & claim seat</button>'
+          + "</div>";
+      }).join("");
+      const body = rows + ownedOnly;
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your leagues</h2>'
         + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (rows || '<p class="caption">No leagues yet. Create one as commissioner, or redeem an invite from yours.</p>')
+        + (body || '<p class="caption">No leagues yet. Create one as commissioner, or redeem an invite from yours.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
         + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
         + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
@@ -4017,22 +4151,46 @@ const html = `<!DOCTYPE html>
 
     function renderInvites() {
       const L = joinPreview || {};
+      const total = L.total_rosters || (createdInvites || []).length;
+      const minted = (createdInvites || []).length;
+      const myMembership = (memberships || []).find(
+        (m) => m.sleeper_league_id === L.sleeper_league_id,
+      );
       const rows = (createdInvites || []).map((inv) => {
+        const showCode = inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0;
         return '<div class="app-card" style="margin-bottom:8px">'
           + "<b>" + esc(inv.team_name) + "</b>"
           + '<p class="caption" style="margin:4px 0 0">'
           + (inv.claimed
             ? "Already claimed"
-            : 'Invite code: <code style="user-select:all">' + esc(inv.code) + "</code>")
-          + "</p></div>";
+            : (showCode
+              ? 'Invite code: <code style="user-select:all">' + esc(inv.code) + "</code>"
+                + ' <button type="button" class="linkish" data-copy-code="' + esc(inv.code) + '">Copy</button>'
+              : "Unclaimed — rotate to reveal a new code"))
+          + "</p>"
+          + (!inv.claimed && !myMembership
+            ? '<button type="button" class="chip" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">Claim this seat</button>"
+            : "")
+          + "</div>";
       }).join("");
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
-        + '<h2 class="screen-h" tabindex="-1">Seat invites</h2>'
-        + '<p class="caption"><b>' + esc(L.name || "League") + "</b> is ready to invite. "
-        + "DM each manager <b>only their</b> code. The code is already tied to their Sleeper team — they only set a username and password.</p>"
+        + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
+        + '<p class="caption"><b>' + esc(L.name || "League") + "</b> — "
+        + minted + " seat invite" + (minted === 1 ? "" : "s")
+        + (total ? " (league has " + total + " roster" + (total === 1 ? "" : "s") + ")" : "")
+        + ". DM each manager <b>only their</b> code. Codes are tied to the Sleeper team.</p>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + rows
-        + '<p class="caption">Codes for unclaimed seats can be rotated later from create (same league ID).</p>'
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-rotate-invites="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Working…" : "Rotate unclaimed") + "</button>"
+        + (myMembership
+          ? '<button type="button" class="chip" data-open-league="' + esc(L.sleeper_league_id) + '">Open dashboard</button>'
+          : '<p class="caption">Claim your own seat above so this league appears on Your leagues.</p>')
+        + "</div>"
+        + '<p class="caption">Rotate only when a code was lost or leaked. Claimed seats are never rotated.</p>'
         + "</div>";
     }
 
@@ -4068,14 +4226,13 @@ const html = `<!DOCTYPE html>
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
-          || appScreen === "invites" || appScreen === "redeem" || appScreen === "join") {
+          || appScreen === "invites" || appScreen === "redeem") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
         app.innerHTML = appScreen === "gate" ? renderAppGate()
           : appScreen === "create" ? renderCreateLeague()
           : appScreen === "invites" ? renderInvites()
           : appScreen === "redeem" ? renderRedeemInvite()
-          : appScreen === "join" ? renderCreateLeague()
           : renderAppHome();
         const land = focusNext ? app.querySelector(focusNext) : null;
         focusNext = null;
@@ -4550,6 +4707,7 @@ const html = `<!DOCTYPE html>
         appScreen = "create";
         joinError = "";
         createdInvites = null;
+        inviteCodesVisible = false;
         focusNext = ".screen-h";
         render();
         return;
@@ -4572,27 +4730,27 @@ const html = `<!DOCTYPE html>
         onRedeemInvite();
         return;
       }
-      const appJoin = e.target.closest("[data-app-join]");
-      if (appJoin) {
-        appScreen = "create";
-        joinError = "";
-        focusNext = ".screen-h";
-        render();
+      const manageInvites = e.target.closest("[data-manage-invites]");
+      if (manageInvites) {
+        openInviteConsole(manageInvites.dataset.manageInvites).catch((err) => console.error(err));
         return;
       }
-      const joinPreviewBtn = e.target.closest("[data-join-preview]");
-      if (joinPreviewBtn) {
-        onCreateLeague();
+      const rotateInvites = e.target.closest("[data-rotate-invites]");
+      if (rotateInvites) {
+        onRotateInvites();
         return;
       }
-      const joinSeatBtn = e.target.closest("[data-join-seat]");
-      if (joinSeatBtn) {
-        joinSeatId = joinSeatBtn.dataset.joinSeat;
-        render();
+      const claimSeatBtn = e.target.closest("[data-claim-seat]");
+      if (claimSeatBtn) {
+        onClaimSeat(claimSeatBtn.dataset.claimSeat);
         return;
       }
-      const joinConfirmBtn = e.target.closest("[data-join-confirm]");
-      if (joinConfirmBtn) {
+      const copyCode = e.target.closest("[data-copy-code]");
+      if (copyCode) {
+        const code = copyCode.dataset.copyCode;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).catch(() => {});
+        }
         return;
       }
       const openLeagueBtn = e.target.closest("[data-open-league]");
@@ -4616,7 +4774,6 @@ const html = `<!DOCTYPE html>
           voteSeatRemember(m.sleeper_user_id);
           openLeagueDashboard(leagueInfo).catch((err) => {
             console.error(err);
-            // No UI book yet — still enter pending screen.
             saveActiveLeague(leagueInfo);
             appScreen = "dash";
             members = null;

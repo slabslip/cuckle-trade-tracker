@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
-import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
+import { pickTier, readJson, roundName, setLeagueId, writeJson, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
-const TEAMS = 10;
+setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const _leagueMeta = readJson("leagues.json", []);
+const TEAMS = Number((_leagueMeta[0] && _leagueMeta[0].total_rosters) || readJson("members.json", []).length || 10);
 const FLAT_SCALE = 10000;
 // ponytail: blend fitted to 12 KTC names (2026-08-28). Top stays near raw DP; bottom lifts. Hill will stay high vs KTC — DP ranks him 285, KTC 1069.
 const FLAT_EXP = 0.3;

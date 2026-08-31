@@ -1,25 +1,38 @@
 #!/usr/bin/env node
 /**
+ * DEPRECATED — Phase 1 CUCK-xxxx seat seeding.
+ *
+ * Chuckle Fantasy uses commissioner per-seat invites (CF-XXXX-XXXX) via the
+ * join-league Edge Function. Do not seed CUCK codes for Cuckle; they collide
+ * with seat_profiles / memberships from invite redeem.
+ *
+ * See docs/APP_SDD.md and docs/SUPABASE_SETUP.md §8.
+ *
+ * Escape hatch (legacy only): --force-legacy
+ */
+import fs from "node:fs";
+import { ROOT } from "./lib.mjs";
+
+if (!process.argv.includes("--force-legacy")) {
+  console.error("seed-seat-auth.mjs is retired.");
+  console.error("Create the league in Chuckle Fantasy and DM CF- invite codes instead.");
+  console.error("Pass --force-legacy only if you intentionally need the old CUCK seed path.");
+  process.exit(1);
+}
+
+/**
  * Phase 1 — seed one Supabase Auth user per Sleeper seat and print invite codes.
  *
  * NEVER commit a service_role key. Pass it in the environment:
  *
- *   SUPABASE_SERVICE_ROLE_KEY=eyJ... node seed-seat-auth.mjs
- *   SUPABASE_SERVICE_ROLE_KEY=eyJ... node seed-seat-auth.mjs --rotate
+ *   SUPABASE_SERVICE_ROLE_KEY=eyJ... node seed-seat-auth.mjs --force-legacy
+ *   SUPABASE_SERVICE_ROLE_KEY=eyJ... node seed-seat-auth.mjs --force-legacy --rotate
  *
- * --rotate regenerates passwords for seats that already exist and reprints codes.
- *
- * Output: codes printed to stdout, and written to data/seat-invites.local.txt
- * (gitignored). DM each manager their own line. Do not paste codes into Slack
- * channels the whole league can read if you care about seat impersonation.
- *
- * Prerequisites (docs/SUPABASE_SETUP.md §7):
+ * Prerequisites (docs/SUPABASE_SETUP.md §7a — superseded by §8):
  *   1. db/phase1-seat-auth.sql has been run
  *   2. Auth → Providers → Email → Confirm email is OFF (synthetic emails)
  *   3. Site URL includes your GitHub Pages URL and, later, the custom domain
  */
-import fs from "node:fs";
-import { ROOT } from "./lib.mjs";
 
 const PROJECT = "https://gtqyvnkkjiksmmtmzubw.supabase.co";
 const AUTH = PROJECT + "/auth/v1";

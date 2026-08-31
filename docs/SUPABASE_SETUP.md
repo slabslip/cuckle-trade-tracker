@@ -720,36 +720,18 @@ custom domain becomes another origin — see [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.
 
 ---
 
-## 7a. Phase 1 — claimed-seat auth (do this next)
+## 7a. Phase 1 — claimed-seat auth (**superseded by §8**)
 
-Closes client-asserted `voter` writes. Tallies stay publicly readable.
+Phase 1 `CUCK-` per-seat Auth users via [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) are
+**retired**. Chuckle Fantasy binds seats with commissioner `CF-` invites (§8). Keep
+[`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql) for the original `seat_profiles` /
+vote write gate, then apply multi-league + Wave 1/2 SQL so votes resolve from
+`league_memberships`.
 
-### Steps
+Do **not** seed CUCK codes for Cuckle — they collide with invite-redeem memberships.
+`seed-seat-auth.mjs` exits unless you pass `--force-legacy`.
 
-1. **SQL.** Paste [`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql) into the
-   SQL editor and run it. Confirm `seat_profiles` exists with RLS on, and that
-   anon can no longer INSERT into `trade_votes` (a bare anon POST should fail).
-2. **Auth settings.** Authentication → Providers → Email → **Confirm email = OFF**.
-   Authentication → URL Configuration → set Site URL to your live origin
-   (`https://slabslip.github.io/cuckle-trade-tracker` until the custom domain is
-   ready; then follow [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md)).
-3. **Seed codes.** Copy the **service_role** key from the dashboard (never commit it):
-
-   ```bash
-   SUPABASE_SERVICE_ROLE_KEY='eyJ…' node seed-seat-auth.mjs
-   ```
-
-   Codes print to the terminal and to `data/seat-invites.local.txt` (gitignored).
-   DM each manager their own line. Re-issue with `--rotate` if a code leaks.
-4. **Optional clean tally.** Uncomment the `truncate public.trade_votes` line at
-   the bottom of `phase1-seat-auth.sql`, run once, re-comment — wipes Phase 0
-   device-UUID ballots before the league starts claiming.
-5. **Deploy** this branch’s `index.html` (or merge to `main`). Open a trade on
-   your phone → claim your seat → vote.
-6. **Custom domain** whenever ready — DNS + GitHub Pages + Auth URL update.
-   Managers claim again on the new origin (localStorage does not transfer).
-
-### Verify
+### Historical verify
 
 ```bash
 # Anon write must fail after Phase 1 SQL:
@@ -761,19 +743,25 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 # expect 401 or 403
 ```
 
-Claim + vote in the browser is the real test.
-
 ---
 
 ## 8. Multi-league app (Chuckle Fantasy)
 
-See [`APP_SDD.md`](APP_SDD.md). After Phase 1 SQL:
+See [`APP_SDD.md`](APP_SDD.md). Apply SQL **in order**:
 
-1. Paste [`db/multi-league-app.sql`](../db/multi-league-app.sql) then [`db/commissioner-invites.sql`](../db/commissioner-invites.sql)
-2. Deploy Edge Function `supabase/functions/join-league`
-3. Auth Confirm email stays **OFF**; Site URL includes your app origin
-4. **Commissioner:** Create account → Create a league → Sleeper league ID (Cuckle: `1315431339301806080`) + optional ESPN league ID → DM invite codes
-5. **Members:** Create account → Redeem invite → dashboard (seat already bound)
+1. [`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql)
+2. [`db/multi-league-app.sql`](../db/multi-league-app.sql)
+3. [`db/commissioner-invites.sql`](../db/commissioner-invites.sql)
+4. [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql) — atomic redeem, claim-seat RPCs, tighten RLS
+5. [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) — per-league vote identity
+
+Then:
+
+1. Deploy Edge Function `supabase/functions/join-league`
+2. Auth Confirm email stays **OFF**; Site URL includes your app origin
+3. **Commissioner:** Create account → Create a league → Sleeper league ID (Cuckle: `1315431339301806080`) + optional ESPN → DM codes → **Claim this seat**
+4. **Members:** Create account → Redeem invite → dashboard
+5. **Meter sync (non-Cuckle):** `node build.mjs <league_id>` (or Action `league-sync`); status → `ready`
 
 Username emails are synthetic: `{username}@users.cuckle.invalid`.
 

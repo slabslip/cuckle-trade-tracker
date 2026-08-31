@@ -1,9 +1,9 @@
 # Custom domain (GoDaddy → GitHub Pages)
 
-Phase 1 claimed-seat auth and the dashboard both work on whatever **origin** the
+Chuckle Fantasy auth and the dashboard both work on whatever **origin** the
 browser is on. A GoDaddy domain does not change the app code; it changes DNS,
 GitHub Pages, and one Supabase Auth setting. Do this whenever you are ready —
-before or after seeding invite codes.
+before or after managers redeem invites.
 
 Today the site is at:
 
@@ -13,7 +13,13 @@ After a custom domain it will be at the domain root, e.g.:
 
 `https://yourdomain.com/`
 
-Relative paths (`data/ui/members.json`, etc.) keep working either way.
+Relative paths (`data/ui/members.json`, `data/leagues/<id>/ui/…`) keep working either way.
+
+**PWA / “Add to Home Screen”:** after the custom domain is live, managers can install
+the site as a home-screen web app from Safari/Chrome. A dedicated service worker and
+web push are parked for a later slice — the domain cutover does not depend on them.
+
+**ESPN history import** is also parked; optional `espn_league_id` on create is storage only.
 
 ---
 
@@ -22,11 +28,11 @@ Relative paths (`data/ui/members.json`, etc.) keep working either way.
 ```text
 Phone browser
    │
-   ├─ loads HTML/CSS/JS + data/ui/*.json
+   ├─ loads HTML/CSS/JS + data/leagues/<id>/ui/*.json (Cuckle also data/ui)
    │     from GitHub Pages (custom domain or github.io)
    │
-   └─ votes / claim-seat
-         to Supabase (Auth + REST) — same project URL either way
+   └─ auth / votes / invites
+         to Supabase (Auth + REST + Edge) — same project URL either way
 ```
 
 | Piece | Role with a custom domain |
@@ -34,7 +40,7 @@ Phone browser
 | **GoDaddy DNS** | Points your domain at GitHub’s servers |
 | **GitHub Pages** | Serves this repo; optional `CNAME` file pins the domain |
 | **Supabase Auth** | Must list the new origin as an allowed Site / Redirect URL |
-| **localStorage** | Bound to the **origin**. github.io sessions do **not** carry over to the custom domain — each manager claims once on the new URL |
+| **localStorage** | Bound to the **origin**. github.io sessions do **not** carry over to the custom domain — each manager signs in again on the new URL |
 
 Supabase’s project URL (`*.supabase.co`) does not change. You do not move the
 database when you add a domain.
@@ -103,13 +109,13 @@ Dashboard → **Authentication → URL Configuration**:
 | **Site URL** | Your canonical HTTPS origin, e.g. `https://yourdomain.com` |
 | **Redirect URLs** | Include **both** during cutover: `https://yourdomain.com/**` and `https://slabslip.github.io/cuckle-trade-tracker/**` |
 
-Phase 1 uses password grant (team + invite code), not OAuth redirects, but Site
+Phase 1 uses password grant (username + password), not OAuth redirects, but Site
 URL still matters for Auth session validation. Keeping the github.io URL during
-cutover avoids a weekend where old bookmarks cannot claim.
+cutover avoids a weekend where old bookmarks cannot sign in.
 
 Also confirm (**Authentication → Providers → Email**):
 
-- **Confirm email** = **OFF** (invite emails are synthetic `seat-<id>@seats.cuckle.invalid` and are never mailed).
+- **Confirm email** = **OFF** (account emails are synthetic `{username}@users.cuckle.invalid` and are never mailed).
 
 ---
 
@@ -117,12 +123,13 @@ Also confirm (**Authentication → Providers → Email**):
 
 1. DNS live; `https://yourdomain.com` serves this site (HTTPS green).
 2. Supabase Site URL + Redirect URLs updated.
-3. Open the **new** URL on your phone → claim your seat with your invite code.
+3. Open the **new** URL on your phone → sign in (or redeem invite if first time).
 4. Cast a test vote; confirm the tally moves.
 5. Tell the league the new link. Old github.io links can keep working if you leave
-   that Redirect URL in place; remind them they must **claim again** on the new
+   that Redirect URL in place; remind them they must **sign in again** on the new
    domain (different origin = empty localStorage).
 6. Optional later: stop advertising github.io once everyone has moved.
+7. Optional: Add to Home Screen (PWA install). Web push stays later.
 
 ---
 
@@ -130,12 +137,12 @@ Also confirm (**Authentication → Providers → Email**):
 
 - No change to the anon key or project URL in `generate-page.mjs` for a domain alone.
 - No GoDaddy “forwarding / masking” — use real DNS to GitHub, not a framed redirect.
-- No App Store build for Phase 1.
-- No IP allowlisting — identity is the invite code + Auth session, not the network.
+- No App Store build for this cutover (PWA home-screen is enough for now).
+- No IP allowlisting — identity is Auth + invite membership, not the network.
 
 ---
 
-## 7. If claim works on github.io but fails on the new domain
+## 7. If sign-in works on github.io but fails on the new domain
 
 1. Hard-refresh / clear site data for the new origin and try again.
 2. Re-check Supabase Site URL matches the exact scheme + host (no trailing path).

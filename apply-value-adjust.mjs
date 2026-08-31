@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /** Reprice today even bags (retired=0 + 40/60 KTC), then apply VA. Windows stay flatten. */
 import { readdirSync, readFileSync } from "node:fs";
-import { DATA, writeUi } from "./lib.mjs";
+import { leagueUiDir, setLeagueId, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, repriceTodayLegs } from "./price-today.mjs";
+
+setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const UI = leagueUiDir();
 
 const EVEN = 100;
 
@@ -159,9 +162,9 @@ function buildMarks(seats, today) {
 }
 
 function main() {
-  const league0 = JSON.parse(readFileSync(`${DATA}/ui/league.json`, "utf8"));
+  const league0 = JSON.parse(readFileSync(`${UI}/league.json`, "utf8"));
   const ctx = makeTodayPrice(league0.today || "2026-08-29");
-  const dir = `${DATA}/ui/me`;
+  const dir = `${UI}/me`;
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
   const seats = [];
   const players = new Map();
@@ -222,7 +225,7 @@ function main() {
     seats.push(me);
   }
 
-  const league = JSON.parse(readFileSync(`${DATA}/ui/league.json`, "utf8"));
+  const league = JSON.parse(readFileSync(`${UI}/league.json`, "utf8"));
   const traders = new Map((league.traders || []).map((t) => [t.user_id, t]));
   for (const me of seats) {
     const row = traders.get(me.user_id);

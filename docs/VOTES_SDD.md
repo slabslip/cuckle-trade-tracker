@@ -340,26 +340,28 @@ which is a decimal snowflake string. It is stored rather than nulled because `ch
 `not null`, and because one row per `(trade, voter)` for the whole life of an opinion — including
 the fact that it was withdrawn — is the more useful record.
 
-### 5.5 Claimed-seat auth (shipped)
+### 5.5 Claimed-seat auth (Chuckle Fantasy)
 
-Supabase Auth is on for **vote writes only**. Each manager gets one invite code from
-`seed-seat-auth.mjs`. They pick their team name, enter the code once, and the session
-is stored in `cuckle.auth.v1` on that browser origin.
+Supabase Auth is on for **vote writes only**. Identity is a Chuckle Fantasy username/
+password account plus a **membership** in the active league (invite redeem or
+commissioner claim-seat). Phase 1 `CUCK-` codes from `seed-seat-auth.mjs` are **retired**.
 
 | Piece | Role |
 | --- | --- |
-| Synthetic email | `seat-<user_id>@seats.cuckle.invalid` (never mailed; Confirm email OFF) |
-| Password | The invite code (`CUCK-XXXX-XXXX`) |
-| `seat_profiles` | Maps `auth.users` → Sleeper `seat_user_id` |
-| RLS | Anon may **SELECT** tallies; only **authenticated** may INSERT/UPDATE, and only as their profile seat |
-| Trigger `trade_votes_force_voter` | Rewrites `voter` to the claimed seat before the row lands |
+| Synthetic email | `{username}@users.cuckle.invalid` (never mailed; Confirm email OFF) |
+| Password | Account password (not the invite code) |
+| Invite | `CF-XXXX-XXXX` → binds `league_memberships` to a Sleeper seat |
+| `trade_votes.sleeper_league_id` | Scopes the ballot to one league |
+| Trigger `trade_votes_force_voter` | Rewrites `voter` from `league_memberships` for that league |
+| RLS | Anon may **SELECT** tallies; authenticated may write only as their membership seat |
 
 The Teams picker is still not Auth. Soft-delete on news is still UI-gated. What closed is
-impersonation and device-UUID ballot stuffing on **trade_votes**.
+impersonation and device-UUID ballot stuffing on **trade_votes**, and wrong-seat votes when
+switching leagues.
 
-Custom domain cutover: localStorage is origin-scoped — managers claim again on the new
+Custom domain cutover: localStorage is origin-scoped — managers sign in again on the new
 host. Walkthrough: [`docs/CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) and
-[`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §7.
+[`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §8 / [`docs/APP_SDD.md`](APP_SDD.md).
 
 Optional once before go-live: `truncate public.trade_votes restart identity;` (commented in
 `db/phase1-seat-auth.sql`) so Phase 0 unverified rows do not sit in the tally.

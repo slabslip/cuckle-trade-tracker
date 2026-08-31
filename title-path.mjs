@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /** Champions path. Official Sleeper GETs. Does not touch the trade needle. */
 import fs from "node:fs";
-import { DATA, readJson, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
+import { DATA, readJson, setLeagueId, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
 
-const LEAGUE_ID = process.argv[2] || "1315431339301806080";
+const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const KICKOFF = {
   2019: "2019-09-05",
   2020: "2020-09-10",

@@ -1,0 +1,80 @@
+# Build one Sleeper league's meter book into data/leagues/<id>/ui.
+#
+#   repository_dispatch event_type: league-sync
+#   client_payload: { "league_id": "1315431339301806080" }
+#
+# Or Actions → Run workflow → enter league_id.
+name: league-sync
+
+on:
+  repository_dispatch:
+    types: [league-sync]
+  workflow_dispatch:
+    inputs:
+      league_id:
+        description: Sleeper league ID
+        required: true
+        default: "1315431339301806080"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: league-sync-${{ github.event.client_payload.league_id || github.event.inputs.league_id || 'default' }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Resolve league id
+        id: league
+        run: |
+          ID="${{ github.event.client_payload.league_id || github.event.inputs.league_id }}"
+          if [ -z "$ID" ]; then ID="1315431339301806080"; fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Sleeper players dictionary
+        uses: actions/cache@v4
+        with:
+          path: data/players.nfl.json
+          key: players-nfl-${{ runner.os }}-v1
+          restore-keys: |
+            players-nfl-${{ runner.os }}-
+
+      - name: Ensure players.nfl.json
+        run: node ensure-players.mjs
+
+      - name: Build league meter
+        env:
+          LEAGUE_ID: ${{ steps.league.outputs.id }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node build.mjs "$LEAGUE_ID"
+
+      - name: Commit scoped UI if changed
+        env:
+          LEAGUE_ID: ${{ steps.league.outputs.id }}
+        run: |
+          set -e
+          git config user.name "cuckle-league-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "data/leagues/${LEAGUE_ID}" data/ui generate-page.mjs index.html || true
+          if git diff --cached --quiet; then
+            echo "No meter changes to commit"
+            exit 0
+          fi
+          git commit -m "Sync league ${LEAGUE_ID} meter book."
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin main && break
+            echo "push conflict, retry $i"
+            sleep $((i * 4))
+          done

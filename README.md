@@ -13,22 +13,27 @@ sends per-seat invites; members redeem a code and set username/password. See
 **Drafters:** who actually used the pick. Rookie 2020–2026 surplus = player today minus pick cost on draft day. 2019 startup is a separate tab ranked by player today (DynastyProcess has no 2019 startup pick prices).
 
 ```bash
-node build.mjs
+node build.mjs                              # CuckleChunckle (default)
+node build.mjs <sleeper_league_id>          # any league → data/leagues/<id>/{raw,ui}
 ```
 
-Or one step at a time:
+Or one step at a time (pass the same league id to each league-scoped step):
 
 ```bash
-node sleeper-sync.mjs
-node draft-resolve.mjs
-node value-snapshot.mjs          # latest + monthly git history
+node sleeper-sync.mjs [league_id]
+node draft-resolve.mjs [league_id]
+node value-snapshot.mjs          # latest + monthly git history (shared)
 node ktc-snapshot.mjs            # weekly Superflex snap → data/ktc/ (not in build.mjs)
-node revalue.mjs
-node title-path.mjs              # titles.json for Champions Path
-node apply-value-adjust.mjs      # today blend + Value Adjustment + trade boards + marks.json
-node generate-page.mjs
+node revalue.mjs [league_id]
+node title-path.mjs [league_id]  # titles.json for Champions Path
+node apply-value-adjust.mjs [league_id]
+node generate-page.mjs           # site shell (Cuckle)
+node mark-league-ready.mjs [league_id]  # needs SUPABASE_SERVICE_ROLE_KEY
 node news-sync.mjs               # news.json for News and Alerts (not in build.mjs)
 ```
+
+League UI lives under `data/leagues/<id>/ui/` (Cuckle is dual-written to `data/ui/` for
+news-refresh and legacy readers). Shared curve/KTC/players stay under `data/`.
 
 `news-sync.mjs` builds the News and Alerts feed. It reads the rosters `sleeper-sync.mjs` already
 wrote and **touches no value, no Value Adjustment, no lens window and no ranking**, which is why

@@ -51,6 +51,7 @@ import test from "node:test";
 import { readJson } from "./lib.mjs";
 import { matchText, loadIndex, normText, looksTitleCased, capitalisedIn, explainName, teamsNamed, PUBLISH_MIN, NOTIFY_MIN, MAX_SUBJECTS, CATEGORY_IDS, scoreCorpus } from "./news-match.mjs";
 import { stripAttribution } from "./news-fixtures.mjs";
+import { classify, tweetPokeKind, summariseTweet, leagueLine } from "./news-voice.mjs";
 
 const index = loadIndex();
 const corpus = readJson("fixtures/rss-corpus.json", null);
@@ -482,6 +483,31 @@ test("the entry-point guard survives every way the file gets invoked", (t) => {
   } finally {
     fs.rmSync(spaced, { recursive: true, force: true });
   }
+});
+
+test("not starting on IR is good news — fact only, no poke", () => {
+  // Live miss (2026-08-31): Keaton Mitchell "not going to start on IR" was labelled Injury
+  // and needled ("Ouch…") because classify() saw the bare IR token and UPBEAT missed the negation.
+  const good = "Keaton Mitchell is not going to start on IR to start the season as of right now and Jaret Patterson is not on the initial 53 man roster per this post";
+  const bad = "Ravens placed RB Keaton Mitchell on injured reserve to start the season";
+  const g = classify(good);
+  assert.equal(g.category, "injury");
+  assert.equal(g.upbeat, true);
+  assert.equal(tweetPokeKind(good), "");
+  const sum = summariseTweet({
+    title: good, player: "Keaton Mitchell", team: "BAL", position: "RB", tweet_handle: "NFL_DovKleiman",
+  });
+  assert.match(sum, /^Good injury news/);
+  assert.doesNotMatch(sum, /\bOuch\b|IR fairy|bites the/i);
+  const line = leagueLine({
+    id: "tweet:52", category: "tweet", title: good, player: "Keaton Mitchell", tweet_handle: "NFL_DovKleiman",
+  }, "TrumanCooper");
+  assert.equal(line, sum, "no poke appended for avoided-IR news");
+
+  const b = classify(bad);
+  assert.equal(b.category, "injury");
+  assert.equal(b.upbeat, false);
+  assert.equal(tweetPokeKind(bad), "injury");
 });
 
 /* ----------------------------------------------------------------- report ---- */

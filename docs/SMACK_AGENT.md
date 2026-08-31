@@ -29,7 +29,7 @@ It does not invent.
 
 | Kind | When | Bank |
 | --- | --- | --- |
-| `injury` | Hurt / IR / PUP / misses time (not “cleared”) | `tweet_injury` |
+| `injury` | Hurt / IR / PUP / misses time (not “cleared” / not “avoiding IR”) | `tweet_injury` |
 | `cut` | Waived / released / cut (not “kept on the 53”) | `tweet_cut` |
 | `retire` | Announced retirement (not “coming *out* of retirement”) | `tweet_retire` |
 | `off` | Suspension / off-field | `tweet_off` |
@@ -163,6 +163,8 @@ node -e "/* or the revoice script used in PR #37 */"
 - Default: needle the roster, not the person.
 - Group chat short spice is fine on cuts/IR.
 - Skip poke on “made the roster” / “kept on the 53” / good injury news.
+- “Not starting on IR” / “not going on IR” is **good** news (healthy enough to be
+  active) — label as Good injury news, fact only. Do not needle that.
 
 ---
 

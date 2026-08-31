@@ -42,9 +42,12 @@
  *     its own element, prefixed by the name of whoever wrote it. leagueLine() never sees it as
  *     something to return, and no generated line can replace it or be replaced by it.
  *   - **A shared tweet's line is fact + poke.** summariseTweet() states what the tweet said;
- *     a short bank poke follows for attitude. Single-seat rows may say "you"; multi-tag and
- *     The league stay impersonal (`tweet_league`). Never repeat the manager name in the line —
- *     that lives in the header. `noteFreeOfAddress()` asserts the multi/unaddressed cases.
+ *     a short bank poke follows **only when the story is a cut, injury, suspension, or
+ *     off-field hit**. Strictly informational tweets (made the roster, depth-chart notes,
+ *     generic buzz) ship the fact alone — no attitude tacked on. Single-seat rows may say
+ *     "you"; multi-tag and The league stay impersonal (`tweet_league`). Never repeat the
+ *     manager name in the line — that lives in the header. `noteFreeOfAddress()` asserts the
+ *     multi/unaddressed cases.
  *
  * ## The rules the lines follow
  *
@@ -85,13 +88,13 @@ export const CATEGORIES = [
     id: "injury",
     label: "Injury",
     severity: 5,
-    test: /\b(injur\w+|tears?|torn|ACL|MCL|Achilles|concussion|hamstring|surgery|fracture\w*|sprain\w*|out for the season|IR\b|injured reserve|placed on IR|questionable|doubtful|ruled out|will not play|did not practice|hospital\w*|carted off|strain\w*|PUP list)\b/i,
+    test: /\b(injur\w+|tears?|torn|ACL|MCL|Achilles|concussion|hamstring|surgery|fracture\w*|sprain\w*|out for the season|IR\b|injured reserve|placed on IR|questionable|doubtful|ruled out|will not play|not play(?:ing)?(?: this season)?|did not practice|hospital\w*|carted off|strain\w*|PUP(?: list)?|physically unable to perform|miss(?:es|ing)? time)\b/i,
   },
   {
     id: "trade",
     label: "Trade",
     severity: 4,
-    test: /\b(traded?|trade|acquir\w+|dealt|shipped to|sent to|released|waived|cut\b|signs? with|signed with|claim\w+ off waivers|agree\w* to terms)\b/i,
+    test: /\b(traded?|trade|acquir\w+|dealt|shipped to|sent to|released|waiv\w*|cut\b|signs? with|signed with|claim\w+ off waivers|agree\w* to terms)\b/i,
   },
   {
     id: "depth_chart",
@@ -222,6 +225,19 @@ const TEMPLATES = {
     "Sleep tight.",
     "Hope you liked that pick.",
     "Tell the bench it might be starting.",
+    // Cut / hurt oriented — only appended when tweetWantsPoke() says so.
+    "That's gonna leave a mark on the roster.",
+    "Waiver wire just cleared its throat.",
+    "Time to find a warm body.",
+    "Your Sunday just got a plot twist.",
+    "The IR fairy strikes again.",
+    "Cutdown casualty. Condolences.",
+    "Hope the bench is ready for its close-up.",
+    "That's a bruise on the depth chart.",
+    "Somebody check the practice report twice.",
+    "The trainers are writing the story now.",
+    "Released into the wild. Your problem now.",
+    "Ouch. For him and for you.",
   ],
   tweet_who: [
     "Don't act surprised.",
@@ -230,6 +246,10 @@ const TEMPLATES = {
     "This one's aimed at your forehead.",
     "Not a drill.",
     "You're welcome.",
+    "That's a roster hit with your name on it.",
+    "Feel that one in the depth chart.",
+    "Waivers are calling. Pick up.",
+    "Have a seat — the medical staff has the floor.",
   ],
   /** Impersonal tags for The league / multi-tag rows — no "you". */
   tweet_league: [
@@ -238,6 +258,9 @@ const TEMPLATES = {
     "Everybody see this?",
     "File under: league business.",
     "No notes. Just vibes.",
+    "Collective oof.",
+    "Someone's Sunday just got interesting.",
+    "The waiver wire sends its regards.",
   ],
 };
 
@@ -536,7 +559,7 @@ export function classify(title) {
 
 /**
  * Glue a factual tweet summary to a short poke without blowing MAX_LINE.
- * Fact first (the news), poke second (the attitude).
+ * Fact first (the news), poke second (the attitude) — poke may be empty.
  */
 function joinFactAndPoke(fact, poke) {
   const f = String(fact || "").replace(/\s+/g, " ").trim();
@@ -547,6 +570,31 @@ function joinFactAndPoke(fact, poke) {
   const head = clipAt(f, budget);
   const base = /[.!?…]$/.test(head) ? head : `${head}.`;
   return clipAt(`${base} ${p}`, MAX_LINE);
+}
+
+/**
+ * Whether a shared tweet earns a smack-talk poke.
+ *
+ * Cuts, injuries, suspensions and off-field hits get needled. Strictly informational posts
+ * (made the roster, kept on the 53, generic buzz, depth-chart notes without hurt wording)
+ * ship the fact alone. Good-injury news (cleared / returning) is informational in spirit —
+ * the owner already got the upside; no jab.
+ *
+ * Trade-category rows only poke when the wording is an actual waive/release/cut, not
+ * "despite trade speculation, kept" which classify() still lands in `trade`.
+ */
+export function tweetWantsPoke(text) {
+  const s = String(text == null ? "" : text);
+  if (!s.trim()) return false;
+  const { category, upbeat } = classify(s);
+  if (category === "injury") return !upbeat;
+  if (category === "suspension" || category === "off_field") return true;
+  if (category === "trade") {
+    const cut = /\b(waiv\w*|released|cut\b|claim\w* off waivers)\b/i.test(s);
+    const kept = /\b(kept|keeping|made the (?:final )?roster|made the 53|on the 53|53-man roster|finished (?:cutdown|cuts)|survived (?:the )?cut|staying (?:put)?)\b/i.test(s);
+    return cut && !kept;
+  }
+  return false;
 }
 
 function tweetPoke(item, manager) {
@@ -577,24 +625,26 @@ function tweetPoke(item, manager) {
  * Replacing the voice means replacing this function's body and the tables above it. Its inputs
  * and its return type are the contract with news-sync.mjs; keep those and nothing else breaks.
  *
- * **Shared tweets:** factual summariseTweet() first, then a short poke. Manager name stays in
- * the row header; pokes use "you" only when a single seat is addressed. Multi-tag / The league
- * get an impersonal tag so nobody is roasted by mistake.
+ * **Shared tweets:** factual summariseTweet() first, then a short poke only when
+ * tweetWantsPoke() says the story is a cut / hurt / suspension / off-field hit. Manager name
+ * stays in the row header; pokes use "you" only when a single seat is addressed. Multi-tag /
+ * The league get an impersonal tag so nobody is roasted by mistake.
  */
 export function leagueLine(item, ctx) {
   const manager = String((ctx && ctx.manager) || "").trim();
   const player = String((item && item.player) || "").trim();
 
   /**
-   * Shared tweets: news first, attitude second.
+   * Shared tweets: news first, attitude second — and only when the attitude has somewhere to land.
    *
    * summariseTweet() carries what happened. The tweet / tweet_who / tweet_league banks are
-   * short pokes only — they used to *replace* the fact and the feed lost the story. The
-   * sharer's note is a separate field and never returned from this seam.
+   * short pokes only — they used to *replace* the fact and the feed lost the story. Informational
+   * posts skip the poke entirely. The sharer's note is a separate field and never returned from
+   * this seam.
    */
   if (item && item.category === "tweet") {
     const fact = summariseTweet(item);
-    const poke = tweetPoke(item, manager);
+    const poke = tweetWantsPoke(item.title) ? tweetPoke(item, manager) : "";
     return joinFactAndPoke(fact, poke);
   }
 

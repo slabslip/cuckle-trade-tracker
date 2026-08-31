@@ -658,7 +658,8 @@ row-level link would be **defect A1** — an interactive control nested in anoth
 control. Those controls sit in the citation foot as siblings.
 
 The tweet row shows the **manager tag**, a compact `league_line` (**tweet fact first**, then a
-short poke / trash-talk), and a citation foot (`@handle · relative time · See tweet`). The full
+short poke / trash-talk **only on cuts, injuries, suspensions, and off-field hits** —
+informational posts ship the fact alone), and a citation foot (`@handle · relative time · See tweet`). The full
 `tweet_text` is kept on the item for matching/oEmbed but is **not** painted into the row. The
 link out is ≥44px and keyboard operable. Multi-tag / The league rows keep impersonal pokes
 (no “you”); single-seat rows may needle in second person without repeating the manager name.

@@ -162,55 +162,48 @@ const html = `<!DOCTYPE html>
       position: absolute; width: 1px; height: 1px; margin: -1px;
       overflow: hidden; clip-path: inset(50%); white-space: nowrap;
     }
-    /* Fixed league dock: content scrolls underneath; safe-area for notched phones. */
+    /* Fixed league dock — PSA-style: pure black bar, outline icons, tiny labels, solid white when on. */
     body.has-bottom-nav {
-      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     }
     .bottom-nav {
       position: fixed; z-index: 60;
       left: 50%; transform: translateX(-50%);
       bottom: 0; width: 100%; max-width: 920px;
-      display: flex; align-items: flex-end; justify-content: space-around;
-      gap: 2px;
-      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
-      background: rgba(11, 11, 13, 0.94);
-      border-top: 1px solid var(--line);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: space-around;
+      gap: 0;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+      background: #000;
+      border-top: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
     }
     .bottom-nav[hidden] { display: none; }
     .bottom-nav button {
-      flex: 1 1 0; min-width: 0; min-height: 52px;
+      flex: 1 1 0; min-width: 0; min-height: 48px;
       appearance: none; font: inherit; cursor: pointer;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; padding: 6px 2px;
-      color: var(--dim); background: transparent; border: 0; border-radius: 10px;
+      gap: 4px; padding: 4px 2px 2px;
+      color: #8e8e93; background: transparent; border: 0; border-radius: 0;
       -webkit-tap-highlight-color: transparent;
     }
-    .bottom-nav button svg { width: 22px; height: 22px; flex: 0 0 auto; }
+    .bottom-nav button svg {
+      width: 24px; height: 24px; flex: 0 0 auto;
+      fill: none; stroke: currentColor; stroke-width: 1.7;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
     .bottom-nav button span {
-      font-size: 0.625rem; line-height: 1.1; letter-spacing: 0.02em;
+      font-size: 10px; font-weight: 500; line-height: 1.1;
+      letter-spacing: -0.01em;
       max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .bottom-nav button.on { color: var(--text); }
+    .bottom-nav button.on { color: #fff; }
+    /* Active: bolder stroke. Home alone fills solid white (PSA Home glyph). */
+    .bottom-nav button.on svg { stroke-width: 2.15; }
+    .bottom-nav button.bottom-home.on svg {
+      fill: currentColor; stroke: none;
+    }
     .bottom-nav button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .bottom-nav button.bottom-home {
-      color: var(--text);
-    }
-    .bottom-nav button.bottom-home svg {
-      width: 26px; height: 26px;
-    }
-    .bottom-nav button.bottom-home.on {
-      color: var(--text);
-    }
-    .bottom-nav button.bottom-home .bottom-home-disk {
-      width: 44px; height: 44px; border-radius: 50%;
-      display: grid; place-items: center;
-      background: #1c1c22; border: 1px solid var(--line);
-    }
-    .bottom-nav button.bottom-home.on .bottom-home-disk {
-      background: #25252c; border-color: #3a3a44;
-    }
+    .bottom-nav button.bottom-home svg { width: 26px; height: 26px; }
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -1101,21 +1094,34 @@ const html = `<!DOCTYPE html>
   <div id="app" tabindex="-1" hidden></div>
   <nav id="bottomNav" class="bottom-nav" hidden aria-label="League menu">
     <button type="button" data-bottom="account" aria-label="Account">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8V22h19.2v-2.8c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.25"/>
+        <path d="M5.5 19.5c.8-3.2 3.2-4.75 6.5-4.75s5.7 1.55 6.5 4.75"/>
+      </svg>
       <span>Account</span>
     </button>
     <button type="button" data-bottom="trades" aria-label="Trades">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 8h11"/>
+        <path d="M14.5 4.5L18 8l-3.5 3.5"/>
+        <path d="M17 16H6"/>
+        <path d="M9.5 12.5L6 16l3.5 3.5"/>
+      </svg>
       <span>Trades</span>
     </button>
     <button type="button" class="bottom-home" data-bottom="home" aria-label="Home">
-      <span class="bottom-home-disk" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3.2l9 7.4h-2.4V21h-5.2v-6.2H10.6V21H5.4v-10.4H3L12 3.2z"/></svg>
-      </span>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
+      </svg>
       <span>Home</span>
     </button>
     <button type="button" data-bottom="teams" aria-label="Teams">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="9" cy="8" r="2.75"/>
+        <circle cx="16.5" cy="9" r="2.25"/>
+        <path d="M3.75 19c.7-2.6 2.7-3.9 5.25-3.9s4.55 1.3 5.25 3.9"/>
+        <path d="M13.5 19c.45-1.7 1.55-2.7 3-2.7 1.55 0 2.7 1 3.2 2.7"/>
+      </svg>
       <span>Teams</span>
     </button>
   </nav>

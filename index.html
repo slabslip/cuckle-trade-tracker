@@ -97,48 +97,20 @@
     @media (max-width: 360px) {
       h1.brand { font-size: 1rem; gap: 6px; }
     }
-    /* All ten managers have to be on screen at once -- this is the most-used control in the app
-       and a list you have to scroll to reach half of is the thing being fixed. Ten options at the
-       44px minimum plus the menu's 4px padding and 1px border is 450px, so the cap is that plus a
-       few pixels of slack. The second term is the room a phone has for it at all, which is what
-       stops it growing past the viewport in landscape -- it does not know where on the page the
-       trigger sits, and since the header picker was removed this menu opens from league home's
-       Teams chip, halfway down the screen. showMenu() is what puts it on screen from there; this
-       cap is what keeps it short enough for that to be possible.
-       Do not lower the 44px to make a longer list fit -- raise this instead, and check
-       scrollHeight == clientHeight at 568px, which is the shortest phone we care about. */
-    .who-menu {
-      position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
-      /* 168px cut a 27-character seat name to "BartholomewCuckl…", and the crown now takes
-         19px more of that row. The menu is anchored to the right edge and floats over the
-         page, so it can take the width the trigger cannot, and it still yields to the
-         viewport on the narrowest phone. */
-      width: 220px; max-width: calc(100vw - 32px);
-      max-height: min(calc(10 * 44px + 16px), calc(100dvh - 88px)); overflow-y: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      padding: 4px 0; margin: 0;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    /* Bottom-nav Teams page: every roster as a full-width row. The Teams chip dropdown is gone;
+       this list is the only door into a seat. Rows reuse .row (same as the trades tape). */
+    .teams-list {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
     }
-    /* A flex row so the crown can sit beside the name. The name keeps the ellipsis, and it needs
-       min-width: 0 to get it -- a flex item's automatic minimum is min-content (§3a). */
-    .who-menu button {
-      display: flex; align-items: center; gap: 6px;
-      width: 100%; appearance: none; font: inherit;
-      font-size: 0.8125rem; color: var(--muted); text-align: left;
-      background: transparent; border: 0;
-      min-height: 44px; padding: 6px 12px; cursor: pointer;
-    }
-    .who-menu .who-name {
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .teams-list > button.row {
+      width: 100%; appearance: none; font: inherit; text-align: left; cursor: pointer;
+      min-height: 44px;
     }
     /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
     img.seat-flair, svg.crown {
       display: inline-block; width: 1.15em; height: 1.15em;
       vertical-align: -0.2em; object-fit: contain; flex: 0 0 auto;
     }
-    .who-menu button[aria-selected="true"] { color: var(--text); }
-    .who-menu button.on { color: var(--text); }
-    .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
     button.row, button.chip, button.tab, .row {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -726,12 +698,6 @@
       justify-content: center; color: var(--dim); font-weight: 500;
       background: transparent; border-style: dashed; cursor: default;
     }
-    /* The Teams chip is the only mount of .who-menu now that the brand header's picker is gone,
-       and it keeps the class rather than inheriting a copy of it: the 220px width, the 44px
-       options and the no-scroll cap are that one rule. The override is only which edge it hangs
-       from -- the header's picker was the right-most thing in its row, this chip is the left-most
-       thing in its box -- so nothing about the menu itself is restated here. */
-    .chip-box .who-menu { left: 0; right: auto; }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
        cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
@@ -1163,9 +1129,6 @@
     let draftFilterOpen = false;
     let year = "all";
     let yearFilterOpen = false;
-    // League home's Teams chip, the one and only way into a seat. The brand header carried a
-    // second trigger for the same list until the chips replaced it.
-    let teamsOpen = false;
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -1360,25 +1323,32 @@
     }
 
     /**
-     * The league's ten managers as listbox options: last season's finishing order, the champion
-     * crowned (via seatLabel), the taken seat marked, one 44px target each.
-     *
-     * One emitter, and now one mount: league home's Teams chip renders it into #teamMenu. The
-     * brand header used to paint the same options into a second menu of its own, and the emitter
-     * stayed single the whole time it did, because two controls claiming to be the same list are
-     * exactly how the finishing order or the crown ends up disagreeing between them. It stays
-     * single now for the next second mount rather than for the one that was removed.
+     * Every roster in the league as rows the bottom-nav Teams page mounts. One emitter, one
+     * mount: the Teams chip dropdown used to be the other door into a seat and is gone. A second
+     * list that typed its own crown or finishing order is how those disagree between surfaces.
+     * Crown rides seatLabel for the reigning champ — not a second paint here.
      */
     function whoOptions() {
-      const opt = (on, id, label) =>
-        '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
-        + '<span class="who-name">' + seatLabel(label) + "</span></button>";
-      // Managers only. The list used to open with a "Team" option that cleared the seat; the home
-      // icon in the header does exactly that, and dropping the option is what lets all ten names
-      // show without scrolling. Crown rides seatLabel for the reigning champ — not a second paint.
+      const mySeat = authSeatId() || (me && me.user_id) || null;
       return members
-        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name))
+        .slice()
+        .sort((a, b) => (a.place || 99) - (b.place || 99))
+        .map((m) => {
+          const id = m.user_id;
+          const on = !!(me && me.user_id === id);
+          const mine = mySeat && id === mySeat;
+          return '<button type="button" class="row' + (on ? " you" : "") + '" data-who="' + esc(id) + '"'
+            + ' aria-current="' + (on ? "true" : "false") + '">'
+            + '<div class="row-top"><div><div class="names">'
+            + (mine ? '<span class="sr-only">Your team: </span>' : "")
+            + seatLabel(m.name)
+            + (mine ? ' <span class="caption">(you)</span>' : "")
+            + "</div>"
+            + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
+            + (on ? " · viewing" : "")
+            + "</div></div>"
+            + '<span class="chev" aria-hidden="true">›</span></div></button>';
+        })
         .join("");
     }
 
@@ -1422,7 +1392,6 @@
       draftFilterOpen = false;
       lensOpen = false;
       dsOpen = false;
-      teamsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
@@ -1531,7 +1500,6 @@
         openPick = null;
         openDraft = null;
         markOpen = null;
-        teamsOpen = false;
         lensOpen = false;
         yearFilterOpen = false;
         draftFilterOpen = false;
@@ -1601,9 +1569,6 @@
       say("");
       document.getElementById("app").hidden = false;
       voteSeatRemember(id);
-      // The menu is spent once a seat is taken, and it lives inside the subtree render() is
-      // about to replace.
-      teamsOpen = false;
       if (!keep) {
         view = "home";
         openId = null;
@@ -1937,33 +1902,6 @@
     }
 
     /**
-     * The other live chip, and the only way into a seat: the brand header's picker was removed
-     * once the chips shipped, on the ruling that the chips are the access points. The way out of
-     * a seat is the home icon in the header, which calls clearLeague() from every screen -- so
-     * leaving one seat for another is two taps, and that is the accepted trade.
-     *
-     * The visible label is the constant "Teams", never the selection, for the same reason the
-     * League Data Sets chip beside it reads a constant: a chip that renamed itself to the taken
-     * seat would read as that manager's own button rather than as the way to the other nine. The
-     * accessible name carries the seat instead, and the h2.seat-h above the tab row is what says
-     * it on screen.
-     */
-    function teamsChip() {
-      const named = me && me.name
-        ? "Teams, " + me.name + seatFlairText(me.name) + " selected"
-        : "Teams, none selected";
-      return '<button type="button" class="home-chip' + (teamsOpen ? " on" : "") + '" data-teams-open="1"'
-        + ' aria-haspopup="listbox" aria-expanded="' + (teamsOpen ? "true" : "false") + '"'
-        + ' aria-label="' + esc(named) + '"><span class="chip-lab">'
-        + "Teams" + ' <span class="chev">▾</span></span></button>';
-    }
-
-    function teamsMenu() {
-      return '<div class="who-menu" id="teamMenu" role="listbox" aria-label="Teams">'
-        + whoOptions() + "</div>";
-    }
-
-    /**
      * A cell nobody has decided on yet. Deliberately not a button and deliberately not
      * addressable: no tabindex, no data-*, no role, nothing for a handler to find. The ticker
      * shipped two <button> pills with an empty destination and every tap on them did nothing;
@@ -1976,22 +1914,23 @@
     }
 
     /**
-     * League home's box of four equal chips. Two lead somewhere, two are slots.
+     * League home's box of four equal chips. League Data Sets is the live control; the other
+     * three are undecided slots. The Teams chip used to sit here as a seat-picker dropdown —
+     * that job moved to the bottom-nav Teams page, so this box no longer mounts a team list.
      *
-     * Both menus are emitted here rather than inside their triggers, so both are absolutely
-     * positioned against this one box: they drop the full width of the card instead of the
-     * width of the cell they were opened from, and there is a single ancestor chain to keep
+     * The Data Sets menu is emitted here rather than inside its trigger, so it is absolutely
+     * positioned against this one box: it drops the full width of the card instead of the
+     * width of the cell it was opened from, and there is a single ancestor chain to keep
      * free of overflow, transform, contain and clip-path.
      */
     function homeChips() {
       return '<div class="chip-box ds-wrap">'
         + '<div class="chip-grid">'
-        + teamsChip()
         + dataSetRow()
         + chipSlot()
         + chipSlot()
+        + chipSlot()
         + "</div>"
-        + (teamsOpen ? teamsMenu() : "")
         + (dsOpen ? dsMenu() : "")
         + "</div>";
     }
@@ -2368,25 +2307,12 @@
     }
 
     function renderTeamsPage() {
-      const list = (members || []).slice().sort((a, b) => (a.place || 99) - (b.place || 99));
-      const mySeat = authSeatId() || (me && me.user_id) || null;
-      const rows = list.map((m) => {
-        const mine = mySeat && m.user_id === mySeat;
-        const on = me && me.user_id === m.user_id;
-        return '<button type="button" class="row' + (on ? " you" : "") + '" data-who="' + esc(m.user_id) + '">'
-          + '<div class="row-top"><div><div class="names">'
-          + (mine ? '<span class="sr-only">Your team: </span>' : "")
-          + seatLabel(m.name)
-          + (mine ? ' <span class="caption">(you)</span>' : "")
-          + "</div>"
-          + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
-          + (on ? " · viewing" : "")
-          + "</div></div>"
-          + '<span class="chev" aria-hidden="true">›</span></div></button>';
-      }).join("");
+      const rows = whoOptions();
       return '<h2 class="screen-h" tabindex="-1">Teams</h2>'
-        + '<p class="caption">Every roster in this league. Tap a team to open their meter.</p>'
-        + (rows || '<p class="caption">Teams have not loaded yet.</p>');
+        + '<p class="caption">Every roster in this league. Tap a team to open their home dashboard.</p>'
+        + (rows
+          ? '<div class="teams-list" role="list">' + rows + "</div>"
+          : '<p class="caption">Teams have not loaded yet.</p>');
     }
 
     function backChip(label) {
@@ -2807,7 +2733,6 @@
 
     function goBottomNav(which) {
       if (appScreen !== "dash") return;
-      teamsOpen = false;
       dsOpen = false;
       lensOpen = false;
       yearFilterOpen = false;
@@ -4992,7 +4917,6 @@
       }
       // Every other popup is exclusive with this one, and this one paints above all of them,
       // so opening from the header has to close them rather than cover an open menu.
-      teamsOpen = false;
       dsOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
@@ -5009,51 +4933,9 @@
       lensOpen = false;
       paintLens();
     }, true);
-    // An outside click closes the seat menu. #app's own handler runs first and has already
-    // cleared the flag for a click on the chip or on an option, so this only ever fires for a
-    // click that landed somewhere else on the page.
-    document.addEventListener("click", (e) => {
-      if (!teamsOpen) return;
-      if (e.target.closest("#teamMenu") || e.target.closest("[data-teams-open]")) return;
-      teamsOpen = false;
-      render();
-    });
-
-    /**
-     * The Teams chip's mount of the seat menu, and the only one: the brand header's picker was
-     * removed when the chips became the access points. It lives inside #app, so it is rendered
-     * rather than painted, and closing it returns focus to the chip -- the menu it came from is
-     * about to stop existing, and #app's innerHTML rebuild would otherwise drop focus to <body>.
-     *
-     * showMenu() is the half the header mount never needed. That trigger sat in the brand row at
-     * the top of the page, so its menu was on screen by construction; this one opens from the
-     * middle of league home, where focusing the selected option scrolls that option into view and
-     * leaves the rest of the list below the fold.
-     */
-    function openTeams() {
-      teamsOpen = true;
-      dsOpen = false;
-      lensOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      render();
-      const menu = document.getElementById("teamMenu");
-      if (!menu) return;
-      const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
-      if (sel) sel.focus({ preventScroll: true });
-      showMenu(menu);
-    }
-
-    function closeTeams() {
-      teamsOpen = false;
-      render();
-      const btn = document.querySelector("[data-teams-open]");
-      if (btn) btn.focus({ preventScroll: true });
-    }
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
-      if (teamsOpen) { closeTeams(); return true; }
       if (lensOpen) {
         lensOpen = false;
         paintLens();
@@ -5078,25 +4960,7 @@
         if (closeTopmost()) e.preventDefault();
         return;
       }
-      // Team picker: a listbox, so the arrows move between options and never scroll the page.
-      // Matched on the class rather than on the menu's id, because the class is what any mount
-      // of this list carries -- there were two mounts until the header picker was removed, and
-      // a second copy of this block is how one of them quietly lost Home/End.
-      const inWho = e.target.closest && e.target.closest(".who-menu");
-      if (teamsOpen && inWho) {
-        const opts = [...inWho.querySelectorAll("button")];
-        const i = opts.indexOf(document.activeElement);
-        let next = -1;
-        if (e.key === "ArrowDown") next = (i + 1) % opts.length;
-        else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
-        else if (e.key === "Home") next = 0;
-        else if (e.key === "End") next = opts.length - 1;
-        else if (e.key === "Tab") { closeTeams(); return; }
-        if (next >= 0) { e.preventDefault(); opts[next].focus(); }
-        return;
-      }
-      // League Data Sets: the same listbox keyboard as the seat picker above, for the same
-      // reason -- five options in a popup are a list to move through, not five tab stops.
+      // League Data Sets: a listbox, so the arrows move between options and never scroll the page.
       const inDs = e.target.closest && e.target.closest("#dataSets");
       if (dsOpen && inDs) {
         const opts = [...document.querySelectorAll("#dataSets button")];
@@ -5160,7 +5024,6 @@
 
     function openDataSets() {
       dsOpen = true;
-      teamsOpen = false;
       lensOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
@@ -5219,18 +5082,9 @@
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
-      // The Teams chip and the menu it opens. Both live inside #app, which is why the seat is
-      // taken from here rather than from a listener bound to the menu: the menu is rendered and
-      // re-rendered rather than painted once, so the handler is on the container that survives.
-      const teamsBtn = e.target.closest("[data-teams-open]");
-      if (teamsBtn) {
-        if (teamsOpen) closeTeams();
-        else openTeams();
-        return;
-      }
+      // Bottom-nav Teams page rows (and any future seat pick): data-who loads that team's home.
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
-        teamsOpen = false;
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }

@@ -4515,7 +4515,6 @@
 
     function renderInvites() {
       const L = joinPreview || {};
-      const total = L.total_rosters || (createdInvites || []).length;
       const myMembership = (memberships || []).find(
         (m) => m.sleeper_league_id === L.sleeper_league_id,
       );
@@ -4589,11 +4588,6 @@
         + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
         + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
-        + '<p class="caption"><b>' + esc(L.name || "League") + "</b> — "
-        + unclaimed.length + " unclaimed · " + claimed.length + " claimed"
-        + (total ? " · " + total + " roster" + (total === 1 ? "" : "s") : "")
-        + ". Copy one invite link per team and DM it to that manager only.</p>"
-        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + tabs

@@ -633,8 +633,11 @@ the way P1-13 taught — skill position, then a live NFL team, then active. Two 
 
 Same seam, `leagueLine()`. No second voice system. **The sharer's `note` is a separate
 attributed field on the row** — it never replaces `league_line`. Fact first, optional poke
-second (cuts / hurts / retire / off-field only). Private coaching goes in **`agent_tip`**
-(Shortcut Ask) and is saved to `data/smack-tips.json` — see [`SMACK_AGENT.md`](SMACK_AGENT.md).
+second (cuts / real hurts / retire / off-field only). **Polarity matters:** “not starting
+on IR” / “avoided IR” / cleared / returning are **good** injury news (healthy enough to be
+active — maybe available immediately) and ship **fact only** — never a jab. Private coaching
+goes in **`agent_tip`** (Shortcut Ask) and is saved to `data/smack-tips.json` — see
+[`SMACK_AGENT.md`](SMACK_AGENT.md) §1 (Reading injury polarity) and §5.
 
 Three tweet poke banks by kind (`tweet_injury` / `tweet_cut` / `tweet_retire` / `tweet_off`),
 plus impersonal `tweet_league` for multi-tag rows. The first version used one bank with
@@ -659,8 +662,9 @@ row-level link would be **defect A1** — an interactive control nested in anoth
 control. Those controls sit in the citation foot as siblings.
 
 The tweet row shows the **manager tag**, a compact `league_line` (**tweet fact first**, then a
-short poke / trash-talk **only on cuts, injuries, suspensions, and off-field hits** —
-informational posts ship the fact alone), and a citation foot (`@handle · relative time · See tweet`). The full
+short poke / trash-talk **only on cuts, real injuries, suspensions, and off-field hits** —
+informational posts and **good** injury news such as “not starting on IR” / cleared / returning
+ship the fact alone), and a citation foot (`@handle · relative time · See tweet`). The full
 `tweet_text` is kept on the item for matching/oEmbed but is **not** painted into the row. The
 link out is ≥44px and keyboard operable. Multi-tag / The league rows keep impersonal pokes
 (no “you”); single-seat rows may needle in second person without repeating the manager name.

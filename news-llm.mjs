@@ -111,6 +111,8 @@ export const SYSTEM_PROMPT = [
   "Never address anybody. Do not use 'you' or 'your'. Do not name a league member.",
   "Do not describe the act of sharing. Summarise the content.",
   "Nothing about appearance, family, money, health beyond what the tweet reports, or anything a person would not laugh at.",
+  // Polarity — see docs/SMACK_AGENT.md §1 "Reading injury polarity". Bare "IR" is not enough.
+  "Polarity: 'not starting on IR' / 'not going on IR' / 'avoided IR' / cleared / returning is GOOD news (player may be active). Do not frame it as a setback.",
 ].join(" ");
 
 /* ---------------------------------------------------------------- state ---- */

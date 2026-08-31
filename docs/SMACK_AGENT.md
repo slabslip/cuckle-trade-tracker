@@ -42,6 +42,26 @@ lives in the header.
 Automated (non-tweet) rows still use the longer `{who}` / `{player}` banks
 (`injury`, `trade`, …) in `TEMPLATES`.
 
+### Reading injury polarity (do not miss this)
+
+The word **IR** alone is not enough to decide poke vs fact-only. Read the
+**assertion**, not the keyword.
+
+| Tweet says | Fantasy meaning | Voice |
+| --- | --- | --- |
+| Placed on IR / starts the season on IR / PUP | Out — missed time | **Injury** + poke |
+| **Not** starting on IR / not going on IR / avoided IR / not on IR / off IR | Healthy enough to be **active** — may play immediately | **Good injury news**, fact only |
+| Cleared / returning / upgraded / expected to play | Upside for the owner | **Good injury news**, fact only |
+
+**Worked example (2026-08-31).** Shared post: *“Keaton Mitchell is not going to
+start on IR to start the season…”* That is **positive** for whoever rosters him:
+he is not opening the year on the shelf; he may be available Week 1. The first
+voice pass saw the bare `IR` token, labelled it Injury, and needled the seat
+(“Ouch…”). Wrong. Correct line: *Good injury news — …* with **no poke**.
+
+Code: `readsUpbeat()` / `UPBEAT_IR_AVOID` in `news-voice.mjs`; `tweetPokeKind()`
+returns `""` when injury is upbeat. Revoice after changing those patterns.
+
 ---
 
 ## 2. House rules (do not loosen casually)
@@ -49,11 +69,14 @@ Automated (non-tweet) rows still use the longer `{who}` / `{player}` banks
 1. Needle the **roster decision**, the **timing**, or the **player** — not
    appearance, family, money, or anything a friend would not laugh at.
 2. Never invent a fact the tweet did not state.
-3. Informational posts do not need smack. Cuts and hurts do.
+3. Informational posts do not need smack. Cuts and **real** hurts do.
+   Negated IR / cleared / returning are informational — **no poke**.
 4. The sharer’s public `note` is **their** voice. The agent’s poke is **ours**.
    Keep them separate.
 5. Variant choice is a **hash of the item id**, not `Math.random()`, so a line
    is stable for a given story.
+6. Keywords are not polarity. “IR” in “not on IR” is good news; “IR” in
+   “placed on IR” is bad. Always parse the negation.
 
 ---
 
@@ -141,7 +164,10 @@ node -e "/* or the revoice script used in PR #37 */"
 *Paste winners here as you coach. Promote into `TEMPLATES` when they stick.*
 
 ### Injury
-- 
+- “Not starting on IR” / “not going on IR” / “avoided IR” = **good** — healthy
+  enough to be active, maybe Week 1. Label **Good injury news**. **No poke.**
+  (Keaton Mitchell, 2026-08-31 — do not repeat the “Ouch” miss.)
+- Real IR / PUP / “will miss” / “placed on IR” = needle the seat.
 - 
 
 ### Cut / waive / release
@@ -157,14 +183,15 @@ node -e "/* or the revoice script used in PR #37 */"
 - 
 
 ### Do not use
-- 
+- Needling a seat because the tweet merely *mentioned* IR while saying the
+  player is **not** going there.
 
 ### Heat level for this league
 - Default: needle the roster, not the person.
-- Group chat short spice is fine on cuts/IR.
+- Group chat short spice is fine on cuts / real IR / PUP.
 - Skip poke on “made the roster” / “kept on the 53” / good injury news.
 - “Not starting on IR” / “not going on IR” is **good** news (healthy enough to be
-  active) — label as Good injury news, fact only. Do not needle that.
+  active, maybe start immediately) — **Good injury news**, fact only. Never jab.
 
 ---
 

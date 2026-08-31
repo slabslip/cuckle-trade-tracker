@@ -35,13 +35,10 @@ them, are in **Honest copy** below.
   clears it.
 - Choices are the **two seat `user_id`s** of the trade, not display names, so a rename on Sleeper
   does not orphan a vote.
-- Voting is **not** gated on picking a seat with the Team button. The voter identity recorded with
-  each vote is the selected seat's `user_id`, falling back to the last seat this device picked
-  (`cuckle.seat.v1`), so a future store can show the tally per manager. The fallback is load
-  bearing rather than belt-and-braces: the card lives on **league home**, and the home button
-  calls `clearLeague()`, which nulls the selected seat. Without the remembered seat every vote
-  would be anonymous. Either way it is an **unverified claim** — anyone can pick any seat — so do
-  not present a per-manager tally as attested.
+- Voting is **gated on a claimed seat**. Team name + per-seat invite code via Supabase Auth
+  (see §5.5). The Teams chip remains unverified UX for browsing a seat — it is not enough to
+  write a ballot. `voter` is forced to the claimed Sleeper `user_id` in the database
+  (`db/phase1-seat-auth.sql`).
 - **N-way trades carry no vote.** "Which side won" has no two-sided answer across three bags, and
   N-way is already the case that carries no Value Adjustment. The block renders a caption instead
   of buttons. In practice `trade_boards.sides` only contains complete 2-team trades
@@ -343,33 +340,30 @@ which is a decimal snowflake string. It is stored rather than nulled because `ch
 `not null`, and because one row per `(trade, voter)` for the whole life of an opinion — including
 the fact that it was withdrawn — is the more useful record.
 
-### 5.5 `voter` is client-asserted. Say it out loud.
+### 5.5 Claimed-seat auth (shipped)
 
-There is no Supabase Auth on this project. There is no logged-in user, so there is no `auth.uid()`
-to compare anything against, and the `voter` column is **asserted by the browser and unverifiable
-by the database**. The RLS policies are `using (true)` / `with check (true)`; they gate *which
-verbs* are reachable, not *who* is calling.
+Supabase Auth is on for **vote writes only**. Each manager gets one invite code from
+`seed-seat-auth.mjs`. They pick their team name, enter the code once, and the session
+is stored in `cuckle.auth.v1` on that browser origin.
 
-Concretely, a league member who opens dev tools can:
+| Piece | Role |
+| --- | --- |
+| Synthetic email | `seat-<user_id>@seats.cuckle.invalid` (never mailed; Confirm email OFF) |
+| Password | The invite code (`CUCK-XXXX-XXXX`) |
+| `seat_profiles` | Maps `auth.users` → Sleeper `seat_user_id` |
+| RLS | Anon may **SELECT** tallies; only **authenticated** may INSERT/UPDATE, and only as their profile seat |
+| Trigger `trade_votes_force_voter` | Rewrites `voter` to the claimed seat before the row lands |
 
-- **vote as someone else.** Seat `user_id`s are public — they are in `data/ui/members.json`.
-- **overwrite or clear another member's vote**, because the UPDATE policy cannot tell one caller
-  from another.
-- **stuff the ballot**, since a fresh uuid is a new voter as far as the unique constraint knows.
+The Teams picker is still not Auth. Soft-delete on news is still UI-gated. What closed is
+impersonation and device-UUID ballot stuffing on **trade_votes**.
 
-No policy fixes this while the identity is client-asserted, and a header or a client-supplied
-check would only look like a control. **The anon key is not a security boundary** — it is a
-routing token, and the security boundary is RLS, which stops none of the above.
+Custom domain cutover: localStorage is origin-scoped — managers claim again on the new
+host. Walkthrough: [`docs/CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) and
+[`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §7.
 
-This is acceptable *here and only here*: about ten people in a private dynasty league who all know
-each other, the stakes are an opinion counter next to a trade, and the votes are firewalled from
-every number that matters — they never enter the needle math, the even book, Value Adjustment, the
-lens windows, `today_delta`, partner grades, `aged`, or any ranking. It is a low-value target
-guarded by social trust. It is not a model to copy for anything where the data matters.
-
-The fix, if it ever matters, is Supabase Auth: narrow the policies to `auth.uid()` and drop the
-client-asserted `voter` column. That is a much larger change than this feature deserves today.
+Optional once before go-live: `truncate public.trade_votes restart identity;` (commented in
+`db/phase1-seat-auth.sql`) so Phase 0 unverified rows do not sit in the tally.
 
 Two more, for completeness. **Nothing rate-limits** — Supabase's platform limits are the only cap,
-which a ten-person league will never approach. And there is **no PII**: a vote is a transaction id,
-a seat id and two timestamps.
+which a ten-person league will never approach. And there is **no PII** in a vote row: a transaction
+id, a seat id and two timestamps. Invite codes are secrets — DM them, do not commit them.

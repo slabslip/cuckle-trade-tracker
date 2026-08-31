@@ -710,15 +710,58 @@ rather than as an HTTP error code.
 
 For the record, this site is served from **`https://slabslip.github.io`** (path
 `/cuckle-trade-tracker/`), and locally from `http://localhost:8766` per the
-README. Those are the origins that will appear in requests.
+README. Those are the origins that will appear in requests. A GoDaddy (or any)
+custom domain becomes another origin — see [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).
 
-Origins do become configurable in two places we are not using yet — if we ever
-add either, come back to this:
+**Supabase Auth** (Phase 1 claim-seat) **does** keep an allowlist:
 
-- **Supabase Auth** keeps an allowlist of redirect URLs. Only relevant if we turn
-  on real logins.
-- **Edge Functions** set their own CORS headers in code and do not inherit the
-  REST API's.
+- Dashboard → Authentication → URL Configuration → **Site URL** + **Redirect URLs**
+- Include both github.io and the custom domain during cutover
+
+---
+
+## 7a. Phase 1 — claimed-seat auth (do this next)
+
+Closes client-asserted `voter` writes. Tallies stay publicly readable.
+
+### Steps
+
+1. **SQL.** Paste [`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql) into the
+   SQL editor and run it. Confirm `seat_profiles` exists with RLS on, and that
+   anon can no longer INSERT into `trade_votes` (a bare anon POST should fail).
+2. **Auth settings.** Authentication → Providers → Email → **Confirm email = OFF**.
+   Authentication → URL Configuration → set Site URL to your live origin
+   (`https://slabslip.github.io/cuckle-trade-tracker` until the custom domain is
+   ready; then follow [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md)).
+3. **Seed codes.** Copy the **service_role** key from the dashboard (never commit it):
+
+   ```bash
+   SUPABASE_SERVICE_ROLE_KEY='eyJ…' node seed-seat-auth.mjs
+   ```
+
+   Codes print to the terminal and to `data/seat-invites.local.txt` (gitignored).
+   DM each manager their own line. Re-issue with `--rotate` if a code leaks.
+4. **Optional clean tally.** Uncomment the `truncate public.trade_votes` line at
+   the bottom of `phase1-seat-auth.sql`, run once, re-comment — wipes Phase 0
+   device-UUID ballots before the league starts claiming.
+5. **Deploy** this branch’s `index.html` (or merge to `main`). Open a trade on
+   your phone → claim your seat → vote.
+6. **Custom domain** whenever ready — DNS + GitHub Pages + Auth URL update.
+   Managers claim again on the new origin (localStorage does not transfer).
+
+### Verify
+
+```bash
+# Anon write must fail after Phase 1 SQL:
+curl -s -o /dev/null -w "%{http_code}\n" \
+  -X POST "$URL/rest/v1/trade_votes" \
+  -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+  -H "Content-Type: application/json" \
+  -d '{"transaction_id":"0","choice":"0","voter":"0"}'
+# expect 401 or 403
+```
+
+Claim + vote in the browser is the real test.
 
 ---
 

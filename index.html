@@ -509,6 +509,30 @@
       padding: 12px; margin: 12px 0 0;
     }
     .vote-card .vote { margin: 0; }
+    /* Claim-seat form: Phase 1 identity for votes. Same surfaces as the rest of the page. */
+    .claim-box { margin-top: 8px; display: grid; gap: 8px; }
+    .claim-box label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
+    .claim-box select, .claim-box input {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 0 12px; width: 100%;
+    }
+    .claim-box select:focus-visible, .claim-box input:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .claim-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .claim-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; }
+    .auth-bar {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline;
+      margin: 0 0 8px; font-size: 0.8125rem; color: var(--dim);
+    }
+    .auth-bar b { color: var(--text); font-weight: 650; }
+    button.linkish {
+      appearance: none; font: inherit; font-size: inherit; color: var(--muted);
+      background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+      min-height: 44px;
+    }
+    button.linkish:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
     .vote-note {
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
@@ -2080,7 +2104,7 @@
         return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
       // Remove is admin-only in the UI. League home clears me, so this reads the remembered
-      // seat (same key votes use) — pick TrumanCooper once via Teams, then Home still unlocks it.
+      // seat — claimed seat (Phase 1) preferred, else remembered Teams seat.
       const admin = isNewsAdmin();
       const rows = items.map((it) => {
         const url = String(it.source_url || "");
@@ -2434,6 +2458,8 @@
     const VOTE_KEY = "cuckle.votes.v1";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
+    // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
+    const AUTH_KEY = "cuckle.auth.v1";
     // localStorage throws in private mode and when a quota is full. Memory is the fallback so
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;
@@ -2444,6 +2470,9 @@
     // to hide a secret, and the Row Level Security in db/schema.sql is the boundary — not the key.
     // A service_role / sb_secret_ key must NEVER appear here: it bypasses RLS entirely.
     const VOTE_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/rest/v1";
+    const AUTH_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/auth/v1";
+    // Synthetic emails created by seed-seat-auth.mjs. Never mailed; password = invite code.
+    const AUTH_EMAIL_DOMAIN = "seats.cuckle.invalid";
     // A legacy anon JWT, so Authorization: Bearer is valid alongside the always-required apikey
     // header. A newer sb_publishable_... key is not a JWT and is rejected on Bearer with
     // "Invalid JWT" — if this key is ever replaced with one of those, send apikey alone.
@@ -2463,6 +2492,11 @@
     // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
     // the vote itself is already in localStorage, so nothing here can lose it.
     const votePending = new Set();
+    // Claimed-seat session: { access_token, refresh_token, expires_at, seat_user_id, seat_name }
+    let authSession = null;
+    let authBusy = false;
+    let authError = "";
+    let claimPrompt = false;
 
     function voteDeviceId() {
       try {
@@ -2479,7 +2513,7 @@
 
     // The card lives on league home, and going home clears the selected seat by design, so a
     // live seat is rarely there to read. Remember the last seat this device picked instead.
-    // It is an unverified claim either way — see docs/VOTES_SDD.md — and voting never waits on it.
+    // Teams picker is still an unverified UX claim. Vote identity is authSeatId() only.
     function voteSeatRemember(uid) {
       try { if (uid) localStorage.setItem(VOTE_SEAT_KEY, uid); }
       catch (err) { /* private mode: the vote still records, just without an identity */ }
@@ -2491,20 +2525,56 @@
       catch (err) { return null; }
     }
 
+    function authSeatId() {
+      return (authSession && authSession.seat_user_id) || null;
+    }
+
+    function authSeatName() {
+      return (authSession && authSession.seat_name) || null;
+    }
+
+    function authLoad() {
+      try {
+        const raw = localStorage.getItem(AUTH_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (found && found.access_token && found.seat_user_id) authSession = found;
+        else authSession = null;
+      } catch (err) {
+        authSession = null;
+      }
+    }
+
+    function authSave(session) {
+      authSession = session;
+      try {
+        if (session) localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+        else localStorage.removeItem(AUTH_KEY);
+      } catch (err) { /* private mode: in-memory session only */ }
+    }
+
+    function authClear() {
+      authSave(null);
+      authError = "";
+      claimPrompt = false;
+    }
+
+    function authEmailForSeat(userId) {
+      return "seat-" + userId + "@" + AUTH_EMAIL_DOMAIN;
+    }
+
     /**
      * Soft-delete for the alert feed. UI-gated to TrumanCooper; the write is a stamp on
-     * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). League home clears
-     * me, so this uses the remembered seat the same way votes do: pick TrumanCooper via
-     * Teams once, then Home still unlocks Remove.
+     * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). Prefers the claimed
+     * seat (Phase 1), then the remembered Teams seat.
      *
-     * This is not real auth. Anyone with the anon key can PATCH those columns. Acceptable for
-     * ten friends; the button simply is not offered to anyone else.
+     * Soft-delete itself is still not real auth on the wire — anyone with the anon key can
+     * PATCH those columns. The claim gate only hides the button.
      */
     const NEWS_ADMIN_UID = "458342725222133760";
     const NEWS_ADMIN_NAME = "TrumanCooper";
 
     function isNewsAdmin() {
-      return voteSeatId() === NEWS_ADMIN_UID;
+      return (authSeatId() || voteSeatId()) === NEWS_ADMIN_UID;
     }
 
     function newsSubmissionId(itemId) {
@@ -2604,8 +2674,12 @@
     // ---- Supabase transport ----------------------------------------------------
     // Two doors above, one wire here. Nothing outside this block knows Supabase exists.
 
-    function voteHeaders(extra) {
-      return Object.assign({ apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON }, extra || {});
+    // Reads can use the anon key (public tallies). Writes must use the claimed-seat JWT.
+    function voteHeaders(extra, forWrite) {
+      const token = (forWrite && authSession && authSession.access_token)
+        ? authSession.access_token
+        : VOTE_ANON;
+      return Object.assign({ apikey: VOTE_ANON, Authorization: "Bearer " + token }, extra || {});
     }
 
     // AbortSignal.timeout is missing on Safari before 16, where undefined just means no timeout.
@@ -2627,14 +2701,118 @@
       catch (err) { return d.toISOString(); }
     }
 
-    // The voter recorded with a vote is the seat picked at vote time, or the device otherwise, so
-    // one device can own more than one voter id over its life and a seat picked later must not
-    // orphan an earlier vote. This is every id we might have written as.
-    // The charset guard keeps a hand-edited localStorage value from breaking out of the in.()
-    // list below; ids are Sleeper snowflakes or uuids, so nothing real is filtered.
+    async function authRefreshIfNeeded() {
+      if (!authSession || !authSession.refresh_token) return;
+      const exp = Number(authSession.expires_at) || 0;
+      // Refresh a minute early. expires_at is unix seconds.
+      if (exp && (exp - 60) * 1000 > Date.now()) return;
+      try {
+        const res = await fetch(AUTH_API + "/token?grant_type=refresh_token", {
+          method: "POST",
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + VOTE_ANON,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refresh_token: authSession.refresh_token }),
+          signal: voteAbort(),
+        });
+        if (!res.ok) throw new Error("refresh " + res.status);
+        const data = await res.json();
+        authSave({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token || authSession.refresh_token,
+          expires_at: data.expires_at
+            || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
+          seat_user_id: authSession.seat_user_id,
+          seat_name: authSession.seat_name,
+        });
+      } catch (err) {
+        console.error(err);
+        authClear();
+      }
+    }
+
+    async function authClaimSeat(seatUserId, code) {
+      const seat = (members || []).find((m) => m.user_id === seatUserId);
+      if (!seat) throw new Error("Unknown seat.");
+      const trimmed = String(code || "").trim();
+      if (!trimmed) throw new Error("Enter your invite code.");
+      const res = await fetch(AUTH_API + "/token?grant_type=password", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + VOTE_ANON,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: authEmailForSeat(seat.user_id),
+          password: trimmed,
+        }),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error_description || data.msg || data.message || ("Sign-in failed (" + res.status + ")");
+        throw new Error(msg);
+      }
+      // Confirm the profile row exists and matches — never trust client metadata alone.
+      const profRes = await fetch(
+        VOTE_API + "/seat_profiles?select=seat_user_id,seat_name&auth_user_id=eq."
+          + encodeURIComponent(data.user.id),
+        {
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + data.access_token,
+          },
+          signal: voteAbort(),
+        },
+      );
+      if (!profRes.ok) throw new Error("Could not load seat profile (" + profRes.status + ").");
+      const rows = await profRes.json();
+      const prof = Array.isArray(rows) && rows[0];
+      if (!prof || prof.seat_user_id !== seat.user_id) {
+        throw new Error("That code is not linked to this seat. Ask Truman for a fresh invite.");
+      }
+      authSave({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at
+          || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
+        seat_user_id: prof.seat_user_id,
+        seat_name: prof.seat_name || seat.name,
+      });
+      voteSeatRemember(prof.seat_user_id);
+      authError = "";
+      claimPrompt = false;
+    }
+
+    async function onClaimSubmit() {
+      if (authBusy) return;
+      const sel = document.getElementById("claimSeat");
+      const codeEl = document.getElementById("claimCode");
+      const seatUserId = sel && sel.value;
+      const code = codeEl && codeEl.value;
+      authBusy = true;
+      authError = "";
+      render();
+      try {
+        await authClaimSeat(seatUserId, code);
+        await voteLoad();
+      } catch (err) {
+        authError = (err && err.message) || "Could not claim that seat.";
+        console.error(err);
+      } finally {
+        authBusy = false;
+        render();
+      }
+    }
+
+    // Phase 1: voter identity is the claimed seat only. Legacy device ids remain in local
+    // tallies for display heal until the optional truncate; new writes never use them.
     function voteVoterIds() {
-      const ids = [voteDeviceId()];
-      const seat = voteSeatId();
+      const ids = [];
+      const seat = authSeatId();
       if (seat) ids.push(seat);
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
@@ -2653,6 +2831,7 @@
     // hiding it, and both are wrong.
     async function voteLoad() {
       voteLiveState = "loading";
+      await authRefreshIfNeeded();
       const ids = voteVoterIds();
       try {
         const [rows, mineRows] = await Promise.all([
@@ -2693,23 +2872,32 @@
     //
     // Deliberately one-directional: a trade with no local vote is NOT cleared on the server just
     // because this device has not heard of it. The same person on a phone and a laptop resolves to
-    // the same voter once they pick a seat, and inferring a clear from local absence would have
+    // the same voter once they claim a seat, and inferring a clear from local absence would have
     // the second device silently delete the first device's vote. A clear is only ever sent when
     // someone actually taps to clear.
+    //
+    // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
     function voteHeal() {
       if (voteLiveState !== "ok") return;
+      if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
         const local = votes[tx].choice || null;
-        if (local && voteLive.mine[tx] !== local) votePush(tx, local, votes[tx].seat);
+        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId());
       }
     }
 
     // Optimistic: the vote is in localStorage and on screen before this runs. The upsert names
     // its conflict target explicitly because PostgREST otherwise infers the primary key, which is
     // the surrogate id — leave it off and a second vote fails on the unique constraint.
+    // voter is rewritten by the trade_votes_force_voter trigger; we still send the claimed seat.
     function votePush(transactionId, choice, seat) {
-      const voter = seat || voteDeviceId();
+      if (!authSession || !authSession.access_token || !seat) {
+        votePending.delete(transactionId);
+        claimPrompt = true;
+        render();
+        return;
+      }
       const sent = choice == null ? VOTE_CLEARED : choice;
       votePending.add(transactionId);
       fetch(VOTE_API + "/trade_votes?on_conflict=transaction_id,voter", {
@@ -2717,8 +2905,8 @@
         headers: voteHeaders({
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=representation",
-        }),
-        body: JSON.stringify({ transaction_id: transactionId, choice: sent, voter: voter }),
+        }, true),
+        body: JSON.stringify({ transaction_id: transactionId, choice: sent, voter: seat }),
         signal: voteAbort(),
       }).then((res) => {
         if (!res.ok) throw new Error("vote write " + res.status);
@@ -2809,15 +2997,15 @@
     }
 
     // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
-    // The selected seat rides along as the voter identity so the store can key on a manager
-    // rather than a device, but voting is not gated on picking a seat.
+    // Phase 1: gated on a claimed seat. The Teams picker is not enough — invite code required.
     function writeVote(transactionId, choice) {
+      const seat = authSeatId();
+      if (!seat) {
+        claimPrompt = true;
+        render();
+        return;
+      }
       const box = voteBoxRead();
-      const prev = box.votes[transactionId] || null;
-      // On a clear the local entry is about to go, so the voter it was written under has to be
-      // read first — otherwise a vote cast as a seat would be cleared under the device id and the
-      // real row would survive.
-      const seat = choice == null ? (prev && prev.seat) || voteSeatId() : voteSeatId();
       if (choice == null) delete box.votes[transactionId];
       else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
       voteBoxWrite(box);
@@ -2840,6 +3028,26 @@
       return hit ? 1 + ((hit.others || []).length) : voteSeats(r).length;
     }
 
+    function claimFormHtml() {
+      const opts = (members || []).map((m) => {
+        const sel = (authSeatId() || voteSeatId()) === m.user_id ? " selected" : "";
+        return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name) + "</option>";
+      }).join("");
+      return '<div class="claim-box">'
+        + '<p class="caption" style="margin:0">Claim your seat once with the invite code Truman sent you. '
+        + "This phone remembers it. Voting is one seat, one ballot — no shared league password.</p>"
+        + '<label>Team name<select id="claimSeat" name="claimSeat"'
+        + (authBusy ? " disabled" : "") + ">" + opts + "</select></label>"
+        + '<label>Invite code<input id="claimCode" name="claimCode" type="password" autocomplete="current-password"'
+        + ' placeholder="CUCK-XXXX-XXXX"' + (authBusy ? " disabled" : "") + " /></label>"
+        + '<div class="claim-actions">'
+        + '<button type="button" class="chip" data-claim-go="1"'
+        + (authBusy ? " disabled" : "") + ">"
+        + (authBusy ? "Claiming…" : "Claim seat") + "</button>"
+        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + "</div></div>";
+    }
+
     function voteBlock(r) {
       const seats = voteSeats(r);
       const head = '<div class="vote"><div class="vote-h">Who actually won it?</div>';
@@ -2848,7 +3056,15 @@
       if (seats.length !== 2 || voteParties(r) > 2) {
         return head + '<p class="caption">Three-team trade. There is no two-sided answer to score, so voting is off here.</p></div>';
       }
+      if (!authSeatId()) {
+        return head
+          + '<p class="caption">Claim your seat to cast a league vote. Tallies stay visible either way.</p>'
+          + claimFormHtml()
+          + "</div>";
+      }
       const v = readVotes(r.transaction_id);
+      const bar = '<div class="auth-bar">Voting as <b>' + seatLabel(authSeatName() || authSeatId()) + "</b>"
+        + ' <button type="button" class="linkish" data-auth-signout="1">Sign out</button></div>';
       const opts = seats.map((s) => {
         const on = v.choice === s.uid;
         const n = v.tally[s.uid] || 0;
@@ -2874,6 +3090,7 @@
           ? "Your vote, on this device only — the league tally is out of reach right now."
           : "Your vote, on this device only — the league tally lights up once the vote store answers.";
       return head
+        + bar
         + '<div class="vote-opts">' + opts + "</div>"
         + '<p class="caption">' + note + " Opinion only: votes never enter the value book.</p></div>";
     }
@@ -3754,6 +3971,13 @@
       render();
     }
 
+    document.getElementById("app").addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const t = e.target;
+      if (!t || (t.id !== "claimCode" && t.id !== "claimSeat")) return;
+      e.preventDefault();
+      onClaimSubmit();
+    });
     document.getElementById("app").addEventListener("click", (e) => {
       // Before everything: leaving a screen must not read as a click on what is on it.
       const backBtn = e.target.closest("[data-back]");
@@ -3802,6 +4026,19 @@
         deleteNewsItem(newsDelBtn.dataset.newsDel);
         return;
       }
+      // Claim seat (Phase 1) and sign out — before vote buttons so a form submit cannot
+      // also read as a ballot.
+      const claimGo = e.target.closest("[data-claim-go]");
+      if (claimGo) {
+        onClaimSubmit();
+        return;
+      }
+      const signOut = e.target.closest("[data-auth-signout]");
+      if (signOut) {
+        authClear();
+        render();
+        return;
+      }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
       // so a vote must not read as a click on the accordion.
       const voteBtn = e.target.closest("[data-vote]");
@@ -3813,7 +4050,8 @@
         // Casting a vote is the last thing the trade's own screen is for, so it hands the user
         // the league list — named, so being moved does not read as being thrown out. Clearing a
         // vote is not casting one and stays put, or the screen would vanish under the user.
-        if (view === "trade" && next) {
+        // Unclaimed: writeVote only opens the claim form; stay on this screen.
+        if (view === "trade" && next && authSeatId()) {
           const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
           openTradesList({ tx: tx, name: (won && won.name) || "" });
         } else {
@@ -3946,6 +4184,7 @@
     // would put a paused free-tier project between the reader and the whole dashboard, and votes
     // are the least important thing on it. Its own .catch keeps a vote failure out of the fatal
     // path below — a missing tally is a caption, not a broken page.
+    authLoad();
     loadMembers()
       .then(() => voteLoad().catch((err) => console.error(err)))
       .then(() => loadNewsDeleted().catch((err) => console.error(err)))

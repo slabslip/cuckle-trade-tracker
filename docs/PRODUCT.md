@@ -75,12 +75,16 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Hop tape for a pick (who held it, flip vs used).
 - Rookie surplus (player today − pick cost on draft day) and a separate 2019 startup tab (player today; DP has no 2019 startup pick prices).
 - Phone-first static page, existing CSS, no new packages.
+- **Claimed-seat login for trade votes only** — team name + per-seat invite code via
+  Supabase Auth. One ballot per Sleeper seat. Not Sleeper OAuth, not multi-league accounts.
 
 **Out (CUT)**
 
 - FAAB as a leg, a point, or a tape line.
 - One-way deals (one seat gets players/picks; the other gets nothing or only FAAB).
-- Browser-side Sleeper calls, login, live refresh.
+- Browser-side Sleeper calls, live refresh.
+- Full product login (email accounts for browsing, App Store app, push notifications,
+  multi-league SaaS). Those stay PARKED; vote claim is the only Auth carve-out.
 - A third hero number that pretends to be “today.”
 - Chart libraries, npm, Tailwind, new CSS systems.
 - Applying the 300 activity floor to the **today** clock (Hill is 285 — still a real player).
@@ -101,6 +105,8 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Peak-in-window, AUC, or “years above 300” as the **headline** over-time number.
 - Flip P&L as the default over-time identity (hop tape already exists; do not merge it into the trade needle).
 - Auto-publish / scheduled rebuild (cadence is an open question).
+- PWA / web push / native app shell (Phase 2 of the vote-identity strategy).
+- Multi-league tenancy — other Sleeper leagues on this infra (Phase 3).
 
 ---
 

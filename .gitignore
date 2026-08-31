@@ -2,4 +2,5 @@ data/players.nfl.json
 data/.dp-repo/
 data/dp/history/
 data/tx_cache/
+data/seat-invites.local.txt
 node_modules/

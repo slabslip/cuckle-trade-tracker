@@ -77,7 +77,7 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Phone-first static page, existing CSS, no new packages.
 - **Chuckle Fantasy multi-league app** — commissioner creates a league (Sleeper ID +
   optional ESPN ID), sends per-seat invites; members set username/password only.
-  See [`APP_SDD.md`](APP_SDD.md).
+  Spec: [`APP_SDD.md`](APP_SDD.md). Build today: [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 
 **Out (CUT)**
 

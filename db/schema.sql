@@ -399,6 +399,9 @@ alter table public.news_submissions add column if not exists processed_at timest
 -- with deleted_at set, and the page hides it as soon as the admin PATCH lands.
 alter table public.news_submissions add column if not exists deleted_at   timestamptz;
 alter table public.news_submissions add column if not exists deleted_by   text;
+-- Private coaching for the smack/summary agent. Not shown on the feed row (that is `note`).
+-- See docs/SMACK_AGENT.md. Optional Shortcut Ask → agent_tip; news-sync appends data/smack-tips.json.
+alter table public.news_submissions add column if not exists agent_tip    text;
 
 
 -- --------------------------------------------------------------------------
@@ -446,6 +449,9 @@ begin
       -- `note` is free text a person typed and is escaped at render time.
       ('news_submissions_note_len',
        'check (note is null or length(note) between 1 and 500)'),
+      -- Private coaching for the smack agent — not rendered on the feed (see docs/SMACK_AGENT.md).
+      ('news_submissions_agent_tip_len',
+       'check (agent_tip is null or length(agent_tip) between 1 and 500)'),
       ('news_submissions_target_name_len',
        'check (target_name is null or length(target_name) between 1 and 64)'),
       ('news_submissions_submitted_by_len',
@@ -697,14 +703,13 @@ create index if not exists news_submissions_alive_idx
 --   Prefer:        resolution=ignore-duplicates,return=minimal
 --
 --   { "url": "https://x.com/AdamSchefter/status/123",
---     "note": "your TE is cooked",          -- optional
+--     "note": "your TE is cooked",          -- optional public jab on the row
+--     "agent_tip": "lean harder — he overdrafted this guy",  -- optional private coaching
 --     "target_name": "SF69erss",            -- optional, a members.json name
 --     "submitted_by": "BubbaCuckShremp" }   -- optional
 --
--- `resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second
--- tap on Share answers 201 with an empty body instead of a 409 the Shortcut
--- would surface as a failure. It needs INSERT only — no UPDATE privilege is
--- consulted — which is what keeps the table write-once for its real columns.
+-- One-tap Shortcut sends only url + submitted_by. agent_tip is the Ask/Dictation path
+-- documented in docs/SUPABASE_SETUP.md §3b and docs/SMACK_AGENT.md.
 --
 -- The pipeline's stamp, for the record:
 --   PATCH .../news_submissions?id=eq.<id>   {"processed_at": "<iso8601>"}

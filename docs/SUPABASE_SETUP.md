@@ -443,11 +443,40 @@ Only `url` is required. A successful POST answers **201** with an empty body.
 * **`note`** — optional jab. Ships in its **own** attributed field on the row;
   it does not replace the locker-room summary. Up to 500 characters, trimmed to
   240 in the feed. Skip it for one-tap.
+* **`agent_tip`** — optional **private** coaching for the smack/summary agent
+  (tone, “no poke”, a line you would have said). **Not** shown on the feed.
+  Saved into `data/smack-tips.json` on ingest. See [`SMACK_AGENT.md`](SMACK_AGENT.md).
+  Up to 500 characters. Skip it for one-tap.
 * **`target_name`** — optional manual override of who the row is aimed at. Send
   a **name**, not a `user_id`. Case and spaces do not matter; aliases resolve.
   Ambiguous fragments refuse; the item still publishes under "The league".
   **Omit for Auto** — that is the one-tap path. If you add a Choose-from-List,
   wire **Chosen Item** into this field or it arrives as `null`.
+
+### Optional: “Send to Cuckle (with tip)” — coach the agent
+
+Same as one-tap, plus one Ask before the POST. Use when you want the summary
+agent to remember how *you* would talk about this share.
+
+1. Duplicate **Send to Cuckle** → rename **Send to Cuckle (with tip)**.
+2. After the Tweet URL variable, add **Ask for Input** (or **Dictate Text**):
+   “Tip for the smack agent (optional)”. Allow empty.
+3. **Set Variable** `Agent Tip` = **Provided Input**.
+4. Change the Get Contents of URL JSON body to:
+
+```
+{
+  "url":          <Tweet URL>,
+  "submitted_by": "TrumanCooper",
+  "agent_tip":    <Agent Tip>
+}
+```
+
+If the Ask is blank, either omit `agent_tip` or send it only when non-empty
+(Shortcut If). Empty tips are ignored by the pipeline.
+
+Run `db/schema.sql` (or the `agent_tip` alter) on Supabase once so the column
+exists — otherwise PostgREST rejects the unknown field.
 
 `resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second tap
 on Share answers 201 with an empty body instead of a `409` the Shortcut would

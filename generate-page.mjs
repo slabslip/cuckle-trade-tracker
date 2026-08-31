@@ -1013,7 +1013,7 @@ const html = `<!DOCTYPE html>
     let newsStatusTimer = null;
     let newsBoundBox = null;
     let lens = "all";
-    const DATA_V = "news20260831145026";
+    const DATA_V = "news20260831145043";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

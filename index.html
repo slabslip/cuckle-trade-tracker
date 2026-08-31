@@ -704,7 +704,7 @@
       background: transparent; border-style: dashed; cursor: default;
     }
     /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
-       Hero announcement, four circular quick actions, “In the league” strip, one light CTA. */
+       Hero announcement, four circular quick actions, and an “In the league” strip. */
     .lh-hero.day-alert {
       position: relative; overflow: hidden;
       border-radius: 20px; padding: 16px 16px 14px; margin: 0 0 20px;
@@ -789,15 +789,6 @@
     button.lh-strip-card span {
       font-size: 0.75rem; color: var(--dim); margin-top: auto;
     }
-    button.lh-cta {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; min-height: 52px; margin: 2px 0 22px;
-      appearance: none; font: inherit; font-size: 1rem; font-weight: 700;
-      color: #0b0b0d; background: #f0f0f0; border: 0; border-radius: 999px;
-      cursor: pointer; touch-action: manipulation;
-    }
-    button.lh-cta:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 3px; }
-    button.lh-cta svg { flex: 0 0 auto; }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
        cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
@@ -2388,7 +2379,6 @@
       return dayAlert()
         + homeChips()
         + leagueInProgress()
-        + homePrimaryCta()
         + dataSetPanel()
         + renderNews();
     }
@@ -4162,22 +4152,6 @@
         + "</section>";
     }
 
-    /** Primary light CTA — open claimed seat, or find a team on the Teams page. */
-    function homePrimaryCta() {
-      const id = authSeatId();
-      const name = authSeatName();
-      if (id) {
-        return '<button type="button" class="lh-cta" data-lh-seat="' + esc(id) + '">'
-          + '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
-          + '<path fill="currentColor" d="M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z"/></svg>'
-          + "Open " + esc(name || "your team") + "</button>";
-      }
-      return '<button type="button" class="lh-cta" data-lh-nav="teams">'
-        + '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
-        + '<path fill="currentColor" d="M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z"/></svg>'
-        + "Find your team</button>";
-    }
-
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
@@ -5244,15 +5218,10 @@
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
-      // League-home quick actions / CTA: same destinations as bottom nav or selectMe.
+      // League-home quick actions: same destinations as bottom nav.
       const lhNav = e.target.closest("[data-lh-nav]");
       if (lhNav) {
         goBottomNav(lhNav.dataset.lhNav);
-        return;
-      }
-      const lhSeat = e.target.closest("[data-lh-seat]");
-      if (lhSeat && lhSeat.dataset.lhSeat) {
-        selectMe(lhSeat.dataset.lhSeat);
         return;
       }
       // Bottom-nav Teams page rows (and any future seat pick): data-who loads that team's home.

@@ -3217,7 +3217,7 @@ const html = `<!DOCTYPE html>
         ? "@" + inv.claimed_username
         : (inv && inv.team_name) || "the current manager";
       if (!window.confirm(
-        "Reissue invite for " + ((inv && inv.team_name) || "this seat") + "?\n\n"
+        "Reissue invite for " + ((inv && inv.team_name) || "this seat") + "? "
         + "This removes " + who + " from the seat and creates a new code for the replacement manager. "
         + "Their past votes stay in the tally.",
       )) return;
@@ -3268,7 +3268,7 @@ const html = `<!DOCTYPE html>
         ? ((mem.username ? "@" + mem.username : "member") + " (" + mem.team_name + ")")
         : "that member";
       if (!window.confirm(
-        "Transfer commissioner to " + label + "?\n\n"
+        "Transfer commissioner to " + label + "? "
         + "You will lose invite/admin access for this league. You keep your seat if you claimed one.",
       )) return;
       joinBusy = true;
@@ -5075,7 +5075,7 @@ const html = `<!DOCTYPE html>
         const lines = (createdInvites || [])
           .filter((inv) => inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0 && !inv.claimed)
           .map((inv) => inviteDmText(inv.team_name, inv.code));
-        copyText(lines.join("\n\n"));
+        copyText(lines.join(String.fromCharCode(10, 10)));
         return;
       }
       const openLeagueBtn = e.target.closest("[data-open-league]");

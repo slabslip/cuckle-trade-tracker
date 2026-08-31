@@ -3583,17 +3583,27 @@ const html = `<!DOCTYPE html>
       joinError = "";
       joinPreview = null;
       appScreen = "dash";
-      members = null;
+      // League home (news + chips), not a seat meter. Teams list is how you open a roster.
+      // Deep-link ?me= is still honored inside loadMembers(); membership seat is not auto-picked.
+      me = null;
       data = null;
+      view = "home";
+      openId = null;
+      tradeSeat = null;
+      partnerName = null;
+      openPick = null;
+      openDraft = null;
+      markOpen = null;
+      titleYear = null;
+      voteToast = null;
+      dsOpen = false;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      dataSet = null;
+      focusNext = null;
+      syncUrl();
       await loadMembers();
-      // Auto-select this membership's Teams seat when it matches a manager.
-      if (leagueInfo && leagueInfo.sleeper_user_id && members && !me) {
-        const seat = members.find((m) => m.user_id === leagueInfo.sleeper_user_id);
-        if (seat) {
-          try { await selectMe(seat.user_id, true); }
-          catch (err) { console.error(err); }
-        }
-      }
       voteLoad().catch((err) => console.error(err));
       loadNewsDeleted().catch((err) => console.error(err));
     }
@@ -6120,6 +6130,21 @@ if (!inline.includes("function renderAccountPage()") || !inline.includes("functi
 }
 if (!html.includes("body.has-bottom-nav")) {
   throw new Error("page content must pad for the fixed bottom nav");
+}
+if (!inline.includes('data-open-league="') || !inline.includes("async function openLeagueDashboard(")) {
+  throw new Error("Your leagues must open a league via openLeagueDashboard");
+}
+// Opening a league lands on league home (news feed), never auto-picks the member's seat meter.
+{
+  const at = inline.indexOf("async function openLeagueDashboard(");
+  if (at < 0) throw new Error("openLeagueDashboard missing");
+  const src = inline.slice(at, at + 1200);
+  if (src.includes("selectMe(")) {
+    throw new Error("openLeagueDashboard must not auto-select a seat — league home includes the news feed");
+  }
+  if (!src.includes('view = "home"') || !src.includes("\n      me = null;")) {
+    throw new Error("openLeagueDashboard must clear the seat and show league home");
+  }
 }
 if (!inline.includes("function renderSettings()")) {
   throw new Error("Settings screen renderer missing");

@@ -906,7 +906,7 @@ const html = `<!DOCTYPE html>
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
       SF69erss: { img: "data/ui/flair-sf69erss.png" },
-      TipsUp: { img: "data/ui/flair-tipsup.png" },
+      bigjberg: { img: "data/ui/flair-bigjberg.png" },
       BubbaCuckShremp: { img: "data/ui/flair-bubbacuckshremp.png" },
       TedCumberbatch: { img: "data/ui/flair-tedcumberbatch.png" },
       TrumanCooper: { img: "data/ui/flair-trumancooper.png" },
@@ -978,7 +978,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "20260831emoji2";
+    const DATA_V = "20260831berg1";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4621,7 +4621,7 @@ for (const need of [
   'ARae: { img: "data/ui/flair-arae.png" }',
   'ChiefGumby: { img: "data/ui/flair-chiefgumby.png" }',
   'KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" }',
-  'TipsUp: { img: "data/ui/flair-tipsup.png" }',
+  'bigjberg: { img: "data/ui/flair-bigjberg.png" }',
 ]) {
   if (!inline.includes(need)) throw new Error(`seat flair map missing: ${need}`);
 }

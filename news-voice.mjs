@@ -164,6 +164,31 @@ function readsUpbeat(text) {
 }
 
 /**
+ * Per-seat voice flavor. Known traits of league members we lean on when needling *their*
+ * roster — never appearance/family/money; profession jokes that the seat would laugh at are ok.
+ * Documented in docs/SMACK_AGENT.md §5a. Keys are Sleeper display names.
+ *
+ * `pokes.off` etc. replace the generic tweet_* bank when this seat is the single tag.
+ * Court / charge / arrest stories for the lawyer seat prefer index 0 (the services line).
+ */
+export const SEAT_FLAVOR = {
+  TedCumberbatch: {
+    role: "lawyer",
+    // Lean on the JD when trash-talking Ted's team — especially off-field / court news.
+    pokes: {
+      off: [
+        "He may need a lawyer — are you offering your services?",
+        "Legal trouble. Are you taking walk-ins?",
+        "Court date on the calendar. Billable hours?",
+      ],
+    },
+  },
+};
+
+/** Court / charge / arrest wording — seats with a lawyer flavor get the services line. */
+const LEGAL_STORY = /\b(court|charg\w*|arrest\w*|lawsuit|indict\w*|misdemeanor|felony|citation|cited)\b/i;
+
+/**
  * The templates. `{who}` is the manager, `{player}` the player, `{team}` their NFL team.
  *
  * Every slot is filled with plain text and the result is escaped with esc() at render time —
@@ -761,12 +786,31 @@ function tweetPokeBank(kind) {
   return TEMPLATES.tweet;
 }
 
+/**
+ * Seat-specific poke bank, or null to fall through to the generic themed bank.
+ * Lawyer seat + legal story → always the "offering your services?" line (index 0).
+ */
+function seatPokeBank(manager, kind, item) {
+  const flavor = SEAT_FLAVOR[manager];
+  if (!flavor || !flavor.pokes) return null;
+  const bank = flavor.pokes[kind];
+  if (!Array.isArray(bank) || !bank.length) return null;
+  if (
+    flavor.role === "lawyer" &&
+    kind === "off" &&
+    LEGAL_STORY.test(String((item && item.title) || ""))
+  ) {
+    return [bank[0]];
+  }
+  return bank;
+}
+
 function tweetPoke(item, manager) {
   const player = String((item && item.player) || "").trim();
   const seed = item && (item.id || item.title || player || manager) || "poke";
   const kind = tweetPokeKind(item && item.title);
   if (manager && player) {
-    const bank = tweetPokeBank(kind);
+    const bank = seatPokeBank(manager, kind, item) || tweetPokeBank(kind);
     return bank[hash(seed) % bank.length]
       .replace(/\{player\}/g, player)
       .replace(/\{team\}/g, String((item && item.team) || "his old spot"))

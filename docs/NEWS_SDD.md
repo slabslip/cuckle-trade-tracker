@@ -675,6 +675,22 @@ via Teams once; league home clears `me` but keeps the vote seat key). The page h
 soon as the PATCH lands; `news-sync` skips it on the next build. UI gate among friends, not real
 auth — same honesty as the insert surface. SQL: `docs/SUPABASE_SETUP.md` §3c.
 
+### Live refresh (client)
+
+The feed is still a committed `news.json` on Pages — nothing reads Supabase for the rows. While
+someone is on **league home**, the page:
+
+1. **Polls** `data/ui/news.json?news=<timestamp>` about every 45s (and on `visibilitychange`
+   when the tab becomes visible again). The `news=` buster is deliberate: `DATA_V` is a
+   page-wide cache key and does not move when only the feed file changes (§7).
+2. **Pull-to-refresh** at the top of the `.news-box` (touch pull-down, or wheel upward while
+   pinned to the top) always re-fetches and applies.
+3. **Auto-applies** new rows when the reader is already near the top of the box — Twitter-shaped
+   “it just showed up.” If they have scrolled down, a **“N new posts · tap to show”** pill
+   parks the update until they tap it or scroll back to the top.
+
+No CSS animation on the box (WCAG 2.2.2 / the existing build guard). Status copy is static text.
+
 ### What this costs, honestly
 
 `news_submissions` is **write-open to anyone holding the anon key**, which is in the page. That is

@@ -1,5 +1,18 @@
 {
   "v": 1,
-  "updated": null,
-  "tips": []
+  "updated": "2026-08-31T13:56:00.000Z",
+  "tips": [
+    {
+      "id": "tip:manual:ted-lawyer-jacobs-20260831",
+      "submission_id": null,
+      "tweet_url": "https://x.com/adamschefter/status/2094415083799523723",
+      "submitted_by": "TrumanCooper",
+      "created_at": "2026-08-31T13:56:00.000Z",
+      "tip": "TedCumberbatch is a lawyer. On Josh Jacobs court news (and other legal/off-field hits on Ted’s roster), lean on that: “He may need a lawyer — are you offering your services?” Reference the JD whenever trash-talking his team when a legal gag fits.",
+      "player": "Josh Jacobs",
+      "managers": ["TedCumberbatch"],
+      "poke_kind": "off",
+      "league_line": "Off the field — Josh Jacobs’ initial court appearance is scheduled for Nov. He may need a lawyer — are you offering your services?"
+    }
+  ]
 }

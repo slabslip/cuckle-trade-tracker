@@ -144,9 +144,9 @@ feed diffable and the register reviewable.
 
 | File | Role |
 | --- | --- |
-| `news-voice.mjs` | `TEMPLATES`, `tweetPokeKind`, `summariseTweet`, `leagueLine` |
+| `news-voice.mjs` | `TEMPLATES`, `SEAT_FLAVOR`, `tweetPokeKind`, `summariseTweet`, `leagueLine` |
 | `data/smack-tips.json` | Your coaching log from the Shortcut |
-| `docs/SMACK_AGENT.md` | This brief — examples, do/don’t, heat level |
+| `docs/SMACK_AGENT.md` | This brief — examples, seat flavor, do/don’t, heat level |
 | `news-llm.mjs` | Prompt + tip injection when the model is on |
 | `docs/SUPABASE_SETUP.md` §3b | Shortcut JSON including optional `agent_tip` |
 
@@ -168,18 +168,19 @@ node -e "/* or the revoice script used in PR #37 */"
   enough to be active, maybe Week 1. Label **Good injury news**. **No poke.**
   (Keaton Mitchell, 2026-08-31 — do not repeat the “Ouch” miss.)
 - Real IR / PUP / “will miss” / “placed on IR” = needle the seat.
-- 
 
 ### Cut / waive / release
-- 
 - 
 
 ### Retire / disappear
 - 
-- 
+
+### Off the field / suspension
+- Court / charges / arrest on **TedCumberbatch**’s roster → lean on the lawyer
+  bit (see §5a). Winner: *“He may need a lawyer — are you offering your
+  services?”* (Josh Jacobs court appearance, 2026-08-31).
 
 ### Soft (still friends)
-- 
 - 
 
 ### Do not use
@@ -192,23 +193,48 @@ node -e "/* or the revoice script used in PR #37 */"
 - Skip poke on “made the roster” / “kept on the 53” / good injury news.
 - “Not starting on IR” / “not going on IR” is **good** news (healthy enough to be
   active, maybe start immediately) — **Good injury news**, fact only. Never jab.
+- Seat flavor (profession jokes the seat would laugh at) is fine; still never
+  appearance / family / money.
+
+---
+
+## 5a. Seat flavor (who these people are)
+
+Known traits we reference when trash-talking **that seat’s** team. Still no
+manager name in the poke — the header already has it. Code: `SEAT_FLAVOR` in
+`news-voice.mjs`.
+
+| Seat | Flavor | When to lean on it |
+| --- | --- | --- |
+| **TedCumberbatch** | **Lawyer** | Off-field / court / charges / arrest on his players. Also fair game on other jabs at his roster when a legal gag fits — he passed the bar; milk it. |
+
+**Worked example (2026-08-31).** Schefter: Josh Jacobs’ initial court appearance
+scheduled for Nov. Seat: TedCumberbatch. Fact + poke:
+
+> Off the field — Josh Jacobs’ initial court appearance is scheduled for Nov.
+> He may need a lawyer — are you offering your services?
+
+Do **not** use a generic “How’s the stomach” poke here when the seat is Ted —
+the lawyer line is the point.
 
 ---
 
 ## 6. Checklist for a new tip from your phone
 
 1. Share tweet → **Send to Cuckle (with tip)** (or add Ask to the one-tap copy).
-2. Dictate / type the tip (“no poke”, “use Ace Bandage line”, “aim at Ted”).
+2. Dictate / type the tip (“no poke”, “use Ace Bandage line”, “aim at Ted”,
+   “Ted’s a lawyer — services line”).
 3. Wait for `news-refresh` (or cron) so `news-sync` appends `data/smack-tips.json`.
-4. Optionally open this doc and copy the tip into §5.
-5. When a tip repeatedly lands, add it to the right `tweet_*` bank in
-   `news-voice.mjs` and revoice.
+4. Optionally open this doc and copy the tip into §5 / §5a.
+5. When a tip repeatedly lands, add it to the right `tweet_*` bank (or
+   `SEAT_FLAVOR`) in `news-voice.mjs` and revoice.
 
 ---
 
 ## 7. Open improvements
 
-- [ ] Per-seat voice flavor (Ted vs Bubba) if the corpus splits cleanly
+- [x] Per-seat voice flavor started — TedCumberbatch = lawyer (`SEAT_FLAVOR`)
+- [ ] More seat flavors (Bubba, …) as the corpus splits cleanly
 - [ ] Tip that says `poke: none` forces fact-only even on a cut (override)
 - [ ] Tip that supplies an exact poke string for that one row
 - [ ] UI for browsing `smack-tips.json` on an admin seat only

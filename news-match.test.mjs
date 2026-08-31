@@ -51,7 +51,7 @@ import test from "node:test";
 import { readJson } from "./lib.mjs";
 import { matchText, loadIndex, normText, looksTitleCased, capitalisedIn, explainName, teamsNamed, PUBLISH_MIN, NOTIFY_MIN, MAX_SUBJECTS, CATEGORY_IDS, scoreCorpus } from "./news-match.mjs";
 import { stripAttribution } from "./news-fixtures.mjs";
-import { classify, tweetPokeKind, summariseTweet, leagueLine } from "./news-voice.mjs";
+import { classify, tweetPokeKind, summariseTweet, leagueLine, SEAT_FLAVOR } from "./news-voice.mjs";
 
 const index = loadIndex();
 const corpus = readJson("fixtures/rss-corpus.json", null);
@@ -508,6 +508,44 @@ test("not starting on IR is good news — fact only, no poke", () => {
   assert.equal(b.category, "injury");
   assert.equal(b.upbeat, false);
   assert.equal(tweetPokeKind(bad), "injury");
+});
+
+test("TedCumberbatch lawyer seat flavor on Jacobs court news", () => {
+  // Coaching (2026-08-31): Ted is a lawyer — court/charge news on his roster gets the
+  // services poke, not a generic "How's the stomach." See docs/SMACK_AGENT.md §5a.
+  assert.equal(SEAT_FLAVOR.TedCumberbatch.role, "lawyer");
+  const title =
+    "Josh Jacobs’ initial court appearance is scheduled for Nov. 17, but the NFL does not have to wait for the legal process to be completed before issuing discipline.";
+  assert.equal(tweetPokeKind(title), "off");
+  const line = leagueLine(
+    {
+      id: "tweet:53",
+      category: "tweet",
+      title,
+      player: "Josh Jacobs",
+      team: "GB",
+      position: "RB",
+      tweet_handle: "AdamSchefter",
+    },
+    { manager: "TedCumberbatch" },
+  );
+  assert.match(line, /^Off the field/);
+  assert.match(line, /lawyer/i);
+  assert.match(line, /offering your services/i);
+  assert.doesNotMatch(line, /How's the stomach/i);
+
+  // Same story on another seat keeps the generic off bank (no lawyer gag).
+  const other = leagueLine(
+    {
+      id: "tweet:53b",
+      category: "tweet",
+      title,
+      player: "Josh Jacobs",
+      tweet_handle: "AdamSchefter",
+    },
+    { manager: "TrumanCooper" },
+  );
+  assert.doesNotMatch(other, /lawyer|services/i);
 });
 
 /* ----------------------------------------------------------------- report ---- */

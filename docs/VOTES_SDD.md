@@ -15,7 +15,7 @@ functions, in their own UI block. Nothing in the value spine may read them, now 
 
 ---
 
-## 1. What ships today (Phase 1)
+## 1. What ships today (Wave 2 vote identity)
 
 The gold **Recent Trade** card on league home expands to the full trade. Under the expanded trade,
 and only there, sits the vote block:
@@ -30,15 +30,16 @@ enter the value book.
 The caption above is the connected case. All five variants, and the rule that decides between
 them, are in **Honest copy** below.
 
-- One vote per trade per person, enforced in the database by a unique constraint on
-  `(transaction_id, voter)`. Tapping the other side moves the vote; tapping the same side
-  clears it.
+- One vote per trade per person **per league**, enforced by unique
+  `(sleeper_league_id, transaction_id, voter)` (`db/wave2b-vote-unique.sql`). Tapping the other
+  side moves the vote; tapping the same side clears it.
 - Choices are the **two seat `user_id`s** of the trade, not display names, so a rename on Sleeper
   does not orphan a vote.
-- Voting is **gated on a claimed seat**. Team name + per-seat invite code via Supabase Auth
-  (see §5.5). The Teams chip remains unverified UX for browsing a seat — it is not enough to
-  write a ballot. `voter` is forced to the claimed Sleeper `user_id` in the database
-  (`db/phase1-seat-auth.sql`).
+- Voting is **gated on league membership**. Sign in + redeem a CF invite (or commissioner claim
+  seat). `voter` is forced from `league_memberships` for the ballot’s `sleeper_league_id`
+  (`db/wave2-vote-identity.sql`). Bottom-nav **Teams** is for browsing meters — it does not write
+  ballots. Phase 1 `seat_profiles` / CUCK seed codes are retired (`seed-seat-auth.mjs` exits unless
+  `--force-legacy`).
 - **N-way trades carry no vote.** "Which side won" has no two-sided answer across three bags, and
   N-way is already the case that carries no Value Adjustment. The block renders a caption instead
   of buttons. In practice `trade_boards.sides` only contains complete 2-team trades
@@ -274,14 +275,15 @@ are fired **after** first paint, so Supabase is never between the reader and the
 ### 5.2 Writes — upsert, optimistically
 
 ```
-POST /rest/v1/trade_votes?on_conflict=transaction_id,voter
+POST /rest/v1/trade_votes?on_conflict=sleeper_league_id,transaction_id,voter
 Prefer: resolution=merge-duplicates,return=representation
-{ "transaction_id": "...", "choice": "...", "voter": "..." }
+{ "transaction_id": "...", "choice": "...", "voter": "...", "sleeper_league_id": "..." }
 ```
 
-`?on_conflict=transaction_id,voter` is **not optional**. PostgREST infers the conflict target from
-the primary key unless told otherwise, and the primary key is the surrogate `id` — leave it off
-and a second vote fails on the unique constraint instead of updating the row.
+`?on_conflict=sleeper_league_id,transaction_id,voter` is **not optional**. PostgREST infers the
+conflict target from the primary key unless told otherwise, and the primary key is the surrogate
+`id` — leave it off and a second vote fails on the unique constraint instead of updating the row.
+Requires `db/wave2b-vote-unique.sql`.
 
 The vote is written to `localStorage` and on screen **before** the request leaves. The response
 then reconciles: the echoed row's `choice` is folded into the cached tally, moving only our own

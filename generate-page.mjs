@@ -10,7 +10,12 @@ const html = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta name="theme-color" content="#0b0b0d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="data/ui/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="data/ui/icon-192.png" />
   <title>Chuckle Fantasy</title>
   <style>
     :root {
@@ -3722,7 +3727,7 @@ const html = `<!DOCTYPE html>
         voter: seat,
         sleeper_league_id: leagueId,
       };
-      fetch(VOTE_API + "/trade_votes?on_conflict=transaction_id,voter", {
+      fetch(VOTE_API + "/trade_votes?on_conflict=sleeper_league_id,transaction_id,voter", {
         method: "POST",
         headers: voteHeaders({
           "Content-Type": "application/json",
@@ -5454,6 +5459,10 @@ const html = `<!DOCTYPE html>
         render();
       }
     })();
+    // Installable shell (browser + home-screen). Push stays parked.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch((err) => console.warn("sw", err));
+    }
   </script>
 </body>
 </html>`;
@@ -6130,6 +6139,15 @@ if (!inline.includes("function renderAccountPage()") || !inline.includes("functi
 }
 if (!html.includes("body.has-bottom-nav")) {
   throw new Error("page content must pad for the fixed bottom nav");
+}
+if (!html.includes('rel="manifest"') || !html.includes("manifest.webmanifest")) {
+  throw new Error("PWA manifest link is required for installable browser/app shell");
+}
+if (!inline.includes('serviceWorker.register("./sw.js")')) {
+  throw new Error("service worker registration is required for PWA shell");
+}
+if (!inline.includes("on_conflict=sleeper_league_id,transaction_id,voter")) {
+  throw new Error("vote upsert must target league-scoped unique (wave2b)");
 }
 if (!inline.includes('data-open-league="') || !inline.includes("async function openLeagueDashboard(")) {
   throw new Error("Your leagues must open a league via openLeagueDashboard");

@@ -15,9 +15,10 @@ After a custom domain it will be at the domain root, e.g.:
 
 Relative paths (`data/ui/members.json`, `data/leagues/<id>/ui/…`) keep working either way.
 
-**PWA / “Add to Home Screen”:** after the custom domain is live, managers can install
-the site as a home-screen web app from Safari/Chrome. A dedicated service worker and
-web push are parked for a later slice — the domain cutover does not depend on them.
+**PWA / “Add to Home Screen”:** `manifest.webmanifest` + `sw.js` ship on this branch so Safari
+and Chrome can install Chuckle as a standalone shell (browser and phone). After a custom domain is
+live, set Supabase Auth Site URL to that origin, then install from the browser share sheet.
+**Web push** and native App Store shells stay parked — install does not depend on them.
 
 **ESPN history import** is also parked; optional `espn_league_id` on create is storage only.
 

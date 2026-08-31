@@ -4,3 +4,4 @@ data/dp/history/
 data/tx_cache/
 data/seat-invites.local.txt
 node_modules/
+supabase/.temp/

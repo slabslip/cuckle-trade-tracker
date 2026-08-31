@@ -218,7 +218,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | --- | --- |
 | Sleeper chat / comments scrape | **No** — no public API; privacy/ToS |
 | ESPN meter import | PARKED (`espn_league_id` reserved) |
-| Web push / App Store | PARKED — custom domain + PWA install first |
+| Web push / App Store | PARKED — PWA install shell ships; push + store later |
 | Auto-sync every league on create | Manual / Action `league-sync` for now |
 | Smack agent seat-voice bank | Future opt-in inside Chuckle — not Sleeper scrape |
 
@@ -226,11 +226,17 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
 ## 12. Acceptance (Cuckle + path ready)
 
-- [ ] SQL 1–5 applied; `join-league` deployed; Confirm email OFF
+Operator applies SQL + deploys Edge (this Cloud Agent cannot hold your Supabase login):
+
+- [ ] SQL 1–7 applied (`phase1` → `multi-league` → `commissioner-invites` → `wave1` → `wave2` → `wave2b` → `wave5`); `join-league` deployed; Confirm email OFF
 - [ ] Commissioner creates Cuckle once; revisit opens console without remint
-- [ ] Ten codes DMed; commissioner claims own seat; member redeems
-- [ ] Both can open dashboard and cast a vote as their seat
-- [ ] Second league can be registered; meter appears only after scoped build → `ready`
+- [ ] Ten invite links DMed; commissioner claims own seat; member redeems
+- [ ] Both open **league home** (news feed); pick a team from bottom-nav Teams; cast a vote as their seat
+- [ ] Second league can be registered; meter appears only after `node build.mjs <id>` → `ready`
+
+**In-repo (this branch):** invite console, idempotent create, claim seat, atomic redeem, Wave 2
+vote identity + Wave 2b uniqueness, scoped `data/leagues/<id>/ui` pipeline, `league-sync` Action,
+PWA manifest + service worker. Live dogfood remains the checkboxes above.
 
 ---
 
@@ -242,7 +248,9 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | [`supabase/functions/join-league/index.ts`](../supabase/functions/join-league/index.ts) | Create / invites / redeem |
 | [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql) | Atomic redeem / claim / RLS |
 | [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) | Per-league votes |
+| [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) | Unique `(league, tx, voter)` |
 | [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) | Unclaimed `code_plain` for invite console |
 | [`build.mjs`](../build.mjs) / [`lib.mjs`](../lib.mjs) | Scoped pipeline |
 | [`mark-league-ready.mjs`](../mark-league-ready.mjs) | Status flip |
+| [`manifest.webmanifest`](../manifest.webmanifest) / [`sw.js`](../sw.js) | PWA install shell |
 | [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md) | Same-day operator path |

@@ -50,15 +50,21 @@ git pull origin cursor/multi-league-app-878c
 git branch --show-current
 # must print: cursor/multi-league-app-878c
 
-ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql supabase/functions/join-league/index.ts
-# all three paths must exist
+ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql db/wave2b-vote-unique.sql db/wave5-invite-plain.sql supabase/functions/join-league/index.ts
+# all five paths must exist
+```
+
+Optional repo self-check (no Supabase login required):
+
+```bash
+node generate-page.mjs && node verify-strategy.mjs
 ```
 
 You are **not** pasting branch code into Supabase. The branch lives on GitHub / your disk. Supabase only gets the **SQL files** and the **Edge Function deploy** below.
 
 ---
 
-## Step 2 — Paste SQL into Supabase (five times)
+## Step 2 — Paste SQL into Supabase (seven times)
 
 **Where to open Supabase**
 
@@ -85,7 +91,8 @@ cuckle-trade-tracker/db/
 | 3 | `db/commissioner-invites.sql` | Select all → Copy |
 | 4 | `db/wave1-invite-hardening.sql` | Select all → Copy |
 | 5 | `db/wave2-vote-identity.sql` | Select all → Copy |
-| 6 | `db/wave5-invite-plain.sql` | Select all → Copy (unclaimed codes stay visible in console) |
+| 6 | `db/wave2b-vote-unique.sql` | Select all → Copy (league-scoped vote uniqueness) |
+| 7 | `db/wave5-invite-plain.sql` | Select all → Copy (unclaimed codes stay visible in console) |
 
 **For each file:**
 

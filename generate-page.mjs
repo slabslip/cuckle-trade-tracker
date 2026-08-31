@@ -4621,7 +4621,7 @@ for (const need of [
   'ARae: { img: "data/ui/flair-arae.png" }',
   'ChiefGumby: { img: "data/ui/flair-chiefgumby.png" }',
   'KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" }',
-  'TipsUp: { img: \"data/ui/flair-tipsup.png\" }',
+  'TipsUp: { img: "data/ui/flair-tipsup.png" }',
 ]) {
   if (!inline.includes(need)) throw new Error(`seat flair map missing: ${need}`);
 }

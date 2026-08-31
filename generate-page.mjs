@@ -6063,8 +6063,6 @@ if (!inline.includes("function inviteCodeVisible(")) {
 }
 // The page HTML is a template literal: a lone "\n" inside client JS becomes a real newline and
 // blanks the browser. Keep the inline script parseable.
-// The page HTML is a template literal: a lone "\n" inside client JS becomes a real newline and
-// blanks the browser. Keep the inline script parseable.
 try {
   const start = html.indexOf("<script>") + "<script>".length;
   const end = html.indexOf("</script>", start);

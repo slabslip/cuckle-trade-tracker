@@ -8,7 +8,9 @@
 //   create          { sleeper_league_id, espn_league_id? }
 //                   → first time: mint codes; revisit by same commissioner: status only (no remint)
 //   list_invites    { sleeper_league_id }  → unclaimed codes + claimed seats + members
-//   rotate_invites  { sleeper_league_id }  → new codes for unclaimed seats
+//   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats
+//   rotate_seat     { sleeper_league_id, sleeper_user_id }
+//                   → new code for one unclaimed seat (Generate invite)
 //   reissue_seat    { sleeper_league_id, sleeper_user_id }
 //                   → clear membership + mint new code for a claimed seat (manager left)
 //   transfer_commissioner { sleeper_league_id, new_commissioner_id }
@@ -424,6 +426,90 @@ Deno.serve(async (req) => {
     });
   }
 
+  // ---- generate / rotate one unclaimed seat ----
+  if (action === "rotate_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const seatId = String(body.sleeper_user_id || "").trim();
+    if (!leagueId || !seatId) {
+      return json(400, { ok: false, error: "Pick the seat to generate an invite for" });
+    }
+    const { data: league } = await admin.from("leagues")
+      .select("created_by, name, status, season, total_rosters, espn_league_id")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!league || league.created_by !== user.id) {
+      return json(403, { ok: false, error: "Only the league creator can generate invites" });
+    }
+    const { data: invite } = await admin.from("seat_invites")
+      .select("*")
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId)
+      .maybeSingle();
+    if (!invite) return json(404, { ok: false, error: "Unknown seat" });
+    if (invite.claimed_by) {
+      return json(400, {
+        ok: false,
+        error: "That seat is claimed — use Reissue for new manager instead",
+      });
+    }
+
+    const code = makeCode();
+    const code_hash = await sha256Hex(code);
+    const { error: updErr } = await admin.from("seat_invites").update({
+      code_hash,
+      code_plain: code,
+      claimed_by: null,
+      claimed_at: null,
+      created_by: user.id,
+      team_name: invite.team_name,
+    }).eq("id", invite.id);
+    if (updErr) {
+      const msg = updErr.message || "";
+      if (msg.includes("code_plain")) {
+        return json(500, {
+          ok: false,
+          error: "Run db/wave5-invite-plain.sql in the Supabase SQL Editor, then try again.",
+        });
+      }
+      return json(500, { ok: false, error: "Could not generate invite: " + msg });
+    }
+
+    let invites;
+    let members;
+    try {
+      invites = await listInviteRows(admin, leagueId);
+      members = await listLeagueMembers(admin, leagueId);
+    } catch {
+      invites = [];
+      members = [];
+    }
+    invites = (invites || []).map((row) =>
+      row.sleeper_user_id === seatId
+        ? { ...row, claimed: false, claimed_by: null, claimed_username: null, code }
+        : row
+    );
+
+    return json(200, {
+      ok: true,
+      generated: {
+        team_name: invite.team_name,
+        sleeper_user_id: seatId,
+        code,
+      },
+      league: {
+        sleeper_league_id: leagueId,
+        name: league.name,
+        status: league.status,
+        season: league.season,
+        total_rosters: league.total_rosters,
+        espn_league_id: league.espn_league_id,
+      },
+      invites,
+      members,
+      note: "Invite ready — copy the link or DM the code to that manager only.",
+    });
+  }
+
   // ---- reissue one claimed seat (manager left → new invite for replacement) ----
   if (action === "reissue_seat") {
     const leagueId = String(body.sleeper_league_id || "").trim();
@@ -447,7 +533,7 @@ Deno.serve(async (req) => {
     if (!invite.claimed_by) {
       return json(400, {
         ok: false,
-        error: "That seat is unclaimed — use Rotate unclaimed instead",
+        error: "That seat is unclaimed — use Generate invite instead",
       });
     }
 

@@ -2640,7 +2640,7 @@ const html = `<!DOCTYPE html>
       authError = "";
       claimPrompt = false;
       appScreen = "gate";
-      gateMode = "signin";
+      gateMode = "signup";
     }
 
     function saveActiveLeague(league) {

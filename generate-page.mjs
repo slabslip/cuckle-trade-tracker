@@ -1253,7 +1253,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsTicker20260831230120";
+    const DATA_V = "champWeek20260831231000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4442,6 +4442,28 @@ const html = `<!DOCTYPE html>
               pairs = scored.sort((x, y) => y.sum - x.sum);
               seasonYear = season;
               label = "Week " + tryWeek + (season ? " " + season : "");
+              // Championship week (e.g. Week 17 after a 6-team bracket) gets an explicit title.
+              const pws = Number(meta.settings && meta.settings.playoff_week_start) || 0;
+              const playoffTeams = Number(meta.settings && meta.settings.playoff_teams) || 0;
+              let champWeek = 0;
+              if (pws > 0) {
+                try {
+                  const bracket = await fetch(sleeper + "/league/" + leagueId + "/winners_bracket")
+                    .then((r) => r.json());
+                  const final = (bracket || []).find((row) => row && row.p === 1 && row.r != null);
+                  if (final) champWeek = pws + (Number(final.r) - 1);
+                } catch (brErr) {
+                  console.error(brErr);
+                }
+                if (!champWeek && playoffTeams) {
+                  // 4 teams → 2 rounds, 6–8 → 3, else 4. Same map title-path uses via bracket rounds.
+                  const rounds = playoffTeams <= 4 ? 2 : playoffTeams <= 8 ? 3 : 4;
+                  champWeek = pws + rounds - 1;
+                }
+              }
+              if (champWeek && tryWeek === champWeek) {
+                label += " · Championship week";
+              }
               break;
             }
             // No points this week — step back; empty playoff weeks (e.g. 18) skip the same way.
@@ -5989,7 +6011,7 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
 for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
-  "api.sleeper.app/v1", "function matchupStripHtml("]) {
+  "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket"]) {
   if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
 }
 if (inline.includes('day-alert-h">Champions Path')) {

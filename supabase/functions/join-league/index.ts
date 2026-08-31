@@ -408,7 +408,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ---- list invites (plaintext for unclaimed); mint any missing Sleeper seats ----
+  // ---- list invites (DB first; Sleeper only if seats are missing) ----
   if (action === "list_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
     const { data: league } = await admin.from("leagues")
@@ -419,34 +419,17 @@ Deno.serve(async (req) => {
       return json(403, { ok: false, error: "Only the league creator can list invites" });
     }
 
-    let preview = null;
-    try {
-      preview = await loadTeams(leagueId);
-    } catch (err) {
-      return json(502, {
-        ok: false,
-        error: "Could not load Sleeper roster: " + String((err as Error).message || err),
-      });
-    }
-    if (!preview || !preview.teams.length) {
-      return json(404, { ok: false, error: "No teams found for that Sleeper league" });
-    }
-
     let invites;
     let members;
     try {
-      await ensureSeatInvites(admin, preview, user.id);
-      // Keep league roster count in sync with Sleeper.
-      if (preview.total_rosters && preview.total_rosters !== league.total_rosters) {
-        await admin.from("leagues")
-          .update({ total_rosters: preview.total_rosters, name: preview.name || league.name })
-          .eq("sleeper_league_id", leagueId);
-      }
-      invites = await listInviteRows(admin, leagueId, {
-        backfillMissingPlain: true,
-        createdBy: user.id,
-      });
-      members = await listLeagueMembers(admin, leagueId);
+      // Fast path: read seats already in Supabase — no Sleeper round-trip.
+      [invites, members] = await Promise.all([
+        listInviteRows(admin, leagueId, {
+          backfillMissingPlain: true,
+          createdBy: user.id,
+        }),
+        listLeagueMembers(admin, leagueId),
+      ]);
     } catch (err) {
       const msg = String((err as Error).message || err);
       if (msg.includes("code_plain")) {
@@ -457,16 +440,69 @@ Deno.serve(async (req) => {
       }
       return json(500, { ok: false, error: msg });
     }
+
+    const expected = Number(league.total_rosters) || 0;
+    const needSleeper = !invites.length || (expected > 0 && invites.length < expected);
+
+    let previewTeams: Array<{ sleeper_user_id: string; team_name: string; display_name: string | null }> = [];
+    let leagueName = league.name;
+    let leagueSeason = league.season;
+    let totalRosters = league.total_rosters;
+
+    if (needSleeper) {
+      let preview = null;
+      try {
+        preview = await loadTeams(leagueId);
+      } catch (err) {
+        // If we already have seats, still return them; only fail hard when empty.
+        if (!invites.length) {
+          return json(502, {
+            ok: false,
+            error: "Could not load Sleeper roster: " + String((err as Error).message || err),
+          });
+        }
+      }
+      if (preview && preview.teams.length) {
+        try {
+          await ensureSeatInvites(admin, preview, user.id);
+          if (preview.total_rosters && preview.total_rosters !== league.total_rosters) {
+            await admin.from("leagues")
+              .update({ total_rosters: preview.total_rosters, name: preview.name || league.name })
+              .eq("sleeper_league_id", leagueId);
+          }
+          invites = await listInviteRows(admin, leagueId, {
+            backfillMissingPlain: true,
+            createdBy: user.id,
+          });
+        } catch (err) {
+          const msg = String((err as Error).message || err);
+          if (msg.includes("code_plain")) {
+            return json(500, {
+              ok: false,
+              error: "Run db/wave5-invite-plain.sql in the Supabase SQL Editor, then try again.",
+            });
+          }
+          if (!invites.length) return json(500, { ok: false, error: msg });
+        }
+        previewTeams = preview.teams;
+        leagueName = preview.name || league.name;
+        leagueSeason = preview.season || league.season;
+        totalRosters = preview.total_rosters || league.total_rosters;
+      } else if (!invites.length) {
+        return json(404, { ok: false, error: "No teams found for that Sleeper league" });
+      }
+    }
+
     return json(200, {
       ok: true,
       league: {
         sleeper_league_id: leagueId,
-        name: preview.name || league.name,
+        name: leagueName,
         status: league.status,
-        season: preview.season || league.season,
-        total_rosters: preview.total_rosters || league.total_rosters,
+        season: leagueSeason,
+        total_rosters: totalRosters,
         espn_league_id: league.espn_league_id,
-        teams: preview.teams,
+        teams: previewTeams,
       },
       invites,
       members,

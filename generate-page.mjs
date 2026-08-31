@@ -3384,7 +3384,18 @@ const html = `<!DOCTYPE html>
       transferPickId = "";
       inviteTab = "unclaimed";
       joinLeagueId = leagueId;
-      // Navigate immediately so a failed fetch cannot look like a dead button.
+      // Keep prior seats on screen while we refresh (avoids an empty flash + feels faster).
+      if (!joinPreview || joinPreview.sleeper_league_id !== leagueId) {
+        const owned = (ownedLeagues || []).find((o) => o.sleeper_league_id === leagueId);
+        joinPreview = {
+          sleeper_league_id: leagueId,
+          name: (owned && owned.name) || "League",
+          total_rosters: 0,
+          status: (owned && owned.status) || "pending_sync",
+        };
+        createdInvites = [];
+        leagueMembers = [];
+      }
       appScreen = "invites";
       focusNext = ".screen-h";
       render();
@@ -3399,9 +3410,6 @@ const html = `<!DOCTYPE html>
         joinError = (err && err.message) || "Could not load invites.";
         console.error(err);
         if (!createdInvites) createdInvites = [];
-        if (!joinPreview) {
-          joinPreview = { sleeper_league_id: leagueId, name: "League", total_rosters: 0 };
-        }
       } finally {
         joinBusy = false;
         render();

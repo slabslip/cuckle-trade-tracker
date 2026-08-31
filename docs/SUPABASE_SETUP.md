@@ -769,14 +769,15 @@ Claim + vote in the browser is the real test.
 
 See [`APP_SDD.md`](APP_SDD.md). After Phase 1 SQL:
 
-1. Paste [`db/multi-league-app.sql`](../db/multi-league-app.sql)
+1. Paste [`db/multi-league-app.sql`](../db/multi-league-app.sql) then [`db/commissioner-invites.sql`](../db/commissioner-invites.sql)
 2. Deploy Edge Function `supabase/functions/join-league`
 3. Auth Confirm email stays **OFF**; Site URL includes your app origin
-4. Open the site → **Get started** → Sleeper and/or ESPN **user** ID + username/password
-5. **Add a league** → paste Sleeper **league** ID (CuckleChunckle: `1315431339301806080`) → seat auto-matches from your Sleeper user ID → dashboard
-6. Other leagues join as `pending_sync` until you run the pipeline for that ID
+4. **Commissioner:** Create account → Create a league → Sleeper league ID (Cuckle: `1315431339301806080`) + optional ESPN league ID → DM invite codes
+5. **Members:** Create account → Redeem invite → dashboard (seat already bound)
 
 Username emails are synthetic: `{username}@users.cuckle.invalid`.
+
+Sleeper has **no OAuth** — do not collect Sleeper passwords. Invites bind seats.
 
 ---
 

@@ -740,8 +740,25 @@ const html = `<!DOCTYPE html>
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: transparent; border: 0; padding: 4px 0 0; margin: 0;
       cursor: pointer; touch-action: manipulation; min-height: 72px;
+      overflow: hidden;
     }
     button.news-hero-body:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-hero-slide {
+      display: block; width: 100%;
+      transition: transform 0.45s ease, opacity 0.45s ease;
+      transform: translateX(0); opacity: 1;
+    }
+    .news-hero-slide[hidden] { display: none; }
+    .news-hero-slide.is-exit {
+      position: absolute; left: 0; right: 0; top: 0;
+      display: block !important; transform: translateX(-110%); opacity: 0;
+      pointer-events: none;
+    }
+    .news-hero-slide.is-enter { transform: translateX(110%); opacity: 0; }
+    .news-hero-slide.is-enter.is-in { transform: translateX(0); opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+      .news-hero-slide { transition: none; }
+    }
     .news-hero-slide b {
       display: block; font-weight: 650; line-height: 1.3; margin: 0 0 4px;
     }
@@ -4185,31 +4202,60 @@ const html = `<!DOCTYPE html>
       if (newsHeroTimer) { clearInterval(newsHeroTimer); newsHeroTimer = null; }
     }
 
-    function paintNewsHeroSlide() {
+    function paintNewsHeroSlide(animate) {
       const root = document.querySelector(".news-hero");
       if (!root) return;
       const slides = [...root.querySelectorAll("[data-news-slide]")];
       if (!slides.length) return;
+      const prevIdx = slides.findIndex((el) => !el.hidden && !el.classList.contains("is-exit"));
       newsHeroIdx = ((newsHeroIdx % slides.length) + slides.length) % slides.length;
-      slides.forEach((el, i) => { el.hidden = i !== newsHeroIdx; });
+      const next = slides[newsHeroIdx];
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const live = root.querySelector("[data-news-live]");
       if (live) live.textContent = (newsHeroIdx + 1) + " of " + slides.length;
+      if (!animate || reduce || prevIdx < 0 || prevIdx === newsHeroIdx) {
+        slides.forEach((el, i) => {
+          el.hidden = i !== newsHeroIdx;
+          el.classList.remove("is-exit", "is-enter", "is-in");
+        });
+        return;
+      }
+      const prev = slides[prevIdx];
+      // Ticker: current slides left; next enters from the right.
+      prev.classList.remove("is-enter", "is-in");
+      prev.classList.add("is-exit");
+      next.hidden = false;
+      next.classList.remove("is-exit");
+      next.classList.add("is-enter");
+      void next.offsetWidth;
+      next.classList.add("is-in");
+      window.setTimeout(() => {
+        prev.hidden = true;
+        prev.classList.remove("is-exit", "is-enter", "is-in");
+        next.classList.remove("is-enter", "is-in");
+        slides.forEach((el, i) => {
+          if (i !== newsHeroIdx) {
+            el.hidden = true;
+            el.classList.remove("is-exit", "is-enter", "is-in");
+          }
+        });
+      }, 480);
     }
 
-    /** Rotate hero alerts every 2s. Pause / reduced-motion stop the timer (WCAG 2.2.2). */
+    /** Rotate hero alerts every 3s with a leftward ticker slide. Pause / reduced-motion stop it (WCAG 2.2.2). */
     function armNewsHero() {
       clearNewsHero();
       const root = document.querySelector(".news-hero");
       if (!root) return;
-      paintNewsHeroSlide();
+      paintNewsHeroSlide(false);
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (reduce || newsHeroPaused) return;
       const slides = root.querySelectorAll("[data-news-slide]");
       if (slides.length < 2) return;
       newsHeroTimer = setInterval(() => {
         newsHeroIdx += 1;
-        paintNewsHeroSlide();
-      }, 2000);
+        paintNewsHeroSlide(true);
+      }, 3000);
     }
 
     function newsHeroLine(it) {
@@ -4220,7 +4266,7 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * League-home hero: News & Alerts chip. Rotates every 2s in JS (Pause stops it).
+     * League-home hero: News & Alerts chip. Rotates every 3s with a ticker slide (Pause stops it).
      * The whole body opens the full news screen. All-trades lives under In the league.
      */
     function dayAlert() {
@@ -4240,7 +4286,7 @@ const html = `<!DOCTYPE html>
         + '<div class="lh-hero-visual" aria-hidden="true"></div>'
         + '<div class="day-alert-top">'
         + '<div class="day-alert-h">News &amp; Alerts'
-        + "<span>Updates every 2 seconds · tap for full feed</span></div>"
+        + "<span>Updates every 3 seconds · tap for full feed</span></div>"
         + '<button type="button" class="news-hero-pause" data-news-pause="1"'
         + ' aria-pressed="' + (newsHeroPaused ? "true" : "false") + '">'
         + pauseLab + "</button>"
@@ -7009,10 +7055,19 @@ if (/@keyframes/.test(sheetRules)) {
 if (/(^|[;{\s])animation(-[a-z]+)?\s*:/.test(sheetRules)) {
   throw new Error("the stylesheet grew an animation property -- nothing on this page may move itself without a pause control (WCAG 2.2.2)");
 }
-// The reduced-motion branch existed only to stop the ticker. An empty one left behind would read
-// as though something still moves, and the next author would write into it.
-if (/prefers-reduced-motion/.test(sheetRules)) {
-  throw new Error("a prefers-reduced-motion branch survived the ticker -- there is no motion left for it to reduce; delete it, or the motion it guards is unasserted");
+// News & Alerts hero is the one permitted motion region: JS advances every 3s, CSS slides the
+// chip, and Pause / prefers-reduced-motion stop it (WCAG 2.2.2).
+if (!sheetRules.includes("@media (prefers-reduced-motion: reduce)")) {
+  throw new Error("news-hero ticker must keep a prefers-reduced-motion branch that disables its slide");
+}
+if (!sheetRules.includes(".news-hero-slide.is-exit") || !sheetRules.includes("transition: transform 0.45s ease")) {
+  throw new Error("news-hero ticker must keep its leftward slide transition");
+}
+if (!inline.includes("newsHeroPaused") || !inline.includes('data-news-pause')) {
+  throw new Error("news-hero ticker must keep a Pause control (WCAG 2.2.2)");
+}
+if (!inline.includes(", 3000)") || !inline.includes('classList.add("is-exit")')) {
+  throw new Error("news-hero ticker must slide left every 3s via is-exit/is-enter classes");
 }
 // ---------------------------------------------------------------------------------------------
 

@@ -717,12 +717,13 @@ const html = `<!DOCTYPE html>
     }
     button.news-hero-pause:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.news-hero-body {
-      /* Ticker viewport spans the full chip under the header/Pause row. */
+      /* Ticker viewport spans the full chip under the header/Pause row.
+         Tall enough for the source line + ~3–4 body lines (less truncation). */
       position: relative; z-index: 1; display: block; width: 100%; max-width: none;
       box-sizing: border-box; align-self: stretch;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: transparent; border: 0; padding: 4px 0 0; margin: 0;
-      cursor: pointer; touch-action: manipulation; min-height: 72px;
+      cursor: pointer; touch-action: manipulation; min-height: 118px;
       overflow: hidden;
     }
     button.news-hero-body:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
@@ -751,7 +752,8 @@ const html = `<!DOCTYPE html>
       display: block; font-weight: 650; line-height: 1.3; margin: 0 0 4px;
     }
     .news-hero-slide span {
-      display: block; color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+      overflow: hidden; color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
     }
     .news-hero-live {
       position: relative; z-index: 1; margin-top: 8px; width: 100%;
@@ -1237,7 +1239,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "noInTheLeagueH220260831231045";
+    const DATA_V = "newsHeroTallHandle20260831231315";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4263,7 +4265,16 @@ const html = `<!DOCTYPE html>
 
     function newsHeroLine(it) {
       if (!it) return { cat: "News", line: "Nothing shared yet." };
-      const cat = NEWS_CATS[it.category] || "News";
+      let cat = NEWS_CATS[it.category] || "News";
+      // Prefer tweet_handle; fall back to source_label when it is already an @handle.
+      let handle = String(it.tweet_handle || "").replace(/^@/, "").trim();
+      if (!handle) {
+        const label = String(it.source_label || "").trim();
+        if (label.charAt(0) === "@") handle = label.slice(1).trim();
+      }
+      if (handle && /^[A-Za-z0-9_]{1,15}$/.test(handle)) {
+        cat = cat + " · @" + handle;
+      }
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
       return { cat: cat, line: line };
     }
@@ -6021,6 +6032,29 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("?view=titles") || prog.includes('data-view="titles"') || prog.includes(">Champions Path<")) {
     throw new Error("leagueInProgress must not link to Champions Path / titles");
   }
+  if (prog.includes("lh-strip-card") || prog.includes('class="lh-strip-card')) {
+    throw new Error("leagueInProgress must not mount trade strip cards (lh-strip-card) — use week matchups");
+  }
+  if (!prog.includes("matchupStripHtml(")) {
+    throw new Error("leagueInProgress must mount the prior-week matchup strip via matchupStripHtml()");
+  }
+}
+{
+  const at = inline.indexOf("function matchupStripHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const strip = inline.slice(at, stop < 0 ? at + 1200 : stop);
+  for (const need of ["lh-week-h", "lh-match-card", ">Proj<", ">Actual<", "aProj", "bProj", "aPts", "bPts"]) {
+    if (!strip.includes(need)) {
+      throw new Error(`matchupStripHtml must show Week title + Proj/Actual matchup chips; missing ${need}`);
+    }
+  }
+  if (strip.includes("lh-strip-card") || strip.includes("data-board-open") || strip.includes("tradeDelta")) {
+    throw new Error("matchupStripHtml must not emit trade chips (lh-strip-card / data-board-open / deltas)");
+  }
+}
+// Dead trade-strip class must stay gone so Design Mode does not see button/div.lh-strip-card.
+if (html.includes("lh-strip-card") || inline.includes("lh-strip-card")) {
+  throw new Error("league home must not keep lh-strip-card — prior-week matchups use lh-match-card only");
 }
 // Champ scoreboard CSS stays for a.champ-alert chrome the Latest trade button still reuses.
 for (const need of ["a.champ-alert .champ-bout {",
@@ -6150,6 +6184,12 @@ if (html.includes("ellipse at 88%") || html.includes("lh-hero-visual")) {
 }
 if (!html.includes("button.news-hero-body") || !html.includes(".news-hero-slide {\n      display: block; width: 100%; max-width: none")) {
   throw new Error("News Feed ticker viewport must span full chip width (max-width: none)");
+}
+if (!html.includes("min-height: 118px") || !html.includes("-webkit-line-clamp: 4")) {
+  throw new Error("News Feed ticker must keep a taller body (min-height 118px) and ~4-line clamp");
+}
+if (!inline.includes("function newsHeroLine(") || !inline.includes("it.tweet_handle")) {
+  throw new Error("newsHeroLine must append tweet_handle (@author) on the From X source line");
 }
 // League dash must not mount the old ← Leagues · name · username caption under the brand
 // (p.caption margin:0 0 8px as the first child of #app). Removed; keep the forbid tight.

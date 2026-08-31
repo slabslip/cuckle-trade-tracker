@@ -631,15 +631,16 @@ the way P1-13 taught — skill position, then a live NFL team, then active. Two 
 
 ### The voice
 
-Same seam, `leagueLine()`. No second voice system. **The sharer's `note` wins outright if
-present**, checked before anything else so no generated line can override a written one — their
-words know the league and the grudge, the templates only know a category.
+Same seam, `leagueLine()`. No second voice system. **The sharer's `note` is a separate
+attributed field on the row** — it never replaces `league_line`. Fact first, optional poke
+second (cuts / hurts / retire / off-field only). Private coaching goes in **`agent_tip`**
+(Shortcut Ask) and is saved to `data/smack-tips.json` — see [`SMACK_AGENT.md`](SMACK_AGENT.md).
 
-Three template banks, not one, because both slots are independently optional here: a manager and a
-player, a manager only, or neither. The first version used one bank with `{player}` in it and
-shipped *"This got shared into the feed specifically so SF69erss would have to read it. This
-content."* A template whose sentence collapses when a slot is empty needs a different template,
-not a cleverer placeholder.
+Three tweet poke banks by kind (`tweet_injury` / `tweet_cut` / `tweet_retire` / `tweet_off`),
+plus impersonal `tweet_league` for multi-tag rows. The first version used one bank with
+`{player}` in it and shipped *"This got shared into the feed specifically so SF69erss would have
+to read it. This content."* A template whose sentence collapses when a slot is empty needs a
+different template, not a cleverer placeholder.
 
 ### Dedupe
 

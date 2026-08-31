@@ -32,7 +32,8 @@ it is outside `build.mjs` — it is a data-only refresh and the page reads `news
 
 **The feed is manual submissions only.** Share a tweet → **Send to Cuckle** → done. The Shortcut
 POSTs only `{url, submitted_by}`; the matcher tags the roster owner(s). Optional `note` /
-`target_name` exist but are not part of the one-tap path (`docs/SUPABASE_SETUP.md` §3b).
+`target_name` / **`agent_tip`** (private coaching for the smack agent) exist but are not part of
+the one-tap path (`docs/SUPABASE_SETUP.md` §3b, `docs/SMACK_AGENT.md`).
 GitHub Action `news-refresh` rebuilds `news.json` and pushes `main` when Supabase pings
 `repository_dispatch` (§3d), with a one-minute cron as backup.
 
@@ -58,8 +59,9 @@ queue without touching it. The Shortcut recipe, the exact request body and the S
 `docs/SUPABASE_SETUP.md` §3b.
 
 The voice lives behind one seam, `leagueLine()` in `news-voice.mjs`, so it can be rewritten
-without touching ingest or UI. See `docs/NEWS_SDD.md` for the sources actually reachable, the
-Twitter/X finding, and the plan for the daily agent.
+without touching ingest or UI. See `docs/SMACK_AGENT.md` for smack/summary coaching (including
+Shortcut `agent_tip` → `data/smack-tips.json`), and `docs/NEWS_SDD.md` for sources and the
+daily agent plan.
 
 `apply-value-adjust.mjs` is not optional. It owns the today clock (40% flatten + 60% KTC,
 retired → 0), the Value Adjustment, every `trade_boards` row and `marks.json`. Skipping it ships

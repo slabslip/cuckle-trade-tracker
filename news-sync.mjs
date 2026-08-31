@@ -48,7 +48,8 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { DATA, readJson } from "./lib.mjs";
-import { CATEGORIES, classify, leagueLine, leagueLineAsync, noteFreeOfAddress, trimNote, voiceSamples } from "./news-voice.mjs";
+import { CATEGORIES, classify, leagueLine, leagueLineAsync, noteFreeOfAddress, trimNote, tweetPokeKind, voiceSamples } from "./news-voice.mjs";
+import { appendSmackTip, trimAgentTip } from "./smack-tips.mjs";
 import { PUBLISH_MIN, buildMatchIndex, matchText } from "./news-match.mjs";
 import {
   RSS_FEEDS,
@@ -643,6 +644,7 @@ async function ingestSubmissions(ownership, index, members, {
       id: sub.id,
       submitted_by: String(sub.submitted_by || "") || null,
       note: trimNote(sub.note) || null,
+      agent_tip: trimAgentTip(sub.agent_tip) || null,
       target_name: String(sub.target_name || "") || null,
       resolved_by: how,
       manager: own ? own.manager : "(the league)",
@@ -772,6 +774,7 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
    * renders the summary alone, which is a degraded row rather than a wrong one.
    */
   const note = trimNote(sub.note);
+  const agentTip = trimAgentTip(sub.agent_tip);
   const item = {
     id,
     player: player ? player.name : "",
@@ -787,6 +790,25 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
   const tagged = Array.isArray(opts.taggedManagers) && opts.taggedManagers.length
     ? opts.taggedManagers.filter(Boolean)
     : (own && own.manager ? [own.manager] : []);
+  const league_line = await leagueLineAsync(item, { manager: voiceManager }, {
+    managers: opts.managers,
+    cachedLine: opts.cachedLine,
+  });
+  // Private coaching from the Shortcut Ask — never painted on the row. Appended to
+  // data/smack-tips.json so the voice can learn over time (docs/SMACK_AGENT.md).
+  if (agentTip) {
+    appendSmackTip({
+      submission_id: sub.id,
+      tweet_url: tweet.url,
+      submitted_by: sub.submitted_by,
+      created_at: sub.created_at,
+      tip: agentTip,
+      player: player ? player.name : "",
+      managers: tagged,
+      poke_kind: tweetPokeKind(tweet.text),
+      league_line,
+    });
+  }
   return {
     id,
     published: Date.parse(sub.created_at) || Date.now(),
@@ -813,10 +835,7 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     headline: "",
     summary: "",
     note,
-    league_line: await leagueLineAsync(item, { manager: voiceManager }, {
-      managers: opts.managers,
-      cachedLine: opts.cachedLine,
-    }),
+    league_line,
     trending_add: 0,
     /**
      * How the ROW was addressed, which is not the same question as how the player was found.

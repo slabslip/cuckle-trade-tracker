@@ -503,7 +503,7 @@ export async function fetchSubmissions({
     // on the query rather than post-hoc so a long history of removals cannot crowd live shares
     // out of the limit window.
     const url = `${SUPABASE}/news_submissions`
-      + "?select=id,url,note,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by"
+      + "?select=id,url,note,agent_tip,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by"
       + "&deleted_at=is.null"
       + (unprocessedOnly ? "&processed_at=is.null" : "")
       + "&order=created_at." + (newestFirst ? "desc" : "asc")

@@ -73,6 +73,7 @@
  */
 import fs from "node:fs";
 import { DATA } from "./lib.mjs";
+import { recentSmackTipLines } from "./smack-tips.mjs";
 
 export const KEY_ENV = "NEWS_LLM_KEY";
 export const URL_ENV = "NEWS_LLM_URL";
@@ -186,8 +187,21 @@ export function llmEnabled() {
 /** The user's own lines, if they left a file of them. The prompt should quote them, not describe them. */
 export function voiceExamples() {
   const path = process.env[VOICE_ENV];
-  if (!path || !fs.existsSync(path)) return [];
-  return fs.readFileSync(path, "utf8").split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 15);
+  const fromFile = path && fs.existsSync(path)
+    ? fs.readFileSync(path, "utf8").split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 15)
+    : [];
+  // Shortcut agent_tips accumulated in data/smack-tips.json — see docs/SMACK_AGENT.md.
+  const fromTips = recentSmackTipLines(12);
+  const seen = new Set();
+  const out = [];
+  for (const line of [...fromFile, ...fromTips]) {
+    const k = line.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(line);
+    if (out.length >= 20) break;
+  }
+  return out;
 }
 
 /** Everything the model is told about one row. Facts only: no manager, ever. */

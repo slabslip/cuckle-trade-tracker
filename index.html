@@ -2556,7 +2556,7 @@
     let joinSeatId = "";
     let joinBusy = false;
     let joinError = "";
-    let gateMode = "signin"; // signin | signup
+    let gateMode = "signup"; // signup | signin — get started first
 
     function voteDeviceId() {
       try {
@@ -2824,6 +2824,8 @@
             || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
           user_id: authSession.user_id || (data.user && data.user.id) || null,
           username: authSession.username || null,
+          sleeper_user_id: authSession.sleeper_user_id || null,
+          espn_user_id: authSession.espn_user_id || null,
           seat_user_id: authSession.seat_user_id || null,
           seat_name: authSession.seat_name || null,
         });

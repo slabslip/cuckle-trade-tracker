@@ -2887,12 +2887,6 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    function inviteDmText(teamName, code) {
-      return "Your Chuckle Fantasy invite for " + teamName + " is " + code
-        + ". Open " + inviteShareLink(code)
-        + " → Create account (or sign in) → the code is ready to redeem (only yours).";
-    }
-
     function inviteShareLink(code) {
       const base = appPublicUrl();
       const join = base.indexOf("?") >= 0 ? "&" : "?";
@@ -3326,19 +3320,26 @@ const html = `<!DOCTYPE html>
       authBusy = true;
       authError = "";
       render();
+      let handedOff = false;
       try {
         if (gateMode === "signup") await authSignUp(username, password);
         else await authSignIn(username, password);
         await loadMemberships();
-        appScreen = redeemCode ? "redeem" : "home";
         authError = "";
+        authBusy = false;
+        if (redeemCode) {
+          handedOff = true;
+          await onRedeemInvite();
+          return;
+        }
+        appScreen = "home";
         focusNext = ".screen-h";
       } catch (err) {
         authError = (err && err.message) || "Could not sign in.";
         console.error(err);
       } finally {
         authBusy = false;
-        render();
+        if (!handedOff) render();
       }
     }
 
@@ -3407,35 +3408,36 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    async function onGenerateInvite(sleeperUserId) {
+    async function onCopyInviteLink(sleeperUserId) {
       if (joinBusy || !joinPreview || !sleeperUserId) return;
-      const inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId);
+      let inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId);
       joinBusy = true;
       joinError = "";
       settingsCopyNote = "";
       render();
       try {
-        const data = await joinLeagueCall("rotate_seat", {
-          sleeper_league_id: joinPreview.sleeper_league_id,
-          sleeper_user_id: sleeperUserId,
-        });
-        createdInvites = data.invites || [];
-        if (data.members) leagueMembers = data.members;
-        joinPreview = data.league || joinPreview;
-        inviteTab = "unclaimed";
-        const code = (data.generated && data.generated.code)
-          || ((createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId) || {}).code;
-        const team = (data.generated && data.generated.team_name)
-          || (inv && inv.team_name)
-          || "team";
-        if (code && String(code).indexOf("(") !== 0) {
-          await copyText(inviteShareLink(code));
-          settingsCopyNote = "Invite link for " + team + " copied. Code: " + code;
-        } else {
-          settingsCopyNote = data.note || "Invite generated.";
+        let code = inviteCodeVisible(inv) ? inv.code : null;
+        // Mint only when this seat has no usable code yet — re-copy keeps the same link.
+        if (!code) {
+          const data = await joinLeagueCall("rotate_seat", {
+            sleeper_league_id: joinPreview.sleeper_league_id,
+            sleeper_user_id: sleeperUserId,
+          });
+          createdInvites = data.invites || [];
+          if (data.members) leagueMembers = data.members;
+          joinPreview = data.league || joinPreview;
+          inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId) || inv;
+          code = (data.generated && data.generated.code)
+            || (inviteCodeVisible(inv) ? inv.code : null);
         }
+        if (!code || String(code).indexOf("(") === 0) {
+          throw new Error("Could not build an invite link for that team.");
+        }
+        const team = (inv && inv.team_name) || "that team";
+        await copyText(inviteShareLink(code));
+        settingsCopyNote = "Invite link for " + team + " copied — send it to that manager.";
       } catch (err) {
-        joinError = (err && err.message) || "Could not generate that invite.";
+        joinError = (err && err.message) || "Could not copy invite link.";
         console.error(err);
       } finally {
         joinBusy = false;
@@ -4477,11 +4479,20 @@ const html = `<!DOCTYPE html>
     }
 
     function renderAppGate() {
-      const title = gateMode === "signup" ? "Create account" : "Sign in";
-      const go = gateMode === "signup" ? "Create account" : "Sign in";
+      const invited = !!(redeemCode && String(redeemCode).trim());
+      const title = invited
+        ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
+        : (gateMode === "signup" ? "Create account" : "Sign in");
+      const go = invited
+        ? (gateMode === "signup" ? "Create account & join" : "Sign in & join")
+        : (gateMode === "signup" ? "Create account" : "Sign in");
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
-        + '<p class="caption">Trade meter for fantasy leagues. One commissioner creates the league and sends invites. Members set a username and password — no Sleeper login required.</p>'
+        + (invited
+          ? ('<p class="caption">Your invite is ready. Create a username and password — your seat code is already attached'
+            + ' (<code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code>)."
+            + " After you join, your league dashboard opens.</p>")
+          : '<p class="caption">Trade meter for fantasy leagues. One commissioner creates the league and sends invites. Members set a username and password — no Sleeper login required.</p>')
         + '<div class="app-card"><h3>' + title + "</h3>"
         + '<div class="app-form">'
         + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
@@ -4493,13 +4504,16 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
         + (authBusy ? "Working…" : go) + "</button>"
         + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + (joinError && invited ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + "</div></div>"
         + '<p class="caption" style="margin:12px 0 0">'
         + (gateMode === "signup"
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
           : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
         + "</p></div>"
-        + '<p class="caption">Have an invite code? Sign in, then choose <b>Redeem invite</b> on the next screen.</p>'
+        + (invited
+          ? ""
+          : '<p class="caption">Have an invite link from your commissioner? Open that link — or choose <b>Redeem invite</b> after you sign in.</p>')
         + "</div>";
     }
 
@@ -4585,7 +4599,6 @@ const html = `<!DOCTYPE html>
       const tab = inviteTab === "claimed" ? "claimed" : "unclaimed";
       const list = tab === "claimed" ? claimed : unclaimed;
       const rows = list.map((inv) => {
-        const showCode = inviteCodeVisible(inv);
         const claimer = inv.claimed_username
           ? "@" + inv.claimed_username
           : (inv.claimed ? "a member" : null);
@@ -4598,31 +4611,22 @@ const html = `<!DOCTYPE html>
               + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
               + "</div>")
-            : ('<div class="app-actions" style="margin-top:8px">'
-              + '<button type="button" class="chip" data-generate-invite="' + esc(inv.sleeper_user_id) + '"'
+            : ('<p class="caption" style="margin:4px 0 8px">Send them one invite link. It opens account setup with their seat code filled in.</p>'
+              + '<div class="app-actions">'
+              + '<button type="button" class="chip" data-copy-invite-link="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">"
-              + (joinBusy ? "Working…" : "Generate invite") + "</button>"
+              + (joinBusy ? "Working…" : "Copy invite link") + "</button>"
               + (!myMembership
-                ? '<button type="button" class="chip" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
-                  + (joinBusy ? " disabled" : "") + ">Claim this seat</button>"
+                ? '<button type="button" class="linkish" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
+                  + (joinBusy ? " disabled" : "") + ">Claim this seat (you)</button>"
                 : "")
-              + "</div>"
-              + (showCode
-                ? ('<p class="caption" style="margin:8px 0 0">Invite code: <code style="user-select:all">'
-                  + esc(inv.code) + "</code></p>"
-                  + '<div class="app-actions">'
-                  + '<button type="button" class="linkish" data-copy-code="' + esc(inv.code) + '">Copy code</button>'
-                  + '<button type="button" class="linkish" data-copy-link="' + esc(inv.code) + '">Copy link</button>'
-                  + '<button type="button" class="linkish" data-copy-dm="'
-                  + esc(inv.team_name) + '" data-copy-dm-code="' + esc(inv.code) + '">Copy DM text</button>'
-                  + "</div>")
-                : '<p class="caption" style="margin:8px 0 0">Tap Generate invite to mint a code and copy the share link.</p>')))
+              + "</div>"))
           + "</div>";
       }).join("");
       const empty = all.length === 0
         ? '<p class="caption">No seats yet — reopen this screen to load teams from Sleeper. If it stays empty, run wave5 SQL and redeploy join-league.</p>'
         : (tab === "claimed"
-          ? '<p class="caption">No one has redeemed yet. Share invites from the Unclaimed tab.</p>'
+          ? '<p class="caption">No one has redeemed yet. Share invite links from the Unclaimed tab.</p>'
           : '<p class="caption">Every seat is claimed. Use the Claimed tab to reissue if a manager leaves.</p>');
       const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
         + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
@@ -4660,16 +4664,16 @@ const html = `<!DOCTYPE html>
         + '<p class="caption"><b>' + esc(L.name || "League") + "</b> — "
         + unclaimed.length + " unclaimed · " + claimed.length + " claimed"
         + (total ? " · " + total + " roster" + (total === 1 ? "" : "s") : "")
-        + ". Under each team, <b>Generate invite</b> mints their code and copies a share link. DM each manager only theirs.</p>"
+        + ". Copy one invite link per team and DM it to that manager only.</p>"
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + tabs
         + (rows || empty)
         + (tab === "claimed"
-          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b> clears their seat and moves a fresh invite to Unclaimed.</p>'
+          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed.</p>'
           : (!myMembership
-            ? '<p class="caption" style="margin-top:12px">Claim your own seat above so this league appears on Your leagues.</p>'
+            ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
             : ""))
         + transferBlock
         + "</div>";
@@ -5304,7 +5308,12 @@ const html = `<!DOCTYPE html>
       }
       const generateInvite = e.target.closest("[data-generate-invite]");
       if (generateInvite) {
-        onGenerateInvite(generateInvite.dataset.generateInvite).catch((err) => console.error(err));
+        onCopyInviteLink(generateInvite.dataset.generateInvite).catch((err) => console.error(err));
+        return;
+      }
+      const copyInviteLink = e.target.closest("[data-copy-invite-link]");
+      if (copyInviteLink) {
+        onCopyInviteLink(copyInviteLink.dataset.copyInviteLink).catch((err) => console.error(err));
         return;
       }
       const reissueSeat = e.target.closest("[data-reissue-seat]");
@@ -5330,11 +5339,6 @@ const html = `<!DOCTYPE html>
       const copyLink = e.target.closest("[data-copy-link]");
       if (copyLink) {
         copyText(inviteShareLink(copyLink.dataset.copyLink));
-        return;
-      }
-      const copyDm = e.target.closest("[data-copy-dm]");
-      if (copyDm) {
-        copyText(inviteDmText(copyDm.dataset.copyDm, copyDm.dataset.copyDmCode));
         return;
       }
       const openLeagueBtn = e.target.closest("[data-open-league]");
@@ -5548,9 +5552,8 @@ const html = `<!DOCTYPE html>
         }
         if (inviteParam) {
           await loadMemberships().catch((err) => console.error(err));
-          appScreen = "redeem";
-          focusNext = ".screen-h";
-          render();
+          // Already signed in: redeem immediately and open their league dashboard.
+          await onRedeemInvite();
           return;
         }
         await loadMemberships().catch((err) => console.error(err));
@@ -6306,14 +6309,16 @@ if (!inline.includes('data-reissue-seat="') || !inline.includes('data-transfer-c
 if (!inline.includes('data-invite-tab="unclaimed"') || !inline.includes('data-invite-tab="claimed"')) {
   throw new Error("invite console must tab Unclaimed vs Claimed");
 }
-if (!inline.includes('data-generate-invite="') || !inline.includes("function onGenerateInvite(")) {
-  throw new Error("each unclaimed seat must offer Generate invite");
+if (!inline.includes('data-copy-invite-link="') || !inline.includes("function onCopyInviteLink(")) {
+  throw new Error("each unclaimed seat must offer a single Copy invite link action");
 }
-if (!inline.includes("function inviteShareLink(") || !inline.includes('data-copy-link="')) {
-  throw new Error("Generate invite must support copying a share link");
+if (!inline.includes("function inviteShareLink(")) {
+  throw new Error("invite share links are required for Copy invite link");
 }
-if (inline.includes('data-rotate-invites="1"') || inline.includes('data-copy-all-dms="1"')) {
-  throw new Error("bulk Rotate unclaimed / Copy all DMs removed from invite console");
+if (inline.includes('data-rotate-invites="1"') || inline.includes('data-copy-all-dms="1"')
+  || inline.includes('data-generate-invite="') || inline.includes(">Copy DM text<")
+  || inline.includes(">Copy code<")) {
+  throw new Error("invite console must not show redundant copy/generate controls");
 }
 if (!inline.includes("function inviteCodeVisible(")) {
   throw new Error("unclaimed invite codes must auto-show via inviteCodeVisible()");

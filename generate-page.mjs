@@ -665,7 +665,8 @@ const html = `<!DOCTYPE html>
        recorded as a WCAG 2.2.2 failure: a 48s loop with no pause control. That ticker is gone,
        and a news row is text a person needs time to read rather than a pill they glance at. So
        this is a plain overflow box: capped height, newest at the top, and it stays where it is
-       put. Nothing here needs a prefers-reduced-motion branch because nothing here moves. */
+       put. Pull-to-refresh and the "new posts" pill are user-driven state (text / a button),
+       not a self-moving region — no CSS animation, no prefers-reduced-motion branch. */
     .news-box {
       max-height: 420px; overflow-y: auto; -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -750,6 +751,25 @@ const html = `<!DOCTYPE html>
     .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-del[disabled] { opacity: 0.5; cursor: wait; }
     .news-empty { color: var(--dim); font-size: 0.8125rem; line-height: 1.45; padding: 10px 0; }
+    /* Live feed chrome. Sits between the heading and the scroll box. No transform / keyframes —
+       the animation guard on .news-box stays honest; these are static text and a tap target. */
+    .news-live {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+      min-height: 0; margin: 0 0 8px;
+    }
+    .news-live:empty { display: none; margin: 0; }
+    .news-new {
+      display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding: 0 2px;
+      background: none; border: 0; color: var(--muted);
+      font: inherit; font-size: 0.8125rem; font-weight: 650; text-decoration: underline;
+      cursor: pointer;
+    }
+    .news-new:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-pull {
+      color: var(--dim); font-size: 0.75rem; line-height: 1.3;
+      text-align: center; padding: 8px 0 4px;
+    }
+    .news-pull[hidden] { display: none; }
     /* What is left of this row now that the clock control moved to the brand header: the year
        filter on the Trades tab and the round filter on Drafts, each with its caption. Both are
        screen-local, so both stay on the screen they filter. */
@@ -978,8 +998,22 @@ const html = `<!DOCTYPE html>
     // each successful admin Remove, so a delete hides the row without waiting for a Pages rebuild.
     const newsGone = new Set();
     let newsDelPending = null;
+    // Live feed refresh (Twitter-shaped). news.json is a static Pages file; the client polls it
+    // with a cache-busting query and either applies new rows in place (reader at the top) or
+    // holds them behind a "new posts" pill (reader scrolled down). Pull-to-refresh at the top
+    // of the box always applies. See docs/NEWS_SDD.md §10c.
+    const NEWS_POLL_MS = 45000;
+    let newsPollTimer = null;
+    let newsRefreshing = false;
+    let newsPullPx = 0;
+    let newsPullArmed = false;
+    let newsTouchStartY = null;
+    let newsPendingBook = null;
+    let newsStatus = ""; // "Refreshing…" / "Up to date" / "" — aria-live, short-lived
+    let newsStatusTimer = null;
+    let newsBoundBox = null;
     let lens = "all";
-    const DATA_V = "news20260831135745";
+    const DATA_V = "news20260831141904";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2052,6 +2086,7 @@ const html = `<!DOCTYPE html>
       // describing the feed was restating what the first row already shows. The empty state
       // still explains how an item gets here, which is the one thing a row cannot.
       const head = '<h2>News and Alerts</h2>';
+      const live = '<div class="news-live" data-news-live="1"></div>';
       if (!items.length) {
         /**
          * Two different nothings, and they must not read the same.
@@ -2082,7 +2117,9 @@ const html = `<!DOCTYPE html>
           : (raw.length
             ? "No posts in the feed right now."
             : "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here.");
-        return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
+        return head + live
+          + '<div class="news-box" data-news-feed="1" tabindex="0" role="region" aria-label="News and alerts, empty">'
+          + '<p class="news-empty">' + esc(blank) + "</p></div>";
       }
       // Remove is admin-only in the UI. League home clears me, so this reads the remembered
       // seat (same key votes use) — pick TrumanCooper once via Teams, then Home still unlocks it.
@@ -2181,7 +2218,9 @@ const html = `<!DOCTYPE html>
           : '<div class="news-row">' + inner + "</div>";
       }).join("");
       return head
-        + '<div class="news-box" tabindex="0" role="region" aria-label="News and alerts, ' + items.length + ' items">'
+        + live
+        + '<div class="news-box" data-news-feed="1" tabindex="0" role="region" aria-label="News and alerts, ' + items.length + ' items">'
+        + '<div class="news-pull" data-news-pull="1" hidden aria-hidden="true"></div>'
         + rows + "</div>";
     }
 
@@ -2517,7 +2556,256 @@ const html = `<!DOCTYPE html>
       return m ? m[1] : null;
     }
 
-    async function loadNewsDeleted() {
+    /** Stable fingerprint of what the feed is showing — ids + generated stamp. */
+    function newsSig(book) {
+      if (!book || book.v !== 1 || !Array.isArray(book.items)) return "";
+      return String(book.generated || "") + "|" + book.items.map((it) => it && it.id).filter(Boolean).join(",");
+    }
+
+    function newsAtTop(box) {
+      return !box || box.scrollTop < 40;
+    }
+
+    function newsPendingCount() {
+      if (!newsPendingBook) return 0;
+      const pending = new Set(
+        ((newsPendingBook.items) || []).map((it) => it && it.id).filter((id) => id && !newsGone.has(id)),
+      );
+      const cur = new Set(
+        (((news && news.items) || [])).map((it) => it && it.id).filter((id) => id && !newsGone.has(id)),
+      );
+      let n = 0;
+      for (const id of pending) if (!cur.has(id)) n++;
+      // Soft-deletes / revoices with the same ids still count as a refresh worth applying.
+      if (!n && newsSig(newsPendingBook) !== newsSig(news)) n = Math.max(1, pending.size);
+      return n;
+    }
+
+    function setNewsStatus(msg, ms) {
+      newsStatus = msg || "";
+      if (newsStatusTimer) clearTimeout(newsStatusTimer);
+      newsStatusTimer = null;
+      if (msg && ms) {
+        newsStatusTimer = setTimeout(() => {
+          newsStatus = "";
+          newsStatusTimer = null;
+          paintNewsLiveChrome();
+        }, ms);
+      }
+      paintNewsLiveChrome();
+    }
+
+    /** Update the live chrome without a full render (keeps scroll + focus). */
+    function paintNewsLiveChrome() {
+      const host = document.getElementById("app");
+      if (!host) return;
+      const live = host.querySelector("[data-news-live]");
+      if (!live) return;
+      const pending = newsPendingCount();
+      let html = "";
+      if (pending > 0) {
+        const label = pending === 1 ? "1 new post" : pending + " new posts";
+        html += '<button type="button" class="news-new" data-news-apply="1">'
+          + esc(label) + " · tap to show</button>";
+      }
+      if (newsStatus) {
+        html += '<span class="news-pull" aria-live="polite">' + esc(newsStatus) + "</span>";
+      }
+      live.innerHTML = html;
+    }
+
+    function paintNewsPullHint(box) {
+      if (!box) return;
+      let tip = box.querySelector("[data-news-pull]");
+      if (!tip) {
+        tip = document.createElement("div");
+        tip.className = "news-pull";
+        tip.setAttribute("data-news-pull", "1");
+        tip.setAttribute("aria-hidden", "true");
+        box.insertBefore(tip, box.firstChild);
+      }
+      if (newsRefreshing) {
+        tip.hidden = false;
+        tip.textContent = "Refreshing…";
+        return;
+      }
+      if (newsPullPx >= 56) {
+        tip.hidden = false;
+        tip.textContent = "Release to refresh";
+      } else if (newsPullPx > 12) {
+        tip.hidden = false;
+        tip.textContent = "Pull to refresh";
+      } else {
+        tip.hidden = true;
+        tip.textContent = "";
+      }
+    }
+
+    async function fetchNewsBook() {
+      // Bust CDN / browser cache. DATA_V is a page-wide key and does not move when only
+      // news.json changes between full page rebuilds — see NEWS_SDD §7.
+      const res = await fetch("data/ui/news.json?news=" + Date.now());
+      if (!res.ok) throw new Error("news.json " + res.status);
+      const book = await res.json();
+      return book && book.v === 1 && Array.isArray(book.items) ? book : null;
+    }
+
+    /**
+     * Re-read news.json (and soft-deletes). Applies immediately when the reader is at the top
+     * of the box or forced a pull; otherwise parks the book behind the "new posts" pill.
+     */
+    async function refreshNewsFeed(opts) {
+      const reason = (opts && opts.reason) || "poll";
+      const force = !!(opts && opts.force);
+      if (newsRefreshing) return;
+      newsRefreshing = true;
+      newsPullPx = 0;
+      paintNewsPullHint(document.querySelector(".news-box"));
+      if (reason === "pull" || reason === "tap") setNewsStatus("Refreshing…", 0);
+      try {
+        const book = await fetchNewsBook();
+        try { await loadNewsDeleted({ quiet: true }); } catch (err) { /* soft-deletes optional */ }
+        if (!book) {
+          if (reason === "pull" || reason === "tap") setNewsStatus("Could not refresh", 2500);
+          return;
+        }
+        if (newsSig(book) === newsSig(news) && !newsPendingBook) {
+          if (reason === "pull" || reason === "tap") setNewsStatus("You’re up to date", 1800);
+          return;
+        }
+        const box = document.querySelector(".news-box");
+        const applyNow = force || reason === "pull" || reason === "tap" || newsAtTop(box);
+        if (applyNow) {
+          news = book;
+          newsPendingBook = null;
+          setNewsStatus(reason === "poll" ? "" : "Updated", reason === "poll" ? 0 : 1600);
+          render();
+        } else {
+          newsPendingBook = book;
+          setNewsStatus("", 0);
+          paintNewsLiveChrome();
+        }
+      } catch (err) {
+        if (reason === "pull" || reason === "tap") setNewsStatus("Could not refresh", 2500);
+      } finally {
+        newsRefreshing = false;
+        paintNewsPullHint(document.querySelector(".news-box"));
+      }
+    }
+
+    function newsOnLeagueHome() {
+      return view === "home" && !me;
+    }
+
+    function stopNewsPoll() {
+      if (newsPollTimer) { clearInterval(newsPollTimer); newsPollTimer = null; }
+    }
+
+    function startNewsPoll() {
+      stopNewsPoll();
+      newsPollTimer = setInterval(() => {
+        if (document.hidden || !newsOnLeagueHome()) return;
+        refreshNewsFeed({ reason: "poll" });
+      }, NEWS_POLL_MS);
+    }
+
+    function unbindNewsFeed() {
+      newsBoundBox = null;
+      newsTouchStartY = null;
+      newsPullArmed = false;
+      newsPullPx = 0;
+    }
+
+    /**
+     * Wire pull-to-refresh on the news box. Re-bound after every render because innerHTML
+     * replaces the node. Touch: pull down at scrollTop 0. Wheel: scroll up past the top.
+     */
+    function bindNewsFeed() {
+      const box = document.querySelector(".news-box[data-news-feed]");
+      if (!box || box === newsBoundBox) {
+        if (!box) unbindNewsFeed();
+        paintNewsLiveChrome();
+        paintNewsPullHint(box);
+        return;
+      }
+      newsBoundBox = box;
+      paintNewsLiveChrome();
+      paintNewsPullHint(box);
+
+      box.addEventListener("touchstart", (e) => {
+        if (!e.touches || !e.touches.length) return;
+        newsTouchStartY = box.scrollTop <= 0 ? e.touches[0].clientY : null;
+        newsPullArmed = newsTouchStartY != null;
+      }, { passive: true });
+
+      box.addEventListener("touchmove", (e) => {
+        if (!newsPullArmed || newsTouchStartY == null || !e.touches || !e.touches.length) return;
+        if (box.scrollTop > 0) {
+          newsPullPx = 0;
+          paintNewsPullHint(box);
+          return;
+        }
+        const dy = e.touches[0].clientY - newsTouchStartY;
+        newsPullPx = dy > 0 ? Math.min(96, dy) : 0;
+        paintNewsPullHint(box);
+      }, { passive: true });
+
+      box.addEventListener("touchend", () => {
+        const fire = newsPullPx >= 56 && !newsRefreshing;
+        newsTouchStartY = null;
+        newsPullArmed = false;
+        newsPullPx = 0;
+        paintNewsPullHint(box);
+        if (fire) refreshNewsFeed({ reason: "pull", force: true });
+      }, { passive: true });
+
+      box.addEventListener("touchcancel", () => {
+        newsTouchStartY = null;
+        newsPullArmed = false;
+        newsPullPx = 0;
+        paintNewsPullHint(box);
+      }, { passive: true });
+
+      // Desktop: wheel upward while already pinned to the top.
+      let wheelAcc = 0;
+      let wheelReset = null;
+      box.addEventListener("wheel", (e) => {
+        if (box.scrollTop > 0 || e.deltaY >= 0 || newsRefreshing) {
+          wheelAcc = 0;
+          return;
+        }
+        wheelAcc += -e.deltaY;
+        if (wheelReset) clearTimeout(wheelReset);
+        wheelReset = setTimeout(() => { wheelAcc = 0; }, 400);
+        newsPullPx = Math.min(96, wheelAcc / 2);
+        paintNewsPullHint(box);
+        if (wheelAcc > 120) {
+          wheelAcc = 0;
+          newsPullPx = 0;
+          paintNewsPullHint(box);
+          refreshNewsFeed({ reason: "pull", force: true });
+        }
+      }, { passive: true });
+
+      // If they scroll back to the top with a pending book, apply like Twitter.
+      box.addEventListener("scroll", () => {
+        if (newsPendingBook && newsAtTop(box) && !newsRefreshing) {
+          applyPendingNews();
+        }
+      }, { passive: true });
+    }
+
+    /** Apply a book that arrived while the reader was scrolled down. */
+    function applyPendingNews() {
+      if (!newsPendingBook || newsRefreshing) return;
+      news = newsPendingBook;
+      newsPendingBook = null;
+      setNewsStatus("", 0);
+      render();
+    }
+
+    async function loadNewsDeleted(opts) {
+      const quiet = !!(opts && opts.quiet);
       try {
         const ac = new AbortController();
         const timer = setTimeout(() => ac.abort(), VOTE_TIMEOUT);
@@ -2537,7 +2825,7 @@ const html = `<!DOCTYPE html>
           const id = "tweet:" + row.id;
           if (!newsGone.has(id)) { newsGone.add(id); changed = true; }
         }
-        if (changed) render();
+        if (changed && !quiet) render();
       } catch (err) {
         // Column missing until §3c SQL runs, or a paused project: the committed news.json still
         // shows. Remove will alert if the stamp cannot land.
@@ -3473,6 +3761,10 @@ const html = `<!DOCTYPE html>
       // restores it on the way out, so the trigger must be painted from the settled value.
       paintLens();
       syncUrl();
+      // News box is replaced with the subtree — re-bind pull-to-refresh and live chrome.
+      bindNewsFeed();
+      if (newsOnLeagueHome()) startNewsPoll();
+      else stopNewsPoll();
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
@@ -3807,6 +4099,12 @@ const html = `<!DOCTYPE html>
         deleteNewsItem(newsDelBtn.dataset.newsDel);
         return;
       }
+      const newsApplyBtn = e.target.closest("[data-news-apply]");
+      if (newsApplyBtn) {
+        if (newsPendingBook) applyPendingNews();
+        else refreshNewsFeed({ reason: "tap", force: true });
+        return;
+      }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
       // so a vote must not read as a click on the accordion.
       const voteBtn = e.target.closest("[data-vote]");
@@ -3954,6 +4252,14 @@ const html = `<!DOCTYPE html>
     loadMembers()
       .then(() => voteLoad().catch((err) => console.error(err)))
       .then(() => loadNewsDeleted().catch((err) => console.error(err)))
+      .then(() => {
+        startNewsPoll();
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) return;
+          if (!newsOnLeagueHome()) return;
+          refreshNewsFeed({ reason: "poll" });
+        });
+      })
       .catch((err) => {
         document.getElementById("app").hidden = false;
         document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
@@ -4978,11 +5284,25 @@ if (headDecl[2] !== "<h2>News and Alerts</h2>") {
 }
 // Both exits compose `head`. The empty branch returns `head + ...` and the populated branch
 // returns `head` as its first term; a heading dropped from either is a section with no title.
-if (!/return head \+ '<div class="news-box"><p class="news-empty">/.test(newsBody)) {
+// Both exits compose `head` (+ live chrome) then the news-box. The empty branch and the
+// populated branch must each still return the heading, or removing the caption would have
+// taken the title with it.
+if (!/return head \+ live[\s\S]{0,120}class="news-box" data-news-feed="1"[\s\S]{0,160}news-empty/.test(newsBody)) {
   throw new Error("the empty news state must still return the heading above the box");
 }
-if (!/return head\s*\n\s*\+ '<div class="news-box" tabindex="0"/.test(newsBody)) {
+if (!/return head\s*\n\s*\+ live\s*\n\s*\+ '<div class="news-box" data-news-feed="1" tabindex="0"/.test(newsBody)) {
   throw new Error("the populated news feed must still return the heading above the box");
+}
+// Live refresh: pull-to-refresh + poll must ship, and news.json polls must bust cache
+// independently of DATA_V (NEWS_SDD §7 / §10c).
+if (!inline.includes("function refreshNewsFeed(") || !inline.includes("function bindNewsFeed(")) {
+  throw new Error("the news feed lost its live refresh (refreshNewsFeed / bindNewsFeed)");
+}
+if (!inline.includes('fetch("data/ui/news.json?news=" + Date.now())')) {
+  throw new Error("live news refresh must cache-bust news.json with ?news=<timestamp>");
+}
+if (!inline.includes("NEWS_POLL_MS") || !inline.includes("startNewsPoll(")) {
+  throw new Error("the news feed must auto-poll while the reader is on league home");
 }
 // 3. The 44px rule. A pass took 312 sub-44px targets to zero and none may come back. Every
 //    news row is a link, so every news row is a target.

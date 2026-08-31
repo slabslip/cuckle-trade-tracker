@@ -797,9 +797,6 @@
       overflow-wrap: anywhere;
     }
     .lh-section { margin: 0 0 18px; }
-    .lh-week-h {
-      font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
-    }
     a.champ-alert.lh-progress, button.champ-alert.lh-progress {
       background: var(--card); border-color: var(--line); border-radius: 16px;
       min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
@@ -809,32 +806,33 @@
       text-align: left; cursor: pointer; touch-action: manipulation;
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .lh-strip {
+    .lh-week-h {
+      font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
+    }
+    .lh-strip, .lh-match-strip {
       display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
-    button.lh-strip-card, div.lh-strip-card {
+    div.lh-match-card, div.lh-strip-card {
       flex: 0 0 168px; scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
       padding: 10px; min-height: 112px; touch-action: manipulation;
       display: flex; flex-direction: column; gap: 4px;
     }
-    button.lh-strip-card { cursor: pointer; }
-    button.lh-strip-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.lh-strip-card b, div.lh-strip-card b {
+    div.lh-match-card b, div.lh-strip-card b {
       font-size: 0.8125rem; font-weight: 650; line-height: 1.25;
       overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     }
-    button.lh-strip-card span, div.lh-strip-card span {
-      font-size: 0.75rem; color: var(--dim);
-    }
-    button.lh-strip-card .lh-score-row, div.lh-strip-card .lh-score-row {
+    div.lh-match-card .lh-score-row, div.lh-strip-card .lh-score-row {
       display: flex; justify-content: space-between; gap: 8px;
       font-size: 0.75rem; color: var(--muted); margin-top: 2px;
     }
-    button.lh-strip-card .lh-score-row strong, div.lh-strip-card .lh-score-row strong {
+    div.lh-match-card .lh-score-row strong, div.lh-strip-card .lh-score-row strong {
       color: var(--text); font-weight: 650;
+    }
+    .lh-match-empty {
+      font-size: 0.8125rem; color: var(--dim); margin: 0 0 8px;
     }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
@@ -4317,20 +4315,24 @@
 
     function matchupStripHtml() {
       if (weekMatchupsLoading && !weekMatchups) {
-        return '<div class="lh-week-h">Matchups</div>'
-          + '<div class="lh-strip" role="list">'
-          + '<div class="lh-strip-card" role="listitem"><b>Loading matches…</b><span>Sleeper week scores</span></div>'
+        return '<div class="lh-week-h">Recent matches</div>'
+          + '<div class="lh-match-strip lh-strip" role="list" aria-label="Loading matchups">'
+          + '<div class="lh-match-card" role="listitem"><b>Loading matches…</b>'
+          + '<div class="lh-score-row"><span>Sleeper</span><strong>…</strong></div></div>'
           + "</div>";
       }
       if (!weekMatchups || weekMatchups === "empty" || !weekMatchups.pairs || !weekMatchups.pairs.length) {
-        return "";
+        return '<div class="lh-week-h">Recent matches</div>'
+          + '<p class="lh-match-empty">No scored weekly matchups found yet.</p>';
       }
+      // Trailing .0 strip — backslashes must survive the page template literal.
       const fmt = (n) => (n == null || Number.isNaN(Number(n))) ? "—"
-        : Number(n).toFixed(1).replace(/.0$/, "");
-      return '<div class="lh-week-h">' + esc(weekMatchups.label || "Matchups") + "</div>"
-        + '<div class="lh-strip" role="list" aria-label="' + esc(weekMatchups.label || "Recent matches") + '">'
+        : Number(n).toFixed(1).replace(/\.0$/, "");
+      return '<div class="lh-week-h">' + esc(weekMatchups.label || "Recent matches") + "</div>"
+        + '<div class="lh-match-strip lh-strip" role="list" aria-label="'
+        + esc(weekMatchups.label || "Recent matches") + '">'
         + weekMatchups.pairs.map((p) => {
-          return '<div class="lh-strip-card" role="listitem">'
+          return '<div class="lh-match-card" role="listitem">'
             + "<b>" + seatLabel(p.a) + " vs " + seatLabel(p.b) + "</b>"
             + '<div class="lh-score-row"><span>Proj</span><strong>'
             + esc(fmt(p.aProj)) + "–" + esc(fmt(p.bProj)) + "</strong></div>"
@@ -4351,11 +4353,13 @@
         try {
           const state = await fetch(sleeper + "/state/nfl").then((r) => r.json());
           let leagueId = String(lid);
+          // Prefer the prior completed week; before kickoff (display_week 1, no scores) walk back.
           let week = Math.max(1, Number(state.display_week || state.week || 1) - 1);
+          if (Number(state.display_week || state.week || 1) <= 1) week = 1;
           let pairs = [];
           let label = "";
           let seasonYear = "";
-          for (let attempt = 0; attempt < 24 && !pairs.length; attempt++) {
+          for (let attempt = 0; attempt < 30 && !pairs.length; attempt++) {
             const meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
             const tryWeek = week;
             const [rosters, users, matchups] = await Promise.all([
@@ -4395,7 +4399,6 @@
               });
             }
             if (scored.some((p) => p.sum > 0)) {
-              // Projected starter totals from Sleeper weekly projections (half-PPR when rec=0.5).
               const season = String(meta.season || state.league_season || state.season || "");
               const rec = meta.scoring_settings && Number(meta.scoring_settings.rec);
               const ptsKey = rec === 1 ? "pts_ppr" : rec === 0.5 ? "pts_half_ppr" : "pts_std";
@@ -4426,7 +4429,7 @@
               label = "Week " + tryWeek + (season ? " " + season : "");
               break;
             }
-            // No points yet this week — step back a week, then prior season league.
+            // No points this week — step back; empty playoff weeks (e.g. 18) skip the same way.
             if (week > 1) week -= 1;
             else if (meta && meta.previous_league_id) {
               leagueId = String(meta.previous_league_id);

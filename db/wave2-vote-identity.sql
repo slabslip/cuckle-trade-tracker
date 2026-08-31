@@ -138,7 +138,11 @@ create policy trade_votes_auth_update
 -- --------------------------------------------------------------------------
 -- 4. Tallies include league id
 -- --------------------------------------------------------------------------
-create or replace view public.trade_vote_tallies
+-- Must DROP first: CREATE OR REPLACE cannot rename/reorder view columns
+-- (old view led with transaction_id; new one leads with sleeper_league_id).
+drop view if exists public.trade_vote_tallies;
+
+create view public.trade_vote_tallies
   with (security_invoker = true)
   as
     select

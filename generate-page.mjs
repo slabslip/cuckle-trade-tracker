@@ -3382,20 +3382,25 @@ const html = `<!DOCTYPE html>
       joinError = "";
       transferPickId = "";
       inviteTab = "unclaimed";
+      joinLeagueId = leagueId;
+      // Navigate immediately so a failed fetch cannot look like a dead button.
+      appScreen = "invites";
+      focusNext = ".screen-h";
       render();
       try {
         const data = await joinLeagueCall("list_invites", { sleeper_league_id: leagueId });
         createdInvites = data.invites || [];
         leagueMembers = data.members || [];
         joinPreview = data.league;
-        joinLeagueId = leagueId;
         const hasUnclaimed = (createdInvites || []).some((inv) => !inv.claimed);
         inviteTab = hasUnclaimed ? "unclaimed" : "claimed";
-        appScreen = "invites";
-        focusNext = ".screen-h";
       } catch (err) {
         joinError = (err && err.message) || "Could not load invites.";
         console.error(err);
+        if (!createdInvites) createdInvites = [];
+        if (!joinPreview) {
+          joinPreview = { sleeper_league_id: leagueId, name: "League", total_rosters: 0 };
+        }
       } finally {
         joinBusy = false;
         render();
@@ -4655,6 +4660,7 @@ const html = `<!DOCTYPE html>
         + (total ? " · " + total + " roster" + (total === 1 ? "" : "s") : "")
         + ". Under each team, <b>Generate invite</b> mints their code and copies a share link. DM each manager only theirs.</p>"
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
+        + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + tabs
         + (rows || empty)
@@ -4706,6 +4712,7 @@ const html = `<!DOCTYPE html>
         + "</div></div>"
         + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
         + '<p class="caption">As commissioner you mint one invite per Sleeper seat and DM each manager their code. They redeem it to join. You can transfer commissioner to another member, or reissue a seat when a manager leaves.</p>'
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
         + '<div class="app-actions" style="margin-top:8px">'

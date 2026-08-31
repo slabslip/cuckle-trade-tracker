@@ -1236,7 +1236,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "noLeaguesCaption20260831230841";
+    const DATA_V = "leagueSubUnderBrand20260831230939";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2881,17 +2881,21 @@ const html = `<!DOCTYPE html>
       appScreen = "gate";
       gateMode = "signup";
       paintSettingsBtn();
-      const leagueSub = document.getElementById("leagueSub");
-      if (leagueSub) {
-        if (activeLeague && appScreen === "dash") {
-          leagueSub.hidden = false;
-          leagueSub.textContent = activeLeague.name || "League";
-        } else {
-          leagueSub.hidden = true;
-          leagueSub.textContent = "";
-        }
-      }
+      paintLeagueSub();
       paintBottomNav();
+    }
+
+    /** League name under the brand — only while viewing a league dash. */
+    function paintLeagueSub() {
+      const leagueSub = document.getElementById("leagueSub");
+      if (!leagueSub) return;
+      if (activeLeague && appScreen === "dash") {
+        leagueSub.hidden = false;
+        leagueSub.textContent = activeLeague.name || "League";
+      } else {
+        leagueSub.hidden = true;
+        leagueSub.textContent = "";
+      }
     }
 
     function paintSettingsBtn() {
@@ -4297,7 +4301,7 @@ const html = `<!DOCTYPE html>
 
 
     /**
-     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
+     * Pick the most recent trade side for the league-home Latest trade card.
      */
     function latestTradeSide() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
@@ -4471,7 +4475,7 @@ const html = `<!DOCTYPE html>
 
 
     /**
-     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
+     * Latest trade card + horizontal recent-match strip (no section heading).
      */
     function leagueInProgress() {
       ensureWeekMatchups();
@@ -4494,6 +4498,7 @@ const html = `<!DOCTYPE html>
       }
       const strip = matchupStripHtml();
       if (!tradeBox && !strip) return "";
+      // No section heading above Latest trade + week strip.
       return '<section class="lh-section">'
         + tradeBox
         + strip
@@ -5191,6 +5196,7 @@ const html = `<!DOCTYPE html>
           if (back) back.focus({ preventScroll: true });
         }
         if (navigated) window.scrollTo(0, 0);
+        paintLeagueSub();
         paintBottomNav();
         return;
       }
@@ -5200,12 +5206,14 @@ const html = `<!DOCTYPE html>
         const hasBook = !!(league && members);
         if (!hasBook) {
           paintSettingsBtn();
+          paintLeagueSub();
           paintBottomNav();
           app.innerHTML = renderPendingLeague();
           return;
         }
       }
       paintSettingsBtn();
+      paintLeagueSub();
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
@@ -5281,6 +5289,7 @@ const html = `<!DOCTYPE html>
       // After the body, not before: renderDrafts() pins lens to "all" for its own render and
       // restores it on the way out, so the trigger must be painted from the settled value.
       paintLens();
+      paintLeagueSub();
       paintBottomNav();
       syncUrl();
       armNewsHero();
@@ -5888,6 +5897,7 @@ const html = `<!DOCTYPE html>
     const inviteParam = (params.get("invite") || "").trim();
     if (inviteParam) redeemCode = inviteParam.toUpperCase();
     paintSettingsBtn();
+    paintLeagueSub();
     paintBottomNav();
     document.getElementById("app").hidden = false;
     (async () => {
@@ -6085,8 +6095,13 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) 
 if (!html.includes('id="leagueSub"') || !html.includes("p.league-sub")) {
   throw new Error("league name under the brand must ship (p#leagueSub)");
 }
-if (!inline.includes('leagueSub.textContent = activeLeague.name || "League"')) {
+if (!inline.includes("function paintLeagueSub()")
+    || !inline.includes('leagueSub.textContent = activeLeague.name || "League"')) {
   throw new Error("render must paint the active league name under the brand");
+}
+if (!inline.includes("paintLeagueSub();\n        paintBottomNav();")
+    && !inline.includes("paintLeagueSub();\n      paintBottomNav();")) {
+  throw new Error("render must call paintLeagueSub so the league name shows on dash");
 }
 {
   const wrap = html.slice(html.indexOf("    .lens-wrap {"));
@@ -6108,8 +6123,20 @@ if (
 if (inline.includes("lh-section-h") || html.includes(".lh-section-h")) {
   throw new Error("league home must not keep lh-section-h chrome — it only hosted All trades / In the league");
 }
-if (inline.includes("<h2>In the league</h2>")) {
+// Heading removed: section.lh-section must not open with h2 “In the league”.
+if (
+  inline.includes("<h2>In the league</h2>")
+  || inline.includes(">In the league</h2>")
+  || /<h2[^>]*>\s*In the league\s*<\/h2>/.test(inline)
+) {
   throw new Error("league home must not show an In the league heading");
+}
+{
+  const lip = inline.slice(inline.indexOf("function leagueInProgress("));
+  const lipBody = lip.slice(0, lip.indexOf("\n    function "));
+  if (lipBody.includes("<h2>") || lipBody.includes("lh-section-h") || lipBody.includes("In the league</")) {
+    throw new Error("leagueInProgress must not emit In the league heading or lh-section-h wrapper");
+  }
 }
 for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "function matchupStripHtml(", "lh-week-h", "lh-match-card", "lh-score-row"]) {
   if (!inline.includes(need)) throw new Error(`league home news/week strip lost ${need}`);

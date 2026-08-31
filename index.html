@@ -1231,7 +1231,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "noLeaguesCaption20260831230841";
+    const DATA_V = "leagueSubUnderBrand20260831230939";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2876,17 +2876,21 @@
       appScreen = "gate";
       gateMode = "signup";
       paintSettingsBtn();
-      const leagueSub = document.getElementById("leagueSub");
-      if (leagueSub) {
-        if (activeLeague && appScreen === "dash") {
-          leagueSub.hidden = false;
-          leagueSub.textContent = activeLeague.name || "League";
-        } else {
-          leagueSub.hidden = true;
-          leagueSub.textContent = "";
-        }
-      }
+      paintLeagueSub();
       paintBottomNav();
+    }
+
+    /** League name under the brand — only while viewing a league dash. */
+    function paintLeagueSub() {
+      const leagueSub = document.getElementById("leagueSub");
+      if (!leagueSub) return;
+      if (activeLeague && appScreen === "dash") {
+        leagueSub.hidden = false;
+        leagueSub.textContent = activeLeague.name || "League";
+      } else {
+        leagueSub.hidden = true;
+        leagueSub.textContent = "";
+      }
     }
 
     function paintSettingsBtn() {
@@ -4292,7 +4296,7 @@
 
 
     /**
-     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
+     * Pick the most recent trade side for the league-home Latest trade card.
      */
     function latestTradeSide() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
@@ -4466,7 +4470,7 @@
 
 
     /**
-     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
+     * Latest trade card + horizontal recent-match strip (no section heading).
      */
     function leagueInProgress() {
       ensureWeekMatchups();
@@ -4489,6 +4493,7 @@
       }
       const strip = matchupStripHtml();
       if (!tradeBox && !strip) return "";
+      // No section heading above Latest trade + week strip.
       return '<section class="lh-section">'
         + tradeBox
         + strip
@@ -5186,6 +5191,7 @@
           if (back) back.focus({ preventScroll: true });
         }
         if (navigated) window.scrollTo(0, 0);
+        paintLeagueSub();
         paintBottomNav();
         return;
       }
@@ -5195,12 +5201,14 @@
         const hasBook = !!(league && members);
         if (!hasBook) {
           paintSettingsBtn();
+          paintLeagueSub();
           paintBottomNav();
           app.innerHTML = renderPendingLeague();
           return;
         }
       }
       paintSettingsBtn();
+      paintLeagueSub();
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
@@ -5276,6 +5284,7 @@
       // After the body, not before: renderDrafts() pins lens to "all" for its own render and
       // restores it on the way out, so the trigger must be painted from the settled value.
       paintLens();
+      paintLeagueSub();
       paintBottomNav();
       syncUrl();
       armNewsHero();
@@ -5883,6 +5892,7 @@
     const inviteParam = (params.get("invite") || "").trim();
     if (inviteParam) redeemCode = inviteParam.toUpperCase();
     paintSettingsBtn();
+    paintLeagueSub();
     paintBottomNav();
     document.getElementById("app").hidden = false;
     (async () => {

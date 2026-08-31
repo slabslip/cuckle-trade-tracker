@@ -735,6 +735,7 @@ const html = `<!DOCTYPE html>
     }
     button.news-hero-pause:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.news-hero-body {
+      /* Ticker viewport: clips the outgoing/incoming slides. */
       position: relative; z-index: 1; display: block; width: 100%; max-width: none;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: transparent; border: 0; padding: 4px 0 0; margin: 0;
@@ -746,14 +747,19 @@ const html = `<!DOCTYPE html>
       display: block; width: 100%;
       transition: transform 0.45s ease, opacity 0.45s ease;
       transform: translateX(0); opacity: 1;
+      will-change: transform, opacity;
     }
     .news-hero-slide[hidden] { display: none; }
+    /* Outgoing alert slides off left; incoming starts off-right then settles. */
     .news-hero-slide.is-exit {
       position: absolute; left: 0; right: 0; top: 0;
       display: block !important; transform: translateX(-110%); opacity: 0;
       pointer-events: none;
     }
-    .news-hero-slide.is-enter { transform: translateX(110%); opacity: 0; }
+    .news-hero-slide.is-enter {
+      position: relative; display: block !important;
+      transform: translateX(110%); opacity: 0;
+    }
     .news-hero-slide.is-enter.is-in { transform: translateX(0); opacity: 1; }
     @media (prefers-reduced-motion: reduce) {
       .news-hero-slide { transition: none; }
@@ -1247,7 +1253,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "latestTrade20260831225936";
+    const DATA_V = "newsTicker20260831230120";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4275,8 +4281,8 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * League-home hero: News & Alerts chip. Rotates every 3s with a ticker slide (Pause stops it).
-     * The whole body opens the full news screen. All-trades lives under In the league.
+     * League-home hero: News Feed ticker. Each item holds 3s, then slides left; next enters from the right.
+     * Pause / prefers-reduced-motion stop motion (WCAG 2.2.2). Body opens the full news screen.
      */
     function dayAlert() {
       const items = newsItemsLive();

@@ -89,6 +89,11 @@ const html = `<!DOCTYPE html>
        it. Nothing here may clip: #scoreAs is absolutely positioned against it, and a hidden
        overflow anywhere up this chain is what made the seat picker unusable twice. */
     .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; margin-left: auto; }
+    p.league-sub {
+      text-align: center; font-size: 0.8125rem; font-weight: 600;
+      color: var(--muted); margin: -4px 0 14px; letter-spacing: -0.01em;
+    }
+    p.league-sub[hidden] { display: none; }
     /* The brand plus the seat picker needed 394px of a 343px row at 375px, so the picker ran off
        the right edge and the title stepped down to buy it back. The picker is gone and the clock
        control took its place, so the row is carrying a control again and the step still earns its
@@ -1108,6 +1113,7 @@ const html = `<!DOCTYPE html>
       <div id="scoreAs" hidden></div>
     </span>
   </h1>
+  <p class="league-sub" id="leagueSub" hidden></p>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
   <nav id="bottomNav" class="bottom-nav" hidden aria-label="League menu">
@@ -2884,6 +2890,16 @@ const html = `<!DOCTYPE html>
       appScreen = "gate";
       gateMode = "signup";
       paintSettingsBtn();
+      const leagueSub = document.getElementById("leagueSub");
+      if (leagueSub) {
+        if (activeLeague && appScreen === "dash") {
+          leagueSub.hidden = false;
+          leagueSub.textContent = activeLeague.name || "League";
+        } else {
+          leagueSub.hidden = true;
+          leagueSub.textContent = "";
+        }
+      }
       paintBottomNav();
     }
 
@@ -6034,6 +6050,13 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) 
   if (/margin-right:\s*auto/.test(decl)) {
     throw new Error("h1.brand a must not use margin-right: auto -- centering is absolute; .lens-wrap takes the right");
   }
+}
+
+if (!html.includes('id="leagueSub"') || !html.includes("p.league-sub")) {
+  throw new Error("league name under the brand must ship (p#leagueSub)");
+}
+if (!inline.includes('leagueSub.textContent = activeLeague.name || "League"')) {
+  throw new Error("render must paint the active league name under the brand");
 }
 {
   const wrap = html.slice(html.indexOf("    .lens-wrap {"));

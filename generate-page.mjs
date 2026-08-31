@@ -706,28 +706,22 @@ const html = `<!DOCTYPE html>
       background: transparent; border-style: dashed; cursor: default;
     }
     /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
-       News & Alerts hero (rotates in JS), four circular quick actions, “In the league” strip. */
+       News Feed hero (rotates in JS), four circular quick actions, latest trade + week strip. */
     .lh-hero.day-alert, .lh-hero.news-hero {
       position: relative; overflow: hidden;
       border-radius: 20px; padding: 16px 16px 14px; margin: 0 0 20px;
       min-height: 0; height: auto; justify-content: flex-start;
-      background: #1a1810; border: 1px solid #6b5a2e;
-    }
-    .lh-hero-visual {
-      position: absolute; right: -12px; top: 0; bottom: 0; width: 44%;
+      /* One continuous gold-tinted plane — no split right-side panel. */
       background:
-        radial-gradient(ellipse at 65% 35%, rgba(224,180,76,0.22), transparent 68%),
-        linear-gradient(145deg, #2c2618 0%, #141416 55%);
-      border-radius: 18px 0 0 18px; pointer-events: none;
+        radial-gradient(ellipse at 88% 18%, rgba(224,180,76,0.14), transparent 55%),
+        #1a1810;
+      border: 1px solid #6b5a2e;
     }
     .lh-hero .day-alert-top {
       position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px;
       margin-bottom: 8px;
     }
     .lh-hero .day-alert-top .day-alert-h { min-width: 0; }
-    .lh-hero .day-alert-h span {
-      display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 2px;
-    }
     button.news-hero-pause {
       position: relative; z-index: 2; flex: 0 0 auto; margin-left: auto;
       appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
@@ -736,7 +730,7 @@ const html = `<!DOCTYPE html>
     }
     button.news-hero-pause:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.news-hero-body {
-      position: relative; z-index: 1; display: block; width: 100%; max-width: 62%;
+      position: relative; z-index: 1; display: block; width: 100%; max-width: none;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: transparent; border: 0; padding: 4px 0 0; margin: 0;
       cursor: pointer; touch-action: manipulation; min-height: 72px;
@@ -770,7 +764,7 @@ const html = `<!DOCTYPE html>
       font-size: 0.75rem; color: var(--dim);
     }
     .lh-hero .day-in,
-    .lh-hero .date { position: relative; z-index: 1; max-width: 62%; }
+    .lh-hero .date { position: relative; z-index: 1; max-width: none; }
     .lh-hero button.day-in {
       background: transparent; border: 0; padding: 8px 0; margin: 0;
       width: 100%; text-align: left; cursor: pointer; color: inherit;
@@ -803,19 +797,9 @@ const html = `<!DOCTYPE html>
       overflow-wrap: anywhere;
     }
     .lh-section { margin: 0 0 18px; }
-    .lh-section-h {
-      display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px;
+    .lh-week-h {
+      font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
     }
-    .lh-section-h h2 {
-      font-size: 1.05rem; font-weight: 700; margin: 0; letter-spacing: -0.01em;
-    }
-    button.lh-see-all {
-      margin-left: auto; appearance: none; font: inherit;
-      font-size: 0.8125rem; font-weight: 600; color: var(--muted);
-      background: none; border: 0; padding: 8px 0; cursor: pointer;
-      touch-action: manipulation;
-    }
-    button.lh-see-all:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     a.champ-alert.lh-progress, button.champ-alert.lh-progress {
       background: var(--card); border-color: var(--line); border-radius: 16px;
       min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
@@ -830,11 +814,11 @@ const html = `<!DOCTYPE html>
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
     button.lh-strip-card, div.lh-strip-card {
-      flex: 0 0 128px; scroll-snap-align: start;
+      flex: 0 0 168px; scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
-      padding: 10px; min-height: 92px; touch-action: manipulation;
-      display: flex; flex-direction: column; gap: 6px;
+      padding: 10px; min-height: 112px; touch-action: manipulation;
+      display: flex; flex-direction: column; gap: 4px;
     }
     button.lh-strip-card { cursor: pointer; }
     button.lh-strip-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
@@ -843,7 +827,14 @@ const html = `<!DOCTYPE html>
       overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     }
     button.lh-strip-card span, div.lh-strip-card span {
-      font-size: 0.75rem; color: var(--dim); margin-top: auto;
+      font-size: 0.75rem; color: var(--dim);
+    }
+    button.lh-strip-card .lh-score-row, div.lh-strip-card .lh-score-row {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 0.75rem; color: var(--muted); margin-top: 2px;
+    }
+    button.lh-strip-card .lh-score-row strong, div.lh-strip-card .lh-score-row strong {
+      color: var(--text); font-weight: 650;
     }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
@@ -4282,17 +4273,15 @@ const html = `<!DOCTYPE html>
       const n = items.length || 1;
       const pauseLab = newsHeroPaused ? "Play" : "Pause";
       // day-alert-top kept so existing layout chrome / smoke still find the header row.
-      return '<section class="lh-hero day-alert news-hero" aria-label="News and Alerts">'
-        + '<div class="lh-hero-visual" aria-hidden="true"></div>'
+      return '<section class="lh-hero day-alert news-hero" aria-label="News Feed">'
         + '<div class="day-alert-top">'
-        + '<div class="day-alert-h">News &amp; Alerts'
-        + "<span>Updates every 3 seconds · tap for full feed</span></div>"
+        + '<div class="day-alert-h">News Feed</div>'
         + '<button type="button" class="news-hero-pause" data-news-pause="1"'
         + ' aria-pressed="' + (newsHeroPaused ? "true" : "false") + '">'
         + pauseLab + "</button>"
         + "</div>"
         + '<button type="button" class="news-hero-body" data-view="news"'
-        + ' aria-label="Open the News and Alerts feed">'
+        + ' aria-label="Open the News Feed">'
         + slides
         + "</button>"
         + '<div class="news-hero-live" data-news-live aria-live="polite">1 of ' + n + "</div>"
@@ -4317,22 +4306,25 @@ const html = `<!DOCTYPE html>
 
     function matchupStripHtml() {
       if (weekMatchupsLoading && !weekMatchups) {
-        return '<div class="lh-strip" role="list">'
+        return '<div class="lh-week-h">Matchups</div>'
+          + '<div class="lh-strip" role="list">'
           + '<div class="lh-strip-card" role="listitem"><b>Loading matches…</b><span>Sleeper week scores</span></div>'
           + "</div>";
       }
       if (!weekMatchups || weekMatchups === "empty" || !weekMatchups.pairs || !weekMatchups.pairs.length) {
         return "";
       }
-      return '<div class="lh-strip" role="list" aria-label="' + esc(weekMatchups.label || "Recent matches") + '">'
+      const fmt = (n) => (n == null || Number.isNaN(Number(n))) ? "—"
+        : Number(n).toFixed(1).replace(/\.0$/, "");
+      return '<div class="lh-week-h">' + esc(weekMatchups.label || "Matchups") + "</div>"
+        + '<div class="lh-strip" role="list" aria-label="' + esc(weekMatchups.label || "Recent matches") + '">'
         + weekMatchups.pairs.map((p) => {
-          const score = (p.aPts != null && p.bPts != null)
-            ? (Number(p.aPts).toFixed(1).replace(/\\.0$/, "") + "–"
-              + Number(p.bPts).toFixed(1).replace(/\\.0$/, ""))
-            : "—";
           return '<div class="lh-strip-card" role="listitem">'
             + "<b>" + seatLabel(p.a) + " vs " + seatLabel(p.b) + "</b>"
-            + "<span>" + esc(weekMatchups.label) + " · " + esc(score) + "</span>"
+            + '<div class="lh-score-row"><span>Proj</span><strong>'
+            + esc(fmt(p.aProj)) + "–" + esc(fmt(p.bProj)) + "</strong></div>"
+            + '<div class="lh-score-row"><span>Actual</span><strong>'
+            + esc(fmt(p.aPts)) + "–" + esc(fmt(p.bPts)) + "</strong></div>"
             + "</div>";
         }).join("")
         + "</div>";
@@ -4351,6 +4343,7 @@ const html = `<!DOCTYPE html>
           let week = Math.max(1, Number(state.display_week || state.week || 1) - 1);
           let pairs = [];
           let label = "";
+          let seasonYear = "";
           for (let attempt = 0; attempt < 24 && !pairs.length; attempt++) {
             const meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
             const tryWeek = week;
@@ -4385,12 +4378,41 @@ const html = `<!DOCTYPE html>
                 b: ownerName[b.roster_id] || String(b.roster_id),
                 aPts: aPts,
                 bPts: bPts,
+                aStarters: a.starters || [],
+                bStarters: b.starters || [],
                 sum: aPts + bPts,
               });
             }
             if (scored.some((p) => p.sum > 0)) {
+              // Projected starter totals from Sleeper weekly projections (half-PPR when rec=0.5).
+              const season = String(meta.season || state.league_season || state.season || "");
+              const rec = meta.scoring_settings && Number(meta.scoring_settings.rec);
+              const ptsKey = rec === 1 ? "pts_ppr" : rec === 0.5 ? "pts_half_ppr" : "pts_std";
+              let projBy = Object.create(null);
+              try {
+                const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+                const qs = positions.map((p) => "position[]=" + p).join("&");
+                const projs = await fetch(
+                  "https://api.sleeper.app/projections/nfl/" + season + "/" + tryWeek
+                    + "?season_type=regular&" + qs
+                ).then((r) => r.json());
+                for (const p of projs || []) {
+                  const st = p.stats || {};
+                  projBy[p.player_id] = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
+                }
+              } catch (projErr) {
+                console.error(projErr);
+              }
+              const sumProj = (ids) => (ids || []).reduce((n, id) => n + (projBy[id] || 0), 0);
+              for (const p of scored) {
+                p.aProj = Math.round(sumProj(p.aStarters) * 10) / 10;
+                p.bProj = Math.round(sumProj(p.bStarters) * 10) / 10;
+                delete p.aStarters;
+                delete p.bStarters;
+              }
               pairs = scored.sort((x, y) => y.sum - x.sum);
-              label = "Week " + tryWeek;
+              seasonYear = season;
+              label = "Week " + tryWeek + (season ? " " + season : "");
               break;
             }
             // No points yet this week — step back a week, then prior season league.
@@ -4400,7 +4422,9 @@ const html = `<!DOCTYPE html>
               week = 18;
             } else break;
           }
-          weekMatchups = pairs.length ? { week: week, label: label, pairs: pairs } : "empty";
+          weekMatchups = pairs.length
+            ? { week: week, season: seasonYear, label: label, pairs: pairs }
+            : "empty";
         } catch (err) {
           console.error(err);
           weekMatchups = "empty";
@@ -4410,6 +4434,7 @@ const html = `<!DOCTYPE html>
         if (appScreen === "dash" && view === "home" && !me) render();
       })();
     }
+
 
     /**
      * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
@@ -4435,12 +4460,6 @@ const html = `<!DOCTYPE html>
       const strip = matchupStripHtml();
       if (!tradeBox && !strip) return "";
       return '<section class="lh-section">'
-        + '<div class="lh-section-h"><h2>In the league</h2>'
-        + '<button type="button" class="all-trades" data-trades-list="1" aria-label="All trades in the league">'
-        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
-        + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
-        + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
-        + "<span>All trades</span></button></div>"
         + tradeBox
         + strip
         + "</section>";
@@ -5171,13 +5190,6 @@ const html = `<!DOCTYPE html>
         ? '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>'
           + seatLabel(me.name) + "</h2>"
         : "";
-      const leagueChip = (activeLeague && appScreen === "dash")
-        ? '<p class="caption" style="margin:0 0 8px">'
-          + '<button type="button" class="linkish" data-app-home="1">← Leagues</button>'
-          + " · " + esc(activeLeague.name || "League")
-          + (authSession && authSession.username ? " · " + esc(authSession.username) : "")
-          + "</p>"
-        : "";
       const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready"
         && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID)
         ? '<div class="sync-banner">Meter sync still pending for this league. Showing what is available.</div>'
@@ -5212,7 +5224,7 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
-      app.innerHTML = leagueChip + syncNote + seatName + nav + body;
+      app.innerHTML = syncNote + seatName + nav + body;
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
@@ -6034,19 +6046,29 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) 
 // any part of that button strands the screen a vote lands on. The 44px tap area is a painted
 // ::after rather than layout, which no source read would reveal is load-bearing -- assert both
 // halves, and assert nothing put the standalone control back on league home beside it.
-for (const need of ['class="all-trades" data-trades-list="1"',
-  'aria-label="All trades in the league"', "<span>All trades</span>", '"day-alert-top"']) {
-  if (!inline.includes(need)) throw new Error(`generated script lost the all-trades icon: ${need}`);
+// All-trades control removed from league home; Trades quick action + My trades nav remain.
+if (inline.includes('class="all-trades"') || inline.includes("<span>All trades</span>")) {
+  throw new Error("league home must not mount the All trades control — Trades quick action is the door");
 }
-for (const need of ["button.all-trades::after", "inset: -10px", ".day-alert-top .day-alert-h { min-width: 0; }"]) {
-  if (!html.includes(need)) throw new Error(`generated stylesheet lost the all-trades tap area: ${need}`);
+if (inline.includes("<h2>In the league</h2>")) {
+  throw new Error("league home must not show an In the league heading");
 }
-// League home's door is the icon in the card and nothing else. The trade screen keeps its own
-// footer chip -- a different screen with a different parent -- so scope this to the one function
-// rather than to the whole script, or the chip that survives on purpose trips it.
+for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "function matchupStripHtml(", "lh-week-h", "lh-score-row"]) {
+  if (!inline.includes(need)) throw new Error(`league home news/week strip lost ${need}`);
+}
+if (inline.includes("lh-hero-visual") || inline.includes("News &amp; Alerts")) {
+  throw new Error("News Feed hero must not keep the split visual panel or News & Alerts copy");
+}
+if (inline.includes("← Leagues") && inline.includes('class="caption" style="margin:0 0 8px"')) {
+  throw new Error("league dash must not show the ← Leagues caption under the brand");
+}
+// day-alert-top header row still hosts Pause; keep its min-width guard.
+for (const need of [".day-alert-top .day-alert-h { min-width: 0; }"]) {
+  if (!html.includes(need)) throw new Error(`generated stylesheet lost the news header row: ${need}`);
+}
 const homeFn = inline.slice(inline.indexOf("function renderLeagueHome()"));
 if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-list")) {
-  throw new Error("renderLeagueHome grew a standalone trades-list control -- the card's icon is the door");
+  throw new Error("renderLeagueHome grew a standalone trades-list control — Trades quick action is the door");
 }
 // League home's five lists are one "League Data Sets" dropdown, not five stacked accordion packs.
 // The trigger's label is the one thing the user specified by name, and the whole screen below it
@@ -6276,7 +6298,7 @@ const renderSrc = fnBody("render");
 if (!renderSrc.includes("paintLens();")) {
   throw new Error("render() must paint the header clock -- without it the trigger never follows the page");
 }
-if (renderSrc.indexOf("app.innerHTML = leagueChip + syncNote + seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
+if (renderSrc.indexOf("app.innerHTML = syncNote + seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
   throw new Error("paintLens() must run after the body is built -- renderDrafts pins lens and restores it");
 }
 // 4. It hides where the clock has no effect, and it must not be hidden anywhere else. Champions
@@ -6730,7 +6752,7 @@ if (!inline.includes("    function showMenu(menu) {")) {
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
   "+ seatLabel(me.name) + \"</h2>\"",
-  "app.innerHTML = leagueChip + syncNote + seatName + nav + body;",
+  "app.innerHTML = syncNote + seatName + nav + body;",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the seat heading: ${need}`);
 }

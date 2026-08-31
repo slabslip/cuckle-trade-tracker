@@ -806,6 +806,10 @@
       text-align: left; cursor: pointer; touch-action: manipulation;
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-latest-trade {
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      touch-action: manipulation;
+    }
     .lh-week-h {
       font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
     }
@@ -1238,7 +1242,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260831135106";
+    const DATA_V = "latestTrade20260831225936";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4459,7 +4463,8 @@
       let tradeBox = "";
       if (latest) {
         const s = windowScore(latest);
-        tradeBox = '<button type="button" class="champ-alert lh-progress"'
+        // Latest league trade — replaces the old Champions Path home card.
+        tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
           + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
           + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
           + '<div class="day-alert-h">Latest trade</div>'

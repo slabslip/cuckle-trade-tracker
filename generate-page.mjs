@@ -811,6 +811,10 @@ const html = `<!DOCTYPE html>
       text-align: left; cursor: pointer; touch-action: manipulation;
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-latest-trade {
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      touch-action: manipulation;
+    }
     .lh-week-h {
       font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
     }
@@ -1243,7 +1247,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "news20260831135106";
+    const DATA_V = "latestTrade20260831225936";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4464,7 +4468,8 @@ const html = `<!DOCTYPE html>
       let tradeBox = "";
       if (latest) {
         const s = windowScore(latest);
-        tradeBox = '<button type="button" class="champ-alert lh-progress"'
+        // Latest league trade — replaces the old Champions Path home card.
+        tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
           + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
           + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
           + '<div class="day-alert-h">Latest trade</div>'
@@ -5983,6 +5988,17 @@ for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "f
 }
 if (inline.includes('day-alert-h">Champions Path')) {
   throw new Error("league home must not mount a Champions Path progress card -- Latest trade replaced it");
+}
+{
+  const at = inline.indexOf("function leagueInProgress(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
+  if (!prog.includes('day-alert-h">Latest trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
+    throw new Error("leagueInProgress must mount Latest trade (lh-latest-trade) that opens via data-board-open");
+  }
+  if (prog.includes("?view=titles") || prog.includes('data-view="titles"') || prog.includes(">Champions Path<")) {
+    throw new Error("leagueInProgress must not link to Champions Path / titles");
+  }
 }
 // Champ scoreboard CSS stays for a.champ-alert chrome the Latest trade button still reuses.
 for (const need of ["a.champ-alert .champ-bout {",

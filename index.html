@@ -4614,9 +4614,11 @@
                 : '<p class="caption" style="margin:8px 0 0">Tap Generate invite to mint a code and copy the share link.</p>')))
           + "</div>";
       }).join("");
-      const empty = tab === "claimed"
-        ? '<p class="caption">No one has redeemed yet. Share invites from the Unclaimed tab.</p>'
-        : '<p class="caption">Every seat is claimed. Use the Claimed tab to reissue if a manager leaves.</p>';
+      const empty = all.length === 0
+        ? '<p class="caption">No seats yet — reopen this screen to load teams from Sleeper. If it stays empty, run wave5 SQL and redeploy join-league.</p>'
+        : (tab === "claimed"
+          ? '<p class="caption">No one has redeemed yet. Share invites from the Unclaimed tab.</p>'
+          : '<p class="caption">Every seat is claimed. Use the Claimed tab to reissue if a manager leaves.</p>');
       const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
         + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
         + ' aria-selected="' + (tab === "unclaimed" ? "true" : "false") + '"'

@@ -142,6 +142,37 @@ async function mintUnclaimed(
   return invitesOut;
 }
 
+async function ensureSeatInvites(
+  admin: ReturnType<typeof createClient>,
+  preview: NonNullable<Awaited<ReturnType<typeof loadTeams>>>,
+  userId: string,
+) {
+  const { data: existing, error } = await admin.from("seat_invites")
+    .select("sleeper_user_id")
+    .eq("sleeper_league_id", preview.sleeper_league_id);
+  if (error) throw new Error(error.message);
+  const have = new Set((existing || []).map((r) => r.sleeper_user_id));
+  let added = 0;
+  for (const team of preview.teams) {
+    if (have.has(team.sleeper_user_id)) continue;
+    const code = makeCode();
+    const code_hash = await sha256Hex(code);
+    const { error: invErr } = await admin.from("seat_invites").upsert({
+      sleeper_league_id: preview.sleeper_league_id,
+      sleeper_user_id: team.sleeper_user_id,
+      team_name: team.team_name,
+      code_hash,
+      code_plain: code,
+      created_by: userId,
+      claimed_by: null,
+      claimed_at: null,
+    }, { onConflict: "sleeper_league_id,sleeper_user_id" });
+    if (invErr) throw new Error("Invite write failed: " + invErr.message);
+    added += 1;
+  }
+  return added;
+}
+
 async function listInviteRows(
   admin: ReturnType<typeof createClient>,
   leagueId: string,
@@ -199,7 +230,7 @@ async function listInviteRows(
       claimed_at: r.claimed_at,
       code: claimed
         ? "(already claimed)"
-        : (plain || "(hidden — rotate to reissue)"),
+        : (plain || "(hidden — tap Generate invite)"),
     };
   });
 }
@@ -377,7 +408,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ---- list invites (plaintext for unclaimed) ----
+  // ---- list invites (plaintext for unclaimed); mint any missing Sleeper seats ----
   if (action === "list_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
     const { data: league } = await admin.from("leagues")
@@ -387,9 +418,30 @@ Deno.serve(async (req) => {
     if (!league || league.created_by !== user.id) {
       return json(403, { ok: false, error: "Only the league creator can list invites" });
     }
+
+    let preview = null;
+    try {
+      preview = await loadTeams(leagueId);
+    } catch (err) {
+      return json(502, {
+        ok: false,
+        error: "Could not load Sleeper roster: " + String((err as Error).message || err),
+      });
+    }
+    if (!preview || !preview.teams.length) {
+      return json(404, { ok: false, error: "No teams found for that Sleeper league" });
+    }
+
     let invites;
     let members;
     try {
+      await ensureSeatInvites(admin, preview, user.id);
+      // Keep league roster count in sync with Sleeper.
+      if (preview.total_rosters && preview.total_rosters !== league.total_rosters) {
+        await admin.from("leagues")
+          .update({ total_rosters: preview.total_rosters, name: preview.name || league.name })
+          .eq("sleeper_league_id", leagueId);
+      }
       invites = await listInviteRows(admin, leagueId, {
         backfillMissingPlain: true,
         createdBy: user.id,
@@ -405,21 +457,16 @@ Deno.serve(async (req) => {
       }
       return json(500, { ok: false, error: msg });
     }
-    let teams = [];
-    try {
-      const preview = await loadTeams(leagueId);
-      teams = (preview && preview.teams) || [];
-    } catch { /* list still useful without live Sleeper */ }
     return json(200, {
       ok: true,
       league: {
         sleeper_league_id: leagueId,
-        name: league.name,
+        name: preview.name || league.name,
         status: league.status,
-        season: league.season,
-        total_rosters: league.total_rosters,
+        season: preview.season || league.season,
+        total_rosters: preview.total_rosters || league.total_rosters,
         espn_league_id: league.espn_league_id,
-        teams,
+        teams: preview.teams,
       },
       invites,
       members,

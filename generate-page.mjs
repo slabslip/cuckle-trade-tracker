@@ -811,22 +811,23 @@ const html = `<!DOCTYPE html>
       display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
-    div.lh-match-card, div.lh-strip-card {
+    /* Prior-week matchup chips (not trade strip cards). */
+    div.lh-match-card {
       flex: 0 0 168px; scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
       padding: 10px; min-height: 112px; touch-action: manipulation;
       display: flex; flex-direction: column; gap: 4px;
     }
-    div.lh-match-card b, div.lh-strip-card b {
+    div.lh-match-card b {
       font-size: 0.8125rem; font-weight: 650; line-height: 1.25;
       overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     }
-    div.lh-match-card .lh-score-row, div.lh-strip-card .lh-score-row {
+    div.lh-match-card .lh-score-row {
       display: flex; justify-content: space-between; gap: 8px;
       font-size: 0.75rem; color: var(--muted); margin-top: 2px;
     }
-    div.lh-match-card .lh-score-row strong, div.lh-strip-card .lh-score-row strong {
+    div.lh-match-card .lh-score-row strong {
       color: var(--text); font-weight: 650;
     }
     .lh-match-empty {
@@ -1236,7 +1237,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueSubUnderBrand20260831230939";
+    const DATA_V = "noInTheLeagueH220260831231045";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

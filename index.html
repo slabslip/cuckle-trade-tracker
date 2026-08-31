@@ -2893,13 +2893,13 @@
       }
       const userId = (session.user && session.user.id) || (data.user && data.user.id);
       if (!userId || !session.access_token) throw new Error("Sign-up did not return a session. Check Confirm email is OFF.");
-      const prof = await fetch(VOTE_API + "/app_profiles", {
+      const prof = await fetch(VOTE_API + "/app_profiles?on_conflict=auth_user_id", {
         method: "POST",
         headers: {
           apikey: VOTE_ANON,
           Authorization: "Bearer " + session.access_token,
           "Content-Type": "application/json",
-          Prefer: "return=minimal",
+          Prefer: "resolution=merge-duplicates,return=minimal",
         },
         body: JSON.stringify({ auth_user_id: userId, username: name }),
         signal: voteAbort(),
@@ -2907,7 +2907,10 @@
       if (!prof.ok) {
         const t = await prof.text();
         if (t.indexOf("app_profiles_username_key") >= 0) throw new Error("That username is taken.");
-        throw new Error("Could not save profile (" + prof.status + ").");
+        if (t.indexOf("app_profiles_platform_required") >= 0) {
+          throw new Error("Profile blocked: re-run commissioner-invites.sql (platform IDs optional).");
+        }
+        throw new Error("Could not save profile (" + prof.status + "): " + t.slice(0, 180));
       }
       authSave({
         access_token: session.access_token,

@@ -493,25 +493,69 @@ function supabaseHeaders(extra) {
  * markSubmissionProcessed). The option stays because the predicate is still the right one for
  * anything that wants the delta rather than the state, and because the index is still there.
  */
+/** Columns the feed needs. `agent_tip` is optional until the schema alter lands on Supabase. */
+const SUBMISSION_SELECT = "id,url,note,agent_tip,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by";
+const SUBMISSION_SELECT_NO_TIP = "id,url,note,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by";
+
+function submissionListUrl(select, { limit, unprocessedOnly, newestFirst }) {
+  // Soft-deleted rows stay in the table for audit but never re-enter the feed. The filter is
+  // on the query rather than post-hoc so a long history of removals cannot crowd live shares
+  // out of the limit window.
+  return `${SUPABASE}/news_submissions`
+    + "?select=" + select
+    + "&deleted_at=is.null"
+    + (unprocessedOnly ? "&processed_at=is.null" : "")
+    + "&order=created_at." + (newestFirst ? "desc" : "asc")
+    + "&limit=" + (Number(limit) || 50);
+}
+
+/**
+ * True when PostgREST refused the select because `agent_tip` is not on the live table yet.
+ * That is the expected state until `db/schema.sql`'s alter runs (docs/SUPABASE_SETUP.md §3b);
+ * it must not look like an empty queue — that is how #38 blanked the public feed.
+ */
+function isMissingAgentTipColumn(status, body) {
+  if (status !== 400 || !body || typeof body !== "object") return false;
+  const msg = String(body.message || body.error || "");
+  return /agent_tip/i.test(msg) && /does not exist/i.test(msg);
+}
+
 export async function fetchSubmissions({
   limit = 50, timeoutMs = 10000, unprocessedOnly = true, newestFirst = false,
 } = {}) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
+  const opts = { limit, unprocessedOnly, newestFirst };
   try {
-    // Soft-deleted rows stay in the table for audit but never re-enter the feed. The filter is
-    // on the query rather than post-hoc so a long history of removals cannot crowd live shares
-    // out of the limit window.
-    const url = `${SUPABASE}/news_submissions`
-      + "?select=id,url,note,agent_tip,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by"
-      + "&deleted_at=is.null"
-      + (unprocessedOnly ? "&processed_at=is.null" : "")
-      + "&order=created_at." + (newestFirst ? "desc" : "asc")
-      + "&limit=" + (Number(limit) || 50);
-    const res = await fetch(url, { headers: supabaseHeaders(), signal: ac.signal });
-    if (!res.ok) return { ok: false, rows: [], error: `HTTP ${res.status}` };
+    let res = await fetch(submissionListUrl(SUBMISSION_SELECT, opts), {
+      headers: supabaseHeaders(), signal: ac.signal,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      // Schema alter not applied yet: retry without agent_tip so the feed still builds.
+      // Tips stay null until the column exists; smack-tips.json simply does not grow.
+      if (isMissingAgentTipColumn(res.status, body)) {
+        res = await fetch(submissionListUrl(SUBMISSION_SELECT_NO_TIP, opts), {
+          headers: supabaseHeaders(), signal: ac.signal,
+        });
+        if (!res.ok) return { ok: false, rows: [], error: `HTTP ${res.status}` };
+        const rows = await res.json();
+        return {
+          ok: true,
+          rows: Array.isArray(rows) ? rows : [],
+          error: null,
+          agent_tip_column: false,
+        };
+      }
+      return { ok: false, rows: [], error: `HTTP ${res.status}` };
+    }
     const rows = await res.json();
-    return { ok: true, rows: Array.isArray(rows) ? rows : [], error: null };
+    return {
+      ok: true,
+      rows: Array.isArray(rows) ? rows : [],
+      error: null,
+      agent_tip_column: true,
+    };
   } catch (err) {
     return { ok: false, rows: [], error: err && err.name === "AbortError" ? "timeout" : String(err && err.message || err) };
   } finally {

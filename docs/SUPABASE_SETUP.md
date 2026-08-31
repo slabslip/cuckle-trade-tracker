@@ -476,7 +476,9 @@ If the Ask is blank, either omit `agent_tip` or send it only when non-empty
 (Shortcut If). Empty tips are ignored by the pipeline.
 
 Run `db/schema.sql` (or the `agent_tip` alter) on Supabase once so the column
-exists — otherwise PostgREST rejects the unknown field.
+exists. Until then, ingest still builds the feed (it retries the select without
+`agent_tip`); tips simply are not stored. Do **not** skip the alter if you use
+the with-tip Shortcut — PostgREST rejects inserts that name an unknown field.
 
 `resolution=ignore-duplicates` maps to `ON CONFLICT DO NOTHING`, so a second tap
 on Share answers 201 with an empty body instead of a `409` the Shortcut would

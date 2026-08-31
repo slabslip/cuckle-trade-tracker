@@ -510,6 +510,7 @@ async function ingestSubmissions(ownership, index, members, {
   });
   report.queue_ok = queue.ok;
   report.queue_error = queue.error;
+  report.agent_tip_column = queue.agent_tip_column;
   if (!queue.ok) return { rows: [], report };
   report.seen = queue.rows.length;
 
@@ -1441,6 +1442,16 @@ async function main() {
 
   const { book, report } = await build();
 
+  // Submissions *are* the feed while AUTOMATED_SOURCES is off. A failed queue read used to look
+  // like "zero shares" and overwrite a full news.json with an empty one (2026-08-31: selecting
+  // agent_tip before the column existed → HTTP 400 → blank public feed). Refuse to write.
+  if (!args.has("--no-submissions") && report.submissions && report.submissions.queue_ok === false) {
+    throw new Error(
+      `submission queue unreachable (${report.submissions.queue_error || "unknown"}) — `
+      + "refusing to overwrite news.json with an empty feed",
+    );
+  }
+
   // A row addressed to a manager who is not in this league is the failure that matters most:
   // it means the ownership map and the members file disagree, and the feed would be lying about
   // who owns whom. Refuse to write rather than ship it.
@@ -1562,6 +1573,9 @@ async function main() {
     managers_addressed: Object.keys(report.by_manager).length,
     by_category: report.by_category,
     submissions: {
+      queue_ok: report.submissions.queue_ok,
+      queue_error: report.submissions.queue_error,
+      agent_tip_column: report.submissions.agent_tip_column,
       seen: report.submissions.seen,
       published: report.submissions.published,
       rejected_url: report.submissions.rejected_url,

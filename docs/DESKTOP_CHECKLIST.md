@@ -1,81 +1,158 @@
-# Desktop checklist — Chuckle Fantasy go-live
+# Build Chuckle Fantasy today
 
-Do these in order when you are at your machine with the Supabase dashboard and this repo open. PR: [#44](https://github.com/slabslip/cuckle-trade-tracker/pull/44) · branch `cursor/multi-league-app-878c`.
+Ordered path for **this session at your desktop**. Spec: [`APP_SDD.md`](APP_SDD.md).  
+PR [#44](https://github.com/slabslip/cuckle-trade-tracker/pull/44) · branch `cursor/multi-league-app-878c`.
+
+The app code is already on the branch. Today you **wire Supabase + prove the flow**.
 
 ---
 
-## 1. Pull the branch
+## Step 0 — Open the right tools (5 min)
+
+1. Laptop with browser tabs: **GitHub** (this repo) · **Supabase** project dashboard · optional **Terminal**.
+2. Have the **service_role** key handy only if you use the CLI to deploy (never commit it).
+3. Cuckle Sleeper league ID (copy-paste ready):
+
+```text
+1315431339301806080
+```
+
+---
+
+## Step 1 — Get the code
 
 ```bash
+cd /path/to/cuckle-trade-tracker
 git fetch origin
 git checkout cursor/multi-league-app-878c
 git pull origin cursor/multi-league-app-878c
 ```
 
----
-
-## 2. Apply SQL (Supabase → SQL Editor)
-
-Run **each file once**, top to bottom. Safe to re-run if a file says idempotent.
-
-1. [`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql)
-2. [`db/multi-league-app.sql`](../db/multi-league-app.sql)
-3. [`db/commissioner-invites.sql`](../db/commissioner-invites.sql)
-4. [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql)
-5. [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql)
-
-Skip `seed-seat-auth.mjs` — it is retired.
+Skim [`APP_SDD.md`](APP_SDD.md) §§2–3 if you want the shape fresh; then come back here.
 
 ---
 
-## 3. Auth settings (Supabase → Authentication)
+## Step 2 — Apply SQL (Supabase → SQL → New query)
 
-- **Providers → Email → Confirm email = OFF**
-- **URL Configuration → Site URL** = your live app origin  
-  (today: `https://slabslip.github.io/cuckle-trade-tracker` — later: custom domain per [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md))
-- Add the same origin under **Redirect URLs** if prompted
+Paste and **Run** each file **in order**. Wait for success before the next.
+
+| # | File |
+| --- | --- |
+| 1 | `db/phase1-seat-auth.sql` |
+| 2 | `db/multi-league-app.sql` |
+| 3 | `db/commissioner-invites.sql` |
+| 4 | `db/wave1-invite-hardening.sql` |
+| 5 | `db/wave2-vote-identity.sql` |
+
+**Do not** run `node seed-seat-auth.mjs`.
 
 ---
 
-## 4. Deploy the Edge Function
+## Step 3 — Auth settings (Authentication)
+
+1. **Providers → Email → Confirm email = OFF**
+2. **URL Configuration → Site URL** =
+
+```text
+https://slabslip.github.io/cuckle-trade-tracker
+```
+
+3. Add that URL under **Redirect URLs** if the UI asks for it.
+
+(Custom domain later → [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).)
+
+---
+
+## Step 4 — Deploy Edge Function
+
+From the repo root (Supabase CLI logged into this project):
 
 ```bash
-# from repo root, with Supabase CLI logged in to this project
 supabase functions deploy join-league
 ```
 
-Function source: [`supabase/functions/join-league/index.ts`](../supabase/functions/join-league/index.ts).
+Source: `supabase/functions/join-league/index.ts`.
+
+If you have not used the CLI on this machine: install/login once (`supabase login` + `supabase link`), then deploy.
 
 ---
 
-## 5. Dogfood Cuckle (prove the real path)
+## Step 5 — Ship the page (if Pages is still on old main)
 
-1. Open the app (Pages URL or local static serve of `index.html`).
-2. **Create account** (commissioner) → **Create a league** with Sleeper ID  
-   `1315431339301806080`
-3. Copy the **CF-** invite codes → DM yourself / a second browser profile.
-4. On the invite console: **Claim this seat** for your own team.
-5. Second account: **Create account** → **Redeem invite** → dashboard opens.
-6. Open a 2-team trade → cast a vote as that seat.
+Either:
 
-If create remints every time you revisit, Wave 1 SQL/function is not deployed yet.  
-If votes fail after joining a second league later, Wave 2 SQL is missing.
+- **Merge PR #44 → `main`** so GitHub Pages serves the new shell, **or**
+- Locally: `python3 -m http.server 8766` from the repo root and open `http://localhost:8766`.
+
+You need the **new** `index.html` (Chuckle Fantasy gate / create / redeem), not the old single-league-only boot.
 
 ---
 
-## 6. Optional tonight
+## Step 6 — Dogfood (the real product test)
 
-| Task | When |
+### 6a. Commissioner
+
+1. Open the app → **Create account** (pick a username + password ≥ 6).
+2. **Create a league** → paste `1315431339301806080` → Create & generate invites.
+3. **Invite console:** copy each `CF-` code somewhere private (Notes / password manager).
+4. Click **Claim this seat** on **your** team.
+5. **Open dashboard** → confirm the meter loads and Teams is your seat.
+
+### 6b. Member (second browser or private window)
+
+1. **Create account** (different username).
+2. **Redeem invite** → paste one unused `CF-` code → Join.
+3. Confirm dashboard opens as that team.
+4. Open a **2-team trade** → cast a vote → tally moves.
+
+### 6c. Idempotent create check
+
+1. Sign back in as commissioner → Create a league → same ID again.
+2. Expect invite console **without new codes** (status / hidden). Remint only via **Rotate unclaimed**.
+
+---
+
+## Step 7 — Done for today when…
+
+- [ ] All five SQL files ran without error  
+- [ ] `join-league` is deployed  
+- [ ] Confirm email is OFF  
+- [ ] Commissioner claimed a seat and sees the meter  
+- [ ] Second account redeemed and voted  
+- [ ] Re-create same league does **not** silently remint  
+
+Then: merge #44 if not already, DM real managers their codes, and stop.
+
+---
+
+## If something breaks
+
+| Symptom | Fix |
 | --- | --- |
-| Merge PR #44 to `main` after dogfood looks good | After step 5 |
-| `node build.mjs <other_league_id>` for a second league | When you want a non-Cuckle meter |
-| Custom domain / PWA home screen | [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) — anytime |
-| ESPN import / web push | Parked — not needed for Cuckle |
+| Signup says confirm email / no session | Confirm email OFF; hard-refresh |
+| Create league 401 / function error | Redeploy `join-league`; check JWT session |
+| Create remints every time | Wave 1 SQL + latest function not live |
+| Redeem “unknown function” / 500 | Run `wave1-invite-hardening.sql` |
+| Vote write fails | Run `wave2-vote-identity.sql`; must have membership |
+| Dashboard empty for Cuckle | Pages still on old build, or wrong origin; Cuckle should use `data/ui` fallback |
+| “Already has a commissioner” | Someone else already set `created_by` — use that account or fix row in SQL |
+
+---
+
+## Not today (parked)
+
+- Second Sleeper league full meter (`node build.mjs <id>` + Action)  
+- Custom domain / PWA  
+- ESPN import  
+- Smack-agent voice bank / Sleeper chat scrape (**won’t do**)  
 
 ---
 
 ## Reference
 
-- Product shape: [`APP_SDD.md`](APP_SDD.md)
-- Full Supabase walkthrough: [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §8
-- Votes identity: [`VOTES_SDD.md`](VOTES_SDD.md) §5.5
+| Doc | Use |
+| --- | --- |
+| [`APP_SDD.md`](APP_SDD.md) | Full app path spec |
+| [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §8 | Longer Supabase notes |
+| [`VOTES_SDD.md`](VOTES_SDD.md) §5.5 | Vote identity |
+| [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) | After go-live |

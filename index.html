@@ -2553,10 +2553,15 @@
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
     let joinPreview = null; // league preview from Edge Function
     let joinLeagueId = "";
+    let joinEspnId = "";
     let joinSeatId = "";
     let joinBusy = false;
     let joinError = "";
+    let createdInvites = null; // [{ team_name, code, claimed }] after create
+    let redeemCode = "";
     let gateMode = "signup"; // signup | signin — get started first
+    // home | create | invites | redeem | join(legacy unused) | gate | dash
+    // appScreen already declared above — extend values: create | redeem | invites
 
     function voteDeviceId() {
       try {
@@ -2854,23 +2859,12 @@
       return data;
     }
 
-    async function authSignUp(username, password, sleeperUserId, espnUserId) {
+    async function authSignUp(username, password) {
       const name = normalizeUsername(username);
       if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
         throw new Error("Username: 3–32 chars, letters/numbers/_ . -");
       }
       if (String(password || "").length < 6) throw new Error("Password must be at least 6 characters.");
-      const sleeperId = String(sleeperUserId || "").trim() || null;
-      const espnId = String(espnUserId || "").trim() || null;
-      if (!sleeperId && !espnId) {
-        throw new Error("Enter your Sleeper user ID, ESPN user ID, or both.");
-      }
-      if (sleeperId && !/^d{6,64}$/.test(sleeperId)) {
-        throw new Error("Sleeper user ID should be digits (from your Sleeper profile URL).");
-      }
-      if (espnId && !/^[A-Za-z0-9_-]{3,64}$/.test(espnId)) {
-        throw new Error("ESPN user ID looks off — use the ID from your ESPN fantasy profile.");
-      }
       const email = authEmailForUsername(name);
       const res = await fetch(AUTH_API + "/signup", {
         method: "POST",
@@ -2882,11 +2876,7 @@
         body: JSON.stringify({
           email: email,
           password: password,
-          data: {
-            username: name,
-            sleeper_user_id: sleeperId,
-            espn_user_id: espnId,
-          },
+          data: { username: name },
         }),
         signal: voteAbort(),
       });
@@ -2895,14 +2885,12 @@
         const msg = data.error_description || data.msg || data.message || ("Sign-up failed (" + res.status + ")");
         throw new Error(msg);
       }
-      // Some projects return a session immediately; others require a password grant after.
       let session = data;
       if (!session.access_token) {
         session = await authPasswordGrant(email, password);
       }
       const userId = (session.user && session.user.id) || (data.user && data.user.id);
       if (!userId || !session.access_token) throw new Error("Sign-up did not return a session. Check Confirm email is OFF.");
-      // Profile row — username + platform IDs; uniqueness enforced in DB.
       const prof = await fetch(VOTE_API + "/app_profiles", {
         method: "POST",
         headers: {
@@ -2911,22 +2899,12 @@
           "Content-Type": "application/json",
           Prefer: "return=minimal",
         },
-        body: JSON.stringify({
-          auth_user_id: userId,
-          username: name,
-          sleeper_user_id: sleeperId,
-          espn_user_id: espnId,
-        }),
+        body: JSON.stringify({ auth_user_id: userId, username: name }),
         signal: voteAbort(),
       });
       if (!prof.ok) {
         const t = await prof.text();
         if (t.indexOf("app_profiles_username_key") >= 0) throw new Error("That username is taken.");
-        if (t.indexOf("app_profiles_sleeper_user") >= 0) throw new Error("That Sleeper user ID is already linked to an account.");
-        if (t.indexOf("app_profiles_espn_user") >= 0) throw new Error("That ESPN user ID is already linked to an account.");
-        if (t.indexOf("app_profiles_platform_required") >= 0) {
-          throw new Error("Enter your Sleeper user ID, ESPN user ID, or both.");
-        }
         throw new Error("Could not save profile (" + prof.status + ").");
       }
       authSave({
@@ -2936,9 +2914,9 @@
           || Math.floor(Date.now() / 1000) + (Number(session.expires_in) || 3600),
         user_id: userId,
         username: name,
-        sleeper_user_id: sleeperId,
-        espn_user_id: espnId,
-        seat_user_id: sleeperId,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
         seat_name: null,
       });
     }
@@ -2949,12 +2927,9 @@
       const data = await authPasswordGrant(authEmailForUsername(name), password);
       const userId = data.user && data.user.id;
       let uname = name;
-      let sleeperId = null;
-      let espnId = null;
       try {
         const pr = await fetch(
-          VOTE_API + "/app_profiles?select=username,sleeper_user_id,espn_user_id&auth_user_id=eq."
-            + encodeURIComponent(userId),
+          VOTE_API + "/app_profiles?select=username&auth_user_id=eq." + encodeURIComponent(userId),
           {
             headers: { apikey: VOTE_ANON, Authorization: "Bearer " + data.access_token },
             signal: voteAbort(),
@@ -2962,11 +2937,7 @@
         );
         if (pr.ok) {
           const rows = await pr.json();
-          if (rows[0]) {
-            if (rows[0].username) uname = rows[0].username;
-            sleeperId = rows[0].sleeper_user_id || null;
-            espnId = rows[0].espn_user_id || null;
-          }
+          if (rows[0] && rows[0].username) uname = rows[0].username;
         }
       } catch (err) { /* username from form is fine */ }
       authSave({
@@ -2976,9 +2947,9 @@
           || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
         user_id: userId,
         username: uname,
-        sleeper_user_id: sleeperId,
-        espn_user_id: espnId,
-        seat_user_id: sleeperId,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
         seat_name: null,
       });
     }
@@ -3013,45 +2984,17 @@
       return list;
     }
 
-    async function joinLeagueCall(action, sleeperLeagueId, sleeperUserId) {
-      await authRefreshIfNeeded();
-      if (!authSession || !authSession.access_token) throw new Error("Sign in required.");
-      const res = await fetch(FN_API + "/join-league", {
-        method: "POST",
-        headers: {
-          apikey: VOTE_ANON,
-          Authorization: "Bearer " + authSession.access_token,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: action,
-          sleeper_league_id: sleeperLeagueId,
-          sleeper_user_id: sleeperUserId || undefined,
-        }),
-        signal: voteAbort(),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || ("Join failed (" + res.status + ")"));
-      }
-      return data;
-    }
-
     async function onGateSubmit() {
       if (authBusy) return;
       const userEl = document.getElementById("gateUser");
       const passEl = document.getElementById("gatePass");
-      const sleeperEl = document.getElementById("gateSleeper");
-      const espnEl = document.getElementById("gateEspn");
       const username = userEl && userEl.value;
       const password = passEl && passEl.value;
-      const sleeperId = sleeperEl && sleeperEl.value;
-      const espnId = espnEl && espnEl.value;
       authBusy = true;
       authError = "";
       render();
       try {
-        if (gateMode === "signup") await authSignUp(username, password, sleeperId, espnId);
+        if (gateMode === "signup") await authSignUp(username, password);
         else await authSignIn(username, password);
         await loadMemberships();
         appScreen = "home";
@@ -3065,29 +3008,40 @@
       }
     }
 
-    async function onJoinPreview() {
+    async function onCreateLeague() {
       if (joinBusy) return;
       const el = document.getElementById("joinLeagueId");
+      const espnEl = document.getElementById("joinEspnId");
       joinLeagueId = el ? String(el.value || "").trim() : joinLeagueId;
+      joinEspnId = espnEl ? String(espnEl.value || "").trim() : joinEspnId;
       joinBusy = true;
       joinError = "";
-      joinPreview = null;
-      joinSeatId = "";
+      createdInvites = null;
       render();
       try {
-        const data = await joinLeagueCall("preview", joinLeagueId);
+        await authRefreshIfNeeded();
+        const res = await fetch(FN_API + "/join-league", {
+          method: "POST",
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + authSession.access_token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "create",
+            sleeper_league_id: joinLeagueId,
+            espn_league_id: joinEspnId || undefined,
+          }),
+          signal: voteAbort(),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data.error || ("Create failed (" + res.status + ")"));
+        createdInvites = data.invites || [];
         joinPreview = data.league;
-        // Auto-match seat from the Sleeper user ID collected at signup.
-        const mine = authSession && authSession.sleeper_user_id;
-        if (mine && (joinPreview.teams || []).some((t) => t.sleeper_user_id === mine)) {
-          joinSeatId = mine;
-        } else if (mine) {
-          joinError = "Your Sleeper user ID is not a seat in this league. Check the ID or pick your team below.";
-        } else {
-          joinError = "No Sleeper user ID on your account — pick your team below, or add a Sleeper ID under a new signup.";
-        }
+        appScreen = "invites";
+        focusNext = ".screen-h";
       } catch (err) {
-        joinError = (err && err.message) || "Could not load that league.";
+        joinError = (err && err.message) || "Could not create that league.";
         console.error(err);
       } finally {
         joinBusy = false;
@@ -3095,44 +3049,77 @@
       }
     }
 
-    async function onJoinConfirm() {
-      if (joinBusy || !joinPreview || !joinSeatId) return;
+    async function onRedeemInvite() {
+      if (joinBusy) return;
+      const el = document.getElementById("redeemCode");
+      redeemCode = el ? String(el.value || "").trim() : redeemCode;
+      if (!authSession) {
+        joinError = "Create an account or sign in first, then redeem your invite.";
+        appScreen = "gate";
+        gateMode = "signup";
+        render();
+        return;
+      }
       joinBusy = true;
       joinError = "";
       render();
       try {
-        const data = await joinLeagueCall("join", joinPreview.sleeper_league_id, joinSeatId);
+        const data = await joinLeagueCall("redeem", null, null, redeemCode);
         await loadMemberships();
-        const mem = data.membership;
-        const league = {
-          sleeper_league_id: data.league.sleeper_league_id,
-          name: data.league.name,
-          status: data.league.status || "pending_sync",
-          sleeper_user_id: mem.sleeper_user_id,
-          team_name: mem.team_name,
+        const L = data.league;
+        const leagueInfo = {
+          sleeper_league_id: L.sleeper_league_id,
+          name: L.name,
+          status: L.status || "pending_sync",
+          sleeper_user_id: L.sleeper_user_id,
+          team_name: L.team_name,
         };
-        // Keep vote seat_profiles aligned with this membership (trigger also writes).
         if (authSession) {
           authSave(Object.assign({}, authSession, {
-            seat_user_id: mem.sleeper_user_id,
-            seat_name: mem.team_name,
+            seat_user_id: L.sleeper_user_id,
+            seat_name: L.team_name,
           }));
         }
-        voteSeatRemember(mem.sleeper_user_id);
-        await openLeagueDashboard(league);
+        voteSeatRemember(L.sleeper_user_id);
+        await openLeagueDashboard(leagueInfo);
       } catch (err) {
-        joinError = (err && err.message) || "Could not join.";
+        joinError = (err && err.message) || "Could not redeem that invite.";
         console.error(err);
         joinBusy = false;
         render();
       }
     }
 
+    async function joinLeagueCall(action, sleeperLeagueId, sleeperUserId, code) {
+      await authRefreshIfNeeded();
+      if (!authSession || !authSession.access_token) throw new Error("Sign in required.");
+      const res = await fetch(FN_API + "/join-league", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + authSession.access_token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: action,
+          sleeper_league_id: sleeperLeagueId || undefined,
+          sleeper_user_id: sleeperUserId || undefined,
+          code: code || undefined,
+        }),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || ("Request failed (" + res.status + ")"));
+      }
+      return data;
+    }
+
+    // Prefer league-scoped UI JSON; fall back to legacy data/ui for Cuckle.
     function leagueDataPrefix(leagueId) {
       return "data/leagues/" + leagueId + "/ui";
     }
 
-    // Prefer league-scoped UI JSON; fall back to legacy data/ui for Cuckle.
     async function getLeagueJson(name) {
       const id = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       try {
@@ -3952,23 +3939,13 @@
     }
 
     function renderAppGate() {
-      const title = gateMode === "signup" ? "Get started" : "Sign in";
+      const title = gateMode === "signup" ? "Create account" : "Sign in";
       const go = gateMode === "signup" ? "Create account" : "Sign in";
-      const platformFields = gateMode === "signup"
-        ? '<p class="caption" style="margin:0">Required: your <b>Sleeper user ID</b>, <b>ESPN user ID</b>, or both if you moved leagues and still have data on each.</p>'
-          + '<label>Sleeper user ID<input id="gateSleeper" name="sleeperId" inputmode="numeric" autocomplete="off"'
-          + ' placeholder="Digits from sleeper.app" autocapitalize="off"'
-          + (authBusy ? " disabled" : "") + " /></label>"
-          + '<label>ESPN user ID<input id="gateEspn" name="espnId" autocomplete="off"'
-          + ' placeholder="Optional if you entered Sleeper" autocapitalize="off"'
-          + (authBusy ? " disabled" : "") + " /></label>"
-        : "";
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
-        + '<p class="caption">Trade meter for fantasy leagues. Link your Sleeper and/or ESPN ID, join a league by ID, then open your dashboard.</p>'
+        + '<p class="caption">Trade meter for fantasy leagues. One commissioner creates the league and sends invites. Members set a username and password — no Sleeper login required.</p>'
         + '<div class="app-card"><h3>' + title + "</h3>"
         + '<div class="app-form">'
-        + platformFields
         + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
         + ' autocapitalize="off" spellcheck="false"' + (authBusy ? " disabled" : "") + " /></label>"
         + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
@@ -3982,18 +3959,14 @@
         + '<p class="caption" style="margin:12px 0 0">'
         + (gateMode === "signup"
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Get started</button>')
+          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
         + "</p></div>"
-        + '<p class="caption">CuckleChunckle managers: after you create an account, add league ID '
-        + "<code>" + CUCKLE_LEAGUE_ID + "</code> to open the dashboard.</p>"
+        + '<p class="caption">Have an invite code? Sign in, then choose <b>Redeem invite</b> on the next screen.</p>'
         + "</div>";
     }
 
     function renderAppHome() {
       const uname = (authSession && authSession.username) || "you";
-      const plat = [];
-      if (authSession && authSession.sleeper_user_id) plat.push("Sleeper " + authSession.sleeper_user_id);
-      if (authSession && authSession.espn_user_id) plat.push("ESPN " + authSession.espn_user_id);
       const rows = (memberships || []).map((m) => {
         const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
         return '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
@@ -4004,66 +3977,75 @@
       }).join("");
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your leagues</h2>'
-        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>"
-        + (plat.length ? " · " + esc(plat.join(" · ")) : "")
-        + ". "
+        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (rows || '<p class="caption">No leagues yet. For CuckleChunckle, add Sleeper league ID '
-          + "<code>" + CUCKLE_LEAGUE_ID + "</code>.</p>")
+        + (rows || '<p class="caption">No leagues yet. Create one as commissioner, or redeem an invite from yours.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
-        + "</div></div>";
+        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div>"
+        + '<p class="caption">CuckleChunckle: create with Sleeper league ID <code>' + CUCKLE_LEAGUE_ID
+        + "</code>, then DM each manager their seat invite.</p>"
+        + "</div>";
     }
 
-    function renderJoinLeague() {
-      const teams = (joinPreview && joinPreview.teams) || [];
-      const mine = authSession && authSession.sleeper_user_id;
-      const matched = mine && joinSeatId === mine
-        && teams.some((t) => t.sleeper_user_id === mine);
-      const teamBtns = teams.map((t) => {
-        const on = joinSeatId === t.sleeper_user_id;
-        const isMine = mine && t.sleeper_user_id === mine;
-        return '<button type="button" class="team-opt' + (on ? " on" : "") + '"'
-          + ' data-join-seat="' + esc(t.sleeper_user_id) + '"'
-          + ' aria-pressed="' + (on ? "true" : "false") + '">'
-          + esc(t.team_name)
-          + (isMine ? " · your Sleeper ID" : "")
-          + (t.display_name && t.display_name !== t.team_name
-            ? ' <span class="caption" style="display:inline;margin:0">(' + esc(t.display_name) + ")</span>"
-            : "")
-          + "</button>";
+    function renderCreateLeague() {
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
+        + '<p class="caption">Only one person needs to do this. Enter the Sleeper <b>league</b> ID '
+        + "(and ESPN league ID if you still have ESPN history). We pull the roster from Sleeper and mint one invite per team.</p>"
+        + '<div class="app-card"><h3>League IDs</h3>'
+        + '<div class="app-form">'
+        + '<label>Sleeper league ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
+        + ' placeholder="' + CUCKLE_LEAGUE_ID + '" value="' + esc(joinLeagueId) + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<label>ESPN league ID (optional)<input id="joinEspnId" name="espnId" autocomplete="off"'
+        + ' placeholder="Only if you have ESPN data too" value="' + esc(joinEspnId) + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-create-league="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Creating…" : "Create & generate invites") + "</button>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div></div></div>";
+    }
+
+    function renderInvites() {
+      const L = joinPreview || {};
+      const rows = (createdInvites || []).map((inv) => {
+        return '<div class="app-card" style="margin-bottom:8px">'
+          + "<b>" + esc(inv.team_name) + "</b>"
+          + '<p class="caption" style="margin:4px 0 0">'
+          + (inv.claimed
+            ? "Already claimed"
+            : 'Invite code: <code style="user-select:all">' + esc(inv.code) + "</code>")
+          + "</p></div>";
       }).join("");
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
-        + '<h2 class="screen-h" tabindex="-1">Add a league</h2>'
-        + '<p class="caption">Enter the Sleeper <b>league</b> ID. We match your seat from the Sleeper <b>user</b> ID on your account'
-        + (mine ? " (<code>" + esc(mine) + "</code>)" : "")
-        + ". CuckleChunckle uses <code>" + CUCKLE_LEAGUE_ID + "</code>.</p>"
-        + '<div class="app-card"><h3>Sleeper league ID</h3>'
+        + '<h2 class="screen-h" tabindex="-1">Seat invites</h2>'
+        + '<p class="caption"><b>' + esc(L.name || "League") + "</b> is ready to invite. "
+        + "DM each manager <b>only their</b> code. The code is already tied to their Sleeper team — they only set a username and password.</p>"
+        + rows
+        + '<p class="caption">Codes for unclaimed seats can be rotated later from create (same league ID).</p>'
+        + "</div>";
+    }
+
+    function renderRedeemInvite() {
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Redeem invite</h2>'
+        + '<p class="caption">Enter the code your commissioner sent. It already knows your team from Sleeper — you do not enter a Sleeper ID.</p>'
+        + '<div class="app-card"><h3>Invite code</h3>'
         + '<div class="app-form">'
-        + '<label>League ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
-        + ' placeholder="' + CUCKLE_LEAGUE_ID + '" value="' + esc(joinLeagueId) + '"'
+        + '<label>Code<input id="redeemCode" name="code" autocomplete="off" autocapitalize="characters"'
+        + ' placeholder="CF-XXXX-XXXX" value="' + esc(redeemCode) + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-join-preview="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy && !joinPreview ? "Looking up…" : "Find league") + "</button>"
-        + "</div></div></div>"
-        + (joinPreview
-          ? '<div class="app-card"><h3>' + esc(joinPreview.name) + "</h3>"
-            + '<p class="caption" style="margin:0 0 8px">'
-            + (joinPreview.season ? "Season " + esc(joinPreview.season) + " · " : "")
-            + (joinPreview.total_rosters || teams.length) + " teams"
-            + (matched ? " · matched to your Sleeper ID" : "")
-            + "</p>"
-            + '<div class="team-pick">' + teamBtns + "</div>"
-            + '<div class="app-actions" style="margin-top:10px">'
-            + '<button type="button" class="chip" data-join-confirm="1"'
-            + (joinBusy || !joinSeatId ? " disabled" : "") + ">"
-            + (joinBusy ? "Joining…" : "Join & open dashboard") + "</button>"
-            + "</div></div>"
-          : "")
-        + (joinError ? '<p class="err" role="alert" style="color:var(--red)">' + esc(joinError) + "</p>" : "")
-        + "</div>";
+        + '<button type="button" class="chip" data-redeem-go="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Joining…" : "Join & open dashboard") + "</button>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div></div></div>";
     }
 
     function renderPendingLeague() {
@@ -4080,11 +4062,15 @@
     function render() {
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
-      if (appScreen === "gate" || appScreen === "home" || appScreen === "join") {
+      if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
+          || appScreen === "invites" || appScreen === "redeem" || appScreen === "join") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
         app.innerHTML = appScreen === "gate" ? renderAppGate()
-          : appScreen === "join" ? renderJoinLeague()
+          : appScreen === "create" ? renderCreateLeague()
+          : appScreen === "invites" ? renderInvites()
+          : appScreen === "redeem" ? renderRedeemInvite()
+          : appScreen === "join" ? renderCreateLeague()
           : renderAppHome();
         const land = focusNext ? app.querySelector(focusNext) : null;
         focusNext = null;
@@ -4481,9 +4467,14 @@
         onGateSubmit();
         return;
       }
-      if (t.id === "joinLeagueId") {
+      if (t.id === "joinLeagueId" || t.id === "joinEspnId") {
         e.preventDefault();
-        onJoinPreview();
+        onCreateLeague();
+        return;
+      }
+      if (t.id === "redeemCode") {
+        e.preventDefault();
+        onRedeemInvite();
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {
@@ -4544,23 +4535,49 @@
       const appHome = e.target.closest("[data-app-home]");
       if (appHome) {
         appScreen = "home";
+        joinError = "";
         focusNext = ".screen-h";
         loadMemberships().then(() => render()).catch((err) => { console.error(err); render(); });
         return;
       }
+      const appCreate = e.target.closest("[data-app-create]");
+      if (appCreate) {
+        appScreen = "create";
+        joinError = "";
+        createdInvites = null;
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const appRedeem = e.target.closest("[data-app-redeem]");
+      if (appRedeem) {
+        appScreen = "redeem";
+        joinError = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const createLeagueBtn = e.target.closest("[data-create-league]");
+      if (createLeagueBtn) {
+        onCreateLeague();
+        return;
+      }
+      const redeemGo = e.target.closest("[data-redeem-go]");
+      if (redeemGo) {
+        onRedeemInvite();
+        return;
+      }
       const appJoin = e.target.closest("[data-app-join]");
       if (appJoin) {
-        appScreen = "join";
+        appScreen = "create";
         joinError = "";
-        joinPreview = null;
-        joinSeatId = "";
         focusNext = ".screen-h";
         render();
         return;
       }
       const joinPreviewBtn = e.target.closest("[data-join-preview]");
       if (joinPreviewBtn) {
-        onJoinPreview();
+        onCreateLeague();
         return;
       }
       const joinSeatBtn = e.target.closest("[data-join-seat]");
@@ -4571,7 +4588,6 @@
       }
       const joinConfirmBtn = e.target.closest("[data-join-confirm]");
       if (joinConfirmBtn) {
-        onJoinConfirm();
         return;
       }
       const openLeagueBtn = e.target.closest("[data-open-league]");

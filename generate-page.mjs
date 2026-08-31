@@ -802,9 +802,40 @@ const html = `<!DOCTYPE html>
       text-align: left; cursor: pointer; touch-action: manipulation;
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.lh-latest-trade {
-      display: block; width: 100%; text-align: left; cursor: pointer;
-      touch-action: manipulation;
+    /* Latest trade: dark charcoal chip, three left-aligned rows (title / matchup / meta+delta).
+       Triple class beats button.champ-alert.lh-progress { display:block; padding… }. */
+    button.champ-alert.lh-progress.lh-latest-trade {
+      display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
+      gap: 6px; width: 100%; box-sizing: border-box;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      cursor: pointer; touch-action: manipulation;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 16px;
+      padding: 14px 16px; margin: 0 0 12px; min-height: 0; height: auto;
+    }
+    button.lh-latest-trade .day-alert-h {
+      font-weight: 700; color: var(--text); line-height: 1.3; margin: 0;
+    }
+    button.lh-latest-trade .champ-line {
+      color: var(--text); font-weight: 650; line-height: 1.35; margin: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    button.lh-latest-trade .lh-lt-vs {
+      color: var(--muted); font-weight: 500;
+    }
+    button.lh-latest-trade .champ-fig {
+      display: flex; align-items: baseline; gap: 10px; margin: 0; min-width: 0;
+      color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
+      white-space: nowrap; overflow: hidden;
+    }
+    button.lh-latest-trade .champ-fig > span {
+      flex: 0 1 auto; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: var(--dim);
+    }
+    /* Delta stays visible; long date/headline ellipsises. Colour comes from .delta.pos/.neg. */
+    button.lh-latest-trade .champ-fig > b {
+      flex: 0 0 auto; margin-left: 0; white-space: nowrap;
+      font-weight: 650; font-variant-numeric: tabular-nums; color: inherit;
     }
     .lh-week-h {
       font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
@@ -1239,7 +1270,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "champWeekStrip20260831231430";
+    const DATA_V = "latestTradeChip20260831231600";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4504,7 +4535,8 @@ const html = `<!DOCTYPE html>
           + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
           + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
           + '<div class="day-alert-h">Latest trade</div>'
-          + '<div class="champ-line">' + seatLabel(latest.name) + " vs " + seatLabel(latest.other) + "</div>"
+          + '<div class="champ-line">' + seatLabel(latest.name)
+          + ' <span class="lh-lt-vs">vs</span> ' + seatLabel(latest.other) + "</div>"
           + '<div class="date champ-fig"><span>'
           + (latest.date ? esc(latest.date) : "Recent")
           + (latest.headline ? " · " + esc(latest.headline) : "")
@@ -6033,6 +6065,9 @@ if (inline.includes('day-alert-h">Champions Path')) {
   const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
   if (!prog.includes('day-alert-h">Latest trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must mount Latest trade (lh-latest-trade) that opens via data-board-open");
+  }
+  if (!prog.includes('class="lh-lt-vs">vs</span>') || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
+    throw new Error("Latest trade chip must keep muted vs + charcoal column layout CSS");
   }
   if (prog.includes("?view=titles") || prog.includes('data-view="titles"') || prog.includes(">Champions Path<")) {
     throw new Error("leagueInProgress must not link to Champions Path / titles");

@@ -121,8 +121,10 @@ Auth: caller JWT required. Writes: **service role** only (clients cannot insert 
 | --- | --- | --- |
 | `preview` | Signed-in | Sleeper roster preview |
 | `create` | Commissioner | First claim of `created_by`: upsert league + mint codes. Same commissioner again: `already_exists` + status list (**no remint**) |
-| `list_invites` | Creator | Claimed / unclaimed; no plaintext codes |
+| `list_invites` | Creator | Claimed / unclaimed + member list; no plaintext codes |
 | `rotate_invites` | Creator | New codes for **unclaimed** seats only |
+| `reissue_seat` | Creator | Clear membership for a **claimed** seat + mint a new code (manager left / new manager) |
+| `transfer_commissioner` | Creator | Set `created_by` to another **league member**; former commissioner keeps their seat |
 | `redeem` | Member | RPC `redeem_seat_invite` — atomic membership + claim |
 | `claim_seat` | Creator | RPC `claim_commissioner_seat` — consume own seat invite |
 

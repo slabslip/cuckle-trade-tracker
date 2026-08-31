@@ -2573,11 +2573,13 @@ const html = `<!DOCTYPE html>
     let joinEspnId = "";
     let joinBusy = false;
     let joinError = "";
-    let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id }]
-    let inviteCodesVisible = false; // true only right after mint/rotate
+    let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id, claimed_username? }]
+    let leagueMembers = []; // members of the invite-console league (for transfer)
+    let inviteCodesVisible = false; // true only right after mint/rotate/reissue
     let redeemCode = "";
     let gateMode = "signup"; // signup | signin — get started first
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
+    let transferPickId = ""; // selected new commissioner auth_user_id
 
     function voteDeviceId() {
       try {
@@ -3137,12 +3139,17 @@ const html = `<!DOCTYPE html>
       joinBusy = true;
       joinError = "";
       createdInvites = null;
+      leagueMembers = [];
       inviteCodesVisible = false;
       render();
       try {
         await authRefreshIfNeeded();
-        const data = await joinLeagueCall("create", joinLeagueId, null, null, joinEspnId || undefined);
+        const data = await joinLeagueCall("create", {
+          sleeper_league_id: joinLeagueId,
+          espn_league_id: joinEspnId || undefined,
+        });
         createdInvites = data.invites || [];
+        leagueMembers = data.members || [];
         joinPreview = data.league;
         inviteCodesVisible = !data.already_exists;
         await loadMemberships().catch(() => {});
@@ -3162,10 +3169,12 @@ const html = `<!DOCTYPE html>
       joinBusy = true;
       joinError = "";
       inviteCodesVisible = false;
+      transferPickId = "";
       render();
       try {
-        const data = await joinLeagueCall("list_invites", leagueId);
+        const data = await joinLeagueCall("list_invites", { sleeper_league_id: leagueId });
         createdInvites = data.invites || [];
+        leagueMembers = data.members || [];
         joinPreview = data.league;
         joinLeagueId = leagueId;
         appScreen = "invites";
@@ -3185,12 +3194,102 @@ const html = `<!DOCTYPE html>
       joinError = "";
       render();
       try {
-        const data = await joinLeagueCall("rotate_invites", joinPreview.sleeper_league_id);
+        const data = await joinLeagueCall("rotate_invites", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+        });
         createdInvites = data.invites || [];
+        if (data.members) leagueMembers = data.members;
         joinPreview = data.league || joinPreview;
         inviteCodesVisible = true;
       } catch (err) {
         joinError = (err && err.message) || "Could not rotate invites.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onReissueSeat(sleeperUserId) {
+      if (joinBusy || !joinPreview || !sleeperUserId) return;
+      const inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId);
+      const who = (inv && inv.claimed_username)
+        ? "@" + inv.claimed_username
+        : (inv && inv.team_name) || "the current manager";
+      if (!window.confirm(
+        "Reissue invite for " + ((inv && inv.team_name) || "this seat") + "?\n\n"
+        + "This removes " + who + " from the seat and creates a new code for the replacement manager. "
+        + "Their past votes stay in the tally.",
+      )) return;
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("reissue_seat", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          sleeper_user_id: sleeperUserId,
+        });
+        createdInvites = data.invites || [];
+        leagueMembers = data.members || [];
+        joinPreview = data.league || joinPreview;
+        inviteCodesVisible = true;
+        settingsCopyNote = data.note || "New invite ready — copy and DM the new manager.";
+        await loadMemberships().catch(() => {});
+        const lid = joinPreview && joinPreview.sleeper_league_id;
+        const wasMyActiveSeat = !!(activeLeague && activeLeague.sleeper_league_id === lid
+          && activeLeague.sleeper_user_id === sleeperUserId);
+        const wasMyAuthSeat = !!(authSession && authSession.seat_user_id === sleeperUserId);
+        if (wasMyActiveSeat) saveActiveLeague(null);
+        if (wasMyAuthSeat && authSession) {
+          authSave(Object.assign({}, authSession, { seat_user_id: null, seat_name: null }));
+        }
+      } catch (err) {
+        joinError = (err && err.message) || "Could not reissue that seat.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onTransferCommissioner() {
+      if (joinBusy || !joinPreview) return;
+      const pickEl = document.getElementById("transferPick");
+      const newId = pickEl ? String(pickEl.value || "").trim() : transferPickId;
+      transferPickId = newId;
+      if (!newId) {
+        joinError = "Pick a league member to become commissioner.";
+        render();
+        return;
+      }
+      const mem = (leagueMembers || []).find((m) => m.auth_user_id === newId);
+      const label = mem
+        ? ((mem.username ? "@" + mem.username : "member") + " (" + mem.team_name + ")")
+        : "that member";
+      if (!window.confirm(
+        "Transfer commissioner to " + label + "?\n\n"
+        + "You will lose invite/admin access for this league. You keep your seat if you claimed one.",
+      )) return;
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("transfer_commissioner", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          new_commissioner_id: newId,
+        });
+        settingsCopyNote = data.note || "Commissioner transferred.";
+        createdInvites = null;
+        leagueMembers = [];
+        joinPreview = null;
+        inviteCodesVisible = false;
+        await loadMemberships();
+        appScreen = "settings";
+        focusNext = ".screen-h";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not transfer commissioner.";
         console.error(err);
       } finally {
         joinBusy = false;
@@ -3204,11 +3303,10 @@ const html = `<!DOCTYPE html>
       joinError = "";
       render();
       try {
-        const data = await joinLeagueCall(
-          "claim_seat",
-          joinPreview.sleeper_league_id,
-          sleeperUserId,
-        );
+        const data = await joinLeagueCall("claim_seat", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          sleeper_user_id: sleeperUserId,
+        });
         await loadMemberships();
         const L = data.league;
         const leagueInfo = {
@@ -3249,7 +3347,7 @@ const html = `<!DOCTYPE html>
       joinError = "";
       render();
       try {
-        const data = await joinLeagueCall("redeem", null, null, redeemCode);
+        const data = await joinLeagueCall("redeem", { code: redeemCode });
         await loadMemberships();
         const L = data.league;
         const leagueInfo = {
@@ -3275,14 +3373,10 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    async function joinLeagueCall(action, sleeperLeagueId, sleeperUserId, code, espnLeagueId) {
+    async function joinLeagueCall(action, fields) {
       await authRefreshIfNeeded();
       if (!authSession || !authSession.access_token) throw new Error("Sign in required.");
-      const body = { action: action };
-      if (sleeperLeagueId) body.sleeper_league_id = sleeperLeagueId;
-      if (sleeperUserId) body.sleeper_user_id = sleeperUserId;
-      if (code) body.code = code;
-      if (espnLeagueId) body.espn_league_id = espnLeagueId;
+      const body = Object.assign({ action: action }, fields || {});
       const res = await fetch(FN_API + "/join-league", {
         method: "POST",
         headers: {
@@ -4251,13 +4345,18 @@ const html = `<!DOCTYPE html>
       const myMembership = (memberships || []).find(
         (m) => m.sleeper_league_id === L.sleeper_league_id,
       );
+      const meId = authSession && authSession.user_id;
+      const transferCandidates = (leagueMembers || []).filter((m) => m.auth_user_id && m.auth_user_id !== meId);
       const rows = (createdInvites || []).map((inv) => {
         const showCode = inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0;
+        const claimer = inv.claimed_username
+          ? "@" + inv.claimed_username
+          : (inv.claimed ? "a member" : null);
         return '<div class="app-card" style="margin-bottom:8px">'
           + "<b>" + esc(inv.team_name) + "</b>"
           + '<p class="caption" style="margin:4px 0 0">'
           + (inv.claimed
-            ? "Already claimed"
+            ? ("Claimed" + (claimer ? " by " + esc(claimer) : ""))
             : (showCode
               ? 'Invite code: <code style="user-select:all">' + esc(inv.code) + "</code>"
               : "Unclaimed — rotate to reveal a new code"))
@@ -4269,6 +4368,12 @@ const html = `<!DOCTYPE html>
               + esc(inv.team_name) + '" data-copy-dm-code="' + esc(inv.code) + '">Copy DM text</button>'
               + "</div>"
             : "")
+          + (inv.claimed
+            ? '<div class="app-actions">'
+              + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
+              + "</div>"
+            : "")
           + (!inv.claimed && !myMembership
             ? '<button type="button" class="chip" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">Claim this seat</button>"
@@ -4278,6 +4383,27 @@ const html = `<!DOCTYPE html>
       const visibleCodes = (createdInvites || []).filter(
         (inv) => inviteCodesVisible && inv.code && inv.code.indexOf("(") !== 0 && !inv.claimed,
       );
+      const transferBlock = '<div class="app-card" style="margin-top:12px">'
+        + "<h3>Transfer commissioner</h3>"
+        + '<p class="caption" style="margin:0 0 8px">Give dashboard admin to another league member. '
+        + "You keep your seat; they get invites and Settings admin for this league.</p>"
+        + (transferCandidates.length
+          ? ('<div class="app-form"><label>New commissioner<select id="transferPick"'
+            + (joinBusy ? " disabled" : "") + ">"
+            + '<option value="">Pick a member…</option>'
+            + transferCandidates.map((m) => {
+              const label = (m.username ? "@" + m.username : "member") + " — " + m.team_name;
+              const sel = transferPickId === m.auth_user_id ? " selected" : "";
+              return '<option value="' + esc(m.auth_user_id) + '"' + sel + ">"
+                + esc(label) + "</option>";
+            }).join("")
+            + "</select></label>"
+            + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-transfer-comm="1"'
+            + (joinBusy ? " disabled" : "") + ">Transfer admin</button>"
+            + "</div></div>")
+          : '<p class="caption">No other members yet. Someone must redeem an invite before you can transfer.</p>')
+        + "</div>";
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
         + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
@@ -4299,7 +4425,8 @@ const html = `<!DOCTYPE html>
           ? '<button type="button" class="chip" data-open-league="' + esc(L.sleeper_league_id) + '">Open dashboard</button>'
           : '<p class="caption">Claim your own seat above so this league appears on Your leagues.</p>')
         + "</div>"
-        + '<p class="caption">Rotate only when a code was lost or leaked. Claimed seats are never rotated.</p>'
+        + '<p class="caption">Rotate only when a code was lost or leaked. For a claimed seat when a manager leaves, use <b>Reissue for new manager</b>.</p>'
+        + transferBlock
         + "</div>";
     }
 
@@ -4326,7 +4453,9 @@ const html = `<!DOCTYPE html>
               ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
                 + '">Open dashboard</button>'
               : "")
-            + "</div></div>";
+            + "</div>"
+            + '<p class="caption" style="margin:8px 0 0">Transfer admin or reissue a seat after a manager leaves: open <b>Send / manage invites</b>.</p>'
+            + "</div>";
         }).join("")
         : '<p class="caption">You have not created a league yet. Create one from Your leagues to become commissioner and mint seat invites.</p>';
       return '<div class="app-shell">'
@@ -4339,7 +4468,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>"
         + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
-        + '<p class="caption">As commissioner you mint one invite per Sleeper seat and DM each manager their code. They redeem it to join.</p>'
+        + '<p class="caption">As commissioner you mint one invite per Sleeper seat and DM each manager their code. They redeem it to join. You can transfer commissioner to another member, or reissue a seat when a manager leaves.</p>'
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
         + '<div class="app-actions" style="margin-top:8px">'
@@ -4914,6 +5043,16 @@ const html = `<!DOCTYPE html>
       const rotateInvites = e.target.closest("[data-rotate-invites]");
       if (rotateInvites) {
         onRotateInvites();
+        return;
+      }
+      const reissueSeat = e.target.closest("[data-reissue-seat]");
+      if (reissueSeat) {
+        onReissueSeat(reissueSeat.dataset.reissueSeat).catch((err) => console.error(err));
+        return;
+      }
+      const transferComm = e.target.closest("[data-transfer-comm]");
+      if (transferComm) {
+        onTransferCommissioner().catch((err) => console.error(err));
         return;
       }
       const claimSeatBtn = e.target.closest("[data-claim-seat]");
@@ -5868,6 +6007,12 @@ if (!html.includes('id="goSettings"') || !inline.includes("function openSettings
 }
 if (!inline.includes("function renderSettings()")) {
   throw new Error("Settings screen renderer missing");
+}
+if (!inline.includes("function onReissueSeat(") || !inline.includes("function onTransferCommissioner(")) {
+  throw new Error("commissioner must be able to reissue seats and transfer admin");
+}
+if (!inline.includes('data-reissue-seat="') || !inline.includes('data-transfer-comm="1"')) {
+  throw new Error("invite console must expose reissue + transfer controls");
 }
 // Newline-anchored, because "me = null;" is a substring of "partnerName = null;" two lines below
 // it -- a guard that cannot fail is the thing this file has the most of already.

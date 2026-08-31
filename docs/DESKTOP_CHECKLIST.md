@@ -246,7 +246,9 @@ Leave the Terminal running while you test.
 4. Submit  
 
 **Expected:** Invite console opens with status / hidden codes — **not** a brand-new set of codes.  
-New codes only appear after **Rotate unclaimed**.
+New codes only appear after **Rotate unclaimed**.  
+For a **claimed** seat (manager left), use **Reissue for new manager** — that clears the old membership and shows one fresh code.  
+**Transfer admin** (bottom of invite console) moves commissioner to another member who already redeemed.
 
 ---
 

@@ -7,8 +7,12 @@
 //   preview         { sleeper_league_id }
 //   create          { sleeper_league_id, espn_league_id? }
 //                   → first time: mint codes; revisit by same commissioner: status only (no remint)
-//   list_invites    { sleeper_league_id }  → claimed/unclaimed (no plaintext)
+//   list_invites    { sleeper_league_id }  → claimed/unclaimed + members (no plaintext)
 //   rotate_invites  { sleeper_league_id }  → new codes for unclaimed seats
+//   reissue_seat    { sleeper_league_id, sleeper_user_id }
+//                   → clear membership + mint new code for a claimed seat (manager left)
+//   transfer_commissioner { sleeper_league_id, new_commissioner_id }
+//                   → give dashboard admin to another league member
 //   redeem          { code }               → atomic membership + claim
 //   claim_seat      { sleeper_league_id, sleeper_user_id }  → commissioner claims own seat
 //
@@ -143,12 +147,55 @@ async function listInviteRows(
     .eq("sleeper_league_id", leagueId)
     .order("team_name");
   if (error) throw new Error(error.message);
+
+  const claimerIds = [...new Set(
+    (rows || []).map((r) => r.claimed_by).filter(Boolean),
+  )] as string[];
+  const usernames: Record<string, string> = {};
+  if (claimerIds.length) {
+    const { data: profiles } = await admin.from("app_profiles")
+      .select("auth_user_id, username")
+      .in("auth_user_id", claimerIds);
+    for (const p of profiles || []) {
+      if (p.auth_user_id && p.username) usernames[p.auth_user_id] = p.username;
+    }
+  }
+
   return (rows || []).map((r) => ({
     team_name: r.team_name,
     sleeper_user_id: r.sleeper_user_id,
     claimed: !!r.claimed_by,
+    claimed_by: r.claimed_by || null,
+    claimed_username: r.claimed_by ? (usernames[r.claimed_by] || null) : null,
     claimed_at: r.claimed_at,
     code: r.claimed_by ? "(already claimed)" : "(hidden — rotate to reissue)",
+  }));
+}
+
+async function listLeagueMembers(
+  admin: ReturnType<typeof createClient>,
+  leagueId: string,
+) {
+  const { data: mems, error } = await admin.from("league_memberships")
+    .select("auth_user_id, sleeper_user_id, team_name")
+    .eq("sleeper_league_id", leagueId)
+    .order("team_name");
+  if (error) throw new Error(error.message);
+  const ids = (mems || []).map((m) => m.auth_user_id).filter(Boolean);
+  const usernames: Record<string, string> = {};
+  if (ids.length) {
+    const { data: profiles } = await admin.from("app_profiles")
+      .select("auth_user_id, username")
+      .in("auth_user_id", ids);
+    for (const p of profiles || []) {
+      if (p.auth_user_id && p.username) usernames[p.auth_user_id] = p.username;
+    }
+  }
+  return (mems || []).map((m) => ({
+    auth_user_id: m.auth_user_id,
+    sleeper_user_id: m.sleeper_user_id,
+    team_name: m.team_name,
+    username: usernames[m.auth_user_id] || null,
   }));
 }
 
@@ -306,8 +353,10 @@ Deno.serve(async (req) => {
       return json(403, { ok: false, error: "Only the league creator can list invites" });
     }
     let invites;
+    let members;
     try {
       invites = await listInviteRows(admin, leagueId);
+      members = await listLeagueMembers(admin, leagueId);
     } catch (err) {
       return json(500, { ok: false, error: String((err as Error).message || err) });
     }
@@ -328,6 +377,158 @@ Deno.serve(async (req) => {
         teams,
       },
       invites,
+      members,
+    });
+  }
+
+  // ---- reissue one claimed seat (manager left → new invite for replacement) ----
+  if (action === "reissue_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const seatId = String(body.sleeper_user_id || "").trim();
+    if (!leagueId || !seatId) {
+      return json(400, { ok: false, error: "Pick the seat to reissue" });
+    }
+    const { data: league } = await admin.from("leagues")
+      .select("created_by, name, status, season, total_rosters, espn_league_id")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!league || league.created_by !== user.id) {
+      return json(403, { ok: false, error: "Only the league creator can reissue a seat invite" });
+    }
+    const { data: invite } = await admin.from("seat_invites")
+      .select("*")
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId)
+      .maybeSingle();
+    if (!invite) return json(404, { ok: false, error: "Unknown seat" });
+    if (!invite.claimed_by) {
+      return json(400, {
+        ok: false,
+        error: "That seat is unclaimed — use Rotate unclaimed instead",
+      });
+    }
+
+    // Drop the leaving manager's membership for this seat (historical votes stay).
+    const { error: delErr } = await admin.from("league_memberships")
+      .delete()
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId);
+    if (delErr) {
+      return json(500, { ok: false, error: "Could not clear membership: " + delErr.message });
+    }
+
+    const code = makeCode();
+    const code_hash = await sha256Hex(code);
+    const { error: updErr } = await admin.from("seat_invites").update({
+      code_hash,
+      claimed_by: null,
+      claimed_at: null,
+      created_by: user.id,
+      team_name: invite.team_name,
+    }).eq("id", invite.id);
+    if (updErr) {
+      return json(500, { ok: false, error: "Could not mint new invite: " + updErr.message });
+    }
+
+    let invites;
+    let members;
+    try {
+      invites = await listInviteRows(admin, leagueId);
+      members = await listLeagueMembers(admin, leagueId);
+    } catch {
+      invites = [];
+      members = [];
+    }
+    // Overlay plaintext for the reissued seat only.
+    invites = (invites || []).map((row) =>
+      row.sleeper_user_id === seatId
+        ? { ...row, claimed: false, claimed_by: null, claimed_username: null, code }
+        : row
+    );
+
+    return json(200, {
+      ok: true,
+      reissued: {
+        team_name: invite.team_name,
+        sleeper_user_id: seatId,
+        code,
+      },
+      league: {
+        sleeper_league_id: leagueId,
+        name: league.name,
+        status: league.status,
+        season: league.season,
+        total_rosters: league.total_rosters,
+        espn_league_id: league.espn_league_id,
+      },
+      invites,
+      members,
+      note: "DM the new manager this code. The previous account no longer has this seat.",
+    });
+  }
+
+  // ---- transfer commissioner to another league member ----
+  if (action === "transfer_commissioner") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const newId = String(body.new_commissioner_id || "").trim();
+    if (!leagueId || !newId) {
+      return json(400, { ok: false, error: "Pick a league member to become commissioner" });
+    }
+    if (newId === user.id) {
+      return json(400, { ok: false, error: "You are already the commissioner" });
+    }
+    const { data: league } = await admin.from("leagues")
+      .select("created_by, name, status")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!league || league.created_by !== user.id) {
+      return json(403, { ok: false, error: "Only the current commissioner can transfer admin" });
+    }
+    const { data: membership } = await admin.from("league_memberships")
+      .select("auth_user_id, team_name, sleeper_user_id")
+      .eq("sleeper_league_id", leagueId)
+      .eq("auth_user_id", newId)
+      .maybeSingle();
+    if (!membership) {
+      return json(400, {
+        ok: false,
+        error: "That person must already be a league member (redeemed a seat invite)",
+      });
+    }
+    const { data: profile } = await admin.from("app_profiles")
+      .select("username")
+      .eq("auth_user_id", newId)
+      .maybeSingle();
+
+    const { error: updErr } = await admin.from("leagues")
+      .update({ created_by: newId })
+      .eq("sleeper_league_id", leagueId)
+      .eq("created_by", user.id);
+    if (updErr) {
+      return json(500, { ok: false, error: "Could not transfer commissioner: " + updErr.message });
+    }
+    // Keep invite rows aligned with the new creator for RLS on created_by.
+    await admin.from("seat_invites")
+      .update({ created_by: newId })
+      .eq("sleeper_league_id", leagueId);
+
+    return json(200, {
+      ok: true,
+      league: {
+        sleeper_league_id: leagueId,
+        name: league.name,
+        status: league.status,
+        created_by: newId,
+      },
+      new_commissioner: {
+        auth_user_id: newId,
+        username: (profile && profile.username) || null,
+        team_name: membership.team_name,
+        sleeper_user_id: membership.sleeper_user_id,
+      },
+      note: "You are no longer commissioner. "
+        + ((profile && profile.username) || "The new commissioner")
+        + " now manages invites and admin for this league.",
     });
   }
 

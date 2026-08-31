@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Design — League home (phone frame preview)</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #1a1a1e; }
+    .stage {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px; padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #9a9aa3; font-size: 0.8125rem; text-align: center;
+    }
+    .phone {
+      width: 390px; height: min(844px, calc(100vh - 80px));
+      border: 10px solid #2a2a30; border-radius: 32px; overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.55); background: #0b0b0d;
+    }
+    iframe { width: 100%; height: 100%; border: 0; }
+    a { color: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <p>Phone preview only. For <b>Design Mode</b> (clickable DOM), use
+      <a href="./design-league-home.html">design-league-home.html</a>.</p>
+    <div class="phone"><iframe id="frame" title="League home" src="about:blank"></iframe></div>
+  </div>
+  <script>
+    var user = {
+      access_token: "design-mode", refresh_token: "",
+      expires_at: Math.floor(Date.now() / 1000) + 86400,
+      user_id: "design-user", username: "designer",
+      seat_user_id: "457779824002330624", seat_name: "SF69erss"
+    };
+    var league = {
+      sleeper_league_id: "1315431339301806080", name: "CuckleChunckle",
+      status: "ready", sleeper_user_id: "457779824002330624", team_name: "SF69erss"
+    };
+    localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
+    localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
+    localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
+    document.getElementById("frame").src = "./index.html";
+  </script>
+</body>
+</html>

@@ -1,17 +1,15 @@
-# Build Chuckle Fantasy today
+# Build Chuckle Fantasy today — exact clicks
 
-Ordered path for **this session at your desktop**. Spec: [`APP_SDD.md`](APP_SDD.md).  
-PR [#44](https://github.com/slabslip/cuckle-trade-tracker/pull/44) · branch `cursor/multi-league-app-878c`.
+Spec: [`APP_SDD.md`](APP_SDD.md).  
+Repo: **https://github.com/slabslip/cuckle-trade-tracker**  
+Branch: **`cursor/multi-league-app-878c`**  
+PR: **https://github.com/slabslip/cuckle-trade-tracker/pull/44**  
+Supabase project URL: **https://gtqyvnkkjiksmmtmzubw.supabase.co**  
+Live site (after merge): **https://slabslip.github.io/cuckle-trade-tracker/**
 
-The app code is already on the branch. Today you **wire Supabase + prove the flow**.
+The app code is already on the branch. Today you wire Supabase and prove the flow.
 
----
-
-## Step 0 — Open the right tools (5 min)
-
-1. Laptop with browser tabs: **GitHub** (this repo) · **Supabase** project dashboard · optional **Terminal**.
-2. Have the **service_role** key handy only if you use the CLI to deploy (never commit it).
-3. Cuckle Sleeper league ID (copy-paste ready):
+Cuckle Sleeper league ID (keep handy):
 
 ```text
 1315431339301806080
@@ -19,140 +17,267 @@ The app code is already on the branch. Today you **wire Supabase + prove the flo
 
 ---
 
-## Step 1 — Get the code
+## Step 1 — Pull the branch on your computer
+
+**Where:** your Mac/PC **Terminal** (or Cursor’s terminal), inside a clone of this repo.
+
+If you do **not** have the repo yet:
+
+```bash
+cd ~/Documents
+# or wherever you keep code
+git clone https://github.com/slabslip/cuckle-trade-tracker.git
+cd cuckle-trade-tracker
+```
+
+If you **already** have the repo:
 
 ```bash
 cd /path/to/cuckle-trade-tracker
+```
+
+Then always:
+
+```bash
 git fetch origin
 git checkout cursor/multi-league-app-878c
 git pull origin cursor/multi-league-app-878c
 ```
 
-Skim [`APP_SDD.md`](APP_SDD.md) §§2–3 if you want the shape fresh; then come back here.
+**Check it worked:**
+
+```bash
+git branch --show-current
+# must print: cursor/multi-league-app-878c
+
+ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql supabase/functions/join-league/index.ts
+# all three paths must exist
+```
+
+You are **not** pasting branch code into Supabase. The branch lives on GitHub / your disk. Supabase only gets the **SQL files** and the **Edge Function deploy** below.
 
 ---
 
-## Step 2 — Apply SQL (Supabase → SQL → New query)
+## Step 2 — Paste SQL into Supabase (five times)
 
-Paste and **Run** each file **in order**. Wait for success before the next.
+**Where to open Supabase**
 
-| # | File |
-| --- | --- |
-| 1 | `db/phase1-seat-auth.sql` |
-| 2 | `db/multi-league-app.sql` |
-| 3 | `db/commissioner-invites.sql` |
-| 4 | `db/wave1-invite-hardening.sql` |
-| 5 | `db/wave2-vote-identity.sql` |
+1. Browser → go to **https://supabase.com/dashboard**
+2. Sign in
+3. Open the project that matches **`gtqyvnkkjiksmmtmzubw`**  
+   (Project Settings → API → Project URL should be `https://gtqyvnkkjiksmmtmzubw.supabase.co`)
+4. Left sidebar → **SQL Editor**
+5. Click **New query** (or “+”)
 
-**Do not** run `node seed-seat-auth.mjs`.
+**Where the SQL text comes from**
+
+On your computer, open each file **from the repo you just pulled**, in order.  
+In Finder/Cursor they are under:
+
+```text
+cuckle-trade-tracker/db/
+```
+
+| Order | Open this file on disk | What to do |
+| --- | --- | --- |
+| 1 | `db/phase1-seat-auth.sql` | Select all → Copy |
+| 2 | `db/multi-league-app.sql` | Select all → Copy |
+| 3 | `db/commissioner-invites.sql` | Select all → Copy |
+| 4 | `db/wave1-invite-hardening.sql` | Select all → Copy |
+| 5 | `db/wave2-vote-identity.sql` | Select all → Copy |
+
+**For each file:**
+
+1. In Supabase SQL Editor → **New query** (fresh editor is safest)
+2. Click in the big SQL text box
+3. **Paste** the whole file
+4. Click **Run** (bottom right / green play)
+5. Wait until it says success (or “Success. No rows returned”)
+6. Only then do the next file
+
+**Do not** paste `seed-seat-auth.mjs` anywhere. Do not run that script.
+
+If a file errors mid-way: stop and fix before continuing (screenshot the error). Most of these are idempotent and safe to re-run after a fix.
 
 ---
 
-## Step 3 — Auth settings (Authentication)
+## Step 3 — Auth settings (same Supabase project)
 
-1. **Providers → Email → Confirm email = OFF**
-2. **URL Configuration → Site URL** =
+Still in **https://supabase.com/dashboard** → your project:
+
+### 3a. Turn off email confirm
+
+1. Left sidebar → **Authentication**
+2. Click **Providers** (or **Sign In / Providers**)
+3. Open **Email**
+4. Set **Confirm email** to **OFF**
+5. Save if there is a Save button
+
+### 3b. Site URL
+
+1. Still under **Authentication**
+2. Click **URL Configuration** (sometimes under “Settings”)
+3. **Site URL** — paste exactly:
 
 ```text
 https://slabslip.github.io/cuckle-trade-tracker
 ```
 
-3. Add that URL under **Redirect URLs** if the UI asks for it.
+4. Under **Redirect URLs**, add the same URL if the list is empty or missing it:
 
-(Custom domain later → [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).)
+```text
+https://slabslip.github.io/cuckle-trade-tracker/**
+```
+
+5. Save
 
 ---
 
-## Step 4 — Deploy Edge Function
+## Step 4 — Deploy the Edge Function from your Terminal
 
-From the repo root (Supabase CLI logged into this project):
+**Where:** same Terminal, same repo folder as Step 1  
+**What gets deployed:** file on disk  
+`supabase/functions/join-league/index.ts`  
+→ Supabase hosted function named **`join-league`**
+
+### 4a. One-time CLI setup (skip if already done)
 
 ```bash
+# install if you do not have it:
+# macOS: brew install supabase/tap/supabase
+supabase --version
+
+supabase login
+# browser opens → authorize
+
+cd /path/to/cuckle-trade-tracker
+supabase link --project-ref gtqyvnkkjiksmmtmzubw
+# if asked for DB password, use the one from Supabase → Project Settings → Database
+```
+
+### 4b. Deploy
+
+```bash
+cd /path/to/cuckle-trade-tracker
+git checkout cursor/multi-league-app-878c   # still on this branch
 supabase functions deploy join-league
 ```
 
-Source: `supabase/functions/join-league/index.ts`.
-
-If you have not used the CLI on this machine: install/login once (`supabase login` + `supabase link`), then deploy.
+**Check it worked:** Supabase dashboard → left sidebar → **Edge Functions** → you should see **`join-league`**.
 
 ---
 
-## Step 5 — Ship the page (if Pages is still on old main)
+## Step 5 — Open the new Chuckle Fantasy page
 
-Either:
+You need the **new** `index.html` from this branch (gate / Create league / Redeem), not an old build.
 
-- **Merge PR #44 → `main`** so GitHub Pages serves the new shell, **or**
-- Locally: `python3 -m http.server 8766` from the repo root and open `http://localhost:8766`.
+### Option A — Local (fastest to test)
 
-You need the **new** `index.html` (Chuckle Fantasy gate / create / redeem), not the old single-league-only boot.
+**Where:** Terminal, repo root:
 
----
+```bash
+cd /path/to/cuckle-trade-tracker
+python3 -m http.server 8766
+```
 
-## Step 6 — Dogfood (the real product test)
+**Where to open in browser:**
 
-### 6a. Commissioner
+```text
+http://localhost:8766
+```
 
-1. Open the app → **Create account** (pick a username + password ≥ 6).
-2. **Create a league** → paste `1315431339301806080` → Create & generate invites.
-3. **Invite console:** copy each `CF-` code somewhere private (Notes / password manager).
-4. Click **Claim this seat** on **your** team.
-5. **Open dashboard** → confirm the meter loads and Teams is your seat.
+Leave the Terminal running while you test.
 
-### 6b. Member (second browser or private window)
+### Option B — GitHub Pages (real URL)
 
-1. **Create account** (different username).
-2. **Redeem invite** → paste one unused `CF-` code → Join.
-3. Confirm dashboard opens as that team.
-4. Open a **2-team trade** → cast a vote → tally moves.
+1. Browser → **https://github.com/slabslip/cuckle-trade-tracker/pull/44**
+2. Review → **Merge pull request** → confirm merge into **`main`**
+3. Wait 1–2 minutes for Pages
+4. Open **https://slabslip.github.io/cuckle-trade-tracker/**
 
-### 6c. Idempotent create check
-
-1. Sign back in as commissioner → Create a league → same ID again.
-2. Expect invite console **without new codes** (status / hidden). Remint only via **Rotate unclaimed**.
+(You can dogfood on localhost first, then merge.)
 
 ---
 
-## Step 7 — Done for today when…
+## Step 6 — Dogfood as commissioner
 
-- [ ] All five SQL files ran without error  
-- [ ] `join-league` is deployed  
-- [ ] Confirm email is OFF  
-- [ ] Commissioner claimed a seat and sees the meter  
-- [ ] Second account redeemed and voted  
-- [ ] Re-create same league does **not** silently remint  
+**Where:** the app URL from Step 5 (`localhost:8766` or Pages).
 
-Then: merge #44 if not already, DM real managers their codes, and stop.
+1. You should see **Chuckle Fantasy** → **Create account**
+2. Enter a **username** and **password** (password at least 6 characters) → Create account
+3. On **Your leagues** → click **Create a league**
+4. In **Sleeper league ID**, paste:
+
+```text
+1315431339301806080
+```
+
+5. ESPN field: leave blank  
+6. Click **Create & generate invites**
+7. You land on **Invite console** with `CF-XXXX-XXXX` codes  
+8. **Copy each code** into Notes / a password manager (DM later)  
+9. Find **your** team row → click **Claim this seat**  
+10. Click **Open dashboard**  
+11. Confirm the trade meter loads and Teams is your seat  
+
+---
+
+## Step 7 — Dogfood as a member
+
+**Where:** a **different** browser profile or a **Private / Incognito** window (so you are not still signed in as commissioner).
+
+1. Open the **same** app URL as Step 5  
+2. **Create account** with a **different** username  
+3. Click **Redeem invite**  
+4. Paste **one unused** `CF-` code from Step 6  
+5. Click **Join & open dashboard**  
+6. Confirm you are that team  
+7. Open any **2-team trade** → tap a side to **vote** → tally should move  
+
+---
+
+## Step 8 — Prove create does not remint
+
+**Where:** back in the commissioner session (normal browser).
+
+1. Go **← Leagues** / Your leagues  
+2. Click **Create a league** again  
+3. Paste the same ID `1315431339301806080`  
+4. Submit  
+
+**Expected:** Invite console opens with status / hidden codes — **not** a brand-new set of codes.  
+New codes only appear after **Rotate unclaimed**.
+
+---
+
+## Done when all of these are true
+
+- [ ] Terminal is on branch `cursor/multi-league-app-878c`
+- [ ] All **five** SQL files ran in Supabase SQL Editor
+- [ ] Confirm email is **OFF**; Site URL set
+- [ ] Edge Functions list shows **`join-league`**
+- [ ] Commissioner claimed a seat and sees the meter
+- [ ] Second account redeemed and voted
+- [ ] Re-create same league does **not** silently remint
+
+Then: merge PR #44 if you used localhost, DM real managers their codes, stop for today.
 
 ---
 
 ## If something breaks
 
-| Symptom | Fix |
+| What you see | Where to fix |
 | --- | --- |
-| Signup says confirm email / no session | Confirm email OFF; hard-refresh |
-| Create league 401 / function error | Redeploy `join-league`; check JWT session |
-| Create remints every time | Wave 1 SQL + latest function not live |
-| Redeem “unknown function” / 500 | Run `wave1-invite-hardening.sql` |
-| Vote write fails | Run `wave2-vote-identity.sql`; must have membership |
-| Dashboard empty for Cuckle | Pages still on old build, or wrong origin; Cuckle should use `data/ui` fallback |
-| “Already has a commissioner” | Someone else already set `created_by` — use that account or fix row in SQL |
+| Signup fails / “confirm email” | Supabase → Authentication → Providers → Email → Confirm OFF |
+| Create league 401 / failed fetch | Redeploy Step 4; hard-refresh app; sign out/in |
+| Create remints every time | Re-run `db/wave1-invite-hardening.sql`; redeploy `join-league` from this branch |
+| Redeem 500 / unknown function | Re-run `db/wave1-invite-hardening.sql` |
+| Vote does not save | Re-run `db/wave2-vote-identity.sql`; confirm that account redeemed a seat |
+| Old page with no Create league | Wrong URL or Pages not on merged `main` — use localhost from this branch |
+| “Already has a commissioner” | That league’s `created_by` is already set — use that Auth user |
 
 ---
 
-## Not today (parked)
+## Not today
 
-- Second Sleeper league full meter (`node build.mjs <id>` + Action)  
-- Custom domain / PWA  
-- ESPN import  
-- Smack-agent voice bank / Sleeper chat scrape (**won’t do**)  
-
----
-
-## Reference
-
-| Doc | Use |
-| --- | --- |
-| [`APP_SDD.md`](APP_SDD.md) | Full app path spec |
-| [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §8 | Longer Supabase notes |
-| [`VOTES_SDD.md`](VOTES_SDD.md) §5.5 | Vote identity |
-| [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) | After go-live |
+Second-league `node build.mjs`, custom domain, ESPN import, chat scrape.

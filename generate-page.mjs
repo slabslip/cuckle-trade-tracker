@@ -2006,7 +2006,7 @@ const html = `<!DOCTYPE html>
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
-        + '<span class="lh-lab">League Data Sets</span></button>';
+        + '<span class="lh-lab">Data Sets</span></button>';
     }
 
     /**
@@ -5761,7 +5761,7 @@ if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' select
 }
 // The label is a constant, the way the seat picker's is. If it starts reflecting the selection
 // the two dropdowns on the same screen stop reading as the same kind of control.
-if (!inline.includes('<span class="lh-lab">League Data Sets</span>')) {
+if (!inline.includes('<span class="lh-lab">Data Sets</span>')) {
   throw new Error("the League Data Sets trigger label must stay a constant, not the selected set");
 }
 // A popup listbox, matching the seat picker rather than inventing a third, less accessible

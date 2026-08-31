@@ -92,6 +92,8 @@ GitHub Action: [`.github/workflows/league-sync.yml`](../.github/workflows/league
 
 ## 5. Operator checklist
 
+**Start here at your desktop:** [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
+
 1. Apply SQL files in the order in §3
 2. Auth Confirm email **OFF**; Site URL = app / custom domain
 3. Deploy Edge Function `join-league`

@@ -44,13 +44,17 @@ const html = `<!DOCTYPE html>
        reproduce that defect exactly. What keeps the row inside the viewport is the ellipsis on
        h1.brand a plus the trigger's own font step, not a clip. */
     h1.brand {
+      position: relative;
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
       overflow: visible;
     }
     h1.brand a {
-      color: inherit; text-decoration: none; margin-right: auto;
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      /* Centered wordmark (PSA-style). Side chrome stays left/right; the title is absolute. */
+      position: absolute; left: 50%; transform: translateX(-50%);
+      color: inherit; text-decoration: none; margin-right: 0;
+      max-width: min(52%, calc(100% - 168px));
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
       /* It is a link home, so it is a target as well as a title. The line box carries the
          44px rather than padding, which would push the ellipsis off the text. */
       min-height: 44px; line-height: 44px;
@@ -84,7 +88,7 @@ const html = `<!DOCTYPE html>
        this control is persistent chrome and its panel drops down over whatever screen is below
        it. Nothing here may clip: #scoreAs is absolutely positioned against it, and a hidden
        overflow anywhere up this chain is what made the seat picker unusable twice. */
-    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; }
+    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; margin-left: auto; }
     /* The brand plus the seat picker needed 394px of a 343px row at 375px, so the picker ran off
        the right edge and the title stepped down to buy it back. The picker is gone and the clock
        control took its place, so the row is carrying a control again and the step still earns its
@@ -795,27 +799,33 @@ const html = `<!DOCTYPE html>
       touch-action: manipulation;
     }
     button.lh-see-all:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    a.champ-alert.lh-progress {
+    a.champ-alert.lh-progress, button.champ-alert.lh-progress {
       background: var(--card); border-color: var(--line); border-radius: 16px;
       min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
     }
+    button.champ-alert.lh-progress {
+      display: block; width: 100%; appearance: none; font: inherit; color: inherit;
+      text-align: left; cursor: pointer; touch-action: manipulation;
+    }
+    button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .lh-strip {
       display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
-    button.lh-strip-card {
+    button.lh-strip-card, div.lh-strip-card {
       flex: 0 0 128px; scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
-      padding: 10px; min-height: 92px; cursor: pointer; touch-action: manipulation;
+      padding: 10px; min-height: 92px; touch-action: manipulation;
       display: flex; flex-direction: column; gap: 6px;
     }
+    button.lh-strip-card { cursor: pointer; }
     button.lh-strip-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.lh-strip-card b {
+    button.lh-strip-card b, div.lh-strip-card b {
       font-size: 0.8125rem; font-weight: 650; line-height: 1.25;
       overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     }
-    button.lh-strip-card span {
+    button.lh-strip-card span, div.lh-strip-card span {
       font-size: 0.75rem; color: var(--dim); margin-top: auto;
     }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
@@ -1100,14 +1110,14 @@ const html = `<!DOCTYPE html>
       </svg>
       <span>Account</span>
     </button>
-    <button type="button" data-bottom="trades" aria-label="Trades">
+    <button type="button" data-bottom="trades" aria-label="My trades">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 8h11"/>
         <path d="M14.5 4.5L18 8l-3.5 3.5"/>
         <path d="M17 16H6"/>
         <path d="M9.5 12.5L6 16l3.5 3.5"/>
       </svg>
-      <span>Trades</span>
+      <span>My trades</span>
     </button>
     <button type="button" class="bottom-home" data-bottom="home" aria-label="Home">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1115,14 +1125,14 @@ const html = `<!DOCTYPE html>
       </svg>
       <span>Home</span>
     </button>
-    <button type="button" data-bottom="teams" aria-label="Teams">
+    <button type="button" data-bottom="teams" aria-label="My team">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="9" cy="8" r="2.75"/>
         <circle cx="16.5" cy="9" r="2.25"/>
         <path d="M3.75 19c.7-2.6 2.7-3.9 5.25-3.9s4.55 1.3 5.25 3.9"/>
         <path d="M13.5 19c.45-1.7 1.55-2.7 3-2.7 1.55 0 2.7 1 3.2 2.7"/>
       </svg>
-      <span>Teams</span>
+      <span>My team</span>
     </button>
   </nav>
   <script>
@@ -1256,10 +1266,13 @@ const html = `<!DOCTYPE html>
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
-    // News hero carousel (league home). Advanced in JS every 2s; Pause stops it (WCAG 2.2.2).
+    // News hero carousel (league home). Advances in JS every 3s with a leftward ticker slide; Pause stops it (WCAG 2.2.2).
     let newsHeroIdx = 0;
     let newsHeroPaused = false;
     let newsHeroTimer = null;
+    // Sleeper week matchups for the home strip (previous completed week when possible).
+    let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
+    let weekMatchupsLoading = false;
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
@@ -2874,7 +2887,9 @@ const html = `<!DOCTYPE html>
 
     function bottomNavKey() {
       if (view === "account") return "account";
+      // Own-seat home / trades count as My team / My trades.
       if (view === "teams") return "teams";
+      if (me && authSeatId() && me.user_id === authSeatId() && view === "home") return "teams";
       if (view === "trades" || view === "trade") return "trades";
       return "home";
     }
@@ -2916,11 +2931,28 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (which === "teams") {
+        openId = null;
+        tradeSeat = null;
+        const seat = authSeatId();
+        if (seat) {
+          // My team → that seat's home dashboard.
+          const open = () => selectMe(seat);
+          if (members && members.length) open();
+          else {
+            loadMembers().then(open).catch((err) => {
+              console.error(err);
+              me = null;
+              data = null;
+              view = "teams";
+              focusNext = ".screen-h";
+              render();
+            });
+          }
+          return;
+        }
         me = null;
         data = null;
         view = "teams";
-        openId = null;
-        tradeSeat = null;
         focusNext = ".screen-h";
         loadMembers().then(() => render()).catch((err) => {
           console.error(err);
@@ -2929,11 +2961,30 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (which === "trades") {
+        openId = null;
+        tradeSeat = null;
+        const seat = authSeatId();
+        if (seat) {
+          // My trades → that seat's Trades tab (keep view through selectMe).
+          view = "trades";
+          focusNext = ".screen-h";
+          const open = () => selectMe(seat, true);
+          if (members && members.length) open();
+          else {
+            loadMembers().then(open).catch((err) => {
+              console.error(err);
+              me = null;
+              data = null;
+              Promise.resolve(league || getLeagueJson("league.json").then((j) => { league = j; return j; }))
+                .then(() => render())
+                .catch(() => render());
+            });
+          }
+          return;
+        }
         me = null;
         data = null;
         view = "trades";
-        openId = null;
-        tradeSeat = null;
         focusNext = ".screen-h";
         // League trades need league.json; openLeagueDashboard usually loaded it.
         Promise.resolve(league || getLeagueJson("league.json").then((j) => { league = j; return j; }))
@@ -3759,6 +3810,8 @@ const html = `<!DOCTYPE html>
       yearFilterOpen = false;
       draftFilterOpen = false;
       dataSet = null;
+      weekMatchups = null;
+      weekMatchupsLoading = false;
       focusNext = null;
       syncUrl();
       await loadMembers();
@@ -4202,52 +4255,139 @@ const html = `<!DOCTYPE html>
 
 
     /**
-     * “In the league” — Champions Path summary + horizontal recent-trade strip (PSA “in progress”).
+     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
+     */
+    function latestTradeSide() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let best = null;
+      for (const r of sides) {
+        if (!best || (r.date || "") > (best.date || "")
+          || ((r.date || "") === (best.date || "") && String(r.transaction_id) > String(best.transaction_id))) {
+          best = r;
+        }
+      }
+      return best;
+    }
+
+    function matchupStripHtml() {
+      if (weekMatchupsLoading && !weekMatchups) {
+        return '<div class="lh-strip" role="list">'
+          + '<div class="lh-strip-card" role="listitem"><b>Loading matches…</b><span>Sleeper week scores</span></div>'
+          + "</div>";
+      }
+      if (!weekMatchups || weekMatchups === "empty" || !weekMatchups.pairs || !weekMatchups.pairs.length) {
+        return "";
+      }
+      return '<div class="lh-strip" role="list" aria-label="' + esc(weekMatchups.label || "Recent matches") + '">'
+        + weekMatchups.pairs.map((p) => {
+          const score = (p.aPts != null && p.bPts != null)
+            ? (Number(p.aPts).toFixed(1).replace(/\\.0$/, "") + "–"
+              + Number(p.bPts).toFixed(1).replace(/\\.0$/, ""))
+            : "—";
+          return '<div class="lh-strip-card" role="listitem">'
+            + "<b>" + seatLabel(p.a) + " vs " + seatLabel(p.b) + "</b>"
+            + "<span>" + esc(weekMatchups.label) + " · " + esc(score) + "</span>"
+            + "</div>";
+        }).join("")
+        + "</div>";
+    }
+
+    function ensureWeekMatchups() {
+      if (weekMatchups || weekMatchupsLoading) return;
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      if (!lid) return;
+      weekMatchupsLoading = true;
+      const sleeper = "https://api.sleeper.app/v1";
+      (async () => {
+        try {
+          const state = await fetch(sleeper + "/state/nfl").then((r) => r.json());
+          let leagueId = String(lid);
+          let week = Math.max(1, Number(state.display_week || state.week || 1) - 1);
+          let pairs = [];
+          let label = "";
+          for (let attempt = 0; attempt < 24 && !pairs.length; attempt++) {
+            const meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
+            const tryWeek = week;
+            const [rosters, users, matchups] = await Promise.all([
+              fetch(sleeper + "/league/" + leagueId + "/rosters").then((r) => r.json()),
+              fetch(sleeper + "/league/" + leagueId + "/users").then((r) => r.json()),
+              fetch(sleeper + "/league/" + leagueId + "/matchups/" + tryWeek).then((r) => r.json()),
+            ]);
+            const ownerName = Object.create(null);
+            const userName = Object.create(null);
+            for (const u of users || []) {
+              // Prefer Sleeper display_name so seatLabel flair still matches.
+              userName[u.user_id] = u.display_name || (u.metadata && u.metadata.team_name) || u.user_id;
+            }
+            for (const r of rosters || []) {
+              ownerName[r.roster_id] = userName[r.owner_id] || ("Roster " + r.roster_id);
+            }
+            const by = Object.create(null);
+            for (const m of matchups || []) {
+              if (m.matchup_id == null) continue;
+              (by[m.matchup_id] || (by[m.matchup_id] = [])).push(m);
+            }
+            const scored = [];
+            for (const id of Object.keys(by)) {
+              const row = by[id];
+              if (row.length < 2) continue;
+              const a = row[0], b = row[1];
+              const aPts = a.points == null ? 0 : Number(a.points);
+              const bPts = b.points == null ? 0 : Number(b.points);
+              scored.push({
+                a: ownerName[a.roster_id] || String(a.roster_id),
+                b: ownerName[b.roster_id] || String(b.roster_id),
+                aPts: aPts,
+                bPts: bPts,
+                sum: aPts + bPts,
+              });
+            }
+            if (scored.some((p) => p.sum > 0)) {
+              pairs = scored.sort((x, y) => y.sum - x.sum);
+              label = "Week " + tryWeek;
+              break;
+            }
+            // No points yet this week — step back a week, then prior season league.
+            if (week > 1) week -= 1;
+            else if (meta && meta.previous_league_id) {
+              leagueId = String(meta.previous_league_id);
+              week = 18;
+            } else break;
+          }
+          weekMatchups = pairs.length ? { week: week, label: label, pairs: pairs } : "empty";
+        } catch (err) {
+          console.error(err);
+          weekMatchups = "empty";
+        }
+        weekMatchupsLoading = false;
+        // Re-paint league home strip if we are still looking at it.
+        if (appScreen === "dash" && view === "home" && !me) render();
+      })();
+    }
+
+    /**
+     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
      */
     function leagueInProgress() {
-      const champ = ((titles && titles.titles) || [])[0];
-      const rec = champ && champ.record || {};
-      const fin = champFinalCaption(champ, rec);
-      const bout = fin.bout
-        ? '<div class="champ-bout">'
-          + '<span class="bout-team">' + fin.bout.champName + "</span>"
-          + '<b class="bout-score">' + fin.bout.score + "</b>"
-          + '<span class="bout-team bout-r">' + fin.bout.oppName + "</span>"
-          + '<span class="bout-rec">' + fin.bout.champRec + "</span>"
-          + '<span class="bout-rec bout-r">' + fin.bout.oppRec + "</span>"
-          + "</div>"
-        : '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
-          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>";
-      const champBox = champ
-        ? '<a class="champ-alert lh-progress" href="?view=titles" data-view="titles">'
-          + '<div class="day-alert-h">Champions Path</div>'
-          + '<div class="champ-line">' + esc(champ.season) + " Championship</div>"
-          + bout
-          + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
-          + "</a>"
-        : "";
-      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
-      const seen = new Set();
-      const recent = [];
-      for (const r of sides.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""))) {
-        if (seen.has(r.transaction_id)) continue;
-        seen.add(r.transaction_id);
-        recent.push(r);
-        if (recent.length >= 8) break;
+      ensureWeekMatchups();
+      const latest = latestTradeSide();
+      let tradeBox = "";
+      if (latest) {
+        const s = windowScore(latest);
+        tradeBox = '<button type="button" class="champ-alert lh-progress"'
+          + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+          + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+          + '<div class="day-alert-h">Latest trade</div>'
+          + '<div class="champ-line">' + seatLabel(latest.name) + " vs " + seatLabel(latest.other) + "</div>"
+          + '<div class="date champ-fig"><span>'
+          + (latest.date ? esc(latest.date) : "Recent")
+          + (latest.headline ? " · " + esc(latest.headline) : "")
+          + "</span>"
+          + (s != null ? "<b>" + tapeMargin(s) + "</b>" : "")
+          + "</div></button>";
       }
-      const strip = recent.length
-        ? '<div class="lh-strip" role="list">'
-          + recent.map((r) => {
-            const s = windowScore(r);
-            return '<button type="button" class="lh-strip-card" role="listitem"'
-              + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
-              + "<b>" + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</b>"
-              + "<span>" + (r.date ? esc(r.date) : "") + (s != null ? " · " + tapeMargin(s) : "") + "</span>"
-              + "</button>";
-          }).join("")
-          + "</div>"
-        : "";
-      if (!champBox && !strip) return "";
+      const strip = matchupStripHtml();
+      if (!tradeBox && !strip) return "";
       return '<section class="lh-section">'
         + '<div class="lh-section-h"><h2>In the league</h2>'
         + '<button type="button" class="all-trades" data-trades-list="1" aria-label="All trades in the league">'
@@ -4255,10 +4395,11 @@ const html = `<!DOCTYPE html>
         + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
         + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
         + "<span>All trades</span></button></div>"
-        + champBox
+        + tradeBox
         + strip
         + "</section>";
     }
+
 
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
@@ -5748,32 +5889,25 @@ const inline = html.slice(html.indexOf("<script>"));
 for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
 }
-// The champ card caption reads titles.json at runtime, so assert the builder shipped at all.
-for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)", "Top scorer · "]) {
+// The champ final caption builder still ships for Champions Path detail / titles.json readers,
+// even though league home's progress card is now Latest trade (not the championship bout).
+for (const need of ["function champFinalCaption", "Top scorer · ", "const scoreShort =",
+  'scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)',
+  "f.opponent_record"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the champ final caption: ${need}`);
 }
-// The scoreboard row. Each of these is one deletion away from a card that still renders and
-// still says something plausible, which is exactly the failure mode worth asserting against:
-//   scoreShort      the sketch's format -- one decimal, trailing .0 dropped, both halves alike
-//   .bout-rec x2    the runner-up's record is the half of the row that did not exist before,
-//                   and an absent one leaves a row that looks deliberate and is not
-//   .bout-r         both right-hand cells pinned to track 3; lose it and the record slides
-//                   under the score instead of under the name it belongs to
-for (const need of ["const scoreShort =", 'scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)',
-  '<div class="champ-bout">', '<span class="bout-team">', '<span class="bout-team bout-r">',
-  '<span class="bout-rec">', '<span class="bout-rec bout-r">', '<b class="bout-score">',
-  'class="bout-w"', 'class="bout-l"', 'class="bout-dash"',
-  "fin.bout.champRec", "fin.bout.oppRec", "f.opponent_record"]) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a champ scoreboard part: ${need}`);
-}
-// The .0 strip is a lone backslash inside the template literal, the exact hazard that shipped
-// /^pick:d{4}:4:/. yearsOn() carries the same escape, so the shared list above cannot tell the
-// two apart -- assert this one against its own call site.
 if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
   throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
 }
-// Both records ellipsise and the score does not, and the two rows are one grid so a record
-// stays under its own name. Losing any of these is how a scoreboard silently becomes a stack.
+// League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
+for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
+  "api.sleeper.app/v1", "function matchupStripHtml("]) {
+  if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
+}
+if (inline.includes('day-alert-h">Champions Path')) {
+  throw new Error("league home must not mount a Champions Path progress card -- Latest trade replaced it");
+}
+// Champ scoreboard CSS stays for a.champ-alert chrome the Latest trade button still reuses.
 for (const need of ["a.champ-alert .champ-bout {",
   "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);",
   "a.champ-alert .champ-bout > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }",
@@ -5829,6 +5963,25 @@ for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-to
 const brandRule = html.slice(html.indexOf("    h1.brand {"));
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
   throw new Error("h1.brand must declare overflow: visible -- a clip here hides #scoreAs");
+}
+if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) {
+  throw new Error("h1.brand must be position: relative -- the centered brand link is absolute against it");
+}
+{
+  const linkRule = html.slice(html.indexOf("    h1.brand a {"));
+  const decl = linkRule.slice(0, linkRule.indexOf("}"));
+  if (!decl.includes("left: 50%") || !decl.includes("translateX(-50%)")) {
+    throw new Error("h1.brand a must be absolutely centered (left: 50% + translateX(-50%))");
+  }
+  if (/margin-right:\s*auto/.test(decl)) {
+    throw new Error("h1.brand a must not use margin-right: auto -- centering is absolute; .lens-wrap takes the right");
+  }
+}
+{
+  const wrap = html.slice(html.indexOf("    .lens-wrap {"));
+  if (!wrap.slice(0, wrap.indexOf("}")).includes("margin-left: auto")) {
+    throw new Error(".lens-wrap must carry margin-left: auto so the clock stays on the right of the centered brand");
+  }
 }
 
 // The Recent Trade card is now the only door on league home to the league-wide list, so losing
@@ -6052,8 +6205,8 @@ if (!brandMarkup.includes('id="lensWrap"') || !brandMarkup.includes('id="lensBtn
   || !brandMarkup.includes('id="scoreAs"')) {
   throw new Error("the clock control must be mounted inside h1.brand -- that is the top right of the header");
 }
-// The trigger comes after the brand link, which carries margin-right: auto, so it is the last
-// thing in the row and therefore on the right. Order in the markup is what puts it there.
+// The trigger comes after the brand link. The link is absolutely centered; .lens-wrap carries
+// margin-left: auto so the clock stays on the right. Order in the markup still matters.
 if (brandMarkup.indexOf('id="lensWrap"') < brandMarkup.indexOf('href="./"')) {
   throw new Error("the clock trigger must come after the brand link, or it does not sit on the right");
 }
@@ -6393,11 +6546,18 @@ if (!html.includes('id="goSettings"') || !inline.includes("function openSettings
   throw new Error("Settings control next to leagues back is required for commissioner admin");
 }
 if (!html.includes('id="bottomNav"') || !inline.includes("function goBottomNav(")) {
-  throw new Error("fixed bottom league menu (Account/Trades/Home/Teams) is required");
+  throw new Error("fixed bottom league menu (Account/My trades/Home/My team) is required");
 }
 if (!html.includes('data-bottom="account"') || !html.includes('data-bottom="trades"')
   || !html.includes('data-bottom="home"') || !html.includes('data-bottom="teams"')) {
-  throw new Error("bottom nav must expose Account, Trades, Home, and Teams");
+  throw new Error("bottom nav must expose Account, My trades, Home, and My team");
+}
+if (!html.includes('<span>My trades</span>') || !html.includes('<span>My team</span>')
+  || !html.includes('aria-label="My trades"') || !html.includes('aria-label="My team"')) {
+  throw new Error("bottom nav labels must read My trades and My team");
+}
+if (!inline.includes("selectMe(seat)") || !inline.includes("selectMe(seat, true)")) {
+  throw new Error("My team / My trades must open the signed-in seat via selectMe");
 }
 if (!inline.includes("function renderAccountPage()") || !inline.includes("function renderTeamsPage()")) {
   throw new Error("Account and Teams bottom-nav screens are required");
@@ -6555,9 +6715,9 @@ for (const need of [
 // is one deletion away from returning silently, because none of them changes what the page
 // says -- only whether you can read all of it.
 //   .leg.list      a pick list is not a figure; nowrap made it 1,051px wide inside 320px
-//   champ-fig      the score is pinned so a long name, not the number, is what gives
+//   champ-fig      the score/margin is pinned so a long name, not the number, is what gives
 //   min-width: 0   a grid or flex track will not shrink below min-content without it
-for (const need of ['class="leg list"', 'class="date champ-fig"', "fin.tailNum", "fin.topNum",
+for (const need of ['class="leg list"', 'class="date champ-fig"', "tailNum:", "topNum:",
   '<div class="bag"><h3><span>']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a text-fitting fix: ${need}`);
 }

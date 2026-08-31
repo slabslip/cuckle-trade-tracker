@@ -39,13 +39,17 @@
        reproduce that defect exactly. What keeps the row inside the viewport is the ellipsis on
        h1.brand a plus the trigger's own font step, not a clip. */
     h1.brand {
+      position: relative;
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
       overflow: visible;
     }
     h1.brand a {
-      color: inherit; text-decoration: none; margin-right: auto;
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      /* Centered wordmark (PSA-style). Side chrome stays left/right; the title is absolute. */
+      position: absolute; left: 50%; transform: translateX(-50%);
+      color: inherit; text-decoration: none; margin-right: 0;
+      max-width: min(52%, calc(100% - 168px));
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
       /* It is a link home, so it is a target as well as a title. The line box carries the
          44px rather than padding, which would push the ellipsis off the text. */
       min-height: 44px; line-height: 44px;
@@ -79,7 +83,7 @@
        this control is persistent chrome and its panel drops down over whatever screen is below
        it. Nothing here may clip: #scoreAs is absolutely positioned against it, and a hidden
        overflow anywhere up this chain is what made the seat picker unusable twice. */
-    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; }
+    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; margin-left: auto; }
     /* The brand plus the seat picker needed 394px of a 343px row at 375px, so the picker ran off
        the right edge and the title stepped down to buy it back. The picker is gone and the clock
        control took its place, so the row is carrying a control again and the step still earns its
@@ -192,12 +196,10 @@
       max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .bottom-nav button.on { color: #fff; }
-    /* Active tab: filled glyph (PSA Home is a solid white house). */
-    .bottom-nav button.on svg {
+    /* Active: bolder stroke. Home alone fills solid white (PSA Home glyph). */
+    .bottom-nav button.on svg { stroke-width: 2.15; }
+    .bottom-nav button.bottom-home.on svg {
       fill: currentColor; stroke: none;
-    }
-    .bottom-nav button.on svg [data-stroke-keep] {
-      fill: none; stroke: currentColor; stroke-width: 1.7;
     }
     .bottom-nav button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .bottom-nav button.bottom-home svg { width: 26px; height: 26px; }
@@ -792,27 +794,33 @@
       touch-action: manipulation;
     }
     button.lh-see-all:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    a.champ-alert.lh-progress {
+    a.champ-alert.lh-progress, button.champ-alert.lh-progress {
       background: var(--card); border-color: var(--line); border-radius: 16px;
       min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
     }
+    button.champ-alert.lh-progress {
+      display: block; width: 100%; appearance: none; font: inherit; color: inherit;
+      text-align: left; cursor: pointer; touch-action: manipulation;
+    }
+    button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .lh-strip {
       display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
-    button.lh-strip-card {
+    button.lh-strip-card, div.lh-strip-card {
       flex: 0 0 128px; scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
-      padding: 10px; min-height: 92px; cursor: pointer; touch-action: manipulation;
+      padding: 10px; min-height: 92px; touch-action: manipulation;
       display: flex; flex-direction: column; gap: 6px;
     }
+    button.lh-strip-card { cursor: pointer; }
     button.lh-strip-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.lh-strip-card b {
+    button.lh-strip-card b, div.lh-strip-card b {
       font-size: 0.8125rem; font-weight: 650; line-height: 1.25;
       overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     }
-    button.lh-strip-card span {
+    button.lh-strip-card span, div.lh-strip-card span {
       font-size: 0.75rem; color: var(--dim); margin-top: auto;
     }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
@@ -1097,14 +1105,14 @@
       </svg>
       <span>Account</span>
     </button>
-    <button type="button" data-bottom="trades" aria-label="Trades">
+    <button type="button" data-bottom="trades" aria-label="My trades">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 8h11"/>
         <path d="M14.5 4.5L18 8l-3.5 3.5"/>
         <path d="M17 16H6"/>
         <path d="M9.5 12.5L6 16l3.5 3.5"/>
       </svg>
-      <span>Trades</span>
+      <span>My trades</span>
     </button>
     <button type="button" class="bottom-home" data-bottom="home" aria-label="Home">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1112,14 +1120,14 @@
       </svg>
       <span>Home</span>
     </button>
-    <button type="button" data-bottom="teams" aria-label="Teams">
+    <button type="button" data-bottom="teams" aria-label="My team">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="9" cy="8" r="2.75"/>
         <circle cx="16.5" cy="9" r="2.25"/>
         <path d="M3.75 19c.7-2.6 2.7-3.9 5.25-3.9s4.55 1.3 5.25 3.9"/>
         <path d="M13.5 19c.45-1.7 1.55-2.7 3-2.7 1.55 0 2.7 1 3.2 2.7"/>
       </svg>
-      <span>Teams</span>
+      <span>My team</span>
     </button>
   </nav>
   <script>
@@ -1253,10 +1261,13 @@
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
-    // News hero carousel (league home). Advanced in JS every 2s; Pause stops it (WCAG 2.2.2).
+    // News hero carousel (league home). Advances in JS every 3s with a leftward ticker slide; Pause stops it (WCAG 2.2.2).
     let newsHeroIdx = 0;
     let newsHeroPaused = false;
     let newsHeroTimer = null;
+    // Sleeper week matchups for the home strip (previous completed week when possible).
+    let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
+    let weekMatchupsLoading = false;
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
@@ -2871,7 +2882,9 @@
 
     function bottomNavKey() {
       if (view === "account") return "account";
+      // Own-seat home / trades count as My team / My trades.
       if (view === "teams") return "teams";
+      if (me && authSeatId() && me.user_id === authSeatId() && view === "home") return "teams";
       if (view === "trades" || view === "trade") return "trades";
       return "home";
     }
@@ -2913,11 +2926,28 @@
         return;
       }
       if (which === "teams") {
+        openId = null;
+        tradeSeat = null;
+        const seat = authSeatId();
+        if (seat) {
+          // My team → that seat's home dashboard.
+          const open = () => selectMe(seat);
+          if (members && members.length) open();
+          else {
+            loadMembers().then(open).catch((err) => {
+              console.error(err);
+              me = null;
+              data = null;
+              view = "teams";
+              focusNext = ".screen-h";
+              render();
+            });
+          }
+          return;
+        }
         me = null;
         data = null;
         view = "teams";
-        openId = null;
-        tradeSeat = null;
         focusNext = ".screen-h";
         loadMembers().then(() => render()).catch((err) => {
           console.error(err);
@@ -2926,11 +2956,30 @@
         return;
       }
       if (which === "trades") {
+        openId = null;
+        tradeSeat = null;
+        const seat = authSeatId();
+        if (seat) {
+          // My trades → that seat's Trades tab (keep view through selectMe).
+          view = "trades";
+          focusNext = ".screen-h";
+          const open = () => selectMe(seat, true);
+          if (members && members.length) open();
+          else {
+            loadMembers().then(open).catch((err) => {
+              console.error(err);
+              me = null;
+              data = null;
+              Promise.resolve(league || getLeagueJson("league.json").then((j) => { league = j; return j; }))
+                .then(() => render())
+                .catch(() => render());
+            });
+          }
+          return;
+        }
         me = null;
         data = null;
         view = "trades";
-        openId = null;
-        tradeSeat = null;
         focusNext = ".screen-h";
         // League trades need league.json; openLeagueDashboard usually loaded it.
         Promise.resolve(league || getLeagueJson("league.json").then((j) => { league = j; return j; }))
@@ -3756,6 +3805,8 @@
       yearFilterOpen = false;
       draftFilterOpen = false;
       dataSet = null;
+      weekMatchups = null;
+      weekMatchupsLoading = false;
       focusNext = null;
       syncUrl();
       await loadMembers();
@@ -4199,52 +4250,139 @@
 
 
     /**
-     * “In the league” — Champions Path summary + horizontal recent-trade strip (PSA “in progress”).
+     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
+     */
+    function latestTradeSide() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let best = null;
+      for (const r of sides) {
+        if (!best || (r.date || "") > (best.date || "")
+          || ((r.date || "") === (best.date || "") && String(r.transaction_id) > String(best.transaction_id))) {
+          best = r;
+        }
+      }
+      return best;
+    }
+
+    function matchupStripHtml() {
+      if (weekMatchupsLoading && !weekMatchups) {
+        return '<div class="lh-strip" role="list">'
+          + '<div class="lh-strip-card" role="listitem"><b>Loading matches…</b><span>Sleeper week scores</span></div>'
+          + "</div>";
+      }
+      if (!weekMatchups || weekMatchups === "empty" || !weekMatchups.pairs || !weekMatchups.pairs.length) {
+        return "";
+      }
+      return '<div class="lh-strip" role="list" aria-label="' + esc(weekMatchups.label || "Recent matches") + '">'
+        + weekMatchups.pairs.map((p) => {
+          const score = (p.aPts != null && p.bPts != null)
+            ? (Number(p.aPts).toFixed(1).replace(/\.0$/, "") + "–"
+              + Number(p.bPts).toFixed(1).replace(/\.0$/, ""))
+            : "—";
+          return '<div class="lh-strip-card" role="listitem">'
+            + "<b>" + seatLabel(p.a) + " vs " + seatLabel(p.b) + "</b>"
+            + "<span>" + esc(weekMatchups.label) + " · " + esc(score) + "</span>"
+            + "</div>";
+        }).join("")
+        + "</div>";
+    }
+
+    function ensureWeekMatchups() {
+      if (weekMatchups || weekMatchupsLoading) return;
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      if (!lid) return;
+      weekMatchupsLoading = true;
+      const sleeper = "https://api.sleeper.app/v1";
+      (async () => {
+        try {
+          const state = await fetch(sleeper + "/state/nfl").then((r) => r.json());
+          let leagueId = String(lid);
+          let week = Math.max(1, Number(state.display_week || state.week || 1) - 1);
+          let pairs = [];
+          let label = "";
+          for (let attempt = 0; attempt < 24 && !pairs.length; attempt++) {
+            const meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
+            const tryWeek = week;
+            const [rosters, users, matchups] = await Promise.all([
+              fetch(sleeper + "/league/" + leagueId + "/rosters").then((r) => r.json()),
+              fetch(sleeper + "/league/" + leagueId + "/users").then((r) => r.json()),
+              fetch(sleeper + "/league/" + leagueId + "/matchups/" + tryWeek).then((r) => r.json()),
+            ]);
+            const ownerName = Object.create(null);
+            const userName = Object.create(null);
+            for (const u of users || []) {
+              // Prefer Sleeper display_name so seatLabel flair still matches.
+              userName[u.user_id] = u.display_name || (u.metadata && u.metadata.team_name) || u.user_id;
+            }
+            for (const r of rosters || []) {
+              ownerName[r.roster_id] = userName[r.owner_id] || ("Roster " + r.roster_id);
+            }
+            const by = Object.create(null);
+            for (const m of matchups || []) {
+              if (m.matchup_id == null) continue;
+              (by[m.matchup_id] || (by[m.matchup_id] = [])).push(m);
+            }
+            const scored = [];
+            for (const id of Object.keys(by)) {
+              const row = by[id];
+              if (row.length < 2) continue;
+              const a = row[0], b = row[1];
+              const aPts = a.points == null ? 0 : Number(a.points);
+              const bPts = b.points == null ? 0 : Number(b.points);
+              scored.push({
+                a: ownerName[a.roster_id] || String(a.roster_id),
+                b: ownerName[b.roster_id] || String(b.roster_id),
+                aPts: aPts,
+                bPts: bPts,
+                sum: aPts + bPts,
+              });
+            }
+            if (scored.some((p) => p.sum > 0)) {
+              pairs = scored.sort((x, y) => y.sum - x.sum);
+              label = "Week " + tryWeek;
+              break;
+            }
+            // No points yet this week — step back a week, then prior season league.
+            if (week > 1) week -= 1;
+            else if (meta && meta.previous_league_id) {
+              leagueId = String(meta.previous_league_id);
+              week = 18;
+            } else break;
+          }
+          weekMatchups = pairs.length ? { week: week, label: label, pairs: pairs } : "empty";
+        } catch (err) {
+          console.error(err);
+          weekMatchups = "empty";
+        }
+        weekMatchupsLoading = false;
+        // Re-paint league home strip if we are still looking at it.
+        if (appScreen === "dash" && view === "home" && !me) render();
+      })();
+    }
+
+    /**
+     * “In the league” — latest trade card + horizontal recent-match strip (PSA “in progress”).
      */
     function leagueInProgress() {
-      const champ = ((titles && titles.titles) || [])[0];
-      const rec = champ && champ.record || {};
-      const fin = champFinalCaption(champ, rec);
-      const bout = fin.bout
-        ? '<div class="champ-bout">'
-          + '<span class="bout-team">' + fin.bout.champName + "</span>"
-          + '<b class="bout-score">' + fin.bout.score + "</b>"
-          + '<span class="bout-team bout-r">' + fin.bout.oppName + "</span>"
-          + '<span class="bout-rec">' + fin.bout.champRec + "</span>"
-          + '<span class="bout-rec bout-r">' + fin.bout.oppRec + "</span>"
-          + "</div>"
-        : '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
-          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>";
-      const champBox = champ
-        ? '<a class="champ-alert lh-progress" href="?view=titles" data-view="titles">'
-          + '<div class="day-alert-h">Champions Path</div>'
-          + '<div class="champ-line">' + esc(champ.season) + " Championship</div>"
-          + bout
-          + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
-          + "</a>"
-        : "";
-      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
-      const seen = new Set();
-      const recent = [];
-      for (const r of sides.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""))) {
-        if (seen.has(r.transaction_id)) continue;
-        seen.add(r.transaction_id);
-        recent.push(r);
-        if (recent.length >= 8) break;
+      ensureWeekMatchups();
+      const latest = latestTradeSide();
+      let tradeBox = "";
+      if (latest) {
+        const s = windowScore(latest);
+        tradeBox = '<button type="button" class="champ-alert lh-progress"'
+          + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+          + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+          + '<div class="day-alert-h">Latest trade</div>'
+          + '<div class="champ-line">' + seatLabel(latest.name) + " vs " + seatLabel(latest.other) + "</div>"
+          + '<div class="date champ-fig"><span>'
+          + (latest.date ? esc(latest.date) : "Recent")
+          + (latest.headline ? " · " + esc(latest.headline) : "")
+          + "</span>"
+          + (s != null ? "<b>" + tapeMargin(s) + "</b>" : "")
+          + "</div></button>";
       }
-      const strip = recent.length
-        ? '<div class="lh-strip" role="list">'
-          + recent.map((r) => {
-            const s = windowScore(r);
-            return '<button type="button" class="lh-strip-card" role="listitem"'
-              + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
-              + "<b>" + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</b>"
-              + "<span>" + (r.date ? esc(r.date) : "") + (s != null ? " · " + tapeMargin(s) : "") + "</span>"
-              + "</button>";
-          }).join("")
-          + "</div>"
-        : "";
-      if (!champBox && !strip) return "";
+      const strip = matchupStripHtml();
+      if (!tradeBox && !strip) return "";
       return '<section class="lh-section">'
         + '<div class="lh-section-h"><h2>In the league</h2>'
         + '<button type="button" class="all-trades" data-trades-list="1" aria-label="All trades in the league">'
@@ -4252,10 +4390,11 @@
         + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
         + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
         + "<span>All trades</span></button></div>"
-        + champBox
+        + tradeBox
         + strip
         + "</section>";
     }
+
 
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)

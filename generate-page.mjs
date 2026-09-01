@@ -941,11 +941,6 @@ const html = `<!DOCTYPE html>
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
-    .pick-intel-board-h {
-      margin: 0;
-      color: var(--dim); font-size: 0.6875rem; font-weight: 600;
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
     /* Year scope sits next to each column lab (1sts · 2027–2029). On narrow
        columns the lab spans the full col so the string stays readable. */
     .pick-intel-board-yrs {
@@ -2172,18 +2167,19 @@ const html = `<!DOCTYPE html>
     }
 
     /** Idle quick-view leaderboard: three columns — most 1sts, most 2nds, most picks overall.
-     * Counts span every still-available draft year; each column lab shows that year range. */
+     * Counts span every still-available draft year; each column lab shows that year range.
+     * No board-level heading — year scope lives on the column titles only. */
     function pickIntelBoard() {
       const cols = [
         { lab: "1sts", round: 1, filter: true },
         { lab: "2nds", round: 2, filter: true },
         { lab: "Total", round: null, filter: false },
       ];
-      const boardH = "Who's got picks";
       const yrs = pickSeasonRangeLabel();
-      const aria = yrs ? (boardH + ", " + yrs) : boardH;
+      const aria = yrs
+        ? ("Still-available pick leaders, " + yrs)
+        : "Still-available pick leaders";
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
-        + '<p class="pick-intel-board-h">' + boardH + "</p>"
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
           const leaders = pickLeaders(r.round, 3);
@@ -9213,20 +9209,22 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
-  || inline.includes("Most held right now") || !inline.includes("Who's got picks")
+  || inline.includes("Most held right now") || inline.includes("Who's got picks")
+  || inline.includes("pick-intel-board-h")
   || !inline.includes("Draft Data") || inline.includes(">Pick board<")
   || inline.includes('aria-label="Pick board"')
   || inline.includes("pick-intel-board-row")) {
-  throw new Error("Draft Data must ship progressive filters + column leaderboard without a search input");
+  throw new Error("Draft Data must ship progressive filters + column leaderboard without a search input or board-h");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
   || !html.includes(".pick-intel-board-yrs") || !html.includes("button.pick-intel-chip")
+  || html.includes(".pick-intel-board-h")
   || html.includes("button.pick-intel-filter")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
-  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input)");
+  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input or board-h)");
 }
 if (!inline.includes('aria-label="search for picks"')
   || !inline.includes('aria-label="who has my picks"')

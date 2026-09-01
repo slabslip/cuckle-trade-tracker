@@ -1814,26 +1814,29 @@ const html = `<!DOCTYPE html>
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Compact score window on value chips / filter rows — replaces the brand-header clock. */
-    .chip-lens { position: absolute; top: 6px; right: 6px; z-index: 3; }
+    /* Compact score clock on value chips / filter rows — icon only, tucked top-right. */
+    .chip-lens { position: absolute; top: 2px; right: 2px; z-index: 3; line-height: 0; }
     .chip-lens.is-inline {
-      position: static; margin-left: auto; flex: 0 0 auto; align-self: center;
+      position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
     }
-    .h2h-chip.is-trade { position: relative; }
-    .h2h-chip.is-trade > .chip-lens { top: 8px; right: 8px; }
+    .h2h-chip.is-trade { position: relative; padding-top: 18px; }
+    .h2h-chip.is-trade > .chip-lens { top: 2px; right: 2px; }
     button.chip-lens-btn {
-      appearance: none; font: inherit; font-size: 0.625rem; font-weight: 650;
-      color: var(--muted); background: rgba(12, 12, 16, 0.72);
+      appearance: none; font: inherit; color: var(--muted);
+      background: rgba(12, 12, 16, 0.78);
       border: 1px solid var(--line); border-radius: 999px;
-      min-height: 28px; padding: 2px 8px 2px 10px; cursor: pointer;
-      white-space: nowrap; position: relative; line-height: 1.2;
+      width: 22px; height: 22px; min-height: 22px; padding: 0;
+      display: grid; place-items: center; cursor: pointer;
+      position: relative; line-height: 0;
       touch-action: manipulation;
     }
     button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
-    button.chip-lens-btn .chev { color: var(--dim); font-size: 0.7em; }
+    button.chip-lens-btn .chip-lens-ico {
+      display: block; width: 12px; height: 12px;
+    }
     button.chip-lens-btn .dot {
-      position: absolute; top: 3px; right: 3px;
-      width: 5px; height: 5px; border-radius: 50%; background: #e0b44c;
+      position: absolute; top: 1px; right: 1px;
+      width: 4px; height: 4px; border-radius: 50%; background: #e0b44c;
     }
     button.chip-lens-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .chip-lens-bar {
@@ -2140,7 +2143,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsNoHeldLabel20260901141000";
+    const DATA_V = "cuffsUninsuredClock20260901142000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2905,24 +2908,29 @@ const html = `<!DOCTYPE html>
     function cuffLeaders(kind, limit) {
       const counts = new Map();
       for (const r of (cuffs && cuffs.rows) || []) {
+        if (kind === "bare") {
+          // Uninsured: starter whose NFL cuff is not rostered anywhere.
+          if (r.cuff_owned || !r.owner) continue;
+          counts.set(r.owner, (counts.get(r.owner) || 0) + 1);
+          continue;
+        }
         if (!r.cuff_owned || !r.cuff_owner) continue;
         if (kind === "self" && r.owner !== r.cuff_owner) continue;
         if (kind === "other" && r.owner === r.cuff_owner) continue;
-        if (kind === "rb" && r.pos !== "RB") continue;
         counts.set(r.cuff_owner, (counts.get(r.cuff_owner) || 0) + 1);
       }
       const top = Math.max(1, Number(limit) || 3);
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
-    /** Idle quick-view under home chips: Insurers / Poachers / RB. */
+    /** Idle quick-view under home chips: Insurers / Poachers / Uninsured. */
     function cuffsBoard() {
       const cols = [
         { lab: "Insurers", kind: "self", aria: "Filter to self-cuffed starters (insurers)" },
         { lab: "Poachers", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
-        { lab: "RB", kind: "rb", aria: "Filter to RB cuffs held" },
+        { lab: "Uninsured", kind: "bare", aria: "Filter to starters whose cuff is not rostered" },
       ];
-      const aria = "Cuff holders: insurers, poachers, and RB cuffs";
+      const aria = "Cuff holders: insurers, poachers, and uninsured starters";
       const headBtns = cols.map((c) =>
         '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
         + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
@@ -3086,9 +3094,9 @@ const html = `<!DOCTYPE html>
         cuffFilterSelf = true;
       } else if (mode === "other") {
         cuffFilterOther = true;
-      } else if (mode === "rb") {
-        cuffFilterHeld = true;
-        cuffFilterPos = "RB";
+      } else if (mode === "bare" || mode === "rb") {
+        // bare = uninsured (cuff not rostered); legacy rb board taps map here too.
+        cuffFilterFa = true;
       } else {
         cuffFilterOpen = true;
       }
@@ -7979,14 +7987,22 @@ const html = `<!DOCTYPE html>
      * Compact score-window control for chips that show trade / player values.
      * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
      */
+    function chipLensIcon() {
+      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false">'
+        + '<circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>'
+        + '<path d="M8 4.75V8l2.4 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>'
+        + "</svg>";
+    }
+
     function chipLensHtml(opts) {
       if (!lensApplies()) return "";
       const inline = !!(opts && opts.inline);
       const name = clockName();
       return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
         + '<button type="button" class="chip-lens-btn" data-score="1"'
-        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false">'
-        + esc(name) + ' <span class="chev">▾</span></button></span>';
+        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' title="' + esc(name) + '">'
+        + chipLensIcon() + "</button></span>";
     }
 
     function paintLens() {
@@ -8003,8 +8019,9 @@ const html = `<!DOCTYPE html>
       for (const btn of btns) {
         btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
         btn.setAttribute("aria-label", "Score as " + name);
+        btn.setAttribute("title", name);
         btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
-        btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
+        btn.innerHTML = chipLensIcon()
           + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
       }
       panel.hidden = !lensOpen;
@@ -10150,6 +10167,17 @@ if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inlin
 if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
   throw new Error("chip-lens styles and buttons must ship");
 }
+if (!inline.includes("function chipLensIcon(") || !inline.includes("chipLensIcon()")) {
+  throw new Error("chip score control must render a clock icon, not window text");
+}
+{
+  const body = inline.slice(inline.indexOf("function chipLensHtml("), inline.indexOf("function paintLens("));
+  if (!body || !body.includes("chipLensIcon()") || body.includes("<span class=\"chev\">")
+    || body.includes("esc(name) + ' <span")) {
+    throw new Error("chipLensHtml must not put the window name in the visible button label");
+  }
+}
+
 // One shared lens state; chips must not invent a second clock.
 if ((inline.match(/let lens = /g) || []).length !== 1) {
   throw new Error("exactly one global lens state");
@@ -10519,11 +10547,13 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes('data-cuffs-board="') || !inline.includes("cuffFilterHeld")
     || !inline.includes("cuffFilterOther") || !inline.includes('kind: "other"')
     || !inline.includes('lab: "Insurers"') || !inline.includes('lab: "Poachers"')
+    || !inline.includes('lab: "Uninsured"') || !inline.includes('kind: "bare"')
     || !inline.includes('kind: "self"') || !inline.includes('kind: "other"')
     || !inline.includes("cuffFilterSelf")
     || inline.includes('lab: "Self"') || inline.includes('lab: "Other"')
-    || inline.includes('{ lab: "All",') || inline.includes('{ lab: "Poach",')) {
-    throw new Error("Cuffs home must show Insurers / Poachers / RB holder leaderboard");
+    || inline.includes('{ lab: "All",') || inline.includes('{ lab: "Poach",')
+    || inline.includes('{ lab: "RB",')) {
+    throw new Error("Cuffs home must show Insurers / Poachers / Uninsured holder leaderboard");
   }
   {
     const boardFn = inline.slice(inline.indexOf("function cuffsBoard("), inline.indexOf("function cuffInjBadge("));

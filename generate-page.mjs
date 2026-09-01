@@ -1164,6 +1164,30 @@ const html = `<!DOCTYPE html>
     div.lh-latest-trade .day-alert-h {
       font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
     }
+    /* Recent Trade chip + floating vote CTA over the lean footer. */
+    div.lh-latest-trade .lh-trade-chip-wrap {
+      position: relative; width: 100%;
+    }
+    button.lh-trade-vote-cta {
+      position: absolute; left: 50%; bottom: 10px;
+      transform: translateX(-50%); z-index: 2;
+      margin: 0; padding: 7px 16px;
+      font: inherit; font-size: 0.75rem; font-weight: 650; line-height: 1.2;
+      color: #e0b44c; white-space: nowrap;
+      background: rgba(26, 24, 16, 0.78);
+      border: 1px solid rgba(224, 180, 76, 0.5);
+      border-radius: 999px; cursor: pointer; touch-action: manipulation;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+    button.lh-trade-vote-cta:hover {
+      background: rgba(36, 31, 20, 0.92);
+      border-color: rgba(224, 180, 76, 0.72);
+    }
+    button.lh-trade-vote-cta:focus-visible {
+      outline: 2px solid #e0b44c; outline-offset: 2px;
+    }
+    div.lh-latest-trade.voted button.lh-trade-vote-cta { display: none; }
     /* League trades feed: stacked Latest-trade-style H2H cards, newest first. */
     .trades-feed {
       display: flex; flex-direction: column; gap: 18px;
@@ -6966,26 +6990,35 @@ const html = `<!DOCTYPE html>
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
+          const voteCta = voted ? "" : '<button type="button" class="lh-trade-vote-cta"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Recent Trade</div>'
-            + chip
+            + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
+          const voteCta = '<button type="button" class="lh-trade-vote-cta"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Recent Trade</div>'
+            + '<div class="lh-trade-chip-wrap">'
             + '<div class="h2h-chip is-trade" role="group">'
             + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
             + '<div class="h2h-vs" aria-hidden="true">VS</div>'
             + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
             + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
+            + "</div>"
+            + voteCta
             + "</div>"
             + "</div>";
         }
@@ -8745,6 +8778,12 @@ if (inline.includes('day-alert-h">Champions Path')) {
   const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
   if (!prog.includes('day-alert-h">Recent Trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
+  }
+  if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
+    throw new Error("leagueInProgress must mount Who won this trade? vote CTA on Recent Trade");
+  }
+  if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")) {
+    throw new Error("Recent Trade vote CTA styles must ship (lh-trade-vote-cta / lh-trade-chip-wrap)");
   }
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")

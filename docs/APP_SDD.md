@@ -204,7 +204,10 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 ## 10. Security
 
 - Confirm email **OFF** (synthetic emails never mailed).
-- Invite codes are secrets — DM out of band; never commit.
+- Invite codes / links are secrets — DM out of band; never commit.
+- The CF- code is a **seat ticket**, not the account password. Invite links open signup with
+  the code already filled; managers still pick username + password. The page strips `?invite=`
+  from the address bar after load so password managers do not save the ticket as the password.
 - `code_hash` only in DB; plaintext only after mint/rotate in the creator’s browser.
 - League / membership / invite writes: service role / Edge only.
 - Vote tallies publicly readable; writes authenticated + membership-scoped.

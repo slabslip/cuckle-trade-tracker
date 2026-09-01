@@ -216,7 +216,8 @@ Open **https://slabslip.github.io/cuckle-trade-tracker/** (already deployed from
 5. ESPN field: leave blank  
 6. Click **Create & generate invites**
 7. You land on **Invite console** with `CF-XXXX-XXXX` codes  
-8. **Copy each code** into Notes / a password manager (DM later)  
+8. **Copy invite link** (or each `CF-` code) and DM it — do **not** save the CF- code as the
+   account password. Managers pick their own username + password on the link.  
 9. Find **your** team row → click **Claim this seat**  
 10. Click **Open dashboard**  
 11. Confirm the trade meter loads and Teams is your seat  
@@ -227,11 +228,11 @@ Open **https://slabslip.github.io/cuckle-trade-tracker/** (already deployed from
 
 **Where:** a **different** browser profile or a **Private / Incognito** window (so you are not still signed in as commissioner).
 
-1. Open the **same** app URL as Step 5  
-2. **Create account** with a **different** username  
-3. Click **Redeem invite**  
-4. Paste **one unused** `CF-` code from Step 6  
-5. Click **Join & open dashboard**  
+1. Open an **invite link** from Step 6 (preferred), or the app URL + **Redeem invite**  
+2. Confirm the page says the CF- code is a **seat ticket, not your password**  
+3. **Create account** with a **username** and a **new password** (not the CF- code)  
+4. You should land in that team’s dashboard (link path redeems automatically)  
+5. If you used Redeem by hand: paste an unused `CF-` code → **Join & open dashboard**  
 6. Confirm you are that team  
 7. Open any **2-team trade** → tap a side to **vote** → tally should move  
 
@@ -263,7 +264,8 @@ For a **claimed** seat (manager left), use **Reissue for new manager** — that 
 - [ ] Second account redeemed and voted
 - [ ] Re-create same league does **not** silently remint
 
-Then: DM real managers their codes, stop for today.
+Then: DM real managers their **invite links** (or CF- codes). Remind them the code is a
+seat ticket — they still choose their own username and password. Stop for today.
 
 ---
 

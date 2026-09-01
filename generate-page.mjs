@@ -5614,7 +5614,10 @@ const html = `<!DOCTYPE html>
 
     /** Sleeper team name → valid username (matches DB + authSignUp). */
     function suggestUsernameFromTeam(teamName) {
-      let s = String(teamName || "").trim().replace(/\s+/g, "");
+      // Double-escape \\s: this file embeds the page in a template literal, so \\s must
+      // survive into index.html as \\s (whitespace). A single \\s becomes /s+/ and strips
+      // the letter "s" from usernames (TipsUp → TipUp) — the invite-link signup bug.
+      let s = String(teamName || "").trim().replace(/\\s+/g, "");
       s = s.replace(/[^A-Za-z0-9_.-]/g, "");
       if (!s || !/^[A-Za-z0-9_]/.test(s)) s = ("team_" + s).replace(/[^A-Za-z0-9_.-]/g, "");
       if (s.length < 3) s = (s + "seat").slice(0, 32);
@@ -5625,7 +5628,7 @@ const html = `<!DOCTYPE html>
     function prepareUsername(raw) {
       let name = normalizeUsername(raw);
       if (!name) return "";
-      name = name.replace(/\s+/g, "");
+      name = name.replace(/\\s+/g, "");
       name = name.replace(/[^A-Za-z0-9_.-]/g, "");
       if (name && !/^[A-Za-z0-9_]/.test(name)) name = "_" + name;
       return name.slice(0, 32);
@@ -8659,19 +8662,25 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
         + (invited
-          ? ('<p class="caption">Seat code <code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code></p>"
+          ? ('<p class="caption">Seat invite <code style="user-select:all">'
+            + esc(String(redeemCode).toUpperCase()) + "</code>"
+            + " — this is your <b>seat ticket</b>, not your account password.</p>"
             + (gateInviteTeam
               ? ('<p class="caption">Joining as <b>' + esc(gateInviteTeam) + "</b>"
                 + (gateInviteLeague ? " in " + esc(gateInviteLeague) : "") + ". "
-                + "Pick any username (3–32 letters, numbers, _ . -) and a password.</p>")
-              : '<p class="caption">Pick a username and password to claim your seat.</p>'))
+                + "Pick any username (3–32 letters, numbers, _ . -) and a "
+                + "<b>new password</b> you will use to sign in later.</p>")
+              : '<p class="caption">Pick a username and a <b>new password</b> to claim your seat. '
+                + "Do not paste the invite code into the password field.</p>"))
           : "")
         + (gateSuggestedUser && invited
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
             + "</b> — change it if you like.</p>")
           : "")
         + '<div class="app-card"><h3>' + title + "</h3>"
-        + '<div class="app-form">'
+        // Real <form> so password managers / iOS Keychain treat username+password as an
+        // account, not the CF- invite in the URL or the seat-code caption above.
+        + '<form class="app-form" data-gate-form="1" action="#" method="post">'
         + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
         + ' autocapitalize="off" spellcheck="false"'
         + ' placeholder="' + esc(gateSuggestedUser || "e.g. TrumanCooper") + '"'
@@ -8679,14 +8688,14 @@ const html = `<!DOCTYPE html>
         + (authBusy ? " disabled" : "") + " /></label>"
         + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
         + (gateMode === "signup" ? "new-password" : "current-password") + '"'
-        + ' minlength="6" placeholder="At least 6 characters"'
+        + ' minlength="6" placeholder="At least 6 characters — not the invite code"'
         + (authBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
+        + '<button type="submit" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
         + (authBusy ? "Working…" : go) + "</button>"
         + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
         + (joinError && invited ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
-        + "</div></div>"
+        + "</div></form>"
         + '<p class="caption" style="margin:12px 0 0">'
         + (gateMode === "signup"
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
@@ -9316,6 +9325,14 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    // Gate signup/signin is a real <form> so Enter and password managers work. Prevent the
+    // default navigation and run the same path as the submit button.
+    document.getElementById("app").addEventListener("submit", (e) => {
+      if (!e.target || !e.target.closest || !e.target.closest("[data-gate-form]")) return;
+      e.preventDefault();
+      onGateSubmit();
+    });
+
     document.getElementById("app").addEventListener("keydown", (e) => {
       if (e.key === "Escape" && voteSheetTx) {
         e.preventDefault();
@@ -9666,6 +9683,7 @@ const html = `<!DOCTYPE html>
       }
       const gateGo = e.target.closest("[data-gate-go]");
       if (gateGo) {
+        e.preventDefault();
         onGateSubmit();
         return;
       }
@@ -10130,6 +10148,17 @@ const html = `<!DOCTYPE html>
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";
+      // Drop ?invite= from the address bar immediately. Leaving CF-XXXX in the URL while the
+      // username/password fields paint is how iOS Keychain / password managers save the seat
+      // ticket as the account password. redeemCode keeps the value for signup → redeem.
+      try {
+        const u = new URL(location.href);
+        if (u.searchParams.has("invite")) {
+          u.searchParams.delete("invite");
+          const q = u.searchParams.toString();
+          history.replaceState(history.state || {}, "", u.pathname + (q ? "?" + q : "") + u.hash);
+        }
+      } catch (err) { /* ignore */ }
       loadInvitePreview().catch((err) => console.error(err));
     }
     paintSettingsBtn();
@@ -11328,6 +11357,18 @@ if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("func
 }
 if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
   throw new Error("pickOriginName regex must escape parens through the HTML template literal");
+}
+// Username sanitize: generate-page embeds the page in a template literal, so whitespace
+// class must be written as /\\s+/ or the live page gets /s+/ and strips the letter "s"
+// (TipsUp → TipUp on invite signup).
+if (!inline.includes('replace(/\\s+/g, "")') || inline.includes('name.replace(/s+/g, "")')) {
+  throw new Error("prepareUsername must ship /\\\\s+/ into index.html (not /s+/ which eats letter s)");
+}
+if (!inline.includes("data-gate-form") || !inline.includes("seat ticket")) {
+  throw new Error("invite gate must be a real form and say the CF- code is a seat ticket, not the password");
+}
+if (!inline.includes('searchParams.delete("invite")')) {
+  throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")

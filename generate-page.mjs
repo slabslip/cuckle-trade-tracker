@@ -708,7 +708,7 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
     /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
     body.has-news-pullup {
-      padding-bottom: calc(var(--news-pullup-peek, 128px) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--news-pullup-peek, 68px) + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
       overflow: hidden;
@@ -717,7 +717,7 @@ const html = `<!DOCTYPE html>
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 128px;
+      --news-pullup-peek: 68px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -775,7 +775,7 @@ const html = `<!DOCTYPE html>
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
-      padding: 0 12px 6px;
+      padding: 0 12px 4px;
       min-height: 0;
     }
     .news-pullup-peek-block[hidden] { display: none; }
@@ -786,6 +786,20 @@ const html = `<!DOCTYPE html>
       width: 100%; display: block;
     }
     .news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Collapsed peek: seat tag + one-line teaser only — no card chrome or footer. */
+    .news-pullup-peek-inner { min-height: 0; padding: 0; }
+    .news-pullup-peek-who {
+      font-size: 0.6875rem; font-weight: 700; line-height: 1.2;
+      color: var(--text); margin: 0 0 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .news-pullup-peek-who .seat-flair { width: 10px; height: 10px; vertical-align: -1px; }
+    .news-pullup-peek-who .crown { width: 10px; height: 10px; vertical-align: -1px; }
+    .news-pullup-peek-line {
+      font-size: 0.6875rem; line-height: 1.25; color: var(--muted);
+      margin: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .news-pullup-panel {
       flex: 1 1 auto; min-height: 0;
       overflow-y: auto; overscroll-behavior: contain;
@@ -1133,29 +1147,12 @@ const html = `<!DOCTYPE html>
       border-color: #6b5a2e;
       box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
     }
-    /* Totals row keeps an empty center cell; Vote sits in the dark band below. */
+    /* Totals row keeps an empty center cell between left and right bag sums. */
     .h2h-chip.is-trade .h2h-sum-gap {
       grid-column: 2;
       display: flex; align-items: center; justify-content: center;
       min-width: 28px; align-self: center;
     }
-    .h2h-chip.is-trade .h2h-sum-gap.is-vote-row {
-      padding: 5px 0 4px;
-      border-top: 1px solid #3a3428;
-    }
-    button.h2h-vote-btn {
-      appearance: none; font: inherit; cursor: pointer;
-      min-height: 22px; padding: 1px 8px; border-radius: 999px;
-      background: #241f14; border: 1px solid #6b5a2e;
-      color: #e0b44c; font-size: 0.5625rem; font-weight: 700;
-      letter-spacing: 0.04em; text-transform: uppercase;
-      white-space: nowrap;
-    }
-    button.h2h-vote-btn.on {
-      background: #1a1810;
-      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
-    }
-    button.h2h-vote-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Vote sheet: reuses voteBlock side buttons (SF69erss vs KingHenryXXVI style). */
     body.has-vote-sheet { overflow: hidden; }
     .vote-sheet {
@@ -1991,7 +1988,7 @@ const html = `<!DOCTYPE html>
     let tradeSeat = null;
     // Set when a vote navigates the user to the league list, so the list can say the vote landed.
     let voteToast = null;
-    // Transaction id when the in-card Vote button opened the vote sheet overlay.
+    // Transaction id when a data-vote-open control opened the vote sheet overlay.
     let voteSheetTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.
     let focusNext = null;
@@ -3656,8 +3653,9 @@ const html = `<!DOCTYPE html>
           + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
           + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
           + ' aria-label="Open the News Feed">'
-          + '<div class="news-pullup-line">The feed could not be shown. Open for details.</div>'
-          + "</div></div>"
+          + '<div class="news-pullup-peek-inner">'
+          + '<div class="news-pullup-peek-line">The feed could not be shown. Open for details.</div>'
+          + "</div></div></div>"
           + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
           + '<div class="news-pullup-empty">The feed could not be shown. Open for details.</div>'
           + "</div></div></aside>";
@@ -5607,23 +5605,6 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
-    function tradeCanVote(r) {
-      const seats = voteSeats(r);
-      return seats.length === 2 && voteParties(r) <= 2;
-    }
-
-    /** Compact Vote pill in the center gap below bag totals on trade H2H chips. */
-    function tradeVoteBtnHtml(r) {
-      if (!tradeCanVote(r)) return "";
-      const voted = !!readVotes(r.transaction_id).choice;
-      return '<div class="h2h-sum-gap is-vote-row">'
-        + '<button type="button" class="h2h-vote-btn' + (voted ? " on" : "") + '"'
-        + ' data-vote-open="' + esc(r.transaction_id) + '"'
-        + ' aria-label="' + esc(voted ? "Change your vote on this trade" : "Vote on who won this trade") + '">'
-        + (voted ? "Voted" : "Vote")
-        + "</button></div>";
-    }
-
     /** Modal overlay with the existing voteBlock side buttons and tallies. */
     function voteSheetHtml() {
       if (!voteSheetTx) return "";
@@ -6002,11 +5983,21 @@ const html = `<!DOCTYPE html>
       return newsPullupItemInnerHtml(bit);
     }
 
+    function newsPullupPeekTeaserHtml(bit) {
+      const who = bit.who
+        ? '<div class="news-pullup-peek-who">' + bit.who + "</div>"
+        : "";
+      const line = bit.line
+        ? '<div class="news-pullup-peek-line">' + esc(bit.line) + "</div>"
+        : "";
+      return '<div class="news-pullup-peek-inner">' + who + line + "</div>";
+    }
+
     function newsPullupPeekHtml(bit) {
       return '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
         + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
         + ' aria-label="Open the News Feed">'
-        + newsPullupItemInnerHtml(bit)
+        + newsPullupPeekTeaserHtml(bit)
         + "</div></div>";
     }
 
@@ -6211,10 +6202,7 @@ const html = `<!DOCTYPE html>
       };
     }
 
-    /**
-     * Under the chip: left/right voter flairs aligned to each team (read-only tallies).
-     * The Vote pill sits in the row above via tradeVoteBtnHtml().
-     */
+    /** Under the chip: left/right voter flairs aligned to each team (read-only tallies). */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
@@ -6608,7 +6596,6 @@ const html = `<!DOCTYPE html>
         + leftSumHtml
         + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
         + rightSumHtml
-        + tradeVoteBtnHtml(latest)
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
       }
@@ -8690,6 +8677,12 @@ if (inline.includes('day-alert-h">Champions Path')) {
     if (card.includes("h2h-verdict") || card.includes("WINNER") || card.includes("LOSER")) {
       throw new Error("Latest trade chip must not show book WINNER/LOSER under each seat name");
     }
+    if (card.includes("tradeVoteBtnHtml(") || card.includes("h2h-vote-btn") || card.includes("is-vote-row")) {
+      throw new Error("Compact H2H trade chips must not mount a Vote button — vote on the expanded trade screen");
+    }
+  }
+  if (html.includes("button.h2h-vote-btn") || html.includes(".h2h-sum-gap.is-vote-row")) {
+    throw new Error("stylesheet must not style removed h2h-vote-btn on compact trade chips");
   }
   if (html.includes(".h2h-verdict")) {
     throw new Error("stylesheet must not style removed h2h-verdict labels on trade chips");
@@ -8909,6 +8902,17 @@ if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src-bubble")
       && footHtml.indexOf("See tweet</a>") >= 0
       && footHtml.indexOf("news-hero-sep") >= 0)) {
     throw new Error("News pull-up item must order: card > head (seat + bubble), summary, foot (handle · time · See tweet · Remove)");
+  }
+}
+{
+  const peekFn = inline.slice(inline.indexOf("function newsPullupPeekHtml("),
+    inline.indexOf("function newsPullupPeekHtml(") + 450);
+  if (peekFn.indexOf("newsPullupItemInnerHtml") >= 0
+      || peekFn.indexOf("newsPullupPeekTeaserHtml") < 0
+      || !html.includes(".news-pullup-peek-inner")
+      || !html.includes(".news-pullup-peek-who")
+      || !html.includes(".news-pullup-peek-line")) {
+    throw new Error("News pull-up peek must use compact teaser (seat tag + truncated line), not full card");
   }
 }
 // League dash must not mount the old ← Leagues · name · username caption under the brand

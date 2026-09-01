@@ -2259,7 +2259,7 @@ const html = `<!DOCTYPE html>
     /**
      * Top holders of still-available picks.
      * @param {number|number[]|null} rounds — one round, several (e.g. 3+4), or null for all rounds
-     * @param {number} limit — how many names to return (board uses 4)
+     * @param {number} limit — how many names to return (board uses 5)
      * @param {string|null} season — e.g. "2027", or null for every still-available year
      * Ties keep equal counts; names break remaining ties.
      */
@@ -2277,7 +2277,7 @@ const html = `<!DOCTYPE html>
         if (!owner) continue;
         counts.set(owner, (counts.get(owner) || 0) + 1);
       }
-      const top = Math.max(1, Number(limit) || 4);
+      const top = Math.max(1, Number(limit) || 5);
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
@@ -2289,7 +2289,7 @@ const html = `<!DOCTYPE html>
           + '</span><span class="pil-n">· ' + n + "</span></div>").join("");
     }
 
-    /** Idle quick-view leaderboard: top 4 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
+    /** Idle quick-view leaderboard: top 5 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
      * Year label once on the header row; column buttons show round only. */
     function pickIntelBoard() {
       const yrs = PICK_INTEL_BOARD_YEAR;
@@ -2306,7 +2306,7 @@ const html = `<!DOCTYPE html>
           + '" aria-label="Filter to ' + esc(labFull) + '">' + esc(r.lab) + "</button>";
       }).join("");
       const bodyCols = cols.map((r) => {
-        const leaders = pickLeaders(r.rounds, 4, yrs);
+        const leaders = pickLeaders(r.rounds, 5, yrs);
         return '<div class="pick-intel-board-col">'
           + '<div class="pick-intel-board-leaders">' + pickLeadersStack(leaders) + "</div>"
           + "</div>";
@@ -9377,7 +9377,7 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes("function pickSeasonRangeLabel(") || !inline.includes("PICK_INTEL_BOARD_YEAR")
   || !inline.includes("pick-intel-board-cols")
   || !inline.includes("pick-intel-board-yr")
-  || !inline.includes('"3rds–4ths"') || !inline.includes("pickLeaders(r.rounds, 4, yrs)")
+  || !inline.includes('"3rds–4ths"') || !inline.includes("pickLeaders(r.rounds, 5, yrs)")
   || !inline.includes('Still-available 2027 pick leaders')
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
@@ -9388,7 +9388,7 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes("Draft Data") || inline.includes(">Pick board<")
   || inline.includes('aria-label="Pick board"')
   || inline.includes("pick-intel-board-row")) {
-  throw new Error("Draft Data must ship progressive filters + 2027 top-4 column leaderboard without a search input or board-h");
+  throw new Error("Draft Data must ship progressive filters + 2027 top-5 column leaderboard without a search input or board-h");
 }
 if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("function applyPicksBook(")
   || !inline.includes("function pickRoundOrdinal(")) {

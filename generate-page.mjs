@@ -4742,7 +4742,7 @@ const html = `<!DOCTYPE html>
         ? '<p class="caption">No trades on the league tape yet.</p>'
         : !lived.length
           ? '<p class="caption">No trade in the league has lived ' + esc(clockName())
-            + " yet. Score as Since trade to see them.</p>"
+            + " yet. Switch to as of today to see them.</p>"
           : !list.length
             ? '<p class="caption">No trades match these filters. Clear a filter to widen the feed.</p>'
             : "";

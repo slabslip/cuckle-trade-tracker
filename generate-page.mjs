@@ -2023,7 +2023,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "feedVotesTop20260901144500";
+    const DATA_V = "homeTradeRotate20260901131500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2105,6 +2105,9 @@ const html = `<!DOCTYPE html>
     let voteSheetTx = null;
     // Trade id when the voter re-opens options on an already-cast ballot.
     let voteEditTx = null;
+    // Featured trade on league-home Recent Trade. After you vote, we rotate to another
+    // deal — preferring ones the league has already balloted so they keep getting feedback.
+    let homeTradeTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.
     let focusNext = null;
     const seatCache = {};
@@ -2879,6 +2882,7 @@ const html = `<!DOCTYPE html>
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
+      homeTradeTx = null;
       clearPickFilters();
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
@@ -6293,18 +6297,90 @@ const html = `<!DOCTYPE html>
 
 
     /**
-     * Pick the most recent trade side for the league-home Latest trade card.
+     * League ballots already on a trade, not counting this device's choice.
+     * Used to prefer deals that other managers have already weighed in on.
+     */
+    function otherVoteCount(transactionId) {
+      const v = readVotes(transactionId);
+      let n = v.votes || 0;
+      if (v.choice) n = Math.max(0, n - 1);
+      return n;
+    }
+
+    /** True when the deal is a clean two-seat H2H (vote UI only works then). */
+    function homeTradeVoteable(r) {
+      if (!r || !r.transaction_id) return false;
+      try {
+        return voteSeats(r).length === 2 && voteParties(r) <= 2;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    /**
+     * Next Recent Trade candidate. Prefer unvoted (by me) deals that already have
+     * league ballots, then other unvoted H2H trades, newest within each band.
+     */
+    function pickHomeTradeSide(excludeTx) {
+      const all = leagueTrades();
+      if (!all.length) return null;
+      const ex = excludeTx != null ? String(excludeTx) : "";
+      const unvoted = [];
+      for (const r of all) {
+        if (ex && String(r.transaction_id) === ex) continue;
+        if (!homeTradeVoteable(r)) continue;
+        if (readVotes(r.transaction_id).choice) continue;
+        unvoted.push(r);
+      }
+      if (unvoted.length) {
+        unvoted.sort((a, b) => {
+          const oa = otherVoteCount(a.transaction_id);
+          const ob = otherVoteCount(b.transaction_id);
+          if (oa !== ob) return ob - oa;
+          if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+          return String(a.transaction_id) < String(b.transaction_id) ? 1
+            : String(a.transaction_id) > String(b.transaction_id) ? -1 : 0;
+        });
+        return unvoted[0];
+      }
+      // Nothing left to ballot — keep the section filled with the newest other deal.
+      for (const r of all) {
+        if (ex && String(r.transaction_id) === ex) continue;
+        return r;
+      }
+      return all[0] || null;
+    }
+
+    /**
+     * After a cast ballot on the featured home trade, rotate the card to another deal.
+     * Prioritizes trades other users have already voted on so they keep getting feedback.
+     */
+    function advanceHomeTradeAfterVote(votedTx) {
+      const next = pickHomeTradeSide(votedTx);
+      homeTradeTx = next ? next.transaction_id : null;
+      if (homeTradeTx) ensureLatestTradeBags();
+      return next;
+    }
+
+    /**
+     * Trade side for the league-home Recent Trade card.
+     * Starts on the newest voteable deal you have not balloted; after you vote, rotates
+     * (see advanceHomeTradeAfterVote) toward deals with existing league ballots.
      */
     function latestTradeSide() {
-      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
-      let best = null;
-      for (const r of sides) {
-        if (!best || (r.date || "") > (best.date || "")
-          || ((r.date || "") === (best.date || "") && String(r.transaction_id) > String(best.transaction_id))) {
-          best = r;
-        }
+      const all = leagueTrades();
+      if (!all.length) {
+        homeTradeTx = null;
+        return null;
       }
-      return best;
+      if (homeTradeTx) {
+        const pinned = all.find((r) => String(r.transaction_id) === String(homeTradeTx));
+        // Keep the pin while you still have not voted on it.
+        if (pinned && !readVotes(pinned.transaction_id).choice) return pinned;
+      }
+      const picked = pickHomeTradeSide(null);
+      homeTradeTx = picked ? picked.transaction_id : null;
+      return picked;
     }
 
     /** Sleeper-style short name: "Blake Corum" → "B. Corum". */
@@ -8517,6 +8593,7 @@ const html = `<!DOCTYPE html>
         const tx = voteBtn.dataset.vote;
         const pick = voteBtn.dataset.voteSeat;
         const next = readVotes(tx).choice === pick ? null : pick;
+        const featuredTx = homeTradeTx;
         writeVote(tx, next);
         // Casting a vote on the trade feed shows a toast and stays put so the user can keep
         // browsing. Clearing a vote stays put too. Unclaimed: writeVote only opens the claim form.
@@ -8525,6 +8602,11 @@ const html = `<!DOCTYPE html>
           voteToast = { tx: tx, name: (won && won.name) || "" };
         } else {
           voteToast = null;
+        }
+        // After balloting the featured Recent Trade deal, rotate that card to another trade —
+        // preferring deals that already have league votes so they keep getting feedback.
+        if (next && authSeatId() && featuredTx && String(featuredTx) === String(tx)) {
+          advanceHomeTradeAfterVote(tx);
         }
         render();
         return;
@@ -8891,6 +8973,18 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
     throw new Error("leagueInProgress must mount Who won this trade? vote CTA on Recent Trade");
   }
+
+{
+  if (!inline.includes("function pickHomeTradeSide(") || !inline.includes("function advanceHomeTradeAfterVote(")
+    || !inline.includes("function otherVoteCount(") || !inline.includes("let homeTradeTx")
+    || !inline.includes("advanceHomeTradeAfterVote(tx)")) {
+    throw new Error("Recent Trade must rotate after a vote toward league-balloted deals");
+  }
+  const homePick = inline.slice(inline.indexOf("function pickHomeTradeSide("), inline.indexOf("function pickHomeTradeSide(") + 1200);
+  if (!homePick.includes("otherVoteCount(") || !homePick.includes("homeTradeVoteable(")) {
+    throw new Error("pickHomeTradeSide must prefer otherVoteCount among voteable unvoted deals");
+  }
+}
   if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")) {
     throw new Error("Recent Trade vote CTA styles must ship (lh-trade-vote-cta / lh-trade-chip-wrap)");
   }

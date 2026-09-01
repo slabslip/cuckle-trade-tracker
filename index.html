@@ -1458,7 +1458,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "voteFlairOnly20260901014630";
+    const DATA_V = "dropLeanMid20260901015000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4878,26 +4878,17 @@
     }
 
     /**
-     * Under the chip: left/right voter flairs + totals aligned to each team, value lean mid.
+     * Under the chip: left/right voter flairs aligned to each team.
+     * Mid lean copy is gone — valuation winner/loser will live on the seat headers.
      * Voting stays on the trade screen (nested buttons cannot live inside the Latest trade opener).
      */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
-      let mid = "";
-      if (lean && lean.leftDelta != null) {
-        const d = Math.round(lean.leftDelta);
-        if (d === 0) mid = "Value even";
-        else if (d > 0) {
-          mid = "Value leans " + esc(latest.name) + " " + tapeMargin(lean.leftDelta);
-        } else {
-          mid = "Value leans " + esc(latest.other) + " " + tapeMargin(-lean.leftDelta);
-        }
-      }
-      if (!canVote && !mid) return "";
+      if (!canVote) return "";
 
       const sideMarksHtml = (uid, rightAlign) => {
-        if (!canVote || !uid) {
+        if (!uid) {
           return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"></div>';
         }
         const v = readVotes(latest.transaction_id);
@@ -4928,13 +4919,6 @@
           + '<div class="h2h-lean-marks">' + marksInner + "</div></div>";
       };
 
-      if (canVote && !mid) {
-        mid = "Who won?";
-      } else if (canVote && mid) {
-        const v = readVotes(latest.transaction_id);
-        if (!v.votes) mid = mid + '<span class="h2h-lean-empty"> · Who won?</span>';
-      }
-
       const leftUid = seats[0] ? seats[0].uid : null;
       const rightUid = seats[1] ? seats[1].uid : null;
       // Align marks to the same left/right seats the chip paints (latest.name is left).
@@ -4950,9 +4934,10 @@
         }
       }
 
+      // Empty mid keeps the 3-col grid so vote marks stay under each seat.
       return '<div class="h2h-trade-lean">'
         + sideMarksHtml(left, false)
-        + '<div class="h2h-lean-mid">' + mid + "</div>"
+        + '<div class="h2h-lean-mid" aria-hidden="true"></div>'
         + sideMarksHtml(right, true)
         + "</div>";
     }

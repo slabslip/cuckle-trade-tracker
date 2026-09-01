@@ -1463,7 +1463,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "voteFlairOnly20260901014630";
+    const DATA_V = "dropLeanMid20260901015000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4883,26 +4883,17 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Under the chip: left/right voter flairs + totals aligned to each team, value lean mid.
+     * Under the chip: left/right voter flairs aligned to each team.
+     * Mid lean copy is gone — valuation winner/loser will live on the seat headers.
      * Voting stays on the trade screen (nested buttons cannot live inside the Latest trade opener).
      */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
-      let mid = "";
-      if (lean && lean.leftDelta != null) {
-        const d = Math.round(lean.leftDelta);
-        if (d === 0) mid = "Value even";
-        else if (d > 0) {
-          mid = "Value leans " + esc(latest.name) + " " + tapeMargin(lean.leftDelta);
-        } else {
-          mid = "Value leans " + esc(latest.other) + " " + tapeMargin(-lean.leftDelta);
-        }
-      }
-      if (!canVote && !mid) return "";
+      if (!canVote) return "";
 
       const sideMarksHtml = (uid, rightAlign) => {
-        if (!canVote || !uid) {
+        if (!uid) {
           return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"></div>';
         }
         const v = readVotes(latest.transaction_id);
@@ -4933,13 +4924,6 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-lean-marks">' + marksInner + "</div></div>";
       };
 
-      if (canVote && !mid) {
-        mid = "Who won?";
-      } else if (canVote && mid) {
-        const v = readVotes(latest.transaction_id);
-        if (!v.votes) mid = mid + '<span class="h2h-lean-empty"> · Who won?</span>';
-      }
-
       const leftUid = seats[0] ? seats[0].uid : null;
       const rightUid = seats[1] ? seats[1].uid : null;
       // Align marks to the same left/right seats the chip paints (latest.name is left).
@@ -4955,9 +4939,10 @@ const html = `<!DOCTYPE html>
         }
       }
 
+      // Empty mid keeps the 3-col grid so vote marks stay under each seat.
       return '<div class="h2h-trade-lean">'
         + sideMarksHtml(left, false)
-        + '<div class="h2h-lean-mid">' + mid + "</div>"
+        + '<div class="h2h-lean-mid" aria-hidden="true"></div>'
         + sideMarksHtml(right, true)
         + "</div>";
     }
@@ -6967,10 +6952,17 @@ if (inline.includes('day-alert-h">Champions Path')) {
       throw new Error("Latest trade header must not show delta/total figs — name stays centered on the avatar");
     }
   }
-  if (!inline.includes("Who won?") || !inline.includes("Value leans ")
-    || !inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
+  if (!inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
     || !inline.includes("seatVoteMarkHtml(")) {
-    throw new Error("Latest trade chip must surface value lean and per-side vote marks");
+    throw new Error("Latest trade chip must surface per-side vote marks");
+  }
+  {
+    const footAt = inline.indexOf("function latestTradeLeanFooterHtml(");
+    const footStop = inline.indexOf("\n    function ", footAt + 10);
+    const foot = inline.slice(footAt, footStop < 0 ? footAt + 1600 : footStop);
+    if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
+      throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
+    }
   }
   {
     const markAt = inline.indexOf("function seatVoteMarkHtml(");

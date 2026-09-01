@@ -1451,7 +1451,7 @@ const html = `<!DOCTYPE html>
   <h1 class="brand">
     <button type="button" class="go-home" id="goHome" aria-label="League home">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
       </svg>
     </button>
     <span class="lens-wrap" id="lensWrap">
@@ -1614,7 +1614,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickIntel20260901040000";
+    const DATA_V = "pickIntel20260901053100";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8168,7 +8168,7 @@ if (!inline.includes("function reigningChampName()")
 if (!inline.includes("function seatTitle(title)")) {
   throw new Error("bag headings must flair seat names through seatTitle()");
 }
-// Header back arrow: clear seat / nested views; stay on this league's home (never Your leagues).
+// Header home control: clear seat / nested views; stay on this league's home (never Your leagues).
 if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => {')) {
   throw new Error("the leagues back control must clear the seat -- it is the only exit from a seat now");
 }
@@ -8188,8 +8188,8 @@ if (!inline.includes("clearLeague()") || !fnBody("clearLeague").includes("\n    
 if (!html.includes('id="goHome"') || !html.includes('aria-label="League home"')) {
   throw new Error("header back control must be labeled League home");
 }
-if (!html.includes("M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z")) {
-  throw new Error("header home glyph must be a back arrow");
+if (!html.includes("M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z")) {
+  throw new Error("header home glyph must be a home icon");
 }
 if (!html.includes('id="goSettings"') || !inline.includes("function openSettings()")) {
   throw new Error("Settings control next to leagues back is required for commissioner admin");

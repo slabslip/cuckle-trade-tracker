@@ -2198,7 +2198,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260901202749";
+    const DATA_V = "news20260901224527";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8875,10 +8875,11 @@
         + tabs
         + (rows || empty)
         + (tab === "claimed"
-          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed.</p>'
+          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed. '
+            + "Stale claims (no active membership) also need Reissue before you can reclaim your own seat.</p>"
           : (!myMembership
             ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
-            : ""))
+            : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
         + transferBlock
         + "</div>";
     }

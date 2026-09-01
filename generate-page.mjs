@@ -52,11 +52,12 @@ const html = `<!DOCTYPE html>
     /* League name sits where the app wordmark used to — absolute center of the brand row. */
     h1.brand .league-sub {
       position: absolute; left: 50%; transform: translateX(-50%);
-      margin: 0; color: var(--text); font-size: 0.9375rem; font-weight: 650;
-      letter-spacing: -0.01em; text-align: center;
+      margin: 0; padding: 0; color: inherit;
+      font-size: inherit; font-weight: inherit; letter-spacing: inherit;
+      text-align: center; line-height: 44px; min-height: 44px;
       max-width: min(52%, calc(100% - 168px));
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      min-height: 44px; line-height: 44px; pointer-events: none;
+      pointer-events: none;
     }
     h1.brand .league-sub[hidden] { display: none; }
     button.go-home, button.go-settings {
@@ -1382,7 +1383,7 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="League home">
+    <button type="button" class="go-home" id="goHome" aria-label="Leagues">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
       </svg>
@@ -1541,7 +1542,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "dropAppName20260901030500";
+    const DATA_V = "leagueSubBrand20260901031000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2937,10 +2938,10 @@ const html = `<!DOCTYPE html>
     }
 
     function partnerLine(p) {
-      return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
+      return '<div class="row" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
         + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
         + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
-        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></button>";
+        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></div>";
     }
 
     function draftLine(p, tag) {
@@ -5970,11 +5971,11 @@ const html = `<!DOCTYPE html>
         .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
       const rows = scored.map((row) => {
         const p = row.p, per = row.w.per;
-        return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
+        return '<div class="row' + (partnerName === p.name ? " open" : "") + '" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
           + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
           + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
-          + '<div class="margin">' + tapeMargin(per) + "</div></div></button>";
+          + '<div class="margin">' + tapeMargin(per) + "</div></div></div>";
       }).join("");
       let detail = "";
       if (partnerName) {
@@ -7250,6 +7251,9 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) 
 
 if (!html.includes('id="leagueSub"') || !html.includes("h1.brand .league-sub")) {
   throw new Error("league name must ship in the brand row (#leagueSub)");
+}
+if (/<p[^>]*id="leagueSub"/.test(html) || /<p class="league-sub"/.test(html)) {
+  throw new Error("league name must not remain a separate <p> under the brand — it belongs in h1.brand");
 }
 if (!inline.includes("function paintLeagueSub()")
     || !inline.includes('leagueSub.textContent = activeLeague.name || "League"')) {

@@ -1374,7 +1374,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "h2hRefChip20260901010000";
+    const DATA_V = "h2hRefChip20260901020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1413,6 +1413,10 @@ const html = `<!DOCTYPE html>
     let newsHeroIdx = 0;
     let newsHeroPaused = false;
     let newsHeroTimer = null;
+    // Slide transition timeout must clear on remount / Pause, or a stale callback can hide the
+    // live slide (empty News Feed) after bags/matchups re-render mid-animation.
+    let newsHeroAnimTimer = null;
+    let newsHeroAnimGen = 0;
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
     let weekMatchupsLoading = false;
@@ -4362,6 +4366,8 @@ const html = `<!DOCTYPE html>
 
     function clearNewsHero() {
       if (newsHeroTimer) { clearInterval(newsHeroTimer); newsHeroTimer = null; }
+      if (newsHeroAnimTimer) { clearTimeout(newsHeroAnimTimer); newsHeroAnimTimer = null; }
+      newsHeroAnimGen += 1;
     }
 
     function paintNewsHeroSlide(animate) {
@@ -4378,6 +4384,8 @@ const html = `<!DOCTYPE html>
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const live = root.querySelector("[data-news-live]");
       if (live) live.textContent = (newsHeroIdx + 1) + " of " + slides.length;
+      // Drop any in-flight slide timeout before a hard paint or a new transition.
+      if (newsHeroAnimTimer) { clearTimeout(newsHeroAnimTimer); newsHeroAnimTimer = null; }
       if (!animate || reduce || prevIdx < 0 || prevIdx === newsHeroIdx) {
         slides.forEach((el, i) => {
           el.hidden = i !== newsHeroIdx;
@@ -4391,6 +4399,7 @@ const html = `<!DOCTYPE html>
         return;
       }
       const prev = slides[prevIdx];
+      const gen = newsHeroAnimGen;
       // Ticker: current slides left; next enters from the right.
       prev.classList.remove("is-enter", "is-in");
       prev.classList.add("is-exit");
@@ -4399,16 +4408,26 @@ const html = `<!DOCTYPE html>
       next.classList.add("is-enter");
       void next.offsetWidth;
       next.classList.add("is-in");
-      window.setTimeout(() => {
+      newsHeroAnimTimer = window.setTimeout(() => {
+        newsHeroAnimTimer = null;
+        // Remount / Pause bumped the gen — ignore this stale transition cleanup.
+        if (gen !== newsHeroAnimGen) return;
         prev.hidden = true;
         prev.classList.remove("is-exit", "is-enter", "is-in");
         next.classList.remove("is-enter", "is-in");
+        // Ensure the active slide stays visible even if classes raced.
+        next.hidden = false;
         slides.forEach((el, i) => {
           if (i !== newsHeroIdx) {
             el.hidden = true;
             el.classList.remove("is-exit", "is-enter", "is-in");
           }
         });
+        if (!slides.some((el) => !el.hidden)) {
+          newsHeroIdx = 0;
+          slides[0].hidden = false;
+          slides[0].classList.remove("is-exit", "is-enter", "is-in");
+        }
       }, 480);
     }
 
@@ -4449,9 +4468,22 @@ const html = `<!DOCTYPE html>
      * Pause / prefers-reduced-motion stop motion (WCAG 2.2.2). Body opens the full news screen.
      */
     function dayAlert() {
+      const book = news && news.v === 1 ? news : null;
+      const raw = (book && book.items) || [];
       const items = newsItemsLive();
-      const slides = (items.length ? items : [null]).map((it, i) => {
-        const bit = newsHeroLine(it);
+      // Same three empties as the full feed: load failed, never shared, all soft-deleted.
+      // Collapsing these made Design Mode look like a blank ticker when news.json failed.
+      let slidesSrc = items;
+      if (!slidesSrc.length) {
+        const emptyLine = !book
+          ? "The feed could not be loaded."
+          : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
+        slidesSrc = [{ category: "news", league_line: emptyLine, _empty: true }];
+      }
+      const slides = slidesSrc.map((it, i) => {
+        const bit = it && it._empty
+          ? { cat: "News", line: it.league_line }
+          : newsHeroLine(it);
         return '<div class="news-hero-slide" data-news-slide="' + i + '"'
           + (i === 0 ? "" : " hidden") + '>'
           + "<b>" + esc(bit.cat) + "</b>"
@@ -4796,13 +4828,19 @@ const html = `<!DOCTYPE html>
           let label = "";
           let seasonYear = "";
           for (let attempt = 0; attempt < 30 && !pairs.length; attempt++) {
-            const meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
-            const tryWeek = week;
+            let meta;
+            let tryWeek = week;
+            try {
+            meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
+            tryWeek = week;
             const [rosters, users, matchups] = await Promise.all([
               fetch(sleeper + "/league/" + leagueId + "/rosters").then((r) => r.json()),
               fetch(sleeper + "/league/" + leagueId + "/users").then((r) => r.json()),
               fetch(sleeper + "/league/" + leagueId + "/matchups/" + tryWeek).then((r) => r.json()),
             ]);
+            if (!Array.isArray(rosters) || !Array.isArray(users) || !Array.isArray(matchups)) {
+              throw new Error("sleeper matchup payload incomplete");
+            }
             const ownerName = Object.create(null);
             const ownerHandle = Object.create(null);
             const ownerAvatar = Object.create(null);
@@ -4937,6 +4975,16 @@ const html = `<!DOCTYPE html>
               leagueId = String(meta.previous_league_id);
               week = 18;
             } else break;
+            } catch (attemptErr) {
+              // One bad week/network blip must not abort the walk (Design Mode used to stay on
+              // "Loading…" forever when a single Sleeper call rejected mid-scan).
+              console.error(attemptErr);
+              if (week > 1) week -= 1;
+              else if (meta && meta.previous_league_id) {
+                leagueId = String(meta.previous_league_id);
+                week = 18;
+              } else break;
+            }
           }
           weekMatchups = pairs.length
             ? { week: week, season: seasonYear, label: label, pairs: pairs }
@@ -7735,6 +7783,27 @@ if (!inline.includes("newsHeroPaused") || !inline.includes('data-news-pause')) {
 }
 if (!inline.includes(", 3000)") || !inline.includes('classList.add("is-exit")')) {
   throw new Error("news-hero ticker must slide left every 3s via is-exit/is-enter classes");
+}
+// Stale slide timeouts after remount/Pause used to hide every live slide (blank News Feed).
+if (!inline.includes("newsHeroAnimTimer") || !inline.includes("newsHeroAnimGen")) {
+  throw new Error("news-hero must track and cancel in-flight slide timeouts across remounts");
+}
+if (!inline.includes("if (gen !== newsHeroAnimGen) return")) {
+  throw new Error("news-hero slide cleanup must ignore stale generations after clearNewsHero()");
+}
+// Hero empty copy must match the full feed's three cases (load fail / all deleted / never shared).
+{
+  const dayAt = inline.indexOf("function dayAlert()");
+  const daySrc = inline.slice(dayAt, dayAt + 1800);
+  for (const need of [
+    "The feed could not be loaded.",
+    "No posts in the feed right now.",
+    "Nothing shared yet.",
+  ]) {
+    if (!daySrc.includes(need)) {
+      throw new Error(`dayAlert empty states must distinguish load/deleted/never-shared; missing ${need}`);
+    }
+  }
 }
 // ---------------------------------------------------------------------------------------------
 

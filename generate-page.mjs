@@ -1133,17 +1133,22 @@ const html = `<!DOCTYPE html>
       border-color: #6b5a2e;
       box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
     }
-    /* Center Vote control between the two bag totals on trade H2H chips. */
+    /* Totals row keeps an empty center cell; Vote sits in the dark band below. */
     .h2h-chip.is-trade .h2h-sum-gap {
+      grid-column: 2;
       display: flex; align-items: center; justify-content: center;
       min-width: 28px; align-self: center;
     }
+    .h2h-chip.is-trade .h2h-sum-gap.is-vote-row {
+      padding: 5px 0 4px;
+      border-top: 1px solid #3a3428;
+    }
     button.h2h-vote-btn {
       appearance: none; font: inherit; cursor: pointer;
-      min-height: 32px; padding: 4px 12px; border-radius: 999px;
+      min-height: 22px; padding: 1px 8px; border-radius: 999px;
       background: #241f14; border: 1px solid #6b5a2e;
-      color: #e0b44c; font-size: 0.6875rem; font-weight: 700;
-      letter-spacing: 0.05em; text-transform: uppercase;
+      color: #e0b44c; font-size: 0.5625rem; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
       white-space: nowrap;
     }
     button.h2h-vote-btn.on {
@@ -5607,13 +5612,11 @@ const html = `<!DOCTYPE html>
       return seats.length === 2 && voteParties(r) <= 2;
     }
 
-    /** Centered Vote pill between the two bag totals on trade H2H chips. */
+    /** Compact Vote pill in the center gap below bag totals on trade H2H chips. */
     function tradeVoteBtnHtml(r) {
-      if (!tradeCanVote(r)) {
-        return '<div class="h2h-sum-gap" aria-hidden="true"></div>';
-      }
+      if (!tradeCanVote(r)) return "";
       const voted = !!readVotes(r.transaction_id).choice;
-      return '<div class="h2h-sum-gap">'
+      return '<div class="h2h-sum-gap is-vote-row">'
         + '<button type="button" class="h2h-vote-btn' + (voted ? " on" : "") + '"'
         + ' data-vote-open="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(voted ? "Change your vote on this trade" : "Vote on who won this trade") + '">'
@@ -6209,8 +6212,8 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Under the chip: left/right voter flairs aligned to each team.
-     * The center Vote pill opens the vote sheet; marks here are read-only tallies.
+     * Under the chip: left/right voter flairs aligned to each team (read-only tallies).
+     * The Vote pill sits in the row above via tradeVoteBtnHtml().
      */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
@@ -6603,8 +6606,9 @@ const html = `<!DOCTYPE html>
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
         + sideHtml(right, true, rightWin)
         + leftSumHtml
-        + tradeVoteBtnHtml(latest)
+        + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
         + rightSumHtml
+        + tradeVoteBtnHtml(latest)
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
       }

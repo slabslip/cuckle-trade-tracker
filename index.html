@@ -1809,26 +1809,26 @@
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Compact score clock on value chips / filter rows — icon only, tucked top-right. */
-    .chip-lens { position: absolute; top: 0; right: 0; z-index: 3; line-height: 0; }
+    /* Compact score clock on value chips / filter rows — icon only, inset from chip edge. */
+    .chip-lens { position: absolute; top: 6px; right: 6px; z-index: 3; line-height: 0; }
     .chip-lens.is-inline {
       position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
     }
     /* Reserve a clear corner so the clock never covers seat names / medals. */
-    .h2h-chip.is-trade { position: relative; padding-top: 16px; padding-right: 20px; }
-    .h2h-chip.is-trade > .chip-lens { top: 0; right: 0; }
+    .h2h-chip.is-trade { position: relative; padding-top: 22px; padding-right: 30px; }
+    .h2h-chip.is-trade > .chip-lens { top: 6px; right: 6px; }
     button.chip-lens-btn {
       appearance: none; font: inherit; color: var(--muted);
       background: rgba(12, 12, 16, 0.82);
       border: 1px solid var(--line); border-radius: 999px;
-      width: 20px; height: 20px; min-height: 20px; padding: 0;
+      width: 26px; height: 26px; min-height: 26px; padding: 0;
       display: grid; place-items: center; cursor: pointer;
       position: relative; line-height: 0;
       touch-action: manipulation;
     }
     button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
     button.chip-lens-btn .chip-lens-ico {
-      display: block; width: 11px; height: 11px;
+      display: block; width: 14px; height: 14px;
     }
     button.chip-lens-btn .dot {
       position: absolute; top: 1px; right: 1px;
@@ -2139,7 +2139,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsUninsuredCol20260901144500";
+    const DATA_V = "chipClockBiggerCuffAvail20260901145000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3018,7 +3018,7 @@
       }
       if (cuffFilterFa) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-fa="1"'
-          + ' aria-label="Clear free-agent cuff filter">cuff free'
+          + ' aria-label="Clear cuff available filter">cuff available'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterHeld) {
@@ -3076,7 +3076,7 @@
 
     /**
      * Open the full Cuffs screen. Home chips land here so search/filter has room;
-     * mode presets search / my cuffs / cuff free / held / other / rb (board columns).
+     * mode presets search / my cuffs / cuff available / held / other / bare (board columns).
      */
     function openCuffsPage(mode) {
       clearCuffFilters();
@@ -3127,7 +3127,7 @@
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="my cuffs">my cuffs</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
-        + ' aria-label="cuff free agents">cuff free</button>'
+        + ' aria-label="cuff available">cuff available</button>'
         + "</div>"
         + body
         + "</section>";
@@ -3156,7 +3156,7 @@
       } else if (!cuffs || !(cuffs.rows || []).length) {
         body = '<p class="caption">Cuff board is not available for this league yet.</p>';
       } else if (!active) {
-        body = '<p class="caption">Search a team or position, or tap my cuffs / cuff free.</p>';
+        body = '<p class="caption">Search a team or position, or tap my cuffs / cuff available.</p>';
       } else if (!rows.length) {
         body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
@@ -3191,7 +3191,7 @@
         + ' aria-label="my cuffs">my cuffs</button>'
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
         + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
-        + ' aria-label="cuff free agents">cuff free</button>'
+        + ' aria-label="cuff available">cuff available</button>'
         + "</div>"
         + cuffFilterSummary()
         + cuffFilterPanel(seatNames)
@@ -7984,7 +7984,7 @@
      * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
      */
     function chipLensIcon() {
-      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true" focusable="false">'
+      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">'
         + '<circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>'
         + '<path d="M8 4.75V8l2.4 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>'
         + "</svg>";
@@ -8919,7 +8919,7 @@
       }
       const cuffFa = e.target.closest("[data-cuff-fa]");
       if (cuffFa) {
-        // Exclusive mode: cuff free alone — starters whose NFL cuff is unrostered.
+        // Exclusive mode: cuff available alone — starters whose NFL cuff is unrostered.
         if (cuffFilterFa) {
           resetCuffFilters();
         } else {

@@ -2197,7 +2197,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsTagsX20260901165500";
+    const DATA_V = "lensAgeDefault20260901170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3475,7 +3475,14 @@ const html = `<!DOCTYPE html>
       if (view === "trade") {
         // ?view=trade with no trade is not a screen. The list it belongs to is.
         if (!openId) view = "trades";
-        else await ensureTradeSeat();
+        else {
+          await ensureTradeSeat();
+          // Cold deep links omit lens when it is the to-date default; pick y2 for old deals.
+          if (!params.get("lens")) {
+            const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+            lens = defaultLensForDate(side && side.date);
+          }
+        }
       }
       document.getElementById("app").hidden = false;
       render();
@@ -3663,7 +3670,8 @@ const html = `<!DOCTYPE html>
         titleYear: q.get("title") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
-        lens: q.get("lens") || "all",
+        // null when omitted so trade screens can age-default (y2 vs to-date).
+        lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
         d: 0,
       };
     }
@@ -3677,11 +3685,18 @@ const html = `<!DOCTYPE html>
       restoring = true;
       try {
         depth = want.d || 0;
-        lens = want.lens && WINDOWS.some((w) => w[0] === want.lens) ? want.lens : "all";
         view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
         titleYear = want.titleYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
+        if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
+          lens = want.lens;
+        } else if (view === "trade" && openId) {
+          const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+          lens = defaultLensForDate(side && side.date);
+        } else {
+          lens = "all";
+        }
         // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
         partnerName = null;
         openPick = null;
@@ -3886,6 +3901,16 @@ const html = `<!DOCTYPE html>
       const y = p[0] + n, m = p[1], d = p[2];
       const dim = new Date(y, m, 0).getDate();
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
+    }
+
+    /**
+     * Default score clock for a trade's age: First 2 years once the deal is older than
+     * two years; to-date (Since trade) while it is still younger than that.
+     */
+    function defaultLensForDate(date) {
+      const today = (league && league.today) || "";
+      if (!date || !today) return "all";
+      return date <= addYears(today, -2) ? "y2" : "all";
     }
 
     function windowLived(date) {
@@ -8696,6 +8721,10 @@ const html = `<!DOCTYPE html>
       voteToast = null;
       voteSheetTx = null;
       voteEditTx = null;
+      {
+        const side = tradeSide(tx, uid) || tradeSide(tx, null);
+        lens = defaultLensForDate(side && side.date);
+      }
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
       render();
@@ -10315,6 +10344,10 @@ if (!inline.includes("function chipLensHtml(") || !inline.includes("function pos
 }
 if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inline: true })')) {
   throw new Error("value chips and filter rows must mount chipLensHtml");
+}
+if (!inline.includes("function defaultLensForDate(")
+  || !inline.includes('date <= addYears(today, -2) ? "y2" : "all"')) {
+  throw new Error("Trade score lens must default to y2 when older than 2 years, else to-date (all)");
 }
 if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
   throw new Error("chip-lens styles and buttons must ship");

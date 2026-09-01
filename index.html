@@ -1463,7 +1463,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeTopLeft20260901013700";
+    const DATA_V = "parkMatchups20260901013900";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5341,10 +5341,10 @@
 
 
     /**
-     * Latest trade card + horizontal recent-match strip (no section heading).
+     * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
+     * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
     function leagueInProgress() {
-      ensureWeekMatchups();
       ensureLatestTradeBags();
       const latest = latestTradeSide();
       let tradeBox = "";
@@ -5358,7 +5358,7 @@
             + latestTradeCardHtml(latest)
             + "</button>";
         } catch (err) {
-          // Bag/format bugs must not erase the rest of league home (News Feed, week strip).
+          // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
           tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
@@ -5373,14 +5373,8 @@
             + "</button>";
         }
       }
-      let strip = "";
-      try { strip = matchupStripHtml(); } catch (err) { console.error(err); strip = ""; }
-      if (!tradeBox && !strip) return "";
-      // No section heading above Latest trade + week strip.
-      return '<section class="lh-section">'
-        + tradeBox
-        + strip
-        + "</section>";
+      if (!tradeBox) return "";
+      return '<section class="lh-section">' + tradeBox + "</section>";
     }
 
 

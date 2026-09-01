@@ -1468,7 +1468,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeTopLeft20260901013700";
+    const DATA_V = "parkMatchups20260901013900";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5346,10 +5346,10 @@ const html = `<!DOCTYPE html>
 
 
     /**
-     * Latest trade card + horizontal recent-match strip (no section heading).
+     * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
+     * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
     function leagueInProgress() {
-      ensureWeekMatchups();
       ensureLatestTradeBags();
       const latest = latestTradeSide();
       let tradeBox = "";
@@ -5363,7 +5363,7 @@ const html = `<!DOCTYPE html>
             + latestTradeCardHtml(latest)
             + "</button>";
         } catch (err) {
-          // Bag/format bugs must not erase the rest of league home (News Feed, week strip).
+          // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
           tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
@@ -5378,14 +5378,8 @@ const html = `<!DOCTYPE html>
             + "</button>";
         }
       }
-      let strip = "";
-      try { strip = matchupStripHtml(); } catch (err) { console.error(err); strip = ""; }
-      if (!tradeBox && !strip) return "";
-      // No section heading above Latest trade + week strip.
-      return '<section class="lh-section">'
-        + tradeBox
-        + strip
-        + "</section>";
+      if (!tradeBox) return "";
+      return '<section class="lh-section">' + tradeBox + "</section>";
     }
 
 
@@ -6933,30 +6927,19 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("leagueInProgress must not link to Champions Path / titles");
   }
   if (prog.includes("lh-strip-card") || prog.includes('class="lh-strip-card')) {
-    throw new Error("leagueInProgress must not mount trade strip cards (lh-strip-card) — use week matchups");
+    throw new Error("leagueInProgress must not mount trade strip cards (lh-strip-card)");
   }
-  if (!prog.includes("matchupStripHtml(")) {
-    throw new Error("leagueInProgress must mount the prior-week matchup strip via matchupStripHtml()");
+  // Week matchup strip is intentionally unmounted while that slot is redesigned.
+  if (prog.includes("matchupStripHtml(") || prog.includes("ensureWeekMatchups(")
+    || prog.includes("lh-week-h") || prog.includes("lh-match-strip")) {
+    throw new Error("leagueInProgress must not mount the prior-week matchup strip (parked for rethink)");
   }
 }
 {
-  const at = inline.indexOf("function matchupStripHtml(");
-  const stop = inline.indexOf("\n    function ", at + 10);
-  const strip = inline.slice(at, stop < 0 ? at + 1600 : stop);
-  for (const need of ["lh-week-h", "lh-match-card", "h2hMatchCardHtml(", "aProj", "bProj", "aPts", "bPts", "% WIN"]) {
-    if (!strip.includes(need) && !inline.includes(need)) {
-      // h2h helpers live outside matchupStripHtml; accept either the strip call or the helper body.
-      if (need === "h2hMatchCardHtml(" && strip.includes("h2hMatchCardHtml(")) continue;
-      if (need === "% WIN" && inline.includes("% WIN")) continue;
-      if ((need === "aProj" || need === "bProj" || need === "aPts" || need === "bPts") && inline.includes(need)) continue;
-      throw new Error(`matchupStripHtml must show Week title + H2H matchup chips; missing ${need}`);
-    }
-  }
-  if (!strip.includes("h2hMatchCardHtml(")) {
-    throw new Error("matchupStripHtml must render via h2hMatchCardHtml()");
-  }
-  if (strip.includes("lh-strip-card") || strip.includes("data-board-open") || strip.includes("tradeDelta")) {
-    throw new Error("matchupStripHtml must not emit trade chips (lh-strip-card / data-board-open / deltas)");
+  // Helpers stay in the bundle for the redesign, but must not be called from home yet.
+  if (!inline.includes("function matchupStripHtml(") || !inline.includes("function ensureWeekMatchups(")
+    || !inline.includes("function h2hMatchCardHtml(")) {
+    throw new Error("matchup strip helpers must remain available for the post-Latest-trade rethink");
   }
 }
 // Dead trade-strip class must stay gone so Design Mode does not see button/div.lh-strip-card.
@@ -7080,12 +7063,11 @@ if (
     throw new Error("leagueInProgress must not emit In the league heading or lh-section-h wrapper");
   }
 }
-for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "function matchupStripHtml(", "lh-week-h", "lh-match-card", "h2h-chip", "h2h-vs", "% WIN"]) {
+for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "h2h-chip", "h2h-vs"]) {
   if (!inline.includes(need) && !html.includes(need) && !html.includes("." + need)) {
     if (need === "h2h-chip" && (html.includes(".h2h-chip") || inline.includes("h2h-chip"))) continue;
     if (need === "h2h-vs" && (html.includes(".h2h-vs") || inline.includes("h2h-vs"))) continue;
-    if (need === "% WIN" && inline.includes("% WIN")) continue;
-    throw new Error(`league home news/week strip lost ${need}`);
+    throw new Error(`league home news/trade chrome lost ${need}`);
   }
 }
 if (inline.includes("lh-hero-visual") || inline.includes("News &amp; Alerts")) {

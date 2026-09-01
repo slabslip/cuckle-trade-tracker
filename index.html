@@ -1512,7 +1512,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsPullup20260901020000";
+    const DATA_V = "dropMidAsNotes20260901022100";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4922,15 +4922,16 @@
       const valHtml = parts
         ? '<span class="lh-trade-num lh-trade-val">' + esc(parts.num) + "</span>"
         : '<span class="lh-trade-num lh-trade-val">—</span>';
-      // Text-first asset line: gold "+" + label + book number. Mid / as-year notes stay off
-      // the Latest trade lab — every pick is understood as mid until true year values land.
+      // Text-first asset line: gold "+" + label + book number. Never paint Mid / as-year
+      // notes on the Latest trade lab (every pick is mid until true year values land).
       if (leg.kind === "pick") {
         const lab = formatPickLabels(leg.label);
-        const subBits = [lab.secondary].filter(Boolean);
+        // Owner only — do not join parts.note ("Mid" / "as 2028").
+        const sub = lab.secondary || "";
         return '<div class="lh-trade-asset">'
           + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
           + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
-          + (subBits.length ? "<span>" + esc(subBits.join(" · ")) + "</span>" : "")
+          + (sub ? "<span>" + esc(sub) + "</span>" : "")
           + "</div>"
           + valHtml
           + "</div>";
@@ -4941,11 +4942,10 @@
       const posTeam = meta && meta.pos
         ? meta.pos + (meta.team ? " · " + meta.team : "")
         : "";
-      const subBits = [posTeam].filter(Boolean);
       return '<div class="lh-trade-asset">'
         + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
         + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
-        + (subBits.length ? "<span>" + esc(subBits.join(" · ")) + "</span>" : "")
+        + (posTeam ? "<span>" + esc(posTeam) + "</span>" : "")
         + "</div>"
         + valHtml
         + "</div>";

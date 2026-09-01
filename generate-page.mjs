@@ -1517,7 +1517,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsPullup20260901020100";
+    const DATA_V = "dropMidAsNotes20260901022100";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4927,15 +4927,16 @@ const html = `<!DOCTYPE html>
       const valHtml = parts
         ? '<span class="lh-trade-num lh-trade-val">' + esc(parts.num) + "</span>"
         : '<span class="lh-trade-num lh-trade-val">—</span>';
-      // Text-first asset line: gold "+" + label + book number. Mid / as-year notes stay off
-      // the Latest trade lab — every pick is understood as mid until true year values land.
+      // Text-first asset line: gold "+" + label + book number. Never paint Mid / as-year
+      // notes on the Latest trade lab (every pick is mid until true year values land).
       if (leg.kind === "pick") {
         const lab = formatPickLabels(leg.label);
-        const subBits = [lab.secondary].filter(Boolean);
+        // Owner only — do not join parts.note ("Mid" / "as 2028").
+        const sub = lab.secondary || "";
         return '<div class="lh-trade-asset">'
           + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
           + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
-          + (subBits.length ? "<span>" + esc(subBits.join(" · ")) + "</span>" : "")
+          + (sub ? "<span>" + esc(sub) + "</span>" : "")
           + "</div>"
           + valHtml
           + "</div>";
@@ -4946,11 +4947,10 @@ const html = `<!DOCTYPE html>
       const posTeam = meta && meta.pos
         ? meta.pos + (meta.team ? " · " + meta.team : "")
         : "";
-      const subBits = [posTeam].filter(Boolean);
       return '<div class="lh-trade-asset">'
         + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
         + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
-        + (subBits.length ? "<span>" + esc(subBits.join(" · ")) + "</span>" : "")
+        + (posTeam ? "<span>" + esc(posTeam) + "</span>" : "")
         + "</div>"
         + valHtml
         + "</div>";
@@ -7104,6 +7104,24 @@ if (inline.includes('day-alert-h">Champions Path')) {
       throw new Error("Latest trade header must not show delta/total figs — name stays centered on the avatar");
     }
   }
+  {
+    // Latest trade pick subline is owner only — Mid / as-year notes stay off the lab.
+    const assetAt = inline.indexOf("function latestTradeAssetHtml(");
+    const assetStop = inline.indexOf("\n    function ", assetAt + 10);
+    const assetFn = inline.slice(assetAt, assetStop < 0 ? assetAt + 1800 : assetStop)
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    if (!assetFn || assetFn.length < 200) throw new Error("latestTradeAssetHtml() did not ship");
+    if (/parts\s*&&\s*parts\.note|parts\.note/.test(assetFn)) {
+      throw new Error("latestTradeAssetHtml must not paint Mid / as-year notes (parts.note) on the lab");
+    }
+    if (/"Mid"|'Mid'/.test(assetFn)) {
+      throw new Error("latestTradeAssetHtml must not hardcode Mid on the Latest trade lab");
+    }
+    if (!assetFn.includes("lab.secondary") && !assetFn.includes("lab.secondary ||")) {
+      throw new Error("latestTradeAssetHtml must keep the pick owner subline (lab.secondary)");
+    }
+  }
   if (!inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
     || !inline.includes("seatVoteMarkHtml(")) {
     throw new Error("Latest trade chip must surface per-side vote marks");
@@ -7114,11 +7132,11 @@ if (inline.includes('day-alert-h">Champions Path')) {
     const foot = inline.slice(footAt, footStop < 0 ? footAt + 1600 : footStop);
     if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
       throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
+    }
+  }
   if (!inline.includes("h2h-verdict") || !inline.includes("WINNER") || !inline.includes("LOSER")
     || !html.includes(".h2h-verdict.is-win") || !html.includes(".h2h-verdict.is-lose")) {
     throw new Error("Latest trade chip must show book WINNER/LOSER under each seat name");
-  }
-    }
   }
   {
     const markAt = inline.indexOf("function seatVoteMarkHtml(");

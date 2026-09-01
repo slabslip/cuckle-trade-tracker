@@ -1119,9 +1119,9 @@
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
        cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
-    /* Six options -- None plus the five sets -- each with a line saying what the set is built
-       from, so a row is 59px and 76px where that line wraps at 320px. It floats rather than
-       shoving the open set down the page, which is what the Score as panel does.
+    /* Five set options, each with a line saying what the set is built from, so a row is 59px
+       and 76px where that line wraps at 320px. It floats rather than shoving the open set down
+       the page, which is what the Score as panel does.
        The width is the trigger's width and not a fixed 340px. Capped, it left half of every trade
        row visible beside it at 375px and wider -- figures and names floating to the right of a
        menu that was covering the rest of their row, which measured perfectly and read as a
@@ -1130,20 +1130,19 @@
     /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
        .filter-panel box rules that are declared further down the sheet. */
     /* The cap is the list, not a fraction of the viewport. It used to be min(100dvh - 96px, 480px)
-       -- a flat 480px on any phone taller than 576px -- which is a number the six options never
-       reach and so never bit: the panel measured 439px at 320px and simply hung off the bottom of
-       the screen, four of its five options below the fold. This is the same rule the seat menu was
+       -- a flat 480px on any phone taller than 576px -- which is a number the five options never
+       reach and so never bit: the panel measured ~410px at 320px and simply hung off the bottom of
+       the screen, options below the fold. This is the same rule the seat menu was
        fixed with: five rows at the 76px a two-line option takes at 320px, four 4px gaps, 12px of
        panel padding and 2px of border, and then the room a phone has as the second term. Sizing
        to the list is what makes "does it fit" a question with an answer at build time -- the
        generator asserts DATA_SETS.length against it, so a sixth set fails the build instead
        of shipping a scrolling menu. Do not lower the 44px option floor to fit a longer list. */
-    #dataSets {
-      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 12;
-      width: auto; margin: 0; padding: 6px;
-      max-height: min(calc(5 * 76px + 30px), calc(100dvh - 96px)); overflow-y: auto;
-      display: flex; flex-direction: column; gap: 4px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    #dataSets, .ds-list {
+      position: static; width: auto; margin: 0 0 12px; padding: 0;
+      max-height: none; overflow: visible;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: none;
     }
     #dataSets button.ds-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
@@ -1521,7 +1520,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "dropDsNone20260901023000";
+    const DATA_V = "dsFullScreen20260901024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1706,8 +1705,8 @@
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets"];
 
     async function loadMembers() {
       members = await getLeagueJson("members.json");
@@ -1889,6 +1888,7 @@
         view,
         view === "titles" ? (titleYear || "") : "",
         view === "trade" ? (openId || "") + "/" + (tradeSeat || "") : "",
+        view === "datasets" ? (dataSet || "") : "",
       ].join("|");
     }
 
@@ -2316,7 +2316,7 @@
     }
 
     function dsMenu() {
-      return '<div class="filter-panel" id="dataSets" role="listbox" aria-label="League Data Sets">'
+      return '<div class="ds-list" id="dataSets" role="listbox" aria-label="League Data Sets">'
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
@@ -2340,9 +2340,8 @@
       const named = cur
         ? ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected"'
         : ' aria-label="League Data Sets, none selected"';
-      // Circular quick-action cell; accessible name still says "League Data Sets".
-      return '<button type="button" class="lh-action' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
-        + ' aria-haspopup="listbox" aria-expanded="' + (dsOpen ? "true" : "false") + '"'
+      // Circular quick-action cell; opens the full-screen Data Sets list (not a dropdown).
+      return '<button type="button" class="lh-action' + (view === "datasets" ? " on" : "") + '" data-dset-open="1"'
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
@@ -2385,7 +2384,6 @@
         + '<span class="lh-lab">Champions</span></button>'
         + dataSetRow()
         + "</div>"
-        + (dsOpen ? dsMenu() : "")
         + "</div>";
     }
 
@@ -2408,6 +2406,21 @@
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
         + "</div></div>";
+    }
+
+    /**
+     * Full-screen League Data Sets: the five sets as a page list. Choosing one shows that set
+     * on this screen; back returns to the list, then to league home.
+     */
+    function renderDataSetsPage() {
+      if (dataSet) {
+        return '<button type="button" class="chip back" data-dset-list="1">← Data Sets</button>'
+          + dataSetPanel();
+      }
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">League Data Sets</h2>'
+        + '<p class="caption">Pick a set to open it. Each one is a league-wide list, not a seat tab.</p>'
+        + dsMenu();
     }
 
     function nth(n) {
@@ -2740,7 +2753,7 @@
       try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
-      try { sets = dataSetPanel(); } catch (err) { console.error(err); sets = ""; }
+      sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
       // but a thrown path above used to leave a blank first viewport in Design Mode.
       if (!hero) {
@@ -6275,7 +6288,7 @@
       // that leave, so the next one added cannot forget. Same condition as the renderer below.
       if (!(view === "home" && !(me && data))) dsOpen = false;
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
-      const tabs = me && view !== "titles" && view !== "trade" ? ["home", "trades", "partners", "drafts"] : [];
+      const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" ? ["home", "trades", "partners", "drafts"] : [];
       // The four tabs are sections of one manager's page and none of them names that manager,
       // so this does -- once, above the row, on every one of them. It doubles as the screen
       // heading those four screens never had: focusNext = ".screen-h" now lands on the name of
@@ -6311,6 +6324,7 @@
         : view === "account" ? renderAccountPage()
         : view === "teams" ? renderTeamsPage()
         : view === "news" ? renderNewsPage()
+        : view === "datasets" ? renderDataSetsPage()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -6488,7 +6502,8 @@
         document.getElementById("lensBtn").focus({ preventScroll: true });
         return true;
       }
-      if (dsOpen) { closeDataSets(); return true; }
+      if (view === "datasets" && dataSet) { showDataSetList(); return true; }
+      if (view === "datasets") { view = "home"; dataSet = null; focusNext = null; render(); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
@@ -6504,20 +6519,6 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         if (closeTopmost()) e.preventDefault();
-        return;
-      }
-      // League Data Sets: a listbox, so the arrows move between options and never scroll the page.
-      const inDs = e.target.closest && e.target.closest("#dataSets");
-      if (dsOpen && inDs) {
-        const opts = [...document.querySelectorAll("#dataSets button")];
-        const i = opts.indexOf(document.activeElement);
-        let next = -1;
-        if (e.key === "ArrowDown") next = (i + 1) % opts.length;
-        else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
-        else if (e.key === "Home") next = 0;
-        else if (e.key === "End") next = opts.length - 1;
-        else if (e.key === "Tab") { closeDataSets(); return; }
-        if (next >= 0) { e.preventDefault(); opts[next].focus(); }
         return;
       }
       // Roving tabs: one stop in the tab order, arrows move between the four sections.
@@ -6542,31 +6543,39 @@
       if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
       dataSet = id;
       dsOpen = false;
+      view = "datasets";
+      openId = null;
+      tradeSeat = null;
+      focusNext = "[data-dset-head]";
       render();
-      const head = document.querySelector("#dsBody .ds-h");
+      const head = document.querySelector("[data-dset-head]") || document.querySelector("#dsBody .ds-h");
       if (head) head.focus({ preventScroll: true });
     }
 
     function closeDataSets() {
+      // Kept as a no-op name for Escape / outside-click callers; dropdown is gone.
       dsOpen = false;
-      render();
-      const btn = document.querySelector("[data-dset-open]");
-      if (btn) btn.focus({ preventScroll: true });
     }
 
     function openDataSets() {
-      dsOpen = true;
+      dsOpen = false;
       lensOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
+      openId = null;
+      tradeSeat = null;
+      markOpen = null;
+      dataSet = null;
+      view = "datasets";
+      focusNext = ".screen-h";
       render();
-      const menu = document.getElementById("dataSets");
-      if (!menu) return;
-      const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
-      // preventScroll, then showMenu: focusing an option scrolls that option into view and
-      // nothing else, which left options below the fold at 320px.
-      if (sel) sel.focus({ preventScroll: true });
-      showMenu(menu);
+    }
+
+    function showDataSetList() {
+      dataSet = null;
+      view = "datasets";
+      focusNext = ".screen-h";
+      render();
     }
 
     function openTitles() {
@@ -6629,12 +6638,10 @@
       }
       const dsetBtn = e.target.closest("[data-dset]");
       if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }
+      const dsListBtn = e.target.closest("[data-dset-list]");
+      if (dsListBtn) { showDataSetList(); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
-      if (dsOpenBtn) {
-        if (dsOpen) closeDataSets();
-        else openDataSets();
-        return;
-      }
+      if (dsOpenBtn) { openDataSets(); return; }
       // App shell navigation (multi-league home / join / account).
       const gateModeBtn = e.target.closest("[data-gate-mode]");
       if (gateModeBtn) {

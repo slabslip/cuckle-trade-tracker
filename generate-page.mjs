@@ -962,15 +962,25 @@ const html = `<!DOCTYPE html>
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
     .pick-intel-board-leaders {
-      display: grid; gap: 2px;
-      color: var(--dim); font-size: 0.75rem; line-height: 1.35;
+      display: grid; gap: 3px;
+      color: var(--dim); font-size: 0.6875rem; line-height: 1.3;
       min-width: 0;
     }
     .pick-intel-board-leader {
-      min-width: 0; overflow-wrap: anywhere;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 2px 4px;
+      align-items: baseline;
+      min-width: 0;
+    }
+    .pick-intel-board-leader .pil-who {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .pick-intel-board-leaders .pil-n {
-      color: var(--text); font-weight: 650;
+      color: var(--text); font-weight: 650; white-space: nowrap;
     }
     .pick-intel-board-empty {
       color: var(--dim); font-size: 0.75rem;
@@ -1749,7 +1759,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickBoardCols20260901033000";
+    const DATA_V = "pickBoardCols20260901034000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2109,8 +2119,8 @@ const html = `<!DOCTYPE html>
     function pickLeadersStack(leaders) {
       if (!leaders.length) return '<span class="pick-intel-board-empty">Nobody yet</span>';
       return leaders.map(([name, n]) =>
-        '<div class="pick-intel-board-leader">' + seatLabel(name)
-          + ' · <span class="pil-n">' + n + "</span></div>").join("");
+        '<div class="pick-intel-board-leader"><span class="pil-who">' + seatLabel(name)
+          + '</span><span class="pil-n">· ' + n + "</span></div>").join("");
     }
 
     /** Idle quick-view leaderboard: three columns — most 1sts, most 2nds, most picks overall. */

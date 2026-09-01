@@ -10,9 +10,6 @@
 --   3. Create a league → Sleeper ID 1315431339301806080
 --   4. Claim this seat → TrumanCooper
 --   5. Copy invite links for everyone else
---
--- Safe for the league row and other members' claimed seats: only this Auth user
--- is removed; unclaimed invites remint when you Create league again.
 
 begin;
 
@@ -28,7 +25,12 @@ begin
    where sleeper_league_id = league
       or created_by = uid;
 
-  -- Free Truman's seat invite (and any seats this Auth user claimed).
+  -- Clear every seat_invites FK to this Auth user (created_by AND claimed_by),
+  -- then free Truman's seat for a fresh claim.
+  update public.seat_invites
+     set created_by = null
+   where created_by = uid;
+
   update public.seat_invites
      set claimed_by = null,
          claimed_at = null,
@@ -48,8 +50,3 @@ begin
 end $$;
 
 commit;
-
--- Expect: 0 rows
--- select id, email from auth.users where email ilike 'trumancooper%';
--- select * from public.app_profiles where lower(username) like 'truman%';
--- select sleeper_league_id, created_by from public.leagues where sleeper_league_id = '1315431339301806080';

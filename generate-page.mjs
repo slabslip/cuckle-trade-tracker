@@ -932,7 +932,13 @@ const html = `<!DOCTYPE html>
       background: #241f14; border-color: #6b5a2e; color: #e0b44c;
     }
     .h2h-chip.is-trade .h2h-side { gap: 6px; }
+    /* Both trade seats read LTR like the left column (avatar · name · figs). */
+    .h2h-chip.is-trade .h2h-side.is-right {
+      text-align: left; align-items: stretch;
+    }
     .h2h-chip.is-trade .h2h-top { align-items: center; gap: 8px; }
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-top { flex-direction: row; }
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-medal { left: -2px; right: auto; }
     .h2h-chip.is-trade .h2h-av-wrap,
     .h2h-chip.is-trade .h2h-av,
     .h2h-chip.is-trade .h2h-av > img {
@@ -943,11 +949,16 @@ const html = `<!DOCTYPE html>
     .h2h-chip.is-trade .h2h-trade-figs {
       margin-top: 2px; max-width: 100%;
     }
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-id,
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-nums {
+      text-align: left;
+    }
     .h2h-chip.is-trade .figs {
       display: flex; gap: 5px; align-items: baseline;
       font-size: 0.75rem; line-height: 1.2;
     }
     .h2h-side.is-right .figs { flex-direction: row-reverse; }
+    .h2h-chip.is-trade .h2h-side.is-right .figs { flex-direction: row; }
     .h2h-chip.is-trade .figs .val {
       font-variant-numeric: tabular-nums; font-weight: 650; color: var(--text);
       white-space: nowrap;
@@ -1457,7 +1468,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeAssetsLeft20260901013500";
+    const DATA_V = "tradeTopLeft20260901013700";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

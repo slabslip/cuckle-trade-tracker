@@ -8211,7 +8211,7 @@ const html = `<!DOCTYPE html>
       const name = clockName();
       return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
         + '<button type="button" class="chip-lens-btn" data-score="1"'
-        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' aria-label="Score window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
         + ' title="' + esc(name) + '">'
         + chipLensIcon() + "</button></span>";
     }
@@ -8229,7 +8229,7 @@ const html = `<!DOCTYPE html>
       const name = clockName();
       for (const btn of btns) {
         btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
-        btn.setAttribute("aria-label", "Score as " + name);
+        btn.setAttribute("aria-label", "Score window: " + name);
         btn.setAttribute("title", name);
         btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
         btn.innerHTML = chipLensIcon()

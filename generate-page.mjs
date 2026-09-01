@@ -3437,7 +3437,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
         getLeagueJson("marks.json").catch(() => ({ seats: {} })),
         getLeagueJson("news.json").catch(() => null),
-        getLeagueJson("votes.json").catch(() => null),
+        VOTES_OFF ? Promise.resolve(null) : getLeagueJson("votes.json").catch(() => null),
         getLeagueJson("picks.json").catch(() => null),
         getLeagueJson("cuffs.json").catch(() => null),
       ]);
@@ -3457,9 +3457,13 @@ const html = `<!DOCTYPE html>
       } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
-        const book = votesRaw;
-        voteBook = book && book.v === 1 && book.votes ? book : null;
+        voteBook = VOTES_OFF ? null : (votesRaw && votesRaw.v === 1 && votesRaw.votes ? votesRaw : null);
       } catch (err) { voteBook = null; }
+      if (VOTES_OFF) {
+        try { voteBoxWrite({ v: 1, device: voteDeviceId(), votes: {} }); } catch (err) { /* private mode */ }
+        voteLive = null;
+        voteLiveState = "off";
+      }
       try {
         if (picksRaw) applyPicksBook(picksRaw);
         else picks = picks || null;
@@ -4157,21 +4161,13 @@ const html = `<!DOCTYPE html>
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-      // Gold outline for a trade this device has voted on. Colour alone is not a message,
-      // so the same fact goes to a screen reader as text.
-      const voted = !!readVotes(r.transaction_id).choice;
-      // The two sides are exact mirrors, so one score signs both: the seat carries s, the
-      // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
-      // figure it describes, not on the label beside it.
-      // Seat names stay clickable (seat-link); the row itself opens the trade.
-      return '<div class="row' + (voted ? " voted" : "") + '" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      return '<div class="row" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
@@ -4839,11 +4835,7 @@ const html = `<!DOCTYPE html>
     }
 
     function voteToastHtml() {
-      return voteToast
-        ? '<p class="vote-note">Vote recorded'
-          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
-          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
-        : "";
+      return "";
     }
 
     /** Year / team / player filter row + dropdown panel for league-wide trade feeds. */
@@ -4954,8 +4946,6 @@ const html = `<!DOCTYPE html>
 
     /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
     function tradeFeedCardHtml(r) {
-      const voted = !!readVotes(r.transaction_id).choice;
-      const showVote = feedVoteTxSet().has(r.transaction_id);
       let chip = "";
       try {
         chip = latestTradeBagsReady(r.transaction_id)
@@ -4977,16 +4967,13 @@ const html = `<!DOCTYPE html>
         + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
         + "</div>";
-      return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + (showVote ? " has-vote" : "") + '">'
+      return '<div class="lh-trade-feed-card">'
         + main
-        + (showVote ? '<div class="vote-card">' + voteBlock(r) + "</div>" : "")
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
 
     function tradeFeedSelectedHtml(r) {
-      const voted = !!readVotes(r.transaction_id).choice;
       let chip = "";
       try {
         chip = latestTradeBagsReady(r.transaction_id)
@@ -5001,13 +4988,11 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
           + "</div>";
       }
-      return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
+      return '<div class="lh-trade-feed-card is-selected"'
         + ' data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
         + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
@@ -5227,6 +5212,12 @@ const html = `<!DOCTYPE html>
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
     const VOTE_KEY = "cuckle.votes.v2";
+    /** Trade votes retired — no UI, no tallies, local ballots wiped on load. */
+    const VOTES_OFF = true;
+    const EMPTY_VOTE_READ = {
+      choice: null, seat: null, tally: {}, votes: 0,
+      league: false, asOf: null, source: "off", pending: false,
+    };
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
@@ -6339,7 +6330,7 @@ const html = `<!DOCTYPE html>
       focusNext = null;
       syncUrl();
       await loadMembers();
-      voteLoad().catch((err) => console.error(err));
+      if (!VOTES_OFF) voteLoad().catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
       if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
@@ -6371,6 +6362,11 @@ const html = `<!DOCTYPE html>
     // voter's seat flair under the side they picked. SELECT on trade_votes is public; if that
     // read fails we still keep tallies and fall back to count-only marks.
     async function voteLoad() {
+      if (VOTES_OFF) {
+        voteLive = null;
+        voteLiveState = "off";
+        return;
+      }
       voteLiveState = "loading";
       await authRefreshIfNeeded();
       const ids = voteVoterIds();
@@ -6455,7 +6451,7 @@ const html = `<!DOCTYPE html>
     //
     // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
     function voteHeal() {
-      if (voteLiveState !== "ok") return;
+      if (VOTES_OFF || voteLiveState !== "ok") return;
       if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
@@ -6469,6 +6465,7 @@ const html = `<!DOCTYPE html>
     // the surrogate id — leave it off and a second vote fails on the unique constraint.
     // voter is rewritten by the trade_votes_force_voter trigger; we still send the claimed seat.
     function votePush(transactionId, choice, seat) {
+      if (VOTES_OFF) return;
       if (!authSession || !authSession.access_token || !seat) {
         votePending.delete(transactionId);
         render();
@@ -6571,6 +6568,7 @@ const html = `<!DOCTYPE html>
      * Returns { [choiceUid]: [voterUid, ...] } so the lean row can paint flairs per side.
      */
     function voteMarks(transactionId) {
+      if (VOTES_OFF) return {};
       const mine = voteBoxRead().votes[transactionId] || null;
       const local = (mine && mine.choice) || null;
       const localSeat = (mine && mine.seat) || authSeatId() || null;
@@ -6603,6 +6601,7 @@ const html = `<!DOCTYPE html>
     // data/ui/votes.json, else this device alone. localStorage is the source of truth for
     // "my vote"; Supabase is the source of truth for "the league tally".
     function readVotes(transactionId) {
+      if (VOTES_OFF) return EMPTY_VOTE_READ;
       const mine = voteBoxRead().votes[transactionId] || null;
       const local = (mine && mine.choice) || null;
       let tally, league, asOf, source;
@@ -6652,6 +6651,7 @@ const html = `<!DOCTYPE html>
     // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
     // Phase 1: gated on a claimed seat. The Teams picker is not enough — invite code required.
     function writeVote(transactionId, choice) {
+      if (VOTES_OFF) return;
       const seat = authSeatId();
       if (!seat) {
         render();
@@ -6693,21 +6693,12 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
-    /** Modal overlay with the existing voteBlock side buttons and tallies. */
     function voteSheetHtml() {
-      if (!voteSheetTx) return "";
-      const r = tradeSide(voteSheetTx, null);
-      if (!r) return "";
-      return '<div class="vote-sheet" role="presentation">'
-        + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
-        + ' aria-label="Close vote panel"></button>'
-        + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
-        + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
-        + "</div></div>";
+      return "";
     }
 
     function voteBlock(r) {
+      if (VOTES_OFF) return "";
       const seats = voteSeats(r);
       // N-way trades get no vote: "which side won" has no head-to-head answer across three
       // bags, and N-way is already the special case that carries no Value Adjustment.
@@ -7384,8 +7375,9 @@ const html = `<!DOCTYPE html>
       };
     }
 
-    /** Under the chip: left/right voter flairs aligned to each team (read-only tallies). */
+    /** Under the chip: voter flairs (retired when VOTES_OFF). */
     function latestTradeLeanFooterHtml(latest, lean) {
+      if (VOTES_OFF) return "";
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
       if (!canVote) return "";
@@ -8010,31 +8002,18 @@ const html = `<!DOCTYPE html>
       let tradeBox = "";
       if (latest) {
         try {
-          const voted = !!readVotes(latest.transaction_id).choice;
-          // Latest trade H2H chip — opens the trade board for this deal.
-          // Div (not button) so seat-link names/flair can nest legally.
-          // Hold the full chip until seat bags are ready (skeleton meanwhile) so we never
-          // flash the trade_boards headline stub (one leg/side, dash values) then expand.
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
-          const voteCta = voted ? "" : '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
-            + (voted ? " voted" : "") + '"'
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + recentTradeHeaderHtml()
-            + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
-            + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+            + '<div class="lh-trade-chip-wrap">' + chip + "</div>"
             + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
-          const voteCta = '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
@@ -8046,7 +8025,6 @@ const html = `<!DOCTYPE html>
             + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
             + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
             + "</div>"
-            + voteCta
             + "</div>"
             + "</div>";
         }
@@ -10150,6 +10128,10 @@ if (dataVs.length !== 1) throw new Error(`expected exactly one DATA_V, found ${d
 // which once turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its
 // late-4th half weight. Escapes are written \\ in the template; assert they survived.
 const inline = html.slice(html.indexOf("<script>"));
+const votesOff = inline.includes("const VOTES_OFF = true");
+if (!inline.includes("const VOTES_OFF = true") && !inline.includes("const VOTES_OFF = false")) {
+  throw new Error("VOTES_OFF flag must ship (true = no trade vote UI)");
+}
 for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
 }
@@ -10183,11 +10165,20 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
   }
-  if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
-    throw new Error("leagueInProgress must mount Who won this trade? vote CTA on Recent Trade");
-  }
-  if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")) {
-    throw new Error("Recent Trade vote CTA styles must ship (lh-trade-vote-cta / lh-trade-chip-wrap)");
+  if (votesOff) {
+    if (prog.includes("lh-trade-vote-cta") || prog.includes("Who won this trade?")) {
+      throw new Error("VOTES_OFF: leagueInProgress must not mount vote CTA on Recent Trade");
+    }
+    if (!html.includes(".lh-trade-chip-wrap")) {
+      throw new Error("Recent Trade chip wrap styles must ship (.lh-trade-chip-wrap)");
+    }
+  } else {
+    if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
+      throw new Error("leagueInProgress must mount Who won this trade? vote CTA on Recent Trade");
+    }
+    if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")) {
+      throw new Error("Recent Trade vote CTA styles must ship (lh-trade-vote-cta / lh-trade-chip-wrap)");
+    }
   }
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
@@ -10242,23 +10233,39 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (!inline.includes("function pickKeyForLeg(")) {
     throw new Error("pickKeyForLeg must resolve pick tape keys for players and picks");
   }
-  if (!inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
-    || !inline.includes("seatVoteMarkHtml(")) {
-    throw new Error("Latest trade chip must surface per-side vote marks");
-  }
-  {
-    const footAt = inline.indexOf("function latestTradeLeanFooterHtml(");
-    const footStop = inline.indexOf("\n    function ", footAt + 10);
-    const foot = inline.slice(footAt, footStop < 0 ? footAt + 2000 : footStop);
-    if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
-      throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
+  if (votesOff) {
+    if (!inline.includes("const VOTES_OFF = true") || !inline.includes("EMPTY_VOTE_READ")
+      || !inline.includes("if (VOTES_OFF) return EMPTY_VOTE_READ")
+      || !inline.includes("if (VOTES_OFF) return \"\"")) {
+      throw new Error("VOTES_OFF must stub readVotes / vote UI helpers");
     }
-    if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")) {
-      throw new Error("Lean footer must separate flairs from the vote scoreboard (h2h-lean-flairs / h2h-lean-n)");
+    {
+      const footAt = inline.indexOf("function latestTradeLeanFooterHtml(");
+      const footStop = inline.indexOf("\n    function ", footAt + 10);
+      const foot = inline.slice(footAt, footStop < 0 ? footAt + 2000 : footStop);
+      if (!foot.includes("if (VOTES_OFF) return \"\"")) {
+        throw new Error("VOTES_OFF: latestTradeLeanFooterHtml must return empty");
+      }
     }
-  }
-  if (!html.includes(".h2h-lean-flairs") || !html.includes(".h2h-lean-side.is-left .h2h-lean-n")) {
-    throw new Error("Lean vote scoreboard styles must pin totals toward the center");
+  } else {
+    if (!inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
+      || !inline.includes("seatVoteMarkHtml(")) {
+      throw new Error("Latest trade chip must surface per-side vote marks");
+    }
+    {
+      const footAt = inline.indexOf("function latestTradeLeanFooterHtml(");
+      const footStop = inline.indexOf("\n    function ", footAt + 10);
+      const foot = inline.slice(footAt, footStop < 0 ? footAt + 2000 : footStop);
+      if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
+        throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
+      }
+      if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")) {
+        throw new Error("Lean footer must separate flairs from the vote scoreboard (h2h-lean-flairs / h2h-lean-n)");
+      }
+    }
+    if (!html.includes(".h2h-lean-flairs") || !html.includes(".h2h-lean-side.is-left .h2h-lean-n")) {
+      throw new Error("Lean vote scoreboard styles must pin totals toward the center");
+    }
   }
   {
     const cardAt = inline.indexOf("function latestTradeCardHtml(");
@@ -10925,18 +10932,24 @@ for (const need of [
   const at = inline.indexOf("function voteBlock(");
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 2000 : stop);
-  if (fn.includes("League tally as of") || fn.includes('<p class="caption">')
-    || fn.includes("auth-bar") || fn.includes("Voting as")
-    || fn.includes("Who actually won")) {
-    throw new Error("voteBlock must stay compact — no tally caption, auth-bar, or Who actually won header");
+  if (votesOff) {
+    if (!fn.includes("if (VOTES_OFF) return \"\"")) {
+      throw new Error("VOTES_OFF: voteBlock must return empty");
+    }
+  } else {
+    if (fn.includes("League tally as of") || fn.includes('<p class="caption">')
+      || fn.includes("auth-bar") || fn.includes("Voting as")
+      || fn.includes("Who actually won")) {
+      throw new Error("voteBlock must stay compact — no tally caption, auth-bar, or Who actually won header");
+    }
+    if (!fn.includes("vote is-done") || !fn.includes("data-vote-edit") || !fn.includes("vote-done-tally")) {
+      throw new Error("voteBlock must collapse to Voted + tally after a ballot (vote is-done)");
+    }
+    if (!html.includes(".vote-card") || !html.includes("background: #1a1810")
+      || !html.includes("button.vote-done")) {
+      throw new Error("vote chip must match trade gold-frame styles (vote-card / vote-done)");
+    }
   }
-  if (!fn.includes("vote is-done") || !fn.includes("data-vote-edit") || !fn.includes("vote-done-tally")) {
-    throw new Error("voteBlock must collapse to Voted + tally after a ballot (vote is-done)");
-  }
-}
-if (!html.includes(".vote-card") || !html.includes("background: #1a1810")
-  || !html.includes("button.vote-done")) {
-  throw new Error("vote chip must match trade gold-frame styles (vote-card / vote-done)");
 }
 
 for (const ban of [
@@ -10992,15 +11005,29 @@ for (const ban of [
   const cardAt = inline.indexOf("function tradeFeedCardHtml(");
   const cardStop = inline.indexOf("\n    function ", cardAt + 10);
   const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 1800 : cardStop);
-  if (!cardFn.includes("voteBlock(") || !cardFn.includes("feedVoteTxSet(")
-    || !cardFn.includes("lh-trade-feed-main") || !cardFn.includes("has-vote")) {
-    throw new Error("tradeFeedCardHtml must mount vote chips for the newest FEED_VOTE_LIMIT trades");
+  if (!cardFn.includes("lh-trade-feed-main")) {
+    throw new Error("tradeFeedCardHtml must wrap the H2H chip in lh-trade-feed-main");
   }
-  if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
-    throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
-  }
-  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v2"')) {
-    throw new Error("VOTE_KEY must be cuckle.votes.v2 so prior local ballots are wiped");
+  if (votesOff) {
+    if (cardFn.includes("voteBlock(") || cardFn.includes("feedVoteTxSet(") || cardFn.includes("has-vote")
+      || cardFn.includes("voted")) {
+      throw new Error("VOTES_OFF: tradeFeedCardHtml must not mount vote chips or voted classes");
+    }
+    if (!inline.includes('const VOTE_KEY = "cuckle.votes.v2"')
+      || !inline.includes("voteBoxWrite({ v: 1, device: voteDeviceId(), votes: {} })")) {
+      throw new Error("VOTES_OFF must wipe local ballots (VOTE_KEY + voteBoxWrite on load)");
+    }
+  } else {
+    if (!cardFn.includes("voteBlock(") || !cardFn.includes("feedVoteTxSet(")
+      || !cardFn.includes("has-vote")) {
+      throw new Error("tradeFeedCardHtml must mount vote chips for the newest FEED_VOTE_LIMIT trades");
+    }
+    if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
+      throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
+    }
+    if (!inline.includes('const VOTE_KEY = "cuckle.votes.v2"')) {
+      throw new Error("VOTE_KEY must be cuckle.votes.v2 so prior local ballots are wiped");
+    }
   }
   if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
     throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");

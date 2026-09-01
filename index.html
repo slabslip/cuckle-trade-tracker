@@ -3432,7 +3432,7 @@
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
         getLeagueJson("marks.json").catch(() => ({ seats: {} })),
         getLeagueJson("news.json").catch(() => null),
-        getLeagueJson("votes.json").catch(() => null),
+        VOTES_OFF ? Promise.resolve(null) : getLeagueJson("votes.json").catch(() => null),
         getLeagueJson("picks.json").catch(() => null),
         getLeagueJson("cuffs.json").catch(() => null),
       ]);
@@ -3452,9 +3452,13 @@
       } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
-        const book = votesRaw;
-        voteBook = book && book.v === 1 && book.votes ? book : null;
+        voteBook = VOTES_OFF ? null : (votesRaw && votesRaw.v === 1 && votesRaw.votes ? votesRaw : null);
       } catch (err) { voteBook = null; }
+      if (VOTES_OFF) {
+        try { voteBoxWrite({ v: 1, device: voteDeviceId(), votes: {} }); } catch (err) { /* private mode */ }
+        voteLive = null;
+        voteLiveState = "off";
+      }
       try {
         if (picksRaw) applyPicksBook(picksRaw);
         else picks = picks || null;
@@ -4152,21 +4156,13 @@
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-      // Gold outline for a trade this device has voted on. Colour alone is not a message,
-      // so the same fact goes to a screen reader as text.
-      const voted = !!readVotes(r.transaction_id).choice;
-      // The two sides are exact mirrors, so one score signs both: the seat carries s, the
-      // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
-      // figure it describes, not on the label beside it.
-      // Seat names stay clickable (seat-link); the row itself opens the trade.
-      return '<div class="row' + (voted ? " voted" : "") + '" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      return '<div class="row" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
@@ -4834,11 +4830,7 @@
     }
 
     function voteToastHtml() {
-      return voteToast
-        ? '<p class="vote-note">Vote recorded'
-          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
-          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
-        : "";
+      return "";
     }
 
     /** Year / team / player filter row + dropdown panel for league-wide trade feeds. */
@@ -4949,8 +4941,6 @@
 
     /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
     function tradeFeedCardHtml(r) {
-      const voted = !!readVotes(r.transaction_id).choice;
-      const showVote = feedVoteTxSet().has(r.transaction_id);
       let chip = "";
       try {
         chip = latestTradeBagsReady(r.transaction_id)
@@ -4972,16 +4962,13 @@
         + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
         + "</div>";
-      return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + (showVote ? " has-vote" : "") + '">'
+      return '<div class="lh-trade-feed-card">'
         + main
-        + (showVote ? '<div class="vote-card">' + voteBlock(r) + "</div>" : "")
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
 
     function tradeFeedSelectedHtml(r) {
-      const voted = !!readVotes(r.transaction_id).choice;
       let chip = "";
       try {
         chip = latestTradeBagsReady(r.transaction_id)
@@ -4996,13 +4983,11 @@
           + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
           + "</div>";
       }
-      return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
+      return '<div class="lh-trade-feed-card is-selected"'
         + ' data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
         + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
@@ -5222,6 +5207,12 @@
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
     const VOTE_KEY = "cuckle.votes.v2";
+    /** Trade votes retired — no UI, no tallies, local ballots wiped on load. */
+    const VOTES_OFF = true;
+    const EMPTY_VOTE_READ = {
+      choice: null, seat: null, tally: {}, votes: 0,
+      league: false, asOf: null, source: "off", pending: false,
+    };
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
@@ -6334,7 +6325,7 @@
       focusNext = null;
       syncUrl();
       await loadMembers();
-      voteLoad().catch((err) => console.error(err));
+      if (!VOTES_OFF) voteLoad().catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
       if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
@@ -6366,6 +6357,11 @@
     // voter's seat flair under the side they picked. SELECT on trade_votes is public; if that
     // read fails we still keep tallies and fall back to count-only marks.
     async function voteLoad() {
+      if (VOTES_OFF) {
+        voteLive = null;
+        voteLiveState = "off";
+        return;
+      }
       voteLiveState = "loading";
       await authRefreshIfNeeded();
       const ids = voteVoterIds();
@@ -6450,7 +6446,7 @@
     //
     // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
     function voteHeal() {
-      if (voteLiveState !== "ok") return;
+      if (VOTES_OFF || voteLiveState !== "ok") return;
       if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
@@ -6566,6 +6562,7 @@
      * Returns { [choiceUid]: [voterUid, ...] } so the lean row can paint flairs per side.
      */
     function voteMarks(transactionId) {
+      if (VOTES_OFF) return {};
       const mine = voteBoxRead().votes[transactionId] || null;
       const local = (mine && mine.choice) || null;
       const localSeat = (mine && mine.seat) || authSeatId() || null;
@@ -6598,6 +6595,7 @@
     // data/ui/votes.json, else this device alone. localStorage is the source of truth for
     // "my vote"; Supabase is the source of truth for "the league tally".
     function readVotes(transactionId) {
+      if (VOTES_OFF) return EMPTY_VOTE_READ;
       const mine = voteBoxRead().votes[transactionId] || null;
       const local = (mine && mine.choice) || null;
       let tally, league, asOf, source;
@@ -6647,6 +6645,7 @@
     // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
     // Phase 1: gated on a claimed seat. The Teams picker is not enough — invite code required.
     function writeVote(transactionId, choice) {
+      if (VOTES_OFF) return;
       const seat = authSeatId();
       if (!seat) {
         render();
@@ -6688,21 +6687,12 @@
         + "</div></div>";
     }
 
-    /** Modal overlay with the existing voteBlock side buttons and tallies. */
     function voteSheetHtml() {
-      if (!voteSheetTx) return "";
-      const r = tradeSide(voteSheetTx, null);
-      if (!r) return "";
-      return '<div class="vote-sheet" role="presentation">'
-        + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
-        + ' aria-label="Close vote panel"></button>'
-        + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
-        + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
-        + "</div></div>";
+      return "";
     }
 
     function voteBlock(r) {
+      if (VOTES_OFF) return "";
       const seats = voteSeats(r);
       // N-way trades get no vote: "which side won" has no head-to-head answer across three
       // bags, and N-way is already the special case that carries no Value Adjustment.
@@ -7379,8 +7369,9 @@
       };
     }
 
-    /** Under the chip: left/right voter flairs aligned to each team (read-only tallies). */
+    /** Under the chip: voter flairs (retired when VOTES_OFF). */
     function latestTradeLeanFooterHtml(latest, lean) {
+      if (VOTES_OFF) return "";
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
       if (!canVote) return "";
@@ -8005,31 +7996,18 @@
       let tradeBox = "";
       if (latest) {
         try {
-          const voted = !!readVotes(latest.transaction_id).choice;
-          // Latest trade H2H chip — opens the trade board for this deal.
-          // Div (not button) so seat-link names/flair can nest legally.
-          // Hold the full chip until seat bags are ready (skeleton meanwhile) so we never
-          // flash the trade_boards headline stub (one leg/side, dash values) then expand.
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
-          const voteCta = voted ? "" : '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
-            + (voted ? " voted" : "") + '"'
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + recentTradeHeaderHtml()
-            + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
-            + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+            + '<div class="lh-trade-chip-wrap">' + chip + "</div>"
             + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
-          const voteCta = '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
@@ -8041,7 +8019,6 @@
             + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
             + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
             + "</div>"
-            + voteCta
             + "</div>"
             + "</div>";
         }

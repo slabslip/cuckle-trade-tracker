@@ -6457,7 +6457,7 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
       };
       return '<div class="h2h-chip is-trade is-loading" role="status" aria-busy="true"'
-        + ' aria-label="Loading latest trade">'
+        + ' aria-label="Loading recent trade">'
         + side(latest.name, false)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
         + side(latest.other, true)
@@ -6836,8 +6836,8 @@ const html = `<!DOCTYPE html>
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Latest trade</div>'
+            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + '<div class="day-alert-h">Recent Trade</div>'
             + chip
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
@@ -6846,8 +6846,8 @@ const html = `<!DOCTYPE html>
           console.error(err);
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Latest trade</div>'
+            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + '<div class="day-alert-h">Recent Trade</div>'
             + '<div class="h2h-chip is-trade" role="group">'
             + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
             + '<div class="h2h-vs" aria-hidden="true">VS</div>'
@@ -8596,7 +8596,7 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
   throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
-for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
+for (const need of ['day-alert-h">Recent Trade', "function latestTradeSide(", "function ensureWeekMatchups(",
   "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
   "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
   "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
@@ -8610,8 +8610,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
   const at = inline.indexOf("function leagueInProgress(");
   const stop = inline.indexOf("\n    function ", at + 10);
   const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
-  if (!prog.includes('day-alert-h">Latest trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
-    throw new Error("leagueInProgress must mount Latest trade (lh-latest-trade) that opens via data-board-open");
+  if (!prog.includes('day-alert-h">Recent Trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
+    throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
   }
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")

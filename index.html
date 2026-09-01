@@ -6452,7 +6452,7 @@
           + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
       };
       return '<div class="h2h-chip is-trade is-loading" role="status" aria-busy="true"'
-        + ' aria-label="Loading latest trade">'
+        + ' aria-label="Loading recent trade">'
         + side(latest.name, false)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
         + side(latest.other, true)
@@ -6831,8 +6831,8 @@
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Latest trade</div>'
+            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + '<div class="day-alert-h">Recent Trade</div>'
             + chip
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
@@ -6841,8 +6841,8 @@
           console.error(err);
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Latest trade</div>'
+            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + '<div class="day-alert-h">Recent Trade</div>'
             + '<div class="h2h-chip is-trade" role="group">'
             + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
             + '<div class="h2h-vs" aria-hidden="true">VS</div>'

@@ -879,6 +879,17 @@ const html = `<!DOCTYPE html>
     .news-cat-tag.cat-suspension { color: #ffb347; border-color: rgba(255, 179, 71, 0.45); background: rgba(255, 179, 71, 0.1); }
     .news-cat-tag.cat-depth-chart, .news-cat-tag.cat-buzz { color: #9a9aa3; border-color: rgba(154, 154, 163, 0.45); background: rgba(154, 154, 163, 0.08); }
     .news-player { font-weight: 650; }
+    button.news-player {
+      appearance: none; font: inherit; font-weight: 650;
+      background: none; border: 0; padding: 0; margin: 0;
+      color: inherit; cursor: pointer;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+    button.news-player:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 2px;
+    }
     .news-player.pos-qb { color: var(--pos-qb); }
     .news-player.pos-rb { color: var(--pos-rb); }
     .news-player.pos-wr { color: var(--pos-wr); }
@@ -1098,35 +1109,20 @@ const html = `<!DOCTYPE html>
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
-    /* Header row: bold year (left) + round-only filter buttons aligned over each column. */
-    .pick-intel-board-yr {
-      grid-column: 1; grid-row: 1;
-      font-weight: 700; font-size: 0.75rem; line-height: 1.2;
-      color: var(--muted); white-space: nowrap; align-self: center;
-    }
+    /* Three equal columns; year is baked into each round lab (27' 1sts), not a gutter. */
     .pick-intel-board-cols {
       display: grid;
-      grid-template-columns: auto repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       grid-template-rows: auto 1fr;
       gap: 8px 10px;
       align-items: start;
     }
+    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
     .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
     .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
-    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(4) { grid-column: 4; grid-row: 1; }
+    .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
-    .pick-intel-board-cols > .pick-intel-board-col:nth-child(7) { grid-column: 4; grid-row: 2; }
-    /* Cuffs board: no year/"held" gutter — three equal columns only. */
-    .cuffs-board .pick-intel-board-cols {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
-    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
-    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
-    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
-    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
-    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     /* Shared 2-col grid: seat names | counts. Labels sit in the count track
        (centered over · N), not left over the seat names. */
     .pick-intel-board-col {
@@ -1192,7 +1188,6 @@ const html = `<!DOCTYPE html>
         grid-template-rows: none;
         gap: 10px;
       }
-      .pick-intel-board-yr,
       .pick-intel-board-cols > button.pick-intel-board-lab,
       .pick-intel-board-cols > .pick-intel-board-col {
         grid-column: 1; grid-row: auto;
@@ -1901,16 +1896,16 @@ const html = `<!DOCTYPE html>
       display: flex; align-items: center; gap: 8px; justify-content: space-between;
     }
     .ds-h-row .ds-h { margin: 0; flex: 1 1 auto; min-width: 0; }
-    /* Floating score menu — positioned under the chip that opened it. */
+    /* Floating score menu — compact list under the chip that opened it. */
     #scoreAs.score-as-portal {
       position: fixed; z-index: 40;
-      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
-      max-height: min(70dvh, 420px); overflow-y: auto;
+      width: min(168px, calc(100vw - 32px)); margin: 0; padding: 4px;
+      max-height: min(70dvh, 280px); overflow-y: auto;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
     #scoreAs.score-as-portal:not([hidden]) {
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex; flex-direction: column; gap: 2px;
     }
     #scoreAs.score-as-portal[hidden], #scoreAs.score-as-portal:empty { display: none !important; }
 
@@ -1944,12 +1939,14 @@ const html = `<!DOCTYPE html>
 
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
-      min-height: 44px; padding: 8px 10px; cursor: pointer;
+      background: #1c1c22; border: 1px solid transparent; border-radius: 7px;
+      min-height: 34px; padding: 6px 10px; cursor: pointer;
+      line-height: 1.2;
     }
-    #scoreAs button.score-opt.on { border-color: #6b5a2e; }
-    #scoreAs button.score-opt b { display: block; font-weight: 650; }
-    #scoreAs button.score-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
+    #scoreAs button.score-opt.on { border-color: #6b5a2e; background: #221e14; }
+    #scoreAs button.score-opt b {
+      display: block; font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.01em;
+    }
     #scoreAs button.score-opt:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
@@ -2184,6 +2181,7 @@ const html = `<!DOCTYPE html>
     let cuffFilterOwner = ""; // fantasy manager whose starters
     let cuffFilterPos = "";   // QB | RB | WR | TE
     let cuffFilterQ = "";
+    let cuffFilterPlayerId = ""; // Sleeper id — news tap opens rows where starter/cuff matches
     let cuffFilterOpen = false;
     let cuffFilterFa = false; // cuff is unrostered
     let cuffFilterHeld = false; // cuff is rostered by someone
@@ -2197,7 +2195,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "lensAgeDefault20260901170000";
+    const DATA_V = "scoreAsCompact20260901164500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2224,11 +2222,11 @@ const html = `<!DOCTYPE html>
     let dataSet = null;
     let dsOpen = false;
     const WINDOWS = [
-      ["t0", "At trade", "Who won on accept day. Picks still picks."],
-      ["y1", "First 1 year", "Who won after 1 year. Hides younger deals."],
-      ["y2", "First 2 years", "Who won after 2 years. Hides younger deals."],
-      ["y3", "First 3 years", "Who won after 3 years. Hides younger deals."],
-      ["all", "Since trade", "Who is winning from accept through today."],
+      ["t0", "Date of Trade", "Value on the day the trade was accepted."],
+      ["y1", "1 season", "Average value through the rest of this season (or the next season from the offseason)."],
+      ["y2", "2 seasons", "Rest of this season plus the next (or the next two from the offseason)."],
+      ["y3", "3 seasons", "Through three seasons from the trade."],
+      ["all", "as of today", "Value from accept through today."],
     ];
     let view = "home";
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
@@ -2523,6 +2521,7 @@ const html = `<!DOCTYPE html>
       cuffFilterOwner = "";
       cuffFilterPos = "";
       cuffFilterQ = "";
+      cuffFilterPlayerId = "";
       cuffFilterOpen = false;
       cuffFilterFa = false;
       cuffFilterHeld = false;
@@ -2545,7 +2544,8 @@ const html = `<!DOCTYPE html>
 
     function cuffFiltersActive() {
       return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
-        || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterSelf || cuffFilterOther;
+        || !!cuffFilterQ.trim() || !!cuffFilterPlayerId
+        || cuffFilterFa || cuffFilterHeld || cuffFilterSelf || cuffFilterOther;
     }
 
     function pickRoundLabel(n) {
@@ -2753,9 +2753,10 @@ const html = `<!DOCTYPE html>
     }
 
     /** Idle quick-view leaderboard: top 3 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
-     * Year label once on the header row; column buttons show round only. */
+     * Year short-prefix on each column lab (27' 1sts) — no standalone year gutter. */
     function pickIntelBoard() {
       const yrs = PICK_INTEL_BOARD_YEAR;
+      const yrShort = String(yrs).slice(-2) + "'";
       const cols = [
         { lab: "1sts", rounds: [1] },
         { lab: "2nds", rounds: [2] },
@@ -2763,10 +2764,10 @@ const html = `<!DOCTYPE html>
       ];
       const aria = "Still-available 2027 pick leaders by round (1sts, 2nds, 3rds–4ths)";
       const headBtns = cols.map((r) => {
-        const labFull = r.lab + " · " + yrs;
+        const lab = yrShort + " " + r.lab;
         return '<button type="button" class="pick-intel-board-lab" data-pick-rounds="'
           + r.rounds.join(",") + '" data-pick-years="' + esc(yrs)
-          + '" aria-label="Filter to ' + esc(labFull) + '">' + esc(r.lab) + "</button>";
+          + '" aria-label="Filter to ' + esc(lab) + '">' + esc(lab) + "</button>";
       }).join("");
       const bodyCols = cols.map((r) => {
         const leaders = pickLeaders(r.rounds, 3, yrs);
@@ -2778,7 +2779,6 @@ const html = `<!DOCTYPE html>
       }).join("");
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
         + '<div class="pick-intel-board-cols">'
-        + '<span class="pick-intel-board-yr">' + esc(yrs) + "</span>"
         + headBtns
         + bodyCols
         + "</div></div>";
@@ -3019,7 +3019,11 @@ const html = `<!DOCTYPE html>
     function filteredCuffRows(seat) {
       const rows = (cuffs && cuffs.rows) || [];
       const q = cuffFilterQ.trim().toLowerCase();
+      const playerId = String(cuffFilterPlayerId || "");
       return rows.filter((r) => {
+        if (playerId) {
+          if (String(r.starter_id) !== playerId && String(r.cuff_id) !== playerId) return false;
+        }
         if (cuffFilterMine) {
           if (!seat || r.owner !== seat) return false;
         } else if (cuffFilterOwner && r.owner !== cuffFilterOwner) {
@@ -3030,7 +3034,8 @@ const html = `<!DOCTYPE html>
         if (cuffFilterHeld && !r.cuff_owned) return false;
         if (cuffFilterSelf && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner === r.cuff_owner)) return false;
         if (cuffFilterOther && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner !== r.cuff_owner)) return false;
-        if (q) {
+        // Name search is skipped when a news player id is pinned — id match is the source of truth.
+        if (q && !playerId) {
           const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
             .filter(Boolean).join(" ").toLowerCase();
           if (!blob.includes(q)) return false;
@@ -3219,10 +3224,15 @@ const html = `<!DOCTYPE html>
     /**
      * Open the full Cuffs screen. Home chips land here so search/filter has room;
      * mode presets search / my cuffs / cuff available / held / other / bare (board columns).
+     * preset.playerId (from a news highlight) pins rows where that Sleeper id is starter or cuff.
      */
-    function openCuffsPage(mode) {
+    function openCuffsPage(mode, preset) {
       clearCuffFilters();
-      if (mode === "mine") {
+      if (preset && preset.playerId) {
+        cuffFilterPlayerId = String(preset.playerId);
+        cuffFilterQ = String(preset.playerName || "");
+        cuffFilterOpen = true;
+      } else if (mode === "mine") {
         cuffFilterMine = true;
       } else if (mode === "fa") {
         cuffFilterFa = true;
@@ -3301,10 +3311,17 @@ const html = `<!DOCTYPE html>
       } else if (!active) {
         body = '<p class="caption">Search a team or position, or tap Mine / Available.</p>';
       } else if (!rows.length) {
-        body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
+        body = cuffFilterPlayerId
+          ? ('<p class="caption">No cuff row for '
+            + esc(cuffFilterQ.trim() || "that player")
+            + " — rostered in the league, but not a slot-1 starter or depth cuff on this board.</p>")
+          : '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
         let hint;
-        if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
+        if (cuffFilterPlayerId) {
+          hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s")
+            + " for " + (cuffFilterQ.trim() || "that player");
+        } else if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
         else if (cuffFilterSelf) hint = rows.length + " self-cuffed starter" + (rows.length === 1 ? "" : "s") + " (insured)";
@@ -3903,20 +3920,65 @@ const html = `<!DOCTYPE html>
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
     }
 
+    function addDays(ymd, n) {
+      const p = (ymd || "").split("-").map(Number);
+      if (p.length < 3) return ymd;
+      const dt = new Date(Date.UTC(p[0], p[1] - 1, p[2] + n));
+      return dt.toISOString().slice(0, 10);
+    }
+
+    const NFL_KICKOFF = {
+      2019: "2019-09-05", 2020: "2020-09-10", 2021: "2021-09-09", 2022: "2022-09-08",
+      2023: "2023-09-07", 2024: "2024-09-05", 2025: "2025-09-04", 2026: "2026-09-10",
+    };
+
+    function nflKickoff(seasonYear) {
+      const y = Number(seasonYear);
+      return NFL_KICKOFF[y] || (y + "-09-08");
+    }
+
+    function nflSeasonEnd(seasonYear) {
+      return (Number(seasonYear) + 1) + "-01-31";
+    }
+
+    function nflSeasonContext(date) {
+      const y = Number(String(date || "").slice(0, 4));
+      if (!y) return { season: null, phase: "offseason" };
+      if (date <= nflSeasonEnd(y - 1)) return { season: y - 1, phase: "in_season" };
+      if (date < nflKickoff(y)) return { season: y, phase: "offseason" };
+      if (date <= nflSeasonEnd(y)) return { season: y, phase: "in_season" };
+      return { season: y + 1, phase: "offseason" };
+    }
+
+    function seasonWindowEnd(date, seasonCount) {
+      const n = Math.max(1, Number(seasonCount) || 1);
+      const ctx = nflSeasonContext(date);
+      if (ctx.season == null) return date;
+      return nflSeasonEnd(ctx.season + n - 1);
+    }
+
+    function seasonLived(date, seasonCount, today) {
+      if (!date || !today) return false;
+      return today >= seasonWindowEnd(date, seasonCount);
+    }
+
     /**
-     * Default score clock for a trade's age: First 2 years once the deal is older than
-     * two years; to-date (Since trade) while it is still younger than that.
+     * Default score clock by age: 2-season span once that window is complete;
+     * to-date (Since trade) while the deal is still inside its second season.
      */
     function defaultLensForDate(date) {
       const today = (league && league.today) || "";
       if (!date || !today) return "all";
-      return date <= addYears(today, -2) ? "y2" : "all";
+      return seasonLived(date, 2, today) ? "y2" : "all";
     }
 
     function windowLived(date) {
-      const need = { t0: 0, y1: 1, y2: 2, y3: 3, all: 1 }[lens];
-      if (!need) return true;
       const today = (league && league.today) || "";
+      if (lens === "y1") return seasonLived(date, 1, today);
+      if (lens === "y2") return seasonLived(date, 2, today);
+      if (lens === "y3") return seasonLived(date, 3, today);
+      const need = { t0: 0, all: 1 }[lens];
+      if (!need) return true;
       return date <= addYears(today, -need);
     }
 
@@ -4680,7 +4742,7 @@ const html = `<!DOCTYPE html>
         ? '<p class="caption">No trades on the league tape yet.</p>'
         : !lived.length
           ? '<p class="caption">No trade in the league has lived ' + esc(clockName())
-            + " yet. Score as Since trade to see them.</p>"
+            + " yet. Switch to as of today to see them.</p>"
           : !list.length
             ? '<p class="caption">No trades match these filters. Clear a filter to widen the feed.</p>'
             : "";
@@ -6802,11 +6864,19 @@ const html = `<!DOCTYPE html>
       const p = String(pos || "").toUpperCase();
       return NEWS_POS_SLUG[p] || "oth";
     }
-    function newsPlayerSpanHtml(name, pos) {
+    function newsPlayerSpanHtml(name, pos, playerId) {
       const slug = newsPosSlug(pos);
       const tag = pos
         ? '<span class="news-pos-tag pos-' + slug + '">' + esc(pos) + "</span> "
         : "";
+      // Only roster-matched subjects (player_id from ingest) become links into Cuffs.
+      if (playerId) {
+        return '<button type="button" class="news-player pos-' + slug + '"'
+          + ' data-news-cuff="' + esc(String(playerId)) + '"'
+          + ' data-news-cuff-name="' + esc(name) + '"'
+          + ' aria-label="Open cuff for ' + esc(name) + '">'
+          + tag + esc(name) + "</button>";
+      }
       return '<span class="news-player pos-' + slug + '">' + tag + esc(name) + "</span>";
     }
     /** Category pill label from the league_line prefix ("Injury — …", "Roster move on … — …"). */
@@ -6827,57 +6897,31 @@ const html = `<!DOCTYPE html>
       const slug = newsCatTagSlug(label);
       return '<span class="news-cat-tag cat-' + esc(slug) + '">' + esc(label) + "</span>";
     }
-    /** Highlight rostered players and POS Name wire tokens in an expanded pull-up summary. */
+    /**
+     * Highlight the ingest-matched rostered subject only (it.player + it.player_id).
+     * No free POS-Name scanning — that could colour a free agent who shares a wire tag.
+     */
     function newsPullupLineHtml(line, it) {
       const raw = String(line || "");
       if (!raw) return "";
-      const posByName = Object.create(null);
-      if (it && it.player) posByName[String(it.player).toLowerCase()] = it.player_position || null;
-      const newsPosTokens = "QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C";
-      const posNameRe = new RegExp(
-        "\\\\b(" + newsPosTokens + ")\\\\s+"
-          + "((?:[A-Z]\\\\.)+\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*(?:\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*)*"
-          + "|[A-Z][a-z][\\\\w.'\u2019\\\\-]*(?:\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*){0,2})"
-          + "(?:\\\\s+(?:Jr\\\\.|Sr\\\\.|II|III|IV|V))?",
-        "g"
-      );
-      const matches = [];
-      let m;
-      while ((m = posNameRe.exec(raw)) !== null) {
-        matches.push({ start: m.index, end: m.index + m[0].length, pos: m[1], name: m[2], kind: "posName" });
-        posByName[m[2].toLowerCase()] = m[1];
-      }
-      const names = Object.keys(posByName).filter(Boolean).sort((a, b) => b.length - a.length);
-      for (const key of names) {
-        const display = (it && it.player && it.player.toLowerCase() === key)
-          ? it.player
-          : (matches.find((x) => x.name.toLowerCase() === key) || {}).name || key;
-        const re = new RegExp("\\\\b" + display.replace(/[.*+?^\u0024{}()|[\\]\\\\]/g, "\\\\$&") + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "g");
-        let nm;
-        while ((nm = re.exec(raw)) !== null) {
-          if (matches.some((x) => nm.index >= x.start && nm.index < x.end)) continue;
-          matches.push({
-            start: nm.index, end: nm.index + nm[0].length,
-            pos: posByName[key], name: display, kind: "name",
-          });
-        }
-      }
-      matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
-      const kept = [];
-      for (const match of matches) {
-        if (kept.some((k) => match.start < k.end && match.end > k.start)) continue;
-        kept.push(match);
-      }
-      kept.sort((a, b) => a.start - b.start);
+      const playerId = it && it.player_id ? String(it.player_id) : "";
+      const playerName = it && it.player ? String(it.player) : "";
+      if (!playerId || !playerName) return esc(raw);
+      const pos = it.player_position || null;
+      // Nested escapes: this file is an outer template literal. Use \${ so a literal
+      // dollar-brace lands in the shipped script; \\\\ becomes \\ in the browser RegExp.
+      const escaped = playerName.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+      const re = new RegExp("\\\\b" + escaped + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "gi");
       let html = "";
       let cursor = 0;
-      for (const match of kept) {
-        if (match.start > cursor) html += esc(raw.slice(cursor, match.start));
-        html += newsPlayerSpanHtml(match.name, match.pos);
-        cursor = match.end;
+      let m;
+      while ((m = re.exec(raw)) !== null) {
+        if (m.index > cursor) html += esc(raw.slice(cursor, m.index));
+        html += newsPlayerSpanHtml(playerName, pos, playerId);
+        cursor = m.index + m[0].length;
       }
       if (cursor < raw.length) html += esc(raw.slice(cursor));
-      return html;
+      return html || esc(raw);
     }
 
     function newsHeroLine(it) {
@@ -8111,13 +8155,15 @@ const html = `<!DOCTYPE html>
       const one = noun || "deal";
       const many = one + "s";
       if (lens === "t0" || lens === "all" || shown === all) return shown + " " + (shown === 1 ? one : many);
-      const span = { y1: "1 year", y2: "2 years", y3: "3 years" }[lens] || clockName();
+      const span = { y1: "1 season", y2: "2 seasons", y3: "3 seasons" }[lens] || clockName();
       return shown + " of " + all + " lived " + span;
     }
 
     function scoreOpt(row) {
-      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '">'
-        + "<b>" + row[1] + "</b><span>" + row[2] + "</span></button>";
+      // Title-only rows keep the portal short; longer copy stays on title/aria for hover & SR.
+      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
+        + ' title="' + esc(row[2] || row[1]) + '" aria-label="' + esc(row[1]) + '">'
+        + "<b>" + esc(row[1]) + "</b></button>";
     }
 
     /**
@@ -8165,7 +8211,7 @@ const html = `<!DOCTYPE html>
       const name = clockName();
       return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
         + '<button type="button" class="chip-lens-btn" data-score="1"'
-        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' aria-label="Score window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
         + ' title="' + esc(name) + '">'
         + chipLensIcon() + "</button></span>";
     }
@@ -8183,7 +8229,7 @@ const html = `<!DOCTYPE html>
       const name = clockName();
       for (const btn of btns) {
         btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
-        btn.setAttribute("aria-label", "Score as " + name);
+        btn.setAttribute("aria-label", "Score window: " + name);
         btn.setAttribute("title", name);
         btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
         btn.innerHTML = chipLensIcon()
@@ -9023,6 +9069,15 @@ const html = `<!DOCTYPE html>
         openCuffsPage(cuffsOpen.dataset.cuffsOpen || "search");
         return;
       }
+      const newsCuff = e.target.closest("[data-news-cuff]");
+      if (newsCuff) {
+        const pid = newsCuff.getAttribute("data-news-cuff") || "";
+        const pname = newsCuff.getAttribute("data-news-cuff-name") || "";
+        if (!pid) return;
+        if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+        openCuffsPage("search", { playerId: pid, playerName: pname });
+        return;
+      }
       const cuffsBoardBtn = e.target.closest("[data-cuffs-board]");
       if (cuffsBoardBtn) {
         openCuffsPage(cuffsBoardBtn.dataset.cuffsBoard || "held");
@@ -9157,6 +9212,7 @@ const html = `<!DOCTYPE html>
       const cuffClearQ = e.target.closest("[data-cuff-clear-q]");
       if (cuffClearQ) {
         cuffFilterQ = "";
+        cuffFilterPlayerId = "";
         render();
         return;
       }
@@ -9681,6 +9737,7 @@ const html = `<!DOCTYPE html>
       const cuffQBox = e.target.closest("[data-cuff-q]");
       if (cuffQBox) {
         cuffFilterQ = cuffQBox.value;
+        cuffFilterPlayerId = ""; // typing replaces a news-pinned player filter
         if (cuffFilterQ.trim()) cuffFilterMine = false;
         const start = cuffQBox.selectionStart;
         const end = cuffQBox.selectionEnd;
@@ -10163,6 +10220,16 @@ if (!html.includes(".news-player.pos-qb") || !html.includes(".news-cat-tag") || 
 if (!inline.includes("function newsPullupLineHtml(") || !inline.includes("function newsCategoryTagFromLine(")) {
   throw new Error("News pull-up must derive category tags and highlight players in expanded summaries");
 }
+if (!inline.includes('data-news-cuff="') || !inline.includes("data-news-cuff-name")
+  || !inline.includes('closest("[data-news-cuff]")')
+  || !inline.includes("cuffFilterPlayerId")
+  || !inline.includes("openCuffsPage(\"search\", { playerId:")
+  || !inline.includes("No cuff row for ")) {
+  throw new Error("News player highlights must open Cuffs pinned to that Sleeper player id");
+}
+if (!html.includes("button.news-player") || !inline.includes("Only roster-matched subjects")) {
+  throw new Error("News player highlights must be roster-matched buttons into Cuffs");
+}
 {
   const peekFn = inline.slice(inline.indexOf("function newsPullupPeekHtml("),
     inline.indexOf("function newsPullupPeekHtml(") + 450);
@@ -10346,8 +10413,22 @@ if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inlin
   throw new Error("value chips and filter rows must mount chipLensHtml");
 }
 if (!inline.includes("function defaultLensForDate(")
-  || !inline.includes('date <= addYears(today, -2) ? "y2" : "all"')) {
-  throw new Error("Trade score lens must default to y2 when older than 2 years, else to-date (all)");
+  || !inline.includes('seasonLived(date, 2, today) ? "y2" : "all"')
+  || !inline.includes('["t0", "Date of Trade"')
+  || !inline.includes('["y1", "1 season"')
+  || !inline.includes('["y2", "2 seasons"')
+  || !inline.includes('["y3", "3 seasons"')
+  || !inline.includes('["all", "as of today"')) {
+  throw new Error("Trade score menu must ship Date of Trade / 1–3 seasons / as of today");
+}
+{
+  const optFn = fnSrc("scoreOpt");
+  if (!optFn.includes("<b>") || optFn.includes("<span>")) {
+    throw new Error("scoreOpt must be compact title-only rows (no description span)");
+  }
+}
+if (!html.includes("width: min(168px") || !html.includes("min-height: 34px")) {
+  throw new Error("score-as portal must stay compact (narrow + short options)");
 }
 if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
   throw new Error("chip-lens styles and buttons must ship");
@@ -10670,9 +10751,10 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes("function pickLeadersStack(") || !inline.includes("function pickIntelStepPanel(")
   || !inline.includes("function pickSeasonRangeLabel(") || !inline.includes("PICK_INTEL_BOARD_YEAR")
   || !inline.includes("pick-intel-board-cols")
-  || !inline.includes("pick-intel-board-yr")
+  || !inline.includes('yrShort + " " + r.lab')
   || !inline.includes('"3rds–4ths"') || !inline.includes("pickLeaders(r.rounds, 3, yrs)")
   || !inline.includes('Still-available 2027 pick leaders')
+  || inline.includes("pick-intel-board-yr")
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
@@ -10804,12 +10886,12 @@ if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-step-modes") || !html.includes("button.pick-intel-step-mode")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
-  || !html.includes(".pick-intel-board-yr") || !html.includes("button.pick-intel-chip")
+  || html.includes(".pick-intel-board-yr") || !html.includes("button.pick-intel-chip")
   || html.includes(".pick-intel-board-h")
   || html.includes("button.pick-intel-filter")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
-  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input or board-h)");
+  throw new Error("Draft Data progressive filter + column leaderboard styles must ship without year gutter (no pick search input or board-h)");
 }
 if (!inline.includes('aria-label="Search picks"')
   || !inline.includes('aria-label="Original picks"')

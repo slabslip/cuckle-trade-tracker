@@ -855,37 +855,47 @@ const html = `<!DOCTYPE html>
       line-height: 1.3;
     }
     .pick-intel .caption { margin: 0 0 10px; }
-    .pick-intel-tools {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-      align-items: center;
+    .pick-intel-actions {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin: 0 0 10px; align-items: center;
+    }
+    .pick-intel-actions .chip {
+      white-space: nowrap; min-height: 40px; padding: 0 12px;
+    }
+    .pick-intel-actions .chip.on {
+      border-color: #6b5a2e; color: var(--text);
+    }
+    .pick-intel-actions .chip[disabled], .pick-intel-actions .chip[aria-disabled="true"] {
+      opacity: 0.45; cursor: not-allowed;
+    }
+    .pick-intel-group {
       margin: 0 0 8px;
     }
-    .pick-intel-tools input[type="search"] {
-      font: inherit; color: var(--text); background: var(--bg);
-      border: 1px solid var(--line); border-radius: 10px;
-      min-height: 44px; padding: 0 12px; width: 100%;
-      box-sizing: border-box;
+    .pick-intel-group-lab {
+      display: block; margin: 0 0 4px;
+      color: var(--dim); font-size: 0.6875rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
     }
-    .pick-intel-tools input[type="search"]:focus-visible {
-      outline: 2px solid #c8c8d0; outline-offset: 2px;
-    }
-    .pick-intel-tools .chip {
-      white-space: nowrap; min-height: 44px;
-    }
-    .pick-intel-tools .chip.on {
-      border-color: #6b5a2e; color: var(--text);
-    }
-    .pick-intel-quick {
+    .pick-intel-chips {
       display: flex; flex-wrap: wrap; gap: 6px;
-      margin: 0 0 10px;
     }
-    .pick-intel-quick .chip {
+    .pick-intel-chips .chip {
       min-height: 34px; padding: 0 10px; font-size: 0.8125rem;
     }
-    .pick-intel-quick .chip.on {
+    .pick-intel-chips .chip.on {
       border-color: #6b5a2e; color: var(--text);
+    }
+    .pick-intel-held {
+      display: grid; gap: 4px; margin: 0 0 10px;
+    }
+    .pick-intel-held select {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 40px; padding: 0 10px; width: 100%;
+      box-sizing: border-box;
+    }
+    .pick-intel-held select:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     .pick-intel-hint {
       margin: 0 0 8px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
@@ -930,6 +940,42 @@ const html = `<!DOCTYPE html>
     div.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     div.lh-latest-trade .day-alert-h {
       font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
+    }
+    /* League trades feed: stacked Latest-trade-style H2H cards, newest first. */
+    .trades-feed {
+      display: flex; flex-direction: column; gap: 18px;
+      margin: 0 0 24px;
+    }
+    div.lh-trade-feed-card {
+      display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
+      gap: 10px; width: 100%; box-sizing: border-box;
+      font: inherit; color: inherit; text-align: left;
+      cursor: pointer; touch-action: manipulation;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0; margin: 0; min-height: 0; height: auto;
+    }
+    div.lh-trade-feed-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    div.lh-trade-feed-card .day-alert-h {
+      font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
+      font-size: 0.875rem;
+    }
+    div.lh-trade-feed-card.voted .h2h-chip.is-trade {
+      border-color: #6b5a2e;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
+    }
+    #tapeFilters {
+      margin: 0 0 14px;
+      max-height: min(70dvh, 520px); overflow-y: auto;
+    }
+    #tapeFilters .filter-h:first-child { margin-top: 4px; }
+    #tapeFilters input[type="search"] {
+      width: 100%; box-sizing: border-box; margin: 6px 0 10px;
+      padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: #121218; color: var(--text);
+      font: inherit;
+    }
+    #tapeFilters input[type="search"]:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     /* Head-to-head chips: matchups and trades share mirrored left | VS | right. */
     .h2h-chip {
@@ -1602,8 +1648,12 @@ const html = `<!DOCTYPE html>
     let data = null;
     let league = null;
     let picks = null;
-    let pickSearchQ = "";
-    let pickIntelMode = "idle"; // idle | search | mine
+    // Pick board filters (AND across groups). Empty round/year sets mean "all".
+    let pickFilterRounds = {}; // { 1: true } when selected
+    let pickFilterYears = {};  // { "2027": true } when selected
+    let pickFilterOwner = "";  // "" = anyone; else current holder seat name
+    let pickFilterMineOut = false;
+    let pickFilterMineHeld = false;
     let pickIntelOpen = null;
     let picksLoading = false;
     let titles = null;
@@ -1614,7 +1664,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickIntel20260901053100";
+    const DATA_V = "tradesFeed20260901033000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1654,10 +1704,14 @@ const html = `<!DOCTYPE html>
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
     let weekMatchupsLoading = false;
-    // Full bags for the Latest trade Sleeper card (lazy-filled from one seat file).
+    // Full bags for Latest trade + the league trades feed (lazy-filled from seat files).
     let latestTradeHit = null; // seat trade object for latestTradeHitTx
     let latestTradeHitTx = null;
     let latestTradeBagsLoading = false;
+    // tx → seat trade object | null (null = loaded, no bag). Own map so the feed can
+    // paint many H2H cards without fighting the home Latest trade pointer.
+    const tradeBagByTx = Object.create(null);
+    const tradeBagPending = Object.create(null);
     // KTC book keyed by sleeper_id — pos/team for player secondary labels.
     let ktcBySleeper = null;
     let draftSort = "new";
@@ -1666,6 +1720,14 @@ const html = `<!DOCTYPE html>
     let draftFilterOpen = false;
     let year = "all";
     let yearFilterOpen = false;
+    // League-wide trades feed filters (years / teams / players). Separate from the
+    // per-seat Trades tab year filter so the two screens do not clobber each other.
+    let tapeFilterOpen = false;
+    let tapeYear = "all";
+    let tapeTeam = "all";
+    let tapePlayer = "all";
+    let tapePlayerQ = "";
+    let tapeLimit = 25;
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -1777,46 +1839,6 @@ const html = `<!DOCTYPE html>
       });
     }
 
-    /** Normalize a pick-search query into year / round / leftover name text. */
-    function parsePickQuery(q) {
-      let raw = String(q || "").trim().toLowerCase();
-      raw = raw
-        .replace(/\\bfirsts?\\b/g, "1st")
-        .replace(/\\bseconds?\\b/g, "2nd")
-        .replace(/\\bthirds?\\b/g, "3rd")
-        .replace(/\\bfourths?\\b/g, "4th")
-        .replace(/\\b1sts\\b/g, "1st")
-        .replace(/\\b2nds\\b/g, "2nd")
-        .replace(/\\b3rds\\b/g, "3rd")
-        .replace(/\\b4ths\\b/g, "4th");
-      const yearM = raw.match(/\\b(20\\d{2})\\b/);
-      const roundM = raw.match(/\\b(\\d+)(?:st|nd|rd|th)\\b/) || raw.match(/\\bround\\s*(\\d+)\\b/);
-      let rest = raw
-        .replace(/\\b20\\d{2}\\b/g, " ")
-        .replace(/\\b\\d+(?:st|nd|rd|th)\\b/g, " ")
-        .replace(/\\bround\\s*\\d+\\b/g, " ")
-        .replace(/\\bpicks?\\b/g, " ")
-        .replace(/\\s+/g, " ")
-        .trim();
-      return {
-        year: yearM ? yearM[1] : null,
-        round: roundM ? Number(roundM[1]) : null,
-        rest: rest,
-      };
-    }
-
-    function pickMatchesQuery(key, entry, parsed) {
-      const parts = pickKeyParts(key);
-      if (!parts || !entry) return false;
-      if (parsed.year && parts.season !== parsed.year) return false;
-      if (parsed.round != null && parts.round !== parsed.round) return false;
-      if (!parsed.rest) return !!(parsed.year || parsed.round != null);
-      const label = String(entry.label || "").toLowerCase();
-      const owner = String(pickOwnerName(entry) || "").toLowerCase();
-      const origin = String(pickOriginName(entry) || "").toLowerCase();
-      return label.includes(parsed.rest) || owner.includes(parsed.rest) || origin.includes(parsed.rest);
-    }
-
     function stillPickEntries() {
       const out = [];
       if (!picks) return out;
@@ -1828,6 +1850,30 @@ const html = `<!DOCTYPE html>
       return out;
     }
 
+    function pickSeasonsAvailable() {
+      const years = new Set();
+      for (const row of stillPickEntries()) {
+        const parts = pickKeyParts(row.key);
+        if (parts) years.add(parts.season);
+      }
+      return [...years].sort();
+    }
+
+    function pickFiltersActive() {
+      return pickFilterMineOut || pickFilterMineHeld || !!pickFilterOwner
+        || Object.keys(pickFilterRounds).some((k) => pickFilterRounds[k])
+        || Object.keys(pickFilterYears).some((k) => pickFilterYears[k]);
+    }
+
+    function clearPickFilters() {
+      pickFilterRounds = {};
+      pickFilterYears = {};
+      pickFilterOwner = "";
+      pickFilterMineOut = false;
+      pickFilterMineHeld = false;
+      pickIntelOpen = null;
+    }
+
     function alienatedPicks(seat) {
       if (!seat) return [];
       return stillPickEntries().filter((row) => {
@@ -1837,16 +1883,72 @@ const html = `<!DOCTYPE html>
       }).sort((a, b) => String(a.key).localeCompare(String(b.key)));
     }
 
-    function firstRoundLeaders() {
+    /** Apply round/year/owner/mine filters to still-available picks (AND across groups). */
+    function filteredStillPicks(seat) {
+      const roundOn = Object.keys(pickFilterRounds).filter((k) => pickFilterRounds[k]).map(Number);
+      const yearOn = Object.keys(pickFilterYears).filter((k) => pickFilterYears[k]);
+      return stillPickEntries().filter((row) => {
+        const parts = pickKeyParts(row.key);
+        if (!parts) return false;
+        if (roundOn.length && !roundOn.includes(parts.round)) return false;
+        if (yearOn.length && !yearOn.includes(parts.season)) return false;
+        const owner = pickOwnerName(row.entry);
+        const origin = pickOriginName(row.entry);
+        if (pickFilterOwner && owner !== pickFilterOwner) return false;
+        if (pickFilterMineOut) {
+          if (!seat || origin !== seat || !owner || owner === seat) return false;
+        }
+        if (pickFilterMineHeld) {
+          if (!seat || owner !== seat) return false;
+        }
+        return true;
+      }).sort((a, b) => String(a.key).localeCompare(String(b.key)));
+    }
+
+    /**
+     * Top holders of still-available picks. Pass a round number for that round only,
+     * or null for total picks overall. Ties keep equal counts; names break remaining ties.
+     */
+    function pickLeaders(round, limit) {
       const counts = new Map();
       for (const row of stillPickEntries()) {
         const parts = pickKeyParts(row.key);
-        if (!parts || parts.round !== 1) continue;
+        if (!parts) continue;
+        if (round != null && parts.round !== round) continue;
         const owner = pickOwnerName(row.entry);
         if (!owner) continue;
         counts.set(owner, (counts.get(owner) || 0) + 1);
       }
-      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3);
+      const top = Math.max(1, Number(limit) || 3);
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
+    }
+
+    function pickLeadersLine(leaders) {
+      if (!leaders.length) return '<span class="pick-intel-board-empty">Nobody yet</span>';
+      return leaders.map(([name, n]) => seatLabel(name) + ' · <span class="pil-n">' + n + "</span>").join(" · ");
+    }
+
+    /** Idle quick-view leaderboard: most 1sts, most 2nds, most picks overall. */
+    function pickIntelBoard() {
+      const rows = [
+        { lab: "1sts", round: 1, filter: true },
+        { lab: "2nds", round: 2, filter: true },
+        { lab: "Total", round: null, filter: false },
+      ];
+      return '<div class="pick-intel-board" role="group" aria-label="Pick leaders">'
+        + '<p class="pick-intel-board-h">Most held right now</p>'
+        + rows.map((r) => {
+          const leaders = pickLeaders(r.round, 3);
+          const lab = r.filter
+            ? ('<button type="button" class="pick-intel-board-lab" data-pick-round="'
+              + r.round + '" aria-label="Filter to ' + esc(r.lab) + '">' + esc(r.lab) + "</button>")
+            : ('<span class="pick-intel-board-lab">' + esc(r.lab) + "</span>");
+          return '<div class="pick-intel-board-row">'
+            + lab
+            + '<div class="pick-intel-board-leaders">' + pickLeadersLine(leaders) + "</div>"
+            + "</div>";
+        }).join("")
+        + "</div>";
     }
 
     function pickIntelRow(row) {
@@ -1866,75 +1968,88 @@ const html = `<!DOCTYPE html>
         + "</button>";
     }
 
+    function pickFilterChip(attr, value, label, on) {
+      return '<button type="button" class="chip' + (on ? " on" : "") + '" ' + attr + '="'
+        + esc(String(value)) + '" aria-pressed="' + (on ? "true" : "false") + '">'
+        + esc(label) + "</button>";
+    }
+
     /**
-     * League-home trade intel: search who owns which picks, plus one-tap "my picks out"
-     * (picks that originated on your seat and now sit elsewhere).
+     * League-home pick board: filter still-available draft picks by round, year, holder,
+     * and one-tap "my picks out" / "mine held". No free-text search — every control is one tap.
+     * Idle (no filters) shows a quick leaderboard (most 1sts / 2nds / total) instead of the full tape.
      */
     function pickIntel() {
       ensurePicks();
       const seat = authSeatName();
-      const mineOn = pickIntelMode === "mine";
-      const q = pickSearchQ;
-      const parsed = parsePickQuery(q);
-      const quick = [
-        ["1st", "1sts"],
-        ["2nd", "2nds"],
-        ["2027", "2027"],
-        ["2028", "2028"],
-        ["2029", "2029"],
-      ];
+      const active = pickFiltersActive();
+      const roundLabs = [[1, "1sts"], [2, "2nds"], [3, "3rds"], [4, "4ths"]];
+      const seasons = picks ? pickSeasonsAvailable() : ["2027", "2028", "2029"];
+      const seatNames = (members || []).map((m) => m.name).filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
       let body = "";
       if (!picks && picksLoading) {
         body = '<p class="caption">Loading picks…</p>';
       } else if (!picks) {
         body = '<p class="caption">Pick tape is not available for this league yet.</p>';
-      } else if (mineOn) {
-        if (!seat) {
-          body = '<p class="caption">Claim your seat to see which of your original picks other teams hold.</p>';
-        } else {
-          const rows = alienatedPicks(seat);
-          body = rows.length
-            ? ('<p class="pick-intel-hint">' + rows.length + " pick" + (rows.length === 1 ? "" : "s")
-              + " that started as " + esc(seat) + "'s and now sit elsewhere.</p>"
-              + '<div class="pick-intel-list">' + rows.map(pickIntelRow).join("") + "</div>")
-            : ('<p class="caption">None of ' + esc(seat) + "'s original picks are sitting on other rosters right now.</p>");
-        }
-      } else if (q.trim()) {
-        const hits = stillPickEntries()
-          .filter((row) => pickMatchesQuery(row.key, row.entry, parsed))
-          .sort((a, b) => String(a.key).localeCompare(String(b.key)))
-          .slice(0, 40);
-        body = hits.length
-          ? ('<p class="pick-intel-hint">' + hits.length + " still-a-pick match"
-            + (hits.length === 1 ? "" : "es") + ' for “' + esc(q.trim()) + '”.</p>'
-            + '<div class="pick-intel-list">' + hits.map(pickIntelRow).join("") + "</div>")
-          : ('<p class="caption">No still-available picks match “' + esc(q.trim()) + '”.</p>');
+      } else if (!active) {
+        const anyLeaders = pickLeaders(null, 1).length > 0;
+        body = anyLeaders
+          ? (pickIntelBoard()
+            + '<p class="caption">Tap a round, year, or holder — or My picks out — to list those picks.</p>')
+          : '<p class="caption">No still-available picks on the tape yet. Filters light up when picks load.</p>';
+      } else if ((pickFilterMineOut || pickFilterMineHeld) && !seat) {
+        body = '<p class="caption">Claim your seat to filter for your original picks out, or picks you still hold.</p>';
       } else {
-        const leaders = firstRoundLeaders();
-        const lead = leaders.length
-          ? ('<p class="pick-intel-hint">Most 1sts right now: '
-            + leaders.map(([name, n]) => seatLabel(name) + " · " + n).join(" · ")
-            + ".</p>")
-          : "";
-        body = lead
-          + '<p class="caption">Search a round or year — “1st”, “2027 2nd”, or a team name — to see who holds those picks.</p>';
+        const rows = filteredStillPicks(seat);
+        let hint = rows.length + " still-available pick" + (rows.length === 1 ? "" : "s");
+        if (pickFilterMineOut && seat) {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " that started as " + seat + "'s and now sit elsewhere";
+        } else if (pickFilterMineHeld && seat) {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " " + seat + " still holds";
+        }
+        body = rows.length
+          ? ('<p class="pick-intel-hint">' + esc(hint) + ".</p>"
+            + '<div class="pick-intel-list">' + rows.map(pickIntelRow).join("") + "</div>")
+          : ('<p class="caption">No still-available picks match these filters. Clear or loosen a chip.</p>');
       }
-      return '<section class="pick-intel" aria-label="Pick search">'
-        + '<h2 class="pick-intel-h">Pick search</h2>'
-        + '<p class="caption">Who owns the picks you want — and which of yours left via trade.</p>'
-        + '<div class="pick-intel-tools">'
-        + '<input type="search" data-pick-q="1" placeholder="Search picks — 1st, 2028, team…"'
-        + ' value="' + esc(q) + '" aria-label="Search draft picks" autocomplete="off" spellcheck="false" />'
-        + '<button type="button" class="chip' + (mineOn ? " on" : "") + '" data-pick-mine="1"'
-        + ' aria-pressed="' + (mineOn ? "true" : "false") + '">My picks out</button>'
+      const mineOutDis = !seat;
+      const mineHeldDis = !seat;
+      return '<section class="pick-intel" aria-label="Pick board">'
+        + '<h2 class="pick-intel-h">Pick board</h2>'
+        + '<p class="caption">Filter still-available draft picks. Idle shows who holds the most 1sts, 2nds, and picks overall.</p>'
+        + '<div class="pick-intel-actions" role="group" aria-label="Pick board shortcuts">'
+        + '<button type="button" class="chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
+        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '">My picks out</button>'
+        + '<button type="button" class="chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
+        + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '">Mine held</button>'
+        + (active
+          ? '<button type="button" class="chip" data-pick-filter-clear="1">Clear</button>'
+          : "")
         + "</div>"
-        + '<div class="pick-intel-quick" role="group" aria-label="Quick pick filters">'
-        + quick.map(([val, lab]) => {
-          const on = !mineOn && q.trim().toLowerCase() === val;
-          return '<button type="button" class="chip' + (on ? " on" : "") + '" data-pick-quick="'
-            + esc(val) + '">' + esc(lab) + "</button>";
+        + '<div class="pick-intel-group">'
+        + '<span class="pick-intel-group-lab" id="pick-round-lab">Round</span>'
+        + '<div class="pick-intel-chips" role="group" aria-labelledby="pick-round-lab">'
+        + roundLabs.map(([n, lab]) => pickFilterChip("data-pick-round", n, lab, !!pickFilterRounds[n])).join("")
+        + "</div></div>"
+        + '<div class="pick-intel-group">'
+        + '<span class="pick-intel-group-lab" id="pick-year-lab">Year</span>'
+        + '<div class="pick-intel-chips" role="group" aria-labelledby="pick-year-lab">'
+        + seasons.map((y) => pickFilterChip("data-pick-year", y, y, !!pickFilterYears[y])).join("")
+        + "</div></div>"
+        + '<div class="pick-intel-held">'
+        + '<label class="pick-intel-group-lab" for="pick-held-by">Held by</label>'
+        + '<select id="pick-held-by" data-pick-owner="1" aria-label="Filter picks by current holder">'
+        + '<option value=""' + (!pickFilterOwner ? " selected" : "") + ">Anyone</option>"
+        + seatNames.map((name) => {
+          const sel = pickFilterOwner === name ? " selected" : "";
+          return '<option value="' + esc(name) + '"' + sel + ">" + esc(name) + "</option>";
         }).join("")
-        + "</div>"
+        + "</select></div>"
         + body
         + "</section>";
     }
@@ -2147,13 +2262,17 @@ const html = `<!DOCTYPE html>
       yearFilterOpen = false;
       draftFilterOpen = false;
       lensOpen = false;
+      tapeFilterOpen = false;
+      tapeYear = "all";
+      tapeTeam = "all";
+      tapePlayer = "all";
+      tapePlayerQ = "";
+      tapeLimit = 25;
       dsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
-      pickSearchQ = "";
-      pickIntelMode = "idle";
-      pickIntelOpen = null;
+      clearPickFilters();
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
       focusNext = ".screen-h";
@@ -3170,12 +3289,113 @@ const html = `<!DOCTYPE html>
           + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
           + ". Open it again to change your vote, or tap the same side to clear it.</p>"
         : "";
+      const years = [...new Set(lived.map((r) => String(r.date || "").slice(0, 4)).filter(Boolean))]
+        .sort()
+        .reverse();
+      const teams = (members || []).map((m) => m.name).filter(Boolean)
+        .slice()
+        .sort((a, b) => a.localeCompare(b));
+      // Headlines from both sides of each deal — player filter matches either bag's lead asset.
+      const hlByTx = Object.create(null);
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      for (const s of sides) {
+        const tx = s.transaction_id;
+        if (!hlByTx[tx]) hlByTx[tx] = [];
+        if (s.headline) hlByTx[tx].push(String(s.headline));
+      }
+      let list = lived;
+      if (tapeYear !== "all") {
+        list = list.filter((r) => String(r.date || "").slice(0, 4) === tapeYear);
+      }
+      if (tapeTeam !== "all") {
+        list = list.filter((r) => r.name === tapeTeam || r.other === tapeTeam);
+      }
+      const playerPool = [];
+      {
+        const seen = new Set();
+        for (const r of list) {
+          for (const h of hlByTx[r.transaction_id] || []) {
+            const leg = guessLegFromHeadline(h);
+            if (!leg || leg.kind !== "player") continue;
+            const key = String(leg.label || "").trim();
+            if (!key || seen.has(key.toLowerCase())) continue;
+            seen.add(key.toLowerCase());
+            playerPool.push(key);
+          }
+        }
+        playerPool.sort((a, b) => a.localeCompare(b));
+      }
+      const playerNeedle = (tapePlayerQ || "").trim().toLowerCase();
+      if (tapePlayer !== "all") {
+        const want = String(tapePlayer).toLowerCase();
+        list = list.filter((r) => (hlByTx[r.transaction_id] || [])
+          .some((h) => String(h).toLowerCase() === want || String(h).toLowerCase().includes(want)));
+      } else if (playerNeedle) {
+        list = list.filter((r) => (hlByTx[r.transaction_id] || [])
+          .some((h) => String(h).toLowerCase().includes(playerNeedle)));
+      }
+      const filtered = tapeYear !== "all" || tapeTeam !== "all" || tapePlayer !== "all" || !!playerNeedle;
       const empty = !all.length
         ? '<p class="caption">No trades on the league tape yet.</p>'
         : !lived.length
           ? '<p class="caption">No trade in the league has lived ' + esc(clockName())
             + " yet. Score as Since trade to see them.</p>"
-          : "";
+          : !list.length
+            ? '<p class="caption">No trades match these filters. Clear a filter to widen the feed.</p>'
+            : "";
+      const hintBits = [];
+      if (tapeYear !== "all") hintBits.push(tapeYear);
+      if (tapeTeam !== "all") hintBits.push(tapeTeam);
+      if (tapePlayer !== "all") hintBits.push(tapePlayer);
+      else if (playerNeedle) hintBits.push('"' + tapePlayerQ.trim() + '"');
+      const filterHint = filtered
+        ? "Filter · " + hintBits.join(" · ")
+        : "Filter by year, team, or player";
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (filtered || tapeFilterOpen ? " on" : "") + '" data-tfilter="1" aria-label="Filter trades"'
+        + ' aria-expanded="' + (tapeFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const yearRadios = [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
+        '<label data-tape-year="' + esc(row[0]) + '"><input type="radio" name="tapeYear" value="'
+        + esc(row[0]) + '"' + (tapeYear === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const teamRadios = [["all", "All teams"]].concat(teams.map((n) => [n, n])).map((row) =>
+        '<label data-tape-team="' + esc(row[0]) + '"><input type="radio" name="tapeTeam" value="'
+        + esc(row[0]) + '"' + (tapeTeam === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const playerRadios = [["all", "All players"]].concat(playerPool.slice(0, 80).map((n) => [n, n]))
+        .map((row) =>
+          '<label data-tape-player="' + esc(row[0]) + '"><input type="radio" name="tapePlayer" value="'
+          + esc(row[0]) + '"' + (tapePlayer === row[0] ? " checked" : "") + "> "
+          + esc(row[1]) + "</label>"
+        ).join("");
+      const panel = tapeFilterOpen
+        ? '<div class="filter-panel" id="tapeFilters">'
+          + '<div class="filter-h">Year</div>'
+          + yearRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Team</div>'
+          + teamRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Player</div>'
+          + '<input type="search" data-tape-player-q="1" placeholder="Search player or pick label…"'
+          + ' value="' + esc(tapePlayerQ) + '" aria-label="Search players in trades"'
+          + ' autocomplete="off" spellcheck="false" />'
+          + playerRadios
+          + "</div>"
+        : "";
+      ensureTradesFeedBags(list);
+      const shown = list.slice(0, tapeLimit);
+      const cards = shown.map((r) => tradeFeedCardHtml(r)).join("");
+      const more = list.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (list.length - shown.length) + " left)</button>"
+        : "";
       // No back chip here on purpose. This screen's parent is always league home, which is
       // exactly what the home icon in the header does — a second control beside it would say
       // the same thing twice. The trade screen does get one, because its parent varies.
@@ -3183,12 +3403,43 @@ const html = `<!DOCTYPE html>
         // "the tape" is trade_boards.sides, and it carries only complete two-team trades: the
         // league's two three-team deals have no row there, so this is 288 of 290. Saying "the
         // tape" rather than "the league" is the difference between a claim and a fact.
-        + '<p class="caption">Every trade on the league tape, newest first. Tap one to review it'
-        + " and vote on who actually won. A gold outline is a trade you have voted on.</p>"
+        + '<p class="caption">Every trade on the league tape as H2H cards, newest first. Tap one'
+        + " to review it and vote on who actually won. A gold outline is a trade you have voted on.</p>"
         + toast
-        + '<div class="caption">' + esc(livedHint(lived.length, all.length, "trade")) + "</div>"
+        + '<div class="filter-wrap">'
+        + filterRow(filterBtn)
+        + panel
+        + "</div>"
+        + '<div class="caption">' + esc(livedHint(list.length, lived.length, "trade")) + "</div>"
         + empty
-        + lived.map((r) => boardTape(r)).join("");
+        + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
+        + more;
+    }
+
+    /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
+    function tradeFeedCardHtml(r) {
+      const voted = !!readVotes(r.transaction_id).choice;
+      let chip = "";
+      try {
+        chip = latestTradeCardHtml(r);
+      } catch (err) {
+        console.error(err);
+        chip = '<div class="h2h-chip is-trade" role="group">'
+          + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(r.name) + "</div></div>"
+          + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(r.other) + "</div>"
+          + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
+          + "</div>";
+      }
+      return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + '"'
+        + ' role="button" tabindex="0"'
+        + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
+        + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
+        + '<div class="day-alert-h">' + esc(r.date || "")
+        + (r.headline ? " · " + esc(r.headline) : "") + "</div>"
+        + chip
+        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+        + "</div>";
     }
 
     /**
@@ -5281,12 +5532,20 @@ const html = `<!DOCTYPE html>
      * Prefer VA-adjusted seat bags (same applyVa path as tradeRow); until they load,
      * fall back to trade_boards windows (same got/sent as boardTape).
      */
+    function bagHitForTx(tx) {
+      if (!tx) return null;
+      if (Object.prototype.hasOwnProperty.call(tradeBagByTx, tx)) return tradeBagByTx[tx];
+      if (latestTradeHitTx === tx) return latestTradeHit;
+      return null;
+    }
+
     function latestTradeLean(latest) {
-      if (latestTradeHit && latestTradeHitTx === latest.transaction_id) {
+      const hit = bagHitForTx(latest.transaction_id);
+      if (hit) {
         const s = applyVa(
-          (latestTradeHit.windows && latestTradeHit.windows[lens])
-            || latestTradeHit.even || latestTradeHit.realized,
-          isMulti(latestTradeHit),
+          (hit.windows && hit.windows[lens])
+            || hit.even || hit.realized,
+          isMulti(hit),
         );
         if (s && !s.incomplete && s.today != null && s.sent_today != null) {
           const d = displayDelta(s.today, s.sent_today);
@@ -5491,9 +5750,10 @@ const html = `<!DOCTYPE html>
      */
     function latestTradeReceiveSides(latest) {
       const seats = voteSeats(latest);
-      if (latestTradeHit && latestTradeHitTx === latest.transaction_id) {
-        const bag = (latestTradeHit.windows && latestTradeHit.windows[lens])
-          || latestTradeHit.even || latestTradeHit.realized || null;
+      const hit = bagHitForTx(latest.transaction_id);
+      if (hit) {
+        const bag = (hit.windows && hit.windows[lens])
+          || hit.even || hit.realized || null;
         const other = seats.find((s) => s.uid !== latest.user_id);
         return [
           { name: latest.name, uid: latest.user_id, legs: (bag && bag.legs) || [] },
@@ -5518,6 +5778,24 @@ const html = `<!DOCTYPE html>
       return out;
     }
 
+    async function ensureKtcBook() {
+      if (ktcBySleeper) return;
+      ktcBySleeper = Object.create(null);
+      try {
+        const book = await getJson("data/ktc/latest.json");
+        for (const p of (book && book.players) || []) {
+          if (p.sleeper_id) ktcBySleeper[String(p.sleeper_id)] = p;
+        }
+      } catch (ktcErr) {
+        console.error(ktcErr);
+      }
+    }
+
+    function rememberTradeBag(tx, hit) {
+      tradeBagByTx[tx] = hit || null;
+      if (latestTradeHitTx === tx) latestTradeHit = hit || null;
+    }
+
     function ensureLatestTradeBags() {
       const latest = latestTradeSide();
       if (!latest) {
@@ -5526,35 +5804,61 @@ const html = `<!DOCTYPE html>
         return;
       }
       // Already loading or resolved for this transaction (hit may be null if the seat file missed it).
-      if (latestTradeHitTx === latest.transaction_id) return;
+      if (latestTradeHitTx === latest.transaction_id
+        || Object.prototype.hasOwnProperty.call(tradeBagByTx, latest.transaction_id)) {
+        if (Object.prototype.hasOwnProperty.call(tradeBagByTx, latest.transaction_id)) {
+          latestTradeHitTx = latest.transaction_id;
+          latestTradeHit = tradeBagByTx[latest.transaction_id];
+        }
+        return;
+      }
       latestTradeBagsLoading = true;
       latestTradeHitTx = latest.transaction_id;
+      tradeBagPending[latest.transaction_id] = true;
       (async () => {
         try {
-          if (!ktcBySleeper) {
-            ktcBySleeper = Object.create(null);
-            try {
-              const book = await getJson("data/ktc/latest.json");
-              for (const p of (book && book.players) || []) {
-                if (p.sleeper_id) ktcBySleeper[String(p.sleeper_id)] = p;
-              }
-            } catch (ktcErr) {
-              console.error(ktcErr);
-            }
-          }
+          await ensureKtcBook();
           const seat = await seatData(latest.user_id);
           const hit = seat && (seat.trades || [])
             .find((t) => t.transaction_id === latest.transaction_id);
-          if (latestTradeHitTx === latest.transaction_id) {
-            latestTradeHit = hit || null;
-          }
+          rememberTradeBag(latest.transaction_id, hit || null);
         } catch (err) {
           console.error(err);
-          if (latestTradeHitTx === latest.transaction_id) latestTradeHit = null;
+          rememberTradeBag(latest.transaction_id, null);
         }
+        delete tradeBagPending[latest.transaction_id];
         latestTradeBagsLoading = false;
         if (appScreen === "dash" && view === "home" && !me) render();
+        if (appScreen === "dash" && view === "trades" && !me) render();
       })();
+    }
+
+    /** Prefetch seat bags for the first page of the league trades feed. */
+    function ensureTradesFeedBags(rows) {
+      const need = (rows || []).slice(0, Math.max(tapeLimit, 12));
+      for (const r of need) {
+        const tx = r && r.transaction_id;
+        if (!tx) continue;
+        if (Object.prototype.hasOwnProperty.call(tradeBagByTx, tx)) continue;
+        if (tradeBagPending[tx]) continue;
+        tradeBagPending[tx] = true;
+        const uid = r.user_id;
+        (async () => {
+          try {
+            await ensureKtcBook();
+            const seat = await seatData(uid);
+            const hit = seat && (seat.trades || []).find((t) => t.transaction_id === tx);
+            rememberTradeBag(tx, hit || null);
+          } catch (err) {
+            console.error(err);
+            rememberTradeBag(tx, null);
+          }
+          delete tradeBagPending[tx];
+          if (appScreen === "dash" && view === "trades" && !me) render();
+          if (appScreen === "dash" && view === "home" && !me
+            && latestTradeHitTx === tx) render();
+        })();
+      }
     }
 
     function latestTradeCardHtml(latest) {
@@ -6680,6 +6984,7 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
+      tapeFilterOpen = false;
       titleYear = null;
       voteToast = null;
       focusNext = ".screen-h";
@@ -6710,6 +7015,7 @@ const html = `<!DOCTYPE html>
       year = "all";
       yearFilterOpen = false;
       draftFilterOpen = false;
+      tapeFilterOpen = false;
       lensOpen = false;
       voteToast = toast || null;
       focusNext = ".screen-h";
@@ -6801,6 +7107,7 @@ const html = `<!DOCTYPE html>
       if (view === "datasets") { view = "home"; dataSet = null; focusNext = null; render(); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
+      if (tapeFilterOpen) { tapeFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
       if (openDraft) { openDraft = null; render(); return true; }
       // On the trade's own screen openId is the screen, not an open row, so Escape leaves the
@@ -6954,20 +7261,44 @@ const html = `<!DOCTYPE html>
       if (dsOpenBtn) { openDataSets(); return; }
       const pickMine = e.target.closest("[data-pick-mine]");
       if (pickMine) {
-        pickIntelMode = pickIntelMode === "mine" ? "idle" : "mine";
-        if (pickIntelMode === "mine") pickSearchQ = "";
+        if (pickMine.getAttribute("aria-disabled") === "true") return;
+        pickFilterMineOut = !pickFilterMineOut;
+        if (pickFilterMineOut) pickFilterMineHeld = false;
         pickIntelOpen = null;
         render();
         return;
       }
-      const pickQuick = e.target.closest("[data-pick-quick]");
-      if (pickQuick) {
-        pickSearchQ = pickQuick.dataset.pickQuick || "";
-        pickIntelMode = pickSearchQ ? "search" : "idle";
+      const pickMineHeld = e.target.closest("[data-pick-mine-held]");
+      if (pickMineHeld) {
+        if (pickMineHeld.getAttribute("aria-disabled") === "true") return;
+        pickFilterMineHeld = !pickFilterMineHeld;
+        if (pickFilterMineHeld) pickFilterMineOut = false;
         pickIntelOpen = null;
         render();
-        const box = document.querySelector("#app [data-pick-q]");
-        if (box) box.focus({ preventScroll: true });
+        return;
+      }
+      const pickClear = e.target.closest("[data-pick-filter-clear]");
+      if (pickClear) {
+        clearPickFilters();
+        render();
+        return;
+      }
+      const pickRound = e.target.closest("[data-pick-round]");
+      if (pickRound) {
+        const n = Number(pickRound.dataset.pickRound);
+        if (pickFilterRounds[n]) delete pickFilterRounds[n];
+        else pickFilterRounds[n] = true;
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickYear = e.target.closest("[data-pick-year]");
+      if (pickYear) {
+        const y = pickYear.dataset.pickYear;
+        if (pickFilterYears[y]) delete pickFilterYears[y];
+        else pickFilterYears[y] = true;
+        pickIntelOpen = null;
+        render();
         return;
       }
       const pickRow = e.target.closest("[data-pick-intel-key]");
@@ -7183,7 +7514,10 @@ const html = `<!DOCTYPE html>
         openDraft = null;
         if (view !== "home") markOpen = null;
         if (view !== "drafts") draftFilterOpen = false;
-        if (view !== "trades") yearFilterOpen = false;
+        if (view !== "trades") {
+          yearFilterOpen = false;
+          tapeFilterOpen = false;
+        }
         partnerName = null;
         titleYear = null;
         lensOpen = false;
@@ -7207,7 +7541,21 @@ const html = `<!DOCTYPE html>
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
       const yfilterBtn = e.target.closest("[data-yfilter]");
       if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
+      const tfilterBtn = e.target.closest("[data-tfilter]");
+      if (tfilterBtn) {
+        tapeFilterOpen = !tapeFilterOpen;
+        if (tapeFilterOpen) { lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; }
+        render();
+        return;
+      }
+      const tapeMore = e.target.closest("[data-tape-more]");
+      if (tapeMore) {
+        tapeLimit += 25;
+        render();
+        return;
+      }
       if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters")
+        || e.target.closest("#tapeFilters")
         || e.target.closest("#dataSets")) return;
       let closedFilter = false;
       if (dsOpen) {
@@ -7222,6 +7570,10 @@ const html = `<!DOCTYPE html>
         yearFilterOpen = false;
         closedFilter = true;
       }
+      if (tapeFilterOpen && !e.target.closest("#tapeFilters") && !e.target.closest("[data-tfilter]")) {
+        tapeFilterOpen = false;
+        closedFilter = true;
+      }
       const draftBtn = e.target.closest("[data-draft]");
       if (draftBtn) {
         openDraft = openDraft === draftBtn.dataset.draft ? null : draftBtn.dataset.draft;
@@ -7233,22 +7585,39 @@ const html = `<!DOCTYPE html>
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
       else if (closedFilter) render();
     });
-    document.getElementById("app").addEventListener("input", (e) => {
-      const box = e.target.closest("[data-pick-q]");
-      if (!box) return;
-      pickSearchQ = box.value;
-      pickIntelMode = pickSearchQ.trim() ? "search" : "idle";
-      pickIntelOpen = null;
-      const start = box.selectionStart;
-      const end = box.selectionEnd;
-      render();
-      const back = document.querySelector("#app [data-pick-q]");
-      if (back) {
-        back.focus({ preventScroll: true });
-        try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
-      }
-    });
     document.addEventListener("change", (e) => {
+      const tapeYearLab = e.target.closest("[data-tape-year]");
+      if (tapeYearLab) {
+        tapeYear = e.target.checked ? tapeYearLab.dataset.tapeYear : "all";
+        tapeLimit = 25;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const tapeTeamLab = e.target.closest("[data-tape-team]");
+      if (tapeTeamLab) {
+        tapeTeam = e.target.checked ? tapeTeamLab.dataset.tapeTeam : "all";
+        tapeLimit = 25;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const tapePlayerLab = e.target.closest("[data-tape-player]");
+      if (tapePlayerLab) {
+        tapePlayer = e.target.checked ? tapePlayerLab.dataset.tapePlayer : "all";
+        tapePlayerQ = "";
+        tapeLimit = 25;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const pickOwner = e.target.closest("[data-pick-owner]");
+      if (pickOwner) {
+        pickFilterOwner = pickOwner.value || "";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
       const yearLab = e.target.closest("[data-year]");
       if (yearLab) {
         year = e.target.checked ? yearLab.dataset.year : "all";
@@ -7274,6 +7643,22 @@ const html = `<!DOCTYPE html>
         draftStartup = e.target.checked;
         draftFilterOpen = true;
         render();
+      }
+    });
+    document.getElementById("app").addEventListener("input", (e) => {
+      const tapePlayerBox = e.target.closest("[data-tape-player-q]");
+      if (!tapePlayerBox) return;
+      tapePlayerQ = tapePlayerBox.value;
+      tapePlayer = "all";
+      tapeLimit = 25;
+      tapeFilterOpen = true;
+      const start = tapePlayerBox.selectionStart;
+      const end = tapePlayerBox.selectionEnd;
+      render();
+      const back = document.querySelector("#app [data-tape-player-q]");
+      if (back) {
+        back.focus({ preventScroll: true });
+        try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
       }
     });
     // App boot: account gate → league home → dashboard. The meter only loads after a league
@@ -8372,10 +8757,31 @@ for (const need of [
   "function goBack(fallback)",
   "function renderTradeScreen()",
   "function renderLeagueTrades()",
+  "function tradeFeedCardHtml(",
+  "function ensureTradesFeedBags(",
+  "function bagHitForTx(",
   'class="chip back" data-back="1"',
   "← ",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost navigation: ${need}`);
+}
+{
+  const at = inline.indexOf("function renderLeagueTrades(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  if (!fn.includes("trades-feed") || !fn.includes("tradeFeedCardHtml(")
+    || !fn.includes("data-tfilter") || !fn.includes("tapeFilters")
+    || !fn.includes("data-tape-year") || !fn.includes("data-tape-team")
+    || !fn.includes("data-tape-player") || !fn.includes("ensureTradesFeedBags(")) {
+    throw new Error("renderLeagueTrades must be an H2H trade feed with year/team/player filters");
+  }
+  if (fn.includes("boardTape(r)") || fn.includes("lived.map((r) => boardTape")) {
+    throw new Error("league trades feed must use H2H cards, not boardTape rows");
+  }
+}
+if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")
+  || !html.includes("#tapeFilters")) {
+  throw new Error("stylesheet must style the league trades feed + tape filter panel");
 }
 // Text fitting, asserted rather than trusted. Each of these was a measured defect, and each
 // is one deletion away from returning silently, because none of them changes what the page
@@ -8432,11 +8838,16 @@ if (!homeReturn.includes("pickIntel()") || !homeReturn.includes("intel")) {
   throw new Error("renderLeagueHome must mount pickIntel between quick actions and the News Feed");
 }
 if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine="1"')
-  || !inline.includes('data-pick-q="1"') || !inline.includes("function alienatedPicks(")) {
-  throw new Error("Pick search must ship search input, My picks out, and alienatedPicks()");
+  || !inline.includes('data-pick-round') || !inline.includes('data-pick-year')
+  || !inline.includes('data-pick-owner="1"') || !inline.includes("function filteredStillPicks(")
+  || !inline.includes("function clearPickFilters(") || !inline.includes('data-pick-mine-held="1"')
+  || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")) {
+  throw new Error("Pick board must ship filter chips (round/year/owner/mine) without a search input");
 }
-if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")) {
-  throw new Error("Pick search styles must ship in the page shell");
+if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
+  || !html.includes(".pick-intel-chips") || html.includes(".pick-intel-tools input[type=\"search\"]")
+  || html.includes('data-pick-q="1"')) {
+  throw new Error("Pick board filter styles must ship in the page shell (no pick search input)");
 }
 if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
   throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");

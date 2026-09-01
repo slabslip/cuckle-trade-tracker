@@ -936,8 +936,13 @@
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
+    .pick-intel-board-h {
+      margin: 0;
+      color: var(--dim); font-size: 0.6875rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
     /* Year scope under each column lab — stacked so · N stay centered and
-       names keep room (clearer than a cramped 1sts · 2027–2029 line). */
+       names keep room (clearer than a cramped inline · year line). */
     .pick-intel-board-lab .pick-intel-board-yrs {
       display: block;
       margin-top: 1px;
@@ -2164,7 +2169,7 @@
     }
 
     /** Idle quick-view leaderboard: top 5 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
-     * No board-level heading — year scope lives on the column titles only. */
+     * Board title is Who's got picks; year scope lives on the column labs. */
     function pickIntelBoard() {
       const yrs = PICK_INTEL_BOARD_YEAR;
       const cols = [
@@ -2172,8 +2177,10 @@
         { lab: "2nds", rounds: [2] },
         { lab: "3rds–4ths", rounds: [3, 4] },
       ];
-      const aria = "Still-available 2027 pick leaders by round (1sts, 2nds, 3rds–4ths)";
+      const boardH = "Who's got picks";
+      const aria = boardH + ", " + yrs + " by round (1sts, 2nds, 3rds–4ths)";
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
+        + '<p class="pick-intel-board-h">' + boardH + "</p>"
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
           const leaders = pickLeaders(r.rounds, 5, yrs);

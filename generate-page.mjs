@@ -105,7 +105,7 @@ const html = `<!DOCTYPE html>
        the 288px row, and 116.7px at 0.8125rem, which would ellipsise the title. */
     @media (max-width: 460px) {
       h1.brand { font-size: 1.2rem; gap: 8px; }
-      #lensBtn { font-size: 0.75rem; }
+
     }
     /* 320px is the narrowest phone still in use and nothing here had been checked at it.
        The row is 288px after the body padding: 44 for the home icon, two 6px gaps, the clock
@@ -1803,6 +1803,50 @@ const html = `<!DOCTYPE html>
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Compact score window on value chips / filter rows — replaces the brand-header clock. */
+    .chip-lens { position: absolute; top: 6px; right: 6px; z-index: 3; }
+    .chip-lens.is-inline {
+      position: static; margin-left: auto; flex: 0 0 auto; align-self: center;
+    }
+    .h2h-chip.is-trade { position: relative; }
+    .h2h-chip.is-trade > .chip-lens { top: 8px; right: 8px; }
+    button.chip-lens-btn {
+      appearance: none; font: inherit; font-size: 0.625rem; font-weight: 650;
+      color: var(--muted); background: rgba(12, 12, 16, 0.72);
+      border: 1px solid var(--line); border-radius: 999px;
+      min-height: 28px; padding: 2px 8px 2px 10px; cursor: pointer;
+      white-space: nowrap; position: relative; line-height: 1.2;
+      touch-action: manipulation;
+    }
+    button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
+    button.chip-lens-btn .chev { color: var(--dim); font-size: 0.7em; }
+    button.chip-lens-btn .dot {
+      position: absolute; top: 3px; right: 3px;
+      width: 5px; height: 5px; border-radius: 50%; background: #e0b44c;
+    }
+    button.chip-lens-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .chip-lens-bar {
+      display: flex; justify-content: flex-end; margin: 0 0 8px;
+    }
+    .lh-latest-trade .day-alert-h,
+    .ds-h-row {
+      display: flex; align-items: center; gap: 8px; justify-content: space-between;
+    }
+    .ds-h-row .ds-h { margin: 0; flex: 1 1 auto; min-width: 0; }
+    /* Floating score menu — positioned under the chip that opened it. */
+    #scoreAs.score-as-portal {
+      position: fixed; z-index: 40;
+      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
+      max-height: min(70dvh, 420px); overflow-y: auto;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #scoreAs.score-as-portal:not([hidden]) {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    #scoreAs.score-as-portal[hidden], #scoreAs.score-as-portal:empty { display: none !important; }
+
     /* The clock trigger. It reads the selected window alone -- "Since trade ▾" -- and not
        "Score as Since trade": at 0.8125rem the prefix costs 54px of measured width, which the
        320px brand row does not have, and the five window names are self-describing without it.
@@ -1829,17 +1873,8 @@ const html = `<!DOCTYPE html>
        display:none in engines that do not mark [hidden] as !important, and the empty panel
        then paints as a thin card bar under the brand header -- the "weird box" on league home.
        Flex is applied only when the panel is open; hidden/empty stay display:none !important. */
-    #scoreAs {
-      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
-      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
-      max-height: calc(100dvh - 88px); overflow-y: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-    }
-    #scoreAs:not([hidden]) {
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    #scoreAs[hidden], #scoreAs:empty { display: none !important; }
+    /* #scoreAs portal styles: see #scoreAs.score-as-portal above. */
+
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
@@ -1916,10 +1951,6 @@ const html = `<!DOCTYPE html>
         <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
       </svg>
     </button>
-    <span class="lens-wrap" id="lensWrap">
-      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div id="scoreAs" hidden></div>
-    </span>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
@@ -1929,6 +1960,7 @@ const html = `<!DOCTYPE html>
       </button>
     </span>
   </h1>
+  <div id="scoreAs" class="score-as-portal" hidden></div>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
   <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
@@ -2097,7 +2129,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsStarterOwner20260901162500";
+    const DATA_V = "scoreChipLens20260901170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3930,7 +3962,10 @@ const html = `<!DOCTYPE html>
       // handle a late render dropped it to <body> a moment later, which is the same defect the
       // .screen-h special case exists for.
       return '<div class="pack" id="dsBody">'
+        + '<div class="ds-h-row">'
         + '<h2 class="ds-h" tabindex="-1" data-dset-head="1">' + esc(cur[1]) + "</h2>"
+        + (cur[0] === "wide" ? chipLensHtml({ inline: true }) : "")
+        + "</div>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
@@ -7352,6 +7387,7 @@ const html = `<!DOCTYPE html>
         || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
+        + chipLensHtml()
         + sideHtml(left, false, leftWin)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
         + sideHtml(right, true, rightWin)
@@ -7649,7 +7685,10 @@ const html = `<!DOCTYPE html>
       const empty = pool.length ? "" : ((data.trades || []).length
         ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
         : '<p class="caption">No trades on this seat yet.</p>');
-      return teamMarks()
+      return (lensApplies()
+          ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
+          : "")
+        + teamMarks()
         + markChart()
         + empty
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
@@ -7910,32 +7949,72 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The clock control lives in the brand header, outside #app, so it is painted rather than
-     * rendered -- render() replaces #app's whole subtree and would destroy a control that has
-     * to survive every navigation. Only the trigger's own state passes through here; changing
-     * the window calls render(), because that is what moves the figures.
+     * Paint compact chip score triggers and the scoreAs portal. Triggers live in app markup;
+     * the menu portals outside so it is not destroyed mid-click. Changing the window calls
+     * render() because that is what moves the figures.
      */
+
+    /**
+     * Compact score-window control for chips that show trade / player values.
+     * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
+     */
+    function chipLensHtml(opts) {
+      if (!lensApplies()) return "";
+      const inline = !!(opts && opts.inline);
+      const name = clockName();
+      return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
+        + '<button type="button" class="chip-lens-btn" data-score="1"'
+        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false">'
+        + esc(name) + ' <span class="chev">▾</span></button></span>';
+    }
+
     function paintLens() {
-      const wrap = document.getElementById("lensWrap");
-      const btn = document.getElementById("lensBtn");
       const panel = document.getElementById("scoreAs");
-      if (!lensApplies()) {
+      const btns = document.querySelectorAll("button.chip-lens-btn");
+      if (!panel) return;
+      if (!lensApplies() || !btns.length) {
         lensOpen = false;
-        wrap.hidden = true;
         panel.hidden = true;
         panel.innerHTML = "";
         return;
       }
-      wrap.hidden = false;
       const name = clockName();
-      btn.className = "score-btn" + (lens !== "all" || lensOpen ? " on" : "");
-      btn.setAttribute("aria-label", "Score as " + name);
-      btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
-      // The label is the window alone; "Score as" is in the accessible name above.
-      btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
-        + (lens !== "all" ? '<span class="dot"></span>' : "");
+      for (const btn of btns) {
+        btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
+        btn.setAttribute("aria-label", "Score as " + name);
+        btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
+        btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
+          + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
       panel.hidden = !lensOpen;
       panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
+      if (lensOpen) {
+        const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
+          || btns[0];
+        if (anchor) positionScoreAs(anchor);
+      }
+    }
+
+    let lensAnchorId = 0;
+    let lensAnchorSeq = 0;
+
+    function positionScoreAs(btn) {
+      const panel = document.getElementById("scoreAs");
+      if (!panel || !btn) return;
+      const r = btn.getBoundingClientRect();
+      const width = Math.min(280, window.innerWidth - 32);
+      let left = Math.min(r.right - width, window.innerWidth - 16 - width);
+      left = Math.max(16, left);
+      let top = r.bottom + 4;
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+      // Flip above if near bottom of viewport.
+      requestAnimationFrame(() => {
+        const pr = panel.getBoundingClientRect();
+        if (pr.bottom > window.innerHeight - 8) {
+          panel.style.top = Math.max(8, r.top - pr.height - 4) + "px";
+        }
+      });
     }
 
     /**
@@ -7944,7 +8023,9 @@ const html = `<!DOCTYPE html>
      * divs and the clock's departure left them identical.
      */
     function filterRow(left) {
-      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div>"
+        + chipLensHtml({ inline: true })
+        + "</div>";
     }
 
     function renderDrafts() {
@@ -8506,45 +8587,47 @@ const html = `<!DOCTYPE html>
       });
     }
     /**
-     * The clock control's own listener. It has to be its own, because #app's delegated handler
-     * cannot see a control that lives in the brand header -- the same split the seat picker had
-     * while it was mounted there.
-     */
-    document.getElementById("lensWrap").addEventListener("click", (e) => {
-      const opt = e.target.closest("[data-lens]");
-      if (opt) {
-        lens = opt.dataset.lens;
-        lensOpen = false;
-        render();
-        // The option that was clicked no longer exists and was never inside #app, so
-        // focusSelector() cannot put the keyboard back. The trigger is where it came from.
-        document.getElementById("lensBtn").focus({ preventScroll: true });
-        return;
-      }
-      if (!e.target.closest("[data-score]")) return;
-      lensOpen = !lensOpen;
-      if (!lensOpen) {
-        // Closing changes nothing a screen renders, so it does not pay for a full render.
-        paintLens();
-        return;
-      }
-      // Every other popup is exclusive with this one, and this one paints above all of them,
-      // so opening from the header has to close them rather than cover an open menu.
-      dsOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      render();
-    });
-    /**
-     * An outside click closes it. Capture phase, and paint rather than render: #app's handler
-     * returns early on a dozen paths, and an open panel must not survive over the screen the
-     * click just navigated to. Running first also means the fall-through branch at the bottom of
-     * #app's handler sees the flag already cleared and does not schedule a second render.
+     * Score-window control: compact chip buttons in value surfaces; menu portals via #scoreAs.
+     * Document-level so it works from chips inside #app and options outside it.
      */
     document.addEventListener("click", (e) => {
-      if (!lensOpen || e.target.closest("#lensWrap")) return;
-      lensOpen = false;
-      paintLens();
+      const opt = e.target.closest("#scoreAs [data-lens]");
+      if (opt) {
+        e.preventDefault();
+        e.stopPropagation();
+        lens = opt.dataset.lens;
+        lensOpen = false;
+        lensAnchorId = 0;
+        render();
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
+        return;
+      }
+      const scoreBtn = e.target.closest("button.chip-lens-btn[data-score]");
+      if (scoreBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Tag this button so paintLens can re-anchor after render.
+        if (!scoreBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          scoreBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = scoreBtn.getAttribute("data-lens-anchor");
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
+        return;
+      }
+      if (lensOpen && !e.target.closest("#scoreAs") && !e.target.closest("button.chip-lens-btn")) {
+        lensOpen = false;
+        paintLens();
+      }
     }, true);
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
@@ -8552,7 +8635,8 @@ const html = `<!DOCTYPE html>
       if (lensOpen) {
         lensOpen = false;
         paintLens();
-        document.getElementById("lensBtn").focus({ preventScroll: true });
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
         return true;
       }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
@@ -9720,7 +9804,7 @@ for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-to
 // getBoundingClientRect would still report the full panel, so only a hit test would show it.
 const brandRule = html.slice(html.indexOf("    h1.brand {"));
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
-  throw new Error("h1.brand must declare overflow: visible -- a clip here hides #scoreAs");
+  throw new Error("h1.brand must declare overflow: visible -- brand chrome must not clip");
 }
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) {
   throw new Error("h1.brand must be position: relative -- the centered league name is absolute against it");
@@ -10008,502 +10092,72 @@ if (/(pack|dset|view): ""/.test(inline)) {
   throw new Error("a control carries an empty destination -- drop it or make it a static element");
 }
 
-// ---- The clock control, in the brand header ---------------------------------------------------
-// It moved out of the six screens that each rendered their own copy and into the header, where it
-// is persistent chrome. Everything below is one deletion away from failing silently, because none
-// of it changes what the page says -- only whether the control is there, reachable and honest.
-//
-// 1. The trigger ships in the served markup, so a cold load has it before any script runs. This
-//    is the guard the task asked for by name: the control cannot silently revert to the body.
-for (const need of ['<span class="lens-wrap" id="lensWrap">',
-  'class="score-btn" id="lensBtn" data-score="1"',
-  'aria-label="Score as Since trade"',
-  'aria-expanded="false">Since trade <span class="chev">▾</span></button>',
-  '<div id="scoreAs" hidden></div>']) {
-  if (!html.includes(need)) {
-    throw new Error(`the brand header's clock trigger must ship: ${need}`);
-  }
+
+// ---- Score window on value chips (not brand header) ------------------------------------------
+// The global clock left the brand row. It now lives as a compact control on chips/rows that show
+// trade or player values, sharing one `lens` and portaling options through #scoreAs.
+if (html.includes('id="lensWrap"') || html.includes('id="lensBtn"')) {
+  throw new Error("brand header must not host the score clock -- it moved onto value chips");
 }
-// It is inside the h1, not merely somewhere on the page: the whole point is the top right of the
-// brand row, and the h1 is the box the overflow guard above protects.
 const brandMarkup = html.slice(html.indexOf('<h1 class="brand">'), html.indexOf("</h1>"));
-if (!brandMarkup.includes('id="lensWrap"') || !brandMarkup.includes('id="lensBtn"')
-  || !brandMarkup.includes('id="scoreAs"')) {
-  throw new Error("the clock control must be mounted inside h1.brand -- that is the top right of the header");
+if (brandMarkup.includes("lensWrap") || brandMarkup.includes("lensBtn") || brandMarkup.includes("scoreAs")) {
+  throw new Error("h1.brand must not contain the score clock or #scoreAs");
 }
-// Order: back, score lens, league name, settings. App wordmark removed.
-if (brandMarkup.includes("Chuckle Fantasy") || /<a href="\.\/">/.test(brandMarkup)) {
-  throw new Error("app wordmark must stay removed from the brand row");
+if (!html.includes('id="scoreAs"') || !html.includes("score-as-portal")) {
+  throw new Error("#scoreAs portal must ship outside the brand header for chip menus");
 }
-if (!brandMarkup.includes('id="leagueSub"')) {
-  throw new Error("league name must live inside h1.brand");
+if (!inline.includes("function chipLensHtml(") || !inline.includes("function positionScoreAs(")) {
+  throw new Error("chipLensHtml + positionScoreAs must ship for local score windows");
 }
-if (brandMarkup.indexOf('id="lensWrap"') > brandMarkup.indexOf('id="goSettings"')) {
-  throw new Error("score lens must sit left of settings after the swap");
+if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inline: true })')) {
+  throw new Error("value chips and filter rows must mount chipLensHtml");
 }
-if (!brandMarkup.includes('class="brand-end"') || brandMarkup.indexOf('class="brand-end"') < brandMarkup.indexOf('id="lensWrap"')) {
-  throw new Error("settings must be wrapped in .brand-end after the score lens");
+if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
+  throw new Error("chip-lens styles and buttons must ship");
 }
-// 2. One control, one place. Six screens used to render lensRow() and the user asked for a move,
-//    not a copy. Assert the emitter is gone rather than that the call sites are: a re-added
-//    lensRow() would have to be re-written from scratch to get past this.
-for (const gone of ["lensRow", "scoreMenu", "score-k"]) {
-  if (html.includes(gone)) {
-    throw new Error(`the in-body clock control must stay removed -- one control, one place: ${gone}`);
-  }
+// One shared lens state; chips must not invent a second clock.
+if ((inline.match(/let lens = /g) || []).length !== 1) {
+  throw new Error("exactly one global lens state");
 }
-// The trigger is painted, never rendered, so nothing inside #app may emit one. data-score is the
-// attribute its handler matches on, and a second one would give the header a rival.
-const scoreTriggers = (inline.match(/data-score="1"/g) || []).length;
-if (scoreTriggers !== 0) {
-  throw new Error(`a screen renders its own clock trigger: ${scoreTriggers} in the script, want 0 -- the header's is static markup`);
-}
-// 3. It is painted from render(), after the body. renderDrafts() pins lens to "all" for its own
-//    render and restores it on the way out, so painting first would show the pinned value.
 const renderSrc = fnBody("render");
 if (!renderSrc.includes("paintLens();")) {
-  throw new Error("render() must paint the header clock -- without it the trigger never follows the page");
+  throw new Error("render() must paint chip score triggers after the body");
 }
-if (renderSrc.indexOf("app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();") > renderSrc.indexOf("paintLens();")) {
-  throw new Error("paintLens() must run after the body is built -- renderDrafts pins lens and restores it");
+if (renderSrc.indexOf("app.innerHTML =") > renderSrc.indexOf("paintLens();")) {
+  throw new Error("paintLens() must run after the body is built");
 }
-// 4. It hides where the clock has no effect, and it must not be hidden anywhere else. Champions
-//    Path reads no clock; Drafts pins it. A control that visibly does nothing is the dead-pill
-//    defect the ticker already shipped once.
 const appliesSrc = fnBody("lensApplies");
 for (const need of ['view !== "titles"', 'view !== "drafts"']) {
   if (!appliesSrc.includes(need)) {
-    throw new Error(`the header clock must hide where it changes nothing: ${need}`);
+    throw new Error(`chip score control must hide where it changes nothing: ${need}`);
   }
 }
-if (!fnBody("paintLens").includes("if (!lensApplies()) {")) {
-  throw new Error("paintLens must gate on lensApplies() -- the control would show on Champions Path and Drafts");
+if (!fnBody("paintLens").includes("if (!lensApplies()") && !fnBody("paintLens").includes("!lensApplies()")) {
+  throw new Error("paintLens must gate on lensApplies()");
 }
-// Champions Path really does read no clock. If it ever starts, the gate above is wrong rather
-// than the screen, and this is the assertion that says so before a user finds out.
-const titlesSrc = fnSrc("renderTitles");
-for (const banned of ["chipLived(", "clockName(", "lens "]) {
-  if (titlesSrc.includes(banned)) {
-    throw new Error(`Champions Path started reading the clock (${banned.trim()}) -- lensApplies() must stop hiding the control`);
-  }
+if (!fnBody("paintLens").includes("button.chip-lens-btn")) {
+  throw new Error("paintLens must update chip-lens buttons, not a header trigger");
 }
-// Drafts pins the clock for the whole of its render. That pin is why the control hides there.
 const draftsSrc = fnBody("renderDrafts");
 if (!draftsSrc.includes('lens = "all";') || !draftsSrc.includes("lens = prev;")) {
-  throw new Error("renderDrafts must pin and restore the clock -- the header control hides there because of this pin");
+  throw new Error("renderDrafts must pin and restore the clock");
 }
-// 5. The panel is absolutely positioned against .lens-wrap, so a clip anywhere up that chain
-//    hides options that are in the DOM and untappable. This is the A9 defect, and the chain is
-//    one element long: .lens-wrap itself, inside the h1 already guarded above.
-const lensWrapRule = html.slice(html.indexOf("    .lens-wrap {"));
-if (lensWrapRule === html) throw new Error("the .lens-wrap lost its rule");
-const lensWrapDecl = lensWrapRule.slice(0, lensWrapRule.indexOf("}"));
-if (!lensWrapDecl.includes("position: relative")) {
-  throw new Error("the .lens-wrap must be position: relative -- #scoreAs is positioned against it");
-}
-if (/overflow: *(hidden|clip)|clip-path|transform:|contain:|filter:|perspective:/.test(lensWrapDecl)) {
-  throw new Error(".lens-wrap must not clip or contain -- #scoreAs is absolutely positioned against it");
-}
-// It stacks above every panel inside #app. .filter-wrap is 4 and .ds-wrap is 3, so the open
-// clock panel paints over the year filter's trigger and over the chip box it drops across.
-const lensZ = Number((lensWrapDecl.match(/z-index: *(\d+)/) || [])[1]);
-const dsZ = Number((html.match(/\.ds-wrap \{[^}]*z-index: *(\d+)/) || [])[1]);
-const filterZ = Number((html.match(/\.filter-wrap \{[^}]*z-index: *(\d+)/) || [])[1]);
-if (!(lensZ > filterZ && filterZ > dsZ)) {
-  throw new Error(`the clock panel must stack above the screens it drops over: .lens-wrap ${lensZ} > .filter-wrap ${filterZ} > .ds-wrap ${dsZ}`);
-}
-// Anchored to the trigger's own box. It used to be a fixed top: 52px, which was the height of a
-// row at the top of a screen and is not where the trigger sits now.
-if (!html.includes("      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;")) {
-  throw new Error("#scoreAs must hang off the trigger's own box -- a fixed top belongs to the row it left");
-}
-// display:flex on the base #scoreAs rule overrides [hidden] on engines without !important, and
-// the empty panel paints as the thin card bar under the brand header. Flex only when open.
-if (html.includes("    #scoreAs {\n") && /#scoreAs \{[^}]*display:\s*flex/.test(html)) {
-  throw new Error("#scoreAs must not set display:flex on the base rule -- it overrides [hidden] and paints the empty bar");
-}
-if (!html.includes("    #scoreAs:not([hidden]) {")
-  || !html.includes("    #scoreAs[hidden], #scoreAs:empty { display: none !important; }")) {
-  throw new Error("#scoreAs must hide when [hidden]/empty and only flex when open");
-}
-if (html.includes('class="filter-panel" id="scoreAs"')) {
-  throw new Error("#scoreAs must not carry .filter-panel -- that class's in-flow margin/padding is the empty bar");
-}
-// 6. The 44px rule, on the trigger and on all five options. A formatting pass took 312 sub-44px
-//    targets to zero and none may come back.
-const scoreBtnRule = html.slice(html.indexOf("    button.score-btn {"));
-if (!scoreBtnRule.slice(0, scoreBtnRule.indexOf("}")).includes("min-height: 44px")) {
-  throw new Error("the clock trigger must stay a 44px target");
-}
-const scoreOptRule = html.slice(html.indexOf("    #scoreAs button.score-opt {"));
-if (!scoreOptRule.slice(0, scoreOptRule.indexOf("}")).includes("min-height: 44px")) {
-  throw new Error("a clock option must stay a 44px target");
-}
-// 7. The label is the window alone. At 0.8125rem the "Score as" prefix costs a measured 54px,
-//    which the 288px brand row at 320px does not have -- with it, the app's own name ellipsises
-//    on every phone. The words stay in the accessible name, and the font step is what makes even
-//    the widest window name fit: 107.7px of a 109.1px slot at 320px, against 116.7px without it.
-if (!fnBody("paintLens").includes('btn.innerHTML = esc(name) + \' <span class="chev">▾</span>\'')) {
-  throw new Error("the clock trigger's label must be the window alone -- the prefix does not fit at 320px");
-}
-if (!fnBody("paintLens").includes('btn.setAttribute("aria-label", "Score as " + name);')) {
-  throw new Error("the clock trigger must keep \"Score as\" in its accessible name -- the visible label drops it");
-}
-// Scoped to the 460px block, not to the sheet: the step only exists to buy the phone widths, and
-// a bare `#lensBtn { font-size` anywhere would satisfy a whole-sheet check while shrinking the
-// trigger on the desktop too.
-const brandMedia = html.slice(html.indexOf("    @media (max-width: 460px) {"));
-if (!brandMedia.slice(0, brandMedia.indexOf("\n    }")).includes("#lensBtn { font-size: 0.75rem; }")) {
-  throw new Error("the clock trigger must keep its 460px font step -- without it the brand row overflows at 320px");
-}
-// 8. Its own listener, because #app's delegated handler cannot see the header, and an outside
-//    click and Escape both close it. All three were true of the control in the body; a control
-//    that moved out of the delegated handler's reach has to bring them with it.
-for (const need of ['document.getElementById("lensWrap").addEventListener("click"',
-  'if (!lensOpen || e.target.closest("#lensWrap")) return;',
-  'document.getElementById("lensBtn").focus({ preventScroll: true });']) {
-  if (!inline.includes(need)) throw new Error(`the header clock lost a handler: ${need}`);
-}
-if (!inline.includes("if (lensOpen) {\n        lensOpen = false;\n        paintLens();")) {
-  throw new Error("Escape must close the header clock");
-}
-// 9. The screen-local filter row it used to share is one emitter now. Two screens were typing
-//    the same two divs, and the clock's departure left them identical.
-if (!fnBody("renderTrades").includes("filterRow(yearBtn)")) {
-  throw new Error("the Trades tab lost its year filter row");
-}
-if (!fnBody("renderDrafts").includes("filterRow(draftBtn)")) {
-  throw new Error("the Drafts tab lost its round filter row");
-}
-
-// ---- League home's PSA quick-action row ------------------------------------------------------
-// Four circular actions: Trades, Teams, Champions, League Data Sets. Empty chip slots are gone.
-// Data Sets navigates to a full-screen list — the menu markup is not mounted on home.
-const chipSrc = fnBody("homeChips");
-for (const need of ['<div class="lh-actions ds-wrap">', '<div class="lh-action-row">',
-  "dataSetRow()", "lhNavAction(", 'data-view="titles"']) {
-  if (!chipSrc.includes(need)) throw new Error(`the quick-action row lost ${need}`);
-}
-if (chipSrc.includes("dsMenu()")) {
-  throw new Error("homeChips must not mount the Data Sets menu -- openDataSets opens a full screen");
-}
-if (chipSrc.includes("teamsChip()") || chipSrc.includes("teamsMenu()") || chipSrc.includes("teamsOpen")) {
-  throw new Error("the Teams chip dropdown must stay removed -- bottom-nav Teams is the seat list");
-}
-if (chipSrc.includes("chipSlot()")) {
-  throw new Error("league home must not mount empty chip slots -- quick actions replaced them");
-}
-// A slot helper remains (inert span) for history, but must stay unaddressable if ever reused.
-const slotSrc = fnBody("chipSlot");
-if (!slotSrc.includes('<span class="home-chip slot"')) {
-  throw new Error("an undecided chip must be a <span> -- a button that goes nowhere is the dead-pill defect");
-}
-if (/<button|<a |tabindex|data-[a-z]|role=|href=/.test(slotSrc)) {
-  throw new Error("an undecided chip grew an affordance -- it must not be focusable, activatable or addressable");
-}
-if (!slotSrc.includes('aria-hidden="true"')) {
-  throw new Error("an undecided chip must be aria-hidden -- an em dash is a placeholder, not a reading");
-}
-const slotRule = html.slice(html.indexOf("    .home-chip.slot {"));
-if (slotRule === html) throw new Error("the undecided chips lost their placeholder painting");
-for (const need of ["border-style: dashed", "cursor: default", "background: transparent", "color: var(--dim)"]) {
-  if (!slotRule.slice(0, slotRule.indexOf("}")).includes(need)) {
-    throw new Error(`an undecided chip must not look pressable: ${need}`);
-  }
-}
-// Quick-action grid: four equal columns on every width (PSA pattern).
-if (!html.includes("grid-template-columns: repeat(4, minmax(0, 1fr));")) {
-  throw new Error("the quick-action row lost its equal four-column sizing");
-}
-// Legacy chip-box rules may remain unused; the live Data Sets menu anchor is .lh-actions.ds-wrap.
-const lhActionsRule = html.slice(html.indexOf("    .lh-actions {"));
-if (lhActionsRule === html) throw new Error("the quick-action row lost its .lh-actions rules");
-// Equal cells on the legacy chip grid (kept for stylesheet continuity) still assert if present.
-if (html.includes("    .chip-grid {")) {
-  for (const need of ["grid-template-columns: repeat(2, minmax(0, 1fr));", "grid-auto-rows: 1fr;",
-    "grid-template-columns: repeat(4, minmax(0, 1fr));"]) {
-    if (!html.includes(need)) throw new Error(`the chip grid lost its equal-cell sizing: ${need}`);
-  }
-}
-// .ds-wrap no longer hosts an absolutely positioned Data Sets menu.
-if (!html.includes(".ds-wrap")) {
-  throw new Error("the quick-action row lost .ds-wrap");
-}
-
-// ---- One team list: bottom-nav Teams page -----------------------------------------------------
-// The Teams chip dropdown is gone. Bottom-nav Teams mounts whoOptions() once; tapping a row
-// calls selectMe and opens that team's home dashboard.
-if (!inline.includes("    function whoOptions() {")) {
-  throw new Error("the seat list must be one emitter -- the bottom-nav Teams page mounts it");
-}
-if (!fnBody("renderTeamsPage").includes("whoOptions()")) {
-  throw new Error("the Teams page stopped rendering from whoOptions() -- that is a second team list");
-}
-if (inline.includes("function teamsChip(") || inline.includes("function teamsMenu(")
-  || inline.includes("function openTeams(") || inline.includes("function closeTeams(")
-  || inline.includes("let teamsOpen") || inline.includes('data-teams-open=')) {
-  throw new Error("the Teams chip dropdown must stay removed -- bottom-nav Teams replaced it");
-}
-// One caller, and that caller is the Teams page.
-const whoOptCalls = (inline.match(/whoOptions\(\)/g) || []).length - 1; // less its own definition
-if (whoOptCalls !== 1) {
-  throw new Error(`whoOptions() is mounted in ${whoOptCalls} places, want 1 -- a second mount must be asserted, not assumed`);
-}
-// The header may not grow a second seat control again without this file being changed. Every
-// part of the removed picker is named, because each one alone would put it back: the trigger,
-// its menu, the wrapper they were positioned against, and the paint function that drove them.
-for (const gone of ['id="who"', 'id="whoMenu"', "who-wrap", "paintWho", "whoOpen",
-  'id="teamMenu"']) {
-  if (html.includes(gone)) {
-    throw new Error(`a removed seat-picker surface must stay gone: ${gone}`);
-  }
-}
-if (/\.who-menu[\s:{.#]/.test(html)) {
-  throw new Error("the Teams dropdown .who-menu stylesheet must stay removed");
-}
-if (/button\.who[\s:.,{]/.test(html)) {
-  throw new Error("the brand header's seat picker must stay removed -- button.who has no trigger to style");
-}
-// ---------------------------------------------------------------------------------------------
-// The league ticker must stay removed. Same shape as the seat-picker guard above, and for the
-// same reason: it was reviewed and deleted on the user's instruction, so putting any one piece
-// of it back is a decision this file has to be edited to make.
-//
-// Every part is named because each one alone brings it back: the shell node the marquee mounted
-// in, the two functions that built it, the paint call in render(), the classes, and the
-// keyframes that moved it. Seven of the nine pills led to a data set the League Data Sets menu
-// still opens, or to Champions Path, which the gold card still opens; the other two led nowhere.
-//
-// These run against the raw page, comments included, so a comment may not spell a removed token
-// the way code would. That is deliberate and the surviving notes are written around it -- a
-// blunt check has no branch that can be wrong, and prose has no reason to type the function names.
-for (const gone of ['id="feed"', "paintFeed", "leagueBubbles", "ticker-track", "@keyframes ticker",
-  "getElementById(\"feed\")", "class=\"bubble", "class=\"ticker"]) {
-  if (html.includes(gone)) {
-    throw new Error(`the league ticker must stay removed: ${gone}`);
-  }
-}
-// The class selectors, which the substrings above would miss in a stylesheet.
-for (const re of [/\.ticker[\s:.,{]/, /\.bubble[\s:.,{]/, /#feed[\s:.,{]/]) {
-  if (re.test(html)) throw new Error(`the league ticker's stylesheet rules must stay removed: ${re}`);
-}
-// The whole-sheet "nothing animates" assertion that this removal makes possible is NOT here.
-// It subsumes the scoped .news-box animation guard further down, and a guard that runs before
-// the specific one makes the specific one incapable of failing -- the exact defect 3a records.
-// It runs last instead, after every scoped animation check has had its chance. See the end of
-// this file.
-// ---------------------------------------------------------------------------------------------
-// Only one place may build a seat row, so the crown and finishing order cannot be re-typed elsewhere.
-const optEmits = (inline.match(/data-who="' \+ esc\(id\) \+ '"/g) || []).length;
-if (optEmits !== 1) throw new Error(`a seat option is built in ${optEmits} places, want 1`);
-const whoOptSrc = fnBody("whoOptions");
-for (const need of ['class="row', "seatLabel(m.name", 'data-who="\' + esc(id) + \'"',
-  "(a.place || 99) - (b.place || 99)"]) {
-  if (!whoOptSrc.includes(need)) throw new Error(`the seat list emitter lost ${need}`);
-}
-// Crown is painted by seatLabel for the reigning champ — whoOptions must not paint a second one.
-if (whoOptSrc.includes("CROWN") || whoOptSrc.includes("m.place === 1")) {
-  throw new Error("whoOptions must not paint the crown itself — seatLabel owns the reigning-champ mark");
-}
-const teamsPageSrc = fnBody("renderTeamsPage");
-if (!teamsPageSrc.includes('class="teams-list"') || !teamsPageSrc.includes("whoOptions()")) {
-  throw new Error("the Teams page must mount whoOptions() inside .teams-list");
-}
-if (/Every roster|Tap a team|home dashboard<\/p>/.test(teamsPageSrc)) {
-  throw new Error("the Teams page must not ship an instructional how-to caption");
-}
-if (!html.includes("    .teams-list {") || !html.includes("min-height: 44px;")) {
-  throw new Error("the Teams list must keep a 44px row target");
-}
-// Taking a seat from the list opens that team's home dashboard via selectMe.
-if (!inline.includes("if (seatPick.dataset.who) selectMe(seatPick.dataset.who);")) {
-  throw new Error("tapping a team must call selectMe to open that team's home dashboard");
-}
-if (!inline.includes("async function selectMe(") || !inline.includes('view = "home"')) {
-  throw new Error("selectMe must send the user to that team's home dashboard");
-}
-// No leftover "Team" clear-seat option — the header back control clears the seat.
-if (/opt\(!me, "", "Team"\)/.test(inline)) {
-  throw new Error('the seat list must not carry a "Team" option -- the home icon clears the seat');
-}
-for (const need of ['class="crown"', 'aria-hidden="true" focusable="false"',
-  "reigningChampName", "(a.place || 99) - (b.place || 99)"]) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a seat-list part: ${need}`);
-}
-// Seat flair is display-only. Bare Sleeper names stay in data; glyphs/images are painted.
-if (!inline.includes("function seatLabel(name") || !inline.includes("function seatFlairHtml(name)")) {
-  throw new Error("seat flair must ship as seatLabel() / seatFlairHtml()");
-}
-if (!inline.includes('class="seat-link"') || !inline.includes("opts.link === false")) {
-  throw new Error("seatLabel must wrap names in seat-link (data-who) unless link:false");
+if (!html.includes("#scoreAs.score-as-portal") || !html.includes("position: fixed")) {
+  throw new Error("#scoreAs portal must be position:fixed under the opening chip");
 }
 for (const need of [
-  'SF69erss: { img: "data/ui/flair-sf69erss.png" }',
-  'BubbaCuckShremp: { img: "data/ui/flair-bubbacuckshremp.png" }',
-  'TedCumberbatch: { img: "data/ui/flair-tedcumberbatch.png" }',
-  'TrumanCooper: { img: "data/ui/flair-trumancooper.png" }',
-  'DarkWingDucks2023: { img: "data/ui/flair-darkwingducks2023.png" }',
-  'ARae: { img: "data/ui/flair-arae.png" }',
-  'ChiefGumby: { img: "data/ui/flair-chiefgumby.png" }',
-  'KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" }',
-  'bigjberg: { img: "data/ui/flair-bigjberg.png" }',
-  'TipsUp: { img: "data/ui/flair-tipsup.png" }',
+  'e.target.closest("button.chip-lens-btn[data-score]")',
+  'e.target.closest("#scoreAs [data-lens]")',
 ]) {
-  if (!inline.includes(need)) throw new Error(`seat flair map missing: ${need}`);
-}
-if (!html.includes("img.seat-flair, svg.crown {") || !html.includes("width: 1.15em; height: 1.15em;")) {
-  throw new Error("seat-flair and crown must be emoji-sized (1.15em) beside the name");
-}
-// Reigning champ crown rides seatLabel everywhere: crown → name → flair.
-if (!inline.includes("function reigningChampName()")
-  || !fnSrc("seatLabel").includes("reigningChampName() === n ? CROWN + \" \"")
-  || !fnSrc("seatLabel").includes("crown + esc(n) + seatFlairHtml(n)")) {
-  throw new Error("seatLabel must crown the most recent title winner before the name everywhere");
-}
-if (!inline.includes("function seatTitle(title)")) {
-  throw new Error("bag headings must flair seat names through seatTitle()");
-}
-// Header home control: clear seat / nested views; stay on this league's home (never Your leagues).
-if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => {')) {
-  throw new Error("the leagues back control must clear the seat -- it is the only exit from a seat now");
-}
-{
-  const at = inline.indexOf('document.getElementById("goHome").addEventListener("click"');
-  const src = inline.slice(at, at + 450);
-  if (src.includes("goAppHome(")) {
-    throw new Error("goHome must not call goAppHome — it stays on this league home");
-  }
-  if (!src.includes("clearLeague()") || !src.includes("openLeagueDashboard(activeLeague)")) {
-    throw new Error("goHome must clearLeague on dash, or openLeagueDashboard when off-dash with an active league");
+  if (!inline.includes(need)) {
+    throw new Error(`score chip handler must include ${need}`);
   }
 }
-if (!inline.includes("clearLeague()") || !fnBody("clearLeague").includes("\n      me = null;")) {
-  throw new Error("the leagues back path must still call clearLeague to leave a seat");
+if (inline.includes('document.getElementById("lensWrap")') || inline.includes('getElementById("lensBtn")')) {
+  throw new Error("header lens listeners must stay removed");
 }
-if (!html.includes('id="goHome"') || !html.includes('aria-label="League home"')) {
-  throw new Error("header back control must be labeled League home");
-}
-if (!html.includes("M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z")) {
-  throw new Error("header home glyph must be a home icon");
-}
-if (!html.includes('id="goSettings"') || !inline.includes("function openSettings()")) {
-  throw new Error("Settings control next to leagues back is required for commissioner admin");
-}
-if (!html.includes('id="bottomNav"') || !inline.includes("function goBottomNav(")) {
-  throw new Error("bottom nav shell + goBottomNav must remain for deep-links (dock stays hidden)");
-}
-if (!inline.includes("function paintBottomNav(")) {
-  throw new Error("paintBottomNav must keep the league dock hidden");
-}
-{
-  const at = inline.indexOf("function paintBottomNav(");
-  const stop = inline.indexOf("\n    function ", at + 10);
-  const src = inline.slice(at, stop < 0 ? at + 500 : stop);
-  if (!src.includes("nav.hidden = true") || src.includes("nav.hidden = !show")) {
-    throw new Error("paintBottomNav must force the bottom dock hidden (quick actions replaced it)");
-  }
-  if (src.includes('classList.toggle("has-bottom-nav"') || src.includes("has-bottom-nav\", show")) {
-    throw new Error("paintBottomNav must not pad the page for a removed bottom dock");
-  }
-}
-if (!html.includes('data-bottom="account"') || !html.includes('data-bottom="trades"')
-  || !html.includes('data-bottom="home"') || !html.includes('data-bottom="teams"')) {
-  throw new Error("bottom nav markup may stay for goBottomNav deep-links");
-}
-if (!html.includes('<span>My trades</span>') || !html.includes('<span>My team</span>')
-  || !html.includes('aria-label="My trades"') || !html.includes('aria-label="My team"')) {
-  throw new Error("bottom nav labels must read My trades and My team");
-}
-if (!inline.includes("selectMe(seat, true)")) {
-  throw new Error("My trades must open the signed-in seat via selectMe");
-}
-{
-  const at = inline.indexOf('if (which === "teams")');
-  if (at < 0) throw new Error("goBottomNav teams branch missing");
-  const src = inline.slice(at, inline.indexOf("if (which === \"trades\")", at));
-  if (src.includes("selectMe(")) {
-    throw new Error("Teams nav must open the league team list — not auto-select My team");
-  }
-  if (!src.includes('view = "teams"')) {
-    throw new Error("Teams nav must set view=teams so the picker list renders");
-  }
-}
-if (!inline.includes("function renderAccountPage()") || !inline.includes("function renderTeamsPage()")) {
-  throw new Error("Account and Teams screens are required (reachable without the dock)");
-}
-// Dock is retired — body must not reserve bottom padding for it on paint.
-if (!html.includes("body.has-bottom-nav")) {
-  throw new Error("has-bottom-nav CSS may remain but paintBottomNav must not apply it");
-}
-if (!html.includes('rel="manifest"') || !html.includes("manifest.webmanifest")) {
-  throw new Error("PWA manifest link is required for installable browser/app shell");
-}
-if (!inline.includes('serviceWorker.register("./sw.js")')) {
-  throw new Error("service worker registration is required for PWA shell");
-}
-if (!inline.includes("on_conflict=sleeper_league_id,transaction_id,voter")) {
-  throw new Error("vote upsert must target league-scoped unique (wave2b)");
-}
-if (!inline.includes('data-open-league="') || !inline.includes("async function openLeagueDashboard(")) {
-  throw new Error("Your leagues must open a league via openLeagueDashboard");
-}
-// Opening a league lands on league home (news feed), never auto-picks the member's seat meter.
-{
-  const at = inline.indexOf("async function openLeagueDashboard(");
-  if (at < 0) throw new Error("openLeagueDashboard missing");
-  const src = inline.slice(at, at + 1200);
-  if (src.includes("selectMe(")) {
-    throw new Error("openLeagueDashboard must not auto-select a seat — league home includes the news feed");
-  }
-  if (!src.includes('view = "home"') || !src.includes("\n      me = null;")) {
-    throw new Error("openLeagueDashboard must clear the seat and show league home");
-  }
-}
-if (!inline.includes("function renderSettings()")) {
-  throw new Error("Settings screen renderer missing");
-}
-if (!inline.includes("function onReissueSeat(") || !inline.includes("function onTransferCommissioner(")) {
-  throw new Error("commissioner must be able to reissue seats and transfer admin");
-}
-if (!inline.includes('data-reissue-seat="') || !inline.includes('data-transfer-comm="1"')) {
-  throw new Error("invite console must expose reissue + transfer controls");
-}
-if (!inline.includes('data-invite-tab="unclaimed"') || !inline.includes('data-invite-tab="claimed"')) {
-  throw new Error("invite console must tab Unclaimed vs Claimed");
-}
-if (!inline.includes('data-copy-invite-link="') || !inline.includes("function onCopyInviteLink(")) {
-  throw new Error("each unclaimed seat must offer a single Copy invite link action");
-}
-if (!inline.includes("function inviteShareLink(")) {
-  throw new Error("invite share links are required for Copy invite link");
-}
-if (inline.includes('data-rotate-invites="1"') || inline.includes('data-copy-all-dms="1"')
-  || inline.includes('data-generate-invite="') || inline.includes(">Copy DM text<")
-  || inline.includes(">Copy code<")) {
-  throw new Error("invite console must not show redundant copy/generate controls");
-}
-if (!inline.includes("function inviteCodeVisible(")) {
-  throw new Error("unclaimed invite codes must auto-show via inviteCodeVisible()");
-}
-// The page HTML is a template literal: a lone "\n" inside client JS becomes a real newline and
-// blanks the browser. Keep the inline script parseable.
-try {
-  const start = html.indexOf("<script>") + "<script>".length;
-  const end = html.indexOf("</script>", start);
-  // eslint-disable-next-line no-new-func
-  new Function(html.slice(start, end));
-} catch (err) {
-  throw new Error("generated inline script does not parse: " + (err && err.message));
-}
-// Newline-anchored, because "me = null;" is a substring of "partnerName = null;" two lines below
-// it -- a guard that cannot fail is the thing this file has the most of already.
-const clearSrc = fnBody("clearLeague");
-for (const need of ["\n      me = null;", "\n      data = null;", '\n      view = "home";',
-  "\n      render();"]) {
-  if (!clearSrc.includes(need)) {
-    throw new Error(`clearLeague must still leave the seat entirely -- it is the only exit: ${need.trim()}`);
-  }
-}
+
+
 // App wordmark removed — only #goHome remains as the leagues door in the header.
 if (inline.includes('document.querySelector("h1.brand a").addEventListener')) {
   throw new Error("brand wordmark click handler must stay removed");

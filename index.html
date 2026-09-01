@@ -100,7 +100,7 @@
        the 288px row, and 116.7px at 0.8125rem, which would ellipsise the title. */
     @media (max-width: 460px) {
       h1.brand { font-size: 1.2rem; gap: 8px; }
-      #lensBtn { font-size: 0.75rem; }
+
     }
     /* 320px is the narrowest phone still in use and nothing here had been checked at it.
        The row is 288px after the body padding: 44 for the home icon, two 6px gaps, the clock
@@ -1798,6 +1798,50 @@
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Compact score window on value chips / filter rows — replaces the brand-header clock. */
+    .chip-lens { position: absolute; top: 6px; right: 6px; z-index: 3; }
+    .chip-lens.is-inline {
+      position: static; margin-left: auto; flex: 0 0 auto; align-self: center;
+    }
+    .h2h-chip.is-trade { position: relative; }
+    .h2h-chip.is-trade > .chip-lens { top: 8px; right: 8px; }
+    button.chip-lens-btn {
+      appearance: none; font: inherit; font-size: 0.625rem; font-weight: 650;
+      color: var(--muted); background: rgba(12, 12, 16, 0.72);
+      border: 1px solid var(--line); border-radius: 999px;
+      min-height: 28px; padding: 2px 8px 2px 10px; cursor: pointer;
+      white-space: nowrap; position: relative; line-height: 1.2;
+      touch-action: manipulation;
+    }
+    button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
+    button.chip-lens-btn .chev { color: var(--dim); font-size: 0.7em; }
+    button.chip-lens-btn .dot {
+      position: absolute; top: 3px; right: 3px;
+      width: 5px; height: 5px; border-radius: 50%; background: #e0b44c;
+    }
+    button.chip-lens-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .chip-lens-bar {
+      display: flex; justify-content: flex-end; margin: 0 0 8px;
+    }
+    .lh-latest-trade .day-alert-h,
+    .ds-h-row {
+      display: flex; align-items: center; gap: 8px; justify-content: space-between;
+    }
+    .ds-h-row .ds-h { margin: 0; flex: 1 1 auto; min-width: 0; }
+    /* Floating score menu — positioned under the chip that opened it. */
+    #scoreAs.score-as-portal {
+      position: fixed; z-index: 40;
+      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
+      max-height: min(70dvh, 420px); overflow-y: auto;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #scoreAs.score-as-portal:not([hidden]) {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    #scoreAs.score-as-portal[hidden], #scoreAs.score-as-portal:empty { display: none !important; }
+
     /* The clock trigger. It reads the selected window alone -- "Since trade ▾" -- and not
        "Score as Since trade": at 0.8125rem the prefix costs 54px of measured width, which the
        320px brand row does not have, and the five window names are self-describing without it.
@@ -1824,17 +1868,8 @@
        display:none in engines that do not mark [hidden] as !important, and the empty panel
        then paints as a thin card bar under the brand header -- the "weird box" on league home.
        Flex is applied only when the panel is open; hidden/empty stay display:none !important. */
-    #scoreAs {
-      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
-      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
-      max-height: calc(100dvh - 88px); overflow-y: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-    }
-    #scoreAs:not([hidden]) {
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    #scoreAs[hidden], #scoreAs:empty { display: none !important; }
+    /* #scoreAs portal styles: see #scoreAs.score-as-portal above. */
+
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
@@ -1911,10 +1946,6 @@
         <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
       </svg>
     </button>
-    <span class="lens-wrap" id="lensWrap">
-      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div id="scoreAs" hidden></div>
-    </span>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
@@ -1924,6 +1955,7 @@
       </button>
     </span>
   </h1>
+  <div id="scoreAs" class="score-as-portal" hidden></div>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
   <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
@@ -2092,7 +2124,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsStarterOwner20260901162500";
+    const DATA_V = "scoreChipLens20260901170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3925,7 +3957,10 @@
       // handle a late render dropped it to <body> a moment later, which is the same defect the
       // .screen-h special case exists for.
       return '<div class="pack" id="dsBody">'
+        + '<div class="ds-h-row">'
         + '<h2 class="ds-h" tabindex="-1" data-dset-head="1">' + esc(cur[1]) + "</h2>"
+        + (cur[0] === "wide" ? chipLensHtml({ inline: true }) : "")
+        + "</div>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
@@ -4478,7 +4513,8 @@
         + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
         + (ctx.filtered ? '<span class="dot"></span>' : "")
         + "</button>"
-        + '<div class="caption">' + esc(filterHint) + "</div>";
+        + '<div class="caption">' + esc(filterHint) + "</div>"
+        + chipLensHtml({ inline: true });
       const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
         '<label data-tape-year="' + esc(row[0]) + '"><input type="radio" name="tapeYear" value="'
         + esc(row[0]) + '"' + (tapeYear === row[0] ? " checked" : "") + "> "
@@ -7347,6 +7383,7 @@
         || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
+        + chipLensHtml()
         + sideHtml(left, false, leftWin)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
         + sideHtml(right, true, rightWin)
@@ -7644,7 +7681,10 @@
       const empty = pool.length ? "" : ((data.trades || []).length
         ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
         : '<p class="caption">No trades on this seat yet.</p>');
-      return teamMarks()
+      return (lensApplies()
+          ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
+          : "")
+        + teamMarks()
         + markChart()
         + empty
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
@@ -7905,32 +7945,72 @@
     }
 
     /**
-     * The clock control lives in the brand header, outside #app, so it is painted rather than
-     * rendered -- render() replaces #app's whole subtree and would destroy a control that has
-     * to survive every navigation. Only the trigger's own state passes through here; changing
-     * the window calls render(), because that is what moves the figures.
+     * Paint compact chip score triggers and the scoreAs portal. Triggers live in app markup;
+     * the menu portals outside so it is not destroyed mid-click. Changing the window calls
+     * render() because that is what moves the figures.
      */
+
+    /**
+     * Compact score-window control for chips that show trade / player values.
+     * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
+     */
+    function chipLensHtml(opts) {
+      if (!lensApplies()) return "";
+      const inline = !!(opts && opts.inline);
+      const name = clockName();
+      return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
+        + '<button type="button" class="chip-lens-btn" data-score="1"'
+        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false">'
+        + esc(name) + ' <span class="chev">▾</span></button></span>';
+    }
+
     function paintLens() {
-      const wrap = document.getElementById("lensWrap");
-      const btn = document.getElementById("lensBtn");
       const panel = document.getElementById("scoreAs");
-      if (!lensApplies()) {
+      const btns = document.querySelectorAll("button.chip-lens-btn");
+      if (!panel) return;
+      if (!lensApplies() || !btns.length) {
         lensOpen = false;
-        wrap.hidden = true;
         panel.hidden = true;
         panel.innerHTML = "";
         return;
       }
-      wrap.hidden = false;
       const name = clockName();
-      btn.className = "score-btn" + (lens !== "all" || lensOpen ? " on" : "");
-      btn.setAttribute("aria-label", "Score as " + name);
-      btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
-      // The label is the window alone; "Score as" is in the accessible name above.
-      btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
-        + (lens !== "all" ? '<span class="dot"></span>' : "");
+      for (const btn of btns) {
+        btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
+        btn.setAttribute("aria-label", "Score as " + name);
+        btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
+        btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
+          + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
       panel.hidden = !lensOpen;
       panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
+      if (lensOpen) {
+        const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
+          || btns[0];
+        if (anchor) positionScoreAs(anchor);
+      }
+    }
+
+    let lensAnchorId = 0;
+    let lensAnchorSeq = 0;
+
+    function positionScoreAs(btn) {
+      const panel = document.getElementById("scoreAs");
+      if (!panel || !btn) return;
+      const r = btn.getBoundingClientRect();
+      const width = Math.min(280, window.innerWidth - 32);
+      let left = Math.min(r.right - width, window.innerWidth - 16 - width);
+      left = Math.max(16, left);
+      let top = r.bottom + 4;
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+      // Flip above if near bottom of viewport.
+      requestAnimationFrame(() => {
+        const pr = panel.getBoundingClientRect();
+        if (pr.bottom > window.innerHeight - 8) {
+          panel.style.top = Math.max(8, r.top - pr.height - 4) + "px";
+        }
+      });
     }
 
     /**
@@ -7939,7 +8019,9 @@
      * divs and the clock's departure left them identical.
      */
     function filterRow(left) {
-      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div>"
+        + chipLensHtml({ inline: true })
+        + "</div>";
     }
 
     function renderDrafts() {
@@ -8501,45 +8583,47 @@
       });
     }
     /**
-     * The clock control's own listener. It has to be its own, because #app's delegated handler
-     * cannot see a control that lives in the brand header -- the same split the seat picker had
-     * while it was mounted there.
-     */
-    document.getElementById("lensWrap").addEventListener("click", (e) => {
-      const opt = e.target.closest("[data-lens]");
-      if (opt) {
-        lens = opt.dataset.lens;
-        lensOpen = false;
-        render();
-        // The option that was clicked no longer exists and was never inside #app, so
-        // focusSelector() cannot put the keyboard back. The trigger is where it came from.
-        document.getElementById("lensBtn").focus({ preventScroll: true });
-        return;
-      }
-      if (!e.target.closest("[data-score]")) return;
-      lensOpen = !lensOpen;
-      if (!lensOpen) {
-        // Closing changes nothing a screen renders, so it does not pay for a full render.
-        paintLens();
-        return;
-      }
-      // Every other popup is exclusive with this one, and this one paints above all of them,
-      // so opening from the header has to close them rather than cover an open menu.
-      dsOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      render();
-    });
-    /**
-     * An outside click closes it. Capture phase, and paint rather than render: #app's handler
-     * returns early on a dozen paths, and an open panel must not survive over the screen the
-     * click just navigated to. Running first also means the fall-through branch at the bottom of
-     * #app's handler sees the flag already cleared and does not schedule a second render.
+     * Score-window control: compact chip buttons in value surfaces; menu portals via #scoreAs.
+     * Document-level so it works from chips inside #app and options outside it.
      */
     document.addEventListener("click", (e) => {
-      if (!lensOpen || e.target.closest("#lensWrap")) return;
-      lensOpen = false;
-      paintLens();
+      const opt = e.target.closest("#scoreAs [data-lens]");
+      if (opt) {
+        e.preventDefault();
+        e.stopPropagation();
+        lens = opt.dataset.lens;
+        lensOpen = false;
+        lensAnchorId = 0;
+        render();
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
+        return;
+      }
+      const scoreBtn = e.target.closest("button.chip-lens-btn[data-score]");
+      if (scoreBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Tag this button so paintLens can re-anchor after render.
+        if (!scoreBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          scoreBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = scoreBtn.getAttribute("data-lens-anchor");
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
+        return;
+      }
+      if (lensOpen && !e.target.closest("#scoreAs") && !e.target.closest("button.chip-lens-btn")) {
+        lensOpen = false;
+        paintLens();
+      }
     }, true);
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
@@ -8547,7 +8631,8 @@
       if (lensOpen) {
         lensOpen = false;
         paintLens();
-        document.getElementById("lensBtn").focus({ preventScroll: true });
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
         return true;
       }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }

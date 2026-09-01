@@ -1166,11 +1166,7 @@ const html = `<!DOCTYPE html>
       cursor: pointer; text-align: inherit;
       touch-action: manipulation;
     }
-    button.pick-intel-board-leader .pil-who {
-      text-decoration: underline;
-      text-decoration-color: rgba(154, 154, 163, 0.45);
-      text-underline-offset: 2px;
-    }
+    /* No underline here: the whole row opens Draft Data, not the team home. */
     button.pick-intel-board-leader:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
@@ -2201,7 +2197,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "myCurrentChip20260901162500";
+    const DATA_V = "boardNoUnderline20260901164000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2739,7 +2735,10 @@ const html = `<!DOCTYPE html>
     function pickLeadersStack(leaders, linkOpts) {
       if (!leaders.length) return '<span class="pick-intel-board-empty">Nobody yet</span>';
       return leaders.map(([name, n]) => {
-        const who = '<span class="pil-who">' + seatLabel(name) + "</span>"
+        // Draft board rows own the click (open filtered Draft Data). Skip seat-link
+        // so name/flair/count do not jump to that team's home like everywhere else.
+        const linkSeat = !(linkOpts && linkOpts.rounds && linkOpts.rounds.length);
+        const who = '<span class="pil-who">' + seatLabel(name, linkSeat ? undefined : { link: false }) + "</span>"
           + '<span class="pil-n">· ' + n + "</span>";
         if (linkOpts && linkOpts.rounds && linkOpts.rounds.length) {
           const rounds = linkOpts.rounds.join(",");
@@ -10675,6 +10674,12 @@ if (!inline.includes("function openDraftDataPage(") || !inline.includes("functio
 if (!inline.includes("pickLeadersStack(leaders, { rounds:")
   || !inline.includes("ownerMode: \"held\"")) {
   throw new Error("Draft Data board team rows must deep-link with team + round + year filters");
+}
+if (!inline.includes("seatLabel(name, linkSeat ? undefined : { link: false })")) {
+  throw new Error("Draft board leaders must not nest seat-link (clicks open Draft Data, not team home)");
+}
+if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*underline/s.test(html)) {
+  throw new Error("Draft board leader names must not be underlined");
 }
 {
   const homeTeaser = inline.slice(inline.indexOf("function pickIntelHome("), inline.indexOf("function pickIntelHome(") + 1600);

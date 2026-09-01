@@ -516,6 +516,41 @@ async function main() {
         hops,
       };
     }
+    // Trade legs omit native picks that never moved — seed still-held origin slots for future years.
+    const stillYears = new Set();
+    for (const key of Object.keys(out)) {
+      if (out[key].still_pick) stillYears.add(key.split(":")[1]);
+    }
+    const todayYear = Number(String(today).slice(0, 4));
+    for (const year of stillYears) {
+      if (Number(year) <= todayYear) continue;
+      for (let round = 1; round <= 4; round++) {
+        for (let roster = 1; roster <= TEAMS; roster++) {
+          const key = `pick:${year}:${round}:${roster}`;
+          if (out[key]) continue;
+          if (latestRes(resIdx, key, today, "player")) continue;
+          const uid = seatOwner.get(`${latestSeason}:${roster}`);
+          const origin = uid ? (nameById[uid] || uid) : null;
+          if (!origin) continue;
+          out[key] = {
+            label: pickDisplay(year, String(round), origin, null, null),
+            became: null,
+            used_by: null,
+            still_pick: true,
+            hops: [{
+              date: today,
+              from: origin,
+              to: origin,
+              t0: null,
+              out: null,
+              out_date: today,
+              exit: "held",
+              transaction_id: null,
+            }],
+          };
+        }
+      }
+    }
     return out;
   }
 

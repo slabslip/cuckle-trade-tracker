@@ -1799,7 +1799,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickIntelBoardLabInline20260901040000";
+    const DATA_V = "pickIntelUntradedNative20260901050000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1943,7 +1943,7 @@ const html = `<!DOCTYPE html>
 
     function pickOriginName(entry) {
       const label = (entry && entry.label) || "";
-      const m = /\(([^)]+)\)\\s*$/.exec(label);
+      const m = /\\(([^)]+)\\)\\s*$/.exec(label);
       if (m) return m[1];
       const hops = (entry && entry.hops) || [];
       return hops.length ? (hops[0].from || null) : null;
@@ -1961,11 +1961,73 @@ const html = `<!DOCTYPE html>
       return { season: m[1], round: Number(m[2]), slot: Number(m[3]) };
     }
 
+    function pickRoundOrdinal(n) {
+      return ({ 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" })[n] || ("R" + n);
+    }
+
+    /**
+     * picks.json is built from trade legs only — native picks that never moved are absent.
+     * Synthesize still-held origin picks for future draft years so leaderboards count them.
+     */
+    function augmentUntradedPicks(book) {
+      if (!book) return;
+      const rosterNames = new Map();
+      let maxRoster = 0;
+      for (const key of Object.keys(book)) {
+        const seg = key.split(":");
+        if (seg.length < 4 || seg[0] !== "pick") continue;
+        const roster = Number(seg[3]);
+        if (roster > maxRoster) maxRoster = roster;
+        const origin = pickOriginName(book[key]);
+        if (origin) rosterNames.set(String(roster), origin);
+      }
+      const teamN = Math.max(maxRoster, rosterNames.size, (members && members.length) || 0, 10);
+      const years = new Set();
+      for (const key of Object.keys(book)) {
+        const parts = pickKeyParts(key);
+        if (parts && book[key] && book[key].still_pick) years.add(parts.season);
+      }
+      const todayY = Number(String((league && league.today) || "2026").slice(0, 4));
+      const today = (league && league.today) || "";
+      for (const year of years) {
+        if (Number(year) <= todayY) continue;
+        for (let round = 1; round <= 4; round++) {
+          for (let roster = 1; roster <= teamN; roster++) {
+            const key = "pick:" + year + ":" + round + ":" + roster;
+            if (book[key]) continue;
+            const origin = rosterNames.get(String(roster));
+            if (!origin) continue;
+            book[key] = {
+              label: year + " " + pickRoundOrdinal(round) + " (" + origin + ")",
+              became: null,
+              used_by: null,
+              still_pick: true,
+              hops: [{
+                date: today,
+                from: origin,
+                to: origin,
+                t0: null,
+                out: null,
+                out_date: today,
+                exit: "held",
+                transaction_id: null,
+              }],
+            };
+          }
+        }
+      }
+    }
+
+    function applyPicksBook(book) {
+      picks = book;
+      augmentUntradedPicks(picks);
+    }
+
     function ensurePicks() {
       if (picks || picksLoading) return;
       picksLoading = true;
       getLeagueJson("picks.json").then((book) => {
-        picks = book;
+        applyPicksBook(book);
         picksLoading = false;
         if (view === "home" && !me) render();
       }).catch((err) => {
@@ -1978,6 +2040,7 @@ const html = `<!DOCTYPE html>
     function stillPickEntries() {
       const out = [];
       if (!picks) return out;
+      augmentUntradedPicks(picks);
       for (const key of Object.keys(picks)) {
         const entry = picks[key];
         if (!entry || !entry.still_pick) continue;
@@ -2416,7 +2479,7 @@ const html = `<!DOCTYPE html>
         voteBook = book && book.v === 1 && book.votes ? book : null;
       } catch (err) { voteBook = null; }
       try {
-        picks = await getLeagueJson("picks.json");
+        applyPicksBook(await getLeagueJson("picks.json"));
       } catch (err) { picks = picks || null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
@@ -2725,7 +2788,7 @@ const html = `<!DOCTYPE html>
         data = seatCache[id] || await getLeagueJson("me/" + id + ".json");
         seatCache[id] = data;
         if (!league) league = await getLeagueJson("league.json");
-        if (!picks) picks = await getLeagueJson("picks.json");
+        if (!picks) applyPicksBook(await getLeagueJson("picks.json"));
       } catch (err) {
         console.error(err);
         me = prev;
@@ -2890,7 +2953,7 @@ const html = `<!DOCTYPE html>
     async function seatData(uid) {
       try {
         if (!seatCache[uid]) seatCache[uid] = await getLeagueJson("me/" + uid + ".json");
-        if (!picks) picks = await getLeagueJson("picks.json");
+        if (!picks) applyPicksBook(await getLeagueJson("picks.json"));
       } catch (err) {
         console.error(err);
         say("Could not load that team's trades. Check your connection and try again.");
@@ -9313,6 +9376,13 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || inline.includes('aria-label="Pick board"')
   || inline.includes("pick-intel-board-row")) {
   throw new Error("Draft Data must ship progressive filters + 2027 top-5 column leaderboard without a search input or board-h");
+}
+if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("function applyPicksBook(")
+  || !inline.includes("function pickRoundOrdinal(")) {
+  throw new Error("Draft Data must augment untraded native picks before counting leaders");
+}
+if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
+  throw new Error("pickOriginName regex must escape parens through the HTML template literal");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")

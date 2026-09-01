@@ -1091,6 +1091,21 @@ const html = `<!DOCTYPE html>
       border-color: #6b5a2e;
       box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
     }
+    /* Trade detail feed: selected card stays open with bags + vote beneath the H2H chip. */
+    div.lh-trade-feed-card.is-selected {
+      cursor: default;
+      gap: 14px;
+    }
+    div.lh-trade-feed-card.is-selected .day-alert-h {
+      font-size: 0.9375rem;
+    }
+    .trade-feed-detail {
+      margin: 0;
+    }
+    .trade-feed-detail .row-x-head .row-top.tape { margin-bottom: 0; }
+    div.lh-trade-feed-card.is-selected .vote-card {
+      margin: 0;
+    }
     #tapeFilters {
       margin: 0 0 14px;
       max-height: min(70dvh, 520px); overflow-y: auto;
@@ -3636,22 +3651,8 @@ const html = `<!DOCTYPE html>
       });
     }
 
-    function renderLeagueTrades() {
-      const all = leagueTrades();
-      // The same clock filter the per-seat tab and the home tiles use, so the three agree.
-      const lived = all.filter((r) => chipLived(r.date));
-      const toast = voteToast
-        ? '<p class="vote-note">Vote recorded'
-          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
-          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
-        : "";
-      const years = [...new Set(lived.map((r) => String(r.date || "").slice(0, 4)).filter(Boolean))]
-        .sort()
-        .reverse();
-      const teams = (members || []).map((m) => m.name).filter(Boolean)
-        .slice()
-        .sort((a, b) => a.localeCompare(b));
-      // Headlines from both sides of each deal — player filter matches either bag's lead asset.
+    /** Headlines from both sides of each deal — player filter matches either bag's lead asset. */
+    function tapeHeadlinesByTx() {
       const hlByTx = Object.create(null);
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       for (const s of sides) {
@@ -3659,6 +3660,23 @@ const html = `<!DOCTYPE html>
         if (!hlByTx[tx]) hlByTx[tx] = [];
         if (s.headline) hlByTx[tx].push(String(s.headline));
       }
+      return hlByTx;
+    }
+
+    /**
+     * Filtered league tape for the H2H feed. Shared by the league trades list and the trade
+     * detail screen so year / team / player filters behave the same on both.
+     */
+    function tapeTradesFiltered() {
+      const all = leagueTrades();
+      const lived = all.filter((r) => chipLived(r.date));
+      const hlByTx = tapeHeadlinesByTx();
+      const years = [...new Set(lived.map((r) => String(r.date || "").slice(0, 4)).filter(Boolean))]
+        .sort()
+        .reverse();
+      const teams = (members || []).map((m) => m.name).filter(Boolean)
+        .slice()
+        .sort((a, b) => a.localeCompare(b));
       let list = lived;
       if (tapeYear !== "all") {
         list = list.filter((r) => String(r.date || "").slice(0, 4) === tapeYear);
@@ -3699,32 +3717,45 @@ const html = `<!DOCTYPE html>
           : !list.length
             ? '<p class="caption">No trades match these filters. Clear a filter to widen the feed.</p>'
             : "";
+      return { all, lived, list, years, teams, playerPool, filtered, empty, playerNeedle };
+    }
+
+    function voteToastHtml() {
+      return voteToast
+        ? '<p class="vote-note">Vote recorded'
+          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
+          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
+        : "";
+    }
+
+    /** Year / team / player filter row + dropdown panel for league-wide trade feeds. */
+    function tapeFilterHtml(ctx, defaultHint) {
       const hintBits = [];
       if (tapeYear !== "all") hintBits.push(tapeYear);
       if (tapeTeam !== "all") hintBits.push(tapeTeam);
       if (tapePlayer !== "all") hintBits.push(tapePlayer);
-      else if (playerNeedle) hintBits.push('"' + tapePlayerQ.trim() + '"');
-      const filterHint = filtered
+      else if (ctx.playerNeedle) hintBits.push('"' + tapePlayerQ.trim() + '"');
+      const filterHint = ctx.filtered
         ? "Filter · " + hintBits.join(" · ")
-        : "Filter by year, team, or player";
+        : (defaultHint || "Filter by year, team, or player");
       const filterBtn = '<button type="button" class="filter-btn'
-        + (filtered || tapeFilterOpen ? " on" : "") + '" data-tfilter="1" aria-label="Filter trades"'
+        + (ctx.filtered || tapeFilterOpen ? " on" : "") + '" data-tfilter="1" aria-label="Filter trades"'
         + ' aria-expanded="' + (tapeFilterOpen ? "true" : "false") + '">'
         + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
-        + (filtered ? '<span class="dot"></span>' : "")
+        + (ctx.filtered ? '<span class="dot"></span>' : "")
         + "</button>"
         + '<div class="caption">' + esc(filterHint) + "</div>";
-      const yearRadios = [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
+      const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
         '<label data-tape-year="' + esc(row[0]) + '"><input type="radio" name="tapeYear" value="'
         + esc(row[0]) + '"' + (tapeYear === row[0] ? " checked" : "") + "> "
         + esc(row[1]) + "</label>"
       ).join("");
-      const teamRadios = [["all", "All teams"]].concat(teams.map((n) => [n, n])).map((row) =>
+      const teamRadios = [["all", "All teams"]].concat(ctx.teams.map((n) => [n, n])).map((row) =>
         '<label data-tape-team="' + esc(row[0]) + '"><input type="radio" name="tapeTeam" value="'
         + esc(row[0]) + '"' + (tapeTeam === row[0] ? " checked" : "") + "> "
         + esc(row[1]) + "</label>"
       ).join("");
-      const playerRadios = [["all", "All players"]].concat(playerPool.slice(0, 80).map((n) => [n, n]))
+      const playerRadios = [["all", "All players"]].concat(ctx.playerPool.slice(0, 80).map((n) => [n, n]))
         .map((row) =>
           '<label data-tape-player="' + esc(row[0]) + '"><input type="radio" name="tapePlayer" value="'
           + esc(row[0]) + '"' + (tapePlayer === row[0] ? " checked" : "") + "> "
@@ -3745,6 +3776,12 @@ const html = `<!DOCTYPE html>
           + playerRadios
           + "</div>"
         : "";
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
+    }
+
+    function renderLeagueTrades() {
+      const ctx = tapeTradesFiltered();
+      const { lived, list, empty } = ctx;
       ensureTradesFeedBags(list);
       const shown = list.slice(0, tapeLimit);
       const cards = shown.map((r) => tradeFeedCardHtml(r)).join("");
@@ -3761,11 +3798,8 @@ const html = `<!DOCTYPE html>
         // tape" rather than "the league" is the difference between a claim and a fact.
         + '<p class="caption">Every trade on the league tape as H2H cards, newest first. Tap one'
         + " to review it and vote on who actually won. A gold outline is a trade you have voted on.</p>"
-        + toast
-        + '<div class="filter-wrap">'
-        + filterRow(filterBtn)
-        + panel
-        + "</div>"
+        + voteToastHtml()
+        + tapeFilterHtml(ctx)
         + '<div class="caption">' + esc(livedHint(list.length, lived.length, "trade")) + "</div>"
         + empty
         + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
@@ -3777,7 +3811,9 @@ const html = `<!DOCTYPE html>
       const voted = !!readVotes(r.transaction_id).choice;
       let chip = "";
       try {
-        chip = latestTradeCardHtml(r);
+        chip = latestTradeBagsReady(r.transaction_id)
+          ? latestTradeCardHtml(r)
+          : latestTradeSkeletonHtml(r);
       } catch (err) {
         console.error(err);
         chip = '<div class="h2h-chip is-trade" role="group">'
@@ -3799,30 +3835,77 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * One trade, as the whole screen. Built on tradeRow / tradeBags rather than a second
-     * renderer, so the row layout and the bag arithmetic stay in one place.
+     * Selected trade at the top of the detail feed: same H2H chip as home, with bags and vote
+     * expanded beneath. The chip is not a navigation control here — the feed cards below are.
+     */
+    function tradeFeedSelectedHtml(r, hit) {
+      const voted = !!readVotes(r.transaction_id).choice;
+      let chip = "";
+      try {
+        chip = latestTradeBagsReady(r.transaction_id)
+          ? latestTradeCardHtml(r)
+          : latestTradeSkeletonHtml(r);
+      } catch (err) {
+        console.error(err);
+        chip = '<div class="h2h-chip is-trade" role="group">'
+          + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(r.name) + "</div></div>"
+          + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(r.other) + "</div>"
+          + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
+          + "</div>";
+      }
+      const detail = hit
+        ? '<div class="trade-feed-detail">' + tradeRow(hit, null, true) + "</div>"
+        : '<p class="caption">Loading both bags…</p>';
+      return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
+        + ' data-id="' + esc(r.transaction_id) + '"'
+        + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
+        + '<div class="day-alert-h">' + esc(r.date || "")
+        + (r.headline ? " · " + esc(r.headline) : "") + "</div>"
+        + chip
+        + detail
+        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+        + "</div>";
+    }
+
+    /**
+     * One trade as a feed: the opened deal stays at the top (H2H chip + bags + vote), with the
+     * rest of the league tape below as the same cards home and ?view=trades use.
      */
     function renderTradeScreen() {
-      const r = tradeSide(openId, tradeSeat);
-      if (!openId || !r) {
+      const selected = tradeSide(openId, tradeSeat);
+      if (!openId || !selected) {
         return backChip("Back")
           + '<h2 class="screen-h" tabindex="-1">Trade not found</h2>'
           + '<p class="caption">That trade is not on the league tape.</p>'
           + '<button type="button" class="chip" data-trades-list="1">All league trades</button>';
       }
-      const uid = tradeSeat || r.user_id;
+      const ctx = tapeTradesFiltered();
+      const { lived, list, empty } = ctx;
+      const uid = tradeSeat || selected.user_id;
       const cached = seatCache[uid];
       const hit = cached && (cached.trades || []).find((t) => t.transaction_id === openId);
+      const rest = list.filter((r) => r.transaction_id !== openId);
+      ensureTradesFeedBags([selected].concat(rest));
+      const shown = rest.slice(0, tapeLimit);
+      const cards = shown.map((r) => tradeFeedCardHtml(r)).join("");
+      const more = rest.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (rest.length - shown.length) + " left)</button>"
+        : "";
+      const feedBody = tradeFeedSelectedHtml(selected, hit)
+        + cards;
       return backChip("Back")
-        + '<h2 class="screen-h" tabindex="-1">' + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</h2>"
-        + '<p class="caption">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</p>"
-        + (hit
-          ? tradeRow(hit, null, true)
-          : boardTape(r) + '<p class="caption">Loading both bags…</p>')
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
-        + '<div class="screen-foot">'
-        + '<button type="button" class="chip" data-trades-list="1">All league trades</button>'
-        + "</div>";
+        + '<h2 class="screen-h" tabindex="-1">' + seatLabel(selected.name) + " vs " + seatLabel(selected.other) + "</h2>"
+        + '<p class="caption">Review this trade and browse the league tape below. Tap another card'
+        + " to jump to it. A gold outline is a trade you have voted on.</p>"
+        + voteToastHtml()
+        + tapeFilterHtml(ctx)
+        + '<div class="caption">' + esc(livedHint(rest.length + 1, lived.length, "trade")) + "</div>"
+        + (list.length ? "" : empty)
+        + '<div class="trades-feed">' + feedBody + "</div>"
+        + more;
     }
 
     function partnerLine(p) {
@@ -5928,7 +6011,6 @@ const html = `<!DOCTYPE html>
 
     /**
      * Under the chip: left/right voter flairs aligned to each team.
-     * Book WINNER/LOSER lives under each seat name (not mid copy).
      * Voting stays on the trade screen (nested buttons cannot live inside the Latest trade opener).
      */
     function latestTradeLeanFooterHtml(latest, lean) {
@@ -6259,6 +6341,7 @@ const html = `<!DOCTYPE html>
           }
           delete tradeBagPending[tx];
           if (appScreen === "dash" && view === "trades" && !me) render();
+          if (appScreen === "dash" && view === "trade" && !me) render();
           if (appScreen === "dash" && view === "home" && !me
             && latestTradeHitTx === tx) render();
         })();
@@ -7945,16 +8028,15 @@ const html = `<!DOCTYPE html>
         const pick = voteBtn.dataset.voteSeat;
         const next = readVotes(tx).choice === pick ? null : pick;
         writeVote(tx, next);
-        // Casting a vote is the last thing the trade's own screen is for, so it hands the user
-        // the league list — named, so being moved does not read as being thrown out. Clearing a
-        // vote is not casting one and stays put, or the screen would vanish under the user.
-        // Unclaimed: writeVote only opens the claim form; stay on this screen.
+        // Casting a vote on the trade feed shows a toast and stays put so the user can keep
+        // browsing. Clearing a vote stays put too. Unclaimed: writeVote only opens the claim form.
         if (view === "trade" && next && authSeatId()) {
           const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
-          openTradesList({ tx: tx, name: (won && won.name) || "" });
+          voteToast = { tx: tx, name: (won && won.name) || "" };
         } else {
-          render();
+          voteToast = null;
         }
+        render();
         return;
       }
       const pickBtn = e.target.closest("[data-pick]");
@@ -9282,6 +9364,9 @@ for (const need of [
   "function renderTradeScreen()",
   "function renderLeagueTrades()",
   "function tradeFeedCardHtml(",
+  "function tradeFeedSelectedHtml(",
+  "function tapeTradesFiltered(",
+  "function tapeFilterHtml(",
   "function ensureTradesFeedBags(",
   "function bagHitForTx(",
   'class="chip back" data-back="1"',
@@ -9294,17 +9379,38 @@ for (const need of [
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
   if (!fn.includes("trades-feed") || !fn.includes("tradeFeedCardHtml(")
-    || !fn.includes("data-tfilter") || !fn.includes("tapeFilters")
-    || !fn.includes("data-tape-year") || !fn.includes("data-tape-team")
-    || !fn.includes("data-tape-player") || !fn.includes("ensureTradesFeedBags(")) {
+    || !fn.includes("tapeFilterHtml(") || !fn.includes("tapeTradesFiltered(")
+    || !fn.includes("ensureTradesFeedBags(")) {
     throw new Error("renderLeagueTrades must be an H2H trade feed with year/team/player filters");
   }
   if (fn.includes("boardTape(r)") || fn.includes("lived.map((r) => boardTape")) {
     throw new Error("league trades feed must use H2H cards, not boardTape rows");
   }
 }
+{
+  const at = inline.indexOf("function tapeFilterHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  if (!fn.includes("data-tfilter") || !fn.includes("tapeFilters")
+    || !fn.includes("data-tape-year") || !fn.includes("data-tape-team")
+    || !fn.includes("data-tape-player")) {
+    throw new Error("tapeFilterHtml must ship year/team/player filter controls");
+  }
+}
+{
+  const at = inline.indexOf("function renderTradeScreen(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  if (!fn.includes("trades-feed") || !fn.includes("tradeFeedSelectedHtml(")
+    || !fn.includes("tapeTradesFiltered(") || !fn.includes("tapeFilterHtml(")
+    || !fn.includes("tradeFeedCardHtml(") || !fn.includes("ensureTradesFeedBags(")) {
+    throw new Error("renderTradeScreen must be an H2H trade feed with filters and selected trade expanded");
+  }
+  if (fn.includes("boardTape(r)") || fn.includes("screen-foot"))
+    throw new Error("trade detail feed must not use the old standalone boardTape / footer layout");
+}
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")
-  || !html.includes("#tapeFilters")) {
+  || !html.includes("div.lh-trade-feed-card.is-selected") || !html.includes("#tapeFilters")) {
   throw new Error("stylesheet must style the league trades feed + tape filter panel");
 }
 // Text fitting, asserted rather than trusted. Each of these was a measured defect, and each

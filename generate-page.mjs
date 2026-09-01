@@ -2234,7 +2234,7 @@ const html = `<!DOCTYPE html>
       ["y1", "1 season", "Average value through the rest of this season (or the next season from the offseason)."],
       ["y2", "2 seasons", "Rest of this season plus the next (or the next two from the offseason)."],
       ["y3", "3 seasons", "Through three seasons from the trade."],
-      ["all", "as of today", "Value from accept through today."],
+      ["all", "as of today", "Weekly average value from accept through today."],
     ];
     let view = "home";
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
@@ -5138,7 +5138,7 @@ const html = `<!DOCTYPE html>
     function runLensCaption() {
       const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
       if (runLens === "t0") return "Average value at accept across every deal.";
-      if (runLens === "all") return "Average as-of-today value across every deal.";
+      if (runLens === "all") return "Weekly average from accept through today across every deal.";
       return "Average at " + name.toLowerCase() + " where lived; younger deals use their best window.";
     }
 

@@ -237,12 +237,13 @@ function windowAsOfs(t0, today, years) {
   return yearEnds(t0, end);
 }
 
-/** y1/y2/y3 are NFL-season spans; all stays calendar year-end mean through today. */
+/** y1/y2/y3 are NFL-season spans; all is weekly from accept through today. */
 function lensAsOfs(key, t0, today) {
   if (key === "t0") return [t0];
   if (key === "y1") return seasonAsOfs(t0, today, 1);
   if (key === "y2") return seasonAsOfs(t0, today, 2);
   if (key === "y3") return seasonAsOfs(t0, today, 3);
+  if (key === "all") return weekAsOfs(t0, today);
   return windowAsOfs(t0, today, null);
 }
 
@@ -1373,6 +1374,13 @@ async function main() {
   check("chief-arae t0 scored", !chiefArae?.lenses.windows.t0.incomplete
     && chiefArae?.lenses.windows.t0.sides[chiefId]?.today_delta != null);
   check("chief-arae all scored", chiefArae?.lenses.windows.all.sides[chiefId]?.today_delta != null);
+  {
+    const old = meters.find((t) => t.date && t.date <= "2020-12-31");
+    if (old) {
+      const allSnaps = old.lenses.windows.all?.snaps || 0;
+      check("all lens weekly not year-end sparse", allSnaps >= 50);
+    }
+  }
   let unpricedPickT0 = 0;
   for (const t of meters) {
     for (const uid of t.user_ids) {

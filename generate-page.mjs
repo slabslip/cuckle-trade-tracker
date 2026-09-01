@@ -5960,7 +5960,7 @@ const html = `<!DOCTYPE html>
     function newsPlayerSpanHtml(name, pos) {
       const slug = newsPosSlug(pos);
       const tag = pos
-        ? '<span class="news-pos-tag pos-' + slug + '">' + esc(pos) + "</span>"
+        ? '<span class="news-pos-tag pos-' + slug + '">' + esc(pos) + "</span> "
         : "";
       return '<span class="news-player pos-' + slug + '">' + tag + esc(name) + "</span>";
     }
@@ -5988,7 +5988,14 @@ const html = `<!DOCTYPE html>
       if (!raw) return "";
       const posByName = Object.create(null);
       if (it && it.player) posByName[String(it.player).toLowerCase()] = it.player_position || null;
-      const posNameRe = /\\b(QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C)\\s+([A-Z][\\w.'\u2019\\-]+(?:\\s+(?:Jr\\.|Sr\\.|III|II|IV|V|[A-Z]\\.?|[A-Z][\\w.'\u2019\\-]+))*)/g;
+      const newsPosTokens = "QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C";
+      const posNameRe = new RegExp(
+        "\\\\b(" + newsPosTokens + ")\\\\s+"
+          + "((?:[A-Z]\\\\.)+\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*(?:\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*)*"
+          + "|[A-Z][a-z][\\\\w.'\u2019\\\\-]*(?:\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*){0,2})"
+          + "(?:\\\\s+(?:Jr\\\\.|Sr\\\\.|II|III|IV|V))?",
+        "g"
+      );
       const matches = [];
       let m;
       while ((m = posNameRe.exec(raw)) !== null) {
@@ -6000,7 +6007,7 @@ const html = `<!DOCTYPE html>
         const display = (it && it.player && it.player.toLowerCase() === key)
           ? it.player
           : (matches.find((x) => x.name.toLowerCase() === key) || {}).name || key;
-        const re = new RegExp("\\b" + display.replace(/[.*+?^\u0024{}()|[\\]\\\\]/g, "\\\\$&") + "(?:['\u2019]s?)?\\b", "g");
+        const re = new RegExp("\\\\b" + display.replace(/[.*+?^\u0024{}()|[\\]\\\\]/g, "\\\\$&") + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "g");
         let nm;
         while ((nm = re.exec(raw)) !== null) {
           if (matches.some((x) => nm.index >= x.start && nm.index < x.end)) continue;

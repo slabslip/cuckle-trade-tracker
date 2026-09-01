@@ -690,60 +690,99 @@
       background: transparent; border-style: dashed; cursor: default;
     }
     /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
-       News Feed hero (rotates in JS), four circular quick actions, latest trade + week strip. */
-    .lh-hero.day-alert, .lh-hero.news-hero {
-      position: relative; overflow: hidden;
-      border-radius: 20px; padding: 16px 16px 14px; margin: 0 0 20px;
-      min-height: 0; height: auto; justify-content: flex-start;
-      /* Same dark plane as the left half — no right-side glow or split panel. */
-      background: #1a1810;
-      border: 1px solid #6b5a2e;
+       News Feed is a bottom pull-up sheet (peek + drag to expand under the brand). */
+    .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
+    /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
+    body.has-news-pullup {
+      padding-bottom: calc(var(--news-pullup-peek, 112px) + env(safe-area-inset-bottom, 0px));
     }
-    .lh-hero .day-alert-top {
-      position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 12px;
-      margin-bottom: 8px; width: 100%;
-    }
-    .lh-hero .day-alert-top .day-alert-h { min-width: 0; flex: 1 1 auto; }
-    button.news-hero-pause {
-      position: relative; z-index: 2; flex: 0 0 auto; margin-left: auto;
-      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
-      color: #e0b44c; background: none; border: 1px solid #6b5a2e; border-radius: 999px;
-      height: 26px; padding: 0 10px; cursor: pointer; touch-action: manipulation;
-    }
-    button.news-hero-pause:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.news-hero-body {
-      /* Ticker viewport spans the full chip under the header/Pause row.
-         Tall enough for the source line + ~3–4 body lines (less truncation). */
-      position: relative; z-index: 1; display: block; width: 100%; max-width: none;
-      box-sizing: border-box; align-self: stretch;
-      appearance: none; font: inherit; color: inherit; text-align: left;
-      background: transparent; border: 0; padding: 4px 0 0; margin: 0;
-      cursor: pointer; touch-action: manipulation; min-height: 118px;
+    body.has-news-pullup-open {
       overflow: hidden;
     }
-    button.news-hero-body:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .news-hero-slide {
-      display: block; width: 100%; max-width: none; box-sizing: border-box;
-      transition: transform 0.45s ease, opacity 0.45s ease;
-      transform: translateX(0); opacity: 1;
-      will-change: transform, opacity;
+    .news-pullup {
+      position: fixed; left: 0; right: 0; bottom: 0; top: 0;
+      z-index: 40; pointer-events: none;
+      --brand-offset: 56px;
+      --news-pullup-peek: 112px;
     }
-    .news-hero-slide[hidden] { display: none; }
-    /* Outgoing alert slides off left; incoming starts off-right then settles. */
-    .news-hero-slide.is-exit {
-      position: absolute; left: 0; right: 0; top: 0;
-      display: block !important; transform: translateX(-110%); opacity: 0;
-      pointer-events: none;
+    .news-pullup-scrim {
+      position: absolute; inset: 0;
+      background: rgba(8, 8, 10, 0.55);
+      pointer-events: auto;
+      opacity: 0; transition: opacity 0.28s ease;
     }
-    .news-hero-slide.is-enter {
-      position: relative; display: block !important;
-      transform: translateX(110%); opacity: 0;
+    .news-pullup.is-open .news-pullup-scrim { opacity: 1; }
+    .news-pullup-scrim[hidden] { display: none; }
+    .news-pullup-sheet {
+      pointer-events: auto;
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: calc(100dvh - var(--brand-offset));
+      max-height: calc(100dvh - var(--brand-offset));
+      display: flex; flex-direction: column;
+      box-sizing: border-box;
+      background: #1a1810;
+      border: 1px solid #6b5a2e;
+      border-bottom: 0;
+      border-radius: 18px 18px 0 0;
+      transform: translateY(calc(100% - var(--news-pullup-peek)));
+      transition: transform 0.32s cubic-bezier(0.2, 0.85, 0.25, 1);
+      will-change: transform;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .news-hero-slide.is-enter.is-in { transform: translateX(0); opacity: 1; }
+    .news-pullup.is-open .news-pullup-sheet { transform: translateY(0); }
+    .news-pullup.is-dragging .news-pullup-sheet { transition: none; }
     @media (prefers-reduced-motion: reduce) {
-      .news-hero-slide { transition: none; }
+      .news-pullup-sheet, .news-pullup-scrim { transition: none; }
     }
-    /* Slide stack: seat tag → summary → source (From X · @handle) underneath. */
+    .news-pullup-top {
+      flex: 0 0 auto;
+      padding: 8px 16px 6px;
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+    }
+    .news-pullup-grab {
+      display: flex; justify-content: center; padding: 2px 0 8px;
+    }
+    .news-pullup-knob {
+      width: 36px; height: 4px; border-radius: 999px;
+      background: #6b5a2e;
+    }
+    .news-pullup-title-row {
+      display: flex; align-items: baseline; gap: 10px;
+      width: 100%;
+    }
+    .news-pullup-title-row .day-alert-h { min-width: 0; flex: 1 1 auto; }
+    .news-pullup-count {
+      flex: 0 0 auto; font-size: 0.75rem; color: var(--dim);
+    }
+    button.news-pullup-peek {
+      flex: 0 0 auto;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; margin: 0;
+      padding: 4px 16px 14px; cursor: pointer;
+      touch-action: none; user-select: none;
+      min-height: 0;
+    }
+    button.news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.news-pullup-peek[hidden] { display: none; }
+    .news-pullup-panel {
+      flex: 1 1 auto; min-height: 0;
+      overflow-y: auto; overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 16px 20px;
+      touch-action: pan-y;
+    }
+    .news-pullup-panel[hidden] { display: none; }
+    .news-pullup-row {
+      padding: 12px 0;
+      border-top: 1px solid #3a3428;
+    }
+    .news-pullup-row:first-child { border-top: 0; padding-top: 4px; }
+    .news-pullup-empty {
+      padding: 12px 0; color: var(--muted); font-size: 0.875rem; line-height: 1.4;
+    }
+    /* Peek / row stack: seat tag → summary → source underneath. */
     .news-hero-who {
       display: block; font-size: 0.8125rem; font-weight: 650; line-height: 1.3;
       color: #e0b44c; margin: 0 0 4px;
@@ -751,28 +790,19 @@
     }
     .news-hero-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
     .news-hero-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
-    .news-hero-slide span {
+    .news-pullup-line {
       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
       overflow: hidden; color: var(--text); font-size: 0.8125rem; line-height: 1.35;
       margin: 0 0 6px;
+    }
+    .news-pullup.is-open .news-pullup-line {
+      -webkit-line-clamp: unset; display: block;
     }
     .news-hero-src {
       display: block; font-size: 0.6875rem; font-weight: 550; line-height: 1.3;
       color: var(--dim); margin: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .news-hero-live {
-      position: relative; z-index: 1; margin-top: 8px; width: 100%;
-      font-size: 0.75rem; color: var(--dim);
-    }
-    .lh-hero .day-in,
-    .lh-hero .date { position: relative; z-index: 1; max-width: none; }
-    .lh-hero button.day-in {
-      background: transparent; border: 0; padding: 8px 0; margin: 0;
-      width: 100%; text-align: left; cursor: pointer; color: inherit;
-      appearance: none; font: inherit; touch-action: manipulation;
-    }
-    .lh-hero button.day-in + button.day-in { border-top: 1px solid #3a3428; padding-top: 10px; }
     /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
     .lh-actions {
       margin: 18px 0 22px;
@@ -922,12 +952,20 @@
       border-color: #6b5a2e;
       gap: 10px 8px;
       padding: 12px 12px 10px;
+      /* Stretch both seats so = totals share one baseline at the bottom. */
+      align-items: stretch;
     }
     .h2h-chip.is-trade .h2h-vs {
       align-self: center; margin-top: 0;
       background: #241f14; border-color: #6b5a2e; color: #e0b44c;
     }
-    .h2h-chip.is-trade .h2h-side { gap: 6px; }
+    .h2h-chip.is-trade .h2h-side {
+      gap: 6px; min-height: 0; height: 100%;
+    }
+    .h2h-chip.is-trade .h2h-assets {
+      flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px;
+      min-height: 0;
+    }
     /* Both trade seats read LTR like the left column (avatar · name · figs). */
     .h2h-chip.is-trade .h2h-side.is-right {
       text-align: left; align-items: stretch;
@@ -991,7 +1029,7 @@
       display: block; color: var(--dim); font-size: 0.625rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    /* Right-aligned tabular book value — Mid / as-year notes live in the lab line. */
+    /* Right-aligned tabular book value — pick Mid / as-year notes stay off the Latest trade lab. */
     .lh-trade-num,
     .lh-trade-val {
       font-variant-numeric: tabular-nums; font-weight: 650;
@@ -999,7 +1037,7 @@
       white-space: nowrap; text-align: right; min-width: 4.75ch;
     }
     .lh-trade-sum {
-      margin-top: 2px; padding-top: 4px;
+      margin-top: auto; padding-top: 4px;
       border-top: 1px solid #3a3428;
     }
     .lh-trade-sum .lh-trade-eq {
@@ -1008,6 +1046,9 @@
       padding-right: 2px;
     }
     .lh-trade-sum .lh-trade-num { color: var(--text); }
+    .lh-trade-sum.is-high .lh-trade-num { color: var(--green); }
+    .lh-trade-sum.is-low .lh-trade-num { color: var(--red); }
+    .lh-trade-sum.is-even .lh-trade-num { color: var(--text); }
     /* Value lean mid + per-side voter flairs under left | VS | right. */
     .h2h-trade-lean {
       grid-column: 1 / -1;
@@ -1471,7 +1512,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "hideBottomNav20260901015430";
+    const DATA_V = "newsPullup20260901020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1506,14 +1547,9 @@
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
     let view = "home";
-    // News hero carousel (league home). Advances in JS every 3s with a leftward ticker slide; Pause stops it (WCAG 2.2.2).
-    let newsHeroIdx = 0;
-    let newsHeroPaused = false;
-    let newsHeroTimer = null;
-    // Slide transition timeout must clear on remount / Pause, or a stale callback can hide the
-    // live slide (empty News Feed) after bags/matchups re-render mid-animation.
-    let newsHeroAnimTimer = null;
-    let newsHeroAnimGen = 0;
+    // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
+    let newsPullupOpen = false;
+    let newsPullupCleanup = null;
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
     let weekMatchupsLoading = false;
@@ -1788,7 +1824,7 @@
     }
 
     function clearLeague() {
-      clearNewsHero();
+      clearNewsPullup();
       me = null;
       data = null;
       view = "home";
@@ -2705,8 +2741,8 @@
      * set that reads it.
      */
     function renderLeagueHome() {
-      // News & Alerts hero rotates on the chip; the full feed is its own screen (view=news).
-      // Each block is isolated so a throw in Latest trade / week strip cannot blank the News Feed
+      // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
+      // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
       // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
       let hero = "";
       let chips = "";
@@ -2719,21 +2755,29 @@
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
       // but a thrown path above used to leave a blank first viewport in Design Mode.
       if (!hero) {
-        hero = '<section class="lh-hero day-alert news-hero" aria-label="News Feed">'
-          + '<div class="day-alert-top"><div class="day-alert-h">News Feed</div></div>'
-          + '<button type="button" class="news-hero-body" data-view="news"'
+        hero = '<aside class="news-pullup" id="newsPullup" aria-label="News Feed"'
+          + ' data-news-pullup="1" aria-expanded="false">'
+          + '<div class="news-pullup-scrim" data-news-pullup-scrim hidden></div>'
+          + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
+          + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
+          + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
+          + ' aria-label="News Feed">'
+          + '<div class="news-pullup-grab" aria-hidden="true"><span class="news-pullup-knob"></span></div>'
+          + '<div class="news-pullup-title-row">'
+          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div></div></div>'
+          + '<button type="button" class="news-pullup-peek" data-news-pullup-peek'
           + ' aria-label="Open the News Feed">'
-          + '<div class="news-hero-slide" data-news-slide="0">'
-          + "<b>News</b><span>The feed could not be shown. Open for details.</span>"
-          + "</div></button>"
-          + '<div class="news-hero-live" data-news-live aria-live="polite">1 of 1</div>'
-          + "</section>";
+          + '<div class="news-pullup-line">The feed could not be shown. Open for details.</div>'
+          + "</button>"
+          + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
+          + '<div class="news-pullup-empty">The feed could not be shown. Open for details.</div>'
+          + "</div></div></aside>";
       }
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
-      // News hero → Latest trade → quick actions (Trades/Teams/Champions/Data Sets) → data set body.
-      return hero + progress + chips + sets;
+      // Latest trade → quick actions → data set body → bottom News Feed pull-up.
+      return progress + chips + sets + hero;
     }
 
     function renderNews() {
@@ -4596,89 +4640,161 @@
       return raw.filter((it) => !newsGone.has(it.id));
     }
 
-    /** Compact one-line copy for the rotating hero chip. */
+    /** Compact one-line copy for the News Feed peek / pull-up rows. */
 
-    function clearNewsHero() {
-      if (newsHeroTimer) { clearInterval(newsHeroTimer); newsHeroTimer = null; }
-      if (newsHeroAnimTimer) { clearTimeout(newsHeroAnimTimer); newsHeroAnimTimer = null; }
-      newsHeroAnimGen += 1;
+    function newsPullupBrandOffset() {
+      const brand = document.querySelector("h1.brand");
+      if (!brand) return 56;
+      return Math.max(44, Math.ceil(brand.getBoundingClientRect().bottom));
     }
 
-    function paintNewsHeroSlide(animate) {
-      const root = document.querySelector(".news-hero");
-      if (!root) return;
-      const slides = [...root.querySelectorAll("[data-news-slide]")];
-      if (!slides.length) return;
-      // Guard against NaN/out-of-range idx (rapid remounts during bag/matchup loads) so we never
-      // leave every slide hidden — that reads as an empty News Feed chip.
-      if (!Number.isFinite(newsHeroIdx)) newsHeroIdx = 0;
-      const prevIdx = slides.findIndex((el) => !el.hidden && !el.classList.contains("is-exit"));
-      newsHeroIdx = ((newsHeroIdx % slides.length) + slides.length) % slides.length;
-      const next = slides[newsHeroIdx];
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const live = root.querySelector("[data-news-live]");
-      if (live) live.textContent = (newsHeroIdx + 1) + " of " + slides.length;
-      // Drop any in-flight slide timeout before a hard paint or a new transition.
-      if (newsHeroAnimTimer) { clearTimeout(newsHeroAnimTimer); newsHeroAnimTimer = null; }
-      if (!animate || reduce || prevIdx < 0 || prevIdx === newsHeroIdx) {
-        slides.forEach((el, i) => {
-          el.hidden = i !== newsHeroIdx;
-          el.classList.remove("is-exit", "is-enter", "is-in");
-        });
-        // Belt-and-suspenders: if somehow none are visible, force slide 0.
-        if (!slides.some((el) => !el.hidden)) {
-          newsHeroIdx = 0;
-          slides[0].hidden = false;
-        }
-        return;
+    function clearNewsPullup() {
+      if (newsPullupCleanup) {
+        newsPullupCleanup();
+        newsPullupCleanup = null;
       }
-      const prev = slides[prevIdx];
-      const gen = newsHeroAnimGen;
-      // Ticker: current slides left; next enters from the right.
-      prev.classList.remove("is-enter", "is-in");
-      prev.classList.add("is-exit");
-      next.hidden = false;
-      next.classList.remove("is-exit");
-      next.classList.add("is-enter");
-      void next.offsetWidth;
-      next.classList.add("is-in");
-      newsHeroAnimTimer = window.setTimeout(() => {
-        newsHeroAnimTimer = null;
-        // Remount / Pause bumped the gen — ignore this stale transition cleanup.
-        if (gen !== newsHeroAnimGen) return;
-        prev.hidden = true;
-        prev.classList.remove("is-exit", "is-enter", "is-in");
-        next.classList.remove("is-enter", "is-in");
-        // Ensure the active slide stays visible even if classes raced.
-        next.hidden = false;
-        slides.forEach((el, i) => {
-          if (i !== newsHeroIdx) {
-            el.hidden = true;
-            el.classList.remove("is-exit", "is-enter", "is-in");
-          }
-        });
-        if (!slides.some((el) => !el.hidden)) {
-          newsHeroIdx = 0;
-          slides[0].hidden = false;
-          slides[0].classList.remove("is-exit", "is-enter", "is-in");
-        }
-      }, 480);
+      newsPullupOpen = false;
+      document.body.classList.remove("has-news-pullup", "has-news-pullup-open");
     }
 
-    /** Rotate hero alerts every 3s with a leftward ticker slide. Pause / reduced-motion stop it (WCAG 2.2.2). */
-    function armNewsHero() {
-      clearNewsHero();
-      const root = document.querySelector(".news-hero");
+    function setNewsPullupOpen(open) {
+      const root = document.getElementById("newsPullup");
       if (!root) return;
-      paintNewsHeroSlide(false);
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduce || newsHeroPaused) return;
-      const slides = root.querySelectorAll("[data-news-slide]");
-      if (slides.length < 2) return;
-      newsHeroTimer = setInterval(() => {
-        newsHeroIdx += 1;
-        paintNewsHeroSlide(true);
-      }, 3000);
+      newsPullupOpen = !!open;
+      root.classList.toggle("is-open", newsPullupOpen);
+      root.setAttribute("aria-expanded", newsPullupOpen ? "true" : "false");
+      const panel = root.querySelector("[data-news-pullup-panel]");
+      const peek = root.querySelector("[data-news-pullup-peek]");
+      const scrim = root.querySelector("[data-news-pullup-scrim]");
+      const sheet = root.querySelector("[data-news-pullup-sheet]");
+      if (panel) panel.hidden = !newsPullupOpen;
+      if (peek) peek.hidden = newsPullupOpen;
+      if (scrim) scrim.hidden = !newsPullupOpen;
+      document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
+      if (sheet) {
+        sheet.style.transform = "";
+        sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
+      }
+      if (newsPullupOpen && panel) panel.scrollTop = 0;
+    }
+
+    /**
+     * Wire the bottom News Feed pull-up: drag/flick open & close, tap top/scrim to close,
+     * tap peek to open. Sheet expands up to just under the Chuckle Fantasy brand.
+     */
+    function armNewsPullup() {
+      clearNewsPullup();
+      const root = document.getElementById("newsPullup");
+      if (!root) return;
+      document.body.classList.add("has-news-pullup");
+      const sheet = root.querySelector("[data-news-pullup-sheet]");
+      const top = root.querySelector("[data-news-pullup-top]");
+      const peek = root.querySelector("[data-news-pullup-peek]");
+      const scrim = root.querySelector("[data-news-pullup-scrim]");
+      if (!sheet) return;
+
+      const applyBrand = () => {
+        root.style.setProperty("--brand-offset", newsPullupBrandOffset() + "px");
+      };
+      applyBrand();
+      setNewsPullupOpen(false);
+
+      let drag = null;
+      const peekH = () => {
+        const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
+        const n = parseFloat(raw);
+        return Number.isFinite(n) ? n : 112;
+      };
+      const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
+
+      const onPointerDown = (e) => {
+        if (e.button != null && e.button !== 0) return;
+        // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
+        if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
+        applyBrand();
+        const ty = newsPullupOpen ? 0 : maxTy();
+        drag = {
+          id: e.pointerId,
+          startY: e.clientY,
+          originTy: ty,
+          lastY: e.clientY,
+          lastT: performance.now(),
+          vel: 0,
+          moved: false,
+        };
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+        root.classList.add("is-dragging");
+        sheet.style.transform = "translateY(" + ty + "px)";
+        e.preventDefault();
+      };
+
+      const onPointerMove = (e) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const now = performance.now();
+        const dy = e.clientY - drag.startY;
+        const ty = Math.min(maxTy(), Math.max(0, drag.originTy + dy));
+        const dt = Math.max(1, now - drag.lastT);
+        drag.vel = (e.clientY - drag.lastY) / dt;
+        drag.lastY = e.clientY;
+        drag.lastT = now;
+        if (Math.abs(dy) > 6) drag.moved = true;
+        sheet.style.transform = "translateY(" + ty + "px)";
+      };
+
+      const endDrag = (e) => {
+        if (!drag || (e && e.pointerId !== drag.id)) return;
+        const rawTy = sheet.style.transform || "";
+        let ty = newsPullupOpen ? 0 : maxTy();
+        if (rawTy.indexOf("translateY(") === 0) {
+          const n = parseFloat(rawTy.slice(11));
+          if (Number.isFinite(n)) ty = n;
+        }
+        const limit = maxTy();
+        const flickOpen = drag.vel < -0.45;
+        const flickClose = drag.vel > 0.45;
+        const wasTap = !drag.moved;
+        drag = null;
+        root.classList.remove("is-dragging");
+        sheet.style.transform = "";
+        if (wasTap) {
+          if (newsPullupOpen) setNewsPullupOpen(false);
+          else setNewsPullupOpen(true);
+          return;
+        }
+        if (flickOpen) setNewsPullupOpen(true);
+        else if (flickClose) setNewsPullupOpen(false);
+        else setNewsPullupOpen(ty < limit * 0.55);
+      };
+
+      const onScrimClick = (e) => {
+        e.preventDefault();
+        setNewsPullupOpen(false);
+      };
+
+      const onResize = () => applyBrand();
+
+      const targets = [top, peek].filter(Boolean);
+      for (const el of targets) {
+        el.addEventListener("pointerdown", onPointerDown);
+        el.addEventListener("pointermove", onPointerMove);
+        el.addEventListener("pointerup", endDrag);
+        el.addEventListener("pointercancel", endDrag);
+      }
+      if (scrim) scrim.addEventListener("click", onScrimClick);
+      window.addEventListener("resize", onResize);
+
+      newsPullupCleanup = () => {
+        for (const el of targets) {
+          el.removeEventListener("pointerdown", onPointerDown);
+          el.removeEventListener("pointermove", onPointerMove);
+          el.removeEventListener("pointerup", endDrag);
+          el.removeEventListener("pointercancel", endDrag);
+        }
+        if (scrim) scrim.removeEventListener("click", onScrimClick);
+        window.removeEventListener("resize", onResize);
+        root.classList.remove("is-dragging", "is-open");
+        sheet.style.transform = "";
+      };
     }
 
     function newsHeroLine(it) {
@@ -4704,50 +4820,58 @@
       return { cat: cat, line: line, who: who };
     }
 
+    function newsPullupItemHtml(bit) {
+      return (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
+        + '<div class="news-pullup-line">' + esc(bit.line) + "</div>"
+        + '<div class="news-hero-src">' + esc(bit.cat) + "</div>";
+    }
+
     /**
-     * League-home hero: News Feed ticker. Each item holds 3s, then slides left; next enters from the right.
-     * Pause / prefers-reduced-motion stop motion (WCAG 2.2.2). Body opens the full news screen.
+     * League-home News Feed: collapsed peek of the latest item at the bottom of the screen.
+     * Drag / tap opens a full sheet up to just under the brand; tap top or flick down closes.
      */
     function dayAlert() {
       const book = news && news.v === 1 ? news : null;
       const raw = (book && book.items) || [];
       const items = newsItemsLive();
       // Same three empties as the full feed: load failed, never shared, all soft-deleted.
-      // Collapsing these made Design Mode look like a blank ticker when news.json failed.
-      let slidesSrc = items;
-      if (!slidesSrc.length) {
-        const emptyLine = !book
+      let emptyLine = "";
+      if (!items.length) {
+        emptyLine = !book
           ? "The feed could not be loaded."
           : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
-        slidesSrc = [{ category: "news", league_line: emptyLine, _empty: true }];
       }
-      const slides = slidesSrc.map((it, i) => {
-        const bit = it && it._empty
-          ? { cat: "News", line: it.league_line, who: "" }
-          : newsHeroLine(it);
-        return '<div class="news-hero-slide" data-news-slide="' + i + '"'
-          + (i === 0 ? "" : " hidden") + '>'
-          + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
-          + "<span>" + esc(bit.line) + "</span>"
-          + '<div class="news-hero-src">' + esc(bit.cat) + "</div>"
-          + "</div>";
-      }).join("");
-      const n = items.length || 1;
-      const pauseLab = newsHeroPaused ? "Play" : "Pause";
-      // day-alert-top kept so existing layout chrome / smoke still find the header row.
-      return '<section class="lh-hero day-alert news-hero" aria-label="News Feed">'
-        + '<div class="day-alert-top">'
-        + '<div class="day-alert-h">News Feed</div>'
-        + '<button type="button" class="news-hero-pause" data-news-pause="1"'
-        + ' aria-pressed="' + (newsHeroPaused ? "true" : "false") + '">'
-        + pauseLab + "</button>"
-        + "</div>"
-        + '<button type="button" class="news-hero-body" data-view="news"'
+      const latestBit = items.length
+        ? newsHeroLine(items[0])
+        : { cat: "News", line: emptyLine, who: "" };
+      const rows = items.length
+        ? items.map((it) => {
+            const bit = newsHeroLine(it);
+            return '<div class="news-pullup-row">' + newsPullupItemHtml(bit) + "</div>";
+          }).join("")
+        : '<div class="news-pullup-empty">' + esc(emptyLine) + "</div>";
+      const countLab = items.length ? ("1 of " + items.length) : "";
+      return '<aside class="news-pullup" id="newsPullup" aria-label="News Feed"'
+        + ' data-news-pullup="1" aria-expanded="false">'
+        + '<div class="news-pullup-scrim" data-news-pullup-scrim hidden></div>'
+        + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
+        + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
+        + '<div class="news-pullup-top" data-news-pullup-top'
+        + ' role="button" tabindex="0"'
+        + ' aria-label="News Feed — drag up to open, tap to close when open">'
+        + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
+        + '<span class="news-pullup-knob"></span></div>'
+        + '<div class="news-pullup-title-row">'
+        + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
+        + '<span class="news-pullup-count" data-news-pullup-count">' + esc(countLab) + "</span>"
+        + "</div></div>"
+        + '<button type="button" class="news-pullup-peek" data-news-pullup-peek'
         + ' aria-label="Open the News Feed">'
-        + slides
+        + newsPullupItemHtml(latestBit)
         + "</button>"
-        + '<div class="news-hero-live" data-news-live aria-live="polite">1 of ' + n + "</div>"
-        + "</section>";
+        + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
+        + rows
+        + "</div></div></aside>";
     }
 
 
@@ -4798,11 +4922,11 @@
       const valHtml = parts
         ? '<span class="lh-trade-num lh-trade-val">' + esc(parts.num) + "</span>"
         : '<span class="lh-trade-num lh-trade-val">—</span>';
-      // Text-first asset line: gold "+" + label + book number. Mid/as notes ride the lab
-      // subline so the number column stays a clean arithmetic stack.
+      // Text-first asset line: gold "+" + label + book number. Mid / as-year notes stay off
+      // the Latest trade lab — every pick is understood as mid until true year values land.
       if (leg.kind === "pick") {
         const lab = formatPickLabels(leg.label);
-        const subBits = [lab.secondary, parts && parts.note].filter(Boolean);
+        const subBits = [lab.secondary].filter(Boolean);
         return '<div class="lh-trade-asset">'
           + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
           + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
@@ -4817,7 +4941,7 @@
       const posTeam = meta && meta.pos
         ? meta.pos + (meta.team ? " · " + meta.team : "")
         : "";
-      const subBits = [posTeam, parts && parts.note].filter(Boolean);
+      const subBits = [posTeam].filter(Boolean);
       return '<div class="lh-trade-asset">'
         + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
         + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
@@ -4840,10 +4964,14 @@
       return any ? n : null;
     }
 
-    function latestTradeSumHtml(legs) {
+    function latestTradeSumHtml(legs, tone) {
       const sum = latestTradeLegsSum(legs);
       if (sum == null) return "";
-      return '<div class="lh-trade-sum" aria-label="Total ' + esc(fmt(sum)) + '">'
+      const toneCls = tone === "high" ? " is-high"
+        : tone === "low" ? " is-low"
+        : tone === "even" ? " is-even"
+        : "";
+      return '<div class="lh-trade-sum' + toneCls + '" aria-label="Total ' + esc(fmt(sum)) + '">'
         + '<span class="lh-trade-plus" aria-hidden="true"></span>'
         + '<span class="lh-trade-eq" aria-hidden="true">=</span>'
         + '<span class="lh-trade-num">' + esc(fmt(sum)) + "</span>"
@@ -5144,7 +5272,18 @@
         const word = kind === "win" ? "WINNER" : kind === "lose" ? "LOSER" : "EVEN";
         return '<div class="h2h-verdict is-' + kind + '">' + word + "</div>";
       };
-      const sideHtml = (side, rightAlign, win, verdict) => {
+      const leftSum = latestTradeLegsSum(left.legs);
+      const rightSum = latestTradeLegsSum(right.legs);
+      let leftTone = "";
+      let rightTone = "";
+      if (leftSum != null && rightSum != null) {
+        const l = Math.round(leftSum);
+        const r = Math.round(rightSum);
+        if (l > r) { leftTone = "high"; rightTone = "low"; }
+        else if (l < r) { leftTone = "low"; rightTone = "high"; }
+        else { leftTone = "even"; rightTone = "even"; }
+      }
+      const sideHtml = (side, rightAlign, win, verdict, sumTone) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
@@ -5160,17 +5299,17 @@
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
             + '<div class="lh-trade-lab"><b>…</b></div>'
             + '<span class="lh-trade-num lh-trade-val">—</span></div>')
-          + latestTradeSumHtml(legs)
+          + latestTradeSumHtml(legs, sumTone)
           + "</div></div>";
       };
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
-        + sideHtml(left, false, leftWin, leftVerdict)
+        + sideHtml(left, false, leftWin, leftVerdict, leftTone)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin, rightVerdict)
+        + sideHtml(right, true, rightWin, rightVerdict, rightTone)
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
-    }
+      }
 
     function matchupStripHtml() {
       if (weekMatchupsLoading && !weekMatchups) {
@@ -6211,7 +6350,7 @@
       paintLeagueSub();
       paintBottomNav();
       syncUrl();
-      armNewsHero();
+      armNewsPullup();
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
@@ -6493,17 +6632,6 @@
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
-
-      const newsPause = e.target.closest("[data-news-pause]");
-      if (newsPause) {
-        newsHeroPaused = !newsHeroPaused;
-        armNewsHero();
-        // Re-render so the Pause/Play label stays honest after the next paint;
-        // for now update the control in place so the carousel does not restart from zero.
-        newsPause.setAttribute("aria-pressed", newsHeroPaused ? "true" : "false");
-        newsPause.textContent = newsHeroPaused ? "Play" : "Pause";
-        return;
-      }
 
       // League-home quick actions: same destinations as bottom nav.
       const lhNav = e.target.closest("[data-lh-nav]");

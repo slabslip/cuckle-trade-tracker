@@ -11479,6 +11479,15 @@ if (!inline.includes('appScreen = "inviteConfirm"')
     throw new Error("wave6 must refuse redeem when the account already sits a different seat");
   }
 }
+{
+  const wave8 = fs.readFileSync(`${ROOT}db/wave8-vote-tally-members.sql`, "utf8");
+  if (!wave8.includes("league_memberships")
+    || !wave8.includes("trade_vote_tallies")
+    || !wave8.includes("inner join public.league_memberships")
+    || !wave8.includes("security_invoker = false")) {
+    throw new Error("wave8 must rebuild trade_vote_tallies (members join, security_invoker=false for anon)");
+  }
+}
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-step-modes") || !html.includes("button.pick-intel-step-mode")

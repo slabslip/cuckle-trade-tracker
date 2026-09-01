@@ -1228,10 +1228,6 @@ const html = `<!DOCTYPE html>
     div.lh-trade-feed-card.is-selected .day-alert-h {
       font-size: 0.9375rem;
     }
-    .trade-feed-detail {
-      margin: 0;
-    }
-    .trade-feed-detail .row-x-head .row-top.tape { margin-bottom: 0; }
     div.lh-trade-feed-card.is-selected .vote-card {
       margin: 0;
     }
@@ -1428,6 +1424,13 @@ const html = `<!DOCTYPE html>
       font-size: 0.75rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .lh-trade-lab b.pos-qb { color: var(--pos-qb); }
+    .lh-trade-lab b.pos-rb { color: var(--pos-rb); }
+    .lh-trade-lab b.pos-wr { color: var(--pos-wr); }
+    .lh-trade-lab b.pos-te { color: var(--pos-te); }
+    .lh-trade-lab b.pos-k { color: var(--pos-k); }
+    .lh-trade-lab b.pos-def { color: var(--pos-def); }
+    .lh-trade-lab b.pos-oth { color: var(--pos-oth); }
     .lh-trade-lab span {
       display: block; color: var(--dim); font-size: 0.625rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -3964,10 +3967,11 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Selected trade at the top of the detail feed: same H2H chip as home, with bags and vote
-     * expanded beneath. The chip is not a navigation control here — the feed cards below are.
+     * Selected trade at the top of the detail feed: full H2H chip (same layout as feed cards)
+     * plus vote beneath. The chip carries every bag leg inline — no duplicate row-x / bagBlock
+     * stack. The chip is not a navigation control here — the feed cards below are.
      */
-    function tradeFeedSelectedHtml(r, hit) {
+    function tradeFeedSelectedHtml(r) {
       const voted = !!readVotes(r.transaction_id).choice;
       let chip = "";
       try {
@@ -3983,16 +3987,12 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
           + "</div>";
       }
-      const detail = hit
-        ? '<div class="trade-feed-detail">' + tradeRow(hit, null, true) + "</div>"
-        : '<p class="caption">Loading both bags…</p>';
       return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
         + ' data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
         + '<div class="day-alert-h">' + esc(r.date || "")
         + (r.headline ? " · " + esc(r.headline) : "") + "</div>"
         + chip
-        + detail
         + '<div class="vote-card">' + voteBlock(r) + "</div>"
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
@@ -4012,9 +4012,6 @@ const html = `<!DOCTYPE html>
       }
       const ctx = tapeTradesFiltered();
       const { lived, list, empty } = ctx;
-      const uid = tradeSeat || selected.user_id;
-      const cached = seatCache[uid];
-      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === openId);
       const rest = list.filter((r) => r.transaction_id !== openId);
       ensureTradesFeedBags([selected].concat(rest));
       const shown = rest.slice(0, tapeLimit);
@@ -4023,7 +4020,7 @@ const html = `<!DOCTYPE html>
         ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
           + (rest.length - shown.length) + " left)</button>"
         : "";
-      const feedBody = tradeFeedSelectedHtml(selected, hit)
+      const feedBody = tradeFeedSelectedHtml(selected)
         + cards;
       return backChip("Back")
         + '<h2 class="screen-h" tabindex="-1">' + seatLabel(selected.name) + " vs " + seatLabel(selected.other) + "</h2>"
@@ -5991,7 +5988,7 @@ const html = `<!DOCTYPE html>
       if (!raw) return "";
       const posByName = Object.create(null);
       if (it && it.player) posByName[String(it.player).toLowerCase()] = it.player_position || null;
-      const posNameRe = /\b(QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C)\s+([A-Z][\w.'\u2019\-]+(?:\s+(?:Jr\.|Sr\.|III|II|IV|V|[A-Z]\.?|[A-Z][\w.'\u2019\-]+))*)/g;
+      const posNameRe = /\\b(QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C)\\s+([A-Z][\\w.'\u2019\\-]+(?:\\s+(?:Jr\\.|Sr\\.|III|II|IV|V|[A-Z]\\.?|[A-Z][\\w.'\u2019\\-]+))*)/g;
       const matches = [];
       let m;
       while ((m = posNameRe.exec(raw)) !== null) {
@@ -6241,9 +6238,11 @@ const html = `<!DOCTYPE html>
       const posTeam = meta && meta.pos
         ? meta.pos + (meta.team ? " · " + meta.team : "")
         : "";
+      const posSlug = meta && meta.pos ? newsPosSlug(meta.pos) : "";
+      const nameCls = posSlug ? ' class="pos-' + posSlug + '"' : "";
       return '<div class="lh-trade-asset">'
         + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
-        + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
+        + '<div class="lh-trade-lab"><b' + nameCls + '>' + esc(primary || leg.label || "") + "</b>"
         + (posTeam ? "<span>" + esc(posTeam) + "</span>" : "")
         + "</div>"
         + valHtml
@@ -9807,6 +9806,14 @@ for (const need of [
   }
   if (fn.includes("boardTape(r)") || fn.includes("screen-foot"))
     throw new Error("trade detail feed must not use the old standalone boardTape / footer layout");
+}
+{
+  const at = inline.indexOf("function tradeFeedSelectedHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1500 : stop);
+  if (fn.includes("tradeRow(") || fn.includes("trade-feed-detail") || fn.includes("bagBlock(")) {
+    throw new Error("tradeFeedSelectedHtml must use H2H chip only — no redundant row-x / bagBlock detail");
+  }
 }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")
   || !html.includes("div.lh-trade-feed-card.is-selected") || !html.includes("#tapeFilters")) {

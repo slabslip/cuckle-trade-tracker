@@ -643,6 +643,14 @@
       padding: 12px; margin: 0 0 14px;
     }
     .mark-chart-h { font-weight: 650; margin-bottom: 12px; }
+    .mark-chart-h-row {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .mark-chart-h-row .mark-chart-h-copy { min-width: 0; flex: 1 1 auto; font-weight: 650; }
+    .mark-chart-h-row .mark-chart-h-copy span {
+      display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px;
+    }
     .mark-chart-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px; }
     .mark-bar { margin: 0 0 12px; }
     .mark-bar:last-child { margin-bottom: 0; }
@@ -2189,7 +2197,9 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "t0";
-    const DATA_V = "chipLensVaLabelGold20260901180100";
+    let runLens = "y2";
+    let lensPicker = "trade";
+    const DATA_V = "runLensAheadBehind20260901180300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5032,6 +5042,7 @@
     function marksOf(row) {
       const m = row || {};
       const w = (m.lens && m.lens[lens]) || {};
+      const runW = (m.lens && m.lens[runLens]) || {};
       const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
       const soldPicks = m.sold_picks || 0;
@@ -5058,8 +5069,8 @@
       let draftTone = "";
       if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
       else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
-      const total = w.total == null ? null : w.total;
-      const per = w.per == null ? null : w.per;
+      const total = runW.total == null ? null : runW.total;
+      const per = runW.per == null ? null : runW.per;
       let run = "Even";
       let runTone = "";
       if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
@@ -5120,10 +5131,26 @@
         + "</div>";
     }
 
+    function runLensCaption() {
+      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      if (runLens === "t0") return "Average value at accept across every deal.";
+      if (runLens === "all") return "Average as-of-today value across every deal.";
+      return "Average at " + name.toLowerCase() + " where lived; younger deals use their best window.";
+    }
+
+    function runLensHtml() {
+      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      return '<span class="chip-lens is-inline">'
+        + '<button type="button" class="chip-lens-btn" data-run-lens="1"'
+        + ' aria-label="Ahead or behind window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' title="' + esc(name) + '">'
+        + chipLensIcon() + "</button></span>";
+    }
+
     function markChart() {
       if (!markOpen) return "";
       const heads = {
-        run: ["Ahead or behind", (WINDOWS.find((w) => w[0] === lens) || [])[1] || ""],
+        run: ["Ahead or behind", runLensCaption()],
         volume: ["How much they trade", "Two-way count. 80+ Hyper, 40–79 Active, under 40 Quiet."],
         posture: ["Players vs picks", "Picks sold for players vs players sold for picks."],
         manners: ["Who extracts", "Partners they beat vs partners who beat them."],
@@ -5136,13 +5163,21 @@
         .filter((mem) => seats[mem.user_id])
         .map((mem) => ({ name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[markOpen] }));
       if (!rows.length) {
-        return '<div class="mark-chart"><div class="mark-chart-h">' + esc(head[0])
-          + '</div><p class="caption">No league marks in this build.</p></div>';
+        const emptyHead = markOpen === "run"
+          ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+            + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
+          : '<div class="mark-chart-h">' + esc(head[0]) + "</div>";
+        return '<div class="mark-chart">' + emptyHead
+          + '<p class="caption">No league marks in this build.</p></div>';
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
+      const chartHead = markOpen === "run"
+        ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+          + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
+        : '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>";
       return '<div class="mark-chart">'
-        + '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>"
+        + chartHead
         + rows.map((r, i) => {
           const you = me && me.user_id === r.uid;
           const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
@@ -8320,8 +8355,9 @@
     }
 
     function scoreOpt(row) {
+      const active = lensPicker === "run" ? runLens : lens;
       // Title-only rows keep the portal short; longer copy stays on title/aria for hover & SR.
-      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
+      return '<button type="button" class="score-opt' + (active === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
         + ' title="' + esc(row[2] || row[1]) + '" aria-label="' + esc(row[1]) + '">'
         + "<b>" + esc(row[1]) + "</b></button>";
     }
@@ -8378,28 +8414,41 @@
 
     function paintLens() {
       const panel = document.getElementById("scoreAs");
-      const btns = document.querySelectorAll("button.chip-lens-btn");
+      const btns = document.querySelectorAll("button.chip-lens-btn[data-score]");
+      const runBtns = document.querySelectorAll("button.chip-lens-btn[data-run-lens]");
       if (!panel) return;
-      if (!lensApplies() || !btns.length) {
+      if (!lensApplies() || (!btns.length && !runBtns.length)) {
         lensOpen = false;
+        lensPicker = "trade";
         panel.hidden = true;
         panel.innerHTML = "";
         return;
       }
-      const name = clockName();
+      const active = lensPicker === "run" ? runLens : lens;
+      const activeName = (WINDOWS.find((w) => w[0] === active) || [])[1] || "";
+      const tradeName = (WINDOWS.find((w) => w[0] === lens) || [])[1] || "";
+      const runName = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
       for (const btn of btns) {
-        btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
-        btn.setAttribute("aria-label", "Score window: " + name);
-        btn.setAttribute("title", name);
-        btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
+        btn.className = "chip-lens-btn" + (lensPicker === "trade" && (lens !== "all" || lensOpen) ? " on" : "");
+        btn.setAttribute("aria-label", "Score window: " + tradeName);
+        btn.setAttribute("title", tradeName);
+        btn.setAttribute("aria-expanded", lensOpen && lensPicker === "trade" ? "true" : "false");
         btn.innerHTML = chipLensIcon()
           + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
+      for (const btn of runBtns) {
+        btn.className = "chip-lens-btn" + (lensPicker === "run" && (runLens !== "all" || lensOpen) ? " on" : "");
+        btn.setAttribute("aria-label", "Ahead or behind window: " + runName);
+        btn.setAttribute("title", runName);
+        btn.setAttribute("aria-expanded", lensOpen && lensPicker === "run" ? "true" : "false");
+        btn.innerHTML = chipLensIcon()
+          + (runLens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
       }
       panel.hidden = !lensOpen;
       panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
       if (lensOpen) {
         const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
-          || btns[0];
+          || (lensPicker === "run" ? runBtns[0] : btns[0]);
         if (anchor) positionScoreAs(anchor);
       }
     }
@@ -9009,12 +9058,38 @@
       if (opt) {
         e.preventDefault();
         e.stopPropagation();
-        lens = opt.dataset.lens;
+        const wasRun = lensPicker === "run";
+        if (wasRun) runLens = opt.dataset.lens;
+        else lens = opt.dataset.lens;
         lensOpen = false;
+        lensPicker = "trade";
         lensAnchorId = 0;
         render();
-        const back = document.querySelector("button.chip-lens-btn");
+        const back = document.querySelector(
+          wasRun ? "button.chip-lens-btn[data-run-lens]" : "button.chip-lens-btn[data-score]"
+        ) || document.querySelector("button.chip-lens-btn");
         if (back) back.focus({ preventScroll: true });
+        return;
+      }
+      const runLensBtn = e.target.closest("button.chip-lens-btn[data-run-lens]");
+      if (runLensBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!runLensBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          runLensBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = runLensBtn.getAttribute("data-lens-anchor");
+        lensPicker = "run";
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
         return;
       }
       const scoreBtn = e.target.closest("button.chip-lens-btn[data-score]");
@@ -9027,6 +9102,7 @@
           scoreBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
         }
         lensAnchorId = scoreBtn.getAttribute("data-lens-anchor");
+        lensPicker = "trade";
         lensOpen = !lensOpen;
         if (!lensOpen) {
           paintLens();
@@ -9048,6 +9124,7 @@
     function closeTopmost() {
       if (lensOpen) {
         lensOpen = false;
+        lensPicker = "trade";
         paintLens();
         const back = document.querySelector("button.chip-lens-btn");
         if (back) back.focus({ preventScroll: true });

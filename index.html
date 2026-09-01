@@ -1810,24 +1810,25 @@
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Compact score clock on value chips / filter rows — icon only, tucked top-right. */
-    .chip-lens { position: absolute; top: 2px; right: 2px; z-index: 3; line-height: 0; }
+    .chip-lens { position: absolute; top: 0; right: 0; z-index: 3; line-height: 0; }
     .chip-lens.is-inline {
       position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
     }
-    .h2h-chip.is-trade { position: relative; padding-top: 18px; }
-    .h2h-chip.is-trade > .chip-lens { top: 2px; right: 2px; }
+    /* Reserve a clear corner so the clock never covers seat names / medals. */
+    .h2h-chip.is-trade { position: relative; padding-top: 16px; padding-right: 20px; }
+    .h2h-chip.is-trade > .chip-lens { top: 0; right: 0; }
     button.chip-lens-btn {
       appearance: none; font: inherit; color: var(--muted);
-      background: rgba(12, 12, 16, 0.78);
+      background: rgba(12, 12, 16, 0.82);
       border: 1px solid var(--line); border-radius: 999px;
-      width: 22px; height: 22px; min-height: 22px; padding: 0;
+      width: 20px; height: 20px; min-height: 20px; padding: 0;
       display: grid; place-items: center; cursor: pointer;
       position: relative; line-height: 0;
       touch-action: manipulation;
     }
     button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
     button.chip-lens-btn .chip-lens-ico {
-      display: block; width: 12px; height: 12px;
+      display: block; width: 11px; height: 11px;
     }
     button.chip-lens-btn .dot {
       position: absolute; top: 1px; right: 1px;
@@ -2138,7 +2139,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsUninsuredClock20260901142000";
+    const DATA_V = "chipClockIcon20260901143000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7983,7 +7984,7 @@
      * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
      */
     function chipLensIcon() {
-      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false">'
+      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true" focusable="false">'
         + '<circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>'
         + '<path d="M8 4.75V8l2.4 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>'
         + "</svg>";

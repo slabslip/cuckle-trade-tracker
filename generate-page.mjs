@@ -1098,35 +1098,20 @@ const html = `<!DOCTYPE html>
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
-    /* Header row: bold year (left) + round-only filter buttons aligned over each column. */
-    .pick-intel-board-yr {
-      grid-column: 1; grid-row: 1;
-      font-weight: 700; font-size: 0.75rem; line-height: 1.2;
-      color: var(--muted); white-space: nowrap; align-self: center;
-    }
+    /* Three equal columns; year is baked into each round lab (27' 1sts), not a gutter. */
     .pick-intel-board-cols {
       display: grid;
-      grid-template-columns: auto repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       grid-template-rows: auto 1fr;
       gap: 8px 10px;
       align-items: start;
     }
+    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
     .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
     .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
-    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(4) { grid-column: 4; grid-row: 1; }
+    .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
-    .pick-intel-board-cols > .pick-intel-board-col:nth-child(7) { grid-column: 4; grid-row: 2; }
-    /* Cuffs board: no year/"held" gutter — three equal columns only. */
-    .cuffs-board .pick-intel-board-cols {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
-    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
-    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
-    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
-    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
-    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     /* Shared 2-col grid: seat names | counts. Labels sit in the count track
        (centered over · N), not left over the seat names. */
     .pick-intel-board-col {
@@ -1192,7 +1177,6 @@ const html = `<!DOCTYPE html>
         grid-template-rows: none;
         gap: 10px;
       }
-      .pick-intel-board-yr,
       .pick-intel-board-cols > button.pick-intel-board-lab,
       .pick-intel-board-cols > .pick-intel-board-col {
         grid-column: 1; grid-row: auto;
@@ -2197,7 +2181,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "seasonTradeClock20260901154500";
+    const DATA_V = "pickBoardYrPrefix20260901160000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2753,9 +2737,10 @@ const html = `<!DOCTYPE html>
     }
 
     /** Idle quick-view leaderboard: top 3 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
-     * Year label once on the header row; column buttons show round only. */
+     * Year short-prefix on each column lab (27' 1sts) — no standalone year gutter. */
     function pickIntelBoard() {
       const yrs = PICK_INTEL_BOARD_YEAR;
+      const yrShort = String(yrs).slice(-2) + "'";
       const cols = [
         { lab: "1sts", rounds: [1] },
         { lab: "2nds", rounds: [2] },
@@ -2763,10 +2748,10 @@ const html = `<!DOCTYPE html>
       ];
       const aria = "Still-available 2027 pick leaders by round (1sts, 2nds, 3rds–4ths)";
       const headBtns = cols.map((r) => {
-        const labFull = r.lab + " · " + yrs;
+        const lab = yrShort + " " + r.lab;
         return '<button type="button" class="pick-intel-board-lab" data-pick-rounds="'
           + r.rounds.join(",") + '" data-pick-years="' + esc(yrs)
-          + '" aria-label="Filter to ' + esc(labFull) + '">' + esc(r.lab) + "</button>";
+          + '" aria-label="Filter to ' + esc(lab) + '">' + esc(lab) + "</button>";
       }).join("");
       const bodyCols = cols.map((r) => {
         const leaders = pickLeaders(r.rounds, 3, yrs);
@@ -2778,7 +2763,6 @@ const html = `<!DOCTYPE html>
       }).join("");
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
         + '<div class="pick-intel-board-cols">'
-        + '<span class="pick-intel-board-yr">' + esc(yrs) + "</span>"
         + headBtns
         + bodyCols
         + "</div></div>";
@@ -10716,9 +10700,10 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes("function pickLeadersStack(") || !inline.includes("function pickIntelStepPanel(")
   || !inline.includes("function pickSeasonRangeLabel(") || !inline.includes("PICK_INTEL_BOARD_YEAR")
   || !inline.includes("pick-intel-board-cols")
-  || !inline.includes("pick-intel-board-yr")
+  || !inline.includes('yrShort + " " + r.lab')
   || !inline.includes('"3rds–4ths"') || !inline.includes("pickLeaders(r.rounds, 3, yrs)")
   || !inline.includes('Still-available 2027 pick leaders')
+  || inline.includes("pick-intel-board-yr")
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
@@ -10850,12 +10835,12 @@ if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-step-modes") || !html.includes("button.pick-intel-step-mode")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
-  || !html.includes(".pick-intel-board-yr") || !html.includes("button.pick-intel-chip")
+  || html.includes(".pick-intel-board-yr") || !html.includes("button.pick-intel-chip")
   || html.includes(".pick-intel-board-h")
   || html.includes("button.pick-intel-filter")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
-  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input or board-h)");
+  throw new Error("Draft Data progressive filter + column leaderboard styles must ship without year gutter (no pick search input or board-h)");
 }
 if (!inline.includes('aria-label="Search picks"')
   || !inline.includes('aria-label="Original picks"')

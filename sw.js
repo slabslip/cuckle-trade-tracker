@@ -1,6 +1,6 @@
 /* Chuckle Fantasy — installable shell. Cache the app shell; network-first for JSON. */
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
-const CACHE = "chuckle-shell-v37-trade-winner-loser";
+const CACHE = "chuckle-shell-v38-actions-below-trade";
 /* Do not precache index.html — Design Mode must never boot from a stale shell snapshot. */
 const SHELL = ["./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
 

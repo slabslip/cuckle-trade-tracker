@@ -778,8 +778,9 @@ const html = `<!DOCTYPE html>
       appearance: none; font: inherit; touch-action: manipulation;
     }
     .lh-hero button.day-in + button.day-in { border-top: 1px solid #3a3428; padding-top: 10px; }
+    /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
     .lh-actions {
-      margin: 0 0 22px;
+      margin: 18px 0 22px;
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1474,7 +1475,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeWinnerLoser20260901015130";
+    const DATA_V = "actionsBelowTrade20260901015300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2735,7 +2736,8 @@ const html = `<!DOCTYPE html>
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
-      return hero + chips + progress + sets;
+      // News hero → Latest trade → quick actions (Trades/Teams/Champions/Data Sets) → data set body.
+      return hero + progress + chips + sets;
     }
 
     function renderNews() {

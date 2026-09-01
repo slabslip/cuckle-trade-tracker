@@ -1469,7 +1469,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeWinnerLoser20260901015130";
+    const DATA_V = "actionsBelowTrade20260901015300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2730,7 +2730,8 @@
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
-      return hero + chips + progress + sets;
+      // News hero → Latest trade → quick actions (Trades/Teams/Champions/Data Sets) → data set body.
+      return hero + progress + chips + sets;
     }
 
     function renderNews() {

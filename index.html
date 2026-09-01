@@ -1976,13 +1976,16 @@
       return [...years].sort();
     }
 
-    /** Compact year scope for column labs — all still-available seasons (e.g. 2027–2029). */
+    /** Compact year scope helper (kept for callers / smokes). Idle board uses 2027 only. */
     function pickSeasonRangeLabel() {
       const years = pickSeasonsAvailable();
       if (!years.length) return "";
       if (years.length === 1) return years[0];
       return years[0] + "–" + years[years.length - 1];
     }
+
+    /** Idle board year — still-available 2027 picks only. */
+    const PICK_INTEL_BOARD_YEAR = "2027";
 
     function pickFiltersActive() {
       return pickFilterMineOut || pickFilterMineHeld || !!pickFilterOwner
@@ -2128,20 +2131,27 @@
     }
 
     /**
-     * Top holders of still-available picks. Pass a round number for that round only,
-     * or null for total picks overall. Ties keep equal counts; names break remaining ties.
+     * Top holders of still-available picks.
+     * @param {number|number[]|null} rounds — one round, several (e.g. 3+4), or null for all rounds
+     * @param {number} limit — how many names to return (board uses 5)
+     * @param {string|null} season — e.g. "2027", or null for every still-available year
+     * Ties keep equal counts; names break remaining ties.
      */
-    function pickLeaders(round, limit) {
+    function pickLeaders(rounds, limit, season) {
+      const roundSet = rounds == null
+        ? null
+        : new Set((Array.isArray(rounds) ? rounds : [rounds]).map(Number));
       const counts = new Map();
       for (const row of stillPickEntries()) {
         const parts = pickKeyParts(row.key);
         if (!parts) continue;
-        if (round != null && parts.round !== round) continue;
+        if (season != null && parts.season !== String(season)) continue;
+        if (roundSet && !roundSet.has(parts.round)) continue;
         const owner = pickOwnerName(row.entry);
         if (!owner) continue;
         counts.set(owner, (counts.get(owner) || 0) + 1);
       }
-      const top = Math.max(1, Number(limit) || 3);
+      const top = Math.max(1, Number(limit) || 5);
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
@@ -2153,30 +2163,26 @@
           + '</span><span class="pil-n">· ' + n + "</span></div>").join("");
     }
 
-    /** Idle quick-view leaderboard: three columns — most 1sts, most 2nds, most picks overall.
-     * Counts span every still-available draft year; each column lab shows that year range.
+    /** Idle quick-view leaderboard: top 5 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
      * No board-level heading — year scope lives on the column titles only. */
     function pickIntelBoard() {
+      const yrs = PICK_INTEL_BOARD_YEAR;
       const cols = [
-        { lab: "1sts", round: 1, filter: true },
-        { lab: "2nds", round: 2, filter: true },
-        { lab: "Total", round: null, filter: false },
+        { lab: "1sts", rounds: [1] },
+        { lab: "2nds", rounds: [2] },
+        { lab: "3rds–4ths", rounds: [3, 4] },
       ];
-      const yrs = pickSeasonRangeLabel();
-      const aria = yrs
-        ? ("Still-available pick leaders, " + yrs)
-        : "Still-available pick leaders";
+      const aria = "Still-available 2027 pick leaders by round (1sts, 2nds, 3rds–4ths)";
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
-          const leaders = pickLeaders(r.round, 3);
-          const labFull = yrs ? (r.lab + " · " + yrs) : r.lab;
+          const leaders = pickLeaders(r.rounds, 5, yrs);
+          const labFull = r.lab + " · " + yrs;
           const labInner = esc(r.lab)
-            + (yrs ? ('<span class="pick-intel-board-yrs">' + esc(yrs) + "</span>") : "");
-          const lab = r.filter
-            ? ('<button type="button" class="pick-intel-board-lab" data-pick-round="'
-              + r.round + '" aria-label="Filter to ' + esc(labFull) + '">' + labInner + "</button>")
-            : ('<span class="pick-intel-board-lab">' + labInner + "</span>");
+            + '<span class="pick-intel-board-yrs">' + esc(yrs) + "</span>";
+          const lab = '<button type="button" class="pick-intel-board-lab" data-pick-rounds="'
+            + r.rounds.join(",") + '" data-pick-years="' + esc(yrs)
+            + '" aria-label="Filter to ' + esc(labFull) + '">' + labInner + "</button>";
           return '<div class="pick-intel-board-col">'
             + lab
             + '<div class="pick-intel-board-leaders">' + pickLeadersStack(leaders) + "</div>"
@@ -2219,7 +2225,7 @@
       } else if (!picks) {
         body = '<p class="caption">Pick tape is not available for this league yet.</p>';
       } else if (!active) {
-        const anyLeaders = pickLeaders(null, 1).length > 0;
+        const anyLeaders = pickLeaders(null, 1, PICK_INTEL_BOARD_YEAR).length > 0;
         body = anyLeaders
           ? pickIntelBoard()
           : '<p class="caption">No still-available picks on the tape yet. Filters light up when picks load.</p>';
@@ -7599,10 +7605,26 @@
         render();
         return;
       }
+      const pickBoardRounds = e.target.closest("[data-pick-rounds]");
+      if (pickBoardRounds) {
+        // Leaderboard shortcut: apply that round set + board year (2027) and show matches.
+        const rounds = String(pickBoardRounds.dataset.pickRounds || "")
+          .split(",").map(Number).filter((n) => n > 0);
+        const year = String(pickBoardRounds.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
+        pickFilterRounds = {};
+        for (const n of rounds) pickFilterRounds[n] = true;
+        pickFilterYears = {};
+        if (year) pickFilterYears[year] = true;
+        pickFilterOpen = false;
+        pickFilterStep = null;
+        pickIntelOpen = null;
+        render();
+        return;
+      }
       const pickRound = e.target.closest("[data-pick-round]");
       if (pickRound) {
         const n = Number(pickRound.dataset.pickRound);
-        // Leaderboard shortcut: jump straight into the year step with that round on.
+        // Legacy single-round shortcut: jump into the year step with that round on.
         pickFilterRounds = {};
         pickFilterRounds[n] = true;
         pickFilterOpen = true;

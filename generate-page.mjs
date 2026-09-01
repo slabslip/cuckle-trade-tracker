@@ -962,19 +962,31 @@ const html = `<!DOCTYPE html>
       line-height: 1.3;
     }
     .pick-intel .caption { margin: 0 0 8px; }
-    /* Compact toolbar: three equal chips (search / who has mine / whose I hold).
-       Centered under Draft Data; equal flex share; wrap on narrow screens. */
+    /* Compact toolbar: optional leading section icon + three equal chips. */
     .pick-intel-bar {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      margin: 0 0 8px; align-items: stretch; justify-content: center;
+      display: flex; flex-wrap: nowrap; gap: 8px;
+      margin: 0 0 8px; align-items: center; justify-content: flex-start;
+    }
+    .pick-intel-ico {
+      flex: 0 0 auto;
+      width: 28px; height: 36px;
+      display: grid; place-items: center;
+      color: var(--muted);
+      line-height: 0;
+    }
+    .pick-intel-ico svg { display: block; width: 22px; height: 22px; }
+    .pick-intel-chips {
+      flex: 1 1 auto; min-width: 0;
+      display: flex; flex-wrap: nowrap; gap: 6px;
+      align-items: stretch;
     }
     button.pick-intel-chip {
-      appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.6875rem;
       color: var(--text); background: var(--card); border: 1px solid var(--line);
-      border-radius: 10px; min-height: 36px; padding: 6px 10px;
+      border-radius: 10px; min-height: 36px; padding: 6px 6px;
       cursor: pointer; touch-action: manipulation;
-      flex: 1 1 0; min-width: 6.5rem; max-width: 11.5rem;
-      text-align: center; line-height: 1.25; text-wrap: balance;
+      flex: 1 1 0; min-width: 0; max-width: none;
+      text-align: center; line-height: 1.2; text-wrap: balance;
     }
     button.pick-intel-chip.on,
     button.pick-intel-chip[aria-expanded="true"],
@@ -2164,7 +2176,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickBoardTeamClickable20260901151500";
+    const DATA_V = "picksBarIcon20260901153000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2814,6 +2826,8 @@ const html = `<!DOCTYPE html>
       const filterOn = pickFilterOpen || active;
       return '<section class="pick-intel" aria-label="Draft Data">'
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + picksBarIcon()
+        + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
         + ' aria-label="search for picks">'
@@ -2827,7 +2841,7 @@ const html = `<!DOCTYPE html>
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
         + ' aria-label="whose picks do i have">whose picks do i have</button>'
-        + "</div>"
+        + "</div></div>"
         + pickFilterSummary()
         + pickIntelStepPanel(seatNames)
         + body
@@ -2844,6 +2858,18 @@ const html = `<!DOCTYPE html>
      * preset: optional { rounds: number[], years: string[], owner, ownerMode }
      * for leaderboard deep-links (team + column + year already chosen).
      */
+
+    /** Leading glyph for the Draft Data chip row (draft-pick ticket). */
+    function picksBarIcon() {
+      return '<span class="pick-intel-ico" aria-hidden="true" title="Picks">'
+        + '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<rect x="4.5" y="3.5" width="15" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/>'
+        + '<path d="M8 8h8M8 12h8M8 16h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
+        + '<circle cx="16.2" cy="16.2" r="3.2" fill="var(--card)" stroke="currentColor" stroke-width="1.5"/>'
+        + '<path d="M16.2 14.7v1.5l1.1.7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'
+        + "</svg></span>";
+    }
+
     function openDraftDataPage(mode, preset) {
       clearPickFilters();
       if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
@@ -2896,6 +2922,8 @@ const html = `<!DOCTYPE html>
       const mineDis = !seat;
       return '<section class="pick-intel" aria-label="Draft Data">'
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + picksBarIcon()
+        + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
         + ' aria-label="search for picks">search for picks</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
@@ -2904,7 +2932,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="whose picks do i have">whose picks do i have</button>'
-        + "</div>"
+        + "</div></div>"
         + body
         + "</section>";
     }
@@ -3178,6 +3206,7 @@ const html = `<!DOCTYPE html>
       }
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
         + ' aria-label="search cuffs">search cuffs</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
@@ -3185,7 +3214,7 @@ const html = `<!DOCTYPE html>
         + ' aria-label="my cuffs">my cuffs</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
         + ' aria-label="cuff available">cuff available</button>'
-        + "</div>"
+        + "</div></div>"
         + body
         + "</section>";
     }
@@ -3234,6 +3263,7 @@ const html = `<!DOCTYPE html>
       const mineOn = cuffFilterMine;
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
         + ' aria-label="search cuffs">'
@@ -3247,7 +3277,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
         + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
         + ' aria-label="cuff available">cuff available</button>'
-        + "</div>"
+        + "</div></div>"
         + cuffFilterSummary()
         + cuffFilterPanel(seatNames)
         + body
@@ -10563,7 +10593,11 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   throw new Error("Draft Data must ship progressive filters + 2027 top-3 column leaderboard without a search input or board-h");
 
 {
-  if (!inline.includes("function openDraftDataPage(") || !inline.includes("function pickIntelHome(")
+  if (!inline.includes("function picksBarIcon(") || !inline.includes("pick-intel-ico")
+    || !inline.includes("pick-intel-chips")) {
+    throw new Error("Draft Data bar must show a picks icon beside equal-width chips");
+  }
+if (!inline.includes("function openDraftDataPage(") || !inline.includes("function pickIntelHome(")
     || !inline.includes("function renderDraftDataPage(") || !inline.includes('data-draft-data-open="search"')
     || !inline.includes('data-draft-data-open="mine"') || !inline.includes('data-draft-data-open="held"')
     || !inline.includes('view === "draftdata" ? renderDraftDataPage()')

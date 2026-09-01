@@ -10709,7 +10709,7 @@ if (!inline.includes("!lensIsAgeDefault()")) {
 }
 if (!inline.includes('let runLens = "y2"') || !inline.includes("function runLensHtml(")
   || !inline.includes("function runLensCaption(") || !inline.includes("data-run-lens")
-  || !inline.includes("m.lens[runLens]") || !inline.includes(".mark-chart-h-row")) {
+  || !inline.includes("m.lens[runLens]") || !html.includes(".mark-chart-h-row")) {
   throw new Error("Ahead or behind must default to y2 with its own lens filter and best-window marks");
 }
 {

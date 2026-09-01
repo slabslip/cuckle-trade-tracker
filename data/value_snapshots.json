@@ -1,0 +1,458 @@
+[
+  {
+    "as_of": "2026-09-01",
+    "source": "latest",
+    "players": 530,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-08-28",
+    "source": "a9346c6",
+    "players": 530,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-07-31",
+    "source": "40b8c89",
+    "players": 637,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-06-26",
+    "source": "7c3b9b4",
+    "players": 673,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-05-29",
+    "source": "1d3126b",
+    "players": 690,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-04-30",
+    "source": "62eae34",
+    "players": 533,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-02-27",
+    "source": "8daf141",
+    "players": 658,
+    "picks": 85
+  },
+  {
+    "as_of": "2026-01-30",
+    "source": "ca4a6a4",
+    "players": 404,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-12-26",
+    "source": "0247a35",
+    "players": 494,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-11-28",
+    "source": "e3a57bb",
+    "players": 497,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-10-31",
+    "source": "0b66517",
+    "players": 492,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-09-26",
+    "source": "3c0379e",
+    "players": 333,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-08-29",
+    "source": "10dde2b",
+    "players": 546,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-07-25",
+    "source": "d18ea69",
+    "players": 611,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-06-27",
+    "source": "87c33e3",
+    "players": 596,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-05-30",
+    "source": "e503555",
+    "players": 709,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-04-25",
+    "source": "db126e3",
+    "players": 589,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-03-28",
+    "source": "7888015",
+    "players": 636,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-02-28",
+    "source": "8c44cb3",
+    "players": 561,
+    "picks": 85
+  },
+  {
+    "as_of": "2025-01-31",
+    "source": "3419734",
+    "players": 524,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-12-27",
+    "source": "a4eb6da",
+    "players": 629,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-11-29",
+    "source": "18ea246",
+    "players": 633,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-10-25",
+    "source": "4c56582",
+    "players": 466,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-09-27",
+    "source": "04e4b36",
+    "players": 429,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-08-30",
+    "source": "ce5e9ba",
+    "players": 536,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-07-26",
+    "source": "337a7c6",
+    "players": 558,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-06-28",
+    "source": "8d5ab29",
+    "players": 600,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-05-31",
+    "source": "a106fdf",
+    "players": 635,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-04-26",
+    "source": "46a4be2",
+    "players": 651,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-03-29",
+    "source": "dcf0246",
+    "players": 641,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-02-23",
+    "source": "090c6bf",
+    "players": 622,
+    "picks": 85
+  },
+  {
+    "as_of": "2024-01-26",
+    "source": "b2a8ac6",
+    "players": 425,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-12-29",
+    "source": "64796e8",
+    "players": 581,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-11-24",
+    "source": "1ce46a0",
+    "players": 548,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-10-27",
+    "source": "330b55c",
+    "players": 486,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-09-29",
+    "source": "6f82b3e",
+    "players": 433,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-08-25",
+    "source": "075f2dc",
+    "players": 536,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-07-28",
+    "source": "eb9cb5c",
+    "players": 611,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-06-30",
+    "source": "a408e56",
+    "players": 712,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-05-26",
+    "source": "fa792bf",
+    "players": 646,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-04-21",
+    "source": "3676fa1",
+    "players": 641,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-03-31",
+    "source": "6f91a12",
+    "players": 624,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-02-24",
+    "source": "8913c17",
+    "players": 617,
+    "picks": 85
+  },
+  {
+    "as_of": "2023-01-27",
+    "source": "96c3601",
+    "players": 518,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-12-30",
+    "source": "ed9de79",
+    "players": 503,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-11-25",
+    "source": "fc8b0da",
+    "players": 510,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-10-28",
+    "source": "bcfdb9f",
+    "players": 537,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-09-30",
+    "source": "13fb790",
+    "players": 532,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-08-26",
+    "source": "8b782e5",
+    "players": 549,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-07-29",
+    "source": "f8689a5",
+    "players": 592,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-06-24",
+    "source": "caf5c5a",
+    "players": 642,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-05-28",
+    "source": "adacfbf",
+    "players": 612,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-04-29",
+    "source": "c401815",
+    "players": 637,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-03-25",
+    "source": "3af7b0c",
+    "players": 584,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-02-25",
+    "source": "eb3ce82",
+    "players": 676,
+    "picks": 85
+  },
+  {
+    "as_of": "2022-01-28",
+    "source": "3b24dc4",
+    "players": 552,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-12-31",
+    "source": "f327707",
+    "players": 525,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-11-26",
+    "source": "b199574",
+    "players": 511,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-10-29",
+    "source": "20c52b1",
+    "players": 464,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-09-24",
+    "source": "b5d0f16",
+    "players": 447,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-08-27",
+    "source": "2be0afd",
+    "players": 518,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-07-30",
+    "source": "5faea36",
+    "players": 600,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-06-25",
+    "source": "edab40e",
+    "players": 599,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-05-28",
+    "source": "4cb55de",
+    "players": 584,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-04-23",
+    "source": "0e35202",
+    "players": 523,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-03-26",
+    "source": "1fa17ef",
+    "players": 464,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-02-26",
+    "source": "5f646cf",
+    "players": 414,
+    "picks": 85
+  },
+  {
+    "as_of": "2021-01-31",
+    "source": "a9af610",
+    "players": 564,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-11-07",
+    "source": "6875968",
+    "players": 406,
+    "picks": 25
+  },
+  {
+    "as_of": "2020-10-18",
+    "source": "58913b3",
+    "players": 403,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-09-25",
+    "source": "466a8fc",
+    "players": 414,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-08-28",
+    "source": "c142f46",
+    "players": 402,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-07-31",
+    "source": "3c32320",
+    "players": 402,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-06-26",
+    "source": "c6ca451",
+    "players": 365,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-05-29",
+    "source": "0acf4f2",
+    "players": 377,
+    "picks": 85
+  },
+  {
+    "as_of": "2020-04-30",
+    "source": "53c59db",
+    "players": 325,
+    "picks": 85
+  }
+]

@@ -2192,7 +2192,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "boardNoUnderline20260901164000";
+    const DATA_V = "heldOriginalChips20260901164500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2589,12 +2589,12 @@
       }
       if (pickFilterMineHeld) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
-          + ' aria-label="Clear My Current">My Current'
+          + ' aria-label="Clear Held">Held'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (pickFilterMineOut) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
-          + ' aria-label="Clear who has my picks">who has my picks'
+          + ' aria-label="Clear Original">Original'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (!chips.length) return "";
@@ -2855,11 +2855,11 @@
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
-        + ' aria-label="My Current picks">My Current</button>'
+        + ' aria-label="Held picks">Held</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
         + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
-        + ' aria-label="who has my picks">who has my picks</button>'
+        + ' aria-label="Original picks">Original</button>'
         + "</div></div>"
         + pickFilterSummary()
         + pickIntelStepPanel(seatNames)
@@ -2979,10 +2979,10 @@
         + ' aria-label="Search picks">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
-        + ' aria-label="My Current picks">My Current</button>'
+        + ' aria-label="Held picks">Held</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
-        + ' aria-label="who has my picks">who has my picks</button>'
+        + ' aria-label="Original picks">Original</button>'
         + "</div></div>"
         + body
         + "</section>";

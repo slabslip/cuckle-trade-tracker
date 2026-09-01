@@ -1136,6 +1136,63 @@ const html = `<!DOCTYPE html>
       }
     }
     .pick-intel-list { display: grid; gap: 6px; }
+    /* Cuffs: starter → NFL handcuff → fantasy owner. Mirrors Draft Data chrome. */
+    .cuffs-intel { margin: 0 0 16px; }
+    .cuffs-intel .cuffs-row {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; box-sizing: border-box;
+    }
+    .cuffs-intel .cuffs-top {
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline;
+    }
+    .cuffs-intel .cuffs-slot {
+      font-weight: 700; font-size: 0.75rem; color: var(--muted);
+      letter-spacing: 0.04em; min-width: 2.4rem;
+    }
+    .cuffs-intel .cuffs-starter { font-weight: 650; color: var(--text); flex: 1 1 auto; min-width: 0; }
+    .cuffs-intel .cuffs-team { color: var(--muted); font-size: 0.8125rem; font-weight: 500; }
+    .cuffs-intel .cuffs-inj {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
+      color: #f08a8a; border: 1px solid rgba(224, 85, 85, 0.45);
+      background: rgba(224, 85, 85, 0.1); border-radius: 6px;
+      padding: 1px 6px; text-transform: uppercase;
+    }
+    .cuffs-intel .cuffs-sub {
+      margin-top: 6px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
+    }
+    .cuffs-intel .cuffs-sub b { color: var(--text); font-weight: 650; }
+    .cuffs-intel .cuffs-own-you { color: #c9a227; }
+    .cuffs-intel .cuffs-own-fa { color: var(--muted); font-style: italic; }
+    .cuffs-intel .cuffs-filter-panel {
+      display: grid; gap: 8px; margin: 0 0 8px;
+      padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+    .cuffs-intel .cuffs-filter-lab {
+      font-size: 0.6875rem; font-weight: 650; color: var(--muted);
+      letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 4px;
+    }
+    .cuffs-intel .cuffs-pos-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cuffs-intel button.cuffs-pos {
+      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 8px; min-height: 32px; padding: 4px 10px; cursor: pointer;
+      touch-action: manipulation;
+    }
+    .cuffs-intel button.cuffs-pos.on {
+      border-color: #6b5a2e; background: rgba(107, 90, 46, 0.18);
+    }
+    .cuffs-intel button.cuffs-pos:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .cuffs-intel select.cuffs-team-sel,
+    .cuffs-intel input.cuffs-q {
+      width: 100%; box-sizing: border-box; font: inherit; font-size: 0.875rem;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; min-height: 36px; padding: 6px 10px;
+    }
+    .cuffs-intel select.cuffs-team-sel:focus-visible,
+    .cuffs-intel input.cuffs-q:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
+    .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
@@ -2015,6 +2072,15 @@ const html = `<!DOCTYPE html>
     let pickFilterStep = null; // "round" | "year" | "owner" | null
     let pickIntelOpen = null;
     let picksLoading = false;
+    // Cuffs: fantasy slot-1 starters → NFL handcuff + who owns them.
+    let cuffs = null;
+    let cuffsLoading = false;
+    let cuffFilterMine = false;
+    let cuffFilterOwner = ""; // fantasy manager whose starters
+    let cuffFilterPos = "";   // QB | RB | WR | TE
+    let cuffFilterQ = "";
+    let cuffFilterOpen = false;
+    let cuffFilterFa = false; // cuff is unrostered
     let titles = null;
     let marks = null;
     let news = null;
@@ -2023,7 +2089,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "feedVotesTop20260901144500";
+    const DATA_V = "cuffsSection20260901153000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2344,6 +2410,20 @@ const html = `<!DOCTYPE html>
       pickIntelOpen = null;
     }
 
+    function clearCuffFilters() {
+      cuffFilterMine = false;
+      cuffFilterOwner = "";
+      cuffFilterPos = "";
+      cuffFilterQ = "";
+      cuffFilterOpen = false;
+      cuffFilterFa = false;
+    }
+
+    function cuffFiltersActive() {
+      return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
+        || !!cuffFilterQ.trim() || cuffFilterFa;
+    }
+
     function pickRoundLabel(n) {
       return ({ 1: "1sts", 2: "2nds", 3: "3rds", 4: "4ths" })[n] || ("R" + n);
     }
@@ -2649,6 +2729,197 @@ const html = `<!DOCTYPE html>
     }
 
 
+
+    function ensureCuffs() {
+      if (cuffs || cuffsLoading) return;
+      cuffsLoading = true;
+      getLeagueJson("cuffs.json").then((book) => {
+        cuffs = book && book.v === 1 && Array.isArray(book.rows) ? book : { v: 1, rows: [] };
+        cuffsLoading = false;
+        render();
+      }).catch((err) => {
+        console.error(err);
+        cuffs = { v: 1, rows: [] };
+        cuffsLoading = false;
+        render();
+      });
+    }
+
+    function filteredCuffRows(seat) {
+      const rows = (cuffs && cuffs.rows) || [];
+      const q = cuffFilterQ.trim().toLowerCase();
+      return rows.filter((r) => {
+        if (cuffFilterMine) {
+          if (!seat || r.owner !== seat) return false;
+        } else if (cuffFilterOwner && r.owner !== cuffFilterOwner) {
+          return false;
+        }
+        if (cuffFilterPos && r.pos !== cuffFilterPos) return false;
+        if (cuffFilterFa && r.cuff_owned) return false;
+        if (q) {
+          const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
+            .filter(Boolean).join(" ").toLowerCase();
+          if (!blob.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function cuffInjBadge(status) {
+      if (!status) return "";
+      const s = String(status);
+      if (!s || s === "NA") return "";
+      return '<span class="cuffs-inj" title="' + esc(s) + '">' + esc(s) + "</span>";
+    }
+
+    function cuffOwnerLabel(r, seat) {
+      if (!r.cuff_id) return '<span class="cuffs-own-fa">No depth cuff listed</span>';
+      if (!r.cuff_owned) return '<span class="cuffs-own-fa">Free agent</span>';
+      if (seat && r.cuff_owner === seat) {
+        return '<span class="cuffs-own-you">You (' + esc(r.cuff_owner) + ")</span>";
+      }
+      if (r.cuff_mine) {
+        return '<span class="cuffs-own-you">' + esc(r.cuff_owner) + " (self-cuff)</span>";
+      }
+      return esc(r.cuff_owner || "—");
+    }
+
+    function cuffRowHtml(r, seat) {
+      const team = r.nfl_team ? (' <span class="cuffs-team">' + esc(r.nfl_team) + "</span>") : "";
+      const cuffName = r.cuff ? ("<b>" + esc(r.cuff) + "</b>") : "<b>—</b>";
+      return '<div class="cuffs-row">'
+        + '<div class="cuffs-top">'
+        + '<span class="cuffs-slot">' + esc(r.slot || r.pos || "") + "</span>"
+        + '<span class="cuffs-starter">' + esc(r.starter || "—") + team + "</span>"
+        + cuffInjBadge(r.starter_injury)
+        + "</div>"
+        + '<div class="cuffs-sub">If out → ' + cuffName
+        + " · " + cuffOwnerLabel(r, seat)
+        + cuffInjBadge(r.cuff_injury)
+        + "</div></div>";
+    }
+
+    function cuffFilterSummary() {
+      const chips = [];
+      if (cuffFilterMine) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-mine="1"'
+          + ' aria-label="Clear my cuffs filter">my cuffs<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterOwner) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-owner="1"'
+          + ' aria-label="Clear team filter">' + esc(cuffFilterOwner)
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterPos) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-pos="1"'
+          + ' aria-label="Clear position filter">' + esc(cuffFilterPos)
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterFa) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-fa="1"'
+          + ' aria-label="Clear free-agent cuff filter">cuff free'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterQ.trim()) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-q="1"'
+          + ' aria-label="Clear search">"' + esc(cuffFilterQ.trim()) + '"'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (!chips.length) return "";
+      return '<div class="pick-intel-summary" role="group" aria-label="Active cuff filters">'
+        + chips.join("")
+        + (cuffFiltersActive()
+          ? '<button type="button" class="pick-intel-link" data-cuff-filter-clear="1">Clear all</button>'
+          : "")
+        + "</div>";
+    }
+
+    function cuffFilterPanel(seatNames) {
+      if (!cuffFilterOpen) return "";
+      const posBtns = ["QB", "RB", "WR", "TE"].map((p) =>
+        '<button type="button" class="cuffs-pos' + (cuffFilterPos === p ? " on" : "") + '"'
+        + ' data-cuff-pos="' + p + '" aria-pressed="' + (cuffFilterPos === p ? "true" : "false") + '">'
+        + p + "</button>"
+      ).join("");
+      return '<div class="cuffs-filter-panel" role="group" aria-label="Search cuffs">'
+        + '<div><div class="cuffs-filter-lab">Position</div>'
+        + '<div class="cuffs-pos-row">' + posBtns + "</div></div>"
+        + '<div><div class="cuffs-filter-lab">Whose starters</div>'
+        + '<select class="cuffs-team-sel" data-cuff-owner="1" aria-label="Fantasy team">'
+        + '<option value=""' + (!cuffFilterOwner ? " selected" : "") + ">Anyone</option>"
+        + seatNames.map((name) =>
+          '<option value="' + esc(name) + '"' + (cuffFilterOwner === name ? " selected" : "") + ">"
+          + esc(name) + "</option>"
+        ).join("")
+        + "</select></div>"
+        + '<div><div class="cuffs-filter-lab">Player search</div>'
+        + '<input type="search" class="cuffs-q" data-cuff-q="1" placeholder="Starter or cuff name…"'
+        + ' value="' + esc(cuffFilterQ) + '" autocomplete="off" /></div>'
+        + "</div>";
+    }
+
+    /**
+     * League-home Cuffs: each seat's QB1/RB1/WR1/TE1 → next NFL depth-chart teammate
+     * at the same position, and who owns that cuff in the league.
+     */
+    function cuffsPanel() {
+      ensureCuffs();
+      const seat = authSeatName();
+      const seatNames = (members || []).map((m) => m.name).filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      const active = cuffFiltersActive();
+      let rows;
+      if (!active && seat) {
+        rows = ((cuffs && cuffs.rows) || []).filter((r) => r.owner === seat);
+      } else if (!active) {
+        rows = [];
+      } else {
+        rows = filteredCuffRows(seat);
+      }
+      let body = "";
+      if (!cuffs && cuffsLoading) {
+        body = '<p class="caption">Loading cuffs…</p>';
+      } else if (!cuffs || !(cuffs.rows || []).length) {
+        body = '<p class="caption">Cuff board is not available for this league yet.</p>';
+      } else if (!active && !seat) {
+        body = '<p class="caption">Claim your seat to see your QB1/RB1/WR1/TE1 cuffs, or search any team.</p>';
+      } else if (!rows.length) {
+        body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
+      } else {
+        let hint;
+        if (!active && seat) hint = "Your slot-1 starters and who owns their NFL cuffs";
+        else if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
+        else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
+        else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
+        body = '<p class="cuffs-hint">' + esc(hint) + ".</p>"
+          + '<div class="cuffs-list">' + rows.map((r) => cuffRowHtml(r, seat)).join("") + "</div>";
+      }
+      const mineDis = !seat;
+      const filterOn = cuffFilterOpen || active;
+      const mineOn = cuffFilterMine || (!active && !!seat);
+      return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
+        + '<h2 class="pick-intel-h">Cuffs</h2>'
+        + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
+        + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
+        + ' aria-label="search cuffs">'
+        + (cuffFilterOpen ? "Filtering…" : "search cuffs")
+        + "</button>"
+        + '<button type="button" class="pick-intel-chip' + (mineOn ? " on" : "") + '"'
+        + ' data-cuff-mine="1"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (mineOn ? "true" : "false") + '"'
+        + ' aria-label="my cuffs">my cuffs</button>'
+        + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
+        + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
+        + ' aria-label="cuff free agents">cuff free</button>'
+        + "</div>"
+        + cuffFilterSummary()
+        + cuffFilterPanel(seatNames)
+        + body
+        + "</section>";
+    }
+
     function legValueParts(l) {
       if (!l || l.flag === "unpriced" || l.value == null) return null;
       const num = fmt(l.value);
@@ -2711,7 +2982,7 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -2719,6 +2990,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("news.json").catch(() => null),
         getLeagueJson("votes.json").catch(() => null),
         getLeagueJson("picks.json").catch(() => null),
+        getLeagueJson("cuffs.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -2743,6 +3015,9 @@ const html = `<!DOCTYPE html>
         if (picksRaw) applyPicksBook(picksRaw);
         else picks = picks || null;
       } catch (err) { picks = picks || null; }
+      try {
+        cuffs = cuffsRaw && cuffsRaw.v === 1 && Array.isArray(cuffsRaw.rows) ? cuffsRaw : null;
+      } catch (err) { cuffs = null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
@@ -2880,6 +3155,8 @@ const html = `<!DOCTYPE html>
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
       clearPickFilters();
+      clearCuffFilters();
+      cuffs = null;
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
       focusNext = ".screen-h";
@@ -3811,8 +4088,10 @@ const html = `<!DOCTYPE html>
       if (!intel) {
         try { intel = pickIntel(); } catch (err3) { console.error(err3); }
       }
-      // Latest trade → quick actions → pick intel → data set body → bottom News Feed pull-up.
-      return progress + chips + intel + sets + hero;
+      let cuffsHtml = "";
+      try { cuffsHtml = cuffsPanel(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
+      // Latest trade → quick actions → Draft Data → Cuffs → data set body → News Feed pull-up.
+      return progress + chips + intel + cuffsHtml + sets + hero;
     }
 
     function renderNews() {
@@ -4582,6 +4861,7 @@ const html = `<!DOCTYPE html>
       focusNext = null;
       // Match clearLeague / home icon — do not leave Draft Data filters sticky on return.
       clearPickFilters();
+      clearCuffFilters();
       render();
       window.scrollTo(0, 0);
     }
@@ -8256,6 +8536,63 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+
+      const cuffFilterToggle = e.target.closest("[data-cuff-filter-open]");
+      if (cuffFilterToggle) {
+        cuffFilterOpen = !cuffFilterOpen;
+        render();
+        return;
+      }
+      const cuffMine = e.target.closest("[data-cuff-mine]");
+      if (cuffMine) {
+        if (cuffMine.getAttribute("aria-disabled") === "true") return;
+        cuffFilterMine = !cuffFilterMine;
+        if (cuffFilterMine) {
+          cuffFilterOwner = "";
+        }
+        cuffFilterOpen = false;
+        render();
+        return;
+      }
+      const cuffFa = e.target.closest("[data-cuff-fa]");
+      if (cuffFa) {
+        cuffFilterFa = !cuffFilterFa;
+        render();
+        return;
+      }
+      const cuffClear = e.target.closest("[data-cuff-filter-clear]");
+      if (cuffClear) {
+        clearCuffFilters();
+        render();
+        return;
+      }
+      const cuffClearOwner = e.target.closest("[data-cuff-clear-owner]");
+      if (cuffClearOwner) {
+        cuffFilterOwner = "";
+        cuffFilterMine = false;
+        render();
+        return;
+      }
+      const cuffClearPos = e.target.closest("[data-cuff-clear-pos]");
+      if (cuffClearPos) {
+        cuffFilterPos = "";
+        render();
+        return;
+      }
+      const cuffClearQ = e.target.closest("[data-cuff-clear-q]");
+      if (cuffClearQ) {
+        cuffFilterQ = "";
+        render();
+        return;
+      }
+      const cuffPos = e.target.closest("[data-cuff-pos]");
+      if (cuffPos) {
+        const p = cuffPos.dataset.cuffPos || "";
+        cuffFilterPos = cuffFilterPos === p ? "" : p;
+        if (cuffFilterPos) cuffFilterMine = false;
+        render();
+        return;
+      }
       const pickClearRound = e.target.closest("[data-pick-clear-round]");
       if (pickClearRound) {
         const n = Number(pickClearRound.dataset.pickClearRound);
@@ -8741,7 +9078,30 @@ const html = `<!DOCTYPE html>
         render();
       }
     });
+    document.getElementById("app").addEventListener("change", (e) => {
+      const cuffOwnerSel = e.target.closest("[data-cuff-owner]");
+      if (cuffOwnerSel) {
+        cuffFilterOwner = cuffOwnerSel.value || "";
+        if (cuffFilterOwner) cuffFilterMine = false;
+        render();
+        return;
+      }
+    });
     document.getElementById("app").addEventListener("input", (e) => {
+      const cuffQBox = e.target.closest("[data-cuff-q]");
+      if (cuffQBox) {
+        cuffFilterQ = cuffQBox.value;
+        if (cuffFilterQ.trim()) cuffFilterMine = false;
+        const start = cuffQBox.selectionStart;
+        const end = cuffQBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-cuff-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
+        return;
+      }
       const tapePlayerBox = e.target.closest("[data-tape-player-q]");
       if (!tapePlayerBox) return;
       tapePlayerQ = tapePlayerBox.value;
@@ -10149,6 +10509,25 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || inline.includes("pick-intel-board-row")) {
   throw new Error("Draft Data must ship progressive filters + 2027 top-3 column leaderboard without a search input or board-h");
 }
+
+{
+  if (!inline.includes("function cuffsPanel()") || !inline.includes('aria-label="Cuffs"')
+    || !inline.includes('data-cuff-mine="1"') || !inline.includes('data-cuff-filter-open="1"')
+    || !inline.includes('data-cuff-fa="1"') || !inline.includes("function ensureCuffs(")
+    || !inline.includes("function filteredCuffRows(") || !inline.includes("cuffs.json")
+    || !inline.includes("clearCuffFilters(")) {
+    throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
+  }
+  const homeCuffs = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
+  const homeCuffsReturn = homeCuffs.slice(0, homeCuffs.indexOf("\n    }"));
+  if (!homeCuffsReturn.includes("cuffsPanel()") || !homeCuffsReturn.includes("cuffsHtml")) {
+    throw new Error("renderLeagueHome must mount cuffsPanel under Draft Data");
+  }
+  if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")) {
+    throw new Error("Cuffs styles must ship");
+  }
+}
+
 if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("function applyPicksBook(")
   || !inline.includes("function pickRoundOrdinal(")) {
   throw new Error("Draft Data must augment untraded native picks before counting leaders");

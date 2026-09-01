@@ -83,6 +83,7 @@ cuckle-trade-tracker/db/
 | 6 | `db/wave2b-vote-unique.sql` | Select all → Copy (league-scoped vote uniqueness) |
 | 7 | `db/wave5-invite-plain.sql` | Select all → Copy (unclaimed codes stay visible in console) |
 | 8 | `db/wave6-one-seat-redeem.sql` | Select all → Copy (refuse seat-switch overwrite on redeem) |
+| 9 | `db/wave8-vote-tally-members.sql` | Select all → Copy (tallies count current seats only; scrub ghosts) |
 
 **For each file:**
 

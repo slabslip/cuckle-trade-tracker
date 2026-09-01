@@ -182,6 +182,7 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 6. [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) — league-scoped vote uniqueness
 7. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
 8. [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) — refuse seat-switch overwrite on redeem
+9. [`db/wave8-vote-tally-members.sql`](../db/wave8-vote-tally-members.sql) — tallies count current members only
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 

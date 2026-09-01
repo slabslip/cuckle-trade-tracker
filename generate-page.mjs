@@ -954,11 +954,10 @@ const html = `<!DOCTYPE html>
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
-    /* Year scope under each column lab — stacked so · N stay centered and
-       names keep room (clearer than a cramped inline · year line). */
+    /* Year scope inline on the column lab — one line (e.g. 1sts 2027) to save height. */
     .pick-intel-board-lab .pick-intel-board-yrs {
-      display: block;
-      margin-top: 1px;
+      display: inline;
+      margin-left: 0.28em;
       font-weight: 500; font-size: 0.625rem; line-height: 1.15;
       letter-spacing: 0.01em; text-transform: none;
       color: var(--dim); white-space: nowrap;
@@ -1800,7 +1799,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickIntelTeamMode20260901040000";
+    const DATA_V = "pickIntelBoardLabInline20260901040000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

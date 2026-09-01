@@ -70,7 +70,9 @@ const html = `<!DOCTYPE html>
     }
     button.go-settings[hidden] { display: none; }
     /* Settings takes the former clock slot on the right; lens sits beside the back control. */
-    button.go-settings { margin-left: auto; }
+    /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
+    .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
+    .brand-end:empty { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
@@ -1393,11 +1395,13 @@ const html = `<!DOCTYPE html>
       <div id="scoreAs" hidden></div>
     </span>
     <span class="league-sub" id="leagueSub" hidden></span>
-    <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
-      </svg>
-    </button>
+    <span class="brand-end">
+      <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+        </svg>
+      </button>
+    </span>
   </h1>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
@@ -1542,7 +1546,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueSubBrand20260901031000";
+    const DATA_V = "swapLensSettings20260901031500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7268,8 +7272,11 @@ if (!inline.includes("paintLeagueSub();\n        paintBottomNav();")
   if (wrap.slice(0, wrap.indexOf("}")).includes("margin-left: auto")) {
     throw new Error(".lens-wrap must not take the right edge — settings sits there after the swap");
   }
-  if (!html.includes("button.go-settings { margin-left: auto")) {
-    throw new Error("settings must carry margin-left: auto on the right of the brand row");
+  if (!html.includes(".brand-end { margin-left: auto")) {
+    throw new Error("settings must sit in .brand-end on the right of the brand row");
+  }
+  if (html.slice(html.indexOf("    .lens-wrap {"), html.indexOf("}", html.indexOf("    .lens-wrap {"))).includes("margin-left: auto")) {
+    throw new Error("score lens must not take the right edge — settings lives there");
   }
 }
 
@@ -7521,6 +7528,9 @@ if (!brandMarkup.includes('id="leagueSub"')) {
 }
 if (brandMarkup.indexOf('id="lensWrap"') > brandMarkup.indexOf('id="goSettings"')) {
   throw new Error("score lens must sit left of settings after the swap");
+}
+if (!brandMarkup.includes('class="brand-end"') || brandMarkup.indexOf('class="brand-end"') < brandMarkup.indexOf('id="lensWrap"')) {
+  throw new Error("settings must be wrapped in .brand-end after the score lens");
 }
 // 2. One control, one place. Six screens used to render lensRow() and the user asked for a move,
 //    not a copy. Assert the emitter is gone rather than that the call sites are: a re-added

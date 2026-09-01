@@ -65,7 +65,9 @@
     }
     button.go-settings[hidden] { display: none; }
     /* Settings takes the former clock slot on the right; lens sits beside the back control. */
-    button.go-settings { margin-left: auto; }
+    /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
+    .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
+    .brand-end:empty { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
@@ -1388,11 +1390,13 @@
       <div id="scoreAs" hidden></div>
     </span>
     <span class="league-sub" id="leagueSub" hidden></span>
-    <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
-      </svg>
-    </button>
+    <span class="brand-end">
+      <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+        </svg>
+      </button>
+    </span>
   </h1>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
@@ -1537,7 +1541,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueSubBrand20260901031000";
+    const DATA_V = "swapLensSettings20260901031500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2933,10 +2937,10 @@
     }
 
     function partnerLine(p) {
-      return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
+      return '<div class="row" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
         + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
         + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
-        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></button>";
+        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></div>";
     }
 
     function draftLine(p, tag) {
@@ -5966,11 +5970,11 @@
         .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
       const rows = scored.map((row) => {
         const p = row.p, per = row.w.per;
-        return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
+        return '<div class="row' + (partnerName === p.name ? " open" : "") + '" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
           + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
           + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
-          + '<div class="margin">' + tapeMargin(per) + "</div></div></button>";
+          + '<div class="margin">' + tapeMargin(per) + "</div></div></div>";
       }).join("");
       let detail = "";
       if (partnerName) {

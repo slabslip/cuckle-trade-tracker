@@ -93,12 +93,31 @@ function chipLived(date, lens, today) {
   return true;
 }
 
+/** Best window up to the target lens — younger trades fall back to t0/y1/… instead of dropping. */
+function effectiveLens(date, targetLens, today) {
+  if (targetLens === "t0") return "t0";
+  if (targetLens === "all") return "all";
+  const order = ["t0", "y1", "y2", "y3"];
+  const idx = order.indexOf(targetLens);
+  if (idx < 0) return targetLens;
+  for (let i = idx; i >= 0; i--) {
+    const l = order[i];
+    if (l === "t0" || chipLived(date, l, today)) return l;
+  }
+  return "t0";
+}
+
 /** Same rule as the browser's displayDelta: round each bag, then subtract. */
 function tradeDelta(t, lens) {
   if (!t || t.incomplete) return null;
   const s = (t.windows || {})[lens] || t.even;
   if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
   return Math.round(s.today) - Math.round(s.sent_today);
+}
+
+function tradeDeltaAtTarget(t, targetLens, today) {
+  if (!t || t.incomplete) return null;
+  return tradeDelta(t, effectiveLens(t.date, targetLens, today));
 }
 
 function partnerDeltas(seat, name, lens, today) {
@@ -130,8 +149,7 @@ function buildMarks(seats, today) {
     const byLens = {};
     for (const lens of LENSES) {
       const ds = (seat.trades || [])
-        .filter((t) => chipLived(t.date, lens, today))
-        .map((t) => tradeDelta(t, lens))
+        .map((t) => tradeDeltaAtTarget(t, lens, today))
         .filter((d) => d != null);
       let extract = 0, farmed = 0, evenN = 0;
       for (const p of seat.partners || []) {
@@ -393,9 +411,15 @@ function main() {
   // "all" is the flatten windows.all delta, not the today blend in `even` — see AUDIT §8c.
   check("marks 'all' total matches the windows.all deltas", Object.values(marks.seats).every((m) => {
     const seat = seats.find((s) => s.name === m.name);
-    const ds = (seat.trades || []).map((t) => tradeDelta(t, "all")).filter((d) => d != null);
+    const ds = (seat.trades || []).map((t) => tradeDeltaAtTarget(t, "all", league.today)).filter((d) => d != null);
     const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
     return (want == null && m.lens.all.total == null) || Math.abs(want - m.lens.all.total) < 1e-6;
+  }));
+  check("marks 'y2' uses best available window per trade", Object.values(marks.seats).every((m) => {
+    const seat = seats.find((s) => s.name === m.name);
+    const ds = (seat.trades || []).map((t) => tradeDeltaAtTarget(t, "y2", league.today)).filter((d) => d != null);
+    const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
+    return (want == null && m.lens.y2.total == null) || Math.abs(want - m.lens.y2.total) < 1e-6;
   }));
   check("dead league keys gone", !("review_trades" in league) && !("drafters_startup" in league)
     && !("today" in league.trade_boards) && !("aged" in league.trade_boards));

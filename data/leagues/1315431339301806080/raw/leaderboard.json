@@ -11,7 +11,7 @@
     "style": {
       "label": "Balanced",
       "now_share": 0.508291894275286,
-      "horizon": -0.7586206896551724,
+      "horizon": -111.65517241379311,
       "sold_picks_for_players": 10,
       "sold_players_for_picks": 7
     }
@@ -28,7 +28,7 @@
     "style": {
       "label": "Win-now",
       "now_share": 0.8278311037635587,
-      "horizon": -88.91428571428571,
+      "horizon": -247.62857142857143,
       "sold_picks_for_players": 4,
       "sold_players_for_picks": 11
     }
@@ -45,7 +45,7 @@
     "style": {
       "label": "Balanced",
       "now_share": 0.8228659211691762,
-      "horizon": 491.2692307692308,
+      "horizon": 535.5384615384615,
       "sold_picks_for_players": 10,
       "sold_players_for_picks": 3
     }
@@ -62,7 +62,7 @@
     "style": {
       "label": "Win-now",
       "now_share": 0.8032617148852556,
-      "horizon": -9.5968992248062,
+      "horizon": -12.689922480620154,
       "sold_picks_for_players": 30,
       "sold_players_for_picks": 39
     }
@@ -79,7 +79,7 @@
     "style": {
       "label": "Win-now",
       "now_share": 0.6767370640782461,
-      "horizon": -227.53571428571428,
+      "horizon": -166.60714285714286,
       "sold_picks_for_players": 13,
       "sold_players_for_picks": 11
     }
@@ -96,7 +96,7 @@
     "style": {
       "label": "Balanced",
       "now_share": 0.7876084924556015,
-      "horizon": 363.52941176470586,
+      "horizon": 380.88235294117646,
       "sold_picks_for_players": 22,
       "sold_players_for_picks": 7
     }
@@ -113,7 +113,7 @@
     "style": {
       "label": "Balanced",
       "now_share": 0.8609813923414038,
-      "horizon": 431.1714285714286,
+      "horizon": 433.42857142857144,
       "sold_picks_for_players": 8,
       "sold_players_for_picks": 7
     }
@@ -130,7 +130,7 @@
     "style": {
       "label": "Win-now",
       "now_share": 0.5575718791424784,
-      "horizon": -233.9016393442623,
+      "horizon": -255.327868852459,
       "sold_picks_for_players": 9,
       "sold_players_for_picks": 23
     }
@@ -147,7 +147,7 @@
     "style": {
       "label": "Win-now",
       "now_share": 0.7691281138790036,
-      "horizon": -12.75,
+      "horizon": -25.821428571428573,
       "sold_picks_for_players": 25,
       "sold_players_for_picks": 18
     }
@@ -164,7 +164,7 @@
     "style": {
       "label": "Win-now",
       "now_share": 0.9095968302936818,
-      "horizon": -199.3,
+      "horizon": -112.9,
       "sold_picks_for_players": 13,
       "sold_players_for_picks": 18
     }

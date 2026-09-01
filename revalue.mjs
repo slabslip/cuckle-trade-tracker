@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
-import { pickTier, readJson, roundName, seasonAsOfs, setLeagueId, writeJson, writeUi } from "./lib.mjs";
+import {
+  addDays, pickTier, readJson, roundName, seasonAsOfs, setLeagueId, writeJson, writeUi, weekAsOfs,
+} from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
@@ -12,6 +14,10 @@ const FLAT_SCALE = 10000;
 const FLAT_EXP = 0.3;
 const FLAT_TOP_MIX = 0.5;
 // ponytail: pinned calibration tape. Swap IDs here, not a CMS.
+/** Recent trades: t0 player legs use mean flatten over weekly snaps in the next 30 days. */
+const T0_LOOKBACK_DAYS = 30;
+const RECENT_TRADE_DAYS = 180;
+
 const REVIEW_IDS = [
   "460470201385742336",
   "471856282999975936",
@@ -231,12 +237,13 @@ function windowAsOfs(t0, today, years) {
   return yearEnds(t0, end);
 }
 
-/** y1/y2/y3 are NFL-season spans; all stays calendar year-end mean through today. */
+/** y1/y2/y3 are NFL-season spans; all is weekly from accept through today. */
 function lensAsOfs(key, t0, today) {
   if (key === "t0") return [t0];
   if (key === "y1") return seasonAsOfs(t0, today, 1);
   if (key === "y2") return seasonAsOfs(t0, today, 2);
   if (key === "y3") return seasonAsOfs(t0, today, 3);
+  if (key === "all") return weekAsOfs(t0, today);
   return windowAsOfs(t0, today, null);
 }
 
@@ -271,7 +278,7 @@ function flattenLegs(legs, top) {
   return (legs || []).map((l) => ({ ...l, value: flatten(l.value, top) }));
 }
 
-// ponytail: year-end (+ today if inside the window) only, not monthly. Monthly if a mid-year crash must count.
+// ponytail: weekly flatten snaps averaged per leg; each snap uses realized pricing at that date.
 function y3Snaps(leg, dates, ctx) {
   const snaps = [];
   for (const d of dates) {
@@ -289,19 +296,95 @@ function y3Score(leg, dates, today, ctx) {
   const snaps = y3Snaps(leg, dates, ctx);
   const display = priceLeg(leg, today, "realized", ctx);
   if (!snaps.length) return { ...display, value: null, flag: "unpriced" };
-  const value = snaps.reduce((a, s) => a + s.even, 0) / snaps.length;
+  const value = Math.round(snaps.reduce((a, s) => a + s.even, 0) / snaps.length);
   return { ...display, value };
 }
 
-function bagAtEven(legs, uid, asOf, ctx, which) {
-  const raw = bagFor(legs, uid, asOf, "pick", ctx, which);
-  const top = vmaxAt(ctx.vmaxIdx, asOf);
-  const graded = flattenLegs(raw.legs, top);
-  return {
-    points: graded.reduce((a, l) => a + (l.value || 0), 0),
-    unpriced: raw.unpriced,
-    legs: graded,
-  };
+function daysBetween(a, b) {
+  return Math.floor((Date.parse(b) - Date.parse(a)) / 86400000);
+}
+
+function isRecentTrade(t0, today) {
+  const d = daysBetween(t0, today);
+  return d >= 0 && d <= RECENT_TRADE_DAYS;
+}
+
+/** Weekly anchors from accept through min(accept + 30d, today) — catches fast DP moves post-trade. */
+function t0LookbackDates(t0, today) {
+  const end = addDays(t0, T0_LOOKBACK_DAYS);
+  const cap = end < today ? end : today;
+  if (cap < t0) return [t0];
+  return weekAsOfs(t0, cap);
+}
+
+function legT0LookbackFlatten(leg, t0, today, ctx, opts) {
+  const dates = t0LookbackDates(t0, today);
+  const ktcAugment = !!(opts && opts.ktcAugment);
+  const snaps = [];
+  for (const d of dates) {
+    const priced = priceLeg(leg, d, "pick", ctx);
+    if (priced.value == null) continue;
+    const flat = flatten(priced.value, vmaxAt(ctx.vmaxIdx, d));
+    if (ktcAugment && leg.kind === "player" && ctx.todayPrice?.hasKtc) {
+      const blended = priceTodayValue(flat, { ...leg, value: flat, value_flat: flat }, ctx.todayPrice);
+      if (blended != null) snaps.push(blended);
+    } else {
+      snaps.push(flat);
+    }
+  }
+  if (!snaps.length) return null;
+  const avg = Math.round(snaps.reduce((a, b) => a + b, 0) / snaps.length);
+  if (ktcAugment && leg.kind === "player" && ctx.todayPrice?.hasKtc) {
+    const todayDp = playerValue(ctx.curveIdx, leg.asset_key, ctx.today);
+    if (todayDp?.value != null) {
+      const todayFlat = flatten(todayDp.value, vmaxAt(ctx.vmaxIdx, ctx.today));
+      const todayBlend = priceTodayValue(
+        todayFlat,
+        { ...leg, value: todayFlat, value_flat: todayFlat },
+        ctx.todayPrice,
+      );
+      if (todayBlend != null && Number.isFinite(todayBlend)) return Math.max(avg, todayBlend);
+    }
+  }
+  return Number.isFinite(avg) ? avg : null;
+}
+
+function bagAtEven(legs, uid, asOf, ctx, which, opts) {
+  const mine = which === "in"
+    ? legs.filter((l) => l.direction !== "out" && l.to_user_id === uid)
+    : legs.filter((l) => l.direction === "out" && l.from_user_id === uid);
+  const useLookback = !!(opts && opts.t0Lookback) && isRecentTrade(asOf, ctx.today);
+  const ktcAugment = useLookback && !!(opts && opts.ktcAugment);
+  let points = 0;
+  let unpriced = 0;
+  const rows = [];
+  for (const leg of mine) {
+    const priced = priceLeg(leg, asOf, "pick", ctx);
+    let value = priced.value;
+    let flag = priced.flag;
+    if (useLookback && leg.kind === "player") {
+      const lb = legT0LookbackFlatten(leg, asOf, ctx.today, ctx, { ktcAugment });
+      if (lb != null && Number.isFinite(lb)) {
+        value = lb;
+        flag = "t0_lookback";
+      }
+    }
+    if (value == null) {
+      unpriced += 1;
+      rows.push(compactLeg({ ...leg, ...priced, value: null, flag }));
+      continue;
+    }
+    if (flag === "t0_lookback") {
+      rows.push(compactLeg({ ...leg, ...priced, value, flag }));
+      points += value;
+      continue;
+    }
+    const top = vmaxAt(ctx.vmaxIdx, asOf);
+    const flat = flatten(value, top);
+    rows.push(compactLeg({ ...leg, ...priced, value: flat, flag }));
+    points += flat;
+  }
+  return { points, unpriced, legs: rows };
 }
 
 function bagY3(legs, uid, dates, today, ctx, which) {
@@ -458,7 +541,7 @@ async function main() {
   const resIdx = resIndex(resolutions);
   const today = latestAsOf(fullCurve.length ? fullCurve : curve);
   const todayPrice = makeTodayPrice(today);
-  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, todayPrice };
+  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, todayPrice, today };
   const tradeById = new Map(allTrades.map((t) => [t.transaction_id, t]));
 
   function buildPicks() {
@@ -587,6 +670,7 @@ async function main() {
       names: uids.map((id) => nameById[id] || id),
       lenses: {},
     };
+    const t0Lookback = isRecentTrade(t0, today);
 
     for (const lens of ["realized", "pick"]) {
       const sides = {};
@@ -595,8 +679,12 @@ async function main() {
         bags[uid] = {
           got: bagFor(legs, uid, today, lens, ctx, "in"),
           sent: bagFor(legs, uid, today, lens, ctx, "out"),
-          got0: bagFor(legs, uid, t0, lens, ctx, "in"),
-          sent0: bagFor(legs, uid, t0, lens, ctx, "out"),
+          got0: lens === "realized" && t0Lookback
+            ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true, ktcAugment: true })
+            : bagFor(legs, uid, t0, lens, ctx, "in"),
+          sent0: lens === "realized" && t0Lookback
+            ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true, ktcAugment: true })
+            : bagFor(legs, uid, t0, lens, ctx, "out"),
         };
       }
       const incomplete = uids.some((uid) => bags[uid].got.unpriced + bags[uid].sent.unpriced > 0);
@@ -657,28 +745,6 @@ async function main() {
       });
       entry.lenses[lens] = { sides, year_ends: points, t0_priced: t0Priced, incomplete };
     }
-    const y3Dates = windowAsOfs(t0, today, 3);
-    const y3Sides = {};
-    for (const uid of uids) {
-      const got = bagY3(legs, uid, y3Dates, today, ctx, "in");
-      const sent = bagY3(legs, uid, y3Dates, today, ctx, "out");
-      const incomplete = !y3Dates.length || got.unpriced + sent.unpriced > 0;
-      y3Sides[uid] = {
-        name: nameById[uid] || uid,
-        today: got.points,
-        sent_today: sent.points,
-        today_delta: incomplete ? null : got.points - sent.points,
-        unpriced: got.unpriced,
-        sent_unpriced: sent.unpriced,
-        incomplete,
-        legs: got.legs,
-        sent: sent.legs,
-      };
-    }
-    entry.lenses.y3 = {
-      sides: y3Sides,
-      incomplete: uids.some((uid) => y3Sides[uid].incomplete),
-    };
     const topToday = vmaxAt(vmaxIdx, today);
     const top0 = vmaxAt(vmaxIdx, t0);
     const evenSides = {};
@@ -694,10 +760,23 @@ async function main() {
       const gotP = gotLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sentP = sentLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sent0Raw = bagFor(legs, uid, t0, "realized", ctx, "out");
-      const got0Legs = flattenLegs(s.t0_legs, top0);
-      const sent0Legs = flattenLegs(sent0Raw.legs, top0);
-      const t0Got = got0Legs.reduce((a, l) => a + (l.value || 0), 0);
-      const t0Sent = sent0Legs.reduce((a, l) => a + (l.value || 0), 0);
+      let got0Legs;
+      let sent0Legs;
+      let t0Got;
+      let t0Sent;
+      if (t0Lookback) {
+        const got0Bag = bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true, ktcAugment: true });
+        const sent0Bag = bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true, ktcAugment: true });
+        got0Legs = got0Bag.legs;
+        sent0Legs = sent0Bag.legs;
+        t0Got = got0Bag.points;
+        t0Sent = sent0Bag.points;
+      } else {
+        got0Legs = flattenLegs(s.t0_legs, top0);
+        sent0Legs = flattenLegs(sent0Raw.legs, top0);
+        t0Got = got0Legs.reduce((a, l) => a + (l.value || 0), 0);
+        t0Sent = sent0Legs.reduce((a, l) => a + (l.value || 0), 0);
+      }
       const t0Priced = s.t0 != null;
       const todayDelta = s.incomplete ? null : gotP - sentP;
       const t0Delta = s.incomplete || !t0Priced ? null : t0Got - t0Sent;
@@ -752,10 +831,10 @@ async function main() {
       const sides = {};
       for (const uid of uids) {
         const got = key === "t0"
-          ? bagAtEven(legs, uid, t0, ctx, "in")
+          ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: t0Lookback, ktcAugment: true })
           : bagY3(legs, uid, dates, today, ctx, "in");
         const sent = key === "t0"
-          ? bagAtEven(legs, uid, t0, ctx, "out")
+          ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: t0Lookback, ktcAugment: true })
           : bagY3(legs, uid, dates, today, ctx, "out");
         const incomplete = got.unpriced + sent.unpriced > 0 || (key !== "t0" && !dates.length);
         sides[uid] = applyToSide({
@@ -1067,7 +1146,7 @@ async function main() {
       row.loser = nameById[loserId] || loserId;
       row.winner_id = winnerId;
       row.steep_delta = t.lenses.realized.sides[winnerId]?.today_delta ?? null;
-      row.y3_delta = t.lenses.y3?.sides[winnerId]?.today_delta ?? null;
+      row.y3_delta = t.lenses.windows?.y3?.sides[winnerId]?.today_delta ?? null;
       return row;
     }).filter(Boolean);
   }
@@ -1175,7 +1254,7 @@ async function main() {
   const chiefArae = meters.find((t) => t.transaction_id === "460470201385742336");
   const chiefId = members.find((m) => m.canonical_name === "ChiefGumby")?.user_id;
   const zekeToday = chiefArae?.lenses.realized.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
-  const zekeY3 = chiefArae?.lenses.y3.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
+  const zekeY3 = chiefArae?.lenses.windows?.y3?.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
   check("zeke on chief-arae", !!(zekeToday && zekeY3));
   check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3);
   let ghostZero = 0;
@@ -1273,6 +1352,13 @@ async function main() {
   check("chief-arae t0 scored", !chiefArae?.lenses.windows.t0.incomplete
     && chiefArae?.lenses.windows.t0.sides[chiefId]?.today_delta != null);
   check("chief-arae all scored", chiefArae?.lenses.windows.all.sides[chiefId]?.today_delta != null);
+  {
+    const old = meters.find((t) => t.date && t.date <= "2020-12-31");
+    if (old) {
+      const allSnaps = old.lenses.windows.all?.snaps || 0;
+      check("all lens weekly not year-end sparse", allSnaps >= 50);
+    }
+  }
   let unpricedPickT0 = 0;
   for (const t of meters) {
     for (const uid of t.user_ids) {
@@ -1283,6 +1369,15 @@ async function main() {
     }
   }
   check("all t0 picks priced", unpricedPickT0 === 0);
+  {
+    const tipsUpId = members.find((m) => m.canonical_name === "TipsUp")?.user_id;
+    const tipsTed = meters.find((t) => t.transaction_id === "1361916549199306752");
+    const w = tipsTed?.lenses?.windows?.t0?.sides?.[tipsUpId];
+    const douglas = (w?.legs || []).find((l) => (l.label || "").includes("Douglas"));
+    const johnson = (w?.legs || []).find((l) => (l.label || "").includes("Johnson"));
+    check("caleb douglas t0 lookback revised up", douglas?.flag === "t0_lookback"
+      && douglas?.value != null && douglas.value > 856);
+  }
 
   console.log(JSON.stringify({
     trades: meters.length,

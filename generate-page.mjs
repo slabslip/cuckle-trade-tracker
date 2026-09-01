@@ -393,7 +393,7 @@ const html = `<!DOCTYPE html>
     .hop > b { flex: 0 0 auto; white-space: nowrap; }
     .hop b { color: var(--text); font-variant-numeric: tabular-nums; }
     .leg b { color: var(--text); font-variant-numeric: tabular-nums; }
-    .leg.va { color: var(--text); border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
+    .leg.va { color: #d4c07a; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
     .leg.va b { color: #d4c07a; }
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
@@ -428,8 +428,7 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 2px; }
     a.champ-alert .day-alert-h { line-height: 1.3; }
-    /* News Feed hero header row: title + Pause. League-wide trades open via Trades quick action
-       / Latest trade card — no standalone All trades control on home. */
+    /* News Feed hero header row: title + Pause. Recent Trade header carries search all trades. */
     .day-alert-top { display: flex; align-items: flex-start; gap: 12px; }
     /* A flex item's automatic minimum is min-content, so the heading would widen the card
        past the viewport rather than give Pause room. Same guard as the card itself. */
@@ -649,6 +648,14 @@ const html = `<!DOCTYPE html>
       padding: 12px; margin: 0 0 14px;
     }
     .mark-chart-h { font-weight: 650; margin-bottom: 12px; }
+    .mark-chart-h-row {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .mark-chart-h-row .mark-chart-h-copy { min-width: 0; flex: 1 1 auto; font-weight: 650; }
+    .mark-chart-h-row .mark-chart-h-copy span {
+      display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px;
+    }
     .mark-chart-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px; }
     .mark-bar { margin: 0 0 12px; }
     .mark-bar:last-child { margin-bottom: 0; }
@@ -1297,6 +1304,14 @@ const html = `<!DOCTYPE html>
     div.lh-latest-trade .day-alert-h {
       font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
     }
+    button.lh-trade-all-btn {
+      flex: 0 0 auto; appearance: none; font: inherit;
+      font-size: 0.8125rem; font-weight: 500; line-height: 1.2;
+      color: var(--muted); background: none; border: 0; padding: 0;
+      cursor: pointer; text-decoration: underline; white-space: nowrap;
+      min-height: 44px; margin: -8px 0;
+    }
+    button.lh-trade-all-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Recent Trade chip + floating vote CTA over the lean footer. */
     div.lh-latest-trade .lh-trade-chip-wrap {
       position: relative; width: 100%;
@@ -1527,7 +1542,6 @@ const html = `<!DOCTYPE html>
     }
     .h2h-chip.is-trade .h2h-top { align-items: center; gap: 8px; }
     .h2h-chip.is-trade .h2h-side.is-right .h2h-top { flex-direction: row; }
-    .h2h-chip.is-trade .h2h-side.is-right .h2h-medal { left: -2px; right: auto; }
     .h2h-chip.is-trade .h2h-av-wrap,
     .h2h-chip.is-trade .h2h-av,
     .h2h-chip.is-trade .h2h-av > img {
@@ -1641,7 +1655,7 @@ const html = `<!DOCTYPE html>
       margin-top: 2px; padding-top: 4px;
       border-top: 1px solid var(--line);
     }
-    .lh-trade-va .lh-trade-lab b { font-weight: 650; color: var(--text); }
+    .lh-trade-va .lh-trade-lab b { font-weight: 650; color: #d4c07a; }
     .lh-trade-va .lh-trade-num { color: #d4c07a; }
     /* Value lean mid + per-side voter flairs under left | VS | right. */
     .h2h-trade-lean {
@@ -1725,7 +1739,7 @@ const html = `<!DOCTYPE html>
        menu that was covering the rest of their row, which measured perfectly and read as a
        rendering fault. Full width also means the panel cannot be wider than the body's content
        box, so it can never widen the document. */
-    /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
+    /* Addressed by id, the way #scoreAs and #seatTradeFilters are, so these win over the shared
        .filter-panel box rules that are declared further down the sheet. */
     /* The cap is the list, not a fraction of the viewport. It used to be min(100dvh - 96px, 480px)
        -- a flat 480px on any phone taller than 576px -- which is a number the five options never
@@ -1867,7 +1881,7 @@ const html = `<!DOCTYPE html>
     .chip-lens.is-inline {
       position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
     }
-    /* Reserve a clear corner so the clock never covers seat names / medals. */
+    /* Reserve a clear corner so the clock never covers seat names. */
     .h2h-chip.is-trade { position: relative; padding-top: 22px; padding-right: 30px; }
     .h2h-chip.is-trade > .chip-lens { top: 6px; right: 6px; }
     button.chip-lens-btn {
@@ -1974,19 +1988,11 @@ const html = `<!DOCTYPE html>
     .filter-panel .rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
     .filter-panel .filter-h { color: var(--dim); font-size: 0.75rem; margin: 8px 0 0; }
     .filter-wrap { position: relative; z-index: 4; }
-    #yearFilters {
-      position: absolute; top: 52px; left: 0; z-index: 12;
-      width: 132px; max-height: min(60dvh, 420px); overflow-y: auto;
-      margin: 0; padding: 4px 8px;
-      display: flex; flex-direction: column;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    #seatTradeFilters {
+      margin: 0 0 14px;
+      max-height: min(70dvh, 520px); overflow-y: auto;
     }
-    #yearFilters label {
-      min-height: 44px; gap: 10px; font-size: 0.8125rem; color: var(--muted);
-      cursor: pointer;
-    }
-    #yearFilters label:has(input:checked) { color: var(--text); }
-    #yearFilters input { width: 16px; height: 16px; }
+    #seatTradeFilters .filter-h:first-child { margin-top: 4px; }
     .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
     .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
     .path-hero h2 { margin: 0 0 6px; }
@@ -2194,8 +2200,10 @@ const html = `<!DOCTYPE html>
     // each successful admin Remove, so a delete hides the row without waiting for a Pages rebuild.
     const newsGone = new Set();
     let newsDelPending = null;
-    let lens = "all";
-    const DATA_V = "scoreAsCompact20260901164500";
+    let lens = "t0";
+    let runLens = "y2";
+    let lensPicker = "trade";
+    const DATA_V = "runLensAheadBehind20260901180300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2226,7 +2234,7 @@ const html = `<!DOCTYPE html>
       ["y1", "1 season", "Average value through the rest of this season (or the next season from the offseason)."],
       ["y2", "2 seasons", "Rest of this season plus the next (or the next two from the offseason)."],
       ["y3", "3 seasons", "Through three seasons from the trade."],
-      ["all", "as of today", "Value from accept through today."],
+      ["all", "as of today", "Weekly average value from accept through today."],
     ];
     let view = "home";
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
@@ -2252,6 +2260,8 @@ const html = `<!DOCTYPE html>
     let draftFilterOpen = false;
     let year = "all";
     let yearFilterOpen = false;
+    let seatTradeTeam = "all";
+    let seatTradeSort = "new"; // new = Most Recent, old = Oldest
     // League-wide trades feed filters (years / teams / players). Separate from the
     // per-seat Trades tab year filter so the two screens do not clobber each other.
     let tapeFilterOpen = false;
@@ -3447,8 +3457,7 @@ const html = `<!DOCTYPE html>
       } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
-        const book = votesRaw;
-        voteBook = book && book.v === 1 && book.votes ? book : null;
+        voteBook = votesRaw && votesRaw.v === 1 && votesRaw.votes ? votesRaw : null;
       } catch (err) { voteBook = null; }
       try {
         if (picksRaw) applyPicksBook(picksRaw);
@@ -3494,12 +3503,14 @@ const html = `<!DOCTYPE html>
         if (!openId) view = "trades";
         else {
           await ensureTradeSeat();
-          // Cold deep links omit lens when it is the to-date default; pick y2 for old deals.
+          // Cold deep links omit lens when it is the age default; pick t0 / y1 / y2 by trade age.
           if (!params.get("lens")) {
             const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
-            lens = defaultLensForDate(side && side.date);
+            applyDefaultLens(side && side.date);
           }
         }
+      } else if (!params.get("lens")) {
+        applyDefaultLens(null);
       }
       document.getElementById("app").hidden = false;
       render();
@@ -3583,7 +3594,9 @@ const html = `<!DOCTYPE html>
       voteToast = null;
       // Filters are per-seat state. Leaving them set filtered the next seat to a season it may not have.
       year = "all";
-      lens = "all";
+      seatTradeTeam = "all";
+      seatTradeSort = "new";
+      applyDefaultLens(null);
       draftSort = "new";
       draftRounds = { 1: true, 2: true, 3: true, 4: true };
       draftStartup = false;
@@ -3617,7 +3630,8 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
-      if (lens && lens !== "all") q.set("lens", lens);
+      // Omit lens when it matches the age default so cold links re-age on load.
+      if (lens && !lensIsAgeDefault()) q.set("lens", lens);
       // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
       if (isDesignLeagueHome()) q.set("design", "league-home");
       return "?" + q.toString();
@@ -3687,7 +3701,7 @@ const html = `<!DOCTYPE html>
         titleYear: q.get("title") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
-        // null when omitted so trade screens can age-default (y2 vs to-date).
+        // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
         d: 0,
       };
@@ -3710,9 +3724,9 @@ const html = `<!DOCTYPE html>
           lens = want.lens;
         } else if (view === "trade" && openId) {
           const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
-          lens = defaultLensForDate(side && side.date);
+          applyDefaultLens(side && side.date);
         } else {
-          lens = "all";
+          applyDefaultLens(null);
         }
         // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
         partnerName = null;
@@ -3801,6 +3815,7 @@ const html = `<!DOCTYPE html>
         openPick = null;
         openDraft = null;
         voteToast = null;
+        applyDefaultLens(newestTradeDate(id));
         focusNext = ".screen-h";
       }
       syncUrl();
@@ -3842,13 +3857,13 @@ const html = `<!DOCTYPE html>
     }
 
     function sideOf(t) {
-      return applyVa((t.windows && t.windows[lens]) || t.even || t.realized, isMulti(t));
+      return applyVa(sideWindow(t), isMulti(t));
     }
 
     // Mirrors value-adjust.mjs exactly: no VA on N-way trades, totals refresh when either bag is priced.
     function applyVa(s, noVa) {
-      if (!s || s.incomplete) return s;
-      const priced = (legs) => (legs || []).filter((l) => l.value != null);
+      if (!s) return s;
+      const priced = (legs) => (legs || []).filter((l) => l.value != null && Number.isFinite(l.value));
       const sum = (legs) => priced(legs).reduce((a, l) => a + l.value, 0);
       const got = priced(s.legs), sent = priced(s.sent);
       if (!got.length && !sent.length) return s;
@@ -3868,7 +3883,8 @@ const html = `<!DOCTYPE html>
         const damp = theirMax > 0 ? myMax / Math.max(myMax, theirMax) : 1;
         return 0.15 * n * myMax * damp;
       };
-      const vaG = noVa ? 0 : one(got, sent), vaS = noVa ? 0 : one(sent, got);
+      const vaOff = noVa || s.incomplete;
+      const vaG = vaOff ? 0 : one(got, sent), vaS = vaOff ? 0 : one(sent, got);
       const today = sum(s.legs) + vaG, sentToday = sum(s.sent) + vaS;
       return Object.assign({}, s, {
         value_adjust: vaG,
@@ -3886,7 +3902,7 @@ const html = `<!DOCTYPE html>
     }
 
     function windowScore(r) {
-      const w = r.windows && r.windows[lens];
+      const w = windowBag(r);
       if (!w || w.incomplete) return null;
       return displayDelta(w.got, w.sent);
     }
@@ -3962,14 +3978,80 @@ const html = `<!DOCTYPE html>
       return today >= seasonWindowEnd(date, seasonCount);
     }
 
+    /** Best window up to target — matches apply-value-adjust.mjs / marks.json. */
+    function effectiveLens(date, targetLens) {
+      const today = (league && league.today) || "";
+      if (targetLens === "t0" || targetLens === "all") return targetLens;
+      const order = ["t0", "y1", "y2", "y3"];
+      const idx = order.indexOf(targetLens);
+      if (idx < 0) return targetLens;
+      for (let i = idx; i >= 0; i--) {
+        const l = order[i];
+        if (l === "t0") return "t0";
+        const need = { y1: 1, y2: 2, y3: 3 }[l];
+        if (seasonLived(date, need, today)) return l;
+      }
+      return "t0";
+    }
+
+    function windowBag(r, targetLens) {
+      const key = effectiveLens(r.date, targetLens || lens);
+      return (r.windows && r.windows[key]) || {};
+    }
+
+    function sideWindow(t, targetLens) {
+      const key = effectiveLens(t.date, targetLens || lens);
+      return (t.windows && t.windows[key]) || t.even || t.realized;
+    }
+
     /**
-     * Default score clock by age: 2-season span once that window is complete;
-     * to-date (Since trade) while the deal is still inside its second season.
+     * Default score clock by trade age (NFL season windows, not calendar years):
+     *   - still inside its first season window → Date of Trade (t0)
+     *   - that window is done (rest of the season, or the next season from offseason) → 1 season
+     *   - two season windows complete → 2 seasons
+     * Users can still pick 3 seasons or as-of-today from the chip menu.
      */
     function defaultLensForDate(date) {
       const today = (league && league.today) || "";
-      if (!date || !today) return "all";
-      return seasonLived(date, 2, today) ? "y2" : "all";
+      if (!date || !today) return "t0";
+      if (seasonLived(date, 2, today)) return "y2";
+      if (seasonLived(date, 1, today)) return "y1";
+      return "t0";
+    }
+
+    /** Newest trade date on the league tape, or on one seat when uid is set. */
+    function newestTradeDate(uid) {
+      if (uid && data && me && me.user_id === uid && Array.isArray(data.trades)) {
+        let best = "";
+        for (const t of data.trades) {
+          if (t && t.date && t.date > best) best = t.date;
+        }
+        if (best) return best;
+      }
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let best = "";
+      for (const r of sides) {
+        if (uid && r.user_id !== uid) continue;
+        if (r.date && r.date > best) best = r.date;
+      }
+      return best || null;
+    }
+
+    /**
+     * Set the shared chip lens from a trade date, or from the newest deal in context.
+     * List defaults follow the newest deal so y1/y2 never hide younger trades still on the tape.
+     */
+    function applyDefaultLens(date) {
+      lens = defaultLensForDate(date || newestTradeDate(me && me.user_id) || newestTradeDate(null));
+    }
+
+    /** True when the shared lens is still the age default for the current screen. */
+    function lensIsAgeDefault() {
+      if (view === "trade" && openId) {
+        const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+        return lens === defaultLensForDate(side && side.date);
+      }
+      return lens === defaultLensForDate(newestTradeDate(me && me.user_id) || newestTradeDate(null));
     }
 
     function windowLived(date) {
@@ -4070,25 +4152,17 @@ const html = `<!DOCTYPE html>
      * screen it leads to are two things instead of one thing in two states.
      */
     function boardTape(r) {
-      const w = (r.windows && r.windows[lens]) || {};
+      const w = windowBag(r);
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-      // Gold outline for a trade this device has voted on. Colour alone is not a message,
-      // so the same fact goes to a screen reader as text.
-      const voted = !!readVotes(r.transaction_id).choice;
-      // The two sides are exact mirrors, so one score signs both: the seat carries s, the
-      // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
-      // figure it describes, not on the label beside it.
-      // Seat names stay clickable (seat-link); the row itself opens the trade.
-      return '<div class="row' + (voted ? " voted" : "") + '" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      return '<div class="row" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
@@ -4117,7 +4191,13 @@ const html = `<!DOCTYPE html>
     function dataSetRows(id) {
       const p = (league && league.player_lists) || {};
       const trades = (r) => r.trades + (r.trades === 1 ? " trade" : " trades");
-      if (id === "wide") return rankWide().map((r) => boardTape(r)).join("");
+      if (id === "wide") {
+        const list = rankWide();
+        ensureTradesFeedBags(list);
+        return list.length
+          ? '<div class="trades-feed">' + list.map((r) => tradeFeedCardHtml(r)).join("") + "</div>"
+          : "";
+      }
       if (id === "passed") return (p.most_traded || []).map((r) => listRow(r, trades(r))).join("");
       if (id === "least") return (p.least_traded || []).map((r) => listRow(r, trades(r))).join("");
       if (id === "forever") return (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
@@ -4190,7 +4270,7 @@ const html = `<!DOCTYPE html>
     function homeChips() {
       return '<div class="lh-actions ds-wrap">'
         + '<div class="lh-action-row">'
-        + lhNavAction("trades", "Trades",
+        + lhNavAction("trades", "My Trades",
           "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z")
         + lhNavAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
@@ -4832,6 +4912,37 @@ const html = `<!DOCTYPE html>
         + more;
     }
 
+    /**
+     * Map a seat-file trade onto the league tape side the feed cards expect, and stash the
+     * seat bag so latestTradeCardHtml can paint assets without a second fetch. Every surface
+     * that lists a seat's deals (Trades tab, best/worst, partners) goes through this so vote
+     * state keyed by transaction_id matches the league feed.
+     */
+    function seatTradeSide(t) {
+      if (!t || !t.transaction_id) return null;
+      rememberTradeBag(t.transaction_id, t);
+      const uid = (me && me.user_id) || null;
+      const side = tradeSide(t.transaction_id, uid) || tradeSide(t.transaction_id, null);
+      if (side) return side;
+      // Tape gap (rare): still paint a framed card from the seat file so the deal is not lost.
+      const otherNames = (t.others || []);
+      return {
+        transaction_id: t.transaction_id,
+        date: t.date,
+        user_id: uid,
+        name: (me && me.name) || "This seat",
+        other: otherNames.join(" · ") || "Them",
+        headline: "",
+        windows: t.windows || {},
+      };
+    }
+
+    /** One seat trade as the same H2H + vote card the league feed uses. */
+    function seatTradeFeedCardHtml(t) {
+      const side = seatTradeSide(t);
+      return side ? tradeFeedCardHtml(side) : "";
+    }
+
     /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
     function tradeFeedCardHtml(r) {
       const voted = !!readVotes(r.transaction_id).choice;
@@ -4953,6 +5064,7 @@ const html = `<!DOCTYPE html>
     function marksOf(row) {
       const m = row || {};
       const w = (m.lens && m.lens[lens]) || {};
+      const runW = (m.lens && m.lens[runLens]) || {};
       const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
       const soldPicks = m.sold_picks || 0;
@@ -4979,8 +5091,8 @@ const html = `<!DOCTYPE html>
       let draftTone = "";
       if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
       else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
-      const total = w.total == null ? null : w.total;
-      const per = w.per == null ? null : w.per;
+      const total = runW.total == null ? null : runW.total;
+      const per = runW.per == null ? null : runW.per;
       let run = "Even";
       let runTone = "";
       if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
@@ -5041,10 +5153,26 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    function runLensCaption() {
+      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      if (runLens === "t0") return "Average value at accept across every deal.";
+      if (runLens === "all") return "Weekly average from accept through today across every deal.";
+      return "Average at " + name.toLowerCase() + " where lived; younger deals use their best window.";
+    }
+
+    function runLensHtml() {
+      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      return '<span class="chip-lens is-inline">'
+        + '<button type="button" class="chip-lens-btn" data-run-lens="1"'
+        + ' aria-label="Ahead or behind window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' title="' + esc(name) + '">'
+        + chipLensIcon() + "</button></span>";
+    }
+
     function markChart() {
       if (!markOpen) return "";
       const heads = {
-        run: ["Ahead or behind", (WINDOWS.find((w) => w[0] === lens) || [])[1] || ""],
+        run: ["Ahead or behind", runLensCaption()],
         volume: ["How much they trade", "Two-way count. 80+ Hyper, 40–79 Active, under 40 Quiet."],
         posture: ["Players vs picks", "Picks sold for players vs players sold for picks."],
         manners: ["Who extracts", "Partners they beat vs partners who beat them."],
@@ -5057,13 +5185,21 @@ const html = `<!DOCTYPE html>
         .filter((mem) => seats[mem.user_id])
         .map((mem) => ({ name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[markOpen] }));
       if (!rows.length) {
-        return '<div class="mark-chart"><div class="mark-chart-h">' + esc(head[0])
-          + '</div><p class="caption">No league marks in this build.</p></div>';
+        const emptyHead = markOpen === "run"
+          ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+            + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
+          : '<div class="mark-chart-h">' + esc(head[0]) + "</div>";
+        return '<div class="mark-chart">' + emptyHead
+          + '<p class="caption">No league marks in this build.</p></div>';
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
+      const chartHead = markOpen === "run"
+        ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+          + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
+        : '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>";
       return '<div class="mark-chart">'
-        + '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>"
+        + chartHead
         + rows.map((r, i) => {
           const you = me && me.user_id === r.uid;
           const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
@@ -5081,7 +5217,7 @@ const html = `<!DOCTYPE html>
     // needle, the even book, VA, the lens windows, today_delta, partner grades or any board
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
-    const VOTE_KEY = "cuckle.votes.v2";
+    const VOTE_KEY = "cuckle.votes.v3";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
@@ -6531,8 +6667,11 @@ const html = `<!DOCTYPE html>
     }
 
     function voteParties(r) {
-      const cached = seatCache[r.user_id];
-      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
+      // Prefer the bag already painted for this tx (seat tab / feed cache) so N-way detection
+      // cannot disagree between the H2H chip and the vote buttons on the same card.
+      const hit = bagHitForTx(r.transaction_id)
+        || ((seatCache[r.user_id] || {}).trades || [])
+          .find((t) => t.transaction_id === r.transaction_id);
       return hit ? 1 + ((hit.others || []).length) : voteSeats(r).length;
     }
 
@@ -7211,8 +7350,7 @@ const html = `<!DOCTYPE html>
       const hit = bagHitForTx(latest.transaction_id);
       if (hit) {
         const s = applyVa(
-          (hit.windows && hit.windows[lens])
-            || hit.even || hit.realized,
+          sideWindow(hit),
           isMulti(hit),
         );
         if (s && !s.incomplete && s.today != null && s.sent_today != null) {
@@ -7226,7 +7364,7 @@ const html = `<!DOCTYPE html>
           };
         }
       }
-      const w = (latest.windows && latest.windows[lens]) || {};
+      const w = windowBag(latest);
       const d = windowScore(latest);
       return {
         leftTotal: w.incomplete && !w.got ? null : w.got,
@@ -7237,7 +7375,7 @@ const html = `<!DOCTYPE html>
       };
     }
 
-    /** Under the chip: left/right voter flairs aligned to each team (read-only tallies). */
+    /** Under the chip: voter flairs under left | VS | right. */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
@@ -7297,7 +7435,7 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    /** Circular seat avatar from Sleeper/flair; optional gold medal for the winning side. */
+    /** Circular seat avatar from Sleeper/flair; optional gold medal on weekly matchup chips. */
     function h2hAvatarHtml(name, avatarUrl, opts) {
       const win = opts && opts.win;
       const who = String(name || "");
@@ -7415,10 +7553,7 @@ const html = `<!DOCTYPE html>
       const seats = voteSeats(latest);
       const hit = bagHitForTx(latest.transaction_id);
       if (hit) {
-        const bag = applyVa(
-          (hit.windows && hit.windows[lens]) || hit.even || hit.realized || null,
-          isMulti(hit),
-        );
+        const bag = applyVa(sideWindow(hit), isMulti(hit));
         const other = seats.find((s) => s.uid !== latest.user_id);
         return [
           {
@@ -7486,7 +7621,7 @@ const html = `<!DOCTYPE html>
         const cls = right ? "h2h-side is-right" : "h2h-side is-left";
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(name, null, { win: false })
+          + h2hAvatarHtml(name, null)
           + '<div class="h2h-id"><div class="h2h-name">' + seatLabel(name) + "</div></div></div>"
           + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
       };
@@ -7572,10 +7707,9 @@ const html = `<!DOCTYPE html>
             rememberTradeBag(tx, null);
           }
           delete tradeBagPending[tx];
-          if (appScreen === "dash" && view === "trades" && !me) render();
-          if (appScreen === "dash" && view === "trade" && !me) render();
-          if (appScreen === "dash" && view === "home" && !me
-            && latestTradeHitTx === tx) render();
+          if (appScreen !== "dash") return;
+          if (view === "trades" || view === "trade" || view === "partners"
+            || view === "home" || view === "datasets") render();
         })();
       }
     }
@@ -7585,9 +7719,7 @@ const html = `<!DOCTYPE html>
       const left = sides[0] || { name: latest.name, legs: [] };
       const right = sides[1] || { name: latest.other, legs: [] };
       const lean = latestTradeLean(latest);
-      const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
-      const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      // Prefer VA-aware bag totals (same source as win medals). Legs-only is the pre-bag fallback.
+      // Prefer VA-aware bag totals. Legs-only is the pre-bag fallback.
       const leftSum = lean.leftTotal != null ? lean.leftTotal : latestTradeLegsSum(left.legs);
       const rightSum = lean.rightTotal != null ? lean.rightTotal : latestTradeLegsSum(right.legs);
       let leftTone = "";
@@ -7599,7 +7731,7 @@ const html = `<!DOCTYPE html>
         else if (l < r) { leftTone = "low"; rightTone = "high"; }
         else { leftTone = "even"; rightTone = "even"; }
       }
-      const sideHtml = (side, rightAlign, win) => {
+      const sideHtml = (side, rightAlign) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const vaRow = latestTradeVaHtml(side.value_adjust);
@@ -7608,7 +7740,7 @@ const html = `<!DOCTYPE html>
         // leg counts cannot stagger the = lines.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(side.name, side.avatar, { win: win })
+          + h2hAvatarHtml(side.name, side.avatar)
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
           + "</div></div>"
@@ -7626,9 +7758,9 @@ const html = `<!DOCTYPE html>
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
         + chipLensHtml()
-        + sideHtml(left, false, leftWin)
+        + sideHtml(left, false)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin)
+        + sideHtml(right, true)
         + leftSumHtml
         + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
         + rightSumHtml
@@ -7855,6 +7987,14 @@ const html = `<!DOCTYPE html>
      * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
      * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
+    function recentTradeHeaderHtml() {
+      return '<div class="day-alert-h">'
+        + '<span>Recent Trade</span>'
+        + '<button type="button" class="lh-trade-all-btn" data-trades-list="1"'
+        + ' aria-label="Search all trades">search all trades</button>'
+        + "</div>";
+    }
+
     function leagueInProgress() {
       ensureLatestTradeBags();
       const latest = latestTradeSide();
@@ -7862,10 +8002,6 @@ const html = `<!DOCTYPE html>
       if (latest) {
         try {
           const voted = !!readVotes(latest.transaction_id).choice;
-          // Latest trade H2H chip — opens the trade board for this deal.
-          // Div (not button) so seat-link names/flair can nest legally.
-          // Hold the full chip until seat bags are ready (skeleton meanwhile) so we never
-          // flash the trade_boards headline stub (one leg/side, dash values) then expand.
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
@@ -7876,7 +8012,7 @@ const html = `<!DOCTYPE html>
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Recent Trade</div>'
+            + recentTradeHeaderHtml()
             + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
@@ -7889,7 +8025,7 @@ const html = `<!DOCTYPE html>
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Recent Trade</div>'
+            + recentTradeHeaderHtml()
             + '<div class="lh-trade-chip-wrap">'
             + '<div class="h2h-chip is-trade" role="group">'
             + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
@@ -7929,8 +8065,10 @@ const html = `<!DOCTYPE html>
         + teamMarks()
         + markChart()
         + empty
-        + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
-        + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
+        + (best ? '<h2>Best deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(best) + "</div>" : "")
+        + (worst && (!best || worst.transaction_id !== best.transaction_id)
+          ? '<h2>Worst deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(worst) + "</div>"
+          : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")
         + (take ? partnerLine(take) : "")
         + (pay && take && pay.name !== take.name ? partnerLine(pay) : "")
@@ -7960,7 +8098,8 @@ const html = `<!DOCTYPE html>
         + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced, p.s.value_adjust_sent);
       if (p.multi) {
         bags += (t.other_bags || []).map((b) => {
-          const side = applyVa((b.windows && b.windows[lens]) || b.even || b.realized, true);
+          const key = effectiveLens(t.date, lens);
+          const side = applyVa((b.windows && b.windows[key]) || b.even || b.realized, true);
           if (!side) return "";
           return bagBlock(b.name + " received", side.legs, side.today, side.unpriced, side.value_adjust);
         }).join("");
@@ -8109,41 +8248,110 @@ const html = `<!DOCTYPE html>
         + detail + "</div>";
     }
 
-    function renderTrades() {
+    /** Partner names appearing on this seat's trade tape (for the Trades tab team filter). */
+    function seatTradeTeams(trades) {
+      const names = new Set();
+      for (const t of trades || []) {
+        for (const o of t.others || []) if (o) names.add(String(o));
+      }
+      return [...names].sort((a, b) => a.localeCompare(b));
+    }
+
+    /** Filter + sort state for a seat's Trades tab. Shared by renderTrades only. */
+    function seatTradesFiltered() {
       const all = (data && data.trades) || [];
       const years = [...new Set(all.map((t) => t.season))].sort().reverse();
+      const teams = seatTradeTeams(all);
       let list = all;
       if (year !== "all") list = list.filter((t) => t.season === year);
-      // Home tiles exclude trades that have not lived the selected clock; this list must too.
-      const lived = list.filter((t) => chipLived(t.date));
-      const hint = year === "all" ? "Filter by year" : "Filter by year · " + year;
-      const yearBtn = '<button type="button" class="filter-btn' + (year !== "all" || yearFilterOpen ? " on" : "") + '" data-yfilter="1" aria-label="Filter by year" aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
-        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
-        + (year !== "all" ? '<span class="dot"></span>' : "")
-        + "</button>"
-        + '<div class="caption">' + hint + "</div>";
+      if (seatTradeTeam !== "all") {
+        list = list.filter((t) => (t.others || []).some((o) => o === seatTradeTeam));
+      }
+      let lived = list.filter((t) => chipLived(t.date));
+      lived = lived.slice().sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        const ta = a.transaction_id || "";
+        const tb = b.transaction_id || "";
+        if (ta !== tb) return ta < tb ? -1 : 1;
+        return 0;
+      });
+      if (seatTradeSort !== "old") lived.reverse();
+      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort === "old";
       const empty = !all.length
         ? '<p class="caption">No trades on this seat yet.</p>'
         : !list.length
-          ? '<p class="caption">No trades in ' + esc(year) + '. Clear the year filter to see the rest.</p>'
+          ? '<p class="caption">No trades match these filters. Clear a filter to see the rest.</p>'
           : !lived.length
             ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
             : "";
-      return '<div class="filter-wrap">'
-        + filterRow(yearBtn)
-        + (yearFilterOpen
-          // Exactly one year at a time, so these are radios, not checkboxes.
-          ? '<div class="filter-panel" id="yearFilters" role="radiogroup" aria-label="Year">'
-            + [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
-              '<label data-year="' + esc(row[0]) + '"><input type="radio" name="yearFilter" value="' + esc(row[0]) + '"'
-              + (year === row[0] ? " checked" : "") + "> " + esc(row[1]) + "</label>"
-            ).join("")
-            + "</div>"
-          : "")
-        + "</div>"
+      return { all, years, teams, list, lived, filtered, empty };
+    }
+
+    /** One filter control with Year, Team, and sort sub-filters for the seat Trades tab. */
+    function seatTradeFilterHtml(ctx) {
+      const hintBits = [];
+      if (year !== "all") hintBits.push(year);
+      if (seatTradeTeam !== "all") hintBits.push(seatTradeTeam);
+      if (seatTradeSort === "old") hintBits.push("Oldest");
+      const filterHint = ctx.filtered
+        ? "Filter · " + hintBits.join(" · ")
+        : "Filter by year, team, or sort";
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (ctx.filtered || yearFilterOpen ? " on" : "") + '" data-stfilter="1" aria-label="Filter trades"'
+        + ' aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (ctx.filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
+        '<label data-seat-year="' + esc(row[0]) + '"><input type="radio" name="seatTradeYear" value="'
+        + esc(row[0]) + '"' + (year === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const teamRadios = [["all", "All teams"]].concat(ctx.teams.map((n) => [n, n])).map((row) =>
+        '<label data-seat-team="' + esc(row[0]) + '"><input type="radio" name="seatTradeTeam" value="'
+        + esc(row[0]) + '"' + (seatTradeTeam === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const sortRadios = [
+        ["new", "Most Recent"],
+        ["old", "Oldest"],
+      ].map((row) =>
+        '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
+        + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const panel = yearFilterOpen
+        ? '<div class="filter-panel" id="seatTradeFilters">'
+          + '<div class="filter-h">Year</div>'
+          + yearRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Team</div>'
+          + teamRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Sort</div>'
+          + sortRadios
+          + "</div>"
+        : "";
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
+    }
+
+    function renderTrades() {
+      const ctx = seatTradesFiltered();
+      const { all, list, lived, empty } = ctx;
+      const shown = lived.slice(0, tapeLimit);
+      for (const t of shown) seatTradeSide(t);
+      const cards = shown.map((t) => seatTradeFeedCardHtml(t)).join("");
+      const more = lived.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (lived.length - shown.length) + " left)</button>"
+        : "";
+      return seatTradeFilterHtml(ctx)
+        + voteToastHtml()
         + '<div class="caption">' + esc(livedHint(lived.length, list.length, "deal")) + "</div>"
         + empty
-        + lived.map((t) => tradeRow(t)).join("");
+        + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
+        + more;
     }
 
     function clockName() {
@@ -8160,8 +8368,9 @@ const html = `<!DOCTYPE html>
     }
 
     function scoreOpt(row) {
+      const active = lensPicker === "run" ? runLens : lens;
       // Title-only rows keep the portal short; longer copy stays on title/aria for hover & SR.
-      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
+      return '<button type="button" class="score-opt' + (active === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
         + ' title="' + esc(row[2] || row[1]) + '" aria-label="' + esc(row[1]) + '">'
         + "<b>" + esc(row[1]) + "</b></button>";
     }
@@ -8218,28 +8427,41 @@ const html = `<!DOCTYPE html>
 
     function paintLens() {
       const panel = document.getElementById("scoreAs");
-      const btns = document.querySelectorAll("button.chip-lens-btn");
+      const btns = document.querySelectorAll("button.chip-lens-btn[data-score]");
+      const runBtns = document.querySelectorAll("button.chip-lens-btn[data-run-lens]");
       if (!panel) return;
-      if (!lensApplies() || !btns.length) {
+      if (!lensApplies() || (!btns.length && !runBtns.length)) {
         lensOpen = false;
+        lensPicker = "trade";
         panel.hidden = true;
         panel.innerHTML = "";
         return;
       }
-      const name = clockName();
+      const active = lensPicker === "run" ? runLens : lens;
+      const activeName = (WINDOWS.find((w) => w[0] === active) || [])[1] || "";
+      const tradeName = (WINDOWS.find((w) => w[0] === lens) || [])[1] || "";
+      const runName = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
       for (const btn of btns) {
-        btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
-        btn.setAttribute("aria-label", "Score window: " + name);
-        btn.setAttribute("title", name);
-        btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
+        btn.className = "chip-lens-btn" + (lensPicker === "trade" && (lens !== "all" || lensOpen) ? " on" : "");
+        btn.setAttribute("aria-label", "Score window: " + tradeName);
+        btn.setAttribute("title", tradeName);
+        btn.setAttribute("aria-expanded", lensOpen && lensPicker === "trade" ? "true" : "false");
         btn.innerHTML = chipLensIcon()
           + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
+      for (const btn of runBtns) {
+        btn.className = "chip-lens-btn" + (lensPicker === "run" && (runLens !== "all" || lensOpen) ? " on" : "");
+        btn.setAttribute("aria-label", "Ahead or behind window: " + runName);
+        btn.setAttribute("title", runName);
+        btn.setAttribute("aria-expanded", lensOpen && lensPicker === "run" ? "true" : "false");
+        btn.innerHTML = chipLensIcon()
+          + (runLens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
       }
       panel.hidden = !lensOpen;
       panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
       if (lensOpen) {
         const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
-          || btns[0];
+          || (lensPicker === "run" ? runBtns[0] : btns[0]);
         if (anchor) positionScoreAs(anchor);
       }
     }
@@ -8267,14 +8489,11 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The screen-local filter row the clock control used to share: the year filter on the Trades
-     * tab and the round filter on Drafts. One emitter, because both were typing the same two
-     * divs and the clock's departure left them identical.
+     * Screen-local filter row (Trades year/team/sort, Drafts rounds, league tape filters).
+     * No score clock here — each trade chip already mounts its own chipLensHtml().
      */
     function filterRow(left) {
-      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div>"
-        + chipLensHtml({ inline: true })
-        + "</div>";
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
     }
 
     function renderDrafts() {
@@ -8351,7 +8570,8 @@ const html = `<!DOCTYPE html>
           .filter((t) => (t.others || []).length === 1 && t.others[0] === partnerName && chipLived(t.date));
         detail = p
           ? "<h2>" + seatLabel(p.name) + "</h2>"
-            + (deals.length ? deals.map((t) => tradeRow(t)).join("")
+            + (deals.length
+              ? '<div class="trades-feed">' + deals.map((t) => seatTradeFeedCardHtml(t)).join("") + "</div>"
               : '<p class="caption">No deal with ' + seatLabel(p.name) + " has lived " + esc(clockName()) + " yet.</p>")
           : "";
       }
@@ -8769,7 +8989,7 @@ const html = `<!DOCTYPE html>
       voteEditTx = null;
       {
         const side = tradeSide(tx, uid) || tradeSide(tx, null);
-        lens = defaultLensForDate(side && side.date);
+        applyDefaultLens(side && side.date);
       }
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
@@ -8797,10 +9017,13 @@ const html = `<!DOCTYPE html>
       markOpen = null;
       titleYear = null;
       year = "all";
+      seatTradeTeam = "all";
+      seatTradeSort = "new";
       yearFilterOpen = false;
       draftFilterOpen = false;
       tapeFilterOpen = false;
       lensOpen = false;
+      applyDefaultLens(null);
       voteToast = toast || null;
       voteSheetTx = null;
       voteEditTx = null;
@@ -8848,12 +9071,38 @@ const html = `<!DOCTYPE html>
       if (opt) {
         e.preventDefault();
         e.stopPropagation();
-        lens = opt.dataset.lens;
+        const wasRun = lensPicker === "run";
+        if (wasRun) runLens = opt.dataset.lens;
+        else lens = opt.dataset.lens;
         lensOpen = false;
+        lensPicker = "trade";
         lensAnchorId = 0;
         render();
-        const back = document.querySelector("button.chip-lens-btn");
+        const back = document.querySelector(
+          wasRun ? "button.chip-lens-btn[data-run-lens]" : "button.chip-lens-btn[data-score]"
+        ) || document.querySelector("button.chip-lens-btn");
         if (back) back.focus({ preventScroll: true });
+        return;
+      }
+      const runLensBtn = e.target.closest("button.chip-lens-btn[data-run-lens]");
+      if (runLensBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!runLensBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          runLensBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = runLensBtn.getAttribute("data-lens-anchor");
+        lensPicker = "run";
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
         return;
       }
       const scoreBtn = e.target.closest("button.chip-lens-btn[data-score]");
@@ -8866,6 +9115,7 @@ const html = `<!DOCTYPE html>
           scoreBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
         }
         lensAnchorId = scoreBtn.getAttribute("data-lens-anchor");
+        lensPicker = "trade";
         lensOpen = !lensOpen;
         if (!lensOpen) {
           paintLens();
@@ -8887,6 +9137,7 @@ const html = `<!DOCTYPE html>
     function closeTopmost() {
       if (lensOpen) {
         lensOpen = false;
+        lensPicker = "trade";
         paintLens();
         const back = document.querySelector("button.chip-lens-btn");
         if (back) back.focus({ preventScroll: true });
@@ -9580,8 +9831,13 @@ const html = `<!DOCTYPE html>
       }
       const filterBtn = e.target.closest("[data-dfilter]");
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
-      const yfilterBtn = e.target.closest("[data-yfilter]");
-      if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
+      const stfilterBtn = e.target.closest("[data-stfilter]");
+      if (stfilterBtn) {
+        yearFilterOpen = !yearFilterOpen;
+        if (yearFilterOpen) lensOpen = false;
+        render();
+        return;
+      }
       const tfilterBtn = e.target.closest("[data-tfilter]");
       if (tfilterBtn) {
         tapeFilterOpen = !tapeFilterOpen;
@@ -9595,7 +9851,7 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters")
+      if (e.target.closest("#draftFilters") || e.target.closest("#seatTradeFilters")
         || e.target.closest("#tapeFilters")
         || e.target.closest("#dataSets")) return;
       let closedFilter = false;
@@ -9607,7 +9863,7 @@ const html = `<!DOCTYPE html>
         draftFilterOpen = false;
         closedFilter = true;
       }
-      if (yearFilterOpen && !e.target.closest("#yearFilters")) {
+      if (yearFilterOpen && !e.target.closest("#seatTradeFilters") && !e.target.closest("[data-stfilter]")) {
         yearFilterOpen = false;
         closedFilter = true;
       }
@@ -9697,9 +9953,26 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const yearLab = e.target.closest("[data-year]");
-      if (yearLab) {
-        year = e.target.checked ? yearLab.dataset.year : "all";
+      const seatYearLab = e.target.closest("[data-seat-year]");
+      if (seatYearLab) {
+        year = e.target.checked ? seatYearLab.dataset.seatYear : "all";
+        tapeLimit = 20;
+        yearFilterOpen = true;
+        render();
+        return;
+      }
+      const seatTeamLab = e.target.closest("[data-seat-team]");
+      if (seatTeamLab) {
+        seatTradeTeam = e.target.checked ? seatTeamLab.dataset.seatTeam : "all";
+        tapeLimit = 20;
+        yearFilterOpen = true;
+        render();
+        return;
+      }
+      const seatSortLab = e.target.closest("[data-seat-sort]");
+      if (seatSortLab) {
+        seatTradeSort = seatSortLab.dataset.seatSort || "new";
+        tapeLimit = 20;
         yearFilterOpen = true;
         render();
         return;
@@ -9878,7 +10151,8 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
   throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
-for (const need of ['day-alert-h">Recent Trade', "function latestTradeSide(", "function ensureWeekMatchups(",
+for (const need of ["function recentTradeHeaderHtml(", "Recent Trade", "data-trades-list=\"1\"",
+  "search all trades", "function latestTradeSide(", "function ensureWeekMatchups(",
   "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
   "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
   "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
@@ -9892,7 +10166,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
   const at = inline.indexOf("function leagueInProgress(");
   const stop = inline.indexOf("\n    function ", at + 10);
   const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
-  if (!prog.includes('day-alert-h">Recent Trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
+  if (!prog.includes("recentTradeHeaderHtml()") || !prog.includes("lh-latest-trade")
+    || !prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
   }
   if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
@@ -9978,6 +10253,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
     const card = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
     if (card.includes("h2h-verdict") || card.includes("WINNER") || card.includes("LOSER")) {
       throw new Error("Latest trade chip must not show book WINNER/LOSER under each seat name");
+    }
+    if (card.includes("win: win") || card.includes("win: leftWin") || card.includes("win: rightWin")
+      || card.includes('win: true')) {
+      throw new Error("Trade chips must not show winner medals on avatars");
     }
     if (card.includes("tradeVoteBtnHtml(") || card.includes("h2h-vote-btn") || card.includes("is-vote-row")) {
       throw new Error("Compact H2H trade chips must not mount a Vote button — vote on the expanded trade screen");
@@ -10410,16 +10689,47 @@ if (!inline.includes("function chipLensHtml(") || !inline.includes("function pos
   throw new Error("chipLensHtml + positionScoreAs must ship for local score windows");
 }
 if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inline: true })')) {
-  throw new Error("value chips and filter rows must mount chipLensHtml");
+  throw new Error("value chips and home bars must mount chipLensHtml");
+}
+{
+  const at = inline.indexOf("function filterRow(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 400 : stop);
+  if (fn.includes("chipLensHtml(")) {
+    throw new Error("filterRow must not mount chipLensHtml — each trade chip already has a score clock");
+  }
 }
 if (!inline.includes("function defaultLensForDate(")
-  || !inline.includes('seasonLived(date, 2, today) ? "y2" : "all"')
+  || !inline.includes("function applyDefaultLens(")
+  || !inline.includes("function newestTradeDate(")
+  || !inline.includes("function lensIsAgeDefault(")
+  || !inline.includes('if (seasonLived(date, 2, today)) return "y2"')
+  || !inline.includes('if (seasonLived(date, 1, today)) return "y1"')
+  || !inline.includes('return "t0"')
   || !inline.includes('["t0", "Date of Trade"')
   || !inline.includes('["y1", "1 season"')
   || !inline.includes('["y2", "2 seasons"')
   || !inline.includes('["y3", "3 seasons"')
   || !inline.includes('["all", "as of today"')) {
-  throw new Error("Trade score menu must ship Date of Trade / 1–3 seasons / as of today");
+  throw new Error("Trade score menu must ship t0→y1→y2 age defaults and Date of Trade / 1–3 seasons / as of today");
+}
+if (!inline.includes("applyDefaultLens(null)") || !inline.includes("applyDefaultLens(side && side.date)")) {
+  throw new Error("dashboard entry points must apply age-based lens defaults");
+}
+if (!inline.includes("!lensIsAgeDefault()")) {
+  throw new Error("syncUrl must omit lens when it matches the age default");
+}
+if (!inline.includes("function effectiveLens(") || !inline.includes("function sideWindow(")
+  || !inline.includes("effectiveLens(t.date, lens)")) {
+  throw new Error("Trade scoring must use effectiveLens window fallback to match marks.json");
+}
+if (!inline.includes("Number.isFinite(l.value)")) {
+  throw new Error("applyVa must ignore non-finite leg values like value-adjust.mjs");
+}
+if (!inline.includes('let runLens = "y2"') || !inline.includes("function runLensHtml(")
+  || !inline.includes("function runLensCaption(") || !inline.includes("data-run-lens")
+  || !inline.includes("m.lens[runLens]") || !html.includes(".mark-chart-h-row")) {
+  throw new Error("Ahead or behind must default to y2 with its own lens filter and best-window marks");
 }
 {
   const optFn = fnSrc("scoreOpt");
@@ -10676,8 +10986,55 @@ for (const ban of [
   if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
     throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
   }
-  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v2"')) {
-    throw new Error("VOTE_KEY must be cuckle.votes.v2 so prior local ballots are wiped");
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v3"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v3 so prior local ballots are wiped for public launch");
+  }
+  if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
+    throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");
+  }
+}
+{
+  const at = inline.indexOf("function renderTrades(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || !fn.includes("trades-feed")
+    || !fn.includes("seatTradeFilterHtml(") || !fn.includes("seatTradesFiltered(")
+    || fn.includes("tradeRow(t)") || fn.includes("lived.map((t) => tradeRow")) {
+    throw new Error("seat Trades tab must use H2H feed cards (seatTradeFeedCardHtml), not tradeRow");
+  }
+}
+{
+  const at = inline.indexOf("function seatTradeFilterHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("data-stfilter") || !fn.includes('id="seatTradeFilters"')
+    || !fn.includes("Most Recent") || !fn.includes("Oldest")
+    || !fn.includes("filter-h\">Year") || !fn.includes("filter-h\">Team")) {
+    throw new Error("seat Trades tab must ship unified Year/Team/Sort filter panel");
+  }
+}
+{
+  const at = inline.indexOf("function renderTeamHome(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(best)") || fn.includes("tradeRow(worst)")) {
+    throw new Error("team home best/worst deals must use seatTradeFeedCardHtml");
+  }
+}
+{
+  const at = inline.indexOf("function renderPartners(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(t)")) {
+    throw new Error("partners deal list must use seatTradeFeedCardHtml");
+  }
+}
+{
+  const at = inline.indexOf("function dataSetRows(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
+  if (!fn.includes("tradeFeedCardHtml(") || fn.includes("boardTape(r)")) {
+    throw new Error("most-lopsided dataset must use tradeFeedCardHtml, not boardTape");
   }
 }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")

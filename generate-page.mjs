@@ -816,32 +816,45 @@ const html = `<!DOCTYPE html>
     button.lh-latest-trade .day-alert-h {
       font-weight: 700; color: var(--text); line-height: 1.3; margin: 0;
     }
-    /* Head-to-head chips: matchups and trades share the mirrored left | VS | right layout. */
+    /* Head-to-head chips: matchups and trades share mirrored left | VS | right (ref chip). */
     .h2h-chip {
+      position: relative;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      gap: 8px 6px; align-items: start;
-      background: #0c1018; border: 1px solid #6b5a2e; border-radius: 16px;
-      padding: 12px 12px 14px; box-sizing: border-box;
+      gap: 8px 4px; align-items: start;
+      background: #0a0e1a;
+      border: 1px solid #1e2638;
+      border-radius: 18px;
+      padding: 14px 12px 14px; box-sizing: border-box;
       width: 100%;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(232, 196, 90, 0.55), 0 0 18px rgba(201, 162, 39, 0.12);
+    }
+    .h2h-chip::before {
+      content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #e8c45a 35%, #f0d878 50%, #e8c45a 65%, transparent);
+      opacity: 0.9; pointer-events: none;
     }
     .h2h-vs {
-      align-self: center; margin-top: 18px;
-      width: 32px; height: 32px; border-radius: 8px;
+      align-self: start; margin-top: 22px;
+      width: 30px; height: 30px; border-radius: 8px;
       display: grid; place-items: center;
-      background: #161b28; border: 1px solid #2e384e;
-      color: #9aa8c0; font-size: 0.6875rem; font-weight: 700;
-      letter-spacing: 0.04em;
+      background: #121826; border: 1px solid #2a3348;
+      color: #9aa8c0; font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.06em;
     }
-    .h2h-side { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .h2h-side { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
     .h2h-side.is-right { text-align: right; align-items: flex-end; }
     .h2h-side.is-left { text-align: left; align-items: flex-start; }
     .h2h-top {
       display: flex; align-items: flex-start; gap: 8px; width: 100%;
     }
     .h2h-side.is-right .h2h-top { flex-direction: row-reverse; }
+    .h2h-av-wrap {
+      position: relative; flex: 0 0 auto; width: 40px; height: 40px;
+    }
     .h2h-av {
-      flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       object-fit: cover; background: #1a1f2e; border: 1px solid #2e384e;
       display: grid; place-items: center;
       color: #c8d0e0; font-size: 0.75rem; font-weight: 700;
@@ -849,32 +862,46 @@ const html = `<!DOCTYPE html>
     .h2h-av > img {
       width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block;
     }
+    .h2h-medal {
+      position: absolute; left: -2px; bottom: -2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #1a1520; border: 1px solid #c9a227;
+      display: grid; place-items: center; line-height: 0;
+      box-shadow: 0 0 6px rgba(232, 196, 90, 0.45);
+    }
+    .h2h-side.is-right .h2h-medal { left: auto; right: -2px; }
     .h2h-nums { min-width: 0; flex: 1 1 auto; }
     .h2h-side.is-right .h2h-nums { text-align: right; }
     .h2h-pct {
-      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.02em;
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
       margin: 0 0 2px; line-height: 1.2;
     }
-    .h2h-pct.is-win { color: #3ddc97; }
-    .h2h-pct.is-lose { color: #e05555; }
+    .h2h-side.is-right .h2h-pct { flex-direction: row-reverse; }
+    .h2h-pct.is-win { color: #3dffb0; }
+    .h2h-pct.is-lose { color: #f07178; }
     .h2h-pct.is-tie { color: #9aa8c0; }
+    .h2h-pct-ico {
+      width: 11px; height: 11px; flex: 0 0 auto; display: block;
+    }
     .h2h-score {
-      font-size: 1.25rem; font-weight: 750; color: #fff; line-height: 1.1;
-      font-variant-numeric: tabular-nums;
+      font-size: 1.375rem; font-weight: 750; color: #fff; line-height: 1.05;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
     }
     .h2h-proj {
       font-size: 0.75rem; color: #8b95a8; line-height: 1.2;
-      font-variant-numeric: tabular-nums; margin-top: 1px;
+      font-variant-numeric: tabular-nums; margin-top: 2px;
     }
     .h2h-bar {
-      width: 100%; height: 4px; border-radius: 99px; background: #243049;
+      width: 100%; height: 5px; border-radius: 3px; background: #243049;
     }
     .h2h-bar.is-win {
-      background: linear-gradient(90deg, #2ccb9f, #5dffc0);
-      box-shadow: 0 0 8px rgba(44, 203, 159, 0.45);
+      background: #3dffb0;
+      box-shadow: 0 0 10px rgba(61, 255, 176, 0.4);
     }
     .h2h-bar.is-lose { background: #2a3348; }
-    .h2h-bar.is-tie { background: #3d4a6b; }
+    .h2h-bar.is-tie { background: #2a3348; }
+    .h2h-id { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px; }
     .h2h-name {
       font-size: 0.9375rem; font-weight: 750; color: #fff; line-height: 1.2;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
@@ -883,8 +910,9 @@ const html = `<!DOCTYPE html>
       font-size: 0.6875rem; color: #8b95a8; line-height: 1.25;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
     }
-    /* Trade H2H: assets stack under each side instead of score stack. */
-    .h2h-chip.is-trade .h2h-vs { margin-top: 8px; }
+    /* Trade H2H: same seat framing; assets stack under each seat (no fake win%). */
+    .h2h-chip.is-trade .h2h-vs { margin-top: 10px; }
+    .h2h-chip.is-trade .h2h-top { min-height: 40px; align-items: center; }
     .h2h-assets {
       display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 2px;
     }
@@ -933,7 +961,7 @@ const html = `<!DOCTYPE html>
     }
     /* Prior-week matchup H2H chips — wide enough for the mirrored score layout. */
     div.lh-match-card {
-      flex: 0 0 min(100%, 340px); scroll-snap-align: start;
+      flex: 0 0 min(100%, 360px); scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: transparent; border: 0; border-radius: 0;
       padding: 0; min-height: 0; touch-action: manipulation;
@@ -1346,7 +1374,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "h2hChips20260901003000";
+    const DATA_V = "h2hRefChip20260901010000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4519,19 +4547,29 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
-    /** Circular seat avatar from flair art, else initials. */
-    function h2hAvatarHtml(name, avatarUrl) {
+    /** Circular seat avatar from Sleeper/flair; optional gold medal for the winning side. */
+    function h2hAvatarHtml(name, avatarUrl, opts) {
+      const win = opts && opts.win;
+      let inner = "";
       if (avatarUrl) {
-        return '<div class="h2h-av"><img src="' + esc(avatarUrl) + '" alt="" width="40" height="40"'
+        inner = '<div class="h2h-av"><img src="' + esc(avatarUrl) + '" alt="" width="40" height="40"'
           + ' loading="lazy" decoding="async" /></div>';
+      } else {
+        const f = SEAT_FLAIR[name];
+        if (f && f.img) {
+          inner = '<div class="h2h-av"><img src="' + esc(f.img) + "?" + DATA_V
+            + '" alt="" width="40" height="40" loading="lazy" decoding="async" /></div>';
+        } else {
+          const initials = String(name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+          inner = '<div class="h2h-av" aria-hidden="true">' + esc(initials) + "</div>";
+        }
       }
-      const f = SEAT_FLAIR[name];
-      if (f && f.img) {
-        return '<div class="h2h-av"><img src="' + esc(f.img) + "?" + DATA_V
-          + '" alt="" width="40" height="40" loading="lazy" decoding="async" /></div>';
-      }
-      const initials = String(name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
-      return '<div class="h2h-av" aria-hidden="true">' + esc(initials) + "</div>";
+      const medal = win
+        ? '<span class="h2h-medal" aria-hidden="true"><svg viewBox="0 0 16 16" width="10" height="10">'
+          + '<circle cx="8" cy="9" r="4.2" fill="#e8c45a"/>'
+          + '<path d="M5 2.5h6l-1.2 3.2H6.2L5 2.5z" fill="#c9a227"/></svg></span>'
+        : "";
+      return '<div class="h2h-av-wrap">' + inner + medal + "</div>";
     }
 
     function h2hScoreFmt(n) {
@@ -4539,29 +4577,54 @@ const html = `<!DOCTYPE html>
       return Number(n).toFixed(2).replace(/\\.00$/, "").replace(/(\\.[1-9])0$/, "$1");
     }
 
+    /** Left: @handle • record (#rank). Right: record (#rank) • @handle. */
+    function h2hMetaLine(side, right) {
+      const handle = side.handle ? "@" + String(side.handle) : "";
+      let rec = side.record ? String(side.record) : "";
+      if (side.rank != null && side.rank !== "" && rec && !/\\(#\\d+\\)/.test(rec)) {
+        rec = rec + " (#" + side.rank + ")";
+      } else if (side.rank != null && side.rank !== "" && !rec) {
+        rec = "#" + side.rank;
+      }
+      const parts = right ? [rec, handle] : [handle, rec];
+      return parts.filter(Boolean).join(" • ");
+    }
+
     /**
-     * Mirrored matchup side: avatar + win% + actual/proj scores + bar + name/@handle.
+     * Mirrored matchup side: avatar + win% + actual/proj + accent bar + name + meta.
      * right=true mirrors alignment to match the reference chip.
      */
     function h2hMatchSideHtml(side, right) {
       const cls = right ? "h2h-side is-right" : "h2h-side is-left";
       const state = side.state || "tie"; // win | lose | tie
       const pctLab = side.pct == null ? "—" : (String(side.pct) + "% WIN");
-      const meta = [];
-      if (side.handle) meta.push("@" + side.handle);
-      if (side.record) meta.push(side.record);
+      const trophy = state === "win"
+        ? '<svg class="h2h-pct-ico" viewBox="0 0 16 16" aria-hidden="true">'
+          + '<path fill="#e8c45a" d="M4 2h8v2.2c0 2.1-1.4 3.8-3.2 4.3V10h1.4v1.5H5.8V10H7.2V8.5C5.4 8 4 6.3 4 4.2V2zm-1.2 1H1.5c0 2.2 1.3 3.5 2.8 3.9-.2-.6-.3-1.2-.3-1.9V3zm10.9 0H14.7v1.9c0 .7-.1 1.3-.3 1.9 1.5-.4 2.8-1.7 2.8-3.9h-1.3z"/></svg>'
+        : "";
+      const meta = h2hMetaLine(side, right);
       return '<div class="' + cls + '">'
         + '<div class="h2h-top">'
-        + h2hAvatarHtml(side.name, side.avatar)
+        + h2hAvatarHtml(side.name, side.avatar, { win: state === "win" })
         + '<div class="h2h-nums">'
-        + '<div class="h2h-pct is-' + state + '">' + esc(pctLab) + "</div>"
+        + '<div class="h2h-pct is-' + state + '">' + trophy + esc(pctLab) + "</div>"
         + '<div class="h2h-score">' + esc(h2hScoreFmt(side.pts)) + "</div>"
         + '<div class="h2h-proj">' + esc(h2hScoreFmt(side.proj)) + "</div>"
         + "</div></div>"
         + '<div class="h2h-bar is-' + state + '" aria-hidden="true"></div>'
-        + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
-        + (meta.length ? '<div class="h2h-meta">' + esc(meta.join(" · ")) + "</div>" : "")
-        + "</div>";
+        + '<div class="h2h-id">'
+        + '<div class="h2h-name">' + h2hSeatTitleHtml(side) + "</div>"
+        + (meta ? '<div class="h2h-meta">' + esc(meta) + "</div>" : "")
+        + "</div></div>";
+    }
+
+    /** Team name on the chip; crown/flair keyed by Sleeper handle when they differ. */
+    function h2hSeatTitleHtml(side) {
+      const title = side.name || side.handle || "";
+      const flairKey = side.flairName || side.handle || side.name || "";
+      const champ = reigningChampName();
+      const crown = (champ && (champ === flairKey || champ === title)) ? CROWN + " " : "";
+      return crown + esc(title) + seatFlairHtml(flairKey);
     }
 
     function h2hMatchCardHtml(p) {
@@ -4571,12 +4634,12 @@ const html = `<!DOCTYPE html>
       if (aPts > bPts) { aState = "win"; bState = "lose"; aPct = 100; bPct = 0; }
       else if (bPts > aPts) { aState = "lose"; bState = "win"; aPct = 0; bPct = 100; }
       const a = {
-        name: p.a, pts: p.aPts, proj: p.aProj, avatar: p.aAvatar,
-        handle: p.aHandle || p.a, record: p.aRecord || "", state: aState, pct: aPct,
+        name: p.a, flairName: p.aHandle || p.a, pts: p.aPts, proj: p.aProj, avatar: p.aAvatar,
+        handle: p.aHandle || p.a, record: p.aRecord || "", rank: p.aRank, state: aState, pct: aPct,
       };
       const b = {
-        name: p.b, pts: p.bPts, proj: p.bProj, avatar: p.bAvatar,
-        handle: p.bHandle || p.b, record: p.bRecord || "", state: bState, pct: bPct,
+        name: p.b, flairName: p.bHandle || p.b, pts: p.bPts, proj: p.bProj, avatar: p.bAvatar,
+        handle: p.bHandle || p.b, record: p.bRecord || "", rank: p.bRank, state: bState, pct: bPct,
       };
       return '<div class="h2h-chip" role="group" aria-label="'
         + esc(p.a) + " vs " + esc(p.b) + '">'
@@ -4666,14 +4729,18 @@ const html = `<!DOCTYPE html>
       const sideHtml = (side, rightAlign) => {
         const assets = (side.legs || []).map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
+        const handle = side.name || "";
+        const meta = handle ? ("@" + handle) : "";
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar)
-          + '<div class="h2h-nums">'
-          + '<div class="h2h-name">@' + esc(side.name) + "</div>"
-          + '<div class="h2h-meta">Received</div>'
-          + "</div></div>"
+          + '<div class="h2h-nums" aria-hidden="true"></div>'
+          + "</div>"
           + '<div class="h2h-bar is-tie" aria-hidden="true"></div>'
+          + '<div class="h2h-id">'
+          + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
+          + (meta ? '<div class="h2h-meta">' + esc(meta) + "</div>" : "")
+          + "</div>"
           + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><div class="lh-trade-lab"><b>…</b></div></div>')
           + "</div></div>";
@@ -4737,24 +4804,46 @@ const html = `<!DOCTYPE html>
               fetch(sleeper + "/league/" + leagueId + "/matchups/" + tryWeek).then((r) => r.json()),
             ]);
             const ownerName = Object.create(null);
+            const ownerHandle = Object.create(null);
             const ownerAvatar = Object.create(null);
             const ownerRecord = Object.create(null);
+            const ownerRank = Object.create(null);
+            const ownerPf = Object.create(null);
             const userName = Object.create(null);
+            const userHandle = Object.create(null);
             const userAvatar = Object.create(null);
             for (const u of users || []) {
-              // Prefer Sleeper display_name so seatLabel flair still matches.
-              userName[u.user_id] = u.display_name || (u.metadata && u.metadata.team_name) || u.user_id;
+              // Team name for the chip title; display_name is the @handle (and flair key).
+              const handle = u.display_name || u.user_id;
+              const team = (u.metadata && u.metadata.team_name) || handle;
+              userName[u.user_id] = team;
+              userHandle[u.user_id] = handle;
               if (u.avatar) {
                 userAvatar[u.user_id] = "https://sleepercdn.com/avatars/thumbs/" + u.avatar;
               }
             }
+            const rankRows = [];
             for (const r of rosters || []) {
               ownerName[r.roster_id] = userName[r.owner_id] || ("Roster " + r.roster_id);
+              ownerHandle[r.roster_id] = userHandle[r.owner_id] || ownerName[r.roster_id];
               ownerAvatar[r.roster_id] = userAvatar[r.owner_id] || "";
               const wins = r.settings && r.settings.wins != null ? Number(r.settings.wins) : null;
               const losses = r.settings && r.settings.losses != null ? Number(r.settings.losses) : null;
-              ownerRecord[r.roster_id] = (wins != null && losses != null) ? (wins + "-" + losses) : "";
+              const ties = r.settings && r.settings.ties != null ? Number(r.settings.ties) : 0;
+              ownerRecord[r.roster_id] = (wins != null && losses != null)
+                ? (wins + "-" + losses + (ties ? "-" + ties : ""))
+                : "";
+              const pf = Number((r.settings && (r.settings.fpts || r.settings.ppts)) || 0);
+              ownerPf[r.roster_id] = pf;
+              rankRows.push({
+                rid: r.roster_id,
+                wins: wins == null ? -1 : wins,
+                losses: losses == null ? 999 : losses,
+                pf: pf,
+              });
             }
+            rankRows.sort((a, b) => b.wins - a.wins || a.losses - b.losses || b.pf - a.pf);
+            rankRows.forEach((row, i) => { ownerRank[row.rid] = i + 1; });
             const by = Object.create(null);
             for (const m of matchups || []) {
               if (m.matchup_id == null) continue;
@@ -4770,12 +4859,14 @@ const html = `<!DOCTYPE html>
               scored.push({
                 a: ownerName[a.roster_id] || String(a.roster_id),
                 b: ownerName[b.roster_id] || String(b.roster_id),
-                aHandle: ownerName[a.roster_id] || "",
-                bHandle: ownerName[b.roster_id] || "",
+                aHandle: ownerHandle[a.roster_id] || "",
+                bHandle: ownerHandle[b.roster_id] || "",
                 aAvatar: ownerAvatar[a.roster_id] || "",
                 bAvatar: ownerAvatar[b.roster_id] || "",
                 aRecord: ownerRecord[a.roster_id] || "",
                 bRecord: ownerRecord[b.roster_id] || "",
+                aRank: ownerRank[a.roster_id] || "",
+                bRank: ownerRank[b.roster_id] || "",
                 aPts: aPts,
                 bPts: bPts,
                 aStarters: a.starters || [],
@@ -6404,8 +6495,9 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
 for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
   "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
-  "h2h-chip", "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
-  'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id"]) {
+  "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
+  "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
+  'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id", "aRank", "bRank"]) {
   if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
 }
 if (inline.includes('day-alert-h">Champions Path')) {
@@ -6421,6 +6513,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
     || !html.includes(".h2h-chip") || !html.includes(".lh-trade-plus") || !html.includes(".h2h-vs")
+    || !html.includes(".h2h-av-wrap") || !html.includes(".h2h-medal")
     || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
     throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
   }

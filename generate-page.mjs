@@ -1745,7 +1745,7 @@ const html = `<!DOCTYPE html>
 
     function pickOriginName(entry) {
       const label = (entry && entry.label) || "";
-      const m = /\(([^)]+)\)\s*$/.exec(label);
+      const m = /\(([^)]+)\)\\s*$/.exec(label);
       if (m) return m[1];
       const hops = (entry && entry.hops) || [];
       return hops.length ? (hops[0].from || null) : null;
@@ -1758,7 +1758,7 @@ const html = `<!DOCTYPE html>
     }
 
     function pickKeyParts(key) {
-      const m = /^pick:(\d{4}):(\d+):(\d+)$/.exec(String(key || ""));
+      const m = /^pick:(\\d{4}):(\\d+):(\\d+)$/.exec(String(key || ""));
       if (!m) return null;
       return { season: m[1], round: Number(m[2]), slot: Number(m[3]) };
     }
@@ -1781,22 +1781,22 @@ const html = `<!DOCTYPE html>
     function parsePickQuery(q) {
       let raw = String(q || "").trim().toLowerCase();
       raw = raw
-        .replace(/\bfirsts?\b/g, "1st")
-        .replace(/\bseconds?\b/g, "2nd")
-        .replace(/\bthirds?\b/g, "3rd")
-        .replace(/\bfourths?\b/g, "4th")
-        .replace(/\b1sts\b/g, "1st")
-        .replace(/\b2nds\b/g, "2nd")
-        .replace(/\b3rds\b/g, "3rd")
-        .replace(/\b4ths\b/g, "4th");
-      const yearM = raw.match(/\b(20\d{2})\b/);
-      const roundM = raw.match(/\b(\d+)(?:st|nd|rd|th)\b/) || raw.match(/\bround\s*(\d+)\b/);
+        .replace(/\\bfirsts?\\b/g, "1st")
+        .replace(/\\bseconds?\\b/g, "2nd")
+        .replace(/\\bthirds?\\b/g, "3rd")
+        .replace(/\\bfourths?\\b/g, "4th")
+        .replace(/\\b1sts\\b/g, "1st")
+        .replace(/\\b2nds\\b/g, "2nd")
+        .replace(/\\b3rds\\b/g, "3rd")
+        .replace(/\\b4ths\\b/g, "4th");
+      const yearM = raw.match(/\\b(20\\d{2})\\b/);
+      const roundM = raw.match(/\\b(\\d+)(?:st|nd|rd|th)\\b/) || raw.match(/\\bround\\s*(\\d+)\\b/);
       let rest = raw
-        .replace(/\b20\d{2}\b/g, " ")
-        .replace(/\b\d+(?:st|nd|rd|th)\b/g, " ")
-        .replace(/\bround\s*\d+\b/g, " ")
-        .replace(/\bpicks?\b/g, " ")
-        .replace(/\s+/g, " ")
+        .replace(/\\b20\\d{2}\\b/g, " ")
+        .replace(/\\b\\d+(?:st|nd|rd|th)\\b/g, " ")
+        .replace(/\\bround\\s*\\d+\\b/g, " ")
+        .replace(/\\bpicks?\\b/g, " ")
+        .replace(/\\s+/g, " ")
         .trim();
       return {
         year: yearM ? yearM[1] : null,
@@ -1906,9 +1906,9 @@ const html = `<!DOCTYPE html>
           .slice(0, 40);
         body = hits.length
           ? ('<p class="pick-intel-hint">' + hits.length + " still-a-pick match"
-            + (hits.length === 1 ? "" : "es") + " for “" + esc(q.trim()) + "”.</p>"
+            + (hits.length === 1 ? "" : "es") + ' for “' + esc(q.trim()) + '”.</p>'
             + '<div class="pick-intel-list">' + hits.map(pickIntelRow).join("") + "</div>")
-          : ('<p class="caption">No still-available picks match “" + esc(q.trim()) + "”.</p>');
+          : ('<p class="caption">No still-available picks match “' + esc(q.trim()) + '”.</p>');
       } else {
         const leaders = firstRoundLeaders();
         const lead = leaders.length

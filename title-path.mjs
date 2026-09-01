@@ -1,19 +1,10 @@
 #!/usr/bin/env node
 /** Champions path. Official Sleeper GETs. Does not touch the trade needle. */
 import fs from "node:fs";
-import { DATA, readJson, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
+import { DATA, NFL_KICKOFF, readJson, setLeagueId, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
 
-const LEAGUE_ID = process.argv[2] || "1315431339301806080";
-const KICKOFF = {
-  2019: "2019-09-05",
-  2020: "2020-09-10",
-  2021: "2021-09-09",
-  2022: "2022-09-08",
-  2023: "2023-09-07",
-  2024: "2024-09-05",
-  2025: "2025-09-04",
-  2026: "2026-09-10",
-};
+const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const KICKOFF = NFL_KICKOFF;
 
 async function walkLeagues(startId) {
   const leagues = [];

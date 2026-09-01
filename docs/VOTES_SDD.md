@@ -15,7 +15,7 @@ functions, in their own UI block. Nothing in the value spine may read them, now 
 
 ---
 
-## 1. What ships today (Phase 1)
+## 1. What ships today (Wave 2 vote identity)
 
 The gold **Recent Trade** card on league home expands to the full trade. Under the expanded trade,
 and only there, sits the vote block:
@@ -30,18 +30,16 @@ enter the value book.
 The caption above is the connected case. All five variants, and the rule that decides between
 them, are in **Honest copy** below.
 
-- One vote per trade per person, enforced in the database by a unique constraint on
-  `(transaction_id, voter)`. Tapping the other side moves the vote; tapping the same side
-  clears it.
+- One vote per trade per person **per league**, enforced by unique
+  `(sleeper_league_id, transaction_id, voter)` (`db/wave2b-vote-unique.sql`). Tapping the other
+  side moves the vote; tapping the same side clears it.
 - Choices are the **two seat `user_id`s** of the trade, not display names, so a rename on Sleeper
   does not orphan a vote.
-- Voting is **not** gated on picking a seat with the Team button. The voter identity recorded with
-  each vote is the selected seat's `user_id`, falling back to the last seat this device picked
-  (`cuckle.seat.v1`), so a future store can show the tally per manager. The fallback is load
-  bearing rather than belt-and-braces: the card lives on **league home**, and the home button
-  calls `clearLeague()`, which nulls the selected seat. Without the remembered seat every vote
-  would be anonymous. Either way it is an **unverified claim** — anyone can pick any seat — so do
-  not present a per-manager tally as attested.
+- Voting is **gated on league membership**. Sign in + redeem a CF invite (or commissioner claim
+  seat). `voter` is forced from `league_memberships` for the ballot’s `sleeper_league_id`
+  (`db/wave2-vote-identity.sql`). Bottom-nav **Teams** is for browsing meters — it does not write
+  ballots. Phase 1 `seat_profiles` / CUCK seed codes are retired (`seed-seat-auth.mjs` exits unless
+  `--force-legacy`).
 - **N-way trades carry no vote.** "Which side won" has no two-sided answer across three bags, and
   N-way is already the case that carries no Value Adjustment. The block renders a caption instead
   of buttons. In practice `trade_boards.sides` only contains complete 2-team trades
@@ -277,14 +275,15 @@ are fired **after** first paint, so Supabase is never between the reader and the
 ### 5.2 Writes — upsert, optimistically
 
 ```
-POST /rest/v1/trade_votes?on_conflict=transaction_id,voter
+POST /rest/v1/trade_votes?on_conflict=sleeper_league_id,transaction_id,voter
 Prefer: resolution=merge-duplicates,return=representation
-{ "transaction_id": "...", "choice": "...", "voter": "..." }
+{ "transaction_id": "...", "choice": "...", "voter": "...", "sleeper_league_id": "..." }
 ```
 
-`?on_conflict=transaction_id,voter` is **not optional**. PostgREST infers the conflict target from
-the primary key unless told otherwise, and the primary key is the surrogate `id` — leave it off
-and a second vote fails on the unique constraint instead of updating the row.
+`?on_conflict=sleeper_league_id,transaction_id,voter` is **not optional**. PostgREST infers the
+conflict target from the primary key unless told otherwise, and the primary key is the surrogate
+`id` — leave it off and a second vote fails on the unique constraint instead of updating the row.
+Requires `db/wave2b-vote-unique.sql`.
 
 The vote is written to `localStorage` and on screen **before** the request leaves. The response
 then reconciles: the echoed row's `choice` is folded into the cached tally, moving only our own
@@ -343,33 +342,32 @@ which is a decimal snowflake string. It is stored rather than nulled because `ch
 `not null`, and because one row per `(trade, voter)` for the whole life of an opinion — including
 the fact that it was withdrawn — is the more useful record.
 
-### 5.5 `voter` is client-asserted. Say it out loud.
+### 5.5 Claimed-seat auth (Chuckle Fantasy)
 
-There is no Supabase Auth on this project. There is no logged-in user, so there is no `auth.uid()`
-to compare anything against, and the `voter` column is **asserted by the browser and unverifiable
-by the database**. The RLS policies are `using (true)` / `with check (true)`; they gate *which
-verbs* are reachable, not *who* is calling.
+Supabase Auth is on for **vote writes only**. Identity is a Chuckle Fantasy username/
+password account plus a **membership** in the active league (invite redeem or
+commissioner claim-seat). Phase 1 `CUCK-` codes from `seed-seat-auth.mjs` are **retired**.
 
-Concretely, a league member who opens dev tools can:
+| Piece | Role |
+| --- | --- |
+| Synthetic email | `{username}@users.cuckle.invalid` (never mailed; Confirm email OFF) |
+| Password | Account password (not the invite code) |
+| Invite | `CF-XXXX-XXXX` → binds `league_memberships` to a Sleeper seat |
+| `trade_votes.sleeper_league_id` | Scopes the ballot to one league |
+| Trigger `trade_votes_force_voter` | Rewrites `voter` from `league_memberships` for that league |
+| RLS | Anon may **SELECT** tallies; authenticated may write only as their membership seat |
 
-- **vote as someone else.** Seat `user_id`s are public — they are in `data/ui/members.json`.
-- **overwrite or clear another member's vote**, because the UPDATE policy cannot tell one caller
-  from another.
-- **stuff the ballot**, since a fresh uuid is a new voter as far as the unique constraint knows.
+The Teams picker is still not Auth. Soft-delete on news is still UI-gated. What closed is
+impersonation and device-UUID ballot stuffing on **trade_votes**, and wrong-seat votes when
+switching leagues.
 
-No policy fixes this while the identity is client-asserted, and a header or a client-supplied
-check would only look like a control. **The anon key is not a security boundary** — it is a
-routing token, and the security boundary is RLS, which stops none of the above.
+Custom domain cutover: localStorage is origin-scoped — managers sign in again on the new
+host. Walkthrough: [`docs/CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) and
+[`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md) §8 / [`docs/APP_SDD.md`](APP_SDD.md).
 
-This is acceptable *here and only here*: about ten people in a private dynasty league who all know
-each other, the stakes are an opinion counter next to a trade, and the votes are firewalled from
-every number that matters — they never enter the needle math, the even book, Value Adjustment, the
-lens windows, `today_delta`, partner grades, `aged`, or any ranking. It is a low-value target
-guarded by social trust. It is not a model to copy for anything where the data matters.
-
-The fix, if it ever matters, is Supabase Auth: narrow the policies to `auth.uid()` and drop the
-client-asserted `voter` column. That is a much larger change than this feature deserves today.
+Optional once before go-live: `truncate public.trade_votes restart identity;` (commented in
+`db/phase1-seat-auth.sql`) so Phase 0 unverified rows do not sit in the tally.
 
 Two more, for completeness. **Nothing rate-limits** — Supabase's platform limits are the only cap,
-which a ten-person league will never approach. And there is **no PII**: a vote is a transaction id,
-a seat id and two timestamps.
+which a ten-person league will never approach. And there is **no PII** in a vote row: a transaction
+id, a seat id and two timestamps. Invite codes are secrets — DM them, do not commit them.

@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /** Reprice today even bags (retired=0 + 40/60 KTC), then apply VA. Windows stay flatten. */
 import { readdirSync, readFileSync } from "node:fs";
-import { DATA, writeUi } from "./lib.mjs";
+import { leagueUiDir, seasonLived, setLeagueId, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, repriceTodayLegs } from "./price-today.mjs";
+
+setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const UI = leagueUiDir();
 
 const EVEN = 100;
 
@@ -81,11 +84,27 @@ function addYears(ymd, n) {
   return `${y}-${String(p[1]).padStart(2, "0")}-${String(Math.min(p[2], dim)).padStart(2, "0")}`;
 }
 
-/** t0 and all are unfiltered; y1/y2/y3 hide deals that have not lived the clock. */
+/** t0/all unfiltered; y1/y2/y3 need their season span finished. */
 function chipLived(date, lens, today) {
   if (lens === "t0" || lens === "all") return true;
-  const need = { y1: 1, y2: 2, y3: 3 }[lens];
-  return !need || date <= addYears(today, -need);
+  if (lens === "y1") return seasonLived(date, 1, today);
+  if (lens === "y2") return seasonLived(date, 2, today);
+  if (lens === "y3") return seasonLived(date, 3, today);
+  return true;
+}
+
+/** Best window up to the target lens — younger trades fall back to t0/y1/… instead of dropping. */
+function effectiveLens(date, targetLens, today) {
+  if (targetLens === "t0") return "t0";
+  if (targetLens === "all") return "all";
+  const order = ["t0", "y1", "y2", "y3"];
+  const idx = order.indexOf(targetLens);
+  if (idx < 0) return targetLens;
+  for (let i = idx; i >= 0; i--) {
+    const l = order[i];
+    if (l === "t0" || chipLived(date, l, today)) return l;
+  }
+  return "t0";
 }
 
 /** Same rule as the browser's displayDelta: round each bag, then subtract. */
@@ -94,6 +113,11 @@ function tradeDelta(t, lens) {
   const s = (t.windows || {})[lens] || t.even;
   if (!s || s.incomplete || s.today == null || s.sent_today == null) return null;
   return Math.round(s.today) - Math.round(s.sent_today);
+}
+
+function tradeDeltaAtTarget(t, targetLens, today) {
+  if (!t || t.incomplete) return null;
+  return tradeDelta(t, effectiveLens(t.date, targetLens, today));
 }
 
 function partnerDeltas(seat, name, lens, today) {
@@ -125,8 +149,7 @@ function buildMarks(seats, today) {
     const byLens = {};
     for (const lens of LENSES) {
       const ds = (seat.trades || [])
-        .filter((t) => chipLived(t.date, lens, today))
-        .map((t) => tradeDelta(t, lens))
+        .map((t) => tradeDeltaAtTarget(t, lens, today))
         .filter((d) => d != null);
       let extract = 0, farmed = 0, evenN = 0;
       for (const p of seat.partners || []) {
@@ -159,9 +182,9 @@ function buildMarks(seats, today) {
 }
 
 function main() {
-  const league0 = JSON.parse(readFileSync(`${DATA}/ui/league.json`, "utf8"));
+  const league0 = JSON.parse(readFileSync(`${UI}/league.json`, "utf8"));
   const ctx = makeTodayPrice(league0.today || "2026-08-29");
-  const dir = `${DATA}/ui/me`;
+  const dir = `${UI}/me`;
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
   const seats = [];
   const players = new Map();
@@ -222,7 +245,7 @@ function main() {
     seats.push(me);
   }
 
-  const league = JSON.parse(readFileSync(`${DATA}/ui/league.json`, "utf8"));
+  const league = JSON.parse(readFileSync(`${UI}/league.json`, "utf8"));
   const traders = new Map((league.traders || []).map((t) => [t.user_id, t]));
   for (const me of seats) {
     const row = traders.get(me.user_id);
@@ -325,8 +348,9 @@ function main() {
     .find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
   check("chief-arae found", !!chief);
   check("zeke today retired 0", zeke != null && zeke.value === 0);
-  check("hill today blended 1.6-2.0k", hill != null && hill.value >= 1600 && hill.value <= 2000);
-  check("hill not 2892 and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
+  // DP/KTC blend moves with the book; keep a band that rejects raw DP (~2.8k) and retiree 0.
+  check("hill today blended 1.2-2.0k", hill != null && hill.value >= 1200 && hill.value <= 2000);
+  check("hill not raw DP and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
 
   const baker = seats.flatMap((m) => m.trades || []).flatMap((t) =>
     [...(t.even?.legs || []), ...(t.even?.sent || [])]
@@ -387,9 +411,15 @@ function main() {
   // "all" is the flatten windows.all delta, not the today blend in `even` — see AUDIT §8c.
   check("marks 'all' total matches the windows.all deltas", Object.values(marks.seats).every((m) => {
     const seat = seats.find((s) => s.name === m.name);
-    const ds = (seat.trades || []).map((t) => tradeDelta(t, "all")).filter((d) => d != null);
+    const ds = (seat.trades || []).map((t) => tradeDeltaAtTarget(t, "all", league.today)).filter((d) => d != null);
     const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
     return (want == null && m.lens.all.total == null) || Math.abs(want - m.lens.all.total) < 1e-6;
+  }));
+  check("marks 'y2' uses best available window per trade", Object.values(marks.seats).every((m) => {
+    const seat = seats.find((s) => s.name === m.name);
+    const ds = (seat.trades || []).map((t) => tradeDeltaAtTarget(t, "y2", league.today)).filter((d) => d != null);
+    const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
+    return (want == null && m.lens.y2.total == null) || Math.abs(want - m.lens.y2.total) < 1e-6;
   }));
   check("dead league keys gone", !("review_trades" in league) && !("drafters_startup" in league)
     && !("today" in league.trade_boards) && !("aged" in league.trade_boards));

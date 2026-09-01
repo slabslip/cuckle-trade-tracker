@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /** Map pick:year:round:origin_roster → slot + drafted player. Official Sleeper GETs. */
-import { readJson, sleeperGet, writeJson, ymd } from "./lib.mjs";
+import { readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
+
+setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
 function chooseDraft(drafts) {
   const nfl = drafts.filter((d) => !d.sport || d.sport === "nfl");

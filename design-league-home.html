@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=390, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>Design — League home (PSA)</title>
+  <style>
+    html, body {
+      margin: 0; min-height: 100%;
+      background: #0b0b0d; color: #9a9aa3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: grid; place-items: center;
+    }
+    p { max-width: 20rem; text-align: center; line-height: 1.45; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <p>Opening PSA league home for Design Mode…</p>
+  <script>
+    (function () {
+      var user = {
+        access_token: "design-mode",
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 86400,
+        user_id: "design-user",
+        username: "designer",
+        seat_user_id: "457779824002330624",
+        seat_name: "SF69erss"
+      };
+      var league = {
+        sleeper_league_id: "1315431339301806080",
+        name: "CuckleChunckle",
+        status: "ready",
+        sleeper_user_id: "457779824002330624",
+        team_name: "SF69erss"
+      };
+      try {
+        localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
+        localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
+        localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
+        // Sticky for the tab: boot + openLeagueDashboard keep reading this after syncUrl
+        // strips ?design= (otherwise soft-delete sync / Your leagues can blank Design Mode).
+        sessionStorage.setItem("cuckle.design.league_home", "1");
+      } catch (err) {
+        document.querySelector("p").textContent =
+          "Allow localStorage on this origin, then reload.";
+        return;
+      }
+      var go = function () {
+        // Unique cache-bust so a stale document / SW shell is not reused.
+        location.replace("./index.html?design=league-home&v=run-lens-1803&_=" + Date.now());
+      };
+      if (!("serviceWorker" in navigator)) {
+        go();
+        return;
+      }
+      // Drop every registration and cache bucket that could still hold a blank/pre-PSA shell.
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+      }).then(function () {
+        if (!("caches" in window)) return;
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }).catch(function () { /* still open the app */ }).then(go);
+    })();
+  </script>
+</body>
+</html>

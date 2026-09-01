@@ -75,12 +75,17 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Hop tape for a pick (who held it, flip vs used).
 - Rookie surplus (player today − pick cost on draft day) and a separate 2019 startup tab (player today; DP has no 2019 startup pick prices).
 - Phone-first static page, existing CSS, no new packages.
+- **Chuckle Fantasy multi-league app** — commissioner creates a league (Sleeper ID +
+  optional ESPN ID), sends per-seat invites; members set username/password only.
+  Spec: [`APP_SDD.md`](APP_SDD.md). Build today: [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 
 **Out (CUT)**
 
 - FAAB as a leg, a point, or a tape line.
 - One-way deals (one seat gets players/picks; the other gets nothing or only FAAB).
-- Browser-side Sleeper calls, login, live refresh.
+- Browser-side Sleeper calls for the **meter** (join/preview via Edge Function is in).
+- Live refresh of DynastyProcess from the phone.
+- App Store / Play binaries and push notifications (PARKED — PWA / custom domain first).
 - A third hero number that pretends to be “today.”
 - Chart libraries, npm, Tailwind, new CSS systems.
 - Applying the 300 activity floor to the **today** clock (Hill is 285 — still a real player).
@@ -100,7 +105,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Weekly/monthly spark (full git density) instead of year-end + today.
 - Peak-in-window, AUC, or “years above 300” as the **headline** over-time number.
 - Flip P&L as the default over-time identity (hop tape already exists; do not merge it into the trade needle).
-- Auto-publish / scheduled rebuild (cadence is an open question).
+- Auto-publish / scheduled rebuild for every newly joined league (manual/Action sync first).
+- PWA install prompt + web push.
+- Native App Store / Play wrappers.
 
 ---
 

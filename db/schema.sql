@@ -178,30 +178,17 @@ create trigger trade_votes_touch_updated_at
 -- anon key with no policy involved at all. That is why the pattern in section 6
 -- puts `enable row level security` on every new table.
 --
--- WHAT THESE POLICIES DO **NOT** PROTECT — STATED PLAINLY
---   * We are not using Supabase Auth. There is no logged-in user, so there is
---     no `auth.uid()` to compare against. The `voter` column is entirely
---     CLIENT-ASSERTED and therefore UNVERIFIABLE by the database.
---   * Consequence: a determined league member who opens dev tools can vote as
---     someone else, by sending another member's `user_id` (these are public,
---     they sit in data/ui/members.json) or a fresh uuid, as the `voter`. They
---     can also change or overwrite another member's existing vote, because
---     `using (true)` on the UPDATE policy cannot tell one caller from another.
---   * Consequence: ballot stuffing is possible. A new uuid per request is a
---     new voter as far as the unique constraint is concerned.
---   * Nothing here rate-limits. Supabase's platform limits are the only cap.
+-- PHASE 1 NARROWING — see db/phase1-seat-auth.sql (also appended as §7 below)
+--   The open anon INSERT/UPDATE policies in this section are the Phase 0
+--   shape. Re-running this whole file still creates them for a greenfield
+--   project; §7 then drops them and replaces writes with authenticated +
+--   seat_profiles. On the live project, paste phase1-seat-auth.sql once if you
+--   have not re-run this file since Phase 1 shipped.
 --
--- Why that is acceptable HERE, and only here: this is a private 10-team
--- dynasty league of about ten people who all know each other, the stakes are
--- an opinion counter next to a trade, and the votes are firewalled from every
--- number that actually matters (see PRODUCT LAW above). This is a low-value
--- target guarded by social trust, not by cryptography. It is NOT a model to
--- copy for anything where the data matters.
---
--- The fix, if it ever matters: turn on Supabase Auth, then narrow these
--- policies to `auth.uid()` and drop the client-asserted `voter` column. Do not
--- reach for a client-asserted header check instead — the client controls the
--- header too, so it would look like a control while protecting nothing.
+-- PHASE 0 honesty (kept for the record): without Auth, `voter` was
+-- client-asserted and unverifiable. Ballot stuffing and impersonation were
+-- possible. That was accepted for ten friends and an opinion counter. Phase 1
+-- closes the write path.
 
 alter table public.trade_votes enable row level security;
 
@@ -739,8 +726,12 @@ create index if not exists news_submissions_alive_idx
 -- It does not feed the needle, the even book, the Value Adjustment, the lens
 -- windows, `today_delta`, partner grades, or any ranking.
 --
+-- Exception that proves the rule: §7 (seat_profiles) is identity for opinion
+-- writes, not a value input. It still must not join the needle.
+--
 -- Worked example — free-text reactions to a trade. Uncomment, rename, adjust.
--- It is left commented so that running this file creates only trade_votes.
+-- It is left commented so that running this file creates only trade_votes
+-- (plus §7 seat auth when the file is run to the end).
 --
 --   create table if not exists public.trade_notes (
 --     id             bigint generated always as identity primary key,
@@ -801,3 +792,115 @@ create index if not exists news_submissions_alive_idx
 --   revoke delete, truncate on table public.trade_notes from anon;
 --
 -- ============================================================================
+
+
+-- ============================================================================
+-- 7. Phase 1 claimed-seat auth  (same body as db/phase1-seat-auth.sql)
+-- ============================================================================
+-- Kept in this file so a greenfield paste ends in the Phase 1 shape. The
+-- standalone phase1-seat-auth.sql is what you run on the already-live project
+-- without re-pasting the news_submissions half of this file.
+
+create table if not exists public.seat_profiles (
+  auth_user_id uuid primary key references auth.users (id) on delete cascade,
+  seat_user_id text        not null,
+  seat_name    text        not null,
+  created_at   timestamptz not null default now(),
+  constraint seat_profiles_seat_user_id_len check (length(seat_user_id) between 1 and 64),
+  constraint seat_profiles_seat_name_len    check (length(seat_name)    between 1 and 64)
+);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.seat_profiles'::regclass
+      and conname  = 'seat_profiles_seat_user_id_key'
+  ) then
+    alter table public.seat_profiles
+      add constraint seat_profiles_seat_user_id_key unique (seat_user_id);
+  end if;
+end $$;
+
+alter table public.seat_profiles enable row level security;
+
+drop policy if exists seat_profiles_select_own on public.seat_profiles;
+create policy seat_profiles_select_own
+  on public.seat_profiles
+  for select
+  to authenticated
+  using (auth_user_id = auth.uid());
+
+grant select on table public.seat_profiles to authenticated;
+revoke insert, update, delete, truncate on table public.seat_profiles from anon;
+revoke insert, update, delete, truncate on table public.seat_profiles from authenticated;
+
+create or replace function public.trade_votes_force_voter()
+returns trigger
+language plpgsql
+as $$
+declare
+  sid text;
+begin
+  select p.seat_user_id into sid
+  from public.seat_profiles p
+  where p.auth_user_id = auth.uid();
+
+  if sid is null then
+    raise exception 'trade_votes: no claimed seat for this session';
+  end if;
+
+  new.voter := sid;
+  return new;
+end $$;
+
+drop trigger if exists trade_votes_force_voter on public.trade_votes;
+create trigger trade_votes_force_voter
+  before insert or update on public.trade_votes
+  for each row execute function public.trade_votes_force_voter();
+
+drop policy if exists trade_votes_anon_insert on public.trade_votes;
+drop policy if exists trade_votes_anon_update on public.trade_votes;
+
+drop policy if exists trade_votes_anon_select on public.trade_votes;
+create policy trade_votes_anon_select
+  on public.trade_votes
+  for select
+  to anon
+  using (true);
+
+drop policy if exists trade_votes_authenticated_select on public.trade_votes;
+create policy trade_votes_authenticated_select
+  on public.trade_votes
+  for select
+  to authenticated
+  using (true);
+
+drop policy if exists trade_votes_auth_insert on public.trade_votes;
+create policy trade_votes_auth_insert
+  on public.trade_votes
+  for insert
+  to authenticated
+  with check (
+    voter = (select p.seat_user_id from public.seat_profiles p where p.auth_user_id = auth.uid())
+  );
+
+drop policy if exists trade_votes_auth_update on public.trade_votes;
+create policy trade_votes_auth_update
+  on public.trade_votes
+  for update
+  to authenticated
+  using (
+    voter = (select p.seat_user_id from public.seat_profiles p where p.auth_user_id = auth.uid())
+  )
+  with check (
+    voter = (select p.seat_user_id from public.seat_profiles p where p.auth_user_id = auth.uid())
+  );
+
+grant select on table public.trade_votes to anon;
+grant select, insert, update on table public.trade_votes to authenticated;
+grant select on table public.trade_vote_tallies to anon;
+grant select on table public.trade_vote_tallies to authenticated;
+
+revoke insert, update, delete, truncate on table public.trade_votes from anon;
+revoke delete, truncate on table public.trade_votes from authenticated;

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /** Official Sleeper GETs only. Trade tape + aliases. Does not overwrite aliases.overrides.json. */
 import fs from "node:fs";
-import { DATA, readJson, sleeperGet, writeJson, ymd } from "./lib.mjs";
+import { DATA, readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
 
-const LEAGUE_ID = process.argv[2] || "1315431339301806080";
+const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
 function addAlias(map, userId, raw, kind, season) {
   if (!raw || typeof raw !== "string") return;

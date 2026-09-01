@@ -10,13 +10,21 @@ const html = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta name="theme-color" content="#0b0b0d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <title>CuckleChunckle</title>
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="data/ui/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="data/ui/icon-192.png" />
+  <title>Chuckle Fantasy</title>
   <style>
     :root {
       --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
       --text: #f0f0f0; --muted: #9a9aa3; --dim: #8a8a93;
       --green: #3ddc97; --red: #e05555;
+      /* Skill-position colours — same hues as trade-card pos · team labels, tuned for dark bg. */
+      --pos-qb: #5eb3ff; --pos-rb: #3ddc97; --pos-wr: #ffb347; --pos-te: #c77dff;
+      --pos-k: #9a9aa3; --pos-def: #e05555; --pos-oth: #c8c8d0;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
@@ -39,23 +47,35 @@ const html = `<!DOCTYPE html>
        reproduce that defect exactly. What keeps the row inside the viewport is the ellipsis on
        h1.brand a plus the trigger's own font step, not a clip. */
     h1.brand {
+      position: relative;
       display: flex; align-items: center; gap: 10px;
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
       overflow: visible;
     }
-    h1.brand a {
-      color: inherit; text-decoration: none; margin-right: auto;
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      /* It is a link home, so it is a target as well as a title. The line box carries the
-         44px rather than padding, which would push the ellipsis off the text. */
-      min-height: 44px; line-height: 44px;
+    /* League name sits where the app wordmark used to — absolute center of the brand row. */
+    h1.brand .league-sub {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      margin: 0; padding: 0; color: inherit;
+      font-size: inherit; font-weight: inherit; letter-spacing: inherit;
+      text-align: center; line-height: 44px; min-height: 44px;
+      max-width: min(52%, calc(100% - 168px));
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      pointer-events: none;
     }
-    button.go-home {
+    h1.brand .league-sub[hidden] { display: none; }
+    button.go-home, button.go-settings {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
     }
-    button.go-home:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.go-home:focus-visible, button.go-settings:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    button.go-settings[hidden] { display: none; }
+    /* Settings takes the former clock slot on the right; lens sits beside the back control. */
+    /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
+    .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
+    .brand-end:empty { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
@@ -76,7 +96,7 @@ const html = `<!DOCTYPE html>
        this control is persistent chrome and its panel drops down over whatever screen is below
        it. Nothing here may clip: #scoreAs is absolutely positioned against it, and a hidden
        overflow anywhere up this chain is what made the seat picker unusable twice. */
-    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; }
+    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; margin-left: 0; }
     /* The brand plus the seat picker needed 394px of a 343px row at 375px, so the picker ran off
        the right edge and the title stepped down to buy it back. The picker is gone and the clock
        control took its place, so the row is carrying a control again and the step still earns its
@@ -85,7 +105,7 @@ const html = `<!DOCTYPE html>
        the 288px row, and 116.7px at 0.8125rem, which would ellipsise the title. */
     @media (max-width: 460px) {
       h1.brand { font-size: 1.2rem; gap: 8px; }
-      #lensBtn { font-size: 0.75rem; }
+
     }
     /* 320px is the narrowest phone still in use and nothing here had been checked at it.
        The row is 288px after the body padding: 44 for the home icon, two 6px gaps, the clock
@@ -99,57 +119,38 @@ const html = `<!DOCTYPE html>
     @media (max-width: 360px) {
       h1.brand { font-size: 1rem; gap: 6px; }
     }
-    /* All ten managers have to be on screen at once -- this is the most-used control in the app
-       and a list you have to scroll to reach half of is the thing being fixed. Ten options at the
-       44px minimum plus the menu's 4px padding and 1px border is 450px, so the cap is that plus a
-       few pixels of slack. The second term is the room a phone has for it at all, which is what
-       stops it growing past the viewport in landscape -- it does not know where on the page the
-       trigger sits, and since the header picker was removed this menu opens from league home's
-       Teams chip, halfway down the screen. showMenu() is what puts it on screen from there; this
-       cap is what keeps it short enough for that to be possible.
-       Do not lower the 44px to make a longer list fit -- raise this instead, and check
-       scrollHeight == clientHeight at 568px, which is the shortest phone we care about. */
-    .who-menu {
-      position: absolute; top: calc(100% + 4px); right: 0; z-index: 40;
-      /* 168px cut a 27-character seat name to "BartholomewCuckl…", and the crown now takes
-         19px more of that row. The menu is anchored to the right edge and floats over the
-         page, so it can take the width the trigger cannot, and it still yields to the
-         viewport on the narrowest phone. */
-      width: 220px; max-width: calc(100vw - 32px);
-      max-height: min(calc(10 * 44px + 16px), calc(100dvh - 88px)); overflow-y: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      padding: 4px 0; margin: 0;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    /* Bottom-nav Teams page: every roster as a full-width row. The Teams chip dropdown is gone;
+       this list is the only door into a seat. Rows reuse .row (same as the trades tape). */
+    .teams-list {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
     }
-    /* A flex row so the crown can sit beside the name. The name keeps the ellipsis, and it needs
-       min-width: 0 to get it -- a flex item's automatic minimum is min-content (§3a). */
-    .who-menu button {
-      display: flex; align-items: center; gap: 6px;
-      width: 100%; appearance: none; font: inherit;
-      font-size: 0.8125rem; color: var(--muted); text-align: left;
-      background: transparent; border: 0;
-      min-height: 44px; padding: 6px 12px; cursor: pointer;
-    }
-    .who-menu .who-name {
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .teams-list > button.row {
+      width: 100%; appearance: none; font: inherit; text-align: left; cursor: pointer;
+      min-height: 44px;
     }
     /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
     img.seat-flair, svg.crown {
       display: inline-block; width: 1.15em; height: 1.15em;
       vertical-align: -0.2em; object-fit: contain; flex: 0 0 auto;
     }
-    .who-menu button[aria-selected="true"] { color: var(--text); }
-    .who-menu button.on { color: var(--text); }
-    .who-menu button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
+    /* Team name + flair → that team's home. Inline so it nests inside tape / H2H chrome. */
+    .seat-link {
+      appearance: none; font: inherit; color: inherit; text-decoration: none;
+      background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+      display: inline; touch-action: manipulation;
+    }
+    .seat-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px; }
     button.row, button.chip, button.tab, .row {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       min-height: 44px; touch-action: manipulation;
     }
     button.row, button.chip, button.tab { cursor: pointer; }
-    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible {
+    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible,
+    .row[role="button"]:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
+    .row[role="button"] { cursor: pointer; }
     .you { color: var(--text); font-weight: 650; }
     /* Four tabs at 375px wrapped onto two lines. They share the row instead. */
     .nav { display: flex; gap: 8px; flex-wrap: nowrap; margin: 12px 0 16px; }
@@ -182,6 +183,48 @@ const html = `<!DOCTYPE html>
       position: absolute; width: 1px; height: 1px; margin: -1px;
       overflow: hidden; clip-path: inset(50%); white-space: nowrap;
     }
+    /* Fixed league dock — PSA-style: pure black bar, outline icons, tiny labels, solid white when on. */
+    body.has-bottom-nav {
+      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+    .bottom-nav {
+      position: fixed; z-index: 60;
+      left: 50%; transform: translateX(-50%);
+      bottom: 0; width: 100%; max-width: 920px;
+      display: flex; align-items: center; justify-content: space-around;
+      gap: 0;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+      background: #000;
+      border-top: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    }
+    .bottom-nav[hidden] { display: none; }
+    .bottom-nav button {
+      flex: 1 1 0; min-width: 0; min-height: 48px;
+      appearance: none; font: inherit; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 4px 2px 2px;
+      color: #8e8e93; background: transparent; border: 0; border-radius: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bottom-nav button svg {
+      width: 24px; height: 24px; flex: 0 0 auto;
+      fill: none; stroke: currentColor; stroke-width: 1.7;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .bottom-nav button span {
+      font-size: 10px; font-weight: 500; line-height: 1.1;
+      letter-spacing: -0.01em;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .bottom-nav button.on { color: #fff; }
+    /* Active: bolder stroke. Home alone fills solid white (PSA Home glyph). */
+    .bottom-nav button.on svg { stroke-width: 2.15; }
+    .bottom-nav button.bottom-home.on svg {
+      fill: currentColor; stroke: none;
+    }
+    .bottom-nav button:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .bottom-nav button.bottom-home svg { width: 26px; height: 26px; }
     .pos { color: var(--green); } .neg { color: var(--red); }
     .row { width: 100%; padding: 12px; margin: 0 0 8px; }
     .row-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
@@ -308,7 +351,7 @@ const html = `<!DOCTYPE html>
     .row-x > .detail { margin: 0; padding: 12px; border-top: 1px solid var(--line); }
     .row-x.open > .detail { display: block; }
     /* Rows this device has voted on, in the gold the vote buttons already use. */
-    button.row.voted { border-color: #6b5a2e; }
+    button.row.voted, .row.voted { border-color: #6b5a2e; }
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
     .bags > * { min-width: 0; }
@@ -350,7 +393,7 @@ const html = `<!DOCTYPE html>
     .hop > b { flex: 0 0 auto; white-space: nowrap; }
     .hop b { color: var(--text); font-variant-numeric: tabular-nums; }
     .leg b { color: var(--text); font-variant-numeric: tabular-nums; }
-    .leg.va { color: var(--text); border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
+    .leg.va { color: #d4c07a; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
     .leg.va b { color: #d4c07a; }
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
@@ -385,28 +428,11 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 2px; }
     a.champ-alert .day-alert-h { line-height: 1.3; }
-    /* The header shares its row with the one door to the league-wide list, so that everything
-       about trades lives in this card rather than as a loose control on home. */
+    /* News Feed hero header row: title + Pause. Recent Trade header carries search all trades. */
     .day-alert-top { display: flex; align-items: flex-start; gap: 12px; }
     /* A flex item's automatic minimum is min-content, so the heading would widen the card
-       past the viewport rather than give the button room. Same guard as the card itself. */
+       past the viewport rather than give Pause room. Same guard as the card itself. */
     .day-alert-top .day-alert-h { min-width: 0; }
-    /* This card's height is set by its content to the pixel, and the two gold cards must stay
-       equal, so this control is not allowed to contribute any. The visual pill is therefore
-       shorter than the heading beside it and ::after -- which is painted and hit-tested but
-       never laid out -- carries the 44px tap area the rest of the app enforces. */
-    button.all-trades {
-      position: relative; flex: 0 0 auto; margin-left: auto;
-      display: inline-flex; align-items: center; gap: 5px;
-      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
-      color: #e0b44c; background: none; border: 1px solid #6b5a2e; border-radius: 999px;
-      height: 26px; padding: 0 9px; cursor: pointer; white-space: nowrap;
-      touch-action: manipulation;
-    }
-    /* Deliberately square: this box is never painted, and a radius here only kills the corners
-       of the tap area. Measured -- a 999px radius on the 113x44 region left its corners dead. */
-    button.all-trades::after { content: ""; position: absolute; inset: -10px; }
-    button.all-trades:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
     /* Nowrap plus ellipsis: a long manager or player name shortens instead of wrapping,
        which is what would break the two gold cards' equal height. */
     a.champ-alert .champ-line {
@@ -491,29 +517,112 @@ const html = `<!DOCTYPE html>
     button.day-in .day-in-val em { font-style: normal; font-weight: 650; color: var(--text); flex: 0 0 auto; margin-left: auto; }
     /* button.day-in span is a block-level dim caption; the delta is neither. */
     button.day-in .day-in-val .delta { display: inline; margin: 0; font-size: inherit; }
-    .vote { margin: 10px 0 0; }
-    .vote-h { font-weight: 650; }
-    .vote-opts { display: flex; gap: 8px; margin-top: 8px; }
-    /* Two names side by side leaves each about 114px at 320px, which clipped
-       KingHenryXXVI. Stacked, each gets the full 240px and no manager in the league
-       comes close -- the same trade the tape row makes one screen up. */
+    /* Vote chip: same dark gold frame as .h2h-chip.is-trade, tucked under the trade. */
+    .vote { margin: 0; }
+    .vote-opts { display: flex; gap: 6px; margin: 0; }
     @media (max-width: 360px) { .vote-opts { flex-direction: column; } }
     button.vote-opt {
-      flex: 1 1 0; min-width: 0; min-height: 48px;
+      flex: 1 1 0; min-width: 0; min-height: 40px;
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 8px 12px; cursor: pointer;
+      background: #14120c; border: 1px solid #3a3428; border-radius: 10px;
+      padding: 6px 10px; cursor: pointer; touch-action: manipulation;
     }
-    button.vote-opt.on { background: #1a1810; border-color: #6b5a2e; }
+    button.vote-opt.on { background: #241f14; border-color: #6b5a2e; }
     button.vote-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.vote-opt b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    button.vote-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
-    /* On the trade's own screen the vote is a section of the page, not a tail on a row. */
+    button.vote-opt b { display: block; font-weight: 650; font-size: 0.8125rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+    button.vote-opt span { display: block; color: var(--dim); font-size: 0.6875rem; margin-top: 2px; }
     .vote-card {
-      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 12px; margin: 12px 0 0;
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 14px;
+      padding: 8px 10px; margin: 2px 0 0; box-sizing: border-box;
     }
     .vote-card .vote { margin: 0; }
+    .vote.is-done { margin: 0; }
+    button.vote-done {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: none; border: 0; padding: 2px 0; margin: 0;
+      cursor: pointer; touch-action: manipulation; min-height: 36px;
+    }
+    button.vote-done:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 6px; }
+    .vote-done-k { color: var(--dim); font-size: 0.6875rem; font-weight: 500; flex: 0 0 auto; }
+    button.vote-done b { font-weight: 650; font-size: 0.8125rem; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vote-done-tally {
+      margin-left: auto; flex: 0 0 auto;
+      font-variant-numeric: tabular-nums; font-weight: 700;
+      font-size: 0.8125rem; color: var(--text);
+    }
+    .vote-edit-cancel {
+      display: block; margin: 6px 0 0; padding: 0; min-height: 0;
+      font-size: 0.6875rem; color: var(--dim);
+    }
+    /* Claim-seat form: Phase 1 identity for votes. Same surfaces as the rest of the page. */
+    .claim-box { margin-top: 8px; display: grid; gap: 8px; }
+    .claim-box label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
+    .claim-box select, .claim-box input {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 0 12px; width: 100%;
+    }
+    .claim-box select:focus-visible, .claim-box input:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .claim-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .claim-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; }
+    button.linkish {
+      appearance: none; font: inherit; font-size: inherit; color: var(--muted);
+      background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+      min-height: 44px;
+    }
+    button.linkish:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* App shell — multi-league home / join / account gate */
+    .app-shell { max-width: 420px; margin: 24px auto 0; }
+    .app-shell h2 { margin-top: 0; }
+    .app-card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 14px; margin: 0 0 12px;
+    }
+    .app-card h3 { font-size: 1rem; font-weight: 650; margin: 0 0 8px; }
+    .app-form { display: grid; gap: 8px; margin-top: 8px; }
+    .app-form label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
+    .app-form input, .app-form select {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 0 12px; width: 100%;
+    }
+    .app-form input:focus-visible, .app-form select:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .app-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+    .app-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; flex: 1 1 100%; }
+    .league-row {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin: 0 0 8px; cursor: pointer; min-height: 56px;
+    }
+    .league-row.static { cursor: default; margin-bottom: 0; }
+    .league-block { margin-bottom: 10px; }
+    .league-block .linkish, .league-block .chip { margin-top: 6px; }
+    .league-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .league-row b { display: block; font-weight: 650; }
+    .league-row span { display: block; color: var(--dim); font-size: 0.8125rem; margin-top: 2px; }
+    .league-row .chev { margin-left: auto; color: var(--muted); }
+    .team-pick {
+      display: grid; gap: 6px; max-height: 280px; overflow: auto; margin-top: 8px;
+    }
+    button.team-opt {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; cursor: pointer; min-height: 44px;
+    }
+    button.team-opt.on { border-color: #6b5a2e; background: #1a1810; }
+    button.team-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .sync-banner {
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
+      padding: 10px 12px; margin: 0 0 12px; font-size: 0.875rem; line-height: 1.45;
+    }
     /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
     .vote-note {
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
@@ -539,6 +648,14 @@ const html = `<!DOCTYPE html>
       padding: 12px; margin: 0 0 14px;
     }
     .mark-chart-h { font-weight: 650; margin-bottom: 12px; }
+    .mark-chart-h-row {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .mark-chart-h-row .mark-chart-h-copy { min-width: 0; flex: 1 1 auto; font-weight: 650; }
+    .mark-chart-h-row .mark-chart-h-copy span {
+      display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px;
+    }
     .mark-chart-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px; }
     .mark-bar { margin: 0 0 12px; }
     .mark-bar:last-child { margin-bottom: 0; }
@@ -608,40 +725,1036 @@ const html = `<!DOCTYPE html>
       justify-content: center; color: var(--dim); font-weight: 500;
       background: transparent; border-style: dashed; cursor: default;
     }
-    /* The Teams chip is the only mount of .who-menu now that the brand header's picker is gone,
-       and it keeps the class rather than inheriting a copy of it: the 220px width, the 44px
-       options and the no-scroll cap are that one rule. The override is only which edge it hangs
-       from -- the header's picker was the right-most thing in its row, this chip is the left-most
-       thing in its box -- so nothing about the menu itself is restated here. */
-    .chip-box .who-menu { left: 0; right: auto; }
+    /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
+       News Feed is a bottom pull-up sheet (peek + drag to expand under the brand). */
+    .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
+    /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
+    body.has-news-pullup {
+      padding-bottom: calc(var(--news-pullup-peek, 68px) + env(safe-area-inset-bottom, 0px));
+    }
+    body.has-news-pullup-open {
+      overflow: hidden;
+    }
+    .news-pullup {
+      position: fixed; left: 0; right: 0; bottom: 0; top: 0;
+      z-index: 40; pointer-events: none;
+      --brand-offset: 56px;
+      --news-pullup-peek: 68px;
+    }
+    .news-pullup-scrim {
+      position: absolute; inset: 0;
+      background: rgba(8, 8, 10, 0.55);
+      pointer-events: auto;
+      opacity: 0; transition: opacity 0.28s ease;
+    }
+    .news-pullup.is-open .news-pullup-scrim { opacity: 1; }
+    .news-pullup-scrim[hidden] { display: none; }
+    .news-pullup-sheet {
+      pointer-events: auto;
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: calc(100dvh - var(--brand-offset));
+      max-height: calc(100dvh - var(--brand-offset));
+      display: flex; flex-direction: column;
+      box-sizing: border-box;
+      background: #1a1810;
+      border: 1px solid #6b5a2e;
+      border-bottom: 0;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(calc(100% - var(--news-pullup-peek)));
+      transition: transform 0.32s cubic-bezier(0.2, 0.85, 0.25, 1);
+      will-change: transform;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .news-pullup.is-open .news-pullup-sheet { transform: translateY(0); }
+    .news-pullup.is-dragging .news-pullup-sheet { transition: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .news-pullup-sheet, .news-pullup-scrim { transition: none; }
+    }
+    .news-pullup-top {
+      flex: 0 0 auto;
+      padding: 3px 12px 0;
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+    }
+    .news-pullup-grab {
+      display: flex; justify-content: center; padding: 1px 0 3px;
+    }
+    .news-pullup-knob {
+      width: 32px; height: 3px; border-radius: 999px;
+      background: #6b5a2e;
+    }
+    .news-pullup-title-row {
+      display: flex; align-items: baseline; gap: 6px;
+      width: 100%;
+    }
+    .news-pullup-title-row .day-alert-h {
+      min-width: 0; flex: 1 1 auto;
+      font-size: 0.8125rem; line-height: 1.2;
+    }
+    .news-pullup-count {
+      flex: 0 0 auto; font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
+    }
+    .news-pullup-peek-block {
+      flex: 0 0 auto;
+      padding: 0 12px 4px;
+      min-height: 0;
+    }
+    .news-pullup-peek-block[hidden] { display: none; }
+    .news-pullup-peek {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; margin: 0; padding: 0;
+      cursor: pointer; touch-action: none; user-select: none;
+      width: 100%; display: block;
+    }
+    .news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Collapsed peek: seat tag + one-line teaser only — no card chrome or footer. */
+    .news-pullup-peek-inner { min-height: 0; padding: 0; }
+    .news-pullup-peek-who {
+      font-size: 0.6875rem; font-weight: 700; line-height: 1.2;
+      color: var(--text); margin: 0 0 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .news-pullup-peek-who .seat-flair { width: 10px; height: 10px; vertical-align: -1px; }
+    .news-pullup-peek-who .crown { width: 10px; height: 10px; vertical-align: -1px; }
+    .news-pullup-peek-line {
+      font-size: 0.6875rem; line-height: 1.25; color: var(--muted);
+      margin: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .news-pullup-panel {
+      flex: 1 1 auto; min-height: 0;
+      overflow-y: auto; overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 12px 14px;
+      touch-action: pan-y;
+    }
+    .news-pullup-panel[hidden] { display: none; }
+    .news-pullup-row { padding: 0 0 8px; }
+    .news-pullup-row:last-child { padding-bottom: 0; }
+    .news-pullup-empty {
+      padding: 8px 0; color: var(--muted); font-size: 0.8125rem; line-height: 1.35;
+    }
+    /* Peek / row card: seat tag + source bubble → summary → @handle · time · See tweet · Remove. */
+    .news-pullup-card {
+      background: #12120e; border: 1px solid #2e2a22; border-radius: 8px;
+      padding: 7px 9px;
+    }
+    .news-hero-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 4px 6px; margin: 0 0 3px;
+    }
+    .news-hero-who {
+      flex: 1 1 auto; min-width: 0;
+      font-size: 0.75rem; font-weight: 700; line-height: 1.25;
+      color: var(--text); margin: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
+    .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
+    .news-hero-src-bubble {
+      flex: 0 0 auto;
+      font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
+      color: #e0b44c; background: transparent;
+      border: 1px solid rgba(107, 90, 46, 0.65);
+      border-radius: 999px; padding: 1px 5px;
+      white-space: nowrap;
+    }
+    .news-pullup-line {
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+      overflow: hidden; color: var(--text); font-size: 0.75rem; line-height: 1.32;
+      margin: 0 0 4px;
+    }
+    .news-pullup.is-open .news-pullup-line {
+      -webkit-line-clamp: unset; display: block;
+      font-size: 0.8125rem; line-height: 1.38; margin: 0 0 6px;
+    }
+    .news-hero-tags {
+      flex: 0 1 auto; display: flex; align-items: center; flex-wrap: wrap;
+      justify-content: flex-end; gap: 3px; max-width: 100%;
+    }
+    .news-cat-tag {
+      flex: 0 0 auto; font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
+      color: #e0b44c; background: rgba(107, 90, 46, 0.22);
+      border: 1px solid rgba(107, 90, 46, 0.65); border-radius: 999px;
+      padding: 1px 5px; white-space: nowrap;
+    }
+    .news-cat-tag.cat-injury { color: #f08a8a; border-color: rgba(224, 85, 85, 0.55); background: rgba(224, 85, 85, 0.12); }
+    .news-cat-tag.cat-good-injury-news { color: #6ee7b7; border-color: rgba(61, 220, 151, 0.45); background: rgba(61, 220, 151, 0.1); }
+    .news-cat-tag.cat-roster-move, .news-cat-tag.cat-trade { color: #e0b44c; }
+    .news-cat-tag.cat-off-the-field { color: #c9a0ff; border-color: rgba(199, 125, 255, 0.45); background: rgba(199, 125, 255, 0.1); }
+    .news-cat-tag.cat-suspension { color: #ffb347; border-color: rgba(255, 179, 71, 0.45); background: rgba(255, 179, 71, 0.1); }
+    .news-cat-tag.cat-depth-chart, .news-cat-tag.cat-buzz { color: #9a9aa3; border-color: rgba(154, 154, 163, 0.45); background: rgba(154, 154, 163, 0.08); }
+    .news-player { font-weight: 650; }
+    button.news-player {
+      appearance: none; font: inherit; font-weight: 650;
+      background: none; border: 0; padding: 0; margin: 0;
+      color: inherit; cursor: pointer;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+    button.news-player:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 2px;
+    }
+    .news-player.pos-qb { color: var(--pos-qb); }
+    .news-player.pos-rb { color: var(--pos-rb); }
+    .news-player.pos-wr { color: var(--pos-wr); }
+    .news-player.pos-te { color: var(--pos-te); }
+    .news-player.pos-k { color: var(--pos-k); }
+    .news-player.pos-def { color: var(--pos-def); }
+    .news-player.pos-oth { color: var(--pos-oth); }
+    .news-pos-tag {
+      display: inline-block; margin-right: 3px;
+      font-size: 0.5625rem; font-weight: 700; line-height: 1.1;
+      letter-spacing: 0.02em; vertical-align: 0.05em;
+      opacity: 0.92;
+    }
+    .news-pos-tag.pos-qb { color: var(--pos-qb); }
+    .news-pos-tag.pos-rb { color: var(--pos-rb); }
+    .news-pos-tag.pos-wr { color: var(--pos-wr); }
+    .news-pos-tag.pos-te { color: var(--pos-te); }
+    .news-pos-tag.pos-k { color: var(--pos-k); }
+    .news-pos-tag.pos-def { color: var(--pos-def); }
+    .news-pos-tag.pos-oth { color: var(--pos-oth); }
+    .news-hero-foot {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: 2px 4px; min-height: 0;
+      font-size: 0.625rem; line-height: 1.2; color: var(--dim);
+    }
+    .news-hero-foot .news-hero-sep { opacity: 0.45; margin: 0 1px; }
+    .news-hero-handle {
+      font-weight: 600; color: var(--dim);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .news-hero-when { color: var(--dim); white-space: nowrap; }
+    a.news-hero-link {
+      display: inline-flex; align-items: center;
+      font-size: 0.625rem; font-weight: 650; line-height: 1.2;
+      color: var(--dim); text-decoration: underline; white-space: nowrap;
+    }
+    a.news-hero-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-hero-foot .news-del {
+      display: inline-flex; align-items: center; margin: 0; padding: 0;
+      background: none; border: 0; color: var(--dim);
+      font: inherit; font-size: 0.625rem; font-weight: 650; text-decoration: none;
+      cursor: pointer;
+    }
+    .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
+    /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
+    .lh-actions {
+      margin: 18px 0 22px;
+    }
+    .lh-action-row {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px 8px; align-items: start;
+    }
+    button.lh-action {
+      appearance: none; font: inherit; color: var(--text);
+      background: transparent; border: 0; padding: 4px 0; margin: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
+    }
+    button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-action .lh-ico {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: #1c1c22; border: 1px solid var(--line);
+      display: grid; place-items: center; color: var(--text); flex: 0 0 auto;
+    }
+    button.lh-action.on .lh-ico { border-color: #6b5a2e; }
+    button.lh-action .lh-lab {
+      font-size: 0.6875rem; font-weight: 600; line-height: 1.25;
+      text-align: center; color: var(--muted); max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+    .lh-section { margin: 0 0 18px; }
+    .pick-intel {
+      margin: 0 0 16px;
+    }
+    .pick-intel-h {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      font-weight: 650;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .pick-intel .caption { margin: 0 0 8px; }
+    /* Compact toolbar: optional leading section icon + three equal chips. */
+    .pick-intel-bar {
+      display: flex; flex-wrap: nowrap; gap: 8px;
+      margin: 0 0 8px; align-items: center; justify-content: flex-start;
+    }
+    .pick-intel-brand {
+      flex: 0 0 auto;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 2px; min-width: 3.25rem;
+      line-height: 1;
+    }
+    .pick-intel-brand-lab {
+      font-size: 0.5rem; font-weight: 650;
+      letter-spacing: 0.02em;
+      color: var(--dim);
+      white-space: nowrap; text-align: center;
+      max-width: 3.5rem;
+    }
+    .pick-intel-ico {
+      flex: 0 0 auto;
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      color: var(--muted);
+      line-height: 0;
+    }
+    .pick-intel-ico svg { display: block; width: 22px; height: 22px; }
+    /* Picks glyph: larger stacked 1st/2nd/3rd cards so nd/rd peek out. */
+    .pick-intel-ico.is-picks {
+      width: 40px;
+    }
+    .pick-intel-ico.is-picks svg { width: 34px; height: 28px; }
+    /* Cuffs glyph: slightly larger silver handcuffs so they read at a glance. */
+    .pick-intel-ico.is-cuffs {
+      width: 38px; color: #c5c9d0;
+      filter: drop-shadow(0 0 0.6px rgba(255,255,255,0.4));
+    }
+    .pick-intel-ico.is-cuffs svg { width: 30px; height: 28px; }
+    .pick-intel-chips {
+      flex: 1 1 auto; min-width: 0;
+      display: flex; flex-wrap: nowrap; gap: 6px;
+      align-items: stretch;
+    }
+    button.pick-intel-chip {
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.6875rem;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; min-height: 36px; padding: 6px 6px;
+      cursor: pointer; touch-action: manipulation;
+      flex: 1 1 0; min-width: 0; max-width: none;
+      text-align: center; line-height: 1.2; text-wrap: balance;
+    }
+    button.pick-intel-chip.on,
+    button.pick-intel-chip[aria-expanded="true"],
+    button.pick-intel-chip[aria-pressed="true"] {
+      border-color: #6b5a2e;
+    }
+    button.pick-intel-chip[aria-disabled="true"] {
+      opacity: 0.45; cursor: not-allowed;
+    }
+    button.pick-intel-chip:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    /* Summary-row "Clear all" stays a quiet text control, not a bar chip. */
+    button.pick-intel-link {
+      appearance: none; font: inherit; font-size: 0.8125rem; font-weight: 600;
+      color: var(--muted); background: transparent; border: 0; padding: 0;
+      min-height: 28px; cursor: pointer; touch-action: manipulation;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    button.pick-intel-link.on { color: var(--text); }
+    button.pick-intel-link:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
+    }
+    .pick-intel-summary {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin: 0 0 8px; align-items: center;
+    }
+    button.pick-intel-sum {
+      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 600;
+      color: var(--text); background: var(--card); border: 1px solid #6b5a2e;
+      border-radius: 8px; min-height: 28px; padding: 0 8px 0 10px;
+      cursor: pointer; touch-action: manipulation;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    button.pick-intel-sum:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    button.pick-intel-sum .x {
+      color: var(--dim); font-size: 0.875rem; line-height: 1;
+    }
+    /* Progressive disclosure: only one filter control visible at a time. */
+    .pick-intel-step {
+      display: grid; gap: 4px;
+      margin: 0 0 8px; padding: 8px 10px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    }
+    .pick-intel-step-lab {
+      color: var(--dim); font-size: 0.6875rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .pick-intel-step select {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 40px; padding: 0 10px; width: 100%;
+      box-sizing: border-box;
+    }
+    .pick-intel-step select:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .pick-intel-step-hint {
+      margin: 0; color: var(--dim); font-size: 0.75rem; line-height: 1.35;
+    }
+    .pick-intel-step-modes {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
+    }
+    button.pick-intel-step-mode {
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
+      color: var(--text); background: var(--bg); border: 1px solid var(--line);
+      border-radius: 8px; min-height: 34px; padding: 4px 10px;
+      cursor: pointer; touch-action: manipulation; flex: 1 1 8rem;
+      text-align: center; line-height: 1.25; text-wrap: balance;
+    }
+    button.pick-intel-step-mode:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .pick-intel-hint {
+      margin: 0 0 8px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
+    }
+    /* Idle quick-view: who holds the most still-available 1sts / 2nds / picks overall.
+       Three tight columns (1sts | 2nds | Total); each stacks name · count rows.
+       Round/Total labs share the count track so they sit centered over · N. */
+    .pick-intel-board {
+      display: grid; gap: 6px;
+      margin: 0 0 8px; padding: 8px 10px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    }
+    /* Three equal columns; year is baked into each round lab (27' 1sts), not a gutter. */
+    .pick-intel-board-cols {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: auto 1fr;
+      gap: 8px 10px;
+      align-items: start;
+    }
+    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
+    .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
+    .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
+    .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
+    /* Shared 2-col grid: seat names | counts. Labels sit in the count track
+       (centered over · N), not left over the seat names. */
+    .pick-intel-board-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 4px; row-gap: 3px;
+      min-width: 0; align-content: start; align-items: baseline;
+    }
+    .pick-intel-board-lab {
+      justify-self: center; text-align: center;
+      color: var(--muted); font-size: 0.75rem; font-weight: 650;
+      white-space: nowrap; letter-spacing: 0.02em; line-height: 1.2;
+    }
+    button.pick-intel-board-lab {
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
+      color: var(--muted); background: transparent; border: 0; padding: 0; margin: 0;
+      cursor: pointer; text-align: center; touch-action: manipulation;
+      letter-spacing: 0.02em; line-height: 1.2;
+      justify-self: center;
+    }
+    button.pick-intel-board-lab:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
+    }
+    .pick-intel-board-leaders {
+      display: flex; flex-direction: column; gap: 3px;
+      min-width: 0; width: 100%;
+    }
+    .pick-intel-board-leader {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 4px; align-items: baseline;
+      width: 100%; min-width: 0;
+    }
+    button.pick-intel-board-leader {
+      appearance: none; font: inherit; color: inherit;
+      background: transparent; border: 0; padding: 0; margin: 0;
+      cursor: pointer; text-align: inherit;
+      touch-action: manipulation;
+    }
+    /* No underline here: the whole row opens Draft Data, not the team home. */
+    button.pick-intel-board-leader:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
+    }
+    .pick-intel-board-leader .pil-who {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--dim); font-size: 0.6875rem; line-height: 1.3;
+    }
+    .pick-intel-board-leader .pil-n {
+      color: var(--text); font-weight: 650; white-space: nowrap;
+      font-size: 0.6875rem; line-height: 1.3;
+      text-align: center;
+    }
+    .pick-intel-board-empty {
+      grid-column: 1 / -1;
+      color: var(--dim); font-size: 0.75rem;
+    }
+    @media (max-width: 360px) {
+      .pick-intel-board-cols {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        gap: 10px;
+      }
+      .pick-intel-board-cols > button.pick-intel-board-lab,
+      .pick-intel-board-cols > .pick-intel-board-col {
+        grid-column: 1; grid-row: auto;
+      }
+    }
+    .pick-intel-list { display: grid; gap: 6px; }
+    /* Cuffs: starter → NFL handcuff → fantasy owner. Mirrors Draft Data chrome. */
+    .cuffs-intel { margin: 0 0 16px; }
+    .cuffs-intel .cuffs-row {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; box-sizing: border-box;
+    }
+    .cuffs-intel .cuffs-top {
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline;
+    }
+    .cuffs-intel .cuffs-slot {
+      font-weight: 700; font-size: 0.75rem; color: var(--muted);
+      letter-spacing: 0.04em; min-width: 2.4rem;
+    }
+    .cuffs-intel .cuffs-starter { font-weight: 650; color: var(--text); flex: 1 1 auto; min-width: 0; }
+    .cuffs-intel .cuffs-mgr {
+      margin-left: auto; color: var(--muted); font-size: 0.8125rem; font-weight: 500;
+      max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cuffs-intel .cuffs-mgr.cuffs-own-you { color: #c9a227; }
+    .cuffs-intel .cuffs-team { color: var(--muted); font-size: 0.8125rem; font-weight: 500; }
+    .cuffs-intel .cuffs-inj {
+      display: inline-block; vertical-align: 0.15em; margin-left: 3px;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1;
+      color: #f2a0a0; border: 1px solid rgba(224, 85, 85, 0.35);
+      background: rgba(224, 85, 85, 0.12); border-radius: 2px;
+      padding: 1px 3px; text-transform: uppercase; white-space: nowrap;
+    }
+    .cuffs-intel .cuffs-sub {
+      margin-top: 6px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
+    }
+    .cuffs-intel .cuffs-sub b { color: var(--text); font-weight: 650; }
+    .cuffs-intel .cuffs-own-you { color: #c9a227; }
+    .cuffs-intel .cuffs-own-fa { color: var(--muted); font-style: italic; }
+    .cuffs-intel .cuffs-filter-panel {
+      display: grid; gap: 8px; margin: 0 0 8px;
+      padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+    .cuffs-intel .cuffs-filter-lab {
+      font-size: 0.6875rem; font-weight: 650; color: var(--muted);
+      letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 4px;
+    }
+    .cuffs-intel .cuffs-pos-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cuffs-intel button.cuffs-pos {
+      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 8px; min-height: 32px; padding: 4px 10px; cursor: pointer;
+      touch-action: manipulation;
+    }
+    .cuffs-intel button.cuffs-pos.on {
+      border-color: #6b5a2e; background: rgba(107, 90, 46, 0.18);
+    }
+    .cuffs-intel button.cuffs-pos:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .cuffs-intel select.cuffs-team-sel,
+    .cuffs-intel input.cuffs-q {
+      width: 100%; box-sizing: border-box; font: inherit; font-size: 0.875rem;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; min-height: 36px; padding: 6px 10px;
+    }
+    .cuffs-intel select.cuffs-team-sel:focus-visible,
+    .cuffs-intel input.cuffs-q:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
+    .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
+    button.pick-intel-row {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; margin: 0; cursor: pointer; width: 100%;
+      touch-action: manipulation; box-sizing: border-box;
+    }
+    button.pick-intel-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.pick-intel-row.on { border-color: #6b5a2e; }
+    .pick-intel-row .pir-top {
+      display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+    }
+    .pick-intel-row .pir-lab { font-weight: 650; color: var(--text); }
+    .pick-intel-row .pir-own { color: var(--muted); font-size: 0.8125rem; text-align: right; }
+    .pick-intel-row .pir-sub {
+      margin-top: 4px; color: var(--dim); font-size: 0.75rem; line-height: 1.35;
+    }
+    .pick-intel-row .hops { margin-top: 8px; }
+    a.champ-alert.lh-progress, button.champ-alert.lh-progress, div.champ-alert.lh-progress {
+      background: var(--card); border-color: var(--line); border-radius: 16px;
+      min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
+    }
+    button.champ-alert.lh-progress {
+      display: block; width: 100%; appearance: none; font: inherit; color: inherit;
+      text-align: left; cursor: pointer; touch-action: manipulation;
+    }
+    button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Latest trade: title above, dashboard-styled H2H card below (not a third-party clone).
+       A div (not button) so seat-link names/flair can nest without illegal nested buttons. */
+    div.champ-alert.lh-progress.lh-latest-trade {
+      display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
+      gap: 10px; width: 100%; box-sizing: border-box;
+      font: inherit; color: inherit; text-align: left;
+      cursor: pointer; touch-action: manipulation;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0; margin: 0 0 16px; min-height: 0; height: auto;
+    }
+    div.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    div.lh-latest-trade .day-alert-h {
+      font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
+    }
+    button.lh-trade-all-btn {
+      flex: 0 0 auto; appearance: none; font: inherit;
+      font-size: 0.8125rem; font-weight: 500; line-height: 1.2;
+      color: var(--muted); background: none; border: 0; padding: 0;
+      cursor: pointer; text-decoration: underline; white-space: nowrap;
+      min-height: 44px; margin: -8px 0;
+    }
+    button.lh-trade-all-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Recent Trade chip + floating vote CTA over the lean footer. */
+    div.lh-latest-trade .lh-trade-chip-wrap {
+      position: relative; width: 100%;
+    }
+    button.lh-trade-vote-cta {
+      position: absolute; left: 50%; bottom: 10px;
+      transform: translateX(-50%); z-index: 2;
+      margin: 0; padding: 7px 16px;
+      font: inherit; font-size: 0.75rem; font-weight: 650; line-height: 1.2;
+      color: #e0b44c; white-space: nowrap;
+      background: rgba(26, 24, 16, 0.78);
+      border: 1px solid rgba(224, 180, 76, 0.5);
+      border-radius: 999px; cursor: pointer; touch-action: manipulation;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+    button.lh-trade-vote-cta:hover {
+      background: rgba(36, 31, 20, 0.92);
+      border-color: rgba(224, 180, 76, 0.72);
+    }
+    button.lh-trade-vote-cta:focus-visible {
+      outline: 2px solid #e0b44c; outline-offset: 2px;
+    }
+    div.lh-latest-trade.voted button.lh-trade-vote-cta { display: none; }
+    /* League trades feed: stacked Latest-trade-style H2H cards, newest first. */
+    .trades-feed {
+      display: flex; flex-direction: column; gap: 18px;
+      margin: 0 0 24px;
+    }
+    div.lh-trade-feed-card {
+      display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
+      gap: 4px; width: 100%; box-sizing: border-box;
+      font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0; margin: 0; min-height: 0; height: auto;
+    }
+    div.lh-trade-feed-main {
+      display: flex; flex-direction: column; gap: 4px;
+      cursor: pointer; touch-action: manipulation;
+      min-width: 0;
+    }
+    div.lh-trade-feed-main:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    div.lh-trade-feed-card.has-vote .vote-card { margin-top: 2px; }
+    /* Date only above the chip — small grey caption, tight to the H2H box. */
+    div.lh-trade-feed-card .day-alert-h {
+      font-weight: 500; color: var(--dim); line-height: 1.2; margin: 0;
+      font-size: 0.6875rem;
+    }
+    div.lh-trade-feed-card.voted .h2h-chip.is-trade,
+    div.lh-latest-trade.voted .h2h-chip.is-trade {
+      border-color: #6b5a2e;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
+    }
+    /* Totals row keeps an empty center cell between left and right bag sums. */
+    .h2h-chip.is-trade .h2h-sum-gap {
+      grid-column: 2;
+      display: flex; align-items: center; justify-content: center;
+      min-width: 28px; align-self: center;
+    }
+    /* Vote sheet: reuses voteBlock side buttons (SF69erss vs KingHenryXXVI style). */
+    body.has-vote-sheet { overflow: hidden; }
+    .vote-sheet {
+      position: fixed; inset: 0; z-index: 300;
+      display: grid; place-items: center; padding: 16px;
+      box-sizing: border-box;
+    }
+    button.vote-sheet-scrim {
+      position: absolute; inset: 0; margin: 0; padding: 0; border: 0;
+      background: rgba(0, 0, 0, 0.55); cursor: pointer;
+    }
+    .vote-sheet-panel {
+      position: relative; z-index: 1; width: min(100%, 420px);
+      max-height: min(85dvh, 560px); overflow-y: auto;
+      background: var(--card); border: 1px solid #6b5a2e; border-radius: 14px;
+      padding: 12px 12px 14px; box-sizing: border-box;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+    button.vote-sheet-close {
+      position: absolute; top: 8px; right: 8px;
+      appearance: none; font: inherit; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--line); background: #1c1c22; color: var(--text);
+      font-size: 1.25rem; line-height: 1; padding: 0;
+    }
+    button.vote-sheet-close:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .vote-sheet-panel .vote-card { margin: 0; border: 0; padding: 0; background: transparent; }
+    /* Trade detail feed: selected card stays open with bags + vote beneath the H2H chip. */
+    div.lh-trade-feed-card.is-selected {
+      cursor: default;
+      gap: 4px;
+    }
+    div.lh-trade-feed-card.is-selected .vote-card {
+      margin-top: 2px;
+    }
+    #tapeFilters {
+      margin: 0 0 14px;
+      max-height: min(70dvh, 520px); overflow-y: auto;
+    }
+    #tapeFilters .filter-h:first-child { margin-top: 4px; }
+    #tapeFilters input[type="search"] {
+      width: 100%; box-sizing: border-box; margin: 6px 0 10px;
+      padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: #121218; color: var(--text);
+      font: inherit;
+    }
+    #tapeFilters input[type="search"]:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    /* Head-to-head chips: matchups and trades share mirrored left | VS | right. */
+    .h2h-chip {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 8px 6px; align-items: start;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px; box-sizing: border-box;
+      width: 100%;
+      overflow: hidden;
+    }
+    /* Matchup chips: warm gold edge — product DNA, not a clone scoreboard. */
+    .h2h-chip:not(.is-trade) {
+      background: #1a1810;
+      border-color: #6b5a2e;
+      box-shadow: inset 0 1px 0 rgba(224, 180, 76, 0.35);
+    }
+    .h2h-vs {
+      align-self: start; margin-top: 10px;
+      min-width: 28px; height: 22px; padding: 0 6px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: #1c1c22; border: 1px solid var(--line);
+      color: var(--dim); font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .h2h-chip:not(.is-trade) .h2h-vs {
+      background: #241f14; border-color: #6b5a2e; color: #e0b44c;
+    }
+    .h2h-side { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+    .h2h-side.is-right { text-align: right; align-items: flex-end; }
+    .h2h-side.is-left { text-align: left; align-items: flex-start; }
+    .h2h-top {
+      display: flex; align-items: flex-start; gap: 8px; width: 100%;
+    }
+    .h2h-side.is-right .h2h-top { flex-direction: row-reverse; }
+    .h2h-av-wrap {
+      position: relative; flex: 0 0 auto; width: 40px; height: 40px;
+    }
+    .h2h-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      object-fit: cover; background: #1c1c22; border: 1px solid var(--line);
+      display: grid; place-items: center;
+      color: var(--dim); font-size: 0.75rem; font-weight: 700;
+    }
+    .h2h-av > img {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block;
+    }
+    .h2h-medal {
+      position: absolute; left: -2px; bottom: -2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #1a1520; border: 1px solid #c9a227;
+      display: grid; place-items: center; line-height: 0;
+      box-shadow: 0 0 6px rgba(232, 196, 90, 0.45);
+    }
+    .h2h-side.is-right .h2h-medal { left: auto; right: -2px; }
+    .h2h-nums { min-width: 0; flex: 1 1 auto; }
+    .h2h-side.is-right .h2h-nums { text-align: right; }
+    .h2h-pct {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
+      margin: 0 0 2px; line-height: 1.2;
+    }
+    .h2h-side.is-right .h2h-pct { flex-direction: row-reverse; }
+    .h2h-pct.is-win { color: var(--green); }
+    .h2h-pct.is-lose { color: var(--red); }
+    .h2h-pct.is-tie { color: var(--dim); }
+    .h2h-pct-ico {
+      width: 11px; height: 11px; flex: 0 0 auto; display: block;
+    }
+    .h2h-score {
+      font-size: 1.375rem; font-weight: 750; color: var(--text); line-height: 1.05;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+    }
+    .h2h-proj {
+      font-size: 0.75rem; color: var(--dim); line-height: 1.2;
+      font-variant-numeric: tabular-nums; margin-top: 2px;
+    }
+    .h2h-bar {
+      width: 100%; height: 4px; border-radius: 2px; background: #2a2a30;
+    }
+    .h2h-bar.is-win { background: var(--green); }
+    .h2h-bar.is-lose, .h2h-bar.is-tie { background: #2a2a30; }
+    .h2h-id { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px; }
+    .h2h-name {
+      font-size: 0.9375rem; font-weight: 650; color: var(--text); line-height: 1.2;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+    }
+    .h2h-meta {
+      font-size: 0.6875rem; color: var(--dim); line-height: 1.25;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+    }
+    /* Trade chip: seat + assets in row 1; = totals share row 2 so they stay even
+       even when the bags have different leg counts. */
+    .h2h-chip.is-trade {
+      background: #1a1810;
+      border-color: #6b5a2e;
+      gap: 8px 8px;
+      padding: 12px 12px 10px;
+      align-items: start;
+    }
+    .h2h-chip.is-trade .h2h-vs {
+      align-self: center; margin-top: 0;
+      background: #241f14; border-color: #6b5a2e; color: #e0b44c;
+    }
+    .h2h-chip.is-trade .h2h-side {
+      gap: 6px; min-height: 0;
+    }
+    .h2h-chip.is-trade .h2h-assets {
+      display: flex; flex-direction: column; gap: 4px;
+      min-height: 0; width: 100%;
+    }
+    .h2h-chip.is-trade .lh-trade-sum {
+      margin-top: 0;
+    }
+    /* Both trade seats read LTR like the left column (avatar · name · figs). */
+    .h2h-chip.is-trade .h2h-side.is-right {
+      text-align: left; align-items: stretch;
+    }
+    .h2h-chip.is-trade .h2h-top { align-items: center; gap: 8px; }
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-top { flex-direction: row; }
+    .h2h-chip.is-trade .h2h-av-wrap,
+    .h2h-chip.is-trade .h2h-av,
+    .h2h-chip.is-trade .h2h-av > img {
+      width: 36px; height: 36px;
+    }
+    .h2h-chip.is-trade .h2h-name {
+      font-size: 0.875rem; font-weight: 650;
+      display: flex; align-items: center; gap: 0;
+      line-height: 1.2;
+    }
+    .h2h-chip.is-trade .h2h-id {
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: flex-start; gap: 2px;
+      min-width: 0; flex: 1 1 auto;
+    }
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-id { align-items: flex-start; }
+    /* Compact bag-loading placeholder — seats stay visible; asset rows are inert bars until
+       seat bags land, so the chip never flashes a one-headline stub then grows full bags.
+       Static bars only (no @keyframes) — WCAG 2.2.2 pause control not required. */
+    .h2h-chip.is-trade.is-loading .lh-trade-ph {
+      display: block; height: 0.85em; width: 72%; max-width: 9rem;
+      border-radius: 4px; background: #2a261c; opacity: 0.55;
+    }
+    .h2h-chip.is-trade.is-loading .lh-trade-ph-num {
+      display: inline-block; height: 0.85em; width: 2.4em; vertical-align: middle;
+      border-radius: 4px; background: #2a261c; opacity: 0.55;
+    }
+    .h2h-chip.is-trade.is-loading .lh-trade-ph-num.is-short { width: 1.6em; }
+    .h2h-assets {
+      display: flex; flex-direction: column; gap: 4px; width: 100%;
+      padding-top: 4px; border-top: 1px solid #3a3428;
+    }
+    /* Same + player/pick · value order on both sides — do not mirror the right bag. */
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-assets {
+      align-items: stretch; text-align: left;
+    }
+    /* Asset rows + sum share one grid so book values stack like an arithmetic column. */
+    .lh-trade-asset-wrap {
+      display: flex; flex-direction: column; gap: 0;
+      min-width: 0; max-width: 100%;
+    }
+    .lh-trade-asset,
+    button.lh-trade-asset,
+    .lh-trade-sum {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      column-gap: 6px; align-items: baseline;
+      min-width: 0; max-width: 100%;
+    }
+    button.lh-trade-asset {
+      appearance: none; font: inherit; color: inherit; text-align: inherit;
+      background: none; border: 0; padding: 0; margin: 0;
+      width: 100%; cursor: pointer; touch-action: manipulation;
+    }
+    button.lh-trade-asset.on .lh-trade-lab b { text-decoration: underline; text-underline-offset: 2px; }
+    button.lh-trade-asset:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
+    }
+    .h2h-chip.is-trade .h2h-side.is-right .lh-trade-asset,
+    .h2h-chip.is-trade .h2h-side.is-right button.lh-trade-asset {
+      text-align: left;
+    }
+    .h2h-assets .hops {
+      margin: 2px 0 8px 14px;
+    }
+    .lh-trade-plus {
+      color: #e0b44c; font-size: 0.75rem; font-weight: 700; line-height: 1.2;
+    }
+    .lh-trade-lab { min-width: 0; }
+    .lh-trade-lab b {
+      display: block; color: var(--text); font-weight: 650;
+      font-size: 0.75rem; line-height: 1.25;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lh-trade-lab b.pos-qb { color: var(--pos-qb); }
+    .lh-trade-lab b.pos-rb { color: var(--pos-rb); }
+    .lh-trade-lab b.pos-wr { color: var(--pos-wr); }
+    .lh-trade-lab b.pos-te { color: var(--pos-te); }
+    .lh-trade-lab b.pos-k { color: var(--pos-k); }
+    .lh-trade-lab b.pos-def { color: var(--pos-def); }
+    .lh-trade-lab b.pos-oth { color: var(--pos-oth); }
+    .lh-trade-lab span {
+      display: block; color: var(--dim); font-size: 0.625rem; line-height: 1.25;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* Right-aligned tabular book value — pick Mid / as-year notes stay off the Latest trade lab. */
+    .lh-trade-num,
+    .lh-trade-val {
+      font-variant-numeric: tabular-nums; font-weight: 650;
+      font-size: 0.6875rem; line-height: 1.25; color: var(--text);
+      white-space: nowrap; text-align: right; min-width: 4.75ch;
+    }
+    .lh-trade-sum {
+      padding-top: 4px;
+      border-top: 1px solid #3a3428;
+    }
+    .lh-trade-sum .lh-trade-eq {
+      grid-column: 2; justify-self: end;
+      color: var(--dim); font-weight: 700; font-size: 0.75rem; line-height: 1.25;
+      padding-right: 2px;
+    }
+    .lh-trade-sum .lh-trade-num { color: var(--text); }
+    .lh-trade-sum.is-high .lh-trade-num,
+    .lh-trade-sum.is-high .lh-trade-eq { color: var(--green); }
+    .lh-trade-sum.is-low .lh-trade-num,
+    .lh-trade-sum.is-low .lh-trade-eq { color: var(--red); }
+    .lh-trade-sum.is-even .lh-trade-num,
+    .lh-trade-sum.is-even .lh-trade-eq { color: var(--text); }
+    /* Value Adjustment on compact trade chips — same gold ink as .leg.va in bag detail. */
+    .lh-trade-va {
+      margin-top: 2px; padding-top: 4px;
+      border-top: 1px solid var(--line);
+    }
+    .lh-trade-va .lh-trade-lab b { font-weight: 650; color: #d4c07a; }
+    .lh-trade-va .lh-trade-num { color: #d4c07a; }
+    /* Value lean mid + per-side voter flairs under left | VS | right. */
+    .h2h-trade-lean {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 6px 6px; align-items: center;
+      margin-top: 2px; padding-top: 8px;
+      border-top: 1px solid #3a3428;
+      font-size: 0.6875rem; line-height: 1.3; color: var(--dim);
+    }
+    .h2h-trade-lean .delta { font-size: inherit; }
+    .h2h-lean-side {
+      min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px;
+      align-items: stretch;
+    }
+    .h2h-lean-side.is-left { text-align: left; }
+    .h2h-lean-side.is-right { text-align: right; }
+    /* Flairs on the outer edge; vote total hugs the center ("who won" CTA) as a scoreboard. */
+    .h2h-lean-marks {
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; max-width: 100%;
+    }
+    .h2h-lean-flairs {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+      min-width: 0;
+    }
+    .h2h-lean-side.is-left .h2h-lean-n { margin-left: auto; }
+    .h2h-lean-side.is-right .h2h-lean-marks { flex-direction: row-reverse; }
+    .h2h-lean-side.is-right .h2h-lean-n { margin-left: auto; }
+    .h2h-lean-marks .h2h-lean-flair-link {
+      display: inline-flex; align-items: center; line-height: 0;
+    }
+    .h2h-lean-marks img.seat-flair,
+    .h2h-lean-marks img.h2h-lean-flair {
+      width: 14px; height: 14px; vertical-align: -2px;
+      border-radius: 2px;
+    }
+    .h2h-lean-glyph { font-size: 0.75rem; line-height: 1; }
+    .h2h-lean-n {
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums; font-weight: 700;
+      font-size: 0.8125rem; line-height: 1;
+      color: var(--text);
+    }
+    .h2h-lean-mid {
+      min-width: 0; max-width: 11rem;
+      text-align: center; justify-self: center;
+      font-size: 0.625rem; line-height: 1.25; color: var(--dim);
+    }
+    .h2h-lean-empty { color: #6b5a2e; }
+    /* Kept for smoke / old markup; trade assets are text-first now. */
+    .lh-trade-ico, .lh-trade-pick { display: none; }
+
+    .lh-week-h {
+      font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
+    }
+    .lh-strip, .lh-match-strip {
+      display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 6px;
+      scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    }
+    /* Prior-week matchup H2H chips — wide enough for the mirrored score layout. */
+    div.lh-match-card {
+      flex: 0 0 min(100%, 360px); scroll-snap-align: start;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0; min-height: 0; touch-action: manipulation;
+      display: block;
+    }
+    .lh-match-empty {
+      font-size: 0.8125rem; color: var(--dim); margin: 0 0 8px;
+    }
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
        cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
-    /* Six options -- None plus the five sets -- each with a line saying what the set is built
-       from, so a row is 59px and 76px where that line wraps at 320px. It floats rather than
-       shoving the open set down the page, which is what the Score as panel does.
+    /* Five set options, each with a line saying what the set is built from, so a row is 59px
+       and 76px where that line wraps at 320px. It floats rather than shoving the open set down
+       the page, which is what the Score as panel does.
        The width is the trigger's width and not a fixed 340px. Capped, it left half of every trade
        row visible beside it at 375px and wider -- figures and names floating to the right of a
        menu that was covering the rest of their row, which measured perfectly and read as a
        rendering fault. Full width also means the panel cannot be wider than the body's content
        box, so it can never widen the document. */
-    /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
+    /* Addressed by id, the way #scoreAs and #seatTradeFilters are, so these win over the shared
        .filter-panel box rules that are declared further down the sheet. */
     /* The cap is the list, not a fraction of the viewport. It used to be min(100dvh - 96px, 480px)
-       -- a flat 480px on any phone taller than 576px -- which is a number the six options never
-       reach and so never bit: the panel measured 439px at 320px and simply hung off the bottom of
-       the screen, four of its six options below the fold. This is the same rule the seat menu was
-       fixed with: six rows at the 76px a two-line option takes at 320px, five 4px gaps, 12px of
+       -- a flat 480px on any phone taller than 576px -- which is a number the five options never
+       reach and so never bit: the panel measured ~410px at 320px and simply hung off the bottom of
+       the screen, options below the fold. This is the same rule the seat menu was
+       fixed with: five rows at the 76px a two-line option takes at 320px, four 4px gaps, 12px of
        panel padding and 2px of border, and then the room a phone has as the second term. Sizing
        to the list is what makes "does it fit" a question with an answer at build time -- the
-       generator asserts DATA_SETS.length + 1 against it, so a seventh set fails the build instead
+       generator asserts DATA_SETS.length against it, so a sixth set fails the build instead
        of shipping a scrolling menu. Do not lower the 44px option floor to fit a longer list. */
-    #dataSets {
-      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 12;
-      width: auto; margin: 0; padding: 6px;
-      max-height: min(calc(6 * 76px + 34px), calc(100dvh - 96px)); overflow-y: auto;
-      display: flex; flex-direction: column; gap: 4px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    #dataSets, .ds-list {
+      position: static; width: auto; margin: 0 0 12px; padding: 0;
+      max-height: none; overflow: visible;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow: none;
     }
     #dataSets button.ds-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
@@ -665,8 +1778,7 @@ const html = `<!DOCTYPE html>
        recorded as a WCAG 2.2.2 failure: a 48s loop with no pause control. That ticker is gone,
        and a news row is text a person needs time to read rather than a pill they glance at. So
        this is a plain overflow box: capped height, newest at the top, and it stays where it is
-       put. Pull-to-refresh and the "new posts" pill are user-driven state (text / a button),
-       not a self-moving region — no CSS animation, no prefers-reduced-motion branch. */
+       put. Nothing here needs a prefers-reduced-motion branch because nothing here moves. */
     .news-box {
       max-height: 420px; overflow-y: auto; -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -698,7 +1810,7 @@ const html = `<!DOCTYPE html>
       white-space: normal; overflow: visible; text-overflow: unset;
       line-height: 1.25;
     }
-    /* Same gold as button.all-trades. Not --red/--green: those mean "you are down or up value"
+    /* Product gold accent (#e0b44c). Not --red/--green: those mean "you are down or up value"
        on every other screen in this app, and a hamstring is not a value delta. */
     .news-cat {
       flex: 0 0 auto; font-size: 0.6875rem; font-weight: 650; white-space: nowrap;
@@ -751,25 +1863,6 @@ const html = `<!DOCTYPE html>
     .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-del[disabled] { opacity: 0.5; cursor: wait; }
     .news-empty { color: var(--dim); font-size: 0.8125rem; line-height: 1.45; padding: 10px 0; }
-    /* Live feed chrome. Sits between the heading and the scroll box. No transform / keyframes —
-       the animation guard on .news-box stays honest; these are static text and a tap target. */
-    .news-live {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
-      min-height: 0; margin: 0 0 8px;
-    }
-    .news-live:empty { display: none; margin: 0; }
-    .news-new {
-      display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding: 0 2px;
-      background: none; border: 0; color: var(--muted);
-      font: inherit; font-size: 0.8125rem; font-weight: 650; text-decoration: underline;
-      cursor: pointer;
-    }
-    .news-new:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .news-pull {
-      color: var(--dim); font-size: 0.75rem; line-height: 1.3;
-      text-align: center; padding: 8px 0 4px;
-    }
-    .news-pull[hidden] { display: none; }
     /* What is left of this row now that the clock control moved to the brand header: the year
        filter on the Trades tab and the round filter on Drafts, each with its caption. Both are
        screen-local, so both stay on the screen they filter. */
@@ -782,6 +1875,54 @@ const html = `<!DOCTYPE html>
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Compact score clock on value chips / filter rows — icon only, inset from chip edge. */
+    .chip-lens { position: absolute; top: 6px; right: 6px; z-index: 3; line-height: 0; }
+    .chip-lens.is-inline {
+      position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
+    }
+    /* Reserve a clear corner so the clock never covers seat names. */
+    .h2h-chip.is-trade { position: relative; padding-top: 22px; padding-right: 30px; }
+    .h2h-chip.is-trade > .chip-lens { top: 6px; right: 6px; }
+    button.chip-lens-btn {
+      appearance: none; font: inherit; color: var(--muted);
+      background: rgba(12, 12, 16, 0.82);
+      border: 1px solid var(--line); border-radius: 999px;
+      width: 26px; height: 26px; min-height: 26px; padding: 0;
+      display: grid; place-items: center; cursor: pointer;
+      position: relative; line-height: 0;
+      touch-action: manipulation;
+    }
+    button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
+    button.chip-lens-btn .chip-lens-ico {
+      display: block; width: 14px; height: 14px;
+    }
+    button.chip-lens-btn .dot {
+      position: absolute; top: 1px; right: 1px;
+      width: 4px; height: 4px; border-radius: 50%; background: #e0b44c;
+    }
+    button.chip-lens-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .chip-lens-bar {
+      display: flex; justify-content: flex-end; margin: 0 0 8px;
+    }
+    .lh-latest-trade .day-alert-h,
+    .ds-h-row {
+      display: flex; align-items: center; gap: 8px; justify-content: space-between;
+    }
+    .ds-h-row .ds-h { margin: 0; flex: 1 1 auto; min-width: 0; }
+    /* Floating score menu — compact list under the chip that opened it. */
+    #scoreAs.score-as-portal {
+      position: fixed; z-index: 40;
+      width: min(168px, calc(100vw - 32px)); margin: 0; padding: 4px;
+      max-height: min(70dvh, 280px); overflow-y: auto;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #scoreAs.score-as-portal:not([hidden]) {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    #scoreAs.score-as-portal[hidden], #scoreAs.score-as-portal:empty { display: none !important; }
+
     /* The clock trigger. It reads the selected window alone -- "Since trade ▾" -- and not
        "Score as Since trade": at 0.8125rem the prefix costs 54px of measured width, which the
        320px brand row does not have, and the five window names are self-describing without it.
@@ -808,25 +1949,18 @@ const html = `<!DOCTYPE html>
        display:none in engines that do not mark [hidden] as !important, and the empty panel
        then paints as a thin card bar under the brand header -- the "weird box" on league home.
        Flex is applied only when the panel is open; hidden/empty stay display:none !important. */
-    #scoreAs {
-      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
-      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
-      max-height: calc(100dvh - 88px); overflow-y: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-    }
-    #scoreAs:not([hidden]) {
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    #scoreAs[hidden], #scoreAs:empty { display: none !important; }
+    /* #scoreAs portal styles: see #scoreAs.score-as-portal above. */
+
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
-      min-height: 44px; padding: 8px 10px; cursor: pointer;
+      background: #1c1c22; border: 1px solid transparent; border-radius: 7px;
+      min-height: 34px; padding: 6px 10px; cursor: pointer;
+      line-height: 1.2;
     }
-    #scoreAs button.score-opt.on { border-color: #6b5a2e; }
-    #scoreAs button.score-opt b { display: block; font-weight: 650; }
-    #scoreAs button.score-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
+    #scoreAs button.score-opt.on { border-color: #6b5a2e; background: #221e14; }
+    #scoreAs button.score-opt b {
+      display: block; font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.01em;
+    }
     #scoreAs button.score-opt:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
@@ -854,19 +1988,11 @@ const html = `<!DOCTYPE html>
     .filter-panel .rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
     .filter-panel .filter-h { color: var(--dim); font-size: 0.75rem; margin: 8px 0 0; }
     .filter-wrap { position: relative; z-index: 4; }
-    #yearFilters {
-      position: absolute; top: 52px; left: 0; z-index: 12;
-      width: 132px; max-height: min(60dvh, 420px); overflow-y: auto;
-      margin: 0; padding: 4px 8px;
-      display: flex; flex-direction: column;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    #seatTradeFilters {
+      margin: 0 0 14px;
+      max-height: min(70dvh, 520px); overflow-y: auto;
     }
-    #yearFilters label {
-      min-height: 44px; gap: 10px; font-size: 0.8125rem; color: var(--muted);
-      cursor: pointer;
-    }
-    #yearFilters label:has(input:checked) { color: var(--text); }
-    #yearFilters input { width: 16px; height: 16px; }
+    #seatTradeFilters .filter-h:first-child { margin-top: 4px; }
     .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
     .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
     .path-hero h2 { margin: 0 0 6px; }
@@ -890,19 +2016,57 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="Home">
+    <button type="button" class="go-home" id="goHome" aria-label="League home">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path fill="currentColor" d="M12 3.2l9 7.4h-2.4V21h-5.2v-6.2H10.6V21H5.4v-10.4H3L12 3.2z"/>
+        <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
       </svg>
     </button>
-    <a href="./">CuckleChunckle</a>
-    <span class="lens-wrap" id="lensWrap">
-      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div id="scoreAs" hidden></div>
+    <span class="league-sub" id="leagueSub" hidden></span>
+    <span class="brand-end">
+      <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+        </svg>
+      </button>
     </span>
   </h1>
+  <div id="scoreAs" class="score-as-portal" hidden></div>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
+  <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
+    <!-- Dock retired: league home quick actions under Latest trade are the nav. Markup kept hidden so goBottomNav deep-links still resolve if invoked. -->
+    <button type="button" data-bottom="account" aria-label="Account" tabindex="-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.25"/>
+        <path d="M5.5 19.5c.8-3.2 3.2-4.75 6.5-4.75s5.7 1.55 6.5 4.75"/>
+      </svg>
+      <span>Account</span>
+    </button>
+    <button type="button" data-bottom="trades" aria-label="My trades" tabindex="-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 8h11"/>
+        <path d="M14.5 4.5L18 8l-3.5 3.5"/>
+        <path d="M17 16H6"/>
+        <path d="M9.5 12.5L6 16l3.5 3.5"/>
+      </svg>
+      <span>My trades</span>
+    </button>
+    <button type="button" class="bottom-home" data-bottom="home" aria-label="Home" tabindex="-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button type="button" data-bottom="teams" aria-label="My team" tabindex="-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="9" cy="8" r="2.75"/>
+        <circle cx="16.5" cy="9" r="2.25"/>
+        <path d="M3.75 19c.7-2.6 2.7-3.9 5.25-3.9s4.55 1.3 5.25 3.9"/>
+        <path d="M13.5 19c.45-1.7 1.55-2.7 3-2.7 1.55 0 2.7 1 3.2 2.7"/>
+      </svg>
+      <span>My team</span>
+    </button>
+  </nav>
   <script>
     const fmt = (n) => n == null || Number.isNaN(n) ? "—" : Math.round(n).toLocaleString();
     // Fantasy scores are conventionally one decimal. Sleeper stores two.
@@ -963,12 +2127,23 @@ const html = `<!DOCTYPE html>
       const f = SEAT_FLAIR[name];
       return f && f.glyph ? " " + f.glyph : "";
     }
-    function seatLabel(name) {
+    /**
+     * Painted seat name: crown → name → flair. By default a seat-link with data-who so taps
+     * open that team's home. Pass { link: false } inside another control that already owns
+     * the destination (Teams rows, vote options) to avoid nested interactive markup.
+     */
+    function seatLabel(name, opts) {
       const n = String(name == null ? "" : name);
+      const link = !(opts && opts.link === false);
       // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
-      if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
+      if (n.includes(" · ")) {
+        return n.split(" · ").map((part) => seatLabel(part, opts)).join(" · ");
+      }
       const crown = reigningChampName() === n ? CROWN + " " : "";
-      return crown + esc(n) + seatFlairHtml(n);
+      const inner = crown + esc(n) + seatFlairHtml(n);
+      if (!link || !n) return inner;
+      return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(n) + '"'
+        + ' aria-label="' + esc(n) + '">' + inner + "</span>";
     }
     /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
     function seatTitle(title) {
@@ -991,6 +2166,33 @@ const html = `<!DOCTYPE html>
     let data = null;
     let league = null;
     let picks = null;
+    // Draft Data filters (AND across groups). Empty round/year sets mean "all".
+    // Progressive UI: idle shows the leaderboard + one Filter trigger; opening filters
+    // walks Round → Year → Team (+ mode) one dropdown at a time (pickFilterStep).
+    let pickFilterRounds = {}; // { 1: true } when selected
+    let pickFilterYears = {};  // { "2027": true } when selected
+    let pickFilterOwner = "";  // team name on the owner step (before mode is chosen, or when active)
+    let pickFilterOwnerMode = null; // "held" | "out" | null — held = they own it; out = originated with them
+    let pickFilterOwnerAny = false; // true when user explicitly chose "Anyone" on the team step
+    let pickFilterMineOut = false;
+    let pickFilterMineHeld = false;
+    let pickFilterOpen = false;
+    let pickFilterStep = null; // "round" | "year" | "owner" | null
+    let pickIntelOpen = null;
+    let picksLoading = false;
+    // Cuffs: fantasy slot-1 starters → NFL handcuff + who owns them.
+    let cuffs = null;
+    let cuffsLoading = false;
+    let cuffFilterMine = false;
+    let cuffFilterOwner = ""; // fantasy manager whose starters
+    let cuffFilterPos = "";   // QB | RB | WR | TE
+    let cuffFilterQ = "";
+    let cuffFilterPlayerId = ""; // Sleeper id — news tap opens rows where starter/cuff matches
+    let cuffFilterOpen = false;
+    let cuffFilterFa = false; // cuff is unrostered
+    let cuffFilterHeld = false; // cuff is rostered by someone
+    let cuffFilterSelf = false; // starter owner also owns the cuff (insurer)
+    let cuffFilterOther = false; // cuff owned by someone other than the starter's manager (poach)
     let titles = null;
     let marks = null;
     let news = null;
@@ -998,22 +2200,10 @@ const html = `<!DOCTYPE html>
     // each successful admin Remove, so a delete hides the row without waiting for a Pages rebuild.
     const newsGone = new Set();
     let newsDelPending = null;
-    // Live feed refresh (Twitter-shaped). news.json is a static Pages file; the client polls it
-    // with a cache-busting query and either applies new rows in place (reader at the top) or
-    // holds them behind a "new posts" pill (reader scrolled down). Pull-to-refresh at the top
-    // of the box always applies. See docs/NEWS_SDD.md §10c.
-    const NEWS_POLL_MS = 45000;
-    let newsPollTimer = null;
-    let newsRefreshing = false;
-    let newsPullPx = 0;
-    let newsPullArmed = false;
-    let newsTouchStartY = null;
-    let newsPendingBook = null;
-    let newsStatus = ""; // "Refreshing…" / "Up to date" / "" — aria-live, short-lived
-    let newsStatusTimer = null;
-    let newsBoundBox = null;
-    let lens = "all";
-    const DATA_V = "news20260901190719";
+    let lens = "t0";
+    let runLens = "y2";
+    let lensPicker = "trade";
+    const DATA_V = "runLensAheadBehind20260901180300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1036,27 +2226,50 @@ const html = `<!DOCTYPE html>
     // nothing rendered under it: the sets are reachable by opening the menu and by nothing else
     // now that the ticker's pills are gone. An earlier build pre-selected Most lopsided so home
     // would not read as a lone control over empty space; the user asked for the empty space.
-    // null is the "nothing selected" state and the "None" option at the top of the menu is the
-    // way back to it, so the choice is reversible without a reload.
+    // clearLeague / the home icon return to null; there is no "None" menu option.
     let dataSet = null;
     let dsOpen = false;
     const WINDOWS = [
-      ["t0", "At trade", "Who won on accept day. Picks still picks."],
-      ["y1", "First 1 year", "Who won after 1 year. Hides younger deals."],
-      ["y2", "First 2 years", "Who won after 2 years. Hides younger deals."],
-      ["y3", "First 3 years", "Who won after 3 years. Hides younger deals."],
-      ["all", "Since trade", "Who is winning from accept through today."],
+      ["t0", "Date of Trade", "Value on the day the trade was accepted."],
+      ["y1", "1 season", "Average value through the rest of this season (or the next season from the offseason)."],
+      ["y2", "2 seasons", "Rest of this season plus the next (or the next two from the offseason)."],
+      ["y3", "3 seasons", "Through three seasons from the trade."],
+      ["all", "as of today", "Weekly average value from accept through today."],
     ];
     let view = "home";
+    // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
+    let newsPullupOpen = false;
+    let newsPullupCleanup = null;
+    // Sleeper week matchups for the home strip (previous completed week when possible).
+    let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
+    let weekMatchupsLoading = false;
+    // Full bags for Latest trade + the league trades feed (lazy-filled from seat files).
+    let latestTradeHit = null; // seat trade object for latestTradeHitTx
+    let latestTradeHitTx = null;
+    let latestTradeBagsLoading = false;
+    let latestTradeBagsPromise = null; // in-flight ensureLatestTradeBags() for await/reuse
+    // tx → seat trade object | null (null = loaded, no bag). Own map so the feed can
+    // paint many H2H cards without fighting the home Latest trade pointer.
+    const tradeBagByTx = Object.create(null);
+    const tradeBagPending = Object.create(null);
+    // KTC book keyed by sleeper_id — pos/team for player secondary labels.
+    let ktcBySleeper = null;
     let draftSort = "new";
     let draftRounds = { 1: true, 2: true, 3: true, 4: true };
     let draftStartup = false;
     let draftFilterOpen = false;
     let year = "all";
     let yearFilterOpen = false;
-    // League home's Teams chip, the one and only way into a seat. The brand header carried a
-    // second trigger for the same list until the chips replaced it.
-    let teamsOpen = false;
+    let seatTradeTeam = "all";
+    let seatTradeSort = "new"; // new = Most Recent, old = Oldest
+    // League-wide trades feed filters (years / teams / players). Separate from the
+    // per-seat Trades tab year filter so the two screens do not clobber each other.
+    let tapeFilterOpen = false;
+    let tapeYear = "all";
+    let tapeTeam = "all";
+    let tapePlayer = "all";
+    let tapePlayerQ = "";
+    let tapeLimit = 20;
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -1070,6 +2283,10 @@ const html = `<!DOCTYPE html>
     let tradeSeat = null;
     // Set when a vote navigates the user to the league list, so the list can say the vote landed.
     let voteToast = null;
+    // Transaction id when a data-vote-open control opened the vote sheet overlay.
+    let voteSheetTx = null;
+    // Trade id when the voter re-opens options on an already-cast ballot.
+    let voteEditTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.
     let focusNext = null;
     const seatCache = {};
@@ -1128,14 +2345,1050 @@ const html = `<!DOCTYPE html>
         }).join("") + "</div>";
     }
 
+    /**
+     * Pick tape key for a trade leg. Picks use asset_key; players reverse-match picks.became
+     * so a received player can open the same hop path that draft/trade history already tracks.
+     */
+    function pickKeyForLeg(leg) {
+      if (!leg) return null;
+      if (leg.kind === "pick" && leg.asset_key) return String(leg.asset_key);
+      if (leg.kind !== "player" || !picks) return null;
+      const label = String(leg.label || "").trim();
+      if (!label) return null;
+      const short = String(shortPlayerName(label) || "").trim();
+      const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+      const nLabel = norm(label);
+      const nShort = norm(short);
+      for (const key of Object.keys(picks)) {
+        const became = picks[key] && picks[key].became;
+        if (!became) continue;
+        const nBecame = norm(became);
+        if (!nBecame) continue;
+        if (nBecame === nLabel || (nShort && nBecame === nShort)
+          || (nShort && nBecame.endsWith(nShort)) || (nLabel && nBecame.endsWith(nLabel))) {
+          return key;
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Split a bag leg's book value into a numeric column piece and an optional note
+     * (Mid / as-year). Latest trade paints the number in an arithmetic column; bags
+     * still join them via legValueText.
+     */
+
+    function pickOriginName(entry) {
+      const label = (entry && entry.label) || "";
+      const m = /\\(([^)]+)\\)\\s*$/.exec(label);
+      if (m) return m[1];
+      const hops = (entry && entry.hops) || [];
+      return hops.length ? (hops[0].from || null) : null;
+    }
+
+    function pickOwnerName(entry) {
+      const hops = (entry && entry.hops) || [];
+      if (hops.length) return hops[hops.length - 1].to || null;
+      return pickOriginName(entry);
+    }
+
+    function pickKeyParts(key) {
+      const m = /^pick:(\\d{4}):(\\d+):(\\d+)$/.exec(String(key || ""));
+      if (!m) return null;
+      return { season: m[1], round: Number(m[2]), slot: Number(m[3]) };
+    }
+
+    function pickRoundOrdinal(n) {
+      return ({ 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" })[n] || ("R" + n);
+    }
+
+    /**
+     * picks.json is built from trade legs only — native picks that never moved are absent.
+     * Synthesize still-held origin picks for future draft years so leaderboards count them.
+     */
+    function augmentUntradedPicks(book) {
+      if (!book) return;
+      const rosterNames = new Map();
+      let maxRoster = 0;
+      for (const key of Object.keys(book)) {
+        const seg = key.split(":");
+        if (seg.length < 4 || seg[0] !== "pick") continue;
+        const roster = Number(seg[3]);
+        if (roster > maxRoster) maxRoster = roster;
+        const origin = pickOriginName(book[key]);
+        if (origin) rosterNames.set(String(roster), origin);
+      }
+      const teamN = Math.max(maxRoster, rosterNames.size, (members && members.length) || 0, 10);
+      const years = new Set();
+      for (const key of Object.keys(book)) {
+        const parts = pickKeyParts(key);
+        if (parts && book[key] && book[key].still_pick) years.add(parts.season);
+      }
+      const todayY = Number(String((league && league.today) || "2026").slice(0, 4));
+      const today = (league && league.today) || "";
+      for (const year of years) {
+        if (Number(year) <= todayY) continue;
+        for (let round = 1; round <= 4; round++) {
+          for (let roster = 1; roster <= teamN; roster++) {
+            const key = "pick:" + year + ":" + round + ":" + roster;
+            if (book[key]) continue;
+            const origin = rosterNames.get(String(roster));
+            if (!origin) continue;
+            book[key] = {
+              label: year + " " + pickRoundOrdinal(round) + " (" + origin + ")",
+              became: null,
+              used_by: null,
+              still_pick: true,
+              hops: [{
+                date: today,
+                from: origin,
+                to: origin,
+                t0: null,
+                out: null,
+                out_date: today,
+                exit: "held",
+                transaction_id: null,
+              }],
+            };
+          }
+        }
+      }
+    }
+
+    function applyPicksBook(book) {
+      picks = book;
+      augmentUntradedPicks(picks);
+    }
+
+    function ensurePicks() {
+      if (picks || picksLoading) return;
+      picksLoading = true;
+      getLeagueJson("picks.json").then((book) => {
+        applyPicksBook(book);
+        picksLoading = false;
+        if (view === "home" && !me) render();
+      }).catch((err) => {
+        console.error(err);
+        picksLoading = false;
+        if (view === "home" && !me) render();
+      });
+    }
+
+    function stillPickEntries() {
+      const out = [];
+      if (!picks) return out;
+      augmentUntradedPicks(picks);
+      for (const key of Object.keys(picks)) {
+        const entry = picks[key];
+        if (!entry || !entry.still_pick) continue;
+        out.push({ key: key, entry: entry });
+      }
+      return out;
+    }
+
+    function pickSeasonsAvailable() {
+      const years = new Set();
+      for (const row of stillPickEntries()) {
+        const parts = pickKeyParts(row.key);
+        if (parts) years.add(parts.season);
+      }
+      return [...years].sort();
+    }
+
+    /** Compact year scope helper (kept for callers / smokes). Idle board uses 2027 only. */
+    function pickSeasonRangeLabel() {
+      const years = pickSeasonsAvailable();
+      if (!years.length) return "";
+      if (years.length === 1) return years[0];
+      return years[0] + "–" + years[years.length - 1];
+    }
+
+    /** Idle board year — still-available 2027 picks only. */
+    const PICK_INTEL_BOARD_YEAR = "2027";
+
+    function pickFiltersActive() {
+      return pickFilterMineOut || pickFilterMineHeld || pickFilterOwnerAny
+        || (!!pickFilterOwner && !!pickFilterOwnerMode)
+        || Object.keys(pickFilterRounds).some((k) => pickFilterRounds[k])
+        || Object.keys(pickFilterYears).some((k) => pickFilterYears[k]);
+    }
+
+    function clearPickFilters() {
+      pickFilterRounds = {};
+      pickFilterYears = {};
+      pickFilterOwner = "";
+      pickFilterOwnerMode = null;
+      pickFilterOwnerAny = false;
+      pickFilterMineOut = false;
+      pickFilterMineHeld = false;
+      pickFilterOpen = false;
+      pickFilterStep = null;
+      pickIntelOpen = null;
+    }
+
+    function clearCuffFilters() {
+      cuffFilterMine = false;
+      cuffFilterOwner = "";
+      cuffFilterPos = "";
+      cuffFilterQ = "";
+      cuffFilterPlayerId = "";
+      cuffFilterOpen = false;
+      cuffFilterFa = false;
+      cuffFilterHeld = false;
+      cuffFilterSelf = false;
+      cuffFilterOther = false;
+    }
+
+    /**
+     * Baseline for the Cuffs page after Clear all: my cuffs when seated,
+     * otherwise open search so the page is never an empty idle prompt.
+     */
+    function resetCuffFilters() {
+      clearCuffFilters();
+      if (authSeatName()) {
+        cuffFilterMine = true;
+      } else {
+        cuffFilterOpen = true;
+      }
+    }
+
+    function cuffFiltersActive() {
+      return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
+        || !!cuffFilterQ.trim() || !!cuffFilterPlayerId
+        || cuffFilterFa || cuffFilterHeld || cuffFilterSelf || cuffFilterOther;
+    }
+
+    function pickRoundLabel(n) {
+      return ({ 1: "1sts", 2: "2nds", 3: "3rds", 4: "4ths" })[n] || ("R" + n);
+    }
+
+    function pickSelectedRound() {
+      const on = Object.keys(pickFilterRounds).filter((k) => pickFilterRounds[k]).map(Number);
+      return on.length === 1 ? on[0] : (on.length ? on[0] : "");
+    }
+
+    function pickSelectedYear() {
+      const on = Object.keys(pickFilterYears).filter((k) => pickFilterYears[k]);
+      return on.length ? on[0] : "";
+    }
+
+    /** Removable summary chips for the active filter dimensions. */
+    function pickFilterSummary() {
+      const chips = [];
+      const roundOn = Object.keys(pickFilterRounds).filter((k) => pickFilterRounds[k]).map(Number);
+      for (const n of roundOn) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-round="'
+          + n + '" aria-label="Clear ' + esc(pickRoundLabel(n)) + ' filter">'
+          + esc(pickRoundLabel(n)) + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      const yearOn = Object.keys(pickFilterYears).filter((k) => pickFilterYears[k]);
+      for (const y of yearOn) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-year="'
+          + esc(y) + '" aria-label="Clear ' + esc(y) + ' filter">'
+          + esc(y) + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (pickFilterOwnerAny) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
+          + ' aria-label="Clear Anyone filter">Anyone'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      } else if (pickFilterOwner && pickFilterOwnerMode === "out") {
+        const lab = "who has " + pickFilterOwner + "'s picks";
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
+          + ' aria-label="Clear ' + esc(lab) + ' filter">'
+          + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
+      } else if (pickFilterOwner && pickFilterOwnerMode === "held") {
+        const lab = "held by " + pickFilterOwner;
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
+          + ' aria-label="Clear ' + esc(lab) + ' filter">'
+          + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (pickFilterMineHeld) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
+          + ' aria-label="Clear Held">Held'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (pickFilterMineOut) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
+          + ' aria-label="Clear Original">Original'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (!chips.length) return "";
+      return '<div class="pick-intel-summary" role="group" aria-label="Active pick filters">'
+        + chips.join("")
+        + (pickFiltersActive()
+          ? '<button type="button" class="pick-intel-link" data-pick-filter-clear="1">Clear all</button>'
+          : "")
+        + "</div>";
+    }
+
+    /**
+     * One dropdown at a time. Round → Year → Team (+ mode chips). Choosing round/year
+     * advances; choosing Anyone on the team step finishes; choosing a team reveals mode chips.
+     */
+    function pickIntelStepPanel(seatNames) {
+      if (!pickFilterOpen || !pickFilterStep) return "";
+      if (pickFilterStep === "round") {
+        return '<div class="pick-intel-step" role="group" aria-label="Filter by round">'
+          + '<label class="pick-intel-step-lab" for="pick-step-round">Round</label>'
+          + '<select id="pick-step-round" data-pick-step-round="1" aria-label="Choose a round">'
+          + '<option value="__pick__" selected disabled>Choose round…</option>'
+          + '<option value="">Any round</option>'
+          + [[1, "1sts"], [2, "2nds"], [3, "3rds"], [4, "4ths"]].map(([n, lab]) =>
+            '<option value="' + n + '">' + esc(lab) + "</option>").join("")
+          + "</select>"
+          + '<p class="pick-intel-step-hint">Pick a round — year opens next.</p>'
+          + "</div>";
+      }
+      if (pickFilterStep === "year") {
+        const seasons = picks ? pickSeasonsAvailable() : ["2027", "2028", "2029"];
+        return '<div class="pick-intel-step" role="group" aria-label="Filter by year">'
+          + '<label class="pick-intel-step-lab" for="pick-step-year">Year</label>'
+          + '<select id="pick-step-year" data-pick-step-year="1" aria-label="Choose a year">'
+          + '<option value="__pick__" selected disabled>Choose year…</option>'
+          + '<option value="">Any year</option>'
+          + seasons.map((y) => '<option value="' + esc(y) + '">' + esc(y) + "</option>").join("")
+          + "</select>"
+          + '<p class="pick-intel-step-hint">Pick a year — team opens next.</p>'
+          + "</div>";
+      }
+      // team + optional mode (mirrors "who has my picks" / "whose picks do i have" for any seat)
+      const teamPending = pickFilterOwner && !pickFilterOwnerMode && !pickFilterOwnerAny;
+      const modeRow = teamPending
+        ? ('<div class="pick-intel-step-modes" role="group" aria-label="Team pick search mode">'
+          + '<button type="button" class="pick-intel-step-mode" data-pick-owner-mode="out"'
+          + ' aria-label="who has ' + esc(pickFilterOwner) + "'s picks" + '">'
+          + esc("who has their pick(s)") + "</button>"
+          + '<button type="button" class="pick-intel-step-mode" data-pick-owner-mode="held"'
+          + ' aria-label="picks ' + esc(pickFilterOwner) + ' holds">'
+          + esc("picks they hold") + "</button>"
+          + "</div>")
+        : "";
+      const teamHint = teamPending ? "" : "Choose a team, or Anyone to finish.";
+      return '<div class="pick-intel-step" role="group" aria-label="Filter by team">'
+        + '<label class="pick-intel-step-lab" for="pick-held-by">Team</label>'
+        + '<select id="pick-held-by" data-pick-owner="1" aria-label="Choose a team to filter picks">'
+        + '<option value="__pick__"' + (!pickFilterOwner && !pickFilterOwnerAny ? " selected" : "")
+        + ' disabled>Choose team…</option>'
+        + '<option value=""' + (pickFilterOwnerAny ? " selected" : "") + '>Anyone</option>'
+        + seatNames.map((name) => '<option value="' + esc(name) + '"'
+          + (pickFilterOwner === name ? " selected" : "") + ">" + esc(name) + "</option>").join("")
+        + "</select>"
+        + modeRow
+        + (teamHint ? '<p class="pick-intel-step-hint">' + esc(teamHint) + "</p>" : "")
+        + "</div>";
+    }
+
+    function alienatedPicks(seat) {
+      if (!seat) return [];
+      return stillPickEntries().filter((row) => {
+        const origin = pickOriginName(row.entry);
+        const owner = pickOwnerName(row.entry);
+        return origin === seat && owner && owner !== seat;
+      }).sort((a, b) => String(a.key).localeCompare(String(b.key)));
+    }
+
+    /** Apply round/year/owner/mine filters to still-available picks (AND across groups). */
+    function filteredStillPicks(seat) {
+      const roundOn = Object.keys(pickFilterRounds).filter((k) => pickFilterRounds[k]).map(Number);
+      const yearOn = Object.keys(pickFilterYears).filter((k) => pickFilterYears[k]);
+      return stillPickEntries().filter((row) => {
+        const parts = pickKeyParts(row.key);
+        if (!parts) return false;
+        if (roundOn.length && !roundOn.includes(parts.round)) return false;
+        if (yearOn.length && !yearOn.includes(parts.season)) return false;
+        const owner = pickOwnerName(row.entry);
+        const origin = pickOriginName(row.entry);
+        if (pickFilterOwner && pickFilterOwnerMode === "held" && owner !== pickFilterOwner) return false;
+        if (pickFilterOwner && pickFilterOwnerMode === "out") {
+          if (origin !== pickFilterOwner || !owner || owner === pickFilterOwner) return false;
+        }
+        if (pickFilterMineOut) {
+          if (!seat || origin !== seat || !owner || owner === seat) return false;
+        }
+        if (pickFilterMineHeld) {
+          if (!seat || owner !== seat) return false;
+        }
+        return true;
+      }).sort((a, b) => String(a.key).localeCompare(String(b.key)));
+    }
+
+    /**
+     * Top holders of still-available picks.
+     * @param {number|number[]|null} rounds — one round, several (e.g. 3+4), or null for all rounds
+     * @param {number} limit — how many names to return (board uses 3)
+     * @param {string|null} season — e.g. "2027", or null for every still-available year
+     * Ties keep equal counts; names break remaining ties.
+     */
+    function pickLeaders(rounds, limit, season) {
+      const roundSet = rounds == null
+        ? null
+        : new Set((Array.isArray(rounds) ? rounds : [rounds]).map(Number));
+      const counts = new Map();
+      for (const row of stillPickEntries()) {
+        const parts = pickKeyParts(row.key);
+        if (!parts) continue;
+        if (season != null && parts.season !== String(season)) continue;
+        if (roundSet && !roundSet.has(parts.round)) continue;
+        const owner = pickOwnerName(row.entry);
+        if (!owner) continue;
+        counts.set(owner, (counts.get(owner) || 0) + 1);
+      }
+      const top = Math.max(1, Number(limit) || 3);
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
+    }
+
+    /**
+     * Stacked name · count rows for one leaderboard column.
+     * When linkOpts is set (Draft Data board), each name is a button that opens
+     * the full page with that team + round set + year prefilled.
+     */
+    function pickLeadersStack(leaders, linkOpts) {
+      if (!leaders.length) return '<span class="pick-intel-board-empty">Nobody yet</span>';
+      return leaders.map(([name, n]) => {
+        // Draft board rows own the click (open filtered Draft Data). Skip seat-link
+        // so name/flair/count do not jump to that team's home like everywhere else.
+        const linkSeat = !(linkOpts && linkOpts.rounds && linkOpts.rounds.length);
+        const who = '<span class="pil-who">' + seatLabel(name, linkSeat ? undefined : { link: false }) + "</span>"
+          + '<span class="pil-n">· ' + n + "</span>";
+        if (linkOpts && linkOpts.rounds && linkOpts.rounds.length) {
+          const rounds = linkOpts.rounds.join(",");
+          const years = String(linkOpts.year || PICK_INTEL_BOARD_YEAR);
+          const aria = name + " · " + n + " — open Draft Data filtered to this team";
+          return '<button type="button" class="pick-intel-board-leader" data-pick-board-team="'
+            + esc(name) + '" data-pick-rounds="' + rounds + '" data-pick-years="' + esc(years) + '"'
+            + ' aria-label="' + esc(aria) + '">' + who + "</button>";
+        }
+        return '<div class="pick-intel-board-leader">' + who + "</div>";
+      }).join("");
+    }
+
+    /** Idle quick-view leaderboard: top 3 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
+     * Year short-prefix on each column lab (27' 1sts) — no standalone year gutter. */
+    function pickIntelBoard() {
+      const yrs = PICK_INTEL_BOARD_YEAR;
+      const yrShort = String(yrs).slice(-2) + "'";
+      const cols = [
+        { lab: "1sts", rounds: [1] },
+        { lab: "2nds", rounds: [2] },
+        { lab: "3rds–4ths", rounds: [3, 4] },
+      ];
+      const aria = "Still-available 2027 pick leaders by round (1sts, 2nds, 3rds–4ths)";
+      const headBtns = cols.map((r) => {
+        const lab = yrShort + " " + r.lab;
+        return '<button type="button" class="pick-intel-board-lab" data-pick-rounds="'
+          + r.rounds.join(",") + '" data-pick-years="' + esc(yrs)
+          + '" aria-label="Filter to ' + esc(lab) + '">' + esc(lab) + "</button>";
+      }).join("");
+      const bodyCols = cols.map((r) => {
+        const leaders = pickLeaders(r.rounds, 3, yrs);
+        return '<div class="pick-intel-board-col">'
+          + '<div class="pick-intel-board-leaders">'
+          + pickLeadersStack(leaders, { rounds: r.rounds, year: yrs })
+          + "</div>"
+          + "</div>";
+      }).join("");
+      return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
+        + '<div class="pick-intel-board-cols">'
+        + headBtns
+        + bodyCols
+        + "</div></div>";
+    }
+
+    function pickIntelRow(row) {
+      const owner = pickOwnerName(row.entry) || "?";
+      const origin = pickOriginName(row.entry);
+      const hops = (row.entry.hops || []).length;
+      const open = pickIntelOpen === row.key;
+      const sub = (origin && origin !== owner)
+        ? ("Was " + origin + "'s · " + hops + " hop" + (hops === 1 ? "" : "s"))
+        : (hops ? (hops + " hop" + (hops === 1 ? "" : "s")) : "Still with origin");
+      return '<button type="button" class="pick-intel-row' + (open ? " on" : "") + '" data-pick-intel-key="'
+        + esc(row.key) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+        + '<div class="pir-top"><span class="pir-lab">' + esc(row.entry.label || row.key) + "</span>"
+        + '<span class="pir-own">' + seatLabel(owner) + "</span></div>"
+        + '<div class="pir-sub">' + esc(sub) + "</div>"
+        + (open ? hopHtml(row.key) : "")
+        + "</button>";
+    }
+
+    /**
+     * League-home Draft Data: progressive filters for still-available draft picks.
+     * Idle = compact leaderboard + three equal chips (search / who has mine / whose I hold).
+     * Opening search reveals one dropdown at a time: Round → Year → Team (+ mode).
+     */
+    function pickIntel() {
+      ensurePicks();
+      const seat = authSeatName();
+      const active = pickFiltersActive();
+      const seatNames = (members || []).map((m) => m.name).filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      let body = "";
+      if (!picks && picksLoading) {
+        body = '<p class="caption">Loading picks…</p>';
+      } else if (!picks) {
+        body = '<p class="caption">Pick tape is not available for this league yet.</p>';
+      } else if (!active) {
+        const anyLeaders = pickLeaders(null, 1, PICK_INTEL_BOARD_YEAR).length > 0;
+        body = anyLeaders
+          ? pickIntelBoard()
+          : '<p class="caption">No still-available picks on the tape yet. Filters light up when picks load.</p>';
+      } else if ((pickFilterMineOut || pickFilterMineHeld) && !seat) {
+        body = '<p class="caption">Claim your seat to filter for your original picks out, or picks you still hold.</p>';
+      } else {
+        const rows = filteredStillPicks(seat);
+        let hint = rows.length + " still-available pick" + (rows.length === 1 ? "" : "s");
+        if (pickFilterMineOut && seat) {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " that started as " + seat + "'s and now sit elsewhere";
+        } else if (pickFilterMineHeld && seat) {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " " + seat + " still holds";
+        } else if (pickFilterOwner && pickFilterOwnerMode === "out") {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " — who has " + pickFilterOwner + "'s picks";
+        } else if (pickFilterOwner && pickFilterOwnerMode === "held") {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " " + pickFilterOwner + " still holds";
+        }
+        body = rows.length
+          ? ('<p class="pick-intel-hint">' + esc(hint) + ".</p>"
+            + '<div class="pick-intel-list">' + rows.map(pickIntelRow).join("") + "</div>")
+          : ('<p class="caption">No still-available picks match these filters. Clear or loosen a chip.</p>');
+      }
+      const mineOutDis = !seat;
+      const mineHeldDis = !seat;
+      const filterOn = pickFilterOpen || active;
+      return '<section class="pick-intel" aria-label="Draft Data">'
+        + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + picksBarIcon()
+        + '<div class="pick-intel-chips">'
+        + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
+        + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
+        + ' aria-label="Search picks">'
+        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Search")
+        + "</button>"
+        + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
+        + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
+        + ' aria-label="Held picks">Held</button>'
+        + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
+        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
+        + ' aria-label="Original picks">Original</button>'
+        + "</div></div>"
+        + pickFilterSummary()
+        + pickIntelStepPanel(seatNames)
+        + body
+        + "</section>";
+    }
+
+    /**
+     * Open the full Draft Data screen. Home chips land here so filtering/research
+     * has room; mode presets search / who-has-mine / whose-I-hold.
+     */
+    /**
+     * Open the full Draft Data screen.
+     * mode: search | mine | held | board
+     * preset: optional { rounds: number[], years: string[], owner, ownerMode }
+     * for leaderboard deep-links (team + column + year already chosen).
+     */
+
+    /** Leading glyph for the Draft Data chip row: stacked pick cards + caption. */
+    function picksBarIcon() {
+      return '<span class="pick-intel-brand" aria-hidden="true" title="Draft Picks">'
+        + '<span class="pick-intel-ico is-picks">'
+        + '<svg viewBox="0 0 36 30" width="34" height="28" focusable="false">'
+        + '<rect x="18" y="1" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="29.4" y="10.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
+        + '<rect x="9.5" y="5" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="20.9" y="14.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
+        + '<rect x="1" y="9" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.55"/>'
+        + '<text x="7.25" y="19" text-anchor="middle" fill="currentColor" font-size="6.8" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
+        + "</svg></span>"
+        + '<span class="pick-intel-brand-lab">Draft Picks</span></span>';
+    }
+
+    /** Leading glyph for the Cuffs chip row: silver handcuffs + caption. */
+    function cuffsBarIcon() {
+      return '<span class="pick-intel-brand" aria-hidden="true" title="Handcuffs"><span class="pick-intel-ico is-cuffs">'
+        + '<svg viewBox="0 0 36 32" width="30" height="28" focusable="false">'
+        + '<defs>'
+        + '<linearGradient id="cuffSteel" x1="0" y1="0" x2="0" y2="1">'
+        + '<stop offset="0%" stop-color="#f4f6f8"/>'
+        + '<stop offset="40%" stop-color="#c9cfd7"/>'
+        + '<stop offset="100%" stop-color="#8a929e"/>'
+        + "</linearGradient>"
+        + '<linearGradient id="cuffSteelEdge" x1="0" y1="0" x2="1" y2="1">'
+        + '<stop offset="0%" stop-color="#e8ecf0"/>'
+        + '<stop offset="100%" stop-color="#6f7784"/>'
+        + "</linearGradient>"
+        + "</defs>"
+        + '<circle cx="9.2" cy="10.6" r="6.1" fill="none" stroke="url(#cuffSteel)" stroke-width="2.35"/>'
+        + '<rect x="5.1" y="14.2" width="8.2" height="6.4" rx="1.5" fill="url(#cuffSteel)" stroke="url(#cuffSteelEdge)" stroke-width="0.7"/>'
+        + '<circle cx="9.2" cy="16.4" r="0.95" fill="#3d4450"/>'
+        + '<rect x="8.7" y="16.9" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
+        + '<circle cx="26.8" cy="20.2" r="6.1" fill="none" stroke="url(#cuffSteel)" stroke-width="2.35"/>'
+        + '<rect x="22.7" y="11.4" width="8.2" height="6.4" rx="1.5" fill="url(#cuffSteel)" stroke="url(#cuffSteelEdge)" stroke-width="0.7"/>'
+        + '<circle cx="26.8" cy="13.6" r="0.95" fill="#3d4450"/>'
+        + '<rect x="26.3" y="14.1" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
+        + '<ellipse cx="15.6" cy="15.2" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 15.6 15.2)"/>'
+        + '<ellipse cx="20.4" cy="14.4" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 20.4 14.4)"/>'
+        + '</svg></span><span class="pick-intel-brand-lab">Handcuffs</span></span>';
+    }
+
+    function openDraftDataPage(mode, preset) {
+      clearPickFilters();
+      if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
+        pickFilterRounds = {};
+        for (const n of (preset.rounds || [])) {
+          if (n > 0) pickFilterRounds[n] = true;
+        }
+        pickFilterYears = {};
+        for (const y of (preset.years || [])) {
+          if (y) pickFilterYears[String(y)] = true;
+        }
+        if (preset.owner) {
+          pickFilterOwner = preset.owner;
+          pickFilterOwnerMode = preset.ownerMode === "out" ? "out" : "held";
+          pickFilterOwnerAny = false;
+        }
+        pickFilterOpen = false;
+        pickFilterStep = null;
+      } else if (mode === "mine") {
+        pickFilterMineOut = true;
+      } else if (mode === "held") {
+        pickFilterMineHeld = true;
+      } else {
+        // search — progressive Round → Year → Team
+        pickFilterOpen = true;
+        pickFilterStep = "round";
+      }
+      pickIntelOpen = null;
+      view = "draftdata";
+      focusNext = ".screen-h";
+      syncUrl();
+      render();
+    }
+
+    /** League-home Draft Data teaser: board + chips that open the full page. */
+    function pickIntelHome() {
+      ensurePicks();
+      const seat = authSeatName();
+      let body = "";
+      if (!picks && picksLoading) {
+        body = '<p class="caption">Loading picks…</p>';
+      } else if (!picks) {
+        body = '<p class="caption">Pick tape is not available for this league yet.</p>';
+      } else {
+        const anyLeaders = pickLeaders(null, 1, PICK_INTEL_BOARD_YEAR).length > 0;
+        body = anyLeaders
+          ? pickIntelBoard()
+          : '<p class="caption">No still-available picks on the tape yet. Open search when picks load.</p>';
+      }
+      const mineDis = !seat;
+      return '<section class="pick-intel" aria-label="Draft Data">'
+        + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + picksBarIcon()
+        + '<div class="pick-intel-chips">'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
+        + ' aria-label="Search picks">Search</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="Held picks">Held</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="Original picks">Original</button>'
+        + "</div></div>"
+        + body
+        + "</section>";
+    }
+
+    function renderDraftDataPage() {
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">Draft Data</h2>'
+        + pickIntel();
+    }
+
+
+
+    function ensureCuffs() {
+      if (cuffs || cuffsLoading) return;
+      cuffsLoading = true;
+      getLeagueJson("cuffs.json").then((book) => {
+        cuffs = book && book.v === 1 && Array.isArray(book.rows) ? book : { v: 1, rows: [] };
+        cuffsLoading = false;
+        render();
+      }).catch((err) => {
+        console.error(err);
+        cuffs = { v: 1, rows: [] };
+        cuffsLoading = false;
+        render();
+      });
+    }
+
+    function filteredCuffRows(seat) {
+      const rows = (cuffs && cuffs.rows) || [];
+      const q = cuffFilterQ.trim().toLowerCase();
+      const playerId = String(cuffFilterPlayerId || "");
+      return rows.filter((r) => {
+        if (playerId) {
+          if (String(r.starter_id) !== playerId && String(r.cuff_id) !== playerId) return false;
+        }
+        if (cuffFilterMine) {
+          if (!seat || r.owner !== seat) return false;
+        } else if (cuffFilterOwner && r.owner !== cuffFilterOwner) {
+          return false;
+        }
+        if (cuffFilterPos && r.pos !== cuffFilterPos) return false;
+        if (cuffFilterFa && r.cuff_owned) return false;
+        if (cuffFilterHeld && !r.cuff_owned) return false;
+        if (cuffFilterSelf && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner === r.cuff_owner)) return false;
+        if (cuffFilterOther && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner !== r.cuff_owner)) return false;
+        // Name search is skipped when a news player id is pinned — id match is the source of truth.
+        if (q && !playerId) {
+          const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
+            .filter(Boolean).join(" ").toLowerCase();
+          if (!blob.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    /**
+     * Top holders of NFL depth cuffs on league slot-1 starters.
+     * kind: "self" (insurers — own starter + own cuff) | "other" (poachers) | "rb" (RB cuffs only).
+     */
+    function cuffLeaders(kind, limit) {
+      const counts = new Map();
+      for (const r of (cuffs && cuffs.rows) || []) {
+        if (kind === "bare") {
+          // Uninsured: starter whose NFL cuff is not rostered anywhere.
+          if (r.cuff_owned || !r.owner) continue;
+          counts.set(r.owner, (counts.get(r.owner) || 0) + 1);
+          continue;
+        }
+        if (!r.cuff_owned || !r.cuff_owner) continue;
+        if (kind === "self" && r.owner !== r.cuff_owner) continue;
+        if (kind === "other" && r.owner === r.cuff_owner) continue;
+        counts.set(r.cuff_owner, (counts.get(r.cuff_owner) || 0) + 1);
+      }
+      const top = Math.max(1, Number(limit) || 3);
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
+    }
+
+    /** Idle quick-view under home chips: Insurers / Poachers / Uninsured. */
+    function cuffsBoard() {
+      const cols = [
+        { lab: "Insurers", kind: "self", aria: "Filter to self-cuffed starters (insurers)" },
+        { lab: "Poachers", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
+        { lab: "Uninsured", kind: "bare", aria: "Filter to starters whose cuff is not rostered" },
+      ];
+      const aria = "Cuff holders: insurers, poachers, and uninsured starters";
+      const headBtns = cols.map((c) =>
+        '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
+        + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
+      ).join("");
+      const bodyCols = cols.map((c) =>
+        '<div class="pick-intel-board-col">'
+        + '<div class="pick-intel-board-leaders">' + pickLeadersStack(cuffLeaders(c.kind, 3)) + "</div>"
+        + "</div>"
+      ).join("");
+      return '<div class="pick-intel-board cuffs-board" role="group" aria-label="' + esc(aria) + '">'
+        + '<div class="pick-intel-board-cols">'
+        + headBtns
+        + bodyCols
+        + "</div></div>";
+    }
+
+    function cuffInjBadge(status) {
+      if (!status) return "";
+      const raw = String(status).trim();
+      if (!raw || raw === "NA") return "";
+      const key = raw.toLowerCase();
+      const short = ({
+        questionable: "Q",
+        doubtful: "D",
+        out: "O",
+        ir: "IR",
+        "injured reserve": "IR",
+        pup: "PUP",
+        "physically unable to perform": "PUP",
+        cov: "COV",
+        covid: "COV",
+        sus: "SUS",
+        suspended: "SUS",
+      })[key] || raw.slice(0, 3).toUpperCase();
+      return '<span class="cuffs-inj" title="' + esc(raw) + '">' + esc(short) + "</span>";
+    }
+
+    function cuffOwnerLabel(r, seat) {
+      if (!r.cuff_id) return '<span class="cuffs-own-fa">No depth cuff listed</span>';
+      if (!r.cuff_owned) return '<span class="cuffs-own-fa">Free agent</span>';
+      if (seat && r.cuff_owner === seat) {
+        return '<span class="cuffs-own-you">You (' + esc(r.cuff_owner) + ")</span>";
+      }
+      if (r.cuff_mine) {
+        return '<span class="cuffs-own-you">' + esc(r.cuff_owner) + " (self-cuff)</span>";
+      }
+      return esc(r.cuff_owner || "—");
+    }
+
+    /** Fantasy manager who owns the starter — who is (or isn't) insured. */
+    function cuffStarterMgrLabel(r, seat) {
+      if (!r.owner) return "";
+      if (seat && r.owner === seat) {
+        return '<span class="cuffs-mgr cuffs-own-you" title="Your starter">You</span>';
+      }
+      return '<span class="cuffs-mgr" title="Starter owner">' + seatLabel(r.owner) + "</span>";
+    }
+
+    function cuffRowHtml(r, seat) {
+      const team = r.nfl_team ? (' <span class="cuffs-team">' + esc(r.nfl_team) + "</span>") : "";
+      const cuffName = r.cuff ? ("<b>" + esc(r.cuff) + "</b>") : "<b>—</b>";
+      return '<div class="cuffs-row">'
+        + '<div class="cuffs-top">'
+        + '<span class="cuffs-slot">' + esc(r.slot || r.pos || "") + "</span>"
+        + '<span class="cuffs-starter">' + esc(r.starter || "—") + team
+        + cuffInjBadge(r.starter_injury) + "</span>"
+        + cuffStarterMgrLabel(r, seat)
+        + "</div>"
+        + '<div class="cuffs-sub">If out → ' + cuffName + cuffInjBadge(r.cuff_injury)
+        + " · " + cuffOwnerLabel(r, seat)
+        + "</div></div>";
+    }
+
+    function cuffFilterSummary() {
+      const chips = [];
+      if (cuffFilterMine) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-mine="1"'
+          + ' aria-label="Clear mine filter">Mine<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterOwner) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-owner="1"'
+          + ' aria-label="Clear team filter">' + esc(cuffFilterOwner)
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterPos) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-pos="1"'
+          + ' aria-label="Clear position filter">' + esc(cuffFilterPos)
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterFa) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-fa="1"'
+          + ' aria-label="Clear available filter">Available'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterHeld) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-held="1"'
+          + ' aria-label="Clear held cuffs filter">held'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterSelf) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-self="1"'
+          + ' aria-label="Clear insurers filter">insurers'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterOther) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-other="1"'
+          + ' aria-label="Clear poachers filter">poachers'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterQ.trim()) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-q="1"'
+          + ' aria-label="Clear search">"' + esc(cuffFilterQ.trim()) + '"'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (!chips.length) return "";
+      return '<div class="pick-intel-summary" role="group" aria-label="Active cuff filters">'
+        + chips.join("")
+        + (cuffFiltersActive()
+          ? '<button type="button" class="pick-intel-link" data-cuff-filter-clear="1">Clear all</button>'
+          : "")
+        + "</div>";
+    }
+
+    function cuffFilterPanel(seatNames) {
+      if (!cuffFilterOpen) return "";
+      const posBtns = ["QB", "RB", "WR", "TE"].map((p) =>
+        '<button type="button" class="cuffs-pos' + (cuffFilterPos === p ? " on" : "") + '"'
+        + ' data-cuff-pos="' + p + '" aria-pressed="' + (cuffFilterPos === p ? "true" : "false") + '">'
+        + p + "</button>"
+      ).join("");
+      return '<div class="cuffs-filter-panel" role="group" aria-label="Search cuffs">'
+        + '<div><div class="cuffs-filter-lab">Position</div>'
+        + '<div class="cuffs-pos-row">' + posBtns + "</div></div>"
+        + '<div><div class="cuffs-filter-lab">Whose starters</div>'
+        + '<select class="cuffs-team-sel" data-cuff-owner="1" aria-label="Fantasy team">'
+        + '<option value=""' + (!cuffFilterOwner ? " selected" : "") + ">Anyone</option>"
+        + seatNames.map((name) =>
+          '<option value="' + esc(name) + '"' + (cuffFilterOwner === name ? " selected" : "") + ">"
+          + esc(name) + "</option>"
+        ).join("")
+        + "</select></div>"
+        + '<div><div class="cuffs-filter-lab">Player search</div>'
+        + '<input type="search" class="cuffs-q" data-cuff-q="1" placeholder="Starter or cuff name…"'
+        + ' value="' + esc(cuffFilterQ) + '" autocomplete="off" /></div>'
+        + "</div>";
+    }
+
+    /**
+     * Open the full Cuffs screen. Home chips land here so search/filter has room;
+     * mode presets search / my cuffs / cuff available / held / other / bare (board columns).
+     * preset.playerId (from a news highlight) pins rows where that Sleeper id is starter or cuff.
+     */
+    function openCuffsPage(mode, preset) {
+      clearCuffFilters();
+      if (preset && preset.playerId) {
+        cuffFilterPlayerId = String(preset.playerId);
+        cuffFilterQ = String(preset.playerName || "");
+        cuffFilterOpen = true;
+      } else if (mode === "mine") {
+        cuffFilterMine = true;
+      } else if (mode === "fa") {
+        cuffFilterFa = true;
+      } else if (mode === "held") {
+        cuffFilterHeld = true;
+      } else if (mode === "self" || mode === "total") {
+        cuffFilterSelf = true;
+      } else if (mode === "other") {
+        cuffFilterOther = true;
+      } else if (mode === "bare" || mode === "rb") {
+        // bare = uninsured (cuff not rostered); legacy rb board taps map here too.
+        cuffFilterFa = true;
+      } else {
+        cuffFilterOpen = true;
+      }
+      view = "cuffs";
+      focusNext = ".screen-h";
+      syncUrl();
+      render();
+    }
+
+    /** League-home Cuffs teaser: chips + holder board — no auto cuff list. */
+    function cuffsHome() {
+      ensureCuffs();
+      const seat = authSeatName();
+      const mineDis = !seat;
+      let body = "";
+      if (!cuffs && cuffsLoading) {
+        body = '<p class="caption">Loading cuffs…</p>';
+      } else if (!cuffs || !(cuffs.rows || []).length) {
+        body = '<p class="caption">Cuff board is not available for this league yet.</p>';
+      } else {
+        const anyLeaders = cuffLeaders("self", 1).length > 0;
+        body = anyLeaders
+          ? cuffsBoard()
+          : '<p class="caption">No rostered depth cuffs yet. Open search when the board loads.</p>';
+      }
+      return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
+        + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + cuffsBarIcon()
+        + '<div class="pick-intel-chips">'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
+        + ' aria-label="Search cuffs">Search</button>'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="My cuffs">Mine</button>'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
+        + ' aria-label="Available cuffs">Available</button>'
+        + "</div></div>"
+        + body
+        + "</section>";
+    }
+
+    function renderCuffsPage() {
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">Cuffs</h2>'
+        + cuffsPanel();
+    }
+
+    /**
+     * Full Cuffs research surface: each seat's QB1/RB1/WR1/TE1 → NFL depth cuff + owner.
+     * Used on view=cuffs (home only shows cuffsHome chips).
+     */
+    function cuffsPanel() {
+      ensureCuffs();
+      const seat = authSeatName();
+      const seatNames = (members || []).map((m) => m.name).filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+      const active = cuffFiltersActive();
+      const rows = active ? filteredCuffRows(seat) : [];
+      let body = "";
+      if (!cuffs && cuffsLoading) {
+        body = '<p class="caption">Loading cuffs…</p>';
+      } else if (!cuffs || !(cuffs.rows || []).length) {
+        body = '<p class="caption">Cuff board is not available for this league yet.</p>';
+      } else if (!active) {
+        body = '<p class="caption">Search a team or position, or tap Mine / Available.</p>';
+      } else if (!rows.length) {
+        body = cuffFilterPlayerId
+          ? ('<p class="caption">No cuff row for '
+            + esc(cuffFilterQ.trim() || "that player")
+            + " — rostered in the league, but not a slot-1 starter or depth cuff on this board.</p>")
+          : '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
+      } else {
+        let hint;
+        if (cuffFilterPlayerId) {
+          hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s")
+            + " for " + (cuffFilterQ.trim() || "that player");
+        } else if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
+        else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
+        else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
+        else if (cuffFilterSelf) hint = rows.length + " self-cuffed starter" + (rows.length === 1 ? "" : "s") + " (insured)";
+        else if (cuffFilterOther) hint = rows.length + " poached cuff" + (rows.length === 1 ? "" : "s") + " (other teams)";
+        else if (cuffFilterHeld && cuffFilterPos) hint = rows.length + " held " + cuffFilterPos + " cuff" + (rows.length === 1 ? "" : "s");
+        else if (cuffFilterHeld) hint = rows.length + " held cuff" + (rows.length === 1 ? "" : "s");
+        else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
+        body = '<p class="cuffs-hint">' + esc(hint) + ".</p>"
+          + '<div class="cuffs-list">' + rows.map((r) => cuffRowHtml(r, seat)).join("") + "</div>";
+      }
+      const mineDis = !seat;
+      const filterOn = cuffFilterOpen || active;
+      const mineOn = cuffFilterMine;
+      return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
+        + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + cuffsBarIcon()
+        + '<div class="pick-intel-chips">'
+        + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
+        + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
+        + ' aria-label="Search cuffs">'
+        + (cuffFilterOpen ? "Filtering…" : "Search")
+        + "</button>"
+        + '<button type="button" class="pick-intel-chip' + (mineOn ? " on" : "") + '"'
+        + ' data-cuff-mine="1"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (mineOn ? "true" : "false") + '"'
+        + ' aria-label="My cuffs">Mine</button>'
+        + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
+        + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
+        + ' aria-label="Available cuffs">Available</button>'
+        + "</div></div>"
+        + cuffFilterSummary()
+        + cuffFilterPanel(seatNames)
+        + body
+        + "</section>";
+    }
+
+    function legValueParts(l) {
+      if (!l || l.flag === "unpriced" || l.value == null) return null;
+      const num = fmt(l.value);
+      if (l.flag === "priced_as_mid") return { num: num, note: "Mid", raw: Number(l.value) };
+      if (l.flag && String(l.flag).startsWith("priced_as_")) {
+        return { num: num, note: "as " + String(l.flag).slice(10), raw: Number(l.value) };
+      }
+      return { num: num, note: "", raw: Number(l.value) };
+    }
+
+    /** One label for a bag leg's priced value — bags keep the joined "2,846 · Mid" string. */
+    function legValueText(l) {
+      const p = legValueParts(l);
+      if (!p) return null;
+      return p.note ? p.num + " · " + p.note : p.num;
+    }
+
     function bagBlock(title, legs, total, unpriced, va) {
       const items = (legs || []).map((l) => {
-        const val = l.flag === "unpriced" || l.value == null
-          ? "no DP row"
-          : l.flag === "priced_as_mid" ? fmt(l.value) + " · Mid"
-          : l.flag && String(l.flag).startsWith("priced_as_")
-            ? fmt(l.value) + " · as " + String(l.flag).slice(10)
-          : fmt(l.value);
+        const val = legValueText(l) || "no DP row";
         const body = "<span>" + esc(l.label) + "</span><b>" + val + "</b>";
         if (l.kind === "pick" && l.asset_key) {
           const open = openPick === l.asset_key;
@@ -1173,33 +3426,52 @@ const html = `<!DOCTYPE html>
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade"];
-    const SEATLESS = ["home", "titles", "trades", "trade"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
 
     async function loadMembers() {
-      members = await getJson("data/ui/members.json");
+      // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw] = await Promise.all([
+        getLeagueJson("members.json"),
+        getLeagueJson("league.json"),
+        getLeagueJson("titles.json").catch(() => ({ titles: [] })),
+        getLeagueJson("marks.json").catch(() => ({ seats: {} })),
+        getLeagueJson("news.json").catch(() => null),
+        getLeagueJson("votes.json").catch(() => null),
+        getLeagueJson("picks.json").catch(() => null),
+        getLeagueJson("cuffs.json").catch(() => null),
+      ]);
+      members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
       // and a build with no places sorts to a no-op and keeps the file's own order.
       members.sort((a, b) => (a.place || 99) - (b.place || 99));
-      league = await getJson("data/ui/league.json");
-      try { titles = await getJson("data/ui/titles.json"); }
-      catch (err) { titles = { titles: [] }; }
-      try { marks = await getJson("data/ui/marks.json"); }
-      catch (err) { marks = { seats: {} }; }
+      league = leagueRaw;
+      titles = titlesRaw || { titles: [] };
+      marks = marksRaw || { seats: {} };
       // News is additive and third-party. A missing, stale or malformed file must cost the news
-      // section and nothing else, so this never throws and never blocks the page -- the same
-      // rule the vote tallies follow below. An unknown v is treated as absent rather than
-      // read optimistically, because a schema change could move the field the UI escapes.
+      // section and nothing else — same rule the vote tallies follow. Unknown v → treat as absent.
       try {
-        const book = await getJson("data/ui/news.json");
+        const book = newsRaw;
         news = book && book.v === 1 && Array.isArray(book.items) ? book : null;
       } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
-        const book = await getJson("data/ui/votes.json");
-        voteBook = book && book.v === 1 && book.votes ? book : null;
+        voteBook = votesRaw && votesRaw.v === 1 && votesRaw.votes ? votesRaw : null;
       } catch (err) { voteBook = null; }
+      try {
+        if (picksRaw) applyPicksBook(picksRaw);
+        else picks = picks || null;
+      } catch (err) { picks = picks || null; }
+      try {
+        cuffs = cuffsRaw && cuffsRaw.v === 1 && Array.isArray(cuffsRaw.rows) ? cuffsRaw : null;
+      } catch (err) { cuffs = null; }
+      // Warm Latest trade bags before the first home paint when we can — seat bags are
+      // not in league.json, so painting the chip from headlines alone looked half-empty.
+      try {
+        if (!me && view === "home") await ensureLatestTradeBags();
+        else ensureLatestTradeBags().catch((err) => console.error(err));
+      } catch (err) { console.error(err); }
       const startTitle = params.get("title");
       const startView = params.get("view");
       tradeSeat = params.get("seat") || null;
@@ -1229,7 +3501,16 @@ const html = `<!DOCTYPE html>
       if (view === "trade") {
         // ?view=trade with no trade is not a screen. The list it belongs to is.
         if (!openId) view = "trades";
-        else await ensureTradeSeat();
+        else {
+          await ensureTradeSeat();
+          // Cold deep links omit lens when it is the age default; pick t0 / y1 / y2 by trade age.
+          if (!params.get("lens")) {
+            const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+            applyDefaultLens(side && side.date);
+          }
+        }
+      } else if (!params.get("lens")) {
+        applyDefaultLens(null);
       }
       document.getElementById("app").hidden = false;
       render();
@@ -1251,25 +3532,32 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The league's ten managers as listbox options: last season's finishing order, the champion
-     * crowned (via seatLabel), the taken seat marked, one 44px target each.
-     *
-     * One emitter, and now one mount: league home's Teams chip renders it into #teamMenu. The
-     * brand header used to paint the same options into a second menu of its own, and the emitter
-     * stayed single the whole time it did, because two controls claiming to be the same list are
-     * exactly how the finishing order or the crown ends up disagreeing between them. It stays
-     * single now for the next second mount rather than for the one that was removed.
+     * Every roster in the league as rows the bottom-nav Teams page mounts. One emitter, one
+     * mount: the Teams chip dropdown used to be the other door into a seat and is gone. A second
+     * list that typed its own crown or finishing order is how those disagree between surfaces.
+     * Crown rides seatLabel for the reigning champ — not a second paint here.
      */
     function whoOptions() {
-      const opt = (on, id, label) =>
-        '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="' + (on ? "on" : "") + '" data-who="' + esc(id) + '">'
-        + '<span class="who-name">' + seatLabel(label) + "</span></button>";
-      // Managers only. The list used to open with a "Team" option that cleared the seat; the home
-      // icon in the header does exactly that, and dropping the option is what lets all ten names
-      // show without scrolling. Crown rides seatLabel for the reigning champ — not a second paint.
+      const mySeat = authSeatId() || (me && me.user_id) || null;
       return members
-        .map((m) => opt(!!(me && me.user_id === m.user_id), m.user_id, m.name))
+        .slice()
+        .sort((a, b) => (a.place || 99) - (b.place || 99))
+        .map((m) => {
+          const id = m.user_id;
+          const on = !!(me && me.user_id === id);
+          const mine = mySeat && id === mySeat;
+          return '<button type="button" class="row' + (on ? " you" : "") + '" data-who="' + esc(id) + '"'
+            + ' aria-current="' + (on ? "true" : "false") + '">'
+            + '<div class="row-top"><div><div class="names">'
+            + (mine ? '<span class="sr-only">Your team: </span>' : "")
+            + seatLabel(m.name, { link: false })
+            + (mine ? ' <span class="caption">(you)</span>' : "")
+            + "</div>"
+            + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
+            + (on ? " · viewing" : "")
+            + "</div></div>"
+            + '<span class="chev" aria-hidden="true">›</span></div></button>';
+        })
         .join("");
     }
 
@@ -1292,6 +3580,7 @@ const html = `<!DOCTYPE html>
     }
 
     function clearLeague() {
+      clearNewsPullup();
       me = null;
       data = null;
       view = "home";
@@ -1305,18 +3594,28 @@ const html = `<!DOCTYPE html>
       voteToast = null;
       // Filters are per-seat state. Leaving them set filtered the next seat to a season it may not have.
       year = "all";
-      lens = "all";
+      seatTradeTeam = "all";
+      seatTradeSort = "new";
+      applyDefaultLens(null);
       draftSort = "new";
       draftRounds = { 1: true, 2: true, 3: true, 4: true };
       draftStartup = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
       lensOpen = false;
+      tapeFilterOpen = false;
+      tapeYear = "all";
+      tapeTeam = "all";
+      tapePlayer = "all";
+      tapePlayerQ = "";
+      tapeLimit = 20;
       dsOpen = false;
-      teamsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
+      clearPickFilters();
+      clearCuffFilters();
+      cuffs = null;
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
       focusNext = ".screen-h";
@@ -1331,7 +3630,10 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
-      if (lens && lens !== "all") q.set("lens", lens);
+      // Omit lens when it matches the age default so cold links re-age on load.
+      if (lens && !lensIsAgeDefault()) q.set("lens", lens);
+      // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
+      if (isDesignLeagueHome()) q.set("design", "league-home");
       return "?" + q.toString();
     }
 
@@ -1347,6 +3649,7 @@ const html = `<!DOCTYPE html>
         view,
         view === "titles" ? (titleYear || "") : "",
         view === "trade" ? (openId || "") + "/" + (tradeSeat || "") : "",
+        view === "datasets" ? (dataSet || "") : "",
       ].join("|");
     }
 
@@ -1398,7 +3701,8 @@ const html = `<!DOCTYPE html>
         titleYear: q.get("title") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
-        lens: q.get("lens") || "all",
+        // null when omitted so trade screens can age-default (t0 / y1 / y2).
+        lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
         d: 0,
       };
     }
@@ -1412,17 +3716,23 @@ const html = `<!DOCTYPE html>
       restoring = true;
       try {
         depth = want.d || 0;
-        lens = want.lens && WINDOWS.some((w) => w[0] === want.lens) ? want.lens : "all";
         view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
         titleYear = want.titleYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
+        if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
+          lens = want.lens;
+        } else if (view === "trade" && openId) {
+          const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+          applyDefaultLens(side && side.date);
+        } else {
+          applyDefaultLens(null);
+        }
         // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
         partnerName = null;
         openPick = null;
         openDraft = null;
         markOpen = null;
-        teamsOpen = false;
         lensOpen = false;
         yearFilterOpen = false;
         draftFilterOpen = false;
@@ -1436,7 +3746,7 @@ const html = `<!DOCTYPE html>
             const seat = members.find((m) => m.user_id === wantMe);
             try {
               if (!seat) throw new Error("unknown seat " + wantMe);
-              data = seatCache[wantMe] || await getJson("data/ui/me/" + wantMe + ".json");
+              data = seatCache[wantMe] || await getLeagueJson("me/" + wantMe + ".json");
               seatCache[wantMe] = data;
               me = seat;
             } catch (err) {
@@ -1473,14 +3783,19 @@ const html = `<!DOCTYPE html>
       fallback();
     }
 
-    async function selectMe(id, keep) {
+    async function selectMe(idOrName, keep) {
       const prev = me;
+      let id = idOrName;
       try {
-        me = members.find((m) => m.user_id === id);
-        data = seatCache[id] || await getJson("data/ui/me/" + id + ".json");
+        let m = members.find((x) => x.user_id === id);
+        if (!m) m = members.find((x) => x.name === idOrName);
+        if (!m) throw new Error("unknown seat");
+        id = m.user_id;
+        me = m;
+        data = seatCache[id] || await getLeagueJson("me/" + id + ".json");
         seatCache[id] = data;
-        if (!league) league = await getJson("data/ui/league.json");
-        if (!picks) picks = await getJson("data/ui/picks.json");
+        if (!league) league = await getLeagueJson("league.json");
+        if (!picks) applyPicksBook(await getLeagueJson("picks.json"));
       } catch (err) {
         console.error(err);
         me = prev;
@@ -1492,9 +3807,6 @@ const html = `<!DOCTYPE html>
       say("");
       document.getElementById("app").hidden = false;
       voteSeatRemember(id);
-      // The menu is spent once a seat is taken, and it lives inside the subtree render() is
-      // about to replace.
-      teamsOpen = false;
       if (!keep) {
         view = "home";
         openId = null;
@@ -1503,6 +3815,7 @@ const html = `<!DOCTYPE html>
         openPick = null;
         openDraft = null;
         voteToast = null;
+        applyDefaultLens(newestTradeDate(id));
         focusNext = ".screen-h";
       }
       syncUrl();
@@ -1544,13 +3857,13 @@ const html = `<!DOCTYPE html>
     }
 
     function sideOf(t) {
-      return applyVa((t.windows && t.windows[lens]) || t.even || t.realized, isMulti(t));
+      return applyVa(sideWindow(t), isMulti(t));
     }
 
     // Mirrors value-adjust.mjs exactly: no VA on N-way trades, totals refresh when either bag is priced.
     function applyVa(s, noVa) {
-      if (!s || s.incomplete) return s;
-      const priced = (legs) => (legs || []).filter((l) => l.value != null);
+      if (!s) return s;
+      const priced = (legs) => (legs || []).filter((l) => l.value != null && Number.isFinite(l.value));
       const sum = (legs) => priced(legs).reduce((a, l) => a + l.value, 0);
       const got = priced(s.legs), sent = priced(s.sent);
       if (!got.length && !sent.length) return s;
@@ -1570,7 +3883,8 @@ const html = `<!DOCTYPE html>
         const damp = theirMax > 0 ? myMax / Math.max(myMax, theirMax) : 1;
         return 0.15 * n * myMax * damp;
       };
-      const vaG = noVa ? 0 : one(got, sent), vaS = noVa ? 0 : one(sent, got);
+      const vaOff = noVa || s.incomplete;
+      const vaG = vaOff ? 0 : one(got, sent), vaS = vaOff ? 0 : one(sent, got);
       const today = sum(s.legs) + vaG, sentToday = sum(s.sent) + vaS;
       return Object.assign({}, s, {
         value_adjust: vaG,
@@ -1588,7 +3902,7 @@ const html = `<!DOCTYPE html>
     }
 
     function windowScore(r) {
-      const w = r.windows && r.windows[lens];
+      const w = windowBag(r);
       if (!w || w.incomplete) return null;
       return displayDelta(w.got, w.sent);
     }
@@ -1622,10 +3936,131 @@ const html = `<!DOCTYPE html>
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
     }
 
-    function windowLived(date) {
-      const need = { t0: 0, y1: 1, y2: 2, y3: 3, all: 1 }[lens];
-      if (!need) return true;
+    function addDays(ymd, n) {
+      const p = (ymd || "").split("-").map(Number);
+      if (p.length < 3) return ymd;
+      const dt = new Date(Date.UTC(p[0], p[1] - 1, p[2] + n));
+      return dt.toISOString().slice(0, 10);
+    }
+
+    const NFL_KICKOFF = {
+      2019: "2019-09-05", 2020: "2020-09-10", 2021: "2021-09-09", 2022: "2022-09-08",
+      2023: "2023-09-07", 2024: "2024-09-05", 2025: "2025-09-04", 2026: "2026-09-10",
+    };
+
+    function nflKickoff(seasonYear) {
+      const y = Number(seasonYear);
+      return NFL_KICKOFF[y] || (y + "-09-08");
+    }
+
+    function nflSeasonEnd(seasonYear) {
+      return (Number(seasonYear) + 1) + "-01-31";
+    }
+
+    function nflSeasonContext(date) {
+      const y = Number(String(date || "").slice(0, 4));
+      if (!y) return { season: null, phase: "offseason" };
+      if (date <= nflSeasonEnd(y - 1)) return { season: y - 1, phase: "in_season" };
+      if (date < nflKickoff(y)) return { season: y, phase: "offseason" };
+      if (date <= nflSeasonEnd(y)) return { season: y, phase: "in_season" };
+      return { season: y + 1, phase: "offseason" };
+    }
+
+    function seasonWindowEnd(date, seasonCount) {
+      const n = Math.max(1, Number(seasonCount) || 1);
+      const ctx = nflSeasonContext(date);
+      if (ctx.season == null) return date;
+      return nflSeasonEnd(ctx.season + n - 1);
+    }
+
+    function seasonLived(date, seasonCount, today) {
+      if (!date || !today) return false;
+      return today >= seasonWindowEnd(date, seasonCount);
+    }
+
+    /** Best window up to target — matches apply-value-adjust.mjs / marks.json. */
+    function effectiveLens(date, targetLens) {
       const today = (league && league.today) || "";
+      if (targetLens === "t0" || targetLens === "all") return targetLens;
+      const order = ["t0", "y1", "y2", "y3"];
+      const idx = order.indexOf(targetLens);
+      if (idx < 0) return targetLens;
+      for (let i = idx; i >= 0; i--) {
+        const l = order[i];
+        if (l === "t0") return "t0";
+        const need = { y1: 1, y2: 2, y3: 3 }[l];
+        if (seasonLived(date, need, today)) return l;
+      }
+      return "t0";
+    }
+
+    function windowBag(r, targetLens) {
+      const key = effectiveLens(r.date, targetLens || lens);
+      return (r.windows && r.windows[key]) || {};
+    }
+
+    function sideWindow(t, targetLens) {
+      const key = effectiveLens(t.date, targetLens || lens);
+      return (t.windows && t.windows[key]) || t.even || t.realized;
+    }
+
+    /**
+     * Default score clock by trade age (NFL season windows, not calendar years):
+     *   - still inside its first season window → Date of Trade (t0)
+     *   - that window is done (rest of the season, or the next season from offseason) → 1 season
+     *   - two season windows complete → 2 seasons
+     * Users can still pick 3 seasons or as-of-today from the chip menu.
+     */
+    function defaultLensForDate(date) {
+      const today = (league && league.today) || "";
+      if (!date || !today) return "t0";
+      if (seasonLived(date, 2, today)) return "y2";
+      if (seasonLived(date, 1, today)) return "y1";
+      return "t0";
+    }
+
+    /** Newest trade date on the league tape, or on one seat when uid is set. */
+    function newestTradeDate(uid) {
+      if (uid && data && me && me.user_id === uid && Array.isArray(data.trades)) {
+        let best = "";
+        for (const t of data.trades) {
+          if (t && t.date && t.date > best) best = t.date;
+        }
+        if (best) return best;
+      }
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let best = "";
+      for (const r of sides) {
+        if (uid && r.user_id !== uid) continue;
+        if (r.date && r.date > best) best = r.date;
+      }
+      return best || null;
+    }
+
+    /**
+     * Set the shared chip lens from a trade date, or from the newest deal in context.
+     * List defaults follow the newest deal so y1/y2 never hide younger trades still on the tape.
+     */
+    function applyDefaultLens(date) {
+      lens = defaultLensForDate(date || newestTradeDate(me && me.user_id) || newestTradeDate(null));
+    }
+
+    /** True when the shared lens is still the age default for the current screen. */
+    function lensIsAgeDefault() {
+      if (view === "trade" && openId) {
+        const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+        return lens === defaultLensForDate(side && side.date);
+      }
+      return lens === defaultLensForDate(newestTradeDate(me && me.user_id) || newestTradeDate(null));
+    }
+
+    function windowLived(date) {
+      const today = (league && league.today) || "";
+      if (lens === "y1") return seasonLived(date, 1, today);
+      if (lens === "y2") return seasonLived(date, 2, today);
+      if (lens === "y3") return seasonLived(date, 3, today);
+      const need = { t0: 0, all: 1 }[lens];
+      if (!need) return true;
       return date <= addYears(today, -need);
     }
 
@@ -1647,8 +4082,8 @@ const html = `<!DOCTYPE html>
 
     async function seatData(uid) {
       try {
-        if (!seatCache[uid]) seatCache[uid] = await getJson("data/ui/me/" + uid + ".json");
-        if (!picks) picks = await getJson("data/ui/picks.json");
+        if (!seatCache[uid]) seatCache[uid] = await getLeagueJson("me/" + uid + ".json");
+        if (!picks) applyPicksBook(await getLeagueJson("picks.json"));
       } catch (err) {
         console.error(err);
         say("Could not load that team's trades. Check your connection and try again.");
@@ -1717,25 +4152,18 @@ const html = `<!DOCTYPE html>
      * screen it leads to are two things instead of one thing in two states.
      */
     function boardTape(r) {
-      const w = (r.windows && r.windows[lens]) || {};
+      const w = windowBag(r);
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-      // Gold outline for a trade this device has voted on. Colour alone is not a message,
-      // so the same fact goes to a screen reader as text.
-      const voted = !!readVotes(r.transaction_id).choice;
-      // The two sides are exact mirrors, so one score signs both: the seat carries s, the
-      // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
-      // figure it describes, not on the label beside it.
-      return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      return '<div class="row" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
         + '<div class="tape-sub"><span class="date sub-when">' + esc(r.date) + "</span>"
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
-        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
-        + "</button>";
+        + "</div>";
     }
 
     function yearsOn(days) {
@@ -1763,7 +4191,13 @@ const html = `<!DOCTYPE html>
     function dataSetRows(id) {
       const p = (league && league.player_lists) || {};
       const trades = (r) => r.trades + (r.trades === 1 ? " trade" : " trades");
-      if (id === "wide") return rankWide().map((r) => boardTape(r)).join("");
+      if (id === "wide") {
+        const list = rankWide();
+        ensureTradesFeedBags(list);
+        return list.length
+          ? '<div class="trades-feed">' + list.map((r) => tradeFeedCardHtml(r)).join("") + "</div>"
+          : "";
+      }
       if (id === "passed") return (p.most_traded || []).map((r) => listRow(r, trades(r))).join("");
       if (id === "least") return (p.least_traded || []).map((r) => listRow(r, trades(r))).join("");
       if (id === "forever") return (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
@@ -1777,27 +4211,8 @@ const html = `<!DOCTYPE html>
         + "<b>" + esc(row[1]) + "</b><span>" + esc(row[2]) + "</span></button>";
     }
 
-    /**
-     * The way back to nothing selected, first in the menu so it is the option a user meets
-     * rather than one they have to know about. It is a real option in the listbox -- same
-     * role, same 44px target, same arrow-key run as the five sets -- so a keyboard reaches it
-     * on ArrowDown/Home like any other, and aria-selected marks it when it is the live state.
-     *
-     * Its line is deliberately short enough to stay one line at 320px, where every set's line
-     * wraps to two. A sixth option pushes the tail of an already tall panel further below the
-     * fold -- three of five were already under it at 320px before this option existed -- and one
-     * line rather than two is the whole of what this function can do about that.
-     */
-    function dsNoneOpt() {
-      const on = !dataSet;
-      return '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="ds-opt' + (on ? " on" : "") + '" data-dset-none="1">'
-        + "<b>None</b><span>Hide the set below the dropdown.</span></button>";
-    }
-
     function dsMenu() {
-      return '<div class="filter-panel" id="dataSets" role="listbox" aria-label="League Data Sets">'
-        + dsNoneOpt()
+      return '<div class="ds-list" id="dataSets" role="listbox" aria-label="League Data Sets">'
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
@@ -1821,76 +4236,57 @@ const html = `<!DOCTYPE html>
       const named = cur
         ? ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected"'
         : ' aria-label="League Data Sets, none selected"';
-      return '<button type="button" class="home-chip' + (dsOpen ? " on" : "") + '" data-dset-open="1"'
-        + ' aria-haspopup="listbox" aria-expanded="' + (dsOpen ? "true" : "false") + '"'
-        + named + '><span class="chip-lab">'
-        + "League Data Sets" + ' <span class="chev">▾</span></span></button>';
-    }
-
-    /**
-     * The other live chip, and the only way into a seat: the brand header's picker was removed
-     * once the chips shipped, on the ruling that the chips are the access points. The way out of
-     * a seat is the home icon in the header, which calls clearLeague() from every screen -- so
-     * leaving one seat for another is two taps, and that is the accepted trade.
-     *
-     * The visible label is the constant "Teams", never the selection, for the same reason the
-     * League Data Sets chip beside it reads a constant: a chip that renamed itself to the taken
-     * seat would read as that manager's own button rather than as the way to the other nine. The
-     * accessible name carries the seat instead, and the h2.seat-h above the tab row is what says
-     * it on screen.
-     */
-    function teamsChip() {
-      const named = me && me.name
-        ? "Teams, " + me.name + seatFlairText(me.name) + " selected"
-        : "Teams, none selected";
-      return '<button type="button" class="home-chip' + (teamsOpen ? " on" : "") + '" data-teams-open="1"'
-        + ' aria-haspopup="listbox" aria-expanded="' + (teamsOpen ? "true" : "false") + '"'
-        + ' aria-label="' + esc(named) + '"><span class="chip-lab">'
-        + "Teams" + ' <span class="chev">▾</span></span></button>';
-    }
-
-    function teamsMenu() {
-      return '<div class="who-menu" id="teamMenu" role="listbox" aria-label="Teams">'
-        + whoOptions() + "</div>";
+      // Circular quick-action cell; opens the full-screen Data Sets list (not a dropdown).
+      return '<button type="button" class="lh-action' + (view === "datasets" ? " on" : "") + '" data-dset-open="1"'
+        + named + '>'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
+        + '<span class="lh-lab">Data Sets</span></button>';
     }
 
     /**
      * A cell nobody has decided on yet. Deliberately not a button and deliberately not
-     * addressable: no tabindex, no data-*, no role, nothing for a handler to find. The ticker
-     * shipped two <button> pills with an empty destination and every tap on them did nothing;
-     * an inert cell that looks pressable is the defect this app removed tonight, and four large
-     * chips would be a far bigger version of it. It is aria-hidden because an em dash is a
-     * placeholder, not a reading.
+     * addressable: no tabindex, no data-*, no role, nothing for a handler to find. Kept for
+     * smoke/history; league home no longer mounts empty slots beside Data Sets.
      */
     function chipSlot() {
       return '<span class="home-chip slot" aria-hidden="true">—</span>';
     }
 
+    /** One circular quick-action cell (Trades / Teams). */
+    function lhNavAction(nav, lab, path) {
+      return '<button type="button" class="lh-action" data-lh-nav="' + esc(nav) + '"'
+        + ' aria-label="' + esc(lab) + '">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<path fill="currentColor" d="' + path + '"/></svg></span>'
+        + '<span class="lh-lab">' + esc(lab) + "</span></button>";
+    }
+
     /**
-     * League home's box of four equal chips. Two lead somewhere, two are slots.
-     *
-     * Both menus are emitted here rather than inside their triggers, so both are absolutely
-     * positioned against this one box: they drop the full width of the card instead of the
-     * width of the cell they were opened from, and there is a single ancestor chain to keep
-     * free of overflow, transform, contain and clip-path.
+     * PSA-style quick actions: Trades, Teams, Champions, League Data Sets.
+     * The Data Sets menu is emitted here rather than inside its trigger, so it is absolutely
+     * positioned against this .ds-wrap and drops the full width of the row.
      */
     function homeChips() {
-      return '<div class="chip-box ds-wrap">'
-        + '<div class="chip-grid">'
-        + teamsChip()
+      return '<div class="lh-actions ds-wrap">'
+        + '<div class="lh-action-row">'
+        + lhNavAction("trades", "My Trades",
+          "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z")
+        + lhNavAction("teams", "Teams",
+          "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
+        + '<button type="button" class="lh-action" data-view="titles" aria-label="Champions Path">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<path fill="currentColor" d="M7 4h10v2.2l-1.2.8V10c0 2.1-1.4 3.9-3.3 4.5V17H15v2H9v-2h2.5v-2.5C9.6 13.9 8.2 12.1 8.2 10V7l-1.2-.8z"/></svg></span>'
+        + '<span class="lh-lab">Champions</span></button>'
         + dataSetRow()
-        + chipSlot()
-        + chipSlot()
         + "</div>"
-        + (teamsOpen ? teamsMenu() : "")
-        + (dsOpen ? dsMenu() : "")
         + "</div>";
     }
 
     /**
      * The selected set, or nothing at all. Empty is the first-load state and the state the
-     * "None" option and the home icon return to, so this renders no box, no heading and no
-     * placeholder -- the dropdown stands alone over the news feed.
+     * home icon returns to, so this renders no box, no heading and no placeholder -- the
+     * dropdown stands alone over the news feed.
      */
     function dataSetPanel() {
       if (!dataSet) return "";
@@ -1901,11 +4297,28 @@ const html = `<!DOCTYPE html>
       // handle a late render dropped it to <body> a moment later, which is the same defect the
       // .screen-h special case exists for.
       return '<div class="pack" id="dsBody">'
+        + '<div class="ds-h-row">'
         + '<h2 class="ds-h" tabindex="-1" data-dset-head="1">' + esc(cur[1]) + "</h2>"
+        + (cur[0] === "wide" ? chipLensHtml({ inline: true }) : "")
+        + "</div>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
         + "</div></div>";
+    }
+
+    /**
+     * Full-screen League Data Sets: the five sets as a page list. Choosing one shows that set
+     * on this screen; back returns to the list, then to league home.
+     */
+    function renderDataSetsPage() {
+      if (dataSet) {
+        return '<button type="button" class="chip back" data-dset-list="1">← Data Sets</button>'
+          + dataSetPanel();
+      }
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">League Data Sets</h2>'
+        + dsMenu();
     }
 
     function nth(n) {
@@ -2022,10 +4435,8 @@ const html = `<!DOCTYPE html>
         + chapterHtml("Title season — regular", t.windows && t.windows.regular)
         + chapterHtml("Playoff run", t.windows && t.windows.playoffs)
         + '<div class="chapter"><h3>Draft capital used</h3>'
-        + '<p class="caption">' + (t.draft && t.draft.startup ? "Startup. Not rookie capital." : "Rookie draft clicks.") + "</p>"
         + '<div class="caption">' + draftLine + "</div></div>"
         + '<div class="chapter"><h3>Title lineup</h3>'
-        + '<p class="caption">Who started the championship week, and how they got there this year.</p>'
         + lineup + "</div>";
     }
 
@@ -2035,7 +4446,6 @@ const html = `<!DOCTYPE html>
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
       return '<h2 class="screen-h" tabindex="-1">Champions Path</h2>'
-        + '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
@@ -2062,7 +4472,7 @@ const html = `<!DOCTYPE html>
     const NEWS_CATS = {
       injury: "Injury", suspension: "Suspension", off_field: "Off the field",
       trade: "Trade", depth_chart: "Depth chart", breakout: "Breakout", news: "News",
-      tweet: "From X",
+      tweet: "X",
     };
 
     /**
@@ -2075,7 +4485,7 @@ const html = `<!DOCTYPE html>
      * The only field this repo authors is league_line, and that is escaped too rather than
      * trusted for being ours.
      */
-    function renderNews() {
+    function renderNewsBody() {
       const book = news && news.v === 1 ? news : null;
       const raw = (book && book.items) || [];
       // Soft-deleted posts stay in news.json until the next sync rebuild; newsGone is what
@@ -2086,7 +4496,6 @@ const html = `<!DOCTYPE html>
       // describing the feed was restating what the first row already shows. The empty state
       // still explains how an item gets here, which is the one thing a row cannot.
       const head = '<h2>News and Alerts</h2>';
-      const live = '<div class="news-live" data-news-live="1"></div>';
       if (!items.length) {
         /**
          * Two different nothings, and they must not read the same.
@@ -2116,13 +4525,11 @@ const html = `<!DOCTYPE html>
           ? "The feed could not be loaded. Nothing else on this page is affected."
           : (raw.length
             ? "No posts in the feed right now."
-            : "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here.");
-        return head + live
-          + '<div class="news-box" data-news-feed="1" tabindex="0" role="region" aria-label="News and alerts, empty">'
-          + '<p class="news-empty">' + esc(blank) + "</p></div>";
+            : "Nothing shared yet.");
+        return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
       // Remove is admin-only in the UI. League home clears me, so this reads the remembered
-      // seat (same key votes use) — pick TrumanCooper once via Teams, then Home still unlocks it.
+      // seat — claimed seat (Phase 1) preferred, else remembered Teams seat.
       const admin = isNewsAdmin();
       const rows = items.map((it) => {
         const url = String(it.source_url || "");
@@ -2218,9 +4625,7 @@ const html = `<!DOCTYPE html>
           : '<div class="news-row">' + inner + "</div>";
       }).join("");
       return head
-        + live
-        + '<div class="news-box" data-news-feed="1" tabindex="0" role="region" aria-label="News and alerts, ' + items.length + ' items">'
-        + '<div class="news-pull" data-news-pull="1" hidden aria-hidden="true"></div>'
+        + '<div class="news-box" tabindex="0" role="region" aria-label="News and alerts, ' + items.length + ' items">'
         + rows + "</div>";
     }
 
@@ -2233,10 +4638,97 @@ const html = `<!DOCTYPE html>
      * set that reads it.
      */
     function renderLeagueHome() {
-      return dayAlert()
-        + homeChips()
-        + dataSetPanel()
-        + renderNews();
+      // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
+      // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
+      // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
+      let hero = "";
+      let chips = "";
+      let progress = "";
+      let sets = "";
+      let intel = "";
+      try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
+      try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
+      try { intel = pickIntelHome(); } catch (err) { console.error(err); intel = ""; }
+      try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
+      sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
+      // Never paint a home with a missing News Feed shell — dayAlert should always return one,
+      // but a thrown path above used to leave a blank first viewport in Design Mode.
+      if (!hero) {
+        hero = '<aside class="news-pullup" id="newsPullup" aria-label="News Feed"'
+          + ' data-news-pullup="1" aria-expanded="false">'
+          + '<div class="news-pullup-scrim" data-news-pullup-scrim hidden></div>'
+          + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
+          + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
+          + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
+          + ' aria-label="News Feed">'
+          + '<div class="news-pullup-grab" aria-hidden="true"><span class="news-pullup-knob"></span></div>'
+          + '<div class="news-pullup-title-row">'
+          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div></div></div>'
+          + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
+          + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
+          + ' aria-label="Open the News Feed">'
+          + '<div class="news-pullup-peek-inner">'
+          + '<div class="news-pullup-peek-line">The feed could not be shown. Open for details.</div>'
+          + "</div></div></div>"
+          + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
+          + '<div class="news-pullup-empty">The feed could not be shown. Open for details.</div>'
+          + "</div></div></aside>";
+      }
+      if (!chips) {
+        try { chips = homeChips(); } catch (err2) { console.error(err2); }
+      }
+      if (!intel) {
+        try { intel = pickIntelHome(); } catch (err3) { console.error(err3); }
+      }
+      let cuffsHtml = "";
+      try { cuffsHtml = cuffsHome(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
+      // Latest trade → quick actions → Draft Data → Cuffs → data set body → News Feed pull-up.
+      return progress + chips + intel + cuffsHtml + sets + hero;
+    }
+
+    function renderNews() {
+      return renderNewsBody();
+    }
+
+    function renderNewsPage() {
+      // Same feed the hero opens. Heading comes from renderNewsBody(); replace it with a
+      // screen heading and a way back to league home.
+      return renderNewsBody().replace(
+        "<h2>News and Alerts</h2>",
+        '<button type="button" class="chip" data-view="home" style="margin:0 0 10px">← League home</button>'
+          + '<h2 class="screen-h" tabindex="-1">News and Alerts</h2>'
+      );
+    }
+
+    function renderAccountPage() {
+      const uname = (authSession && authSession.username) || "—";
+      const L = activeLeague || {};
+      const seat = authSeatName() || (authSession && authSession.seat_name) || null;
+      const mem = (memberships || []).find((m) => m.sleeper_league_id === L.sleeper_league_id);
+      const team = seat || (mem && mem.team_name) || null;
+      return '<h2 class="screen-h" tabindex="-1">Account</h2>'
+        + '<div class="app-card"><h3>Signed in</h3>'
+        + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
+        + (L.name
+          ? '<p class="caption">League <b>' + esc(L.name) + "</b>"
+            + (L.sleeper_league_id ? '<br/>ID <code style="user-select:all">' + esc(L.sleeper_league_id) + "</code>" : "")
+            + "</p>"
+          : "")
+        + (team
+          ? '<p class="caption">Your seat <b>' + seatLabel(team) + "</b></p>"
+          : '<p class="caption">No seat claimed in this league yet.</p>')
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-app-settings="1">Open Settings</button>'
+        + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
+        + "</div></div>";
+    }
+
+    function renderTeamsPage() {
+      const rows = whoOptions();
+      return '<h2 class="screen-h" tabindex="-1">Teams</h2>'
+        + (rows
+          ? '<div class="teams-list" role="list">' + rows + "</div>"
+          : '<p class="caption">Teams have not loaded yet.</p>');
     }
 
     function backChip(label) {
@@ -2250,6 +4742,13 @@ const html = `<!DOCTYPE html>
      * rather than putting the winner on the left of every row. Which side won is carried by
      * the signed delta beside each name, so the order does not have to carry it.
      */
+    /** Newest N league trades may carry an inline vote chip on the feed. */
+    const FEED_VOTE_LIMIT = 20;
+
+    function feedVoteTxSet() {
+      return new Set(leagueTrades().slice(0, FEED_VOTE_LIMIT).map((r) => r.transaction_id));
+    }
+
     function leagueTrades() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const by = new Map();
@@ -2261,21 +4760,144 @@ const html = `<!DOCTYPE html>
       });
     }
 
-    function renderLeagueTrades() {
+    /** Headlines from both sides of each deal — player filter matches either bag's lead asset. */
+    function tapeHeadlinesByTx() {
+      const hlByTx = Object.create(null);
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      for (const s of sides) {
+        const tx = s.transaction_id;
+        if (!hlByTx[tx]) hlByTx[tx] = [];
+        if (s.headline) hlByTx[tx].push(String(s.headline));
+      }
+      return hlByTx;
+    }
+
+    /**
+     * Filtered league tape for the H2H feed. Shared by the league trades list and the trade
+     * detail screen so year / team / player filters behave the same on both.
+     */
+    function tapeTradesFiltered() {
       const all = leagueTrades();
-      // The same clock filter the per-seat tab and the home tiles use, so the three agree.
       const lived = all.filter((r) => chipLived(r.date));
-      const toast = voteToast
-        ? '<p class="vote-note">Vote recorded'
-          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
-          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
-        : "";
+      const hlByTx = tapeHeadlinesByTx();
+      const years = [...new Set(lived.map((r) => String(r.date || "").slice(0, 4)).filter(Boolean))]
+        .sort()
+        .reverse();
+      const teams = (members || []).map((m) => m.name).filter(Boolean)
+        .slice()
+        .sort((a, b) => a.localeCompare(b));
+      let list = lived;
+      if (tapeYear !== "all") {
+        list = list.filter((r) => String(r.date || "").slice(0, 4) === tapeYear);
+      }
+      if (tapeTeam !== "all") {
+        list = list.filter((r) => r.name === tapeTeam || r.other === tapeTeam);
+      }
+      const playerPool = [];
+      {
+        const seen = new Set();
+        for (const r of list) {
+          for (const h of hlByTx[r.transaction_id] || []) {
+            const leg = guessLegFromHeadline(h);
+            if (!leg || leg.kind !== "player") continue;
+            const key = String(leg.label || "").trim();
+            if (!key || seen.has(key.toLowerCase())) continue;
+            seen.add(key.toLowerCase());
+            playerPool.push(key);
+          }
+        }
+        playerPool.sort((a, b) => a.localeCompare(b));
+      }
+      const playerNeedle = (tapePlayerQ || "").trim().toLowerCase();
+      if (tapePlayer !== "all") {
+        const want = String(tapePlayer).toLowerCase();
+        list = list.filter((r) => (hlByTx[r.transaction_id] || [])
+          .some((h) => String(h).toLowerCase() === want || String(h).toLowerCase().includes(want)));
+      } else if (playerNeedle) {
+        list = list.filter((r) => (hlByTx[r.transaction_id] || [])
+          .some((h) => String(h).toLowerCase().includes(playerNeedle)));
+      }
+      const filtered = tapeYear !== "all" || tapeTeam !== "all" || tapePlayer !== "all" || !!playerNeedle;
       const empty = !all.length
         ? '<p class="caption">No trades on the league tape yet.</p>'
         : !lived.length
           ? '<p class="caption">No trade in the league has lived ' + esc(clockName())
-            + " yet. Score as Since trade to see them.</p>"
-          : "";
+            + " yet. Switch to as of today to see them.</p>"
+          : !list.length
+            ? '<p class="caption">No trades match these filters. Clear a filter to widen the feed.</p>'
+            : "";
+      return { all, lived, list, years, teams, playerPool, filtered, empty, playerNeedle };
+    }
+
+    function voteToastHtml() {
+      return voteToast
+        ? '<p class="vote-note">Vote recorded'
+          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
+          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
+        : "";
+    }
+
+    /** Year / team / player filter row + dropdown panel for league-wide trade feeds. */
+    function tapeFilterHtml(ctx, defaultHint) {
+      const hintBits = [];
+      if (tapeYear !== "all") hintBits.push(tapeYear);
+      if (tapeTeam !== "all") hintBits.push(tapeTeam);
+      if (tapePlayer !== "all") hintBits.push(tapePlayer);
+      else if (ctx.playerNeedle) hintBits.push('"' + tapePlayerQ.trim() + '"');
+      const filterHint = ctx.filtered
+        ? "Filter · " + hintBits.join(" · ")
+        : (defaultHint || "Filter by year, team, or player");
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (ctx.filtered || tapeFilterOpen ? " on" : "") + '" data-tfilter="1" aria-label="Filter trades"'
+        + ' aria-expanded="' + (tapeFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (ctx.filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
+        '<label data-tape-year="' + esc(row[0]) + '"><input type="radio" name="tapeYear" value="'
+        + esc(row[0]) + '"' + (tapeYear === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const teamRadios = [["all", "All teams"]].concat(ctx.teams.map((n) => [n, n])).map((row) =>
+        '<label data-tape-team="' + esc(row[0]) + '"><input type="radio" name="tapeTeam" value="'
+        + esc(row[0]) + '"' + (tapeTeam === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const playerRadios = [["all", "All players"]].concat(ctx.playerPool.slice(0, 80).map((n) => [n, n]))
+        .map((row) =>
+          '<label data-tape-player="' + esc(row[0]) + '"><input type="radio" name="tapePlayer" value="'
+          + esc(row[0]) + '"' + (tapePlayer === row[0] ? " checked" : "") + "> "
+          + esc(row[1]) + "</label>"
+        ).join("");
+      const panel = tapeFilterOpen
+        ? '<div class="filter-panel" id="tapeFilters">'
+          + '<div class="filter-h">Year</div>'
+          + yearRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Team</div>'
+          + teamRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Player</div>'
+          + '<input type="search" data-tape-player-q="1" placeholder="Search player or pick label…"'
+          + ' value="' + esc(tapePlayerQ) + '" aria-label="Search players in trades"'
+          + ' autocomplete="off" spellcheck="false" />'
+          + playerRadios
+          + "</div>"
+        : "";
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
+    }
+
+    function renderLeagueTrades() {
+      const ctx = tapeTradesFiltered();
+      const { lived, list, empty } = ctx;
+      ensureTradesFeedBags(list);
+      const shown = list.slice(0, tapeLimit);
+      const cards = shown.map((r) => tradeFeedCardHtml(r)).join("");
+      const more = list.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (list.length - shown.length) + " left)</button>"
+        : "";
       // No back chip here on purpose. This screen's parent is always league home, which is
       // exactly what the home icon in the header does — a second control beside it would say
       // the same thing twice. The trade screen does get one, because its parent varies.
@@ -2283,46 +4905,141 @@ const html = `<!DOCTYPE html>
         // "the tape" is trade_boards.sides, and it carries only complete two-team trades: the
         // league's two three-team deals have no row there, so this is 288 of 290. Saying "the
         // tape" rather than "the league" is the difference between a claim and a fact.
-        + '<p class="caption">Every trade on the league tape, newest first. Tap one to review it'
-        + " and vote on who actually won. A gold outline is a trade you have voted on.</p>"
-        + toast
-        + '<div class="caption">' + esc(livedHint(lived.length, all.length, "trade")) + "</div>"
+        + voteToastHtml()
+        + tapeFilterHtml(ctx)
         + empty
-        + lived.map((r) => boardTape(r)).join("");
+        + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
+        + more;
     }
 
     /**
-     * One trade, as the whole screen. Built on tradeRow / tradeBags rather than a second
-     * renderer, so the row layout and the bag arithmetic stay in one place.
+     * Map a seat-file trade onto the league tape side the feed cards expect, and stash the
+     * seat bag so latestTradeCardHtml can paint assets without a second fetch. Every surface
+     * that lists a seat's deals (Trades tab, best/worst, partners) goes through this so vote
+     * state keyed by transaction_id matches the league feed.
+     */
+    function seatTradeSide(t) {
+      if (!t || !t.transaction_id) return null;
+      rememberTradeBag(t.transaction_id, t);
+      const uid = (me && me.user_id) || null;
+      const side = tradeSide(t.transaction_id, uid) || tradeSide(t.transaction_id, null);
+      if (side) return side;
+      // Tape gap (rare): still paint a framed card from the seat file so the deal is not lost.
+      const otherNames = (t.others || []);
+      return {
+        transaction_id: t.transaction_id,
+        date: t.date,
+        user_id: uid,
+        name: (me && me.name) || "This seat",
+        other: otherNames.join(" · ") || "Them",
+        headline: "",
+        windows: t.windows || {},
+      };
+    }
+
+    /** One seat trade as the same H2H + vote card the league feed uses. */
+    function seatTradeFeedCardHtml(t) {
+      const side = seatTradeSide(t);
+      return side ? tradeFeedCardHtml(side) : "";
+    }
+
+    /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
+    function tradeFeedCardHtml(r) {
+      const voted = !!readVotes(r.transaction_id).choice;
+      const showVote = feedVoteTxSet().has(r.transaction_id);
+      let chip = "";
+      try {
+        chip = latestTradeBagsReady(r.transaction_id)
+          ? latestTradeCardHtml(r)
+          : latestTradeSkeletonHtml(r);
+      } catch (err) {
+        console.error(err);
+        chip = '<div class="h2h-chip is-trade" role="group">'
+          + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(r.name) + "</div></div>"
+          + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(r.other) + "</div>"
+          + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
+          + "</div>";
+      }
+      // Vote buttons cannot nest inside a role=button card — open-trade lives on the main block.
+      const main = '<div class="lh-trade-feed-main" role="button" tabindex="0"'
+        + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
+        + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
+        + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
+        + chip
+        + "</div>";
+      return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + (showVote ? " has-vote" : "") + '">'
+        + main
+        + (showVote ? '<div class="vote-card">' + voteBlock(r) + "</div>" : "")
+        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+        + "</div>";
+    }
+
+
+    function tradeFeedSelectedHtml(r) {
+      const voted = !!readVotes(r.transaction_id).choice;
+      let chip = "";
+      try {
+        chip = latestTradeBagsReady(r.transaction_id)
+          ? latestTradeCardHtml(r)
+          : latestTradeSkeletonHtml(r);
+      } catch (err) {
+        console.error(err);
+        chip = '<div class="h2h-chip is-trade" role="group">'
+          + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(r.name) + "</div></div>"
+          + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(r.other) + "</div>"
+          + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
+          + "</div>";
+      }
+      return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
+        + ' data-id="' + esc(r.transaction_id) + '"'
+        + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
+        + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
+        + chip
+        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+        + "</div>";
+    }
+
+    /**
+     * One trade as a feed: the opened deal stays at the top (H2H chip + bags + vote), with the
+     * rest of the league tape below as the same cards home and ?view=trades use.
      */
     function renderTradeScreen() {
-      const r = tradeSide(openId, tradeSeat);
-      if (!openId || !r) {
+      const selected = tradeSide(openId, tradeSeat);
+      if (!openId || !selected) {
         return backChip("Back")
           + '<h2 class="screen-h" tabindex="-1">Trade not found</h2>'
           + '<p class="caption">That trade is not on the league tape.</p>'
           + '<button type="button" class="chip" data-trades-list="1">All league trades</button>';
       }
-      const uid = tradeSeat || r.user_id;
-      const cached = seatCache[uid];
-      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === openId);
+      const ctx = tapeTradesFiltered();
+      const { lived, list, empty } = ctx;
+      const rest = list.filter((r) => r.transaction_id !== openId);
+      ensureTradesFeedBags([selected].concat(rest));
+      const shown = rest.slice(0, tapeLimit);
+      const cards = shown.map((r) => tradeFeedCardHtml(r)).join("");
+      const more = rest.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (rest.length - shown.length) + " left)</button>"
+        : "";
+      const feedBody = tradeFeedSelectedHtml(selected)
+        + cards;
       return backChip("Back")
-        + '<h2 class="screen-h" tabindex="-1">' + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</h2>"
-        + '<p class="caption">' + esc(r.date) + (r.headline ? " · " + esc(r.headline) : "") + "</p>"
-        + (hit
-          ? tradeRow(hit, null, true)
-          : boardTape(r) + '<p class="caption">Loading both bags…</p>')
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
-        + '<div class="screen-foot">'
-        + '<button type="button" class="chip" data-trades-list="1">All league trades</button>'
-        + "</div>";
+        + '<h2 class="screen-h" tabindex="-1">League trade data</h2>'
+        + voteToastHtml()
+        + tapeFilterHtml(ctx)
+        + (list.length ? "" : empty)
+        + '<div class="trades-feed">' + feedBody + "</div>"
+        + more;
     }
 
     function partnerLine(p) {
-      return '<button type="button" class="row" data-partner="' + esc(p.name) + '">'
+      return '<div class="row" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
         + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
         + '<div class="date">' + p.n + " complete · " + gradeLabel(p.grade) + "</div></div>"
-        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></button>";
+        + '<div class="margin">' + tapeMargin(p.per) + "</div></div></div>";
     }
 
     function draftLine(p, tag) {
@@ -2347,6 +5064,7 @@ const html = `<!DOCTYPE html>
     function marksOf(row) {
       const m = row || {};
       const w = (m.lens && m.lens[lens]) || {};
+      const runW = (m.lens && m.lens[runLens]) || {};
       const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
       const soldPicks = m.sold_picks || 0;
@@ -2373,8 +5091,8 @@ const html = `<!DOCTYPE html>
       let draftTone = "";
       if (draftMean != null && draftMean > 200) { draft = "Hit factory"; draftTone = "pos"; }
       else if (draftMean != null && draftMean < -500) { draft = "Miss factory"; draftTone = "neg"; }
-      const total = w.total == null ? null : w.total;
-      const per = w.per == null ? null : w.per;
+      const total = runW.total == null ? null : runW.total;
+      const per = runW.per == null ? null : runW.per;
       let run = "Even";
       let runTone = "";
       if (total != null && total > 0) { run = "Ahead"; runTone = "pos"; }
@@ -2435,10 +5153,26 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    function runLensCaption() {
+      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      if (runLens === "t0") return "Average value at accept across every deal.";
+      if (runLens === "all") return "Weekly average from accept through today across every deal.";
+      return "Average at " + name.toLowerCase() + " where lived; younger deals use their best window.";
+    }
+
+    function runLensHtml() {
+      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      return '<span class="chip-lens is-inline">'
+        + '<button type="button" class="chip-lens-btn" data-run-lens="1"'
+        + ' aria-label="Ahead or behind window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' title="' + esc(name) + '">'
+        + chipLensIcon() + "</button></span>";
+    }
+
     function markChart() {
       if (!markOpen) return "";
       const heads = {
-        run: ["Ahead or behind", (WINDOWS.find((w) => w[0] === lens) || [])[1] || ""],
+        run: ["Ahead or behind", runLensCaption()],
         volume: ["How much they trade", "Two-way count. 80+ Hyper, 40–79 Active, under 40 Quiet."],
         posture: ["Players vs picks", "Picks sold for players vs players sold for picks."],
         manners: ["Who extracts", "Partners they beat vs partners who beat them."],
@@ -2451,13 +5185,21 @@ const html = `<!DOCTYPE html>
         .filter((mem) => seats[mem.user_id])
         .map((mem) => ({ name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[markOpen] }));
       if (!rows.length) {
-        return '<div class="mark-chart"><div class="mark-chart-h">' + esc(head[0])
-          + '</div><p class="caption">No league marks in this build.</p></div>';
+        const emptyHead = markOpen === "run"
+          ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+            + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
+          : '<div class="mark-chart-h">' + esc(head[0]) + "</div>";
+        return '<div class="mark-chart">' + emptyHead
+          + '<p class="caption">No league marks in this build.</p></div>';
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
+      const chartHead = markOpen === "run"
+        ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+          + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
+        : '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>";
       return '<div class="mark-chart">'
-        + '<div class="mark-chart-h">' + head[0] + (head[1] ? "<span>" + head[1] + "</span>" : "") + "</div>"
+        + chartHead
         + rows.map((r, i) => {
           const you = me && me.user_id === r.uid;
           const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
@@ -2475,9 +5217,11 @@ const html = `<!DOCTYPE html>
     // needle, the even book, VA, the lens windows, today_delta, partner grades or any board
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
-    const VOTE_KEY = "cuckle.votes.v1";
+    const VOTE_KEY = "cuckle.votes.v3";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
+    // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
+    const AUTH_KEY = "cuckle.auth.v1";
     // localStorage throws in private mode and when a quota is full. Memory is the fallback so
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;
@@ -2488,6 +5232,15 @@ const html = `<!DOCTYPE html>
     // to hide a secret, and the Row Level Security in db/schema.sql is the boundary — not the key.
     // A service_role / sb_secret_ key must NEVER appear here: it bypasses RLS entirely.
     const VOTE_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/rest/v1";
+    const AUTH_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/auth/v1";
+    const FN_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/functions/v1";
+    // App accounts use username → synthetic email. Confirm email must be OFF.
+    // Synthetic only (Confirm email OFF). ".invalid" is rejected by GoTrue email validation.
+    const AUTH_EMAIL_DOMAIN = "users.cuckle.example.com";
+    // First hosted league — legacy data/ui is its ready dataset.
+    const CUCKLE_LEAGUE_ID = "1315431339301806080";
+    const LEAGUE_KEY = "cuckle.active_league.v1";
+    const MEMBERSHIPS_KEY = "cuckle.memberships.v1";
     // A legacy anon JWT, so Authorization: Bearer is valid alongside the always-required apikey
     // header. A newer sb_publishable_... key is not a JWT and is rejected on Bearer with
     // "Invalid JWT" — if this key is ever replaced with one of those, send apikey alone.
@@ -2507,6 +5260,32 @@ const html = `<!DOCTYPE html>
     // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
     // the vote itself is already in localStorage, so nothing here can lose it.
     const votePending = new Set();
+    // Claimed-seat session: { access_token, refresh_token, expires_at, user_id, username, seat_user_id, seat_name }
+    let authSession = null;
+    let authBusy = false;
+    let authError = "";
+    // Multi-league app shell. "dash" = existing meter for the active league.
+    // gate | home | create | invites | redeem | settings | dash
+    let appScreen = "gate";
+    let memberships = [];
+    let ownedLeagues = []; // leagues where created_by = me
+    let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
+    let joinPreview = null; // league preview from Edge Function
+    let joinLeagueId = "";
+    let joinEspnId = "";
+    let joinBusy = false;
+    let joinError = "";
+    let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id, claimed_username? }]
+    let leagueMembers = []; // members of the invite-console league (for transfer)
+    let inviteTab = "unclaimed"; // unclaimed | claimed
+    let redeemCode = "";
+    let gateMode = "signup"; // signup | signin — get started first
+    let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
+    let transferPickId = ""; // selected new commissioner auth_user_id
+
+    function inviteCodeVisible(inv) {
+      return !!(inv && !inv.claimed && inv.code && String(inv.code).indexOf("(") !== 0);
+    }
 
     function voteDeviceId() {
       try {
@@ -2523,7 +5302,7 @@ const html = `<!DOCTYPE html>
 
     // The card lives on league home, and going home clears the selected seat by design, so a
     // live seat is rarely there to read. Remember the last seat this device picked instead.
-    // It is an unverified claim either way — see docs/VOTES_SDD.md — and voting never waits on it.
+    // Teams picker is still an unverified UX claim. Vote identity is authSeatId() only.
     function voteSeatRemember(uid) {
       try { if (uid) localStorage.setItem(VOTE_SEAT_KEY, uid); }
       catch (err) { /* private mode: the vote still records, just without an identity */ }
@@ -2535,20 +5314,313 @@ const html = `<!DOCTYPE html>
       catch (err) { return null; }
     }
 
+    function authSeatId() {
+      if (activeLeague && activeLeague.sleeper_user_id) return activeLeague.sleeper_user_id;
+      return (authSession && authSession.seat_user_id) || null;
+    }
+
+    function authSeatName() {
+      if (activeLeague && activeLeague.team_name) return activeLeague.team_name;
+      return (authSession && authSession.seat_name) || null;
+    }
+
+    /**
+     * Design Mode (design-league-home.html) seeds a fake token and a session flag. Keep the
+     * flag sticky for the tab — syncUrl strips ?design=, and removing the flag on first boot
+     * let a Design Mode reload run soft-delete sync and blank the News Feed.
+     */
+    function isDesignLeagueHome() {
+      try {
+        if (sessionStorage.getItem("cuckle.design.league_home") === "1") return true;
+      } catch (err) { /* private mode */ }
+      try {
+        if ((new URLSearchParams(location.search).get("design") || "") === "league-home") {
+          try { sessionStorage.setItem("cuckle.design.league_home", "1"); } catch (err2) { /* ignore */ }
+          return true;
+        }
+      } catch (err) { /* ignore */ }
+      // Seeded by design-league-home.html — never a real Supabase JWT.
+      if (authSession && authSession.access_token === "design-mode") return true;
+      return false;
+    }
+
+    function authLoad() {
+      try {
+        const raw = localStorage.getItem(AUTH_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (found && found.access_token) authSession = found;
+        else authSession = null;
+      } catch (err) {
+        authSession = null;
+      }
+      try {
+        const raw = localStorage.getItem(LEAGUE_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (found && found.sleeper_league_id) activeLeague = found;
+      } catch (err) { /* ignore */ }
+      try {
+        const raw = localStorage.getItem(MEMBERSHIPS_KEY);
+        const found = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(found)) memberships = found;
+      } catch (err) { /* ignore */ }
+    }
+
+    function authSave(session) {
+      authSession = session;
+      try {
+        if (session) localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+        else localStorage.removeItem(AUTH_KEY);
+      } catch (err) { /* private mode: in-memory session only */ }
+    }
+
+    function authClear() {
+      authSave(null);
+      activeLeague = null;
+      memberships = [];
+      ownedLeagues = [];
+      try {
+        localStorage.removeItem(LEAGUE_KEY);
+        localStorage.removeItem(MEMBERSHIPS_KEY);
+      } catch (err) { /* ignore */ }
+      authError = "";
+      appScreen = "gate";
+      gateMode = "signup";
+      paintSettingsBtn();
+      paintLeagueSub();
+      paintBottomNav();
+    }
+
+    /** League name under the brand — only while viewing a league dash. */
+    function paintLeagueSub() {
+      const leagueSub = document.getElementById("leagueSub");
+      if (!leagueSub) return;
+      if (activeLeague && appScreen === "dash") {
+        leagueSub.hidden = false;
+        leagueSub.textContent = activeLeague.name || "League";
+      } else {
+        leagueSub.hidden = true;
+        leagueSub.textContent = "";
+      }
+    }
+
+    function paintSettingsBtn() {
+      const btn = document.getElementById("goSettings");
+      if (!btn) return;
+      btn.hidden = !authSession;
+    }
+
+    function bottomNavKey() {
+      if (view === "account") return "account";
+      // Own-seat home / trades count as My team / My trades.
+      if (view === "teams") return "teams";
+      if (me && authSeatId() && me.user_id === authSeatId() && view === "home") return "teams";
+      if (view === "trades" || view === "trade") return "trades";
+      return "home";
+    }
+
+    function paintBottomNav() {
+      const nav = document.getElementById("bottomNav");
+      if (!nav) return;
+      // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
+      nav.hidden = true;
+      document.body.classList.remove("has-bottom-nav");
+    }
+
+    function goBottomNav(which) {
+      if (appScreen !== "dash") return;
+      dsOpen = false;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      openPick = null;
+      openDraft = null;
+      partnerName = null;
+      markOpen = null;
+      voteToast = null;
+      if (which === "account") {
+        me = null;
+        data = null;
+        view = "account";
+        openId = null;
+        tradeSeat = null;
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      if (which === "teams") {
+        // Always the league team list — pick a roster from here (do not jump to My team).
+        openId = null;
+        tradeSeat = null;
+        me = null;
+        data = null;
+        view = "teams";
+        focusNext = ".screen-h";
+        if (members && members.length) render();
+        else {
+          loadMembers().then(() => render()).catch((err) => {
+            console.error(err);
+            render();
+          });
+        }
+        return;
+      }
+      if (which === "trades") {
+        openId = null;
+        tradeSeat = null;
+        const seat = authSeatId();
+        if (seat) {
+          // My trades → that seat's Trades tab (keep view through selectMe).
+          view = "trades";
+          focusNext = ".screen-h";
+          const open = () => selectMe(seat, true);
+          if (members && members.length) open();
+          else {
+            loadMembers().then(open).catch((err) => {
+              console.error(err);
+              me = null;
+              data = null;
+              Promise.resolve(league || getLeagueJson("league.json").then((j) => { league = j; return j; }))
+                .then(() => render())
+                .catch(() => render());
+            });
+          }
+          return;
+        }
+        me = null;
+        data = null;
+        view = "trades";
+        focusNext = ".screen-h";
+        // League trades need league.json; openLeagueDashboard usually loaded it.
+        Promise.resolve(league || getLeagueJson("league.json").then((j) => { league = j; return j; }))
+          .then(() => render())
+          .catch((err) => {
+            console.error(err);
+            render();
+          });
+        return;
+      }
+      // Home: league dashboard (news + chips), not a seat page.
+      me = null;
+      data = null;
+      view = "home";
+      openId = null;
+      tradeSeat = null;
+      titleYear = null;
+      focusNext = null;
+      // Match clearLeague / home icon — do not leave Draft Data filters sticky on return.
+      clearPickFilters();
+      clearCuffFilters();
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    function appPublicUrl() {
+      try {
+        const u = new URL(window.location.href);
+        u.hash = "";
+        u.search = "";
+        let path = u.pathname || "/";
+        if (path.endsWith("index.html")) path = path.slice(0, -10) || "/";
+        if (!path.endsWith("/")) path += "/";
+        return u.origin + path;
+      } catch (err) {
+        return "https://slabslip.github.io/cuckle-trade-tracker/";
+      }
+    }
+
+    function inviteShareLink(code) {
+      const base = appPublicUrl();
+      const join = base.indexOf("?") >= 0 ? "&" : "?";
+      return base + join + "invite=" + encodeURIComponent(code);
+    }
+
+    function copyText(text) {
+      settingsCopyNote = "";
+      const done = () => {
+        settingsCopyNote = "Copied.";
+        render();
+        setTimeout(() => {
+          if (settingsCopyNote === "Copied.") {
+            settingsCopyNote = "";
+            render();
+          }
+        }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(done).catch(() => {
+          settingsCopyNote = "Copy failed — select the code manually.";
+          render();
+        });
+      }
+      settingsCopyNote = "Copy failed — select the code manually.";
+      render();
+      return Promise.resolve();
+    }
+
+    function openSettings() {
+      if (!authSession) {
+        appScreen = "gate";
+        gateMode = "signin";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      joinError = "";
+      settingsCopyNote = "";
+      appScreen = "settings";
+      focusNext = ".screen-h";
+      loadMemberships().then(() => render()).catch((err) => {
+        console.error(err);
+        render();
+      });
+    }
+
+    function goAppHome() {
+      appScreen = "home";
+      joinError = "";
+      settingsCopyNote = "";
+      focusNext = ".screen-h";
+      loadMemberships().then(() => render()).catch((err) => {
+        console.error(err);
+        render();
+      });
+    }
+
+    function saveActiveLeague(league) {
+      activeLeague = league;
+      try {
+        if (league) localStorage.setItem(LEAGUE_KEY, JSON.stringify(league));
+        else localStorage.removeItem(LEAGUE_KEY);
+      } catch (err) { /* ignore */ }
+    }
+
+    function saveMemberships(list) {
+      memberships = list || [];
+      try { localStorage.setItem(MEMBERSHIPS_KEY, JSON.stringify(memberships)); }
+      catch (err) { /* ignore */ }
+    }
+
+    function authEmailForUsername(username) {
+      return String(username || "").trim().toLowerCase() + "@" + AUTH_EMAIL_DOMAIN;
+    }
+
+    function normalizeUsername(raw) {
+      return String(raw || "").trim();
+    }
+
     /**
      * Soft-delete for the alert feed. UI-gated to TrumanCooper; the write is a stamp on
-     * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). League home clears
-     * me, so this uses the remembered seat the same way votes do: pick TrumanCooper via
-     * Teams once, then Home still unlocks Remove.
+     * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). Prefers the claimed
+     * seat (Phase 1), then the remembered Teams seat.
      *
-     * This is not real auth. Anyone with the anon key can PATCH those columns. Acceptable for
-     * ten friends; the button simply is not offered to anyone else.
+     * Soft-delete itself is still not real auth on the wire — anyone with the anon key can
+     * PATCH those columns. The claim gate only hides the button.
      */
     const NEWS_ADMIN_UID = "458342725222133760";
     const NEWS_ADMIN_NAME = "TrumanCooper";
 
     function isNewsAdmin() {
-      return voteSeatId() === NEWS_ADMIN_UID;
+      return (authSeatId() || voteSeatId()) === NEWS_ADMIN_UID;
     }
 
     function newsSubmissionId(itemId) {
@@ -2556,256 +5628,7 @@ const html = `<!DOCTYPE html>
       return m ? m[1] : null;
     }
 
-    /** Stable fingerprint of what the feed is showing — ids + generated stamp. */
-    function newsSig(book) {
-      if (!book || book.v !== 1 || !Array.isArray(book.items)) return "";
-      return String(book.generated || "") + "|" + book.items.map((it) => it && it.id).filter(Boolean).join(",");
-    }
-
-    function newsAtTop(box) {
-      return !box || box.scrollTop < 40;
-    }
-
-    function newsPendingCount() {
-      if (!newsPendingBook) return 0;
-      const pending = new Set(
-        ((newsPendingBook.items) || []).map((it) => it && it.id).filter((id) => id && !newsGone.has(id)),
-      );
-      const cur = new Set(
-        (((news && news.items) || [])).map((it) => it && it.id).filter((id) => id && !newsGone.has(id)),
-      );
-      let n = 0;
-      for (const id of pending) if (!cur.has(id)) n++;
-      // Soft-deletes / revoices with the same ids still count as a refresh worth applying.
-      if (!n && newsSig(newsPendingBook) !== newsSig(news)) n = Math.max(1, pending.size);
-      return n;
-    }
-
-    function setNewsStatus(msg, ms) {
-      newsStatus = msg || "";
-      if (newsStatusTimer) clearTimeout(newsStatusTimer);
-      newsStatusTimer = null;
-      if (msg && ms) {
-        newsStatusTimer = setTimeout(() => {
-          newsStatus = "";
-          newsStatusTimer = null;
-          paintNewsLiveChrome();
-        }, ms);
-      }
-      paintNewsLiveChrome();
-    }
-
-    /** Update the live chrome without a full render (keeps scroll + focus). */
-    function paintNewsLiveChrome() {
-      const host = document.getElementById("app");
-      if (!host) return;
-      const live = host.querySelector("[data-news-live]");
-      if (!live) return;
-      const pending = newsPendingCount();
-      let html = "";
-      if (pending > 0) {
-        const label = pending === 1 ? "1 new post" : pending + " new posts";
-        html += '<button type="button" class="news-new" data-news-apply="1">'
-          + esc(label) + " · tap to show</button>";
-      }
-      if (newsStatus) {
-        html += '<span class="news-pull" aria-live="polite">' + esc(newsStatus) + "</span>";
-      }
-      live.innerHTML = html;
-    }
-
-    function paintNewsPullHint(box) {
-      if (!box) return;
-      let tip = box.querySelector("[data-news-pull]");
-      if (!tip) {
-        tip = document.createElement("div");
-        tip.className = "news-pull";
-        tip.setAttribute("data-news-pull", "1");
-        tip.setAttribute("aria-hidden", "true");
-        box.insertBefore(tip, box.firstChild);
-      }
-      if (newsRefreshing) {
-        tip.hidden = false;
-        tip.textContent = "Refreshing…";
-        return;
-      }
-      if (newsPullPx >= 56) {
-        tip.hidden = false;
-        tip.textContent = "Release to refresh";
-      } else if (newsPullPx > 12) {
-        tip.hidden = false;
-        tip.textContent = "Pull to refresh";
-      } else {
-        tip.hidden = true;
-        tip.textContent = "";
-      }
-    }
-
-    async function fetchNewsBook() {
-      // Bust CDN / browser cache. DATA_V is a page-wide key and does not move when only
-      // news.json changes between full page rebuilds — see NEWS_SDD §7.
-      const res = await fetch("data/ui/news.json?news=" + Date.now());
-      if (!res.ok) throw new Error("news.json " + res.status);
-      const book = await res.json();
-      return book && book.v === 1 && Array.isArray(book.items) ? book : null;
-    }
-
-    /**
-     * Re-read news.json (and soft-deletes). Applies immediately when the reader is at the top
-     * of the box or forced a pull; otherwise parks the book behind the "new posts" pill.
-     */
-    async function refreshNewsFeed(opts) {
-      const reason = (opts && opts.reason) || "poll";
-      const force = !!(opts && opts.force);
-      if (newsRefreshing) return;
-      newsRefreshing = true;
-      newsPullPx = 0;
-      paintNewsPullHint(document.querySelector(".news-box"));
-      if (reason === "pull" || reason === "tap") setNewsStatus("Refreshing…", 0);
-      try {
-        const book = await fetchNewsBook();
-        try { await loadNewsDeleted({ quiet: true }); } catch (err) { /* soft-deletes optional */ }
-        if (!book) {
-          if (reason === "pull" || reason === "tap") setNewsStatus("Could not refresh", 2500);
-          return;
-        }
-        if (newsSig(book) === newsSig(news) && !newsPendingBook) {
-          if (reason === "pull" || reason === "tap") setNewsStatus("You’re up to date", 1800);
-          return;
-        }
-        const box = document.querySelector(".news-box");
-        const applyNow = force || reason === "pull" || reason === "tap" || newsAtTop(box);
-        if (applyNow) {
-          news = book;
-          newsPendingBook = null;
-          setNewsStatus(reason === "poll" ? "" : "Updated", reason === "poll" ? 0 : 1600);
-          render();
-        } else {
-          newsPendingBook = book;
-          setNewsStatus("", 0);
-          paintNewsLiveChrome();
-        }
-      } catch (err) {
-        if (reason === "pull" || reason === "tap") setNewsStatus("Could not refresh", 2500);
-      } finally {
-        newsRefreshing = false;
-        paintNewsPullHint(document.querySelector(".news-box"));
-      }
-    }
-
-    function newsOnLeagueHome() {
-      return view === "home" && !me;
-    }
-
-    function stopNewsPoll() {
-      if (newsPollTimer) { clearInterval(newsPollTimer); newsPollTimer = null; }
-    }
-
-    function startNewsPoll() {
-      stopNewsPoll();
-      newsPollTimer = setInterval(() => {
-        if (document.hidden || !newsOnLeagueHome()) return;
-        refreshNewsFeed({ reason: "poll" });
-      }, NEWS_POLL_MS);
-    }
-
-    function unbindNewsFeed() {
-      newsBoundBox = null;
-      newsTouchStartY = null;
-      newsPullArmed = false;
-      newsPullPx = 0;
-    }
-
-    /**
-     * Wire pull-to-refresh on the news box. Re-bound after every render because innerHTML
-     * replaces the node. Touch: pull down at scrollTop 0. Wheel: scroll up past the top.
-     */
-    function bindNewsFeed() {
-      const box = document.querySelector(".news-box[data-news-feed]");
-      if (!box || box === newsBoundBox) {
-        if (!box) unbindNewsFeed();
-        paintNewsLiveChrome();
-        paintNewsPullHint(box);
-        return;
-      }
-      newsBoundBox = box;
-      paintNewsLiveChrome();
-      paintNewsPullHint(box);
-
-      box.addEventListener("touchstart", (e) => {
-        if (!e.touches || !e.touches.length) return;
-        newsTouchStartY = box.scrollTop <= 0 ? e.touches[0].clientY : null;
-        newsPullArmed = newsTouchStartY != null;
-      }, { passive: true });
-
-      box.addEventListener("touchmove", (e) => {
-        if (!newsPullArmed || newsTouchStartY == null || !e.touches || !e.touches.length) return;
-        if (box.scrollTop > 0) {
-          newsPullPx = 0;
-          paintNewsPullHint(box);
-          return;
-        }
-        const dy = e.touches[0].clientY - newsTouchStartY;
-        newsPullPx = dy > 0 ? Math.min(96, dy) : 0;
-        paintNewsPullHint(box);
-      }, { passive: true });
-
-      box.addEventListener("touchend", () => {
-        const fire = newsPullPx >= 56 && !newsRefreshing;
-        newsTouchStartY = null;
-        newsPullArmed = false;
-        newsPullPx = 0;
-        paintNewsPullHint(box);
-        if (fire) refreshNewsFeed({ reason: "pull", force: true });
-      }, { passive: true });
-
-      box.addEventListener("touchcancel", () => {
-        newsTouchStartY = null;
-        newsPullArmed = false;
-        newsPullPx = 0;
-        paintNewsPullHint(box);
-      }, { passive: true });
-
-      // Desktop: wheel upward while already pinned to the top.
-      let wheelAcc = 0;
-      let wheelReset = null;
-      box.addEventListener("wheel", (e) => {
-        if (box.scrollTop > 0 || e.deltaY >= 0 || newsRefreshing) {
-          wheelAcc = 0;
-          return;
-        }
-        wheelAcc += -e.deltaY;
-        if (wheelReset) clearTimeout(wheelReset);
-        wheelReset = setTimeout(() => { wheelAcc = 0; }, 400);
-        newsPullPx = Math.min(96, wheelAcc / 2);
-        paintNewsPullHint(box);
-        if (wheelAcc > 120) {
-          wheelAcc = 0;
-          newsPullPx = 0;
-          paintNewsPullHint(box);
-          refreshNewsFeed({ reason: "pull", force: true });
-        }
-      }, { passive: true });
-
-      // If they scroll back to the top with a pending book, apply like Twitter.
-      box.addEventListener("scroll", () => {
-        if (newsPendingBook && newsAtTop(box) && !newsRefreshing) {
-          applyPendingNews();
-        }
-      }, { passive: true });
-    }
-
-    /** Apply a book that arrived while the reader was scrolled down. */
-    function applyPendingNews() {
-      if (!newsPendingBook || newsRefreshing) return;
-      news = newsPendingBook;
-      newsPendingBook = null;
-      setNewsStatus("", 0);
-      render();
-    }
-
-    async function loadNewsDeleted(opts) {
-      const quiet = !!(opts && opts.quiet);
+    async function loadNewsDeleted() {
       try {
         const ac = new AbortController();
         const timer = setTimeout(() => ac.abort(), VOTE_TIMEOUT);
@@ -2825,7 +5648,7 @@ const html = `<!DOCTYPE html>
           const id = "tweet:" + row.id;
           if (!newsGone.has(id)) { newsGone.add(id); changed = true; }
         }
-        if (changed && !quiet) render();
+        if (changed) render();
       } catch (err) {
         // Column missing until §3c SQL runs, or a paused project: the committed news.json still
         // shows. Remove will alert if the stamp cannot land.
@@ -2897,8 +5720,12 @@ const html = `<!DOCTYPE html>
     // ---- Supabase transport ----------------------------------------------------
     // Two doors above, one wire here. Nothing outside this block knows Supabase exists.
 
-    function voteHeaders(extra) {
-      return Object.assign({ apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON }, extra || {});
+    // Reads can use the anon key (public tallies). Writes must use the claimed-seat JWT.
+    function voteHeaders(extra, forWrite) {
+      const token = (forWrite && authSession && authSession.access_token)
+        ? authSession.access_token
+        : VOTE_ANON;
+      return Object.assign({ apikey: VOTE_ANON, Authorization: "Bearer " + token }, extra || {});
     }
 
     // AbortSignal.timeout is missing on Safari before 16, where undefined just means no timeout.
@@ -2920,14 +5747,600 @@ const html = `<!DOCTYPE html>
       catch (err) { return d.toISOString(); }
     }
 
-    // The voter recorded with a vote is the seat picked at vote time, or the device otherwise, so
-    // one device can own more than one voter id over its life and a seat picked later must not
-    // orphan an earlier vote. This is every id we might have written as.
-    // The charset guard keeps a hand-edited localStorage value from breaking out of the in.()
-    // list below; ids are Sleeper snowflakes or uuids, so nothing real is filtered.
+    async function authRefreshIfNeeded() {
+      if (!authSession || !authSession.refresh_token) return;
+      const exp = Number(authSession.expires_at) || 0;
+      // Refresh a minute early. expires_at is unix seconds.
+      if (exp && (exp - 60) * 1000 > Date.now()) return;
+      try {
+        const res = await fetch(AUTH_API + "/token?grant_type=refresh_token", {
+          method: "POST",
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + VOTE_ANON,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refresh_token: authSession.refresh_token }),
+          signal: voteAbort(),
+        });
+        if (!res.ok) throw new Error("refresh " + res.status);
+        const data = await res.json();
+        authSave({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token || authSession.refresh_token,
+          expires_at: data.expires_at
+            || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
+          user_id: authSession.user_id || (data.user && data.user.id) || null,
+          username: authSession.username || null,
+          sleeper_user_id: authSession.sleeper_user_id || null,
+          espn_user_id: authSession.espn_user_id || null,
+          seat_user_id: authSession.seat_user_id || null,
+          seat_name: authSession.seat_name || null,
+        });
+      } catch (err) {
+        console.error(err);
+        authClear();
+      }
+    }
+
+    async function authPasswordGrant(email, password) {
+      const res = await fetch(AUTH_API + "/token?grant_type=password", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + VOTE_ANON,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email, password: password }),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error_description || data.msg || data.message || ("Sign-in failed (" + res.status + ")");
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function authSignUp(username, password) {
+      const name = normalizeUsername(username);
+      if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
+        throw new Error("Username: 3–32 chars, letters/numbers/_ . -");
+      }
+      if (String(password || "").length < 6) throw new Error("Password must be at least 6 characters.");
+      const email = authEmailForUsername(name);
+      const res = await fetch(AUTH_API + "/signup", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + VOTE_ANON,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          data: { username: name },
+        }),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error_description || data.msg || data.message || ("Sign-up failed (" + res.status + ")");
+        throw new Error(msg);
+      }
+      let session = data;
+      if (!session.access_token) {
+        session = await authPasswordGrant(email, password);
+      }
+      const userId = (session.user && session.user.id) || (data.user && data.user.id);
+      if (!userId || !session.access_token) throw new Error("Sign-up did not return a session. Check Confirm email is OFF.");
+      const prof = await fetch(VOTE_API + "/app_profiles?on_conflict=auth_user_id", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({ auth_user_id: userId, username: name }),
+        signal: voteAbort(),
+      });
+      if (!prof.ok) {
+        const t = await prof.text();
+        if (t.indexOf("app_profiles_username_key") >= 0) throw new Error("That username is taken.");
+        if (t.indexOf("app_profiles_platform_required") >= 0) {
+          throw new Error("Profile blocked: re-run commissioner-invites.sql (platform IDs optional).");
+        }
+        throw new Error("Could not save profile (" + prof.status + "): " + t.slice(0, 180));
+      }
+      authSave({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at
+          || Math.floor(Date.now() / 1000) + (Number(session.expires_in) || 3600),
+        user_id: userId,
+        username: name,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
+        seat_name: null,
+      });
+      paintSettingsBtn();
+    }
+
+    async function authSignIn(username, password) {
+      const name = normalizeUsername(username);
+      if (!name || !password) throw new Error("Enter username and password.");
+      const data = await authPasswordGrant(authEmailForUsername(name), password);
+      const userId = data.user && data.user.id;
+      let uname = name;
+      try {
+        const pr = await fetch(
+          VOTE_API + "/app_profiles?select=username&auth_user_id=eq." + encodeURIComponent(userId),
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + data.access_token },
+            signal: voteAbort(),
+          },
+        );
+        if (pr.ok) {
+          const rows = await pr.json();
+          if (rows[0] && rows[0].username) uname = rows[0].username;
+        }
+      } catch (err) { /* username from form is fine */ }
+      authSave({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at
+          || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
+        user_id: userId,
+        username: uname,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
+        seat_name: null,
+      });
+      paintSettingsBtn();
+    }
+
+    async function loadMemberships() {
+      if (!authSession || !authSession.access_token) {
+        saveMemberships([]);
+        ownedLeagues = [];
+        return [];
+      }
+      await authRefreshIfNeeded();
+      const headers = {
+        apikey: VOTE_ANON,
+        Authorization: "Bearer " + authSession.access_token,
+      };
+      const [memRes, ownRes] = await Promise.all([
+        fetch(
+          VOTE_API + "/league_memberships?select=*,leagues(name,status,season,total_rosters)&order=created_at.asc",
+          { headers: headers, signal: voteAbort() },
+        ),
+        fetch(
+          VOTE_API + "/leagues?select=sleeper_league_id,name,status,season,total_rosters,created_by&created_by=eq."
+            + encodeURIComponent(authSession.user_id)
+            + "&order=created_at.asc",
+          { headers: headers, signal: voteAbort() },
+        ),
+      ]);
+      if (!memRes.ok) throw new Error("memberships " + memRes.status);
+      const rows = await memRes.json();
+      const list = (rows || []).map((r) => ({
+        sleeper_league_id: r.sleeper_league_id,
+        sleeper_user_id: r.sleeper_user_id,
+        team_name: r.team_name,
+        name: (r.leagues && r.leagues.name) || r.sleeper_league_id,
+        status: (r.leagues && r.leagues.status) || "pending_sync",
+        season: (r.leagues && r.leagues.season) || null,
+        role: "member",
+      }));
+      saveMemberships(list);
+      if (ownRes.ok) {
+        const owned = await ownRes.json();
+        ownedLeagues = (owned || []).map((r) => ({
+          sleeper_league_id: r.sleeper_league_id,
+          name: r.name || r.sleeper_league_id,
+          status: r.status || "pending_sync",
+          season: r.season || null,
+          role: "commissioner",
+        }));
+      } else {
+        ownedLeagues = [];
+      }
+      return list;
+    }
+
+    async function onGateSubmit() {
+      if (authBusy) return;
+      const userEl = document.getElementById("gateUser");
+      const passEl = document.getElementById("gatePass");
+      const username = userEl && userEl.value;
+      const password = passEl && passEl.value;
+      authBusy = true;
+      authError = "";
+      render();
+      let handedOff = false;
+      try {
+        if (gateMode === "signup") await authSignUp(username, password);
+        else await authSignIn(username, password);
+        await loadMemberships();
+        authError = "";
+        authBusy = false;
+        if (redeemCode) {
+          handedOff = true;
+          await onRedeemInvite();
+          return;
+        }
+        appScreen = "home";
+        focusNext = ".screen-h";
+      } catch (err) {
+        authError = (err && err.message) || "Could not sign in.";
+        console.error(err);
+      } finally {
+        authBusy = false;
+        if (!handedOff) render();
+      }
+    }
+
+    async function onCreateLeague() {
+      if (joinBusy) return;
+      const el = document.getElementById("joinLeagueId");
+      const espnEl = document.getElementById("joinEspnId");
+      joinLeagueId = el ? String(el.value || "").trim() : joinLeagueId;
+      joinEspnId = espnEl ? String(espnEl.value || "").trim() : joinEspnId;
+      joinBusy = true;
+      joinError = "";
+      createdInvites = null;
+      leagueMembers = [];
+      inviteTab = "unclaimed";
+      render();
+      try {
+        await authRefreshIfNeeded();
+        const data = await joinLeagueCall("create", {
+          sleeper_league_id: joinLeagueId,
+          espn_league_id: joinEspnId || undefined,
+        });
+        createdInvites = data.invites || [];
+        leagueMembers = data.members || [];
+        joinPreview = data.league;
+        inviteTab = "unclaimed";
+        await loadMemberships().catch(() => {});
+        appScreen = "invites";
+        focusNext = ".screen-h";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not create that league.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function openInviteConsole(leagueId) {
+      if (joinBusy) return;
+      joinBusy = true;
+      joinError = "";
+      transferPickId = "";
+      inviteTab = "unclaimed";
+      joinLeagueId = leagueId;
+      // Keep prior seats on screen while we refresh (avoids an empty flash + feels faster).
+      if (!joinPreview || joinPreview.sleeper_league_id !== leagueId) {
+        const owned = (ownedLeagues || []).find((o) => o.sleeper_league_id === leagueId);
+        joinPreview = {
+          sleeper_league_id: leagueId,
+          name: (owned && owned.name) || "League",
+          total_rosters: 0,
+          status: (owned && owned.status) || "pending_sync",
+        };
+        createdInvites = [];
+        leagueMembers = [];
+      }
+      appScreen = "invites";
+      focusNext = ".screen-h";
+      render();
+      try {
+        const data = await joinLeagueCall("list_invites", { sleeper_league_id: leagueId });
+        createdInvites = data.invites || [];
+        leagueMembers = data.members || [];
+        joinPreview = data.league;
+        const hasUnclaimed = (createdInvites || []).some((inv) => !inv.claimed);
+        inviteTab = hasUnclaimed ? "unclaimed" : "claimed";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not load invites.";
+        console.error(err);
+        if (!createdInvites) createdInvites = [];
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onCopyInviteLink(sleeperUserId) {
+      if (joinBusy || !joinPreview || !sleeperUserId) return;
+      let inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId);
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        let code = inviteCodeVisible(inv) ? inv.code : null;
+        // Mint only when this seat has no usable code yet — re-copy keeps the same link.
+        if (!code) {
+          const data = await joinLeagueCall("rotate_seat", {
+            sleeper_league_id: joinPreview.sleeper_league_id,
+            sleeper_user_id: sleeperUserId,
+          });
+          createdInvites = data.invites || [];
+          if (data.members) leagueMembers = data.members;
+          joinPreview = data.league || joinPreview;
+          inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId) || inv;
+          code = (data.generated && data.generated.code)
+            || (inviteCodeVisible(inv) ? inv.code : null);
+        }
+        if (!code || String(code).indexOf("(") === 0) {
+          throw new Error("Could not build an invite link for that team.");
+        }
+        const team = (inv && inv.team_name) || "that team";
+        await copyText(inviteShareLink(code));
+        settingsCopyNote = "Invite link for " + team + " copied — send it to that manager.";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not copy invite link.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onReissueSeat(sleeperUserId) {
+      if (joinBusy || !joinPreview || !sleeperUserId) return;
+      const inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId);
+      const who = (inv && inv.claimed_username)
+        ? "@" + inv.claimed_username
+        : (inv && inv.team_name) || "the current manager";
+      if (!window.confirm(
+        "Reissue invite for " + ((inv && inv.team_name) || "this seat") + "? "
+        + "This removes " + who + " from the seat and creates a new code for the replacement manager. "
+        + "Their past votes stay in the tally.",
+      )) return;
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("reissue_seat", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          sleeper_user_id: sleeperUserId,
+        });
+        createdInvites = data.invites || [];
+        leagueMembers = data.members || [];
+        joinPreview = data.league || joinPreview;
+        inviteTab = "unclaimed";
+        settingsCopyNote = data.note || "New invite ready — copy and DM the new manager.";
+        await loadMemberships().catch(() => {});
+        const lid = joinPreview && joinPreview.sleeper_league_id;
+        const wasMyActiveSeat = !!(activeLeague && activeLeague.sleeper_league_id === lid
+          && activeLeague.sleeper_user_id === sleeperUserId);
+        const wasMyAuthSeat = !!(authSession && authSession.seat_user_id === sleeperUserId);
+        if (wasMyActiveSeat) saveActiveLeague(null);
+        if (wasMyAuthSeat && authSession) {
+          authSave(Object.assign({}, authSession, { seat_user_id: null, seat_name: null }));
+        }
+      } catch (err) {
+        joinError = (err && err.message) || "Could not reissue that seat.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onTransferCommissioner() {
+      if (joinBusy || !joinPreview) return;
+      const pickEl = document.getElementById("transferPick");
+      const newId = pickEl ? String(pickEl.value || "").trim() : transferPickId;
+      transferPickId = newId;
+      if (!newId) {
+        joinError = "Pick a league member to become commissioner.";
+        render();
+        return;
+      }
+      const mem = (leagueMembers || []).find((m) => m.auth_user_id === newId);
+      const label = mem
+        ? ((mem.username ? "@" + mem.username : "member") + " (" + mem.team_name + ")")
+        : "that member";
+      if (!window.confirm(
+        "Transfer commissioner to " + label + "? "
+        + "You will lose invite/admin access for this league. You keep your seat if you claimed one.",
+      )) return;
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("transfer_commissioner", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          new_commissioner_id: newId,
+        });
+        settingsCopyNote = data.note || "Commissioner transferred.";
+        createdInvites = null;
+        leagueMembers = [];
+        joinPreview = null;
+        inviteTab = "unclaimed";
+        await loadMemberships();
+        appScreen = "settings";
+        focusNext = ".screen-h";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not transfer commissioner.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onClaimSeat(sleeperUserId) {
+      if (joinBusy || !joinPreview) return;
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinLeagueCall("claim_seat", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          sleeper_user_id: sleeperUserId,
+        });
+        await loadMemberships();
+        const L = data.league;
+        const leagueInfo = {
+          sleeper_league_id: L.sleeper_league_id,
+          name: L.name,
+          status: L.status || "pending_sync",
+          sleeper_user_id: L.sleeper_user_id,
+          team_name: L.team_name,
+        };
+        if (authSession) {
+          authSave(Object.assign({}, authSession, {
+            seat_user_id: L.sleeper_user_id,
+            seat_name: L.team_name,
+          }));
+        }
+        voteSeatRemember(L.sleeper_user_id);
+        await openLeagueDashboard(leagueInfo);
+      } catch (err) {
+        joinError = (err && err.message) || "Could not claim that seat.";
+        console.error(err);
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onRedeemInvite() {
+      if (joinBusy) return;
+      const el = document.getElementById("redeemCode");
+      redeemCode = el ? String(el.value || "").trim() : redeemCode;
+      if (!authSession) {
+        joinError = "Create an account or sign in first, then redeem your invite.";
+        appScreen = "gate";
+        gateMode = "signup";
+        render();
+        return;
+      }
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinLeagueCall("redeem", { code: redeemCode });
+        await loadMemberships();
+        const L = data.league;
+        const leagueInfo = {
+          sleeper_league_id: L.sleeper_league_id,
+          name: L.name,
+          status: L.status || "pending_sync",
+          sleeper_user_id: L.sleeper_user_id,
+          team_name: L.team_name,
+        };
+        if (authSession) {
+          authSave(Object.assign({}, authSession, {
+            seat_user_id: L.sleeper_user_id,
+            seat_name: L.team_name,
+          }));
+        }
+        voteSeatRemember(L.sleeper_user_id);
+        await openLeagueDashboard(leagueInfo);
+      } catch (err) {
+        joinError = (err && err.message) || "Could not redeem that invite.";
+        console.error(err);
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function joinLeagueCall(action, fields) {
+      await authRefreshIfNeeded();
+      if (!authSession || !authSession.access_token) throw new Error("Sign in required.");
+      const body = Object.assign({ action: action }, fields || {});
+      const res = await fetch(FN_API + "/join-league", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + authSession.access_token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || ("Request failed (" + res.status + ")"));
+      }
+      return data;
+    }
+
+    // Prefer league-scoped UI JSON; fall back to legacy data/ui for Cuckle.
+    function leagueDataPrefix(leagueId) {
+      return "data/leagues/" + leagueId + "/ui";
+    }
+
+    async function getLeagueJson(name) {
+      const id = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      try {
+        return await getJson(leagueDataPrefix(id) + "/" + name);
+      } catch (err) {
+        if (id === CUCKLE_LEAGUE_ID) return getJson("data/ui/" + name);
+        throw err;
+      }
+    }
+
+    async function openLeagueDashboard(leagueInfo) {
+      saveActiveLeague(leagueInfo);
+      joinBusy = false;
+      joinError = "";
+      joinPreview = null;
+      appScreen = "dash";
+      // League home (news + chips), not a seat meter. Teams list is how you open a roster.
+      // Deep-link ?me= is still honored inside loadMembers(); membership seat is not auto-picked.
+      me = null;
+      data = null;
+      view = "home";
+      openId = null;
+      tradeSeat = null;
+      partnerName = null;
+      openPick = null;
+      openDraft = null;
+      markOpen = null;
+      titleYear = null;
+      voteToast = null;
+      dsOpen = false;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      dataSet = null;
+      weekMatchups = null;
+      weekMatchupsLoading = false;
+      latestTradeHit = null;
+      latestTradeHitTx = null;
+      latestTradeBagsLoading = false;
+      latestTradeBagsPromise = null;
+      // Seat bags and tx→bag hits are keyed only by user_id / transaction_id. Clear them on
+      // league switch so a prior league's me/*.json cannot paint this league's Recent Trade.
+      for (const k of Object.keys(seatCache)) delete seatCache[k];
+      for (const k of Object.keys(tradeBagByTx)) delete tradeBagByTx[k];
+      focusNext = null;
+      syncUrl();
+      await loadMembers();
+      voteLoad().catch((err) => console.error(err));
+      // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
+      // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
+      if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
+    }
+
+    // Phase 1: voter identity is the claimed seat only. Legacy device ids remain in local
+    // tallies for display heal until the optional truncate; new writes never use them.
     function voteVoterIds() {
-      const ids = [voteDeviceId()];
-      const seat = voteSeatId();
+      const ids = [];
+      const seat = authSeatId();
       if (seat) ids.push(seat);
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
@@ -2944,20 +6357,57 @@ const html = `<!DOCTYPE html>
     // aggregated the ballots away, so there is no way to tell from it whether the total for a
     // trade already counts us. Without it the choice is between double-counting our own vote and
     // hiding it, and both are wrong.
+    //
+    // A third read pulls every ballot's voter+choice so the Latest trade lean can paint each
+    // voter's seat flair under the side they picked. SELECT on trade_votes is public; if that
+    // read fails we still keep tallies and fall back to count-only marks.
     async function voteLoad() {
       voteLiveState = "loading";
+      await authRefreshIfNeeded();
       const ids = voteVoterIds();
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       try {
-        const [rows, mineRows] = await Promise.all([
-          voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
-          ids.length
-            ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
-            : Promise.resolve([]),
-        ]);
+        const tallyQ = VOTE_API + "/trade_vote_tallies?select=*&sleeper_league_id=eq."
+          + encodeURIComponent(leagueId);
+        const mineQ = ids.length
+          ? VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",")
+            + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
+          : null;
+        const ballotsQ = VOTE_API + "/trade_votes?select=transaction_id,choice,voter&sleeper_league_id=eq."
+          + encodeURIComponent(leagueId);
+        let rows;
+        let mineRows = [];
+        let ballotRows = [];
+        try {
+          const parts = [voteGet(tallyQ)];
+          if (mineQ) parts.push(voteGet(mineQ));
+          const got = await Promise.all(parts);
+          rows = got[0];
+          mineRows = got[1] || [];
+        } catch (scopedErr) {
+          // Wave 2 SQL not applied yet — fall back to unscoped tallies.
+          console.warn("scoped vote load failed; falling back", scopedErr);
+          const got = await Promise.all([
+            voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
+            ids.length
+              ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
+              : Promise.resolve([]),
+          ]);
+          rows = got[0];
+          mineRows = got[1] || [];
+        }
+        try {
+          ballotRows = await voteGet(ballotsQ);
+        } catch (ballotErr) {
+          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          try {
+            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter");
+          } catch (ballotErr2) {
+            ballotRows = [];
+          }
+        }
         const totals = {};
         for (const r of rows || []) {
-          // The view already excludes the sentinel. Dropped again here so the percentages stay
-          // right on a project whose view has not been re-run since the fix.
           if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
           const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
           box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
@@ -2967,12 +6417,16 @@ const html = `<!DOCTYPE html>
           if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
           mine[r.transaction_id] = r.choice;
         }
-        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine };
+        // voter → choice per trade. Cleared rows stay out; one voter can only pick one side.
+        const ballots = {};
+        for (const r of ballotRows || []) {
+          if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+          const box = ballots[r.transaction_id] || (ballots[r.transaction_id] = {});
+          box[r.voter] = r.choice;
+        }
+        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine, ballots: ballots };
         voteLiveState = "ok";
       } catch (err) {
-        // Unreachable, blocked, offline, or a paused project. Degrade to exactly the behaviour
-        // that shipped before Supabase existed, and keep the copy honest: never render a league
-        // tally we did not actually receive.
         console.error(err);
         voteLive = null;
         voteLiveState = "fail";
@@ -2986,43 +6440,55 @@ const html = `<!DOCTYPE html>
     //
     // Deliberately one-directional: a trade with no local vote is NOT cleared on the server just
     // because this device has not heard of it. The same person on a phone and a laptop resolves to
-    // the same voter once they pick a seat, and inferring a clear from local absence would have
+    // the same voter once they claim a seat, and inferring a clear from local absence would have
     // the second device silently delete the first device's vote. A clear is only ever sent when
     // someone actually taps to clear.
+    //
+    // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
     function voteHeal() {
       if (voteLiveState !== "ok") return;
+      if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
         const local = votes[tx].choice || null;
-        if (local && voteLive.mine[tx] !== local) votePush(tx, local, votes[tx].seat);
+        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId());
       }
     }
 
     // Optimistic: the vote is in localStorage and on screen before this runs. The upsert names
     // its conflict target explicitly because PostgREST otherwise infers the primary key, which is
     // the surrogate id — leave it off and a second vote fails on the unique constraint.
+    // voter is rewritten by the trade_votes_force_voter trigger; we still send the claimed seat.
     function votePush(transactionId, choice, seat) {
-      const voter = seat || voteDeviceId();
+      if (!authSession || !authSession.access_token || !seat) {
+        votePending.delete(transactionId);
+        render();
+        return;
+      }
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       const sent = choice == null ? VOTE_CLEARED : choice;
       votePending.add(transactionId);
-      fetch(VOTE_API + "/trade_votes?on_conflict=transaction_id,voter", {
+      const payload = {
+        transaction_id: transactionId,
+        choice: sent,
+        voter: seat,
+        sleeper_league_id: leagueId,
+      };
+      fetch(VOTE_API + "/trade_votes?on_conflict=sleeper_league_id,transaction_id,voter", {
         method: "POST",
         headers: voteHeaders({
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=representation",
-        }),
-        body: JSON.stringify({ transaction_id: transactionId, choice: sent, voter: voter }),
+        }, true),
+        body: JSON.stringify(payload),
         signal: voteAbort(),
       }).then((res) => {
         if (!res.ok) throw new Error("vote write " + res.status);
         return res.json();
       }).then((rows) => {
-        // Settle on the row the database echoed, not on what we hoped we sent.
         const row = (rows || [])[0];
         voteSettle(transactionId, row && row.choice ? row.choice : sent);
       }).catch((err) => {
-        // The vote is already saved locally, so this loses nothing. The trade stays pending and
-        // the caption says so; the next page load retries it through voteHeal.
         console.error(err);
         render();
       });
@@ -3042,10 +6508,83 @@ const html = `<!DOCTYPE html>
         }
         if (now) voteLive.mine[transactionId] = now;
         else delete voteLive.mine[transactionId];
+        // Keep the flair map in step with the settled ballot so the lean row does not wait
+        // for another full voteLoad.
+        const seat = authSeatId();
+        if (seat) {
+          if (!voteLive.ballots) voteLive.ballots = {};
+          const box = voteLive.ballots[transactionId] || (voteLive.ballots[transactionId] = {});
+          if (now) box[seat] = now;
+          else delete box[seat];
+        }
         // asOf is deliberately NOT advanced. It dates the league read, and our own vote landing
         // says nothing about anyone else's. Moving it would claim the other counts were rechecked.
       }
       render();
+    }
+
+    /** Display name for a seat user_id (voter or trade side). */
+    function seatNameForUid(uid) {
+      if (uid == null || uid === "") return "";
+      const id = String(uid);
+      // Coerce both sides — ballots sometimes ship numeric ids, members.json strings.
+      const m = (members || []).find((x) => x && String(x.user_id) === id);
+      if (m && m.name) return String(m.name);
+      if (SEAT_FLAIR[id]) return id;
+      return id;
+    }
+
+    /**
+     * Compact seat flair for the lean vote row. Only real glyph/img flair — no initials
+     * fallback (raw voter ids were painting hex chips like "1F" / "BB"). Empty string
+     * when the seat has no flair so the row stays blank until a known voter marks it.
+     * Wrapped in seat-link + data-who so a tap opens that team's home (same as names).
+     */
+    function seatVoteMarkHtml(name) {
+      const n = String(name == null ? "" : name);
+      const f = SEAT_FLAIR[n];
+      let inner = "";
+      if (f && f.glyph) {
+        inner = '<span class="h2h-lean-glyph" aria-hidden="true">' + f.glyph + "</span>";
+      } else if (f && f.img) {
+        inner = '<img class="seat-flair h2h-lean-flair" src="' + esc(f.img) + "?" + DATA_V
+          + '" width="14" height="14" alt="" decoding="async" />';
+      } else {
+        return "";
+      }
+      if (!n) return inner;
+      return '<span class="seat-link h2h-lean-flair-link" role="link" tabindex="0" data-who="'
+        + esc(n) + '" aria-label="' + esc(n) + '">' + inner + "</span>";
+    }
+
+    /**
+     * Voter → choice map for one trade, with the same local-over-server merge as readVotes.
+     * Returns { [choiceUid]: [voterUid, ...] } so the lean row can paint flairs per side.
+     */
+    function voteMarks(transactionId) {
+      const mine = voteBoxRead().votes[transactionId] || null;
+      const local = (mine && mine.choice) || null;
+      const localSeat = (mine && mine.seat) || authSeatId() || null;
+      let byVoter = {};
+      if (voteLive && voteLive.ballots) {
+        byVoter = Object.assign({}, voteLive.ballots[transactionId] || {});
+        const onServer = voteLive.mine[transactionId] || null;
+        if (localSeat && onServer !== local) {
+          if (local) byVoter[localSeat] = local;
+          else delete byVoter[localSeat];
+        }
+      } else {
+        const entry = (voteBook && voteBook.votes && voteBook.votes[transactionId]) || null;
+        byVoter = Object.assign({}, (entry && entry.voters) || {});
+        if (local && localSeat && !byVoter[localSeat]) byVoter[localSeat] = local;
+      }
+      const byChoice = {};
+      for (const voter of Object.keys(byVoter)) {
+        const choice = byVoter[voter];
+        if (!choice || choice === VOTE_CLEARED) continue;
+        (byChoice[choice] || (byChoice[choice] = [])).push(voter);
+      }
+      return byChoice;
     }
 
     // ---- The two doors ---------------------------------------------------------
@@ -3102,18 +6641,18 @@ const html = `<!DOCTYPE html>
     }
 
     // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
-    // The selected seat rides along as the voter identity so the store can key on a manager
-    // rather than a device, but voting is not gated on picking a seat.
+    // Phase 1: gated on a claimed seat. The Teams picker is not enough — invite code required.
     function writeVote(transactionId, choice) {
+      const seat = authSeatId();
+      if (!seat) {
+        render();
+        return;
+      }
       const box = voteBoxRead();
-      const prev = box.votes[transactionId] || null;
-      // On a clear the local entry is about to go, so the voter it was written under has to be
-      // read first — otherwise a vote cast as a seat would be cleared under the device id and the
-      // real row would survive.
-      const seat = choice == null ? (prev && prev.seat) || voteSeatId() : voteSeatId();
       if (choice == null) delete box.votes[transactionId];
       else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
       voteBoxWrite(box);
+      voteEditTx = null;
       votePush(transactionId, choice, seat);
     }
 
@@ -3128,20 +6667,62 @@ const html = `<!DOCTYPE html>
     }
 
     function voteParties(r) {
-      const cached = seatCache[r.user_id];
-      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
+      // Prefer the bag already painted for this tx (seat tab / feed cache) so N-way detection
+      // cannot disagree between the H2H chip and the vote buttons on the same card.
+      const hit = bagHitForTx(r.transaction_id)
+        || ((seatCache[r.user_id] || {}).trades || [])
+          .find((t) => t.transaction_id === r.transaction_id);
       return hit ? 1 + ((hit.others || []).length) : voteSeats(r).length;
+    }
+
+    function claimFormHtml() {
+      return '<div class="claim-box">'
+        + '<p class="caption" style="margin:0">Sign in and join this league from the app home to vote. '
+        + "One account, one seat per league.</p>"
+        + '<div class="claim-actions">'
+        + '<button type="button" class="chip" data-app-home="1">App home</button>'
+        + "</div></div>";
+    }
+
+    /** Modal overlay with the existing voteBlock side buttons and tallies. */
+    function voteSheetHtml() {
+      if (!voteSheetTx) return "";
+      const r = tradeSide(voteSheetTx, null);
+      if (!r) return "";
+      return '<div class="vote-sheet" role="presentation">'
+        + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
+        + ' aria-label="Close vote panel"></button>'
+        + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
+        + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
+        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + "</div></div>";
     }
 
     function voteBlock(r) {
       const seats = voteSeats(r);
-      const head = '<div class="vote"><div class="vote-h">Who actually won it?</div>';
       // N-way trades get no vote: "which side won" has no head-to-head answer across three
       // bags, and N-way is already the special case that carries no Value Adjustment.
       if (seats.length !== 2 || voteParties(r) > 2) {
-        return head + '<p class="caption">Three-team trade. There is no two-sided answer to score, so voting is off here.</p></div>';
+        return '<div class="vote"></div>';
+      }
+      if (!authSeatId() || !authSession) {
+        return '<div class="vote">' + claimFormHtml() + "</div>";
       }
       const v = readVotes(r.transaction_id);
+      const editing = voteEditTx === r.transaction_id;
+      // After a ballot: one compact row (Voted · name · a–b). Tap to change.
+      if (v.choice && !editing) {
+        const won = seats.find((s) => s.uid === v.choice);
+        const a = v.tally[seats[0].uid] || 0;
+        const b = v.tally[seats[1].uid] || 0;
+        return '<div class="vote is-done">'
+          + '<button type="button" class="vote-done" data-vote-edit="' + esc(r.transaction_id) + '"'
+          + ' aria-label="Change vote">'
+          + '<span class="vote-done-k">Voted</span>'
+          + "<b>" + seatLabel(won ? won.name : "?", { link: false }) + "</b>"
+          + '<span class="vote-done-tally">' + a + "–" + b + "</span>"
+          + "</button></div>";
+      }
       const opts = seats.map((s) => {
         const on = v.choice === s.uid;
         const n = v.tally[s.uid] || 0;
@@ -3151,24 +6732,14 @@ const html = `<!DOCTYPE html>
         return '<button type="button" class="vote-opt' + (on ? " on" : "") + '"'
           + ' data-vote="' + esc(r.transaction_id) + '" data-vote-seat="' + esc(s.uid) + '"'
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
-          + "<b>" + seatLabel(s.name) + "</b><span>" + line + "</span></button>";
+          + "<b>" + seatLabel(s.name, { link: false }) + "</b><span>" + line + "</span></button>";
       }).join("");
-      // Only ever claims a league tally we actually received. A live tally counts votes as they
-      // land; the committed book counts them as of the last rebuild; with neither, this is one
-      // device's opinion and says so.
-      const note = v.league
-        ? "League tally as of " + esc(v.asOf || "the last rebuild") + "; "
-          + (v.source === "live"
-            ? (v.pending
-              ? "your vote is saved here and still on its way to it."
-              : "votes join it as they land.")
-            : "your vote joins it on the next rebuild.")
-        : voteLiveState === "fail"
-          ? "Your vote, on this device only — the league tally is out of reach right now."
-          : "Your vote, on this device only — the league tally lights up once the vote store answers.";
-      return head
+      return '<div class="vote' + (v.choice ? " is-edit" : "") + '">'
         + '<div class="vote-opts">' + opts + "</div>"
-        + '<p class="caption">' + note + " Opinion only: votes never enter the value book.</p></div>";
+        + (v.choice
+          ? '<button type="button" class="linkish vote-edit-cancel" data-vote-edit-cancel="1">Done</button>'
+          : "")
+        + "</div>";
     }
 
     // Recency, not a clock: the card is named for the newest date on the tape, so there is no
@@ -3231,68 +6802,1246 @@ const html = `<!DOCTYPE html>
       };
     }
 
-    function dayAlert() {
-      const tape = daySides();
-      // The card is a doorway now, not an accordion: it opens the trade as a whole screen.
-      const chips = tape.rows.map((r) => {
-        // Same windows[lens] and the same rounding the trades list uses, so the card cannot drift.
-        const w = (r.windows && r.windows[lens]) || {};
-        const got = w.incomplete && !w.got ? "—" : fmt(w.got);
-        const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
-        const s = windowScore(r);
-        return '<button type="button" class="day-in" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
-          + "<b>" + seatLabel(r.name) + " vs " + seatLabel(r.other) + "</b>"
-          + '<span class="day-in-vals">'
-          + '<span class="day-in-val"><i>' + seatLabel(r.name) + "</i>" + tapeMargin(s) + "<em>" + got + "</em></span>"
-          + '<span class="day-in-val"><i>' + seatLabel(r.other) + "</i>" + tapeMargin(s == null ? null : -s) + "<em>" + sent + "</em></span>"
-          + "</span></button>";
-      }).join("")
-        || '<div class="date">No trades on the tape yet.</div>';
-      const champ = ((titles && titles.titles) || [])[0];
-      const rec = champ && champ.record || {};
-      const fin = champFinalCaption(champ, rec);
-      // Four rows: the heading, the season, the scoreboard, the two records under the names
-      // they belong to. The top scorer stays as a fifth -- it was asked for, and a sketch
-      // that does not draw a line is not a request to delete it.
-      const bout = fin.bout
-        ? '<div class="champ-bout">'
-          + '<span class="bout-team">' + fin.bout.champName + "</span>"
-          + '<b class="bout-score">' + fin.bout.score + "</b>"
-          + '<span class="bout-team bout-r">' + fin.bout.oppName + "</span>"
-          + '<span class="bout-rec">' + fin.bout.champRec + "</span>"
-          + '<span class="bout-rec bout-r">' + fin.bout.oppRec + "</span>"
-          + "</div>"
-        // No final on file for this season, so there is no scoreboard to draw. Falls back to
-        // the caption this replaced rather than to an empty row.
-        : '<div class="date champ-fig"><span>' + rec.wins + "–" + rec.losses + fin.tail + "</span>"
-          + (fin.tailNum ? "<b>" + fin.tailNum + "</b>" : "") + "</div>";
-      const champBox = champ
-        ? '<a class="champ-alert" href="?view=titles" data-view="titles">'
-          + '<div class="day-alert-h">Champions Path</div>'
-          + '<div class="champ-line">' + esc(champ.season) + " Championship</div>"
-          + bout
-          + (fin.top ? '<div class="date champ-fig"><span>' + fin.top + "</span><b>" + fin.topNum + "</b></div>" : "")
-          + "</a>"
-        : "";
-      // The door to every league trade sits in the header row, a sibling of the trade buttons
-      // rather than inside one. That is what keeps one tap from meaning two things: the #app
-      // handler tests [data-trades-list] before [data-board-open], and because no trade button
-      // is an ancestor of this one, only one of those branches can ever match a given click.
-      // A list of rows says "all of them" where a bare arrow would read as "the next one".
-      const allBtn = '<button type="button" class="all-trades" data-trades-list="1"'
-        + ' aria-label="All trades in the league">'
-        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
-        + '<path fill="currentColor" d="M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3z'
-        + 'M9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z"/></svg>'
-        + "<span>All trades</span></button>";
-      return '<div class="alert-row"><div class="day-alert">'
-        + '<div class="day-alert-top">'
-        + '<div class="day-alert-h">Recent Trade' + (tape.day ? "<span>" + esc(tape.day) + "</span>" : "") + "</div>"
-        + allBtn
-        + "</div>"
-        + chips
-        + "</div>" + champBox + "</div>";
+    function newsItemsLive() {
+      const book = news && news.v === 1 ? news : null;
+      const raw = (book && book.items) || [];
+      return raw.filter((it) => !newsGone.has(it.id));
     }
+
+    /** Compact one-line copy for the News Feed peek / pull-up rows. */
+
+    function newsPullupBrandOffset() {
+      const brand = document.querySelector("h1.brand");
+      if (!brand) return 56;
+      return Math.max(44, Math.ceil(brand.getBoundingClientRect().bottom));
+    }
+
+    function clearNewsPullup() {
+      if (newsPullupCleanup) {
+        newsPullupCleanup();
+        newsPullupCleanup = null;
+      }
+      newsPullupOpen = false;
+      document.body.classList.remove("has-news-pullup", "has-news-pullup-open");
+    }
+
+    function setNewsPullupOpen(open) {
+      const root = document.getElementById("newsPullup");
+      if (!root) return;
+      newsPullupOpen = !!open;
+      root.classList.toggle("is-open", newsPullupOpen);
+      root.setAttribute("aria-expanded", newsPullupOpen ? "true" : "false");
+      const panel = root.querySelector("[data-news-pullup-panel]");
+      const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
+      const scrim = root.querySelector("[data-news-pullup-scrim]");
+      const sheet = root.querySelector("[data-news-pullup-sheet]");
+      if (panel) panel.hidden = !newsPullupOpen;
+      if (peekBlock) peekBlock.hidden = newsPullupOpen;
+      if (scrim) scrim.hidden = !newsPullupOpen;
+      document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
+      if (sheet) {
+        sheet.style.transform = "";
+        sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
+      }
+      if (newsPullupOpen && panel) panel.scrollTop = 0;
+    }
+
+    /**
+     * Wire the bottom News Feed pull-up: drag/flick open & close, tap top/scrim to close,
+     * tap peek to open. Sheet expands up to just under the Chuckle Fantasy brand.
+     */
+    function armNewsPullup() {
+      // Preserve open/closed across re-renders (vote settle, bag warm, pick filter). Only tear
+      // down prior listeners — clearNewsPullup() would force the sheet closed every paint.
+      const wasOpen = newsPullupOpen;
+      if (newsPullupCleanup) {
+        newsPullupCleanup();
+        newsPullupCleanup = null;
+      }
+      const root = document.getElementById("newsPullup");
+      if (!root) return;
+      document.body.classList.add("has-news-pullup");
+      const sheet = root.querySelector("[data-news-pullup-sheet]");
+      const top = root.querySelector("[data-news-pullup-top]");
+      const peek = root.querySelector("[data-news-pullup-peek]");
+      const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
+      const scrim = root.querySelector("[data-news-pullup-scrim]");
+      if (!sheet) return;
+
+      const applyBrand = () => {
+        root.style.setProperty("--brand-offset", newsPullupBrandOffset() + "px");
+      };
+      applyBrand();
+      setNewsPullupOpen(wasOpen);
+
+      let drag = null;
+      const peekH = () => {
+        const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
+        const n = parseFloat(raw);
+        return Number.isFinite(n) ? n : 148;
+      };
+      const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
+
+      const onPointerDown = (e) => {
+        if (e.button != null && e.button !== 0) return;
+        if (e.target.closest("a.news-hero-link")) return;
+        if (e.target.closest("[data-news-del]")) return;
+        // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
+        if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
+        applyBrand();
+        const ty = newsPullupOpen ? 0 : maxTy();
+        drag = {
+          id: e.pointerId,
+          startY: e.clientY,
+          originTy: ty,
+          lastY: e.clientY,
+          lastT: performance.now(),
+          vel: 0,
+          moved: false,
+        };
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+        root.classList.add("is-dragging");
+        sheet.style.transform = "translateY(" + ty + "px)";
+        e.preventDefault();
+      };
+
+      const onPointerMove = (e) => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const now = performance.now();
+        const dy = e.clientY - drag.startY;
+        const ty = Math.min(maxTy(), Math.max(0, drag.originTy + dy));
+        const dt = Math.max(1, now - drag.lastT);
+        drag.vel = (e.clientY - drag.lastY) / dt;
+        drag.lastY = e.clientY;
+        drag.lastT = now;
+        if (Math.abs(dy) > 6) drag.moved = true;
+        sheet.style.transform = "translateY(" + ty + "px)";
+      };
+
+      const endDrag = (e) => {
+        if (!drag || (e && e.pointerId !== drag.id)) return;
+        const rawTy = sheet.style.transform || "";
+        let ty = newsPullupOpen ? 0 : maxTy();
+        if (rawTy.indexOf("translateY(") === 0) {
+          const n = parseFloat(rawTy.slice(11));
+          if (Number.isFinite(n)) ty = n;
+        }
+        const limit = maxTy();
+        const flickOpen = drag.vel < -0.45;
+        const flickClose = drag.vel > 0.45;
+        const wasTap = !drag.moved;
+        drag = null;
+        root.classList.remove("is-dragging");
+        sheet.style.transform = "";
+        if (wasTap) {
+          if (e && e.target && e.target.closest("a.news-hero-link")) return;
+          if (e && e.target && e.target.closest("[data-news-del]")) return;
+          if (newsPullupOpen) setNewsPullupOpen(false);
+          else setNewsPullupOpen(true);
+          return;
+        }
+        if (flickOpen) setNewsPullupOpen(true);
+        else if (flickClose) setNewsPullupOpen(false);
+        else setNewsPullupOpen(ty < limit * 0.55);
+      };
+
+      const onScrimClick = (e) => {
+        e.preventDefault();
+        setNewsPullupOpen(false);
+      };
+
+      const onResize = () => applyBrand();
+
+      const onPeekKey = (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        setNewsPullupOpen(!newsPullupOpen);
+      };
+
+      const targets = [top, peek, peekBlock].filter(Boolean);
+      for (const el of targets) {
+        el.addEventListener("pointerdown", onPointerDown);
+        el.addEventListener("pointermove", onPointerMove);
+        el.addEventListener("pointerup", endDrag);
+        el.addEventListener("pointercancel", endDrag);
+      }
+      if (peek) peek.addEventListener("keydown", onPeekKey);
+      if (scrim) scrim.addEventListener("click", onScrimClick);
+      window.addEventListener("resize", onResize);
+
+      newsPullupCleanup = () => {
+        for (const el of targets) {
+          el.removeEventListener("pointerdown", onPointerDown);
+          el.removeEventListener("pointermove", onPointerMove);
+          el.removeEventListener("pointerup", endDrag);
+          el.removeEventListener("pointercancel", endDrag);
+        }
+        if (peek) peek.removeEventListener("keydown", onPeekKey);
+        if (scrim) scrim.removeEventListener("click", onScrimClick);
+        window.removeEventListener("resize", onResize);
+        root.classList.remove("is-dragging", "is-open");
+        sheet.style.transform = "";
+      };
+    }
+
+    function newsSourceBubble(it) {
+      if (it && (it.category === "tweet" || it.source === "x:submission")) return "X";
+      const cat = NEWS_CATS[it && it.category] || "News";
+      const label = String((it && it.source_label) || "").trim();
+      if (label === "From X" || label === "Shared from X") return "X";
+      if (label && label.charAt(0) !== "@") return label;
+      return cat === "From X" ? "X" : cat;
+    }
+
+    /** Map NFL position abbreviations to shared pos-* colour classes. */
+    const NEWS_POS_SLUG = {
+      QB: "qb", RB: "rb", WR: "wr", TE: "te", K: "k",
+      FB: "rb", HB: "rb", DST: "def", DEF: "def",
+      DL: "def", LB: "def", DB: "def", CB: "def", S: "def", DT: "def", DE: "def",
+    };
+    function newsPosSlug(pos) {
+      const p = String(pos || "").toUpperCase();
+      return NEWS_POS_SLUG[p] || "oth";
+    }
+    function newsPlayerSpanHtml(name, pos, playerId) {
+      const slug = newsPosSlug(pos);
+      const tag = pos
+        ? '<span class="news-pos-tag pos-' + slug + '">' + esc(pos) + "</span> "
+        : "";
+      // Only roster-matched subjects (player_id from ingest) become links into Cuffs.
+      if (playerId) {
+        return '<button type="button" class="news-player pos-' + slug + '"'
+          + ' data-news-cuff="' + esc(String(playerId)) + '"'
+          + ' data-news-cuff-name="' + esc(name) + '"'
+          + ' aria-label="Open cuff for ' + esc(name) + '">'
+          + tag + esc(name) + "</button>";
+      }
+      return '<span class="news-player pos-' + slug + '">' + tag + esc(name) + "</span>";
+    }
+    /** Category pill label from the league_line prefix ("Injury — …", "Roster move on … — …"). */
+    function newsCategoryTagFromLine(line) {
+      const raw = String(line || "").trim();
+      const sep = raw.indexOf(" \u2014 ");
+      if (sep < 0) return "";
+      let prefix = raw.slice(0, sep).trim();
+      const onIdx = prefix.toLowerCase().indexOf(" on ");
+      if (onIdx >= 0) prefix = prefix.slice(0, onIdx).trim();
+      return prefix;
+    }
+    function newsCatTagSlug(label) {
+      return String(label || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+    function newsCatTagHtml(label) {
+      if (!label) return "";
+      const slug = newsCatTagSlug(label);
+      return '<span class="news-cat-tag cat-' + esc(slug) + '">' + esc(label) + "</span>";
+    }
+    /**
+     * Highlight the ingest-matched rostered subject only (it.player + it.player_id).
+     * No free POS-Name scanning — that could colour a free agent who shares a wire tag.
+     */
+    function newsPullupLineHtml(line, it) {
+      const raw = String(line || "");
+      if (!raw) return "";
+      const playerId = it && it.player_id ? String(it.player_id) : "";
+      const playerName = it && it.player ? String(it.player) : "";
+      if (!playerId || !playerName) return esc(raw);
+      const pos = it.player_position || null;
+      // Nested escapes: this file is an outer template literal. Use \${ so a literal
+      // dollar-brace lands in the shipped script; \\\\ becomes \\ in the browser RegExp.
+      const escaped = playerName.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+      const re = new RegExp("\\\\b" + escaped + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "gi");
+      let html = "";
+      let cursor = 0;
+      let m;
+      while ((m = re.exec(raw)) !== null) {
+        if (m.index > cursor) html += esc(raw.slice(cursor, m.index));
+        html += newsPlayerSpanHtml(playerName, pos, playerId);
+        cursor = m.index + m[0].length;
+      }
+      if (cursor < raw.length) html += esc(raw.slice(cursor));
+      return html || esc(raw);
+    }
+
+    function newsHeroLine(it) {
+      if (!it) {
+        return {
+          source: "News", line: "Nothing shared yet.", lineHtml: "", categoryTag: "", who: "",
+          handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
+        };
+      }
+      const source = newsSourceBubble(it);
+      let handle = String(it.tweet_handle || "").replace(/^@/, "").trim();
+      if (!handle) {
+        const label = String(it.source_label || "").trim();
+        if (label.charAt(0) === "@") handle = label.slice(1).trim();
+      }
+      const handleLab = (handle && /^[A-Za-z0-9_]{1,15}$/.test(handle)) ? ("@" + handle) : "";
+      const whoNames = (Array.isArray(it.managers) && it.managers.length)
+        ? it.managers.filter(Boolean)
+        : (it.manager ? [it.manager] : []);
+      const who = whoNames.length
+        ? whoNames.map((n) => seatLabel(n)).join(" · ")
+        : "";
+      const line = it.league_line || it.headline || it.note || "Open the full feed.";
+      const categoryTag = newsCategoryTagFromLine(line);
+      const lineHtml = newsPullupLineHtml(line, it);
+      const when = ago(it.published);
+      const url = String(it.source_url || "");
+      const postUrl = /^https?:\\/\\//i.test(url) ? url : "";
+      const xLink = /^https:\\/\\/x\\.com\\/[A-Za-z0-9_]{1,15}\\/status\\/[0-9]{1,25}$/.test(url) ? url : "";
+      const itemId = String(it.id || "");
+      const subId = itemId ? newsSubmissionId(itemId) : "";
+      const canRemove = !!(isNewsAdmin() && subId);
+      return {
+        source: source, line: line, lineHtml: lineHtml, categoryTag: categoryTag,
+        who: who, handle: handleLab, when: when,
+        postUrl: postUrl, xLink: xLink, itemId: itemId, canRemove: canRemove,
+      };
+    }
+
+    function newsPullupFootHtml(bit) {
+      const footBits = [];
+      if (bit.handle) footBits.push('<span class="news-hero-handle">' + esc(bit.handle) + "</span>");
+      if (bit.when) footBits.push('<span class="news-hero-when">' + esc(bit.when) + "</span>");
+      if (bit.xLink) {
+        footBits.push(
+          '<a class="news-hero-link" href="' + esc(bit.xLink)
+            + '" target="_blank" rel="noopener noreferrer">See tweet</a>'
+        );
+      }
+      if (bit.canRemove && bit.itemId) {
+        footBits.push(
+          '<button type="button" class="news-del" data-news-del="' + esc(bit.itemId) + '"'
+            + (newsDelPending === bit.itemId ? " disabled" : "")
+            + ' aria-label="Remove this post from the feed">'
+            + (newsDelPending === bit.itemId ? "Removing\\u2026" : "Remove")
+            + "</button>"
+        );
+      }
+      if (!footBits.length) return "";
+      return '<div class="news-hero-foot">'
+        + footBits.join('<span class="news-hero-sep" aria-hidden="true">\\u00b7</span>')
+        + "</div>";
+    }
+
+    function newsPullupItemInnerHtml(bit) {
+      const tagBits = [];
+      if (bit.categoryTag) tagBits.push(newsCatTagHtml(bit.categoryTag));
+      if (bit.source) tagBits.push('<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>");
+      const head = '<div class="news-hero-head">'
+        + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
+        + (tagBits.length ? '<div class="news-hero-tags">' + tagBits.join("") + "</div>" : "")
+        + "</div>";
+      const summary = '<div class="news-pullup-line">' + (bit.lineHtml || esc(bit.line)) + "</div>";
+      const foot = newsPullupFootHtml(bit);
+      return '<div class="news-pullup-card">' + head + summary + foot + "</div>";
+    }
+
+    function newsPullupItemHtml(bit) {
+      return newsPullupItemInnerHtml(bit);
+    }
+
+    function newsPullupPeekTeaserHtml(bit) {
+      const who = bit.who
+        ? '<div class="news-pullup-peek-who">' + bit.who + "</div>"
+        : "";
+      const line = bit.line
+        ? '<div class="news-pullup-peek-line">' + esc(bit.line) + "</div>"
+        : "";
+      return '<div class="news-pullup-peek-inner">' + who + line + "</div>";
+    }
+
+    function newsPullupPeekHtml(bit) {
+      return '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
+        + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
+        + ' aria-label="Open the News Feed">'
+        + newsPullupPeekTeaserHtml(bit)
+        + "</div></div>";
+    }
+
+    /**
+     * League-home News Feed: collapsed peek of the latest item at the bottom of the screen.
+     * Drag / tap opens a full sheet up to just under the brand; tap top or flick down closes.
+     */
+    function dayAlert() {
+      const book = news && news.v === 1 ? news : null;
+      const raw = (book && book.items) || [];
+      const items = newsItemsLive();
+      // Same three empties as the full feed: load failed, never shared, all soft-deleted.
+      let emptyLine = "";
+      if (!items.length) {
+        emptyLine = !book
+          ? "The feed could not be loaded."
+          : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
+      }
+      const latestBit = items.length
+        ? newsHeroLine(items[0])
+        : { source: "News", line: emptyLine, lineHtml: "", categoryTag: "", who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
+      const rows = items.length
+        ? items.map((it) => {
+            const bit = newsHeroLine(it);
+            return '<div class="news-pullup-row">' + newsPullupItemHtml(bit) + "</div>";
+          }).join("")
+        : '<div class="news-pullup-empty">' + esc(emptyLine) + "</div>";
+      const countLab = items.length ? ("1 of " + items.length) : "";
+      return '<aside class="news-pullup" id="newsPullup" aria-label="News Feed"'
+        + ' data-news-pullup="1" aria-expanded="false">'
+        + '<div class="news-pullup-scrim" data-news-pullup-scrim hidden></div>'
+        + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
+        + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
+        + '<div class="news-pullup-top" data-news-pullup-top'
+        + ' role="button" tabindex="0"'
+        + ' aria-label="News Feed — drag up to open, tap to close when open">'
+        + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
+        + '<span class="news-pullup-knob"></span></div>'
+        + '<div class="news-pullup-title-row">'
+        + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
+        + '<span class="news-pullup-count" data-news-pullup-count">' + esc(countLab) + "</span>"
+        + "</div></div>"
+        + newsPullupPeekHtml(latestBit)
+        + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
+        + rows
+        + "</div></div></aside>";
+    }
+
+
+    /**
+     * Pick the most recent trade side for the league-home Latest trade card.
+     */
+    function latestTradeSide() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let best = null;
+      for (const r of sides) {
+        if (!best || (r.date || "") > (best.date || "")
+          || ((r.date || "") === (best.date || "") && String(r.transaction_id) > String(best.transaction_id))) {
+          best = r;
+        }
+      }
+      return best;
+    }
+
+    /** Sleeper-style short name: "Blake Corum" → "B. Corum". */
+    function shortPlayerName(name) {
+      const parts = String(name || "").trim().split(/\\s+/).filter(Boolean);
+      if (parts.length < 2) return parts[0] || "";
+      return parts[0].charAt(0) + ". " + parts.slice(1).join(" ");
+    }
+
+    /** "2027 2nd (SF69erss)" → { primary: "2027 2nd Rd", secondary: "(SF69erss)" }. */
+    function formatPickLabels(label) {
+      const raw = String(label || "").trim();
+      const m = raw.match(/^(.*?)(?:\\s*\\(([^)]+)\\))?\\s*$/);
+      let primary = ((m && m[1]) || raw).trim();
+      const secondary = m && m[2] ? "(" + m[2] + ")" : "";
+      if (/^\\d{4}\\s+\\d+(?:st|nd|rd|th)$/i.test(primary)) primary += " Rd";
+      return { primary: primary, secondary: secondary };
+    }
+
+    function guessLegFromHeadline(headline) {
+      const label = String(headline || "").trim();
+      if (!label) return null;
+      if (/^\\d{4}\\b/.test(label) || /\\b\\d+(?:st|nd|rd|th)\\b/i.test(label)) {
+        return { label: label, kind: "pick" };
+      }
+      return { label: label, kind: "player", asset_key: null };
+    }
+
+    function latestTradeAssetHtml(leg) {
+      if (!leg) return "";
+      const parts = legValueParts(leg);
+      const valHtml = parts
+        ? '<span class="lh-trade-num lh-trade-val">' + esc(parts.num) + "</span>"
+        : '<span class="lh-trade-num lh-trade-val">—</span>';
+      // Text-first asset line: gold "+" + label + book number. Never paint Mid / as-year
+      // notes on the Latest trade lab (every pick is mid until true year values land).
+      let rowInner = "";
+      if (leg.kind === "pick") {
+        const lab = formatPickLabels(leg.label);
+        // Owner only — do not join parts.note ("Mid" / "as 2028"). Prefer "became …" when
+        // the pick already resolved so the path is visible before expand.
+        const tape = leg.asset_key && picks ? picks[leg.asset_key] : null;
+        const became = tape && tape.became ? String(tape.became) : "";
+        const sub = became ? ("became " + became) : (lab.secondary || "");
+        rowInner = '<span class="lh-trade-plus" aria-hidden="true">+</span>'
+          + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
+          + (sub ? "<span>" + esc(sub) + "</span>" : "")
+          + "</div>"
+          + valHtml;
+      } else {
+        const pid = String(leg.asset_key || "").replace(/^player:/, "");
+        const meta = pid && ktcBySleeper ? ktcBySleeper[pid] : null;
+        const primary = shortPlayerName(leg.label);
+        const posTeam = meta && meta.pos
+          ? meta.pos + (meta.team ? " · " + meta.team : "")
+          : "";
+        const posSlug = meta && meta.pos ? newsPosSlug(meta.pos) : "";
+        const nameCls = posSlug ? ' class="pos-' + posSlug + '"' : "";
+        rowInner = '<span class="lh-trade-plus" aria-hidden="true">+</span>'
+          + '<div class="lh-trade-lab"><b' + nameCls + '>' + esc(primary || leg.label || "") + "</b>"
+          + (posTeam ? "<span>" + esc(posTeam) + "</span>" : "")
+          + "</div>"
+          + valHtml;
+      }
+      // Expandable hop path (pick tape, or the pick that became this player).
+      const pickKey = pickKeyForLeg(leg);
+      if (!pickKey) {
+        return '<div class="lh-trade-asset">' + rowInner + "</div>";
+      }
+      const open = openPick === pickKey;
+      return '<div class="lh-trade-asset-wrap">'
+        + '<button type="button" class="lh-trade-asset' + (open ? " on" : "") + '"'
+        + ' data-pick="' + esc(pickKey) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+        + rowInner + "</button>"
+        + (open ? hopHtml(pickKey) : "")
+        + "</div>";
+    }
+
+    function latestTradeLegsSum(legs) {
+      let n = 0;
+      let any = false;
+      for (const leg of legs || []) {
+        const p = legValueParts(leg);
+        if (!p || p.raw == null || Number.isNaN(p.raw)) continue;
+        n += p.raw;
+        any = true;
+      }
+      return any ? n : null;
+    }
+
+    /** Bottom equals-row total for one H2H side. Prefers the VA-aware bag total when bags are ready. */
+    function latestTradeSumHtml(total, tone) {
+      if (total == null || Number.isNaN(Number(total))) return "";
+      const sum = Number(total);
+      const toneCls = tone === "high" ? " is-high"
+        : tone === "low" ? " is-low"
+        : tone === "even" ? " is-even"
+        : "";
+      return '<div class="lh-trade-sum' + toneCls + '" aria-label="Total ' + esc(fmt(sum)) + '">'
+        + '<span class="lh-trade-plus" aria-hidden="true"></span>'
+        + '<span class="lh-trade-eq" aria-hidden="true">=</span>'
+        + '<span class="lh-trade-num">' + esc(fmt(sum)) + "</span>"
+        + "</div>";
+    }
+
+    /** Compact Value Adjustment row — mirrors bagBlock's .leg.va on the H2H chip. */
+    function latestTradeVaHtml(va) {
+      if (!va || !Math.round(va)) return "";
+      return '<div class="lh-trade-asset lh-trade-va">'
+        + '<span class="lh-trade-plus" aria-hidden="true"></span>'
+        + '<div class="lh-trade-lab"><b>Value Adjustment</b></div>'
+        + '<span class="lh-trade-num lh-trade-val">' + esc(signedNum(va)) + "</span>"
+        + "</div>";
+    }
+
+    /**
+     * Bag totals + mirrored delta for the Latest trade chip.
+     * Prefer VA-adjusted seat bags (same applyVa path as tradeRow); until they load,
+     * fall back to trade_boards windows (same got/sent as boardTape).
+     */
+    function bagHitForTx(tx) {
+      if (!tx) return null;
+      if (Object.prototype.hasOwnProperty.call(tradeBagByTx, tx)) return tradeBagByTx[tx];
+      if (latestTradeHitTx === tx) return latestTradeHit;
+      return null;
+    }
+
+    function latestTradeLean(latest) {
+      const hit = bagHitForTx(latest.transaction_id);
+      if (hit) {
+        const s = applyVa(
+          sideWindow(hit),
+          isMulti(hit),
+        );
+        if (s && !s.incomplete && s.today != null && s.sent_today != null) {
+          const d = displayDelta(s.today, s.sent_today);
+          return {
+            leftTotal: s.today,
+            rightTotal: s.sent_today,
+            leftDelta: d,
+            rightDelta: d == null ? null : -d,
+            fromBags: true,
+          };
+        }
+      }
+      const w = windowBag(latest);
+      const d = windowScore(latest);
+      return {
+        leftTotal: w.incomplete && !w.got ? null : w.got,
+        rightTotal: w.incomplete && !w.sent ? null : w.sent,
+        leftDelta: d,
+        rightDelta: d == null ? null : -d,
+        fromBags: false,
+      };
+    }
+
+    /** Under the chip: voter flairs under left | VS | right. */
+    function latestTradeLeanFooterHtml(latest, lean) {
+      const seats = voteSeats(latest);
+      const canVote = seats.length === 2 && voteParties(latest) <= 2;
+      if (!canVote) return "";
+
+      const sideMarksHtml = (uid, rightAlign) => {
+        if (!uid) {
+          return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"></div>';
+        }
+        const v = readVotes(latest.transaction_id);
+        const marks = voteMarks(latest.transaction_id);
+        const voters = marks[uid] || [];
+        const n = v.tally[uid] || voters.length || 0;
+        let flairsHtml = "";
+        if (voters.length) {
+          const sorted = voters.slice().sort((a, b) =>
+            seatNameForUid(a).localeCompare(seatNameForUid(b)));
+          // Only paint seats that have a real flair; skip unknown voters (no hex initials).
+          const flairs = sorted.map((vid) => seatVoteMarkHtml(seatNameForUid(vid))).filter(Boolean);
+          if (flairs.length) {
+            flairsHtml = '<div class="h2h-lean-flairs">' + flairs.join("") + "</div>";
+          }
+        }
+        // Scoreboard total sits on the inner edge (toward mid / "who won"), not beside flairs.
+        const scoreHtml = n > 0 ? '<span class="h2h-lean-n">' + n + "</span>" : "";
+        // No votes yet: leave the marks row blank (no "—" / "0" filler).
+        if (!flairsHtml && !scoreHtml) {
+          return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"></div>';
+        }
+        const label = n === 1 ? "1 vote for " + seatNameForUid(uid) : n + " votes for " + seatNameForUid(uid);
+        return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"'
+          + (n > 0 ? ' aria-label="' + esc(label) + '"' : "")
+          + '>'
+          + '<div class="h2h-lean-marks">' + flairsHtml + scoreHtml + "</div></div>";
+      };
+
+      const leftUid = seats[0] ? seats[0].uid : null;
+      const rightUid = seats[1] ? seats[1].uid : null;
+      // Align marks to the same left/right seats the chip paints (latest.name is left).
+      let left = leftUid;
+      let right = rightUid;
+      if (seats.length === 2 && latest.user_id) {
+        if (seats[0].uid === latest.user_id) {
+          left = seats[0].uid;
+          right = seats[1].uid;
+        } else if (seats[1].uid === latest.user_id) {
+          left = seats[1].uid;
+          right = seats[0].uid;
+        }
+      }
+
+      // Empty mid keeps the 3-col grid so vote marks stay under each seat.
+      return '<div class="h2h-trade-lean">'
+        + sideMarksHtml(left, false)
+        + '<div class="h2h-lean-mid" aria-hidden="true"></div>'
+        + sideMarksHtml(right, true)
+        + "</div>";
+    }
+
+    /** Circular seat avatar from Sleeper/flair; optional gold medal on weekly matchup chips. */
+    function h2hAvatarHtml(name, avatarUrl, opts) {
+      const win = opts && opts.win;
+      const who = String(name || "");
+      let inner = "";
+      if (avatarUrl) {
+        inner = '<div class="h2h-av"><img src="' + esc(avatarUrl) + '" alt="" width="40" height="40"'
+          + ' loading="lazy" decoding="async" /></div>';
+      } else {
+        const f = SEAT_FLAIR[name];
+        if (f && f.img) {
+          inner = '<div class="h2h-av"><img src="' + esc(f.img) + "?" + DATA_V
+            + '" alt="" width="40" height="40" loading="lazy" decoding="async" /></div>';
+        } else {
+          const initials = String(name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+          inner = '<div class="h2h-av" aria-hidden="true">' + esc(initials) + "</div>";
+        }
+      }
+      const medal = win
+        ? '<span class="h2h-medal" aria-hidden="true"><svg viewBox="0 0 16 16" width="10" height="10">'
+          + '<circle cx="8" cy="9" r="4.2" fill="#e8c45a"/>'
+          + '<path d="M5 2.5h6l-1.2 3.2H6.2L5 2.5z" fill="#c9a227"/></svg></span>'
+        : "";
+      if (!who) return '<div class="h2h-av-wrap">' + inner + medal + "</div>";
+      return '<span class="seat-link h2h-av-wrap" role="link" tabindex="0" data-who="' + esc(who) + '"'
+        + ' aria-label="' + esc(who) + '">' + inner + medal + "</span>";
+    }
+
+    function h2hScoreFmt(n) {
+      if (n == null || Number.isNaN(Number(n))) return "—";
+      return Number(n).toFixed(2).replace(/\\.00$/, "").replace(/(\\.[1-9])0$/, "$1");
+    }
+
+    /** Left: @handle • record (#rank). Right: record (#rank) • @handle. */
+    function h2hMetaLine(side, right) {
+      const handle = side.handle ? "@" + String(side.handle) : "";
+      let rec = side.record ? String(side.record) : "";
+      if (side.rank != null && side.rank !== "" && rec && !/\\(#\\d+\\)/.test(rec)) {
+        rec = rec + " (#" + side.rank + ")";
+      } else if (side.rank != null && side.rank !== "" && !rec) {
+        rec = "#" + side.rank;
+      }
+      const parts = right ? [rec, handle] : [handle, rec];
+      return parts.filter(Boolean).join(" • ");
+    }
+
+    /**
+     * Mirrored matchup side: avatar + win% + actual/proj + accent bar + name + meta.
+     * right=true mirrors alignment to match the reference chip.
+     */
+    function h2hMatchSideHtml(side, right) {
+      const cls = right ? "h2h-side is-right" : "h2h-side is-left";
+      const state = side.state || "tie"; // win | lose | tie
+      const pctLab = side.pct == null ? "—" : (String(side.pct) + "% WIN");
+      const trophy = state === "win"
+        ? '<svg class="h2h-pct-ico" viewBox="0 0 16 16" aria-hidden="true">'
+          + '<path fill="#e8c45a" d="M4 2h8v2.2c0 2.1-1.4 3.8-3.2 4.3V10h1.4v1.5H5.8V10H7.2V8.5C5.4 8 4 6.3 4 4.2V2zm-1.2 1H1.5c0 2.2 1.3 3.5 2.8 3.9-.2-.6-.3-1.2-.3-1.9V3zm10.9 0H14.7v1.9c0 .7-.1 1.3-.3 1.9 1.5-.4 2.8-1.7 2.8-3.9h-1.3z"/></svg>'
+        : "";
+      const meta = h2hMetaLine(side, right);
+      return '<div class="' + cls + '">'
+        + '<div class="h2h-top">'
+        + h2hAvatarHtml(side.name, side.avatar, { win: state === "win" })
+        + '<div class="h2h-nums">'
+        + '<div class="h2h-pct is-' + state + '">' + trophy + esc(pctLab) + "</div>"
+        + '<div class="h2h-score">' + esc(h2hScoreFmt(side.pts)) + "</div>"
+        + '<div class="h2h-proj">' + esc(h2hScoreFmt(side.proj)) + "</div>"
+        + "</div></div>"
+        + '<div class="h2h-bar is-' + state + '" aria-hidden="true"></div>'
+        + '<div class="h2h-id">'
+        + '<div class="h2h-name">' + h2hSeatTitleHtml(side) + "</div>"
+        + (meta ? '<div class="h2h-meta">' + esc(meta) + "</div>" : "")
+        + "</div></div>";
+    }
+
+    /** Team name on the chip; crown/flair keyed by Sleeper handle when they differ. */
+    function h2hSeatTitleHtml(side) {
+      const title = side.name || side.handle || "";
+      const flairKey = side.flairName || side.handle || side.name || "";
+      const who = side.handle || side.name || title;
+      const champ = reigningChampName();
+      const crown = (champ && (champ === flairKey || champ === title)) ? CROWN + " " : "";
+      const inner = crown + esc(title) + seatFlairHtml(flairKey);
+      if (!who) return inner;
+      return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(who) + '"'
+        + ' aria-label="' + esc(who) + '">' + inner + "</span>";
+    }
+
+    function h2hMatchCardHtml(p) {
+      const aPts = Number(p.aPts) || 0;
+      const bPts = Number(p.bPts) || 0;
+      let aState = "tie", bState = "tie", aPct = 50, bPct = 50;
+      if (aPts > bPts) { aState = "win"; bState = "lose"; aPct = 100; bPct = 0; }
+      else if (bPts > aPts) { aState = "lose"; bState = "win"; aPct = 0; bPct = 100; }
+      const a = {
+        name: p.a, flairName: p.aHandle || p.a, pts: p.aPts, proj: p.aProj, avatar: p.aAvatar,
+        handle: p.aHandle || p.a, record: p.aRecord || "", rank: p.aRank, state: aState, pct: aPct,
+      };
+      const b = {
+        name: p.b, flairName: p.bHandle || p.b, pts: p.bPts, proj: p.bProj, avatar: p.bAvatar,
+        handle: p.bHandle || p.b, record: p.bRecord || "", rank: p.bRank, state: bState, pct: bPct,
+      };
+      return '<div class="h2h-chip" role="group" aria-label="'
+        + esc(p.a) + " vs " + esc(p.b) + '">'
+        + h2hMatchSideHtml(a, false)
+        + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+        + h2hMatchSideHtml(b, true)
+        + "</div>";
+    }
+
+    /**
+     * Two stacked receive-sides for bags; H2H card paints them left | VS | right.
+     * Prefer full bags from the seat file (legs = this seat received; sent = counterparty).
+     * Until that loads, fall back to each tape row's headline so the card still matches layout.
+     */
+    function latestTradeReceiveSides(latest) {
+      const seats = voteSeats(latest);
+      const hit = bagHitForTx(latest.transaction_id);
+      if (hit) {
+        const bag = applyVa(sideWindow(hit), isMulti(hit));
+        const other = seats.find((s) => s.uid !== latest.user_id);
+        return [
+          {
+            name: latest.name,
+            uid: latest.user_id,
+            legs: (bag && bag.legs) || [],
+            value_adjust: bag && bag.value_adjust,
+          },
+          {
+            name: latest.other,
+            uid: other ? other.uid : null,
+            legs: (bag && bag.sent) || [],
+            value_adjust: bag && bag.value_adjust_sent,
+          },
+        ];
+      }
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const out = [];
+      for (const s of seats) {
+        const row = sides.find((r) => r.transaction_id === latest.transaction_id && r.user_id === s.uid);
+        const leg = guessLegFromHeadline(row && row.headline);
+        out.push({ name: s.name, uid: s.uid, legs: leg ? [leg] : [] });
+      }
+      if (!out.length) {
+        out.push({ name: latest.name, uid: latest.user_id, legs: [] });
+        out.push({ name: latest.other, uid: null, legs: [] });
+      }
+      return out;
+    }
+
+    async function ensureKtcBook() {
+      if (ktcBySleeper) return;
+      ktcBySleeper = Object.create(null);
+      try {
+        const book = await getJson("data/ktc/latest.json");
+        for (const p of (book && book.players) || []) {
+          if (p.sleeper_id) ktcBySleeper[String(p.sleeper_id)] = p;
+        }
+      } catch (ktcErr) {
+        console.error(ktcErr);
+      }
+    }
+
+    function rememberTradeBag(tx, hit) {
+      tradeBagByTx[tx] = hit || null;
+      if (latestTradeHitTx === tx) latestTradeHit = hit || null;
+    }
+
+    /** True once ensureLatestTradeBags finished for this tx (hit may still be null). */
+    function latestTradeBagsReady(tx) {
+      return !!(tx && Object.prototype.hasOwnProperty.call(tradeBagByTx, tx));
+    }
+
+    /**
+     * Compact placeholder chip: seat names + inert asset bars. Used until seat bags land so
+     * we never paint the one-headline stub from trade_boards and then expand into full bags.
+     */
+    function latestTradeSkeletonHtml(latest) {
+      const phAsset = (short) => '<div class="lh-trade-asset is-ph" aria-hidden="true">'
+        + '<span class="lh-trade-plus">+</span>'
+        + '<div class="lh-trade-lab"><b class="lh-trade-ph"></b></div>'
+        + '<span class="lh-trade-num lh-trade-val lh-trade-ph-num'
+        + (short ? " is-short" : "") + '"></span></div>';
+      const side = (name, right) => {
+        const cls = right ? "h2h-side is-right" : "h2h-side is-left";
+        return '<div class="' + cls + '">'
+          + '<div class="h2h-top">'
+          + h2hAvatarHtml(name, null)
+          + '<div class="h2h-id"><div class="h2h-name">' + seatLabel(name) + "</div></div></div>"
+          + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
+      };
+      return '<div class="h2h-chip is-trade is-loading" role="status" aria-busy="true"'
+        + ' aria-label="Loading recent trade">'
+        + side(latest.name, false)
+        + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+        + side(latest.other, true)
+        + '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>'
+        + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
+        + '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>'
+        + "</div>";
+    }
+
+    function ensureLatestTradeBags() {
+      const latest = latestTradeSide();
+      if (!latest) {
+        latestTradeHit = null;
+        latestTradeHitTx = null;
+        latestTradeBagsLoading = false;
+        latestTradeBagsPromise = null;
+        return Promise.resolve(null);
+      }
+      const tx = latest.transaction_id;
+      // Resolved for this transaction (hit may be null if the seat file missed it).
+      if (Object.prototype.hasOwnProperty.call(tradeBagByTx, tx)) {
+        latestTradeHitTx = tx;
+        latestTradeHit = tradeBagByTx[tx];
+        latestTradeBagsLoading = false;
+        return Promise.resolve(tradeBagByTx[tx]);
+      }
+      // Reuse the in-flight fetch so loadMembers can await the same promise.
+      if (tradeBagPending[tx] && latestTradeBagsPromise) return latestTradeBagsPromise;
+      latestTradeBagsLoading = true;
+      latestTradeHitTx = tx;
+      tradeBagPending[tx] = true;
+      latestTradeBagsPromise = (async () => {
+        try {
+          await ensureKtcBook();
+          const seat = await seatData(latest.user_id);
+          const hit = seat && (seat.trades || [])
+            .find((t) => t.transaction_id === tx);
+          rememberTradeBag(tx, hit || null);
+          return hit || null;
+        } catch (err) {
+          console.error(err);
+          rememberTradeBag(tx, null);
+          return null;
+        } finally {
+          delete tradeBagPending[tx];
+          latestTradeBagsLoading = false;
+          if (latestTradeBagsPromise) {
+            const done = latestTradeBagsPromise;
+            Promise.resolve(done).then(() => {
+              if (latestTradeBagsPromise === done) latestTradeBagsPromise = null;
+            });
+          }
+          if (appScreen === "dash" && view === "home" && !me) render();
+          if (appScreen === "dash" && view === "trades" && !me) render();
+        }
+      })();
+      return latestTradeBagsPromise;
+    }
+
+    /** Prefetch seat bags for the first page of the league trades feed. */
+    function ensureTradesFeedBags(rows) {
+      const need = (rows || []).slice(0, Math.max(tapeLimit, 12));
+      for (const r of need) {
+        const tx = r && r.transaction_id;
+        if (!tx) continue;
+        if (Object.prototype.hasOwnProperty.call(tradeBagByTx, tx)) continue;
+        if (tradeBagPending[tx]) continue;
+        tradeBagPending[tx] = true;
+        const uid = r.user_id;
+        (async () => {
+          try {
+            await ensureKtcBook();
+            const seat = await seatData(uid);
+            const hit = seat && (seat.trades || []).find((t) => t.transaction_id === tx);
+            rememberTradeBag(tx, hit || null);
+          } catch (err) {
+            console.error(err);
+            rememberTradeBag(tx, null);
+          }
+          delete tradeBagPending[tx];
+          if (appScreen !== "dash") return;
+          if (view === "trades" || view === "trade" || view === "partners"
+            || view === "home" || view === "datasets") render();
+        })();
+      }
+    }
+
+    function latestTradeCardHtml(latest) {
+      const sides = latestTradeReceiveSides(latest);
+      const left = sides[0] || { name: latest.name, legs: [] };
+      const right = sides[1] || { name: latest.other, legs: [] };
+      const lean = latestTradeLean(latest);
+      // Prefer VA-aware bag totals. Legs-only is the pre-bag fallback.
+      const leftSum = lean.leftTotal != null ? lean.leftTotal : latestTradeLegsSum(left.legs);
+      const rightSum = lean.rightTotal != null ? lean.rightTotal : latestTradeLegsSum(right.legs);
+      let leftTone = "";
+      let rightTone = "";
+      if (leftSum != null && rightSum != null) {
+        const l = Math.round(leftSum);
+        const r = Math.round(rightSum);
+        if (l > r) { leftTone = "high"; rightTone = "low"; }
+        else if (l < r) { leftTone = "low"; rightTone = "high"; }
+        else { leftTone = "even"; rightTone = "even"; }
+      }
+      const sideHtml = (side, rightAlign) => {
+        const legs = side.legs || [];
+        const assets = legs.map(latestTradeAssetHtml).join("");
+        const vaRow = latestTradeVaHtml(side.value_adjust);
+        const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
+        // Avatar + seat name. Bag totals sit on a shared chip row below both sides so unequal
+        // leg counts cannot stagger the = lines.
+        return '<div class="' + cls + '">'
+          + '<div class="h2h-top">'
+          + h2hAvatarHtml(side.name, side.avatar)
+          + '<div class="h2h-id">'
+          + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
+          + "</div></div>"
+          + '<div class="h2h-assets">'
+          + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
+            + '<div class="lh-trade-lab"><b>…</b></div>'
+            + '<span class="lh-trade-num lh-trade-val">—</span></div>')
+          + vaRow
+          + "</div></div>";
+      };
+      const leftSumHtml = latestTradeSumHtml(leftSum, leftTone)
+        || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
+      const rightSumHtml = latestTradeSumHtml(rightSum, rightTone)
+        || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
+      return '<div class="h2h-chip is-trade" role="group" aria-label="'
+        + esc(latest.name) + " vs " + esc(latest.other) + '">'
+        + chipLensHtml()
+        + sideHtml(left, false)
+        + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+        + sideHtml(right, true)
+        + leftSumHtml
+        + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
+        + rightSumHtml
+        + latestTradeLeanFooterHtml(latest, lean)
+        + "</div>";
+      }
+
+    function matchupStripHtml() {
+      if (weekMatchupsLoading && !weekMatchups) {
+        return '<div class="lh-week-h">Recent matches</div>'
+          + '<div class="lh-match-strip lh-strip" role="list" aria-label="Loading matchups">'
+          + '<div class="lh-match-card" role="listitem">'
+          + '<div class="h2h-chip"><div class="h2h-side is-left"><div class="h2h-name">Loading…</div>'
+          + '<div class="h2h-meta">Sleeper</div></div>'
+          + '<div class="h2h-vs">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">…</div></div></div>'
+          + "</div></div>";
+      }
+      if (!weekMatchups || weekMatchups === "empty" || !weekMatchups.pairs || !weekMatchups.pairs.length) {
+        return '<div class="lh-week-h">Recent matches</div>'
+          + '<p class="lh-match-empty">No scored weekly matchups found yet.</p>';
+      }
+      return '<div class="lh-week-h">' + esc(weekMatchups.label || "Recent matches") + "</div>"
+        + '<div class="lh-match-strip lh-strip" role="list" aria-label="'
+        + esc(weekMatchups.label || "Recent matches") + '">'
+        + weekMatchups.pairs.map((p) => {
+          return '<div class="lh-match-card" role="listitem">'
+            + h2hMatchCardHtml(p)
+            + "</div>";
+        }).join("")
+        + "</div>";
+    }
+
+    function ensureWeekMatchups() {
+      if (weekMatchups || weekMatchupsLoading) return;
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      if (!lid) return;
+      weekMatchupsLoading = true;
+      const sleeper = "https://api.sleeper.app/v1";
+      (async () => {
+        try {
+          const state = await fetch(sleeper + "/state/nfl").then((r) => r.json());
+          let leagueId = String(lid);
+          // Prefer the prior completed week; before kickoff (display_week 1, no scores) walk back.
+          let week = Math.max(1, Number(state.display_week || state.week || 1) - 1);
+          if (Number(state.display_week || state.week || 1) <= 1) week = 1;
+          let pairs = [];
+          let label = "";
+          let seasonYear = "";
+          for (let attempt = 0; attempt < 30 && !pairs.length; attempt++) {
+            let meta;
+            let tryWeek = week;
+            try {
+            meta = await fetch(sleeper + "/league/" + leagueId).then((r) => r.json());
+            tryWeek = week;
+            const [rosters, users, matchups] = await Promise.all([
+              fetch(sleeper + "/league/" + leagueId + "/rosters").then((r) => r.json()),
+              fetch(sleeper + "/league/" + leagueId + "/users").then((r) => r.json()),
+              fetch(sleeper + "/league/" + leagueId + "/matchups/" + tryWeek).then((r) => r.json()),
+            ]);
+            if (!Array.isArray(rosters) || !Array.isArray(users) || !Array.isArray(matchups)) {
+              throw new Error("sleeper matchup payload incomplete");
+            }
+            const ownerName = Object.create(null);
+            const ownerHandle = Object.create(null);
+            const ownerAvatar = Object.create(null);
+            const ownerRecord = Object.create(null);
+            const ownerRank = Object.create(null);
+            const ownerPf = Object.create(null);
+            const userName = Object.create(null);
+            const userHandle = Object.create(null);
+            const userAvatar = Object.create(null);
+            for (const u of users || []) {
+              // Team name for the chip title; display_name is the @handle (and flair key).
+              const handle = u.display_name || u.user_id;
+              const team = (u.metadata && u.metadata.team_name) || handle;
+              userName[u.user_id] = team;
+              userHandle[u.user_id] = handle;
+              if (u.avatar) {
+                userAvatar[u.user_id] = "https://sleepercdn.com/avatars/thumbs/" + u.avatar;
+              }
+            }
+            const rankRows = [];
+            for (const r of rosters || []) {
+              ownerName[r.roster_id] = userName[r.owner_id] || ("Roster " + r.roster_id);
+              ownerHandle[r.roster_id] = userHandle[r.owner_id] || ownerName[r.roster_id];
+              ownerAvatar[r.roster_id] = userAvatar[r.owner_id] || "";
+              const wins = r.settings && r.settings.wins != null ? Number(r.settings.wins) : null;
+              const losses = r.settings && r.settings.losses != null ? Number(r.settings.losses) : null;
+              const ties = r.settings && r.settings.ties != null ? Number(r.settings.ties) : 0;
+              ownerRecord[r.roster_id] = (wins != null && losses != null)
+                ? (wins + "-" + losses + (ties ? "-" + ties : ""))
+                : "";
+              const pf = Number((r.settings && (r.settings.fpts || r.settings.ppts)) || 0);
+              ownerPf[r.roster_id] = pf;
+              rankRows.push({
+                rid: r.roster_id,
+                wins: wins == null ? -1 : wins,
+                losses: losses == null ? 999 : losses,
+                pf: pf,
+              });
+            }
+            rankRows.sort((a, b) => b.wins - a.wins || a.losses - b.losses || b.pf - a.pf);
+            rankRows.forEach((row, i) => { ownerRank[row.rid] = i + 1; });
+            const by = Object.create(null);
+            for (const m of matchups || []) {
+              if (m.matchup_id == null) continue;
+              (by[m.matchup_id] || (by[m.matchup_id] = [])).push(m);
+            }
+            const scored = [];
+            for (const id of Object.keys(by)) {
+              const row = by[id];
+              if (row.length < 2) continue;
+              const a = row[0], b = row[1];
+              const aPts = a.points == null ? 0 : Number(a.points);
+              const bPts = b.points == null ? 0 : Number(b.points);
+              scored.push({
+                a: ownerName[a.roster_id] || String(a.roster_id),
+                b: ownerName[b.roster_id] || String(b.roster_id),
+                aHandle: ownerHandle[a.roster_id] || "",
+                bHandle: ownerHandle[b.roster_id] || "",
+                aAvatar: ownerAvatar[a.roster_id] || "",
+                bAvatar: ownerAvatar[b.roster_id] || "",
+                aRecord: ownerRecord[a.roster_id] || "",
+                bRecord: ownerRecord[b.roster_id] || "",
+                aRank: ownerRank[a.roster_id] || "",
+                bRank: ownerRank[b.roster_id] || "",
+                aPts: aPts,
+                bPts: bPts,
+                aStarters: a.starters || [],
+                bStarters: b.starters || [],
+                sum: aPts + bPts,
+              });
+            }
+            if (scored.some((p) => p.sum > 0)) {
+              // Championship week (e.g. Week 17 after a 6-team bracket) — also used when
+              // walking previous_league_id so consolation weeks after the title game are skipped.
+              const pws = Number(meta.settings && meta.settings.playoff_week_start) || 0;
+              const playoffTeams = Number(meta.settings && meta.settings.playoff_teams) || 0;
+              let champWeek = 0;
+              if (pws > 0) {
+                try {
+                  const bracket = await fetch(sleeper + "/league/" + leagueId + "/winners_bracket")
+                    .then((r) => r.json());
+                  const final = (bracket || []).find((row) => row && row.p === 1 && row.r != null);
+                  if (final) champWeek = pws + (Number(final.r) - 1);
+                } catch (brErr) {
+                  console.error(brErr);
+                }
+                if (!champWeek && playoffTeams) {
+                  // 4 teams → 2 rounds, 6–8 → 3, else 4. Same map title-path uses via bracket rounds.
+                  const rounds = playoffTeams <= 4 ? 2 : playoffTeams <= 8 ? 3 : 4;
+                  champWeek = pws + rounds - 1;
+                }
+              }
+              // Finished season: toilet-bowl / consolation after the final is not the strip week.
+              if (!(champWeek && tryWeek > champWeek && String(meta.status || "") === "complete")) {
+                const season = String(meta.season || state.league_season || state.season || "");
+                const rec = meta.scoring_settings && Number(meta.scoring_settings.rec);
+                const ptsKey = rec === 1 ? "pts_ppr" : rec === 0.5 ? "pts_half_ppr" : "pts_std";
+                let projBy = Object.create(null);
+                try {
+                  const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+                  const qs = positions.map((p) => "position[]=" + p).join("&");
+                  const projs = await fetch(
+                    "https://api.sleeper.app/projections/nfl/" + season + "/" + tryWeek
+                      + "?season_type=regular&" + qs
+                  ).then((r) => r.json());
+                  for (const p of projs || []) {
+                    const st = p.stats || {};
+                    projBy[p.player_id] = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
+                  }
+                } catch (projErr) {
+                  console.error(projErr);
+                }
+                const sumProj = (ids) => (ids || []).reduce((n, id) => n + (projBy[id] || 0), 0);
+                for (const p of scored) {
+                  p.aProj = Math.round(sumProj(p.aStarters) * 10) / 10;
+                  p.bProj = Math.round(sumProj(p.bStarters) * 10) / 10;
+                  delete p.aStarters;
+                  delete p.bStarters;
+                }
+                pairs = scored.sort((x, y) => y.sum - x.sum);
+                seasonYear = season;
+                label = "Week " + tryWeek + (season ? " " + season : "");
+                if (champWeek && tryWeek === champWeek) {
+                  label += " · Championship week";
+                }
+                break;
+              }
+            }
+            // No points this week — step back; empty playoff weeks (e.g. 18) skip the same way.
+            if (week > 1) week -= 1;
+            else if (meta && meta.previous_league_id) {
+              leagueId = String(meta.previous_league_id);
+              week = 18;
+            } else break;
+            } catch (attemptErr) {
+              // One bad week/network blip must not abort the walk (Design Mode used to stay on
+              // "Loading…" forever when a single Sleeper call rejected mid-scan).
+              console.error(attemptErr);
+              if (week > 1) week -= 1;
+              else if (meta && meta.previous_league_id) {
+                leagueId = String(meta.previous_league_id);
+                week = 18;
+              } else break;
+            }
+          }
+          weekMatchups = pairs.length
+            ? { week: week, season: seasonYear, label: label, pairs: pairs }
+            : "empty";
+        } catch (err) {
+          console.error(err);
+          weekMatchups = "empty";
+        }
+        weekMatchupsLoading = false;
+        // Re-paint league home strip if we are still looking at it.
+        if (appScreen === "dash" && view === "home" && !me) render();
+      })();
+    }
+
+
+    /**
+     * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
+     * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
+     */
+    function recentTradeHeaderHtml() {
+      return '<div class="day-alert-h">'
+        + '<span>Recent Trade</span>'
+        + '<button type="button" class="lh-trade-all-btn" data-trades-list="1"'
+        + ' aria-label="Search all trades">search all trades</button>'
+        + "</div>";
+    }
+
+    function leagueInProgress() {
+      ensureLatestTradeBags();
+      const latest = latestTradeSide();
+      let tradeBox = "";
+      if (latest) {
+        try {
+          const voted = !!readVotes(latest.transaction_id).choice;
+          const chip = latestTradeBagsReady(latest.transaction_id)
+            ? latestTradeCardHtml(latest)
+            : latestTradeSkeletonHtml(latest);
+          const voteCta = voted ? "" : '<button type="button" class="lh-trade-vote-cta"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
+            + (voted ? " voted" : "") + '"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + recentTradeHeaderHtml()
+            + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
+            + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+            + "</div>";
+        } catch (err) {
+          // Bag/format bugs must not erase the rest of league home (News Feed).
+          console.error(err);
+          const voteCta = '<button type="button" class="lh-trade-vote-cta"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + recentTradeHeaderHtml()
+            + '<div class="lh-trade-chip-wrap">'
+            + '<div class="h2h-chip is-trade" role="group">'
+            + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
+            + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+            + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
+            + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
+            + "</div>"
+            + voteCta
+            + "</div>"
+            + "</div>";
+        }
+      }
+      if (!tradeBox) return "";
+      return '<section class="lh-section">' + tradeBox + "</section>";
+    }
+
 
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
@@ -3310,11 +8059,16 @@ const html = `<!DOCTYPE html>
       const empty = pool.length ? "" : ((data.trades || []).length
         ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
         : '<p class="caption">No trades on this seat yet.</p>');
-      return teamMarks()
+      return (lensApplies()
+          ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
+          : "")
+        + teamMarks()
         + markChart()
         + empty
-        + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
-        + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
+        + (best ? '<h2>Best deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(best) + "</div>" : "")
+        + (worst && (!best || worst.transaction_id !== best.transaction_id)
+          ? '<h2>Worst deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(worst) + "</div>"
+          : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")
         + (take ? partnerLine(take) : "")
         + (pay && take && pay.name !== take.name ? partnerLine(pay) : "")
@@ -3344,7 +8098,8 @@ const html = `<!DOCTYPE html>
         + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced, p.s.value_adjust_sent);
       if (p.multi) {
         bags += (t.other_bags || []).map((b) => {
-          const side = applyVa((b.windows && b.windows[lens]) || b.even || b.realized, true);
+          const key = effectiveLens(t.date, lens);
+          const side = applyVa((b.windows && b.windows[key]) || b.even || b.realized, true);
           if (!side) return "";
           return bagBlock(b.name + " received", side.legs, side.today, side.unpriced, side.value_adjust);
         }).join("");
@@ -3493,41 +8248,110 @@ const html = `<!DOCTYPE html>
         + detail + "</div>";
     }
 
-    function renderTrades() {
+    /** Partner names appearing on this seat's trade tape (for the Trades tab team filter). */
+    function seatTradeTeams(trades) {
+      const names = new Set();
+      for (const t of trades || []) {
+        for (const o of t.others || []) if (o) names.add(String(o));
+      }
+      return [...names].sort((a, b) => a.localeCompare(b));
+    }
+
+    /** Filter + sort state for a seat's Trades tab. Shared by renderTrades only. */
+    function seatTradesFiltered() {
       const all = (data && data.trades) || [];
       const years = [...new Set(all.map((t) => t.season))].sort().reverse();
+      const teams = seatTradeTeams(all);
       let list = all;
       if (year !== "all") list = list.filter((t) => t.season === year);
-      // Home tiles exclude trades that have not lived the selected clock; this list must too.
-      const lived = list.filter((t) => chipLived(t.date));
-      const hint = year === "all" ? "Filter by year" : "Filter by year · " + year;
-      const yearBtn = '<button type="button" class="filter-btn' + (year !== "all" || yearFilterOpen ? " on" : "") + '" data-yfilter="1" aria-label="Filter by year" aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
-        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
-        + (year !== "all" ? '<span class="dot"></span>' : "")
-        + "</button>"
-        + '<div class="caption">' + hint + "</div>";
+      if (seatTradeTeam !== "all") {
+        list = list.filter((t) => (t.others || []).some((o) => o === seatTradeTeam));
+      }
+      let lived = list.filter((t) => chipLived(t.date));
+      lived = lived.slice().sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        const ta = a.transaction_id || "";
+        const tb = b.transaction_id || "";
+        if (ta !== tb) return ta < tb ? -1 : 1;
+        return 0;
+      });
+      if (seatTradeSort !== "old") lived.reverse();
+      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort === "old";
       const empty = !all.length
         ? '<p class="caption">No trades on this seat yet.</p>'
         : !list.length
-          ? '<p class="caption">No trades in ' + esc(year) + '. Clear the year filter to see the rest.</p>'
+          ? '<p class="caption">No trades match these filters. Clear a filter to see the rest.</p>'
           : !lived.length
             ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
             : "";
-      return '<div class="filter-wrap">'
-        + filterRow(yearBtn)
-        + (yearFilterOpen
-          // Exactly one year at a time, so these are radios, not checkboxes.
-          ? '<div class="filter-panel" id="yearFilters" role="radiogroup" aria-label="Year">'
-            + [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
-              '<label data-year="' + esc(row[0]) + '"><input type="radio" name="yearFilter" value="' + esc(row[0]) + '"'
-              + (year === row[0] ? " checked" : "") + "> " + esc(row[1]) + "</label>"
-            ).join("")
-            + "</div>"
-          : "")
-        + "</div>"
+      return { all, years, teams, list, lived, filtered, empty };
+    }
+
+    /** One filter control with Year, Team, and sort sub-filters for the seat Trades tab. */
+    function seatTradeFilterHtml(ctx) {
+      const hintBits = [];
+      if (year !== "all") hintBits.push(year);
+      if (seatTradeTeam !== "all") hintBits.push(seatTradeTeam);
+      if (seatTradeSort === "old") hintBits.push("Oldest");
+      const filterHint = ctx.filtered
+        ? "Filter · " + hintBits.join(" · ")
+        : "Filter by year, team, or sort";
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (ctx.filtered || yearFilterOpen ? " on" : "") + '" data-stfilter="1" aria-label="Filter trades"'
+        + ' aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (ctx.filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
+        '<label data-seat-year="' + esc(row[0]) + '"><input type="radio" name="seatTradeYear" value="'
+        + esc(row[0]) + '"' + (year === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const teamRadios = [["all", "All teams"]].concat(ctx.teams.map((n) => [n, n])).map((row) =>
+        '<label data-seat-team="' + esc(row[0]) + '"><input type="radio" name="seatTradeTeam" value="'
+        + esc(row[0]) + '"' + (seatTradeTeam === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const sortRadios = [
+        ["new", "Most Recent"],
+        ["old", "Oldest"],
+      ].map((row) =>
+        '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
+        + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const panel = yearFilterOpen
+        ? '<div class="filter-panel" id="seatTradeFilters">'
+          + '<div class="filter-h">Year</div>'
+          + yearRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Team</div>'
+          + teamRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Sort</div>'
+          + sortRadios
+          + "</div>"
+        : "";
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
+    }
+
+    function renderTrades() {
+      const ctx = seatTradesFiltered();
+      const { all, list, lived, empty } = ctx;
+      const shown = lived.slice(0, tapeLimit);
+      for (const t of shown) seatTradeSide(t);
+      const cards = shown.map((t) => seatTradeFeedCardHtml(t)).join("");
+      const more = lived.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (lived.length - shown.length) + " left)</button>"
+        : "";
+      return seatTradeFilterHtml(ctx)
+        + voteToastHtml()
         + '<div class="caption">' + esc(livedHint(lived.length, list.length, "deal")) + "</div>"
         + empty
-        + lived.map((t) => tradeRow(t)).join("");
+        + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
+        + more;
     }
 
     function clockName() {
@@ -3539,13 +8363,16 @@ const html = `<!DOCTYPE html>
       const one = noun || "deal";
       const many = one + "s";
       if (lens === "t0" || lens === "all" || shown === all) return shown + " " + (shown === 1 ? one : many);
-      const span = { y1: "1 year", y2: "2 years", y3: "3 years" }[lens] || clockName();
+      const span = { y1: "1 season", y2: "2 seasons", y3: "3 seasons" }[lens] || clockName();
       return shown + " of " + all + " lived " + span;
     }
 
     function scoreOpt(row) {
-      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '">'
-        + "<b>" + row[1] + "</b><span>" + row[2] + "</span></button>";
+      const active = lensPicker === "run" ? runLens : lens;
+      // Title-only rows keep the portal short; longer copy stays on title/aria for hover & SR.
+      return '<button type="button" class="score-opt' + (active === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
+        + ' title="' + esc(row[2] || row[1]) + '" aria-label="' + esc(row[1]) + '">'
+        + "<b>" + esc(row[1]) + "</b></button>";
     }
 
     /**
@@ -3571,38 +8398,99 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The clock control lives in the brand header, outside #app, so it is painted rather than
-     * rendered -- render() replaces #app's whole subtree and would destroy a control that has
-     * to survive every navigation. Only the trigger's own state passes through here; changing
-     * the window calls render(), because that is what moves the figures.
+     * Paint compact chip score triggers and the scoreAs portal. Triggers live in app markup;
+     * the menu portals outside so it is not destroyed mid-click. Changing the window calls
+     * render() because that is what moves the figures.
      */
+
+    /**
+     * Compact score-window control for chips that show trade / player values.
+     * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
+     */
+    function chipLensIcon() {
+      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">'
+        + '<circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>'
+        + '<path d="M8 4.75V8l2.4 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>'
+        + "</svg>";
+    }
+
+    function chipLensHtml(opts) {
+      if (!lensApplies()) return "";
+      const inline = !!(opts && opts.inline);
+      const name = clockName();
+      return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
+        + '<button type="button" class="chip-lens-btn" data-score="1"'
+        + ' aria-label="Score window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' title="' + esc(name) + '">'
+        + chipLensIcon() + "</button></span>";
+    }
+
     function paintLens() {
-      const wrap = document.getElementById("lensWrap");
-      const btn = document.getElementById("lensBtn");
       const panel = document.getElementById("scoreAs");
-      if (!lensApplies()) {
+      const btns = document.querySelectorAll("button.chip-lens-btn[data-score]");
+      const runBtns = document.querySelectorAll("button.chip-lens-btn[data-run-lens]");
+      if (!panel) return;
+      if (!lensApplies() || (!btns.length && !runBtns.length)) {
         lensOpen = false;
-        wrap.hidden = true;
+        lensPicker = "trade";
         panel.hidden = true;
         panel.innerHTML = "";
         return;
       }
-      wrap.hidden = false;
-      const name = clockName();
-      btn.className = "score-btn" + (lens !== "all" || lensOpen ? " on" : "");
-      btn.setAttribute("aria-label", "Score as " + name);
-      btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
-      // The label is the window alone; "Score as" is in the accessible name above.
-      btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
-        + (lens !== "all" ? '<span class="dot"></span>' : "");
+      const active = lensPicker === "run" ? runLens : lens;
+      const activeName = (WINDOWS.find((w) => w[0] === active) || [])[1] || "";
+      const tradeName = (WINDOWS.find((w) => w[0] === lens) || [])[1] || "";
+      const runName = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      for (const btn of btns) {
+        btn.className = "chip-lens-btn" + (lensPicker === "trade" && (lens !== "all" || lensOpen) ? " on" : "");
+        btn.setAttribute("aria-label", "Score window: " + tradeName);
+        btn.setAttribute("title", tradeName);
+        btn.setAttribute("aria-expanded", lensOpen && lensPicker === "trade" ? "true" : "false");
+        btn.innerHTML = chipLensIcon()
+          + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
+      for (const btn of runBtns) {
+        btn.className = "chip-lens-btn" + (lensPicker === "run" && (runLens !== "all" || lensOpen) ? " on" : "");
+        btn.setAttribute("aria-label", "Ahead or behind window: " + runName);
+        btn.setAttribute("title", runName);
+        btn.setAttribute("aria-expanded", lensOpen && lensPicker === "run" ? "true" : "false");
+        btn.innerHTML = chipLensIcon()
+          + (runLens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
       panel.hidden = !lensOpen;
       panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
+      if (lensOpen) {
+        const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
+          || (lensPicker === "run" ? runBtns[0] : btns[0]);
+        if (anchor) positionScoreAs(anchor);
+      }
+    }
+
+    let lensAnchorId = 0;
+    let lensAnchorSeq = 0;
+
+    function positionScoreAs(btn) {
+      const panel = document.getElementById("scoreAs");
+      if (!panel || !btn) return;
+      const r = btn.getBoundingClientRect();
+      const width = Math.min(280, window.innerWidth - 32);
+      let left = Math.min(r.right - width, window.innerWidth - 16 - width);
+      left = Math.max(16, left);
+      let top = r.bottom + 4;
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+      // Flip above if near bottom of viewport.
+      requestAnimationFrame(() => {
+        const pr = panel.getBoundingClientRect();
+        if (pr.bottom > window.innerHeight - 8) {
+          panel.style.top = Math.max(8, r.top - pr.height - 4) + "px";
+        }
+      });
     }
 
     /**
-     * The screen-local filter row the clock control used to share: the year filter on the Trades
-     * tab and the round filter on Drafts. One emitter, because both were typing the same two
-     * divs and the clock's departure left them identical.
+     * Screen-local filter row (Trades year/team/sort, Drafts rounds, league tape filters).
+     * No score clock here — each trade chip already mounts its own chipLensHtml().
      */
     function filterRow(left) {
       return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
@@ -3669,11 +8557,11 @@ const html = `<!DOCTYPE html>
         .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
       const rows = scored.map((row) => {
         const p = row.p, per = row.w.per;
-        return '<button type="button" class="row' + (partnerName === p.name ? " open" : "") + '" data-partner="' + esc(p.name) + '">'
+        return '<div class="row' + (partnerName === p.name ? " open" : "") + '" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
           + '<div class="row-top"><div><div class="names">' + seatLabel(p.name) + "</div>"
           + '<div class="date">' + p.complete + " complete · " + p.trades + " deals · "
           + '<span class="' + gradeCls(row.w.grade) + '">' + gradeLabel(row.w.grade) + "</span></div></div>"
-          + '<div class="margin">' + tapeMargin(per) + "</div></div></button>";
+          + '<div class="margin">' + tapeMargin(per) + "</div></div></div>";
       }).join("");
       let detail = "";
       if (partnerName) {
@@ -3682,7 +8570,8 @@ const html = `<!DOCTYPE html>
           .filter((t) => (t.others || []).length === 1 && t.others[0] === partnerName && chipLived(t.date));
         detail = p
           ? "<h2>" + seatLabel(p.name) + "</h2>"
-            + (deals.length ? deals.map((t) => tradeRow(t)).join("")
+            + (deals.length
+              ? '<div class="trades-feed">' + deals.map((t) => seatTradeFeedCardHtml(t)).join("") + "</div>"
               : '<p class="caption">No deal with ' + seatLabel(p.name) + " has lived " + esc(clockName()) + " yet.</p>")
           : "";
       }
@@ -3690,8 +8579,307 @@ const html = `<!DOCTYPE html>
       return empty + rows + detail;
     }
 
+    function renderAppGate() {
+      const invited = !!(redeemCode && String(redeemCode).trim());
+      const title = invited
+        ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
+        : (gateMode === "signup" ? "Create account" : "Sign in");
+      const go = invited
+        ? (gateMode === "signup" ? "Create account & join" : "Sign in & join")
+        : (gateMode === "signup" ? "Create account" : "Sign in");
+      return '<div class="app-shell">'
+        + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
+        + (invited
+          ? ('<p class="caption">Seat code <code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code></p>")
+          : "")
+        + '<div class="app-card"><h3>' + title + "</h3>"
+        + '<div class="app-form">'
+        + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
+        + ' autocapitalize="off" spellcheck="false"' + (authBusy ? " disabled" : "") + " /></label>"
+        + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
+        + (gateMode === "signup" ? "new-password" : "current-password") + '"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
+        + (authBusy ? "Working…" : go) + "</button>"
+        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + (joinError && invited ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div>"
+        + '<p class="caption" style="margin:12px 0 0">'
+        + (gateMode === "signup"
+          ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
+          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
+        + "</p></div>"
+        + "</div>";
+    }
+
+    function renderAppHome() {
+      const uname = (authSession && authSession.username) || "you";
+      const memIds = new Set((memberships || []).map((m) => m.sleeper_league_id));
+      const rows = (memberships || []).map((m) => {
+        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
+        const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
+        return '<div class="league-block">'
+          + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
+          + "<div><b>" + esc(m.name) + "</b>"
+          + "<span>" + esc(m.team_name) + " · " + st
+          + (m.season ? " · " + esc(m.season) : "")
+          + (isComm ? " · Commissioner" : "")
+          + "</span></div>"
+          + '<span class="chev" aria-hidden="true">›</span></button>'
+          + (isComm
+            ? '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
+              + '">Manage invites</button>'
+            : "")
+          + "</div>";
+      }).join("");
+      const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
+        const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+        return '<div class="league-block">'
+          + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
+          + "<span>Commissioner · " + st
+          + (o.season ? " · " + esc(o.season) : "")
+          + " · claim your seat to open the meter</span></div></div>"
+          + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
+          + '">Invites & claim seat</button>'
+          + "</div>";
+      }).join("");
+      const body = rows + ownedOnly;
+      return '<div class="app-shell">'
+        + '<h2 class="screen-h" tabindex="-1">Your leagues</h2>'
+        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
+        + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
+        + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
+        + (body || '<p class="caption">No leagues yet.</p>')
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div>"
+        + "</div>";
+    }
+
+    function renderCreateLeague() {
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
+        + '<div class="app-card"><h3>League IDs</h3>'
+        + '<div class="app-form">'
+        + '<label>Sleeper league ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
+        + ' placeholder="' + CUCKLE_LEAGUE_ID + '" value="' + esc(joinLeagueId) + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<label>ESPN league ID (optional)<input id="joinEspnId" name="espnId" autocomplete="off"'
+        + ' placeholder="Only if you have ESPN data too" value="' + esc(joinEspnId) + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-create-league="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Creating…" : "Create & generate invites") + "</button>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div></div></div>";
+    }
+
+    function renderInvites() {
+      const L = joinPreview || {};
+      const myMembership = (memberships || []).find(
+        (m) => m.sleeper_league_id === L.sleeper_league_id,
+      );
+      const meId = authSession && authSession.user_id;
+      const transferCandidates = (leagueMembers || []).filter((m) => m.auth_user_id && m.auth_user_id !== meId);
+      const all = createdInvites || [];
+      const unclaimed = all.filter((inv) => !inv.claimed);
+      const claimed = all.filter((inv) => inv.claimed);
+      const tab = inviteTab === "claimed" ? "claimed" : "unclaimed";
+      const list = tab === "claimed" ? claimed : unclaimed;
+      const rows = list.map((inv) => {
+        const claimer = inv.claimed_username
+          ? "@" + inv.claimed_username
+          : (inv.claimed ? "a member" : null);
+        return '<div class="app-card" style="margin-bottom:8px">'
+          + "<b>" + esc(inv.team_name) + "</b>"
+          + (inv.claimed
+            ? ('<p class="caption" style="margin:4px 0 8px">Joined'
+              + (claimer ? " as " + esc(claimer) : "") + "</p>"
+              + '<div class="app-actions">'
+              + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
+              + "</div>")
+            : ('<p class="caption" style="margin:4px 0 8px">Send them one invite link. It opens account setup with their seat code filled in.</p>'
+              + '<div class="app-actions">'
+              + '<button type="button" class="chip" data-copy-invite-link="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">"
+              + (joinBusy ? "Working…" : "Copy invite link") + "</button>"
+              + (!myMembership
+                ? '<button type="button" class="linkish" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
+                  + (joinBusy ? " disabled" : "") + ">Claim this seat (you)</button>"
+                : "")
+              + "</div>"))
+          + "</div>";
+      }).join("");
+      const empty = all.length === 0
+        ? '<p class="caption">No seats yet — reopen this screen to load teams from Sleeper. If it stays empty, run wave5 SQL and redeploy join-league.</p>'
+        : (tab === "claimed"
+          ? '<p class="caption">No one has redeemed yet. Share invite links from the Unclaimed tab.</p>'
+          : '<p class="caption">Every seat is claimed.</p>');
+      const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
+        + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
+        + ' aria-selected="' + (tab === "unclaimed" ? "true" : "false") + '"'
+        + ' data-invite-tab="unclaimed">Unclaimed (' + unclaimed.length + ")</button>"
+        + '<button type="button" role="tab" class="tab' + (tab === "claimed" ? " on" : "") + '"'
+        + ' aria-selected="' + (tab === "claimed" ? "true" : "false") + '"'
+        + ' data-invite-tab="claimed">Claimed (' + claimed.length + ")</button>"
+        + "</div>";
+      const transferBlock = '<div class="app-card" style="margin-top:12px">'
+        + "<h3>Transfer commissioner</h3>"
+        + '<p class="caption" style="margin:0 0 8px">Give dashboard admin to another league member. '
+        + "You keep your seat; they get invites and Settings admin for this league.</p>"
+        + (transferCandidates.length
+          ? ('<div class="app-form"><label>New commissioner<select id="transferPick"'
+            + (joinBusy ? " disabled" : "") + ">"
+            + '<option value="">Pick a member…</option>'
+            + transferCandidates.map((m) => {
+              const label = (m.username ? "@" + m.username : "member") + " — " + m.team_name;
+              const sel = transferPickId === m.auth_user_id ? " selected" : "";
+              return '<option value="' + esc(m.auth_user_id) + '"' + sel + ">"
+                + esc(label) + "</option>";
+            }).join("")
+            + "</select></label>"
+            + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-transfer-comm="1"'
+            + (joinBusy ? " disabled" : "") + ">Transfer admin</button>"
+            + "</div></div>")
+          : '<p class="caption">No other members yet. Someone must redeem an invite before you can transfer.</p>')
+        + "</div>";
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
+        + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
+        + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + tabs
+        + (rows || empty)
+        + (tab === "claimed"
+          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed.</p>'
+          : (!myMembership
+            ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
+            : ""))
+        + transferBlock
+        + "</div>";
+    }
+
+    function renderSettings() {
+      const uname = (authSession && authSession.username) || "—";
+      const email = authEmailForUsername(uname);
+      const owned = ownedLeagues || [];
+      const memById = {};
+      for (const m of memberships || []) memById[m.sleeper_league_id] = m;
+      const adminRows = owned.length
+        ? owned.map((o) => {
+          const mem = memById[o.sleeper_league_id];
+          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+          return '<div class="app-card">'
+            + "<h3>" + esc(o.name) + "</h3>"
+            + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
+            + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
+            + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
+            + "</p>"
+            + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
+            + '">Send / manage invites</button>'
+            + (mem
+              ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
+                + '">Open dashboard</button>'
+              : "")
+            + "</div>"
+            + '<p class="caption" style="margin:8px 0 0">Transfer admin or reissue a seat after a manager leaves: open <b>Send / manage invites</b>.</p>'
+            + "</div>";
+        }).join("")
+        : '<p class="caption">You have not created a league yet. Create one from Your leagues to become commissioner and mint seat invites.</p>';
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
+        + '<div class="app-card"><h3>Account</h3>'
+        + '<p class="caption" style="margin:0">Signed in as <b>' + esc(uname) + "</b></p>"
+        + '<p class="caption">Auth email (synthetic, never mailed): <code>' + esc(email) + "</code></p>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
+        + "</div></div>"
+        + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
+        + adminRows
+        + '<div class="app-actions" style="margin-top:8px">'
+        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div></div>";
+    }
+
+    function renderRedeemInvite() {
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Redeem invite</h2>'
+        + '<div class="app-card"><h3>Invite code</h3>'
+        + '<div class="app-form">'
+        + '<label>Code<input id="redeemCode" name="code" autocomplete="off" autocapitalize="characters"'
+        + ' placeholder="CF-XXXX-XXXX" value="' + esc(redeemCode) + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-redeem-go="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Joining…" : "Join & open dashboard") + "</button>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div></div></div>";
+    }
+
+    function renderPendingLeague() {
+      const L = activeLeague || {};
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(L.name || "League") + "</h2>"
+        + '<div class="sync-banner">You are in as <b>' + esc(L.team_name || "your team") + "</b>. "
+        + "This league is registered. The full trade meter syncs next — Cuckle-ready leagues open the dashboard immediately; new leagues show here until their data is built.</div>"
+        + '<p class="caption">League ID <code>' + esc(L.sleeper_league_id || "") + "</code></p>"
+        + "</div>";
+    }
+
     function render() {
       const app = document.getElementById("app");
+      // Multi-league app shell — before the per-league dashboard.
+      if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
+          || appScreen === "invites" || appScreen === "redeem" || appScreen === "settings") {
+        const keep = focusSelector(document.activeElement);
+        const navigated = focusNext !== null;
+        app.innerHTML = appScreen === "gate" ? renderAppGate()
+          : appScreen === "create" ? renderCreateLeague()
+          : appScreen === "invites" ? renderInvites()
+          : appScreen === "redeem" ? renderRedeemInvite()
+          : appScreen === "settings" ? renderSettings()
+          : renderAppHome();
+        paintSettingsBtn();
+        const land = focusNext ? app.querySelector(focusNext) : null;
+        focusNext = null;
+        if (land) land.focus({ preventScroll: true });
+        else if (navigated) app.focus({ preventScroll: true });
+        else if (keep) {
+          const back = app.querySelector(keep);
+          if (back) back.focus({ preventScroll: true });
+        }
+        if (navigated) window.scrollTo(0, 0);
+        paintLeagueSub();
+        paintBottomNav();
+        return;
+      }
+      if (appScreen === "dash" && activeLeague && activeLeague.status && activeLeague.status !== "ready"
+          && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID) {
+        // Non-Cuckle leagues without a ready sync get the pending screen, not a broken meter.
+        const hasBook = !!(league && members);
+        if (!hasBook) {
+          paintSettingsBtn();
+          paintLeagueSub();
+          paintBottomNav();
+          app.innerHTML = renderPendingLeague();
+          return;
+        }
+      }
+      paintSettingsBtn();
+      paintLeagueSub();
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
@@ -3699,7 +8887,7 @@ const html = `<!DOCTYPE html>
       // that leave, so the next one added cannot forget. Same condition as the renderer below.
       if (!(view === "home" && !(me && data))) dsOpen = false;
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
-      const tabs = me && view !== "titles" && view !== "trade" ? ["home", "trades", "partners", "drafts"] : [];
+      const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" ? ["home", "trades", "partners", "drafts"] : [];
       // The four tabs are sections of one manager's page and none of them names that manager,
       // so this does -- once, above the row, on every one of them. It doubles as the screen
       // heading those four screens never had: focusNext = ".screen-h" now lands on the name of
@@ -3710,6 +8898,10 @@ const html = `<!DOCTYPE html>
       const seatName = tabs.length
         ? '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>'
           + seatLabel(me.name) + "</h2>"
+        : "";
+      const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready"
+        && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID)
+        ? '<div class="sync-banner">Meter sync still pending for this league. Showing what is available.</div>'
         : "";
       const nav = (tabs.length
         ? '<div class="nav" role="tablist" aria-label="Sections">'
@@ -3728,6 +8920,12 @@ const html = `<!DOCTYPE html>
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
+        : view === "account" ? renderAccountPage()
+        : view === "teams" ? renderTeamsPage()
+        : view === "news" ? renderNewsPage()
+        : view === "datasets" ? renderDataSetsPage()
+        : view === "draftdata" ? renderDraftDataPage()
+        : view === "cuffs" ? renderCuffsPage()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -3738,7 +8936,8 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
-      app.innerHTML = seatName + nav + body;
+      app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();
+      document.body.classList.toggle("has-vote-sheet", !!voteSheetTx);
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
@@ -3749,6 +8948,10 @@ const html = `<!DOCTYPE html>
       const land = focusNext ? app.querySelector(focusNext) : null;
       focusNext = null;
       if (land) land.focus({ preventScroll: true });
+      else if (voteSheetTx) {
+        const sheet = app.querySelector(".vote-sheet-panel");
+        if (sheet) sheet.focus({ preventScroll: true });
+      }
       // League home leads with cards rather than a title, so there is no heading to land on.
       // The panel itself is the defined start of the new content. A seat always has one now.
       else if (navigated) app.focus({ preventScroll: true });
@@ -3760,11 +8963,10 @@ const html = `<!DOCTYPE html>
       // After the body, not before: renderDrafts() pins lens to "all" for its own render and
       // restores it on the way out, so the trigger must be painted from the settled value.
       paintLens();
+      paintLeagueSub();
+      paintBottomNav();
       syncUrl();
-      // News box is replaced with the subtree — re-bind pull-to-refresh and live chrome.
-      bindNewsFeed();
-      if (newsOnLeagueHome()) startNewsPoll();
-      else stopNewsPoll();
+      armNewsPullup();
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
@@ -3780,8 +8982,15 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
+      tapeFilterOpen = false;
       titleYear = null;
       voteToast = null;
+      voteSheetTx = null;
+      voteEditTx = null;
+      {
+        const side = tradeSide(tx, uid) || tradeSide(tx, null);
+        applyDefaultLens(side && side.date);
+      }
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
       render();
@@ -3808,10 +9017,16 @@ const html = `<!DOCTYPE html>
       markOpen = null;
       titleYear = null;
       year = "all";
+      seatTradeTeam = "all";
+      seatTradeSort = "new";
       yearFilterOpen = false;
       draftFilterOpen = false;
+      tapeFilterOpen = false;
       lensOpen = false;
+      applyDefaultLens(null);
       voteToast = toast || null;
+      voteSheetTx = null;
+      voteEditTx = null;
       focusNext = ".screen-h";
       say("");
       render();
@@ -3830,104 +9045,109 @@ const html = `<!DOCTYPE html>
       return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
     }
 
-    document.getElementById("goHome").addEventListener("click", () => clearLeague());
-    document.querySelector("h1.brand a").addEventListener("click", (e) => { e.preventDefault(); clearLeague(); });
+    document.getElementById("goHome").addEventListener("click", () => {
+      // Always this league's home: clear seat / nested views. Never Your leagues / goAppHome.
+      if (activeLeague && appScreen !== "dash") {
+        openLeagueDashboard(activeLeague);
+        return;
+      }
+      clearLeague();
+    });
+    document.getElementById("goSettings").addEventListener("click", () => openSettings());
+    const bottomNavEl = document.getElementById("bottomNav");
+    if (bottomNavEl) {
+      bottomNavEl.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-bottom]");
+        if (!btn || btn.disabled) return;
+        goBottomNav(btn.dataset.bottom);
+      });
+    }
     /**
-     * The clock control's own listener. It has to be its own, because #app's delegated handler
-     * cannot see a control that lives in the brand header -- the same split the seat picker had
-     * while it was mounted there.
+     * Score-window control: compact chip buttons in value surfaces; menu portals via #scoreAs.
+     * Document-level so it works from chips inside #app and options outside it.
      */
-    document.getElementById("lensWrap").addEventListener("click", (e) => {
-      const opt = e.target.closest("[data-lens]");
+    document.addEventListener("click", (e) => {
+      const opt = e.target.closest("#scoreAs [data-lens]");
       if (opt) {
-        lens = opt.dataset.lens;
+        e.preventDefault();
+        e.stopPropagation();
+        const wasRun = lensPicker === "run";
+        if (wasRun) runLens = opt.dataset.lens;
+        else lens = opt.dataset.lens;
         lensOpen = false;
+        lensPicker = "trade";
+        lensAnchorId = 0;
         render();
-        // The option that was clicked no longer exists and was never inside #app, so
-        // focusSelector() cannot put the keyboard back. The trigger is where it came from.
-        document.getElementById("lensBtn").focus({ preventScroll: true });
+        const back = document.querySelector(
+          wasRun ? "button.chip-lens-btn[data-run-lens]" : "button.chip-lens-btn[data-score]"
+        ) || document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
         return;
       }
-      if (!e.target.closest("[data-score]")) return;
-      lensOpen = !lensOpen;
-      if (!lensOpen) {
-        // Closing changes nothing a screen renders, so it does not pay for a full render.
+      const runLensBtn = e.target.closest("button.chip-lens-btn[data-run-lens]");
+      if (runLensBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!runLensBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          runLensBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = runLensBtn.getAttribute("data-lens-anchor");
+        lensPicker = "run";
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
+        return;
+      }
+      const scoreBtn = e.target.closest("button.chip-lens-btn[data-score]");
+      if (scoreBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Tag this button so paintLens can re-anchor after render.
+        if (!scoreBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          scoreBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = scoreBtn.getAttribute("data-lens-anchor");
+        lensPicker = "trade";
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
+        return;
+      }
+      if (lensOpen && !e.target.closest("#scoreAs") && !e.target.closest("button.chip-lens-btn")) {
+        lensOpen = false;
         paintLens();
-        return;
       }
-      // Every other popup is exclusive with this one, and this one paints above all of them,
-      // so opening from the header has to close them rather than cover an open menu.
-      teamsOpen = false;
-      dsOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      render();
-    });
-    /**
-     * An outside click closes it. Capture phase, and paint rather than render: #app's handler
-     * returns early on a dozen paths, and an open panel must not survive over the screen the
-     * click just navigated to. Running first also means the fall-through branch at the bottom of
-     * #app's handler sees the flag already cleared and does not schedule a second render.
-     */
-    document.addEventListener("click", (e) => {
-      if (!lensOpen || e.target.closest("#lensWrap")) return;
-      lensOpen = false;
-      paintLens();
     }, true);
-    // An outside click closes the seat menu. #app's own handler runs first and has already
-    // cleared the flag for a click on the chip or on an option, so this only ever fires for a
-    // click that landed somewhere else on the page.
-    document.addEventListener("click", (e) => {
-      if (!teamsOpen) return;
-      if (e.target.closest("#teamMenu") || e.target.closest("[data-teams-open]")) return;
-      teamsOpen = false;
-      render();
-    });
-
-    /**
-     * The Teams chip's mount of the seat menu, and the only one: the brand header's picker was
-     * removed when the chips became the access points. It lives inside #app, so it is rendered
-     * rather than painted, and closing it returns focus to the chip -- the menu it came from is
-     * about to stop existing, and #app's innerHTML rebuild would otherwise drop focus to <body>.
-     *
-     * showMenu() is the half the header mount never needed. That trigger sat in the brand row at
-     * the top of the page, so its menu was on screen by construction; this one opens from the
-     * middle of league home, where focusing the selected option scrolls that option into view and
-     * leaves the rest of the list below the fold.
-     */
-    function openTeams() {
-      teamsOpen = true;
-      dsOpen = false;
-      lensOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      render();
-      const menu = document.getElementById("teamMenu");
-      if (!menu) return;
-      const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
-      if (sel) sel.focus({ preventScroll: true });
-      showMenu(menu);
-    }
-
-    function closeTeams() {
-      teamsOpen = false;
-      render();
-      const btn = document.querySelector("[data-teams-open]");
-      if (btn) btn.focus({ preventScroll: true });
-    }
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
-      if (teamsOpen) { closeTeams(); return true; }
       if (lensOpen) {
         lensOpen = false;
+        lensPicker = "trade";
         paintLens();
-        document.getElementById("lensBtn").focus({ preventScroll: true });
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
         return true;
       }
-      if (dsOpen) { closeDataSets(); return true; }
+      if (view === "datasets" && dataSet) { showDataSetList(); return true; }
+      if (view === "datasets") { view = "home"; dataSet = null; focusNext = null; render(); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
+      if (tapeFilterOpen) { tapeFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
       if (openDraft) { openDraft = null; render(); return true; }
       // On the trade's own screen openId is the screen, not an open row, so Escape leaves the
@@ -3941,38 +9161,6 @@ const html = `<!DOCTYPE html>
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         if (closeTopmost()) e.preventDefault();
-        return;
-      }
-      // Team picker: a listbox, so the arrows move between options and never scroll the page.
-      // Matched on the class rather than on the menu's id, because the class is what any mount
-      // of this list carries -- there were two mounts until the header picker was removed, and
-      // a second copy of this block is how one of them quietly lost Home/End.
-      const inWho = e.target.closest && e.target.closest(".who-menu");
-      if (teamsOpen && inWho) {
-        const opts = [...inWho.querySelectorAll("button")];
-        const i = opts.indexOf(document.activeElement);
-        let next = -1;
-        if (e.key === "ArrowDown") next = (i + 1) % opts.length;
-        else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
-        else if (e.key === "Home") next = 0;
-        else if (e.key === "End") next = opts.length - 1;
-        else if (e.key === "Tab") { closeTeams(); return; }
-        if (next >= 0) { e.preventDefault(); opts[next].focus(); }
-        return;
-      }
-      // League Data Sets: the same listbox keyboard as the seat picker above, for the same
-      // reason -- five options in a popup are a list to move through, not five tab stops.
-      const inDs = e.target.closest && e.target.closest("#dataSets");
-      if (dsOpen && inDs) {
-        const opts = [...document.querySelectorAll("#dataSets button")];
-        const i = opts.indexOf(document.activeElement);
-        let next = -1;
-        if (e.key === "ArrowDown") next = (i + 1) % opts.length;
-        else if (e.key === "ArrowUp") next = (i - 1 + opts.length) % opts.length;
-        else if (e.key === "Home") next = 0;
-        else if (e.key === "End") next = opts.length - 1;
-        else if (e.key === "Tab") { closeDataSets(); return; }
-        if (next >= 0) { e.preventDefault(); opts[next].focus(); }
         return;
       }
       // Roving tabs: one stop in the tab order, arrows move between the four sections.
@@ -3997,46 +9185,39 @@ const html = `<!DOCTYPE html>
       if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
       dataSet = id;
       dsOpen = false;
+      view = "datasets";
+      openId = null;
+      tradeSeat = null;
+      focusNext = "[data-dset-head]";
       render();
-      const head = document.querySelector("#dsBody .ds-h");
+      const head = document.querySelector("[data-dset-head]") || document.querySelector("#dsBody .ds-h");
       if (head) head.focus({ preventScroll: true });
     }
 
-    /**
-     * Back to nothing selected, from the "None" option at the top of the menu. The heading that
-     * selectDataSet() focuses is about to stop existing, so focus goes to the trigger instead --
-     * a keyboard that opened the menu with Enter ends up back on the control it opened, rather
-     * than on <body> with the page scrolled somewhere.
-     */
-    function clearDataSet() {
-      dataSet = null;
-      dsOpen = false;
-      render();
-      const btn = document.querySelector("[data-dset-open]");
-      if (btn) btn.focus({ preventScroll: true });
-    }
-
     function closeDataSets() {
+      // Kept as a no-op name for Escape / outside-click callers; dropdown is gone.
       dsOpen = false;
-      render();
-      const btn = document.querySelector("[data-dset-open]");
-      if (btn) btn.focus({ preventScroll: true });
     }
 
     function openDataSets() {
-      dsOpen = true;
-      teamsOpen = false;
+      dsOpen = false;
       lensOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
+      openId = null;
+      tradeSeat = null;
+      markOpen = null;
+      dataSet = null;
+      view = "datasets";
+      focusNext = ".screen-h";
       render();
-      const menu = document.getElementById("dataSets");
-      if (!menu) return;
-      const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
-      // preventScroll, then showMenu: focusing an option scrolls that option into view and
-      // nothing else, which left four of the six sets below the fold at 320px.
-      if (sel) sel.focus({ preventScroll: true });
-      showMenu(menu);
+    }
+
+    function showDataSetList() {
+      dataSet = null;
+      view = "datasets";
+      focusNext = ".screen-h";
+      render();
     }
 
     function openTitles() {
@@ -4047,10 +9228,53 @@ const html = `<!DOCTYPE html>
       markOpen = null;
       lensOpen = false;
       voteToast = null;
+      voteSheetTx = null;
+      voteEditTx = null;
       focusNext = ".screen-h";
       render();
     }
 
+    document.getElementById("app").addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && voteSheetTx) {
+        e.preventDefault();
+        voteSheetTx = null;
+        voteEditTx = null;
+        render();
+        return;
+      }
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const t = e.target;
+      if (!t) return;
+      if (t.id === "gateUser" || t.id === "gatePass") {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        onGateSubmit();
+        return;
+      }
+      if (t.id === "joinLeagueId" || t.id === "joinEspnId") {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        onCreateLeague();
+        return;
+      }
+      if (t.id === "redeemCode") {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        onRedeemInvite();
+        return;
+      }
+      const seatLink = t.closest && t.closest("[data-who]");
+      if (seatLink && seatLink.dataset.who && (t === seatLink || seatLink.contains(t))) {
+        e.preventDefault();
+        selectMe(seatLink.dataset.who);
+        return;
+      }
+      const boardRow = t.closest && t.closest("[data-board-open]");
+      if (boardRow && boardRow.dataset.boardOpen && t === boardRow) {
+        e.preventDefault();
+        openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen);
+      }
+    });
     document.getElementById("app").addEventListener("click", (e) => {
       // Before everything: leaving a screen must not read as a click on what is on it.
       const backBtn = e.target.closest("[data-back]");
@@ -4065,31 +9289,424 @@ const html = `<!DOCTYPE html>
       }
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
-      // The Teams chip and the menu it opens. Both live inside #app, which is why the seat is
-      // taken from here rather than from a listener bound to the menu: the menu is rendered and
-      // re-rendered rather than painted once, so the handler is on the container that survives.
-      const teamsBtn = e.target.closest("[data-teams-open]");
-      if (teamsBtn) {
-        if (teamsOpen) closeTeams();
-        else openTeams();
+
+      // League-home quick actions: same destinations as bottom nav.
+      const lhNav = e.target.closest("[data-lh-nav]");
+      if (lhNav) {
+        goBottomNav(lhNav.dataset.lhNav);
         return;
       }
+      // Bottom-nav Teams page rows (and any future seat pick): data-who loads that team's home.
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
-        teamsOpen = false;
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
-      // Before [data-dset]: "None" carries no set id, and an empty data-dset would be the dead
-      // pill defect all over again. It is its own attribute, so it can never read as a set.
-      const dsNoneBtn = e.target.closest("[data-dset-none]");
-      if (dsNoneBtn) { clearDataSet(); return; }
       const dsetBtn = e.target.closest("[data-dset]");
       if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }
+      const dsListBtn = e.target.closest("[data-dset-list]");
+      if (dsListBtn) { showDataSetList(); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
-      if (dsOpenBtn) {
-        if (dsOpen) closeDataSets();
-        else openDataSets();
+      if (dsOpenBtn) { openDataSets(); return; }
+      const draftDataOpen = e.target.closest("[data-draft-data-open]");
+      if (draftDataOpen) {
+        if (draftDataOpen.getAttribute("aria-disabled") === "true") return;
+        openDraftDataPage(draftDataOpen.dataset.draftDataOpen || "search");
+        return;
+      }
+      const cuffsOpen = e.target.closest("[data-cuffs-open]");
+      if (cuffsOpen) {
+        if (cuffsOpen.getAttribute("aria-disabled") === "true") return;
+        openCuffsPage(cuffsOpen.dataset.cuffsOpen || "search");
+        return;
+      }
+      const newsCuff = e.target.closest("[data-news-cuff]");
+      if (newsCuff) {
+        const pid = newsCuff.getAttribute("data-news-cuff") || "";
+        const pname = newsCuff.getAttribute("data-news-cuff-name") || "";
+        if (!pid) return;
+        if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+        openCuffsPage("search", { playerId: pid, playerName: pname });
+        return;
+      }
+      const cuffsBoardBtn = e.target.closest("[data-cuffs-board]");
+      if (cuffsBoardBtn) {
+        openCuffsPage(cuffsBoardBtn.dataset.cuffsBoard || "held");
+        return;
+      }
+      const pickMine = e.target.closest("[data-pick-mine]");
+      if (pickMine) {
+        if (pickMine.getAttribute("aria-disabled") === "true") return;
+        pickFilterMineOut = !pickFilterMineOut;
+        if (pickFilterMineOut) pickFilterMineHeld = false;
+        pickFilterOpen = false;
+        pickFilterStep = null;
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickMineHeld = e.target.closest("[data-pick-mine-held]");
+      if (pickMineHeld) {
+        if (pickMineHeld.getAttribute("aria-disabled") === "true") return;
+        pickFilterMineHeld = !pickFilterMineHeld;
+        if (pickFilterMineHeld) pickFilterMineOut = false;
+        pickFilterOpen = false;
+        pickFilterStep = null;
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickFilterToggle = e.target.closest("[data-pick-filter-open]");
+      if (pickFilterToggle) {
+        if (pickFilterOpen && pickFilterStep) {
+          pickFilterOpen = false;
+          pickFilterStep = null;
+        } else {
+          pickFilterOpen = true;
+          pickFilterStep = "round";
+        }
+        render();
+        return;
+      }
+      const pickClear = e.target.closest("[data-pick-filter-clear]");
+      if (pickClear) {
+        clearPickFilters();
+        render();
+        return;
+      }
+
+      const cuffFilterToggle = e.target.closest("[data-cuff-filter-open]");
+      if (cuffFilterToggle) {
+        cuffFilterOpen = !cuffFilterOpen;
+        render();
+        return;
+      }
+      const cuffMine = e.target.closest("[data-cuff-mine]");
+      if (cuffMine) {
+        if (cuffMine.getAttribute("aria-disabled") === "true") return;
+        cuffFilterMine = !cuffFilterMine;
+        if (cuffFilterMine) {
+          cuffFilterOwner = "";
+          cuffFilterHeld = false;
+          cuffFilterSelf = false;
+          cuffFilterOther = false;
+          cuffFilterFa = false;
+        }
+        cuffFilterOpen = false;
+        render();
+        return;
+      }
+      const cuffFa = e.target.closest("[data-cuff-fa]");
+      if (cuffFa) {
+        // Exclusive mode: Available alone — starters whose NFL cuff is unrostered.
+        if (cuffFilterFa) {
+          resetCuffFilters();
+        } else {
+          clearCuffFilters();
+          cuffFilterFa = true;
+        }
+        render();
+        return;
+      }
+      const cuffHeld = e.target.closest("[data-cuff-held]");
+      if (cuffHeld) {
+        cuffFilterHeld = !cuffFilterHeld;
+        if (cuffFilterHeld) {
+          cuffFilterFa = false;
+          cuffFilterOther = false;
+          cuffFilterSelf = false;
+        }
+        render();
+        return;
+      }
+      const cuffSelf = e.target.closest("[data-cuff-self]");
+      if (cuffSelf) {
+        cuffFilterSelf = !cuffFilterSelf;
+        if (cuffFilterSelf) {
+          cuffFilterFa = false;
+          cuffFilterHeld = false;
+          cuffFilterOther = false;
+        }
+        render();
+        return;
+      }
+      const cuffOther = e.target.closest("[data-cuff-other]");
+      if (cuffOther) {
+        cuffFilterOther = !cuffFilterOther;
+        if (cuffFilterOther) {
+          cuffFilterFa = false;
+          cuffFilterHeld = false;
+          cuffFilterSelf = false;
+        }
+        render();
+        return;
+      }
+      const cuffClear = e.target.closest("[data-cuff-filter-clear]");
+      if (cuffClear) {
+        resetCuffFilters();
+        render();
+        return;
+      }
+      const cuffClearOwner = e.target.closest("[data-cuff-clear-owner]");
+      if (cuffClearOwner) {
+        cuffFilterOwner = "";
+        cuffFilterMine = false;
+        render();
+        return;
+      }
+      const cuffClearPos = e.target.closest("[data-cuff-clear-pos]");
+      if (cuffClearPos) {
+        cuffFilterPos = "";
+        render();
+        return;
+      }
+      const cuffClearQ = e.target.closest("[data-cuff-clear-q]");
+      if (cuffClearQ) {
+        cuffFilterQ = "";
+        cuffFilterPlayerId = "";
+        render();
+        return;
+      }
+      const cuffPos = e.target.closest("[data-cuff-pos]");
+      if (cuffPos) {
+        const p = cuffPos.dataset.cuffPos || "";
+        cuffFilterPos = cuffFilterPos === p ? "" : p;
+        if (cuffFilterPos) cuffFilterMine = false;
+        render();
+        return;
+      }
+      const pickClearRound = e.target.closest("[data-pick-clear-round]");
+      if (pickClearRound) {
+        const n = Number(pickClearRound.dataset.pickClearRound);
+        delete pickFilterRounds[n];
+        pickFilterOpen = true;
+        pickFilterStep = "round";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickClearYear = e.target.closest("[data-pick-clear-year]");
+      if (pickClearYear) {
+        const y = pickClearYear.dataset.pickClearYear;
+        delete pickFilterYears[y];
+        pickFilterOpen = true;
+        pickFilterStep = "year";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickClearOwner = e.target.closest("[data-pick-clear-owner]");
+      if (pickClearOwner) {
+        pickFilterOwner = "";
+        pickFilterOwnerMode = null;
+        pickFilterOwnerAny = false;
+        pickFilterOpen = true;
+        pickFilterStep = "owner";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickOwnerMode = e.target.closest("[data-pick-owner-mode]");
+      if (pickOwnerMode) {
+        const mode = pickOwnerMode.dataset.pickOwnerMode;
+        if (mode !== "out" && mode !== "held") return;
+        pickFilterOwnerMode = mode;
+        pickFilterOpen = false;
+        pickFilterStep = null;
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickBoardTeam = e.target.closest("[data-pick-board-team]");
+      if (pickBoardTeam) {
+        // Leaderboard seat → Draft Data prefilled for that holder + column rounds + year.
+        const rounds = String(pickBoardTeam.dataset.pickRounds || "")
+          .split(",").map(Number).filter((n) => n > 0);
+        const year = String(pickBoardTeam.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
+        const team = pickBoardTeam.dataset.pickBoardTeam || "";
+        if (!team) return;
+        openDraftDataPage("board", {
+          rounds,
+          years: year ? [year] : [],
+          owner: team,
+          ownerMode: "held",
+        });
+        return;
+      }
+      const pickBoardRounds = e.target.closest("button.pick-intel-board-lab[data-pick-rounds]");
+      if (pickBoardRounds) {
+        // Column header → Draft Data prefilled for that round set + board year.
+        const rounds = String(pickBoardRounds.dataset.pickRounds || "")
+          .split(",").map(Number).filter((n) => n > 0);
+        const year = String(pickBoardRounds.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
+        openDraftDataPage("board", {
+          rounds,
+          years: year ? [year] : [],
+        });
+        return;
+      }
+      const pickRound = e.target.closest("[data-pick-round]");
+      if (pickRound) {
+        const n = Number(pickRound.dataset.pickRound);
+        // Legacy single-round shortcut: jump into the year step with that round on.
+        pickFilterRounds = {};
+        pickFilterRounds[n] = true;
+        pickFilterOpen = true;
+        pickFilterStep = "year";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickYear = e.target.closest("[data-pick-year]");
+      if (pickYear) {
+        const y = pickYear.dataset.pickYear;
+        if (pickFilterYears[y]) delete pickFilterYears[y];
+        else pickFilterYears[y] = true;
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickRow = e.target.closest("[data-pick-intel-key]");
+      if (pickRow) {
+        const key = pickRow.dataset.pickIntelKey;
+        pickIntelOpen = pickIntelOpen === key ? null : key;
+        render();
+        return;
+      }
+      // App shell navigation (multi-league home / join / account).
+      const gateModeBtn = e.target.closest("[data-gate-mode]");
+      if (gateModeBtn) {
+        gateMode = gateModeBtn.dataset.gateMode === "signup" ? "signup" : "signin";
+        authError = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const gateGo = e.target.closest("[data-gate-go]");
+      if (gateGo) {
+        onGateSubmit();
+        return;
+      }
+      const appHome = e.target.closest("[data-app-home]");
+      if (appHome) {
+        goAppHome();
+        return;
+      }
+      const appSettings = e.target.closest("[data-app-settings]");
+      if (appSettings) {
+        openSettings();
+        return;
+      }
+      const appCreate = e.target.closest("[data-app-create]");
+      if (appCreate) {
+        appScreen = "create";
+        joinError = "";
+        createdInvites = null;
+        inviteTab = "unclaimed";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const appRedeem = e.target.closest("[data-app-redeem]");
+      if (appRedeem) {
+        appScreen = "redeem";
+        joinError = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const createLeagueBtn = e.target.closest("[data-create-league]");
+      if (createLeagueBtn) {
+        onCreateLeague();
+        return;
+      }
+      const redeemGo = e.target.closest("[data-redeem-go]");
+      if (redeemGo) {
+        onRedeemInvite();
+        return;
+      }
+      const manageInvites = e.target.closest("[data-manage-invites]");
+      if (manageInvites) {
+        openInviteConsole(manageInvites.dataset.manageInvites).catch((err) => console.error(err));
+        return;
+      }
+      const inviteTabBtn = e.target.closest("[data-invite-tab]");
+      if (inviteTabBtn) {
+        inviteTab = inviteTabBtn.dataset.inviteTab === "claimed" ? "claimed" : "unclaimed";
+        render();
+        return;
+      }
+      const generateInvite = e.target.closest("[data-generate-invite]");
+      if (generateInvite) {
+        onCopyInviteLink(generateInvite.dataset.generateInvite).catch((err) => console.error(err));
+        return;
+      }
+      const copyInviteLink = e.target.closest("[data-copy-invite-link]");
+      if (copyInviteLink) {
+        onCopyInviteLink(copyInviteLink.dataset.copyInviteLink).catch((err) => console.error(err));
+        return;
+      }
+      const reissueSeat = e.target.closest("[data-reissue-seat]");
+      if (reissueSeat) {
+        onReissueSeat(reissueSeat.dataset.reissueSeat).catch((err) => console.error(err));
+        return;
+      }
+      const transferComm = e.target.closest("[data-transfer-comm]");
+      if (transferComm) {
+        onTransferCommissioner().catch((err) => console.error(err));
+        return;
+      }
+      const claimSeatBtn = e.target.closest("[data-claim-seat]");
+      if (claimSeatBtn) {
+        onClaimSeat(claimSeatBtn.dataset.claimSeat);
+        return;
+      }
+      const copyCode = e.target.closest("[data-copy-code]");
+      if (copyCode) {
+        copyText(copyCode.dataset.copyCode);
+        return;
+      }
+      const copyLink = e.target.closest("[data-copy-link]");
+      if (copyLink) {
+        copyText(inviteShareLink(copyLink.dataset.copyLink));
+        return;
+      }
+      const openLeagueBtn = e.target.closest("[data-open-league]");
+      if (openLeagueBtn) {
+        const id = openLeagueBtn.dataset.openLeague;
+        const m = (memberships || []).find((x) => x.sleeper_league_id === id);
+        if (m) {
+          const leagueInfo = {
+            sleeper_league_id: m.sleeper_league_id,
+            name: m.name,
+            status: m.status || "pending_sync",
+            sleeper_user_id: m.sleeper_user_id,
+            team_name: m.team_name,
+          };
+          if (authSession) {
+            authSave(Object.assign({}, authSession, {
+              seat_user_id: m.sleeper_user_id,
+              seat_name: m.team_name,
+            }));
+          }
+          voteSeatRemember(m.sleeper_user_id);
+          openLeagueDashboard(leagueInfo).catch((err) => {
+            console.error(err);
+            saveActiveLeague(leagueInfo);
+            appScreen = "dash";
+            members = null;
+            league = null;
+            render();
+          });
+        }
+        return;
+      }
+      const signOut = e.target.closest("[data-auth-signout]");
+      if (signOut) {
+        authClear();
+        document.getElementById("app").hidden = false;
+        focusNext = ".screen-h";
+        render();
         return;
       }
       // Admin soft-delete on a shared tweet. Early return so it cannot fall through to any
@@ -4099,10 +9716,29 @@ const html = `<!DOCTYPE html>
         deleteNewsItem(newsDelBtn.dataset.newsDel);
         return;
       }
-      const newsApplyBtn = e.target.closest("[data-news-apply]");
-      if (newsApplyBtn) {
-        if (newsPendingBook) applyPendingNews();
-        else refreshNewsFeed({ reason: "tap", force: true });
+      const voteOpenBtn = e.target.closest("[data-vote-open]");
+      if (voteOpenBtn) {
+        voteSheetTx = voteOpenBtn.dataset.voteOpen || null;
+        render();
+        return;
+      }
+      const voteSheetClose = e.target.closest("[data-vote-sheet-close]");
+      if (voteSheetClose) {
+        voteSheetTx = null;
+        voteEditTx = null;
+        render();
+        return;
+      }
+      const voteEditBtn = e.target.closest("[data-vote-edit]");
+      if (voteEditBtn) {
+        voteEditTx = voteEditBtn.dataset.voteEdit || null;
+        render();
+        return;
+      }
+      const voteEditCancel = e.target.closest("[data-vote-edit-cancel]");
+      if (voteEditCancel) {
+        voteEditTx = null;
+        render();
         return;
       }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
@@ -4113,15 +9749,15 @@ const html = `<!DOCTYPE html>
         const pick = voteBtn.dataset.voteSeat;
         const next = readVotes(tx).choice === pick ? null : pick;
         writeVote(tx, next);
-        // Casting a vote is the last thing the trade's own screen is for, so it hands the user
-        // the league list — named, so being moved does not read as being thrown out. Clearing a
-        // vote is not casting one and stays put, or the screen would vanish under the user.
-        if (view === "trade" && next) {
+        // Casting a vote on the trade feed shows a toast and stays put so the user can keep
+        // browsing. Clearing a vote stays put too. Unclaimed: writeVote only opens the claim form.
+        if (view === "trade" && next && authSeatId()) {
           const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
-          openTradesList({ tx: tx, name: (won && won.name) || "" });
+          voteToast = { tx: tx, name: (won && won.name) || "" };
         } else {
-          render();
+          voteToast = null;
         }
+        render();
         return;
       }
       const pickBtn = e.target.closest("[data-pick]");
@@ -4161,13 +9797,19 @@ const html = `<!DOCTYPE html>
       const viewBtn = e.target.closest("[data-view]");
       if (viewBtn) {
         if (viewBtn.tagName === "A") e.preventDefault();
-        view = viewBtn.dataset.view;
+        const nextView = viewBtn.dataset.view;
+        if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
+        if (view === "cuffs" && nextView !== "cuffs") clearCuffFilters();
+        view = nextView;
         openId = null;
         tradeSeat = null;
         openDraft = null;
         if (view !== "home") markOpen = null;
         if (view !== "drafts") draftFilterOpen = false;
-        if (view !== "trades") yearFilterOpen = false;
+        if (view !== "trades") {
+          yearFilterOpen = false;
+          tapeFilterOpen = false;
+        }
         partnerName = null;
         titleYear = null;
         lensOpen = false;
@@ -4189,9 +9831,28 @@ const html = `<!DOCTYPE html>
       }
       const filterBtn = e.target.closest("[data-dfilter]");
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
-      const yfilterBtn = e.target.closest("[data-yfilter]");
-      if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
-      if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters")
+      const stfilterBtn = e.target.closest("[data-stfilter]");
+      if (stfilterBtn) {
+        yearFilterOpen = !yearFilterOpen;
+        if (yearFilterOpen) lensOpen = false;
+        render();
+        return;
+      }
+      const tfilterBtn = e.target.closest("[data-tfilter]");
+      if (tfilterBtn) {
+        tapeFilterOpen = !tapeFilterOpen;
+        if (tapeFilterOpen) { lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; }
+        render();
+        return;
+      }
+      const tapeMore = e.target.closest("[data-tape-more]");
+      if (tapeMore) {
+        tapeLimit += 25;
+        render();
+        return;
+      }
+      if (e.target.closest("#draftFilters") || e.target.closest("#seatTradeFilters")
+        || e.target.closest("#tapeFilters")
         || e.target.closest("#dataSets")) return;
       let closedFilter = false;
       if (dsOpen) {
@@ -4202,8 +9863,12 @@ const html = `<!DOCTYPE html>
         draftFilterOpen = false;
         closedFilter = true;
       }
-      if (yearFilterOpen && !e.target.closest("#yearFilters")) {
+      if (yearFilterOpen && !e.target.closest("#seatTradeFilters") && !e.target.closest("[data-stfilter]")) {
         yearFilterOpen = false;
+        closedFilter = true;
+      }
+      if (tapeFilterOpen && !e.target.closest("#tapeFilters") && !e.target.closest("[data-tfilter]")) {
+        tapeFilterOpen = false;
         closedFilter = true;
       }
       const draftBtn = e.target.closest("[data-draft]");
@@ -4218,9 +9883,96 @@ const html = `<!DOCTYPE html>
       else if (closedFilter) render();
     });
     document.addEventListener("change", (e) => {
-      const yearLab = e.target.closest("[data-year]");
-      if (yearLab) {
-        year = e.target.checked ? yearLab.dataset.year : "all";
+      const tapeYearLab = e.target.closest("[data-tape-year]");
+      if (tapeYearLab) {
+        tapeYear = e.target.checked ? tapeYearLab.dataset.tapeYear : "all";
+        tapeLimit = 20;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const tapeTeamLab = e.target.closest("[data-tape-team]");
+      if (tapeTeamLab) {
+        tapeTeam = e.target.checked ? tapeTeamLab.dataset.tapeTeam : "all";
+        tapeLimit = 20;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const tapePlayerLab = e.target.closest("[data-tape-player]");
+      if (tapePlayerLab) {
+        tapePlayer = e.target.checked ? tapePlayerLab.dataset.tapePlayer : "all";
+        tapePlayerQ = "";
+        tapeLimit = 20;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const pickStepRound = e.target.closest("[data-pick-step-round]");
+      if (pickStepRound) {
+        const raw = pickStepRound.value;
+        if (raw === "__pick__") return;
+        pickFilterRounds = {};
+        if (raw) pickFilterRounds[Number(raw)] = true;
+        pickFilterOpen = true;
+        pickFilterStep = "year";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickStepYear = e.target.closest("[data-pick-step-year]");
+      if (pickStepYear) {
+        const y = pickStepYear.value;
+        if (y === "__pick__") return;
+        pickFilterYears = {};
+        if (y) pickFilterYears[y] = true;
+        pickFilterOpen = true;
+        pickFilterStep = "owner";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickOwner = e.target.closest("[data-pick-owner]");
+      if (pickOwner) {
+        const v = pickOwner.value;
+        if (v === "__pick__") return;
+        if (!v) {
+          pickFilterOwner = "";
+          pickFilterOwnerMode = null;
+          pickFilterOwnerAny = true;
+          pickFilterOpen = false;
+          pickFilterStep = null;
+        } else {
+          pickFilterOwner = v;
+          pickFilterOwnerAny = false;
+          pickFilterOwnerMode = null;
+          pickFilterOpen = true;
+          pickFilterStep = "owner";
+        }
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const seatYearLab = e.target.closest("[data-seat-year]");
+      if (seatYearLab) {
+        year = e.target.checked ? seatYearLab.dataset.seatYear : "all";
+        tapeLimit = 20;
+        yearFilterOpen = true;
+        render();
+        return;
+      }
+      const seatTeamLab = e.target.closest("[data-seat-team]");
+      if (seatTeamLab) {
+        seatTradeTeam = e.target.checked ? seatTeamLab.dataset.seatTeam : "all";
+        tapeLimit = 20;
+        yearFilterOpen = true;
+        render();
+        return;
+      }
+      const seatSortLab = e.target.closest("[data-seat-sort]");
+      if (seatSortLab) {
+        seatTradeSort = seatSortLab.dataset.seatSort || "new";
+        tapeLimit = 20;
         yearFilterOpen = true;
         render();
         return;
@@ -4245,26 +9997,127 @@ const html = `<!DOCTYPE html>
         render();
       }
     });
-    // The live tally is read after the page has painted, not before it. Awaiting Supabase here
-    // would put a paused free-tier project between the reader and the whole dashboard, and votes
-    // are the least important thing on it. Its own .catch keeps a vote failure out of the fatal
-    // path below — a missing tally is a caption, not a broken page.
-    loadMembers()
-      .then(() => voteLoad().catch((err) => console.error(err)))
-      .then(() => loadNewsDeleted().catch((err) => console.error(err)))
-      .then(() => {
-        startNewsPoll();
-        document.addEventListener("visibilitychange", () => {
-          if (document.hidden) return;
-          if (!newsOnLeagueHome()) return;
-          refreshNewsFeed({ reason: "poll" });
-        });
-      })
-      .catch((err) => {
-        document.getElementById("app").hidden = false;
-        document.getElementById("lead").textContent = "Could not load league data. Hard-refresh, or serve this folder over http.";
+    document.getElementById("app").addEventListener("change", (e) => {
+      const cuffOwnerSel = e.target.closest("[data-cuff-owner]");
+      if (cuffOwnerSel) {
+        cuffFilterOwner = cuffOwnerSel.value || "";
+        if (cuffFilterOwner) cuffFilterMine = false;
+        render();
+        return;
+      }
+    });
+    document.getElementById("app").addEventListener("input", (e) => {
+      const cuffQBox = e.target.closest("[data-cuff-q]");
+      if (cuffQBox) {
+        cuffFilterQ = cuffQBox.value;
+        cuffFilterPlayerId = ""; // typing replaces a news-pinned player filter
+        if (cuffFilterQ.trim()) cuffFilterMine = false;
+        const start = cuffQBox.selectionStart;
+        const end = cuffQBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-cuff-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
+        return;
+      }
+      const tapePlayerBox = e.target.closest("[data-tape-player-q]");
+      if (!tapePlayerBox) return;
+      tapePlayerQ = tapePlayerBox.value;
+      tapePlayer = "all";
+      tapeLimit = 20;
+      tapeFilterOpen = true;
+      const start = tapePlayerBox.selectionStart;
+      const end = tapePlayerBox.selectionEnd;
+      render();
+      const back = document.querySelector("#app [data-tape-player-q]");
+      if (back) {
+        back.focus({ preventScroll: true });
+        try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+      }
+    });
+    // App boot: account gate → league home → dashboard. The meter only loads after a league
+    // is selected. Vote tallies still load after paint when we enter a ready league.
+    authLoad();
+    const inviteParam = (params.get("invite") || "").trim();
+    if (inviteParam) redeemCode = inviteParam.toUpperCase();
+    paintSettingsBtn();
+    paintLeagueSub();
+    paintBottomNav();
+    document.getElementById("app").hidden = false;
+    (async () => {
+      try {
+        if (!authSession) {
+          appScreen = "gate";
+          if (inviteParam) gateMode = "signup";
+          focusNext = ".screen-h";
+          render();
+          return;
+        }
+        await authRefreshIfNeeded();
+        if (!authSession) {
+          appScreen = "gate";
+          render();
+          return;
+        }
+        if (inviteParam) {
+          await loadMemberships().catch((err) => console.error(err));
+          // Already signed in: redeem immediately and open their league dashboard.
+          await onRedeemInvite();
+          return;
+        }
+        // Design Mode entry (design-league-home.html): skip the memberships API — the
+        // design-mode token cannot fetch remote rows, and without a local match boot used to
+        // fall through to Your leagues (the old app home) instead of the PSA league home.
+        // Re-seed sticky flag from ?design= (syncUrl strips it later). Never remove the flag
+        // on boot — reloads must keep skipping soft-delete + memberships.
+        try {
+          if ((params.get("design") || "") === "league-home") {
+            sessionStorage.setItem("cuckle.design.league_home", "1");
+          }
+        } catch (err) { /* private mode */ }
+        const designLeagueHome = isDesignLeagueHome();
+        if (!designLeagueHome) {
+          await loadMemberships().catch((err) => console.error(err));
+        }
+        if (activeLeague && activeLeague.sleeper_league_id) {
+          const m = (memberships || []).find((x) => x.sleeper_league_id === activeLeague.sleeper_league_id);
+          if (m) {
+            activeLeague = Object.assign({}, activeLeague, {
+              name: m.name,
+              status: m.status,
+              sleeper_user_id: m.sleeper_user_id,
+              team_name: m.team_name,
+            });
+            saveActiveLeague(activeLeague);
+          }
+          if (m || designLeagueHome) {
+            try {
+              await openLeagueDashboard(activeLeague);
+              return;
+            } catch (err) {
+              console.error(err);
+              appScreen = "dash";
+              render();
+              return;
+            }
+          }
+        }
+        appScreen = "home";
+        focusNext = ".screen-h";
+        render();
+      } catch (err) {
+        document.getElementById("lead").textContent = "Could not start the app. Hard-refresh and try again.";
         console.error(err);
-      });
+        appScreen = "gate";
+        render();
+      }
+    })();
+    // Installable shell (browser + home-screen). Push stays parked.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch((err) => console.warn("sw", err));
+    }
   </script>
 </body>
 </html>`;
@@ -4287,32 +10140,185 @@ const inline = html.slice(html.indexOf("<script>"));
 for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
 }
-// The champ card caption reads titles.json at runtime, so assert the builder shipped at all.
-for (const need of ["function champFinalCaption", "champFinalCaption(champ, rec)", "Top scorer · "]) {
+// The champ final caption builder still ships for Champions Path detail / titles.json readers,
+// even though league home's progress card is now Latest trade (not the championship bout).
+for (const need of ["function champFinalCaption", "Top scorer · ", "const scoreShort =",
+  'scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)',
+  "f.opponent_record"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the champ final caption: ${need}`);
 }
-// The scoreboard row. Each of these is one deletion away from a card that still renders and
-// still says something plausible, which is exactly the failure mode worth asserting against:
-//   scoreShort      the sketch's format -- one decimal, trailing .0 dropped, both halves alike
-//   .bout-rec x2    the runner-up's record is the half of the row that did not exist before,
-//                   and an absent one leaves a row that looks deliberate and is not
-//   .bout-r         both right-hand cells pinned to track 3; lose it and the record slides
-//                   under the score instead of under the name it belongs to
-for (const need of ["const scoreShort =", 'scoreShort(f.champ_points) + "–" + scoreShort(f.opponent_points)',
-  '<div class="champ-bout">', '<span class="bout-team">', '<span class="bout-team bout-r">',
-  '<span class="bout-rec">', '<span class="bout-rec bout-r">', '<b class="bout-score">',
-  'class="bout-w"', 'class="bout-l"', 'class="bout-dash"',
-  "fin.bout.champRec", "fin.bout.oppRec", "f.opponent_record"]) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a champ scoreboard part: ${need}`);
-}
-// The .0 strip is a lone backslash inside the template literal, the exact hazard that shipped
-// /^pick:d{4}:4:/. yearsOn() carries the same escape, so the shared list above cannot tell the
-// two apart -- assert this one against its own call site.
 if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
   throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
 }
-// Both records ellipsise and the score does not, and the two rows are one grid so a record
-// stays under its own name. Losing any of these is how a scoreboard silently becomes a stack.
+// League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
+for (const need of ["function recentTradeHeaderHtml(", "Recent Trade", "data-trades-list=\"1\"",
+  "search all trades", "function latestTradeSide(", "function ensureWeekMatchups(",
+  "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
+  "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
+  "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
+  'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id", "aRank", "bRank"]) {
+  if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
+}
+if (inline.includes('day-alert-h">Champions Path')) {
+  throw new Error("league home must not mount a Champions Path progress card -- Latest trade replaced it");
+}
+{
+  const at = inline.indexOf("function leagueInProgress(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
+  if (!prog.includes("recentTradeHeaderHtml()") || !prog.includes("lh-latest-trade")
+    || !prog.includes("data-board-open")) {
+    throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
+  }
+  if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
+    throw new Error("leagueInProgress must mount Who won this trade? vote CTA on Recent Trade");
+  }
+  if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")) {
+    throw new Error("Recent Trade vote CTA styles must ship (lh-trade-vote-cta / lh-trade-chip-wrap)");
+  }
+  if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
+    || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
+    || !inline.includes("function latestTradeLean(") || !inline.includes("function legValueText(")
+    || !inline.includes("latestTradeLeanFooterHtml(") || !inline.includes("lh-trade-val")
+    || !inline.includes("lh-trade-num") || !inline.includes("latestTradeSumHtml(")
+    || !inline.includes("function legValueParts(") || !inline.includes("lh-trade-sum")
+    || !inline.includes("tapeFigures(")
+    || !html.includes(".h2h-chip") || !html.includes(".lh-trade-plus") || !html.includes(".h2h-vs")
+    || !html.includes(".h2h-av-wrap") || !html.includes(".h2h-medal")
+    || !html.includes(".lh-trade-val") || !html.includes(".lh-trade-num") || !html.includes(".lh-trade-sum")
+    || !html.includes(".h2h-trade-lean")
+    || !html.includes(".h2h-lean-marks") || !html.includes(".h2h-lean-n")
+    || !html.includes("div.champ-alert.lh-progress.lh-latest-trade")) {
+    throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
+  }
+  if (!inline.includes("function latestTradeLean(") || !inline.includes("applyVa(")
+    || !inline.includes("windowScore(latest)")) {
+    throw new Error("Latest trade chip must reuse applyVa/windowScore for value lean");
+  }
+  {
+    const cardAt = inline.indexOf("function latestTradeCardHtml(");
+    const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+    const card = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
+    if (card.includes("h2h-trade-figs") || card.includes("tapeFigures(")) {
+      throw new Error("Latest trade header must not show delta/total figs — name stays centered on the avatar");
+    }
+  }
+  {
+    // Latest trade pick subline is owner only — Mid / as-year notes stay off the lab.
+    const assetAt = inline.indexOf("function latestTradeAssetHtml(");
+    const assetStop = inline.indexOf("\n    function ", assetAt + 10);
+    const assetFn = inline.slice(assetAt, assetStop < 0 ? assetAt + 1800 : assetStop)
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    if (!assetFn || assetFn.length < 200) throw new Error("latestTradeAssetHtml() did not ship");
+    if (/parts\s*&&\s*parts\.note|parts\.note/.test(assetFn)) {
+      throw new Error("latestTradeAssetHtml must not paint Mid / as-year notes (parts.note) on the lab");
+    }
+    if (/"Mid"|'Mid'/.test(assetFn)) {
+      throw new Error("latestTradeAssetHtml must not hardcode Mid on the Latest trade lab");
+    }
+    if (!assetFn.includes("lab.secondary") && !assetFn.includes("lab.secondary ||")
+      && !assetFn.includes("became ")) {
+      throw new Error("latestTradeAssetHtml must keep the pick owner subline (lab.secondary) or became path hint");
+    }
+    if (!assetFn.includes("pickKeyForLeg(") || !assetFn.includes("data-pick=")
+      || !assetFn.includes("hopHtml(") || !assetFn.includes("lh-trade-asset-wrap")) {
+      throw new Error("latestTradeAssetHtml must make assets expandable with hop paths (data-pick / hopHtml)");
+    }
+  }
+  if (!inline.includes("function pickKeyForLeg(")) {
+    throw new Error("pickKeyForLeg must resolve pick tape keys for players and picks");
+  }
+  if (!inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
+    || !inline.includes("seatVoteMarkHtml(")) {
+    throw new Error("Latest trade chip must surface per-side vote marks");
+  }
+  {
+    const footAt = inline.indexOf("function latestTradeLeanFooterHtml(");
+    const footStop = inline.indexOf("\n    function ", footAt + 10);
+    const foot = inline.slice(footAt, footStop < 0 ? footAt + 2000 : footStop);
+    if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
+      throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
+    }
+    if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")) {
+      throw new Error("Lean footer must separate flairs from the vote scoreboard (h2h-lean-flairs / h2h-lean-n)");
+    }
+  }
+  if (!html.includes(".h2h-lean-flairs") || !html.includes(".h2h-lean-side.is-left .h2h-lean-n")) {
+    throw new Error("Lean vote scoreboard styles must pin totals toward the center");
+  }
+  {
+    const cardAt = inline.indexOf("function latestTradeCardHtml(");
+    const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+    const card = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
+    if (card.includes("h2h-verdict") || card.includes("WINNER") || card.includes("LOSER")) {
+      throw new Error("Latest trade chip must not show book WINNER/LOSER under each seat name");
+    }
+    if (card.includes("win: win") || card.includes("win: leftWin") || card.includes("win: rightWin")
+      || card.includes('win: true')) {
+      throw new Error("Trade chips must not show winner medals on avatars");
+    }
+    if (card.includes("tradeVoteBtnHtml(") || card.includes("h2h-vote-btn") || card.includes("is-vote-row")) {
+      throw new Error("Compact H2H trade chips must not mount a Vote button — vote on the expanded trade screen");
+    }
+  }
+  if (html.includes("button.h2h-vote-btn") || html.includes(".h2h-sum-gap.is-vote-row")) {
+    throw new Error("stylesheet must not style removed h2h-vote-btn on compact trade chips");
+  }
+  if (html.includes(".h2h-verdict")) {
+    throw new Error("stylesheet must not style removed h2h-verdict labels on trade chips");
+  }
+  if (!inline.includes("function latestTradeVaHtml(") || !inline.includes("latestTradeVaHtml(")
+    || !html.includes(".lh-trade-va")) {
+    throw new Error("Latest trade chip must show Value Adjustment when present (latestTradeVaHtml / .lh-trade-va)");
+  }
+  {
+    const vaAt = inline.indexOf("function latestTradeVaHtml(");
+    const vaStop = inline.indexOf("\n    function ", vaAt + 10);
+    const vaFn = inline.slice(vaAt, vaStop < 0 ? vaAt + 400 : vaStop);
+    if (!vaFn.includes("Value Adjustment") || !vaFn.includes("signedNum(va)")) {
+      throw new Error("latestTradeVaHtml must mirror bagBlock Value Adjustment row");
+    }
+  }
+  {
+    const markAt = inline.indexOf("function seatVoteMarkHtml(");
+    const markStop = inline.indexOf("\n    function ", markAt + 10);
+    const markFn = inline.slice(markAt, markStop < 0 ? markAt + 800 : markStop);
+    if (markFn.includes("h2h-lean-init") || markFn.includes("initials")) {
+      throw new Error("seatVoteMarkHtml must not fall back to initials — only real seat flairs");
+    }
+    if (!markFn.includes("data-who=") || !markFn.includes("h2h-lean-flair-link")
+      || !markFn.includes('role="link"')) {
+      throw new Error("seatVoteMarkHtml must wrap flairs in seat-link data-who (open team home)");
+    }
+  }
+  if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig") || prog.includes("lh-trade-handle")) {
+    throw new Error("Latest trade must not keep the old 3-line vs/delta or stacked-handle chip markup");
+  }
+  if (prog.includes("?view=titles") || prog.includes('data-view="titles"') || prog.includes(">Champions Path<")) {
+    throw new Error("leagueInProgress must not link to Champions Path / titles");
+  }
+  if (prog.includes("lh-strip-card") || prog.includes('class="lh-strip-card')) {
+    throw new Error("leagueInProgress must not mount trade strip cards (lh-strip-card)");
+  }
+  // Week matchup strip is intentionally unmounted while that slot is redesigned.
+  if (prog.includes("matchupStripHtml(") || prog.includes("ensureWeekMatchups(")
+    || prog.includes("lh-week-h") || prog.includes("lh-match-strip")) {
+    throw new Error("leagueInProgress must not mount the prior-week matchup strip (parked for rethink)");
+  }
+}
+{
+  // Helpers stay in the bundle for the redesign, but must not be called from home yet.
+  if (!inline.includes("function matchupStripHtml(") || !inline.includes("function ensureWeekMatchups(")
+    || !inline.includes("function h2hMatchCardHtml(")) {
+    throw new Error("matchup strip helpers must remain available for the post-Latest-trade rethink");
+  }
+}
+// Dead trade-strip class must stay gone so Design Mode does not see button/div.lh-strip-card.
+if (html.includes("lh-strip-card") || inline.includes("lh-strip-card")) {
+  throw new Error("league home must not keep lh-strip-card — prior-week matchups use lh-match-card only");
+}
+// Champ scoreboard CSS stays for a.champ-alert chrome the Latest trade button still reuses.
 for (const need of ["a.champ-alert .champ-bout {",
   "grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);",
   "a.champ-alert .champ-bout > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }",
@@ -4367,78 +10373,250 @@ for (const need of ["grid-column: 1 / -1", "@media (max-width: 700px)", ".row-to
 // getBoundingClientRect would still report the full panel, so only a hit test would show it.
 const brandRule = html.slice(html.indexOf("    h1.brand {"));
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
-  throw new Error("h1.brand must declare overflow: visible -- a clip here hides #scoreAs");
+  throw new Error("h1.brand must declare overflow: visible -- brand chrome must not clip");
+}
+if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) {
+  throw new Error("h1.brand must be position: relative -- the centered league name is absolute against it");
+}
+{
+  const subRule = html.slice(html.indexOf("    h1.brand .league-sub {"));
+  const decl = subRule.slice(0, subRule.indexOf("}"));
+  if (!decl.includes("left: 50%") || !decl.includes("translateX(-50%)")) {
+    throw new Error("h1.brand .league-sub must be absolutely centered (left: 50% + translateX(-50%))");
+  }
 }
 
-// The Recent Trade card is now the only door on league home to the league-wide list, so losing
-// any part of that button strands the screen a vote lands on. The 44px tap area is a painted
-// ::after rather than layout, which no source read would reveal is load-bearing -- assert both
-// halves, and assert nothing put the standalone control back on league home beside it.
-for (const need of ['class="all-trades" data-trades-list="1"',
-  'aria-label="All trades in the league"', "<span>All trades</span>", '"day-alert-top"']) {
-  if (!inline.includes(need)) throw new Error(`generated script lost the all-trades icon: ${need}`);
+if (!html.includes('id="leagueSub"') || !html.includes("h1.brand .league-sub")) {
+  throw new Error("league name must ship in the brand row (#leagueSub)");
 }
-for (const need of ["button.all-trades::after", "inset: -10px", ".day-alert-top .day-alert-h { min-width: 0; }"]) {
-  if (!html.includes(need)) throw new Error(`generated stylesheet lost the all-trades tap area: ${need}`);
+if (/<p[^>]*id="leagueSub"/.test(html) || /<p class="league-sub"/.test(html)) {
+  throw new Error("league name must not remain a separate <p> under the brand — it belongs in h1.brand");
 }
-// League home's door is the icon in the card and nothing else. The trade screen keeps its own
-// footer chip -- a different screen with a different parent -- so scope this to the one function
-// rather than to the whole script, or the chip that survives on purpose trips it.
+if (!inline.includes("function paintLeagueSub()")
+    || !inline.includes('leagueSub.textContent = activeLeague.name || "League"')) {
+  throw new Error("render must paint the active league name under the brand");
+}
+if (!inline.includes("paintLeagueSub();\n        paintBottomNav();")
+    && !inline.includes("paintLeagueSub();\n      paintBottomNav();")) {
+  throw new Error("render must call paintLeagueSub so the league name shows on dash");
+}
+{
+  const wrap = html.slice(html.indexOf("    .lens-wrap {"));
+  if (wrap.slice(0, wrap.indexOf("}")).includes("margin-left: auto")) {
+    throw new Error(".lens-wrap must not take the right edge — settings sits there after the swap");
+  }
+  if (!html.includes(".brand-end { margin-left: auto")) {
+    throw new Error("settings must sit in .brand-end on the right of the brand row");
+  }
+  if (html.slice(html.indexOf("    .lens-wrap {"), html.indexOf("}", html.indexOf("    .lens-wrap {"))).includes("margin-left: auto")) {
+    throw new Error("score lens must not take the right edge — settings lives there");
+  }
+}
+
+// All-trades control removed from league home; Trades quick action + Latest trade + My trades remain.
+// Forbid markup, visible copy, and leftover stylesheet rules so the pill cannot return quietly.
+if (
+  inline.includes('class="all-trades"')
+  || inline.includes("<span>All trades</span>")
+  || inline.includes(">All trades<")
+  || html.includes("button.all-trades")
+) {
+  throw new Error("league home must not mount the All trades control — Trades quick action is the door");
+}
+if (inline.includes("lh-section-h") || html.includes(".lh-section-h")) {
+  throw new Error("league home must not keep lh-section-h chrome — it only hosted All trades / In the league");
+}
+// Heading removed: section.lh-section must not open with h2 “In the league”.
+if (
+  inline.includes("<h2>In the league</h2>")
+  || inline.includes(">In the league</h2>")
+  || /<h2[^>]*>\s*In the league\s*<\/h2>/.test(inline)
+) {
+  throw new Error("league home must not show an In the league heading");
+}
+{
+  const lip = inline.slice(inline.indexOf("function leagueInProgress("));
+  const lipBody = lip.slice(0, lip.indexOf("\n    function "));
+  if (lipBody.includes("<h2>") || lipBody.includes("lh-section-h") || lipBody.includes("In the league</")) {
+    throw new Error("leagueInProgress must not emit In the league heading or lh-section-h wrapper");
+  }
+}
+for (const need of ["news-pullup", 'day-alert-h" id="newsPullupTitle">News Feed', "h2h-chip", "h2h-vs"]) {
+  if (!inline.includes(need) && !html.includes(need) && !html.includes("." + need)) {
+    if (need === "h2h-chip" && (html.includes(".h2h-chip") || inline.includes("h2h-chip"))) continue;
+    if (need === "h2h-vs" && (html.includes(".h2h-vs") || inline.includes("h2h-vs"))) continue;
+    throw new Error(`league home news/trade chrome lost ${need}`);
+  }
+}
+if (inline.includes("lh-hero-visual") || inline.includes("News &amp; Alerts")) {
+  throw new Error("News Feed must not keep the split visual panel or News & Alerts copy");
+}
+if (html.includes("ellipse at 88%") || html.includes("lh-hero-visual")) {
+  throw new Error("News Feed must be one continuous dark plane — no right-half glow or visual panel");
+}
+if (!html.includes("data-news-pullup-peek") || !html.includes(".news-pullup-sheet {")) {
+  throw new Error("News Feed must ship as a bottom pull-up sheet with a peek control");
+}
+if (!html.includes("body.has-news-pullup") || !html.includes("--news-pullup-peek")) {
+  throw new Error("News Feed pull-up must reserve bottom padding via --news-pullup-peek");
+}
+if (!inline.includes("function newsHeroLine(") || !inline.includes("it.tweet_handle")
+    || !inline.includes("it.published") || !inline.includes("it.source_url")) {
+  throw new Error("newsHeroLine must read tweet_handle, published, and source_url for pull-up rows");
+}
+if (!inline.includes("it.managers") || !inline.includes("news-hero-who")
+    || !inline.includes('whoNames.map((n) => seatLabel(n))')) {
+  throw new Error("newsHeroLine must tag related fantasy seat(s) via managers/manager");
+}
+if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src-bubble")
+    || !html.includes(".news-hero-foot") || !html.includes("a.news-hero-link")
+    || !html.includes(".news-pullup-card") || !html.includes(".news-hero-sep")) {
+  throw new Error("News Feed must style seat tag, source bubble, card, foot row, and post link");
+}
+{
+  const itemHtml = inline.slice(inline.indexOf("function newsPullupItemInnerHtml("),
+    inline.indexOf("function newsPullupItemInnerHtml(") + 700);
+  const footHtml = inline.slice(inline.indexOf("function newsPullupFootHtml("),
+    inline.indexOf("function newsPullupItemInnerHtml("));
+  if (!(itemHtml.indexOf("news-hero-head") >= 0
+      && itemHtml.indexOf("news-hero-who") >= 0
+      && itemHtml.indexOf("news-hero-tags") >= 0
+      && itemHtml.indexOf("newsCatTagHtml") >= 0
+      && itemHtml.indexOf("news-hero-src-bubble") >= 0
+      && itemHtml.indexOf("bit.lineHtml") >= 0
+      && itemHtml.indexOf("news-pullup-line") > itemHtml.indexOf("news-hero-head")
+      && itemHtml.indexOf("newsPullupFootHtml") >= 0
+      && itemHtml.indexOf("news-pullup-card") >= 0
+      && footHtml.indexOf("news-hero-foot") >= 0
+      && footHtml.indexOf("See tweet</a>") >= 0
+      && footHtml.indexOf("news-hero-sep") >= 0)) {
+    throw new Error("News pull-up item must order: card > head (seat + category/source tags), rich summary, foot (handle · time · See tweet · Remove)");
+  }
+}
+if (!html.includes(".news-player.pos-qb") || !html.includes(".news-cat-tag") || !html.includes(".news-pos-tag")) {
+  throw new Error("News pull-up expanded rows must ship position-coloured players and category tags");
+}
+if (!inline.includes("function newsPullupLineHtml(") || !inline.includes("function newsCategoryTagFromLine(")) {
+  throw new Error("News pull-up must derive category tags and highlight players in expanded summaries");
+}
+if (!inline.includes('data-news-cuff="') || !inline.includes("data-news-cuff-name")
+  || !inline.includes('closest("[data-news-cuff]")')
+  || !inline.includes("cuffFilterPlayerId")
+  || !inline.includes("openCuffsPage(\"search\", { playerId:")
+  || !inline.includes("No cuff row for ")) {
+  throw new Error("News player highlights must open Cuffs pinned to that Sleeper player id");
+}
+if (!html.includes("button.news-player") || !inline.includes("Only roster-matched subjects")) {
+  throw new Error("News player highlights must be roster-matched buttons into Cuffs");
+}
+{
+  const peekFn = inline.slice(inline.indexOf("function newsPullupPeekHtml("),
+    inline.indexOf("function newsPullupPeekHtml(") + 450);
+  if (peekFn.indexOf("newsPullupItemInnerHtml") >= 0
+      || peekFn.indexOf("newsPullupPeekTeaserHtml") < 0
+      || !html.includes(".news-pullup-peek-inner")
+      || !html.includes(".news-pullup-peek-who")
+      || !html.includes(".news-pullup-peek-line")) {
+    throw new Error("News pull-up peek must use compact teaser (seat tag + truncated line), not full card");
+  }
+}
+// League dash must not mount the old ← Leagues · name · username caption under the brand
+// (p.caption margin:0 0 8px as the first child of #app). Removed; keep the forbid tight.
+if (inline.includes("← Leagues")) {
+  throw new Error("league dash must not show the ← Leagues caption under the brand");
+}
+if (inline.includes("const leagueChip") || inline.includes("leagueChip +")
+    || inline.includes("syncNote + leagueChip")
+    || /class="caption" style="margin:0 0 8px"[\s\S]{0,160}data-app-home="1"/.test(inline)) {
+  throw new Error("league dash must not rebuild the leagues caption row inside #app");
+}
+if (!inline.includes("app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();")) {
+  throw new Error("league dash render must compose syncNote + seatName + nav + body with no caption row");
+}
+// day-alert-top header row still hosts Pause; keep its min-width guard.
+for (const need of [".day-alert-top .day-alert-h { min-width: 0; }"]) {
+  if (!html.includes(need)) throw new Error(`generated stylesheet lost the news header row: ${need}`);
+}
 const homeFn = inline.slice(inline.indexOf("function renderLeagueHome()"));
 if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-list")) {
-  throw new Error("renderLeagueHome grew a standalone trades-list control -- the card's icon is the door");
+  throw new Error("renderLeagueHome grew a standalone trades-list control — Trades quick action is the door");
 }
-// League home's five lists are one "League Data Sets" dropdown, not five stacked accordion packs.
-// The trigger's label is the one thing the user specified by name, and the whole screen below it
-// is a single selected set, so losing the trigger loses the only door to four of the five lists.
+// League home's five lists open as a full-screen Data Sets page (not a dropdown).
+// The quick-action trigger is the door; losing it loses the only path to four of the five lists.
 if (!inline.includes('"League Data Sets"')) {
   throw new Error('the League Data Sets trigger must ship -- it is the only door to four of the five sets');
 }
-if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' selected"')) {
-  throw new Error("the League Data Sets trigger must name the selected set in its accessible name");
+if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' selected"')
+  && !inline.includes("aria-label=\"League Data Sets, ' + esc(cur[1]) + ' selected\"")) {
+  // Accept the live emitter form used in dataSetRow().
 }
-// The label is a constant, the way the seat picker's is. If it starts reflecting the selection
-// the two dropdowns on the same screen stop reading as the same kind of control.
-if (!inline.includes('+ "League Data Sets" + \' <span class="chev">')) {
+if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' selected"')
+  && !/aria-label="League Data Sets, ' \+ esc\(cur\[1\]\) \+ ' selected"/.test(inline)
+  && !/aria-label="League Data Sets, ' \+ esc\(cur\[1\]\) \+ ' selected"/.test(inline)) {
+  if (!inline.includes("League Data Sets, ' + esc(cur[1]) + ' selected")) {
+    throw new Error("the League Data Sets trigger must name the selected set in its accessible name");
+  }
+}
+if (!inline.includes('<span class="lh-lab">Data Sets</span>')) {
   throw new Error("the League Data Sets trigger label must stay a constant, not the selected set");
 }
-// A popup listbox, matching the seat picker rather than inventing a third, less accessible
-// pattern: named options a screen reader can enumerate, the selection marked, the trigger
-// announcing that it opens one.
-for (const need of ['id="dataSets"', 'role="listbox" aria-label="League Data Sets"',
-  "function closeDataSets()", "function openDataSets()",
-  'e.target.closest("#dataSets")', 'if (dsOpen) { closeDataSets(); return true; }',
-  'const opts = [...document.querySelectorAll("#dataSets button")];']) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a League Data Sets part: ${need}`);
+// Full-screen list page: options stay a listbox for a11y, but openDataSets navigates view=datasets.
+for (const need of [
+  'id="dataSets"',
+  'role="listbox" aria-label="League Data Sets"',
+  "function openDataSets()",
+  "function renderDataSetsPage()",
+  'view = "datasets"',
+  'view === "datasets" ? renderDataSetsPage()',
+  'data-dset-open="1"',
+  "function showDataSetList()",
+  'data-dset-list="1"',
+]) {
+  if (!inline.includes(need)) throw new Error(`Data Sets full-screen path lost: ${need}`);
 }
-// Scoped to the two emitters, because the seat picker carries role="option" and aria-selected of
-// its own -- checked against the whole script these would pass on the seat menu alone.
+// Dropdown chrome must stay gone.
+for (const gone of [
+  'aria-haspopup="listbox"',
+  'aria-expanded="\' + (dsOpen ? "true" : "false") + \'"',
+  "showMenu(menu)",
+  'if (dsOpen) { closeDataSets(); return true; }',
+  'const opts = [...document.querySelectorAll("#dataSets button")];',
+]) {
+  // showMenu may still exist for other filters — only ban it inside openDataSets.
+  if (gone === "showMenu(menu)") {
+    const openSrc = (() => {
+      const at = inline.indexOf("function openDataSets(");
+      if (at < 0) return "";
+      const rest = inline.slice(at);
+      return rest.slice(0, rest.indexOf("\n    function "));
+    })();
+    if (openSrc.includes("showMenu(")) {
+      throw new Error("openDataSets must not open a floating menu -- it navigates to view=datasets");
+    }
+    continue;
+  }
+  if (inline.includes(gone)) throw new Error(`Data Sets dropdown chrome must stay removed: ${gone}`);
+}
 const fnSrc = (name) => {
   const at = inline.indexOf(`    function ${name}(`);
   if (at < 0) throw new Error(`generated script lost ${name}()`);
   const rest = inline.slice(at + 4);
   return rest.slice(0, rest.indexOf("\n    function "));
 };
-/**
- * Just the function's own body, cut at its closing brace. fnSrc() runs to the next `function`
- * keyword, so it carries the following function's doc comment with it -- which is fine for a
- * "this string is present" check and useless for a "this string is absent" one. Every negative
- * assertion below uses this instead.
- */
 const fnBody = (name) => {
   const src = fnSrc(name);
   const end = src.indexOf("\n    }");
   return end < 0 ? src : src.slice(0, end);
 };
-for (const need of ['role="option"', 'aria-selected="\' + (on ? "true" : "false") + \'"', 'data-dset="']) {
+for (const need of ['role="option"', 'data-dset="']) {
   if (!fnSrc("dsOpt").includes(need)) throw new Error(`a data set option lost ${need}`);
 }
-for (const need of ['aria-haspopup="listbox"', 'aria-expanded="\' + (dsOpen ? "true" : "false") + \'"',
-  'data-dset-open="1"']) {
-  if (!fnSrc("dataSetRow").includes(need)) throw new Error(`the League Data Sets trigger lost ${need}`);
+if (!fnSrc("dataSetRow").includes('data-dset-open="1"')) {
+  throw new Error("the League Data Sets trigger lost data-dset-open");
 }
-// Exactly the five sets the five packs held, each with an id the ticker can name. Losing one
-// deletes a list from the app with nothing left pointing at it.
+if (fnSrc("dataSetRow").includes("aria-haspopup") || fnSrc("dataSetRow").includes("aria-expanded")) {
+  throw new Error("the Data Sets trigger must not advertise a popup listbox anymore");
+}
 for (const need of ['["wide", "Most lopsided trades"', '["passed", "Most passed around"',
   '["least", "Least traded"', '["forever", "Forever players"', '["home", "Homesteaders"']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a data set: ${need}`);
@@ -4446,22 +10624,15 @@ for (const need of ['["wide", "Most lopsided trades"', '["passed", "Most passed 
 const dsBlock = inline.slice(inline.indexOf("    const DATA_SETS = ["));
 const dsIds = (dsBlock.slice(0, dsBlock.indexOf("\n    ];")).match(/\["\w+", "/g) || []).length;
 if (dsIds !== 5) throw new Error(`DATA_SETS must hold exactly five sets, found ${dsIds}`);
-// No set is chosen on a cold load: league home opens as the dropdown alone. This guard used to
-// assert the opposite -- `let dataSet = "wide";`, so home would not be a lone control over empty
-// space -- and the user asked for the empty space, so it now asserts the default it once forbade.
 if (!inline.includes("let dataSet = null;")) {
   throw new Error("league home must open with no data set selected");
 }
 if (/let dataSet = "/.test(inline)) {
-  throw new Error("a data set is pre-selected on load -- league home opens on the dropdown alone");
+  throw new Error("a data set is pre-selected on load -- league home opens with none selected");
 }
-// The empty state is the panel emitting nothing, not a placeholder box. Scoped to the function,
-// because `if (!dataSet) return "";` anywhere else would satisfy a whole-script check.
 if (!fnSrc("dataSetPanel").includes('if (!dataSet) return "";')) {
   throw new Error("dataSetPanel must render nothing when no set is selected");
 }
-// The home icon returns league home to what a cold load shows. It used to reset to "wide"; that
-// reset target moved with the default, and the two must not drift apart.
 const clearFn = fnSrc("clearLeague");
 if (!clearFn.includes("dataSet = null;")) {
   throw new Error("clearLeague must reset to no data set selected -- the home icon has to match a cold load");
@@ -4469,511 +10640,170 @@ if (!clearFn.includes("dataSet = null;")) {
 if (/dataSet = "/.test(clearFn)) {
   throw new Error("the home icon resets to a selected data set -- it must match the empty first load");
 }
-// Nothing selected is reversible without a reload: a "None" option, first in the menu, at the
-// same 44px as the five sets and in the same arrow-key run, so a keyboard reaches it.
-for (const need of ['data-dset-none="1"', "function clearDataSet()",
-  'e.target.closest("[data-dset-none]")', "if (dsNoneBtn) { clearDataSet(); return; }",
-  "<b>None</b><span>"]) {
-  if (!inline.includes(need)) throw new Error(`the clear-selection path lost a part: ${need}`);
+for (const gone of ["dsNoneOpt", "clearDataSet", "data-dset-none", "<b>None</b><span>Hide the set"]) {
+  if (inline.includes(gone)) throw new Error(`Data Sets must not keep a None clear path: ${gone}`);
 }
-// It is an option in the listbox, not a bare button, or a screen reader gets an unmarked control
-// in a list of marked ones -- and it carries its own attribute rather than an empty data-dset,
-// which is the dead-pill defect the ticker already shipped once.
-for (const need of ['role="option"', 'aria-selected="\' + (on ? "true" : "false") + \'"',
-  'class="ds-opt']) {
-  if (!fnSrc("dsNoneOpt").includes(need)) throw new Error(`the None option lost ${need}`);
+if (fnSrc("dsMenu").includes("dsNoneOpt")) {
+  throw new Error("dsMenu must not compose a None option");
 }
-if (fnSrc("dsNoneOpt").includes('data-dset="')) {
-  throw new Error("the None option must not carry a data-dset -- it names no set");
-}
-if (!fnSrc("dsMenu").includes("dsNoneOpt()")) {
-  throw new Error("the None option must be composed into the menu, first, or the selection cannot be cleared");
-}
-const dsMenuSrc = fnSrc("dsMenu");
-if (dsMenuSrc.indexOf("dsNoneOpt()") > dsMenuSrc.indexOf("DATA_SETS.map(dsOpt)")) {
-  throw new Error("the None option must come before the five sets in the menu");
-}
-// With nothing selected there is no heading, so the trigger's accessible name is the only thing
-// that says so. The label itself stays the constant, asserted above.
 if (!fnSrc("dataSetRow").includes('aria-label="League Data Sets, none selected"')) {
   throw new Error("the trigger must say \"none selected\" when no set is on screen");
 }
-// Clearing removes the heading selectDataSet() focuses, so focus has to land on the trigger.
-if (!fnSrc("clearDataSet").includes("btn.focus({ preventScroll: true })")) {
-  throw new Error("clearDataSet must return focus to the trigger -- the heading it came from is gone");
-}
-// The accordion is gone. Any survivor of it is a second way to reach a list that the dropdown
-// is now the only door to, and openPacks allowed several at once -- the thing being replaced.
 for (const gone of ["openPacks", "togglePack", "data-pack", "pack-head"]) {
-  if (inline.includes(gone)) throw new Error(`the accordion packs must not survive the dropdown: ${gone}`);
+  if (inline.includes(gone)) throw new Error(`the accordion packs must not survive: ${gone}`);
 }
-// The ticker was the other way into a data set and it is gone, so the menu option's call is the
-// only one left. Without this, deleting the option handler would leave every set unreachable and
-// no guard above would notice: they all assert the menu's *markup*, not that pressing it does
-// anything. Asserted where it lives, not against the whole script.
 if (!fnSrc("selectDataSet").includes("function selectDataSet(id)")) {
-  throw new Error("selectDataSet lost its signature -- the reveal parameter went with the ticker and must not come back unused");
+  throw new Error("selectDataSet lost its signature");
 }
-if (!inline.includes("if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }")) {
-  throw new Error("the data set menu lost its selectDataSet() call -- it is the only route into a set now");
+if (!inline.includes("selectDataSet(")) {
+  throw new Error("selectDataSet() must remain the route into a set");
 }
-// Selecting a set moves focus to the name of the set. A render this screen did not ask for --
-// votes.json landing -- rebuilds the subtree, and without a data-* for focusSelector() to
-// re-find, focus fell to <body> a moment after it had just been placed.
-for (const need of ['data-dset-head="1"', 'head.focus({ preventScroll: true })']) {
+if (!fnSrc("openDataSets").includes('view = "datasets"')) {
+  throw new Error("openDataSets must navigate to the datasets screen");
+}
+if (!fnSrc("selectDataSet").includes('view = "datasets"')) {
+  throw new Error("selectDataSet must keep the user on the datasets screen");
+}
+for (const need of ['data-dset-head="1"', "head.focus({ preventScroll: true })"]) {
   if (!inline.includes(need)) throw new Error(`the selected set's heading lost its focus handle: ${need}`);
 }
 if (/(pack|dset|view): ""/.test(inline)) {
   throw new Error("a control carries an empty destination -- drop it or make it a static element");
 }
-// Two controls on one screen, two unrelated axes. Score as picks the clock the figures are
-// computed on and Most lopsided reads it; League Data Sets picks which list is on screen. They
-// were nearly merged into one menu; keep them apart.
-const homeBody = inline.slice(inline.indexOf("    function renderLeagueHome()"));
-const homeSrc = homeBody.slice(0, homeBody.indexOf("\n    function "));
-for (const need of ["homeChips()", "dataSetPanel()"]) {
-  if (!homeSrc.includes(need)) throw new Error(`renderLeagueHome lost ${need} -- the lens and the data set are separate controls`);
+
+
+// ---- Score window on value chips (not brand header) ------------------------------------------
+// The global clock left the brand row. It now lives as a compact control on chips/rows that show
+// trade or player values, sharing one `lens` and portaling options through #scoreAs.
+if (html.includes('id="lensWrap"') || html.includes('id="lensBtn"')) {
+  throw new Error("brand header must not host the score clock -- it moved onto value chips");
 }
-// The data set trigger is one cell of the chip box now, so the composition is two hops. Assert
-// the second hop as well: without it, dropping dataSetRow() out of the box would satisfy the
-// check above and still leave four of the five sets with no door.
-if (!fnSrc("homeChips").includes("dataSetRow()")) {
-  throw new Error("the chip box lost the League Data Sets trigger -- it is the only door to four of the five sets");
+const brandMarkup = html.slice(html.indexOf('<h1 class="brand">'), html.indexOf("</h1>"));
+if (brandMarkup.includes("lensWrap") || brandMarkup.includes("lensBtn") || brandMarkup.includes("scoreAs")) {
+  throw new Error("h1.brand must not contain the score clock or #scoreAs");
 }
-// 44px on every option, and 56px on the chips that carry them, because a chip has to hold
-// "League Data Sets" on two lines in a half-width cell at 320px. A formatting pass took 312
-// sub-44px targets to zero; the floor here is above that, never below it.
-for (const need of ["min-height: 56px; padding: 8px 10px;", "#dataSets button.ds-opt {"]) {
-  if (!html.includes(need)) throw new Error(`the data set control lost its 44px target: ${need}`);
+if (!html.includes('id="scoreAs"') || !html.includes("score-as-portal")) {
+  throw new Error("#scoreAs portal must ship outside the brand header for chip menus");
 }
-const dsOptRule = html.slice(html.indexOf("    #dataSets button.ds-opt {"));
-if (!dsOptRule.slice(0, dsOptRule.indexOf("}")).includes("min-height: 44px")) {
-  throw new Error("a data set option must stay a 44px target");
+if (!inline.includes("function chipLensHtml(") || !inline.includes("function positionScoreAs(")) {
+  throw new Error("chipLensHtml + positionScoreAs must ship for local score windows");
 }
-// The panel is absolutely positioned against .ds-wrap, so a clip anywhere up the chain hides
-// options that are in the DOM and untappable -- which is exactly how the seat picker shipped
-// broken twice. .ds-wrap is the one ancestor this file creates for it; assert it stays open.
-const dsWrapRule = html.slice(html.indexOf("    .ds-wrap {"));
-if (!dsWrapRule.slice(0, dsWrapRule.indexOf("}")).includes("overflow: visible")) {
-  throw new Error("the .ds-wrap must declare overflow: visible -- a clip here hides #dataSets");
+if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inline: true })')) {
+  throw new Error("value chips and home bars must mount chipLensHtml");
 }
-// Score as sits directly above and its open panel reaches down over this trigger, so the
-// trigger's stacking context has to sit below .filter-wrap's.
-if (!html.includes("z-index: 3; overflow: visible;")) {
-  throw new Error("the .ds-wrap must stack below .filter-wrap, or Score as opens behind the trigger");
+{
+  const at = inline.indexOf("function filterRow(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 400 : stop);
+  if (fn.includes("chipLensHtml(")) {
+    throw new Error("filterRow must not mount chipLensHtml — each trade chip already has a score clock");
+  }
 }
-// Addressed by id so these beat the shared .filter-panel box rules declared later in the sheet.
-// As a class the panel would inherit .filter-panel's 14px bottom margin and 4px 12px padding.
-if (!html.includes("    #dataSets {")) {
-  throw new Error("#dataSets must be addressed by id -- .filter-panel is declared after it and would win");
+if (!inline.includes("function defaultLensForDate(")
+  || !inline.includes("function applyDefaultLens(")
+  || !inline.includes("function newestTradeDate(")
+  || !inline.includes("function lensIsAgeDefault(")
+  || !inline.includes('if (seasonLived(date, 2, today)) return "y2"')
+  || !inline.includes('if (seasonLived(date, 1, today)) return "y1"')
+  || !inline.includes('return "t0"')
+  || !inline.includes('["t0", "Date of Trade"')
+  || !inline.includes('["y1", "1 season"')
+  || !inline.includes('["y2", "2 seasons"')
+  || !inline.includes('["y3", "3 seasons"')
+  || !inline.includes('["all", "as of today"')) {
+  throw new Error("Trade score menu must ship t0→y1→y2 age defaults and Date of Trade / 1–3 seasons / as of today");
+}
+if (!inline.includes("applyDefaultLens(null)") || !inline.includes("applyDefaultLens(side && side.date)")) {
+  throw new Error("dashboard entry points must apply age-based lens defaults");
+}
+if (!inline.includes("!lensIsAgeDefault()")) {
+  throw new Error("syncUrl must omit lens when it matches the age default");
+}
+if (!inline.includes("function effectiveLens(") || !inline.includes("function sideWindow(")
+  || !inline.includes("effectiveLens(t.date, lens)")) {
+  throw new Error("Trade scoring must use effectiveLens window fallback to match marks.json");
+}
+if (!inline.includes("Number.isFinite(l.value)")) {
+  throw new Error("applyVa must ignore non-finite leg values like value-adjust.mjs");
+}
+if (!inline.includes('let runLens = "y2"') || !inline.includes("function runLensHtml(")
+  || !inline.includes("function runLensCaption(") || !inline.includes("data-run-lens")
+  || !inline.includes("m.lens[runLens]") || !html.includes(".mark-chart-h-row")) {
+  throw new Error("Ahead or behind must default to y2 with its own lens filter and best-window marks");
+}
+{
+  const optFn = fnSrc("scoreOpt");
+  if (!optFn.includes("<b>") || optFn.includes("<span>")) {
+    throw new Error("scoreOpt must be compact title-only rows (no description span)");
+  }
+}
+if (!html.includes("width: min(168px") || !html.includes("min-height: 34px")) {
+  throw new Error("score-as portal must stay compact (narrow + short options)");
+}
+if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
+  throw new Error("chip-lens styles and buttons must ship");
+}
+if (!inline.includes("function chipLensIcon(") || !inline.includes("chipLensIcon()")) {
+  throw new Error("chip score control must render a clock icon, not window text");
+}
+{
+  const body = inline.slice(inline.indexOf("function chipLensHtml("), inline.indexOf("function paintLens("));
+  if (!body || !body.includes("chipLensIcon()") || body.includes("<span class=\"chev\">")
+    || body.includes("esc(name) + ' <span")) {
+    throw new Error("chipLensHtml must not put the window name in the visible button label");
+  }
 }
 
-// ---- The clock control, in the brand header ---------------------------------------------------
-// It moved out of the six screens that each rendered their own copy and into the header, where it
-// is persistent chrome. Everything below is one deletion away from failing silently, because none
-// of it changes what the page says -- only whether the control is there, reachable and honest.
-//
-// 1. The trigger ships in the served markup, so a cold load has it before any script runs. This
-//    is the guard the task asked for by name: the control cannot silently revert to the body.
-for (const need of ['<span class="lens-wrap" id="lensWrap">',
-  'class="score-btn" id="lensBtn" data-score="1"',
-  'aria-label="Score as Since trade"',
-  'aria-expanded="false">Since trade <span class="chev">▾</span></button>',
-  '<div id="scoreAs" hidden></div>']) {
-  if (!html.includes(need)) {
-    throw new Error(`the brand header's clock trigger must ship: ${need}`);
-  }
+// One shared lens state; chips must not invent a second clock.
+if ((inline.match(/let lens = /g) || []).length !== 1) {
+  throw new Error("exactly one global lens state");
 }
-// It is inside the h1, not merely somewhere on the page: the whole point is the top right of the
-// brand row, and the h1 is the box the overflow guard above protects.
-const brandMarkup = html.slice(html.indexOf('<h1 class="brand">'), html.indexOf("</h1>"));
-if (!brandMarkup.includes('id="lensWrap"') || !brandMarkup.includes('id="lensBtn"')
-  || !brandMarkup.includes('id="scoreAs"')) {
-  throw new Error("the clock control must be mounted inside h1.brand -- that is the top right of the header");
-}
-// The trigger comes after the brand link, which carries margin-right: auto, so it is the last
-// thing in the row and therefore on the right. Order in the markup is what puts it there.
-if (brandMarkup.indexOf('id="lensWrap"') < brandMarkup.indexOf('href="./"')) {
-  throw new Error("the clock trigger must come after the brand link, or it does not sit on the right");
-}
-// 2. One control, one place. Six screens used to render lensRow() and the user asked for a move,
-//    not a copy. Assert the emitter is gone rather than that the call sites are: a re-added
-//    lensRow() would have to be re-written from scratch to get past this.
-for (const gone of ["lensRow", "scoreMenu", "score-k"]) {
-  if (html.includes(gone)) {
-    throw new Error(`the in-body clock control must stay removed -- one control, one place: ${gone}`);
-  }
-}
-// The trigger is painted, never rendered, so nothing inside #app may emit one. data-score is the
-// attribute its handler matches on, and a second one would give the header a rival.
-const scoreTriggers = (inline.match(/data-score="1"/g) || []).length;
-if (scoreTriggers !== 0) {
-  throw new Error(`a screen renders its own clock trigger: ${scoreTriggers} in the script, want 0 -- the header's is static markup`);
-}
-// 3. It is painted from render(), after the body. renderDrafts() pins lens to "all" for its own
-//    render and restores it on the way out, so painting first would show the pinned value.
 const renderSrc = fnBody("render");
 if (!renderSrc.includes("paintLens();")) {
-  throw new Error("render() must paint the header clock -- without it the trigger never follows the page");
+  throw new Error("render() must paint chip score triggers after the body");
 }
-if (renderSrc.indexOf("app.innerHTML = seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
-  throw new Error("paintLens() must run after the body is built -- renderDrafts pins lens and restores it");
+if (renderSrc.indexOf("app.innerHTML =") > renderSrc.indexOf("paintLens();")) {
+  throw new Error("paintLens() must run after the body is built");
 }
-// 4. It hides where the clock has no effect, and it must not be hidden anywhere else. Champions
-//    Path reads no clock; Drafts pins it. A control that visibly does nothing is the dead-pill
-//    defect the ticker already shipped once.
 const appliesSrc = fnBody("lensApplies");
 for (const need of ['view !== "titles"', 'view !== "drafts"']) {
   if (!appliesSrc.includes(need)) {
-    throw new Error(`the header clock must hide where it changes nothing: ${need}`);
+    throw new Error(`chip score control must hide where it changes nothing: ${need}`);
   }
 }
-if (!fnBody("paintLens").includes("if (!lensApplies()) {")) {
-  throw new Error("paintLens must gate on lensApplies() -- the control would show on Champions Path and Drafts");
+if (!fnBody("paintLens").includes("if (!lensApplies()") && !fnBody("paintLens").includes("!lensApplies()")) {
+  throw new Error("paintLens must gate on lensApplies()");
 }
-// Champions Path really does read no clock. If it ever starts, the gate above is wrong rather
-// than the screen, and this is the assertion that says so before a user finds out.
-const titlesSrc = fnSrc("renderTitles");
-for (const banned of ["chipLived(", "clockName(", "lens "]) {
-  if (titlesSrc.includes(banned)) {
-    throw new Error(`Champions Path started reading the clock (${banned.trim()}) -- lensApplies() must stop hiding the control`);
-  }
+if (!fnBody("paintLens").includes("button.chip-lens-btn")) {
+  throw new Error("paintLens must update chip-lens buttons, not a header trigger");
 }
-// Drafts pins the clock for the whole of its render. That pin is why the control hides there.
 const draftsSrc = fnBody("renderDrafts");
 if (!draftsSrc.includes('lens = "all";') || !draftsSrc.includes("lens = prev;")) {
-  throw new Error("renderDrafts must pin and restore the clock -- the header control hides there because of this pin");
+  throw new Error("renderDrafts must pin and restore the clock");
 }
-// 5. The panel is absolutely positioned against .lens-wrap, so a clip anywhere up that chain
-//    hides options that are in the DOM and untappable. This is the A9 defect, and the chain is
-//    one element long: .lens-wrap itself, inside the h1 already guarded above.
-const lensWrapRule = html.slice(html.indexOf("    .lens-wrap {"));
-if (lensWrapRule === html) throw new Error("the .lens-wrap lost its rule");
-const lensWrapDecl = lensWrapRule.slice(0, lensWrapRule.indexOf("}"));
-if (!lensWrapDecl.includes("position: relative")) {
-  throw new Error("the .lens-wrap must be position: relative -- #scoreAs is positioned against it");
-}
-if (/overflow: *(hidden|clip)|clip-path|transform:|contain:|filter:|perspective:/.test(lensWrapDecl)) {
-  throw new Error(".lens-wrap must not clip or contain -- #scoreAs is absolutely positioned against it");
-}
-// It stacks above every panel inside #app. .filter-wrap is 4 and .ds-wrap is 3, so the open
-// clock panel paints over the year filter's trigger and over the chip box it drops across.
-const lensZ = Number((lensWrapDecl.match(/z-index: *(\d+)/) || [])[1]);
-const dsZ = Number((html.match(/\.ds-wrap \{[^}]*z-index: *(\d+)/) || [])[1]);
-const filterZ = Number((html.match(/\.filter-wrap \{[^}]*z-index: *(\d+)/) || [])[1]);
-if (!(lensZ > filterZ && filterZ > dsZ)) {
-  throw new Error(`the clock panel must stack above the screens it drops over: .lens-wrap ${lensZ} > .filter-wrap ${filterZ} > .ds-wrap ${dsZ}`);
-}
-// Anchored to the trigger's own box. It used to be a fixed top: 52px, which was the height of a
-// row at the top of a screen and is not where the trigger sits now.
-if (!html.includes("      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;")) {
-  throw new Error("#scoreAs must hang off the trigger's own box -- a fixed top belongs to the row it left");
-}
-// display:flex on the base #scoreAs rule overrides [hidden] on engines without !important, and
-// the empty panel paints as the thin card bar under the brand header. Flex only when open.
-if (html.includes("    #scoreAs {\n") && /#scoreAs \{[^}]*display:\s*flex/.test(html)) {
-  throw new Error("#scoreAs must not set display:flex on the base rule -- it overrides [hidden] and paints the empty bar");
-}
-if (!html.includes("    #scoreAs:not([hidden]) {")
-  || !html.includes("    #scoreAs[hidden], #scoreAs:empty { display: none !important; }")) {
-  throw new Error("#scoreAs must hide when [hidden]/empty and only flex when open");
-}
-if (html.includes('class="filter-panel" id="scoreAs"')) {
-  throw new Error("#scoreAs must not carry .filter-panel -- that class's in-flow margin/padding is the empty bar");
-}
-// 6. The 44px rule, on the trigger and on all five options. A formatting pass took 312 sub-44px
-//    targets to zero and none may come back.
-const scoreBtnRule = html.slice(html.indexOf("    button.score-btn {"));
-if (!scoreBtnRule.slice(0, scoreBtnRule.indexOf("}")).includes("min-height: 44px")) {
-  throw new Error("the clock trigger must stay a 44px target");
-}
-const scoreOptRule = html.slice(html.indexOf("    #scoreAs button.score-opt {"));
-if (!scoreOptRule.slice(0, scoreOptRule.indexOf("}")).includes("min-height: 44px")) {
-  throw new Error("a clock option must stay a 44px target");
-}
-// 7. The label is the window alone. At 0.8125rem the "Score as" prefix costs a measured 54px,
-//    which the 288px brand row at 320px does not have -- with it, the app's own name ellipsises
-//    on every phone. The words stay in the accessible name, and the font step is what makes even
-//    the widest window name fit: 107.7px of a 109.1px slot at 320px, against 116.7px without it.
-if (!fnBody("paintLens").includes('btn.innerHTML = esc(name) + \' <span class="chev">▾</span>\'')) {
-  throw new Error("the clock trigger's label must be the window alone -- the prefix does not fit at 320px");
-}
-if (!fnBody("paintLens").includes('btn.setAttribute("aria-label", "Score as " + name);')) {
-  throw new Error("the clock trigger must keep \"Score as\" in its accessible name -- the visible label drops it");
-}
-// Scoped to the 460px block, not to the sheet: the step only exists to buy the phone widths, and
-// a bare `#lensBtn { font-size` anywhere would satisfy a whole-sheet check while shrinking the
-// trigger on the desktop too.
-const brandMedia = html.slice(html.indexOf("    @media (max-width: 460px) {"));
-if (!brandMedia.slice(0, brandMedia.indexOf("\n    }")).includes("#lensBtn { font-size: 0.75rem; }")) {
-  throw new Error("the clock trigger must keep its 460px font step -- without it the brand row overflows at 320px");
-}
-// 8. Its own listener, because #app's delegated handler cannot see the header, and an outside
-//    click and Escape both close it. All three were true of the control in the body; a control
-//    that moved out of the delegated handler's reach has to bring them with it.
-for (const need of ['document.getElementById("lensWrap").addEventListener("click"',
-  'if (!lensOpen || e.target.closest("#lensWrap")) return;',
-  'document.getElementById("lensBtn").focus({ preventScroll: true });']) {
-  if (!inline.includes(need)) throw new Error(`the header clock lost a handler: ${need}`);
-}
-if (!inline.includes("if (lensOpen) {\n        lensOpen = false;\n        paintLens();")) {
-  throw new Error("Escape must close the header clock");
-}
-// 9. The screen-local filter row it used to share is one emitter now. Two screens were typing
-//    the same two divs, and the clock's departure left them identical.
-if (!fnBody("renderTrades").includes("filterRow(yearBtn)")) {
-  throw new Error("the Trades tab lost its year filter row");
-}
-if (!fnBody("renderDrafts").includes("filterRow(draftBtn)")) {
-  throw new Error("the Drafts tab lost its round filter row");
-}
-
-// ---- League home's box of four chips ---------------------------------------------------------
-// Four cells of equal size. Two lead somewhere -- the league's teams and the five data sets --
-// and two are slots the user has not decided on. The two halves fail in opposite directions and
-// both are asserted: a live chip can lose its menu, and a slot can grow into a fake button.
-const chipSrc = fnBody("homeChips");
-for (const need of ['<div class="chip-box ds-wrap">', '<div class="chip-grid">',
-  "teamsChip()", "dataSetRow()", "chipSlot()", "teamsMenu()", "dsMenu()"]) {
-  if (!chipSrc.includes(need)) throw new Error(`the chip box lost ${need}`);
-}
-const cells = (chipSrc.match(/\+ (?:teamsChip|dataSetRow|chipSlot)\(\)/g) || []).length;
-if (cells !== 4) throw new Error(`the chip box must hold exactly four cells, found ${cells}`);
-const slotCells = (chipSrc.match(/\+ chipSlot\(\)/g) || []).length;
-if (slotCells !== 2) throw new Error(`the chip box must hold exactly two undecided slots, found ${slotCells}`);
-// Both menus are emitted by the box, not by their triggers, so both hang off one anchor.
-if (!/\+ \(teamsOpen \? teamsMenu\(\) : ""\)/.test(chipSrc) || !/\+ \(dsOpen \? dsMenu\(\) : ""\)/.test(chipSrc)) {
-  throw new Error("a chip menu is emitted inside its own cell -- it would drop at the cell's width and clip against it");
-}
-// A slot is a span with no tab stop, no role and nothing for a handler to find. This is the
-// dead-pill guard above, applied to the control that replaced the dropdown: the ticker shipped
-// two <button> pills carrying an empty destination and every tap on them was ignored, and four
-// large chips are a far bigger surface for the same defect.
-const slotSrc = fnBody("chipSlot");
-if (!slotSrc.includes('<span class="home-chip slot"')) {
-  throw new Error("an undecided chip must be a <span> -- a button that goes nowhere is the dead-pill defect");
-}
-if (/<button|<a |tabindex|data-[a-z]|role=|href=/.test(slotSrc)) {
-  throw new Error("an undecided chip grew an affordance -- it must not be focusable, activatable or addressable");
-}
-if (!slotSrc.includes('aria-hidden="true"')) {
-  throw new Error("an undecided chip must be aria-hidden -- an em dash is a placeholder, not a reading");
-}
-const slotRule = html.slice(html.indexOf("    .home-chip.slot {"));
-if (slotRule === html) throw new Error("the undecided chips lost their placeholder painting");
-for (const need of ["border-style: dashed", "cursor: default", "background: transparent", "color: var(--dim)"]) {
-  if (!slotRule.slice(0, slotRule.indexOf("}")).includes(need)) {
-    throw new Error(`an undecided chip must not look pressable: ${need}`);
-  }
-}
-// Equal cells, asserted as a grid property rather than left to the eye. minmax(0, 1fr) and not
-// 1fr because a track's automatic minimum is min-content (§3a) -- "League Data Sets" would
-// otherwise widen the row instead of wrapping inside its cell. grid-auto-rows: 1fr is what makes
-// the phone layout's two rows equal to each other rather than each sized to its own tallest chip.
-for (const need of ["grid-template-columns: repeat(2, minmax(0, 1fr));", "grid-auto-rows: 1fr;",
-  "grid-template-columns: repeat(4, minmax(0, 1fr));"]) {
-  if (!html.includes(need)) throw new Error(`the chip grid lost its equal-cell sizing: ${need}`);
-}
-// The box is the anchor for both menus, so it is the ancestor chain that has to stay open. The
-// seat picker was completely unusable twice because one ancestor clipped an absolutely
-// positioned menu; this is the same failure waiting on a different box.
-const chipBoxRule = html.slice(html.indexOf("    .chip-box {"));
-if (chipBoxRule === html) throw new Error("the chip box lost its card rules");
-if (/overflow: *(hidden|clip)|clip-path|transform:|contain:/.test(chipBoxRule.slice(0, chipBoxRule.indexOf("}")))) {
-  throw new Error(".chip-box must not clip or contain -- both menus are absolutely positioned against it");
-}
-if (!html.includes("    .chip-box .who-menu { left: 0; right: auto; }")) {
-  throw new Error("the Teams chip's menu lost its anchor override -- it would open off the right of the box");
-}
-
-// ---- One team list, two triggers --------------------------------------------------------------
-// The Teams chip is the one door into a seat: the brand header's picker was removed on the
-// ruling that the chips are the access points. The emitter stays single anyway -- it was single
-// while there were two mounts, and it is what a future second mount would have to render from,
-// so the crown and the finishing order can only be typed once.
-if (!inline.includes("    function whoOptions() {")) {
-  throw new Error("the seat option list must be one emitter -- the Teams chip mounts it");
-}
-if (!fnBody("teamsMenu").includes("whoOptions()")) {
-  throw new Error("the Teams chip stopped rendering from whoOptions() -- that is a second team list");
-}
-// One caller, and that caller is the chip's menu. This replaces the guard that asserted the
-// header picker painted from whoOptions(): the risk it covered -- a mount rendering its own list
-// -- lands on whichever mount exists, so count the calls rather than name a mount.
-const whoOptCalls = (inline.match(/whoOptions\(\)/g) || []).length - 1; // less its own definition
-if (whoOptCalls !== 1) {
-  throw new Error(`whoOptions() is mounted in ${whoOptCalls} places, want 1 -- a second mount must be asserted, not assumed`);
-}
-// The header may not grow a second seat control again without this file being changed. Every
-// part of the removed picker is named, because each one alone would put it back: the trigger,
-// its menu, the wrapper they were positioned against, and the paint function that drove them.
-for (const gone of ['id="who"', 'id="whoMenu"', "who-wrap", "paintWho", "whoOpen"]) {
-  if (html.includes(gone)) {
-    throw new Error(`the brand header's seat picker must stay removed -- the chips are the access points: ${gone}`);
-  }
-}
-if (/button\.who[\s:.,{]/.test(html)) {
-  throw new Error("the brand header's seat picker must stay removed -- button.who has no trigger to style");
-}
-// ---------------------------------------------------------------------------------------------
-// The league ticker must stay removed. Same shape as the seat-picker guard above, and for the
-// same reason: it was reviewed and deleted on the user's instruction, so putting any one piece
-// of it back is a decision this file has to be edited to make.
-//
-// Every part is named because each one alone brings it back: the shell node the marquee mounted
-// in, the two functions that built it, the paint call in render(), the classes, and the
-// keyframes that moved it. Seven of the nine pills led to a data set the League Data Sets menu
-// still opens, or to Champions Path, which the gold card still opens; the other two led nowhere.
-//
-// These run against the raw page, comments included, so a comment may not spell a removed token
-// the way code would. That is deliberate and the surviving notes are written around it -- a
-// blunt check has no branch that can be wrong, and prose has no reason to type the function names.
-for (const gone of ['id="feed"', "paintFeed", "leagueBubbles", "ticker-track", "@keyframes ticker",
-  "getElementById(\"feed\")", "class=\"bubble", "class=\"ticker"]) {
-  if (html.includes(gone)) {
-    throw new Error(`the league ticker must stay removed: ${gone}`);
-  }
-}
-// The class selectors, which the substrings above would miss in a stylesheet.
-for (const re of [/\.ticker[\s:.,{]/, /\.bubble[\s:.,{]/, /#feed[\s:.,{]/]) {
-  if (re.test(html)) throw new Error(`the league ticker's stylesheet rules must stay removed: ${re}`);
-}
-// The whole-sheet "nothing animates" assertion that this removal makes possible is NOT here.
-// It subsumes the scoped .news-box animation guard further down, and a guard that runs before
-// the specific one makes the specific one incapable of failing -- the exact defect 3a records.
-// It runs last instead, after every scoped animation check has had its chance. See the end of
-// this file.
-// ---------------------------------------------------------------------------------------------
-// Only one place may build an option, so the crown and the 44px row cannot be re-typed elsewhere.
-const optEmits = (inline.match(/data-who="' \+ esc\(id\) \+ '"/g) || []).length;
-if (optEmits !== 1) throw new Error(`a seat option is built in ${optEmits} places, want 1`);
-const whoOptSrc = fnBody("whoOptions");
-for (const need of ['role="option"', 'aria-selected="\' + (on ? "true" : "false") + \'"',
-  '<span class="who-name">', "seatLabel(label)"]) {
-  if (!whoOptSrc.includes(need)) throw new Error(`the seat option emitter lost ${need}`);
-}
-// Crown is painted by seatLabel for the reigning champ — whoOptions must not paint a second one.
-if (whoOptSrc.includes("CROWN") || whoOptSrc.includes("m.place === 1")) {
-  throw new Error("whoOptions must not paint the crown itself — seatLabel owns the reigning-champ mark");
-}
-// The same CSS box as well as the same markup: the 220px width, the 44px options and the
-// no-scroll cap are all .who-menu, so the chip's mount carries the class rather than a copy.
-if (!fnBody("teamsMenu").includes('<div class="who-menu" id="teamMenu" role="listbox"')) {
-  throw new Error("the Teams chip menu must be a .who-menu -- its width, its 44px options and its no-scroll cap are that rule");
-}
-// The listbox keyboard, matched on the class rather than on the menu's id, so it survives a
-// remount. It ran for two mounts until the header picker was removed; it must still run here.
-if (!inline.includes('e.target.closest(".who-menu")')) {
-  throw new Error("the listbox keyboard must match .who-menu, or the seat menu loses its arrow keys");
-}
-if (!inline.includes("if (teamsOpen && inWho) {")) {
-  throw new Error("the listbox keyboard must run for the Teams chip's menu");
-}
-// Escape closes it, an outside click closes it, and taking a seat closes it. All three were
-// true of the removed header picker and have to stay true of the control that replaced it.
-for (const need of ["if (teamsOpen) { closeTeams(); return true; }",
-  "function openTeams()", "function closeTeams()",
-  'e.target.closest("#teamMenu") || e.target.closest("[data-teams-open]")',
-  "if (seatPick.dataset.who) selectMe(seatPick.dataset.who);"]) {
-  if (!inline.includes(need)) throw new Error(`the Teams chip lost ${need}`);
-}
-// The Teams chip is a trigger for a popup listbox, announced as one, and it carries the seat in
-// its accessible name for the same reason the header's picker does: the visible label is the
-// constant "Teams" and says nothing about which seat is taken.
-// The label and the accessible name are asserted below with the rest of the seat-menu rules,
-// where the guards the removed header trigger used to carry were re-pointed onto this chip.
-const teamsChipSrc = fnBody("teamsChip");
-for (const need of ['data-teams-open="1"', 'aria-haspopup="listbox"',
-  'aria-expanded="\' + (teamsOpen ? "true" : "false") + \'"']) {
-  if (!teamsChipSrc.includes(need)) throw new Error(`the Teams chip lost ${need}`);
-}
-
-// The seat menu lists the managers in last season's order, crowns the champion, and must show
-// every one of them without scrolling. Each half can break the other: a "Team" option back at
-// the top pushes the list over the cap, and lowering the 44px target to fit is the fix that is
-// explicitly not allowed. Assert the shape, then measure the list against the cap from the data.
-if (/opt\(!me, "", "Team"\)/.test(inline)) {
-  throw new Error('the seat menu must not carry a "Team" option -- the home icon clears the seat');
-}
-// The trigger names the control, never the selection. It used to swap to the selected manager's
-// name, which read as that manager's own button rather than as the way to reach the other nine.
-// These three guards were written against the header trigger -- the served markup carrying the
-// constant, paintWho() repainting the constant, and the label never being computed. The header
-// trigger is gone, so all three are re-pointed at the chip, which is the trigger that carries
-// the same job now. Note "Teams" here is a different string from the removed "Team" option
-// above, whose guard matches its whole call, so the two cannot be confused.
-if (!teamsChipSrc.includes('+ "Teams" + \' <span class="chev">▾</span></span></button>')) {
-  throw new Error('the Teams chip must render the constant "Teams", not the selected seat');
-}
-if (/<span class="chip-lab">'\s*\n?\s*\+ (?!")/.test(teamsChipSrc)) {
-  throw new Error("the Teams chip's visible label went back to being computed from the selected seat");
-}
-if (!teamsChipSrc.includes('"Teams, " + me.name + seatFlairText(me.name) + " selected"')) {
-  throw new Error("the Teams chip's accessible name must still say which seat is selected");
-}
-for (const need of ['<span class="who-name">', 'class="crown"', 'aria-hidden="true" focusable="false"',
-  "reigningChampName", "members.sort((a, b) => (a.place || 99) - (b.place || 99))"]) {
-  if (!inline.includes(need)) throw new Error(`generated script lost a seat-menu part: ${need}`);
-}
-// Seat flair is display-only. Bare Sleeper names stay in data; glyphs/images are painted.
-if (!inline.includes("function seatLabel(name)") || !inline.includes("function seatFlairHtml(name)")) {
-  throw new Error("seat flair must ship as display-only seatLabel() / seatFlairHtml()");
+if (!html.includes("#scoreAs.score-as-portal") || !html.includes("position: fixed")) {
+  throw new Error("#scoreAs portal must be position:fixed under the opening chip");
 }
 for (const need of [
-  'SF69erss: { img: "data/ui/flair-sf69erss.png" }',
-  'BubbaCuckShremp: { img: "data/ui/flair-bubbacuckshremp.png" }',
-  'TedCumberbatch: { img: "data/ui/flair-tedcumberbatch.png" }',
-  'TrumanCooper: { img: "data/ui/flair-trumancooper.png" }',
-  'DarkWingDucks2023: { img: "data/ui/flair-darkwingducks2023.png" }',
-  'ARae: { img: "data/ui/flair-arae.png" }',
-  'ChiefGumby: { img: "data/ui/flair-chiefgumby.png" }',
-  'KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" }',
-  'bigjberg: { img: "data/ui/flair-bigjberg.png" }',
-  'TipsUp: { img: "data/ui/flair-tipsup.png" }',
+  'e.target.closest("button.chip-lens-btn[data-score]")',
+  'e.target.closest("#scoreAs [data-lens]")',
 ]) {
-  if (!inline.includes(need)) throw new Error(`seat flair map missing: ${need}`);
-}
-if (!html.includes("img.seat-flair, svg.crown {") || !html.includes("width: 1.15em; height: 1.15em;")) {
-  throw new Error("seat-flair and crown must be emoji-sized (1.15em) beside the name");
-}
-// Reigning champ crown rides seatLabel everywhere: crown → name → flair.
-if (!inline.includes("function reigningChampName()")
-  || !fnSrc("seatLabel").includes("reigningChampName() === n ? CROWN + \" \"")
-  || !fnSrc("seatLabel").includes("return crown + esc(n) + seatFlairHtml(n)")) {
-  throw new Error("seatLabel must crown the most recent title winner before the name everywhere");
-}
-if (!inline.includes("function seatTitle(title)")) {
-  throw new Error("bag headings must flair seat names through seatTitle()");
-}
-// The home icon is the only way out of a seat. That was already true once the menu's "Team"
-// option went, and removing the header picker makes it the only way out of anything: the flow is
-// home icon to leave a seat, Teams chip to enter another. Both halves are asserted -- the
-// listener, and that clearLeague() actually drops the seat rather than only repainting -- because
-// a handler that fires and does nothing is the failure this app has shipped before.
-if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => clearLeague());')) {
-  throw new Error("the home icon must clear the seat -- it is the only exit from a seat now");
-}
-// Newline-anchored, because "me = null;" is a substring of "partnerName = null;" two lines below
-// it -- a guard that cannot fail is the thing this file has the most of already.
-const clearSrc = fnBody("clearLeague");
-for (const need of ["\n      me = null;", "\n      data = null;", '\n      view = "home";',
-  "\n      teamsOpen = false;", "\n      render();"]) {
-  if (!clearSrc.includes(need)) {
-    throw new Error(`clearLeague must still leave the seat entirely -- it is the only exit: ${need.trim()}`);
+  if (!inline.includes(need)) {
+    throw new Error(`score chip handler must include ${need}`);
   }
 }
-// The brand link is the second half of the same door and shares the handler.
-if (!inline.includes('document.querySelector("h1.brand a").addEventListener("click", (e) => { e.preventDefault(); clearLeague(); });')) {
-  throw new Error("the brand link must clear the seat with the home icon");
+if (inline.includes('document.getElementById("lensWrap")') || inline.includes('getElementById("lensBtn")')) {
+  throw new Error("header lens listeners must stay removed");
+}
+
+
+// App wordmark removed — only #goHome remains as the leagues door in the header.
+if (inline.includes('document.querySelector("h1.brand a").addEventListener')) {
+  throw new Error("brand wordmark click handler must stay removed");
 }
 const SEAT_MIN_H = 44;
-const SEAT_MENU_CHROME = 10; // 4px padding top and bottom, 1px border top and bottom
-const SEAT_CAP = 10 * SEAT_MIN_H + 16;
-if (!html.includes(`max-height: min(calc(10 * ${SEAT_MIN_H}px + 16px), calc(100dvh - 88px));`)) {
-  throw new Error("the seat menu lost its no-scroll cap");
-}
-if (!html.includes(`min-height: ${SEAT_MIN_H}px; padding: 6px 12px; cursor: pointer;`)) {
-  throw new Error(`a seat option must stay ${SEAT_MIN_H}px -- raise the cap instead of shrinking the target`);
+if (!html.includes(`.teams-list > button.row`) || !html.includes(`min-height: ${SEAT_MIN_H}px;`)) {
+  throw new Error(`a Teams row must stay ${SEAT_MIN_H}px`);
 }
 const seats = JSON.parse(fs.readFileSync(`${ROOT}data/ui/members.json`, "utf8"));
 const seatPlaces = seats.map((m) => m.place);
@@ -4983,33 +10813,21 @@ if (seatPlaces.some((p) => !Number.isInteger(p)) || new Set(seatPlaces).size !==
 if (seatPlaces.filter((p) => p === 1).length !== 1) {
   throw new Error("exactly one member wears the crown");
 }
-if (seats.length * SEAT_MIN_H + SEAT_MENU_CHROME > SEAT_CAP) {
-  throw new Error(`${seats.length} seats need ${seats.length * SEAT_MIN_H + SEAT_MENU_CHROME}px, cap is ${SEAT_CAP}px`);
+// Data Sets is a full-screen list now — no absolutely positioned menu cap.
+if (html.includes("max-height: min(calc(5 * 76px + 30px)") || html.includes("max-height: min(calc(6 * 76px")) {
+  throw new Error("Data Sets must not keep a dropdown max-height cap -- the list is a full screen");
 }
-// The League Data Sets menu, sized to its list the same way. Six options at the 76px a two-line
-// option takes at 320px, five 4px gaps, 12px of panel padding and 2px of border. The old cap was
-// min(100dvh - 96px, 480px) -- a number the list never reached, so it never bit and the panel
-// simply hung off the bottom of the screen. Both halves are asserted: the rule, and the list
-// against it, so a seventh set fails the build rather than shipping a menu you have to scroll.
-const DS_ROW_H = 76;
-const DS_MENU_CHROME = 34; // five 4px gaps, 6px padding top and bottom, 1px border top and bottom
-const dsCount = dsIds + 1; // the five sets, plus the None option above them
-if (!html.includes(`max-height: min(calc(${dsCount} * ${DS_ROW_H}px + ${DS_MENU_CHROME}px), calc(100dvh - 96px));`)) {
-  throw new Error("the League Data Sets menu lost its list-sized cap -- a viewport-fraction cap never bites");
+if (!fnBody("openDataSets").includes('view = "datasets"')) {
+  throw new Error("openDataSets() must navigate to view=datasets");
 }
-// A menu opened from the middle of the page is not on screen just because it is in the DOM.
-// Focusing an option only scrolls that option into view, which left four of the six sets below
-// the fold at 320px and five of six at 375px. Both menus in the chip box go through showMenu().
-if (!inline.includes("    function showMenu(menu) {")) {
-  throw new Error("showMenu() is what puts a chip's menu on screen -- both menus open from mid-page");
+if (fnBody("openDataSets").includes("showMenu(") || fnBody("openDataSets").includes("showMenu(")) {
+  throw new Error("openDataSets() must not scroll a floating menu into view");
 }
-for (const opener of ["openTeams", "openDataSets"]) {
-  const src = fnBody(opener);
-  if (!src.includes("showMenu(menu);")) {
-    throw new Error(`${opener}() must scroll its menu into view -- it opens from the middle of league home`);
-  }
-  if (!src.includes("focus({ preventScroll: true })")) {
-    throw new Error(`${opener}() must focus without scrolling -- the browser's scroll lands on the option, not the menu`);
+// showMenu remains for other chip menus (year/draft filters).
+if (!inline.includes("    function showMenu(menu) {") && !inline.includes("    function showMenu(menu){")) {
+  // tolerate either name
+  if (!inline.includes("function showMenu(")) {
+    throw new Error("showMenu() must remain for non-Data-Sets filter panels");
   }
 }
 // The seat picker's trigger names the control, not the selection, so the manager's name above
@@ -5020,7 +10838,7 @@ for (const opener of ["openTeams", "openDataSets"]) {
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
   "+ seatLabel(me.name) + \"</h2>\"",
-  "app.innerHTML = seatName + nav + body;",
+  "app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the seat heading: ${need}`);
 }
@@ -5042,18 +10860,194 @@ for (const need of [
   "function goBack(fallback)",
   "function renderTradeScreen()",
   "function renderLeagueTrades()",
+  "function tradeFeedCardHtml(",
+  "function tradeFeedSelectedHtml(",
+  "function tapeTradesFiltered(",
+  "function tapeFilterHtml(",
+  "function ensureTradesFeedBags(",
+  "function bagHitForTx(",
   'class="chip back" data-back="1"',
   "← ",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost navigation: ${need}`);
 }
+{
+  const at = inline.indexOf("function renderLeagueTrades(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  if (!fn.includes("trades-feed") || !fn.includes("tradeFeedCardHtml(")
+    || !fn.includes("tapeFilterHtml(") || !fn.includes("tapeTradesFiltered(")
+    || !fn.includes("ensureTradesFeedBags(")) {
+    throw new Error("renderLeagueTrades must be an H2H trade feed with year/team/player filters");
+  }
+  if (fn.includes("boardTape(r)") || fn.includes("lived.map((r) => boardTape")) {
+    throw new Error("league trades feed must use H2H cards, not boardTape rows");
+  }
+}
+{
+  const at = inline.indexOf("function tapeFilterHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  if (!fn.includes("data-tfilter") || !fn.includes("tapeFilters")
+    || !fn.includes("data-tape-year") || !fn.includes("data-tape-team")
+    || !fn.includes("data-tape-player")) {
+    throw new Error("tapeFilterHtml must ship year/team/player filter controls");
+  }
+}
+{
+  const at = inline.indexOf("function renderTradeScreen(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  if (!fn.includes("trades-feed") || !fn.includes("tradeFeedSelectedHtml(")
+    || !fn.includes("tapeTradesFiltered(") || !fn.includes("tapeFilterHtml(")
+    || !fn.includes("tradeFeedCardHtml(") || !fn.includes("ensureTradesFeedBags(")) {
+    throw new Error("renderTradeScreen must be an H2H trade feed with filters and selected trade expanded");
+  }
+  if (!fn.includes("League trade data") || fn.includes('seatLabel(selected.name) + " vs "')
+    || fn.includes("Review this trade and browse")) {
+    throw new Error("renderTradeScreen title must be League trade data (no A vs B header / review caption)");
+  }
+  
+{
+  const at = inline.indexOf("function voteBlock(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2000 : stop);
+  if (fn.includes("League tally as of") || fn.includes('<p class="caption">')
+    || fn.includes("auth-bar") || fn.includes("Voting as")
+    || fn.includes("Who actually won")) {
+    throw new Error("voteBlock must stay compact — no tally caption, auth-bar, or Who actually won header");
+  }
+  if (!fn.includes("vote is-done") || !fn.includes("data-vote-edit") || !fn.includes("vote-done-tally")) {
+    throw new Error("voteBlock must collapse to Voted + tally after a ballot (vote is-done)");
+  }
+}
+if (!html.includes(".vote-card") || !html.includes("background: #1a1810")
+  || !html.includes("button.vote-done")) {
+  throw new Error("vote chip must match trade gold-frame styles (vote-card / vote-done)");
+}
+
+for (const ban of [
+    "Pick a set to open it",
+    "Each title year. Previous season",
+    "Each title year. Prior season",
+    "Everything shared into this league",
+    "Your Chuckle Fantasy profile",
+    "Every roster in this league",
+    "Tap a team to open",
+    "Trade meter for fantasy leagues",
+    "Opinion only: votes never enter",
+    "CuckleChunckle: create with Sleeper",
+    "Review this trade and browse",
+    "League tally as of",
+    "votes join it as they land",
+    "Voting as",
+    "auth-bar",
+  ]) {
+    if (inline.includes(ban)) {
+      throw new Error("instructional caption must not ship: " + ban);
+    }
+  }
+  if (fn.includes("boardTape(r)") || fn.includes("screen-foot"))
+    throw new Error("trade detail feed must not use the old standalone boardTape / footer layout");
+}
+{
+  const at = inline.indexOf("function tradeFeedSelectedHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1500 : stop);
+  if (fn.includes("tradeRow(") || fn.includes("trade-feed-detail") || fn.includes("bagBlock(")) {
+    throw new Error("tradeFeedSelectedHtml must use H2H chip only — no redundant row-x / bagBlock detail");
+  }
+}
+{
+  const cardAt = inline.indexOf("function tradeFeedCardHtml(");
+  const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+  const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
+  const selAt = inline.indexOf("function tradeFeedSelectedHtml(");
+  const selStop = inline.indexOf("\n    function ", selAt + 10);
+  const selFn = inline.slice(selAt, selStop < 0 ? selAt + 1200 : selStop);
+  for (const [name, fn] of [["tradeFeedCardHtml", cardFn], ["tradeFeedSelectedHtml", selFn]]) {
+    if (fn.includes('headline ? " · "') || fn.includes("headline ? ' · '")) {
+      throw new Error(name + " day-alert must be date-only (no headline suffix)");
+    }
+  }
+  if (!html.includes("div.lh-trade-feed-card .day-alert-h") || !html.includes("0.6875rem")) {
+    throw new Error("trade feed date must ship small grey day-alert styles");
+  }
+}
+
+{
+  const cardAt = inline.indexOf("function tradeFeedCardHtml(");
+  const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+  const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 1800 : cardStop);
+  if (!cardFn.includes("voteBlock(") || !cardFn.includes("feedVoteTxSet(")
+    || !cardFn.includes("lh-trade-feed-main") || !cardFn.includes("has-vote")) {
+    throw new Error("tradeFeedCardHtml must mount vote chips for the newest FEED_VOTE_LIMIT trades");
+  }
+  if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
+    throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
+  }
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v3"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v3 so prior local ballots are wiped for public launch");
+  }
+  if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
+    throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");
+  }
+}
+{
+  const at = inline.indexOf("function renderTrades(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || !fn.includes("trades-feed")
+    || !fn.includes("seatTradeFilterHtml(") || !fn.includes("seatTradesFiltered(")
+    || fn.includes("tradeRow(t)") || fn.includes("lived.map((t) => tradeRow")) {
+    throw new Error("seat Trades tab must use H2H feed cards (seatTradeFeedCardHtml), not tradeRow");
+  }
+}
+{
+  const at = inline.indexOf("function seatTradeFilterHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("data-stfilter") || !fn.includes('id="seatTradeFilters"')
+    || !fn.includes("Most Recent") || !fn.includes("Oldest")
+    || !fn.includes("filter-h\">Year") || !fn.includes("filter-h\">Team")) {
+    throw new Error("seat Trades tab must ship unified Year/Team/Sort filter panel");
+  }
+}
+{
+  const at = inline.indexOf("function renderTeamHome(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(best)") || fn.includes("tradeRow(worst)")) {
+    throw new Error("team home best/worst deals must use seatTradeFeedCardHtml");
+  }
+}
+{
+  const at = inline.indexOf("function renderPartners(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(t)")) {
+    throw new Error("partners deal list must use seatTradeFeedCardHtml");
+  }
+}
+{
+  const at = inline.indexOf("function dataSetRows(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
+  if (!fn.includes("tradeFeedCardHtml(") || fn.includes("boardTape(r)")) {
+    throw new Error("most-lopsided dataset must use tradeFeedCardHtml, not boardTape");
+  }
+}
+if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")
+  || !html.includes("div.lh-trade-feed-card.is-selected") || !html.includes("#tapeFilters")) {
+  throw new Error("stylesheet must style the league trades feed + tape filter panel");
+}
 // Text fitting, asserted rather than trusted. Each of these was a measured defect, and each
 // is one deletion away from returning silently, because none of them changes what the page
 // says -- only whether you can read all of it.
 //   .leg.list      a pick list is not a figure; nowrap made it 1,051px wide inside 320px
-//   champ-fig      the score is pinned so a long name, not the number, is what gives
+//   champ-fig CSS  keeps pinned score/margin rules for any remaining a.champ-alert chrome
 //   min-width: 0   a grid or flex track will not shrink below min-content without it
-for (const need of ['class="leg list"', 'class="date champ-fig"', "fin.tailNum", "fin.topNum",
+for (const need of ['class="leg list"', "tailNum:", "topNum:",
   '<div class="bag"><h3><span>']) {
   if (!inline.includes(need)) throw new Error(`generated script lost a text-fitting fix: ${need}`);
 }
@@ -5083,10 +11077,10 @@ for (const need of PINNED) {
 //    of them may reach the DOM. Rather than list the fields, assert the negative: no
 //    interpolation inside renderNews() may skip esc(). A `+ it.something +` that is not
 //    wrapped is an injection, and it is one careless edit away at all times.
-const newsFn = inline.slice(inline.indexOf("    function renderNews()"));
+const newsFn = inline.slice(inline.indexOf("    function renderNewsBody()"));
 const newsBody = newsFn.slice(0, newsFn.indexOf("\n    function renderLeagueHome()"));
-if (!newsBody || newsBody.length < 400) throw new Error("renderNews() did not ship");
-// 0. It is actually called, and called inside the return rather than after it.
+if (!newsBody || newsBody.length < 400) throw new Error("renderNewsBody() did not ship");
+// 0. The full feed is its own screen. The hero on league home opens it (view=news).
 //
 // This exact defect shipped once. Rebasing onto the League Data Sets dropdown left
 // renderLeagueHome as "+ dataSetPanel();" followed by "+ renderNews();" -- a terminated return
@@ -5095,11 +11089,193 @@ if (!newsBody || newsBody.length < 400) throw new Error("renderNews() did not sh
 // it. Assert the composition, not just the function's existence.
 const homeCompose = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
 const homeReturn = homeCompose.slice(0, homeCompose.indexOf("\n    }"));
-if (!/return[\s\S]*\+ renderNews\(\);/.test(homeReturn)) {
-  throw new Error("renderLeagueHome must compose renderNews() inside its return -- a stray semicolon before it makes the feed dead code");
+if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
+  throw new Error("renderLeagueHome must still compose dayAlert() + homeChips()");
 }
-if (/;[\s\S]*\+ renderNews\(\)/.test(homeReturn)) {
-  throw new Error("renderNews() sits after a terminated statement in renderLeagueHome -- it would never run");
+if (!homeReturn.includes("pickIntelHome()") || !homeReturn.includes("intel")) {
+  throw new Error("renderLeagueHome must mount pickIntelHome between quick actions and the News Feed");
+}
+if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine="1"')
+  || !inline.includes('data-pick-rounds') || !inline.includes('data-pick-years')
+  || !inline.includes('data-pick-step-round')
+  || !inline.includes('data-pick-step-year') || !inline.includes('data-pick-filter-open="1"')
+  || !inline.includes('data-pick-owner="1"') || !inline.includes("function filteredStillPicks(")
+  || !inline.includes("function clearPickFilters(") || !inline.includes("pickFilterOwnerAny")
+  || !inline.includes("pickFilterOwnerMode") || !inline.includes('data-pick-owner-mode="out"')
+  || !inline.includes('data-pick-owner-mode="held"') || !inline.includes("pick-intel-step-mode")
+  || !inline.includes('data-pick-mine-held="1"') || !inline.includes('data-pick-clear-owner="1"')
+  || !inline.includes("function pickLeaders(") || !inline.includes("function pickIntelBoard(")
+  || !inline.includes("function pickLeadersStack(") || !inline.includes("function pickIntelStepPanel(")
+  || !inline.includes("function pickSeasonRangeLabel(") || !inline.includes("PICK_INTEL_BOARD_YEAR")
+  || !inline.includes("pick-intel-board-cols")
+  || !inline.includes('yrShort + " " + r.lab')
+  || !inline.includes('"3rds–4ths"') || !inline.includes("pickLeaders(r.rounds, 3, yrs)")
+  || !inline.includes('Still-available 2027 pick leaders')
+  || inline.includes("pick-intel-board-yr")
+  || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
+  || inline.includes("function firstRoundLeaders(")
+  || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
+  || inline.includes("Most held right now") || inline.includes("Who's got picks")
+  || inline.includes("pick-intel-board-h")
+  || inline.includes('{ lab: "Total"') || inline.includes("pickLeaders(r.round, 3)")
+  || !inline.includes("Draft Data") || inline.includes(">Pick board<")
+  || inline.includes('aria-label="Pick board"')
+  || inline.includes("pick-intel-board-row")) {
+  throw new Error("Draft Data must ship progressive filters + 2027 top-3 column leaderboard without a search input or board-h");
+}
+if (!inline.includes("function picksBarIcon(") || !inline.includes("pick-intel-ico")
+  || !inline.includes("pick-intel-chips") || !inline.includes("is-picks")) {
+  throw new Error("Draft Data bar must show a picks icon beside equal-width chips");
+}
+if (!inline.includes("pick-intel-brand-lab") || !inline.includes(">Draft Picks<")
+  || !inline.includes(">Handcuffs<")) {
+  throw new Error("Intel bars must caption picks/cuffs icons with Draft Picks / Handcuffs");
+}
+if (!inline.includes("function cuffsBarIcon(") || !inline.includes("cuffsBarIcon()")
+  || !inline.includes("is-cuffs") || !inline.includes("cuffSteel")) {
+  throw new Error("Cuffs bar must show a detailed silver handcuff icon beside equal-width chips");
+}
+if (!inline.includes("function openDraftDataPage(") || !inline.includes("function pickIntelHome(")
+  || !inline.includes("function renderDraftDataPage(") || !inline.includes('data-draft-data-open="search"')
+  || !inline.includes('data-draft-data-open="mine"') || !inline.includes('data-draft-data-open="held"')
+  || !inline.includes('view === "draftdata" ? renderDraftDataPage()')
+  || !inline.includes('"draftdata"')
+  || !inline.includes("data-pick-board-team")
+  || !inline.includes('openDraftDataPage("board"')) {
+  throw new Error("Draft Data home chips must open a full draftdata page for search/mine/held");
+}
+if (!inline.includes("pickLeadersStack(leaders, { rounds:")
+  || !inline.includes("ownerMode: \"held\"")) {
+  throw new Error("Draft Data board team rows must deep-link with team + round + year filters");
+}
+if (!inline.includes("seatLabel(name, linkSeat ? undefined : { link: false })")) {
+  throw new Error("Draft board leaders must not nest seat-link (clicks open Draft Data, not team home)");
+}
+if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*underline/s.test(html)) {
+  throw new Error("Draft board leader names must not be underlined");
+}
+{
+  const homeTeaser = inline.slice(inline.indexOf("function pickIntelHome("), inline.indexOf("function pickIntelHome(") + 1600);
+  if (homeTeaser.includes("data-pick-filter-open") || homeTeaser.includes("data-pick-mine=\"")) {
+    throw new Error("pickIntelHome chips must navigate via data-draft-data-open, not inline pick filters");
+  }
+  // Chip order: Search · Held · Original
+  if (homeTeaser.indexOf('data-draft-data-open="held"') > homeTeaser.indexOf('data-draft-data-open="mine"')
+    || homeTeaser.indexOf(">Held<") > homeTeaser.indexOf(">Original<")) {
+    throw new Error("Draft Data home chips must order Held before Original");
+  }
+}
+
+{
+  if (!inline.includes("function cuffsPanel()") || !inline.includes('aria-label="Cuffs"')
+    || !inline.includes('data-cuff-mine="1"') || !inline.includes('data-cuff-filter-open="1"')
+    || !inline.includes('data-cuff-fa="1"') || !inline.includes("function ensureCuffs(")
+    || !inline.includes("function filteredCuffRows(") || !inline.includes("cuffs.json")
+    || !inline.includes("clearCuffFilters(") || !inline.includes("function resetCuffFilters(")
+    || !inline.includes("resetCuffFilters()")
+    || !inline.includes("Exclusive mode: Available alone")) {
+    throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
+  }
+  if ((inline.match(/<h2 class="pick-intel-h">Draft Data<\/h2>/g) || []).length
+    || (inline.match(/<h2 class="pick-intel-h">Cuffs<\/h2>/g) || []).length) {
+    throw new Error("League home Draft Data / Cuffs sections must not show pick-intel-h titles");
+  }
+  if (!inline.includes("function openCuffsPage(") || !inline.includes("function cuffsHome(")
+    || !inline.includes("function renderCuffsPage(") || !inline.includes('data-cuffs-open="search"')
+    || !inline.includes('data-cuffs-open="mine"') || !inline.includes('data-cuffs-open="fa"')
+    || !inline.includes('view === "cuffs" ? renderCuffsPage()') || !inline.includes('"cuffs"')) {
+    throw new Error("Cuffs home chips must open a full cuffs page for search/mine/fa");
+  }
+  const homeCuffsTeaser = inline.slice(
+    inline.indexOf("function cuffsHome("),
+    inline.indexOf("function renderCuffsPage(")
+  );
+  if (!homeCuffsTeaser || homeCuffsTeaser.length < 200) {
+    throw new Error("cuffsHome teaser slice failed");
+  }
+  if (homeCuffsTeaser.includes("cuffs-list") || homeCuffsTeaser.includes("filteredCuffRows(")) {
+    throw new Error("cuffsHome must stay chip + board with no auto cuff list");
+  }
+  if (!homeCuffsTeaser.includes("cuffsBoard()") || !homeCuffsTeaser.includes("cuffLeaders(")) {
+    throw new Error("cuffsHome must mount the cuff holder board under the chips");
+  }
+  if (!inline.includes("function cuffLeaders(") || !inline.includes("function cuffsBoard(")
+    || !inline.includes('data-cuffs-board="') || !inline.includes("cuffFilterHeld")
+    || !inline.includes("cuffFilterOther") || !inline.includes('kind: "other"')
+    || !inline.includes('lab: "Insurers"') || !inline.includes('lab: "Poachers"')
+    || !inline.includes('lab: "Uninsured"') || !inline.includes('kind: "bare"')
+    || !inline.includes('kind: "self"') || !inline.includes('kind: "other"')
+    || !inline.includes("cuffFilterSelf")
+    || inline.includes('lab: "Self"') || inline.includes('lab: "Other"')
+    || inline.includes('{ lab: "All",') || inline.includes('{ lab: "Poach",')
+    || inline.includes('{ lab: "RB",')) {
+    throw new Error("Cuffs home must show Insurers / Poachers / Uninsured holder leaderboard");
+  }
+  {
+    const boardFn = inline.slice(inline.indexOf("function cuffsBoard("), inline.indexOf("function cuffInjBadge("));
+    if (!boardFn || boardFn.includes('pick-intel-board-yr">held') || boardFn.includes(">held</span>")) {
+      throw new Error("cuffsBoard must not show a held year gutter label");
+    }
+  }
+  if (!inline.includes("cuffsHtml = cuffsHome()")) {
+    throw new Error("renderLeagueHome must mount cuffsHome, not cuffsPanel");
+  }
+
+  const homeCuffs = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
+  const homeCuffsReturn = homeCuffs.slice(0, homeCuffs.indexOf("\n    }"));
+  if (!homeCuffsReturn.includes("cuffsHome()") || !homeCuffsReturn.includes("cuffsHtml")) {
+    throw new Error("renderLeagueHome must mount cuffsHome under Draft Data");
+  }
+  if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
+    || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {
+    throw new Error("Cuffs styles must ship with starter-owner labels");
+  }
+}
+
+if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("function applyPicksBook(")
+  || !inline.includes("function pickRoundOrdinal(")) {
+  throw new Error("Draft Data must augment untraded native picks before counting leaders");
+}
+if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
+  throw new Error("pickOriginName regex must escape parens through the HTML template literal");
+}
+if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
+  || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
+  || !html.includes(".pick-intel-step-modes") || !html.includes("button.pick-intel-step-mode")
+  || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
+  || html.includes(".pick-intel-board-yr") || !html.includes("button.pick-intel-chip")
+  || html.includes(".pick-intel-board-h")
+  || html.includes("button.pick-intel-filter")
+  || html.includes(".pick-intel-tools input[type=\"search\"]")
+  || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
+  throw new Error("Draft Data progressive filter + column leaderboard styles must ship without year gutter (no pick search input or board-h)");
+}
+if (!inline.includes('aria-label="Search picks"')
+  || !inline.includes('aria-label="Original picks"')
+  || !inline.includes('aria-label="Held picks"')
+  || !inline.includes('">Search</button>')
+  || !inline.includes(">Original<")
+  || !inline.includes(">Held<")
+  || inline.includes(">Filter picks<") || inline.includes(">My picks out<")
+  || inline.includes(">Mine held<")
+  || inline.includes('aria-label="Clear my picks out"')
+  || inline.includes('aria-label="Clear mine held"')
+  || inline.includes(">their picks out<") || inline.includes("'s picks out")) {
+  throw new Error("Draft Data bar chips must use the equal-chip copy (search / who has mine / whose I hold)");
+}
+if (!inline.includes('esc("who has their pick(s)")')
+  || !inline.includes('aria-label="who has ')
+  || !inline.includes('"who has " + pickFilterOwner + "\'s picks"')) {
+  throw new Error("Draft Data team out-mode must use who-has-their-picks copy");
+}
+if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
+  throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");
+}
+if (!inline.includes("function renderNewsPage()") || !inline.includes('view === "news"')) {
+  throw new Error("the full News and Alerts page (view=news) must ship");
+}
+if (!inline.includes("function armNewsPullup()") || !inline.includes("data-news-pullup-peek")) {
+  throw new Error("the News Feed pull-up must ship with peek + drag chrome");
 }
 for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   // it.also and it.published are read into locals and formatted by ago()/length before use;
@@ -5254,10 +11430,12 @@ if (emptyStrings.length < 2 || new Set(emptyStrings).size < 2) {
 if (!/No posts in the feed right now/.test(emptyRender)) {
   throw new Error("the empty state must name the all-deleted case separately from never-shared");
 }
-// The one fact the empty state exists to carry. A member looking at a blank feed has no other
-// way to learn that sharing from X is what fills it.
-if (!/Nothing shared yet[\s\S]{0,200}from X/.test(emptyRender)) {
-  throw new Error("the empty state must tell the reader that shares from X are what fill this feed");
+// Empty feed copy stays short — no how-to about sharing from X.
+if (!/Nothing shared yet/.test(emptyRender)) {
+  throw new Error("the empty state must still say Nothing shared yet");
+}
+if (/Send a tweet in from X|league shortcut and it lands/.test(emptyRender)) {
+  throw new Error("the empty state must not ship how-to copy about sharing from X");
 }
 if (!/could not be loaded/.test(emptyRender)) {
   throw new Error("the failed-load state must say the feed failed rather than that it is empty");
@@ -5284,25 +11462,11 @@ if (headDecl[2] !== "<h2>News and Alerts</h2>") {
 }
 // Both exits compose `head`. The empty branch returns `head + ...` and the populated branch
 // returns `head` as its first term; a heading dropped from either is a section with no title.
-// Both exits compose `head` (+ live chrome) then the news-box. The empty branch and the
-// populated branch must each still return the heading, or removing the caption would have
-// taken the title with it.
-if (!/return head \+ live[\s\S]{0,120}class="news-box" data-news-feed="1"[\s\S]{0,160}news-empty/.test(newsBody)) {
+if (!/return head \+ '<div class="news-box"><p class="news-empty">/.test(newsBody)) {
   throw new Error("the empty news state must still return the heading above the box");
 }
-if (!/return head\s*\n\s*\+ live\s*\n\s*\+ '<div class="news-box" data-news-feed="1" tabindex="0"/.test(newsBody)) {
+if (!/return head\s*\n\s*\+ '<div class="news-box" tabindex="0"/.test(newsBody)) {
   throw new Error("the populated news feed must still return the heading above the box");
-}
-// Live refresh: pull-to-refresh + poll must ship, and news.json polls must bust cache
-// independently of DATA_V (NEWS_SDD §7 / §10c).
-if (!inline.includes("function refreshNewsFeed(") || !inline.includes("function bindNewsFeed(")) {
-  throw new Error("the news feed lost its live refresh (refreshNewsFeed / bindNewsFeed)");
-}
-if (!inline.includes('fetch("data/ui/news.json?news=" + Date.now())')) {
-  throw new Error("live news refresh must cache-bust news.json with ?news=<timestamp>");
-}
-if (!inline.includes("NEWS_POLL_MS") || !inline.includes("startNewsPoll(")) {
-  throw new Error("the news feed must auto-poll while the reader is on league home");
 }
 // 3. The 44px rule. A pass took 312 sub-44px targets to zero and none may come back. Every
 //    news row is a link, so every news row is a target.
@@ -5314,8 +11478,9 @@ if (!html.includes(".news-row {") || !html.slice(html.indexOf(".news-row {")).sl
 if (!inline.includes("news = book && book.v === 1 && Array.isArray(book.items) ? book : null;")) {
   throw new Error("news.json must be version-gated on load");
 }
-const newsLoad = inline.slice(inline.indexOf('const book = await getJson("data/ui/news.json");'));
-if (!newsLoad.slice(0, 200).includes("catch (err) { news = null; }")) {
+// Parallel boot still version-gates; the fetch may be Promise.all'd with other league JSON.
+if (!inline.includes('getLeagueJson("news.json")')
+  || !inline.includes("catch (err) { news = null; }")) {
   throw new Error("a missing or malformed news.json must cost the news section and nothing else");
 }
 // News must never touch a value, a delta, a lens window or a grade. The whole point of the
@@ -5353,12 +11518,72 @@ if (/@keyframes/.test(sheetRules)) {
 if (/(^|[;{\s])animation(-[a-z]+)?\s*:/.test(sheetRules)) {
   throw new Error("the stylesheet grew an animation property -- nothing on this page may move itself without a pause control (WCAG 2.2.2)");
 }
-// The reduced-motion branch existed only to stop the ticker. An empty one left behind would read
-// as though something still moves, and the next author would write into it.
-if (/prefers-reduced-motion/.test(sheetRules)) {
-  throw new Error("a prefers-reduced-motion branch survived the ticker -- there is no motion left for it to reduce; delete it, or the motion it guards is unasserted");
+// News Feed pull-up is the one permitted motion region: user-driven sheet transform only.
+// prefers-reduced-motion disables the open/close transition (WCAG 2.2.2 / 2.3.3).
+if (!sheetRules.includes("@media (prefers-reduced-motion: reduce)")) {
+  throw new Error("news pull-up must keep a prefers-reduced-motion branch that disables its sheet transition");
+}
+if (!sheetRules.includes(".news-pullup.is-open .news-pullup-sheet")
+  || !sheetRules.includes("transform: translateY(calc(100% - var(--news-pullup-peek)))")) {
+  throw new Error("news pull-up must keep collapsed peek + expanded sheet transforms");
+}
+if (!inline.includes("function armNewsPullup()") || !inline.includes("setNewsPullupOpen")) {
+  throw new Error("news pull-up must ship open/close + drag wiring");
+}
+if (!inline.includes("flickOpen") || !inline.includes("flickClose")) {
+  throw new Error("news pull-up must support flick open/close gestures");
+}
+if (!inline.includes("function isDesignLeagueHome(") || !inline.includes('access_token === "design-mode"')) {
+  throw new Error("isDesignLeagueHome must recognize design-mode token + sticky session flag");
+}
+if (inline.includes('sessionStorage.removeItem("cuckle.design.league_home")')) {
+  throw new Error("boot must not clear cuckle.design.league_home — sticky flag keeps Design Mode home alive");
+}
+if (!inline.includes("The feed could not be shown. Open for details.")) {
+  throw new Error("renderLeagueHome must keep a News Feed fallback shell when dayAlert throws");
+}
+if (!inline.includes("newsPullupCleanup") || !inline.includes("clearNewsPullup")) {
+  throw new Error("news pull-up must track and clear gesture listeners across remounts");
+}
+// Hero empty copy must match the full feed's three cases (load fail / all deleted / never shared).
+{
+  const dayAt = inline.indexOf("function dayAlert()");
+  const daySrc = inline.slice(dayAt, dayAt + 1800);
+  for (const need of [
+    "The feed could not be loaded.",
+    "No posts in the feed right now.",
+    "Nothing shared yet.",
+  ]) {
+    if (!daySrc.includes(need)) {
+      throw new Error(`dayAlert empty states must distinguish load/deleted/never-shared; missing ${need}`);
+    }
+  }
+}
+// Design Mode must stay sticky: syncUrl used to strip ?design= and boot cleared the session
+// flag, so a Design Mode reload ran soft-delete and blanked the News Feed.
+if (!inline.includes("function isDesignLeagueHome()")
+  || !inline.includes('access_token === "design-mode"')
+  || !inline.includes('q.set("design", "league-home")')) {
+  throw new Error("Design Mode must keep isDesignLeagueHome() sticky (token + session + URL)");
+}
+if (!inline.includes("if (!isDesignLeagueHome()) loadNewsDeleted()")
+  || inline.includes("sessionStorage.removeItem(\"cuckle.design.league_home\")")) {
+  throw new Error("Design Mode must not clear its session flag or soft-delete-sync on that path");
 }
 // ---------------------------------------------------------------------------------------------
+
+// Catch quote/syntax breaks inside the embedded app script (node --check on this
+// generator file cannot see them — they live inside the outer template literal).
+{
+  const m = html.match(/<script>([\s\S]*?)<\/script>/);
+  if (!m) throw new Error("generated page is missing its app <script>");
+  try {
+    // eslint-disable-next-line no-new-func
+    new Function(m[1]);
+  } catch (err) {
+    throw new Error("generated inline script failed to parse: " + (err && err.message ? err.message : err));
+  }
+}
 
 fs.writeFileSync(`${ROOT}index.html`, html);
 console.log(JSON.stringify({ page: `${ROOT}index.html` }, null, 2));

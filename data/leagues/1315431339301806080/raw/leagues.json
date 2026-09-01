@@ -1,0 +1,74 @@
+[
+  {
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "1183265256141869056",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "1183265256141869056",
+    "season": "2025",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "1048309758392000512",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "1048309758392000512",
+    "season": "2024",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "917168707477233664",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "917168707477233664",
+    "season": "2023",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "784465088559046656",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "784465088559046656",
+    "season": "2022",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "650061903124582400",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "650061903124582400",
+    "season": "2021",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "514103570328997888",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "514103570328997888",
+    "season": "2020",
+    "name": "CuckleChunckle ",
+    "previous_league_id": "457780103087124480",
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  },
+  {
+    "league_id": "457780103087124480",
+    "season": "2019",
+    "name": "CuckleChunckle ",
+    "previous_league_id": null,
+    "num_teams": 10,
+    "playoff_teams": 6,
+    "superflex": true
+  }
+]

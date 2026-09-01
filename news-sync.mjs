@@ -47,7 +47,7 @@
  */
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { DATA, readJson } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, DATA, leagueUiDir, readJson } from "./lib.mjs";
 import { CATEGORIES, classify, leagueLine, leagueLineAsync, noteFreeOfAddress, trimNote, tweetPokeKind, voiceSamples } from "./news-voice.mjs";
 import { appendSmackTip, trimAgentTip } from "./smack-tips.mjs";
 import { PUBLISH_MIN, buildMatchIndex, matchText } from "./news-match.mjs";
@@ -1235,9 +1235,13 @@ function bookOf(items, rssResults, sleeper) {
 }
 
 function writeBook(book) {
+  const body = JSON.stringify(book) + "\n";
   const path = `${DATA}/ui/news.json`;
   fs.mkdirSync(`${DATA}/ui`, { recursive: true });
-  fs.writeFileSync(path, JSON.stringify(book) + "\n");
+  fs.writeFileSync(path, body);
+  const scoped = `${leagueUiDir(CUCKLE_LEAGUE_ID)}/news.json`;
+  fs.mkdirSync(scoped.slice(0, scoped.lastIndexOf("/")), { recursive: true });
+  fs.writeFileSync(scoped, body);
   return path;
 }
 

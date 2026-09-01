@@ -710,19 +710,66 @@ rather than as an HTTP error code.
 
 For the record, this site is served from **`https://slabslip.github.io`** (path
 `/cuckle-trade-tracker/`), and locally from `http://localhost:8766` per the
-README. Those are the origins that will appear in requests.
+README. Those are the origins that will appear in requests. A GoDaddy (or any)
+custom domain becomes another origin — see [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).
 
-Origins do become configurable in two places we are not using yet — if we ever
-add either, come back to this:
+**Supabase Auth** (Phase 1 claim-seat) **does** keep an allowlist:
 
-- **Supabase Auth** keeps an allowlist of redirect URLs. Only relevant if we turn
-  on real logins.
-- **Edge Functions** set their own CORS headers in code and do not inherit the
-  REST API's.
+- Dashboard → Authentication → URL Configuration → **Site URL** + **Redirect URLs**
+- Include both github.io and the custom domain during cutover
 
 ---
 
-## 8. Hand back — done
+## 7a. Phase 1 — claimed-seat auth (**superseded by §8**)
+
+Phase 1 `CUCK-` per-seat Auth users via [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) are
+**retired**. Chuckle Fantasy binds seats with commissioner `CF-` invites (§8). Keep
+[`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql) for the original `seat_profiles` /
+vote write gate, then apply multi-league + Wave 1/2 SQL so votes resolve from
+`league_memberships`.
+
+Do **not** seed CUCK codes for Cuckle — they collide with invite-redeem memberships.
+`seed-seat-auth.mjs` exits unless you pass `--force-legacy`.
+
+### Historical verify
+
+```bash
+# Anon write must fail after Phase 1 SQL:
+curl -s -o /dev/null -w "%{http_code}\n" \
+  -X POST "$URL/rest/v1/trade_votes" \
+  -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+  -H "Content-Type: application/json" \
+  -d '{"transaction_id":"0","choice":"0","voter":"0"}'
+# expect 401 or 403
+```
+
+---
+
+## 8. Multi-league app (Chuckle Fantasy)
+
+See [`APP_SDD.md`](APP_SDD.md). Apply SQL **in order**:
+
+1. [`db/phase1-seat-auth.sql`](../db/phase1-seat-auth.sql)
+2. [`db/multi-league-app.sql`](../db/multi-league-app.sql)
+3. [`db/commissioner-invites.sql`](../db/commissioner-invites.sql)
+4. [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql) — atomic redeem, claim-seat RPCs, tighten RLS
+5. [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) — per-league vote identity
+
+Then:
+
+1. Deploy Edge Function `supabase/functions/join-league`
+2. Auth Confirm email stays **OFF**; Site URL includes your app origin
+3. **Commissioner:** Create account → Create a league → Sleeper league ID (Cuckle: `1315431339301806080`) + optional ESPN → DM codes → **Claim this seat**
+4. **Members:** Create account → Redeem invite → dashboard
+5. **Meter sync (non-Cuckle):** `node build.mjs <league_id>` (or Action `league-sync`); status → `ready`
+
+Username emails are synthetic: `{username}@users.cuckle.invalid`.
+
+Sleeper has **no OAuth** — do not collect Sleeper passwords. Invites bind seats.
+
+---
+
+## 9. Hand back — done
 
 Both values were handed over and are wired into `generate-page.mjs`:
 

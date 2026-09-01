@@ -2,6 +2,10 @@
 
 Sleeper league `1315431339301806080`. Superflex dynasty, 2019–2026. Official Sleeper GETs + DynastyProcess CSVs (GPL-3). Not SlabSlip.
 
+**App (Chuckle Fantasy):** one commissioner creates the league (Sleeper league ID ± ESPN),
+sends per-seat invites; members redeem a code and set username/password. See
+[`docs/APP_SDD.md`](docs/APP_SDD.md). Custom domain: [`docs/CUSTOM_DOMAIN.md`](docs/CUSTOM_DOMAIN.md).
+
 **Default:** a pick that has already been drafted is the player it became, priced today.
 
 **Toggle:** what that pick (and the rest of the bag) was worth on the day they accepted, using DynastyProcess pick values from git history.
@@ -9,22 +13,27 @@ Sleeper league `1315431339301806080`. Superflex dynasty, 2019–2026. Official S
 **Drafters:** who actually used the pick. Rookie 2020–2026 surplus = player today minus pick cost on draft day. 2019 startup is a separate tab ranked by player today (DynastyProcess has no 2019 startup pick prices).
 
 ```bash
-node build.mjs
+node build.mjs                              # CuckleChunckle (default)
+node build.mjs <sleeper_league_id>          # any league → data/leagues/<id>/{raw,ui}
 ```
 
-Or one step at a time:
+Or one step at a time (pass the same league id to each league-scoped step):
 
 ```bash
-node sleeper-sync.mjs
-node draft-resolve.mjs
-node value-snapshot.mjs          # latest + monthly git history
+node sleeper-sync.mjs [league_id]
+node draft-resolve.mjs [league_id]
+node value-snapshot.mjs          # latest + monthly git history (shared)
 node ktc-snapshot.mjs            # weekly Superflex snap → data/ktc/ (not in build.mjs)
-node revalue.mjs
-node title-path.mjs              # titles.json for Champions Path
-node apply-value-adjust.mjs      # today blend + Value Adjustment + trade boards + marks.json
-node generate-page.mjs
+node revalue.mjs [league_id]
+node title-path.mjs [league_id]  # titles.json for Champions Path
+node apply-value-adjust.mjs [league_id]
+node generate-page.mjs           # site shell (Cuckle)
+node mark-league-ready.mjs [league_id]  # needs SUPABASE_SERVICE_ROLE_KEY
 node news-sync.mjs               # news.json for News and Alerts (not in build.mjs)
 ```
+
+League UI lives under `data/leagues/<id>/ui/` (Cuckle is dual-written to `data/ui/` for
+news-refresh and legacy readers). Shared curve/KTC/players stay under `data/`.
 
 `news-sync.mjs` builds the News and Alerts feed. It reads the rosters `sleeper-sync.mjs` already
 wrote and **touches no value, no Value Adjustment, no lens window and no ranking**, which is why
@@ -83,6 +92,13 @@ python3 -m http.server 8766
 # http://localhost:8766/?me=TipsUp&view=trades&lens=y3
 # http://localhost:8766/preview.html      framed at 375 / 390 / 402 / 430
 ```
+
+**iPhone / Design Mode previews** (local static server, e.g. port `8799`):
+
+- **iPhone bezel (look at this):** `http://127.0.0.1:8799/iphone-preview.html`
+  (alias of `design-league-home-frame.html` — Dynamic Island + home bar + News Feed)
+- **Design Mode (clickable DOM, no bezel):** `http://127.0.0.1:8799/design-league-home.html`
+- **Phone-width tool:** `http://127.0.0.1:8799/preview.html`
 
 Live: [Home](https://slabslip.github.io/cuckle-trade-tracker/) ·
 [Champions Path](https://slabslip.github.io/cuckle-trade-tracker/?view=titles) ·

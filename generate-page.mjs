@@ -2008,7 +2008,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueTradeDataTitle20260901133000";
+    const DATA_V = "noHowToCaptions20260901134000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3432,7 +3432,6 @@ const html = `<!DOCTYPE html>
       }
       return '<button type="button" class="chip back" data-view="home">← League home</button>'
         + '<h2 class="screen-h" tabindex="-1">League Data Sets</h2>'
-        + '<p class="caption">Pick a set to open it. Each one is a league-wide list, not a seat tab.</p>'
         + dsMenu();
     }
 
@@ -3550,10 +3549,8 @@ const html = `<!DOCTYPE html>
         + chapterHtml("Title season — regular", t.windows && t.windows.regular)
         + chapterHtml("Playoff run", t.windows && t.windows.playoffs)
         + '<div class="chapter"><h3>Draft capital used</h3>'
-        + '<p class="caption">' + (t.draft && t.draft.startup ? "Startup. Not rookie capital." : "Rookie draft clicks.") + "</p>"
         + '<div class="caption">' + draftLine + "</div></div>"
         + '<div class="chapter"><h3>Title lineup</h3>'
-        + '<p class="caption">Who started the championship week, and how they got there this year.</p>'
         + lineup + "</div>";
     }
 
@@ -3563,7 +3560,6 @@ const html = `<!DOCTYPE html>
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
       return '<h2 class="screen-h" tabindex="-1">Champions Path</h2>'
-        + '<p class="caption">Each title year. Previous season, offseason, then the year they won. Not the trade needle.</p>'
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
@@ -3643,7 +3639,7 @@ const html = `<!DOCTYPE html>
           ? "The feed could not be loaded. Nothing else on this page is affected."
           : (raw.length
             ? "No posts in the feed right now."
-            : "Nothing shared yet. Send a tweet in from X with the league shortcut and it lands here.");
+            : "Nothing shared yet.");
         return head + '<div class="news-box"><p class="news-empty">' + esc(blank) + "</p></div>";
       }
       // Remove is admin-only in the UI. League home clears me, so this reads the remembered
@@ -3813,7 +3809,6 @@ const html = `<!DOCTYPE html>
         "<h2>News and Alerts</h2>",
         '<button type="button" class="chip" data-view="home" style="margin:0 0 10px">← League home</button>'
           + '<h2 class="screen-h" tabindex="-1">News and Alerts</h2>'
-          + '<p class="caption">Everything shared into this league. Tap a row for the source.</p>'
       );
     }
 
@@ -3824,7 +3819,6 @@ const html = `<!DOCTYPE html>
       const mem = (memberships || []).find((m) => m.sleeper_league_id === L.sleeper_league_id);
       const team = seat || (mem && mem.team_name) || null;
       return '<h2 class="screen-h" tabindex="-1">Account</h2>'
-        + '<p class="caption">Your Chuckle Fantasy profile for this device session.</p>'
         + '<div class="app-card"><h3>Signed in</h3>'
         + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
         + (L.name
@@ -3844,7 +3838,6 @@ const html = `<!DOCTYPE html>
     function renderTeamsPage() {
       const rows = whoOptions();
       return '<h2 class="screen-h" tabindex="-1">Teams</h2>'
-        + '<p class="caption">Every roster in this league. Tap a team to open their home dashboard.</p>'
         + (rows
           ? '<div class="teams-list" role="list">' + rows + "</div>"
           : '<p class="caption">Teams have not loaded yet.</p>');
@@ -5756,11 +5749,11 @@ const html = `<!DOCTYPE html>
       // N-way trades get no vote: "which side won" has no head-to-head answer across three
       // bags, and N-way is already the special case that carries no Value Adjustment.
       if (seats.length !== 2 || voteParties(r) > 2) {
-        return head + '<p class="caption">Three-team trade. There is no two-sided answer to score, so voting is off here.</p></div>';
+        return head + "</div>";
       }
       if (!authSeatId() || !authSession) {
         return head
-          + '<p class="caption">Join this league with your account to cast a vote. Tallies stay visible either way.</p>'
+          + ""
           + claimFormHtml()
           + "</div>";
       }
@@ -5794,7 +5787,7 @@ const html = `<!DOCTYPE html>
       return head
         + bar
         + '<div class="vote-opts">' + opts + "</div>"
-        + '<p class="caption">' + note + " Opinion only: votes never enter the value book.</p></div>";
+        + '<p class="caption">' + note + "</p></div>";
     }
 
     // Recency, not a clock: the card is named for the newest date on the tape, so there is no
@@ -7524,10 +7517,8 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
         + (invited
-          ? ('<p class="caption">Your invite is ready. Create a username and password — your seat code is already attached'
-            + ' (<code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code>)."
-            + " After you join, your league dashboard opens.</p>")
-          : '<p class="caption">Trade meter for fantasy leagues. One commissioner creates the league and sends invites. Members set a username and password — no Sleeper login required.</p>')
+          ? ('<p class="caption">Seat code <code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code></p>")
+          : "")
         + '<div class="app-card"><h3>' + title + "</h3>"
         + '<div class="app-form">'
         + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
@@ -7546,9 +7537,6 @@ const html = `<!DOCTYPE html>
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
           : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
         + "</p></div>"
-        + (invited
-          ? ""
-          : '<p class="caption">Have an invite link from your commissioner? Open that link — or choose <b>Redeem invite</b> after you sign in.</p>')
         + "</div>";
     }
 
@@ -7589,13 +7577,11 @@ const html = `<!DOCTYPE html>
         + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (body || '<p class="caption">No leagues yet. Create one as commissioner, or redeem an invite from yours.</p>')
+        + (body || '<p class="caption">No leagues yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
         + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
         + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
         + "</div>"
-        + '<p class="caption">CuckleChunckle: create with Sleeper league ID <code>' + CUCKLE_LEAGUE_ID
-        + "</code>, then DM each manager their seat invite.</p>"
         + "</div>";
     }
 
@@ -7603,8 +7589,6 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
-        + '<p class="caption">Only one person needs to do this. Enter the Sleeper <b>league</b> ID '
-        + "(and ESPN league ID if you still have ESPN history). We pull the roster from Sleeper and mint one invite per team.</p>"
         + '<div class="app-card"><h3>League IDs</h3>'
         + '<div class="app-form">'
         + '<label>Sleeper league ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
@@ -7661,7 +7645,7 @@ const html = `<!DOCTYPE html>
         ? '<p class="caption">No seats yet — reopen this screen to load teams from Sleeper. If it stays empty, run wave5 SQL and redeploy join-league.</p>'
         : (tab === "claimed"
           ? '<p class="caption">No one has redeemed yet. Share invite links from the Unclaimed tab.</p>'
-          : '<p class="caption">Every seat is claimed. Use the Claimed tab to reissue if a manager leaves.</p>');
+          : '<p class="caption">Every seat is claimed.</p>');
       const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
         + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
         + ' aria-selected="' + (tab === "unclaimed" ? "true" : "false") + '"'
@@ -7746,7 +7730,6 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>"
         + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
-        + '<p class="caption">As commissioner you mint one invite per Sleeper seat and DM each manager their code. They redeem it to join. You can transfer commissioner to another member, or reissue a seat when a manager leaves.</p>'
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
@@ -7760,7 +7743,6 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Redeem invite</h2>'
-        + '<p class="caption">Enter the code your commissioner sent. It already knows your team from Sleeper — you do not enter a Sleeper ID.</p>'
         + '<div class="app-card"><h3>Invite code</h3>'
         + '<div class="app-form">'
         + '<label>Code<input id="redeemCode" name="code" autocomplete="off" autocapitalize="characters"'
@@ -9656,8 +9638,8 @@ const teamsPageSrc = fnBody("renderTeamsPage");
 if (!teamsPageSrc.includes('class="teams-list"') || !teamsPageSrc.includes("whoOptions()")) {
   throw new Error("the Teams page must mount whoOptions() inside .teams-list");
 }
-if (!teamsPageSrc.includes("home dashboard")) {
-  throw new Error("the Teams page must tell users a tap opens that team's home dashboard");
+if (/Every roster|Tap a team|home dashboard<\/p>/.test(teamsPageSrc)) {
+  throw new Error("the Teams page must not ship an instructional how-to caption");
 }
 if (!html.includes("    .teams-list {") || !html.includes("min-height: 44px;")) {
   throw new Error("the Teams list must keep a 44px row target");
@@ -9961,6 +9943,23 @@ for (const need of [
     || fn.includes("Review this trade and browse")) {
     throw new Error("renderTradeScreen title must be League trade data (no A vs B header / review caption)");
   }
+  for (const ban of [
+    "Pick a set to open it",
+    "Each title year. Previous season",
+    "Each title year. Prior season",
+    "Everything shared into this league",
+    "Your Chuckle Fantasy profile",
+    "Every roster in this league",
+    "Tap a team to open",
+    "Trade meter for fantasy leagues",
+    "Opinion only: votes never enter",
+    "CuckleChunckle: create with Sleeper",
+    "Review this trade and browse",
+  ]) {
+    if (inline.includes(ban)) {
+      throw new Error("instructional caption must not ship: " + ban);
+    }
+  }
   if (fn.includes("boardTape(r)") || fn.includes("screen-foot"))
     throw new Error("trade detail feed must not use the old standalone boardTape / footer layout");
 }
@@ -10255,10 +10254,12 @@ if (emptyStrings.length < 2 || new Set(emptyStrings).size < 2) {
 if (!/No posts in the feed right now/.test(emptyRender)) {
   throw new Error("the empty state must name the all-deleted case separately from never-shared");
 }
-// The one fact the empty state exists to carry. A member looking at a blank feed has no other
-// way to learn that sharing from X is what fills it.
-if (!/Nothing shared yet[\s\S]{0,200}from X/.test(emptyRender)) {
-  throw new Error("the empty state must tell the reader that shares from X are what fill this feed");
+// Empty feed copy stays short — no how-to about sharing from X.
+if (!/Nothing shared yet/.test(emptyRender)) {
+  throw new Error("the empty state must still say Nothing shared yet");
+}
+if (/Send a tweet in from X|league shortcut and it lands/.test(emptyRender)) {
+  throw new Error("the empty state must not ship how-to copy about sharing from X");
 }
 if (!/could not be loaded/.test(emptyRender)) {
   throw new Error("the failed-load state must say the feed failed rather than that it is empty");

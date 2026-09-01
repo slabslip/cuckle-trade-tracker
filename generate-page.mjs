@@ -2176,7 +2176,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "picksBarIcon20260901153000";
+    const DATA_V = "cuffsBarIcon20260901154000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2870,6 +2870,17 @@ const html = `<!DOCTYPE html>
         + "</svg></span>";
     }
 
+    /** Leading glyph for the Cuffs chip row (linked handcuffs). */
+    function cuffsBarIcon() {
+      return '<span class="pick-intel-ico" aria-hidden="true" title="Cuffs">'
+        + '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<circle cx="8" cy="12" r="4.25" fill="none" stroke="currentColor" stroke-width="1.7"/>'
+        + '<circle cx="16" cy="12" r="4.25" fill="none" stroke="currentColor" stroke-width="1.7"/>'
+        + '<path d="M11.2 10.4h1.6M11.2 13.6h1.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'
+        + '<path d="M6.4 8.6l1.2-1.5M17.6 8.6l-1.2-1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+        + "</svg></span>";
+    }
+
     function openDraftDataPage(mode, preset) {
       clearPickFilters();
       if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
@@ -3206,6 +3217,7 @@ const html = `<!DOCTYPE html>
       }
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + cuffsBarIcon()
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
         + ' aria-label="search cuffs">search cuffs</button>'
@@ -3263,6 +3275,7 @@ const html = `<!DOCTYPE html>
       const mineOn = cuffFilterMine;
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + cuffsBarIcon()
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
@@ -10596,6 +10609,9 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   if (!inline.includes("function picksBarIcon(") || !inline.includes("pick-intel-ico")
     || !inline.includes("pick-intel-chips")) {
     throw new Error("Draft Data bar must show a picks icon beside equal-width chips");
+  }
+  if (!inline.includes("function cuffsBarIcon(") || !inline.includes("cuffsBarIcon()")) {
+    throw new Error("Cuffs bar must show a handcuff icon beside equal-width chips");
   }
 if (!inline.includes("function openDraftDataPage(") || !inline.includes("function pickIntelHome(")
     || !inline.includes("function renderDraftDataPage(") || !inline.includes('data-draft-data-open="search"')

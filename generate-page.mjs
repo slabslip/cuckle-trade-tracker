@@ -941,11 +941,6 @@ const html = `<!DOCTYPE html>
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
-    .pick-intel-board-h {
-      margin: 0;
-      color: var(--dim); font-size: 0.6875rem; font-weight: 600;
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
     /* Year scope under each column lab — stacked so · N stay centered and
        names keep room (clearer than a cramped inline · year line). */
     .pick-intel-board-lab .pick-intel-board-yrs {
@@ -1775,7 +1770,8 @@ const html = `<!DOCTYPE html>
     // walks Round → Year → Held by one dropdown at a time (pickFilterStep).
     let pickFilterRounds = {}; // { 1: true } when selected
     let pickFilterYears = {};  // { "2027": true } when selected
-    let pickFilterOwner = "";  // "" = anyone; else current holder seat name
+    let pickFilterOwner = "";  // current holder seat name when filtering to one team
+    let pickFilterOwnerAny = false; // true when user explicitly chose "Anyone" on the holder step
     let pickFilterMineOut = false;
     let pickFilterMineHeld = false;
     let pickFilterOpen = false;
@@ -1790,7 +1786,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "draftDataHeading20260901032800";
+    const DATA_V = "pickIntelAnyoneChip20260901034500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1998,7 +1994,7 @@ const html = `<!DOCTYPE html>
     const PICK_INTEL_BOARD_YEAR = "2027";
 
     function pickFiltersActive() {
-      return pickFilterMineOut || pickFilterMineHeld || !!pickFilterOwner
+      return pickFilterMineOut || pickFilterMineHeld || !!pickFilterOwner || pickFilterOwnerAny
         || Object.keys(pickFilterRounds).some((k) => pickFilterRounds[k])
         || Object.keys(pickFilterYears).some((k) => pickFilterYears[k]);
     }
@@ -2007,6 +2003,7 @@ const html = `<!DOCTYPE html>
       pickFilterRounds = {};
       pickFilterYears = {};
       pickFilterOwner = "";
+      pickFilterOwnerAny = false;
       pickFilterMineOut = false;
       pickFilterMineHeld = false;
       pickFilterOpen = false;
@@ -2043,10 +2040,11 @@ const html = `<!DOCTYPE html>
           + esc(y) + '" aria-label="Clear ' + esc(y) + ' filter">'
           + esc(y) + '<span class="x" aria-hidden="true">×</span></button>');
       }
-      if (pickFilterOwner) {
+      if (pickFilterOwner || pickFilterOwnerAny) {
+        const ownerLab = pickFilterOwner || "Anyone";
         chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
-          + ' aria-label="Clear held-by filter">'
-          + esc(pickFilterOwner) + '<span class="x" aria-hidden="true">×</span></button>');
+          + ' aria-label="Clear ' + esc(ownerLab) + ' filter">'
+          + esc(ownerLab) + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (pickFilterMineOut) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
@@ -2174,7 +2172,7 @@ const html = `<!DOCTYPE html>
     }
 
     /** Idle quick-view leaderboard: top 5 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
-     * Board title is Who's got picks; year scope lives on the column labs. */
+     * No board-level heading — year scope lives on the column titles only. */
     function pickIntelBoard() {
       const yrs = PICK_INTEL_BOARD_YEAR;
       const cols = [
@@ -2182,10 +2180,8 @@ const html = `<!DOCTYPE html>
         { lab: "2nds", rounds: [2] },
         { lab: "3rds–4ths", rounds: [3, 4] },
       ];
-      const boardH = "Who's got picks";
-      const aria = boardH + ", " + yrs + " by round (1sts, 2nds, 3rds–4ths)";
+      const aria = "Still-available 2027 pick leaders by round (1sts, 2nds, 3rds–4ths)";
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
-        + '<p class="pick-intel-board-h">' + boardH + "</p>"
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
           const leaders = pickLeaders(r.rounds, 5, yrs);
@@ -7611,6 +7607,7 @@ const html = `<!DOCTYPE html>
       const pickClearOwner = e.target.closest("[data-pick-clear-owner]");
       if (pickClearOwner) {
         pickFilterOwner = "";
+        pickFilterOwnerAny = false;
         pickFilterOpen = true;
         pickFilterStep = "owner";
         pickIntelOpen = null;
@@ -7993,6 +7990,7 @@ const html = `<!DOCTYPE html>
         const v = pickOwner.value;
         if (v === "__pick__") return;
         pickFilterOwner = v || "";
+        pickFilterOwnerAny = !v;
         pickFilterOpen = true;
         pickFilterStep = null; // wizard complete — summary chips remain
         pickIntelOpen = null;
@@ -9223,34 +9221,35 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes('data-pick-step-round')
   || !inline.includes('data-pick-step-year') || !inline.includes('data-pick-filter-open="1"')
   || !inline.includes('data-pick-owner="1"') || !inline.includes("function filteredStillPicks(")
-  || !inline.includes("function clearPickFilters(") || !inline.includes('data-pick-mine-held="1"')
+  || !inline.includes("function clearPickFilters(") || !inline.includes("pickFilterOwnerAny")
+  || !inline.includes('data-pick-mine-held="1"') || !inline.includes('data-pick-clear-owner="1"')
   || !inline.includes("function pickLeaders(") || !inline.includes("function pickIntelBoard(")
   || !inline.includes("function pickLeadersStack(") || !inline.includes("function pickIntelStepPanel(")
   || !inline.includes("function pickSeasonRangeLabel(") || !inline.includes("PICK_INTEL_BOARD_YEAR")
   || !inline.includes("pick-intel-board-cols")
   || !inline.includes("pick-intel-board-yrs")
   || !inline.includes('"3rds–4ths"') || !inline.includes("pickLeaders(r.rounds, 5, yrs)")
-  || !inline.includes("Who's got picks")
+  || !inline.includes('Still-available 2027 pick leaders')
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
-  || inline.includes("Most held right now") || !inline.includes("Who's got picks")
-  || !inline.includes("pick-intel-board-h")
+  || inline.includes("Most held right now") || inline.includes("Who's got picks")
+  || inline.includes("pick-intel-board-h")
   || inline.includes('{ lab: "Total"') || inline.includes("pickLeaders(r.round, 3)")
   || !inline.includes("Draft Data") || inline.includes(">Pick board<")
   || inline.includes('aria-label="Pick board"')
   || inline.includes("pick-intel-board-row")) {
-  throw new Error("Draft Data must ship progressive filters + 2027 top-5 column leaderboard without a search input");
+  throw new Error("Draft Data must ship progressive filters + 2027 top-5 column leaderboard without a search input or board-h");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
   || !html.includes(".pick-intel-board-yrs") || !html.includes("button.pick-intel-chip")
-  || !html.includes(".pick-intel-board-h")
+  || html.includes(".pick-intel-board-h")
   || html.includes("button.pick-intel-filter")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
-  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input)");
+  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input or board-h)");
 }
 if (!inline.includes('aria-label="search for picks"')
   || !inline.includes('aria-label="who has my picks"')

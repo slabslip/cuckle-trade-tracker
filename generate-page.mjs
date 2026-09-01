@@ -930,6 +930,19 @@ const html = `<!DOCTYPE html>
     .pick-intel-step-hint {
       margin: 0; color: var(--dim); font-size: 0.75rem; line-height: 1.35;
     }
+    .pick-intel-step-modes {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
+    }
+    button.pick-intel-step-mode {
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
+      color: var(--text); background: var(--bg); border: 1px solid var(--line);
+      border-radius: 8px; min-height: 34px; padding: 4px 10px;
+      cursor: pointer; touch-action: manipulation; flex: 1 1 8rem;
+      text-align: center; line-height: 1.25; text-wrap: balance;
+    }
+    button.pick-intel-step-mode:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
     .pick-intel-hint {
       margin: 0 0 8px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
     }
@@ -1767,11 +1780,12 @@ const html = `<!DOCTYPE html>
     let picks = null;
     // Draft Data filters (AND across groups). Empty round/year sets mean "all".
     // Progressive UI: idle shows the leaderboard + one Filter trigger; opening filters
-    // walks Round → Year → Held by one dropdown at a time (pickFilterStep).
+    // walks Round → Year → Team (+ mode) one dropdown at a time (pickFilterStep).
     let pickFilterRounds = {}; // { 1: true } when selected
     let pickFilterYears = {};  // { "2027": true } when selected
-    let pickFilterOwner = "";  // current holder seat name when filtering to one team
-    let pickFilterOwnerAny = false; // true when user explicitly chose "Anyone" on the holder step
+    let pickFilterOwner = "";  // team name on the owner step (before mode is chosen, or when active)
+    let pickFilterOwnerMode = null; // "held" | "out" | null — held = they own it; out = originated with them
+    let pickFilterOwnerAny = false; // true when user explicitly chose "Anyone" on the team step
     let pickFilterMineOut = false;
     let pickFilterMineHeld = false;
     let pickFilterOpen = false;
@@ -1786,7 +1800,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickIntelAnyoneChip20260901034500";
+    const DATA_V = "pickIntelTeamMode20260901040000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1994,7 +2008,8 @@ const html = `<!DOCTYPE html>
     const PICK_INTEL_BOARD_YEAR = "2027";
 
     function pickFiltersActive() {
-      return pickFilterMineOut || pickFilterMineHeld || !!pickFilterOwner || pickFilterOwnerAny
+      return pickFilterMineOut || pickFilterMineHeld || pickFilterOwnerAny
+        || (!!pickFilterOwner && !!pickFilterOwnerMode)
         || Object.keys(pickFilterRounds).some((k) => pickFilterRounds[k])
         || Object.keys(pickFilterYears).some((k) => pickFilterYears[k]);
     }
@@ -2003,6 +2018,7 @@ const html = `<!DOCTYPE html>
       pickFilterRounds = {};
       pickFilterYears = {};
       pickFilterOwner = "";
+      pickFilterOwnerMode = null;
       pickFilterOwnerAny = false;
       pickFilterMineOut = false;
       pickFilterMineHeld = false;
@@ -2040,11 +2056,20 @@ const html = `<!DOCTYPE html>
           + esc(y) + '" aria-label="Clear ' + esc(y) + ' filter">'
           + esc(y) + '<span class="x" aria-hidden="true">×</span></button>');
       }
-      if (pickFilterOwner || pickFilterOwnerAny) {
-        const ownerLab = pickFilterOwner || "Anyone";
+      if (pickFilterOwnerAny) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
-          + ' aria-label="Clear ' + esc(ownerLab) + ' filter">'
-          + esc(ownerLab) + '<span class="x" aria-hidden="true">×</span></button>');
+          + ' aria-label="Clear Anyone filter">Anyone'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      } else if (pickFilterOwner && pickFilterOwnerMode === "out") {
+        const lab = pickFilterOwner + "'s picks out";
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
+          + ' aria-label="Clear ' + esc(lab) + ' filter">'
+          + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
+      } else if (pickFilterOwner && pickFilterOwnerMode === "held") {
+        const lab = "held by " + pickFilterOwner;
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
+          + ' aria-label="Clear ' + esc(lab) + ' filter">'
+          + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (pickFilterMineOut) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
@@ -2066,8 +2091,8 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * One dropdown at a time. Round → Year → Held by. Choosing a value (including "Any")
-     * advances to the next step so the filter chrome stays a single control tall.
+     * One dropdown at a time. Round → Year → Team (+ mode chips). Choosing round/year
+     * advances; choosing Anyone on the team step finishes; choosing a team reveals mode chips.
      */
     function pickIntelStepPanel(seatNames) {
       if (!pickFilterOpen || !pickFilterStep) return "";
@@ -2092,18 +2117,35 @@ const html = `<!DOCTYPE html>
           + '<option value="">Any year</option>'
           + seasons.map((y) => '<option value="' + esc(y) + '">' + esc(y) + "</option>").join("")
           + "</select>"
-          + '<p class="pick-intel-step-hint">Pick a year — held by opens next.</p>'
+          + '<p class="pick-intel-step-hint">Pick a year — team opens next.</p>'
           + "</div>";
       }
-      // owner
-      return '<div class="pick-intel-step" role="group" aria-label="Filter by holder">'
-        + '<label class="pick-intel-step-lab" for="pick-held-by">Held by</label>'
-        + '<select id="pick-held-by" data-pick-owner="1" aria-label="Filter picks by current holder">'
-        + '<option value="__pick__" selected disabled>Choose holder…</option>'
-        + '<option value="">Anyone</option>'
-        + seatNames.map((name) => '<option value="' + esc(name) + '">' + esc(name) + "</option>").join("")
+      // team + optional mode (mirrors "who has my picks" / "whose picks do i have" for any seat)
+      const teamPending = pickFilterOwner && !pickFilterOwnerMode && !pickFilterOwnerAny;
+      const modeRow = teamPending
+        ? ('<div class="pick-intel-step-modes" role="group" aria-label="Team pick search mode">'
+          + '<button type="button" class="pick-intel-step-mode" data-pick-owner-mode="out"'
+          + ' aria-label="' + esc(pickFilterOwner + "'s picks out") + '">'
+          + esc("their picks out") + "</button>"
+          + '<button type="button" class="pick-intel-step-mode" data-pick-owner-mode="held"'
+          + ' aria-label="picks ' + esc(pickFilterOwner) + ' holds">'
+          + esc("picks they hold") + "</button>"
+          + "</div>")
+        : "";
+      const teamHint = teamPending
+        ? "Their picks out = who has their picks. Picks they hold = what they still own."
+        : "Choose a team, or Anyone to finish.";
+      return '<div class="pick-intel-step" role="group" aria-label="Filter by team">'
+        + '<label class="pick-intel-step-lab" for="pick-held-by">Team</label>'
+        + '<select id="pick-held-by" data-pick-owner="1" aria-label="Choose a team to filter picks">'
+        + '<option value="__pick__"' + (!pickFilterOwner && !pickFilterOwnerAny ? " selected" : "")
+        + ' disabled>Choose team…</option>'
+        + '<option value=""' + (pickFilterOwnerAny ? " selected" : "") + '>Anyone</option>'
+        + seatNames.map((name) => '<option value="' + esc(name) + '"'
+          + (pickFilterOwner === name ? " selected" : "") + ">" + esc(name) + "</option>").join("")
         + "</select>"
-        + '<p class="pick-intel-step-hint">Choose a holder, or Anyone to finish.</p>'
+        + modeRow
+        + '<p class="pick-intel-step-hint">' + esc(teamHint) + "</p>"
         + "</div>";
     }
 
@@ -2127,7 +2169,10 @@ const html = `<!DOCTYPE html>
         if (yearOn.length && !yearOn.includes(parts.season)) return false;
         const owner = pickOwnerName(row.entry);
         const origin = pickOriginName(row.entry);
-        if (pickFilterOwner && owner !== pickFilterOwner) return false;
+        if (pickFilterOwner && pickFilterOwnerMode === "held" && owner !== pickFilterOwner) return false;
+        if (pickFilterOwner && pickFilterOwnerMode === "out") {
+          if (origin !== pickFilterOwner || !owner || owner === pickFilterOwner) return false;
+        }
         if (pickFilterMineOut) {
           if (!seat || origin !== seat || !owner || owner === seat) return false;
         }
@@ -2219,7 +2264,7 @@ const html = `<!DOCTYPE html>
     /**
      * League-home Draft Data: progressive filters for still-available draft picks.
      * Idle = compact leaderboard + three equal chips (search / who has mine / whose I hold).
-     * Opening search reveals one dropdown at a time: Round → Year → Held by.
+     * Opening search reveals one dropdown at a time: Round → Year → Team (+ mode).
      */
     function pickIntel() {
       ensurePicks();
@@ -2248,6 +2293,12 @@ const html = `<!DOCTYPE html>
         } else if (pickFilterMineHeld && seat) {
           hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
             + " " + seat + " still holds";
+        } else if (pickFilterOwner && pickFilterOwnerMode === "out") {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " that started as " + pickFilterOwner + "'s and now sit elsewhere";
+        } else if (pickFilterOwner && pickFilterOwnerMode === "held") {
+          hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " " + pickFilterOwner + " still holds";
         }
         body = rows.length
           ? ('<p class="pick-intel-hint">' + esc(hint) + ".</p>"
@@ -7607,9 +7658,21 @@ const html = `<!DOCTYPE html>
       const pickClearOwner = e.target.closest("[data-pick-clear-owner]");
       if (pickClearOwner) {
         pickFilterOwner = "";
+        pickFilterOwnerMode = null;
         pickFilterOwnerAny = false;
         pickFilterOpen = true;
         pickFilterStep = "owner";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickOwnerMode = e.target.closest("[data-pick-owner-mode]");
+      if (pickOwnerMode) {
+        const mode = pickOwnerMode.dataset.pickOwnerMode;
+        if (mode !== "out" && mode !== "held") return;
+        pickFilterOwnerMode = mode;
+        pickFilterOpen = false;
+        pickFilterStep = null;
         pickIntelOpen = null;
         render();
         return;
@@ -7989,10 +8052,19 @@ const html = `<!DOCTYPE html>
       if (pickOwner) {
         const v = pickOwner.value;
         if (v === "__pick__") return;
-        pickFilterOwner = v || "";
-        pickFilterOwnerAny = !v;
-        pickFilterOpen = true;
-        pickFilterStep = null; // wizard complete — summary chips remain
+        if (!v) {
+          pickFilterOwner = "";
+          pickFilterOwnerMode = null;
+          pickFilterOwnerAny = true;
+          pickFilterOpen = false;
+          pickFilterStep = null;
+        } else {
+          pickFilterOwner = v;
+          pickFilterOwnerAny = false;
+          pickFilterOwnerMode = null;
+          pickFilterOpen = true;
+          pickFilterStep = "owner";
+        }
         pickIntelOpen = null;
         render();
         return;
@@ -9222,6 +9294,8 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes('data-pick-step-year') || !inline.includes('data-pick-filter-open="1"')
   || !inline.includes('data-pick-owner="1"') || !inline.includes("function filteredStillPicks(")
   || !inline.includes("function clearPickFilters(") || !inline.includes("pickFilterOwnerAny")
+  || !inline.includes("pickFilterOwnerMode") || !inline.includes('data-pick-owner-mode="out"')
+  || !inline.includes('data-pick-owner-mode="held"') || !inline.includes("pick-intel-step-mode")
   || !inline.includes('data-pick-mine-held="1"') || !inline.includes('data-pick-clear-owner="1"')
   || !inline.includes("function pickLeaders(") || !inline.includes("function pickIntelBoard(")
   || !inline.includes("function pickLeadersStack(") || !inline.includes("function pickIntelStepPanel(")
@@ -9243,6 +9317,7 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
+  || !html.includes(".pick-intel-step-modes") || !html.includes("button.pick-intel-step-mode")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
   || !html.includes(".pick-intel-board-yrs") || !html.includes("button.pick-intel-chip")
   || html.includes(".pick-intel-board-h")

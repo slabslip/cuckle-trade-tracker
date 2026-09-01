@@ -1299,7 +1299,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "latestTradeSleeperCard20260831232000";
+    const DATA_V = "homeNewsTradeRestore20260901001500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2511,10 +2511,17 @@ const html = `<!DOCTYPE html>
      */
     function renderLeagueHome() {
       // News & Alerts hero rotates on the chip; the full feed is its own screen (view=news).
-      return dayAlert()
-        + homeChips()
-        + leagueInProgress()
-        + dataSetPanel();
+      // Each block is isolated so a throw in Latest trade / week strip cannot blank the News Feed
+      // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
+      let hero = "";
+      let chips = "";
+      let progress = "";
+      let sets = "";
+      try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
+      try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
+      try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
+      try { sets = dataSetPanel(); } catch (err) { console.error(err); sets = ""; }
+      return hero + chips + progress + sets;
     }
 
     function renderNews() {
@@ -3907,7 +3914,13 @@ const html = `<!DOCTYPE html>
       syncUrl();
       await loadMembers();
       voteLoad().catch((err) => console.error(err));
-      loadNewsDeleted().catch((err) => console.error(err));
+      // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
+      let designHome = false;
+      try {
+        designHome = sessionStorage.getItem("cuckle.design.league_home") === "1"
+          || (new URLSearchParams(location.search).get("design") || "") === "league-home";
+      } catch (err) { /* private mode */ }
+      if (!designHome) loadNewsDeleted().catch((err) => console.error(err));
     }
 
     // Phase 1: voter identity is the claimed seat only. Legacy device ids remain in local
@@ -4281,6 +4294,9 @@ const html = `<!DOCTYPE html>
       if (!root) return;
       const slides = [...root.querySelectorAll("[data-news-slide]")];
       if (!slides.length) return;
+      // Guard against NaN/out-of-range idx (rapid remounts during bag/matchup loads) so we never
+      // leave every slide hidden — that reads as an empty News Feed chip.
+      if (!Number.isFinite(newsHeroIdx)) newsHeroIdx = 0;
       const prevIdx = slides.findIndex((el) => !el.hidden && !el.classList.contains("is-exit"));
       newsHeroIdx = ((newsHeroIdx % slides.length) + slides.length) % slides.length;
       const next = slides[newsHeroIdx];
@@ -4292,6 +4308,11 @@ const html = `<!DOCTYPE html>
           el.hidden = i !== newsHeroIdx;
           el.classList.remove("is-exit", "is-enter", "is-in");
         });
+        // Belt-and-suspenders: if somehow none are visible, force slide 0.
+        if (!slides.some((el) => !el.hidden)) {
+          newsHeroIdx = 0;
+          slides[0].hidden = false;
+        }
         return;
       }
       const prev = slides[prevIdx];
@@ -4709,15 +4730,30 @@ const html = `<!DOCTYPE html>
       const latest = latestTradeSide();
       let tradeBox = "";
       if (latest) {
-        // Sleeper-style completed-trade card — clickable Latest trade control.
-        tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
-          + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-          + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-          + '<div class="day-alert-h">Latest trade</div>'
-          + latestTradeCardHtml(latest)
-          + "</button>";
+        try {
+          // Sleeper-style completed-trade card — clickable Latest trade control.
+          tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + '<div class="day-alert-h">Latest trade</div>'
+            + latestTradeCardHtml(latest)
+            + "</button>";
+        } catch (err) {
+          // Bag/format bugs must not erase the rest of league home (News Feed, week strip).
+          console.error(err);
+          tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
+            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+            + '<div class="day-alert-h">Latest trade</div>'
+            + '<div class="lh-trade-card"><div class="lh-trade-side">'
+            + '<div class="lh-trade-handle">@' + esc(latest.name) + " vs @" + esc(latest.other) + "</div>"
+            + '<div class="lh-trade-assets"><div class="lh-trade-asset"><div class="lh-trade-lab"><b>'
+            + esc(latest.headline || "Open trade") + "</b></div></div></div></div></div>"
+            + "</button>";
+        }
       }
-      const strip = matchupStripHtml();
+      let strip = "";
+      try { strip = matchupStripHtml(); } catch (err) { console.error(err); strip = ""; }
       if (!tradeBox && !strip) return "";
       // No section heading above Latest trade + week strip.
       return '<section class="lh-section">'

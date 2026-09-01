@@ -2901,14 +2901,14 @@ const html = `<!DOCTYPE html>
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
-    /** Idle quick-view under home chips: All / Poach (other teams' cuffs) / RB. */
+    /** Idle quick-view under home chips: All / Poachers (other teams' cuffs) / RB. */
     function cuffsBoard() {
       const cols = [
         { lab: "All", kind: "total", aria: "Filter to all held cuffs" },
-        { lab: "Poach", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
+        { lab: "Poachers", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
         { lab: "RB", kind: "rb", aria: "Filter to RB cuffs held" },
       ];
-      const aria = "Cuff holders: all, poached other-team cuffs, and RB cuffs";
+      const aria = "Cuff holders: all, poachers, and RB cuffs";
       const headBtns = cols.map((c) =>
         '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
         + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
@@ -3011,7 +3011,7 @@ const html = `<!DOCTYPE html>
       }
       if (cuffFilterOther) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-other="1"'
-          + ' aria-label="Clear poached cuffs filter">poach'
+          + ' aria-label="Clear poachers filter">poachers'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterQ.trim()) {
@@ -3140,7 +3140,7 @@ const html = `<!DOCTYPE html>
         if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
-        else if (cuffFilterOther) hint = rows.length + " poached cuff" + (rows.length === 1 ? "" : "s") + " (other teams)" + (rows.length === 1 ? "" : "s") + " (other teams)";
+        else if (cuffFilterOther) hint = rows.length + " poached cuff" + (rows.length === 1 ? "" : "s") + " (other teams)";
         else if (cuffFilterHeld && cuffFilterPos) hint = rows.length + " held " + cuffFilterPos + " cuff" + (rows.length === 1 ? "" : "s");
         else if (cuffFilterHeld) hint = rows.length + " held cuff" + (rows.length === 1 ? "" : "s");
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
@@ -10483,9 +10483,10 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   if (!inline.includes("function cuffLeaders(") || !inline.includes("function cuffsBoard(")
     || !inline.includes('data-cuffs-board="') || !inline.includes("cuffFilterHeld")
     || !inline.includes("cuffFilterOther") || !inline.includes('kind: "other"')
-    || !inline.includes('lab: "Poach"')
-    || inline.includes('kind: "self"') || inline.includes('lab: "Self"') || inline.includes('lab: "Other"')) {
-    throw new Error("Cuffs home must show All / Poach / RB holder leaderboard (poachers, not self/Other)");
+    || !inline.includes('lab: "Poachers"')
+    || inline.includes('kind: "self"') || inline.includes('lab: "Self"') || inline.includes('lab: "Other"')
+    || inline.includes('{ lab: "Poach",')) {
+    throw new Error("Cuffs home must show All / Poachers / RB holder leaderboard (poachers, not self/Other/Poach)");
   }
   if (!inline.includes("cuffsHtml = cuffsHome()")) {
     throw new Error("renderLeagueHome must mount cuffsHome, not cuffsPanel");

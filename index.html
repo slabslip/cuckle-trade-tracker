@@ -2896,14 +2896,14 @@
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
-    /** Idle quick-view under home chips: All / Poach (other teams' cuffs) / RB. */
+    /** Idle quick-view under home chips: All / Poachers (other teams' cuffs) / RB. */
     function cuffsBoard() {
       const cols = [
         { lab: "All", kind: "total", aria: "Filter to all held cuffs" },
-        { lab: "Poach", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
+        { lab: "Poachers", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
         { lab: "RB", kind: "rb", aria: "Filter to RB cuffs held" },
       ];
-      const aria = "Cuff holders: all, poached other-team cuffs, and RB cuffs";
+      const aria = "Cuff holders: all, poachers, and RB cuffs";
       const headBtns = cols.map((c) =>
         '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
         + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
@@ -3006,7 +3006,7 @@
       }
       if (cuffFilterOther) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-other="1"'
-          + ' aria-label="Clear poached cuffs filter">poach'
+          + ' aria-label="Clear poachers filter">poachers'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterQ.trim()) {
@@ -3135,7 +3135,7 @@
         if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
-        else if (cuffFilterOther) hint = rows.length + " poached cuff" + (rows.length === 1 ? "" : "s") + " (other teams)" + (rows.length === 1 ? "" : "s") + " (other teams)";
+        else if (cuffFilterOther) hint = rows.length + " poached cuff" + (rows.length === 1 ? "" : "s") + " (other teams)";
         else if (cuffFilterHeld && cuffFilterPos) hint = rows.length + " held " + cuffFilterPos + " cuff" + (rows.length === 1 ? "" : "s");
         else if (cuffFilterHeld) hint = rows.length + " held cuff" + (rows.length === 1 ? "" : "s");
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
@@ -4513,8 +4513,7 @@
         + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
         + (ctx.filtered ? '<span class="dot"></span>' : "")
         + "</button>"
-        + '<div class="caption">' + esc(filterHint) + "</div>"
-        + chipLensHtml({ inline: true });
+        + '<div class="caption">' + esc(filterHint) + "</div>";
       const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
         '<label data-tape-year="' + esc(row[0]) + '"><input type="radio" name="tapeYear" value="'
         + esc(row[0]) + '"' + (tapeYear === row[0] ? " checked" : "") + "> "

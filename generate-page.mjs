@@ -982,10 +982,10 @@ const html = `<!DOCTYPE html>
     .pick-intel-ico.is-picks svg { width: 34px; height: 28px; }
     /* Cuffs glyph: slightly larger silver handcuffs so they read at a glance. */
     .pick-intel-ico.is-cuffs {
-      width: 34px; color: #c5c9d0;
-      filter: drop-shadow(0 0 0.5px rgba(255,255,255,0.35));
+      width: 38px; color: #c5c9d0;
+      filter: drop-shadow(0 0 0.6px rgba(255,255,255,0.4));
     }
-    .pick-intel-ico.is-cuffs svg { width: 28px; height: 28px; }
+    .pick-intel-ico.is-cuffs svg { width: 30px; height: 28px; }
     .pick-intel-chips {
       flex: 1 1 auto; min-width: 0;
       display: flex; flex-wrap: nowrap; gap: 6px;
@@ -2187,7 +2187,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "picksStackPeek20260901160500";
+    const DATA_V = "cuffsRefIconLabels20260901161000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2885,30 +2885,32 @@ const html = `<!DOCTYPE html>
 
 function cuffsBarIcon() {
       return '<span class="pick-intel-ico is-cuffs" aria-hidden="true" title="Cuffs">'
-        + '<svg viewBox="0 0 32 32" width="28" height="28" focusable="false">'
+        + '<svg viewBox="0 0 36 32" width="30" height="28" focusable="false">'
         + '<defs>'
-        + '<linearGradient id="cuffSteel" x1="0" y1="0" x2="1" y2="1">'
-        + '<stop offset="0%" stop-color="#f2f4f7"/>'
-        + '<stop offset="45%" stop-color="#c8ced6"/>'
-        + '<stop offset="100%" stop-color="#8e96a3"/>'
+        + '<linearGradient id="cuffSteel" x1="0" y1="0" x2="0" y2="1">'
+        + '<stop offset="0%" stop-color="#f4f6f8"/>'
+        + '<stop offset="40%" stop-color="#c9cfd7"/>'
+        + '<stop offset="100%" stop-color="#8a929e"/>'
+        + "</linearGradient>"
+        + '<linearGradient id="cuffSteelEdge" x1="0" y1="0" x2="1" y2="1">'
+        + '<stop offset="0%" stop-color="#e8ecf0"/>'
+        + '<stop offset="100%" stop-color="#6f7784"/>'
         + "</linearGradient>"
         + "</defs>"
-        + '<circle cx="10" cy="16" r="7.2" fill="none" stroke="url(#cuffSteel)" stroke-width="2.4"/>'
-        + '<circle cx="10" cy="16" r="4.35" fill="none" stroke="url(#cuffSteel)" stroke-width="1.55"/>'
-        + '<circle cx="22" cy="16" r="7.2" fill="none" stroke="url(#cuffSteel)" stroke-width="2.4"/>'
-        + '<circle cx="22" cy="16" r="4.35" fill="none" stroke="url(#cuffSteel)" stroke-width="1.55"/>'
-        + '<rect x="14.15" y="12.35" width="3.7" height="7.3" rx="1.1" fill="url(#cuffSteel)" stroke="#6e7682" stroke-width="0.6"/>'
-        + '<circle cx="16" cy="14.2" r="0.85" fill="#5c6570"/>'
-        + '<circle cx="16" cy="17.8" r="0.85" fill="#5c6570"/>'
-        + '<circle cx="10" cy="15.35" r="1.05" fill="#4a515a"/>'
-        + '<rect x="9.45" y="15.9" width="1.1" height="2.1" rx="0.45" fill="#4a515a"/>'
-        + '<circle cx="22" cy="15.35" r="1.05" fill="#4a515a"/>'
-        + '<rect x="21.45" y="15.9" width="1.1" height="2.1" rx="0.45" fill="#4a515a"/>'
-        + '<path d="M7.6 9.4h4.8M19.6 9.4h4.8" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" stroke-linecap="round"/>'
+        + '<circle cx="9.2" cy="10.6" r="6.1" fill="none" stroke="url(#cuffSteel)" stroke-width="2.35"/>'
+        + '<rect x="5.1" y="14.2" width="8.2" height="6.4" rx="1.5" fill="url(#cuffSteel)" stroke="url(#cuffSteelEdge)" stroke-width="0.7"/>'
+        + '<circle cx="9.2" cy="16.4" r="0.95" fill="#3d4450"/>'
+        + '<rect x="8.7" y="16.9" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
+        + '<circle cx="26.8" cy="20.2" r="6.1" fill="none" stroke="url(#cuffSteel)" stroke-width="2.35"/>'
+        + '<rect x="22.7" y="11.4" width="8.2" height="6.4" rx="1.5" fill="url(#cuffSteel)" stroke="url(#cuffSteelEdge)" stroke-width="0.7"/>'
+        + '<circle cx="26.8" cy="13.6" r="0.95" fill="#3d4450"/>'
+        + '<rect x="26.3" y="14.1" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
+        + '<ellipse cx="15.6" cy="15.2" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 15.6 15.2)"/>'
+        + '<ellipse cx="20.4" cy="14.4" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 20.4 14.4)"/>'
         + "</svg></span>";
     }
 
-    function openDraftDataPage(mode, preset) {
+function openDraftDataPage(mode, preset) {
       clearPickFilters();
       if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
         pickFilterRounds = {};
@@ -3142,7 +3144,7 @@ function cuffsBarIcon() {
       }
       if (cuffFilterFa) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-fa="1"'
-          + ' aria-label="Clear cuff available filter">cuff available'
+          + ' aria-label="Clear available filter">Available'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterHeld) {
@@ -3247,12 +3249,12 @@ function cuffsBarIcon() {
         + cuffsBarIcon()
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
-        + ' aria-label="search cuffs">search cuffs</button>'
+        + ' aria-label="Search cuffs">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="my cuffs">my cuffs</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
-        + ' aria-label="cuff available">cuff available</button>'
+        + ' aria-label="Available cuffs">Available</button>'
         + "</div></div>"
         + body
         + "</section>";
@@ -3281,7 +3283,7 @@ function cuffsBarIcon() {
       } else if (!cuffs || !(cuffs.rows || []).length) {
         body = '<p class="caption">Cuff board is not available for this league yet.</p>';
       } else if (!active) {
-        body = '<p class="caption">Search a team or position, or tap my cuffs / cuff available.</p>';
+        body = '<p class="caption">Search a team or position, or tap my cuffs / Available.</p>';
       } else if (!rows.length) {
         body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
@@ -3306,8 +3308,8 @@ function cuffsBarIcon() {
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
-        + ' aria-label="search cuffs">'
-        + (cuffFilterOpen ? "Filtering…" : "search cuffs")
+        + ' aria-label="Search cuffs">'
+        + (cuffFilterOpen ? "Filtering…" : "Search")
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (mineOn ? " on" : "") + '"'
         + ' data-cuff-mine="1"'
@@ -3316,7 +3318,7 @@ function cuffsBarIcon() {
         + ' aria-label="my cuffs">my cuffs</button>'
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
         + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
-        + ' aria-label="cuff available">cuff available</button>'
+        + ' aria-label="Available cuffs">Available</button>'
         + "</div></div>"
         + cuffFilterSummary()
         + cuffFilterPanel(seatNames)
@@ -9044,7 +9046,7 @@ function cuffsBarIcon() {
       }
       const cuffFa = e.target.closest("[data-cuff-fa]");
       if (cuffFa) {
-        // Exclusive mode: cuff available alone — starters whose NFL cuff is unrostered.
+        // Exclusive mode: Available alone — starters whose NFL cuff is unrostered.
         if (cuffFilterFa) {
           resetCuffFilters();
         } else {
@@ -10668,7 +10670,7 @@ if (!inline.includes("function openDraftDataPage(") || !inline.includes("functio
     || !inline.includes("function filteredCuffRows(") || !inline.includes("cuffs.json")
     || !inline.includes("clearCuffFilters(") || !inline.includes("function resetCuffFilters(")
     || !inline.includes("resetCuffFilters()")
-    || !inline.includes("Exclusive mode: cuff available alone")) {
+    || !inline.includes("Exclusive mode: Available alone")) {
     throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
   }
   if ((inline.match(/<h2 class="pick-intel-h">Draft Data<\/h2>/g) || []).length

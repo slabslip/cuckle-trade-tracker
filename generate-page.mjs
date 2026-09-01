@@ -751,8 +751,15 @@ const html = `<!DOCTYPE html>
     .news-hero-slide b {
       display: block; font-weight: 650; line-height: 1.3; margin: 0 0 4px;
     }
+    .news-hero-who {
+      display: block; font-size: 0.75rem; font-weight: 650; line-height: 1.3;
+      color: #e0b44c; margin: 0 0 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .news-hero-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
+    .news-hero-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
     .news-hero-slide span {
-      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
       overflow: hidden; color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
     }
     .news-hero-live {
@@ -1376,7 +1383,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeSimple20260901011400";
+    const DATA_V = "newsSeatTag20260901012000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4484,7 +4491,7 @@ const html = `<!DOCTYPE html>
     }
 
     function newsHeroLine(it) {
-      if (!it) return { cat: "News", line: "Nothing shared yet." };
+      if (!it) return { cat: "News", line: "Nothing shared yet.", who: "" };
       let cat = NEWS_CATS[it.category] || "News";
       // Prefer tweet_handle; fall back to source_label when it is already an @handle.
       let handle = String(it.tweet_handle || "").replace(/^@/, "").trim();
@@ -4495,8 +4502,15 @@ const html = `<!DOCTYPE html>
       if (handle && /^[A-Za-z0-9_]{1,15}$/.test(handle)) {
         cat = cat + " · @" + handle;
       }
+      // Fantasy seats that roster the player this item is about (same as full News Feed tags).
+      const whoNames = (Array.isArray(it.managers) && it.managers.length)
+        ? it.managers.filter(Boolean)
+        : (it.manager ? [it.manager] : []);
+      const who = whoNames.length
+        ? whoNames.map((n) => seatLabel(n)).join(" · ")
+        : "";
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
-      return { cat: cat, line: line };
+      return { cat: cat, line: line, who: who };
     }
 
     /**
@@ -4518,11 +4532,12 @@ const html = `<!DOCTYPE html>
       }
       const slides = slidesSrc.map((it, i) => {
         const bit = it && it._empty
-          ? { cat: "News", line: it.league_line }
+          ? { cat: "News", line: it.league_line, who: "" }
           : newsHeroLine(it);
         return '<div class="news-hero-slide" data-news-slide="' + i + '"'
           + (i === 0 ? "" : " hidden") + '>'
           + "<b>" + esc(bit.cat) + "</b>"
+          + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
           + "<span>" + esc(bit.line) + "</span>"
           + "</div>";
       }).join("");
@@ -6768,11 +6783,18 @@ if (html.includes("ellipse at 88%") || html.includes("lh-hero-visual")) {
 if (!html.includes("button.news-hero-body") || !html.includes(".news-hero-slide {\n      display: block; width: 100%; max-width: none")) {
   throw new Error("News Feed ticker viewport must span full chip width (max-width: none)");
 }
-if (!html.includes("min-height: 118px") || !html.includes("-webkit-line-clamp: 4")) {
-  throw new Error("News Feed ticker must keep a taller body (min-height 118px) and ~4-line clamp");
+if (!html.includes("min-height: 118px") || !html.includes("-webkit-line-clamp: 3")) {
+  throw new Error("News Feed ticker must keep a taller body (min-height 118px) and ~3-line clamp with seat tags");
 }
 if (!inline.includes("function newsHeroLine(") || !inline.includes("it.tweet_handle")) {
   throw new Error("newsHeroLine must append tweet_handle (@author) on the From X source line");
+}
+if (!inline.includes("it.managers") || !inline.includes("news-hero-who")
+    || !inline.includes('whoNames.map((n) => seatLabel(n))')) {
+  throw new Error("newsHeroLine must tag related fantasy seat(s) via managers/manager on the hero");
+}
+if (!html.includes(".news-hero-who")) {
+  throw new Error("News Feed hero must style related-seat tags (.news-hero-who)");
 }
 // League dash must not mount the old ← Leagues · name · username caption under the brand
 // (p.caption margin:0 0 8px as the first child of #app). Removed; keep the forbid tight.

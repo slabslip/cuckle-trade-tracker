@@ -2098,7 +2098,6 @@ const html = `<!DOCTYPE html>
     let voteToast = null;
     // Transaction id when a data-vote-open control opened the vote sheet overlay.
     let voteSheetTx = null;
-    voteEditTx = null;
     // Trade id when the voter re-opens options on an already-cast ballot.
     let voteEditTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.

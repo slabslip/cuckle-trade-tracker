@@ -8383,14 +8383,11 @@
     }
 
     /**
-     * The screen-local filter row the clock control used to share: the year filter on the Trades
-     * tab and the round filter on Drafts. One emitter, because both were typing the same two
-     * divs and the clock's departure left them identical.
+     * Screen-local filter row (Trades year/team/sort, Drafts rounds, league tape filters).
+     * No score clock here — each trade chip already mounts its own chipLensHtml().
      */
     function filterRow(left) {
-      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div>"
-        + chipLensHtml({ inline: true })
-        + "</div>";
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
     }
 
     function renderDrafts() {

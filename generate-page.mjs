@@ -2194,7 +2194,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "seatTradeFilterPanel20260901175500";
+    const DATA_V = "dropFilterRowLens20260901180700";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8388,14 +8388,11 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * The screen-local filter row the clock control used to share: the year filter on the Trades
-     * tab and the round filter on Drafts. One emitter, because both were typing the same two
-     * divs and the clock's departure left them identical.
+     * Screen-local filter row (Trades year/team/sort, Drafts rounds, league tape filters).
+     * No score clock here — each trade chip already mounts its own chipLensHtml().
      */
     function filterRow(left) {
-      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div>"
-        + chipLensHtml({ inline: true })
-        + "</div>";
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
     }
 
     function renderDrafts() {
@@ -10558,7 +10555,15 @@ if (!inline.includes("function chipLensHtml(") || !inline.includes("function pos
   throw new Error("chipLensHtml + positionScoreAs must ship for local score windows");
 }
 if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inline: true })')) {
-  throw new Error("value chips and filter rows must mount chipLensHtml");
+  throw new Error("value chips and home bars must mount chipLensHtml");
+}
+{
+  const at = inline.indexOf("function filterRow(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 400 : stop);
+  if (fn.includes("chipLensHtml(")) {
+    throw new Error("filterRow must not mount chipLensHtml — each trade chip already has a score clock");
+  }
 }
 if (!inline.includes("function defaultLensForDate(")
   || !inline.includes('seasonLived(date, 2, today) ? "y2" : "all"')

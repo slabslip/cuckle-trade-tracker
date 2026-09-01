@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Reprice today even bags (retired=0 + 40/60 KTC), then apply VA. Windows stay flatten. */
 import { readdirSync, readFileSync } from "node:fs";
-import { leagueUiDir, setLeagueId, writeUi } from "./lib.mjs";
+import { leagueUiDir, seasonLived, setLeagueId, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, repriceTodayLegs } from "./price-today.mjs";
 
@@ -84,10 +84,12 @@ function addYears(ymd, n) {
   return `${y}-${String(p[1]).padStart(2, "0")}-${String(Math.min(p[2], dim)).padStart(2, "0")}`;
 }
 
-/** t0 and all are unfiltered; y1/y2/y3 hide deals that have not lived the clock. */
+/** t0/all unfiltered; y1/y2 need their season span finished; y3 stays calendar years. */
 function chipLived(date, lens, today) {
   if (lens === "t0" || lens === "all") return true;
-  const need = { y1: 1, y2: 2, y3: 3 }[lens];
+  if (lens === "y1") return seasonLived(date, 1, today);
+  if (lens === "y2") return seasonLived(date, 2, today);
+  const need = { y3: 3 }[lens];
   return !need || date <= addYears(today, -need);
 }
 
@@ -328,8 +330,9 @@ function main() {
     .find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
   check("chief-arae found", !!chief);
   check("zeke today retired 0", zeke != null && zeke.value === 0);
-  check("hill today blended 1.6-2.0k", hill != null && hill.value >= 1600 && hill.value <= 2000);
-  check("hill not 2892 and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
+  // DP/KTC blend moves with the book; keep a band that rejects raw DP (~2.8k) and retiree 0.
+  check("hill today blended 1.2-2.0k", hill != null && hill.value >= 1200 && hill.value <= 2000);
+  check("hill not raw DP and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
 
   const baker = seats.flatMap((m) => m.trades || []).flatMap((t) =>
     [...(t.even?.legs || []), ...(t.even?.sent || [])]

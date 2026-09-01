@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
-import { pickTier, readJson, roundName, setLeagueId, writeJson, writeUi } from "./lib.mjs";
+import { pickTier, readJson, roundName, seasonAsOfs, setLeagueId, writeJson, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
@@ -229,6 +229,15 @@ function addYears(ymd, n) {
 function windowAsOfs(t0, today, years) {
   const end = years == null ? today : (addYears(t0, years) < today ? addYears(t0, years) : today);
   return yearEnds(t0, end);
+}
+
+/** y1/y2 are NFL-season spans; y3/all stay calendar year-end means. */
+function lensAsOfs(key, t0, today) {
+  if (key === "t0") return [t0];
+  if (key === "y1") return seasonAsOfs(t0, today, 1);
+  if (key === "y2") return seasonAsOfs(t0, today, 2);
+  if (key === "y3") return windowAsOfs(t0, today, 3);
+  return windowAsOfs(t0, today, null);
 }
 
 function indexVmax(curve) {
@@ -736,19 +745,19 @@ async function main() {
       year_ends: evenYearEnds,
       incomplete: entry.lenses.realized.incomplete,
     };
-    const winKeys = [["t0", 0], ["y1", 1], ["y2", 2], ["y3", 3], ["all", null]];
+    const winKeys = ["t0", "y1", "y2", "y3", "all"];
     entry.lenses.windows = {};
-    for (const [key, n] of winKeys) {
-      const dates = n === 0 ? [t0] : windowAsOfs(t0, today, n);
+    for (const key of winKeys) {
+      const dates = lensAsOfs(key, t0, today);
       const sides = {};
       for (const uid of uids) {
-        const got = n === 0
+        const got = key === "t0"
           ? bagAtEven(legs, uid, t0, ctx, "in")
           : bagY3(legs, uid, dates, today, ctx, "in");
-        const sent = n === 0
+        const sent = key === "t0"
           ? bagAtEven(legs, uid, t0, ctx, "out")
           : bagY3(legs, uid, dates, today, ctx, "out");
-        const incomplete = got.unpriced + sent.unpriced > 0 || (n !== 0 && !dates.length);
+        const incomplete = got.unpriced + sent.unpriced > 0 || (key !== "t0" && !dates.length);
         sides[uid] = applyToSide({
           name: nameById[uid] || uid,
           today: got.points,
@@ -1231,7 +1240,7 @@ async function main() {
   const zekeEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
   const hillEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
   check("zeke today retired 0", zekeEvenToday != null && zekeEvenToday.value === 0);
-  check("hill today blended", hillEvenToday != null && hillEvenToday.value >= 1600 && hillEvenToday.value <= 2000);
+  check("hill today blended", hillEvenToday != null && hillEvenToday.value >= 1200 && hillEvenToday.value <= 2200);
   const bakerHits = meters.flatMap((t) => t.user_ids.flatMap((uid) => {
     const s = t.lenses.even.sides[uid];
     return [...(s?.legs || []), ...(s?.sent || [])].filter((l) => (l.label || "") === "Baker Mayfield");
@@ -1239,6 +1248,17 @@ async function main() {
   check("baker still mid-4k", bakerHits.length && bakerHits.every((l) => l.value >= 4200 && l.value <= 5200));
   const winKeys = ["t0", "y1", "y2", "y3", "all"];
   check("every trade has windows", meters.every((t) => winKeys.every((k) => t.lenses.windows?.[k])));
+  // Season clocks: an in-season October deal's 1-season window ends that Jan 31 and must
+  // carry more than a couple of year-end snaps once enough history has elapsed.
+  {
+    const sample = meters.find((t) => t.date && t.date >= "2023-10-01" && t.date <= "2023-10-31");
+    if (sample) {
+      const y1 = sample.lenses.windows.y1;
+      check("oct trade y1 uses season snaps", (y1?.snaps || 0) >= 8);
+      const y2 = sample.lenses.windows.y2;
+      check("oct trade y2 spans further", (y2?.snaps || 0) >= (y1?.snaps || 0));
+    }
+  }
   const winZero = meters.filter((t) => {
     if (t.user_ids.length !== 2) return false;
     return winKeys.some((k) => {

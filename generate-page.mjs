@@ -2197,7 +2197,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "lensAgeDefault20260901170000";
+    const DATA_V = "seasonTradeClock20260901154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2225,8 +2225,8 @@ const html = `<!DOCTYPE html>
     let dsOpen = false;
     const WINDOWS = [
       ["t0", "At trade", "Who won on accept day. Picks still picks."],
-      ["y1", "First 1 year", "Who won after 1 year. Hides younger deals."],
-      ["y2", "First 2 years", "Who won after 2 years. Hides younger deals."],
+      ["y1", "1 season", "Avg value through the rest of this season — or the next season if the deal was in the offseason. Hides unfinished spans."],
+      ["y2", "2 seasons", "Rest of this season plus the next — or the next two from the offseason. Hides unfinished spans."],
       ["y3", "First 3 years", "Who won after 3 years. Hides younger deals."],
       ["all", "Since trade", "Who is winning from accept through today."],
     ];
@@ -3903,20 +3903,64 @@ const html = `<!DOCTYPE html>
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
     }
 
+    function addDays(ymd, n) {
+      const p = (ymd || "").split("-").map(Number);
+      if (p.length < 3) return ymd;
+      const dt = new Date(Date.UTC(p[0], p[1] - 1, p[2] + n));
+      return dt.toISOString().slice(0, 10);
+    }
+
+    const NFL_KICKOFF = {
+      2019: "2019-09-05", 2020: "2020-09-10", 2021: "2021-09-09", 2022: "2022-09-08",
+      2023: "2023-09-07", 2024: "2024-09-05", 2025: "2025-09-04", 2026: "2026-09-10",
+    };
+
+    function nflKickoff(seasonYear) {
+      const y = Number(seasonYear);
+      return NFL_KICKOFF[y] || (y + "-09-08");
+    }
+
+    function nflSeasonEnd(seasonYear) {
+      return (Number(seasonYear) + 1) + "-01-31";
+    }
+
+    function nflSeasonContext(date) {
+      const y = Number(String(date || "").slice(0, 4));
+      if (!y) return { season: null, phase: "offseason" };
+      if (date <= nflSeasonEnd(y - 1)) return { season: y - 1, phase: "in_season" };
+      if (date < nflKickoff(y)) return { season: y, phase: "offseason" };
+      if (date <= nflSeasonEnd(y)) return { season: y, phase: "in_season" };
+      return { season: y + 1, phase: "offseason" };
+    }
+
+    function seasonWindowEnd(date, seasonCount) {
+      const n = Math.max(1, Number(seasonCount) || 1);
+      const ctx = nflSeasonContext(date);
+      if (ctx.season == null) return date;
+      return nflSeasonEnd(ctx.season + n - 1);
+    }
+
+    function seasonLived(date, seasonCount, today) {
+      if (!date || !today) return false;
+      return today >= seasonWindowEnd(date, seasonCount);
+    }
+
     /**
-     * Default score clock for a trade's age: First 2 years once the deal is older than
-     * two years; to-date (Since trade) while it is still younger than that.
+     * Default score clock by age: 2-season span once that window is complete;
+     * to-date (Since trade) while the deal is still inside its second season.
      */
     function defaultLensForDate(date) {
       const today = (league && league.today) || "";
       if (!date || !today) return "all";
-      return date <= addYears(today, -2) ? "y2" : "all";
+      return seasonLived(date, 2, today) ? "y2" : "all";
     }
 
     function windowLived(date) {
-      const need = { t0: 0, y1: 1, y2: 2, y3: 3, all: 1 }[lens];
-      if (!need) return true;
       const today = (league && league.today) || "";
+      if (lens === "y1") return seasonLived(date, 1, today);
+      if (lens === "y2") return seasonLived(date, 2, today);
+      const need = { t0: 0, y3: 3, all: 1 }[lens];
+      if (!need) return true;
       return date <= addYears(today, -need);
     }
 
@@ -8111,7 +8155,7 @@ const html = `<!DOCTYPE html>
       const one = noun || "deal";
       const many = one + "s";
       if (lens === "t0" || lens === "all" || shown === all) return shown + " " + (shown === 1 ? one : many);
-      const span = { y1: "1 year", y2: "2 years", y3: "3 years" }[lens] || clockName();
+      const span = { y1: "1 season", y2: "2 seasons", y3: "3 years" }[lens] || clockName();
       return shown + " of " + all + " lived " + span;
     }
 
@@ -10346,8 +10390,10 @@ if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inlin
   throw new Error("value chips and filter rows must mount chipLensHtml");
 }
 if (!inline.includes("function defaultLensForDate(")
-  || !inline.includes('date <= addYears(today, -2) ? "y2" : "all"')) {
-  throw new Error("Trade score lens must default to y2 when older than 2 years, else to-date (all)");
+  || !inline.includes('seasonLived(date, 2, today) ? "y2" : "all"')
+  || !inline.includes('["y1", "1 season"')
+  || !inline.includes('["y2", "2 seasons"')) {
+  throw new Error("Trade score lens y1/y2 must be season spans; default y2 after 2 seasons else to-date");
 }
 if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
   throw new Error("chip-lens styles and buttons must ship");

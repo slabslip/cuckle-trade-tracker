@@ -971,14 +971,15 @@ const html = `<!DOCTYPE html>
       flex: 0 0 auto;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 1px; min-width: 2.75rem;
+      gap: 2px; min-width: 3.25rem;
       line-height: 1;
     }
     .pick-intel-brand-lab {
       font-size: 0.5rem; font-weight: 650;
-      letter-spacing: 0.01em;
+      letter-spacing: 0.02em;
       color: var(--dim);
       white-space: nowrap; text-align: center;
+      max-width: 3.5rem;
     }
     .pick-intel-ico {
       flex: 0 0 auto;
@@ -2200,7 +2201,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "swapDraftChips20260901151500";
+    const DATA_V = "fixBlankHandcuffsQuote20260901153000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2923,7 +2924,7 @@ const html = `<!DOCTYPE html>
         + '<rect x="26.3" y="14.1" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
         + '<ellipse cx="15.6" cy="15.2" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 15.6 15.2)"/>'
         + '<ellipse cx="20.4" cy="14.4" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 20.4 14.4)"/>'
-        + "</svg></span><span class="pick-intel-brand-lab">Handcuffs</span></span>";
+        + '</svg></span><span class="pick-intel-brand-lab">Handcuffs</span></span>';
     }
 
     function openDraftDataPage(mode, preset) {
@@ -11092,6 +11093,19 @@ if (!inline.includes("if (!isDesignLeagueHome()) loadNewsDeleted()")
   throw new Error("Design Mode must not clear its session flag or soft-delete-sync on that path");
 }
 // ---------------------------------------------------------------------------------------------
+
+// Catch quote/syntax breaks inside the embedded app script (node --check on this
+// generator file cannot see them — they live inside the outer template literal).
+{
+  const m = html.match(/<script>([\s\S]*?)<\/script>/);
+  if (!m) throw new Error("generated page is missing its app <script>");
+  try {
+    // eslint-disable-next-line no-new-func
+    new Function(m[1]);
+  } catch (err) {
+    throw new Error("generated inline script failed to parse: " + (err && err.message ? err.message : err));
+  }
+}
 
 fs.writeFileSync(`${ROOT}index.html`, html);
 console.log(JSON.stringify({ page: `${ROOT}index.html` }, null, 2));

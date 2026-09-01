@@ -1195,16 +1195,17 @@ const html = `<!DOCTYPE html>
     }
     div.lh-trade-feed-card {
       display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
-      gap: 10px; width: 100%; box-sizing: border-box;
+      gap: 4px; width: 100%; box-sizing: border-box;
       font: inherit; color: inherit; text-align: left;
       cursor: pointer; touch-action: manipulation;
       background: transparent; border: 0; border-radius: 0;
       padding: 0; margin: 0; min-height: 0; height: auto;
     }
     div.lh-trade-feed-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Date only above the chip — small grey caption, tight to the H2H box. */
     div.lh-trade-feed-card .day-alert-h {
-      font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
-      font-size: 0.875rem;
+      font-weight: 500; color: var(--dim); line-height: 1.2; margin: 0;
+      font-size: 0.6875rem;
     }
     div.lh-trade-feed-card.voted .h2h-chip.is-trade,
     div.lh-latest-trade.voted .h2h-chip.is-trade {
@@ -1247,13 +1248,10 @@ const html = `<!DOCTYPE html>
     /* Trade detail feed: selected card stays open with bags + vote beneath the H2H chip. */
     div.lh-trade-feed-card.is-selected {
       cursor: default;
-      gap: 14px;
-    }
-    div.lh-trade-feed-card.is-selected .day-alert-h {
-      font-size: 0.9375rem;
+      gap: 4px;
     }
     div.lh-trade-feed-card.is-selected .vote-card {
-      margin: 0;
+      margin-top: 10px;
     }
     #tapeFilters {
       margin: 0 0 14px;
@@ -2008,7 +2006,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "noHowToCaptions20260901134000";
+    const DATA_V = "tradeFeedDateOnly20260901135000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4038,8 +4036,7 @@ const html = `<!DOCTYPE html>
         + ' role="button" tabindex="0"'
         + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
-        + '<div class="day-alert-h">' + esc(r.date || "")
-        + (r.headline ? " · " + esc(r.headline) : "") + "</div>"
+        + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
@@ -4069,8 +4066,7 @@ const html = `<!DOCTYPE html>
       return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
         + ' data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
-        + '<div class="day-alert-h">' + esc(r.date || "")
-        + (r.headline ? " · " + esc(r.headline) : "") + "</div>"
+        + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
         + '<div class="vote-card">' + voteBlock(r) + "</div>"
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
@@ -9969,6 +9965,22 @@ for (const need of [
   const fn = inline.slice(at, stop < 0 ? at + 1500 : stop);
   if (fn.includes("tradeRow(") || fn.includes("trade-feed-detail") || fn.includes("bagBlock(")) {
     throw new Error("tradeFeedSelectedHtml must use H2H chip only — no redundant row-x / bagBlock detail");
+  }
+}
+{
+  const cardAt = inline.indexOf("function tradeFeedCardHtml(");
+  const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+  const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
+  const selAt = inline.indexOf("function tradeFeedSelectedHtml(");
+  const selStop = inline.indexOf("\n    function ", selAt + 10);
+  const selFn = inline.slice(selAt, selStop < 0 ? selAt + 1200 : selStop);
+  for (const [name, fn] of [["tradeFeedCardHtml", cardFn], ["tradeFeedSelectedHtml", selFn]]) {
+    if (fn.includes('headline ? " · "') || fn.includes("headline ? ' · '")) {
+      throw new Error(name + " day-alert must be date-only (no headline suffix)");
+    }
+  }
+  if (!html.includes("div.lh-trade-feed-card .day-alert-h") || !html.includes("0.6875rem")) {
+    throw new Error("trade feed date must ship small grey day-alert styles");
   }
 }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")

@@ -855,10 +855,11 @@ const html = `<!DOCTYPE html>
       line-height: 1.3;
     }
     .pick-intel .caption { margin: 0 0 8px; }
-    /* Compact toolbar: one primary Filter trigger + small My picks out shortcut. */
+    /* Compact toolbar: one primary Filter trigger + My picks out / Mine held.
+       Center the control group under the Draft Data heading. */
     .pick-intel-bar {
       display: flex; flex-wrap: wrap; gap: 8px 12px;
-      margin: 0 0 8px; align-items: center;
+      margin: 0 0 8px; align-items: center; justify-content: center;
     }
     button.pick-intel-filter {
       appearance: none; font: inherit; font-weight: 650; font-size: 0.875rem;
@@ -940,13 +941,16 @@ const html = `<!DOCTYPE html>
       color: var(--dim); font-size: 0.6875rem; font-weight: 600;
       letter-spacing: 0.04em; text-transform: uppercase;
     }
-    /* Draft-year scope under each column lab (stacked so · N stay centered). */
-    .pick-intel-board-lab .pick-intel-board-yrs {
-      display: block;
-      margin-top: 1px;
-      font-weight: 500; font-size: 0.625rem; line-height: 1.2;
-      letter-spacing: 0.01em; text-transform: none;
-      color: var(--dim); white-space: nowrap;
+    /* Year scope sits next to each column lab (1sts · 2027–2029). On narrow
+       columns the lab spans the full col so the string stays readable. */
+    .pick-intel-board-yrs {
+      font-weight: 500; letter-spacing: 0.01em; text-transform: none;
+      color: var(--dim);
+    }
+    .pick-intel-board-yrs::before {
+      content: "·";
+      margin: 0 0.3em;
+      color: var(--dim);
     }
     .pick-intel-board-cols {
       display: grid;
@@ -954,8 +958,8 @@ const html = `<!DOCTYPE html>
       gap: 8px 10px;
       align-items: start;
     }
-    /* Shared 2-col grid: seat names | counts. Labels sit in the count track
-       (centered over · N), not left over the seat names. */
+    /* Shared 2-col grid: seat names | counts. Short labs sit in the count
+       track (centered over · N). With a year suffix the lab spans the col. */
     .pick-intel-board-col {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -963,16 +967,22 @@ const html = `<!DOCTYPE html>
       min-width: 0; align-content: start; align-items: baseline;
     }
     .pick-intel-board-lab {
-      grid-column: 2; justify-self: center; text-align: center;
+      grid-column: 1 / -1; justify-self: stretch; text-align: center;
       color: var(--muted); font-size: 0.75rem; font-weight: 650;
       white-space: nowrap; letter-spacing: 0.02em; line-height: 1.2;
+    }
+    .pick-intel-board-lab:not(:has(.pick-intel-board-yrs)) {
+      grid-column: 2; justify-self: center;
     }
     button.pick-intel-board-lab {
       appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
       color: var(--muted); background: transparent; border: 0; padding: 0; margin: 0;
       cursor: pointer; text-align: center; touch-action: manipulation;
       letter-spacing: 0.02em; line-height: 1.2;
-      grid-column: 2; justify-self: center;
+      grid-column: 1 / -1; justify-self: stretch; width: 100%;
+    }
+    button.pick-intel-board-lab:not(:has(.pick-intel-board-yrs)) {
+      grid-column: 2; justify-self: center; width: auto;
     }
     button.pick-intel-board-lab:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;

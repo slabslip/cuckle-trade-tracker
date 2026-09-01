@@ -850,10 +850,11 @@
       line-height: 1.3;
     }
     .pick-intel .caption { margin: 0 0 8px; }
-    /* Compact toolbar: one primary Filter trigger + small My picks out shortcut. */
+    /* Compact toolbar: one primary Filter trigger + My picks out / Mine held.
+       Center the control group under the Draft Data heading. */
     .pick-intel-bar {
       display: flex; flex-wrap: wrap; gap: 8px 12px;
-      margin: 0 0 8px; align-items: center;
+      margin: 0 0 8px; align-items: center; justify-content: center;
     }
     button.pick-intel-filter {
       appearance: none; font: inherit; font-weight: 650; font-size: 0.875rem;
@@ -1974,7 +1975,7 @@
       return [...years].sort();
     }
 
-    /** Compact year scope for the idle board — all still-available seasons (e.g. 2027–2029). */
+    /** Compact year scope for column labs — all still-available seasons (e.g. 2027–2029). */
     function pickSeasonRangeLabel() {
       const years = pickSeasonsAvailable();
       if (!years.length) return "";

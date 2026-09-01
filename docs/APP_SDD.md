@@ -124,9 +124,10 @@ Auth: caller JWT required. Writes: **service role** only (clients cannot insert 
 | `list_invites` | Creator | Unclaimed codes returned (stored `code_plain`); claimed seats + member list |
 | `rotate_invites` | Creator | New codes for **unclaimed** seats only |
 | `reissue_seat` | Creator | Clear membership for a **claimed** seat + mint a new code (manager left / new manager) |
-| `transfer_commissioner` | Creator | Set `created_by` to another **league member**; former commissioner keeps their seat |
+| `transfer_commissioner` | Primary admin | Set `created_by` to another **league member**; former admin keeps their seat |
+| `add_co_admin` / `remove_co_admin` | Primary admin | Elect / remove a member as co-admin (invite console access) |
 | `redeem` | Member | RPC `redeem_seat_invite` — atomic membership + claim (clears `code_plain`) |
-| `claim_seat` | Creator | RPC `claim_commissioner_seat` — consume own seat invite |
+| `claim_seat` | Primary admin | RPC `claim_commissioner_seat` — consume own seat invite |
 
 Invite format: `CF-XXXX-XXXX` (SHA-256 + `code_plain` while unclaimed). Console tabs: **Unclaimed** / **Claimed**.
 
@@ -182,6 +183,7 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 6. [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) — league-scoped vote uniqueness
 7. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
 8. [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) — refuse seat-switch overwrite on redeem
+9. [`db/wave7-co-admins.sql`](../db/wave7-co-admins.sql) — co-admin elect / remove
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
@@ -234,7 +236,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
 Operator applies SQL + deploys Edge (this Cloud Agent cannot hold your Supabase login):
 
-- [ ] SQL 1–8 applied (`phase1` → … → `wave5` → `wave6`); `join-league` deployed; Confirm email OFF
+- [ ] SQL 1–9 applied (`phase1` → … → `wave6` → `wave7`); `join-league` deployed; Confirm email OFF
 - [ ] Commissioner creates Cuckle once; revisit opens console without remint
 - [ ] Ten invite links DMed; commissioner claims own seat; member redeems
 - [ ] Both open **league home** (news feed); pick a team from bottom-nav Teams; cast a vote as their seat
@@ -257,6 +259,7 @@ PWA manifest + service worker. Live dogfood remains the checkboxes above.
 | [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) | Unique `(league, tx, voter)` |
 | [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) | Unclaimed `code_plain` for invite console |
 | [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) | One seat per account per league on redeem |
+| [`db/wave7-co-admins.sql`](../db/wave7-co-admins.sql) | Co-admin elect / remove |
 | [`build.mjs`](../build.mjs) / [`lib.mjs`](../lib.mjs) | Scoped pipeline |
 | [`mark-league-ready.mjs`](../mark-league-ready.mjs) | Status flip |
 | [`manifest.webmanifest`](../manifest.webmanifest) / [`sw.js`](../sw.js) | PWA install shell |

@@ -15,13 +15,16 @@
 //   reissue_seat    { sleeper_league_id, sleeper_user_id }
 //                   → clear membership + mint new code for a claimed seat (manager left)
 //   transfer_commissioner { sleeper_league_id, new_commissioner_id }
-//                   → give dashboard admin to another league member
+//                   → give primary admin (created_by) to another league member
+//   add_co_admin    { sleeper_league_id, auth_user_id }  → owner elects a co-admin
+//   remove_co_admin { sleeper_league_id, auth_user_id }  → owner removes a co-admin
 //   redeem          { code }               → atomic membership + claim
-//   claim_seat      { sleeper_league_id, sleeper_user_id }  → commissioner claims own seat
+//   claim_seat      { sleeper_league_id, sleeper_user_id }  → primary admin claims own seat
 //
 // Deploy: supabase functions deploy join-league
 // SQL: also apply db/wave5-invite-plain.sql (code_plain column)
-//      and db/wave6-one-seat-redeem.sql (refuse seat-switch overwrite)
+//      db/wave6-one-seat-redeem.sql (refuse seat-switch overwrite)
+//      db/wave7-co-admins.sql (co-admin table)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -283,6 +286,77 @@ async function listLeagueMembers(
   }));
 }
 
+type LeagueAdminRow = {
+  created_by: string | null;
+  name?: string | null;
+  status?: string | null;
+  season?: string | null;
+  total_rosters?: number | null;
+  espn_league_id?: string | null;
+};
+
+/** Primary owner (created_by) or elected co-admin. */
+async function loadLeagueAdminAccess(
+  admin: ReturnType<typeof createClient>,
+  leagueId: string,
+  userId: string,
+): Promise<{ league: LeagueAdminRow | null; isOwner: boolean; isCoAdmin: boolean; ok: boolean }> {
+  const { data: league } = await admin.from("leagues")
+    .select("created_by, name, status, season, total_rosters, espn_league_id")
+    .eq("sleeper_league_id", leagueId)
+    .maybeSingle();
+  if (!league) return { league: null, isOwner: false, isCoAdmin: false, ok: false };
+  const isOwner = league.created_by === userId;
+  if (isOwner) return { league, isOwner: true, isCoAdmin: false, ok: true };
+  const { data: co } = await admin.from("league_co_admins")
+    .select("auth_user_id")
+    .eq("sleeper_league_id", leagueId)
+    .eq("auth_user_id", userId)
+    .maybeSingle();
+  const isCoAdmin = !!co;
+  return { league, isOwner: false, isCoAdmin, ok: isCoAdmin };
+}
+
+async function listCoAdmins(
+  admin: ReturnType<typeof createClient>,
+  leagueId: string,
+) {
+  const { data: rows, error } = await admin.from("league_co_admins")
+    .select("auth_user_id, granted_by, created_at")
+    .eq("sleeper_league_id", leagueId)
+    .order("created_at");
+  if (error) {
+    // wave7 not applied yet — treat as empty rather than blocking invite console
+    if (String(error.message || "").includes("league_co_admins")) return [];
+    throw new Error(error.message);
+  }
+  const ids = (rows || []).map((r) => r.auth_user_id).filter(Boolean);
+  const usernames: Record<string, string> = {};
+  const teams: Record<string, string> = {};
+  if (ids.length) {
+    const [{ data: profiles }, { data: mems }] = await Promise.all([
+      admin.from("app_profiles").select("auth_user_id, username").in("auth_user_id", ids),
+      admin.from("league_memberships")
+        .select("auth_user_id, team_name")
+        .eq("sleeper_league_id", leagueId)
+        .in("auth_user_id", ids),
+    ]);
+    for (const p of profiles || []) {
+      if (p.auth_user_id && p.username) usernames[p.auth_user_id] = p.username;
+    }
+    for (const m of mems || []) {
+      if (m.auth_user_id && m.team_name) teams[m.auth_user_id] = m.team_name;
+    }
+  }
+  return (rows || []).map((r) => ({
+    auth_user_id: r.auth_user_id,
+    username: usernames[r.auth_user_id] || null,
+    team_name: teams[r.auth_user_id] || null,
+    granted_by: r.granted_by || null,
+    created_at: r.created_at,
+  }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json(405, { ok: false, error: "POST only" });
@@ -460,24 +534,25 @@ Deno.serve(async (req) => {
   // ---- list invites (DB first; Sleeper only if seats are missing) ----
   if (action === "list_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
-    const { data: league } = await admin.from("leagues")
-      .select("created_by, name, status, season, total_rosters, espn_league_id")
-      .eq("sleeper_league_id", leagueId)
-      .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can list invites" });
+    const access = await loadLeagueAdminAccess(admin, leagueId, user.id);
+    if (!access.ok || !access.league) {
+      return json(403, { ok: false, error: "Only the league admin or a co-admin can list invites" });
     }
+    const league = access.league;
+    const ownerId = league.created_by || user.id;
 
     let invites;
     let members;
+    let coAdmins: Awaited<ReturnType<typeof listCoAdmins>> = [];
     try {
       // Fast path: read seats already in Supabase — no Sleeper round-trip.
-      [invites, members] = await Promise.all([
+      [invites, members, coAdmins] = await Promise.all([
         listInviteRows(admin, leagueId, {
           backfillMissingPlain: true,
-          createdBy: user.id,
+          createdBy: ownerId,
         }),
         listLeagueMembers(admin, leagueId),
+        listCoAdmins(admin, leagueId),
       ]);
     } catch (err) {
       const msg = String((err as Error).message || err);
@@ -513,7 +588,7 @@ Deno.serve(async (req) => {
       }
       if (preview && preview.teams.length) {
         try {
-          await ensureSeatInvites(admin, preview, user.id);
+          await ensureSeatInvites(admin, preview, ownerId);
           if (preview.total_rosters && preview.total_rosters !== league.total_rosters) {
             await admin.from("leagues")
               .update({ total_rosters: preview.total_rosters, name: preview.name || league.name })
@@ -521,7 +596,7 @@ Deno.serve(async (req) => {
           }
           invites = await listInviteRows(admin, leagueId, {
             backfillMissingPlain: true,
-            createdBy: user.id,
+            createdBy: ownerId,
           });
         } catch (err) {
           const msg = String((err as Error).message || err);
@@ -544,6 +619,8 @@ Deno.serve(async (req) => {
 
     return json(200, {
       ok: true,
+      is_owner: access.isOwner,
+      is_co_admin: access.isCoAdmin,
       league: {
         sleeper_league_id: leagueId,
         name: leagueName,
@@ -551,10 +628,12 @@ Deno.serve(async (req) => {
         season: leagueSeason,
         total_rosters: totalRosters,
         espn_league_id: league.espn_league_id,
+        created_by: league.created_by,
         teams: previewTeams,
       },
       invites,
       members,
+      co_admins: coAdmins,
     });
   }
 
@@ -565,13 +644,12 @@ Deno.serve(async (req) => {
     if (!leagueId || !seatId) {
       return json(400, { ok: false, error: "Pick the seat to generate an invite for" });
     }
-    const { data: league } = await admin.from("leagues")
-      .select("created_by, name, status, season, total_rosters, espn_league_id")
-      .eq("sleeper_league_id", leagueId)
-      .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can generate invites" });
+    const access = await loadLeagueAdminAccess(admin, leagueId, user.id);
+    if (!access.ok || !access.league) {
+      return json(403, { ok: false, error: "Only the league admin or a co-admin can generate invites" });
     }
+    const league = access.league;
+    const ownerId = league.created_by || user.id;
     const { data: invite } = await admin.from("seat_invites")
       .select("*")
       .eq("sleeper_league_id", leagueId)
@@ -592,7 +670,7 @@ Deno.serve(async (req) => {
       code_plain: code,
       claimed_by: null,
       claimed_at: null,
-      created_by: user.id,
+      created_by: ownerId,
       team_name: invite.team_name,
     }).eq("id", invite.id);
     if (updErr) {
@@ -649,13 +727,12 @@ Deno.serve(async (req) => {
     if (!leagueId || !seatId) {
       return json(400, { ok: false, error: "Pick the seat to reissue" });
     }
-    const { data: league } = await admin.from("leagues")
-      .select("created_by, name, status, season, total_rosters, espn_league_id")
-      .eq("sleeper_league_id", leagueId)
-      .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can reissue a seat invite" });
+    const access = await loadLeagueAdminAccess(admin, leagueId, user.id);
+    if (!access.ok || !access.league) {
+      return json(403, { ok: false, error: "Only the league admin or a co-admin can reissue a seat invite" });
     }
+    const league = access.league;
+    const ownerId = league.created_by || user.id;
     const { data: invite } = await admin.from("seat_invites")
       .select("*")
       .eq("sleeper_league_id", leagueId)
@@ -670,12 +747,20 @@ Deno.serve(async (req) => {
     }
 
     // Drop the leaving manager's membership for this seat (historical votes stay).
+    const leavingId = invite.claimed_by;
     const { error: delErr } = await admin.from("league_memberships")
       .delete()
       .eq("sleeper_league_id", leagueId)
       .eq("sleeper_user_id", seatId);
     if (delErr) {
       return json(500, { ok: false, error: "Could not clear membership: " + delErr.message });
+    }
+    // Drop co-admin if they held that badge on this seat's account.
+    if (leavingId) {
+      await admin.from("league_co_admins")
+        .delete()
+        .eq("sleeper_league_id", leagueId)
+        .eq("auth_user_id", leavingId);
     }
 
     const code = makeCode();
@@ -685,7 +770,7 @@ Deno.serve(async (req) => {
       code_plain: code,
       claimed_by: null,
       claimed_at: null,
-      created_by: user.id,
+      created_by: ownerId,
       team_name: invite.team_name,
     }).eq("id", invite.id);
     if (updErr) {
@@ -744,7 +829,7 @@ Deno.serve(async (req) => {
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
     if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the current commissioner can transfer admin" });
+      return json(403, { ok: false, error: "Only the primary admin can transfer ownership" });
     }
     const { data: membership } = await admin.from("league_memberships")
       .select("auth_user_id, team_name, sleeper_user_id")
@@ -773,6 +858,11 @@ Deno.serve(async (req) => {
     await admin.from("seat_invites")
       .update({ created_by: newId })
       .eq("sleeper_league_id", leagueId);
+    // New owner should not also sit in co-admins; former owner may stay as co-admin if desired later.
+    await admin.from("league_co_admins")
+      .delete()
+      .eq("sleeper_league_id", leagueId)
+      .eq("auth_user_id", newId);
 
     return json(200, {
       ok: true,
@@ -788,9 +878,93 @@ Deno.serve(async (req) => {
         team_name: membership.team_name,
         sleeper_user_id: membership.sleeper_user_id,
       },
-      note: "You are no longer commissioner. "
+      note: "You are no longer primary admin. "
         + ((profile && profile.username) || "The new commissioner")
-        + " now manages invites and admin for this league.",
+        + " now owns invites and admin for this league. Co-admins (if any) stay until they remove them.",
+    });
+  }
+
+  // ---- elect co-admin (primary owner only) ----
+  if (action === "add_co_admin") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const targetId = String(body.auth_user_id || "").trim();
+    if (!leagueId || !targetId) {
+      return json(400, { ok: false, error: "Pick a league member to make co-admin" });
+    }
+    const { data: league } = await admin.from("leagues")
+      .select("created_by, name, status")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!league || league.created_by !== user.id) {
+      return json(403, { ok: false, error: "Only the primary admin can elect a co-admin" });
+    }
+    if (targetId === user.id) {
+      return json(400, { ok: false, error: "You are already the primary admin" });
+    }
+    const { data: membership } = await admin.from("league_memberships")
+      .select("auth_user_id, team_name")
+      .eq("sleeper_league_id", leagueId)
+      .eq("auth_user_id", targetId)
+      .maybeSingle();
+    if (!membership) {
+      return json(400, {
+        ok: false,
+        error: "That person must already be a league member before they can be co-admin",
+      });
+    }
+    const { error: insErr } = await admin.from("league_co_admins").upsert({
+      sleeper_league_id: leagueId,
+      auth_user_id: targetId,
+      granted_by: user.id,
+    }, { onConflict: "sleeper_league_id,auth_user_id" });
+    if (insErr) {
+      const msg = String(insErr.message || "");
+      if (msg.includes("league_co_admins")) {
+        return json(500, {
+          ok: false,
+          error: "Run db/wave7-co-admins.sql in the Supabase SQL Editor, then try again.",
+        });
+      }
+      return json(500, { ok: false, error: "Could not add co-admin: " + msg });
+    }
+    const coAdmins = await listCoAdmins(admin, leagueId);
+    const members = await listLeagueMembers(admin, leagueId);
+    return json(200, {
+      ok: true,
+      co_admins: coAdmins,
+      members,
+      note: "Co-admin added. They can manage invites; only you can transfer ownership or elect co-admins.",
+    });
+  }
+
+  // ---- remove co-admin (primary owner only) ----
+  if (action === "remove_co_admin") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const targetId = String(body.auth_user_id || "").trim();
+    if (!leagueId || !targetId) {
+      return json(400, { ok: false, error: "Pick a co-admin to remove" });
+    }
+    const { data: league } = await admin.from("leagues")
+      .select("created_by")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!league || league.created_by !== user.id) {
+      return json(403, { ok: false, error: "Only the primary admin can remove a co-admin" });
+    }
+    const { error: delErr } = await admin.from("league_co_admins")
+      .delete()
+      .eq("sleeper_league_id", leagueId)
+      .eq("auth_user_id", targetId);
+    if (delErr) {
+      return json(500, { ok: false, error: "Could not remove co-admin: " + delErr.message });
+    }
+    const coAdmins = await listCoAdmins(admin, leagueId);
+    const members = await listLeagueMembers(admin, leagueId);
+    return json(200, {
+      ok: true,
+      co_admins: coAdmins,
+      members,
+      note: "Co-admin removed. They keep their seat as a normal member.",
     });
   }
 

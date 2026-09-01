@@ -5268,7 +5268,7 @@ const html = `<!DOCTYPE html>
     // gate | home | create | invites | redeem | settings | dash
     let appScreen = "gate";
     let memberships = [];
-    let ownedLeagues = []; // leagues where created_by = me
+    let ownedLeagues = []; // leagues where I am primary admin or co-admin
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
     let joinPreview = null; // league preview from Edge Function
     let joinLeagueId = "";
@@ -5276,7 +5276,9 @@ const html = `<!DOCTYPE html>
     let joinBusy = false;
     let joinError = "";
     let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id, claimed_username? }]
-    let leagueMembers = []; // members of the invite-console league (for transfer)
+    let leagueMembers = []; // members of the invite-console league (for transfer / co-admin)
+    let leagueCoAdmins = []; // co-admins for the invite-console league
+    let inviteIsOwner = true; // primary admin on open console (vs co-admin)
     let inviteTab = "unclaimed"; // unclaimed | claimed
     let redeemCode = "";
     let gateUsernameDraft = "";
@@ -5289,6 +5291,7 @@ const html = `<!DOCTYPE html>
     let gateMode = "signup"; // signup | signin — get started first
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
+    let coAdminPickId = ""; // selected member to elect as co-admin
 
     function inviteCodeVisible(inv) {
       return !!(inv && !inv.claimed && inv.code && String(inv.code).indexOf("(") !== 0);
@@ -5995,15 +5998,21 @@ const html = `<!DOCTYPE html>
         apikey: VOTE_ANON,
         Authorization: "Bearer " + authSession.access_token,
       };
-      const [memRes, ownRes] = await Promise.all([
+      const uid = authSession.user_id;
+      const [memRes, ownRes, coRes] = await Promise.all([
         fetch(
           VOTE_API + "/league_memberships?select=*,leagues(name,status,season,total_rosters)&order=created_at.asc",
           { headers: headers, signal: voteAbort() },
         ),
         fetch(
           VOTE_API + "/leagues?select=sleeper_league_id,name,status,season,total_rosters,created_by&created_by=eq."
-            + encodeURIComponent(authSession.user_id)
+            + encodeURIComponent(uid)
             + "&order=created_at.asc",
+          { headers: headers, signal: voteAbort() },
+        ),
+        fetch(
+          VOTE_API + "/league_co_admins?select=sleeper_league_id&auth_user_id=eq."
+            + encodeURIComponent(uid),
           { headers: headers, signal: voteAbort() },
         ),
       ]);
@@ -6019,18 +6028,46 @@ const html = `<!DOCTYPE html>
         role: "member",
       }));
       saveMemberships(list);
+
+      const byId = {};
       if (ownRes.ok) {
         const owned = await ownRes.json();
-        ownedLeagues = (owned || []).map((r) => ({
-          sleeper_league_id: r.sleeper_league_id,
-          name: r.name || r.sleeper_league_id,
-          status: r.status || "pending_sync",
-          season: r.season || null,
-          role: "commissioner",
-        }));
-      } else {
-        ownedLeagues = [];
+        for (const r of owned || []) {
+          byId[r.sleeper_league_id] = {
+            sleeper_league_id: r.sleeper_league_id,
+            name: r.name || r.sleeper_league_id,
+            status: r.status || "pending_sync",
+            season: r.season || null,
+            role: "commissioner",
+          };
+        }
       }
+      // Co-admin leagues (wave7). Missing table → 404/empty; ignore until SQL applied.
+      if (coRes.ok) {
+        const cos = await coRes.json();
+        const coIds = (cos || []).map((r) => r.sleeper_league_id).filter(Boolean)
+          .filter((id) => !byId[id]);
+        if (coIds.length) {
+          const coLeagueRes = await fetch(
+            VOTE_API + "/leagues?select=sleeper_league_id,name,status,season,total_rosters"
+              + "&sleeper_league_id=in.(" + coIds.map((id) => '"' + id.replace(/"/g, "") + '"').join(",") + ")",
+            { headers: headers, signal: voteAbort() },
+          );
+          if (coLeagueRes.ok) {
+            const coLeagues = await coLeagueRes.json();
+            for (const r of coLeagues || []) {
+              byId[r.sleeper_league_id] = {
+                sleeper_league_id: r.sleeper_league_id,
+                name: r.name || r.sleeper_league_id,
+                status: r.status || "pending_sync",
+                season: r.season || null,
+                role: "co_admin",
+              };
+            }
+          }
+        }
+      }
+      ownedLeagues = Object.keys(byId).map((k) => byId[k]);
       return list;
     }
 
@@ -6106,7 +6143,9 @@ const html = `<!DOCTYPE html>
       joinBusy = true;
       joinError = "";
       transferPickId = "";
+      coAdminPickId = "";
       inviteTab = "unclaimed";
+      inviteIsOwner = true;
       joinLeagueId = leagueId;
       // Keep prior seats on screen while we refresh (avoids an empty flash + feels faster).
       if (!joinPreview || joinPreview.sleeper_league_id !== leagueId) {
@@ -6119,6 +6158,8 @@ const html = `<!DOCTYPE html>
         };
         createdInvites = [];
         leagueMembers = [];
+        leagueCoAdmins = [];
+        inviteIsOwner = !(owned && owned.role === "co_admin");
       }
       appScreen = "invites";
       focusNext = ".screen-h";
@@ -6127,6 +6168,8 @@ const html = `<!DOCTYPE html>
         const data = await joinLeagueCall("list_invites", { sleeper_league_id: leagueId });
         createdInvites = data.invites || [];
         leagueMembers = data.members || [];
+        leagueCoAdmins = data.co_admins || [];
+        inviteIsOwner = !!data.is_owner;
         joinPreview = data.league;
         const hasUnclaimed = (createdInvites || []).some((inv) => !inv.claimed);
         inviteTab = hasUnclaimed ? "unclaimed" : "claimed";
@@ -6222,6 +6265,11 @@ const html = `<!DOCTYPE html>
 
     async function onTransferCommissioner() {
       if (joinBusy || !joinPreview) return;
+      if (!inviteIsOwner) {
+        joinError = "Only the primary admin can transfer ownership.";
+        render();
+        return;
+      }
       const pickEl = document.getElementById("transferPick");
       const newId = pickEl ? String(pickEl.value || "").trim() : transferPickId;
       transferPickId = newId;
@@ -6235,8 +6283,9 @@ const html = `<!DOCTYPE html>
         ? ((mem.username ? "@" + mem.username : "member") + " (" + mem.team_name + ")")
         : "that member";
       if (!window.confirm(
-        "Transfer commissioner to " + label + "? "
-        + "You will lose invite/admin access for this league. You keep your seat if you claimed one.",
+        "Transfer primary admin to " + label + "? "
+        + "You will lose invite/admin ownership for this league. You keep your seat if you claimed one. "
+        + "Co-admins stay until the new owner removes them.",
       )) return;
       joinBusy = true;
       joinError = "";
@@ -6250,6 +6299,7 @@ const html = `<!DOCTYPE html>
         settingsCopyNote = data.note || "Commissioner transferred.";
         createdInvites = null;
         leagueMembers = [];
+        leagueCoAdmins = [];
         joinPreview = null;
         inviteTab = "unclaimed";
         await loadMemberships();
@@ -6257,6 +6307,77 @@ const html = `<!DOCTYPE html>
         focusNext = ".screen-h";
       } catch (err) {
         joinError = (err && err.message) || "Could not transfer commissioner.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onAddCoAdmin() {
+      if (joinBusy || !joinPreview || !inviteIsOwner) return;
+      const pickEl = document.getElementById("coAdminPick");
+      const targetId = pickEl ? String(pickEl.value || "").trim() : coAdminPickId;
+      coAdminPickId = targetId;
+      if (!targetId) {
+        joinError = "Pick a league member to make co-admin.";
+        render();
+        return;
+      }
+      const mem = (leagueMembers || []).find((m) => m.auth_user_id === targetId);
+      const label = mem
+        ? ((mem.username ? "@" + mem.username : "member") + " (" + mem.team_name + ")")
+        : "that member";
+      if (!window.confirm(
+        "Make " + label + " a co-admin? They can manage invites. "
+        + "Only you (primary admin) can transfer ownership or elect co-admins.",
+      )) return;
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("add_co_admin", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          auth_user_id: targetId,
+        });
+        leagueCoAdmins = data.co_admins || [];
+        if (data.members) leagueMembers = data.members;
+        settingsCopyNote = data.note || "Co-admin added.";
+        coAdminPickId = "";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not add co-admin.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
+    async function onRemoveCoAdmin(authUserId) {
+      if (joinBusy || !joinPreview || !inviteIsOwner || !authUserId) return;
+      const row = (leagueCoAdmins || []).find((c) => c.auth_user_id === authUserId);
+      const label = row
+        ? ((row.username ? "@" + row.username : "member")
+          + (row.team_name ? " (" + row.team_name + ")" : ""))
+        : "that co-admin";
+      if (!window.confirm("Remove " + label + " as co-admin? They keep their seat as a normal member.")) {
+        return;
+      }
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("remove_co_admin", {
+          sleeper_league_id: joinPreview.sleeper_league_id,
+          auth_user_id: authUserId,
+        });
+        leagueCoAdmins = data.co_admins || [];
+        if (data.members) leagueMembers = data.members;
+        settingsCopyNote = data.note || "Co-admin removed.";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not remove co-admin.";
         console.error(err);
       } finally {
         joinBusy = false;
@@ -8737,12 +8858,16 @@ const html = `<!DOCTYPE html>
       const rows = (memberships || []).map((m) => {
         const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
         const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
+        const adminRole = (ownedLeagues || []).find((o) => o.sleeper_league_id === m.sleeper_league_id);
+        const adminLabel = adminRole
+          ? (adminRole.role === "co_admin" ? " · Co-admin" : " · Admin")
+          : "";
         return '<div class="league-block">'
           + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
           + "<div><b>" + esc(m.name) + "</b>"
           + "<span>" + esc(m.team_name) + " · " + st
           + (m.season ? " · " + esc(m.season) : "")
-          + (isComm ? " · Commissioner" : "")
+          + adminLabel
           + "</span></div>"
           + '<span class="chev" aria-hidden="true">›</span></button>'
           + (isComm
@@ -8753,11 +8878,15 @@ const html = `<!DOCTYPE html>
       }).join("");
       const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
         const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+        const roleLab = o.role === "co_admin" ? "Co-admin" : "Admin";
         return '<div class="league-block">'
           + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
-          + "<span>Commissioner · " + st
+          + "<span>" + roleLab + " · " + st
           + (o.season ? " · " + esc(o.season) : "")
-          + " · claim your seat to open the meter</span></div></div>"
+          + (o.role === "commissioner"
+            ? " · claim your seat to open the meter"
+            : " · you co-manage invites")
+          + "</span></div></div>"
           + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
           + '">Invites & claim seat</button>'
           + "</div>";
@@ -8801,7 +8930,9 @@ const html = `<!DOCTYPE html>
         (m) => m.sleeper_league_id === L.sleeper_league_id,
       );
       const meId = authSession && authSession.user_id;
+      const coAdminIds = new Set((leagueCoAdmins || []).map((c) => c.auth_user_id));
       const transferCandidates = (leagueMembers || []).filter((m) => m.auth_user_id && m.auth_user_id !== meId);
+      const coAdminCandidates = transferCandidates.filter((m) => !coAdminIds.has(m.auth_user_id));
       const all = createdInvites || [];
       const unclaimed = all.filter((inv) => !inv.claimed);
       const claimed = all.filter((inv) => inv.claimed);
@@ -8850,33 +8981,77 @@ const html = `<!DOCTYPE html>
         + ' aria-selected="' + (tab === "claimed" ? "true" : "false") + '"'
         + ' data-invite-tab="claimed">Claimed (' + claimed.length + ")</button>"
         + "</div>";
-      const transferBlock = '<div class="app-card" style="margin-top:12px">'
-        + "<h3>Transfer commissioner</h3>"
-        + '<p class="caption" style="margin:0 0 8px">Give dashboard admin to another league member. '
-        + "You keep your seat; they get invites and Settings admin for this league.</p>"
-        + (transferCandidates.length
-          ? ('<div class="app-form"><label>New commissioner<select id="transferPick"'
-            + (joinBusy ? " disabled" : "") + ">"
-            + '<option value="">Pick a member…</option>'
-            + transferCandidates.map((m) => {
-              const label = (m.username ? "@" + m.username : "member") + " — " + m.team_name;
-              const sel = transferPickId === m.auth_user_id ? " selected" : "";
-              return '<option value="' + esc(m.auth_user_id) + '"' + sel + ">"
-                + esc(label) + "</option>";
-            }).join("")
-            + "</select></label>"
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-transfer-comm="1"'
-            + (joinBusy ? " disabled" : "") + ">Transfer admin</button>"
-            + "</div></div>")
-          : '<p class="caption">No other members yet. Someone must redeem an invite before you can transfer.</p>')
-        + "</div>";
+      const transferBlock = inviteIsOwner
+        ? ('<div class="app-card" style="margin-top:12px">'
+          + "<h3>Transfer primary admin</h3>"
+          + '<p class="caption" style="margin:0 0 8px">Hand ownership to another league member. '
+          + "You keep your seat; they become the only person who can elect co-admins or transfer again.</p>"
+          + (transferCandidates.length
+            ? ('<div class="app-form"><label>New primary admin<select id="transferPick"'
+              + (joinBusy ? " disabled" : "") + ">"
+              + '<option value="">Pick a member…</option>'
+              + transferCandidates.map((m) => {
+                const label = (m.username ? "@" + m.username : "member") + " — " + m.team_name;
+                const sel = transferPickId === m.auth_user_id ? " selected" : "";
+                return '<option value="' + esc(m.auth_user_id) + '"' + sel + ">"
+                  + esc(label) + "</option>";
+              }).join("")
+              + "</select></label>"
+              + '<div class="app-actions">'
+              + '<button type="button" class="chip" data-transfer-comm="1"'
+              + (joinBusy ? " disabled" : "") + ">Transfer admin</button>"
+              + "</div></div>")
+            : '<p class="caption">No other members yet. Someone must redeem an invite before you can transfer.</p>')
+          + "</div>")
+        : '<p class="caption" style="margin-top:12px">You are a <b>co-admin</b> — you can manage invites. '
+          + "Only the primary admin can transfer ownership or elect co-admins.</p>";
+
+      const coAdminBlock = inviteIsOwner
+        ? ('<div class="app-card" style="margin-top:12px">'
+          + "<h3>Co-admins</h3>"
+          + '<p class="caption" style="margin:0 0 8px">Elect a member who can manage invites with you. '
+          + "They cannot transfer ownership or elect other co-admins.</p>"
+          + ((leagueCoAdmins || []).length
+            ? ('<ul class="caption" style="margin:0 0 8px;padding-left:18px">'
+              + leagueCoAdmins.map((c) => {
+                const lab = (c.username ? "@" + c.username : "member")
+                  + (c.team_name ? " — " + c.team_name : "");
+                return "<li>" + esc(lab)
+                  + ' <button type="button" class="linkish" data-remove-co-admin="'
+                  + esc(c.auth_user_id) + '"' + (joinBusy ? " disabled" : "")
+                  + ">Remove</button></li>";
+              }).join("")
+              + "</ul>")
+            : '<p class="caption">No co-admins yet.</p>')
+          + (coAdminCandidates.length
+            ? ('<div class="app-form"><label>Add co-admin<select id="coAdminPick"'
+              + (joinBusy ? " disabled" : "") + ">"
+              + '<option value="">Pick a member…</option>'
+              + coAdminCandidates.map((m) => {
+                const label = (m.username ? "@" + m.username : "member") + " — " + m.team_name;
+                const sel = coAdminPickId === m.auth_user_id ? " selected" : "";
+                return '<option value="' + esc(m.auth_user_id) + '"' + sel + ">"
+                  + esc(label) + "</option>";
+              }).join("")
+              + "</select></label>"
+              + '<div class="app-actions">'
+              + '<button type="button" class="chip" data-add-co-admin="1"'
+              + (joinBusy ? " disabled" : "") + ">Elect co-admin</button>"
+              + "</div></div>")
+            : '<p class="caption">Invite another manager first, then you can elect them co-admin.</p>')
+          + "</div>")
+        : "";
+
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
         + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
+        + (inviteIsOwner
+          ? '<p class="caption">You are the <b>primary admin</b> (created this league).</p>'
+          : '<p class="caption">You are a <b>co-admin</b> for this league.</p>')
         + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + tabs
         + (rows || empty)
         + (tab === "claimed"
@@ -8885,6 +9060,7 @@ const html = `<!DOCTYPE html>
           : (!myMembership
             ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
             : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
+        + coAdminBlock
         + transferBlock
         + "</div>";
     }
@@ -8899,10 +9075,12 @@ const html = `<!DOCTYPE html>
         ? owned.map((o) => {
           const mem = memById[o.sleeper_league_id];
           const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+          const roleLab = o.role === "co_admin" ? "Co-admin" : "Primary admin";
           return '<div class="app-card">'
             + "<h3>" + esc(o.name) + "</h3>"
             + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
             + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
+            + "<br/>Your role: " + roleLab
             + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
             + "</p>"
             + '<div class="app-actions">'
@@ -8913,10 +9091,14 @@ const html = `<!DOCTYPE html>
                 + '">Open dashboard</button>'
               : "")
             + "</div>"
-            + '<p class="caption" style="margin:8px 0 0">Transfer admin or reissue a seat after a manager leaves: open <b>Send / manage invites</b>.</p>'
+            + '<p class="caption" style="margin:8px 0 0">'
+            + (o.role === "co_admin"
+              ? "You can manage invites. Primary admin handles ownership transfer and co-admins."
+              : "Elect a co-admin, transfer ownership, or reissue a seat: open <b>Send / manage invites</b>.")
+            + "</p>"
             + "</div>";
         }).join("")
-        : '<p class="caption">You have not created a league yet. Create one from Your leagues to become commissioner and mint seat invites.</p>';
+        : '<p class="caption">You have not created a league yet. Create one from Your leagues to become primary admin and mint seat invites.</p>';
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
@@ -8926,7 +9108,7 @@ const html = `<!DOCTYPE html>
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>"
-        + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
+        + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you manage</h3>'
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
@@ -9848,6 +10030,16 @@ const html = `<!DOCTYPE html>
       const transferComm = e.target.closest("[data-transfer-comm]");
       if (transferComm) {
         onTransferCommissioner().catch((err) => console.error(err));
+        return;
+      }
+      const addCoAdmin = e.target.closest("[data-add-co-admin]");
+      if (addCoAdmin) {
+        onAddCoAdmin().catch((err) => console.error(err));
+        return;
+      }
+      const removeCoAdmin = e.target.closest("[data-remove-co-admin]");
+      if (removeCoAdmin) {
+        onRemoveCoAdmin(removeCoAdmin.dataset.removeCoAdmin).catch((err) => console.error(err));
         return;
       }
       const claimSeatBtn = e.target.closest("[data-claim-seat]");
@@ -11477,6 +11669,17 @@ if (!inline.includes('appScreen = "inviteConfirm"')
   const wave6 = fs.readFileSync(`${ROOT}db/wave6-one-seat-redeem.sql`, "utf8");
   if (!wave6.includes("already have a seat in this league")) {
     throw new Error("wave6 must refuse redeem when the account already sits a different seat");
+  }
+}
+{
+  const wave7 = fs.readFileSync(`${ROOT}db/wave7-co-admins.sql`, "utf8");
+  if (!wave7.includes("league_co_admins")) {
+    throw new Error("wave7 must create league_co_admins for secondary invite admins");
+  }
+  if (!inline.includes("function onAddCoAdmin()")
+    || !inline.includes("data-add-co-admin")
+    || !inline.includes("Elect co-admin")) {
+    throw new Error("invite console must let the primary admin elect a co-admin");
   }
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")

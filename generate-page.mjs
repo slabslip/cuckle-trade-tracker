@@ -1510,6 +1510,9 @@ const html = `<!DOCTYPE html>
       max-width: 100%;
     }
     .h2h-lean-side.is-right .h2h-lean-marks { flex-direction: row-reverse; }
+    .h2h-lean-marks .h2h-lean-flair-link {
+      display: inline-flex; align-items: center; line-height: 0;
+    }
     .h2h-lean-marks img.seat-flair,
     .h2h-lean-marks img.h2h-lean-flair {
       width: 14px; height: 14px; vertical-align: -2px;
@@ -1977,7 +1980,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueHomeReview20260901120000";
+    const DATA_V = "leanFlairLink20260901123000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5542,18 +5545,23 @@ const html = `<!DOCTYPE html>
      * Compact seat flair for the lean vote row. Only real glyph/img flair — no initials
      * fallback (raw voter ids were painting hex chips like "1F" / "BB"). Empty string
      * when the seat has no flair so the row stays blank until a known voter marks it.
+     * Wrapped in seat-link + data-who so a tap opens that team's home (same as names).
      */
     function seatVoteMarkHtml(name) {
       const n = String(name == null ? "" : name);
       const f = SEAT_FLAIR[n];
+      let inner = "";
       if (f && f.glyph) {
-        return '<span class="h2h-lean-glyph" aria-hidden="true">' + f.glyph + "</span>";
-      }
-      if (f && f.img) {
-        return '<img class="seat-flair h2h-lean-flair" src="' + esc(f.img) + "?" + DATA_V
+        inner = '<span class="h2h-lean-glyph" aria-hidden="true">' + f.glyph + "</span>";
+      } else if (f && f.img) {
+        inner = '<img class="seat-flair h2h-lean-flair" src="' + esc(f.img) + "?" + DATA_V
           + '" width="14" height="14" alt="" decoding="async" />';
+      } else {
+        return "";
       }
-      return "";
+      if (!n) return inner;
+      return '<span class="seat-link h2h-lean-flair-link" role="link" tabindex="0" data-who="'
+        + esc(n) + '" aria-label="' + esc(n) + '">' + inner + "</span>";
     }
 
     /**
@@ -8895,9 +8903,13 @@ if (inline.includes('day-alert-h">Champions Path')) {
   {
     const markAt = inline.indexOf("function seatVoteMarkHtml(");
     const markStop = inline.indexOf("\n    function ", markAt + 10);
-    const markFn = inline.slice(markAt, markStop < 0 ? markAt + 600 : markStop);
+    const markFn = inline.slice(markAt, markStop < 0 ? markAt + 800 : markStop);
     if (markFn.includes("h2h-lean-init") || markFn.includes("initials")) {
       throw new Error("seatVoteMarkHtml must not fall back to initials — only real seat flairs");
+    }
+    if (!markFn.includes("data-who=") || !markFn.includes("h2h-lean-flair-link")
+      || !markFn.includes('role="link"')) {
+      throw new Error("seatVoteMarkHtml must wrap flairs in seat-link data-who (open team home)");
     }
   }
   if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig") || prog.includes("lh-trade-handle")) {

@@ -975,6 +975,11 @@ const html = `<!DOCTYPE html>
       line-height: 0;
     }
     .pick-intel-ico svg { display: block; width: 22px; height: 22px; }
+    /* Picks glyph: larger stacked 1st/2nd/3rd cards so nd/rd peek out. */
+    .pick-intel-ico.is-picks {
+      width: 36px;
+    }
+    .pick-intel-ico.is-picks svg { width: 30px; height: 30px; }
     /* Cuffs glyph: slightly larger silver handcuffs so they read at a glance. */
     .pick-intel-ico.is-cuffs {
       width: 34px; color: #c5c9d0;
@@ -2182,7 +2187,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsSilverEmoji20260901155000";
+    const DATA_V = "picksStackLarger20260901155500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2865,21 +2870,20 @@ const html = `<!DOCTYPE html>
      * for leaderboard deep-links (team + column + year already chosen).
      */
 
-    /** Leading glyph for the Draft Data chip row: stacked pick cards (1st / 2nd / 3rd). */
+        /** Leading glyph for the Draft Data chip row: stacked pick cards (1st / 2nd / 3rd). */
     function picksBarIcon() {
-      return '<span class="pick-intel-ico" aria-hidden="true" title="Picks">'
-        + '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
-        + '<rect x="7.2" y="2.2" width="12.2" height="14.2" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
-        + '<text x="13.3" y="11.2" text-anchor="middle" fill="currentColor" font-size="5.2" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
-        + '<rect x="4.8" y="4.4" width="12.2" height="14.2" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
-        + '<text x="10.9" y="13.4" text-anchor="middle" fill="currentColor" font-size="5.2" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
-        + '<rect x="2.4" y="6.6" width="12.2" height="14.2" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.45"/>'
-        + '<text x="8.5" y="15.6" text-anchor="middle" fill="currentColor" font-size="5.4" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
+      return '<span class="pick-intel-ico is-picks" aria-hidden="true" title="Picks">'
+        + '<svg viewBox="0 0 32 32" width="30" height="30" focusable="false">'
+        + '<rect x="11.5" y="1.5" width="14.2" height="16.4" rx="2" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="22.4" y="11.6" text-anchor="end" fill="currentColor" font-size="6" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
+        + '<rect x="6.5" y="5" width="14.2" height="16.4" rx="2" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="17.4" y="15.2" text-anchor="end" fill="currentColor" font-size="6" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
+        + '<rect x="1.5" y="8.5" width="14.2" height="16.4" rx="2" fill="var(--card)" stroke="currentColor" stroke-width="1.5"/>'
+        + '<text x="8.6" y="19.2" text-anchor="middle" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
         + "</svg></span>";
     }
 
-    /** Leading glyph for the Cuffs chip row — silver handcuffs (emoji-clear). */
-    function cuffsBarIcon() {
+function cuffsBarIcon() {
       return '<span class="pick-intel-ico is-cuffs" aria-hidden="true" title="Cuffs">'
         + '<svg viewBox="0 0 32 32" width="28" height="28" focusable="false">'
         + '<defs>'
@@ -10630,7 +10634,7 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
 
 {
   if (!inline.includes("function picksBarIcon(") || !inline.includes("pick-intel-ico")
-    || !inline.includes("pick-intel-chips")) {
+    || !inline.includes("pick-intel-chips") || !inline.includes("is-picks")) {
     throw new Error("Draft Data bar must show a picks icon beside equal-width chips");
   }
   if (!inline.includes("function cuffsBarIcon(") || !inline.includes("cuffsBarIcon()")

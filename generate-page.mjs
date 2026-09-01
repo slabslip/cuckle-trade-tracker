@@ -947,11 +947,22 @@ const html = `<!DOCTYPE html>
     .h2h-chip.is-trade .h2h-name {
       font-size: 0.875rem; font-weight: 650;
       display: flex; align-items: center; gap: 0;
-      line-height: 1.2; min-height: 36px;
+      line-height: 1.2;
     }
     .h2h-chip.is-trade .h2h-id {
-      display: flex; align-items: center; min-width: 0; flex: 1 1 auto;
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: flex-start; gap: 2px;
+      min-width: 0; flex: 1 1 auto;
     }
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-id { align-items: flex-start; }
+    /* Book verdict under the seat name — same lean that drove the old mid “Value leans” line. */
+    .h2h-chip.is-trade .h2h-verdict {
+      font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em;
+      line-height: 1.2; text-transform: uppercase;
+    }
+    .h2h-chip.is-trade .h2h-verdict.is-win { color: var(--green); }
+    .h2h-chip.is-trade .h2h-verdict.is-lose { color: var(--red); }
+    .h2h-chip.is-trade .h2h-verdict.is-even { color: var(--dim); }
     .h2h-assets {
       display: flex; flex-direction: column; gap: 4px; width: 100%;
       padding-top: 4px; border-top: 1px solid #3a3428;
@@ -1463,7 +1474,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "dropLeanMid20260901015000";
+    const DATA_V = "tradeWinnerLoser20260901015130";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4884,7 +4895,7 @@ const html = `<!DOCTYPE html>
 
     /**
      * Under the chip: left/right voter flairs aligned to each team.
-     * Mid lean copy is gone — valuation winner/loser will live on the seat headers.
+     * Book WINNER/LOSER lives under each seat name (not mid copy).
      * Voting stays on the trade screen (nested buttons cannot live inside the Latest trade opener).
      */
     function latestTradeLeanFooterHtml(latest, lean) {
@@ -5129,16 +5140,30 @@ const html = `<!DOCTYPE html>
       const lean = latestTradeLean(latest);
       const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
       const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      const sideHtml = (side, rightAlign, win) => {
+      let leftVerdict = "";
+      let rightVerdict = "";
+      if (lean.leftDelta != null) {
+        const d = Math.round(lean.leftDelta);
+        if (d > 0) { leftVerdict = "win"; rightVerdict = "lose"; }
+        else if (d < 0) { leftVerdict = "lose"; rightVerdict = "win"; }
+        else { leftVerdict = "even"; rightVerdict = "even"; }
+      }
+      const verdictHtml = (kind) => {
+        if (!kind) return "";
+        const word = kind === "win" ? "WINNER" : kind === "lose" ? "LOSER" : "EVEN";
+        return '<div class="h2h-verdict is-' + kind + '">' + word + "</div>";
+      };
+      const sideHtml = (side, rightAlign, win, verdict) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
-        // Avatar + seat name only — bag totals live in the arithmetic column under the assets.
+        // Avatar + seat name + book WINNER/LOSER — bag totals live in the arithmetic column.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar, { win: win })
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
+          + verdictHtml(verdict)
           + "</div></div>"
           + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
@@ -5149,9 +5174,9 @@ const html = `<!DOCTYPE html>
       };
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
-        + sideHtml(left, false, leftWin)
+        + sideHtml(left, false, leftWin, leftVerdict)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin)
+        + sideHtml(right, true, rightWin, rightVerdict)
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
     }
@@ -6962,6 +6987,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
     const foot = inline.slice(footAt, footStop < 0 ? footAt + 1600 : footStop);
     if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
       throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
+  if (!inline.includes("h2h-verdict") || !inline.includes("WINNER") || !inline.includes("LOSER")
+    || !html.includes(".h2h-verdict.is-win") || !html.includes(".h2h-verdict.is-lose")) {
+    throw new Error("Latest trade chip must show book WINNER/LOSER under each seat name");
+  }
     }
   }
   {

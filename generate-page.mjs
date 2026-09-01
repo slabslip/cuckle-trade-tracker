@@ -2092,7 +2092,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsInjTiny20260901154500";
+    const DATA_V = "cuffsFaExclusive20260901155500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8785,10 +8785,12 @@ const html = `<!DOCTYPE html>
       }
       const cuffFa = e.target.closest("[data-cuff-fa]");
       if (cuffFa) {
-        cuffFilterFa = !cuffFilterFa;
+        // Exclusive mode: cuff free alone — starters whose NFL cuff is unrostered.
         if (cuffFilterFa) {
-          cuffFilterHeld = false;
-          cuffFilterOther = false;
+          resetCuffFilters();
+        } else {
+          clearCuffFilters();
+          cuffFilterFa = true;
         }
         render();
         return;
@@ -10786,7 +10788,8 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes('data-cuff-fa="1"') || !inline.includes("function ensureCuffs(")
     || !inline.includes("function filteredCuffRows(") || !inline.includes("cuffs.json")
     || !inline.includes("clearCuffFilters(") || !inline.includes("function resetCuffFilters(")
-    || !inline.includes("resetCuffFilters()")) {
+    || !inline.includes("resetCuffFilters()")
+    || !inline.includes("Exclusive mode: cuff free alone")) {
     throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
   }
   if (!inline.includes("function openCuffsPage(") || !inline.includes("function cuffsHome(")

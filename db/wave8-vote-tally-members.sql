@@ -30,11 +30,13 @@ delete from public.trade_votes v
             and m.sleeper_user_id = v.voter
        );
 
--- 2. Tallies: only current members, never cleared
+-- 2. Tallies: only current members, never cleared.
+-- security_invoker = false: anon/authenticated can read the view without
+-- SELECT on league_memberships (RLS only exposes one's own membership rows).
 drop view if exists public.trade_vote_tallies;
 
 create view public.trade_vote_tallies
-  with (security_invoker = true)
+  with (security_invoker = false)
   as
     select
       v.sleeper_league_id,

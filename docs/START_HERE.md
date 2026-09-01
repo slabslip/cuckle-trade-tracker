@@ -48,6 +48,7 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 7. `db/wave5-invite-plain.sql`
 8. `db/wave6-one-seat-redeem.sql`
 9. `db/wave8-vote-tally-members.sql` (tallies = current members only; scrubs ghost votes)
+   If tallies 401 after wave8: also run `db/wave8b-tally-view-fix.sql`
 
 Optional vote clean slate: `scripts/wipe-trade-votes.sql` → `truncate public.trade_votes ...`
 

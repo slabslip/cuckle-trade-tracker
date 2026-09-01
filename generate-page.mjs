@@ -940,6 +940,16 @@ const html = `<!DOCTYPE html>
       color: var(--dim); font-size: 0.6875rem; font-weight: 600;
       letter-spacing: 0.04em; text-transform: uppercase;
     }
+    /* Compact draft-year scope for the idle board (all still-available seasons). */
+    .pick-intel-board-yrs {
+      font-weight: 500; letter-spacing: 0.02em; text-transform: none;
+      color: var(--muted);
+    }
+    .pick-intel-board-yrs::before {
+      content: "·";
+      margin: 0 0.35em;
+      color: var(--dim);
+    }
     .pick-intel-board-cols {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1971,6 +1981,14 @@ const html = `<!DOCTYPE html>
       return [...years].sort();
     }
 
+    /** Compact year scope for the idle board — all still-available seasons (e.g. 2027–2029). */
+    function pickSeasonRangeLabel() {
+      const years = pickSeasonsAvailable();
+      if (!years.length) return "";
+      if (years.length === 1) return years[0];
+      return years[0] + "–" + years[years.length - 1];
+    }
+
     function pickFiltersActive() {
       return pickFilterMineOut || pickFilterMineHeld || !!pickFilterOwner
         || Object.keys(pickFilterRounds).some((k) => pickFilterRounds[k])
@@ -2140,7 +2158,8 @@ const html = `<!DOCTYPE html>
           + '</span><span class="pil-n">· ' + n + "</span></div>").join("");
     }
 
-    /** Idle quick-view leaderboard: three columns — most 1sts, most 2nds, most picks overall. */
+    /** Idle quick-view leaderboard: three columns — most 1sts, most 2nds, most picks overall.
+     * Counts span every still-available draft year; the heading shows that year range. */
     function pickIntelBoard() {
       const cols = [
         { lab: "1sts", round: 1, filter: true },
@@ -2148,8 +2167,12 @@ const html = `<!DOCTYPE html>
         { lab: "Total", round: null, filter: false },
       ];
       const boardH = "Who's got picks";
-      return '<div class="pick-intel-board" role="group" aria-label="' + boardH + '">'
-        + '<p class="pick-intel-board-h">' + boardH + "</p>"
+      const yrs = pickSeasonRangeLabel();
+      const aria = yrs ? (boardH + ", " + yrs) : boardH;
+      return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
+        + '<p class="pick-intel-board-h">' + boardH
+        + (yrs ? (' <span class="pick-intel-board-yrs">' + esc(yrs) + "</span>") : "")
+        + "</p>"
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
           const leaders = pickLeaders(r.round, 3);
@@ -9168,7 +9191,8 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes("function clearPickFilters(") || !inline.includes('data-pick-mine-held="1"')
   || !inline.includes("function pickLeaders(") || !inline.includes("function pickIntelBoard(")
   || !inline.includes("function pickLeadersStack(") || !inline.includes("function pickIntelStepPanel(")
-  || !inline.includes("pick-intel-board-cols")
+  || !inline.includes("function pickSeasonRangeLabel(") || !inline.includes("pick-intel-board-cols")
+  || !inline.includes("pick-intel-board-yrs")
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
@@ -9179,6 +9203,7 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
+  || !html.includes(".pick-intel-board-yrs")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
   throw new Error("Pick board progressive filter + column leaderboard styles must ship (no pick search input)");

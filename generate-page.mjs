@@ -2240,6 +2240,13 @@ const html = `<!DOCTYPE html>
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
     let newsPullupOpen = false;
     let newsPullupCleanup = null;
+    // After tap-to-close, the sheet collapses under the finger and the browser's follow-up
+    // click lands on whatever is now behind it (home chips, cuffs, bottom nav). Swallow that
+    // click so closing News does not navigate away from the page the user was already on.
+    let newsPullupSwallowClicksUntil = 0;
+    function swallowNewsPullupClickThrough() {
+      newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 450);
+    }
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
     let weekMatchupsLoading = false;
@@ -7002,24 +7009,37 @@ const html = `<!DOCTYPE html>
         const flickOpen = drag.vel < -0.45;
         const flickClose = drag.vel > 0.45;
         const wasTap = !drag.moved;
+        const wasOpenBefore = newsPullupOpen;
         drag = null;
         root.classList.remove("is-dragging");
         sheet.style.transform = "";
         if (wasTap) {
           if (e && e.target && e.target.closest("a.news-hero-link")) return;
           if (e && e.target && e.target.closest("[data-news-del]")) return;
-          if (newsPullupOpen) setNewsPullupOpen(false);
-          else setNewsPullupOpen(true);
+          if (newsPullupOpen) {
+            setNewsPullupOpen(false);
+            swallowNewsPullupClickThrough();
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          } else {
+            setNewsPullupOpen(true);
+          }
           return;
         }
         if (flickOpen) setNewsPullupOpen(true);
         else if (flickClose) setNewsPullupOpen(false);
         else setNewsPullupOpen(ty < limit * 0.55);
+        // Drag/flick dismiss can also leave a click on the page that was under the sheet.
+        if (wasOpenBefore && !newsPullupOpen) swallowNewsPullupClickThrough();
       };
 
       const onScrimClick = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         setNewsPullupOpen(false);
+        swallowNewsPullupClickThrough();
       };
 
       const onResize = () => applyBrand();
@@ -9324,6 +9344,13 @@ const html = `<!DOCTYPE html>
       focusNext = ".screen-h";
       render();
     }
+
+    // Capture-phase: kill the click that follows a News sheet collapse (see swallowNewsPullupClickThrough).
+    document.addEventListener("click", (e) => {
+      if (Date.now() >= newsPullupSwallowClicksUntil) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
 
     // Gate signup/signin is a real <form> so Enter and password managers work. Prevent the
     // default navigation and run the same path as the submit button.
@@ -11660,6 +11687,10 @@ if (!sheetRules.includes(".news-pullup.is-open .news-pullup-sheet")
 }
 if (!inline.includes("function armNewsPullup()") || !inline.includes("setNewsPullupOpen")) {
   throw new Error("news pull-up must ship open/close + drag wiring");
+}
+if (!inline.includes("function swallowNewsPullupClickThrough()")
+  || !inline.includes("newsPullupSwallowClicksUntil")) {
+  throw new Error("news pull-up must swallow the post-close click-through so dismiss does not navigate");
 }
 if (!inline.includes("flickOpen") || !inline.includes("flickClose")) {
   throw new Error("news pull-up must support flick open/close gestures");

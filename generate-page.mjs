@@ -2200,7 +2200,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "handcuffsCaption20260901150500";
+    const DATA_V = "draftPicksCaption20260901151000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

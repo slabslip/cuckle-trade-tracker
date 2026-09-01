@@ -935,15 +935,13 @@
       color: var(--dim); font-size: 0.6875rem; font-weight: 600;
       letter-spacing: 0.04em; text-transform: uppercase;
     }
-    /* Compact draft-year scope for the idle board (all still-available seasons). */
-    .pick-intel-board-yrs {
-      font-weight: 500; letter-spacing: 0.02em; text-transform: none;
-      color: var(--muted);
-    }
-    .pick-intel-board-yrs::before {
-      content: "·";
-      margin: 0 0.35em;
-      color: var(--dim);
+    /* Draft-year scope under each column lab (stacked so · N stay centered). */
+    .pick-intel-board-lab .pick-intel-board-yrs {
+      display: block;
+      margin-top: 1px;
+      font-weight: 500; font-size: 0.625rem; line-height: 1.2;
+      letter-spacing: 0.01em; text-transform: none;
+      color: var(--dim); white-space: nowrap;
     }
     .pick-intel-board-cols {
       display: grid;
@@ -962,13 +960,13 @@
     .pick-intel-board-lab {
       grid-column: 2; justify-self: center; text-align: center;
       color: var(--muted); font-size: 0.75rem; font-weight: 650;
-      white-space: nowrap; letter-spacing: 0.02em;
+      white-space: nowrap; letter-spacing: 0.02em; line-height: 1.2;
     }
     button.pick-intel-board-lab {
       appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
       color: var(--muted); background: transparent; border: 0; padding: 0; margin: 0;
       cursor: pointer; text-align: center; touch-action: manipulation;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.02em; line-height: 1.2;
       grid-column: 2; justify-self: center;
     }
     button.pick-intel-board-lab:focus-visible {
@@ -2154,7 +2152,7 @@
     }
 
     /** Idle quick-view leaderboard: three columns — most 1sts, most 2nds, most picks overall.
-     * Counts span every still-available draft year; the heading shows that year range. */
+     * Counts span every still-available draft year; each column lab shows that year range. */
     function pickIntelBoard() {
       const cols = [
         { lab: "1sts", round: 1, filter: true },
@@ -2165,16 +2163,17 @@
       const yrs = pickSeasonRangeLabel();
       const aria = yrs ? (boardH + ", " + yrs) : boardH;
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
-        + '<p class="pick-intel-board-h">' + boardH
-        + (yrs ? (' <span class="pick-intel-board-yrs">' + esc(yrs) + "</span>") : "")
-        + "</p>"
+        + '<p class="pick-intel-board-h">' + boardH + "</p>"
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
           const leaders = pickLeaders(r.round, 3);
+          const labFull = yrs ? (r.lab + " · " + yrs) : r.lab;
+          const labInner = esc(r.lab)
+            + (yrs ? ('<span class="pick-intel-board-yrs">' + esc(yrs) + "</span>") : "");
           const lab = r.filter
             ? ('<button type="button" class="pick-intel-board-lab" data-pick-round="'
-              + r.round + '" aria-label="Filter to ' + esc(r.lab) + '">' + esc(r.lab) + "</button>")
-            : ('<span class="pick-intel-board-lab">' + esc(r.lab) + "</span>");
+              + r.round + '" aria-label="Filter to ' + esc(labFull) + '">' + labInner + "</button>")
+            : ('<span class="pick-intel-board-lab">' + labInner + "</span>");
           return '<div class="pick-intel-board-col">'
             + lab
             + '<div class="pick-intel-board-leaders">' + pickLeadersStack(leaders) + "</div>"

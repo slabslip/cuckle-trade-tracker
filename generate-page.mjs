@@ -2089,7 +2089,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsOnHome20260901132000";
+    const DATA_V = "draftDataPage20260901133000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2705,8 +2705,11 @@ const html = `<!DOCTYPE html>
       const mineOutDis = !seat;
       const mineHeldDis = !seat;
       const filterOn = pickFilterOpen || active;
+      const heading = view === "draftdata"
+        ? ""
+        : '<h2 class="pick-intel-h">Draft Data</h2>';
       return '<section class="pick-intel" aria-label="Draft Data">'
-        + '<h2 class="pick-intel-h">Draft Data</h2>'
+        + heading
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
@@ -2726,6 +2729,66 @@ const html = `<!DOCTYPE html>
         + pickIntelStepPanel(seatNames)
         + body
         + "</section>";
+    }
+
+    /**
+     * Open the full Draft Data screen. Home chips land here so filtering/research
+     * has room; mode presets search / who-has-mine / whose-I-hold.
+     */
+    function openDraftDataPage(mode) {
+      clearPickFilters();
+      if (mode === "mine") {
+        pickFilterMineOut = true;
+      } else if (mode === "held") {
+        pickFilterMineHeld = true;
+      } else {
+        // search — progressive Round → Year → Team
+        pickFilterOpen = true;
+        pickFilterStep = "round";
+      }
+      pickIntelOpen = null;
+      view = "draftdata";
+      focusNext = ".screen-h";
+      syncUrl();
+      render();
+    }
+
+    /** League-home Draft Data teaser: board + chips that open the full page. */
+    function pickIntelHome() {
+      ensurePicks();
+      const seat = authSeatName();
+      let body = "";
+      if (!picks && picksLoading) {
+        body = '<p class="caption">Loading picks…</p>';
+      } else if (!picks) {
+        body = '<p class="caption">Pick tape is not available for this league yet.</p>';
+      } else {
+        const anyLeaders = pickLeaders(null, 1, PICK_INTEL_BOARD_YEAR).length > 0;
+        body = anyLeaders
+          ? pickIntelBoard()
+          : '<p class="caption">No still-available picks on the tape yet. Open search when picks load.</p>';
+      }
+      const mineDis = !seat;
+      return '<section class="pick-intel" aria-label="Draft Data">'
+        + '<h2 class="pick-intel-h">Draft Data</h2>'
+        + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
+        + ' aria-label="search for picks">search for picks</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="who has my picks">who has my picks</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + "</div>"
+        + body
+        + "</section>";
+    }
+
+    function renderDraftDataPage() {
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">Draft Data</h2>'
+        + pickIntel();
     }
 
 
@@ -2977,8 +3040,8 @@ const html = `<!DOCTYPE html>
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata"];
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
@@ -4056,7 +4119,7 @@ const html = `<!DOCTYPE html>
       let intel = "";
       try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
-      try { intel = pickIntel(); } catch (err) { console.error(err); intel = ""; }
+      try { intel = pickIntelHome(); } catch (err) { console.error(err); intel = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
@@ -4086,7 +4149,7 @@ const html = `<!DOCTYPE html>
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
       if (!intel) {
-        try { intel = pickIntel(); } catch (err3) { console.error(err3); }
+        try { intel = pickIntelHome(); } catch (err3) { console.error(err3); }
       }
       let cuffsHtml = "";
       try { cuffsHtml = cuffsPanel(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
@@ -8152,6 +8215,7 @@ const html = `<!DOCTYPE html>
         : view === "teams" ? renderTeamsPage()
         : view === "news" ? renderNewsPage()
         : view === "datasets" ? renderDataSetsPage()
+        : view === "draftdata" ? renderDraftDataPage()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -8496,6 +8560,12 @@ const html = `<!DOCTYPE html>
       if (dsListBtn) { showDataSetList(); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
       if (dsOpenBtn) { openDataSets(); return; }
+      const draftDataOpen = e.target.closest("[data-draft-data-open]");
+      if (draftDataOpen) {
+        if (draftDataOpen.getAttribute("aria-disabled") === "true") return;
+        openDraftDataPage(draftDataOpen.dataset.draftDataOpen || "search");
+        return;
+      }
       const pickMine = e.target.closest("[data-pick-mine]");
       if (pickMine) {
         if (pickMine.getAttribute("aria-disabled") === "true") return;
@@ -8903,7 +8973,9 @@ const html = `<!DOCTYPE html>
       const viewBtn = e.target.closest("[data-view]");
       if (viewBtn) {
         if (viewBtn.tagName === "A") e.preventDefault();
-        view = viewBtn.dataset.view;
+        const nextView = viewBtn.dataset.view;
+        if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
+        view = nextView;
         openId = null;
         tradeSeat = null;
         openDraft = null;
@@ -10479,8 +10551,8 @@ const homeReturn = homeCompose.slice(0, homeCompose.indexOf("\n    }"));
 if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   throw new Error("renderLeagueHome must still compose dayAlert() + homeChips()");
 }
-if (!homeReturn.includes("pickIntel()") || !homeReturn.includes("intel")) {
-  throw new Error("renderLeagueHome must mount pickIntel between quick actions and the News Feed");
+if (!homeReturn.includes("pickIntelHome()") || !homeReturn.includes("intel")) {
+  throw new Error("renderLeagueHome must mount pickIntelHome between quick actions and the News Feed");
 }
 if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine="1"')
   || !inline.includes('data-pick-rounds') || !inline.includes('data-pick-years')
@@ -10508,6 +10580,20 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || inline.includes('aria-label="Pick board"')
   || inline.includes("pick-intel-board-row")) {
   throw new Error("Draft Data must ship progressive filters + 2027 top-3 column leaderboard without a search input or board-h");
+
+{
+  if (!inline.includes("function openDraftDataPage(") || !inline.includes("function pickIntelHome(")
+    || !inline.includes("function renderDraftDataPage(") || !inline.includes('data-draft-data-open="search"')
+    || !inline.includes('data-draft-data-open="mine"') || !inline.includes('data-draft-data-open="held"')
+    || !inline.includes('view === "draftdata" ? renderDraftDataPage()')
+    || !inline.includes('"draftdata"')) {
+    throw new Error("Draft Data home chips must open a full draftdata page for search/mine/held");
+  }
+  const homeTeaser = inline.slice(inline.indexOf("function pickIntelHome("), inline.indexOf("function pickIntelHome(") + 1600);
+  if (homeTeaser.includes("data-pick-filter-open") || homeTeaser.includes("data-pick-mine=\"")) {
+    throw new Error("pickIntelHome chips must navigate via data-draft-data-open, not inline pick filters");
+  }
+}
 }
 
 {

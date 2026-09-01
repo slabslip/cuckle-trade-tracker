@@ -1732,7 +1732,7 @@ const html = `<!DOCTYPE html>
        menu that was covering the rest of their row, which measured perfectly and read as a
        rendering fault. Full width also means the panel cannot be wider than the body's content
        box, so it can never widen the document. */
-    /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
+    /* Addressed by id, the way #scoreAs and #seatTradeFilters are, so these win over the shared
        .filter-panel box rules that are declared further down the sheet. */
     /* The cap is the list, not a fraction of the viewport. It used to be min(100dvh - 96px, 480px)
        -- a flat 480px on any phone taller than 576px -- which is a number the five options never
@@ -1981,19 +1981,11 @@ const html = `<!DOCTYPE html>
     .filter-panel .rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
     .filter-panel .filter-h { color: var(--dim); font-size: 0.75rem; margin: 8px 0 0; }
     .filter-wrap { position: relative; z-index: 4; }
-    #yearFilters {
-      position: absolute; top: 52px; left: 0; z-index: 12;
-      width: 132px; max-height: min(60dvh, 420px); overflow-y: auto;
-      margin: 0; padding: 4px 8px;
-      display: flex; flex-direction: column;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    #seatTradeFilters {
+      margin: 0 0 14px;
+      max-height: min(70dvh, 520px); overflow-y: auto;
     }
-    #yearFilters label {
-      min-height: 44px; gap: 10px; font-size: 0.8125rem; color: var(--muted);
-      cursor: pointer;
-    }
-    #yearFilters label:has(input:checked) { color: var(--text); }
-    #yearFilters input { width: 16px; height: 16px; }
+    #seatTradeFilters .filter-h:first-child { margin-top: 4px; }
     .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
     .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
     .path-hero h2 { margin: 0 0 6px; }
@@ -2202,7 +2194,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "searchAllTradesBtn20260901174900";
+    const DATA_V = "seatTradeFilterPanel20260901175500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2259,6 +2251,8 @@ const html = `<!DOCTYPE html>
     let draftFilterOpen = false;
     let year = "all";
     let yearFilterOpen = false;
+    let seatTradeTeam = "all";
+    let seatTradeSort = "new"; // new = Most Recent, old = Oldest
     // League-wide trades feed filters (years / teams / players). Separate from the
     // per-seat Trades tab year filter so the two screens do not clobber each other.
     let tapeFilterOpen = false;
@@ -3590,6 +3584,8 @@ const html = `<!DOCTYPE html>
       voteToast = null;
       // Filters are per-seat state. Leaving them set filtered the next seat to a season it may not have.
       year = "all";
+      seatTradeTeam = "all";
+      seatTradeSort = "new";
       lens = "all";
       draftSort = "new";
       draftRounds = { 1: true, 2: true, 3: true, 4: true };
@@ -8165,27 +8161,97 @@ const html = `<!DOCTYPE html>
         + detail + "</div>";
     }
 
-    function renderTrades() {
+    /** Partner names appearing on this seat's trade tape (for the Trades tab team filter). */
+    function seatTradeTeams(trades) {
+      const names = new Set();
+      for (const t of trades || []) {
+        for (const o of t.others || []) if (o) names.add(String(o));
+      }
+      return [...names].sort((a, b) => a.localeCompare(b));
+    }
+
+    /** Filter + sort state for a seat's Trades tab. Shared by renderTrades only. */
+    function seatTradesFiltered() {
       const all = (data && data.trades) || [];
       const years = [...new Set(all.map((t) => t.season))].sort().reverse();
+      const teams = seatTradeTeams(all);
       let list = all;
       if (year !== "all") list = list.filter((t) => t.season === year);
-      // Home tiles exclude trades that have not lived the selected clock; this list must too.
-      const lived = list.filter((t) => chipLived(t.date));
-      const hint = year === "all" ? "Filter by year" : "Filter by year · " + year;
-      const yearBtn = '<button type="button" class="filter-btn' + (year !== "all" || yearFilterOpen ? " on" : "") + '" data-yfilter="1" aria-label="Filter by year" aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
-        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
-        + (year !== "all" ? '<span class="dot"></span>' : "")
-        + "</button>"
-        + '<div class="caption">' + hint + "</div>";
+      if (seatTradeTeam !== "all") {
+        list = list.filter((t) => (t.others || []).some((o) => o === seatTradeTeam));
+      }
+      let lived = list.filter((t) => chipLived(t.date));
+      lived = lived.slice().sort((a, b) => {
+        if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+        const ta = a.transaction_id || "";
+        const tb = b.transaction_id || "";
+        if (ta !== tb) return ta < tb ? -1 : 1;
+        return 0;
+      });
+      if (seatTradeSort !== "old") lived.reverse();
+      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort === "old";
       const empty = !all.length
         ? '<p class="caption">No trades on this seat yet.</p>'
         : !list.length
-          ? '<p class="caption">No trades in ' + esc(year) + '. Clear the year filter to see the rest.</p>'
+          ? '<p class="caption">No trades match these filters. Clear a filter to see the rest.</p>'
           : !lived.length
             ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
             : "";
-      // Same H2H + vote cards as the league feed; bags are already on the seat file.
+      return { all, years, teams, list, lived, filtered, empty };
+    }
+
+    /** One filter control with Year, Team, and sort sub-filters for the seat Trades tab. */
+    function seatTradeFilterHtml(ctx) {
+      const hintBits = [];
+      if (year !== "all") hintBits.push(year);
+      if (seatTradeTeam !== "all") hintBits.push(seatTradeTeam);
+      if (seatTradeSort === "old") hintBits.push("Oldest");
+      const filterHint = ctx.filtered
+        ? "Filter · " + hintBits.join(" · ")
+        : "Filter by year, team, or sort";
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (ctx.filtered || yearFilterOpen ? " on" : "") + '" data-stfilter="1" aria-label="Filter trades"'
+        + ' aria-expanded="' + (yearFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (ctx.filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const yearRadios = [["all", "All"]].concat(ctx.years.map((y) => [y, y])).map((row) =>
+        '<label data-seat-year="' + esc(row[0]) + '"><input type="radio" name="seatTradeYear" value="'
+        + esc(row[0]) + '"' + (year === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const teamRadios = [["all", "All teams"]].concat(ctx.teams.map((n) => [n, n])).map((row) =>
+        '<label data-seat-team="' + esc(row[0]) + '"><input type="radio" name="seatTradeTeam" value="'
+        + esc(row[0]) + '"' + (seatTradeTeam === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const sortRadios = [
+        ["new", "Most Recent"],
+        ["old", "Oldest"],
+      ].map((row) =>
+        '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
+        + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const panel = yearFilterOpen
+        ? '<div class="filter-panel" id="seatTradeFilters">'
+          + '<div class="filter-h">Year</div>'
+          + yearRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Team</div>'
+          + teamRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Sort</div>'
+          + sortRadios
+          + "</div>"
+        : "";
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
+    }
+
+    function renderTrades() {
+      const ctx = seatTradesFiltered();
+      const { all, list, lived, empty } = ctx;
       const shown = lived.slice(0, tapeLimit);
       for (const t of shown) seatTradeSide(t);
       const cards = shown.map((t) => seatTradeFeedCardHtml(t)).join("");
@@ -8193,18 +8259,7 @@ const html = `<!DOCTYPE html>
         ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
           + (lived.length - shown.length) + " left)</button>"
         : "";
-      return '<div class="filter-wrap">'
-        + filterRow(yearBtn)
-        + (yearFilterOpen
-          // Exactly one year at a time, so these are radios, not checkboxes.
-          ? '<div class="filter-panel" id="yearFilters" role="radiogroup" aria-label="Year">'
-            + [["all", "All"]].concat(years.map((y) => [y, y])).map((row) =>
-              '<label data-year="' + esc(row[0]) + '"><input type="radio" name="yearFilter" value="' + esc(row[0]) + '"'
-              + (year === row[0] ? " checked" : "") + "> " + esc(row[1]) + "</label>"
-            ).join("")
-            + "</div>"
-          : "")
-        + "</div>"
+      return seatTradeFilterHtml(ctx)
         + voteToastHtml()
         + '<div class="caption">' + esc(livedHint(lived.length, list.length, "deal")) + "</div>"
         + empty
@@ -8864,6 +8919,8 @@ const html = `<!DOCTYPE html>
       markOpen = null;
       titleYear = null;
       year = "all";
+      seatTradeTeam = "all";
+      seatTradeSort = "new";
       yearFilterOpen = false;
       draftFilterOpen = false;
       tapeFilterOpen = false;
@@ -9647,8 +9704,13 @@ const html = `<!DOCTYPE html>
       }
       const filterBtn = e.target.closest("[data-dfilter]");
       if (filterBtn) { draftFilterOpen = !draftFilterOpen; if (draftFilterOpen) lensOpen = false; render(); return; }
-      const yfilterBtn = e.target.closest("[data-yfilter]");
-      if (yfilterBtn) { yearFilterOpen = !yearFilterOpen; if (yearFilterOpen) lensOpen = false; render(); return; }
+      const stfilterBtn = e.target.closest("[data-stfilter]");
+      if (stfilterBtn) {
+        yearFilterOpen = !yearFilterOpen;
+        if (yearFilterOpen) lensOpen = false;
+        render();
+        return;
+      }
       const tfilterBtn = e.target.closest("[data-tfilter]");
       if (tfilterBtn) {
         tapeFilterOpen = !tapeFilterOpen;
@@ -9662,7 +9724,7 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      if (e.target.closest("#draftFilters") || e.target.closest("#yearFilters")
+      if (e.target.closest("#draftFilters") || e.target.closest("#seatTradeFilters")
         || e.target.closest("#tapeFilters")
         || e.target.closest("#dataSets")) return;
       let closedFilter = false;
@@ -9674,7 +9736,7 @@ const html = `<!DOCTYPE html>
         draftFilterOpen = false;
         closedFilter = true;
       }
-      if (yearFilterOpen && !e.target.closest("#yearFilters")) {
+      if (yearFilterOpen && !e.target.closest("#seatTradeFilters") && !e.target.closest("[data-stfilter]")) {
         yearFilterOpen = false;
         closedFilter = true;
       }
@@ -9764,11 +9826,27 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const yearLab = e.target.closest("[data-year]");
-      if (yearLab) {
-        year = e.target.checked ? yearLab.dataset.year : "all";
-        yearFilterOpen = true;
+      const seatYearLab = e.target.closest("[data-seat-year]");
+      if (seatYearLab) {
+        year = e.target.checked ? seatYearLab.dataset.seatYear : "all";
         tapeLimit = 20;
+        yearFilterOpen = true;
+        render();
+        return;
+      }
+      const seatTeamLab = e.target.closest("[data-seat-team]");
+      if (seatTeamLab) {
+        seatTradeTeam = e.target.checked ? seatTeamLab.dataset.seatTeam : "all";
+        tapeLimit = 20;
+        yearFilterOpen = true;
+        render();
+        return;
+      }
+      const seatSortLab = e.target.closest("[data-seat-sort]");
+      if (seatSortLab) {
+        seatTradeSort = seatSortLab.dataset.seatSort || "new";
+        tapeLimit = 20;
+        yearFilterOpen = true;
         render();
         return;
       }
@@ -10758,8 +10836,19 @@ for (const ban of [
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 4500 : stop);
   if (!fn.includes("seatTradeFeedCardHtml(") || !fn.includes("trades-feed")
+    || !fn.includes("seatTradeFilterHtml(") || !fn.includes("seatTradesFiltered(")
     || fn.includes("tradeRow(t)") || fn.includes("lived.map((t) => tradeRow")) {
     throw new Error("seat Trades tab must use H2H feed cards (seatTradeFeedCardHtml), not tradeRow");
+  }
+}
+{
+  const at = inline.indexOf("function seatTradeFilterHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("data-stfilter") || !fn.includes('id="seatTradeFilters"')
+    || !fn.includes("Most Recent") || !fn.includes("Oldest")
+    || !fn.includes("filter-h\">Year") || !fn.includes("filter-h\">Team")) {
+    throw new Error("seat Trades tab must ship unified Year/Team/Sort filter panel");
   }
 }
 {

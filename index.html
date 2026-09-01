@@ -962,9 +962,22 @@
       display: flex; flex-wrap: nowrap; gap: 8px;
       margin: 0 0 8px; align-items: center; justify-content: flex-start;
     }
+    .pick-intel-brand {
+      flex: 0 0 auto;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1px; min-width: 2.75rem;
+      line-height: 1;
+    }
+    .pick-intel-brand-lab {
+      font-size: 0.5rem; font-weight: 650;
+      letter-spacing: 0.01em;
+      color: var(--dim);
+      white-space: nowrap; text-align: center;
+    }
     .pick-intel-ico {
       flex: 0 0 auto;
-      width: 28px; height: 36px;
+      width: 28px; height: 28px;
       display: grid; place-items: center;
       color: var(--muted);
       line-height: 0;
@@ -2182,7 +2195,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "chipLabelsSearchMine20260901161500";
+    const DATA_V = "intelBrandCaptions20260901162500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2865,9 +2878,10 @@
      * for leaderboard deep-links (team + column + year already chosen).
      */
 
-                /** Leading glyph for the Draft Data chip row: stacked pick cards (1st / 2nd / 3rd). */
+    /** Leading glyph for the Draft Data chip row: stacked pick cards + caption. */
     function picksBarIcon() {
-      return '<span class="pick-intel-ico is-picks" aria-hidden="true" title="Picks">'
+      return '<span class="pick-intel-brand" aria-hidden="true" title="Draft Picks">'
+        + '<span class="pick-intel-ico is-picks">'
         + '<svg viewBox="0 0 36 30" width="34" height="28" focusable="false">'
         + '<rect x="18" y="1" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
         + '<text x="29.4" y="10.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
@@ -2875,11 +2889,13 @@
         + '<text x="20.9" y="14.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
         + '<rect x="1" y="9" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.55"/>'
         + '<text x="7.25" y="19" text-anchor="middle" fill="currentColor" font-size="6.8" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
-        + "</svg></span>";
+        + "</svg></span>"
+        + '<span class="pick-intel-brand-lab">Draft Picks</span></span>';
     }
 
-function cuffsBarIcon() {
-      return '<span class="pick-intel-ico is-cuffs" aria-hidden="true" title="Cuffs">'
+    /** Leading glyph for the Cuffs chip row: silver handcuffs + caption. */
+    function cuffsBarIcon() {
+      return '<span class="pick-intel-brand" aria-hidden="true" title="Handcuffs"><span class="pick-intel-ico is-cuffs">'
         + '<svg viewBox="0 0 36 32" width="30" height="28" focusable="false">'
         + '<defs>'
         + '<linearGradient id="cuffSteel" x1="0" y1="0" x2="0" y2="1">'
@@ -2902,10 +2918,10 @@ function cuffsBarIcon() {
         + '<rect x="26.3" y="14.1" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
         + '<ellipse cx="15.6" cy="15.2" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 15.6 15.2)"/>'
         + '<ellipse cx="20.4" cy="14.4" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 20.4 14.4)"/>'
-        + "</svg></span>";
+        + "</svg></span><span class="pick-intel-brand-lab">Handcuffs</span></span>";
     }
 
-function openDraftDataPage(mode, preset) {
+    function openDraftDataPage(mode, preset) {
       clearPickFilters();
       if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
         pickFilterRounds = {};

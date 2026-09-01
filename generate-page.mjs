@@ -879,6 +879,17 @@ const html = `<!DOCTYPE html>
     .news-cat-tag.cat-suspension { color: #ffb347; border-color: rgba(255, 179, 71, 0.45); background: rgba(255, 179, 71, 0.1); }
     .news-cat-tag.cat-depth-chart, .news-cat-tag.cat-buzz { color: #9a9aa3; border-color: rgba(154, 154, 163, 0.45); background: rgba(154, 154, 163, 0.08); }
     .news-player { font-weight: 650; }
+    button.news-player {
+      appearance: none; font: inherit; font-weight: 650;
+      background: none; border: 0; padding: 0; margin: 0;
+      color: inherit; cursor: pointer;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+    button.news-player:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 2px;
+    }
     .news-player.pos-qb { color: var(--pos-qb); }
     .news-player.pos-rb { color: var(--pos-rb); }
     .news-player.pos-wr { color: var(--pos-wr); }
@@ -2168,6 +2179,7 @@ const html = `<!DOCTYPE html>
     let cuffFilterOwner = ""; // fantasy manager whose starters
     let cuffFilterPos = "";   // QB | RB | WR | TE
     let cuffFilterQ = "";
+    let cuffFilterPlayerId = ""; // Sleeper id — news tap opens rows where starter/cuff matches
     let cuffFilterOpen = false;
     let cuffFilterFa = false; // cuff is unrostered
     let cuffFilterHeld = false; // cuff is rostered by someone
@@ -2181,7 +2193,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickBoardYrPrefix20260901160000";
+    const DATA_V = "newsCuffTap20260901163000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2507,6 +2519,7 @@ const html = `<!DOCTYPE html>
       cuffFilterOwner = "";
       cuffFilterPos = "";
       cuffFilterQ = "";
+      cuffFilterPlayerId = "";
       cuffFilterOpen = false;
       cuffFilterFa = false;
       cuffFilterHeld = false;
@@ -2529,7 +2542,8 @@ const html = `<!DOCTYPE html>
 
     function cuffFiltersActive() {
       return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
-        || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterSelf || cuffFilterOther;
+        || !!cuffFilterQ.trim() || !!cuffFilterPlayerId
+        || cuffFilterFa || cuffFilterHeld || cuffFilterSelf || cuffFilterOther;
     }
 
     function pickRoundLabel(n) {
@@ -3003,7 +3017,11 @@ const html = `<!DOCTYPE html>
     function filteredCuffRows(seat) {
       const rows = (cuffs && cuffs.rows) || [];
       const q = cuffFilterQ.trim().toLowerCase();
+      const playerId = String(cuffFilterPlayerId || "");
       return rows.filter((r) => {
+        if (playerId) {
+          if (String(r.starter_id) !== playerId && String(r.cuff_id) !== playerId) return false;
+        }
         if (cuffFilterMine) {
           if (!seat || r.owner !== seat) return false;
         } else if (cuffFilterOwner && r.owner !== cuffFilterOwner) {
@@ -3014,7 +3032,8 @@ const html = `<!DOCTYPE html>
         if (cuffFilterHeld && !r.cuff_owned) return false;
         if (cuffFilterSelf && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner === r.cuff_owner)) return false;
         if (cuffFilterOther && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner !== r.cuff_owner)) return false;
-        if (q) {
+        // Name search is skipped when a news player id is pinned — id match is the source of truth.
+        if (q && !playerId) {
           const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
             .filter(Boolean).join(" ").toLowerCase();
           if (!blob.includes(q)) return false;
@@ -3203,10 +3222,15 @@ const html = `<!DOCTYPE html>
     /**
      * Open the full Cuffs screen. Home chips land here so search/filter has room;
      * mode presets search / my cuffs / cuff available / held / other / bare (board columns).
+     * preset.playerId (from a news highlight) pins rows where that Sleeper id is starter or cuff.
      */
-    function openCuffsPage(mode) {
+    function openCuffsPage(mode, preset) {
       clearCuffFilters();
-      if (mode === "mine") {
+      if (preset && preset.playerId) {
+        cuffFilterPlayerId = String(preset.playerId);
+        cuffFilterQ = String(preset.playerName || "");
+        cuffFilterOpen = true;
+      } else if (mode === "mine") {
         cuffFilterMine = true;
       } else if (mode === "fa") {
         cuffFilterFa = true;
@@ -3285,10 +3309,17 @@ const html = `<!DOCTYPE html>
       } else if (!active) {
         body = '<p class="caption">Search a team or position, or tap Mine / Available.</p>';
       } else if (!rows.length) {
-        body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
+        body = cuffFilterPlayerId
+          ? ('<p class="caption">No cuff row for '
+            + esc(cuffFilterQ.trim() || "that player")
+            + " — rostered in the league, but not a slot-1 starter or depth cuff on this board.</p>")
+          : '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
         let hint;
-        if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
+        if (cuffFilterPlayerId) {
+          hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s")
+            + " for " + (cuffFilterQ.trim() || "that player");
+        } else if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
         else if (cuffFilterSelf) hint = rows.length + " self-cuffed starter" + (rows.length === 1 ? "" : "s") + " (insured)";
@@ -6830,11 +6861,19 @@ const html = `<!DOCTYPE html>
       const p = String(pos || "").toUpperCase();
       return NEWS_POS_SLUG[p] || "oth";
     }
-    function newsPlayerSpanHtml(name, pos) {
+    function newsPlayerSpanHtml(name, pos, playerId) {
       const slug = newsPosSlug(pos);
       const tag = pos
         ? '<span class="news-pos-tag pos-' + slug + '">' + esc(pos) + "</span> "
         : "";
+      // Only roster-matched subjects (player_id from ingest) become links into Cuffs.
+      if (playerId) {
+        return '<button type="button" class="news-player pos-' + slug + '"'
+          + ' data-news-cuff="' + esc(String(playerId)) + '"'
+          + ' data-news-cuff-name="' + esc(name) + '"'
+          + ' aria-label="Open cuff for ' + esc(name) + '">'
+          + tag + esc(name) + "</button>";
+      }
       return '<span class="news-player pos-' + slug + '">' + tag + esc(name) + "</span>";
     }
     /** Category pill label from the league_line prefix ("Injury — …", "Roster move on … — …"). */
@@ -6855,57 +6894,31 @@ const html = `<!DOCTYPE html>
       const slug = newsCatTagSlug(label);
       return '<span class="news-cat-tag cat-' + esc(slug) + '">' + esc(label) + "</span>";
     }
-    /** Highlight rostered players and POS Name wire tokens in an expanded pull-up summary. */
+    /**
+     * Highlight the ingest-matched rostered subject only (it.player + it.player_id).
+     * No free POS-Name scanning — that could colour a free agent who shares a wire tag.
+     */
     function newsPullupLineHtml(line, it) {
       const raw = String(line || "");
       if (!raw) return "";
-      const posByName = Object.create(null);
-      if (it && it.player) posByName[String(it.player).toLowerCase()] = it.player_position || null;
-      const newsPosTokens = "QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C";
-      const posNameRe = new RegExp(
-        "\\\\b(" + newsPosTokens + ")\\\\s+"
-          + "((?:[A-Z]\\\\.)+\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*(?:\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*)*"
-          + "|[A-Z][a-z][\\\\w.'\u2019\\\\-]*(?:\\\\s+[A-Z][a-z][\\\\w.'\u2019\\\\-]*){0,2})"
-          + "(?:\\\\s+(?:Jr\\\\.|Sr\\\\.|II|III|IV|V))?",
-        "g"
-      );
-      const matches = [];
-      let m;
-      while ((m = posNameRe.exec(raw)) !== null) {
-        matches.push({ start: m.index, end: m.index + m[0].length, pos: m[1], name: m[2], kind: "posName" });
-        posByName[m[2].toLowerCase()] = m[1];
-      }
-      const names = Object.keys(posByName).filter(Boolean).sort((a, b) => b.length - a.length);
-      for (const key of names) {
-        const display = (it && it.player && it.player.toLowerCase() === key)
-          ? it.player
-          : (matches.find((x) => x.name.toLowerCase() === key) || {}).name || key;
-        const re = new RegExp("\\\\b" + display.replace(/[.*+?^\u0024{}()|[\\]\\\\]/g, "\\\\$&") + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "g");
-        let nm;
-        while ((nm = re.exec(raw)) !== null) {
-          if (matches.some((x) => nm.index >= x.start && nm.index < x.end)) continue;
-          matches.push({
-            start: nm.index, end: nm.index + nm[0].length,
-            pos: posByName[key], name: display, kind: "name",
-          });
-        }
-      }
-      matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
-      const kept = [];
-      for (const match of matches) {
-        if (kept.some((k) => match.start < k.end && match.end > k.start)) continue;
-        kept.push(match);
-      }
-      kept.sort((a, b) => a.start - b.start);
+      const playerId = it && it.player_id ? String(it.player_id) : "";
+      const playerName = it && it.player ? String(it.player) : "";
+      if (!playerId || !playerName) return esc(raw);
+      const pos = it.player_position || null;
+      // Nested escapes: this file is an outer template literal. Use \${ so a literal
+      // dollar-brace lands in the shipped script; \\\\ becomes \\ in the browser RegExp.
+      const escaped = playerName.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+      const re = new RegExp("\\\\b" + escaped + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "gi");
       let html = "";
       let cursor = 0;
-      for (const match of kept) {
-        if (match.start > cursor) html += esc(raw.slice(cursor, match.start));
-        html += newsPlayerSpanHtml(match.name, match.pos);
-        cursor = match.end;
+      let m;
+      while ((m = re.exec(raw)) !== null) {
+        if (m.index > cursor) html += esc(raw.slice(cursor, m.index));
+        html += newsPlayerSpanHtml(playerName, pos, playerId);
+        cursor = m.index + m[0].length;
       }
       if (cursor < raw.length) html += esc(raw.slice(cursor));
-      return html;
+      return html || esc(raw);
     }
 
     function newsHeroLine(it) {
@@ -9051,6 +9064,15 @@ const html = `<!DOCTYPE html>
         openCuffsPage(cuffsOpen.dataset.cuffsOpen || "search");
         return;
       }
+      const newsCuff = e.target.closest("[data-news-cuff]");
+      if (newsCuff) {
+        const pid = newsCuff.getAttribute("data-news-cuff") || "";
+        const pname = newsCuff.getAttribute("data-news-cuff-name") || "";
+        if (!pid) return;
+        if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+        openCuffsPage("search", { playerId: pid, playerName: pname });
+        return;
+      }
       const cuffsBoardBtn = e.target.closest("[data-cuffs-board]");
       if (cuffsBoardBtn) {
         openCuffsPage(cuffsBoardBtn.dataset.cuffsBoard || "held");
@@ -9185,6 +9207,7 @@ const html = `<!DOCTYPE html>
       const cuffClearQ = e.target.closest("[data-cuff-clear-q]");
       if (cuffClearQ) {
         cuffFilterQ = "";
+        cuffFilterPlayerId = "";
         render();
         return;
       }
@@ -9709,6 +9732,7 @@ const html = `<!DOCTYPE html>
       const cuffQBox = e.target.closest("[data-cuff-q]");
       if (cuffQBox) {
         cuffFilterQ = cuffQBox.value;
+        cuffFilterPlayerId = ""; // typing replaces a news-pinned player filter
         if (cuffFilterQ.trim()) cuffFilterMine = false;
         const start = cuffQBox.selectionStart;
         const end = cuffQBox.selectionEnd;
@@ -10190,6 +10214,16 @@ if (!html.includes(".news-player.pos-qb") || !html.includes(".news-cat-tag") || 
 }
 if (!inline.includes("function newsPullupLineHtml(") || !inline.includes("function newsCategoryTagFromLine(")) {
   throw new Error("News pull-up must derive category tags and highlight players in expanded summaries");
+}
+if (!inline.includes('data-news-cuff="') || !inline.includes("data-news-cuff-name")
+  || !inline.includes('closest("[data-news-cuff]")')
+  || !inline.includes("cuffFilterPlayerId")
+  || !inline.includes("openCuffsPage(\"search\", { playerId:")
+  || !inline.includes("No cuff row for ")) {
+  throw new Error("News player highlights must open Cuffs pinned to that Sleeper player id");
+}
+if (!html.includes("button.news-player") || !inline.includes("Only roster-matched subjects")) {
+  throw new Error("News player highlights must be roster-matched buttons into Cuffs");
 }
 {
   const peekFn = inline.slice(inline.indexOf("function newsPullupPeekHtml("),

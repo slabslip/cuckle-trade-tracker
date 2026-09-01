@@ -2171,7 +2171,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsBarIcon20260901154000";
+    const DATA_V = "picksStackedCards20260901154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2854,14 +2854,16 @@
      * for leaderboard deep-links (team + column + year already chosen).
      */
 
-    /** Leading glyph for the Draft Data chip row (draft-pick ticket). */
+    /** Leading glyph for the Draft Data chip row: stacked pick cards (1st / 2nd / 3rd). */
     function picksBarIcon() {
       return '<span class="pick-intel-ico" aria-hidden="true" title="Picks">'
         + '<svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
-        + '<rect x="4.5" y="3.5" width="15" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/>'
-        + '<path d="M8 8h8M8 12h8M8 16h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
-        + '<circle cx="16.2" cy="16.2" r="3.2" fill="var(--card)" stroke="currentColor" stroke-width="1.5"/>'
-        + '<path d="M16.2 14.7v1.5l1.1.7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'
+        + '<rect x="7.2" y="2.2" width="12.2" height="14.2" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="13.3" y="11.2" text-anchor="middle" fill="currentColor" font-size="5.2" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
+        + '<rect x="4.8" y="4.4" width="12.2" height="14.2" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="10.9" y="13.4" text-anchor="middle" fill="currentColor" font-size="5.2" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
+        + '<rect x="2.4" y="6.6" width="12.2" height="14.2" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.45"/>'
+        + '<text x="8.5" y="15.6" text-anchor="middle" fill="currentColor" font-size="5.4" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
         + "</svg></span>";
     }
 

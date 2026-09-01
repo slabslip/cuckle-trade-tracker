@@ -2187,7 +2187,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsRefIconLabels20260901161000";
+    const DATA_V = "chipLabelsSearchMine20260901161500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2841,8 +2841,8 @@ const html = `<!DOCTYPE html>
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
-        + ' aria-label="search for picks">'
-        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "search for picks")
+        + ' aria-label="Search picks">'
+        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Search")
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
         + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
@@ -2965,7 +2965,7 @@ function openDraftDataPage(mode, preset) {
         + picksBarIcon()
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
-        + ' aria-label="search for picks">search for picks</button>'
+        + ' aria-label="Search picks">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="who has my picks">who has my picks</button>'
@@ -3130,7 +3130,7 @@ function openDraftDataPage(mode, preset) {
       const chips = [];
       if (cuffFilterMine) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-mine="1"'
-          + ' aria-label="Clear my cuffs filter">my cuffs<span class="x" aria-hidden="true">×</span></button>');
+          + ' aria-label="Clear mine filter">Mine<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterOwner) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-owner="1"'
@@ -3252,7 +3252,7 @@ function openDraftDataPage(mode, preset) {
         + ' aria-label="Search cuffs">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
-        + ' aria-label="my cuffs">my cuffs</button>'
+        + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
         + ' aria-label="Available cuffs">Available</button>'
         + "</div></div>"
@@ -3283,7 +3283,7 @@ function openDraftDataPage(mode, preset) {
       } else if (!cuffs || !(cuffs.rows || []).length) {
         body = '<p class="caption">Cuff board is not available for this league yet.</p>';
       } else if (!active) {
-        body = '<p class="caption">Search a team or position, or tap my cuffs / Available.</p>';
+        body = '<p class="caption">Search a team or position, or tap Mine / Available.</p>';
       } else if (!rows.length) {
         body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
@@ -3315,7 +3315,7 @@ function openDraftDataPage(mode, preset) {
         + ' data-cuff-mine="1"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (mineOn ? "true" : "false") + '"'
-        + ' aria-label="my cuffs">my cuffs</button>'
+        + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
         + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
         + ' aria-label="Available cuffs">Available</button>'
@@ -10747,10 +10747,10 @@ if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
   throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input or board-h)");
 }
-if (!inline.includes('aria-label="search for picks"')
+if (!inline.includes('aria-label="Search picks"')
   || !inline.includes('aria-label="who has my picks"')
   || !inline.includes('aria-label="whose picks do i have"')
-  || !inline.includes('"search for picks"')
+  || !inline.includes('">Search</button>')
   || !inline.includes(">who has my picks<")
   || !inline.includes(">whose picks do i have<")
   || inline.includes(">Filter picks<") || inline.includes(">My picks out<")

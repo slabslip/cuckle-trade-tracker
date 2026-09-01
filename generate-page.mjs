@@ -816,81 +816,128 @@ const html = `<!DOCTYPE html>
     button.lh-latest-trade .day-alert-h {
       font-weight: 700; color: var(--text); line-height: 1.3; margin: 0;
     }
-    .lh-trade-card {
-      background: #0c1018; border: 1px solid #3d4a6b; border-radius: 14px;
-      padding: 14px 14px 8px; box-sizing: border-box;
+    /* Head-to-head chips: matchups and trades share the mirrored left | VS | right layout. */
+    .h2h-chip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 8px 6px; align-items: start;
+      background: #0c1018; border: 1px solid #6b5a2e; border-radius: 16px;
+      padding: 12px 12px 14px; box-sizing: border-box;
+      width: 100%;
     }
-    .lh-trade-side { margin: 0 0 14px; }
-    .lh-trade-side:last-child { margin-bottom: 6px; }
-    .lh-trade-handle {
-      color: #8b9bb8; font-size: 0.875rem; font-weight: 500;
-      line-height: 1.3; margin: 0 0 10px;
+    .h2h-vs {
+      align-self: center; margin-top: 18px;
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center;
+      background: #161b28; border: 1px solid #2e384e;
+      color: #9aa8c0; font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: 0.04em;
     }
-    .lh-trade-assets {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px;
+    .h2h-side { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .h2h-side.is-right { text-align: right; align-items: flex-end; }
+    .h2h-side.is-left { text-align: left; align-items: flex-start; }
+    .h2h-top {
+      display: flex; align-items: flex-start; gap: 8px; width: 100%;
     }
+    .h2h-side.is-right .h2h-top { flex-direction: row-reverse; }
+    .h2h-av {
+      flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+      object-fit: cover; background: #1a1f2e; border: 1px solid #2e384e;
+      display: grid; place-items: center;
+      color: #c8d0e0; font-size: 0.75rem; font-weight: 700;
+    }
+    .h2h-av > img {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block;
+    }
+    .h2h-nums { min-width: 0; flex: 1 1 auto; }
+    .h2h-side.is-right .h2h-nums { text-align: right; }
+    .h2h-pct {
+      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.02em;
+      margin: 0 0 2px; line-height: 1.2;
+    }
+    .h2h-pct.is-win { color: #3ddc97; }
+    .h2h-pct.is-lose { color: #e05555; }
+    .h2h-pct.is-tie { color: #9aa8c0; }
+    .h2h-score {
+      font-size: 1.25rem; font-weight: 750; color: #fff; line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .h2h-proj {
+      font-size: 0.75rem; color: #8b95a8; line-height: 1.2;
+      font-variant-numeric: tabular-nums; margin-top: 1px;
+    }
+    .h2h-bar {
+      width: 100%; height: 4px; border-radius: 99px; background: #243049;
+    }
+    .h2h-bar.is-win {
+      background: linear-gradient(90deg, #2ccb9f, #5dffc0);
+      box-shadow: 0 0 8px rgba(44, 203, 159, 0.45);
+    }
+    .h2h-bar.is-lose { background: #2a3348; }
+    .h2h-bar.is-tie { background: #3d4a6b; }
+    .h2h-name {
+      font-size: 0.9375rem; font-weight: 750; color: #fff; line-height: 1.2;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+    }
+    .h2h-meta {
+      font-size: 0.6875rem; color: #8b95a8; line-height: 1.25;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+    }
+    /* Trade H2H: assets stack under each side instead of score stack. */
+    .h2h-chip.is-trade .h2h-vs { margin-top: 8px; }
+    .h2h-assets {
+      display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 2px;
+    }
+    .h2h-side.is-right .h2h-assets { align-items: flex-end; }
     .lh-trade-asset {
-      display: flex; align-items: center; gap: 8px; min-width: 0;
+      display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%;
     }
+    .h2h-side.is-right .lh-trade-asset { flex-direction: row-reverse; text-align: right; }
     .lh-trade-ico {
-      position: relative; flex: 0 0 auto; width: 36px; height: 36px;
+      position: relative; flex: 0 0 auto; width: 32px; height: 32px;
     }
     .lh-trade-ico > img {
-      width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+      width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
       display: block; background: #1a1f2e;
     }
     .lh-trade-pick {
-      width: 36px; height: 36px; border-radius: 50%; box-sizing: border-box;
+      width: 32px; height: 32px; border-radius: 50%; box-sizing: border-box;
       display: grid; place-items: center;
       background: #1a1f2e; color: #fff;
-      font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.04em;
     }
     .lh-trade-plus {
       position: absolute; right: -2px; bottom: -2px;
-      width: 14px; height: 14px; border-radius: 50%;
+      width: 12px; height: 12px; border-radius: 50%;
       background: #2ccb9f; color: #0c1018;
-      font-size: 0.6875rem; font-weight: 800; line-height: 1;
+      font-size: 0.625rem; font-weight: 800; line-height: 1;
       display: grid; place-items: center;
       border: 1.5px solid #0c1018; box-sizing: border-box;
     }
     .lh-trade-lab { min-width: 0; }
     .lh-trade-lab b {
       display: block; color: #fff; font-weight: 700;
-      font-size: 0.8125rem; line-height: 1.2;
+      font-size: 0.75rem; line-height: 1.2;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .lh-trade-lab span {
-      display: block; color: #717d8e; font-size: 0.6875rem; line-height: 1.25;
+      display: block; color: #717d8e; font-size: 0.625rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    @media (max-width: 360px) {
-      .lh-trade-assets { grid-template-columns: 1fr; }
     }
     .lh-week-h {
       font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
     }
     .lh-strip, .lh-match-strip {
-      display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 6px;
+      display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 6px;
       scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     }
-    /* Prior-week matchup chips (not trade strip cards). */
+    /* Prior-week matchup H2H chips — wide enough for the mirrored score layout. */
     div.lh-match-card {
-      flex: 0 0 168px; scroll-snap-align: start;
+      flex: 0 0 min(100%, 340px); scroll-snap-align: start;
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: #1c1c22; border: 1px solid var(--line); border-radius: 14px;
-      padding: 10px; min-height: 112px; touch-action: manipulation;
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    div.lh-match-card b {
-      font-size: 0.8125rem; font-weight: 650; line-height: 1.25;
-      overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    }
-    div.lh-match-card .lh-score-row {
-      display: flex; justify-content: space-between; gap: 8px;
-      font-size: 0.75rem; color: var(--muted); margin-top: 2px;
-    }
-    div.lh-match-card .lh-score-row strong {
-      color: var(--text); font-weight: 650;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0; min-height: 0; touch-action: manipulation;
+      display: block;
     }
     .lh-match-empty {
       font-size: 0.8125rem; color: var(--dim); margin: 0 0 8px;
@@ -1299,7 +1346,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "homeNewsTradeRestore20260901001500";
+    const DATA_V = "h2hChips20260901003000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4462,7 +4509,7 @@ const html = `<!DOCTYPE html>
         : "";
       const ico = pid
         ? '<img src="https://sleepercdn.com/content/nfl/players/thumb/' + esc(pid)
-          + '.jpg" alt="" width="36" height="36" loading="lazy" decoding="async">'
+          + '.jpg" alt="" width="32" height="32" loading="lazy" decoding="async">'
         : '<div class="lh-trade-pick">PLY</div>';
       return '<div class="lh-trade-asset">'
         + '<div class="lh-trade-ico">' + ico
@@ -4472,10 +4519,77 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
+    /** Circular seat avatar from flair art, else initials. */
+    function h2hAvatarHtml(name, avatarUrl) {
+      if (avatarUrl) {
+        return '<div class="h2h-av"><img src="' + esc(avatarUrl) + '" alt="" width="40" height="40"'
+          + ' loading="lazy" decoding="async" /></div>';
+      }
+      const f = SEAT_FLAIR[name];
+      if (f && f.img) {
+        return '<div class="h2h-av"><img src="' + esc(f.img) + "?" + DATA_V
+          + '" alt="" width="40" height="40" loading="lazy" decoding="async" /></div>';
+      }
+      const initials = String(name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+      return '<div class="h2h-av" aria-hidden="true">' + esc(initials) + "</div>";
+    }
+
+    function h2hScoreFmt(n) {
+      if (n == null || Number.isNaN(Number(n))) return "—";
+      return Number(n).toFixed(2).replace(/\\.00$/, "").replace(/(\\.[1-9])0$/, "$1");
+    }
+
     /**
-     * Two stacked receive-sides for the Sleeper card. Prefer full bags from the seat file
-     * (legs = this seat received; sent = counterparty received). Until that loads, fall back
-     * to each tape row's headline so the card still matches the layout.
+     * Mirrored matchup side: avatar + win% + actual/proj scores + bar + name/@handle.
+     * right=true mirrors alignment to match the reference chip.
+     */
+    function h2hMatchSideHtml(side, right) {
+      const cls = right ? "h2h-side is-right" : "h2h-side is-left";
+      const state = side.state || "tie"; // win | lose | tie
+      const pctLab = side.pct == null ? "—" : (String(side.pct) + "% WIN");
+      const meta = [];
+      if (side.handle) meta.push("@" + side.handle);
+      if (side.record) meta.push(side.record);
+      return '<div class="' + cls + '">'
+        + '<div class="h2h-top">'
+        + h2hAvatarHtml(side.name, side.avatar)
+        + '<div class="h2h-nums">'
+        + '<div class="h2h-pct is-' + state + '">' + esc(pctLab) + "</div>"
+        + '<div class="h2h-score">' + esc(h2hScoreFmt(side.pts)) + "</div>"
+        + '<div class="h2h-proj">' + esc(h2hScoreFmt(side.proj)) + "</div>"
+        + "</div></div>"
+        + '<div class="h2h-bar is-' + state + '" aria-hidden="true"></div>'
+        + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
+        + (meta.length ? '<div class="h2h-meta">' + esc(meta.join(" · ")) + "</div>" : "")
+        + "</div>";
+    }
+
+    function h2hMatchCardHtml(p) {
+      const aPts = Number(p.aPts) || 0;
+      const bPts = Number(p.bPts) || 0;
+      let aState = "tie", bState = "tie", aPct = 50, bPct = 50;
+      if (aPts > bPts) { aState = "win"; bState = "lose"; aPct = 100; bPct = 0; }
+      else if (bPts > aPts) { aState = "lose"; bState = "win"; aPct = 0; bPct = 100; }
+      const a = {
+        name: p.a, pts: p.aPts, proj: p.aProj, avatar: p.aAvatar,
+        handle: p.aHandle || p.a, record: p.aRecord || "", state: aState, pct: aPct,
+      };
+      const b = {
+        name: p.b, pts: p.bPts, proj: p.bProj, avatar: p.bAvatar,
+        handle: p.bHandle || p.b, record: p.bRecord || "", state: bState, pct: bPct,
+      };
+      return '<div class="h2h-chip" role="group" aria-label="'
+        + esc(p.a) + " vs " + esc(p.b) + '">'
+        + h2hMatchSideHtml(a, false)
+        + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+        + h2hMatchSideHtml(b, true)
+        + "</div>";
+    }
+
+    /**
+     * Two stacked receive-sides for bags; H2H card paints them left | VS | right.
+     * Prefer full bags from the seat file (legs = this seat received; sent = counterparty).
+     * Until that loads, fall back to each tape row's headline so the card still matches layout.
      */
     function latestTradeReceiveSides(latest) {
       const seats = voteSeats(latest);
@@ -4547,42 +4661,52 @@ const html = `<!DOCTYPE html>
 
     function latestTradeCardHtml(latest) {
       const sides = latestTradeReceiveSides(latest);
-      const body = sides.map((side) => {
+      const left = sides[0] || { name: latest.name, legs: [] };
+      const right = sides[1] || { name: latest.other, legs: [] };
+      const sideHtml = (side, rightAlign) => {
         const assets = (side.legs || []).map(latestTradeAssetHtml).join("");
-        return '<div class="lh-trade-side">'
-          + '<div class="lh-trade-handle">@' + esc(side.name) + "</div>"
-          + '<div class="lh-trade-assets">'
+        const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
+        return '<div class="' + cls + '">'
+          + '<div class="h2h-top">'
+          + h2hAvatarHtml(side.name, side.avatar)
+          + '<div class="h2h-nums">'
+          + '<div class="h2h-name">@' + esc(side.name) + "</div>"
+          + '<div class="h2h-meta">Received</div>'
+          + "</div></div>"
+          + '<div class="h2h-bar is-tie" aria-hidden="true"></div>'
+          + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><div class="lh-trade-lab"><b>…</b></div></div>')
           + "</div></div>";
-      }).join("");
-      return '<div class="lh-trade-card">' + body + "</div>";
+      };
+      return '<div class="h2h-chip is-trade" role="group" aria-label="'
+        + esc(latest.name) + " vs " + esc(latest.other) + '">'
+        + sideHtml(left, false)
+        + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+        + sideHtml(right, true)
+        + "</div>";
     }
 
     function matchupStripHtml() {
       if (weekMatchupsLoading && !weekMatchups) {
         return '<div class="lh-week-h">Recent matches</div>'
           + '<div class="lh-match-strip lh-strip" role="list" aria-label="Loading matchups">'
-          + '<div class="lh-match-card" role="listitem"><b>Loading matches…</b>'
-          + '<div class="lh-score-row"><span>Sleeper</span><strong>…</strong></div></div>'
-          + "</div>";
+          + '<div class="lh-match-card" role="listitem">'
+          + '<div class="h2h-chip"><div class="h2h-side is-left"><div class="h2h-name">Loading…</div>'
+          + '<div class="h2h-meta">Sleeper</div></div>'
+          + '<div class="h2h-vs">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">…</div></div></div>'
+          + "</div></div>";
       }
       if (!weekMatchups || weekMatchups === "empty" || !weekMatchups.pairs || !weekMatchups.pairs.length) {
         return '<div class="lh-week-h">Recent matches</div>'
           + '<p class="lh-match-empty">No scored weekly matchups found yet.</p>';
       }
-      // Trailing .0 strip — backslashes must survive the page template literal.
-      const fmt = (n) => (n == null || Number.isNaN(Number(n))) ? "—"
-        : Number(n).toFixed(1).replace(/\\.0$/, "");
       return '<div class="lh-week-h">' + esc(weekMatchups.label || "Recent matches") + "</div>"
         + '<div class="lh-match-strip lh-strip" role="list" aria-label="'
         + esc(weekMatchups.label || "Recent matches") + '">'
         + weekMatchups.pairs.map((p) => {
           return '<div class="lh-match-card" role="listitem">'
-            + "<b>" + seatLabel(p.a) + " vs " + seatLabel(p.b) + "</b>"
-            + '<div class="lh-score-row"><span>Proj</span><strong>'
-            + esc(fmt(p.aProj)) + "–" + esc(fmt(p.bProj)) + "</strong></div>"
-            + '<div class="lh-score-row"><span>Actual</span><strong>'
-            + esc(fmt(p.aPts)) + "–" + esc(fmt(p.bPts)) + "</strong></div>"
+            + h2hMatchCardHtml(p)
             + "</div>";
         }).join("")
         + "</div>";
@@ -4613,13 +4737,23 @@ const html = `<!DOCTYPE html>
               fetch(sleeper + "/league/" + leagueId + "/matchups/" + tryWeek).then((r) => r.json()),
             ]);
             const ownerName = Object.create(null);
+            const ownerAvatar = Object.create(null);
+            const ownerRecord = Object.create(null);
             const userName = Object.create(null);
+            const userAvatar = Object.create(null);
             for (const u of users || []) {
               // Prefer Sleeper display_name so seatLabel flair still matches.
               userName[u.user_id] = u.display_name || (u.metadata && u.metadata.team_name) || u.user_id;
+              if (u.avatar) {
+                userAvatar[u.user_id] = "https://sleepercdn.com/avatars/thumbs/" + u.avatar;
+              }
             }
             for (const r of rosters || []) {
               ownerName[r.roster_id] = userName[r.owner_id] || ("Roster " + r.roster_id);
+              ownerAvatar[r.roster_id] = userAvatar[r.owner_id] || "";
+              const wins = r.settings && r.settings.wins != null ? Number(r.settings.wins) : null;
+              const losses = r.settings && r.settings.losses != null ? Number(r.settings.losses) : null;
+              ownerRecord[r.roster_id] = (wins != null && losses != null) ? (wins + "-" + losses) : "";
             }
             const by = Object.create(null);
             for (const m of matchups || []) {
@@ -4636,6 +4770,12 @@ const html = `<!DOCTYPE html>
               scored.push({
                 a: ownerName[a.roster_id] || String(a.roster_id),
                 b: ownerName[b.roster_id] || String(b.roster_id),
+                aHandle: ownerName[a.roster_id] || "",
+                bHandle: ownerName[b.roster_id] || "",
+                aAvatar: ownerAvatar[a.roster_id] || "",
+                bAvatar: ownerAvatar[b.roster_id] || "",
+                aRecord: ownerRecord[a.roster_id] || "",
+                bRecord: ownerRecord[b.roster_id] || "",
                 aPts: aPts,
                 bPts: bPts,
                 aStarters: a.starters || [],
@@ -4745,10 +4885,12 @@ const html = `<!DOCTYPE html>
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Latest trade</div>'
-            + '<div class="lh-trade-card"><div class="lh-trade-side">'
-            + '<div class="lh-trade-handle">@' + esc(latest.name) + " vs @" + esc(latest.other) + "</div>"
-            + '<div class="lh-trade-assets"><div class="lh-trade-asset"><div class="lh-trade-lab"><b>'
-            + esc(latest.headline || "Open trade") + "</b></div></div></div></div></div>"
+            + '<div class="h2h-chip is-trade" role="group">'
+            + '<div class="h2h-side is-left"><div class="h2h-name">@' + esc(latest.name) + "</div></div>"
+            + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+            + '<div class="h2h-side is-right"><div class="h2h-name">@' + esc(latest.other) + "</div>"
+            + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
+            + "</div>"
             + "</button>";
         }
       }
@@ -6261,8 +6403,8 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
 for (const need of ['day-alert-h">Latest trade', "function latestTradeSide(", "function ensureWeekMatchups(",
-  "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "lh-trade-card",
-  "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
+  "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
+  "h2h-chip", "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
   'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id"]) {
   if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
 }
@@ -6277,13 +6419,13 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("leagueInProgress must mount Latest trade (lh-latest-trade) that opens via data-board-open");
   }
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
-    || !inline.includes("function latestTradeCardHtml(") || !inline.includes("lh-trade-handle")
-    || !html.includes(".lh-trade-card") || !html.includes(".lh-trade-plus")
+    || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
+    || !html.includes(".h2h-chip") || !html.includes(".lh-trade-plus") || !html.includes(".h2h-vs")
     || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
-    throw new Error("Latest trade must be the Sleeper completed-trade card (lh-trade-card), not a 3-line chip");
+    throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
   }
-  if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig")) {
-    throw new Error("Latest trade must not keep the old 3-line vs/delta chip markup");
+  if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig") || prog.includes("lh-trade-handle")) {
+    throw new Error("Latest trade must not keep the old 3-line vs/delta or stacked-handle chip markup");
   }
   if (prog.includes("?view=titles") || prog.includes('data-view="titles"') || prog.includes(">Champions Path<")) {
     throw new Error("leagueInProgress must not link to Champions Path / titles");
@@ -6298,11 +6440,18 @@ if (inline.includes('day-alert-h">Champions Path')) {
 {
   const at = inline.indexOf("function matchupStripHtml(");
   const stop = inline.indexOf("\n    function ", at + 10);
-  const strip = inline.slice(at, stop < 0 ? at + 1200 : stop);
-  for (const need of ["lh-week-h", "lh-match-card", ">Proj<", ">Actual<", "aProj", "bProj", "aPts", "bPts"]) {
-    if (!strip.includes(need)) {
-      throw new Error(`matchupStripHtml must show Week title + Proj/Actual matchup chips; missing ${need}`);
+  const strip = inline.slice(at, stop < 0 ? at + 1600 : stop);
+  for (const need of ["lh-week-h", "lh-match-card", "h2hMatchCardHtml(", "aProj", "bProj", "aPts", "bPts", "% WIN"]) {
+    if (!strip.includes(need) && !inline.includes(need)) {
+      // h2h helpers live outside matchupStripHtml; accept either the strip call or the helper body.
+      if (need === "h2hMatchCardHtml(" && strip.includes("h2hMatchCardHtml(")) continue;
+      if (need === "% WIN" && inline.includes("% WIN")) continue;
+      if ((need === "aProj" || need === "bProj" || need === "aPts" || need === "bPts") && inline.includes(need)) continue;
+      throw new Error(`matchupStripHtml must show Week title + H2H matchup chips; missing ${need}`);
     }
+  }
+  if (!strip.includes("h2hMatchCardHtml(")) {
+    throw new Error("matchupStripHtml must render via h2hMatchCardHtml()");
   }
   if (strip.includes("lh-strip-card") || strip.includes("data-board-open") || strip.includes("tradeDelta")) {
     throw new Error("matchupStripHtml must not emit trade chips (lh-strip-card / data-board-open / deltas)");
@@ -6429,8 +6578,13 @@ if (
     throw new Error("leagueInProgress must not emit In the league heading or lh-section-h wrapper");
   }
 }
-for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "function matchupStripHtml(", "lh-week-h", "lh-match-card", "lh-score-row"]) {
-  if (!inline.includes(need)) throw new Error(`league home news/week strip lost ${need}`);
+for (const need of ['"day-alert-top"', 'day-alert-h">News Feed', "function matchupStripHtml(", "lh-week-h", "lh-match-card", "h2h-chip", "h2h-vs", "% WIN"]) {
+  if (!inline.includes(need) && !html.includes(need) && !html.includes("." + need)) {
+    if (need === "h2h-chip" && (html.includes(".h2h-chip") || inline.includes("h2h-chip"))) continue;
+    if (need === "h2h-vs" && (html.includes(".h2h-vs") || inline.includes("h2h-vs"))) continue;
+    if (need === "% WIN" && inline.includes("% WIN")) continue;
+    throw new Error(`league home news/week strip lost ${need}`);
+  }
 }
 if (inline.includes("lh-hero-visual") || inline.includes("News &amp; Alerts")) {
   throw new Error("News Feed hero must not keep the split visual panel or News & Alerts copy");

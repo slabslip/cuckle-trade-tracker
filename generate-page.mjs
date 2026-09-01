@@ -2081,6 +2081,8 @@ const html = `<!DOCTYPE html>
     let cuffFilterQ = "";
     let cuffFilterOpen = false;
     let cuffFilterFa = false; // cuff is unrostered
+    let cuffFilterHeld = false; // cuff is rostered by someone
+    let cuffFilterSelf = false; // starter owner also owns the cuff
     let titles = null;
     let marks = null;
     let news = null;
@@ -2089,7 +2091,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsPage20260901135000";
+    const DATA_V = "cuffsBoard20260901143000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2417,11 +2419,13 @@ const html = `<!DOCTYPE html>
       cuffFilterQ = "";
       cuffFilterOpen = false;
       cuffFilterFa = false;
+      cuffFilterHeld = false;
+      cuffFilterSelf = false;
     }
 
     function cuffFiltersActive() {
       return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
-        || !!cuffFilterQ.trim() || cuffFilterFa;
+        || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterSelf;
     }
 
     function pickRoundLabel(n) {
@@ -2819,6 +2823,8 @@ const html = `<!DOCTYPE html>
         }
         if (cuffFilterPos && r.pos !== cuffFilterPos) return false;
         if (cuffFilterFa && r.cuff_owned) return false;
+        if (cuffFilterHeld && !r.cuff_owned) return false;
+        if (cuffFilterSelf && !(r.cuff_owned && r.owner && r.owner === r.cuff_owner)) return false;
         if (q) {
           const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
             .filter(Boolean).join(" ").toLowerCase();
@@ -2826,6 +2832,47 @@ const html = `<!DOCTYPE html>
         }
         return true;
       });
+    }
+
+    /**
+     * Top holders of NFL depth cuffs on league slot-1 starters.
+     * kind: "total" (any cuff owned) | "self" (own starter + own cuff) | "rb" (RB cuffs only).
+     */
+    function cuffLeaders(kind, limit) {
+      const counts = new Map();
+      for (const r of (cuffs && cuffs.rows) || []) {
+        if (!r.cuff_owned || !r.cuff_owner) continue;
+        if (kind === "self" && r.owner !== r.cuff_owner) continue;
+        if (kind === "rb" && r.pos !== "RB") continue;
+        counts.set(r.cuff_owner, (counts.get(r.cuff_owner) || 0) + 1);
+      }
+      const top = Math.max(1, Number(limit) || 3);
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
+    }
+
+    /** Idle quick-view: who holds the most cuffs — All / Self-cuffed / RB. */
+    function cuffsBoard() {
+      const cols = [
+        { lab: "All", kind: "total", aria: "Filter to all held cuffs" },
+        { lab: "Self", kind: "self", aria: "Filter to self-cuffed starters" },
+        { lab: "RB", kind: "rb", aria: "Filter to RB cuffs held" },
+      ];
+      const aria = "Cuff holders: total, self-cuffed, and RB cuffs";
+      const headBtns = cols.map((c) =>
+        '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
+        + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
+      ).join("");
+      const bodyCols = cols.map((c) =>
+        '<div class="pick-intel-board-col">'
+        + '<div class="pick-intel-board-leaders">' + pickLeadersStack(cuffLeaders(c.kind, 3)) + "</div>"
+        + "</div>"
+      ).join("");
+      return '<div class="pick-intel-board cuffs-board" role="group" aria-label="' + esc(aria) + '">'
+        + '<div class="pick-intel-board-cols">'
+        + '<span class="pick-intel-board-yr">held</span>'
+        + headBtns
+        + bodyCols
+        + "</div></div>";
     }
 
     function cuffInjBadge(status) {
@@ -2883,6 +2930,16 @@ const html = `<!DOCTYPE html>
           + ' aria-label="Clear free-agent cuff filter">cuff free'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
+      if (cuffFilterHeld) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-held="1"'
+          + ' aria-label="Clear held cuffs filter">held'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterSelf) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-self="1"'
+          + ' aria-label="Clear self-cuff filter">self-cuffed'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
       if (cuffFilterQ.trim()) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-q="1"'
           + ' aria-label="Clear search">"' + esc(cuffFilterQ.trim()) + '"'
@@ -2923,7 +2980,7 @@ const html = `<!DOCTYPE html>
 
     /**
      * Open the full Cuffs screen. Home chips land here so search/filter has room;
-     * mode presets search / my cuffs / cuff free.
+     * mode presets search / my cuffs / cuff free / held / self / rb (board columns).
      */
     function openCuffsPage(mode) {
       clearCuffFilters();
@@ -2931,6 +2988,13 @@ const html = `<!DOCTYPE html>
         cuffFilterMine = true;
       } else if (mode === "fa") {
         cuffFilterFa = true;
+      } else if (mode === "held" || mode === "total") {
+        cuffFilterHeld = true;
+      } else if (mode === "self") {
+        cuffFilterSelf = true;
+      } else if (mode === "rb") {
+        cuffFilterHeld = true;
+        cuffFilterPos = "RB";
       } else {
         cuffFilterOpen = true;
       }
@@ -2940,10 +3004,22 @@ const html = `<!DOCTYPE html>
       render();
     }
 
-    /** League-home Cuffs teaser: chips only — no auto list. */
+    /** League-home Cuffs teaser: chips + holder board — no auto cuff list. */
     function cuffsHome() {
+      ensureCuffs();
       const seat = authSeatName();
       const mineDis = !seat;
+      let body = "";
+      if (!cuffs && cuffsLoading) {
+        body = '<p class="caption">Loading cuffs…</p>';
+      } else if (!cuffs || !(cuffs.rows || []).length) {
+        body = '<p class="caption">Cuff board is not available for this league yet.</p>';
+      } else {
+        const anyLeaders = cuffLeaders("total", 1).length > 0;
+        body = anyLeaders
+          ? cuffsBoard()
+          : '<p class="caption">No rostered depth cuffs yet. Open search when the board loads.</p>';
+      }
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
         + '<h2 class="pick-intel-h">Cuffs</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
@@ -2955,6 +3031,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
         + ' aria-label="cuff free agents">cuff free</button>'
         + "</div>"
+        + body
         + "</section>";
     }
 
@@ -2989,6 +3066,9 @@ const html = `<!DOCTYPE html>
         if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
+        else if (cuffFilterSelf) hint = rows.length + " self-cuffed starter" + (rows.length === 1 ? "" : "s");
+        else if (cuffFilterHeld && cuffFilterPos) hint = rows.length + " held " + cuffFilterPos + " cuff" + (rows.length === 1 ? "" : "s");
+        else if (cuffFilterHeld) hint = rows.length + " held cuff" + (rows.length === 1 ? "" : "s");
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
         body = '<p class="cuffs-hint">' + esc(hint) + ".</p>"
           + '<div class="cuffs-list">' + rows.map((r) => cuffRowHtml(r, seat)).join("") + "</div>";
@@ -8610,6 +8690,11 @@ const html = `<!DOCTYPE html>
         openCuffsPage(cuffsOpen.dataset.cuffsOpen || "search");
         return;
       }
+      const cuffsBoardBtn = e.target.closest("[data-cuffs-board]");
+      if (cuffsBoardBtn) {
+        openCuffsPage(cuffsBoardBtn.dataset.cuffsBoard || "held");
+        return;
+      }
       const pickMine = e.target.closest("[data-pick-mine]");
       if (pickMine) {
         if (pickMine.getAttribute("aria-disabled") === "true") return;
@@ -8663,6 +8748,9 @@ const html = `<!DOCTYPE html>
         cuffFilterMine = !cuffFilterMine;
         if (cuffFilterMine) {
           cuffFilterOwner = "";
+          cuffFilterHeld = false;
+          cuffFilterSelf = false;
+          cuffFilterFa = false;
         }
         cuffFilterOpen = false;
         render();
@@ -8671,6 +8759,30 @@ const html = `<!DOCTYPE html>
       const cuffFa = e.target.closest("[data-cuff-fa]");
       if (cuffFa) {
         cuffFilterFa = !cuffFilterFa;
+        if (cuffFilterFa) {
+          cuffFilterHeld = false;
+          cuffFilterSelf = false;
+        }
+        render();
+        return;
+      }
+      const cuffHeld = e.target.closest("[data-cuff-held]");
+      if (cuffHeld) {
+        cuffFilterHeld = !cuffFilterHeld;
+        if (cuffFilterHeld) {
+          cuffFilterFa = false;
+          cuffFilterSelf = false;
+        }
+        render();
+        return;
+      }
+      const cuffSelf = e.target.closest("[data-cuff-self]");
+      if (cuffSelf) {
+        cuffFilterSelf = !cuffFilterSelf;
+        if (cuffFilterSelf) {
+          cuffFilterFa = false;
+          cuffFilterHeld = false;
+        }
         render();
         return;
       }
@@ -10655,9 +10767,23 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes('view === "cuffs" ? renderCuffsPage()') || !inline.includes('"cuffs"')) {
     throw new Error("Cuffs home chips must open a full cuffs page for search/mine/fa");
   }
-  const homeCuffsTeaser = inline.slice(inline.indexOf("function cuffsHome("), inline.indexOf("function cuffsHome(") + 1200);
+  const homeCuffsTeaser = inline.slice(
+    inline.indexOf("function cuffsHome("),
+    inline.indexOf("function renderCuffsPage(")
+  );
+  if (!homeCuffsTeaser || homeCuffsTeaser.length < 200) {
+    throw new Error("cuffsHome teaser slice failed");
+  }
   if (homeCuffsTeaser.includes("cuffs-list") || homeCuffsTeaser.includes("filteredCuffRows(")) {
-    throw new Error("cuffsHome must stay chip-only with no auto cuff list");
+    throw new Error("cuffsHome must stay chip + board with no auto cuff list");
+  }
+  if (!homeCuffsTeaser.includes("cuffsBoard()") || !homeCuffsTeaser.includes("cuffLeaders(")) {
+    throw new Error("cuffsHome must mount the cuff holder board under the chips");
+  }
+  if (!inline.includes("function cuffLeaders(") || !inline.includes("function cuffsBoard(")
+    || !inline.includes('data-cuffs-board="') || !inline.includes("cuffFilterHeld")
+    || !inline.includes("cuffFilterSelf")) {
+    throw new Error("Cuffs home must show All / Self / RB holder leaderboard like Draft Data");
   }
   if (!inline.includes("cuffsHtml = cuffsHome()")) {
     throw new Error("renderLeagueHome must mount cuffsHome, not cuffsPanel");

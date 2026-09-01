@@ -6473,10 +6473,26 @@ const html = `<!DOCTYPE html>
             + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
           : null;
         const ballotsQ = VOTE_API + "/trade_votes?select=transaction_id,choice,voter&sleeper_league_id=eq."
-          + encodeURIComponent(leagueId);
-        let rows;
-        let mineRows = [];
+          + encodeURIComponent(leagueId)
+          + "&choice=neq." + encodeURIComponent(VOTE_CLEARED);
+
+        // Ballots are the source of truth for flairs. Load them even when the tallies
+        // view is broken (e.g. wave8 security_invoker=true → anon 401 on memberships).
         let ballotRows = [];
+        try {
+          ballotRows = await voteGet(ballotsQ);
+        } catch (ballotErr) {
+          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          try {
+            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter"
+              + "&choice=neq." + encodeURIComponent(VOTE_CLEARED));
+          } catch (ballotErr2) {
+            ballotRows = [];
+          }
+        }
+
+        let rows = null;
+        let mineRows = [];
         try {
           const parts = [voteGet(tallyQ)];
           if (mineQ) parts.push(voteGet(mineQ));
@@ -6484,32 +6500,30 @@ const html = `<!DOCTYPE html>
           rows = got[0];
           mineRows = got[1] || [];
         } catch (scopedErr) {
-          // Wave 2 SQL not applied yet — fall back to unscoped tallies.
-          console.warn("scoped vote load failed; falling back", scopedErr);
-          const got = await Promise.all([
-            voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
-            ids.length
-              ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
-              : Promise.resolve([]),
-          ]);
-          rows = got[0];
-          mineRows = got[1] || [];
-        }
-        try {
-          ballotRows = await voteGet(ballotsQ);
-        } catch (ballotErr) {
-          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          console.warn("scoped vote tallies failed; using ballots", scopedErr);
           try {
-            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter");
-          } catch (ballotErr2) {
-            ballotRows = [];
+            mineRows = mineQ ? await voteGet(mineQ) : [];
+          } catch (mineErr) {
+            mineRows = [];
           }
+          rows = null;
         }
+
         const totals = {};
-        for (const r of rows || []) {
-          if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
-          const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
-          box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+        if (rows && rows.length) {
+          for (const r of rows) {
+            if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
+            const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+            box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+          }
+        } else {
+          // Synthesize tallies from raw ballots so a broken tallies view cannot hide
+          // everyone else's votes (Ducks flair / counts on Latest trade).
+          for (const r of ballotRows || []) {
+            if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+            const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+            box[r.choice] = (box[r.choice] || 0) + 1;
+          }
         }
         const mine = {};
         for (const r of mineRows || []) {
@@ -11487,6 +11501,10 @@ if (!inline.includes('appScreen = "inviteConfirm"')
     || !wave8.includes("security_invoker = false")) {
     throw new Error("wave8 must rebuild trade_vote_tallies (members join, security_invoker=false for anon)");
   }
+}
+if (!inline.includes("using ballots")
+  || !inline.includes("Synthesize tallies from raw ballots")) {
+  throw new Error("voteLoad must fall back to raw ballots when trade_vote_tallies is unavailable");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")

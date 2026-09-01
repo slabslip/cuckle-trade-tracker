@@ -2089,7 +2089,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsNoAutoHome20260901134000";
+    const DATA_V = "cuffsPage20260901135000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2922,8 +2922,51 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * League-home Cuffs: each seat's QB1/RB1/WR1/TE1 → next NFL depth-chart teammate
-     * at the same position, and who owns that cuff in the league.
+     * Open the full Cuffs screen. Home chips land here so search/filter has room;
+     * mode presets search / my cuffs / cuff free.
+     */
+    function openCuffsPage(mode) {
+      clearCuffFilters();
+      if (mode === "mine") {
+        cuffFilterMine = true;
+      } else if (mode === "fa") {
+        cuffFilterFa = true;
+      } else {
+        cuffFilterOpen = true;
+      }
+      view = "cuffs";
+      focusNext = ".screen-h";
+      syncUrl();
+      render();
+    }
+
+    /** League-home Cuffs teaser: chips only — no auto list. */
+    function cuffsHome() {
+      const seat = authSeatName();
+      const mineDis = !seat;
+      return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
+        + '<h2 class="pick-intel-h">Cuffs</h2>'
+        + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
+        + ' aria-label="search cuffs">search cuffs</button>'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="my cuffs">my cuffs</button>'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
+        + ' aria-label="cuff free agents">cuff free</button>'
+        + "</div>"
+        + "</section>";
+    }
+
+    function renderCuffsPage() {
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">Cuffs</h2>'
+        + cuffsPanel();
+    }
+
+    /**
+     * Full Cuffs research surface: each seat's QB1/RB1/WR1/TE1 → NFL depth cuff + owner.
+     * Used on view=cuffs (home only shows cuffsHome chips).
      */
     function cuffsPanel() {
       ensureCuffs();
@@ -2931,7 +2974,6 @@ const html = `<!DOCTYPE html>
       const seatNames = (members || []).map((m) => m.name).filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
       const active = cuffFiltersActive();
-      // Home stays chip-only until a filter is chosen — never auto-list my cuffs.
       const rows = active ? filteredCuffRows(seat) : [];
       let body = "";
       if (!cuffs && cuffsLoading) {
@@ -2939,13 +2981,14 @@ const html = `<!DOCTYPE html>
       } else if (!cuffs || !(cuffs.rows || []).length) {
         body = '<p class="caption">Cuff board is not available for this league yet.</p>';
       } else if (!active) {
-        body = "";
+        body = '<p class="caption">Search a team or position, or tap my cuffs / cuff free.</p>';
       } else if (!rows.length) {
         body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
         let hint;
         if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
+        else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
         body = '<p class="cuffs-hint">' + esc(hint) + ".</p>"
           + '<div class="cuffs-list">' + rows.map((r) => cuffRowHtml(r, seat)).join("") + "</div>";
@@ -2953,8 +2996,9 @@ const html = `<!DOCTYPE html>
       const mineDis = !seat;
       const filterOn = cuffFilterOpen || active;
       const mineOn = cuffFilterMine;
+      const heading = view === "cuffs" ? "" : '<h2 class="pick-intel-h">Cuffs</h2>';
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
-        + '<h2 class="pick-intel-h">Cuffs</h2>'
+        + heading
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
@@ -3033,8 +3077,8 @@ const html = `<!DOCTYPE html>
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
@@ -4145,7 +4189,7 @@ const html = `<!DOCTYPE html>
         try { intel = pickIntelHome(); } catch (err3) { console.error(err3); }
       }
       let cuffsHtml = "";
-      try { cuffsHtml = cuffsPanel(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
+      try { cuffsHtml = cuffsHome(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
       // Latest trade → quick actions → Draft Data → Cuffs → data set body → News Feed pull-up.
       return progress + chips + intel + cuffsHtml + sets + hero;
     }
@@ -8209,6 +8253,7 @@ const html = `<!DOCTYPE html>
         : view === "news" ? renderNewsPage()
         : view === "datasets" ? renderDataSetsPage()
         : view === "draftdata" ? renderDraftDataPage()
+        : view === "cuffs" ? renderCuffsPage()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -8557,6 +8602,12 @@ const html = `<!DOCTYPE html>
       if (draftDataOpen) {
         if (draftDataOpen.getAttribute("aria-disabled") === "true") return;
         openDraftDataPage(draftDataOpen.dataset.draftDataOpen || "search");
+        return;
+      }
+      const cuffsOpen = e.target.closest("[data-cuffs-open]");
+      if (cuffsOpen) {
+        if (cuffsOpen.getAttribute("aria-disabled") === "true") return;
+        openCuffsPage(cuffsOpen.dataset.cuffsOpen || "search");
         return;
       }
       const pickMine = e.target.closest("[data-pick-mine]");
@@ -8968,6 +9019,7 @@ const html = `<!DOCTYPE html>
         if (viewBtn.tagName === "A") e.preventDefault();
         const nextView = viewBtn.dataset.view;
         if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
+        if (view === "cuffs" && nextView !== "cuffs") clearCuffFilters();
         view = nextView;
         openId = null;
         tradeSeat = null;
@@ -10597,18 +10649,24 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes("clearCuffFilters(")) {
     throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
   }
-  const cuffsFn = inline.slice(inline.indexOf("function cuffsPanel("), inline.indexOf("function cuffsPanel(") + 2200);
-  if (cuffsFn.includes("!active && seat") || cuffsFn.includes("Your slot-1 starters and who owns their NFL cuffs")) {
-    throw new Error("cuffsPanel must not auto-list my cuffs on an idle homepage");
+  if (!inline.includes("function openCuffsPage(") || !inline.includes("function cuffsHome(")
+    || !inline.includes("function renderCuffsPage(") || !inline.includes('data-cuffs-open="search"')
+    || !inline.includes('data-cuffs-open="mine"') || !inline.includes('data-cuffs-open="fa"')
+    || !inline.includes('view === "cuffs" ? renderCuffsPage()') || !inline.includes('"cuffs"')) {
+    throw new Error("Cuffs home chips must open a full cuffs page for search/mine/fa");
   }
-  if (!cuffsFn.includes("active ? filteredCuffRows(seat) : []")) {
-    throw new Error("cuffsPanel idle state must stay empty until a cuff filter is chosen");
+  const homeCuffsTeaser = inline.slice(inline.indexOf("function cuffsHome("), inline.indexOf("function cuffsHome(") + 1200);
+  if (homeCuffsTeaser.includes("cuffs-list") || homeCuffsTeaser.includes("filteredCuffRows(")) {
+    throw new Error("cuffsHome must stay chip-only with no auto cuff list");
+  }
+  if (!inline.includes("cuffsHtml = cuffsHome()")) {
+    throw new Error("renderLeagueHome must mount cuffsHome, not cuffsPanel");
   }
 
   const homeCuffs = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
   const homeCuffsReturn = homeCuffs.slice(0, homeCuffs.indexOf("\n    }"));
-  if (!homeCuffsReturn.includes("cuffsPanel()") || !homeCuffsReturn.includes("cuffsHtml")) {
-    throw new Error("renderLeagueHome must mount cuffsPanel under Draft Data");
+  if (!homeCuffsReturn.includes("cuffsHome()") || !homeCuffsReturn.includes("cuffsHtml")) {
+    throw new Error("renderLeagueHome must mount cuffsHome under Draft Data");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")) {
     throw new Error("Cuffs styles must ship");

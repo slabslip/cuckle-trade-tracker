@@ -839,6 +839,70 @@
       overflow-wrap: anywhere;
     }
     .lh-section { margin: 0 0 18px; }
+    .pick-intel {
+      margin: 0 0 20px;
+    }
+    .pick-intel-h {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      font-weight: 650;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .pick-intel .caption { margin: 0 0 10px; }
+    .pick-intel-tools {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 8px;
+    }
+    .pick-intel-tools input[type="search"] {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px;
+      min-height: 44px; padding: 0 12px; width: 100%;
+      box-sizing: border-box;
+    }
+    .pick-intel-tools input[type="search"]:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
+    }
+    .pick-intel-tools .chip {
+      white-space: nowrap; min-height: 44px;
+    }
+    .pick-intel-tools .chip.on {
+      border-color: #6b5a2e; color: var(--text);
+    }
+    .pick-intel-quick {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin: 0 0 10px;
+    }
+    .pick-intel-quick .chip {
+      min-height: 34px; padding: 0 10px; font-size: 0.8125rem;
+    }
+    .pick-intel-quick .chip.on {
+      border-color: #6b5a2e; color: var(--text);
+    }
+    .pick-intel-hint {
+      margin: 0 0 8px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
+    }
+    .pick-intel-list { display: grid; gap: 6px; }
+    button.pick-intel-row {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px; margin: 0; cursor: pointer; width: 100%;
+      touch-action: manipulation; box-sizing: border-box;
+    }
+    button.pick-intel-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.pick-intel-row.on { border-color: #6b5a2e; }
+    .pick-intel-row .pir-top {
+      display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+    }
+    .pick-intel-row .pir-lab { font-weight: 650; color: var(--text); }
+    .pick-intel-row .pir-own { color: var(--muted); font-size: 0.8125rem; text-align: right; }
+    .pick-intel-row .pir-sub {
+      margin-top: 4px; color: var(--dim); font-size: 0.75rem; line-height: 1.35;
+    }
+    .pick-intel-row .hops { margin-top: 8px; }
     a.champ-alert.lh-progress, button.champ-alert.lh-progress, div.champ-alert.lh-progress {
       background: var(--card); border-color: var(--line); border-radius: 16px;
       min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
@@ -1533,6 +1597,10 @@
     let data = null;
     let league = null;
     let picks = null;
+    let pickSearchQ = "";
+    let pickIntelMode = "idle"; // idle | search | mine
+    let pickIntelOpen = null;
+    let picksLoading = false;
     let titles = null;
     let marks = null;
     let news = null;
@@ -1541,7 +1609,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueHomeLabel20260901031500";
+    const DATA_V = "pickIntel20260901040000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1669,6 +1737,204 @@
      * (Mid / as-year). Latest trade paints the number in an arithmetic column; bags
      * still join them via legValueText.
      */
+
+    function pickOriginName(entry) {
+      const label = (entry && entry.label) || "";
+      const m = /(([^)]+))s*$/.exec(label);
+      if (m) return m[1];
+      const hops = (entry && entry.hops) || [];
+      return hops.length ? (hops[0].from || null) : null;
+    }
+
+    function pickOwnerName(entry) {
+      const hops = (entry && entry.hops) || [];
+      if (hops.length) return hops[hops.length - 1].to || null;
+      return pickOriginName(entry);
+    }
+
+    function pickKeyParts(key) {
+      const m = /^pick:(d{4}):(d+):(d+)$/.exec(String(key || ""));
+      if (!m) return null;
+      return { season: m[1], round: Number(m[2]), slot: Number(m[3]) };
+    }
+
+    function ensurePicks() {
+      if (picks || picksLoading) return;
+      picksLoading = true;
+      getLeagueJson("picks.json").then((book) => {
+        picks = book;
+        picksLoading = false;
+        if (view === "home" && !me) render();
+      }).catch((err) => {
+        console.error(err);
+        picksLoading = false;
+        if (view === "home" && !me) render();
+      });
+    }
+
+    /** Normalize a pick-search query into year / round / leftover name text. */
+    function parsePickQuery(q) {
+      let raw = String(q || "").trim().toLowerCase();
+      raw = raw
+        .replace(/firsts?/g, "1st")
+        .replace(/seconds?/g, "2nd")
+        .replace(/thirds?/g, "3rd")
+        .replace(/fourths?/g, "4th")
+        .replace(/1sts/g, "1st")
+        .replace(/2nds/g, "2nd")
+        .replace(/3rds/g, "3rd")
+        .replace(/4ths/g, "4th");
+      const yearM = raw.match(/(20d{2})/);
+      const roundM = raw.match(/(d+)(?:st|nd|rd|th)/) || raw.match(/rounds*(d+)/);
+      let rest = raw
+        .replace(/20d{2}/g, " ")
+        .replace(/d+(?:st|nd|rd|th)/g, " ")
+        .replace(/rounds*d+/g, " ")
+        .replace(/picks?/g, " ")
+        .replace(/s+/g, " ")
+        .trim();
+      return {
+        year: yearM ? yearM[1] : null,
+        round: roundM ? Number(roundM[1]) : null,
+        rest: rest,
+      };
+    }
+
+    function pickMatchesQuery(key, entry, parsed) {
+      const parts = pickKeyParts(key);
+      if (!parts || !entry) return false;
+      if (parsed.year && parts.season !== parsed.year) return false;
+      if (parsed.round != null && parts.round !== parsed.round) return false;
+      if (!parsed.rest) return !!(parsed.year || parsed.round != null);
+      const label = String(entry.label || "").toLowerCase();
+      const owner = String(pickOwnerName(entry) || "").toLowerCase();
+      const origin = String(pickOriginName(entry) || "").toLowerCase();
+      return label.includes(parsed.rest) || owner.includes(parsed.rest) || origin.includes(parsed.rest);
+    }
+
+    function stillPickEntries() {
+      const out = [];
+      if (!picks) return out;
+      for (const key of Object.keys(picks)) {
+        const entry = picks[key];
+        if (!entry || !entry.still_pick) continue;
+        out.push({ key: key, entry: entry });
+      }
+      return out;
+    }
+
+    function alienatedPicks(seat) {
+      if (!seat) return [];
+      return stillPickEntries().filter((row) => {
+        const origin = pickOriginName(row.entry);
+        const owner = pickOwnerName(row.entry);
+        return origin === seat && owner && owner !== seat;
+      }).sort((a, b) => String(a.key).localeCompare(String(b.key)));
+    }
+
+    function firstRoundLeaders() {
+      const counts = new Map();
+      for (const row of stillPickEntries()) {
+        const parts = pickKeyParts(row.key);
+        if (!parts || parts.round !== 1) continue;
+        const owner = pickOwnerName(row.entry);
+        if (!owner) continue;
+        counts.set(owner, (counts.get(owner) || 0) + 1);
+      }
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 3);
+    }
+
+    function pickIntelRow(row) {
+      const owner = pickOwnerName(row.entry) || "?";
+      const origin = pickOriginName(row.entry);
+      const hops = (row.entry.hops || []).length;
+      const open = pickIntelOpen === row.key;
+      const sub = (origin && origin !== owner)
+        ? ("Was " + origin + "'s · " + hops + " hop" + (hops === 1 ? "" : "s"))
+        : (hops ? (hops + " hop" + (hops === 1 ? "" : "s")) : "Still with origin");
+      return '<button type="button" class="pick-intel-row' + (open ? " on" : "") + '" data-pick-intel-key="'
+        + esc(row.key) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+        + '<div class="pir-top"><span class="pir-lab">' + esc(row.entry.label || row.key) + "</span>"
+        + '<span class="pir-own">' + seatLabel(owner) + "</span></div>"
+        + '<div class="pir-sub">' + esc(sub) + "</div>"
+        + (open ? hopHtml(row.key) : "")
+        + "</button>";
+    }
+
+    /**
+     * League-home trade intel: search who owns which picks, plus one-tap "my picks out"
+     * (picks that originated on your seat and now sit elsewhere).
+     */
+    function pickIntel() {
+      ensurePicks();
+      const seat = authSeatName();
+      const mineOn = pickIntelMode === "mine";
+      const q = pickSearchQ;
+      const parsed = parsePickQuery(q);
+      const quick = [
+        ["1st", "1sts"],
+        ["2nd", "2nds"],
+        ["2027", "2027"],
+        ["2028", "2028"],
+        ["2029", "2029"],
+      ];
+      let body = "";
+      if (!picks && picksLoading) {
+        body = '<p class="caption">Loading picks…</p>';
+      } else if (!picks) {
+        body = '<p class="caption">Pick tape is not available for this league yet.</p>';
+      } else if (mineOn) {
+        if (!seat) {
+          body = '<p class="caption">Claim your seat to see which of your original picks other teams hold.</p>';
+        } else {
+          const rows = alienatedPicks(seat);
+          body = rows.length
+            ? ('<p class="pick-intel-hint">' + rows.length + " pick" + (rows.length === 1 ? "" : "s")
+              + " that started as " + esc(seat) + "'s and now sit elsewhere.</p>"
+              + '<div class="pick-intel-list">' + rows.map(pickIntelRow).join("") + "</div>")
+            : ('<p class="caption">None of ' + esc(seat) + "'s original picks are sitting on other rosters right now.</p>");
+        }
+      } else if (q.trim()) {
+        const hits = stillPickEntries()
+          .filter((row) => pickMatchesQuery(row.key, row.entry, parsed))
+          .sort((a, b) => String(a.key).localeCompare(String(b.key)))
+          .slice(0, 40);
+        body = hits.length
+          ? ('<p class="pick-intel-hint">' + hits.length + " still-a-pick match"
+            + (hits.length === 1 ? "" : "es") + " for “" + esc(q.trim()) + "”.</p>"
+            + '<div class="pick-intel-list">' + hits.map(pickIntelRow).join("") + "</div>")
+          : ('<p class="caption">No still-available picks match “" + esc(q.trim()) + "”.</p>');
+      } else {
+        const leaders = firstRoundLeaders();
+        const lead = leaders.length
+          ? ('<p class="pick-intel-hint">Most 1sts right now: '
+            + leaders.map(([name, n]) => seatLabel(name) + " · " + n).join(" · ")
+            + ".</p>")
+          : "";
+        body = lead
+          + '<p class="caption">Search a round or year — “1st”, “2027 2nd”, or a team name — to see who holds those picks.</p>';
+      }
+      return '<section class="pick-intel" aria-label="Pick search">'
+        + '<h2 class="pick-intel-h">Pick search</h2>'
+        + '<p class="caption">Who owns the picks you want — and which of yours left via trade.</p>'
+        + '<div class="pick-intel-tools">'
+        + '<input type="search" data-pick-q="1" placeholder="Search picks — 1st, 2028, team…"'
+        + ' value="' + esc(q) + '" aria-label="Search draft picks" autocomplete="off" spellcheck="false" />'
+        + '<button type="button" class="chip' + (mineOn ? " on" : "") + '" data-pick-mine="1"'
+        + ' aria-pressed="' + (mineOn ? "true" : "false") + '">My picks out</button>'
+        + "</div>"
+        + '<div class="pick-intel-quick" role="group" aria-label="Quick pick filters">'
+        + quick.map(([val, lab]) => {
+          const on = !mineOn && q.trim().toLowerCase() === val;
+          return '<button type="button" class="chip' + (on ? " on" : "") + '" data-pick-quick="'
+            + esc(val) + '">' + esc(lab) + "</button>";
+        }).join("")
+        + "</div>"
+        + body
+        + "</section>";
+    }
+
+
     function legValueParts(l) {
       if (!l || l.flag === "unpriced" || l.value == null) return null;
       const num = fmt(l.value);
@@ -1753,6 +2019,9 @@
         const book = await getLeagueJson("votes.json");
         voteBook = book && book.v === 1 && book.votes ? book : null;
       } catch (err) { voteBook = null; }
+      try {
+        picks = await getLeagueJson("picks.json");
+      } catch (err) { picks = picks || null; }
       const startTitle = params.get("title");
       const startView = params.get("view");
       tradeSeat = params.get("seat") || null;
@@ -1877,6 +2146,9 @@
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
+      pickSearchQ = "";
+      pickIntelMode = "idle";
+      pickIntelOpen = null;
       say("");
       // League home has no screen heading, so this only asks render() for the scroll to top.
       focusNext = ".screen-h";
@@ -2777,8 +3049,10 @@
       let chips = "";
       let progress = "";
       let sets = "";
+      let intel = "";
       try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
+      try { intel = pickIntel(); } catch (err) { console.error(err); intel = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
@@ -2805,8 +3079,11 @@
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
-      // Latest trade → quick actions → data set body → bottom News Feed pull-up.
-      return progress + chips + sets + hero;
+      if (!intel) {
+        try { intel = pickIntel(); } catch (err3) { console.error(err3); }
+      }
+      // Latest trade → quick actions → pick intel → data set body → bottom News Feed pull-up.
+      return progress + chips + intel + sets + hero;
     }
 
     function renderNews() {
@@ -6670,6 +6947,31 @@
       if (dsListBtn) { showDataSetList(); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
       if (dsOpenBtn) { openDataSets(); return; }
+      const pickMine = e.target.closest("[data-pick-mine]");
+      if (pickMine) {
+        pickIntelMode = pickIntelMode === "mine" ? "idle" : "mine";
+        if (pickIntelMode === "mine") pickSearchQ = "";
+        pickIntelOpen = null;
+        render();
+        return;
+      }
+      const pickQuick = e.target.closest("[data-pick-quick]");
+      if (pickQuick) {
+        pickSearchQ = pickQuick.dataset.pickQuick || "";
+        pickIntelMode = pickSearchQ ? "search" : "idle";
+        pickIntelOpen = null;
+        render();
+        const box = document.querySelector("#app [data-pick-q]");
+        if (box) box.focus({ preventScroll: true });
+        return;
+      }
+      const pickRow = e.target.closest("[data-pick-intel-key]");
+      if (pickRow) {
+        const key = pickRow.dataset.pickIntelKey;
+        pickIntelOpen = pickIntelOpen === key ? null : key;
+        render();
+        return;
+      }
       // App shell navigation (multi-league home / join / account).
       const gateModeBtn = e.target.closest("[data-gate-mode]");
       if (gateModeBtn) {
@@ -6925,6 +7227,21 @@
       const row = e.target.closest(".row[data-id], .row-x-btn[data-id]");
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
       else if (closedFilter) render();
+    });
+    document.getElementById("app").addEventListener("input", (e) => {
+      const box = e.target.closest("[data-pick-q]");
+      if (!box) return;
+      pickSearchQ = box.value;
+      pickIntelMode = pickSearchQ.trim() ? "search" : "idle";
+      pickIntelOpen = null;
+      const start = box.selectionStart;
+      const end = box.selectionEnd;
+      render();
+      const back = document.querySelector("#app [data-pick-q]");
+      if (back) {
+        back.focus({ preventScroll: true });
+        try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+      }
     });
     document.addEventListener("change", (e) => {
       const yearLab = e.target.closest("[data-year]");

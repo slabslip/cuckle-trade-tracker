@@ -2193,8 +2193,8 @@ const html = `<!DOCTYPE html>
     // each successful admin Remove, so a delete hides the row without waiting for a Pages rebuild.
     const newsGone = new Set();
     let newsDelPending = null;
-    let lens = "all";
-    const DATA_V = "dropFilterRowLens20260901180700";
+    let lens = "t0";
+    const DATA_V = "chipLensAgeDefaults20260901181500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3495,12 +3495,14 @@ const html = `<!DOCTYPE html>
         if (!openId) view = "trades";
         else {
           await ensureTradeSeat();
-          // Cold deep links omit lens when it is the to-date default; pick y2 for old deals.
+          // Cold deep links omit lens when it is the age default; pick t0 / y1 / y2 by trade age.
           if (!params.get("lens")) {
             const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
-            lens = defaultLensForDate(side && side.date);
+            applyDefaultLens(side && side.date);
           }
         }
+      } else if (!params.get("lens")) {
+        applyDefaultLens(null);
       }
       document.getElementById("app").hidden = false;
       render();
@@ -3586,7 +3588,7 @@ const html = `<!DOCTYPE html>
       year = "all";
       seatTradeTeam = "all";
       seatTradeSort = "new";
-      lens = "all";
+      applyDefaultLens(null);
       draftSort = "new";
       draftRounds = { 1: true, 2: true, 3: true, 4: true };
       draftStartup = false;
@@ -3620,7 +3622,8 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
-      if (lens && lens !== "all") q.set("lens", lens);
+      // Omit lens when it matches the age default so cold links re-age on load.
+      if (lens && !lensIsAgeDefault()) q.set("lens", lens);
       // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
       if (isDesignLeagueHome()) q.set("design", "league-home");
       return "?" + q.toString();
@@ -3690,7 +3693,7 @@ const html = `<!DOCTYPE html>
         titleYear: q.get("title") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
-        // null when omitted so trade screens can age-default (y2 vs to-date).
+        // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
         d: 0,
       };
@@ -3713,9 +3716,9 @@ const html = `<!DOCTYPE html>
           lens = want.lens;
         } else if (view === "trade" && openId) {
           const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
-          lens = defaultLensForDate(side && side.date);
+          applyDefaultLens(side && side.date);
         } else {
-          lens = "all";
+          applyDefaultLens(null);
         }
         // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
         partnerName = null;
@@ -3804,6 +3807,7 @@ const html = `<!DOCTYPE html>
         openPick = null;
         openDraft = null;
         voteToast = null;
+        applyDefaultLens(newestTradeDate(id));
         focusNext = ".screen-h";
       }
       syncUrl();
@@ -3966,13 +3970,53 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Default score clock by age: 2-season span once that window is complete;
-     * to-date (Since trade) while the deal is still inside its second season.
+     * Default score clock by trade age (NFL season windows, not calendar years):
+     *   - still inside its first season window → Date of Trade (t0)
+     *   - that window is done (rest of the season, or the next season from offseason) → 1 season
+     *   - two season windows complete → 2 seasons
+     * Users can still pick 3 seasons or as-of-today from the chip menu.
      */
     function defaultLensForDate(date) {
       const today = (league && league.today) || "";
-      if (!date || !today) return "all";
-      return seasonLived(date, 2, today) ? "y2" : "all";
+      if (!date || !today) return "t0";
+      if (seasonLived(date, 2, today)) return "y2";
+      if (seasonLived(date, 1, today)) return "y1";
+      return "t0";
+    }
+
+    /** Newest trade date on the league tape, or on one seat when uid is set. */
+    function newestTradeDate(uid) {
+      if (uid && data && me && me.user_id === uid && Array.isArray(data.trades)) {
+        let best = "";
+        for (const t of data.trades) {
+          if (t && t.date && t.date > best) best = t.date;
+        }
+        if (best) return best;
+      }
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let best = "";
+      for (const r of sides) {
+        if (uid && r.user_id !== uid) continue;
+        if (r.date && r.date > best) best = r.date;
+      }
+      return best || null;
+    }
+
+    /**
+     * Set the shared chip lens from a trade date, or from the newest deal in context.
+     * List defaults follow the newest deal so y1/y2 never hide younger trades still on the tape.
+     */
+    function applyDefaultLens(date) {
+      lens = defaultLensForDate(date || newestTradeDate(me && me.user_id) || newestTradeDate(null));
+    }
+
+    /** True when the shared lens is still the age default for the current screen. */
+    function lensIsAgeDefault() {
+      if (view === "trade" && openId) {
+        const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+        return lens === defaultLensForDate(side && side.date);
+      }
+      return lens === defaultLensForDate(newestTradeDate(me && me.user_id) || newestTradeDate(null));
     }
 
     function windowLived(date) {
@@ -8888,7 +8932,7 @@ const html = `<!DOCTYPE html>
       voteEditTx = null;
       {
         const side = tradeSide(tx, uid) || tradeSide(tx, null);
-        lens = defaultLensForDate(side && side.date);
+        applyDefaultLens(side && side.date);
       }
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
@@ -8922,6 +8966,7 @@ const html = `<!DOCTYPE html>
       draftFilterOpen = false;
       tapeFilterOpen = false;
       lensOpen = false;
+      applyDefaultLens(null);
       voteToast = toast || null;
       voteSheetTx = null;
       voteEditTx = null;
@@ -10566,13 +10611,24 @@ if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inlin
   }
 }
 if (!inline.includes("function defaultLensForDate(")
-  || !inline.includes('seasonLived(date, 2, today) ? "y2" : "all"')
+  || !inline.includes("function applyDefaultLens(")
+  || !inline.includes("function newestTradeDate(")
+  || !inline.includes("function lensIsAgeDefault(")
+  || !inline.includes('if (seasonLived(date, 2, today)) return "y2"')
+  || !inline.includes('if (seasonLived(date, 1, today)) return "y1"')
+  || !inline.includes('return "t0"')
   || !inline.includes('["t0", "Date of Trade"')
   || !inline.includes('["y1", "1 season"')
   || !inline.includes('["y2", "2 seasons"')
   || !inline.includes('["y3", "3 seasons"')
   || !inline.includes('["all", "as of today"')) {
-  throw new Error("Trade score menu must ship Date of Trade / 1–3 seasons / as of today");
+  throw new Error("Trade score menu must ship t0→y1→y2 age defaults and Date of Trade / 1–3 seasons / as of today");
+}
+if (!inline.includes("applyDefaultLens(null)") || !inline.includes("applyDefaultLens(side && side.date)")) {
+  throw new Error("dashboard entry points must apply age-based lens defaults");
+}
+if (!inline.includes("!lensIsAgeDefault()")) {
+  throw new Error("syncUrl must omit lens when it matches the age default");
 }
 {
   const optFn = fnSrc("scoreOpt");

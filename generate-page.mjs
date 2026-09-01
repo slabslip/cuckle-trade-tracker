@@ -2930,7 +2930,7 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
-    function cuffInjBadgefunction cuffInjBadge(status) {
+    function cuffInjBadge(status) {
       if (!status) return "";
       const raw = String(status).trim();
       if (!raw || raw === "NA") return "";

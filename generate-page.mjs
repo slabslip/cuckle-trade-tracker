@@ -2089,7 +2089,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "draftDataPage20260901133000";
+    const DATA_V = "cuffsNoAutoHome20260901134000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2931,27 +2931,20 @@ const html = `<!DOCTYPE html>
       const seatNames = (members || []).map((m) => m.name).filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
       const active = cuffFiltersActive();
-      let rows;
-      if (!active && seat) {
-        rows = ((cuffs && cuffs.rows) || []).filter((r) => r.owner === seat);
-      } else if (!active) {
-        rows = [];
-      } else {
-        rows = filteredCuffRows(seat);
-      }
+      // Home stays chip-only until a filter is chosen — never auto-list my cuffs.
+      const rows = active ? filteredCuffRows(seat) : [];
       let body = "";
       if (!cuffs && cuffsLoading) {
         body = '<p class="caption">Loading cuffs…</p>';
       } else if (!cuffs || !(cuffs.rows || []).length) {
         body = '<p class="caption">Cuff board is not available for this league yet.</p>';
-      } else if (!active && !seat) {
-        body = '<p class="caption">Claim your seat to see your QB1/RB1/WR1/TE1 cuffs, or search any team.</p>';
+      } else if (!active) {
+        body = "";
       } else if (!rows.length) {
         body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
         let hint;
-        if (!active && seat) hint = "Your slot-1 starters and who owns their NFL cuffs";
-        else if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
+        if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
         body = '<p class="cuffs-hint">' + esc(hint) + ".</p>"
@@ -2959,7 +2952,7 @@ const html = `<!DOCTYPE html>
       }
       const mineDis = !seat;
       const filterOn = cuffFilterOpen || active;
-      const mineOn = cuffFilterMine || (!active && !!seat);
+      const mineOn = cuffFilterMine;
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
         + '<h2 class="pick-intel-h">Cuffs</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
@@ -10604,6 +10597,14 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes("clearCuffFilters(")) {
     throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
   }
+  const cuffsFn = inline.slice(inline.indexOf("function cuffsPanel("), inline.indexOf("function cuffsPanel(") + 2200);
+  if (cuffsFn.includes("!active && seat") || cuffsFn.includes("Your slot-1 starters and who owns their NFL cuffs")) {
+    throw new Error("cuffsPanel must not auto-list my cuffs on an idle homepage");
+  }
+  if (!cuffsFn.includes("active ? filteredCuffRows(seat) : []")) {
+    throw new Error("cuffsPanel idle state must stay empty until a cuff filter is chosen");
+  }
+
   const homeCuffs = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
   const homeCuffsReturn = homeCuffs.slice(0, homeCuffs.indexOf("\n    }"));
   if (!homeCuffsReturn.includes("cuffsPanel()") || !homeCuffsReturn.includes("cuffsHtml")) {

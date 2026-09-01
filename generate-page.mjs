@@ -1150,6 +1150,11 @@ const html = `<!DOCTYPE html>
       letter-spacing: 0.04em; min-width: 2.4rem;
     }
     .cuffs-intel .cuffs-starter { font-weight: 650; color: var(--text); flex: 1 1 auto; min-width: 0; }
+    .cuffs-intel .cuffs-mgr {
+      margin-left: auto; color: var(--muted); font-size: 0.8125rem; font-weight: 500;
+      max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cuffs-intel .cuffs-mgr.cuffs-own-you { color: #c9a227; }
     .cuffs-intel .cuffs-team { color: var(--muted); font-size: 0.8125rem; font-weight: 500; }
     .cuffs-intel .cuffs-inj {
       display: inline-block; vertical-align: 0.15em; margin-left: 3px;
@@ -2092,7 +2097,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsPoachLabel20260901161000";
+    const DATA_V = "cuffsStarterOwner20260901162500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2922,6 +2927,15 @@ const html = `<!DOCTYPE html>
       return esc(r.cuff_owner || "—");
     }
 
+    /** Fantasy manager who owns the starter — who is (or isn't) insured. */
+    function cuffStarterMgrLabel(r, seat) {
+      if (!r.owner) return "";
+      if (seat && r.owner === seat) {
+        return '<span class="cuffs-mgr cuffs-own-you" title="Your starter">You</span>';
+      }
+      return '<span class="cuffs-mgr" title="Starter owner">' + seatLabel(r.owner) + "</span>";
+    }
+
     function cuffRowHtml(r, seat) {
       const team = r.nfl_team ? (' <span class="cuffs-team">' + esc(r.nfl_team) + "</span>") : "";
       const cuffName = r.cuff ? ("<b>" + esc(r.cuff) + "</b>") : "<b>—</b>";
@@ -2930,6 +2944,7 @@ const html = `<!DOCTYPE html>
         + '<span class="cuffs-slot">' + esc(r.slot || r.pos || "") + "</span>"
         + '<span class="cuffs-starter">' + esc(r.starter || "—") + team
         + cuffInjBadge(r.starter_injury) + "</span>"
+        + cuffStarterMgrLabel(r, seat)
         + "</div>"
         + '<div class="cuffs-sub">If out → ' + cuffName + cuffInjBadge(r.cuff_injury)
         + " · " + cuffOwnerLabel(r, seat)
@@ -10827,8 +10842,9 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   if (!homeCuffsReturn.includes("cuffsHome()") || !homeCuffsReturn.includes("cuffsHtml")) {
     throw new Error("renderLeagueHome must mount cuffsHome under Draft Data");
   }
-  if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")) {
-    throw new Error("Cuffs styles must ship");
+  if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
+    || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {
+    throw new Error("Cuffs styles must ship with starter-owner labels");
   }
 }
 

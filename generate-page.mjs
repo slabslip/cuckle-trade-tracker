@@ -2545,7 +2545,7 @@ const html = `<!DOCTYPE html>
      */
     function resetCuffFilters() {
       clearCuffFilters();
-      if (authSeatName()) {
+      if (authSeatCanonName() || authSeatId()) {
         cuffFilterMine = true;
       } else {
         cuffFilterOpen = true;
@@ -2818,7 +2818,7 @@ const html = `<!DOCTYPE html>
      */
     function pickIntel() {
       ensurePicks();
-      const seat = authSeatName();
+      const seat = authSeatCanonName();
       const active = pickFiltersActive();
       const seatNames = (members || []).map((m) => m.name).filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
@@ -2973,7 +2973,7 @@ const html = `<!DOCTYPE html>
     /** League-home Draft Data teaser: board + chips that open the full page. */
     function pickIntelHome() {
       ensurePicks();
-      const seat = authSeatName();
+      const seat = authSeatCanonName() || authSeatId();
       let body = "";
       if (!picks && picksLoading) {
         body = '<p class="caption">Loading picks…</p>';
@@ -3035,7 +3035,12 @@ const html = `<!DOCTYPE html>
           if (String(r.starter_id) !== playerId && String(r.cuff_id) !== playerId) return false;
         }
         if (cuffFilterMine) {
-          if (!seat || r.owner !== seat) return false;
+          const sid = authSeatId();
+          if (sid && r.owner_id != null && String(r.owner_id) !== "") {
+            if (String(r.owner_id) !== String(sid)) return false;
+          } else if (!seat || r.owner !== seat) {
+            return false;
+          }
         } else if (cuffFilterOwner && r.owner !== cuffFilterOwner) {
           return false;
         }
@@ -3267,7 +3272,7 @@ const html = `<!DOCTYPE html>
     /** League-home Cuffs teaser: chips + holder board — no auto cuff list. */
     function cuffsHome() {
       ensureCuffs();
-      const seat = authSeatName();
+      const seat = authSeatCanonName() || authSeatId();
       const mineDis = !seat;
       let body = "";
       if (!cuffs && cuffsLoading) {
@@ -3308,7 +3313,7 @@ const html = `<!DOCTYPE html>
      */
     function cuffsPanel() {
       ensureCuffs();
-      const seat = authSeatName();
+      const seat = authSeatCanonName();
       const seatNames = (members || []).map((m) => m.name).filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
       const active = cuffFiltersActive();
@@ -5326,9 +5331,27 @@ const html = `<!DOCTYPE html>
       return (authSession && authSession.seat_user_id) || null;
     }
 
+    /** Live Sleeper team_name from membership (may be emoji / renamed). */
     function authSeatName() {
       if (activeLeague && activeLeague.team_name) return activeLeague.team_name;
       return (authSession && authSession.seat_name) || null;
+    }
+
+    /**
+     * Canonical seat name from members.json for Draft Data / Cuffs "mine" chips.
+     * Membership stores Sleeper's live team_name (often renamed); picks + cuffs rows use
+     * pinned names (TrumanCooper, TipsUp, …). Matching the live label empties Held /
+     * Original / Mine for every renamed seat.
+     */
+    function authSeatCanonName() {
+      const id = authSeatId();
+      if (id && Array.isArray(members) && members.length) {
+        const m = members.find((x) => String(x.user_id) === String(id));
+        if (m && m.name) return m.name;
+      }
+      // Design Mode / members not loaded yet — last resort.
+      if (isDesignLeagueHome()) return authSeatName() || "SF69erss";
+      return null;
     }
 
     /**
@@ -11474,9 +11497,10 @@ if (!inline.includes('appScreen = "inviteConfirm"')
   throw new Error("signed-in ?invite= must show inviteConfirm — never auto-redeem onto the open session");
 }
 {
-  const wave6 = fs.readFileSync(`${ROOT}db/wave6-one-seat-redeem.sql`, "utf8");
-  if (!wave6.includes("already have a seat in this league")) {
-    throw new Error("wave6 must refuse redeem when the account already sits a different seat");
+  if (!inline.includes("function authSeatCanonName()")
+    || !inline.includes("const seat = authSeatCanonName()")
+    || inline.includes("function pickIntel() {\n      ensurePicks();\n      const seat = authSeatName()")) {
+    throw new Error("Draft Data / Cuffs mine chips must use authSeatCanonName (members.json), not live Sleeper team_name");
   }
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")

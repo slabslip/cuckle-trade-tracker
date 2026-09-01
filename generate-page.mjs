@@ -1087,10 +1087,56 @@ const html = `<!DOCTYPE html>
       font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
       font-size: 0.875rem;
     }
-    div.lh-trade-feed-card.voted .h2h-chip.is-trade {
+    div.lh-trade-feed-card.voted .h2h-chip.is-trade,
+    div.lh-latest-trade.voted .h2h-chip.is-trade {
       border-color: #6b5a2e;
       box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
     }
+    /* Center Vote control between the two bag totals on trade H2H chips. */
+    .h2h-chip.is-trade .h2h-sum-gap {
+      display: flex; align-items: center; justify-content: center;
+      min-width: 28px; align-self: center;
+    }
+    button.h2h-vote-btn {
+      appearance: none; font: inherit; cursor: pointer;
+      min-height: 32px; padding: 4px 12px; border-radius: 999px;
+      background: #241f14; border: 1px solid #6b5a2e;
+      color: #e0b44c; font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    button.h2h-vote-btn.on {
+      background: #1a1810;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35);
+    }
+    button.h2h-vote-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    /* Vote sheet: reuses voteBlock side buttons (SF69erss vs KingHenryXXVI style). */
+    body.has-vote-sheet { overflow: hidden; }
+    .vote-sheet {
+      position: fixed; inset: 0; z-index: 300;
+      display: grid; place-items: center; padding: 16px;
+      box-sizing: border-box;
+    }
+    button.vote-sheet-scrim {
+      position: absolute; inset: 0; margin: 0; padding: 0; border: 0;
+      background: rgba(0, 0, 0, 0.55); cursor: pointer;
+    }
+    .vote-sheet-panel {
+      position: relative; z-index: 1; width: min(100%, 420px);
+      max-height: min(85dvh, 560px); overflow-y: auto;
+      background: var(--card); border: 1px solid #6b5a2e; border-radius: 14px;
+      padding: 12px 12px 14px; box-sizing: border-box;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+    button.vote-sheet-close {
+      position: absolute; top: 8px; right: 8px;
+      appearance: none; font: inherit; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--line); background: #1c1c22; color: var(--text);
+      font-size: 1.25rem; line-height: 1; padding: 0;
+    }
+    button.vote-sheet-close:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .vote-sheet-panel .vote-card { margin: 0; border: 0; padding: 0; background: transparent; }
     /* Trade detail feed: selected card stays open with bags + vote beneath the H2H chip. */
     div.lh-trade-feed-card.is-selected {
       cursor: default;
@@ -1236,9 +1282,6 @@ const html = `<!DOCTYPE html>
     .h2h-chip.is-trade .lh-trade-sum {
       margin-top: 0;
     }
-    .h2h-chip.is-trade .h2h-sum-gap {
-      min-width: 28px;
-    }
     /* Both trade seats read LTR like the left column (avatar · name · figs). */
     .h2h-chip.is-trade .h2h-side.is-right {
       text-align: left; align-items: stretch;
@@ -1262,14 +1305,6 @@ const html = `<!DOCTYPE html>
       min-width: 0; flex: 1 1 auto;
     }
     .h2h-chip.is-trade .h2h-side.is-right .h2h-id { align-items: flex-start; }
-    /* Book verdict under the seat name — same lean that drove the old mid “Value leans” line. */
-    .h2h-chip.is-trade .h2h-verdict {
-      font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em;
-      line-height: 1.2; text-transform: uppercase;
-    }
-    .h2h-chip.is-trade .h2h-verdict.is-win { color: var(--green); }
-    .h2h-chip.is-trade .h2h-verdict.is-lose { color: var(--red); }
-    .h2h-chip.is-trade .h2h-verdict.is-even { color: var(--dim); }
     /* Compact bag-loading placeholder — seats stay visible; asset rows are inert bars until
        seat bags land, so the chip never flashes a one-headline stub then grows full bags.
        Static bars only (no @keyframes) — WCAG 2.2.2 pause control not required. */
@@ -1903,6 +1938,8 @@ const html = `<!DOCTYPE html>
     let tradeSeat = null;
     // Set when a vote navigates the user to the league list, so the list can say the vote landed.
     let voteToast = null;
+    // Transaction id when the in-card Vote button opened the vote sheet overlay.
+    let voteSheetTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.
     let focusNext = null;
     const seatCache = {};
@@ -5516,6 +5553,39 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
+    function tradeCanVote(r) {
+      const seats = voteSeats(r);
+      return seats.length === 2 && voteParties(r) <= 2;
+    }
+
+    /** Centered Vote pill between the two bag totals on trade H2H chips. */
+    function tradeVoteBtnHtml(r) {
+      if (!tradeCanVote(r)) {
+        return '<div class="h2h-sum-gap" aria-hidden="true"></div>';
+      }
+      const voted = !!readVotes(r.transaction_id).choice;
+      return '<div class="h2h-sum-gap">'
+        + '<button type="button" class="h2h-vote-btn' + (voted ? " on" : "") + '"'
+        + ' data-vote-open="' + esc(r.transaction_id) + '"'
+        + ' aria-label="' + esc(voted ? "Change your vote on this trade" : "Vote on who won this trade") + '">'
+        + (voted ? "Voted" : "Vote")
+        + "</button></div>";
+    }
+
+    /** Modal overlay with the existing voteBlock side buttons and tallies. */
+    function voteSheetHtml() {
+      if (!voteSheetTx) return "";
+      const r = tradeSide(voteSheetTx, null);
+      if (!r) return "";
+      return '<div class="vote-sheet" role="presentation">'
+        + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
+        + ' aria-label="Close vote panel"></button>'
+        + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
+        + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
+        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + "</div></div>";
+    }
+
     function voteBlock(r) {
       const seats = voteSeats(r);
       const head = '<div class="vote"><div class="vote-h">Who actually won it?</div>';
@@ -6011,7 +6081,7 @@ const html = `<!DOCTYPE html>
 
     /**
      * Under the chip: left/right voter flairs aligned to each team.
-     * Voting stays on the trade screen (nested buttons cannot live inside the Latest trade opener).
+     * The center Vote pill opens the vote sheet; marks here are read-only tallies.
      */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
@@ -6355,19 +6425,6 @@ const html = `<!DOCTYPE html>
       const lean = latestTradeLean(latest);
       const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
       const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      let leftVerdict = "";
-      let rightVerdict = "";
-      if (lean.leftDelta != null) {
-        const d = Math.round(lean.leftDelta);
-        if (d > 0) { leftVerdict = "win"; rightVerdict = "lose"; }
-        else if (d < 0) { leftVerdict = "lose"; rightVerdict = "win"; }
-        else { leftVerdict = "even"; rightVerdict = "even"; }
-      }
-      const verdictHtml = (kind) => {
-        if (!kind) return "";
-        const word = kind === "win" ? "WINNER" : kind === "lose" ? "LOSER" : "EVEN";
-        return '<div class="h2h-verdict is-' + kind + '">' + word + "</div>";
-      };
       const leftSum = latestTradeLegsSum(left.legs);
       const rightSum = latestTradeLegsSum(right.legs);
       let leftTone = "";
@@ -6379,18 +6436,17 @@ const html = `<!DOCTYPE html>
         else if (l < r) { leftTone = "low"; rightTone = "high"; }
         else { leftTone = "even"; rightTone = "even"; }
       }
-      const sideHtml = (side, rightAlign, win, verdict) => {
+      const sideHtml = (side, rightAlign, win) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
-        // Avatar + seat name + book WINNER/LOSER. Bag totals sit on a shared chip row below
-        // both sides so unequal leg counts cannot stagger the = lines.
+        // Avatar + seat name. Bag totals sit on a shared chip row below both sides so unequal
+        // leg counts cannot stagger the = lines.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar, { win: win })
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
-          + verdictHtml(verdict)
           + "</div></div>"
           + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
@@ -6404,11 +6460,11 @@ const html = `<!DOCTYPE html>
         || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
-        + sideHtml(left, false, leftWin, leftVerdict)
+        + sideHtml(left, false, leftWin)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin, rightVerdict)
+        + sideHtml(right, true, rightWin)
         + leftSumHtml
-        + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
+        + tradeVoteBtnHtml(latest)
         + rightSumHtml
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
@@ -6639,6 +6695,7 @@ const html = `<!DOCTYPE html>
       let tradeBox = "";
       if (latest) {
         try {
+          const voted = !!readVotes(latest.transaction_id).choice;
           // Latest trade H2H chip — opens the trade board for this deal.
           // Div (not button) so seat-link names/flair can nest legally.
           // Hold the full chip until seat bags are ready (skeleton meanwhile) so we never
@@ -6646,11 +6703,13 @@ const html = `<!DOCTYPE html>
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
+            + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Latest trade</div>'
             + chip
+            + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).
@@ -7435,7 +7494,8 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
-      app.innerHTML = syncNote + seatName + nav + body;
+      app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();
+      document.body.classList.toggle("has-vote-sheet", !!voteSheetTx);
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
@@ -7446,6 +7506,10 @@ const html = `<!DOCTYPE html>
       const land = focusNext ? app.querySelector(focusNext) : null;
       focusNext = null;
       if (land) land.focus({ preventScroll: true });
+      else if (voteSheetTx) {
+        const sheet = app.querySelector(".vote-sheet-panel");
+        if (sheet) sheet.focus({ preventScroll: true });
+      }
       // League home leads with cards rather than a title, so there is no heading to land on.
       // The panel itself is the defined start of the new content. A seat always has one now.
       else if (navigated) app.focus({ preventScroll: true });
@@ -7479,6 +7543,7 @@ const html = `<!DOCTYPE html>
       tapeFilterOpen = false;
       titleYear = null;
       voteToast = null;
+      voteSheetTx = null;
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
       render();
@@ -7510,6 +7575,7 @@ const html = `<!DOCTYPE html>
       tapeFilterOpen = false;
       lensOpen = false;
       voteToast = toast || null;
+      voteSheetTx = null;
       focusNext = ".screen-h";
       say("");
       render();
@@ -7680,11 +7746,18 @@ const html = `<!DOCTYPE html>
       markOpen = null;
       lensOpen = false;
       voteToast = null;
+      voteSheetTx = null;
       focusNext = ".screen-h";
       render();
     }
 
     document.getElementById("app").addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && voteSheetTx) {
+        e.preventDefault();
+        voteSheetTx = null;
+        render();
+        return;
+      }
       if (e.key !== "Enter" && e.key !== " ") return;
       const t = e.target;
       if (!t) return;
@@ -8018,6 +8091,18 @@ const html = `<!DOCTYPE html>
       const newsDelBtn = e.target.closest("[data-news-del]");
       if (newsDelBtn) {
         deleteNewsItem(newsDelBtn.dataset.newsDel);
+        return;
+      }
+      const voteOpenBtn = e.target.closest("[data-vote-open]");
+      if (voteOpenBtn) {
+        voteSheetTx = voteOpenBtn.dataset.voteOpen || null;
+        render();
+        return;
+      }
+      const voteSheetClose = e.target.closest("[data-vote-sheet-close]");
+      if (voteSheetClose) {
+        voteSheetTx = null;
+        render();
         return;
       }
       // Before the row handlers: the vote block is a sibling of the open row, not inside it,
@@ -8455,9 +8540,16 @@ if (inline.includes('day-alert-h">Champions Path')) {
       throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
     }
   }
-  if (!inline.includes("h2h-verdict") || !inline.includes("WINNER") || !inline.includes("LOSER")
-    || !html.includes(".h2h-verdict.is-win") || !html.includes(".h2h-verdict.is-lose")) {
-    throw new Error("Latest trade chip must show book WINNER/LOSER under each seat name");
+  {
+    const cardAt = inline.indexOf("function latestTradeCardHtml(");
+    const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+    const card = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
+    if (card.includes("h2h-verdict") || card.includes("WINNER") || card.includes("LOSER")) {
+      throw new Error("Latest trade chip must not show book WINNER/LOSER under each seat name");
+    }
+  }
+  if (html.includes(".h2h-verdict")) {
+    throw new Error("stylesheet must not style removed h2h-verdict labels on trade chips");
   }
   {
     const markAt = inline.indexOf("function seatVoteMarkHtml(");
@@ -8663,7 +8755,7 @@ if (inline.includes("const leagueChip") || inline.includes("leagueChip +")
     || /class="caption" style="margin:0 0 8px"[\s\S]{0,160}data-app-home="1"/.test(inline)) {
   throw new Error("league dash must not rebuild the leagues caption row inside #app");
 }
-if (!inline.includes("app.innerHTML = syncNote + seatName + nav + body;")) {
+if (!inline.includes("app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();")) {
   throw new Error("league dash render must compose syncNote + seatName + nav + body with no caption row");
 }
 // day-alert-top header row still hosts Pause; keep its min-width guard.
@@ -8860,7 +8952,7 @@ const renderSrc = fnBody("render");
 if (!renderSrc.includes("paintLens();")) {
   throw new Error("render() must paint the header clock -- without it the trigger never follows the page");
 }
-if (renderSrc.indexOf("app.innerHTML = syncNote + seatName + nav + body;") > renderSrc.indexOf("paintLens();")) {
+if (renderSrc.indexOf("app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();") > renderSrc.indexOf("paintLens();")) {
   throw new Error("paintLens() must run after the body is built -- renderDrafts pins lens and restores it");
 }
 // 4. It hides where the clock has no effect, and it must not be hidden anywhere else. Champions
@@ -9341,7 +9433,7 @@ if (!inline.includes("    function showMenu(menu) {") && !inline.includes("    f
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
   "+ seatLabel(me.name) + \"</h2>\"",
-  "app.innerHTML = syncNote + seatName + nav + body;",
+  "app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the seat heading: ${need}`);
 }

@@ -2144,7 +2144,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "chipClockBiggerCuffAvail20260901145000";
+    const DATA_V = "noIntelH2CuffAvail20260901145500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2776,11 +2776,7 @@ const html = `<!DOCTYPE html>
       const mineOutDis = !seat;
       const mineHeldDis = !seat;
       const filterOn = pickFilterOpen || active;
-      const heading = view === "draftdata"
-        ? ""
-        : '<h2 class="pick-intel-h">Draft Data</h2>';
       return '<section class="pick-intel" aria-label="Draft Data">'
-        + heading
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
@@ -2841,7 +2837,6 @@ const html = `<!DOCTYPE html>
       }
       const mineDis = !seat;
       return '<section class="pick-intel" aria-label="Draft Data">'
-        + '<h2 class="pick-intel-h">Draft Data</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
         + ' aria-label="search for picks">search for picks</button>'
@@ -3124,7 +3119,6 @@ const html = `<!DOCTYPE html>
           : '<p class="caption">No rostered depth cuffs yet. Open search when the board loads.</p>';
       }
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
-        + '<h2 class="pick-intel-h">Cuffs</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
         + ' aria-label="search cuffs">search cuffs</button>'
@@ -3180,9 +3174,7 @@ const html = `<!DOCTYPE html>
       const mineDis = !seat;
       const filterOn = cuffFilterOpen || active;
       const mineOn = cuffFilterMine;
-      const heading = view === "cuffs" ? "" : '<h2 class="pick-intel-h">Cuffs</h2>';
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
-        + heading
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
@@ -10524,6 +10516,10 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes("resetCuffFilters()")
     || !inline.includes("Exclusive mode: cuff available alone")) {
     throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
+  }
+  if ((inline.match(/<h2 class="pick-intel-h">Draft Data<\/h2>/g) || []).length
+    || (inline.match(/<h2 class="pick-intel-h">Cuffs<\/h2>/g) || []).length) {
+    throw new Error("League home Draft Data / Cuffs sections must not show pick-intel-h titles");
   }
   if (!inline.includes("function openCuffsPage(") || !inline.includes("function cuffsHome(")
     || !inline.includes("function renderCuffsPage(") || !inline.includes('data-cuffs-open="search"')

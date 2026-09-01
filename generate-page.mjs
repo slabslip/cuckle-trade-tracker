@@ -49,16 +49,16 @@ const html = `<!DOCTYPE html>
       font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
       overflow: visible;
     }
-    h1.brand a {
-      /* Centered wordmark (PSA-style). Side chrome stays left/right; the title is absolute. */
+    /* League name sits where the app wordmark used to — absolute center of the brand row. */
+    h1.brand .league-sub {
       position: absolute; left: 50%; transform: translateX(-50%);
-      color: inherit; text-decoration: none; margin-right: 0;
+      margin: 0; color: var(--text); font-size: 0.9375rem; font-weight: 650;
+      letter-spacing: -0.01em; text-align: center;
       max-width: min(52%, calc(100% - 168px));
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
-      /* It is a link home, so it is a target as well as a title. The line box carries the
-         44px rather than padding, which would push the ellipsis off the text. */
-      min-height: 44px; line-height: 44px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      min-height: 44px; line-height: 44px; pointer-events: none;
     }
+    h1.brand .league-sub[hidden] { display: none; }
     button.go-home, button.go-settings {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -68,6 +68,8 @@ const html = `<!DOCTYPE html>
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     button.go-settings[hidden] { display: none; }
+    /* Settings takes the former clock slot on the right; lens sits beside the back control. */
+    button.go-settings { margin-left: auto; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
     .caption { font-size: 0.8125rem; color: var(--dim); margin: 6px 0 14px; }
@@ -88,12 +90,7 @@ const html = `<!DOCTYPE html>
        this control is persistent chrome and its panel drops down over whatever screen is below
        it. Nothing here may clip: #scoreAs is absolutely positioned against it, and a hidden
        overflow anywhere up this chain is what made the seat picker unusable twice. */
-    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; margin-left: auto; }
-    p.league-sub {
-      text-align: center; font-size: 0.8125rem; font-weight: 600;
-      color: var(--muted); margin: -4px 0 14px; letter-spacing: -0.01em;
-    }
-    p.league-sub[hidden] { display: none; }
+    .lens-wrap { position: relative; flex: 0 0 auto; z-index: 5; margin-left: 0; }
     /* The brand plus the seat picker needed 394px of a 343px row at 375px, so the picker ran off
        the right edge and the title stepped down to buy it back. The picker is gone and the clock
        control took its place, so the row is carrying a control again and the step still earns its
@@ -130,15 +127,24 @@ const html = `<!DOCTYPE html>
       display: inline-block; width: 1.15em; height: 1.15em;
       vertical-align: -0.2em; object-fit: contain; flex: 0 0 auto;
     }
+    /* Team name + flair → that team's home. Inline so it nests inside tape / H2H chrome. */
+    .seat-link {
+      appearance: none; font: inherit; color: inherit; text-decoration: none;
+      background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+      display: inline; touch-action: manipulation;
+    }
+    .seat-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px; }
     button.row, button.chip, button.tab, .row {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       min-height: 44px; touch-action: manipulation;
     }
     button.row, button.chip, button.tab { cursor: pointer; }
-    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible {
+    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible,
+    .row[role="button"]:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
+    .row[role="button"] { cursor: pointer; }
     .you { color: var(--text); font-weight: 650; }
     /* Four tabs at 375px wrapped onto two lines. They share the row instead. */
     .nav { display: flex; gap: 8px; flex-wrap: nowrap; margin: 12px 0 16px; }
@@ -339,7 +345,7 @@ const html = `<!DOCTYPE html>
     .row-x > .detail { margin: 0; padding: 12px; border-top: 1px solid var(--line); }
     .row-x.open > .detail { display: block; }
     /* Rows this device has voted on, in the gold the vote buttons already use. */
-    button.row.voted { border-color: #6b5a2e; }
+    button.row.voted, .row.voted { border-color: #6b5a2e; }
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
     .bags > * { min-width: 0; }
@@ -835,7 +841,7 @@ const html = `<!DOCTYPE html>
       overflow-wrap: anywhere;
     }
     .lh-section { margin: 0 0 18px; }
-    a.champ-alert.lh-progress, button.champ-alert.lh-progress {
+    a.champ-alert.lh-progress, button.champ-alert.lh-progress, div.champ-alert.lh-progress {
       background: var(--card); border-color: var(--line); border-radius: 16px;
       min-height: 0; height: auto; padding: 12px 14px; margin: 0 0 12px;
     }
@@ -845,17 +851,17 @@ const html = `<!DOCTYPE html>
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Latest trade: title above, dashboard-styled H2H card below (not a third-party clone).
-       Triple class beats button.champ-alert.lh-progress { display:block; padding… }. */
-    button.champ-alert.lh-progress.lh-latest-trade {
+       A div (not button) so seat-link names/flair can nest without illegal nested buttons. */
+    div.champ-alert.lh-progress.lh-latest-trade {
       display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
       gap: 10px; width: 100%; box-sizing: border-box;
-      appearance: none; font: inherit; color: inherit; text-align: left;
+      font: inherit; color: inherit; text-align: left;
       cursor: pointer; touch-action: manipulation;
       background: transparent; border: 0; border-radius: 0;
       padding: 0; margin: 0 0 16px; min-height: 0; height: auto;
     }
-    button.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.lh-latest-trade .day-alert-h {
+    div.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    div.lh-latest-trade .day-alert-h {
       font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
     }
     /* Head-to-head chips: matchups and trades share mirrored left | VS | right. */
@@ -1376,23 +1382,22 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="Your leagues">
+    <button type="button" class="go-home" id="goHome" aria-label="League home">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
       </svg>
     </button>
+    <span class="lens-wrap" id="lensWrap">
+      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
+      <div id="scoreAs" hidden></div>
+    </span>
+    <span class="league-sub" id="leagueSub" hidden></span>
     <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
       </svg>
     </button>
-    <a href="./">Chuckle Fantasy</a>
-    <span class="lens-wrap" id="lensWrap">
-      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div id="scoreAs" hidden></div>
-    </span>
   </h1>
-  <p class="league-sub" id="leagueSub" hidden></p>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
   <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
@@ -1489,12 +1494,23 @@ const html = `<!DOCTYPE html>
       const f = SEAT_FLAIR[name];
       return f && f.glyph ? " " + f.glyph : "";
     }
-    function seatLabel(name) {
+    /**
+     * Painted seat name: crown → name → flair. By default a seat-link with data-who so taps
+     * open that team's home. Pass { link: false } inside another control that already owns
+     * the destination (Teams rows, vote options) to avoid nested interactive markup.
+     */
+    function seatLabel(name, opts) {
       const n = String(name == null ? "" : name);
+      const link = !(opts && opts.link === false);
       // Multi-seat counterparties arrive joined: decorate each seat, not the whole string.
-      if (n.includes(" · ")) return n.split(" · ").map(seatLabel).join(" · ");
+      if (n.includes(" · ")) {
+        return n.split(" · ").map((part) => seatLabel(part, opts)).join(" · ");
+      }
       const crown = reigningChampName() === n ? CROWN + " " : "";
-      return crown + esc(n) + seatFlairHtml(n);
+      const inner = crown + esc(n) + seatFlairHtml(n);
+      if (!link || !n) return inner;
+      return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(n) + '"'
+        + ' aria-label="' + esc(n) + '">' + inner + "</span>";
     }
     /** Bag headings like "TrumanCooper received" — flair the seat prefix, escape the rest. */
     function seatTitle(title) {
@@ -1525,7 +1541,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "teamsList20260901025000";
+    const DATA_V = "leagueHomeChrome20260901030000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1806,7 +1822,7 @@ const html = `<!DOCTYPE html>
             + ' aria-current="' + (on ? "true" : "false") + '">'
             + '<div class="row-top"><div><div class="names">'
             + (mine ? '<span class="sr-only">Your team: </span>' : "")
-            + seatLabel(m.name)
+            + seatLabel(m.name, { link: false })
             + (mine ? ' <span class="caption">(you)</span>' : "")
             + "</div>"
             + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
@@ -2019,10 +2035,15 @@ const html = `<!DOCTYPE html>
       fallback();
     }
 
-    async function selectMe(id, keep) {
+    async function selectMe(idOrName, keep) {
       const prev = me;
+      let id = idOrName;
       try {
-        me = members.find((m) => m.user_id === id);
+        let m = members.find((x) => x.user_id === id);
+        if (!m) m = members.find((x) => x.name === idOrName);
+        if (!m) throw new Error("unknown seat");
+        id = m.user_id;
+        me = m;
         data = seatCache[id] || await getLeagueJson("me/" + id + ".json");
         seatCache[id] = data;
         if (!league) league = await getLeagueJson("league.json");
@@ -2270,7 +2291,8 @@ const html = `<!DOCTYPE html>
       // The two sides are exact mirrors, so one score signs both: the seat carries s, the
       // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
       // figure it describes, not on the label beside it.
-      return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      // Seat names stay clickable (seat-link); the row itself opens the trade.
+      return '<div class="row' + (voted ? " voted" : "") + '" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
@@ -2278,7 +2300,7 @@ const html = `<!DOCTYPE html>
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
-        + "</button>";
+        + "</div>";
     }
 
     function yearsOn(days) {
@@ -4547,7 +4569,7 @@ const html = `<!DOCTYPE html>
         return '<button type="button" class="vote-opt' + (on ? " on" : "") + '"'
           + ' data-vote="' + esc(r.transaction_id) + '" data-vote-seat="' + esc(s.uid) + '"'
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
-          + "<b>" + seatLabel(s.name) + "</b><span>" + line + "</span></button>";
+          + "<b>" + seatLabel(s.name, { link: false }) + "</b><span>" + line + "</span></button>";
       }).join("");
       // Only ever claims a league tally we actually received. A live tally counts votes as they
       // land; the committed book counts them as of the last rebuild; with neither, this is one
@@ -5074,6 +5096,7 @@ const html = `<!DOCTYPE html>
     /** Circular seat avatar from Sleeper/flair; optional gold medal for the winning side. */
     function h2hAvatarHtml(name, avatarUrl, opts) {
       const win = opts && opts.win;
+      const who = String(name || "");
       let inner = "";
       if (avatarUrl) {
         inner = '<div class="h2h-av"><img src="' + esc(avatarUrl) + '" alt="" width="40" height="40"'
@@ -5093,7 +5116,9 @@ const html = `<!DOCTYPE html>
           + '<circle cx="8" cy="9" r="4.2" fill="#e8c45a"/>'
           + '<path d="M5 2.5h6l-1.2 3.2H6.2L5 2.5z" fill="#c9a227"/></svg></span>'
         : "";
-      return '<div class="h2h-av-wrap">' + inner + medal + "</div>";
+      if (!who) return '<div class="h2h-av-wrap">' + inner + medal + "</div>";
+      return '<span class="seat-link h2h-av-wrap" role="link" tabindex="0" data-who="' + esc(who) + '"'
+        + ' aria-label="' + esc(who) + '">' + inner + medal + "</span>";
     }
 
     function h2hScoreFmt(n) {
@@ -5146,9 +5171,13 @@ const html = `<!DOCTYPE html>
     function h2hSeatTitleHtml(side) {
       const title = side.name || side.handle || "";
       const flairKey = side.flairName || side.handle || side.name || "";
+      const who = side.handle || side.name || title;
       const champ = reigningChampName();
       const crown = (champ && (champ === flairKey || champ === title)) ? CROWN + " " : "";
-      return crown + esc(title) + seatFlairHtml(flairKey);
+      const inner = crown + esc(title) + seatFlairHtml(flairKey);
+      if (!who) return inner;
+      return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(who) + '"'
+        + ' aria-label="' + esc(who) + '">' + inner + "</span>";
     }
 
     function h2hMatchCardHtml(p) {
@@ -5538,26 +5567,27 @@ const html = `<!DOCTYPE html>
       if (latest) {
         try {
           // Latest trade H2H chip — opens the trade board for this deal.
-          tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
+          // Div (not button) so seat-link names/flair can nest legally.
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Latest trade</div>'
             + latestTradeCardHtml(latest)
-            + "</button>";
+            + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
-          tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
+          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Latest trade</div>'
             + '<div class="h2h-chip is-trade" role="group">'
-            + '<div class="h2h-side is-left"><div class="h2h-name">@' + esc(latest.name) + "</div></div>"
+            + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
             + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-            + '<div class="h2h-side is-right"><div class="h2h-name">@' + esc(latest.other) + "</div>"
+            + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
             + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
             + "</div>"
-            + "</button>";
+            + "</div>";
         }
       }
       if (!tradeBox) return "";
@@ -6419,10 +6449,9 @@ const html = `<!DOCTYPE html>
     }
 
     document.getElementById("goHome").addEventListener("click", () => {
-      // Back to Your leagues (one league or many). Still clears any open seat first.
-      if (authSession) {
-        clearLeague();
-        goAppHome();
+      // Always this league's home: clear seat / nested views. Never Your leagues / goAppHome.
+      if (activeLeague && appScreen !== "dash") {
+        openLeagueDashboard(activeLeague);
         return;
       }
       clearLeague();
@@ -6436,14 +6465,6 @@ const html = `<!DOCTYPE html>
         goBottomNav(btn.dataset.bottom);
       });
     }
-    document.querySelector("h1.brand a").addEventListener("click", (e) => {
-      e.preventDefault();
-      if (authSession && appScreen !== "dash") {
-        goAppHome();
-        return;
-      }
-      clearLeague();
-    });
     /**
      * The clock control's own listener. It has to be its own, because #app's delegated handler
      * cannot see a control that lives in the brand header -- the same split the seat picker had
@@ -7061,7 +7082,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !html.includes(".lh-trade-val") || !html.includes(".lh-trade-num") || !html.includes(".lh-trade-sum")
     || !html.includes(".h2h-trade-lean")
     || !html.includes(".h2h-lean-marks") || !html.includes(".h2h-lean-n")
-    || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
+    || !html.includes("div.champ-alert.lh-progress.lh-latest-trade")) {
     throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
   }
   if (!inline.includes("function latestTradeLean(") || !inline.includes("applyVa(")
@@ -7202,21 +7223,18 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
   throw new Error("h1.brand must declare overflow: visible -- a clip here hides #scoreAs");
 }
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) {
-  throw new Error("h1.brand must be position: relative -- the centered brand link is absolute against it");
+  throw new Error("h1.brand must be position: relative -- the centered league name is absolute against it");
 }
 {
-  const linkRule = html.slice(html.indexOf("    h1.brand a {"));
-  const decl = linkRule.slice(0, linkRule.indexOf("}"));
+  const subRule = html.slice(html.indexOf("    h1.brand .league-sub {"));
+  const decl = subRule.slice(0, subRule.indexOf("}"));
   if (!decl.includes("left: 50%") || !decl.includes("translateX(-50%)")) {
-    throw new Error("h1.brand a must be absolutely centered (left: 50% + translateX(-50%))");
-  }
-  if (/margin-right:\s*auto/.test(decl)) {
-    throw new Error("h1.brand a must not use margin-right: auto -- centering is absolute; .lens-wrap takes the right");
+    throw new Error("h1.brand .league-sub must be absolutely centered (left: 50% + translateX(-50%))");
   }
 }
 
-if (!html.includes('id="leagueSub"') || !html.includes("p.league-sub")) {
-  throw new Error("league name under the brand must ship (p#leagueSub)");
+if (!html.includes('id="leagueSub"') || !html.includes("h1.brand .league-sub")) {
+  throw new Error("league name must ship in the brand row (#leagueSub)");
 }
 if (!inline.includes("function paintLeagueSub()")
     || !inline.includes('leagueSub.textContent = activeLeague.name || "League"')) {
@@ -7228,8 +7246,11 @@ if (!inline.includes("paintLeagueSub();\n        paintBottomNav();")
 }
 {
   const wrap = html.slice(html.indexOf("    .lens-wrap {"));
-  if (!wrap.slice(0, wrap.indexOf("}")).includes("margin-left: auto")) {
-    throw new Error(".lens-wrap must carry margin-left: auto so the clock stays on the right of the centered brand");
+  if (wrap.slice(0, wrap.indexOf("}")).includes("margin-left: auto")) {
+    throw new Error(".lens-wrap must not take the right edge — settings sits there after the swap");
+  }
+  if (!html.includes("button.go-settings { margin-left: auto")) {
+    throw new Error("settings must carry margin-left: auto on the right of the brand row");
   }
 }
 
@@ -7472,10 +7493,15 @@ if (!brandMarkup.includes('id="lensWrap"') || !brandMarkup.includes('id="lensBtn
   || !brandMarkup.includes('id="scoreAs"')) {
   throw new Error("the clock control must be mounted inside h1.brand -- that is the top right of the header");
 }
-// The trigger comes after the brand link. The link is absolutely centered; .lens-wrap carries
-// margin-left: auto so the clock stays on the right. Order in the markup still matters.
-if (brandMarkup.indexOf('id="lensWrap"') < brandMarkup.indexOf('href="./"')) {
-  throw new Error("the clock trigger must come after the brand link, or it does not sit on the right");
+// Order: back, score lens, league name, settings. App wordmark removed.
+if (brandMarkup.includes("Chuckle Fantasy") || /<a href="\.\/">/.test(brandMarkup)) {
+  throw new Error("app wordmark must stay removed from the brand row");
+}
+if (!brandMarkup.includes('id="leagueSub"')) {
+  throw new Error("league name must live inside h1.brand");
+}
+if (brandMarkup.indexOf('id="lensWrap"') > brandMarkup.indexOf('id="goSettings"')) {
+  throw new Error("score lens must sit left of settings after the swap");
 }
 // 2. One control, one place. Six screens used to render lensRow() and the user asked for a move,
 //    not a copy. Assert the emitter is gone rather than that the call sites are: a re-added
@@ -7730,7 +7756,7 @@ for (const re of [/\.ticker[\s:.,{]/, /\.bubble[\s:.,{]/, /#feed[\s:.,{]/]) {
 const optEmits = (inline.match(/data-who="' \+ esc\(id\) \+ '"/g) || []).length;
 if (optEmits !== 1) throw new Error(`a seat option is built in ${optEmits} places, want 1`);
 const whoOptSrc = fnBody("whoOptions");
-for (const need of ['class="row', "seatLabel(m.name)", 'data-who="\' + esc(id) + \'"',
+for (const need of ['class="row', "seatLabel(m.name", 'data-who="\' + esc(id) + \'"',
   "(a.place || 99) - (b.place || 99)"]) {
   if (!whoOptSrc.includes(need)) throw new Error(`the seat list emitter lost ${need}`);
 }
@@ -7764,8 +7790,11 @@ for (const need of ['class="crown"', 'aria-hidden="true" focusable="false"',
   if (!inline.includes(need)) throw new Error(`generated script lost a seat-list part: ${need}`);
 }
 // Seat flair is display-only. Bare Sleeper names stay in data; glyphs/images are painted.
-if (!inline.includes("function seatLabel(name)") || !inline.includes("function seatFlairHtml(name)")) {
-  throw new Error("seat flair must ship as display-only seatLabel() / seatFlairHtml()");
+if (!inline.includes("function seatLabel(name") || !inline.includes("function seatFlairHtml(name)")) {
+  throw new Error("seat flair must ship as seatLabel() / seatFlairHtml()");
+}
+if (!inline.includes('class="seat-link"') || !inline.includes("opts.link === false")) {
+  throw new Error("seatLabel must wrap names in seat-link (data-who) unless link:false");
 }
 for (const need of [
   'SF69erss: { img: "data/ui/flair-sf69erss.png" }',
@@ -7787,7 +7816,7 @@ if (!html.includes("img.seat-flair, svg.crown {") || !html.includes("width: 1.15
 // Reigning champ crown rides seatLabel everywhere: crown → name → flair.
 if (!inline.includes("function reigningChampName()")
   || !fnSrc("seatLabel").includes("reigningChampName() === n ? CROWN + \" \"")
-  || !fnSrc("seatLabel").includes("return crown + esc(n) + seatFlairHtml(n)")) {
+  || !fnSrc("seatLabel").includes("crown + esc(n) + seatFlairHtml(n)")) {
   throw new Error("seatLabel must crown the most recent title winner before the name everywhere");
 }
 if (!inline.includes("function seatTitle(title)")) {
@@ -7800,8 +7829,8 @@ if (!inline.includes('document.getElementById("goHome").addEventListener("click"
 if (!inline.includes("clearLeague()") || !fnBody("clearLeague").includes("\n      me = null;")) {
   throw new Error("the leagues back path must still call clearLeague to leave a seat");
 }
-if (!html.includes('id="goHome"') || !html.includes('aria-label="Your leagues"')) {
-  throw new Error("header back control must be labeled Your leagues");
+if (!html.includes('id="goHome"') || !html.includes('aria-label="Leagues"')) {
+  throw new Error("header back control must be labeled Leagues");
 }
 if (!html.includes("M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z")) {
   throw new Error("header home glyph must be a back arrow");
@@ -7924,9 +7953,9 @@ for (const need of ["\n      me = null;", "\n      data = null;", '\n      view 
     throw new Error(`clearLeague must still leave the seat entirely -- it is the only exit: ${need.trim()}`);
   }
 }
-// The brand link is the second half of the same door.
-if (!inline.includes('document.querySelector("h1.brand a").addEventListener("click", (e) => {')) {
-  throw new Error("the brand link must clear the seat with the home icon");
+// App wordmark removed — only #goHome remains as the leagues door in the header.
+if (inline.includes('document.querySelector("h1.brand a").addEventListener')) {
+  throw new Error("brand wordmark click handler must stay removed");
 }
 const SEAT_MIN_H = 44;
 if (!html.includes(`.teams-list > button.row`) || !html.includes(`min-height: ${SEAT_MIN_H}px;`)) {

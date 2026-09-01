@@ -944,26 +944,14 @@ const html = `<!DOCTYPE html>
     .h2h-chip.is-trade .h2h-av > img {
       width: 36px; height: 36px;
     }
-    .h2h-chip.is-trade .h2h-name { font-size: 0.875rem; font-weight: 650; }
-    /* Side totals + signed lean — same tapeFigures/delta/val chrome as boardTape. */
-    .h2h-chip.is-trade .h2h-trade-figs {
-      margin-top: 2px; max-width: 100%;
+    .h2h-chip.is-trade .h2h-name {
+      font-size: 0.875rem; font-weight: 650;
+      display: flex; align-items: center; gap: 0;
+      line-height: 1.2; min-height: 36px;
     }
-    .h2h-chip.is-trade .h2h-side.is-right .h2h-id,
-    .h2h-chip.is-trade .h2h-side.is-right .h2h-nums {
-      text-align: left;
+    .h2h-chip.is-trade .h2h-id {
+      display: flex; align-items: center; min-width: 0; flex: 1 1 auto;
     }
-    .h2h-chip.is-trade .figs {
-      display: flex; gap: 5px; align-items: baseline;
-      font-size: 0.75rem; line-height: 1.2;
-    }
-    .h2h-side.is-right .figs { flex-direction: row-reverse; }
-    .h2h-chip.is-trade .h2h-side.is-right .figs { flex-direction: row; }
-    .h2h-chip.is-trade .figs .val {
-      font-variant-numeric: tabular-nums; font-weight: 650; color: var(--text);
-      white-space: nowrap;
-    }
-    .h2h-chip.is-trade .figs .delta { font-size: inherit; }
     .h2h-assets {
       display: flex; flex-direction: column; gap: 4px; width: 100%;
       padding-top: 4px; border-top: 1px solid #3a3428;
@@ -1482,7 +1470,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeArithCol20260901014030";
+    const DATA_V = "tradeNameCenter20260901014400";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5153,21 +5141,18 @@ const html = `<!DOCTYPE html>
       const left = sides[0] || { name: latest.name, legs: [] };
       const right = sides[1] || { name: latest.other, legs: [] };
       const lean = latestTradeLean(latest);
-      const leftShow = lean.leftTotal == null ? "—" : fmt(lean.leftTotal);
-      const rightShow = lean.rightTotal == null ? "—" : fmt(lean.rightTotal);
       const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
       const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      const sideHtml = (side, rightAlign, delta, totalShow, win) => {
+      const sideHtml = (side, rightAlign, win) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
-        // Seat name + tapeFigures lean — @handle duplicated the same string under the title.
+        // Avatar + seat name only — bag totals live in the arithmetic column under the assets.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar, { win: win })
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
-          + '<div class="h2h-trade-figs">' + tapeFigures(delta, totalShow) + "</div>"
           + "</div></div>"
           + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
@@ -5178,9 +5163,9 @@ const html = `<!DOCTYPE html>
       };
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
-        + sideHtml(left, false, lean.leftDelta, leftShow, leftWin)
+        + sideHtml(left, false, leftWin)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, lean.rightDelta, rightShow, rightWin)
+        + sideHtml(right, true, rightWin)
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
     }
@@ -6970,8 +6955,16 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
   }
   if (!inline.includes("function latestTradeLean(") || !inline.includes("applyVa(")
-    || !inline.includes("windowScore(latest)") || !inline.includes("tapeFigures(delta, totalShow)")) {
-    throw new Error("Latest trade chip must reuse applyVa/windowScore + tapeFigures for value lean");
+    || !inline.includes("windowScore(latest)")) {
+    throw new Error("Latest trade chip must reuse applyVa/windowScore for value lean");
+  }
+  {
+    const cardAt = inline.indexOf("function latestTradeCardHtml(");
+    const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+    const card = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
+    if (card.includes("h2h-trade-figs") || card.includes("tapeFigures(")) {
+      throw new Error("Latest trade header must not show delta/total figs — name stays centered on the avatar");
+    }
   }
   if (!inline.includes("Who won?") || !inline.includes("Value leans ")
     || !inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")

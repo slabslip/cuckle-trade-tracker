@@ -124,7 +124,7 @@ export const CATEGORIES = [
    * among. Somebody chose to send this one; that is more signal than an aggregator restating a
    * depth chart. It is still only a sort weight, and still not a colour.
    */
-  { id: "tweet", label: "From X", severity: 4, test: /(?!)/ },
+  { id: "tweet", label: "X", severity: 4, test: /(?!)/ },
   { id: "news", label: "News", severity: 1, test: /.*/ },
 ];
 

@@ -100,7 +100,7 @@
        the 288px row, and 116.7px at 0.8125rem, which would ellipsise the title. */
     @media (max-width: 460px) {
       h1.brand { font-size: 1.2rem; gap: 8px; }
-      #lensBtn { font-size: 0.75rem; }
+
     }
     /* 320px is the narrowest phone still in use and nothing here had been checked at it.
        The row is 288px after the body padding: 44 for the home icon, two 6px gaps, the clock
@@ -830,7 +830,7 @@
     }
     .news-hero-head {
       display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 6px; margin: 0 0 3px;
+      flex-wrap: wrap; gap: 4px 6px; margin: 0 0 3px;
     }
     .news-hero-who {
       flex: 1 1 auto; min-width: 0;
@@ -841,12 +841,12 @@
     .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-src-bubble {
-      flex: 0 0 auto; max-width: 46%;
+      flex: 0 0 auto;
       font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
       color: #e0b44c; background: transparent;
       border: 1px solid rgba(107, 90, 46, 0.65);
-      border-radius: 999px; padding: 1px 6px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      border-radius: 999px; padding: 1px 5px;
+      white-space: nowrap;
     }
     .news-pullup-line {
       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
@@ -858,14 +858,14 @@
       font-size: 0.8125rem; line-height: 1.38; margin: 0 0 6px;
     }
     .news-hero-tags {
-      flex: 0 0 auto; display: flex; align-items: center; flex-wrap: wrap;
-      justify-content: flex-end; gap: 4px; max-width: 58%;
+      flex: 0 1 auto; display: flex; align-items: center; flex-wrap: wrap;
+      justify-content: flex-end; gap: 3px; max-width: 100%;
     }
     .news-cat-tag {
       flex: 0 0 auto; font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
       color: #e0b44c; background: rgba(107, 90, 46, 0.22);
       border: 1px solid rgba(107, 90, 46, 0.65); border-radius: 999px;
-      padding: 1px 6px; white-space: nowrap;
+      padding: 1px 5px; white-space: nowrap;
     }
     .news-cat-tag.cat-injury { color: #f08a8a; border-color: rgba(224, 85, 85, 0.55); background: rgba(224, 85, 85, 0.12); }
     .news-cat-tag.cat-good-injury-news { color: #6ee7b7; border-color: rgba(61, 220, 151, 0.45); background: rgba(61, 220, 151, 0.1); }
@@ -957,19 +957,56 @@
       line-height: 1.3;
     }
     .pick-intel .caption { margin: 0 0 8px; }
-    /* Compact toolbar: three equal chips (search / who has mine / whose I hold).
-       Centered under Draft Data; equal flex share; wrap on narrow screens. */
+    /* Compact toolbar: optional leading section icon + three equal chips. */
     .pick-intel-bar {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      margin: 0 0 8px; align-items: stretch; justify-content: center;
+      display: flex; flex-wrap: nowrap; gap: 8px;
+      margin: 0 0 8px; align-items: center; justify-content: flex-start;
+    }
+    .pick-intel-brand {
+      flex: 0 0 auto;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 2px; min-width: 3.25rem;
+      line-height: 1;
+    }
+    .pick-intel-brand-lab {
+      font-size: 0.5rem; font-weight: 650;
+      letter-spacing: 0.02em;
+      color: var(--dim);
+      white-space: nowrap; text-align: center;
+      max-width: 3.5rem;
+    }
+    .pick-intel-ico {
+      flex: 0 0 auto;
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      color: var(--muted);
+      line-height: 0;
+    }
+    .pick-intel-ico svg { display: block; width: 22px; height: 22px; }
+    /* Picks glyph: larger stacked 1st/2nd/3rd cards so nd/rd peek out. */
+    .pick-intel-ico.is-picks {
+      width: 40px;
+    }
+    .pick-intel-ico.is-picks svg { width: 34px; height: 28px; }
+    /* Cuffs glyph: slightly larger silver handcuffs so they read at a glance. */
+    .pick-intel-ico.is-cuffs {
+      width: 38px; color: #c5c9d0;
+      filter: drop-shadow(0 0 0.6px rgba(255,255,255,0.4));
+    }
+    .pick-intel-ico.is-cuffs svg { width: 30px; height: 28px; }
+    .pick-intel-chips {
+      flex: 1 1 auto; min-width: 0;
+      display: flex; flex-wrap: nowrap; gap: 6px;
+      align-items: stretch;
     }
     button.pick-intel-chip {
-      appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.6875rem;
       color: var(--text); background: var(--card); border: 1px solid var(--line);
-      border-radius: 10px; min-height: 36px; padding: 6px 10px;
+      border-radius: 10px; min-height: 36px; padding: 6px 6px;
       cursor: pointer; touch-action: manipulation;
-      flex: 1 1 0; min-width: 6.5rem; max-width: 11.5rem;
-      text-align: center; line-height: 1.25; text-wrap: balance;
+      flex: 1 1 0; min-width: 0; max-width: none;
+      text-align: center; line-height: 1.2; text-wrap: balance;
     }
     button.pick-intel-chip.on,
     button.pick-intel-chip[aria-expanded="true"],
@@ -1075,6 +1112,16 @@
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(7) { grid-column: 4; grid-row: 2; }
+    /* Cuffs board: no year/"held" gutter — three equal columns only. */
+    .cuffs-board .pick-intel-board-cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     /* Shared 2-col grid: seat names | counts. Labels sit in the count track
        (centered over · N), not left over the seat names. */
     .pick-intel-board-col {
@@ -1098,9 +1145,25 @@
     button.pick-intel-board-lab:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
-    .pick-intel-board-leaders,
+    .pick-intel-board-leaders {
+      display: flex; flex-direction: column; gap: 3px;
+      min-width: 0; width: 100%;
+    }
     .pick-intel-board-leader {
-      display: contents;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 4px; align-items: baseline;
+      width: 100%; min-width: 0;
+    }
+    button.pick-intel-board-leader {
+      appearance: none; font: inherit; color: inherit;
+      background: transparent; border: 0; padding: 0; margin: 0;
+      cursor: pointer; text-align: inherit;
+      touch-action: manipulation;
+    }
+    /* No underline here: the whole row opens Draft Data, not the team home. */
+    button.pick-intel-board-leader:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
     .pick-intel-board-leader .pil-who {
       min-width: 0;
@@ -1109,10 +1172,10 @@
       white-space: nowrap;
       color: var(--dim); font-size: 0.6875rem; line-height: 1.3;
     }
-    .pick-intel-board-leaders .pil-n {
+    .pick-intel-board-leader .pil-n {
       color: var(--text); font-weight: 650; white-space: nowrap;
       font-size: 0.6875rem; line-height: 1.3;
-      justify-self: center; text-align: center;
+      text-align: center;
     }
     .pick-intel-board-empty {
       grid-column: 1 / -1;
@@ -1145,12 +1208,18 @@
       letter-spacing: 0.04em; min-width: 2.4rem;
     }
     .cuffs-intel .cuffs-starter { font-weight: 650; color: var(--text); flex: 1 1 auto; min-width: 0; }
+    .cuffs-intel .cuffs-mgr {
+      margin-left: auto; color: var(--muted); font-size: 0.8125rem; font-weight: 500;
+      max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cuffs-intel .cuffs-mgr.cuffs-own-you { color: #c9a227; }
     .cuffs-intel .cuffs-team { color: var(--muted); font-size: 0.8125rem; font-weight: 500; }
     .cuffs-intel .cuffs-inj {
-      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
-      color: #f08a8a; border: 1px solid rgba(224, 85, 85, 0.45);
-      background: rgba(224, 85, 85, 0.1); border-radius: 6px;
-      padding: 1px 6px; text-transform: uppercase;
+      display: inline-block; vertical-align: 0.15em; margin-left: 3px;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1;
+      color: #f2a0a0; border: 1px solid rgba(224, 85, 85, 0.35);
+      background: rgba(224, 85, 85, 0.12); border-radius: 2px;
+      padding: 1px 3px; text-transform: uppercase; white-space: nowrap;
     }
     .cuffs-intel .cuffs-sub {
       margin-top: 6px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
@@ -1792,6 +1861,54 @@
     .lens-row-left { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
     .lens-row-left .caption { margin: 0; }
     .lens-row-left .caption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Compact score clock on value chips / filter rows — icon only, inset from chip edge. */
+    .chip-lens { position: absolute; top: 6px; right: 6px; z-index: 3; line-height: 0; }
+    .chip-lens.is-inline {
+      position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
+    }
+    /* Reserve a clear corner so the clock never covers seat names / medals. */
+    .h2h-chip.is-trade { position: relative; padding-top: 22px; padding-right: 30px; }
+    .h2h-chip.is-trade > .chip-lens { top: 6px; right: 6px; }
+    button.chip-lens-btn {
+      appearance: none; font: inherit; color: var(--muted);
+      background: rgba(12, 12, 16, 0.82);
+      border: 1px solid var(--line); border-radius: 999px;
+      width: 26px; height: 26px; min-height: 26px; padding: 0;
+      display: grid; place-items: center; cursor: pointer;
+      position: relative; line-height: 0;
+      touch-action: manipulation;
+    }
+    button.chip-lens-btn.on { color: var(--text); border-color: #6b5a2e; }
+    button.chip-lens-btn .chip-lens-ico {
+      display: block; width: 14px; height: 14px;
+    }
+    button.chip-lens-btn .dot {
+      position: absolute; top: 1px; right: 1px;
+      width: 4px; height: 4px; border-radius: 50%; background: #e0b44c;
+    }
+    button.chip-lens-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .chip-lens-bar {
+      display: flex; justify-content: flex-end; margin: 0 0 8px;
+    }
+    .lh-latest-trade .day-alert-h,
+    .ds-h-row {
+      display: flex; align-items: center; gap: 8px; justify-content: space-between;
+    }
+    .ds-h-row .ds-h { margin: 0; flex: 1 1 auto; min-width: 0; }
+    /* Floating score menu — positioned under the chip that opened it. */
+    #scoreAs.score-as-portal {
+      position: fixed; z-index: 40;
+      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
+      max-height: min(70dvh, 420px); overflow-y: auto;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    #scoreAs.score-as-portal:not([hidden]) {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    #scoreAs.score-as-portal[hidden], #scoreAs.score-as-portal:empty { display: none !important; }
+
     /* The clock trigger. It reads the selected window alone -- "Since trade ▾" -- and not
        "Score as Since trade": at 0.8125rem the prefix costs 54px of measured width, which the
        320px brand row does not have, and the five window names are self-describing without it.
@@ -1818,17 +1935,8 @@
        display:none in engines that do not mark [hidden] as !important, and the empty panel
        then paints as a thin card bar under the brand header -- the "weird box" on league home.
        Flex is applied only when the panel is open; hidden/empty stay display:none !important. */
-    #scoreAs {
-      position: absolute; top: calc(100% + 4px); right: 0; left: auto; z-index: 12;
-      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
-      max-height: calc(100dvh - 88px); overflow-y: auto;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
-    }
-    #scoreAs:not([hidden]) {
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    #scoreAs[hidden], #scoreAs:empty { display: none !important; }
+    /* #scoreAs portal styles: see #scoreAs.score-as-portal above. */
+
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
@@ -1905,10 +2013,6 @@
         <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
       </svg>
     </button>
-    <span class="lens-wrap" id="lensWrap">
-      <button type="button" class="score-btn" id="lensBtn" data-score="1" aria-label="Score as Since trade" aria-haspopup="true" aria-expanded="false">Since trade <span class="chev">▾</span></button>
-      <div id="scoreAs" hidden></div>
-    </span>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
@@ -1918,6 +2022,7 @@
       </button>
     </span>
   </h1>
+  <div id="scoreAs" class="score-as-portal" hidden></div>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
   <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
@@ -2076,6 +2181,9 @@
     let cuffFilterQ = "";
     let cuffFilterOpen = false;
     let cuffFilterFa = false; // cuff is unrostered
+    let cuffFilterHeld = false; // cuff is rostered by someone
+    let cuffFilterSelf = false; // starter owner also owns the cuff (insurer)
+    let cuffFilterOther = false; // cuff owned by someone other than the starter's manager (poach)
     let titles = null;
     let marks = null;
     let news = null;
@@ -2084,7 +2192,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsOnHome20260901132000";
+    const DATA_V = "lensAgeDefault20260901170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2412,11 +2520,27 @@
       cuffFilterQ = "";
       cuffFilterOpen = false;
       cuffFilterFa = false;
+      cuffFilterHeld = false;
+      cuffFilterSelf = false;
+      cuffFilterOther = false;
+    }
+
+    /**
+     * Baseline for the Cuffs page after Clear all: my cuffs when seated,
+     * otherwise open search so the page is never an empty idle prompt.
+     */
+    function resetCuffFilters() {
+      clearCuffFilters();
+      if (authSeatName()) {
+        cuffFilterMine = true;
+      } else {
+        cuffFilterOpen = true;
+      }
     }
 
     function cuffFiltersActive() {
       return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
-        || !!cuffFilterQ.trim() || cuffFilterFa;
+        || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterSelf || cuffFilterOther;
     }
 
     function pickRoundLabel(n) {
@@ -2463,14 +2587,14 @@
           + ' aria-label="Clear ' + esc(lab) + ' filter">'
           + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
       }
-      if (pickFilterMineOut) {
-        chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
-          + ' aria-label="Clear who has my picks">who has my picks'
-          + '<span class="x" aria-hidden="true">×</span></button>');
-      }
       if (pickFilterMineHeld) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
-          + ' aria-label="Clear whose picks do i have">whose picks do i have'
+          + ' aria-label="Clear Held">Held'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (pickFilterMineOut) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
+          + ' aria-label="Clear Original">Original'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (!chips.length) return "";
@@ -2598,12 +2722,29 @@
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
-    /** Stacked name · count rows for one leaderboard column. */
-    function pickLeadersStack(leaders) {
+    /**
+     * Stacked name · count rows for one leaderboard column.
+     * When linkOpts is set (Draft Data board), each name is a button that opens
+     * the full page with that team + round set + year prefilled.
+     */
+    function pickLeadersStack(leaders, linkOpts) {
       if (!leaders.length) return '<span class="pick-intel-board-empty">Nobody yet</span>';
-      return leaders.map(([name, n]) =>
-        '<div class="pick-intel-board-leader"><span class="pil-who">' + seatLabel(name)
-          + '</span><span class="pil-n">· ' + n + "</span></div>").join("");
+      return leaders.map(([name, n]) => {
+        // Draft board rows own the click (open filtered Draft Data). Skip seat-link
+        // so name/flair/count do not jump to that team's home like everywhere else.
+        const linkSeat = !(linkOpts && linkOpts.rounds && linkOpts.rounds.length);
+        const who = '<span class="pil-who">' + seatLabel(name, linkSeat ? undefined : { link: false }) + "</span>"
+          + '<span class="pil-n">· ' + n + "</span>";
+        if (linkOpts && linkOpts.rounds && linkOpts.rounds.length) {
+          const rounds = linkOpts.rounds.join(",");
+          const years = String(linkOpts.year || PICK_INTEL_BOARD_YEAR);
+          const aria = name + " · " + n + " — open Draft Data filtered to this team";
+          return '<button type="button" class="pick-intel-board-leader" data-pick-board-team="'
+            + esc(name) + '" data-pick-rounds="' + rounds + '" data-pick-years="' + esc(years) + '"'
+            + ' aria-label="' + esc(aria) + '">' + who + "</button>";
+        }
+        return '<div class="pick-intel-board-leader">' + who + "</div>";
+      }).join("");
     }
 
     /** Idle quick-view leaderboard: top 3 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
@@ -2625,7 +2766,9 @@
       const bodyCols = cols.map((r) => {
         const leaders = pickLeaders(r.rounds, 3, yrs);
         return '<div class="pick-intel-board-col">'
-          + '<div class="pick-intel-board-leaders">' + pickLeadersStack(leaders) + "</div>"
+          + '<div class="pick-intel-board-leaders">'
+          + pickLeadersStack(leaders, { rounds: r.rounds, year: yrs })
+          + "</div>"
           + "</div>";
       }).join("");
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
@@ -2701,26 +2844,154 @@
       const mineHeldDis = !seat;
       const filterOn = pickFilterOpen || active;
       return '<section class="pick-intel" aria-label="Draft Data">'
-        + '<h2 class="pick-intel-h">Draft Data</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + picksBarIcon()
+        + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
-        + ' aria-label="search for picks">'
-        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "search for picks")
+        + ' aria-label="Search picks">'
+        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Search")
         + "</button>"
-        + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
-        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
-        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
-        + ' aria-label="who has my picks">who has my picks</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
-        + ' aria-label="whose picks do i have">whose picks do i have</button>'
-        + "</div>"
+        + ' aria-label="Held picks">Held</button>'
+        + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
+        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
+        + ' aria-label="Original picks">Original</button>'
+        + "</div></div>"
         + pickFilterSummary()
         + pickIntelStepPanel(seatNames)
         + body
         + "</section>";
+    }
+
+    /**
+     * Open the full Draft Data screen. Home chips land here so filtering/research
+     * has room; mode presets search / who-has-mine / whose-I-hold.
+     */
+    /**
+     * Open the full Draft Data screen.
+     * mode: search | mine | held | board
+     * preset: optional { rounds: number[], years: string[], owner, ownerMode }
+     * for leaderboard deep-links (team + column + year already chosen).
+     */
+
+    /** Leading glyph for the Draft Data chip row: stacked pick cards + caption. */
+    function picksBarIcon() {
+      return '<span class="pick-intel-brand" aria-hidden="true" title="Draft Picks">'
+        + '<span class="pick-intel-ico is-picks">'
+        + '<svg viewBox="0 0 36 30" width="34" height="28" focusable="false">'
+        + '<rect x="18" y="1" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="29.4" y="10.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
+        + '<rect x="9.5" y="5" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="20.9" y="14.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
+        + '<rect x="1" y="9" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.55"/>'
+        + '<text x="7.25" y="19" text-anchor="middle" fill="currentColor" font-size="6.8" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
+        + "</svg></span>"
+        + '<span class="pick-intel-brand-lab">Draft Picks</span></span>';
+    }
+
+    /** Leading glyph for the Cuffs chip row: silver handcuffs + caption. */
+    function cuffsBarIcon() {
+      return '<span class="pick-intel-brand" aria-hidden="true" title="Handcuffs"><span class="pick-intel-ico is-cuffs">'
+        + '<svg viewBox="0 0 36 32" width="30" height="28" focusable="false">'
+        + '<defs>'
+        + '<linearGradient id="cuffSteel" x1="0" y1="0" x2="0" y2="1">'
+        + '<stop offset="0%" stop-color="#f4f6f8"/>'
+        + '<stop offset="40%" stop-color="#c9cfd7"/>'
+        + '<stop offset="100%" stop-color="#8a929e"/>'
+        + "</linearGradient>"
+        + '<linearGradient id="cuffSteelEdge" x1="0" y1="0" x2="1" y2="1">'
+        + '<stop offset="0%" stop-color="#e8ecf0"/>'
+        + '<stop offset="100%" stop-color="#6f7784"/>'
+        + "</linearGradient>"
+        + "</defs>"
+        + '<circle cx="9.2" cy="10.6" r="6.1" fill="none" stroke="url(#cuffSteel)" stroke-width="2.35"/>'
+        + '<rect x="5.1" y="14.2" width="8.2" height="6.4" rx="1.5" fill="url(#cuffSteel)" stroke="url(#cuffSteelEdge)" stroke-width="0.7"/>'
+        + '<circle cx="9.2" cy="16.4" r="0.95" fill="#3d4450"/>'
+        + '<rect x="8.7" y="16.9" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
+        + '<circle cx="26.8" cy="20.2" r="6.1" fill="none" stroke="url(#cuffSteel)" stroke-width="2.35"/>'
+        + '<rect x="22.7" y="11.4" width="8.2" height="6.4" rx="1.5" fill="url(#cuffSteel)" stroke="url(#cuffSteelEdge)" stroke-width="0.7"/>'
+        + '<circle cx="26.8" cy="13.6" r="0.95" fill="#3d4450"/>'
+        + '<rect x="26.3" y="14.1" width="1" height="1.85" rx="0.4" fill="#3d4450"/>'
+        + '<ellipse cx="15.6" cy="15.2" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 15.6 15.2)"/>'
+        + '<ellipse cx="20.4" cy="14.4" rx="2.55" ry="1.55" fill="none" stroke="url(#cuffSteel)" stroke-width="1.7" transform="rotate(-28 20.4 14.4)"/>'
+        + '</svg></span><span class="pick-intel-brand-lab">Handcuffs</span></span>';
+    }
+
+    function openDraftDataPage(mode, preset) {
+      clearPickFilters();
+      if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
+        pickFilterRounds = {};
+        for (const n of (preset.rounds || [])) {
+          if (n > 0) pickFilterRounds[n] = true;
+        }
+        pickFilterYears = {};
+        for (const y of (preset.years || [])) {
+          if (y) pickFilterYears[String(y)] = true;
+        }
+        if (preset.owner) {
+          pickFilterOwner = preset.owner;
+          pickFilterOwnerMode = preset.ownerMode === "out" ? "out" : "held";
+          pickFilterOwnerAny = false;
+        }
+        pickFilterOpen = false;
+        pickFilterStep = null;
+      } else if (mode === "mine") {
+        pickFilterMineOut = true;
+      } else if (mode === "held") {
+        pickFilterMineHeld = true;
+      } else {
+        // search — progressive Round → Year → Team
+        pickFilterOpen = true;
+        pickFilterStep = "round";
+      }
+      pickIntelOpen = null;
+      view = "draftdata";
+      focusNext = ".screen-h";
+      syncUrl();
+      render();
+    }
+
+    /** League-home Draft Data teaser: board + chips that open the full page. */
+    function pickIntelHome() {
+      ensurePicks();
+      const seat = authSeatName();
+      let body = "";
+      if (!picks && picksLoading) {
+        body = '<p class="caption">Loading picks…</p>';
+      } else if (!picks) {
+        body = '<p class="caption">Pick tape is not available for this league yet.</p>';
+      } else {
+        const anyLeaders = pickLeaders(null, 1, PICK_INTEL_BOARD_YEAR).length > 0;
+        body = anyLeaders
+          ? pickIntelBoard()
+          : '<p class="caption">No still-available picks on the tape yet. Open search when picks load.</p>';
+      }
+      const mineDis = !seat;
+      return '<section class="pick-intel" aria-label="Draft Data">'
+        + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
+        + picksBarIcon()
+        + '<div class="pick-intel-chips">'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
+        + ' aria-label="Search picks">Search</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="Held picks">Held</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="Original picks">Original</button>'
+        + "</div></div>"
+        + body
+        + "</section>";
+    }
+
+    function renderDraftDataPage() {
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">Draft Data</h2>'
+        + pickIntel();
     }
 
 
@@ -2751,6 +3022,9 @@
         }
         if (cuffFilterPos && r.pos !== cuffFilterPos) return false;
         if (cuffFilterFa && r.cuff_owned) return false;
+        if (cuffFilterHeld && !r.cuff_owned) return false;
+        if (cuffFilterSelf && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner === r.cuff_owner)) return false;
+        if (cuffFilterOther && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner !== r.cuff_owner)) return false;
         if (q) {
           const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
             .filter(Boolean).join(" ").toLowerCase();
@@ -2760,11 +3034,71 @@
       });
     }
 
+    /**
+     * Top holders of NFL depth cuffs on league slot-1 starters.
+     * kind: "self" (insurers — own starter + own cuff) | "other" (poachers) | "rb" (RB cuffs only).
+     */
+    function cuffLeaders(kind, limit) {
+      const counts = new Map();
+      for (const r of (cuffs && cuffs.rows) || []) {
+        if (kind === "bare") {
+          // Uninsured: starter whose NFL cuff is not rostered anywhere.
+          if (r.cuff_owned || !r.owner) continue;
+          counts.set(r.owner, (counts.get(r.owner) || 0) + 1);
+          continue;
+        }
+        if (!r.cuff_owned || !r.cuff_owner) continue;
+        if (kind === "self" && r.owner !== r.cuff_owner) continue;
+        if (kind === "other" && r.owner === r.cuff_owner) continue;
+        counts.set(r.cuff_owner, (counts.get(r.cuff_owner) || 0) + 1);
+      }
+      const top = Math.max(1, Number(limit) || 3);
+      return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
+    }
+
+    /** Idle quick-view under home chips: Insurers / Poachers / Uninsured. */
+    function cuffsBoard() {
+      const cols = [
+        { lab: "Insurers", kind: "self", aria: "Filter to self-cuffed starters (insurers)" },
+        { lab: "Poachers", kind: "other", aria: "Filter to other teams' cuffs you hold (poachers)" },
+        { lab: "Uninsured", kind: "bare", aria: "Filter to starters whose cuff is not rostered" },
+      ];
+      const aria = "Cuff holders: insurers, poachers, and uninsured starters";
+      const headBtns = cols.map((c) =>
+        '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
+        + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
+      ).join("");
+      const bodyCols = cols.map((c) =>
+        '<div class="pick-intel-board-col">'
+        + '<div class="pick-intel-board-leaders">' + pickLeadersStack(cuffLeaders(c.kind, 3)) + "</div>"
+        + "</div>"
+      ).join("");
+      return '<div class="pick-intel-board cuffs-board" role="group" aria-label="' + esc(aria) + '">'
+        + '<div class="pick-intel-board-cols">'
+        + headBtns
+        + bodyCols
+        + "</div></div>";
+    }
+
     function cuffInjBadge(status) {
       if (!status) return "";
-      const s = String(status);
-      if (!s || s === "NA") return "";
-      return '<span class="cuffs-inj" title="' + esc(s) + '">' + esc(s) + "</span>";
+      const raw = String(status).trim();
+      if (!raw || raw === "NA") return "";
+      const key = raw.toLowerCase();
+      const short = ({
+        questionable: "Q",
+        doubtful: "D",
+        out: "O",
+        ir: "IR",
+        "injured reserve": "IR",
+        pup: "PUP",
+        "physically unable to perform": "PUP",
+        cov: "COV",
+        covid: "COV",
+        sus: "SUS",
+        suspended: "SUS",
+      })[key] || raw.slice(0, 3).toUpperCase();
+      return '<span class="cuffs-inj" title="' + esc(raw) + '">' + esc(short) + "</span>";
     }
 
     function cuffOwnerLabel(r, seat) {
@@ -2779,18 +3113,27 @@
       return esc(r.cuff_owner || "—");
     }
 
+    /** Fantasy manager who owns the starter — who is (or isn't) insured. */
+    function cuffStarterMgrLabel(r, seat) {
+      if (!r.owner) return "";
+      if (seat && r.owner === seat) {
+        return '<span class="cuffs-mgr cuffs-own-you" title="Your starter">You</span>';
+      }
+      return '<span class="cuffs-mgr" title="Starter owner">' + seatLabel(r.owner) + "</span>";
+    }
+
     function cuffRowHtml(r, seat) {
       const team = r.nfl_team ? (' <span class="cuffs-team">' + esc(r.nfl_team) + "</span>") : "";
       const cuffName = r.cuff ? ("<b>" + esc(r.cuff) + "</b>") : "<b>—</b>";
       return '<div class="cuffs-row">'
         + '<div class="cuffs-top">'
         + '<span class="cuffs-slot">' + esc(r.slot || r.pos || "") + "</span>"
-        + '<span class="cuffs-starter">' + esc(r.starter || "—") + team + "</span>"
-        + cuffInjBadge(r.starter_injury)
+        + '<span class="cuffs-starter">' + esc(r.starter || "—") + team
+        + cuffInjBadge(r.starter_injury) + "</span>"
+        + cuffStarterMgrLabel(r, seat)
         + "</div>"
-        + '<div class="cuffs-sub">If out → ' + cuffName
+        + '<div class="cuffs-sub">If out → ' + cuffName + cuffInjBadge(r.cuff_injury)
         + " · " + cuffOwnerLabel(r, seat)
-        + cuffInjBadge(r.cuff_injury)
         + "</div></div>";
     }
 
@@ -2798,7 +3141,7 @@
       const chips = [];
       if (cuffFilterMine) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-mine="1"'
-          + ' aria-label="Clear my cuffs filter">my cuffs<span class="x" aria-hidden="true">×</span></button>');
+          + ' aria-label="Clear mine filter">Mine<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterOwner) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-clear-owner="1"'
@@ -2812,7 +3155,22 @@
       }
       if (cuffFilterFa) {
         chips.push('<button type="button" class="pick-intel-sum" data-cuff-fa="1"'
-          + ' aria-label="Clear free-agent cuff filter">cuff free'
+          + ' aria-label="Clear available filter">Available'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterHeld) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-held="1"'
+          + ' aria-label="Clear held cuffs filter">held'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterSelf) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-self="1"'
+          + ' aria-label="Clear insurers filter">insurers'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (cuffFilterOther) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-other="1"'
+          + ' aria-label="Clear poachers filter">poachers'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterQ.trim()) {
@@ -2854,8 +3212,74 @@
     }
 
     /**
-     * League-home Cuffs: each seat's QB1/RB1/WR1/TE1 → next NFL depth-chart teammate
-     * at the same position, and who owns that cuff in the league.
+     * Open the full Cuffs screen. Home chips land here so search/filter has room;
+     * mode presets search / my cuffs / cuff available / held / other / bare (board columns).
+     */
+    function openCuffsPage(mode) {
+      clearCuffFilters();
+      if (mode === "mine") {
+        cuffFilterMine = true;
+      } else if (mode === "fa") {
+        cuffFilterFa = true;
+      } else if (mode === "held") {
+        cuffFilterHeld = true;
+      } else if (mode === "self" || mode === "total") {
+        cuffFilterSelf = true;
+      } else if (mode === "other") {
+        cuffFilterOther = true;
+      } else if (mode === "bare" || mode === "rb") {
+        // bare = uninsured (cuff not rostered); legacy rb board taps map here too.
+        cuffFilterFa = true;
+      } else {
+        cuffFilterOpen = true;
+      }
+      view = "cuffs";
+      focusNext = ".screen-h";
+      syncUrl();
+      render();
+    }
+
+    /** League-home Cuffs teaser: chips + holder board — no auto cuff list. */
+    function cuffsHome() {
+      ensureCuffs();
+      const seat = authSeatName();
+      const mineDis = !seat;
+      let body = "";
+      if (!cuffs && cuffsLoading) {
+        body = '<p class="caption">Loading cuffs…</p>';
+      } else if (!cuffs || !(cuffs.rows || []).length) {
+        body = '<p class="caption">Cuff board is not available for this league yet.</p>';
+      } else {
+        const anyLeaders = cuffLeaders("self", 1).length > 0;
+        body = anyLeaders
+          ? cuffsBoard()
+          : '<p class="caption">No rostered depth cuffs yet. Open search when the board loads.</p>';
+      }
+      return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
+        + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + cuffsBarIcon()
+        + '<div class="pick-intel-chips">'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
+        + ' aria-label="Search cuffs">Search</button>'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="My cuffs">Mine</button>'
+        + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
+        + ' aria-label="Available cuffs">Available</button>'
+        + "</div></div>"
+        + body
+        + "</section>";
+    }
+
+    function renderCuffsPage() {
+      return '<button type="button" class="chip back" data-view="home">← League home</button>'
+        + '<h2 class="screen-h" tabindex="-1">Cuffs</h2>'
+        + cuffsPanel();
+    }
+
+    /**
+     * Full Cuffs research surface: each seat's QB1/RB1/WR1/TE1 → NFL depth cuff + owner.
+     * Used on view=cuffs (home only shows cuffsHome chips).
      */
     function cuffsPanel() {
       ensureCuffs();
@@ -2863,52 +3287,50 @@
       const seatNames = (members || []).map((m) => m.name).filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
       const active = cuffFiltersActive();
-      let rows;
-      if (!active && seat) {
-        rows = ((cuffs && cuffs.rows) || []).filter((r) => r.owner === seat);
-      } else if (!active) {
-        rows = [];
-      } else {
-        rows = filteredCuffRows(seat);
-      }
+      const rows = active ? filteredCuffRows(seat) : [];
       let body = "";
       if (!cuffs && cuffsLoading) {
         body = '<p class="caption">Loading cuffs…</p>';
       } else if (!cuffs || !(cuffs.rows || []).length) {
         body = '<p class="caption">Cuff board is not available for this league yet.</p>';
-      } else if (!active && !seat) {
-        body = '<p class="caption">Claim your seat to see your QB1/RB1/WR1/TE1 cuffs, or search any team.</p>';
+      } else if (!active) {
+        body = '<p class="caption">Search a team or position, or tap Mine / Available.</p>';
       } else if (!rows.length) {
         body = '<p class="caption">No cuffs match these filters. Clear or loosen a chip.</p>';
       } else {
         let hint;
-        if (!active && seat) hint = "Your slot-1 starters and who owns their NFL cuffs";
-        else if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
+        if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
+        else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
+        else if (cuffFilterSelf) hint = rows.length + " self-cuffed starter" + (rows.length === 1 ? "" : "s") + " (insured)";
+        else if (cuffFilterOther) hint = rows.length + " poached cuff" + (rows.length === 1 ? "" : "s") + " (other teams)";
+        else if (cuffFilterHeld && cuffFilterPos) hint = rows.length + " held " + cuffFilterPos + " cuff" + (rows.length === 1 ? "" : "s");
+        else if (cuffFilterHeld) hint = rows.length + " held cuff" + (rows.length === 1 ? "" : "s");
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
         body = '<p class="cuffs-hint">' + esc(hint) + ".</p>"
           + '<div class="cuffs-list">' + rows.map((r) => cuffRowHtml(r, seat)).join("") + "</div>";
       }
       const mineDis = !seat;
       const filterOn = cuffFilterOpen || active;
-      const mineOn = cuffFilterMine || (!active && !!seat);
+      const mineOn = cuffFilterMine;
       return '<section class="pick-intel cuffs-intel" aria-label="Cuffs">'
-        + '<h2 class="pick-intel-h">Cuffs</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Cuffs controls">'
+        + cuffsBarIcon()
+        + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
         + ' data-cuff-filter-open="1" aria-expanded="' + (cuffFilterOpen ? "true" : "false") + '"'
-        + ' aria-label="search cuffs">'
-        + (cuffFilterOpen ? "Filtering…" : "search cuffs")
+        + ' aria-label="Search cuffs">'
+        + (cuffFilterOpen ? "Filtering…" : "Search")
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (mineOn ? " on" : "") + '"'
         + ' data-cuff-mine="1"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (mineOn ? "true" : "false") + '"'
-        + ' aria-label="my cuffs">my cuffs</button>'
+        + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
         + ' data-cuff-fa="1" aria-pressed="' + (cuffFilterFa ? "true" : "false") + '"'
-        + ' aria-label="cuff free agents">cuff free</button>'
-        + "</div>"
+        + ' aria-label="Available cuffs">Available</button>'
+        + "</div></div>"
         + cuffFilterSummary()
         + cuffFilterPanel(seatNames)
         + body
@@ -2972,8 +3394,8 @@
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
@@ -3048,7 +3470,14 @@
       if (view === "trade") {
         // ?view=trade with no trade is not a screen. The list it belongs to is.
         if (!openId) view = "trades";
-        else await ensureTradeSeat();
+        else {
+          await ensureTradeSeat();
+          // Cold deep links omit lens when it is the to-date default; pick y2 for old deals.
+          if (!params.get("lens")) {
+            const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+            lens = defaultLensForDate(side && side.date);
+          }
+        }
       }
       document.getElementById("app").hidden = false;
       render();
@@ -3236,7 +3665,8 @@
         titleYear: q.get("title") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
-        lens: q.get("lens") || "all",
+        // null when omitted so trade screens can age-default (y2 vs to-date).
+        lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
         d: 0,
       };
     }
@@ -3250,11 +3680,18 @@
       restoring = true;
       try {
         depth = want.d || 0;
-        lens = want.lens && WINDOWS.some((w) => w[0] === want.lens) ? want.lens : "all";
         view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
         titleYear = want.titleYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
+        if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
+          lens = want.lens;
+        } else if (view === "trade" && openId) {
+          const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
+          lens = defaultLensForDate(side && side.date);
+        } else {
+          lens = "all";
+        }
         // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
         partnerName = null;
         openPick = null;
@@ -3459,6 +3896,16 @@
       const y = p[0] + n, m = p[1], d = p[2];
       const dim = new Date(y, m, 0).getDate();
       return y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(d, dim)).padStart(2, "0");
+    }
+
+    /**
+     * Default score clock for a trade's age: First 2 years once the deal is older than
+     * two years; to-date (Since trade) while it is still younger than that.
+     */
+    function defaultLensForDate(date) {
+      const today = (league && league.today) || "";
+      if (!date || !today) return "all";
+      return date <= addYears(today, -2) ? "y2" : "all";
     }
 
     function windowLived(date) {
@@ -3703,7 +4150,10 @@
       // handle a late render dropped it to <body> a moment later, which is the same defect the
       // .screen-h special case exists for.
       return '<div class="pack" id="dsBody">'
+        + '<div class="ds-h-row">'
         + '<h2 class="ds-h" tabindex="-1" data-dset-head="1">' + esc(cur[1]) + "</h2>"
+        + (cur[0] === "wide" ? chipLensHtml({ inline: true }) : "")
+        + "</div>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
@@ -3875,7 +4325,7 @@
     const NEWS_CATS = {
       injury: "Injury", suspension: "Suspension", off_field: "Off the field",
       trade: "Trade", depth_chart: "Depth chart", breakout: "Breakout", news: "News",
-      tweet: "From X",
+      tweet: "X",
     };
 
     /**
@@ -4051,7 +4501,7 @@
       let intel = "";
       try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
-      try { intel = pickIntel(); } catch (err) { console.error(err); intel = ""; }
+      try { intel = pickIntelHome(); } catch (err) { console.error(err); intel = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
@@ -4081,10 +4531,10 @@
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
       if (!intel) {
-        try { intel = pickIntel(); } catch (err3) { console.error(err3); }
+        try { intel = pickIntelHome(); } catch (err3) { console.error(err3); }
       }
       let cuffsHtml = "";
-      try { cuffsHtml = cuffsPanel(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
+      try { cuffsHtml = cuffsHome(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
       // Latest trade → quick actions → Draft Data → Cuffs → data set body → News Feed pull-up.
       return progress + chips + intel + cuffsHtml + sets + hero;
     }
@@ -6329,11 +6779,12 @@
     }
 
     function newsSourceBubble(it) {
-      const cat = NEWS_CATS[it.category] || "News";
-      if (it.category === "tweet") return cat;
-      const label = String(it.source_label || "").trim();
+      if (it && (it.category === "tweet" || it.source === "x:submission")) return "X";
+      const cat = NEWS_CATS[it && it.category] || "News";
+      const label = String((it && it.source_label) || "").trim();
+      if (label === "From X" || label === "Shared from X") return "X";
       if (label && label.charAt(0) !== "@") return label;
-      return cat;
+      return cat === "From X" ? "X" : cat;
     }
 
     /** Map NFL position abbreviations to shared pos-* colour classes. */
@@ -7125,6 +7576,7 @@
         || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
+        + chipLensHtml()
         + sideHtml(left, false, leftWin)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
         + sideHtml(right, true, rightWin)
@@ -7422,7 +7874,10 @@
       const empty = pool.length ? "" : ((data.trades || []).length
         ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
         : '<p class="caption">No trades on this seat yet.</p>');
-      return teamMarks()
+      return (lensApplies()
+          ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
+          : "")
+        + teamMarks()
         + markChart()
         + empty
         + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
@@ -7683,32 +8138,81 @@
     }
 
     /**
-     * The clock control lives in the brand header, outside #app, so it is painted rather than
-     * rendered -- render() replaces #app's whole subtree and would destroy a control that has
-     * to survive every navigation. Only the trigger's own state passes through here; changing
-     * the window calls render(), because that is what moves the figures.
+     * Paint compact chip score triggers and the scoreAs portal. Triggers live in app markup;
+     * the menu portals outside so it is not destroyed mid-click. Changing the window calls
+     * render() because that is what moves the figures.
      */
+
+    /**
+     * Compact score-window control for chips that show trade / player values.
+     * Shared global lens state -- any chip updates the same clock; menu portals via #scoreAs.
+     */
+    function chipLensIcon() {
+      return '<svg class="chip-lens-ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">'
+        + '<circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>'
+        + '<path d="M8 4.75V8l2.4 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>'
+        + "</svg>";
+    }
+
+    function chipLensHtml(opts) {
+      if (!lensApplies()) return "";
+      const inline = !!(opts && opts.inline);
+      const name = clockName();
+      return '<span class="chip-lens' + (inline ? " is-inline" : "") + '">'
+        + '<button type="button" class="chip-lens-btn" data-score="1"'
+        + ' aria-label="Score as ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
+        + ' title="' + esc(name) + '">'
+        + chipLensIcon() + "</button></span>";
+    }
+
     function paintLens() {
-      const wrap = document.getElementById("lensWrap");
-      const btn = document.getElementById("lensBtn");
       const panel = document.getElementById("scoreAs");
-      if (!lensApplies()) {
+      const btns = document.querySelectorAll("button.chip-lens-btn");
+      if (!panel) return;
+      if (!lensApplies() || !btns.length) {
         lensOpen = false;
-        wrap.hidden = true;
         panel.hidden = true;
         panel.innerHTML = "";
         return;
       }
-      wrap.hidden = false;
       const name = clockName();
-      btn.className = "score-btn" + (lens !== "all" || lensOpen ? " on" : "");
-      btn.setAttribute("aria-label", "Score as " + name);
-      btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
-      // The label is the window alone; "Score as" is in the accessible name above.
-      btn.innerHTML = esc(name) + ' <span class="chev">▾</span>'
-        + (lens !== "all" ? '<span class="dot"></span>' : "");
+      for (const btn of btns) {
+        btn.className = "chip-lens-btn" + (lens !== "all" || lensOpen ? " on" : "");
+        btn.setAttribute("aria-label", "Score as " + name);
+        btn.setAttribute("title", name);
+        btn.setAttribute("aria-expanded", lensOpen ? "true" : "false");
+        btn.innerHTML = chipLensIcon()
+          + (lens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
+      }
       panel.hidden = !lensOpen;
       panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
+      if (lensOpen) {
+        const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
+          || btns[0];
+        if (anchor) positionScoreAs(anchor);
+      }
+    }
+
+    let lensAnchorId = 0;
+    let lensAnchorSeq = 0;
+
+    function positionScoreAs(btn) {
+      const panel = document.getElementById("scoreAs");
+      if (!panel || !btn) return;
+      const r = btn.getBoundingClientRect();
+      const width = Math.min(280, window.innerWidth - 32);
+      let left = Math.min(r.right - width, window.innerWidth - 16 - width);
+      left = Math.max(16, left);
+      let top = r.bottom + 4;
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+      // Flip above if near bottom of viewport.
+      requestAnimationFrame(() => {
+        const pr = panel.getBoundingClientRect();
+        if (pr.bottom > window.innerHeight - 8) {
+          panel.style.top = Math.max(8, r.top - pr.height - 4) + "px";
+        }
+      });
     }
 
     /**
@@ -7717,7 +8221,9 @@
      * divs and the clock's departure left them identical.
      */
     function filterRow(left) {
-      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div></div>";
+      return '<div class="lens-row"><div class="lens-row-left">' + left + "</div>"
+        + chipLensHtml({ inline: true })
+        + "</div>";
     }
 
     function renderDrafts() {
@@ -8147,6 +8653,8 @@
         : view === "teams" ? renderTeamsPage()
         : view === "news" ? renderNewsPage()
         : view === "datasets" ? renderDataSetsPage()
+        : view === "draftdata" ? renderDraftDataPage()
+        : view === "cuffs" ? renderCuffsPage()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -8208,6 +8716,10 @@
       voteToast = null;
       voteSheetTx = null;
       voteEditTx = null;
+      {
+        const side = tradeSide(tx, uid) || tradeSide(tx, null);
+        lens = defaultLensForDate(side && side.date);
+      }
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
       render();
@@ -8277,45 +8789,47 @@
       });
     }
     /**
-     * The clock control's own listener. It has to be its own, because #app's delegated handler
-     * cannot see a control that lives in the brand header -- the same split the seat picker had
-     * while it was mounted there.
-     */
-    document.getElementById("lensWrap").addEventListener("click", (e) => {
-      const opt = e.target.closest("[data-lens]");
-      if (opt) {
-        lens = opt.dataset.lens;
-        lensOpen = false;
-        render();
-        // The option that was clicked no longer exists and was never inside #app, so
-        // focusSelector() cannot put the keyboard back. The trigger is where it came from.
-        document.getElementById("lensBtn").focus({ preventScroll: true });
-        return;
-      }
-      if (!e.target.closest("[data-score]")) return;
-      lensOpen = !lensOpen;
-      if (!lensOpen) {
-        // Closing changes nothing a screen renders, so it does not pay for a full render.
-        paintLens();
-        return;
-      }
-      // Every other popup is exclusive with this one, and this one paints above all of them,
-      // so opening from the header has to close them rather than cover an open menu.
-      dsOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      render();
-    });
-    /**
-     * An outside click closes it. Capture phase, and paint rather than render: #app's handler
-     * returns early on a dozen paths, and an open panel must not survive over the screen the
-     * click just navigated to. Running first also means the fall-through branch at the bottom of
-     * #app's handler sees the flag already cleared and does not schedule a second render.
+     * Score-window control: compact chip buttons in value surfaces; menu portals via #scoreAs.
+     * Document-level so it works from chips inside #app and options outside it.
      */
     document.addEventListener("click", (e) => {
-      if (!lensOpen || e.target.closest("#lensWrap")) return;
-      lensOpen = false;
-      paintLens();
+      const opt = e.target.closest("#scoreAs [data-lens]");
+      if (opt) {
+        e.preventDefault();
+        e.stopPropagation();
+        lens = opt.dataset.lens;
+        lensOpen = false;
+        lensAnchorId = 0;
+        render();
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
+        return;
+      }
+      const scoreBtn = e.target.closest("button.chip-lens-btn[data-score]");
+      if (scoreBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Tag this button so paintLens can re-anchor after render.
+        if (!scoreBtn.getAttribute("data-lens-anchor")) {
+          lensAnchorSeq += 1;
+          scoreBtn.setAttribute("data-lens-anchor", String(lensAnchorSeq));
+        }
+        lensAnchorId = scoreBtn.getAttribute("data-lens-anchor");
+        lensOpen = !lensOpen;
+        if (!lensOpen) {
+          paintLens();
+          return;
+        }
+        dsOpen = false;
+        yearFilterOpen = false;
+        draftFilterOpen = false;
+        render();
+        return;
+      }
+      if (lensOpen && !e.target.closest("#scoreAs") && !e.target.closest("button.chip-lens-btn")) {
+        lensOpen = false;
+        paintLens();
+      }
     }, true);
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
@@ -8323,7 +8837,8 @@
       if (lensOpen) {
         lensOpen = false;
         paintLens();
-        document.getElementById("lensBtn").focus({ preventScroll: true });
+        const back = document.querySelector("button.chip-lens-btn");
+        if (back) back.focus({ preventScroll: true });
         return true;
       }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
@@ -8491,6 +9006,23 @@
       if (dsListBtn) { showDataSetList(); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
       if (dsOpenBtn) { openDataSets(); return; }
+      const draftDataOpen = e.target.closest("[data-draft-data-open]");
+      if (draftDataOpen) {
+        if (draftDataOpen.getAttribute("aria-disabled") === "true") return;
+        openDraftDataPage(draftDataOpen.dataset.draftDataOpen || "search");
+        return;
+      }
+      const cuffsOpen = e.target.closest("[data-cuffs-open]");
+      if (cuffsOpen) {
+        if (cuffsOpen.getAttribute("aria-disabled") === "true") return;
+        openCuffsPage(cuffsOpen.dataset.cuffsOpen || "search");
+        return;
+      }
+      const cuffsBoardBtn = e.target.closest("[data-cuffs-board]");
+      if (cuffsBoardBtn) {
+        openCuffsPage(cuffsBoardBtn.dataset.cuffsBoard || "held");
+        return;
+      }
       const pickMine = e.target.closest("[data-pick-mine]");
       if (pickMine) {
         if (pickMine.getAttribute("aria-disabled") === "true") return;
@@ -8544,6 +9076,10 @@
         cuffFilterMine = !cuffFilterMine;
         if (cuffFilterMine) {
           cuffFilterOwner = "";
+          cuffFilterHeld = false;
+          cuffFilterSelf = false;
+          cuffFilterOther = false;
+          cuffFilterFa = false;
         }
         cuffFilterOpen = false;
         render();
@@ -8551,13 +9087,52 @@
       }
       const cuffFa = e.target.closest("[data-cuff-fa]");
       if (cuffFa) {
-        cuffFilterFa = !cuffFilterFa;
+        // Exclusive mode: Available alone — starters whose NFL cuff is unrostered.
+        if (cuffFilterFa) {
+          resetCuffFilters();
+        } else {
+          clearCuffFilters();
+          cuffFilterFa = true;
+        }
+        render();
+        return;
+      }
+      const cuffHeld = e.target.closest("[data-cuff-held]");
+      if (cuffHeld) {
+        cuffFilterHeld = !cuffFilterHeld;
+        if (cuffFilterHeld) {
+          cuffFilterFa = false;
+          cuffFilterOther = false;
+          cuffFilterSelf = false;
+        }
+        render();
+        return;
+      }
+      const cuffSelf = e.target.closest("[data-cuff-self]");
+      if (cuffSelf) {
+        cuffFilterSelf = !cuffFilterSelf;
+        if (cuffFilterSelf) {
+          cuffFilterFa = false;
+          cuffFilterHeld = false;
+          cuffFilterOther = false;
+        }
+        render();
+        return;
+      }
+      const cuffOther = e.target.closest("[data-cuff-other]");
+      if (cuffOther) {
+        cuffFilterOther = !cuffFilterOther;
+        if (cuffFilterOther) {
+          cuffFilterFa = false;
+          cuffFilterHeld = false;
+          cuffFilterSelf = false;
+        }
         render();
         return;
       }
       const cuffClear = e.target.closest("[data-cuff-filter-clear]");
       if (cuffClear) {
-        clearCuffFilters();
+        resetCuffFilters();
         render();
         return;
       }
@@ -8630,20 +9205,32 @@
         render();
         return;
       }
-      const pickBoardRounds = e.target.closest("[data-pick-rounds]");
+      const pickBoardTeam = e.target.closest("[data-pick-board-team]");
+      if (pickBoardTeam) {
+        // Leaderboard seat → Draft Data prefilled for that holder + column rounds + year.
+        const rounds = String(pickBoardTeam.dataset.pickRounds || "")
+          .split(",").map(Number).filter((n) => n > 0);
+        const year = String(pickBoardTeam.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
+        const team = pickBoardTeam.dataset.pickBoardTeam || "";
+        if (!team) return;
+        openDraftDataPage("board", {
+          rounds,
+          years: year ? [year] : [],
+          owner: team,
+          ownerMode: "held",
+        });
+        return;
+      }
+      const pickBoardRounds = e.target.closest("button.pick-intel-board-lab[data-pick-rounds]");
       if (pickBoardRounds) {
-        // Leaderboard shortcut: apply that round set + board year (2027) and show matches.
+        // Column header → Draft Data prefilled for that round set + board year.
         const rounds = String(pickBoardRounds.dataset.pickRounds || "")
           .split(",").map(Number).filter((n) => n > 0);
         const year = String(pickBoardRounds.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
-        pickFilterRounds = {};
-        for (const n of rounds) pickFilterRounds[n] = true;
-        pickFilterYears = {};
-        if (year) pickFilterYears[year] = true;
-        pickFilterOpen = false;
-        pickFilterStep = null;
-        pickIntelOpen = null;
-        render();
+        openDraftDataPage("board", {
+          rounds,
+          years: year ? [year] : [],
+        });
         return;
       }
       const pickRound = e.target.closest("[data-pick-round]");
@@ -8898,7 +9485,10 @@
       const viewBtn = e.target.closest("[data-view]");
       if (viewBtn) {
         if (viewBtn.tagName === "A") e.preventDefault();
-        view = viewBtn.dataset.view;
+        const nextView = viewBtn.dataset.view;
+        if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
+        if (view === "cuffs" && nextView !== "cuffs") clearCuffFilters();
+        view = nextView;
         openId = null;
         tradeSeat = null;
         openDraft = null;

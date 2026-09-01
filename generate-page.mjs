@@ -2008,7 +2008,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeAssetPaths20260901130000";
+    const DATA_V = "leagueTradeDataTitle20260901133000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9956,6 +9956,10 @@ for (const need of [
     || !fn.includes("tapeTradesFiltered(") || !fn.includes("tapeFilterHtml(")
     || !fn.includes("tradeFeedCardHtml(") || !fn.includes("ensureTradesFeedBags(")) {
     throw new Error("renderTradeScreen must be an H2H trade feed with filters and selected trade expanded");
+  }
+  if (!fn.includes("League trade data") || fn.includes('seatLabel(selected.name) + " vs "')
+    || fn.includes("Review this trade and browse")) {
+    throw new Error("renderTradeScreen title must be League trade data (no A vs B header / review caption)");
   }
   if (fn.includes("boardTape(r)") || fn.includes("screen-foot"))
     throw new Error("trade detail feed must not use the old standalone boardTape / footer layout");

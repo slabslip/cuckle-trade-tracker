@@ -1520,7 +1520,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "dsFullScreen20260901024500";
+    const DATA_V = "teamsList20260901025000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3297,33 +3297,20 @@
         return;
       }
       if (which === "teams") {
+        // Always the league team list — pick a roster from here (do not jump to My team).
         openId = null;
         tradeSeat = null;
-        const seat = authSeatId();
-        if (seat) {
-          // My team → that seat's home dashboard.
-          const open = () => selectMe(seat);
-          if (members && members.length) open();
-          else {
-            loadMembers().then(open).catch((err) => {
-              console.error(err);
-              me = null;
-              data = null;
-              view = "teams";
-              focusNext = ".screen-h";
-              render();
-            });
-          }
-          return;
-        }
         me = null;
         data = null;
         view = "teams";
         focusNext = ".screen-h";
-        loadMembers().then(() => render()).catch((err) => {
-          console.error(err);
-          render();
-        });
+        if (members && members.length) render();
+        else {
+          loadMembers().then(() => render()).catch((err) => {
+            console.error(err);
+            render();
+          });
+        }
         return;
       }
       if (which === "trades") {

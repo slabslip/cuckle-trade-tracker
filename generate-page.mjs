@@ -1525,7 +1525,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "dsFullScreen20260901024500";
+    const DATA_V = "teamsList20260901025000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3302,33 +3302,20 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (which === "teams") {
+        // Always the league team list — pick a roster from here (do not jump to My team).
         openId = null;
         tradeSeat = null;
-        const seat = authSeatId();
-        if (seat) {
-          // My team → that seat's home dashboard.
-          const open = () => selectMe(seat);
-          if (members && members.length) open();
-          else {
-            loadMembers().then(open).catch((err) => {
-              console.error(err);
-              me = null;
-              data = null;
-              view = "teams";
-              focusNext = ".screen-h";
-              render();
-            });
-          }
-          return;
-        }
         me = null;
         data = null;
         view = "teams";
         focusNext = ".screen-h";
-        loadMembers().then(() => render()).catch((err) => {
-          console.error(err);
-          render();
-        });
+        if (members && members.length) render();
+        else {
+          loadMembers().then(() => render()).catch((err) => {
+            console.error(err);
+            render();
+          });
+        }
         return;
       }
       if (which === "trades") {
@@ -7847,8 +7834,19 @@ if (!html.includes('<span>My trades</span>') || !html.includes('<span>My team</s
   || !html.includes('aria-label="My trades"') || !html.includes('aria-label="My team"')) {
   throw new Error("bottom nav labels must read My trades and My team");
 }
-if (!inline.includes("selectMe(seat)") || !inline.includes("selectMe(seat, true)")) {
-  throw new Error("My team / My trades must open the signed-in seat via selectMe");
+if (!inline.includes("selectMe(seat, true)")) {
+  throw new Error("My trades must open the signed-in seat via selectMe");
+}
+{
+  const at = inline.indexOf('if (which === "teams")');
+  if (at < 0) throw new Error("goBottomNav teams branch missing");
+  const src = inline.slice(at, inline.indexOf("if (which === \"trades\")", at));
+  if (src.includes("selectMe(")) {
+    throw new Error("Teams nav must open the league team list — not auto-select My team");
+  }
+  if (!src.includes('view = "teams"')) {
+    throw new Error("Teams nav must set view=teams so the picker list renders");
+  }
 }
 if (!inline.includes("function renderAccountPage()") || !inline.includes("function renderTeamsPage()")) {
   throw new Error("Account and Teams screens are required (reachable without the dock)");

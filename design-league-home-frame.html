@@ -41,7 +41,8 @@
     localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
     localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
     localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
-    document.getElementById("frame").src = "./design-league-home.html";
+    try { sessionStorage.setItem("cuckle.design.league_home", "1"); } catch (e) {}
+    document.getElementById("frame").src = "./design-league-home.html?v=home-fix-0245&_=" + Date.now();
   </script>
 </body>
 </html>

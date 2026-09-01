@@ -983,17 +983,50 @@ const html = `<!DOCTYPE html>
       font-size: 0.6875rem; line-height: 1.25; color: var(--text);
       white-space: nowrap;
     }
-    /* Value lean + vote cue under left | VS | right (opens trade detail to cast). */
+    /* Value lean mid + per-side voter flairs under left | VS | right. */
     .h2h-trade-lean {
       grid-column: 1 / -1;
-      display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
-      gap: 0 2px; margin-top: 2px; padding-top: 8px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 6px 6px; align-items: center;
+      margin-top: 2px; padding-top: 8px;
       border-top: 1px solid #3a3428;
       font-size: 0.6875rem; line-height: 1.3; color: var(--dim);
-      text-align: center;
     }
     .h2h-trade-lean .delta { font-size: inherit; }
-    .h2h-lean-dot { color: #6b5a2e; }
+    .h2h-lean-side {
+      min-width: 0; display: flex; flex-direction: column; gap: 2px;
+    }
+    .h2h-lean-side.is-left { align-items: flex-start; text-align: left; }
+    .h2h-lean-side.is-right { align-items: flex-end; text-align: right; }
+    .h2h-lean-marks {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+      max-width: 100%;
+    }
+    .h2h-lean-side.is-right .h2h-lean-marks { flex-direction: row-reverse; }
+    .h2h-lean-marks img.seat-flair,
+    .h2h-lean-marks img.h2h-lean-flair {
+      width: 14px; height: 14px; vertical-align: -2px;
+      border-radius: 2px;
+    }
+    .h2h-lean-glyph { font-size: 0.75rem; line-height: 1; }
+    .h2h-lean-init {
+      display: inline-grid; place-items: center;
+      width: 14px; height: 14px; border-radius: 2px;
+      background: #2a2418; border: 1px solid #3a3428;
+      color: var(--dim); font-size: 0.5rem; font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .h2h-lean-n {
+      font-variant-numeric: tabular-nums; font-weight: 650;
+      color: var(--text); margin-inline: 1px;
+    }
+    .h2h-lean-mid {
+      min-width: 0; max-width: 11rem;
+      text-align: center; justify-self: center;
+      font-size: 0.625rem; line-height: 1.25; color: var(--dim);
+    }
+    .h2h-lean-empty { color: #6b5a2e; }
     /* Kept for smoke / old markup; trade assets are text-first now. */
     .lh-trade-ico, .lh-trade-pick { display: none; }
 
@@ -1419,7 +1452,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsSrcBelow20260901012800";
+    const DATA_V = "tradeVoteMarks20260901013245";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4107,6 +4140,10 @@ const html = `<!DOCTYPE html>
     // aggregated the ballots away, so there is no way to tell from it whether the total for a
     // trade already counts us. Without it the choice is between double-counting our own vote and
     // hiding it, and both are wrong.
+    //
+    // A third read pulls every ballot's voter+choice so the Latest trade lean can paint each
+    // voter's seat flair under the side they picked. SELECT on trade_votes is public; if that
+    // read fails we still keep tallies and fall back to count-only marks.
     async function voteLoad() {
       voteLiveState = "loading";
       await authRefreshIfNeeded();
@@ -4119,8 +4156,11 @@ const html = `<!DOCTYPE html>
           ? VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",")
             + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
           : null;
+        const ballotsQ = VOTE_API + "/trade_votes?select=transaction_id,choice,voter&sleeper_league_id=eq."
+          + encodeURIComponent(leagueId);
         let rows;
         let mineRows = [];
+        let ballotRows = [];
         try {
           const parts = [voteGet(tallyQ)];
           if (mineQ) parts.push(voteGet(mineQ));
@@ -4139,6 +4179,16 @@ const html = `<!DOCTYPE html>
           rows = got[0];
           mineRows = got[1] || [];
         }
+        try {
+          ballotRows = await voteGet(ballotsQ);
+        } catch (ballotErr) {
+          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          try {
+            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter");
+          } catch (ballotErr2) {
+            ballotRows = [];
+          }
+        }
         const totals = {};
         for (const r of rows || []) {
           if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
@@ -4150,7 +4200,14 @@ const html = `<!DOCTYPE html>
           if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
           mine[r.transaction_id] = r.choice;
         }
-        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine };
+        // voter → choice per trade. Cleared rows stay out; one voter can only pick one side.
+        const ballots = {};
+        for (const r of ballotRows || []) {
+          if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+          const box = ballots[r.transaction_id] || (ballots[r.transaction_id] = {});
+          box[r.voter] = r.choice;
+        }
+        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine, ballots: ballots };
         voteLiveState = "ok";
       } catch (err) {
         console.error(err);
@@ -4234,10 +4291,74 @@ const html = `<!DOCTYPE html>
         }
         if (now) voteLive.mine[transactionId] = now;
         else delete voteLive.mine[transactionId];
+        // Keep the flair map in step with the settled ballot so the lean row does not wait
+        // for another full voteLoad.
+        const seat = authSeatId();
+        if (seat) {
+          if (!voteLive.ballots) voteLive.ballots = {};
+          const box = voteLive.ballots[transactionId] || (voteLive.ballots[transactionId] = {});
+          if (now) box[seat] = now;
+          else delete box[seat];
+        }
         // asOf is deliberately NOT advanced. It dates the league read, and our own vote landing
         // says nothing about anyone else's. Moving it would claim the other counts were rechecked.
       }
       render();
+    }
+
+    /** Display name for a seat user_id (voter or trade side). */
+    function seatNameForUid(uid) {
+      if (!uid) return "";
+      const m = (members || []).find((x) => x && x.user_id === uid);
+      return (m && m.name) ? String(m.name) : String(uid);
+    }
+
+    /**
+     * Compact seat mark for the lean vote row — flair image/glyph, else initials.
+     * Unlike seatFlairHtml, no leading space (marks sit in a flex gap row).
+     */
+    function seatVoteMarkHtml(name) {
+      const n = String(name == null ? "" : name);
+      const f = SEAT_FLAIR[n];
+      if (f && f.glyph) {
+        return '<span class="h2h-lean-glyph" aria-hidden="true">' + f.glyph + "</span>";
+      }
+      if (f && f.img) {
+        return '<img class="seat-flair h2h-lean-flair" src="' + esc(f.img) + "?" + DATA_V
+          + '" width="14" height="14" alt="" decoding="async" />';
+      }
+      const initials = n.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+      return '<span class="h2h-lean-init" aria-hidden="true">' + esc(initials) + "</span>";
+    }
+
+    /**
+     * Voter → choice map for one trade, with the same local-over-server merge as readVotes.
+     * Returns { [choiceUid]: [voterUid, ...] } so the lean row can paint flairs per side.
+     */
+    function voteMarks(transactionId) {
+      const mine = voteBoxRead().votes[transactionId] || null;
+      const local = (mine && mine.choice) || null;
+      const localSeat = (mine && mine.seat) || authSeatId() || null;
+      let byVoter = {};
+      if (voteLive && voteLive.ballots) {
+        byVoter = Object.assign({}, voteLive.ballots[transactionId] || {});
+        const onServer = voteLive.mine[transactionId] || null;
+        if (localSeat && onServer !== local) {
+          if (local) byVoter[localSeat] = local;
+          else delete byVoter[localSeat];
+        }
+      } else {
+        const entry = (voteBook && voteBook.votes && voteBook.votes[transactionId]) || null;
+        byVoter = Object.assign({}, (entry && entry.voters) || {});
+        if (local && localSeat && !byVoter[localSeat]) byVoter[localSeat] = local;
+      }
+      const byChoice = {};
+      for (const voter of Object.keys(byVoter)) {
+        const choice = byVoter[voter];
+        if (!choice || choice === VOTE_CLEARED) continue;
+        (byChoice[choice] || (byChoice[choice] = [])).push(voter);
+      }
+      return byChoice;
     }
 
     // ---- The two doors ---------------------------------------------------------
@@ -4709,34 +4830,78 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Compact value-lean + vote cue under the chip. Voting stays on the trade screen
-     * (nested buttons cannot live inside the Latest trade opener).
+     * Under the chip: left/right voter flairs + totals aligned to each team, value lean mid.
+     * Voting stays on the trade screen (nested buttons cannot live inside the Latest trade opener).
      */
     function latestTradeLeanFooterHtml(latest, lean) {
-      const bits = [];
+      const seats = voteSeats(latest);
+      const canVote = seats.length === 2 && voteParties(latest) <= 2;
+      let mid = "";
       if (lean && lean.leftDelta != null) {
         const d = Math.round(lean.leftDelta);
-        if (d === 0) bits.push("Value even");
+        if (d === 0) mid = "Value even";
         else if (d > 0) {
-          bits.push("Value leans " + esc(latest.name) + " " + tapeMargin(lean.leftDelta));
+          mid = "Value leans " + esc(latest.name) + " " + tapeMargin(lean.leftDelta);
         } else {
-          bits.push("Value leans " + esc(latest.other) + " " + tapeMargin(-lean.leftDelta));
+          mid = "Value leans " + esc(latest.other) + " " + tapeMargin(-lean.leftDelta);
         }
       }
-      const seats = voteSeats(latest);
-      if (seats.length === 2 && voteParties(latest) <= 2) {
+      if (!canVote && !mid) return "";
+
+      const sideMarksHtml = (uid, rightAlign) => {
+        if (!canVote || !uid) {
+          return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"></div>';
+        }
         const v = readVotes(latest.transaction_id);
-        if (v.votes > 0) {
-          const a = v.tally[seats[0].uid] || 0;
-          const b = v.tally[seats[1].uid] || 0;
-          bits.push("Votes " + a + "–" + b);
+        const marks = voteMarks(latest.transaction_id);
+        const voters = marks[uid] || [];
+        const n = v.tally[uid] || voters.length || 0;
+        let marksInner = "";
+        if (voters.length) {
+          const sorted = voters.slice().sort((a, b) =>
+            seatNameForUid(a).localeCompare(seatNameForUid(b)));
+          marksInner = sorted.map((vid) => seatVoteMarkHtml(seatNameForUid(vid))).join("")
+            + '<span class="h2h-lean-n">' + n + "</span>";
+        } else if (n > 0) {
+          // Tallies landed but ballots did not — still show the count under the team.
+          marksInner = '<span class="h2h-lean-n">' + n + "</span>";
+        } else if (!v.votes) {
+          marksInner = '<span class="h2h-lean-empty">—</span>';
         } else {
-          bits.push("Who won?");
+          marksInner = '<span class="h2h-lean-n">0</span>';
+        }
+        const label = n === 1 ? "1 vote for " + seatNameForUid(uid) : n + " votes for " + seatNameForUid(uid);
+        return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"'
+          + ' aria-label="' + esc(label) + '">'
+          + '<div class="h2h-lean-marks">' + marksInner + "</div></div>";
+      };
+
+      if (canVote && !mid) {
+        mid = "Who won?";
+      } else if (canVote && mid) {
+        const v = readVotes(latest.transaction_id);
+        if (!v.votes) mid = mid + '<span class="h2h-lean-empty"> · Who won?</span>';
+      }
+
+      const leftUid = seats[0] ? seats[0].uid : null;
+      const rightUid = seats[1] ? seats[1].uid : null;
+      // Align marks to the same left/right seats the chip paints (latest.name is left).
+      let left = leftUid;
+      let right = rightUid;
+      if (seats.length === 2 && latest.user_id) {
+        if (seats[0].uid === latest.user_id) {
+          left = seats[0].uid;
+          right = seats[1].uid;
+        } else if (seats[1].uid === latest.user_id) {
+          left = seats[1].uid;
+          right = seats[0].uid;
         }
       }
-      if (!bits.length) return "";
+
       return '<div class="h2h-trade-lean">'
-        + bits.join('<span class="h2h-lean-dot" aria-hidden="true"> · </span>')
+        + sideMarksHtml(left, false)
+        + '<div class="h2h-lean-mid">' + mid + "</div>"
+        + sideMarksHtml(right, true)
         + "</div>";
     }
 
@@ -6732,6 +6897,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !html.includes(".h2h-chip") || !html.includes(".lh-trade-plus") || !html.includes(".h2h-vs")
     || !html.includes(".h2h-av-wrap") || !html.includes(".h2h-medal")
     || !html.includes(".lh-trade-val") || !html.includes(".h2h-trade-lean")
+    || !html.includes(".h2h-lean-marks") || !html.includes(".h2h-lean-n")
     || !html.includes("button.champ-alert.lh-progress.lh-latest-trade")) {
     throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
   }
@@ -6739,8 +6905,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !inline.includes("windowScore(latest)") || !inline.includes("tapeFigures(delta, totalShow)")) {
     throw new Error("Latest trade chip must reuse applyVa/windowScore + tapeFigures for value lean");
   }
-  if (!inline.includes("Who won?") || !inline.includes("Value leans ")) {
-    throw new Error("Latest trade chip must surface value lean and a Who won? vote cue");
+  if (!inline.includes("Who won?") || !inline.includes("Value leans ")
+    || !inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
+    || !inline.includes("seatVoteMarkHtml(")) {
+    throw new Error("Latest trade chip must surface value lean and per-side vote marks");
   }
   if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig") || prog.includes("lh-trade-handle")) {
     throw new Error("Latest trade must not keep the old 3-line vs/delta or stacked-handle chip markup");

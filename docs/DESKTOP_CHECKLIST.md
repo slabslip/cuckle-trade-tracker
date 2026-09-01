@@ -39,8 +39,8 @@ git pull origin main
 git branch --show-current
 # must print: main
 
-ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql db/wave2b-vote-unique.sql db/wave5-invite-plain.sql db/wave6-one-seat-redeem.sql supabase/functions/join-league/index.ts
-# all six paths must exist
+ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql db/wave2b-vote-unique.sql db/wave5-invite-plain.sql db/wave6-one-seat-redeem.sql db/wave8-vote-tally-members.sql supabase/functions/join-league/index.ts
+# all seven paths must exist
 ```
 
 Optional repo self-check (no Supabase login required):
@@ -259,7 +259,7 @@ For a **claimed** seat (manager left), use **Reissue for new manager** — that 
 ## Done when all of these are true
 
 - [ ] Terminal is on branch `main`
-- [ ] All **eight** SQL files ran in Supabase SQL Editor (through `wave6-one-seat-redeem.sql`)
+- [ ] All **nine** SQL files ran in Supabase SQL Editor (through `wave8-vote-tally-members.sql`)
 - [ ] Confirm email is **OFF**; Site URL set
 - [ ] Edge Functions list shows **`join-league`**
 - [ ] Commissioner claimed a seat and sees the meter

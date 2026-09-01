@@ -748,11 +748,9 @@ const html = `<!DOCTYPE html>
     @media (prefers-reduced-motion: reduce) {
       .news-hero-slide { transition: none; }
     }
-    .news-hero-slide b {
-      display: block; font-weight: 650; line-height: 1.3; margin: 0 0 4px;
-    }
+    /* Slide stack: seat tag → summary → source (From X · @handle) underneath. */
     .news-hero-who {
-      display: block; font-size: 0.75rem; font-weight: 650; line-height: 1.3;
+      display: block; font-size: 0.8125rem; font-weight: 650; line-height: 1.3;
       color: #e0b44c; margin: 0 0 4px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
@@ -760,7 +758,13 @@ const html = `<!DOCTYPE html>
     .news-hero-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
     .news-hero-slide span {
       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
-      overflow: hidden; color: var(--dim); font-size: 0.8125rem; line-height: 1.35;
+      overflow: hidden; color: var(--text); font-size: 0.8125rem; line-height: 1.35;
+      margin: 0 0 6px;
+    }
+    .news-hero-src {
+      display: block; font-size: 0.6875rem; font-weight: 550; line-height: 1.3;
+      color: var(--dim); margin: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .news-hero-live {
       position: relative; z-index: 1; margin-top: 8px; width: 100%;
@@ -1415,7 +1419,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeValLean20260901013000";
+    const DATA_V = "newsSrcBelow20260901012800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4573,9 +4577,9 @@ const html = `<!DOCTYPE html>
           : newsHeroLine(it);
         return '<div class="news-hero-slide" data-news-slide="' + i + '"'
           + (i === 0 ? "" : " hidden") + '>'
-          + "<b>" + esc(bit.cat) + "</b>"
           + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
           + "<span>" + esc(bit.line) + "</span>"
+          + '<div class="news-hero-src">' + esc(bit.cat) + "</div>"
           + "</div>";
       }).join("");
       const n = items.length || 1;
@@ -6919,8 +6923,17 @@ if (!inline.includes("it.managers") || !inline.includes("news-hero-who")
     || !inline.includes('whoNames.map((n) => seatLabel(n))')) {
   throw new Error("newsHeroLine must tag related fantasy seat(s) via managers/manager on the hero");
 }
-if (!html.includes(".news-hero-who")) {
-  throw new Error("News Feed hero must style related-seat tags (.news-hero-who)");
+if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src")) {
+  throw new Error("News Feed hero must style seat tags (.news-hero-who) and source under summary (.news-hero-src)");
+}
+if (!inline.includes('news-hero-src') || inline.indexOf('news-hero-who') > inline.indexOf('news-hero-src')
+    && 'bit.who' in inline) {
+  // Order in slide markup: who, then summary span, then src.
+}
+const slideBuild = inline.slice(inline.indexOf("const slides = slidesSrc.map"), inline.indexOf("const slides = slidesSrc.map") + 900);
+if (!(slideBuild.indexOf("news-hero-who") < slideBuild.indexOf("<span>")
+      && slideBuild.indexOf("<span>") < slideBuild.indexOf("news-hero-src"))) {
+  throw new Error("News hero slide must order: seat tag, summary, then From X source underneath");
 }
 // League dash must not mount the old ← Leagues · name · username caption under the brand
 // (p.caption margin:0 0 8px as the first child of #app). Removed; keep the forbid tight.

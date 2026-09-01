@@ -1972,7 +1972,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickIntelUntradedNative20260901050000";
+    const DATA_V = "leagueHomeReview20260901120000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2630,31 +2630,38 @@
     const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets"];
 
     async function loadMembers() {
-      members = await getLeagueJson("members.json");
+      // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw] = await Promise.all([
+        getLeagueJson("members.json"),
+        getLeagueJson("league.json"),
+        getLeagueJson("titles.json").catch(() => ({ titles: [] })),
+        getLeagueJson("marks.json").catch(() => ({ seats: {} })),
+        getLeagueJson("news.json").catch(() => null),
+        getLeagueJson("votes.json").catch(() => null),
+        getLeagueJson("picks.json").catch(() => null),
+      ]);
+      members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
       // and a build with no places sorts to a no-op and keeps the file's own order.
       members.sort((a, b) => (a.place || 99) - (b.place || 99));
-      league = await getLeagueJson("league.json");
-      try { titles = await getLeagueJson("titles.json"); }
-      catch (err) { titles = { titles: [] }; }
-      try { marks = await getLeagueJson("marks.json"); }
-      catch (err) { marks = { seats: {} }; }
+      league = leagueRaw;
+      titles = titlesRaw || { titles: [] };
+      marks = marksRaw || { seats: {} };
       // News is additive and third-party. A missing, stale or malformed file must cost the news
-      // section and nothing else, so this never throws and never blocks the page -- the same
-      // rule the vote tallies follow below. An unknown v is treated as absent rather than
-      // read optimistically, because a schema change could move the field the UI escapes.
+      // section and nothing else — same rule the vote tallies follow. Unknown v → treat as absent.
       try {
-        const book = await getLeagueJson("news.json");
+        const book = newsRaw;
         news = book && book.v === 1 && Array.isArray(book.items) ? book : null;
       } catch (err) { news = null; }
       // Absent, stale or malformed vote tallies must never block the page: the local vote still works.
       try {
-        const book = await getLeagueJson("votes.json");
+        const book = votesRaw;
         voteBook = book && book.v === 1 && book.votes ? book : null;
       } catch (err) { voteBook = null; }
       try {
-        applyPicksBook(await getLeagueJson("picks.json"));
+        if (picksRaw) applyPicksBook(picksRaw);
+        else picks = picks || null;
       } catch (err) { picks = picks || null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
@@ -4500,6 +4507,8 @@
       tradeSeat = null;
       titleYear = null;
       focusNext = null;
+      // Match clearLeague / home icon — do not leave Draft Data filters sticky on return.
+      clearPickFilters();
       render();
       window.scrollTo(0, 0);
     }
@@ -5313,6 +5322,10 @@
       latestTradeHitTx = null;
       latestTradeBagsLoading = false;
       latestTradeBagsPromise = null;
+      // Seat bags and tx→bag hits are keyed only by user_id / transaction_id. Clear them on
+      // league switch so a prior league's me/*.json cannot paint this league's Recent Trade.
+      for (const k of Object.keys(seatCache)) delete seatCache[k];
+      for (const k of Object.keys(tradeBagByTx)) delete tradeBagByTx[k];
       focusNext = null;
       syncUrl();
       await loadMembers();
@@ -5831,7 +5844,13 @@
      * tap peek to open. Sheet expands up to just under the Chuckle Fantasy brand.
      */
     function armNewsPullup() {
-      clearNewsPullup();
+      // Preserve open/closed across re-renders (vote settle, bag warm, pick filter). Only tear
+      // down prior listeners — clearNewsPullup() would force the sheet closed every paint.
+      const wasOpen = newsPullupOpen;
+      if (newsPullupCleanup) {
+        newsPullupCleanup();
+        newsPullupCleanup = null;
+      }
       const root = document.getElementById("newsPullup");
       if (!root) return;
       document.body.classList.add("has-news-pullup");
@@ -5846,7 +5865,7 @@
         root.style.setProperty("--brand-offset", newsPullupBrandOffset() + "px");
       };
       applyBrand();
-      setNewsPullupOpen(false);
+      setNewsPullupOpen(wasOpen);
 
       let drag = null;
       const peekH = () => {
@@ -6288,9 +6307,10 @@
       return any ? n : null;
     }
 
-    function latestTradeSumHtml(legs, tone) {
-      const sum = latestTradeLegsSum(legs);
-      if (sum == null) return "";
+    /** Bottom equals-row total for one H2H side. Prefers the VA-aware bag total when bags are ready. */
+    function latestTradeSumHtml(total, tone) {
+      if (total == null || Number.isNaN(Number(total))) return "";
+      const sum = Number(total);
       const toneCls = tone === "high" ? " is-high"
         : tone === "low" ? " is-low"
         : tone === "even" ? " is-even"
@@ -6705,8 +6725,9 @@
       const lean = latestTradeLean(latest);
       const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
       const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      const leftSum = latestTradeLegsSum(left.legs);
-      const rightSum = latestTradeLegsSum(right.legs);
+      // Prefer VA-aware bag totals (same source as win medals). Legs-only is the pre-bag fallback.
+      const leftSum = lean.leftTotal != null ? lean.leftTotal : latestTradeLegsSum(left.legs);
+      const rightSum = lean.rightTotal != null ? lean.rightTotal : latestTradeLegsSum(right.legs);
       let leftTone = "";
       let rightTone = "";
       if (leftSum != null && rightSum != null) {
@@ -6736,9 +6757,9 @@
           + vaRow
           + "</div></div>";
       };
-      const leftSumHtml = latestTradeSumHtml(left.legs, leftTone)
+      const leftSumHtml = latestTradeSumHtml(leftSum, leftTone)
         || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
-      const rightSumHtml = latestTradeSumHtml(right.legs, rightTone)
+      const rightSumHtml = latestTradeSumHtml(rightSum, rightTone)
         || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'

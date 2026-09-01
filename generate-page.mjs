@@ -835,7 +835,7 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-head {
       display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 6px; margin: 0 0 3px;
+      flex-wrap: wrap; gap: 4px 6px; margin: 0 0 3px;
     }
     .news-hero-who {
       flex: 1 1 auto; min-width: 0;
@@ -846,12 +846,12 @@ const html = `<!DOCTYPE html>
     .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-src-bubble {
-      flex: 0 0 auto; max-width: 46%;
+      flex: 0 0 auto;
       font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
       color: #e0b44c; background: transparent;
       border: 1px solid rgba(107, 90, 46, 0.65);
-      border-radius: 999px; padding: 1px 6px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      border-radius: 999px; padding: 1px 5px;
+      white-space: nowrap;
     }
     .news-pullup-line {
       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
@@ -863,14 +863,14 @@ const html = `<!DOCTYPE html>
       font-size: 0.8125rem; line-height: 1.38; margin: 0 0 6px;
     }
     .news-hero-tags {
-      flex: 0 0 auto; display: flex; align-items: center; flex-wrap: wrap;
-      justify-content: flex-end; gap: 4px; max-width: 58%;
+      flex: 0 1 auto; display: flex; align-items: center; flex-wrap: wrap;
+      justify-content: flex-end; gap: 3px; max-width: 100%;
     }
     .news-cat-tag {
       flex: 0 0 auto; font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
       color: #e0b44c; background: rgba(107, 90, 46, 0.22);
       border: 1px solid rgba(107, 90, 46, 0.65); border-radius: 999px;
-      padding: 1px 6px; white-space: nowrap;
+      padding: 1px 5px; white-space: nowrap;
     }
     .news-cat-tag.cat-injury { color: #f08a8a; border-color: rgba(224, 85, 85, 0.55); background: rgba(224, 85, 85, 0.12); }
     .news-cat-tag.cat-good-injury-news { color: #6ee7b7; border-color: rgba(61, 220, 151, 0.45); background: rgba(61, 220, 151, 0.1); }
@@ -2197,7 +2197,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsFeedSync20260901165000";
+    const DATA_V = "newsTagsX20260901165500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4305,7 +4305,7 @@ const html = `<!DOCTYPE html>
     const NEWS_CATS = {
       injury: "Injury", suspension: "Suspension", off_field: "Off the field",
       trade: "Trade", depth_chart: "Depth chart", breakout: "Breakout", news: "News",
-      tweet: "From X",
+      tweet: "X",
     };
 
     /**
@@ -6759,11 +6759,12 @@ const html = `<!DOCTYPE html>
     }
 
     function newsSourceBubble(it) {
-      const cat = NEWS_CATS[it.category] || "News";
-      if (it.category === "tweet") return cat;
-      const label = String(it.source_label || "").trim();
+      if (it && (it.category === "tweet" || it.source === "x:submission")) return "X";
+      const cat = NEWS_CATS[it && it.category] || "News";
+      const label = String((it && it.source_label) || "").trim();
+      if (label === "From X" || label === "Shared from X") return "X";
       if (label && label.charAt(0) !== "@") return label;
-      return cat;
+      return cat === "From X" ? "X" : cat;
     }
 
     /** Map NFL position abbreviations to shared pos-* colour classes. */

@@ -1385,7 +1385,7 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="Leagues">
+    <button type="button" class="go-home" id="goHome" aria-label="League home">
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
       </svg>
@@ -1546,7 +1546,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "swapLensSettings20260901031500";
+    const DATA_V = "leagueHomeLabel20260901031500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7868,8 +7868,8 @@ if (!inline.includes('document.getElementById("goHome").addEventListener("click"
 if (!inline.includes("clearLeague()") || !fnBody("clearLeague").includes("\n      me = null;")) {
   throw new Error("the leagues back path must still call clearLeague to leave a seat");
 }
-if (!html.includes('id="goHome"') || !html.includes('aria-label="Leagues"')) {
-  throw new Error("header back control must be labeled Leagues");
+if (!html.includes('id="goHome"') || !html.includes('aria-label="League home"')) {
+  throw new Error("header back control must be labeled League home");
 }
 if (!html.includes("M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z")) {
   throw new Error("header home glyph must be a back arrow");

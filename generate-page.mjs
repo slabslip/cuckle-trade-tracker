@@ -2091,7 +2091,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsBoard20260901143000";
+    const DATA_V = "cuffsResetMine20260901150000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2421,6 +2421,19 @@ const html = `<!DOCTYPE html>
       cuffFilterFa = false;
       cuffFilterHeld = false;
       cuffFilterSelf = false;
+    }
+
+    /**
+     * Baseline for the Cuffs page after Clear all: my cuffs when seated,
+     * otherwise open search so the page is never an empty idle prompt.
+     */
+    function resetCuffFilters() {
+      clearCuffFilters();
+      if (authSeatName()) {
+        cuffFilterMine = true;
+      } else {
+        cuffFilterOpen = true;
+      }
     }
 
     function cuffFiltersActive() {
@@ -8788,7 +8801,7 @@ const html = `<!DOCTYPE html>
       }
       const cuffClear = e.target.closest("[data-cuff-filter-clear]");
       if (cuffClear) {
-        clearCuffFilters();
+        resetCuffFilters();
         render();
         return;
       }
@@ -10758,7 +10771,8 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || !inline.includes('data-cuff-mine="1"') || !inline.includes('data-cuff-filter-open="1"')
     || !inline.includes('data-cuff-fa="1"') || !inline.includes("function ensureCuffs(")
     || !inline.includes("function filteredCuffRows(") || !inline.includes("cuffs.json")
-    || !inline.includes("clearCuffFilters(")) {
+    || !inline.includes("clearCuffFilters(") || !inline.includes("function resetCuffFilters(")
+    || !inline.includes("resetCuffFilters()")) {
     throw new Error("Cuffs section must mount below Draft Data with my/search/free filters");
   }
   if (!inline.includes("function openCuffsPage(") || !inline.includes("function cuffsHome(")

@@ -2418,6 +2418,19 @@
       cuffFilterSelf = false;
     }
 
+    /**
+     * Baseline for the Cuffs page after Clear all: my cuffs when seated,
+     * otherwise open search so the page is never an empty idle prompt.
+     */
+    function resetCuffFilters() {
+      clearCuffFilters();
+      if (authSeatName()) {
+        cuffFilterMine = true;
+      } else {
+        cuffFilterOpen = true;
+      }
+    }
+
     function cuffFiltersActive() {
       return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
         || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterSelf;
@@ -8783,7 +8796,7 @@
       }
       const cuffClear = e.target.closest("[data-cuff-filter-clear]");
       if (cuffClear) {
-        clearCuffFilters();
+        resetCuffFilters();
         render();
         return;
       }

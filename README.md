@@ -93,6 +93,13 @@ python3 -m http.server 8766
 # http://localhost:8766/preview.html      framed at 375 / 390 / 402 / 430
 ```
 
+**iPhone / Design Mode previews** (local static server, e.g. port `8799`):
+
+- **iPhone bezel (look at this):** `http://127.0.0.1:8799/iphone-preview.html`
+  (alias of `design-league-home-frame.html` — Dynamic Island + home bar + News Feed)
+- **Design Mode (clickable DOM, no bezel):** `http://127.0.0.1:8799/design-league-home.html`
+- **Phone-width tool:** `http://127.0.0.1:8799/preview.html`
+
 Live: [Home](https://slabslip.github.io/cuckle-trade-tracker/) ·
 [Champions Path](https://slabslip.github.io/cuckle-trade-tracker/?view=titles) ·
 [Phone preview](https://slabslip.github.io/cuckle-trade-tracker/preview.html)

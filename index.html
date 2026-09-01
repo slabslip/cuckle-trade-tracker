@@ -1147,10 +1147,11 @@
     .cuffs-intel .cuffs-starter { font-weight: 650; color: var(--text); flex: 1 1 auto; min-width: 0; }
     .cuffs-intel .cuffs-team { color: var(--muted); font-size: 0.8125rem; font-weight: 500; }
     .cuffs-intel .cuffs-inj {
-      font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
-      color: #f08a8a; border: 1px solid rgba(224, 85, 85, 0.45);
-      background: rgba(224, 85, 85, 0.1); border-radius: 6px;
-      padding: 1px 6px; text-transform: uppercase;
+      display: inline-block; vertical-align: 0.15em; margin-left: 3px;
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1;
+      color: #f2a0a0; border: 1px solid rgba(224, 85, 85, 0.35);
+      background: rgba(224, 85, 85, 0.12); border-radius: 2px;
+      padding: 1px 3px; text-transform: uppercase; white-space: nowrap;
     }
     .cuffs-intel .cuffs-sub {
       margin-top: 6px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
@@ -2086,7 +2087,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsPoachBoard20260901153000";
+    const DATA_V = "cuffsInjTiny20260901154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2885,9 +2886,23 @@
 
     function cuffInjBadge(status) {
       if (!status) return "";
-      const s = String(status);
-      if (!s || s === "NA") return "";
-      return '<span class="cuffs-inj" title="' + esc(s) + '">' + esc(s) + "</span>";
+      const raw = String(status).trim();
+      if (!raw || raw === "NA") return "";
+      const key = raw.toLowerCase();
+      const short = ({
+        questionable: "Q",
+        doubtful: "D",
+        out: "O",
+        ir: "IR",
+        "injured reserve": "IR",
+        pup: "PUP",
+        "physically unable to perform": "PUP",
+        cov: "COV",
+        covid: "COV",
+        sus: "SUS",
+        suspended: "SUS",
+      })[key] || raw.slice(0, 3).toUpperCase();
+      return '<span class="cuffs-inj" title="' + esc(raw) + '">' + esc(short) + "</span>";
     }
 
     function cuffOwnerLabel(r, seat) {
@@ -2908,12 +2923,11 @@
       return '<div class="cuffs-row">'
         + '<div class="cuffs-top">'
         + '<span class="cuffs-slot">' + esc(r.slot || r.pos || "") + "</span>"
-        + '<span class="cuffs-starter">' + esc(r.starter || "—") + team + "</span>"
-        + cuffInjBadge(r.starter_injury)
+        + '<span class="cuffs-starter">' + esc(r.starter || "—") + team
+        + cuffInjBadge(r.starter_injury) + "</span>"
         + "</div>"
-        + '<div class="cuffs-sub">If out → ' + cuffName
+        + '<div class="cuffs-sub">If out → ' + cuffName + cuffInjBadge(r.cuff_injury)
         + " · " + cuffOwnerLabel(r, seat)
-        + cuffInjBadge(r.cuff_injury)
         + "</div></div>";
     }
 

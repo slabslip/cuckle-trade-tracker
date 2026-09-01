@@ -1209,11 +1209,16 @@ const html = `<!DOCTYPE html>
       display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
       gap: 4px; width: 100%; box-sizing: border-box;
       font: inherit; color: inherit; text-align: left;
-      cursor: pointer; touch-action: manipulation;
       background: transparent; border: 0; border-radius: 0;
       padding: 0; margin: 0; min-height: 0; height: auto;
     }
-    div.lh-trade-feed-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    div.lh-trade-feed-main {
+      display: flex; flex-direction: column; gap: 4px;
+      cursor: pointer; touch-action: manipulation;
+      min-width: 0;
+    }
+    div.lh-trade-feed-main:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    div.lh-trade-feed-card.has-vote .vote-card { margin-top: 2px; }
     /* Date only above the chip — small grey caption, tight to the H2H box. */
     div.lh-trade-feed-card .day-alert-h {
       font-weight: 500; color: var(--dim); line-height: 1.2; margin: 0;
@@ -2018,7 +2023,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "voteChipCompact20260901142000";
+    const DATA_V = "feedVotesTop20260901144500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2082,7 +2087,7 @@ const html = `<!DOCTYPE html>
     let tapeTeam = "all";
     let tapePlayer = "all";
     let tapePlayerQ = "";
-    let tapeLimit = 25;
+    let tapeLimit = 20;
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -2869,7 +2874,7 @@ const html = `<!DOCTYPE html>
       tapeTeam = "all";
       tapePlayer = "all";
       tapePlayerQ = "";
-      tapeLimit = 25;
+      tapeLimit = 20;
       dsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
@@ -3866,6 +3871,13 @@ const html = `<!DOCTYPE html>
      * rather than putting the winner on the left of every row. Which side won is carried by
      * the signed delta beside each name, so the order does not have to carry it.
      */
+    /** Newest N league trades may carry an inline vote chip on the feed. */
+    const FEED_VOTE_LIMIT = 20;
+
+    function feedVoteTxSet() {
+      return new Set(leagueTrades().slice(0, FEED_VOTE_LIMIT).map((r) => r.transaction_id));
+    }
+
     function leagueTrades() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const by = new Map();
@@ -4032,6 +4044,7 @@ const html = `<!DOCTYPE html>
     /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
     function tradeFeedCardHtml(r) {
       const voted = !!readVotes(r.transaction_id).choice;
+      const showVote = feedVoteTxSet().has(r.transaction_id);
       let chip = "";
       try {
         chip = latestTradeBagsReady(r.transaction_id)
@@ -4046,21 +4059,21 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
           + "</div>";
       }
-      return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + '"'
-        + ' role="button" tabindex="0"'
+      // Vote buttons cannot nest inside a role=button card — open-trade lives on the main block.
+      const main = '<div class="lh-trade-feed-main" role="button" tabindex="0"'
         + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
         + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
+        + "</div>";
+      return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + (showVote ? " has-vote" : "") + '">'
+        + main
+        + (showVote ? '<div class="vote-card">' + voteBlock(r) + "</div>" : "")
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
 
-    /**
-     * Selected trade at the top of the detail feed: full H2H chip (same layout as feed cards)
-     * plus vote beneath. The chip carries every bag leg inline — no duplicate row-x / bagBlock
-     * stack. The chip is not a navigation control here — the feed cards below are.
-     */
+
     function tradeFeedSelectedHtml(r) {
       const voted = !!readVotes(r.transaction_id).choice;
       let chip = "";
@@ -4277,7 +4290,7 @@ const html = `<!DOCTYPE html>
     // needle, the even book, VA, the lens windows, today_delta, partner grades or any board
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
-    const VOTE_KEY = "cuckle.votes.v1";
+    const VOTE_KEY = "cuckle.votes.v2";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
@@ -8634,7 +8647,7 @@ const html = `<!DOCTYPE html>
       const tapeYearLab = e.target.closest("[data-tape-year]");
       if (tapeYearLab) {
         tapeYear = e.target.checked ? tapeYearLab.dataset.tapeYear : "all";
-        tapeLimit = 25;
+        tapeLimit = 20;
         tapeFilterOpen = true;
         render();
         return;
@@ -8642,7 +8655,7 @@ const html = `<!DOCTYPE html>
       const tapeTeamLab = e.target.closest("[data-tape-team]");
       if (tapeTeamLab) {
         tapeTeam = e.target.checked ? tapeTeamLab.dataset.tapeTeam : "all";
-        tapeLimit = 25;
+        tapeLimit = 20;
         tapeFilterOpen = true;
         render();
         return;
@@ -8651,7 +8664,7 @@ const html = `<!DOCTYPE html>
       if (tapePlayerLab) {
         tapePlayer = e.target.checked ? tapePlayerLab.dataset.tapePlayer : "all";
         tapePlayerQ = "";
-        tapeLimit = 25;
+        tapeLimit = 20;
         tapeFilterOpen = true;
         render();
         return;
@@ -8733,7 +8746,7 @@ const html = `<!DOCTYPE html>
       if (!tapePlayerBox) return;
       tapePlayerQ = tapePlayerBox.value;
       tapePlayer = "all";
-      tapeLimit = 25;
+      tapeLimit = 20;
       tapeFilterOpen = true;
       const start = tapePlayerBox.selectionStart;
       const end = tapePlayerBox.selectionEnd;
@@ -10033,6 +10046,22 @@ for (const ban of [
   }
   if (!html.includes("div.lh-trade-feed-card .day-alert-h") || !html.includes("0.6875rem")) {
     throw new Error("trade feed date must ship small grey day-alert styles");
+  }
+}
+
+{
+  const cardAt = inline.indexOf("function tradeFeedCardHtml(");
+  const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+  const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 1800 : cardStop);
+  if (!cardFn.includes("voteBlock(") || !cardFn.includes("feedVoteTxSet(")
+    || !cardFn.includes("lh-trade-feed-main") || !cardFn.includes("has-vote")) {
+    throw new Error("tradeFeedCardHtml must mount vote chips for the newest FEED_VOTE_LIMIT trades");
+  }
+  if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
+    throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
+  }
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v2"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v2 so prior local ballots are wiped");
   }
 }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")

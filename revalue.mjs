@@ -278,7 +278,7 @@ function flattenLegs(legs, top) {
   return (legs || []).map((l) => ({ ...l, value: flatten(l.value, top) }));
 }
 
-// ponytail: year-end (+ today if inside the window) only, not monthly. Monthly if a mid-year crash must count.
+// ponytail: weekly flatten snaps averaged per leg; each snap uses realized pricing at that date.
 function y3Snaps(leg, dates, ctx) {
   const snaps = [];
   for (const d of dates) {
@@ -296,7 +296,7 @@ function y3Score(leg, dates, today, ctx) {
   const snaps = y3Snaps(leg, dates, ctx);
   const display = priceLeg(leg, today, "realized", ctx);
   if (!snaps.length) return { ...display, value: null, flag: "unpriced" };
-  const value = snaps.reduce((a, s) => a + s.even, 0) / snaps.length;
+  const value = Math.round(snaps.reduce((a, s) => a + s.even, 0) / snaps.length);
   return { ...display, value };
 }
 
@@ -745,28 +745,6 @@ async function main() {
       });
       entry.lenses[lens] = { sides, year_ends: points, t0_priced: t0Priced, incomplete };
     }
-    const y3Dates = windowAsOfs(t0, today, 3);
-    const y3Sides = {};
-    for (const uid of uids) {
-      const got = bagY3(legs, uid, y3Dates, today, ctx, "in");
-      const sent = bagY3(legs, uid, y3Dates, today, ctx, "out");
-      const incomplete = !y3Dates.length || got.unpriced + sent.unpriced > 0;
-      y3Sides[uid] = {
-        name: nameById[uid] || uid,
-        today: got.points,
-        sent_today: sent.points,
-        today_delta: incomplete ? null : got.points - sent.points,
-        unpriced: got.unpriced,
-        sent_unpriced: sent.unpriced,
-        incomplete,
-        legs: got.legs,
-        sent: sent.legs,
-      };
-    }
-    entry.lenses.y3 = {
-      sides: y3Sides,
-      incomplete: uids.some((uid) => y3Sides[uid].incomplete),
-    };
     const topToday = vmaxAt(vmaxIdx, today);
     const top0 = vmaxAt(vmaxIdx, t0);
     const evenSides = {};
@@ -1168,7 +1146,7 @@ async function main() {
       row.loser = nameById[loserId] || loserId;
       row.winner_id = winnerId;
       row.steep_delta = t.lenses.realized.sides[winnerId]?.today_delta ?? null;
-      row.y3_delta = t.lenses.y3?.sides[winnerId]?.today_delta ?? null;
+      row.y3_delta = t.lenses.windows?.y3?.sides[winnerId]?.today_delta ?? null;
       return row;
     }).filter(Boolean);
   }
@@ -1276,7 +1254,7 @@ async function main() {
   const chiefArae = meters.find((t) => t.transaction_id === "460470201385742336");
   const chiefId = members.find((m) => m.canonical_name === "ChiefGumby")?.user_id;
   const zekeToday = chiefArae?.lenses.realized.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
-  const zekeY3 = chiefArae?.lenses.y3.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
+  const zekeY3 = chiefArae?.lenses.windows?.y3?.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
   check("zeke on chief-arae", !!(zekeToday && zekeY3));
   check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3);
   let ghostZero = 0;

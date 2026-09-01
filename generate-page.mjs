@@ -3858,13 +3858,13 @@ const html = `<!DOCTYPE html>
     }
 
     function sideOf(t) {
-      return applyVa((t.windows && t.windows[lens]) || t.even || t.realized, isMulti(t));
+      return applyVa(sideWindow(t), isMulti(t));
     }
 
     // Mirrors value-adjust.mjs exactly: no VA on N-way trades, totals refresh when either bag is priced.
     function applyVa(s, noVa) {
-      if (!s || s.incomplete) return s;
-      const priced = (legs) => (legs || []).filter((l) => l.value != null);
+      if (!s) return s;
+      const priced = (legs) => (legs || []).filter((l) => l.value != null && Number.isFinite(l.value));
       const sum = (legs) => priced(legs).reduce((a, l) => a + l.value, 0);
       const got = priced(s.legs), sent = priced(s.sent);
       if (!got.length && !sent.length) return s;
@@ -3884,7 +3884,8 @@ const html = `<!DOCTYPE html>
         const damp = theirMax > 0 ? myMax / Math.max(myMax, theirMax) : 1;
         return 0.15 * n * myMax * damp;
       };
-      const vaG = noVa ? 0 : one(got, sent), vaS = noVa ? 0 : one(sent, got);
+      const vaOff = noVa || s.incomplete;
+      const vaG = vaOff ? 0 : one(got, sent), vaS = vaOff ? 0 : one(sent, got);
       const today = sum(s.legs) + vaG, sentToday = sum(s.sent) + vaS;
       return Object.assign({}, s, {
         value_adjust: vaG,
@@ -3902,7 +3903,7 @@ const html = `<!DOCTYPE html>
     }
 
     function windowScore(r) {
-      const w = r.windows && r.windows[lens];
+      const w = windowBag(r);
       if (!w || w.incomplete) return null;
       return displayDelta(w.got, w.sent);
     }
@@ -3976,6 +3977,32 @@ const html = `<!DOCTYPE html>
     function seasonLived(date, seasonCount, today) {
       if (!date || !today) return false;
       return today >= seasonWindowEnd(date, seasonCount);
+    }
+
+    /** Best window up to target — matches apply-value-adjust.mjs / marks.json. */
+    function effectiveLens(date, targetLens) {
+      const today = (league && league.today) || "";
+      if (targetLens === "t0" || targetLens === "all") return targetLens;
+      const order = ["t0", "y1", "y2", "y3"];
+      const idx = order.indexOf(targetLens);
+      if (idx < 0) return targetLens;
+      for (let i = idx; i >= 0; i--) {
+        const l = order[i];
+        if (l === "t0") return "t0";
+        const need = { y1: 1, y2: 2, y3: 3 }[l];
+        if (seasonLived(date, need, today)) return l;
+      }
+      return "t0";
+    }
+
+    function windowBag(r, targetLens) {
+      const key = effectiveLens(r.date, targetLens || lens);
+      return (r.windows && r.windows[key]) || {};
+    }
+
+    function sideWindow(t, targetLens) {
+      const key = effectiveLens(t.date, targetLens || lens);
+      return (t.windows && t.windows[key]) || t.even || t.realized;
     }
 
     /**
@@ -4126,7 +4153,7 @@ const html = `<!DOCTYPE html>
      * screen it leads to are two things instead of one thing in two states.
      */
     function boardTape(r) {
-      const w = (r.windows && r.windows[lens]) || {};
+      const w = windowBag(r);
       const s = windowScore(r);
       const got = w.incomplete && !w.got ? "—" : fmt(w.got);
       const sent = w.incomplete && !w.sent ? "—" : fmt(w.sent);
@@ -7332,8 +7359,7 @@ const html = `<!DOCTYPE html>
       const hit = bagHitForTx(latest.transaction_id);
       if (hit) {
         const s = applyVa(
-          (hit.windows && hit.windows[lens])
-            || hit.even || hit.realized,
+          sideWindow(hit),
           isMulti(hit),
         );
         if (s && !s.incomplete && s.today != null && s.sent_today != null) {
@@ -7347,7 +7373,7 @@ const html = `<!DOCTYPE html>
           };
         }
       }
-      const w = (latest.windows && latest.windows[lens]) || {};
+      const w = windowBag(latest);
       const d = windowScore(latest);
       return {
         leftTotal: w.incomplete && !w.got ? null : w.got,
@@ -7536,10 +7562,7 @@ const html = `<!DOCTYPE html>
       const seats = voteSeats(latest);
       const hit = bagHitForTx(latest.transaction_id);
       if (hit) {
-        const bag = applyVa(
-          (hit.windows && hit.windows[lens]) || hit.even || hit.realized || null,
-          isMulti(hit),
-        );
+        const bag = applyVa(sideWindow(hit), isMulti(hit));
         const other = seats.find((s) => s.uid !== latest.user_id);
         return [
           {
@@ -8088,7 +8111,8 @@ const html = `<!DOCTYPE html>
         + bagBlock(sentTitle, p.s.sent, p.s.sent_today, p.s.sent_unpriced, p.s.value_adjust_sent);
       if (p.multi) {
         bags += (t.other_bags || []).map((b) => {
-          const side = applyVa((b.windows && b.windows[lens]) || b.even || b.realized, true);
+          const key = effectiveLens(t.date, lens);
+          const side = applyVa((b.windows && b.windows[key]) || b.even || b.realized, true);
           if (!side) return "";
           return bagBlock(b.name + " received", side.legs, side.today, side.unpriced, side.value_adjust);
         }).join("");
@@ -10707,6 +10731,13 @@ if (!inline.includes("applyDefaultLens(null)") || !inline.includes("applyDefault
 }
 if (!inline.includes("!lensIsAgeDefault()")) {
   throw new Error("syncUrl must omit lens when it matches the age default");
+}
+if (!inline.includes("function effectiveLens(") || !inline.includes("function sideWindow(")
+  || !inline.includes("effectiveLens(t.date, lens)")) {
+  throw new Error("Trade scoring must use effectiveLens window fallback to match marks.json");
+}
+if (!inline.includes("Number.isFinite(l.value)")) {
+  throw new Error("applyVa must ignore non-finite leg values like value-adjust.mjs");
 }
 if (!inline.includes('let runLens = "y2"') || !inline.includes("function runLensHtml(")
   || !inline.includes("function runLensCaption(") || !inline.includes("data-run-lens")

@@ -802,7 +802,7 @@ const html = `<!DOCTYPE html>
       text-align: left; cursor: pointer; touch-action: manipulation;
     }
     button.champ-alert.lh-progress:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    /* Latest trade: Sleeper-style completed-trade card (title above, navy asset card below).
+    /* Latest trade: title above, dashboard-styled H2H card below (not a third-party clone).
        Triple class beats button.champ-alert.lh-progress { display:block; padding… }. */
     button.champ-alert.lh-progress.lh-latest-trade {
       display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
@@ -814,34 +814,37 @@ const html = `<!DOCTYPE html>
     }
     button.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.lh-latest-trade .day-alert-h {
-      font-weight: 700; color: var(--text); line-height: 1.3; margin: 0;
+      font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
     }
-    /* Head-to-head chips: matchups and trades share mirrored left | VS | right (ref chip). */
+    /* Head-to-head chips: matchups and trades share mirrored left | VS | right. */
     .h2h-chip {
       position: relative;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      gap: 8px 4px; align-items: start;
-      background: #0a0e1a;
-      border: 1px solid #1e2638;
-      border-radius: 18px;
-      padding: 14px 12px 14px; box-sizing: border-box;
+      gap: 8px 6px; align-items: start;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px; box-sizing: border-box;
       width: 100%;
       overflow: hidden;
-      box-shadow: inset 0 1px 0 rgba(232, 196, 90, 0.55), 0 0 18px rgba(201, 162, 39, 0.12);
     }
-    .h2h-chip::before {
-      content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, #e8c45a 35%, #f0d878 50%, #e8c45a 65%, transparent);
-      opacity: 0.9; pointer-events: none;
+    /* Matchup chips: warm gold edge — product DNA, not a clone scoreboard. */
+    .h2h-chip:not(.is-trade) {
+      background: #1a1810;
+      border-color: #6b5a2e;
+      box-shadow: inset 0 1px 0 rgba(224, 180, 76, 0.35);
     }
     .h2h-vs {
-      align-self: start; margin-top: 22px;
-      width: 30px; height: 30px; border-radius: 8px;
+      align-self: start; margin-top: 10px;
+      min-width: 28px; height: 22px; padding: 0 6px; border-radius: 999px;
       display: grid; place-items: center;
-      background: #121826; border: 1px solid #2a3348;
-      color: #9aa8c0; font-size: 0.625rem; font-weight: 700;
-      letter-spacing: 0.06em;
+      background: #1c1c22; border: 1px solid var(--line);
+      color: var(--dim); font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .h2h-chip:not(.is-trade) .h2h-vs {
+      background: #241f14; border-color: #6b5a2e; color: #e0b44c;
     }
     .h2h-side { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
     .h2h-side.is-right { text-align: right; align-items: flex-end; }
@@ -855,9 +858,9 @@ const html = `<!DOCTYPE html>
     }
     .h2h-av {
       width: 40px; height: 40px; border-radius: 50%;
-      object-fit: cover; background: #1a1f2e; border: 1px solid #2e384e;
+      object-fit: cover; background: #1c1c22; border: 1px solid var(--line);
       display: grid; place-items: center;
-      color: #c8d0e0; font-size: 0.75rem; font-weight: 700;
+      color: var(--dim); font-size: 0.75rem; font-weight: 700;
     }
     .h2h-av > img {
       width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block;
@@ -878,80 +881,79 @@ const html = `<!DOCTYPE html>
       margin: 0 0 2px; line-height: 1.2;
     }
     .h2h-side.is-right .h2h-pct { flex-direction: row-reverse; }
-    .h2h-pct.is-win { color: #3dffb0; }
-    .h2h-pct.is-lose { color: #f07178; }
-    .h2h-pct.is-tie { color: #9aa8c0; }
+    .h2h-pct.is-win { color: var(--green); }
+    .h2h-pct.is-lose { color: var(--red); }
+    .h2h-pct.is-tie { color: var(--dim); }
     .h2h-pct-ico {
       width: 11px; height: 11px; flex: 0 0 auto; display: block;
     }
     .h2h-score {
-      font-size: 1.375rem; font-weight: 750; color: #fff; line-height: 1.05;
+      font-size: 1.375rem; font-weight: 750; color: var(--text); line-height: 1.05;
       font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
     }
     .h2h-proj {
-      font-size: 0.75rem; color: #8b95a8; line-height: 1.2;
+      font-size: 0.75rem; color: var(--dim); line-height: 1.2;
       font-variant-numeric: tabular-nums; margin-top: 2px;
     }
     .h2h-bar {
-      width: 100%; height: 5px; border-radius: 3px; background: #243049;
+      width: 100%; height: 4px; border-radius: 2px; background: #2a2a30;
     }
-    .h2h-bar.is-win {
-      background: #3dffb0;
-      box-shadow: 0 0 10px rgba(61, 255, 176, 0.4);
-    }
-    .h2h-bar.is-lose { background: #2a3348; }
-    .h2h-bar.is-tie { background: #2a3348; }
+    .h2h-bar.is-win { background: var(--green); }
+    .h2h-bar.is-lose, .h2h-bar.is-tie { background: #2a2a30; }
     .h2h-id { min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px; }
     .h2h-name {
-      font-size: 0.9375rem; font-weight: 750; color: #fff; line-height: 1.2;
+      font-size: 0.9375rem; font-weight: 650; color: var(--text); line-height: 1.2;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
     }
     .h2h-meta {
-      font-size: 0.6875rem; color: #8b95a8; line-height: 1.25;
+      font-size: 0.6875rem; color: var(--dim); line-height: 1.25;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
     }
-    /* Trade H2H: same seat framing; assets stack under each seat (no fake win%). */
-    .h2h-chip.is-trade .h2h-vs { margin-top: 10px; }
-    .h2h-chip.is-trade .h2h-top { min-height: 40px; align-items: center; }
+    /* Trade chip: seat row + compact gold "+" asset lines (dashboard surface). */
+    .h2h-chip.is-trade {
+      background: #1a1810;
+      border-color: #6b5a2e;
+      gap: 10px 8px;
+      padding: 12px 12px 10px;
+    }
+    .h2h-chip.is-trade .h2h-vs {
+      align-self: center; margin-top: 0;
+      background: #241f14; border-color: #6b5a2e; color: #e0b44c;
+    }
+    .h2h-chip.is-trade .h2h-side { gap: 6px; }
+    .h2h-chip.is-trade .h2h-top { align-items: center; gap: 8px; }
+    .h2h-chip.is-trade .h2h-av-wrap,
+    .h2h-chip.is-trade .h2h-av,
+    .h2h-chip.is-trade .h2h-av > img {
+      width: 36px; height: 36px;
+    }
+    .h2h-chip.is-trade .h2h-name { font-size: 0.875rem; font-weight: 650; }
     .h2h-assets {
-      display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 2px;
+      display: flex; flex-direction: column; gap: 5px; width: 100%;
+      padding-top: 4px; border-top: 1px solid #3a3428;
     }
     .h2h-side.is-right .h2h-assets { align-items: flex-end; }
     .lh-trade-asset {
-      display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%;
+      display: flex; align-items: baseline; gap: 6px; min-width: 0; max-width: 100%;
     }
     .h2h-side.is-right .lh-trade-asset { flex-direction: row-reverse; text-align: right; }
-    .lh-trade-ico {
-      position: relative; flex: 0 0 auto; width: 32px; height: 32px;
-    }
-    .lh-trade-ico > img {
-      width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-      display: block; background: #1a1f2e;
-    }
-    .lh-trade-pick {
-      width: 32px; height: 32px; border-radius: 50%; box-sizing: border-box;
-      display: grid; place-items: center;
-      background: #1a1f2e; color: #fff;
-      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.04em;
-    }
     .lh-trade-plus {
-      position: absolute; right: -2px; bottom: -2px;
-      width: 12px; height: 12px; border-radius: 50%;
-      background: #2ccb9f; color: #0c1018;
-      font-size: 0.625rem; font-weight: 800; line-height: 1;
-      display: grid; place-items: center;
-      border: 1.5px solid #0c1018; box-sizing: border-box;
+      flex: 0 0 auto;
+      color: #e0b44c; font-size: 0.75rem; font-weight: 700; line-height: 1.2;
     }
     .lh-trade-lab { min-width: 0; }
     .lh-trade-lab b {
-      display: block; color: #fff; font-weight: 700;
-      font-size: 0.75rem; line-height: 1.2;
+      display: block; color: var(--text); font-weight: 650;
+      font-size: 0.75rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .lh-trade-lab span {
-      display: block; color: #717d8e; font-size: 0.625rem; line-height: 1.25;
+      display: block; color: var(--dim); font-size: 0.625rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    /* Kept for smoke / old markup; trade assets are text-first now. */
+    .lh-trade-ico, .lh-trade-pick { display: none; }
+
     .lh-week-h {
       font-size: 1.05rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em;
     }
@@ -1374,7 +1376,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "homeFix20260901024500";
+    const DATA_V = "tradeSimple20260901011400";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4586,11 +4588,11 @@ const html = `<!DOCTYPE html>
 
     function latestTradeAssetHtml(leg) {
       if (!leg) return "";
+      // Text-first asset line: gold "+" + label (pick or player). No circular badge chrome.
       if (leg.kind === "pick") {
         const lab = formatPickLabels(leg.label);
         return '<div class="lh-trade-asset">'
-          + '<div class="lh-trade-ico"><div class="lh-trade-pick">PICK</div>'
-          + '<span class="lh-trade-plus" aria-hidden="true">+</span></div>'
+          + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
           + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
           + (lab.secondary ? "<span>" + esc(lab.secondary) + "</span>" : "")
           + "</div></div>";
@@ -4599,15 +4601,10 @@ const html = `<!DOCTYPE html>
       const meta = pid && ktcBySleeper ? ktcBySleeper[pid] : null;
       const primary = shortPlayerName(leg.label);
       const secondary = meta && meta.pos
-        ? meta.pos + (meta.team ? " - " + meta.team : "")
+        ? meta.pos + (meta.team ? " · " + meta.team : "")
         : "";
-      const ico = pid
-        ? '<img src="https://sleepercdn.com/content/nfl/players/thumb/' + esc(pid)
-          + '.jpg" alt="" width="32" height="32" loading="lazy" decoding="async">'
-        : '<div class="lh-trade-pick">PLY</div>';
       return '<div class="lh-trade-asset">'
-        + '<div class="lh-trade-ico">' + ico
-        + '<span class="lh-trade-plus" aria-hidden="true">+</span></div>'
+        + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
         + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
         + (secondary ? "<span>" + esc(secondary) + "</span>" : "")
         + "</div></div>";
@@ -4797,18 +4794,17 @@ const html = `<!DOCTYPE html>
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
         const handle = side.name || "";
         const meta = handle ? ("@" + handle) : "";
+        // Compact seat row: avatar beside name — no empty score stack / accent bar.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar)
-          + '<div class="h2h-nums" aria-hidden="true"></div>'
-          + "</div>"
-          + '<div class="h2h-bar is-tie" aria-hidden="true"></div>'
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
           + (meta ? '<div class="h2h-meta">' + esc(meta) + "</div>" : "")
-          + "</div>"
+          + "</div></div>"
           + '<div class="h2h-assets">'
-          + (assets || '<div class="lh-trade-asset"><div class="lh-trade-lab"><b>…</b></div></div>')
+          + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
+            + '<div class="lh-trade-lab"><b>…</b></div></div>')
           + "</div></div>";
       };
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
@@ -5044,7 +5040,7 @@ const html = `<!DOCTYPE html>
       let tradeBox = "";
       if (latest) {
         try {
-          // Sleeper-style completed-trade card — clickable Latest trade control.
+          // Latest trade H2H chip — opens the trade board for this deal.
           tradeBox = '<button type="button" class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'

@@ -1374,7 +1374,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "h2hRefChip20260901020000";
+    const DATA_V = "homeFix20260901024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1714,6 +1714,8 @@ const html = `<!DOCTYPE html>
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
       if (lens && lens !== "all") q.set("lens", lens);
+      // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
+      if (isDesignLeagueHome()) q.set("design", "league-home");
       return "?" + q.toString();
     }
 
@@ -2600,6 +2602,22 @@ const html = `<!DOCTYPE html>
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       try { sets = dataSetPanel(); } catch (err) { console.error(err); sets = ""; }
+      // Never paint a home with a missing News Feed shell — dayAlert should always return one,
+      // but a thrown path above used to leave a blank first viewport in Design Mode.
+      if (!hero) {
+        hero = '<section class="lh-hero day-alert news-hero" aria-label="News Feed">'
+          + '<div class="day-alert-top"><div class="day-alert-h">News Feed</div></div>'
+          + '<button type="button" class="news-hero-body" data-view="news"'
+          + ' aria-label="Open the News Feed">'
+          + '<div class="news-hero-slide" data-news-slide="0">'
+          + "<b>News</b><span>The feed could not be shown. Open for details.</span>"
+          + "</div></button>"
+          + '<div class="news-hero-live" data-news-live aria-live="polite">1 of 1</div>'
+          + "</section>";
+      }
+      if (!chips) {
+        try { chips = homeChips(); } catch (err2) { console.error(err2); }
+      }
       return hero + chips + progress + sets;
     }
 
@@ -2992,6 +3010,26 @@ const html = `<!DOCTYPE html>
     function authSeatName() {
       if (activeLeague && activeLeague.team_name) return activeLeague.team_name;
       return (authSession && authSession.seat_name) || null;
+    }
+
+    /**
+     * Design Mode (design-league-home.html) seeds a fake token and a session flag. Keep the
+     * flag sticky for the tab — syncUrl strips ?design=, and removing the flag on first boot
+     * let a Design Mode reload run soft-delete sync and blank the News Feed.
+     */
+    function isDesignLeagueHome() {
+      try {
+        if (sessionStorage.getItem("cuckle.design.league_home") === "1") return true;
+      } catch (err) { /* private mode */ }
+      try {
+        if ((new URLSearchParams(location.search).get("design") || "") === "league-home") {
+          try { sessionStorage.setItem("cuckle.design.league_home", "1"); } catch (err2) { /* ignore */ }
+          return true;
+        }
+      } catch (err) { /* ignore */ }
+      // Seeded by design-league-home.html — never a real Supabase JWT.
+      if (authSession && authSession.access_token === "design-mode") return true;
+      return false;
     }
 
     function authLoad() {
@@ -3994,12 +4032,8 @@ const html = `<!DOCTYPE html>
       await loadMembers();
       voteLoad().catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
-      let designHome = false;
-      try {
-        designHome = sessionStorage.getItem("cuckle.design.league_home") === "1"
-          || (new URLSearchParams(location.search).get("design") || "") === "league-home";
-      } catch (err) { /* private mode */ }
-      if (!designHome) loadNewsDeleted().catch((err) => console.error(err));
+      // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
+      if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
     }
 
     // Phase 1: voter identity is the claimed seat only. Legacy device ids remain in local
@@ -6462,12 +6496,14 @@ const html = `<!DOCTYPE html>
         // Design Mode entry (design-league-home.html): skip the memberships API — the
         // design-mode token cannot fetch remote rows, and without a local match boot used to
         // fall through to Your leagues (the old app home) instead of the PSA league home.
-        let designLeagueHome = false;
+        // Re-seed sticky flag from ?design= (syncUrl strips it later). Never remove the flag
+        // on boot — reloads must keep skipping soft-delete + memberships.
         try {
-          designLeagueHome = sessionStorage.getItem("cuckle.design.league_home") === "1"
-            || (params.get("design") || "") === "league-home";
-          if (designLeagueHome) sessionStorage.removeItem("cuckle.design.league_home");
+          if ((params.get("design") || "") === "league-home") {
+            sessionStorage.setItem("cuckle.design.league_home", "1");
+          }
         } catch (err) { /* private mode */ }
+        const designLeagueHome = isDesignLeagueHome();
         if (!designLeagueHome) {
           await loadMemberships().catch((err) => console.error(err));
         }
@@ -7785,6 +7821,15 @@ if (!inline.includes(", 3000)") || !inline.includes('classList.add("is-exit")'))
   throw new Error("news-hero ticker must slide left every 3s via is-exit/is-enter classes");
 }
 // Stale slide timeouts after remount/Pause used to hide every live slide (blank News Feed).
+if (!inline.includes("function isDesignLeagueHome(") || !inline.includes('access_token === "design-mode"')) {
+  throw new Error("isDesignLeagueHome must recognize design-mode token + sticky session flag");
+}
+if (inline.includes('sessionStorage.removeItem("cuckle.design.league_home")')) {
+  throw new Error("boot must not clear cuckle.design.league_home — sticky flag keeps Design Mode home alive");
+}
+if (!inline.includes("The feed could not be shown. Open for details.")) {
+  throw new Error("renderLeagueHome must keep a News Feed fallback shell when dayAlert throws");
+}
 if (!inline.includes("newsHeroAnimTimer") || !inline.includes("newsHeroAnimGen")) {
   throw new Error("news-hero must track and cancel in-flight slide timeouts across remounts");
 }
@@ -7804,6 +7849,17 @@ if (!inline.includes("if (gen !== newsHeroAnimGen) return")) {
       throw new Error(`dayAlert empty states must distinguish load/deleted/never-shared; missing ${need}`);
     }
   }
+}
+// Design Mode must stay sticky: syncUrl used to strip ?design= and boot cleared the session
+// flag, so a Design Mode reload ran soft-delete and blanked the News Feed.
+if (!inline.includes("function isDesignLeagueHome()")
+  || !inline.includes('access_token === "design-mode"')
+  || !inline.includes('q.set("design", "league-home")')) {
+  throw new Error("Design Mode must keep isDesignLeagueHome() sticky (token + session + URL)");
+}
+if (!inline.includes("if (!isDesignLeagueHome()) loadNewsDeleted()")
+  || inline.includes("sessionStorage.removeItem(\"cuckle.design.league_home\")")) {
+  throw new Error("Design Mode must not clear its session flag or soft-delete-sync on that path");
 }
 // ---------------------------------------------------------------------------------------------
 

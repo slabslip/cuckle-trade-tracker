@@ -1369,7 +1369,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "h2hRefChip20260901020000";
+    const DATA_V = "homeFix20260901024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1709,6 +1709,8 @@
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
       if (lens && lens !== "all") q.set("lens", lens);
+      // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
+      if (isDesignLeagueHome()) q.set("design", "league-home");
       return "?" + q.toString();
     }
 
@@ -2595,6 +2597,22 @@
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       try { sets = dataSetPanel(); } catch (err) { console.error(err); sets = ""; }
+      // Never paint a home with a missing News Feed shell — dayAlert should always return one,
+      // but a thrown path above used to leave a blank first viewport in Design Mode.
+      if (!hero) {
+        hero = '<section class="lh-hero day-alert news-hero" aria-label="News Feed">'
+          + '<div class="day-alert-top"><div class="day-alert-h">News Feed</div></div>'
+          + '<button type="button" class="news-hero-body" data-view="news"'
+          + ' aria-label="Open the News Feed">'
+          + '<div class="news-hero-slide" data-news-slide="0">'
+          + "<b>News</b><span>The feed could not be shown. Open for details.</span>"
+          + "</div></button>"
+          + '<div class="news-hero-live" data-news-live aria-live="polite">1 of 1</div>'
+          + "</section>";
+      }
+      if (!chips) {
+        try { chips = homeChips(); } catch (err2) { console.error(err2); }
+      }
       return hero + chips + progress + sets;
     }
 
@@ -2987,6 +3005,26 @@
     function authSeatName() {
       if (activeLeague && activeLeague.team_name) return activeLeague.team_name;
       return (authSession && authSession.seat_name) || null;
+    }
+
+    /**
+     * Design Mode (design-league-home.html) seeds a fake token and a session flag. Keep the
+     * flag sticky for the tab — syncUrl strips ?design=, and removing the flag on first boot
+     * let a Design Mode reload run soft-delete sync and blank the News Feed.
+     */
+    function isDesignLeagueHome() {
+      try {
+        if (sessionStorage.getItem("cuckle.design.league_home") === "1") return true;
+      } catch (err) { /* private mode */ }
+      try {
+        if ((new URLSearchParams(location.search).get("design") || "") === "league-home") {
+          try { sessionStorage.setItem("cuckle.design.league_home", "1"); } catch (err2) { /* ignore */ }
+          return true;
+        }
+      } catch (err) { /* ignore */ }
+      // Seeded by design-league-home.html — never a real Supabase JWT.
+      if (authSession && authSession.access_token === "design-mode") return true;
+      return false;
     }
 
     function authLoad() {
@@ -3989,12 +4027,8 @@
       await loadMembers();
       voteLoad().catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
-      let designHome = false;
-      try {
-        designHome = sessionStorage.getItem("cuckle.design.league_home") === "1"
-          || (new URLSearchParams(location.search).get("design") || "") === "league-home";
-      } catch (err) { /* private mode */ }
-      if (!designHome) loadNewsDeleted().catch((err) => console.error(err));
+      // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
+      if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
     }
 
     // Phase 1: voter identity is the claimed seat only. Legacy device ids remain in local
@@ -6457,12 +6491,14 @@
         // Design Mode entry (design-league-home.html): skip the memberships API — the
         // design-mode token cannot fetch remote rows, and without a local match boot used to
         // fall through to Your leagues (the old app home) instead of the PSA league home.
-        let designLeagueHome = false;
+        // Re-seed sticky flag from ?design= (syncUrl strips it later). Never remove the flag
+        // on boot — reloads must keep skipping soft-delete + memberships.
         try {
-          designLeagueHome = sessionStorage.getItem("cuckle.design.league_home") === "1"
-            || (params.get("design") || "") === "league-home";
-          if (designLeagueHome) sessionStorage.removeItem("cuckle.design.league_home");
+          if ((params.get("design") || "") === "league-home") {
+            sessionStorage.setItem("cuckle.design.league_home", "1");
+          }
         } catch (err) { /* private mode */ }
+        const designLeagueHome = isDesignLeagueHome();
         if (!designLeagueHome) {
           await loadMemberships().catch((err) => console.error(err));
         }

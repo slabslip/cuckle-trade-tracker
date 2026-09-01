@@ -1,7 +1,8 @@
 /* Chuckle Fantasy — installable shell. Cache the app shell; network-first for JSON. */
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
-const CACHE = "chuckle-shell-v23-home-review";
-const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
+const CACHE = "chuckle-shell-v24-home-fix";
+/* Do not precache index.html — Design Mode must never boot from a stale shell snapshot. */
+const SHELL = ["./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -21,16 +22,12 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   // Live API / Edge always network.
   if (url.hostname.includes("supabase.co")) return;
-  // index.html / app root: network-first so Design Mode and deploys are not stuck on a
-  // cache-first shell (that is how the pre-PSA home kept showing after a redesign).
+  // index.html / app root: network-only (offline fallback only). Never write HTML into CACHE —
+  // that is how Design Mode stayed on a blank/pre-PSA shell after deploys.
   const isAppHtml = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
   if (isAppHtml) {
     event.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy));
-        return res;
-      }).catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html"))),
+      fetch(req).catch(() => caches.match("./index.html")),
     );
     return;
   }

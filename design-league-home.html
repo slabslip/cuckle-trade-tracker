@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=390, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Cache-Control" content="no-cache" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
   <title>Design — League home (PSA)</title>
   <style>
     html, body {
@@ -39,8 +40,8 @@
         localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
         localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
         localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
-        // Boot reads this and opens league dash without the memberships API
-        // (design-mode token cannot load remote memberships).
+        // Sticky for the tab: boot + openLeagueDashboard keep reading this after syncUrl
+        // strips ?design= (otherwise soft-delete sync / Your leagues can blank Design Mode).
         sessionStorage.setItem("cuckle.design.league_home", "1");
       } catch (err) {
         document.querySelector("p").textContent =
@@ -48,14 +49,14 @@
         return;
       }
       var go = function () {
-        // Cache-bust so a stale document is not reused.
-        location.replace("./index.html?design=league-home&v=home-review");
+        // Unique cache-bust so a stale document / SW shell is not reused.
+        location.replace("./index.html?design=league-home&v=home-fix-0245&_=" + Date.now());
       };
       if (!("serviceWorker" in navigator)) {
         go();
         return;
       }
-      // Drop cache-first shells that still hold the pre-PSA homepage.
+      // Drop every registration and cache bucket that could still hold a blank/pre-PSA shell.
       navigator.serviceWorker.getRegistrations().then(function (regs) {
         return Promise.all(regs.map(function (r) { return r.unregister(); }));
       }).then(function () {

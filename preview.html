@@ -69,11 +69,13 @@
     <button type="button" id="reload">Reload</button>
   </div>
   <div class="bar">
-    <input id="path" value="index.html" aria-label="Path and query to load"
-           placeholder="index.html?view=titles" />
+    <input id="path" value="design-league-home.html" aria-label="Path and query to load"
+           placeholder="design-league-home.html" />
     <button type="button" id="go">Go</button>
     <select id="jump" aria-label="Jump to screen">
-      <option value="index.html">League home</option>
+      <option value="design-league-home.html" selected>PSA league home (Design)</option>
+      <option value="design-league-home-frame.html">iPhone bezel wrapper</option>
+      <option value="index.html">League home (raw)</option>
       <option value="index.html?view=titles">Champions path</option>
     </select>
   </div>
@@ -82,17 +84,15 @@
     <div class="wrap" id="wrap">
       <div class="phone" id="phone">
         <div class="notch"></div>
-        <iframe id="frame" src="index.html" title="CuckleChunckle at phone size"></iframe>
+        <iframe id="frame" src="design-league-home.html" title="Chuckle Fantasy at phone size"></iframe>
       </div>
     </div>
   </div>
 
   <p class="caption">
-    Real dashboard at true phone width — same CSS a user gets in Safari.
-    <b>Pick a manager with the Team button inside the frame</b>; the <code>?me=</code> deep link
-    does not restore state yet. Design Mode cannot select elements through an iframe — for that,
-    open <code>index.html</code> directly and edit <code>generate-page.mjs</code>, not the
-    generated <code>index.html</code>.
+    True phone width of the PSA league home. For a full iPhone shell (island + home bar), open
+    <code>design-league-home-frame.html</code>. Design Mode cannot select through an iframe — use
+    <code>design-league-home.html</code> directly for clickable DOM.
   </p>
 
 <script>

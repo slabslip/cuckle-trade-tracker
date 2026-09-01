@@ -428,8 +428,7 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 2px; }
     a.champ-alert .day-alert-h { line-height: 1.3; }
-    /* News Feed hero header row: title + Pause. League-wide trades open via Trades quick action
-       / Latest trade card — no standalone All trades control on home. */
+    /* News Feed hero header row: title + Pause. Recent Trade header carries search all trades. */
     .day-alert-top { display: flex; align-items: flex-start; gap: 12px; }
     /* A flex item's automatic minimum is min-content, so the heading would widen the card
        past the viewport rather than give Pause room. Same guard as the card itself. */
@@ -1297,6 +1296,14 @@ const html = `<!DOCTYPE html>
     div.lh-latest-trade .day-alert-h {
       font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
     }
+    button.lh-trade-all-btn {
+      flex: 0 0 auto; appearance: none; font: inherit;
+      font-size: 0.8125rem; font-weight: 500; line-height: 1.2;
+      color: var(--muted); background: none; border: 0; padding: 0;
+      cursor: pointer; text-decoration: underline; white-space: nowrap;
+      min-height: 44px; margin: -8px 0;
+    }
+    button.lh-trade-all-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Recent Trade chip + floating vote CTA over the lean footer. */
     div.lh-latest-trade .lh-trade-chip-wrap {
       position: relative; width: 100%;
@@ -2195,7 +2202,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "myTradesLabel20260901174800";
+    const DATA_V = "searchAllTradesBtn20260901174900";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7894,6 +7901,14 @@ const html = `<!DOCTYPE html>
      * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
      * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
+    function recentTradeHeaderHtml() {
+      return '<div class="day-alert-h">'
+        + '<span>Recent Trade</span>'
+        + '<button type="button" class="lh-trade-all-btn" data-trades-list="1"'
+        + ' aria-label="Search all trades">search all trades</button>'
+        + "</div>";
+    }
+
     function leagueInProgress() {
       ensureLatestTradeBags();
       const latest = latestTradeSide();
@@ -7915,7 +7930,7 @@ const html = `<!DOCTYPE html>
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Recent Trade</div>'
+            + recentTradeHeaderHtml()
             + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
@@ -7928,7 +7943,7 @@ const html = `<!DOCTYPE html>
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="day-alert-h">Recent Trade</div>'
+            + recentTradeHeaderHtml()
             + '<div class="lh-trade-chip-wrap">'
             + '<div class="h2h-chip is-trade" role="group">'
             + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
@@ -9931,7 +9946,8 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
   throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
-for (const need of ['day-alert-h">Recent Trade', "function latestTradeSide(", "function ensureWeekMatchups(",
+for (const need of ["function recentTradeHeaderHtml(", "Recent Trade", "data-trades-list=\"1\"",
+  "search all trades", "function latestTradeSide(", "function ensureWeekMatchups(",
   "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
   "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
   "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
@@ -9945,7 +9961,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
   const at = inline.indexOf("function leagueInProgress(");
   const stop = inline.indexOf("\n    function ", at + 10);
   const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
-  if (!prog.includes('day-alert-h">Recent Trade') || !prog.includes("lh-latest-trade") || !prog.includes("data-board-open")) {
+  if (!prog.includes("recentTradeHeaderHtml()") || !prog.includes("lh-latest-trade")
+    || !prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
   }
   if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {

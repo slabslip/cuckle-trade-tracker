@@ -2195,7 +2195,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "seatTradeFeedUnify20260901172000";
+    const DATA_V = "myTradesLabel20260901174800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4196,7 +4196,7 @@ const html = `<!DOCTYPE html>
     function homeChips() {
       return '<div class="lh-actions ds-wrap">'
         + '<div class="lh-action-row">'
-        + lhNavAction("trades", "Trades",
+        + lhNavAction("trades", "My Trades",
           "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z")
         + lhNavAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")

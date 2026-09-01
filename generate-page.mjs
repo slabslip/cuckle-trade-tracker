@@ -5222,7 +5222,8 @@ const html = `<!DOCTYPE html>
     // needle, the even book, VA, the lens windows, today_delta, partner grades or any board
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
-    const VOTE_KEY = "cuckle.votes.v3";
+    // Bump this when wiping Supabase trade_votes so heal cannot re-upload stale device ballots.
+    const VOTE_KEY = "cuckle.votes.v4";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
@@ -5265,6 +5266,9 @@ const html = `<!DOCTYPE html>
     // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
     // the vote itself is already in localStorage, so nothing here can lose it.
     const votePending = new Set();
+    // Shown briefly when a write fails so the manager knows to retry (not silent local-only).
+    let voteWriteError = "";
+    let voteReloadAt = 0;
     // Claimed-seat session: { access_token, refresh_token, expires_at, user_id, username, seat_user_id, seat_name }
     let authSession = null;
     let authBusy = false;
@@ -6480,26 +6484,45 @@ const html = `<!DOCTYPE html>
     // trade already counts us. Without it the choice is between double-counting our own vote and
     // hiding it, and both are wrong.
     //
-    // A third read pulls every ballot's voter+choice so the Latest trade lean can paint each
-    // voter's seat flair under the side they picked. SELECT on trade_votes is public; if that
-    // read fails we still keep tallies and fall back to count-only marks.
+    // Ballots (voter+choice) load first and are the source of truth for flairs. If the tallies
+    // view 401s or is missing, we synthesize counts from those ballots so every claimed seat
+    // still sees every other manager's vote.
     async function voteLoad() {
       voteLiveState = "loading";
       await authRefreshIfNeeded();
       const ids = voteVoterIds();
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      const memberIds = new Set(
+        (members || []).map((m) => (m && m.user_id != null ? String(m.user_id) : "")).filter(Boolean)
+      );
       try {
         const tallyQ = VOTE_API + "/trade_vote_tallies?select=*&sleeper_league_id=eq."
           + encodeURIComponent(leagueId);
         const mineQ = ids.length
           ? VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",")
             + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
+            + "&choice=neq." + encodeURIComponent(VOTE_CLEARED)
           : null;
         const ballotsQ = VOTE_API + "/trade_votes?select=transaction_id,choice,voter&sleeper_league_id=eq."
-          + encodeURIComponent(leagueId);
-        let rows;
-        let mineRows = [];
+          + encodeURIComponent(leagueId)
+          + "&choice=neq." + encodeURIComponent(VOTE_CLEARED);
+
+        // Ballots first so a broken tallies view cannot hide other managers' votes.
         let ballotRows = [];
+        try {
+          ballotRows = await voteGet(ballotsQ);
+        } catch (ballotErr) {
+          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          try {
+            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter"
+              + "&choice=neq." + encodeURIComponent(VOTE_CLEARED));
+          } catch (ballotErr2) {
+            ballotRows = [];
+          }
+        }
+
+        let rows = null;
+        let mineRows = [];
         try {
           const parts = [voteGet(tallyQ)];
           if (mineQ) parts.push(voteGet(mineQ));
@@ -6507,32 +6530,31 @@ const html = `<!DOCTYPE html>
           rows = got[0];
           mineRows = got[1] || [];
         } catch (scopedErr) {
-          // Wave 2 SQL not applied yet — fall back to unscoped tallies.
-          console.warn("scoped vote load failed; falling back", scopedErr);
-          const got = await Promise.all([
-            voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
-            ids.length
-              ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
-              : Promise.resolve([]),
-          ]);
-          rows = got[0];
-          mineRows = got[1] || [];
-        }
-        try {
-          ballotRows = await voteGet(ballotsQ);
-        } catch (ballotErr) {
-          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          console.warn("scoped vote tallies failed; using ballots", scopedErr);
           try {
-            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter");
-          } catch (ballotErr2) {
-            ballotRows = [];
+            mineRows = mineQ ? await voteGet(mineQ) : [];
+          } catch (mineErr) {
+            mineRows = [];
           }
+          rows = null;
         }
+
         const totals = {};
-        for (const r of rows || []) {
-          if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
-          const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
-          box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+        if (rows && rows.length) {
+          for (const r of rows) {
+            if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
+            const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+            box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+          }
+        } else {
+          // Synthesize tallies from raw ballots so a broken tallies view cannot hide
+          // everyone else's votes (Ducks flair / counts on Latest trade).
+          for (const r of ballotRows || []) {
+            if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+            if (memberIds.size && !memberIds.has(String(r.voter))) continue;
+            const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+            box[r.choice] = (box[r.choice] || 0) + 1;
+          }
         }
         const mine = {};
         for (const r of mineRows || []) {
@@ -6543,11 +6565,13 @@ const html = `<!DOCTYPE html>
         const ballots = {};
         for (const r of ballotRows || []) {
           if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+          if (memberIds.size && !memberIds.has(String(r.voter))) continue;
           const box = ballots[r.transaction_id] || (ballots[r.transaction_id] = {});
           box[r.voter] = r.choice;
         }
         voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine, ballots: ballots };
         voteLiveState = "ok";
+        voteReloadAt = Date.now();
       } catch (err) {
         console.error(err);
         voteLive = null;
@@ -6555,6 +6579,15 @@ const html = `<!DOCTYPE html>
       }
       voteHeal();
       render();
+    }
+
+    // Re-pull league ballots when the manager returns to the tab so Ducks/Truman/new seats
+    // see each other's votes without a full page reload.
+    function voteReloadIfStale() {
+      if (document.visibilityState && document.visibilityState !== "visible") return;
+      if (appScreen !== "dash" || !activeLeague) return;
+      if (Date.now() - voteReloadAt < 2000) return;
+      voteLoad().catch((err) => console.error(err));
     }
 
     // localStorage owns "my vote", so a trade where Supabase disagrees gets the local vote pushed
@@ -6567,13 +6600,14 @@ const html = `<!DOCTYPE html>
     // someone actually taps to clear.
     //
     // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
+    // Heal retries do not pass priorLocal — a failed heal leaves local as-is for the next pass.
     function voteHeal() {
       if (voteLiveState !== "ok") return;
       if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
         const local = votes[tx].choice || null;
-        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId());
+        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId(), null);
       }
     }
 
@@ -6581,7 +6615,9 @@ const html = `<!DOCTYPE html>
     // its conflict target explicitly because PostgREST otherwise infers the primary key, which is
     // the surrogate id — leave it off and a second vote fails on the unique constraint.
     // voter is rewritten by the trade_votes_force_voter trigger; we still send the claimed seat.
-    function votePush(transactionId, choice, seat) {
+    // priorLocal: when set (user tap), a failed write restores that ballot so this phone cannot
+    // look like it voted when Supabase never got the row — that was how Ducks saw 2 and Truman 1.
+    function votePush(transactionId, choice, seat, priorLocal) {
       if (!authSession || !authSession.access_token || !seat) {
         votePending.delete(transactionId);
         render();
@@ -6590,6 +6626,7 @@ const html = `<!DOCTYPE html>
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       const sent = choice == null ? VOTE_CLEARED : choice;
       votePending.add(transactionId);
+      voteWriteError = "";
       const payload = {
         transaction_id: transactionId,
         choice: sent,
@@ -6604,14 +6641,34 @@ const html = `<!DOCTYPE html>
         }, true),
         body: JSON.stringify(payload),
         signal: voteAbort(),
-      }).then((res) => {
-        if (!res.ok) throw new Error("vote write " + res.status);
+      }).then(async (res) => {
+        if (!res.ok) {
+          let detail = "";
+          try { detail = (await res.text() || "").slice(0, 180); } catch (e) { /* ignore */ }
+          throw new Error("vote write " + res.status + (detail ? ": " + detail : ""));
+        }
         return res.json();
       }).then((rows) => {
         const row = (rows || [])[0];
         voteSettle(transactionId, row && row.choice ? row.choice : sent);
+        // Full refresh so this device immediately picks up any concurrent ballots from
+        // other claimed seats (and confirms ours landed in the public SELECT).
+        voteLoad().catch((err) => console.error(err));
       }).catch((err) => {
         console.error(err);
+        votePending.delete(transactionId);
+        if (priorLocal !== undefined) {
+          const box = voteBoxRead();
+          if (priorLocal && priorLocal.choice) {
+            box.votes[transactionId] = priorLocal;
+          } else {
+            delete box.votes[transactionId];
+          }
+          voteBoxWrite(box);
+        }
+        voteWriteError = "Vote didn’t save — check connection and try again.";
+        voteToast = null;
+        say(voteWriteError);
         render();
       });
     }
@@ -6771,11 +6828,18 @@ const html = `<!DOCTYPE html>
         return;
       }
       const box = voteBoxRead();
+      const prev = box.votes[transactionId]
+        ? {
+            choice: box.votes[transactionId].choice,
+            seat: box.votes[transactionId].seat,
+            ts: box.votes[transactionId].ts,
+          }
+        : null;
       if (choice == null) delete box.votes[transactionId];
       else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
       voteBoxWrite(box);
       voteEditTx = null;
-      votePush(transactionId, choice, seat);
+      votePush(transactionId, choice, seat, prev);
     }
 
     function voteSeats(r) {
@@ -10099,6 +10163,8 @@ const html = `<!DOCTYPE html>
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
       else if (closedFilter) render();
     });
+    document.addEventListener("visibilitychange", () => { voteReloadIfStale(); });
+    window.addEventListener("focus", () => { voteReloadIfStale(); });
     document.addEventListener("change", (e) => {
       const tapeYearLab = e.target.closest("[data-tape-year]");
       if (tapeYearLab) {
@@ -11226,8 +11292,23 @@ for (const ban of [
   if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
     throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
   }
-  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v3"')) {
-    throw new Error("VOTE_KEY must be cuckle.votes.v3 so prior local ballots are wiped for public launch");
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v4"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v4 so local heal cannot re-upload ballots after a Supabase wipe");
+  }
+  if (!inline.includes("using ballots")
+    || !inline.includes("Synthesize tallies from raw ballots")
+    || !inline.includes("voteReloadIfStale")
+    || !inline.includes("priorLocal")) {
+    throw new Error("voteLoad/votePush must sync ballots across devices (ballot fallback, reload, revert on fail)");
+  }
+  {
+    const wave8 = fs.readFileSync(`${ROOT}db/wave8-vote-tally-members.sql`, "utf8");
+    if (!wave8.includes("league_memberships")
+      || !wave8.includes("trade_vote_tallies")
+      || !wave8.includes("inner join public.league_memberships")
+      || !wave8.includes("security_invoker = false")) {
+      throw new Error("wave8 must rebuild trade_vote_tallies (members join, security_invoker=false for anon)");
+    }
   }
   if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
     throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");

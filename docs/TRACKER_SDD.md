@@ -2,7 +2,9 @@
 
 **Written:** 2026-08-28. **Status:** stop. This file is the single sheet for everything discussed in the build session. Decomposed law still lives in `PRODUCT.md` (WANT), `ARCHITECTURE.md` (HAVE), `VALUE_SDD.md`, `UI_SDD.md`, `OPEN_QUESTIONS.md`. If those disagree with this file on *what we discussed*, this file wins until Truman edits it.
 
-**Not SlabSlip.** Code and docs live in `/Users/trumancooper/Desktop/cuckle-trade-tracker/`. Do not put this in `tradeslabs-web`.
+**Not SlabSlip.** Code and docs live in **https://github.com/slabslip/cuckle-trade-tracker**
+(Cursor Cloud Agent: `/workspace`; local clone: wherever you checked it out). Do not put this in
+`tradeslabs-web`. Go-live entry point: [`START_HERE.md`](START_HERE.md).
 
 ---
 

@@ -1,7 +1,9 @@
-# Start here — Chuckle Fantasy (Cuckle trade repo)
+# Start here — Chuckle Fantasy (Cuckle tracker session repo)
 
-**This repo is the product.** Everything for Chuckle Fantasy / CuckleChunckle lives in
-**https://github.com/slabslip/cuckle-trade-tracker** — not SlabSlip, not another folder name.
+**This repo is the product and the Cursor Cloud Agent session workspace.** Everything for
+Chuckle Fantasy / CuckleChunckle lives in **https://github.com/slabslip/cuckle-trade-tracker**
+— not SlabSlip, not another folder name. When docs say “session repo” or “Cuckle trade repo,”
+they mean this repository.
 
 | What | Where |
 | --- | --- |

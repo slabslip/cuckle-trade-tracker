@@ -151,7 +151,9 @@ supabase login
 # browser opens → authorize
 # (Cloud Agent / CI: export SUPABASE_ACCESS_TOKEN from https://supabase.com/dashboard/account/tokens)
 
-cd ~/path/to/cuckle-trade-tracker   # repo root — where supabase/functions/ lives
+# Repo root — where supabase/functions/ lives (see START_HERE for your environment)
+# Cloud Agent: already at /workspace
+# Mac / PC:     cd ~/Documents/cuckle-trade-tracker   # your clone path
 supabase link --project-ref gtqyvnkkjiksmmtmzubw
 # if asked for DB password, use the one from Supabase → Project Settings → Database
 ```
@@ -159,7 +161,7 @@ supabase link --project-ref gtqyvnkkjiksmmtmzubw
 ### 4b. Deploy
 
 ```bash
-cd ~/path/to/cuckle-trade-tracker   # repo root
+# Cloud Agent: cd /workspace   |   Mac: cd ~/Documents/cuckle-trade-tracker
 ./scripts/deploy-join-league.sh
 # or manually:
 # supabase functions deploy join-league --project-ref gtqyvnkkjiksmmtmzubw
@@ -178,7 +180,7 @@ You need the **new** `index.html` from this branch (gate / Create league / Redee
 **Where:** Terminal, repo root:
 
 ```bash
-cd ~/path/to/cuckle-trade-tracker   # repo root
+# Cloud Agent: cd /workspace   |   Mac: cd ~/Documents/cuckle-trade-tracker
 python3 -m http.server 8766
 ```
 
@@ -270,7 +272,7 @@ Then: DM real managers their codes, stop for today.
 | What you see | Where to fix |
 | --- | --- |
 | `supabase: command not found` | Install CLI (Step 4a) or use `npx supabase`; or run `./scripts/deploy-join-league.sh` |
-| `cd: /path/to/cuckle-trade-tracker: No such file` | Use your real clone path (repo root), e.g. `cd ~/Documents/cuckle-trade-tracker` |
+| `cd: ... No such file` | Cloud Agent: `/workspace`. Mac: your clone path, e.g. `~/Documents/cuckle-trade-tracker` |
 | Deploy asks for access token | Run `supabase login` or `export SUPABASE_ACCESS_TOKEN=sbp_...` |
 | Signup fails / “confirm email” | Supabase → Authentication → Providers → Email → Confirm OFF |
 | Create league 401 / failed fetch | Redeploy Step 4; hard-refresh app; sign out/in |

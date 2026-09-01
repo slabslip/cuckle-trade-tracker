@@ -1075,6 +1075,16 @@
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(7) { grid-column: 4; grid-row: 2; }
+    /* Cuffs board: no year/"held" gutter — three equal columns only. */
+    .cuffs-board .pick-intel-board-cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     /* Shared 2-col grid: seat names | counts. Labels sit in the count track
        (centered over · N), not left over the seat names. */
     .pick-intel-board-col {
@@ -2125,7 +2135,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsInsurersBoard20260901181000";
+    const DATA_V = "cuffsNoHeldLabel20260901141000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2919,7 +2929,6 @@
       ).join("");
       return '<div class="pick-intel-board cuffs-board" role="group" aria-label="' + esc(aria) + '">'
         + '<div class="pick-intel-board-cols">'
-        + '<span class="pick-intel-board-yr">held</span>'
         + headBtns
         + bodyCols
         + "</div></div>";

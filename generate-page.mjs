@@ -1080,6 +1080,16 @@ const html = `<!DOCTYPE html>
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     .pick-intel-board-cols > .pick-intel-board-col:nth-child(7) { grid-column: 4; grid-row: 2; }
+    /* Cuffs board: no year/"held" gutter — three equal columns only. */
+    .cuffs-board .pick-intel-board-cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(2) { grid-column: 2; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > button.pick-intel-board-lab:nth-child(3) { grid-column: 3; grid-row: 1; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(4) { grid-column: 1; grid-row: 2; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(5) { grid-column: 2; grid-row: 2; }
+    .cuffs-board .pick-intel-board-cols > .pick-intel-board-col:nth-child(6) { grid-column: 3; grid-row: 2; }
     /* Shared 2-col grid: seat names | counts. Labels sit in the count track
        (centered over · N), not left over the seat names. */
     .pick-intel-board-col {
@@ -2130,7 +2140,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsInsurersBoard20260901181000";
+    const DATA_V = "cuffsNoHeldLabel20260901141000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2924,7 +2934,6 @@ const html = `<!DOCTYPE html>
       ).join("");
       return '<div class="pick-intel-board cuffs-board" role="group" aria-label="' + esc(aria) + '">'
         + '<div class="pick-intel-board-cols">'
-        + '<span class="pick-intel-board-yr">held</span>'
         + headBtns
         + bodyCols
         + "</div></div>";
@@ -10515,6 +10524,12 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
     || inline.includes('lab: "Self"') || inline.includes('lab: "Other"')
     || inline.includes('{ lab: "All",') || inline.includes('{ lab: "Poach",')) {
     throw new Error("Cuffs home must show Insurers / Poachers / RB holder leaderboard");
+  }
+  {
+    const boardFn = inline.slice(inline.indexOf("function cuffsBoard("), inline.indexOf("function cuffInjBadge("));
+    if (!boardFn || boardFn.includes('pick-intel-board-yr">held') || boardFn.includes(">held</span>")) {
+      throw new Error("cuffsBoard must not show a held year gutter label");
+    }
   }
   if (!inline.includes("cuffsHtml = cuffsHome()")) {
     throw new Error("renderLeagueHome must mount cuffsHome, not cuffsPanel");

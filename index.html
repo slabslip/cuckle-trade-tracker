@@ -1537,7 +1537,6 @@
     }
     .h2h-chip.is-trade .h2h-top { align-items: center; gap: 8px; }
     .h2h-chip.is-trade .h2h-side.is-right .h2h-top { flex-direction: row; }
-    .h2h-chip.is-trade .h2h-side.is-right .h2h-medal { left: -2px; right: auto; }
     .h2h-chip.is-trade .h2h-av-wrap,
     .h2h-chip.is-trade .h2h-av,
     .h2h-chip.is-trade .h2h-av > img {
@@ -1877,7 +1876,7 @@
     .chip-lens.is-inline {
       position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
     }
-    /* Reserve a clear corner so the clock never covers seat names / medals. */
+    /* Reserve a clear corner so the clock never covers seat names. */
     .h2h-chip.is-trade { position: relative; padding-top: 22px; padding-right: 30px; }
     .h2h-chip.is-trade > .chip-lens { top: 6px; right: 6px; }
     button.chip-lens-btn {
@@ -7414,7 +7413,7 @@
         + "</div>";
     }
 
-    /** Circular seat avatar from Sleeper/flair; optional gold medal for the winning side. */
+    /** Circular seat avatar from Sleeper/flair; optional gold medal on weekly matchup chips. */
     function h2hAvatarHtml(name, avatarUrl, opts) {
       const win = opts && opts.win;
       const who = String(name || "");
@@ -7603,7 +7602,7 @@
         const cls = right ? "h2h-side is-right" : "h2h-side is-left";
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(name, null, { win: false })
+          + h2hAvatarHtml(name, null)
           + '<div class="h2h-id"><div class="h2h-name">' + seatLabel(name) + "</div></div></div>"
           + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
       };
@@ -7701,9 +7700,7 @@
       const left = sides[0] || { name: latest.name, legs: [] };
       const right = sides[1] || { name: latest.other, legs: [] };
       const lean = latestTradeLean(latest);
-      const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
-      const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      // Prefer VA-aware bag totals (same source as win medals). Legs-only is the pre-bag fallback.
+      // Prefer VA-aware bag totals. Legs-only is the pre-bag fallback.
       const leftSum = lean.leftTotal != null ? lean.leftTotal : latestTradeLegsSum(left.legs);
       const rightSum = lean.rightTotal != null ? lean.rightTotal : latestTradeLegsSum(right.legs);
       let leftTone = "";
@@ -7715,7 +7712,7 @@
         else if (l < r) { leftTone = "low"; rightTone = "high"; }
         else { leftTone = "even"; rightTone = "even"; }
       }
-      const sideHtml = (side, rightAlign, win) => {
+      const sideHtml = (side, rightAlign) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const vaRow = latestTradeVaHtml(side.value_adjust);
@@ -7724,7 +7721,7 @@
         // leg counts cannot stagger the = lines.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(side.name, side.avatar, { win: win })
+          + h2hAvatarHtml(side.name, side.avatar)
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
           + "</div></div>"
@@ -7742,9 +7739,9 @@
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
         + chipLensHtml()
-        + sideHtml(left, false, leftWin)
+        + sideHtml(left, false)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin)
+        + sideHtml(right, true)
         + leftSumHtml
         + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
         + rightSumHtml

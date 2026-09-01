@@ -1542,7 +1542,6 @@ const html = `<!DOCTYPE html>
     }
     .h2h-chip.is-trade .h2h-top { align-items: center; gap: 8px; }
     .h2h-chip.is-trade .h2h-side.is-right .h2h-top { flex-direction: row; }
-    .h2h-chip.is-trade .h2h-side.is-right .h2h-medal { left: -2px; right: auto; }
     .h2h-chip.is-trade .h2h-av-wrap,
     .h2h-chip.is-trade .h2h-av,
     .h2h-chip.is-trade .h2h-av > img {
@@ -1882,7 +1881,7 @@ const html = `<!DOCTYPE html>
     .chip-lens.is-inline {
       position: static; margin-left: auto; flex: 0 0 auto; align-self: flex-start;
     }
-    /* Reserve a clear corner so the clock never covers seat names / medals. */
+    /* Reserve a clear corner so the clock never covers seat names. */
     .h2h-chip.is-trade { position: relative; padding-top: 22px; padding-right: 30px; }
     .h2h-chip.is-trade > .chip-lens { top: 6px; right: 6px; }
     button.chip-lens-btn {
@@ -7419,7 +7418,7 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    /** Circular seat avatar from Sleeper/flair; optional gold medal for the winning side. */
+    /** Circular seat avatar from Sleeper/flair; optional gold medal on weekly matchup chips. */
     function h2hAvatarHtml(name, avatarUrl, opts) {
       const win = opts && opts.win;
       const who = String(name || "");
@@ -7608,7 +7607,7 @@ const html = `<!DOCTYPE html>
         const cls = right ? "h2h-side is-right" : "h2h-side is-left";
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(name, null, { win: false })
+          + h2hAvatarHtml(name, null)
           + '<div class="h2h-id"><div class="h2h-name">' + seatLabel(name) + "</div></div></div>"
           + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
       };
@@ -7706,9 +7705,7 @@ const html = `<!DOCTYPE html>
       const left = sides[0] || { name: latest.name, legs: [] };
       const right = sides[1] || { name: latest.other, legs: [] };
       const lean = latestTradeLean(latest);
-      const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
-      const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
-      // Prefer VA-aware bag totals (same source as win medals). Legs-only is the pre-bag fallback.
+      // Prefer VA-aware bag totals. Legs-only is the pre-bag fallback.
       const leftSum = lean.leftTotal != null ? lean.leftTotal : latestTradeLegsSum(left.legs);
       const rightSum = lean.rightTotal != null ? lean.rightTotal : latestTradeLegsSum(right.legs);
       let leftTone = "";
@@ -7720,7 +7717,7 @@ const html = `<!DOCTYPE html>
         else if (l < r) { leftTone = "low"; rightTone = "high"; }
         else { leftTone = "even"; rightTone = "even"; }
       }
-      const sideHtml = (side, rightAlign, win) => {
+      const sideHtml = (side, rightAlign) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const vaRow = latestTradeVaHtml(side.value_adjust);
@@ -7729,7 +7726,7 @@ const html = `<!DOCTYPE html>
         // leg counts cannot stagger the = lines.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(side.name, side.avatar, { win: win })
+          + h2hAvatarHtml(side.name, side.avatar)
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
           + "</div></div>"
@@ -7747,9 +7744,9 @@ const html = `<!DOCTYPE html>
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
         + chipLensHtml()
-        + sideHtml(left, false, leftWin)
+        + sideHtml(left, false)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin)
+        + sideHtml(right, true)
         + leftSumHtml
         + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
         + rightSumHtml
@@ -10245,6 +10242,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
     const card = inline.slice(cardAt, cardStop < 0 ? cardAt + 1200 : cardStop);
     if (card.includes("h2h-verdict") || card.includes("WINNER") || card.includes("LOSER")) {
       throw new Error("Latest trade chip must not show book WINNER/LOSER under each seat name");
+    }
+    if (card.includes("win: win") || card.includes("win: leftWin") || card.includes("win: rightWin")
+      || card.includes('win: true')) {
+      throw new Error("Trade chips must not show winner medals on avatars");
     }
     if (card.includes("tradeVoteBtnHtml(") || card.includes("h2h-vote-btn") || card.includes("is-vote-row")) {
       throw new Error("Compact H2H trade chips must not mount a Vote button — vote on the expanded trade screen");

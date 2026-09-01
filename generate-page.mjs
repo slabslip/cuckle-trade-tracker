@@ -2134,7 +2134,7 @@ const html = `<!DOCTYPE html>
           + ' aria-label="Clear Anyone filter">Anyone'
           + '<span class="x" aria-hidden="true">×</span></button>');
       } else if (pickFilterOwner && pickFilterOwnerMode === "out") {
-        const lab = pickFilterOwner + "'s picks out";
+        const lab = "who has " + pickFilterOwner + "'s picks";
         chips.push('<button type="button" class="pick-intel-sum" data-pick-clear-owner="1"'
           + ' aria-label="Clear ' + esc(lab) + ' filter">'
           + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
@@ -2198,16 +2198,14 @@ const html = `<!DOCTYPE html>
       const modeRow = teamPending
         ? ('<div class="pick-intel-step-modes" role="group" aria-label="Team pick search mode">'
           + '<button type="button" class="pick-intel-step-mode" data-pick-owner-mode="out"'
-          + ' aria-label="' + esc(pickFilterOwner + "'s picks out") + '">'
-          + esc("their picks out") + "</button>"
+          + ' aria-label="who has ' + esc(pickFilterOwner) + "'s picks" + '">'
+          + esc("who has their pick(s)") + "</button>"
           + '<button type="button" class="pick-intel-step-mode" data-pick-owner-mode="held"'
           + ' aria-label="picks ' + esc(pickFilterOwner) + ' holds">'
           + esc("picks they hold") + "</button>"
           + "</div>")
         : "";
-      const teamHint = teamPending
-        ? "Their picks out = who has their picks. Picks they hold = what they still own."
-        : "Choose a team, or Anyone to finish.";
+      const teamHint = teamPending ? "" : "Choose a team, or Anyone to finish.";
       return '<div class="pick-intel-step" role="group" aria-label="Filter by team">'
         + '<label class="pick-intel-step-lab" for="pick-held-by">Team</label>'
         + '<select id="pick-held-by" data-pick-owner="1" aria-label="Choose a team to filter picks">'
@@ -2218,7 +2216,7 @@ const html = `<!DOCTYPE html>
           + (pickFilterOwner === name ? " selected" : "") + ">" + esc(name) + "</option>").join("")
         + "</select>"
         + modeRow
-        + '<p class="pick-intel-step-hint">' + esc(teamHint) + "</p>"
+        + (teamHint ? '<p class="pick-intel-step-hint">' + esc(teamHint) + "</p>" : "")
         + "</div>";
     }
 
@@ -2370,7 +2368,7 @@ const html = `<!DOCTYPE html>
             + " " + seat + " still holds";
         } else if (pickFilterOwner && pickFilterOwnerMode === "out") {
           hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
-            + " that started as " + pickFilterOwner + "'s and now sit elsewhere";
+            + " — who has " + pickFilterOwner + "'s picks";
         } else if (pickFilterOwner && pickFilterOwnerMode === "held") {
           hint = rows.length + " pick" + (rows.length === 1 ? "" : "s")
             + " " + pickFilterOwner + " still holds";
@@ -9417,8 +9415,14 @@ if (!inline.includes('aria-label="search for picks"')
   || inline.includes(">Filter picks<") || inline.includes(">My picks out<")
   || inline.includes(">Mine held<")
   || inline.includes('aria-label="Clear my picks out"')
-  || inline.includes('aria-label="Clear mine held"')) {
+  || inline.includes('aria-label="Clear mine held"')
+  || inline.includes(">their picks out<") || inline.includes("'s picks out")) {
   throw new Error("Draft Data bar chips must use the equal-chip copy (search / who has mine / whose I hold)");
+}
+if (!inline.includes('esc("who has their pick(s)")')
+  || !inline.includes('aria-label="who has ')
+  || !inline.includes('"who has " + pickFilterOwner + "\'s picks"')) {
+  throw new Error("Draft Data team out-mode must use who-has-their-picks copy");
 }
 if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
   throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");

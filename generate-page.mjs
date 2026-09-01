@@ -10680,6 +10680,11 @@ if (!inline.includes("pickLeadersStack(leaders, { rounds:")
   if (homeTeaser.includes("data-pick-filter-open") || homeTeaser.includes("data-pick-mine=\"")) {
     throw new Error("pickIntelHome chips must navigate via data-draft-data-open, not inline pick filters");
   }
+  // Chip order: Search · whose picks do i have · who has my picks
+  if (homeTeaser.indexOf('data-draft-data-open="held"') > homeTeaser.indexOf('data-draft-data-open="mine"')
+    || homeTeaser.indexOf("whose picks do i have") > homeTeaser.indexOf("who has my picks")) {
+    throw new Error("Draft Data home chips must order held (whose) before mine (who has)");
+  }
 }
 
 {

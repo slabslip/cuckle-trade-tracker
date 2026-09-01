@@ -957,11 +957,16 @@ const html = `<!DOCTYPE html>
       display: flex; flex-direction: column; gap: 5px; width: 100%;
       padding-top: 4px; border-top: 1px solid #3a3428;
     }
-    .h2h-side.is-right .h2h-assets { align-items: flex-end; }
+    /* Same + player/pick · value order on both sides — do not mirror the right bag. */
+    .h2h-chip.is-trade .h2h-side.is-right .h2h-assets {
+      align-items: stretch; text-align: left;
+    }
     .lh-trade-asset {
       display: flex; align-items: baseline; gap: 6px; min-width: 0; max-width: 100%;
     }
-    .h2h-side.is-right .lh-trade-asset { flex-direction: row-reverse; text-align: right; }
+    .h2h-chip.is-trade .h2h-side.is-right .lh-trade-asset {
+      flex-direction: row; text-align: left;
+    }
     .lh-trade-plus {
       flex: 0 0 auto;
       color: #e0b44c; font-size: 0.75rem; font-weight: 700; line-height: 1.2;
@@ -1452,7 +1457,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeVoteMarks20260901013245";
+    const DATA_V = "tradeAssetsLeft20260901013500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

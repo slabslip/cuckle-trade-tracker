@@ -393,7 +393,7 @@ const html = `<!DOCTYPE html>
     .hop > b { flex: 0 0 auto; white-space: nowrap; }
     .hop b { color: var(--text); font-variant-numeric: tabular-nums; }
     .leg b { color: var(--text); font-variant-numeric: tabular-nums; }
-    .leg.va { color: var(--text); border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
+    .leg.va { color: #d4c07a; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-weight: 650; }
     .leg.va b { color: #d4c07a; }
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
@@ -1648,7 +1648,7 @@ const html = `<!DOCTYPE html>
       margin-top: 2px; padding-top: 4px;
       border-top: 1px solid var(--line);
     }
-    .lh-trade-va .lh-trade-lab b { font-weight: 650; color: var(--text); }
+    .lh-trade-va .lh-trade-lab b { font-weight: 650; color: #d4c07a; }
     .lh-trade-va .lh-trade-num { color: #d4c07a; }
     /* Value lean mid + per-side voter flairs under left | VS | right. */
     .h2h-trade-lean {
@@ -2194,7 +2194,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "t0";
-    const DATA_V = "chipLensAgeDefaults20260901181500";
+    const DATA_V = "chipLensVaLabelGold20260901180100";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

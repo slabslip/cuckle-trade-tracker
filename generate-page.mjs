@@ -2006,7 +2006,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeFeedDateOnly20260901135000";
+    const DATA_V = "voteNoCaption20260901140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5754,8 +5754,6 @@ const html = `<!DOCTYPE html>
           + "</div>";
       }
       const v = readVotes(r.transaction_id);
-      const bar = '<div class="auth-bar">Voting as <b>' + seatLabel(authSeatName() || authSeatId()) + "</b>"
-        + ' <button type="button" class="linkish" data-auth-signout="1">Sign out</button></div>';
       const opts = seats.map((s) => {
         const on = v.choice === s.uid;
         const n = v.tally[s.uid] || 0;
@@ -5767,23 +5765,9 @@ const html = `<!DOCTYPE html>
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
           + "<b>" + seatLabel(s.name, { link: false }) + "</b><span>" + line + "</span></button>";
       }).join("");
-      // Only ever claims a league tally we actually received. A live tally counts votes as they
-      // land; the committed book counts them as of the last rebuild; with neither, this is one
-      // device's opinion and says so.
-      const note = v.league
-        ? "League tally as of " + esc(v.asOf || "the last rebuild") + "; "
-          + (v.source === "live"
-            ? (v.pending
-              ? "your vote is saved here and still on its way to it."
-              : "votes join it as they land.")
-            : "your vote joins it on the next rebuild.")
-        : voteLiveState === "fail"
-          ? "Your vote, on this device only — the league tally is out of reach right now."
-          : "Your vote, on this device only — the league tally lights up once the vote store answers.";
       return head
-        + bar
         + '<div class="vote-opts">' + opts + "</div>"
-        + '<p class="caption">' + note + "</p></div>";
+        + "</div>";
     }
 
     // Recency, not a clock: the card is named for the newest date on the tape, so there is no
@@ -9939,7 +9923,17 @@ for (const need of [
     || fn.includes("Review this trade and browse")) {
     throw new Error("renderTradeScreen title must be League trade data (no A vs B header / review caption)");
   }
-  for (const ban of [
+  
+{
+  const at = inline.indexOf("function voteBlock(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2000 : stop);
+  if (fn.includes("League tally as of") || fn.includes('<p class="caption">')
+    || fn.includes("auth-bar") || fn.includes("Voting as")) {
+    throw new Error("voteBlock must not ship tally caption or Voting as auth-bar");
+  }
+}
+for (const ban of [
     "Pick a set to open it",
     "Each title year. Previous season",
     "Each title year. Prior season",
@@ -9951,6 +9945,10 @@ for (const need of [
     "Opinion only: votes never enter",
     "CuckleChunckle: create with Sleeper",
     "Review this trade and browse",
+    "League tally as of",
+    "votes join it as they land",
+    "Voting as",
+    "auth-bar",
   ]) {
     if (inline.includes(ban)) {
       throw new Error("instructional caption must not ship: " + ban);

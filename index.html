@@ -703,7 +703,7 @@
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
     /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
     body.has-news-pullup {
-      padding-bottom: calc(var(--news-pullup-peek, 112px) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--news-pullup-peek, 148px) + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
       overflow: hidden;
@@ -712,7 +712,7 @@
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 112px;
+      --news-pullup-peek: 148px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -765,16 +765,20 @@
     .news-pullup-count {
       flex: 0 0 auto; font-size: 0.75rem; color: var(--dim);
     }
-    button.news-pullup-peek {
+    .news-pullup-peek-block {
       flex: 0 0 auto;
-      appearance: none; font: inherit; color: inherit; text-align: left;
-      background: transparent; border: 0; margin: 0;
-      padding: 4px 16px 14px; cursor: pointer;
-      touch-action: none; user-select: none;
+      position: relative;
+      padding: 4px 16px 14px;
       min-height: 0;
     }
-    button.news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.news-pullup-peek[hidden] { display: none; }
+    .news-pullup-peek-block[hidden] { display: none; }
+    .news-pullup-peek {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; margin: 0; padding: 0;
+      cursor: pointer; touch-action: none; user-select: none;
+      width: 100%; display: block;
+    }
+    .news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-pullup-panel {
       flex: 1 1 auto; min-height: 0;
       overflow-y: auto; overscroll-behavior: contain;
@@ -791,27 +795,55 @@
     .news-pullup-empty {
       padding: 12px 0; color: var(--muted); font-size: 0.875rem; line-height: 1.4;
     }
-    /* Peek / row stack: seat tag → summary → source underneath. */
+    /* Peek / row stack: seat tag + source bubble → summary → account + time (+ link). */
+    .news-hero-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; margin: 0 0 6px;
+    }
     .news-hero-who {
-      display: block; font-size: 0.8125rem; font-weight: 650; line-height: 1.3;
-      color: #e0b44c; margin: 0 0 4px;
+      flex: 1 1 auto; min-width: 0;
+      font-size: 0.8125rem; font-weight: 650; line-height: 1.3;
+      color: #e0b44c; margin: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .news-hero-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
     .news-hero-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
+    .news-hero-src-bubble {
+      flex: 0 0 auto; max-width: 46%;
+      font-size: 0.625rem; font-weight: 650; line-height: 1.2;
+      color: #d4c48a; background: rgba(107, 90, 46, 0.32);
+      border: 1px solid rgba(107, 90, 46, 0.55);
+      border-radius: 999px; padding: 3px 8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .news-pullup-line {
-      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
-      overflow: hidden; color: var(--text); font-size: 0.8125rem; line-height: 1.35;
-      margin: 0 0 6px;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+      overflow: hidden; color: var(--text); font-size: 0.8125rem; line-height: 1.38;
+      margin: 0 0 8px;
     }
     .news-pullup.is-open .news-pullup-line {
       -webkit-line-clamp: unset; display: block;
     }
-    .news-hero-src {
-      display: block; font-size: 0.6875rem; font-weight: 550; line-height: 1.3;
-      color: var(--dim); margin: 0;
+    .news-hero-foot {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: 4px 10px; min-height: 1.1rem;
+      font-size: 0.6875rem; line-height: 1.3; color: var(--dim);
+    }
+    .news-pullup-peek-block .news-hero-foot { padding-right: 4.75rem; }
+    .news-hero-handle {
+      font-weight: 600; color: #a8a8b0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .news-hero-when { color: var(--dim); white-space: nowrap; }
+    a.news-hero-link {
+      font-size: 0.6875rem; font-weight: 650; line-height: 1.3;
+      color: #e0b44c; text-decoration: none; white-space: nowrap;
+    }
+    a.news-hero-link:hover, a.news-hero-link:focus-visible { text-decoration: underline; }
+    .news-pullup-peek-block > a.news-hero-link {
+      position: absolute; right: 16px; bottom: 14px;
+    }
+    .news-pullup-row a.news-hero-link { margin-left: auto; }
     /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
     .lh-actions {
       margin: 18px 0 22px;
@@ -3602,10 +3634,11 @@
           + '<div class="news-pullup-grab" aria-hidden="true"><span class="news-pullup-knob"></span></div>'
           + '<div class="news-pullup-title-row">'
           + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div></div></div>'
-          + '<button type="button" class="news-pullup-peek" data-news-pullup-peek'
+          + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
+          + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
           + ' aria-label="Open the News Feed">'
           + '<div class="news-pullup-line">The feed could not be shown. Open for details.</div>'
-          + "</button>"
+          + "</div></div>"
           + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
           + '<div class="news-pullup-empty">The feed could not be shown. Open for details.</div>'
           + "</div></div></aside>";
@@ -5725,11 +5758,11 @@
       root.classList.toggle("is-open", newsPullupOpen);
       root.setAttribute("aria-expanded", newsPullupOpen ? "true" : "false");
       const panel = root.querySelector("[data-news-pullup-panel]");
-      const peek = root.querySelector("[data-news-pullup-peek]");
+      const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
       const sheet = root.querySelector("[data-news-pullup-sheet]");
       if (panel) panel.hidden = !newsPullupOpen;
-      if (peek) peek.hidden = newsPullupOpen;
+      if (peekBlock) peekBlock.hidden = newsPullupOpen;
       if (scrim) scrim.hidden = !newsPullupOpen;
       document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
       if (sheet) {
@@ -5751,6 +5784,7 @@
       const sheet = root.querySelector("[data-news-pullup-sheet]");
       const top = root.querySelector("[data-news-pullup-top]");
       const peek = root.querySelector("[data-news-pullup-peek]");
+      const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
       if (!sheet) return;
 
@@ -5764,12 +5798,13 @@
       const peekH = () => {
         const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
         const n = parseFloat(raw);
-        return Number.isFinite(n) ? n : 112;
+        return Number.isFinite(n) ? n : 148;
       };
       const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
 
       const onPointerDown = (e) => {
         if (e.button != null && e.button !== 0) return;
+        if (e.target.closest("a.news-hero-link")) return;
         // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
         applyBrand();
@@ -5818,6 +5853,7 @@
         root.classList.remove("is-dragging");
         sheet.style.transform = "";
         if (wasTap) {
+          if (e && e.target && e.target.closest("a.news-hero-link")) return;
           if (newsPullupOpen) setNewsPullupOpen(false);
           else setNewsPullupOpen(true);
           return;
@@ -5834,13 +5870,20 @@
 
       const onResize = () => applyBrand();
 
-      const targets = [top, peek].filter(Boolean);
+      const onPeekKey = (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        setNewsPullupOpen(!newsPullupOpen);
+      };
+
+      const targets = [top, peek, peekBlock].filter(Boolean);
       for (const el of targets) {
         el.addEventListener("pointerdown", onPointerDown);
         el.addEventListener("pointermove", onPointerMove);
         el.addEventListener("pointerup", endDrag);
         el.addEventListener("pointercancel", endDrag);
       }
+      if (peek) peek.addEventListener("keydown", onPeekKey);
       if (scrim) scrim.addEventListener("click", onScrimClick);
       window.addEventListener("resize", onResize);
 
@@ -5851,6 +5894,7 @@
           el.removeEventListener("pointerup", endDrag);
           el.removeEventListener("pointercancel", endDrag);
         }
+        if (peek) peek.removeEventListener("keydown", onPeekKey);
         if (scrim) scrim.removeEventListener("click", onScrimClick);
         window.removeEventListener("resize", onResize);
         root.classList.remove("is-dragging", "is-open");
@@ -5858,19 +5902,28 @@
       };
     }
 
+    function newsSourceBubble(it) {
+      const cat = NEWS_CATS[it.category] || "News";
+      if (it.category === "tweet") return cat;
+      const label = String(it.source_label || "").trim();
+      if (label && label.charAt(0) !== "@") return label;
+      return cat;
+    }
+
     function newsHeroLine(it) {
-      if (!it) return { cat: "News", line: "Nothing shared yet.", who: "" };
-      let cat = NEWS_CATS[it.category] || "News";
-      // Prefer tweet_handle; fall back to source_label when it is already an @handle.
+      if (!it) {
+        return {
+          source: "News", line: "Nothing shared yet.", who: "",
+          handle: "", when: "", postUrl: "",
+        };
+      }
+      const source = newsSourceBubble(it);
       let handle = String(it.tweet_handle || "").replace(/^@/, "").trim();
       if (!handle) {
         const label = String(it.source_label || "").trim();
         if (label.charAt(0) === "@") handle = label.slice(1).trim();
       }
-      if (handle && /^[A-Za-z0-9_]{1,15}$/.test(handle)) {
-        cat = cat + " · @" + handle;
-      }
-      // Fantasy seats that roster the player this item is about (same as full News Feed tags).
+      const handleLab = (handle && /^[A-Za-z0-9_]{1,15}$/.test(handle)) ? ("@" + handle) : "";
       const whoNames = (Array.isArray(it.managers) && it.managers.length)
         ? it.managers.filter(Boolean)
         : (it.manager ? [it.manager] : []);
@@ -5878,13 +5931,45 @@
         ? whoNames.map((n) => seatLabel(n)).join(" · ")
         : "";
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
-      return { cat: cat, line: line, who: who };
+      const when = ago(it.published);
+      const url = String(it.source_url || "");
+      const postUrl = /^https?:\/\//i.test(url) ? url : "";
+      return { source: source, line: line, who: who, handle: handleLab, when: when, postUrl: postUrl };
+    }
+
+    function newsPullupLinkHtml(bit) {
+      if (!bit.postUrl) return "";
+      return '<a class="news-hero-link" href="' + esc(bit.postUrl)
+        + '" target="_blank" rel="noopener noreferrer">See post</a>';
+    }
+
+    function newsPullupItemInnerHtml(bit) {
+      const head = '<div class="news-hero-head">'
+        + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
+        + (bit.source ? '<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>" : "")
+        + "</div>";
+      const summary = '<div class="news-pullup-line">' + esc(bit.line) + "</div>";
+      const footBits = [];
+      if (bit.handle) footBits.push('<span class="news-hero-handle">' + esc(bit.handle) + "</span>");
+      if (bit.when) footBits.push('<span class="news-hero-when">' + esc(bit.when) + "</span>");
+      const foot = footBits.length
+        ? '<div class="news-hero-foot">' + footBits.join("") + "</div>"
+        : "";
+      return head + summary + foot;
     }
 
     function newsPullupItemHtml(bit) {
-      return (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
-        + '<div class="news-pullup-line">' + esc(bit.line) + "</div>"
-        + '<div class="news-hero-src">' + esc(bit.cat) + "</div>";
+      return newsPullupItemInnerHtml(bit) + newsPullupLinkHtml(bit);
+    }
+
+    function newsPullupPeekHtml(bit) {
+      return '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
+        + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
+        + ' aria-label="Open the News Feed">'
+        + newsPullupItemInnerHtml(bit)
+        + "</div>"
+        + newsPullupLinkHtml(bit)
+        + "</div>";
     }
 
     /**
@@ -5904,7 +5989,7 @@
       }
       const latestBit = items.length
         ? newsHeroLine(items[0])
-        : { cat: "News", line: emptyLine, who: "" };
+        : { source: "News", line: emptyLine, who: "", handle: "", when: "", postUrl: "" };
       const rows = items.length
         ? items.map((it) => {
             const bit = newsHeroLine(it);
@@ -5926,10 +6011,7 @@
         + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
         + '<span class="news-pullup-count" data-news-pullup-count">' + esc(countLab) + "</span>"
         + "</div></div>"
-        + '<button type="button" class="news-pullup-peek" data-news-pullup-peek'
-        + ' aria-label="Open the News Feed">'
-        + newsPullupItemHtml(latestBit)
-        + "</button>"
+        + newsPullupPeekHtml(latestBit)
         + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
         + rows
         + "</div></div></aside>";

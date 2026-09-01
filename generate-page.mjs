@@ -900,6 +900,40 @@ const html = `<!DOCTYPE html>
     .pick-intel-hint {
       margin: 0 0 8px; color: var(--dim); font-size: 0.8125rem; line-height: 1.4;
     }
+    /* Idle quick-view: who holds the most still-available 1sts / 2nds / picks overall. */
+    .pick-intel-board {
+      display: grid; gap: 8px;
+      margin: 0 0 10px; padding: 10px 12px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    }
+    .pick-intel-board-h {
+      margin: 0;
+      color: var(--dim); font-size: 0.6875rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .pick-intel-board-row {
+      display: grid; grid-template-columns: 3.25rem minmax(0, 1fr);
+      gap: 8px; align-items: baseline;
+    }
+    .pick-intel-board-lab {
+      color: var(--muted); font-size: 0.8125rem; font-weight: 650;
+      white-space: nowrap;
+    }
+    button.pick-intel-board-lab {
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.8125rem;
+      color: var(--muted); background: transparent; border: 0; padding: 0; margin: 0;
+      cursor: pointer; text-align: left; touch-action: manipulation;
+    }
+    button.pick-intel-board-lab:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
+    }
+    .pick-intel-board-leaders {
+      color: var(--dim); font-size: 0.8125rem; line-height: 1.45;
+      min-width: 0; overflow-wrap: anywhere;
+    }
+    .pick-intel-board-leaders .pil-n {
+      color: var(--text); font-weight: 650;
+    }
     .pick-intel-list { display: grid; gap: 6px; }
     button.pick-intel-row {
       appearance: none; font: inherit; color: inherit; text-align: left;
@@ -1664,7 +1698,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradesFeed20260901033000";
+    const DATA_V = "pickBoardLeaders20260901062000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8841,13 +8875,17 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || !inline.includes('data-pick-round') || !inline.includes('data-pick-year')
   || !inline.includes('data-pick-owner="1"') || !inline.includes("function filteredStillPicks(")
   || !inline.includes("function clearPickFilters(") || !inline.includes('data-pick-mine-held="1"')
-  || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")) {
-  throw new Error("Pick board must ship filter chips (round/year/owner/mine) without a search input");
+  || !inline.includes("function pickLeaders(") || !inline.includes("function pickIntelBoard(")
+  || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
+  || inline.includes("function firstRoundLeaders(")
+  || inline.includes("Search a round") || inline.includes("Most 1sts right now:")) {
+  throw new Error("Pick board must ship filter chips + leaderboard without a search input");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
-  || !html.includes(".pick-intel-chips") || html.includes(".pick-intel-tools input[type=\"search\"]")
+  || !html.includes(".pick-intel-chips") || !html.includes(".pick-intel-board")
+  || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"')) {
-  throw new Error("Pick board filter styles must ship in the page shell (no pick search input)");
+  throw new Error("Pick board filter + leaderboard styles must ship in the page shell (no pick search input)");
 }
 if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
   throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");

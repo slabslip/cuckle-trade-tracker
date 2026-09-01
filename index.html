@@ -1424,15 +1424,33 @@
       align-items: stretch; text-align: left;
     }
     /* Asset rows + sum share one grid so book values stack like an arithmetic column. */
+    .lh-trade-asset-wrap {
+      display: flex; flex-direction: column; gap: 0;
+      min-width: 0; max-width: 100%;
+    }
     .lh-trade-asset,
+    button.lh-trade-asset,
     .lh-trade-sum {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
       column-gap: 6px; align-items: baseline;
       min-width: 0; max-width: 100%;
     }
-    .h2h-chip.is-trade .h2h-side.is-right .lh-trade-asset {
+    button.lh-trade-asset {
+      appearance: none; font: inherit; color: inherit; text-align: inherit;
+      background: none; border: 0; padding: 0; margin: 0;
+      width: 100%; cursor: pointer; touch-action: manipulation;
+    }
+    button.lh-trade-asset.on .lh-trade-lab b { text-decoration: underline; text-underline-offset: 2px; }
+    button.lh-trade-asset:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
+    }
+    .h2h-chip.is-trade .h2h-side.is-right .lh-trade-asset,
+    .h2h-chip.is-trade .h2h-side.is-right button.lh-trade-asset {
       text-align: left;
+    }
+    .h2h-assets .hops {
+      margin: 2px 0 8px 14px;
     }
     .lh-trade-plus {
       color: #e0b44c; font-size: 0.75rem; font-weight: 700; line-height: 1.2;
@@ -1985,7 +2003,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leanVoteScoreboard20260901124500";
+    const DATA_V = "tradeAssetPaths20260901130000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2121,6 +2139,33 @@
           return '<div class="hop"><span>' + esc(h.date) + " · " + esc(h.from || "?") + " → " + esc(h.to) + exit
             + "</span><b>" + fmt(h.t0) + " → " + fmt(h.out) + "</b></div>";
         }).join("") + "</div>";
+    }
+
+    /**
+     * Pick tape key for a trade leg. Picks use asset_key; players reverse-match picks.became
+     * so a received player can open the same hop path that draft/trade history already tracks.
+     */
+    function pickKeyForLeg(leg) {
+      if (!leg) return null;
+      if (leg.kind === "pick" && leg.asset_key) return String(leg.asset_key);
+      if (leg.kind !== "player" || !picks) return null;
+      const label = String(leg.label || "").trim();
+      if (!label) return null;
+      const short = String(shortPlayerName(label) || "").trim();
+      const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+      const nLabel = norm(label);
+      const nShort = norm(short);
+      for (const key of Object.keys(picks)) {
+        const became = picks[key] && picks[key].became;
+        if (!became) continue;
+        const nBecame = norm(became);
+        if (!nBecame) continue;
+        if (nBecame === nLabel || (nShort && nBecame === nShort)
+          || (nShort && nBecame.endsWith(nShort)) || (nLabel && nBecame.endsWith(nLabel))) {
+          return key;
+        }
+      }
+      return null;
     }
 
     /**
@@ -3967,11 +4012,8 @@
         // "the tape" is trade_boards.sides, and it carries only complete two-team trades: the
         // league's two three-team deals have no row there, so this is 288 of 290. Saying "the
         // tape" rather than "the league" is the difference between a claim and a fact.
-        + '<p class="caption">Every trade on the league tape as H2H cards, newest first. Tap one'
-        + " to review it and vote on who actually won. A gold outline is a trade you have voted on.</p>"
         + voteToastHtml()
         + tapeFilterHtml(ctx)
-        + '<div class="caption">' + esc(livedHint(list.length, lived.length, "trade")) + "</div>"
         + empty
         + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
         + more;
@@ -4062,12 +4104,9 @@
       const feedBody = tradeFeedSelectedHtml(selected)
         + cards;
       return backChip("Back")
-        + '<h2 class="screen-h" tabindex="-1">' + seatLabel(selected.name) + " vs " + seatLabel(selected.other) + "</h2>"
-        + '<p class="caption">Review this trade and browse the league tape below. Tap another card'
-        + " to jump to it. A gold outline is a trade you have voted on.</p>"
+        + '<h2 class="screen-h" tabindex="-1">League trade data</h2>'
         + voteToastHtml()
         + tapeFilterHtml(ctx)
-        + '<div class="caption">' + esc(livedHint(rest.length + 1, lived.length, "trade")) + "</div>"
         + (list.length ? "" : empty)
         + '<div class="trades-feed">' + feedBody + "</div>"
         + more;
@@ -6283,36 +6322,48 @@
         : '<span class="lh-trade-num lh-trade-val">—</span>';
       // Text-first asset line: gold "+" + label + book number. Never paint Mid / as-year
       // notes on the Latest trade lab (every pick is mid until true year values land).
+      let rowInner = "";
       if (leg.kind === "pick") {
         const lab = formatPickLabels(leg.label);
-        // Owner only — do not join parts.note ("Mid" / "as 2028").
-        const sub = lab.secondary || "";
-        return '<div class="lh-trade-asset">'
-          + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
+        // Owner only — do not join parts.note ("Mid" / "as 2028"). Prefer "became …" when
+        // the pick already resolved so the path is visible before expand.
+        const tape = leg.asset_key && picks ? picks[leg.asset_key] : null;
+        const became = tape && tape.became ? String(tape.became) : "";
+        const sub = became ? ("became " + became) : (lab.secondary || "");
+        rowInner = '<span class="lh-trade-plus" aria-hidden="true">+</span>'
           + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
           + (sub ? "<span>" + esc(sub) + "</span>" : "")
           + "</div>"
-          + valHtml
-          + "</div>";
+          + valHtml;
+      } else {
+        const pid = String(leg.asset_key || "").replace(/^player:/, "");
+        const meta = pid && ktcBySleeper ? ktcBySleeper[pid] : null;
+        const primary = shortPlayerName(leg.label);
+        const posTeam = meta && meta.pos
+          ? meta.pos + (meta.team ? " · " + meta.team : "")
+          : "";
+        const posSlug = meta && meta.pos ? newsPosSlug(meta.pos) : "";
+        const nameCls = posSlug ? ' class="pos-' + posSlug + '"' : "";
+        rowInner = '<span class="lh-trade-plus" aria-hidden="true">+</span>'
+          + '<div class="lh-trade-lab"><b' + nameCls + '>' + esc(primary || leg.label || "") + "</b>"
+          + (posTeam ? "<span>" + esc(posTeam) + "</span>" : "")
+          + "</div>"
+          + valHtml;
       }
-      const pid = String(leg.asset_key || "").replace(/^player:/, "");
-      const meta = pid && ktcBySleeper ? ktcBySleeper[pid] : null;
-      const primary = shortPlayerName(leg.label);
-      const posTeam = meta && meta.pos
-        ? meta.pos + (meta.team ? " · " + meta.team : "")
-        : "";
-      const posSlug = meta && meta.pos ? newsPosSlug(meta.pos) : "";
-      const nameCls = posSlug ? ' class="pos-' + posSlug + '"' : "";
-      return '<div class="lh-trade-asset">'
-        + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
-        + '<div class="lh-trade-lab"><b' + nameCls + '>' + esc(primary || leg.label || "") + "</b>"
-        + (posTeam ? "<span>" + esc(posTeam) + "</span>" : "")
-        + "</div>"
-        + valHtml
+      // Expandable hop path (pick tape, or the pick that became this player).
+      const pickKey = pickKeyForLeg(leg);
+      if (!pickKey) {
+        return '<div class="lh-trade-asset">' + rowInner + "</div>";
+      }
+      const open = openPick === pickKey;
+      return '<div class="lh-trade-asset-wrap">'
+        + '<button type="button" class="lh-trade-asset' + (open ? " on" : "") + '"'
+        + ' data-pick="' + esc(pickKey) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+        + rowInner + "</button>"
+        + (open ? hopHtml(pickKey) : "")
         + "</div>";
     }
 
-    /** Sum of priced leg book values for the Latest trade arithmetic total row. */
     function latestTradeLegsSum(legs) {
       let n = 0;
       let any = false;

@@ -708,7 +708,7 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
     /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
     body.has-news-pullup {
-      padding-bottom: calc(var(--news-pullup-peek, 168px) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--news-pullup-peek, 128px) + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
       overflow: hidden;

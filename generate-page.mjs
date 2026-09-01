@@ -1028,13 +1028,6 @@ const html = `<!DOCTYPE html>
       border-radius: 2px;
     }
     .h2h-lean-glyph { font-size: 0.75rem; line-height: 1; }
-    .h2h-lean-init {
-      display: inline-grid; place-items: center;
-      width: 14px; height: 14px; border-radius: 2px;
-      background: #2a2418; border: 1px solid #3a3428;
-      color: var(--dim); font-size: 0.5rem; font-weight: 700;
-      letter-spacing: -0.02em;
-    }
     .h2h-lean-n {
       font-variant-numeric: tabular-nums; font-weight: 650;
       color: var(--text); margin-inline: 1px;
@@ -1470,7 +1463,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeNameCenter20260901014400";
+    const DATA_V = "voteFlairOnly20260901014630";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4338,14 +4331,19 @@ const html = `<!DOCTYPE html>
 
     /** Display name for a seat user_id (voter or trade side). */
     function seatNameForUid(uid) {
-      if (!uid) return "";
-      const m = (members || []).find((x) => x && x.user_id === uid);
-      return (m && m.name) ? String(m.name) : String(uid);
+      if (uid == null || uid === "") return "";
+      const id = String(uid);
+      // Coerce both sides — ballots sometimes ship numeric ids, members.json strings.
+      const m = (members || []).find((x) => x && String(x.user_id) === id);
+      if (m && m.name) return String(m.name);
+      if (SEAT_FLAIR[id]) return id;
+      return id;
     }
 
     /**
-     * Compact seat mark for the lean vote row — flair image/glyph, else initials.
-     * Unlike seatFlairHtml, no leading space (marks sit in a flex gap row).
+     * Compact seat flair for the lean vote row. Only real glyph/img flair — no initials
+     * fallback (raw voter ids were painting hex chips like "1F" / "BB"). Empty string
+     * when the seat has no flair so the row stays blank until a known voter marks it.
      */
     function seatVoteMarkHtml(name) {
       const n = String(name == null ? "" : name);
@@ -4357,8 +4355,7 @@ const html = `<!DOCTYPE html>
         return '<img class="seat-flair h2h-lean-flair" src="' + esc(f.img) + "?" + DATA_V
           + '" width="14" height="14" alt="" decoding="async" />';
       }
-      const initials = n.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
-      return '<span class="h2h-lean-init" aria-hidden="true">' + esc(initials) + "</span>";
+      return "";
     }
 
     /**
@@ -4916,19 +4913,23 @@ const html = `<!DOCTYPE html>
         if (voters.length) {
           const sorted = voters.slice().sort((a, b) =>
             seatNameForUid(a).localeCompare(seatNameForUid(b)));
-          marksInner = sorted.map((vid) => seatVoteMarkHtml(seatNameForUid(vid))).join("")
-            + '<span class="h2h-lean-n">' + n + "</span>";
+          // Only paint seats that have a real flair; skip unknown voters (no hex initials).
+          const flairs = sorted.map((vid) => seatVoteMarkHtml(seatNameForUid(vid))).filter(Boolean);
+          if (flairs.length) {
+            marksInner = flairs.join("")
+              + (n > 0 ? '<span class="h2h-lean-n">' + n + "</span>" : "");
+          } else if (n > 0) {
+            marksInner = '<span class="h2h-lean-n">' + n + "</span>";
+          }
         } else if (n > 0) {
-          // Tallies landed but ballots did not — still show the count under the team.
+          // Tallies landed but ballots did not — count only, no placeholder chips.
           marksInner = '<span class="h2h-lean-n">' + n + "</span>";
-        } else if (!v.votes) {
-          marksInner = '<span class="h2h-lean-empty">—</span>';
-        } else {
-          marksInner = '<span class="h2h-lean-n">0</span>';
         }
+        // No votes yet: leave the marks row blank (no "—" / "0" filler).
         const label = n === 1 ? "1 vote for " + seatNameForUid(uid) : n + " votes for " + seatNameForUid(uid);
         return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"'
-          + ' aria-label="' + esc(label) + '">'
+          + (n > 0 ? ' aria-label="' + esc(label) + '"' : "")
+          + '>'
           + '<div class="h2h-lean-marks">' + marksInner + "</div></div>";
       };
 
@@ -6970,6 +6971,14 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !inline.includes("function voteMarks(") || !inline.includes("h2h-lean-marks")
     || !inline.includes("seatVoteMarkHtml(")) {
     throw new Error("Latest trade chip must surface value lean and per-side vote marks");
+  }
+  {
+    const markAt = inline.indexOf("function seatVoteMarkHtml(");
+    const markStop = inline.indexOf("\n    function ", markAt + 10);
+    const markFn = inline.slice(markAt, markStop < 0 ? markAt + 600 : markStop);
+    if (markFn.includes("h2h-lean-init") || markFn.includes("initials")) {
+      throw new Error("seatVoteMarkHtml must not fall back to initials — only real seat flairs");
+    }
   }
   if (prog.includes('class="lh-lt-vs">vs</span>') || prog.includes("champ-fig") || prog.includes("lh-trade-handle")) {
     throw new Error("Latest trade must not keep the old 3-line vs/delta or stacked-handle chip markup");

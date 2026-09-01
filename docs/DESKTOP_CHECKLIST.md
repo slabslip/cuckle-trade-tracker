@@ -2,10 +2,9 @@
 
 Spec: [`APP_SDD.md`](APP_SDD.md).  
 Repo: **https://github.com/slabslip/cuckle-trade-tracker**  
-Branch: **`cursor/multi-league-app-878c`**  
-PR: **https://github.com/slabslip/cuckle-trade-tracker/pull/44**  
+Branch: **`main`** (live on GitHub Pages)  
 Supabase project URL: **https://gtqyvnkkjiksmmtmzubw.supabase.co**  
-Live site (after merge): **https://slabslip.github.io/cuckle-trade-tracker/**
+Live site: **https://slabslip.github.io/cuckle-trade-tracker/**
 
 The app code is already on the branch. Today you wire Supabase and prove the flow.
 
@@ -33,22 +32,22 @@ cd cuckle-trade-tracker
 If you **already** have the repo:
 
 ```bash
-cd /path/to/cuckle-trade-tracker
+cd ~/path/to/cuckle-trade-tracker   # your actual clone folder — NOT a literal placeholder
 ```
 
 Then always:
 
 ```bash
 git fetch origin
-git checkout cursor/multi-league-app-878c
-git pull origin cursor/multi-league-app-878c
+git checkout main
+git pull origin main
 ```
 
 **Check it worked:**
 
 ```bash
 git branch --show-current
-# must print: cursor/multi-league-app-878c
+# must print: main
 
 ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql db/wave2b-vote-unique.sql db/wave5-invite-plain.sql supabase/functions/join-league/index.ts
 # all five paths must exist
@@ -151,14 +150,18 @@ https://slabslip.github.io/cuckle-trade-tracker/**
 ### 4a. One-time CLI setup (skip if already done)
 
 ```bash
-# install if you do not have it:
-# macOS: brew install supabase/tap/supabase
-supabase --version
+# Install (pick one):
+# macOS:   brew install supabase/tap/supabase
+# Linux:   curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz && mv supabase ~/.local/bin/
+# Any OS:  npx supabase --version   # no global install needed
+
+supabase --version   # or: npx supabase --version
 
 supabase login
 # browser opens → authorize
+# (Cloud Agent / CI: export SUPABASE_ACCESS_TOKEN from https://supabase.com/dashboard/account/tokens)
 
-cd /path/to/cuckle-trade-tracker
+cd ~/path/to/cuckle-trade-tracker   # repo root — where supabase/functions/ lives
 supabase link --project-ref gtqyvnkkjiksmmtmzubw
 # if asked for DB password, use the one from Supabase → Project Settings → Database
 ```
@@ -166,9 +169,10 @@ supabase link --project-ref gtqyvnkkjiksmmtmzubw
 ### 4b. Deploy
 
 ```bash
-cd /path/to/cuckle-trade-tracker
-git checkout cursor/multi-league-app-878c   # still on this branch
-supabase functions deploy join-league
+cd ~/path/to/cuckle-trade-tracker   # repo root
+./scripts/deploy-join-league.sh
+# or manually:
+# supabase functions deploy join-league --project-ref gtqyvnkkjiksmmtmzubw
 ```
 
 **Check it worked:** Supabase dashboard → left sidebar → **Edge Functions** → you should see **`join-league`**.
@@ -184,7 +188,7 @@ You need the **new** `index.html` from this branch (gate / Create league / Redee
 **Where:** Terminal, repo root:
 
 ```bash
-cd /path/to/cuckle-trade-tracker
+cd ~/path/to/cuckle-trade-tracker   # repo root
 python3 -m http.server 8766
 ```
 
@@ -196,12 +200,9 @@ http://localhost:8766
 
 Leave the Terminal running while you test.
 
-### Option B — GitHub Pages (real URL)
+### Option B — GitHub Pages (live URL)
 
-1. Browser → **https://github.com/slabslip/cuckle-trade-tracker/pull/44**
-2. Review → **Merge pull request** → confirm merge into **`main`**
-3. Wait 1–2 minutes for Pages
-4. Open **https://slabslip.github.io/cuckle-trade-tracker/**
+Open **https://slabslip.github.io/cuckle-trade-tracker/** (already deployed from `main`).
 
 (You can dogfood on localhost first, then merge.)
 
@@ -262,15 +263,15 @@ For a **claimed** seat (manager left), use **Reissue for new manager** — that 
 
 ## Done when all of these are true
 
-- [ ] Terminal is on branch `cursor/multi-league-app-878c`
-- [ ] All **six** SQL files ran in Supabase SQL Editor (through `wave5-invite-plain.sql`)
+- [ ] Terminal is on branch `main`
+- [ ] All **seven** SQL files ran in Supabase SQL Editor (through `wave5-invite-plain.sql`)
 - [ ] Confirm email is **OFF**; Site URL set
 - [ ] Edge Functions list shows **`join-league`**
 - [ ] Commissioner claimed a seat and sees the meter
 - [ ] Second account redeemed and voted
 - [ ] Re-create same league does **not** silently remint
 
-Then: merge PR #44 if you used localhost, DM real managers their codes, stop for today.
+Then: DM real managers their codes, stop for today.
 
 ---
 
@@ -278,12 +279,15 @@ Then: merge PR #44 if you used localhost, DM real managers their codes, stop for
 
 | What you see | Where to fix |
 | --- | --- |
+| `supabase: command not found` | Install CLI (Step 4a) or use `npx supabase`; or run `./scripts/deploy-join-league.sh` |
+| `cd: /path/to/cuckle-trade-tracker: No such file` | Use your real clone path (repo root), e.g. `cd ~/Documents/cuckle-trade-tracker` |
+| Deploy asks for access token | Run `supabase login` or `export SUPABASE_ACCESS_TOKEN=sbp_...` |
 | Signup fails / “confirm email” | Supabase → Authentication → Providers → Email → Confirm OFF |
 | Create league 401 / failed fetch | Redeploy Step 4; hard-refresh app; sign out/in |
-| Create remints every time | Re-run `db/wave1-invite-hardening.sql`; redeploy `join-league` from this branch |
+| Create remints every time | Re-run `db/wave1-invite-hardening.sql`; redeploy `join-league` |
 | Redeem 500 / unknown function | Re-run `db/wave1-invite-hardening.sql` |
 | Vote does not save | Re-run `db/wave2-vote-identity.sql`; confirm that account redeemed a seat |
-| Old page with no Create league | Wrong URL or Pages not on merged `main` — use localhost from this branch |
+| Old page with no Create league | Hard-refresh; confirm URL is https://slabslip.github.io/cuckle-trade-tracker/ |
 | “Already has a commissioner” | That league’s `created_by` is already set — use that Auth user |
 
 ---

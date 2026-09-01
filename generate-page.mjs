@@ -855,34 +855,39 @@ const html = `<!DOCTYPE html>
       line-height: 1.3;
     }
     .pick-intel .caption { margin: 0 0 8px; }
-    /* Compact toolbar: one primary Filter trigger + My picks out / Mine held.
-       Center the control group under the Draft Data heading. */
+    /* Compact toolbar: three equal chips (search / who has mine / whose I hold).
+       Centered under Draft Data; equal flex share; wrap on narrow screens. */
     .pick-intel-bar {
-      display: flex; flex-wrap: wrap; gap: 8px 12px;
-      margin: 0 0 8px; align-items: center; justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 0 0 8px; align-items: stretch; justify-content: center;
     }
-    button.pick-intel-filter {
-      appearance: none; font: inherit; font-weight: 650; font-size: 0.875rem;
+    button.pick-intel-chip {
+      appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
       color: var(--text); background: var(--card); border: 1px solid var(--line);
-      border-radius: 10px; min-height: 36px; padding: 0 12px;
+      border-radius: 10px; min-height: 36px; padding: 6px 10px;
       cursor: pointer; touch-action: manipulation;
+      flex: 1 1 0; min-width: 6.5rem; max-width: 11.5rem;
+      text-align: center; line-height: 1.25; text-wrap: balance;
     }
-    button.pick-intel-filter.on, button.pick-intel-filter[aria-expanded="true"] {
+    button.pick-intel-chip.on,
+    button.pick-intel-chip[aria-expanded="true"],
+    button.pick-intel-chip[aria-pressed="true"] {
       border-color: #6b5a2e;
     }
-    button.pick-intel-filter:focus-visible {
+    button.pick-intel-chip[aria-disabled="true"] {
+      opacity: 0.45; cursor: not-allowed;
+    }
+    button.pick-intel-chip:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
+    /* Summary-row "Clear all" stays a quiet text control, not a bar chip. */
     button.pick-intel-link {
       appearance: none; font: inherit; font-size: 0.8125rem; font-weight: 600;
       color: var(--muted); background: transparent; border: 0; padding: 0;
-      min-height: 36px; cursor: pointer; touch-action: manipulation;
+      min-height: 28px; cursor: pointer; touch-action: manipulation;
       text-decoration: underline; text-underline-offset: 3px;
     }
     button.pick-intel-link.on { color: var(--text); }
-    button.pick-intel-link[disabled], button.pick-intel-link[aria-disabled="true"] {
-      opacity: 0.45; cursor: not-allowed; text-decoration: none;
-    }
     button.pick-intel-link:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
@@ -969,20 +974,20 @@ const html = `<!DOCTYPE html>
     .pick-intel-board-lab {
       grid-column: 1 / -1; justify-self: stretch; text-align: center;
       color: var(--muted); font-size: 0.75rem; font-weight: 650;
-      white-space: nowrap; letter-spacing: 0.02em; line-height: 1.2;
+      white-space: normal; letter-spacing: 0.02em; line-height: 1.2;
     }
     .pick-intel-board-lab:not(:has(.pick-intel-board-yrs)) {
-      grid-column: 2; justify-self: center;
+      grid-column: 2; justify-self: center; white-space: nowrap;
     }
     button.pick-intel-board-lab {
       appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
       color: var(--muted); background: transparent; border: 0; padding: 0; margin: 0;
       cursor: pointer; text-align: center; touch-action: manipulation;
-      letter-spacing: 0.02em; line-height: 1.2;
+      letter-spacing: 0.02em; line-height: 1.2; white-space: normal;
       grid-column: 1 / -1; justify-self: stretch; width: 100%;
     }
     button.pick-intel-board-lab:not(:has(.pick-intel-board-yrs)) {
-      grid-column: 2; justify-self: center; width: auto;
+      grid-column: 2; justify-self: center; width: auto; white-space: nowrap;
     }
     button.pick-intel-board-lab:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
@@ -2050,12 +2055,12 @@ const html = `<!DOCTYPE html>
       }
       if (pickFilterMineOut) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
-          + ' aria-label="Clear my picks out">My picks out'
+          + ' aria-label="Clear who has my picks">who has my picks'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (pickFilterMineHeld) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
-          + ' aria-label="Clear mine held">Mine held'
+          + ' aria-label="Clear whose picks do i have">whose picks do i have'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (!chips.length) return "";
@@ -2216,8 +2221,8 @@ const html = `<!DOCTYPE html>
 
     /**
      * League-home Draft Data: progressive filters for still-available draft picks.
-     * Idle = compact leaderboard + Filter picks trigger (+ My picks out shortcut).
-     * Opening filters reveals one dropdown at a time: Round → Year → Held by.
+     * Idle = compact leaderboard + three equal chips (search / who has mine / whose I hold).
+     * Opening search reveals one dropdown at a time: Round → Year → Held by.
      */
     function pickIntel() {
       ensurePicks();
@@ -2258,16 +2263,19 @@ const html = `<!DOCTYPE html>
       return '<section class="pick-intel" aria-label="Draft Data">'
         + '<h2 class="pick-intel-h">Draft Data</h2>'
         + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
-        + '<button type="button" class="pick-intel-filter' + (filterOn ? " on" : "") + '"'
-        + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '">'
-        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Filter picks")
+        + '<button type="button" class="pick-intel-chip' + (filterOn ? " on" : "") + '"'
+        + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '"'
+        + ' aria-label="search for picks">'
+        + (pickFilterOpen && pickFilterStep ? "Filtering…" : "search for picks")
         + "</button>"
-        + '<button type="button" class="pick-intel-link' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
+        + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
         + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
-        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '">My picks out</button>'
-        + '<button type="button" class="pick-intel-link' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
+        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
+        + ' aria-label="who has my picks">who has my picks</button>'
+        + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
-        + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '">Mine held</button>'
+        + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
+        + ' aria-label="whose picks do i have">whose picks do i have</button>'
         + "</div>"
         + pickFilterSummary()
         + pickIntelStepPanel(seatNames)
@@ -9214,10 +9222,23 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
   || !html.includes(".pick-intel-board") || !html.includes(".pick-intel-board-cols")
-  || !html.includes(".pick-intel-board-yrs")
+  || !html.includes(".pick-intel-board-yrs") || !html.includes("button.pick-intel-chip")
+  || html.includes("button.pick-intel-filter")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
   throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input)");
+}
+if (!inline.includes('aria-label="search for picks"')
+  || !inline.includes('aria-label="who has my picks"')
+  || !inline.includes('aria-label="whose picks do i have"')
+  || !inline.includes('"search for picks"')
+  || !inline.includes(">who has my picks<")
+  || !inline.includes(">whose picks do i have<")
+  || inline.includes(">Filter picks<") || inline.includes(">My picks out<")
+  || inline.includes(">Mine held<")
+  || inline.includes('aria-label="Clear my picks out"')
+  || inline.includes('aria-label="Clear mine held"')) {
+  throw new Error("Draft Data bar chips must use the equal-chip copy (search / who has mine / whose I hold)");
 }
 if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
   throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");

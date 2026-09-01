@@ -4,6 +4,7 @@
 // Authorization: Bearer <user JWT>
 //
 // Actions:
+//   invite_preview   { code }               → public: team_name + suggested username (no auth)
 //   preview         { sleeper_league_id }
 //   create          { sleeper_league_id, espn_league_id? }
 //                   → first time: mint codes; revisit by same commissioner: status only (no remint)
@@ -88,6 +89,15 @@ async function sha256Hex(text: string) {
   const data = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Sleeper team name → valid app username (matches app_profiles shape). */
+function suggestUsername(teamName: string) {
+  let s = String(teamName || "").trim().replace(/\s+/g, "");
+  s = s.replace(/[^A-Za-z0-9_.-]/g, "");
+  if (!s || !/^[A-Za-z0-9_]/.test(s)) s = ("team_" + s).replace(/[^A-Za-z0-9_.-]/g, "");
+  if (s.length < 3) s = (s + "seat").slice(0, 32);
+  return s.slice(0, 32);
 }
 
 async function mintUnclaimed(
@@ -273,6 +283,44 @@ Deno.serve(async (req) => {
     return json(500, { ok: false, error: "Supabase env missing" });
   }
 
+  let body: Record<string, unknown> = {};
+  try {
+    body = await req.json();
+  } catch {
+    return json(400, { ok: false, error: "Invalid JSON" });
+  }
+
+  const action = String(body.action || "preview");
+  const admin = createClient(supabaseUrl, service);
+
+  // Public: invite link opens signup with team name + suggested username (no auth yet).
+  if (action === "invite_preview") {
+    const code = String(body.code || "").trim().toUpperCase();
+    if (!code || code.length < 8) {
+      return json(400, { ok: false, error: "Enter a valid invite code" });
+    }
+    const code_hash = await sha256Hex(code);
+    const { data: invite, error: invErr } = await admin.from("seat_invites")
+      .select("team_name, claimed_by, sleeper_league_id")
+      .eq("code_hash", code_hash)
+      .maybeSingle();
+    if (invErr) return json(500, { ok: false, error: invErr.message });
+    if (!invite) return json(404, { ok: false, error: "Unknown invite code" });
+    if (invite.claimed_by) {
+      return json(409, { ok: false, error: "This invite was already used — sign in instead" });
+    }
+    const { data: leagueRow } = await admin.from("leagues")
+      .select("name")
+      .eq("sleeper_league_id", invite.sleeper_league_id)
+      .maybeSingle();
+    return json(200, {
+      ok: true,
+      team_name: invite.team_name,
+      league_name: leagueRow && leagueRow.name ? leagueRow.name : null,
+      suggested_username: suggestUsername(invite.team_name),
+    });
+  }
+
   const authHeader = req.headers.get("Authorization") || "";
   const userClient = createClient(supabaseUrl, anon, {
     global: { headers: { Authorization: authHeader } },
@@ -282,16 +330,6 @@ Deno.serve(async (req) => {
     return json(401, { ok: false, error: "Sign in required" });
   }
   const user = userData.user;
-  const admin = createClient(supabaseUrl, service);
-
-  let body: Record<string, unknown> = {};
-  try {
-    body = await req.json();
-  } catch {
-    return json(400, { ok: false, error: "Invalid JSON" });
-  }
-
-  const action = String(body.action || "preview");
 
   // ---- preview ----
   if (action === "preview") {

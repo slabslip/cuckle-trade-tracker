@@ -5279,6 +5279,10 @@ const html = `<!DOCTYPE html>
     let leagueMembers = []; // members of the invite-console league (for transfer)
     let inviteTab = "unclaimed"; // unclaimed | claimed
     let redeemCode = "";
+    let gateUsernameDraft = "";
+    let gateInviteTeam = null;
+    let gateInviteLeague = null;
+    let gateSuggestedUser = null;
     let gateMode = "signup"; // signup | signin — get started first
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
@@ -5608,6 +5612,74 @@ const html = `<!DOCTYPE html>
       return String(raw || "").trim();
     }
 
+    /** Sleeper team name → valid username (matches DB + authSignUp). */
+    function suggestUsernameFromTeam(teamName) {
+      let s = String(teamName || "").trim().replace(/\s+/g, "");
+      s = s.replace(/[^A-Za-z0-9_.-]/g, "");
+      if (!s || !/^[A-Za-z0-9_]/.test(s)) s = ("team_" + s).replace(/[^A-Za-z0-9_.-]/g, "");
+      if (s.length < 3) s = (s + "seat").slice(0, 32);
+      return s.slice(0, 32);
+    }
+
+    /** Strip spaces and illegal chars before validation so "Truman Cooper" works. */
+    function prepareUsername(raw) {
+      let name = normalizeUsername(raw);
+      if (!name) return "";
+      name = name.replace(/\s+/g, "");
+      name = name.replace(/[^A-Za-z0-9_.-]/g, "");
+      if (name && !/^[A-Za-z0-9_]/.test(name)) name = "_" + name;
+      return name.slice(0, 32);
+    }
+
+    function validateUsername(name) {
+      if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
+        throw new Error("Username must be 3–32 characters: letters, numbers, and _ . - only (no spaces).");
+      }
+      return name;
+    }
+
+    function authErrorMessage(data, status, fallback) {
+      const code = data && data.error_code;
+      const msg = (data && (data.error_description || data.msg || data.message)) || fallback;
+      if (code === "email_address_invalid") {
+        return "Account email rejected — hard refresh the page (auth fix may not have loaded yet).";
+      }
+      if (code === "over_email_send_rate_limit") {
+        return "Too many sign-up attempts — wait a few minutes. In Supabase, turn Confirm email OFF.";
+      }
+      if (code === "user_already_exists") return "That username is taken — pick another or sign in.";
+      return msg;
+    }
+
+    async function loadInvitePreview() {
+      const code = (redeemCode || "").trim();
+      if (!code) return;
+      try {
+        const res = await fetch(FN_API + "/join-league", {
+          method: "POST",
+          headers: { apikey: VOTE_ANON, "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "invite_preview", code: code }),
+          signal: voteAbort(),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.ok) {
+          gateInviteTeam = data.team_name || null;
+          gateInviteLeague = data.league_name || null;
+          gateSuggestedUser = data.suggested_username || suggestUsernameFromTeam(data.team_name);
+          if (gateSuggestedUser && !gateUsernameDraft) gateUsernameDraft = gateSuggestedUser;
+          render();
+          return;
+        }
+        if (data.error && String(data.error).includes("already used")) {
+          gateMode = "signin";
+          joinError = String(data.error);
+          render();
+        }
+      } catch (err) {
+        console.warn("invite preview", err);
+      }
+    }
+
     /**
      * Soft-delete for the alert feed. UI-gated to TrumanCooper; the write is a stamp on
      * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). Prefers the claimed
@@ -5803,10 +5875,7 @@ const html = `<!DOCTYPE html>
     }
 
     async function authSignUp(username, password) {
-      const name = normalizeUsername(username);
-      if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
-        throw new Error("Username: 3–32 chars, letters/numbers/_ . -");
-      }
+      const name = validateUsername(prepareUsername(username));
       if (String(password || "").length < 6) throw new Error("Password must be at least 6 characters.");
       const email = authEmailForUsername(name);
       const res = await fetch(AUTH_API + "/signup", {
@@ -5825,8 +5894,7 @@ const html = `<!DOCTYPE html>
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msg = data.error_description || data.msg || data.message || ("Sign-up failed (" + res.status + ")");
-        throw new Error(msg);
+        throw new Error(authErrorMessage(data, res.status, "Sign-up failed (" + res.status + ")"));
       }
       let session = data;
       if (!session.access_token) {
@@ -5869,8 +5937,8 @@ const html = `<!DOCTYPE html>
     }
 
     async function authSignIn(username, password) {
-      const name = normalizeUsername(username);
-      if (!name || !password) throw new Error("Enter username and password.");
+      const name = validateUsername(prepareUsername(username));
+      if (!password) throw new Error("Enter username and password.");
       const data = await authPasswordGrant(authEmailForUsername(name), password);
       const userId = data.user && data.user.id;
       let uname = name;
@@ -5956,7 +6024,8 @@ const html = `<!DOCTYPE html>
       if (authBusy) return;
       const userEl = document.getElementById("gateUser");
       const passEl = document.getElementById("gatePass");
-      const username = userEl && userEl.value;
+      const username = userEl ? userEl.value : gateUsernameDraft;
+      gateUsernameDraft = username || gateUsernameDraft;
       const password = passEl && passEl.value;
       authBusy = true;
       authError = "";
@@ -8590,14 +8659,27 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
         + (invited
-          ? ('<p class="caption">Seat code <code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code></p>")
+          ? ('<p class="caption">Seat code <code style="user-select:all">' + esc(String(redeemCode).toUpperCase()) + "</code></p>"
+            + (gateInviteTeam
+              ? ('<p class="caption">Joining as <b>' + esc(gateInviteTeam) + "</b>"
+                + (gateInviteLeague ? " in " + esc(gateInviteLeague) : "") + ". "
+                + "Pick any username (3–32 letters, numbers, _ . -) and a password.</p>")
+              : '<p class="caption">Pick a username and password to claim your seat.</p>'))
+          : "")
+        + (gateSuggestedUser && invited
+          ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
+            + "</b> — change it if you like.</p>")
           : "")
         + '<div class="app-card"><h3>' + title + "</h3>"
         + '<div class="app-form">'
         + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
-        + ' autocapitalize="off" spellcheck="false"' + (authBusy ? " disabled" : "") + " /></label>"
+        + ' autocapitalize="off" spellcheck="false"'
+        + ' placeholder="' + esc(gateSuggestedUser || "e.g. TrumanCooper") + '"'
+        + ' value="' + esc(gateUsernameDraft) + '"'
+        + (authBusy ? " disabled" : "") + " /></label>"
         + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
         + (gateMode === "signup" ? "new-password" : "current-password") + '"'
+        + ' minlength="6" placeholder="At least 6 characters"'
         + (authBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
@@ -10007,6 +10089,10 @@ const html = `<!DOCTYPE html>
       }
     });
     document.getElementById("app").addEventListener("input", (e) => {
+      if (e.target && e.target.id === "gateUser") {
+        gateUsernameDraft = String(e.target.value || "");
+        return;
+      }
       const cuffQBox = e.target.closest("[data-cuff-q]");
       if (cuffQBox) {
         cuffFilterQ = cuffQBox.value;
@@ -10041,7 +10127,11 @@ const html = `<!DOCTYPE html>
     // is selected. Vote tallies still load after paint when we enter a ready league.
     authLoad();
     const inviteParam = (params.get("invite") || "").trim();
-    if (inviteParam) redeemCode = inviteParam.toUpperCase();
+    if (inviteParam) {
+      redeemCode = inviteParam.toUpperCase();
+      gateMode = "signup";
+      loadInvitePreview().catch((err) => console.error(err));
+    }
     paintSettingsBtn();
     paintLeagueSub();
     paintBottomNav();

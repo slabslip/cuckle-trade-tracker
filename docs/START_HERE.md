@@ -46,6 +46,7 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 5. `db/wave2-vote-identity.sql`
 6. `db/wave2b-vote-unique.sql`
 7. `db/wave5-invite-plain.sql`
+8. `db/wave6-one-seat-redeem.sql`
 
 Optional vote clean slate: `scripts/wipe-trade-votes.sql` → `truncate public.trade_votes ...`
 

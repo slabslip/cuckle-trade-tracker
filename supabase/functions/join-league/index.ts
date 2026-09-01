@@ -21,6 +21,7 @@
 //
 // Deploy: supabase functions deploy join-league
 // SQL: also apply db/wave5-invite-plain.sql (code_plain column)
+//      and db/wave6-one-seat-redeem.sql (refuse seat-switch overwrite)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -226,8 +227,17 @@ async function listInviteRows(
     }
   }
 
+  const { data: mems } = await admin.from("league_memberships")
+    .select("sleeper_user_id")
+    .eq("sleeper_league_id", leagueId);
+  const activeSeats = new Set(
+    (mems || []).map((m) => String(m.sleeper_user_id || "")).filter(Boolean),
+  );
+
   return (rows || []).map((r) => {
     const claimed = !!r.claimed_by;
+    // Claim stamp with no matching membership (e.g. signed-in auto-redeem switched seats).
+    const orphan = claimed && !activeSeats.has(String(r.sleeper_user_id || ""));
     const plain = !claimed && r.code_plain && String(r.code_plain).indexOf("CF-") === 0
       ? String(r.code_plain)
       : null;
@@ -235,6 +245,7 @@ async function listInviteRows(
       team_name: r.team_name,
       sleeper_user_id: r.sleeper_user_id,
       claimed,
+      orphan,
       claimed_by: r.claimed_by || null,
       claimed_username: r.claimed_by ? (usernames[r.claimed_by] || null) : null,
       claimed_at: r.claimed_at,
@@ -301,22 +312,22 @@ Deno.serve(async (req) => {
     }
     const code_hash = await sha256Hex(code);
     const { data: invite, error: invErr } = await admin.from("seat_invites")
-      .select("team_name, claimed_by, sleeper_league_id")
+      .select("team_name, claimed_by, sleeper_league_id, sleeper_user_id")
       .eq("code_hash", code_hash)
       .maybeSingle();
     if (invErr) return json(500, { ok: false, error: invErr.message });
     if (!invite) return json(404, { ok: false, error: "Unknown invite code" });
-    if (invite.claimed_by) {
-      return json(409, { ok: false, error: "This invite was already used — sign in instead" });
-    }
     const { data: leagueRow } = await admin.from("leagues")
       .select("name")
       .eq("sleeper_league_id", invite.sleeper_league_id)
       .maybeSingle();
     return json(200, {
       ok: true,
+      claimed: !!invite.claimed_by,
       team_name: invite.team_name,
       league_name: leagueRow && leagueRow.name ? leagueRow.name : null,
+      sleeper_league_id: invite.sleeper_league_id,
+      sleeper_user_id: invite.sleeper_user_id || null,
       suggested_username: suggestUsername(invite.team_name),
     });
   }
@@ -799,6 +810,13 @@ Deno.serve(async (req) => {
       if (msg.includes("unknown invite") || error.code === "P0002") {
         return json(404, { ok: false, error: "Unknown or expired invite code" });
       }
+      if (msg.includes("already have a seat in this league")) {
+        return json(409, {
+          ok: false,
+          error: "You already have a seat in this league. Reissue the wrong seat first, "
+            + "or use Claim this seat from the invite console — do not open another manager's link.",
+        });
+      }
       if (msg.includes("already used") || msg.includes("seat already claimed")) {
         return json(409, { ok: false, error: "That invite was already used or the seat is taken" });
       }
@@ -812,6 +830,19 @@ Deno.serve(async (req) => {
         if (!invite) return json(404, { ok: false, error: "Unknown or expired invite code" });
         if (invite.claimed_by && invite.claimed_by !== user.id) {
           return json(409, { ok: false, error: "That invite was already used" });
+        }
+        const { data: priorMem } = await admin.from("league_memberships")
+          .select("sleeper_user_id")
+          .eq("auth_user_id", user.id)
+          .eq("sleeper_league_id", invite.sleeper_league_id)
+          .maybeSingle();
+        if (priorMem && priorMem.sleeper_user_id
+          && priorMem.sleeper_user_id !== invite.sleeper_user_id) {
+          return json(409, {
+            ok: false,
+            error: "You already have a seat in this league. Reissue the wrong seat first, "
+              + "or use Claim this seat from the invite console — do not open another manager's link.",
+          });
         }
         const { data: membership, error: memErr } = await admin.from("league_memberships").upsert({
           auth_user_id: user.id,
@@ -869,6 +900,13 @@ Deno.serve(async (req) => {
       if (msg.includes("not commissioner")) {
         return json(403, { ok: false, error: "Only the league creator can claim a seat this way" });
       }
+      if (msg.includes("already have a seat in this league")) {
+        return json(409, {
+          ok: false,
+          error: "You already have a seat in this league. Reissue the wrong seat first "
+            + "before claiming another.",
+        });
+      }
       if (msg.includes("already claimed") || msg.includes("seat already")) {
         return json(409, { ok: false, error: "That seat is already claimed" });
       }
@@ -892,6 +930,19 @@ Deno.serve(async (req) => {
         if (!invite) return json(404, { ok: false, error: "Unknown seat" });
         if (invite.claimed_by && invite.claimed_by !== user.id) {
           return json(409, { ok: false, error: "That seat is already claimed" });
+        }
+        const { data: priorClaim } = await admin.from("league_memberships")
+          .select("sleeper_user_id")
+          .eq("auth_user_id", user.id)
+          .eq("sleeper_league_id", leagueId)
+          .maybeSingle();
+        if (priorClaim && priorClaim.sleeper_user_id
+          && priorClaim.sleeper_user_id !== invite.sleeper_user_id) {
+          return json(409, {
+            ok: false,
+            error: "You already have a seat in this league. Reissue the wrong seat first "
+              + "before claiming another.",
+          });
         }
         const { data: membership, error: memErr } = await admin.from("league_memberships").upsert({
           auth_user_id: user.id,

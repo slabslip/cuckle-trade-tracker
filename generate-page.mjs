@@ -5282,6 +5282,9 @@ const html = `<!DOCTYPE html>
     let gateUsernameDraft = "";
     let gateInviteTeam = null;
     let gateInviteLeague = null;
+    let gateInviteLeagueId = null;
+    let gateInviteSeatId = null;
+    let gateInviteClaimed = false;
     let gateSuggestedUser = null;
     let gateMode = "signup"; // signup | signin — get started first
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
@@ -5668,8 +5671,16 @@ const html = `<!DOCTYPE html>
         if (data.ok) {
           gateInviteTeam = data.team_name || null;
           gateInviteLeague = data.league_name || null;
+          gateInviteLeagueId = data.sleeper_league_id || null;
+          gateInviteSeatId = data.sleeper_user_id || null;
+          gateInviteClaimed = !!data.claimed;
           gateSuggestedUser = data.suggested_username || suggestUsernameFromTeam(data.team_name);
           if (gateSuggestedUser && !gateUsernameDraft) gateUsernameDraft = gateSuggestedUser;
+          // Logged-out + already-used: send them to sign-in (they may already have an account).
+          if (gateInviteClaimed && !authSession) {
+            gateMode = "signin";
+            joinError = "This invite was already used — sign in instead.";
+          }
           render();
           return;
         }
@@ -6299,6 +6310,20 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      // Soft client guard (SQL wave6 is the real lock): do not silently switch seats.
+      if (gateInviteLeagueId && gateInviteSeatId) {
+        const mine = (memberships || []).find(
+          (m) => m.sleeper_league_id === gateInviteLeagueId,
+        );
+        if (mine && mine.sleeper_user_id && mine.sleeper_user_id !== gateInviteSeatId) {
+          joinError = "You already sit as " + (mine.team_name || "another team")
+            + " in this league. Reissue the wrong seat from Manage invites — "
+            + "do not redeem another manager's link on your account.";
+          if (appScreen !== "inviteConfirm") appScreen = "inviteConfirm";
+          render();
+          return;
+        }
+      }
       joinBusy = true;
       joinError = "";
       render();
@@ -6320,6 +6345,8 @@ const html = `<!DOCTYPE html>
           }));
         }
         voteSeatRemember(L.sleeper_user_id);
+        redeemCode = "";
+        gateInviteClaimed = false;
         await openLeagueDashboard(leagueInfo);
       } catch (err) {
         joinError = (err && err.message) || "Could not redeem that invite.";
@@ -8784,16 +8811,21 @@ const html = `<!DOCTYPE html>
         const claimer = inv.claimed_username
           ? "@" + inv.claimed_username
           : (inv.claimed ? "a member" : null);
+        const orphanNote = inv.orphan
+          ? " Stale claim (no active membership) — Reissue to free this seat."
+          : "";
         return '<div class="app-card" style="margin-bottom:8px">'
           + "<b>" + esc(inv.team_name) + "</b>"
           + (inv.claimed
             ? ('<p class="caption" style="margin:4px 0 8px">Joined'
-              + (claimer ? " as " + esc(claimer) : "") + "</p>"
+              + (claimer ? " as " + esc(claimer) : "") + "."
+              + esc(orphanNote) + "</p>"
               + '<div class="app-actions">'
               + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
               + "</div>")
-            : ('<p class="caption" style="margin:4px 0 8px">Send them one invite link. It opens account setup with their seat code filled in.</p>'
+            : ('<p class="caption" style="margin:4px 0 8px">Copy the invite link and send it — '
+              + "do not open it while signed in as commissioner (that claims the seat onto your account).</p>"
               + '<div class="app-actions">'
               + '<button type="button" class="chip" data-copy-invite-link="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">"
@@ -8848,10 +8880,11 @@ const html = `<!DOCTYPE html>
         + tabs
         + (rows || empty)
         + (tab === "claimed"
-          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed.</p>'
+          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed. '
+            + "Stale claims (no active membership) also need Reissue before you can reclaim your own seat.</p>"
           : (!myMembership
             ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
-            : ""))
+            : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
         + transferBlock
         + "</div>";
     }
@@ -8919,6 +8952,65 @@ const html = `<!DOCTYPE html>
         + "</div></div></div></div>";
     }
 
+    /**
+     * Signed-in + ?invite= — never auto-redeem. Commissioners copy links to send; opening
+     * them while logged in used to claim the seat onto their account and orphan the prior seat.
+     */
+    function renderInviteConfirm() {
+      const uname = (authSession && authSession.username) || "you";
+      const lid = gateInviteLeagueId || null;
+      const mySeat = lid
+        ? (memberships || []).find((m) => m.sleeper_league_id === lid)
+        : null;
+      const team = gateInviteTeam || "that team";
+      const league = gateInviteLeague || "this league";
+      const sameSeat = !!(mySeat && gateInviteSeatId && mySeat.sleeper_user_id === gateInviteSeatId);
+      let body = "";
+      if (gateInviteClaimed) {
+        body = '<p class="caption">This invite for <b>' + esc(team) + "</b> in "
+          + esc(league) + " was already used. It is not a link to send anymore.</p>"
+          + (mySeat
+            ? ('<p class="caption">You currently sit as <b>' + esc(mySeat.team_name) + "</b>. "
+              + "If you meant to invite another manager, open <b>Manage invites</b>, "
+              + "<b>Reissue</b> their seat, then <b>Copy invite link</b> — paste it to them "
+              + "without opening it while signed in.</p>")
+            : '<p class="caption">Sign out only if this invite is for a different account.</p>');
+      } else if (mySeat && !sameSeat) {
+        body = '<p class="caption">You are signed in as <b>' + esc(uname) + "</b> and already sit as "
+          + "<b>" + esc(mySeat.team_name) + "</b> in " + esc(league) + ".</p>"
+          + '<p class="caption">This link is for <b>' + esc(team) + "</b>. Opening it does not send "
+          + "the invite — redeeming would try to move your account onto that seat. "
+          + "Copy the link from Manage invites and send it to the other manager instead.</p>";
+      } else if (sameSeat) {
+        body = '<p class="caption">You already sit as <b>' + esc(team) + "</b>. "
+          + "Open Your leagues to continue.</p>";
+      } else {
+        body = '<p class="caption">You are signed in as <b>' + esc(uname) + "</b>. "
+          + "This invite is for <b>" + esc(team) + "</b>"
+          + (gateInviteLeague ? " in " + esc(league) : "") + ".</p>"
+          + '<p class="caption">Only redeem if <b>you</b> are joining that seat. '
+          + "If you are the commissioner sending this link, go back and paste it to the other manager.</p>";
+      }
+      const canRedeem = !gateInviteClaimed && !mySeat;
+      return '<div class="app-shell">'
+        + '<h2 class="screen-h" tabindex="-1">Invite link</h2>'
+        + '<div class="app-card">'
+        + body
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-app-home="1">Your leagues</button>'
+        + (canRedeem
+          ? ('<button type="button" class="chip" data-redeem-go="1"'
+            + (joinBusy ? " disabled" : "") + ">"
+            + (joinBusy ? "Joining…" : "Join as " + esc(team)) + "</button>")
+          : "")
+        + (lid
+          ? ('<button type="button" class="linkish" data-manage-invites="' + esc(lid)
+            + '">Manage invites</button>')
+          : "")
+        + "</div></div></div>";
+    }
+
     function renderPendingLeague() {
       const L = activeLeague || {};
       return '<div class="app-shell">'
@@ -8934,13 +9026,15 @@ const html = `<!DOCTYPE html>
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
-          || appScreen === "invites" || appScreen === "redeem" || appScreen === "settings") {
+          || appScreen === "invites" || appScreen === "redeem" || appScreen === "inviteConfirm"
+          || appScreen === "settings") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
         app.innerHTML = appScreen === "gate" ? renderAppGate()
           : appScreen === "create" ? renderCreateLeague()
           : appScreen === "invites" ? renderInvites()
           : appScreen === "redeem" ? renderRedeemInvite()
+          : appScreen === "inviteConfirm" ? renderInviteConfirm()
           : appScreen === "settings" ? renderSettings()
           : renderAppHome();
         paintSettingsBtn();
@@ -10182,8 +10276,12 @@ const html = `<!DOCTYPE html>
         }
         if (inviteParam) {
           await loadMemberships().catch((err) => console.error(err));
-          // Already signed in: redeem immediately and open their league dashboard.
-          await onRedeemInvite();
+          // Already signed in: never auto-redeem. Opening a manager invite while logged in
+          // used to claim that seat onto this account and leave the prior seat stamped claimed.
+          joinError = "";
+          appScreen = "inviteConfirm";
+          focusNext = ".screen-h";
+          render();
           return;
         }
         // Design Mode entry (design-league-home.html): skip the memberships API — the
@@ -11369,6 +11467,17 @@ if (!inline.includes("data-gate-form") || !inline.includes("seat ticket")) {
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");
+}
+if (!inline.includes('appScreen = "inviteConfirm"')
+  || !inline.includes("function renderInviteConfirm()")
+  || inline.includes("Already signed in: redeem immediately")) {
+  throw new Error("signed-in ?invite= must show inviteConfirm — never auto-redeem onto the open session");
+}
+{
+  const wave6 = fs.readFileSync(`${ROOT}db/wave6-one-seat-redeem.sql`, "utf8");
+  if (!wave6.includes("already have a seat in this league")) {
+    throw new Error("wave6 must refuse redeem when the account already sits a different seat");
+  }
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")

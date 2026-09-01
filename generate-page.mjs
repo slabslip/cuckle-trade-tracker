@@ -1771,7 +1771,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "latestTradeBagsReady20260901034500";
+    const DATA_V = "latestTradeBagsReady20260901035000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2143,8 +2143,9 @@ const html = `<!DOCTYPE html>
         { lab: "2nds", round: 2, filter: true },
         { lab: "Total", round: null, filter: false },
       ];
-      return '<div class="pick-intel-board" role="group" aria-label="Pick leaders">'
-        + '<p class="pick-intel-board-h">Most held right now</p>'
+      const boardH = "Who's got picks";
+      return '<div class="pick-intel-board" role="group" aria-label="' + boardH + '">'
+        + '<p class="pick-intel-board-h">' + boardH + "</p>"
         + '<div class="pick-intel-board-cols">'
         + cols.map((r) => {
           const leaders = pickLeaders(r.round, 3);
@@ -9167,6 +9168,7 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || inline.includes('data-pick-q="1"') || inline.includes("function parsePickQuery(")
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
+  || inline.includes("Most held right now") || !inline.includes("Who's got picks")
   || inline.includes("pick-intel-board-row")) {
   throw new Error("Pick board must ship progressive filters + column leaderboard without a search input");
 }

@@ -1124,9 +1124,9 @@ const html = `<!DOCTYPE html>
     /* The League Data Sets trigger has no rules of its own any more: it is one of the four
        .home-chip cells above, and giving it a second, more specific rule set is how the four
        cells stop being the same size as each other. Its 44px floor became the box's 56px one. */
-    /* Six options -- None plus the five sets -- each with a line saying what the set is built
-       from, so a row is 59px and 76px where that line wraps at 320px. It floats rather than
-       shoving the open set down the page, which is what the Score as panel does.
+    /* Five set options, each with a line saying what the set is built from, so a row is 59px
+       and 76px where that line wraps at 320px. It floats rather than shoving the open set down
+       the page, which is what the Score as panel does.
        The width is the trigger's width and not a fixed 340px. Capped, it left half of every trade
        row visible beside it at 375px and wider -- figures and names floating to the right of a
        menu that was covering the rest of their row, which measured perfectly and read as a
@@ -1135,18 +1135,18 @@ const html = `<!DOCTYPE html>
     /* Addressed by id, the way #scoreAs and #yearFilters are, so these win over the shared
        .filter-panel box rules that are declared further down the sheet. */
     /* The cap is the list, not a fraction of the viewport. It used to be min(100dvh - 96px, 480px)
-       -- a flat 480px on any phone taller than 576px -- which is a number the six options never
-       reach and so never bit: the panel measured 439px at 320px and simply hung off the bottom of
-       the screen, four of its six options below the fold. This is the same rule the seat menu was
-       fixed with: six rows at the 76px a two-line option takes at 320px, five 4px gaps, 12px of
+       -- a flat 480px on any phone taller than 576px -- which is a number the five options never
+       reach and so never bit: the panel measured ~410px at 320px and simply hung off the bottom of
+       the screen, options below the fold. This is the same rule the seat menu was
+       fixed with: five rows at the 76px a two-line option takes at 320px, four 4px gaps, 12px of
        panel padding and 2px of border, and then the room a phone has as the second term. Sizing
        to the list is what makes "does it fit" a question with an answer at build time -- the
-       generator asserts DATA_SETS.length + 1 against it, so a seventh set fails the build instead
+       generator asserts DATA_SETS.length against it, so a sixth set fails the build instead
        of shipping a scrolling menu. Do not lower the 44px option floor to fit a longer list. */
     #dataSets {
       position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 12;
       width: auto; margin: 0; padding: 6px;
-      max-height: min(calc(6 * 76px + 34px), calc(100dvh - 96px)); overflow-y: auto;
+      max-height: min(calc(5 * 76px + 30px), calc(100dvh - 96px)); overflow-y: auto;
       display: flex; flex-direction: column; gap: 4px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
@@ -1526,7 +1526,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "alignTradeSums20260901022530";
+    const DATA_V = "dropDsNone20260901023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1549,8 +1549,7 @@ const html = `<!DOCTYPE html>
     // nothing rendered under it: the sets are reachable by opening the menu and by nothing else
     // now that the ticker's pills are gone. An earlier build pre-selected Most lopsided so home
     // would not read as a lone control over empty space; the user asked for the empty space.
-    // null is the "nothing selected" state and the "None" option at the top of the menu is the
-    // way back to it, so the choice is reversible without a reload.
+    // clearLeague / the home icon return to null; there is no "None" menu option.
     let dataSet = null;
     let dsOpen = false;
     const WINDOWS = [
@@ -2321,27 +2320,8 @@ const html = `<!DOCTYPE html>
         + "<b>" + esc(row[1]) + "</b><span>" + esc(row[2]) + "</span></button>";
     }
 
-    /**
-     * The way back to nothing selected, first in the menu so it is the option a user meets
-     * rather than one they have to know about. It is a real option in the listbox -- same
-     * role, same 44px target, same arrow-key run as the five sets -- so a keyboard reaches it
-     * on ArrowDown/Home like any other, and aria-selected marks it when it is the live state.
-     *
-     * Its line is deliberately short enough to stay one line at 320px, where every set's line
-     * wraps to two. A sixth option pushes the tail of an already tall panel further below the
-     * fold -- three of five were already under it at 320px before this option existed -- and one
-     * line rather than two is the whole of what this function can do about that.
-     */
-    function dsNoneOpt() {
-      const on = !dataSet;
-      return '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="ds-opt' + (on ? " on" : "") + '" data-dset-none="1">'
-        + "<b>None</b><span>Hide the set below the dropdown.</span></button>";
-    }
-
     function dsMenu() {
       return '<div class="filter-panel" id="dataSets" role="listbox" aria-label="League Data Sets">'
-        + dsNoneOpt()
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
@@ -2416,8 +2396,8 @@ const html = `<!DOCTYPE html>
 
     /**
      * The selected set, or nothing at all. Empty is the first-load state and the state the
-     * "None" option and the home icon return to, so this renders no box, no heading and no
-     * placeholder -- the dropdown stands alone over the news feed.
+     * home icon returns to, so this renders no box, no heading and no placeholder -- the
+     * dropdown stands alone over the news feed.
      */
     function dataSetPanel() {
       if (!dataSet) return "";
@@ -6572,20 +6552,6 @@ const html = `<!DOCTYPE html>
       if (head) head.focus({ preventScroll: true });
     }
 
-    /**
-     * Back to nothing selected, from the "None" option at the top of the menu. The heading that
-     * selectDataSet() focuses is about to stop existing, so focus goes to the trigger instead --
-     * a keyboard that opened the menu with Enter ends up back on the control it opened, rather
-     * than on <body> with the page scrolled somewhere.
-     */
-    function clearDataSet() {
-      dataSet = null;
-      dsOpen = false;
-      render();
-      const btn = document.querySelector("[data-dset-open]");
-      if (btn) btn.focus({ preventScroll: true });
-    }
-
     function closeDataSets() {
       dsOpen = false;
       render();
@@ -6603,7 +6569,7 @@ const html = `<!DOCTYPE html>
       if (!menu) return;
       const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
       // preventScroll, then showMenu: focusing an option scrolls that option into view and
-      // nothing else, which left four of the six sets below the fold at 320px.
+      // nothing else, which left options below the fold at 320px.
       if (sel) sel.focus({ preventScroll: true });
       showMenu(menu);
     }
@@ -6666,10 +6632,6 @@ const html = `<!DOCTYPE html>
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
-      // Before [data-dset]: "None" carries no set id, and an empty data-dset would be the dead
-      // pill defect all over again. It is its own attribute, so it can never read as a set.
-      const dsNoneBtn = e.target.closest("[data-dset-none]");
-      if (dsNoneBtn) { clearDataSet(); return; }
       const dsetBtn = e.target.closest("[data-dset]");
       if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");
@@ -7444,38 +7406,17 @@ if (!clearFn.includes("dataSet = null;")) {
 if (/dataSet = "/.test(clearFn)) {
   throw new Error("the home icon resets to a selected data set -- it must match the empty first load");
 }
-// Nothing selected is reversible without a reload: a "None" option, first in the menu, at the
-// same 44px as the five sets and in the same arrow-key run, so a keyboard reaches it.
-for (const need of ['data-dset-none="1"', "function clearDataSet()",
-  'e.target.closest("[data-dset-none]")', "if (dsNoneBtn) { clearDataSet(); return; }",
-  "<b>None</b><span>"]) {
-  if (!inline.includes(need)) throw new Error(`the clear-selection path lost a part: ${need}`);
+// No "None" option: selection clears only via clearLeague / home. The menu is the five sets.
+for (const gone of ["dsNoneOpt", "clearDataSet", "data-dset-none", "<b>None</b><span>Hide the set"]) {
+  if (inline.includes(gone)) throw new Error(`Data Sets must not keep a None clear path: ${gone}`);
 }
-// It is an option in the listbox, not a bare button, or a screen reader gets an unmarked control
-// in a list of marked ones -- and it carries its own attribute rather than an empty data-dset,
-// which is the dead-pill defect the ticker already shipped once.
-for (const need of ['role="option"', 'aria-selected="\' + (on ? "true" : "false") + \'"',
-  'class="ds-opt']) {
-  if (!fnSrc("dsNoneOpt").includes(need)) throw new Error(`the None option lost ${need}`);
-}
-if (fnSrc("dsNoneOpt").includes('data-dset="')) {
-  throw new Error("the None option must not carry a data-dset -- it names no set");
-}
-if (!fnSrc("dsMenu").includes("dsNoneOpt()")) {
-  throw new Error("the None option must be composed into the menu, first, or the selection cannot be cleared");
-}
-const dsMenuSrc = fnSrc("dsMenu");
-if (dsMenuSrc.indexOf("dsNoneOpt()") > dsMenuSrc.indexOf("DATA_SETS.map(dsOpt)")) {
-  throw new Error("the None option must come before the five sets in the menu");
+if (fnSrc("dsMenu").includes("dsNoneOpt")) {
+  throw new Error("dsMenu must not compose a None option");
 }
 // With nothing selected there is no heading, so the trigger's accessible name is the only thing
 // that says so. The label itself stays the constant, asserted above.
 if (!fnSrc("dataSetRow").includes('aria-label="League Data Sets, none selected"')) {
   throw new Error("the trigger must say \"none selected\" when no set is on screen");
-}
-// Clearing removes the heading selectDataSet() focuses, so focus has to land on the trigger.
-if (!fnSrc("clearDataSet").includes("btn.focus({ preventScroll: true })")) {
-  throw new Error("clearDataSet must return focus to the trigger -- the heading it came from is gone");
 }
 // The accordion is gone. Any survivor of it is a second way to reach a list that the dropdown
 // is now the only door to, and openPacks allowed several at once -- the thing being replaced.
@@ -8026,20 +7967,20 @@ if (seatPlaces.some((p) => !Number.isInteger(p)) || new Set(seatPlaces).size !==
 if (seatPlaces.filter((p) => p === 1).length !== 1) {
   throw new Error("exactly one member wears the crown");
 }
-// The League Data Sets menu, sized to its list the same way. Six options at the 76px a two-line
-// option takes at 320px, five 4px gaps, 12px of panel padding and 2px of border. The old cap was
+// The League Data Sets menu, sized to its list the same way. Five options at the 76px a two-line
+// option takes at 320px, four 4px gaps, 12px of panel padding and 2px of border. The old cap was
 // min(100dvh - 96px, 480px) -- a number the list never reached, so it never bit and the panel
 // simply hung off the bottom of the screen. Both halves are asserted: the rule, and the list
-// against it, so a seventh set fails the build rather than shipping a menu you have to scroll.
+// against it, so a sixth set fails the build rather than shipping a menu you have to scroll.
 const DS_ROW_H = 76;
-const DS_MENU_CHROME = 34; // five 4px gaps, 6px padding top and bottom, 1px border top and bottom
-const dsCount = dsIds + 1; // the five sets, plus the None option above them
+const DS_MENU_CHROME = 30; // four 4px gaps, 6px padding top and bottom, 1px border top and bottom
+const dsCount = dsIds; // the five sets only -- no None option
 if (!html.includes(`max-height: min(calc(${dsCount} * ${DS_ROW_H}px + ${DS_MENU_CHROME}px), calc(100dvh - 96px));`)) {
   throw new Error("the League Data Sets menu lost its list-sized cap -- a viewport-fraction cap never bites");
 }
 // A menu opened from the middle of the page is not on screen just because it is in the DOM.
-// Focusing an option only scrolls that option into view, which left four of the six sets below
-// the fold at 320px and five of six at 375px. The Data Sets menu goes through showMenu().
+// Focusing an option only scrolls that option into view, which left options below the fold at
+// phone widths. The Data Sets menu goes through showMenu().
 if (!inline.includes("    function showMenu(menu) {")) {
   throw new Error("showMenu() is what puts a chip's menu on screen -- Data Sets opens from mid-page");
 }

@@ -1132,16 +1132,16 @@
     /* The cap is the list, not a fraction of the viewport. It used to be min(100dvh - 96px, 480px)
        -- a flat 480px on any phone taller than 576px -- which is a number the six options never
        reach and so never bit: the panel measured 439px at 320px and simply hung off the bottom of
-       the screen, four of its six options below the fold. This is the same rule the seat menu was
-       fixed with: six rows at the 76px a two-line option takes at 320px, five 4px gaps, 12px of
+       the screen, four of its five options below the fold. This is the same rule the seat menu was
+       fixed with: five rows at the 76px a two-line option takes at 320px, four 4px gaps, 12px of
        panel padding and 2px of border, and then the room a phone has as the second term. Sizing
        to the list is what makes "does it fit" a question with an answer at build time -- the
-       generator asserts DATA_SETS.length + 1 against it, so a seventh set fails the build instead
+       generator asserts DATA_SETS.length against it, so a sixth set fails the build instead
        of shipping a scrolling menu. Do not lower the 44px option floor to fit a longer list. */
     #dataSets {
       position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 12;
       width: auto; margin: 0; padding: 6px;
-      max-height: min(calc(6 * 76px + 34px), calc(100dvh - 96px)); overflow-y: auto;
+      max-height: min(calc(5 * 76px + 30px), calc(100dvh - 96px)); overflow-y: auto;
       display: flex; flex-direction: column; gap: 4px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
@@ -1521,7 +1521,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "alignTradeSums20260901022530";
+    const DATA_V = "dropDsNone20260901023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1544,8 +1544,7 @@
     // nothing rendered under it: the sets are reachable by opening the menu and by nothing else
     // now that the ticker's pills are gone. An earlier build pre-selected Most lopsided so home
     // would not read as a lone control over empty space; the user asked for the empty space.
-    // null is the "nothing selected" state and the "None" option at the top of the menu is the
-    // way back to it, so the choice is reversible without a reload.
+    // clearLeague / the home icon return to null; there is no "None" menu option.
     let dataSet = null;
     let dsOpen = false;
     const WINDOWS = [
@@ -2316,27 +2315,8 @@
         + "<b>" + esc(row[1]) + "</b><span>" + esc(row[2]) + "</span></button>";
     }
 
-    /**
-     * The way back to nothing selected, first in the menu so it is the option a user meets
-     * rather than one they have to know about. It is a real option in the listbox -- same
-     * role, same 44px target, same arrow-key run as the five sets -- so a keyboard reaches it
-     * on ArrowDown/Home like any other, and aria-selected marks it when it is the live state.
-     *
-     * Its line is deliberately short enough to stay one line at 320px, where every set's line
-     * wraps to two. A sixth option pushes the tail of an already tall panel further below the
-     * fold -- three of five were already under it at 320px before this option existed -- and one
-     * line rather than two is the whole of what this function can do about that.
-     */
-    function dsNoneOpt() {
-      const on = !dataSet;
-      return '<button type="button" role="option" aria-selected="' + (on ? "true" : "false") + '"'
-        + ' class="ds-opt' + (on ? " on" : "") + '" data-dset-none="1">'
-        + "<b>None</b><span>Hide the set below the dropdown.</span></button>";
-    }
-
     function dsMenu() {
       return '<div class="filter-panel" id="dataSets" role="listbox" aria-label="League Data Sets">'
-        + dsNoneOpt()
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
@@ -2411,8 +2391,8 @@
 
     /**
      * The selected set, or nothing at all. Empty is the first-load state and the state the
-     * "None" option and the home icon return to, so this renders no box, no heading and no
-     * placeholder -- the dropdown stands alone over the news feed.
+     * home icon returns to, so this renders no box, no heading and no placeholder -- the
+     * dropdown stands alone over the news feed.
      */
     function dataSetPanel() {
       if (!dataSet) return "";
@@ -6567,20 +6547,6 @@
       if (head) head.focus({ preventScroll: true });
     }
 
-    /**
-     * Back to nothing selected, from the "None" option at the top of the menu. The heading that
-     * selectDataSet() focuses is about to stop existing, so focus goes to the trigger instead --
-     * a keyboard that opened the menu with Enter ends up back on the control it opened, rather
-     * than on <body> with the page scrolled somewhere.
-     */
-    function clearDataSet() {
-      dataSet = null;
-      dsOpen = false;
-      render();
-      const btn = document.querySelector("[data-dset-open]");
-      if (btn) btn.focus({ preventScroll: true });
-    }
-
     function closeDataSets() {
       dsOpen = false;
       render();
@@ -6598,7 +6564,7 @@
       if (!menu) return;
       const sel = menu.querySelector('[aria-selected="true"]') || menu.querySelector("button");
       // preventScroll, then showMenu: focusing an option scrolls that option into view and
-      // nothing else, which left four of the six sets below the fold at 320px.
+      // nothing else, which left options below the fold at 320px.
       if (sel) sel.focus({ preventScroll: true });
       showMenu(menu);
     }
@@ -6661,10 +6627,6 @@
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
-      // Before [data-dset]: "None" carries no set id, and an empty data-dset would be the dead
-      // pill defect all over again. It is its own attribute, so it can never read as a set.
-      const dsNoneBtn = e.target.closest("[data-dset-none]");
-      if (dsNoneBtn) { clearDataSet(); return; }
       const dsetBtn = e.target.closest("[data-dset]");
       if (dsetBtn) { selectDataSet(dsetBtn.dataset.dset); return; }
       const dsOpenBtn = e.target.closest("[data-dset-open]");

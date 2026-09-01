@@ -773,8 +773,9 @@
       appearance: none; font: inherit; touch-action: manipulation;
     }
     .lh-hero button.day-in + button.day-in { border-top: 1px solid #3a3428; padding-top: 10px; }
+    /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
     .lh-actions {
-      margin: 0 0 22px;
+      margin: 18px 0 22px;
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1340,15 +1341,16 @@
   <p class="league-sub" id="leagueSub" hidden></p>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
-  <nav id="bottomNav" class="bottom-nav" hidden aria-label="League menu">
-    <button type="button" data-bottom="account" aria-label="Account">
+  <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
+    <!-- Dock retired: league home quick actions under Latest trade are the nav. Markup kept hidden so goBottomNav deep-links still resolve if invoked. -->
+    <button type="button" data-bottom="account" aria-label="Account" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="8" r="3.25"/>
         <path d="M5.5 19.5c.8-3.2 3.2-4.75 6.5-4.75s5.7 1.55 6.5 4.75"/>
       </svg>
       <span>Account</span>
     </button>
-    <button type="button" data-bottom="trades" aria-label="My trades">
+    <button type="button" data-bottom="trades" aria-label="My trades" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 8h11"/>
         <path d="M14.5 4.5L18 8l-3.5 3.5"/>
@@ -1357,13 +1359,13 @@
       </svg>
       <span>My trades</span>
     </button>
-    <button type="button" class="bottom-home" data-bottom="home" aria-label="Home">
+    <button type="button" class="bottom-home" data-bottom="home" aria-label="Home" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
       </svg>
       <span>Home</span>
     </button>
-    <button type="button" data-bottom="teams" aria-label="My team">
+    <button type="button" data-bottom="teams" aria-label="My team" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="9" cy="8" r="2.75"/>
         <circle cx="16.5" cy="9" r="2.25"/>
@@ -1469,7 +1471,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "actionsBelowTrade20260901015300";
+    const DATA_V = "hideBottomNav20260901015430";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3222,16 +3224,9 @@
     function paintBottomNav() {
       const nav = document.getElementById("bottomNav");
       if (!nav) return;
-      const show = appScreen === "dash" && !!(activeLeague && activeLeague.sleeper_league_id);
-      nav.hidden = !show;
-      document.body.classList.toggle("has-bottom-nav", show);
-      if (!show) return;
-      const key = bottomNavKey();
-      for (const btn of nav.querySelectorAll("[data-bottom]")) {
-        const on = btn.dataset.bottom === key;
-        btn.classList.toggle("on", on);
-        btn.setAttribute("aria-current", on ? "page" : "false");
-      }
+      // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
+      nav.hidden = true;
+      document.body.classList.remove("has-bottom-nav");
     }
 
     function goBottomNav(which) {
@@ -6292,11 +6287,14 @@
       clearLeague();
     });
     document.getElementById("goSettings").addEventListener("click", () => openSettings());
-    document.getElementById("bottomNav").addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-bottom]");
-      if (!btn || btn.disabled) return;
-      goBottomNav(btn.dataset.bottom);
-    });
+    const bottomNavEl = document.getElementById("bottomNav");
+    if (bottomNavEl) {
+      bottomNavEl.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-bottom]");
+        if (!btn || btn.disabled) return;
+        goBottomNav(btn.dataset.bottom);
+      });
+    }
     document.querySelector("h1.brand a").addEventListener("click", (e) => {
       e.preventDefault();
       if (authSession && appScreen !== "dash") {

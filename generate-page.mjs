@@ -1346,15 +1346,16 @@ const html = `<!DOCTYPE html>
   <p class="league-sub" id="leagueSub" hidden></p>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
-  <nav id="bottomNav" class="bottom-nav" hidden aria-label="League menu">
-    <button type="button" data-bottom="account" aria-label="Account">
+  <nav id="bottomNav" class="bottom-nav" hidden aria-hidden="true" aria-label="League menu">
+    <!-- Dock retired: league home quick actions under Latest trade are the nav. Markup kept hidden so goBottomNav deep-links still resolve if invoked. -->
+    <button type="button" data-bottom="account" aria-label="Account" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="8" r="3.25"/>
         <path d="M5.5 19.5c.8-3.2 3.2-4.75 6.5-4.75s5.7 1.55 6.5 4.75"/>
       </svg>
       <span>Account</span>
     </button>
-    <button type="button" data-bottom="trades" aria-label="My trades">
+    <button type="button" data-bottom="trades" aria-label="My trades" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M7 8h11"/>
         <path d="M14.5 4.5L18 8l-3.5 3.5"/>
@@ -1363,13 +1364,13 @@ const html = `<!DOCTYPE html>
       </svg>
       <span>My trades</span>
     </button>
-    <button type="button" class="bottom-home" data-bottom="home" aria-label="Home">
+    <button type="button" class="bottom-home" data-bottom="home" aria-label="Home" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
       </svg>
       <span>Home</span>
     </button>
-    <button type="button" data-bottom="teams" aria-label="My team">
+    <button type="button" data-bottom="teams" aria-label="My team" tabindex="-1">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="9" cy="8" r="2.75"/>
         <circle cx="16.5" cy="9" r="2.25"/>
@@ -1475,7 +1476,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "actionsBelowTrade20260901015300";
+    const DATA_V = "hideBottomNav20260901015430";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3228,16 +3229,9 @@ const html = `<!DOCTYPE html>
     function paintBottomNav() {
       const nav = document.getElementById("bottomNav");
       if (!nav) return;
-      const show = appScreen === "dash" && !!(activeLeague && activeLeague.sleeper_league_id);
-      nav.hidden = !show;
-      document.body.classList.toggle("has-bottom-nav", show);
-      if (!show) return;
-      const key = bottomNavKey();
-      for (const btn of nav.querySelectorAll("[data-bottom]")) {
-        const on = btn.dataset.bottom === key;
-        btn.classList.toggle("on", on);
-        btn.setAttribute("aria-current", on ? "page" : "false");
-      }
+      // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
+      nav.hidden = true;
+      document.body.classList.remove("has-bottom-nav");
     }
 
     function goBottomNav(which) {
@@ -6298,11 +6292,14 @@ const html = `<!DOCTYPE html>
       clearLeague();
     });
     document.getElementById("goSettings").addEventListener("click", () => openSettings());
-    document.getElementById("bottomNav").addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-bottom]");
-      if (!btn || btn.disabled) return;
-      goBottomNav(btn.dataset.bottom);
-    });
+    const bottomNavEl = document.getElementById("bottomNav");
+    if (bottomNavEl) {
+      bottomNavEl.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-bottom]");
+        if (!btn || btn.disabled) return;
+        goBottomNav(btn.dataset.bottom);
+      });
+    }
     document.querySelector("h1.brand a").addEventListener("click", (e) => {
       e.preventDefault();
       if (authSession && appScreen !== "dash") {
@@ -7749,11 +7746,25 @@ if (!html.includes('id="goSettings"') || !inline.includes("function openSettings
   throw new Error("Settings control next to leagues back is required for commissioner admin");
 }
 if (!html.includes('id="bottomNav"') || !inline.includes("function goBottomNav(")) {
-  throw new Error("fixed bottom league menu (Account/My trades/Home/My team) is required");
+  throw new Error("bottom nav shell + goBottomNav must remain for deep-links (dock stays hidden)");
+}
+if (!inline.includes("function paintBottomNav(")) {
+  throw new Error("paintBottomNav must keep the league dock hidden");
+}
+{
+  const at = inline.indexOf("function paintBottomNav(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const src = inline.slice(at, stop < 0 ? at + 500 : stop);
+  if (!src.includes("nav.hidden = true") || src.includes("nav.hidden = !show")) {
+    throw new Error("paintBottomNav must force the bottom dock hidden (quick actions replaced it)");
+  }
+  if (src.includes('classList.toggle("has-bottom-nav"') || src.includes("has-bottom-nav\", show")) {
+    throw new Error("paintBottomNav must not pad the page for a removed bottom dock");
+  }
 }
 if (!html.includes('data-bottom="account"') || !html.includes('data-bottom="trades"')
   || !html.includes('data-bottom="home"') || !html.includes('data-bottom="teams"')) {
-  throw new Error("bottom nav must expose Account, My trades, Home, and My team");
+  throw new Error("bottom nav markup may stay for goBottomNav deep-links");
 }
 if (!html.includes('<span>My trades</span>') || !html.includes('<span>My team</span>')
   || !html.includes('aria-label="My trades"') || !html.includes('aria-label="My team"')) {
@@ -7763,10 +7774,11 @@ if (!inline.includes("selectMe(seat)") || !inline.includes("selectMe(seat, true)
   throw new Error("My team / My trades must open the signed-in seat via selectMe");
 }
 if (!inline.includes("function renderAccountPage()") || !inline.includes("function renderTeamsPage()")) {
-  throw new Error("Account and Teams bottom-nav screens are required");
+  throw new Error("Account and Teams screens are required (reachable without the dock)");
 }
+// Dock is retired — body must not reserve bottom padding for it on paint.
 if (!html.includes("body.has-bottom-nav")) {
-  throw new Error("page content must pad for the fixed bottom nav");
+  throw new Error("has-bottom-nav CSS may remain but paintBottomNav must not apply it");
 }
 if (!html.includes('rel="manifest"') || !html.includes("manifest.webmanifest")) {
   throw new Error("PWA manifest link is required for installable browser/app shell");

@@ -2200,7 +2200,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "draftPicksCaption20260901151000";
+    const DATA_V = "swapDraftChips20260901151500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2595,14 +2595,14 @@ const html = `<!DOCTYPE html>
           + ' aria-label="Clear ' + esc(lab) + ' filter">'
           + esc(lab) + '<span class="x" aria-hidden="true">×</span></button>');
       }
-      if (pickFilterMineOut) {
-        chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
-          + ' aria-label="Clear who has my picks">who has my picks'
-          + '<span class="x" aria-hidden="true">×</span></button>');
-      }
       if (pickFilterMineHeld) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
           + ' aria-label="Clear whose picks do i have">whose picks do i have'
+          + '<span class="x" aria-hidden="true">×</span></button>');
+      }
+      if (pickFilterMineOut) {
+        chips.push('<button type="button" class="pick-intel-sum" data-pick-mine="1"'
+          + ' aria-label="Clear who has my picks">who has my picks'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (!chips.length) return "";
@@ -2857,14 +2857,14 @@ const html = `<!DOCTYPE html>
         + ' aria-label="Search picks">'
         + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Search")
         + "</button>"
-        + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
-        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
-        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
-        + ' aria-label="who has my picks">who has my picks</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
         + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
+        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
+        + ' aria-label="who has my picks">who has my picks</button>'
         + "</div></div>"
         + pickFilterSummary()
         + pickIntelStepPanel(seatNames)
@@ -2982,12 +2982,12 @@ const html = `<!DOCTYPE html>
         + '<div class="pick-intel-chips">'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
         + ' aria-label="Search picks">Search</button>'
-        + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
-        + ' aria-label="who has my picks">who has my picks</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
+        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ' aria-label="who has my picks">who has my picks</button>'
         + "</div></div>"
         + body
         + "</section>";

@@ -1765,7 +1765,7 @@ const html = `<!DOCTYPE html>
     let data = null;
     let league = null;
     let picks = null;
-    // Pick board filters (AND across groups). Empty round/year sets mean "all".
+    // Draft Data filters (AND across groups). Empty round/year sets mean "all".
     // Progressive UI: idle shows the leaderboard + one Filter trigger; opening filters
     // walks Round → Year → Held by one dropdown at a time (pickFilterStep).
     let pickFilterRounds = {}; // { 1: true } when selected
@@ -1785,7 +1785,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "latestTradeBagsReady20260901035000";
+    const DATA_V = "draftDataHeading20260901032800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2206,7 +2206,7 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * League-home pick board: progressive filters for still-available draft picks.
+     * League-home Draft Data: progressive filters for still-available draft picks.
      * Idle = compact leaderboard + Filter picks trigger (+ My picks out shortcut).
      * Opening filters reveals one dropdown at a time: Round → Year → Held by.
      */
@@ -2246,9 +2246,9 @@ const html = `<!DOCTYPE html>
       const mineOutDis = !seat;
       const mineHeldDis = !seat;
       const filterOn = pickFilterOpen || active;
-      return '<section class="pick-intel" aria-label="Pick board">'
-        + '<h2 class="pick-intel-h">Pick board</h2>'
-        + '<div class="pick-intel-bar" role="group" aria-label="Pick board controls">'
+      return '<section class="pick-intel" aria-label="Draft Data">'
+        + '<h2 class="pick-intel-h">Draft Data</h2>'
+        + '<div class="pick-intel-bar" role="group" aria-label="Draft Data controls">'
         + '<button type="button" class="pick-intel-filter' + (filterOn ? " on" : "") + '"'
         + ' data-pick-filter-open="1" aria-expanded="' + (pickFilterOpen && pickFilterStep ? "true" : "false") + '">'
         + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Filter picks")
@@ -9197,8 +9197,10 @@ if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine
   || inline.includes("function firstRoundLeaders(")
   || inline.includes("Search a round") || inline.includes("Most 1sts right now:")
   || inline.includes("Most held right now") || !inline.includes("Who's got picks")
+  || !inline.includes("Draft Data") || inline.includes(">Pick board<")
+  || inline.includes('aria-label="Pick board"')
   || inline.includes("pick-intel-board-row")) {
-  throw new Error("Pick board must ship progressive filters + column leaderboard without a search input");
+  throw new Error("Draft Data must ship progressive filters + column leaderboard without a search input");
 }
 if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-bar") || !html.includes(".pick-intel-step")
@@ -9206,7 +9208,7 @@ if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
   || !html.includes(".pick-intel-board-yrs")
   || html.includes(".pick-intel-tools input[type=\"search\"]")
   || html.includes('data-pick-q="1"') || html.includes(".pick-intel-board-row")) {
-  throw new Error("Pick board progressive filter + column leaderboard styles must ship (no pick search input)");
+  throw new Error("Draft Data progressive filter + column leaderboard styles must ship (no pick search input)");
 }
 if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
   throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");

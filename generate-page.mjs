@@ -22,6 +22,9 @@ const html = `<!DOCTYPE html>
       --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
       --text: #f0f0f0; --muted: #9a9aa3; --dim: #8a8a93;
       --green: #3ddc97; --red: #e05555;
+      /* Skill-position colours — same hues as trade-card pos · team labels, tuned for dark bg. */
+      --pos-qb: #5eb3ff; --pos-rb: #3ddc97; --pos-wr: #ffb347; --pos-te: #c77dff;
+      --pos-k: #9a9aa3; --pos-def: #e05555; --pos-oth: #c8c8d0;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
@@ -847,6 +850,43 @@ const html = `<!DOCTYPE html>
       -webkit-line-clamp: unset; display: block;
       font-size: 0.8125rem; line-height: 1.38; margin: 0 0 6px;
     }
+    .news-hero-tags {
+      flex: 0 0 auto; display: flex; align-items: center; flex-wrap: wrap;
+      justify-content: flex-end; gap: 4px; max-width: 58%;
+    }
+    .news-cat-tag {
+      flex: 0 0 auto; font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
+      color: #e0b44c; background: rgba(107, 90, 46, 0.22);
+      border: 1px solid rgba(107, 90, 46, 0.65); border-radius: 999px;
+      padding: 1px 6px; white-space: nowrap;
+    }
+    .news-cat-tag.cat-injury { color: #f08a8a; border-color: rgba(224, 85, 85, 0.55); background: rgba(224, 85, 85, 0.12); }
+    .news-cat-tag.cat-good-injury-news { color: #6ee7b7; border-color: rgba(61, 220, 151, 0.45); background: rgba(61, 220, 151, 0.1); }
+    .news-cat-tag.cat-roster-move, .news-cat-tag.cat-trade { color: #e0b44c; }
+    .news-cat-tag.cat-off-the-field { color: #c9a0ff; border-color: rgba(199, 125, 255, 0.45); background: rgba(199, 125, 255, 0.1); }
+    .news-cat-tag.cat-suspension { color: #ffb347; border-color: rgba(255, 179, 71, 0.45); background: rgba(255, 179, 71, 0.1); }
+    .news-cat-tag.cat-depth-chart, .news-cat-tag.cat-buzz { color: #9a9aa3; border-color: rgba(154, 154, 163, 0.45); background: rgba(154, 154, 163, 0.08); }
+    .news-player { font-weight: 650; }
+    .news-player.pos-qb { color: var(--pos-qb); }
+    .news-player.pos-rb { color: var(--pos-rb); }
+    .news-player.pos-wr { color: var(--pos-wr); }
+    .news-player.pos-te { color: var(--pos-te); }
+    .news-player.pos-k { color: var(--pos-k); }
+    .news-player.pos-def { color: var(--pos-def); }
+    .news-player.pos-oth { color: var(--pos-oth); }
+    .news-pos-tag {
+      display: inline-block; margin-right: 3px;
+      font-size: 0.5625rem; font-weight: 700; line-height: 1.1;
+      letter-spacing: 0.02em; vertical-align: 0.05em;
+      opacity: 0.92;
+    }
+    .news-pos-tag.pos-qb { color: var(--pos-qb); }
+    .news-pos-tag.pos-rb { color: var(--pos-rb); }
+    .news-pos-tag.pos-wr { color: var(--pos-wr); }
+    .news-pos-tag.pos-te { color: var(--pos-te); }
+    .news-pos-tag.pos-k { color: var(--pos-k); }
+    .news-pos-tag.pos-def { color: var(--pos-def); }
+    .news-pos-tag.pos-oth { color: var(--pos-oth); }
     .news-hero-foot {
       display: flex; align-items: center; flex-wrap: wrap;
       gap: 2px 4px; min-height: 0;
@@ -5910,10 +5950,91 @@ const html = `<!DOCTYPE html>
       return cat;
     }
 
+    /** Map NFL position abbreviations to shared pos-* colour classes. */
+    const NEWS_POS_SLUG = {
+      QB: "qb", RB: "rb", WR: "wr", TE: "te", K: "k",
+      FB: "rb", HB: "rb", DST: "def", DEF: "def",
+      DL: "def", LB: "def", DB: "def", CB: "def", S: "def", DT: "def", DE: "def",
+    };
+    function newsPosSlug(pos) {
+      const p = String(pos || "").toUpperCase();
+      return NEWS_POS_SLUG[p] || "oth";
+    }
+    function newsPlayerSpanHtml(name, pos) {
+      const slug = newsPosSlug(pos);
+      const tag = pos
+        ? '<span class="news-pos-tag pos-' + slug + '">' + esc(pos) + "</span>"
+        : "";
+      return '<span class="news-player pos-' + slug + '">' + tag + esc(name) + "</span>";
+    }
+    /** Category pill label from the league_line prefix ("Injury — …", "Roster move on … — …"). */
+    function newsCategoryTagFromLine(line) {
+      const raw = String(line || "").trim();
+      const sep = raw.indexOf(" \u2014 ");
+      if (sep < 0) return "";
+      let prefix = raw.slice(0, sep).trim();
+      const onIdx = prefix.toLowerCase().indexOf(" on ");
+      if (onIdx >= 0) prefix = prefix.slice(0, onIdx).trim();
+      return prefix;
+    }
+    function newsCatTagSlug(label) {
+      return String(label || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+    function newsCatTagHtml(label) {
+      if (!label) return "";
+      const slug = newsCatTagSlug(label);
+      return '<span class="news-cat-tag cat-' + esc(slug) + '">' + esc(label) + "</span>";
+    }
+    /** Highlight rostered players and POS Name wire tokens in an expanded pull-up summary. */
+    function newsPullupLineHtml(line, it) {
+      const raw = String(line || "");
+      if (!raw) return "";
+      const posByName = Object.create(null);
+      if (it && it.player) posByName[String(it.player).toLowerCase()] = it.player_position || null;
+      const posNameRe = /\b(QB|RB|WR|TE|K|FB|OL|DL|LB|DB|CB|DT|DE|OT|OG|C)\s+([A-Z][\w.'\u2019\-]+(?:\s+(?:Jr\.|Sr\.|III|II|IV|V|[A-Z]\.?|[A-Z][\w.'\u2019\-]+))*)/g;
+      const matches = [];
+      let m;
+      while ((m = posNameRe.exec(raw)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, pos: m[1], name: m[2], kind: "posName" });
+        posByName[m[2].toLowerCase()] = m[1];
+      }
+      const names = Object.keys(posByName).filter(Boolean).sort((a, b) => b.length - a.length);
+      for (const key of names) {
+        const display = (it && it.player && it.player.toLowerCase() === key)
+          ? it.player
+          : (matches.find((x) => x.name.toLowerCase() === key) || {}).name || key;
+        const re = new RegExp("\\b" + display.replace(/[.*+?^\u0024{}()|[\\]\\\\]/g, "\\\\$&") + "(?:['\u2019]s?)?\\b", "g");
+        let nm;
+        while ((nm = re.exec(raw)) !== null) {
+          if (matches.some((x) => nm.index >= x.start && nm.index < x.end)) continue;
+          matches.push({
+            start: nm.index, end: nm.index + nm[0].length,
+            pos: posByName[key], name: display, kind: "name",
+          });
+        }
+      }
+      matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+      const kept = [];
+      for (const match of matches) {
+        if (kept.some((k) => match.start < k.end && match.end > k.start)) continue;
+        kept.push(match);
+      }
+      kept.sort((a, b) => a.start - b.start);
+      let html = "";
+      let cursor = 0;
+      for (const match of kept) {
+        if (match.start > cursor) html += esc(raw.slice(cursor, match.start));
+        html += newsPlayerSpanHtml(match.name, match.pos);
+        cursor = match.end;
+      }
+      if (cursor < raw.length) html += esc(raw.slice(cursor));
+      return html;
+    }
+
     function newsHeroLine(it) {
       if (!it) {
         return {
-          source: "News", line: "Nothing shared yet.", who: "",
+          source: "News", line: "Nothing shared yet.", lineHtml: "", categoryTag: "", who: "",
           handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
         };
       }
@@ -5931,6 +6052,8 @@ const html = `<!DOCTYPE html>
         ? whoNames.map((n) => seatLabel(n)).join(" · ")
         : "";
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
+      const categoryTag = newsCategoryTagFromLine(line);
+      const lineHtml = newsPullupLineHtml(line, it);
       const when = ago(it.published);
       const url = String(it.source_url || "");
       const postUrl = /^https?:\\/\\//i.test(url) ? url : "";
@@ -5939,7 +6062,8 @@ const html = `<!DOCTYPE html>
       const subId = itemId ? newsSubmissionId(itemId) : "";
       const canRemove = !!(isNewsAdmin() && subId);
       return {
-        source: source, line: line, who: who, handle: handleLab, when: when,
+        source: source, line: line, lineHtml: lineHtml, categoryTag: categoryTag,
+        who: who, handle: handleLab, when: when,
         postUrl: postUrl, xLink: xLink, itemId: itemId, canRemove: canRemove,
       };
     }
@@ -5970,11 +6094,14 @@ const html = `<!DOCTYPE html>
     }
 
     function newsPullupItemInnerHtml(bit) {
+      const tagBits = [];
+      if (bit.categoryTag) tagBits.push(newsCatTagHtml(bit.categoryTag));
+      if (bit.source) tagBits.push('<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>");
       const head = '<div class="news-hero-head">'
         + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
-        + (bit.source ? '<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>" : "")
+        + (tagBits.length ? '<div class="news-hero-tags">' + tagBits.join("") + "</div>" : "")
         + "</div>";
-      const summary = '<div class="news-pullup-line">' + esc(bit.line) + "</div>";
+      const summary = '<div class="news-pullup-line">' + (bit.lineHtml || esc(bit.line)) + "</div>";
       const foot = newsPullupFootHtml(bit);
       return '<div class="news-pullup-card">' + head + summary + foot + "</div>";
     }
@@ -6018,7 +6145,7 @@ const html = `<!DOCTYPE html>
       }
       const latestBit = items.length
         ? newsHeroLine(items[0])
-        : { source: "News", line: emptyLine, who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
+        : { source: "News", line: emptyLine, lineHtml: "", categoryTag: "", who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
       const rows = items.length
         ? items.map((it) => {
             const bit = newsHeroLine(it);
@@ -8890,19 +9017,29 @@ if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src-bubble")
 }
 {
   const itemHtml = inline.slice(inline.indexOf("function newsPullupItemInnerHtml("),
-    inline.indexOf("function newsPullupItemInnerHtml(") + 500);
+    inline.indexOf("function newsPullupItemInnerHtml(") + 700);
   const footHtml = inline.slice(inline.indexOf("function newsPullupFootHtml("),
     inline.indexOf("function newsPullupItemInnerHtml("));
   if (!(itemHtml.indexOf("news-hero-head") >= 0
-      && itemHtml.indexOf("news-hero-who") < itemHtml.indexOf("news-hero-src-bubble")
+      && itemHtml.indexOf("news-hero-who") >= 0
+      && itemHtml.indexOf("news-hero-tags") >= 0
+      && itemHtml.indexOf("newsCatTagHtml") >= 0
+      && itemHtml.indexOf("news-hero-src-bubble") >= 0
+      && itemHtml.indexOf("bit.lineHtml") >= 0
       && itemHtml.indexOf("news-pullup-line") > itemHtml.indexOf("news-hero-head")
       && itemHtml.indexOf("newsPullupFootHtml") >= 0
       && itemHtml.indexOf("news-pullup-card") >= 0
       && footHtml.indexOf("news-hero-foot") >= 0
       && footHtml.indexOf("See tweet</a>") >= 0
       && footHtml.indexOf("news-hero-sep") >= 0)) {
-    throw new Error("News pull-up item must order: card > head (seat + bubble), summary, foot (handle · time · See tweet · Remove)");
+    throw new Error("News pull-up item must order: card > head (seat + category/source tags), rich summary, foot (handle · time · See tweet · Remove)");
   }
+}
+if (!html.includes(".news-player.pos-qb") || !html.includes(".news-cat-tag") || !html.includes(".news-pos-tag")) {
+  throw new Error("News pull-up expanded rows must ship position-coloured players and category tags");
+}
+if (!inline.includes("function newsPullupLineHtml(") || !inline.includes("function newsCategoryTagFromLine(")) {
+  throw new Error("News pull-up must derive category tags and highlight players in expanded summaries");
 }
 {
   const peekFn = inline.slice(inline.indexOf("function newsPullupPeekHtml("),

@@ -1108,9 +1108,29 @@
     button.pick-intel-board-lab:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
-    .pick-intel-board-leaders,
+    .pick-intel-board-leaders {
+      display: flex; flex-direction: column; gap: 3px;
+      min-width: 0; width: 100%;
+    }
     .pick-intel-board-leader {
-      display: contents;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 4px; align-items: baseline;
+      width: 100%; min-width: 0;
+    }
+    button.pick-intel-board-leader {
+      appearance: none; font: inherit; color: inherit;
+      background: transparent; border: 0; padding: 0; margin: 0;
+      cursor: pointer; text-align: inherit;
+      touch-action: manipulation;
+    }
+    button.pick-intel-board-leader .pil-who {
+      text-decoration: underline;
+      text-decoration-color: rgba(154, 154, 163, 0.45);
+      text-underline-offset: 2px;
+    }
+    button.pick-intel-board-leader:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;
     }
     .pick-intel-board-leader .pil-who {
       min-width: 0;
@@ -1119,10 +1139,10 @@
       white-space: nowrap;
       color: var(--dim); font-size: 0.6875rem; line-height: 1.3;
     }
-    .pick-intel-board-leaders .pil-n {
+    .pick-intel-board-leader .pil-n {
       color: var(--text); font-weight: 650; white-space: nowrap;
       font-size: 0.6875rem; line-height: 1.3;
-      justify-self: center; text-align: center;
+      text-align: center;
     }
     .pick-intel-board-empty {
       grid-column: 1 / -1;
@@ -2139,7 +2159,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "noSectionTitles20260901150000";
+    const DATA_V = "pickBoardTeamClickable20260901151500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2669,12 +2689,26 @@
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
-    /** Stacked name · count rows for one leaderboard column. */
-    function pickLeadersStack(leaders) {
+    /**
+     * Stacked name · count rows for one leaderboard column.
+     * When linkOpts is set (Draft Data board), each name is a button that opens
+     * the full page with that team + round set + year prefilled.
+     */
+    function pickLeadersStack(leaders, linkOpts) {
       if (!leaders.length) return '<span class="pick-intel-board-empty">Nobody yet</span>';
-      return leaders.map(([name, n]) =>
-        '<div class="pick-intel-board-leader"><span class="pil-who">' + seatLabel(name)
-          + '</span><span class="pil-n">· ' + n + "</span></div>").join("");
+      return leaders.map(([name, n]) => {
+        const who = '<span class="pil-who">' + seatLabel(name) + "</span>"
+          + '<span class="pil-n">· ' + n + "</span>";
+        if (linkOpts && linkOpts.rounds && linkOpts.rounds.length) {
+          const rounds = linkOpts.rounds.join(",");
+          const years = String(linkOpts.year || PICK_INTEL_BOARD_YEAR);
+          const aria = name + " · " + n + " — open Draft Data filtered to this team";
+          return '<button type="button" class="pick-intel-board-leader" data-pick-board-team="'
+            + esc(name) + '" data-pick-rounds="' + rounds + '" data-pick-years="' + esc(years) + '"'
+            + ' aria-label="' + esc(aria) + '">' + who + "</button>";
+        }
+        return '<div class="pick-intel-board-leader">' + who + "</div>";
+      }).join("");
     }
 
     /** Idle quick-view leaderboard: top 3 holders of 2027 1sts, 2027 2nds, and 2027 3rd+4th combined.
@@ -2696,7 +2730,9 @@
       const bodyCols = cols.map((r) => {
         const leaders = pickLeaders(r.rounds, 3, yrs);
         return '<div class="pick-intel-board-col">'
-          + '<div class="pick-intel-board-leaders">' + pickLeadersStack(leaders) + "</div>"
+          + '<div class="pick-intel-board-leaders">'
+          + pickLeadersStack(leaders, { rounds: r.rounds, year: yrs })
+          + "</div>"
           + "</div>";
       }).join("");
       return '<div class="pick-intel-board" role="group" aria-label="' + esc(aria) + '">'
@@ -2797,9 +2833,31 @@
      * Open the full Draft Data screen. Home chips land here so filtering/research
      * has room; mode presets search / who-has-mine / whose-I-hold.
      */
-    function openDraftDataPage(mode) {
+    /**
+     * Open the full Draft Data screen.
+     * mode: search | mine | held | board
+     * preset: optional { rounds: number[], years: string[], owner, ownerMode }
+     * for leaderboard deep-links (team + column + year already chosen).
+     */
+    function openDraftDataPage(mode, preset) {
       clearPickFilters();
-      if (mode === "mine") {
+      if (preset && (preset.owner || (preset.rounds && preset.rounds.length) || (preset.years && preset.years.length))) {
+        pickFilterRounds = {};
+        for (const n of (preset.rounds || [])) {
+          if (n > 0) pickFilterRounds[n] = true;
+        }
+        pickFilterYears = {};
+        for (const y of (preset.years || [])) {
+          if (y) pickFilterYears[String(y)] = true;
+        }
+        if (preset.owner) {
+          pickFilterOwner = preset.owner;
+          pickFilterOwnerMode = preset.ownerMode === "out" ? "out" : "held";
+          pickFilterOwnerAny = false;
+        }
+        pickFilterOpen = false;
+        pickFilterStep = null;
+      } else if (mode === "mine") {
         pickFilterMineOut = true;
       } else if (mode === "held") {
         pickFilterMineHeld = true;
@@ -9029,20 +9087,32 @@
         render();
         return;
       }
-      const pickBoardRounds = e.target.closest("[data-pick-rounds]");
+      const pickBoardTeam = e.target.closest("[data-pick-board-team]");
+      if (pickBoardTeam) {
+        // Leaderboard seat → Draft Data prefilled for that holder + column rounds + year.
+        const rounds = String(pickBoardTeam.dataset.pickRounds || "")
+          .split(",").map(Number).filter((n) => n > 0);
+        const year = String(pickBoardTeam.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
+        const team = pickBoardTeam.dataset.pickBoardTeam || "";
+        if (!team) return;
+        openDraftDataPage("board", {
+          rounds,
+          years: year ? [year] : [],
+          owner: team,
+          ownerMode: "held",
+        });
+        return;
+      }
+      const pickBoardRounds = e.target.closest("button.pick-intel-board-lab[data-pick-rounds]");
       if (pickBoardRounds) {
-        // Leaderboard shortcut: apply that round set + board year (2027) and show matches.
+        // Column header → Draft Data prefilled for that round set + board year.
         const rounds = String(pickBoardRounds.dataset.pickRounds || "")
           .split(",").map(Number).filter((n) => n > 0);
         const year = String(pickBoardRounds.dataset.pickYears || PICK_INTEL_BOARD_YEAR);
-        pickFilterRounds = {};
-        for (const n of rounds) pickFilterRounds[n] = true;
-        pickFilterYears = {};
-        if (year) pickFilterYears[year] = true;
-        pickFilterOpen = false;
-        pickFilterStep = null;
-        pickIntelOpen = null;
-        render();
+        openDraftDataPage("board", {
+          rounds,
+          years: year ? [year] : [],
+        });
         return;
       }
       const pickRound = e.target.closest("[data-pick-round]");

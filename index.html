@@ -1213,6 +1213,18 @@
     .h2h-chip.is-trade .h2h-verdict.is-win { color: var(--green); }
     .h2h-chip.is-trade .h2h-verdict.is-lose { color: var(--red); }
     .h2h-chip.is-trade .h2h-verdict.is-even { color: var(--dim); }
+    /* Compact bag-loading placeholder — seats stay visible; asset rows are inert bars until
+       seat bags land, so the chip never flashes a one-headline stub then grows full bags.
+       Static bars only (no @keyframes) — WCAG 2.2.2 pause control not required. */
+    .h2h-chip.is-trade.is-loading .lh-trade-ph {
+      display: block; height: 0.85em; width: 72%; max-width: 9rem;
+      border-radius: 4px; background: #2a261c; opacity: 0.55;
+    }
+    .h2h-chip.is-trade.is-loading .lh-trade-ph-num {
+      display: inline-block; height: 0.85em; width: 2.4em; vertical-align: middle;
+      border-radius: 4px; background: #2a261c; opacity: 0.55;
+    }
+    .h2h-chip.is-trade.is-loading .lh-trade-ph-num.is-short { width: 1.6em; }
     .h2h-assets {
       display: flex; flex-direction: column; gap: 4px; width: 100%;
       padding-top: 4px; border-top: 1px solid #3a3428;
@@ -1754,7 +1766,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "pickBoardCols20260901034000";
+    const DATA_V = "latestTradeBagsReady20260901034500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1798,6 +1810,7 @@
     let latestTradeHit = null; // seat trade object for latestTradeHitTx
     let latestTradeHitTx = null;
     let latestTradeBagsLoading = false;
+    let latestTradeBagsPromise = null; // in-flight ensureLatestTradeBags() for await/reuse
     // tx → seat trade object | null (null = loaded, no bag). Own map so the feed can
     // paint many H2H cards without fighting the home Latest trade pointer.
     const tradeBagByTx = Object.create(null);
@@ -2308,6 +2321,12 @@
       try {
         picks = await getLeagueJson("picks.json");
       } catch (err) { picks = picks || null; }
+      // Warm Latest trade bags before the first home paint when we can — seat bags are
+      // not in league.json, so painting the chip from headlines alone looked half-empty.
+      try {
+        if (!me && view === "home") await ensureLatestTradeBags();
+        else ensureLatestTradeBags().catch((err) => console.error(err));
+      } catch (err) { console.error(err); }
       const startTitle = params.get("title");
       const startView = params.get("view");
       tradeSeat = params.get("seat") || null;
@@ -4894,6 +4913,7 @@
       latestTradeHit = null;
       latestTradeHitTx = null;
       latestTradeBagsLoading = false;
+      latestTradeBagsPromise = null;
       focusNext = null;
       syncUrl();
       await loadMembers();
@@ -5962,41 +5982,88 @@
       if (latestTradeHitTx === tx) latestTradeHit = hit || null;
     }
 
+    /** True once ensureLatestTradeBags finished for this tx (hit may still be null). */
+    function latestTradeBagsReady(tx) {
+      return !!(tx && Object.prototype.hasOwnProperty.call(tradeBagByTx, tx));
+    }
+
+    /**
+     * Compact placeholder chip: seat names + inert asset bars. Used until seat bags land so
+     * we never paint the one-headline stub from trade_boards and then expand into full bags.
+     */
+    function latestTradeSkeletonHtml(latest) {
+      const phAsset = (short) => '<div class="lh-trade-asset is-ph" aria-hidden="true">'
+        + '<span class="lh-trade-plus">+</span>'
+        + '<div class="lh-trade-lab"><b class="lh-trade-ph"></b></div>'
+        + '<span class="lh-trade-num lh-trade-val lh-trade-ph-num'
+        + (short ? " is-short" : "") + '"></span></div>';
+      const side = (name, right) => {
+        const cls = right ? "h2h-side is-right" : "h2h-side is-left";
+        return '<div class="' + cls + '">'
+          + '<div class="h2h-top">'
+          + h2hAvatarHtml(name, null, { win: false })
+          + '<div class="h2h-id"><div class="h2h-name">' + seatLabel(name) + "</div></div></div>"
+          + '<div class="h2h-assets">' + phAsset(false) + phAsset(true) + "</div></div>";
+      };
+      return '<div class="h2h-chip is-trade is-loading" role="status" aria-busy="true"'
+        + ' aria-label="Loading latest trade">'
+        + side(latest.name, false)
+        + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+        + side(latest.other, true)
+        + '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>'
+        + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
+        + '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>'
+        + "</div>";
+    }
+
     function ensureLatestTradeBags() {
       const latest = latestTradeSide();
       if (!latest) {
         latestTradeHit = null;
         latestTradeHitTx = null;
-        return;
+        latestTradeBagsLoading = false;
+        latestTradeBagsPromise = null;
+        return Promise.resolve(null);
       }
-      // Already loading or resolved for this transaction (hit may be null if the seat file missed it).
-      if (latestTradeHitTx === latest.transaction_id
-        || Object.prototype.hasOwnProperty.call(tradeBagByTx, latest.transaction_id)) {
-        if (Object.prototype.hasOwnProperty.call(tradeBagByTx, latest.transaction_id)) {
-          latestTradeHitTx = latest.transaction_id;
-          latestTradeHit = tradeBagByTx[latest.transaction_id];
-        }
-        return;
+      const tx = latest.transaction_id;
+      // Resolved for this transaction (hit may be null if the seat file missed it).
+      if (Object.prototype.hasOwnProperty.call(tradeBagByTx, tx)) {
+        latestTradeHitTx = tx;
+        latestTradeHit = tradeBagByTx[tx];
+        latestTradeBagsLoading = false;
+        return Promise.resolve(tradeBagByTx[tx]);
       }
+      // Reuse the in-flight fetch so loadMembers can await the same promise.
+      if (tradeBagPending[tx] && latestTradeBagsPromise) return latestTradeBagsPromise;
       latestTradeBagsLoading = true;
-      latestTradeHitTx = latest.transaction_id;
-      tradeBagPending[latest.transaction_id] = true;
-      (async () => {
+      latestTradeHitTx = tx;
+      tradeBagPending[tx] = true;
+      latestTradeBagsPromise = (async () => {
         try {
           await ensureKtcBook();
           const seat = await seatData(latest.user_id);
           const hit = seat && (seat.trades || [])
-            .find((t) => t.transaction_id === latest.transaction_id);
-          rememberTradeBag(latest.transaction_id, hit || null);
+            .find((t) => t.transaction_id === tx);
+          rememberTradeBag(tx, hit || null);
+          return hit || null;
         } catch (err) {
           console.error(err);
-          rememberTradeBag(latest.transaction_id, null);
+          rememberTradeBag(tx, null);
+          return null;
+        } finally {
+          delete tradeBagPending[tx];
+          latestTradeBagsLoading = false;
+          if (latestTradeBagsPromise) {
+            const done = latestTradeBagsPromise;
+            Promise.resolve(done).then(() => {
+              if (latestTradeBagsPromise === done) latestTradeBagsPromise = null;
+            });
+          }
+          if (appScreen === "dash" && view === "home" && !me) render();
+          if (appScreen === "dash" && view === "trades" && !me) render();
         }
-        delete tradeBagPending[latest.transaction_id];
-        latestTradeBagsLoading = false;
-        if (appScreen === "dash" && view === "home" && !me) render();
-        if (appScreen === "dash" && view === "trades" && !me) render();
       })();
+      return latestTradeBagsPromise;
     }
 
     /** Prefetch seat bags for the first page of the league trades feed. */
@@ -6320,11 +6387,16 @@
         try {
           // Latest trade H2H chip — opens the trade board for this deal.
           // Div (not button) so seat-link names/flair can nest legally.
+          // Hold the full chip until seat bags are ready (skeleton meanwhile) so we never
+          // flash the trade_boards headline stub (one leg/side, dash values) then expand.
+          const chip = latestTradeBagsReady(latest.transaction_id)
+            ? latestTradeCardHtml(latest)
+            : latestTradeSkeletonHtml(latest);
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Latest trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
             + '<div class="day-alert-h">Latest trade</div>'
-            + latestTradeCardHtml(latest)
+            + chip
             + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).

@@ -2195,7 +2195,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "scoreAsCompact20260901164500";
+    const DATA_V = "seatTradeFeedUnify20260901172000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4117,7 +4117,13 @@ const html = `<!DOCTYPE html>
     function dataSetRows(id) {
       const p = (league && league.player_lists) || {};
       const trades = (r) => r.trades + (r.trades === 1 ? " trade" : " trades");
-      if (id === "wide") return rankWide().map((r) => boardTape(r)).join("");
+      if (id === "wide") {
+        const list = rankWide();
+        ensureTradesFeedBags(list);
+        return list.length
+          ? '<div class="trades-feed">' + list.map((r) => tradeFeedCardHtml(r)).join("") + "</div>"
+          : "";
+      }
       if (id === "passed") return (p.most_traded || []).map((r) => listRow(r, trades(r))).join("");
       if (id === "least") return (p.least_traded || []).map((r) => listRow(r, trades(r))).join("");
       if (id === "forever") return (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
@@ -4830,6 +4836,37 @@ const html = `<!DOCTYPE html>
         + empty
         + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
         + more;
+    }
+
+    /**
+     * Map a seat-file trade onto the league tape side the feed cards expect, and stash the
+     * seat bag so latestTradeCardHtml can paint assets without a second fetch. Every surface
+     * that lists a seat's deals (Trades tab, best/worst, partners) goes through this so vote
+     * state keyed by transaction_id matches the league feed.
+     */
+    function seatTradeSide(t) {
+      if (!t || !t.transaction_id) return null;
+      rememberTradeBag(t.transaction_id, t);
+      const uid = (me && me.user_id) || null;
+      const side = tradeSide(t.transaction_id, uid) || tradeSide(t.transaction_id, null);
+      if (side) return side;
+      // Tape gap (rare): still paint a framed card from the seat file so the deal is not lost.
+      const otherNames = (t.others || []);
+      return {
+        transaction_id: t.transaction_id,
+        date: t.date,
+        user_id: uid,
+        name: (me && me.name) || "This seat",
+        other: otherNames.join(" · ") || "Them",
+        headline: "",
+        windows: t.windows || {},
+      };
+    }
+
+    /** One seat trade as the same H2H + vote card the league feed uses. */
+    function seatTradeFeedCardHtml(t) {
+      const side = seatTradeSide(t);
+      return side ? tradeFeedCardHtml(side) : "";
     }
 
     /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
@@ -6531,8 +6568,11 @@ const html = `<!DOCTYPE html>
     }
 
     function voteParties(r) {
-      const cached = seatCache[r.user_id];
-      const hit = cached && (cached.trades || []).find((t) => t.transaction_id === r.transaction_id);
+      // Prefer the bag already painted for this tx (seat tab / feed cache) so N-way detection
+      // cannot disagree between the H2H chip and the vote buttons on the same card.
+      const hit = bagHitForTx(r.transaction_id)
+        || ((seatCache[r.user_id] || {}).trades || [])
+          .find((t) => t.transaction_id === r.transaction_id);
       return hit ? 1 + ((hit.others || []).length) : voteSeats(r).length;
     }
 
@@ -7572,10 +7612,9 @@ const html = `<!DOCTYPE html>
             rememberTradeBag(tx, null);
           }
           delete tradeBagPending[tx];
-          if (appScreen === "dash" && view === "trades" && !me) render();
-          if (appScreen === "dash" && view === "trade" && !me) render();
-          if (appScreen === "dash" && view === "home" && !me
-            && latestTradeHitTx === tx) render();
+          if (appScreen !== "dash") return;
+          if (view === "trades" || view === "trade" || view === "partners"
+            || view === "home" || view === "datasets") render();
         })();
       }
     }
@@ -7929,8 +7968,10 @@ const html = `<!DOCTYPE html>
         + teamMarks()
         + markChart()
         + empty
-        + (best ? "<h2>Best deal</h2>" + tradeRow(best) : "")
-        + (worst && (!best || worst.transaction_id !== best.transaction_id) ? "<h2>Worst deal</h2>" + tradeRow(worst) : "")
+        + (best ? '<h2>Best deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(best) + "</div>" : "")
+        + (worst && (!best || worst.transaction_id !== best.transaction_id)
+          ? '<h2>Worst deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(worst) + "</div>"
+          : "")
         + ((take || pay) ? "<h2>Partners</h2>" : "")
         + (take ? partnerLine(take) : "")
         + (pay && take && pay.name !== take.name ? partnerLine(pay) : "")
@@ -8129,6 +8170,14 @@ const html = `<!DOCTYPE html>
           : !lived.length
             ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
             : "";
+      // Same H2H + vote cards as the league feed; bags are already on the seat file.
+      const shown = lived.slice(0, tapeLimit);
+      for (const t of shown) seatTradeSide(t);
+      const cards = shown.map((t) => seatTradeFeedCardHtml(t)).join("");
+      const more = lived.length > shown.length
+        ? '<button type="button" class="chip" data-tape-more="1">Show more trades ('
+          + (lived.length - shown.length) + " left)</button>"
+        : "";
       return '<div class="filter-wrap">'
         + filterRow(yearBtn)
         + (yearFilterOpen
@@ -8141,9 +8190,11 @@ const html = `<!DOCTYPE html>
             + "</div>"
           : "")
         + "</div>"
+        + voteToastHtml()
         + '<div class="caption">' + esc(livedHint(lived.length, list.length, "deal")) + "</div>"
         + empty
-        + lived.map((t) => tradeRow(t)).join("");
+        + (cards ? '<div class="trades-feed">' + cards + "</div>" : "")
+        + more;
     }
 
     function clockName() {
@@ -8351,7 +8402,8 @@ const html = `<!DOCTYPE html>
           .filter((t) => (t.others || []).length === 1 && t.others[0] === partnerName && chipLived(t.date));
         detail = p
           ? "<h2>" + seatLabel(p.name) + "</h2>"
-            + (deals.length ? deals.map((t) => tradeRow(t)).join("")
+            + (deals.length
+              ? '<div class="trades-feed">' + deals.map((t) => seatTradeFeedCardHtml(t)).join("") + "</div>"
               : '<p class="caption">No deal with ' + seatLabel(p.name) + " has lived " + esc(clockName()) + " yet.</p>")
           : "";
       }
@@ -9701,6 +9753,7 @@ const html = `<!DOCTYPE html>
       if (yearLab) {
         year = e.target.checked ? yearLab.dataset.year : "all";
         yearFilterOpen = true;
+        tapeLimit = 20;
         render();
         return;
       }
@@ -10678,6 +10731,42 @@ for (const ban of [
   }
   if (!inline.includes('const VOTE_KEY = "cuckle.votes.v2"')) {
     throw new Error("VOTE_KEY must be cuckle.votes.v2 so prior local ballots are wiped");
+  }
+  if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
+    throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");
+  }
+}
+{
+  const at = inline.indexOf("function renderTrades(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 4500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || !fn.includes("trades-feed")
+    || fn.includes("tradeRow(t)") || fn.includes("lived.map((t) => tradeRow")) {
+    throw new Error("seat Trades tab must use H2H feed cards (seatTradeFeedCardHtml), not tradeRow");
+  }
+}
+{
+  const at = inline.indexOf("function renderTeamHome(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(best)") || fn.includes("tradeRow(worst)")) {
+    throw new Error("team home best/worst deals must use seatTradeFeedCardHtml");
+  }
+}
+{
+  const at = inline.indexOf("function renderPartners(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(t)")) {
+    throw new Error("partners deal list must use seatTradeFeedCardHtml");
+  }
+}
+{
+  const at = inline.indexOf("function dataSetRows(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
+  if (!fn.includes("tradeFeedCardHtml(") || fn.includes("boardTape(r)")) {
+    throw new Error("most-lopsided dataset must use tradeFeedCardHtml, not boardTape");
   }
 }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")

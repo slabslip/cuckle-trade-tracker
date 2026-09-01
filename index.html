@@ -2196,7 +2196,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "fixBlankHandcuffsQuote20260901153000";
+    const DATA_V = "myCurrentChip20260901162500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2593,7 +2593,7 @@
       }
       if (pickFilterMineHeld) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
-          + ' aria-label="Clear whose picks do i have">whose picks do i have'
+          + ' aria-label="Clear My Current">My Current'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (pickFilterMineOut) {
@@ -2856,7 +2856,7 @@
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
-        + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + ' aria-label="My Current picks">My Current</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
         + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
@@ -2980,7 +2980,7 @@
         + ' aria-label="Search picks">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
-        + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + ' aria-label="My Current picks">My Current</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="who has my picks">who has my picks</button>'

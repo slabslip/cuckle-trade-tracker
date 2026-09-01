@@ -2201,7 +2201,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "fixBlankHandcuffsQuote20260901153000";
+    const DATA_V = "myCurrentChip20260901162500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2598,7 +2598,7 @@ const html = `<!DOCTYPE html>
       }
       if (pickFilterMineHeld) {
         chips.push('<button type="button" class="pick-intel-sum" data-pick-mine-held="1"'
-          + ' aria-label="Clear whose picks do i have">whose picks do i have'
+          + ' aria-label="Clear My Current">My Current'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (pickFilterMineOut) {
@@ -2861,7 +2861,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
         + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
-        + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + ' aria-label="My Current picks">My Current</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
         + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
@@ -2985,7 +2985,7 @@ const html = `<!DOCTYPE html>
         + ' aria-label="Search picks">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
-        + ' aria-label="whose picks do i have">whose picks do i have</button>'
+        + ' aria-label="My Current picks">My Current</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
         + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
         + ' aria-label="who has my picks">who has my picks</button>'
@@ -10681,10 +10681,10 @@ if (!inline.includes("pickLeadersStack(leaders, { rounds:")
   if (homeTeaser.includes("data-pick-filter-open") || homeTeaser.includes("data-pick-mine=\"")) {
     throw new Error("pickIntelHome chips must navigate via data-draft-data-open, not inline pick filters");
   }
-  // Chip order: Search · whose picks do i have · who has my picks
+  // Chip order: Search · My Current · who has my picks
   if (homeTeaser.indexOf('data-draft-data-open="held"') > homeTeaser.indexOf('data-draft-data-open="mine"')
-    || homeTeaser.indexOf("whose picks do i have") > homeTeaser.indexOf("who has my picks")) {
-    throw new Error("Draft Data home chips must order held (whose) before mine (who has)");
+    || homeTeaser.indexOf(">My Current<") > homeTeaser.indexOf("who has my picks")) {
+    throw new Error("Draft Data home chips must order held (My Current) before mine (who has)");
   }
 }
 
@@ -10774,10 +10774,10 @@ if (!html.includes(".pick-intel") || !html.includes("button.pick-intel-row")
 }
 if (!inline.includes('aria-label="Search picks"')
   || !inline.includes('aria-label="who has my picks"')
-  || !inline.includes('aria-label="whose picks do i have"')
+  || !inline.includes('aria-label="My Current picks"')
   || !inline.includes('">Search</button>')
   || !inline.includes(">who has my picks<")
-  || !inline.includes(">whose picks do i have<")
+  || !inline.includes(">My Current<")
   || inline.includes(">Filter picks<") || inline.includes(">My picks out<")
   || inline.includes(">Mine held<")
   || inline.includes('aria-label="Clear my picks out"')

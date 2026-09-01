@@ -972,9 +972,9 @@
     .pick-intel-ico svg { display: block; width: 22px; height: 22px; }
     /* Picks glyph: larger stacked 1st/2nd/3rd cards so nd/rd peek out. */
     .pick-intel-ico.is-picks {
-      width: 36px;
+      width: 40px;
     }
-    .pick-intel-ico.is-picks svg { width: 30px; height: 30px; }
+    .pick-intel-ico.is-picks svg { width: 34px; height: 28px; }
     /* Cuffs glyph: slightly larger silver handcuffs so they read at a glance. */
     .pick-intel-ico.is-cuffs {
       width: 34px; color: #c5c9d0;
@@ -2182,7 +2182,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "picksStackLarger20260901155500";
+    const DATA_V = "picksStackPeek20260901160500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2865,16 +2865,16 @@
      * for leaderboard deep-links (team + column + year already chosen).
      */
 
-        /** Leading glyph for the Draft Data chip row: stacked pick cards (1st / 2nd / 3rd). */
+                /** Leading glyph for the Draft Data chip row: stacked pick cards (1st / 2nd / 3rd). */
     function picksBarIcon() {
       return '<span class="pick-intel-ico is-picks" aria-hidden="true" title="Picks">'
-        + '<svg viewBox="0 0 32 32" width="30" height="30" focusable="false">'
-        + '<rect x="11.5" y="1.5" width="14.2" height="16.4" rx="2" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
-        + '<text x="22.4" y="11.6" text-anchor="end" fill="currentColor" font-size="6" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
-        + '<rect x="6.5" y="5" width="14.2" height="16.4" rx="2" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
-        + '<text x="17.4" y="15.2" text-anchor="end" fill="currentColor" font-size="6" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
-        + '<rect x="1.5" y="8.5" width="14.2" height="16.4" rx="2" fill="var(--card)" stroke="currentColor" stroke-width="1.5"/>'
-        + '<text x="8.6" y="19.2" text-anchor="middle" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
+        + '<svg viewBox="0 0 36 30" width="34" height="28" focusable="false">'
+        + '<rect x="18" y="1" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="29.4" y="10.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">3rd</text>'
+        + '<rect x="9.5" y="5" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.35"/>'
+        + '<text x="20.9" y="14.8" text-anchor="end" fill="currentColor" font-size="6.4" font-weight="700" font-family="system-ui,sans-serif">2nd</text>'
+        + '<rect x="1" y="9" width="12.5" height="15.5" rx="1.8" fill="var(--card)" stroke="currentColor" stroke-width="1.55"/>'
+        + '<text x="7.25" y="19" text-anchor="middle" fill="currentColor" font-size="6.8" font-weight="700" font-family="system-ui,sans-serif">1st</text>'
         + "</svg></span>";
     }
 

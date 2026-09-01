@@ -1378,7 +1378,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsSeatTag20260901012000";
+    const DATA_V = "tradeNoAt20260901012300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4802,15 +4802,12 @@
       const sideHtml = (side, rightAlign) => {
         const assets = (side.legs || []).map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
-        const handle = side.name || "";
-        const meta = handle ? ("@" + handle) : "";
-        // Compact seat row: avatar beside name — no empty score stack / accent bar.
+        // Seat name only — @handle duplicated the same string under the title.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar)
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
-          + (meta ? '<div class="h2h-meta">' + esc(meta) + "</div>" : "")
           + "</div></div>"
           + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'

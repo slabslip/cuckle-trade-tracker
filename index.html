@@ -936,16 +936,14 @@
       margin: 0 0 8px; padding: 8px 10px;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
     }
-    /* Year scope sits next to each column lab (1sts · 2027–2029). On narrow
-       columns the lab spans the full col so the string stays readable. */
-    .pick-intel-board-yrs {
-      font-weight: 500; letter-spacing: 0.01em; text-transform: none;
-      color: var(--dim);
-    }
-    .pick-intel-board-yrs::before {
-      content: "·";
-      margin: 0 0.3em;
-      color: var(--dim);
+    /* Year scope under each column lab — stacked so · N stay centered and
+       names keep room (clearer than a cramped 1sts · 2027–2029 line). */
+    .pick-intel-board-lab .pick-intel-board-yrs {
+      display: block;
+      margin-top: 1px;
+      font-weight: 500; font-size: 0.625rem; line-height: 1.15;
+      letter-spacing: 0.01em; text-transform: none;
+      color: var(--dim); white-space: nowrap;
     }
     .pick-intel-board-cols {
       display: grid;
@@ -953,8 +951,8 @@
       gap: 8px 10px;
       align-items: start;
     }
-    /* Shared 2-col grid: seat names | counts. Short labs sit in the count
-       track (centered over · N). With a year suffix the lab spans the col. */
+    /* Shared 2-col grid: seat names | counts. Labels sit in the count track
+       (centered over · N), not left over the seat names. */
     .pick-intel-board-col {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -962,22 +960,16 @@
       min-width: 0; align-content: start; align-items: baseline;
     }
     .pick-intel-board-lab {
-      grid-column: 1 / -1; justify-self: stretch; text-align: center;
+      grid-column: 2; justify-self: center; text-align: center;
       color: var(--muted); font-size: 0.75rem; font-weight: 650;
-      white-space: normal; letter-spacing: 0.02em; line-height: 1.2;
-    }
-    .pick-intel-board-lab:not(:has(.pick-intel-board-yrs)) {
-      grid-column: 2; justify-self: center; white-space: nowrap;
+      white-space: nowrap; letter-spacing: 0.02em; line-height: 1.2;
     }
     button.pick-intel-board-lab {
       appearance: none; font: inherit; font-weight: 650; font-size: 0.75rem;
       color: var(--muted); background: transparent; border: 0; padding: 0; margin: 0;
       cursor: pointer; text-align: center; touch-action: manipulation;
-      letter-spacing: 0.02em; line-height: 1.2; white-space: normal;
-      grid-column: 1 / -1; justify-self: stretch; width: 100%;
-    }
-    button.pick-intel-board-lab:not(:has(.pick-intel-board-yrs)) {
-      grid-column: 2; justify-self: center; width: auto; white-space: nowrap;
+      letter-spacing: 0.02em; line-height: 1.2;
+      grid-column: 2; justify-self: center;
     }
     button.pick-intel-board-lab:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 4px;

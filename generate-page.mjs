@@ -1501,15 +1501,23 @@ const html = `<!DOCTYPE html>
     }
     .h2h-trade-lean .delta { font-size: inherit; }
     .h2h-lean-side {
-      min-width: 0; display: flex; flex-direction: column; gap: 2px;
+      min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px;
+      align-items: stretch;
     }
-    .h2h-lean-side.is-left { align-items: flex-start; text-align: left; }
-    .h2h-lean-side.is-right { align-items: flex-end; text-align: right; }
+    .h2h-lean-side.is-left { text-align: left; }
+    .h2h-lean-side.is-right { text-align: right; }
+    /* Flairs on the outer edge; vote total hugs the center ("who won" CTA) as a scoreboard. */
     .h2h-lean-marks {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
-      max-width: 100%;
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; max-width: 100%;
     }
+    .h2h-lean-flairs {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+      min-width: 0;
+    }
+    .h2h-lean-side.is-left .h2h-lean-n { margin-left: auto; }
     .h2h-lean-side.is-right .h2h-lean-marks { flex-direction: row-reverse; }
+    .h2h-lean-side.is-right .h2h-lean-n { margin-left: auto; }
     .h2h-lean-marks .h2h-lean-flair-link {
       display: inline-flex; align-items: center; line-height: 0;
     }
@@ -1520,8 +1528,10 @@ const html = `<!DOCTYPE html>
     }
     .h2h-lean-glyph { font-size: 0.75rem; line-height: 1; }
     .h2h-lean-n {
-      font-variant-numeric: tabular-nums; font-weight: 650;
-      color: var(--text); margin-inline: 1px;
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums; font-weight: 700;
+      font-size: 0.8125rem; line-height: 1;
+      color: var(--text);
     }
     .h2h-lean-mid {
       min-width: 0; max-width: 11rem;
@@ -1980,7 +1990,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leanFlairLink20260901123000";
+    const DATA_V = "leanVoteScoreboard20260901124500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6401,28 +6411,27 @@ const html = `<!DOCTYPE html>
         const marks = voteMarks(latest.transaction_id);
         const voters = marks[uid] || [];
         const n = v.tally[uid] || voters.length || 0;
-        let marksInner = "";
+        let flairsHtml = "";
         if (voters.length) {
           const sorted = voters.slice().sort((a, b) =>
             seatNameForUid(a).localeCompare(seatNameForUid(b)));
           // Only paint seats that have a real flair; skip unknown voters (no hex initials).
           const flairs = sorted.map((vid) => seatVoteMarkHtml(seatNameForUid(vid))).filter(Boolean);
           if (flairs.length) {
-            marksInner = flairs.join("")
-              + (n > 0 ? '<span class="h2h-lean-n">' + n + "</span>" : "");
-          } else if (n > 0) {
-            marksInner = '<span class="h2h-lean-n">' + n + "</span>";
+            flairsHtml = '<div class="h2h-lean-flairs">' + flairs.join("") + "</div>";
           }
-        } else if (n > 0) {
-          // Tallies landed but ballots did not — count only, no placeholder chips.
-          marksInner = '<span class="h2h-lean-n">' + n + "</span>";
         }
+        // Scoreboard total sits on the inner edge (toward mid / "who won"), not beside flairs.
+        const scoreHtml = n > 0 ? '<span class="h2h-lean-n">' + n + "</span>" : "";
         // No votes yet: leave the marks row blank (no "—" / "0" filler).
+        if (!flairsHtml && !scoreHtml) {
+          return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"></div>';
+        }
         const label = n === 1 ? "1 vote for " + seatNameForUid(uid) : n + " votes for " + seatNameForUid(uid);
         return '<div class="h2h-lean-side' + (rightAlign ? " is-right" : " is-left") + '"'
           + (n > 0 ? ' aria-label="' + esc(label) + '"' : "")
           + '>'
-          + '<div class="h2h-lean-marks">' + marksInner + "</div></div>";
+          + '<div class="h2h-lean-marks">' + flairsHtml + scoreHtml + "</div></div>";
       };
 
       const leftUid = seats[0] ? seats[0].uid : null;
@@ -8866,10 +8875,16 @@ if (inline.includes('day-alert-h">Champions Path')) {
   {
     const footAt = inline.indexOf("function latestTradeLeanFooterHtml(");
     const footStop = inline.indexOf("\n    function ", footAt + 10);
-    const foot = inline.slice(footAt, footStop < 0 ? footAt + 1600 : footStop);
+    const foot = inline.slice(footAt, footStop < 0 ? footAt + 2000 : footStop);
     if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
       throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
     }
+    if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")) {
+      throw new Error("Lean footer must separate flairs from the vote scoreboard (h2h-lean-flairs / h2h-lean-n)");
+    }
+  }
+  if (!html.includes(".h2h-lean-flairs") || !html.includes(".h2h-lean-side.is-left .h2h-lean-n")) {
+    throw new Error("Lean vote scoreboard styles must pin totals toward the center");
   }
   {
     const cardAt = inline.indexOf("function latestTradeCardHtml(");

@@ -554,11 +554,6 @@ const html = `<!DOCTYPE html>
     }
     .claim-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .claim-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; }
-    .auth-bar {
-      display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline;
-      margin: 0 0 8px; font-size: 0.8125rem; color: var(--dim);
-    }
-    .auth-bar b { color: var(--text); font-weight: 650; }
     button.linkish {
       appearance: none; font: inherit; font-size: inherit; color: var(--muted);
       background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline;
@@ -2006,7 +2001,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "voteNoCaption20260901140000";
+    const DATA_V = "voteNoAuthBar20260901141000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

@@ -930,6 +930,20 @@
       width: 36px; height: 36px;
     }
     .h2h-chip.is-trade .h2h-name { font-size: 0.875rem; font-weight: 650; }
+    /* Side totals + signed lean — same tapeFigures/delta/val chrome as boardTape. */
+    .h2h-chip.is-trade .h2h-trade-figs {
+      margin-top: 2px; max-width: 100%;
+    }
+    .h2h-chip.is-trade .figs {
+      display: flex; gap: 5px; align-items: baseline;
+      font-size: 0.75rem; line-height: 1.2;
+    }
+    .h2h-side.is-right .figs { flex-direction: row-reverse; }
+    .h2h-chip.is-trade .figs .val {
+      font-variant-numeric: tabular-nums; font-weight: 650; color: var(--text);
+      white-space: nowrap;
+    }
+    .h2h-chip.is-trade .figs .delta { font-size: inherit; }
     .h2h-assets {
       display: flex; flex-direction: column; gap: 5px; width: 100%;
       padding-top: 4px; border-top: 1px solid #3a3428;
@@ -943,7 +957,7 @@
       flex: 0 0 auto;
       color: #e0b44c; font-size: 0.75rem; font-weight: 700; line-height: 1.2;
     }
-    .lh-trade-lab { min-width: 0; }
+    .lh-trade-lab { min-width: 0; flex: 1 1 auto; }
     .lh-trade-lab b {
       display: block; color: var(--text); font-weight: 650;
       font-size: 0.75rem; line-height: 1.25;
@@ -953,6 +967,24 @@
       display: block; color: var(--dim); font-size: 0.625rem; line-height: 1.25;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    /* Per-asset book value — same tabular weight as bagBlock totals. */
+    .lh-trade-val {
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums; font-weight: 650;
+      font-size: 0.6875rem; line-height: 1.25; color: var(--text);
+      white-space: nowrap;
+    }
+    /* Value lean + vote cue under left | VS | right (opens trade detail to cast). */
+    .h2h-trade-lean {
+      grid-column: 1 / -1;
+      display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
+      gap: 0 2px; margin-top: 2px; padding-top: 8px;
+      border-top: 1px solid #3a3428;
+      font-size: 0.6875rem; line-height: 1.3; color: var(--dim);
+      text-align: center;
+    }
+    .h2h-trade-lean .delta { font-size: inherit; }
+    .h2h-lean-dot { color: #6b5a2e; }
     /* Kept for smoke / old markup; trade assets are text-first now. */
     .lh-trade-ico, .lh-trade-pick { display: none; }
 
@@ -1378,7 +1410,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "tradeNoAt20260901012300";
+    const DATA_V = "tradeValLean20260901013000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -1507,14 +1539,19 @@
         }).join("") + "</div>";
     }
 
+    /** One label for a bag leg's priced value — bags and the Latest trade chip share it. */
+    function legValueText(l) {
+      if (!l || l.flag === "unpriced" || l.value == null) return null;
+      if (l.flag === "priced_as_mid") return fmt(l.value) + " · Mid";
+      if (l.flag && String(l.flag).startsWith("priced_as_")) {
+        return fmt(l.value) + " · as " + String(l.flag).slice(10);
+      }
+      return fmt(l.value);
+    }
+
     function bagBlock(title, legs, total, unpriced, va) {
       const items = (legs || []).map((l) => {
-        const val = l.flag === "unpriced" || l.value == null
-          ? "no DP row"
-          : l.flag === "priced_as_mid" ? fmt(l.value) + " · Mid"
-          : l.flag && String(l.flag).startsWith("priced_as_")
-            ? fmt(l.value) + " · as " + String(l.flag).slice(10)
-          : fmt(l.value);
+        const val = legValueText(l) || "no DP row";
         const body = "<span>" + esc(l.label) + "</span><b>" + val + "</b>";
         if (l.kind === "pick" && l.asset_key) {
           const open = openPick === l.asset_key;
@@ -4598,14 +4635,20 @@
 
     function latestTradeAssetHtml(leg) {
       if (!leg) return "";
-      // Text-first asset line: gold "+" + label (pick or player). No circular badge chrome.
+      const valTxt = legValueText(leg);
+      const valHtml = valTxt
+        ? '<span class="lh-trade-val">' + esc(valTxt) + "</span>"
+        : "";
+      // Text-first asset line: gold "+" + label + book value. No circular badge chrome.
       if (leg.kind === "pick") {
         const lab = formatPickLabels(leg.label);
         return '<div class="lh-trade-asset">'
           + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
           + '<div class="lh-trade-lab"><b>' + esc(lab.primary) + "</b>"
           + (lab.secondary ? "<span>" + esc(lab.secondary) + "</span>" : "")
-          + "</div></div>";
+          + "</div>"
+          + valHtml
+          + "</div>";
       }
       const pid = String(leg.asset_key || "").replace(/^player:/, "");
       const meta = pid && ktcBySleeper ? ktcBySleeper[pid] : null;
@@ -4617,7 +4660,75 @@
         + '<span class="lh-trade-plus" aria-hidden="true">+</span>'
         + '<div class="lh-trade-lab"><b>' + esc(primary || leg.label || "") + "</b>"
         + (secondary ? "<span>" + esc(secondary) + "</span>" : "")
-        + "</div></div>";
+        + "</div>"
+        + valHtml
+        + "</div>";
+    }
+
+    /**
+     * Bag totals + mirrored delta for the Latest trade chip.
+     * Prefer VA-adjusted seat bags (same applyVa path as tradeRow); until they load,
+     * fall back to trade_boards windows (same got/sent as boardTape).
+     */
+    function latestTradeLean(latest) {
+      if (latestTradeHit && latestTradeHitTx === latest.transaction_id) {
+        const s = applyVa(
+          (latestTradeHit.windows && latestTradeHit.windows[lens])
+            || latestTradeHit.even || latestTradeHit.realized,
+          isMulti(latestTradeHit),
+        );
+        if (s && !s.incomplete && s.today != null && s.sent_today != null) {
+          const d = displayDelta(s.today, s.sent_today);
+          return {
+            leftTotal: s.today,
+            rightTotal: s.sent_today,
+            leftDelta: d,
+            rightDelta: d == null ? null : -d,
+            fromBags: true,
+          };
+        }
+      }
+      const w = (latest.windows && latest.windows[lens]) || {};
+      const d = windowScore(latest);
+      return {
+        leftTotal: w.incomplete && !w.got ? null : w.got,
+        rightTotal: w.incomplete && !w.sent ? null : w.sent,
+        leftDelta: d,
+        rightDelta: d == null ? null : -d,
+        fromBags: false,
+      };
+    }
+
+    /**
+     * Compact value-lean + vote cue under the chip. Voting stays on the trade screen
+     * (nested buttons cannot live inside the Latest trade opener).
+     */
+    function latestTradeLeanFooterHtml(latest, lean) {
+      const bits = [];
+      if (lean && lean.leftDelta != null) {
+        const d = Math.round(lean.leftDelta);
+        if (d === 0) bits.push("Value even");
+        else if (d > 0) {
+          bits.push("Value leans " + esc(latest.name) + " " + tapeMargin(lean.leftDelta));
+        } else {
+          bits.push("Value leans " + esc(latest.other) + " " + tapeMargin(-lean.leftDelta));
+        }
+      }
+      const seats = voteSeats(latest);
+      if (seats.length === 2 && voteParties(latest) <= 2) {
+        const v = readVotes(latest.transaction_id);
+        if (v.votes > 0) {
+          const a = v.tally[seats[0].uid] || 0;
+          const b = v.tally[seats[1].uid] || 0;
+          bits.push("Votes " + a + "–" + b);
+        } else {
+          bits.push("Who won?");
+        }
+      }
+      if (!bits.length) return "";
+      return '<div class="h2h-trade-lean">'
+        + bits.join('<span class="h2h-lean-dot" aria-hidden="true"> · </span>')
+        + "</div>";
     }
 
     /** Circular seat avatar from Sleeper/flair; optional gold medal for the winning side. */
@@ -4799,15 +4910,21 @@
       const sides = latestTradeReceiveSides(latest);
       const left = sides[0] || { name: latest.name, legs: [] };
       const right = sides[1] || { name: latest.other, legs: [] };
-      const sideHtml = (side, rightAlign) => {
+      const lean = latestTradeLean(latest);
+      const leftShow = lean.leftTotal == null ? "—" : fmt(lean.leftTotal);
+      const rightShow = lean.rightTotal == null ? "—" : fmt(lean.rightTotal);
+      const leftWin = lean.leftDelta != null && Math.round(lean.leftDelta) > 0;
+      const rightWin = lean.rightDelta != null && Math.round(lean.rightDelta) > 0;
+      const sideHtml = (side, rightAlign, delta, totalShow, win) => {
         const assets = (side.legs || []).map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
-        // Seat name only — @handle duplicated the same string under the title.
+        // Seat name + tapeFigures lean — @handle duplicated the same string under the title.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
-          + h2hAvatarHtml(side.name, side.avatar)
+          + h2hAvatarHtml(side.name, side.avatar, { win: win })
           + '<div class="h2h-id">'
           + '<div class="h2h-name">' + seatLabel(side.name) + "</div>"
+          + '<div class="h2h-trade-figs">' + tapeFigures(delta, totalShow) + "</div>"
           + "</div></div>"
           + '<div class="h2h-assets">'
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
@@ -4816,9 +4933,10 @@
       };
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
-        + sideHtml(left, false)
+        + sideHtml(left, false, lean.leftDelta, leftShow, leftWin)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true)
+        + sideHtml(right, true, lean.rightDelta, rightShow, rightWin)
+        + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
     }
 

@@ -39,8 +39,8 @@ git pull origin main
 git branch --show-current
 # must print: main
 
-ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql db/wave2b-vote-unique.sql db/wave5-invite-plain.sql supabase/functions/join-league/index.ts
-# all five paths must exist
+ls db/wave1-invite-hardening.sql db/wave2-vote-identity.sql db/wave2b-vote-unique.sql db/wave5-invite-plain.sql db/wave6-one-seat-redeem.sql supabase/functions/join-league/index.ts
+# all six paths must exist
 ```
 
 Optional repo self-check (no Supabase login required):
@@ -82,6 +82,7 @@ cuckle-trade-tracker/db/
 | 5 | `db/wave2-vote-identity.sql` | Select all → Copy |
 | 6 | `db/wave2b-vote-unique.sql` | Select all → Copy (league-scoped vote uniqueness) |
 | 7 | `db/wave5-invite-plain.sql` | Select all → Copy (unclaimed codes stay visible in console) |
+| 8 | `db/wave6-one-seat-redeem.sql` | Select all → Copy (refuse seat-switch overwrite on redeem) |
 
 **For each file:**
 
@@ -257,7 +258,7 @@ For a **claimed** seat (manager left), use **Reissue for new manager** — that 
 ## Done when all of these are true
 
 - [ ] Terminal is on branch `main`
-- [ ] All **seven** SQL files ran in Supabase SQL Editor (through `wave5-invite-plain.sql`)
+- [ ] All **eight** SQL files ran in Supabase SQL Editor (through `wave6-one-seat-redeem.sql`)
 - [ ] Confirm email is **OFF**; Site URL set
 - [ ] Edge Functions list shows **`join-league`**
 - [ ] Commissioner claimed a seat and sees the meter

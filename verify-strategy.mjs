@@ -15,6 +15,7 @@ const need = [
   "db/wave2-vote-identity.sql",
   "db/wave2b-vote-unique.sql",
   "db/wave5-invite-plain.sql",
+  "db/wave6-one-seat-redeem.sql",
   "supabase/functions/join-league/index.ts",
   "build.mjs",
   "lib.mjs",

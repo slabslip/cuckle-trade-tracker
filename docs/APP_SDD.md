@@ -179,7 +179,9 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 3. [`db/commissioner-invites.sql`](../db/commissioner-invites.sql) — invites, optional platform IDs
 4. [`db/wave1-invite-hardening.sql`](../db/wave1-invite-hardening.sql) — redeem/claim RPCs, tighten RLS
 5. [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) — per-league votes
-6. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
+6. [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) — league-scoped vote uniqueness
+7. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
+8. [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) — refuse seat-switch overwrite on redeem
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
@@ -191,6 +193,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | --- | --- |
 | Second commissioner on same league | 409 |
 | Reuse claimed invite | 409 |
+| Redeem while already seated in that league (different team) | 409 — reissue wrong seat first |
 | Redeem race | Atomic RPC — one winner |
 | Remint on create revisit | Forbidden — use Rotate |
 | Commissioner never claims seat | League on home as commissioner-only; no meter until claim/redeem |
@@ -231,7 +234,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
 Operator applies SQL + deploys Edge (this Cloud Agent cannot hold your Supabase login):
 
-- [ ] SQL 1–7 applied (`phase1` → `multi-league` → `commissioner-invites` → `wave1` → `wave2` → `wave2b` → `wave5`); `join-league` deployed; Confirm email OFF
+- [ ] SQL 1–8 applied (`phase1` → … → `wave5` → `wave6`); `join-league` deployed; Confirm email OFF
 - [ ] Commissioner creates Cuckle once; revisit opens console without remint
 - [ ] Ten invite links DMed; commissioner claims own seat; member redeems
 - [ ] Both open **league home** (news feed); pick a team from bottom-nav Teams; cast a vote as their seat
@@ -253,6 +256,7 @@ PWA manifest + service worker. Live dogfood remains the checkboxes above.
 | [`db/wave2-vote-identity.sql`](../db/wave2-vote-identity.sql) | Per-league votes |
 | [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) | Unique `(league, tx, voter)` |
 | [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) | Unclaimed `code_plain` for invite console |
+| [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) | One seat per account per league on redeem |
 | [`build.mjs`](../build.mjs) / [`lib.mjs`](../lib.mjs) | Scoped pipeline |
 | [`mark-league-ready.mjs`](../mark-league-ready.mjs) | Status flip |
 | [`manifest.webmanifest`](../manifest.webmanifest) / [`sw.js`](../sw.js) | PWA install shell |

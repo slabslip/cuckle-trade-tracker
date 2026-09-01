@@ -3,8 +3,10 @@
 Sleeper league `1315431339301806080`. Superflex dynasty, 2019–2026. Official Sleeper GETs + DynastyProcess CSVs (GPL-3). Not SlabSlip.
 
 **App (Chuckle Fantasy):** one commissioner creates the league (Sleeper league ID ± ESPN),
-sends per-seat invites; members redeem a code and set username/password. See
-[`docs/APP_SDD.md`](docs/APP_SDD.md). Custom domain: [`docs/CUSTOM_DOMAIN.md`](docs/CUSTOM_DOMAIN.md).
+sends per-seat invites; members redeem a code and set username/password.
+
+**→ Go live:** [`docs/START_HERE.md`](docs/START_HERE.md) (repo root, Supabase, deploy, dogfood)  
+Spec: [`docs/APP_SDD.md`](docs/APP_SDD.md). Custom domain: [`docs/CUSTOM_DOMAIN.md`](docs/CUSTOM_DOMAIN.md).
 
 **Default:** a pick that has already been drafted is the player it became, priced today.
 

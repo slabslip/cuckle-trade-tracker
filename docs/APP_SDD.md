@@ -3,9 +3,9 @@
 **Role:** Spec for the **multi-league app path** (account → league home → invites → dashboard).
 Companion to the meter canon [`PRODUCT.md`](PRODUCT.md). Votes wire: [`VOTES_SDD.md`](VOTES_SDD.md).
 News / smack: [`NEWS_SDD.md`](NEWS_SDD.md) / [`SMACK_AGENT.md`](SMACK_AGENT.md). Domain: [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).
-**Build today:** [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
+**Build today:** [`START_HERE.md`](START_HERE.md) · [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 
-**Status:** Implemented on branch `cursor/multi-league-app-878c` (PR #44). Live when SQL + Edge Function are applied and dogfood passes.
+**Status:** On **`main`**, live at https://slabslip.github.io/cuckle-trade-tracker/. Requires Supabase SQL + `join-league` deploy + Auth settings (see START_HERE).
 
 **App name:** Chuckle Fantasy (brand in shell). Hosted league one: **CuckleChunckle** (`1315431339301806080`).
 

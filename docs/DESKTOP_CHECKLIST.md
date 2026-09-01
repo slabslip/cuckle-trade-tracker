@@ -1,7 +1,9 @@
 # Build Chuckle Fantasy today — exact clicks
 
+**Start here:** [`START_HERE.md`](START_HERE.md) — repo paths, Cloud Agent vs Mac, go-live order.
+
 Spec: [`APP_SDD.md`](APP_SDD.md).  
-Repo: **https://github.com/slabslip/cuckle-trade-tracker**  
+Repo: **https://github.com/slabslip/cuckle-trade-tracker** (the Cuckle trade repo)  
 Branch: **`main`** (live on GitHub Pages)  
 Supabase project URL: **https://gtqyvnkkjiksmmtmzubw.supabase.co**  
 Live site: **https://slabslip.github.io/cuckle-trade-tracker/**
@@ -16,26 +18,14 @@ Cuckle Sleeper league ID (keep handy):
 
 ---
 
-## Step 1 — Pull the branch on your computer
+## Step 1 — Pull `main` (repo root)
 
-**Where:** your Mac/PC **Terminal** (or Cursor’s terminal), inside a clone of this repo.
+**Where:** Terminal at the **Cuckle trade repo root** — the folder with `supabase/`, `db/`, `generate-page.mjs`.
 
-If you do **not** have the repo yet:
-
-```bash
-cd ~/Documents
-# or wherever you keep code
-git clone https://github.com/slabslip/cuckle-trade-tracker.git
-cd cuckle-trade-tracker
-```
-
-If you **already** have the repo:
-
-```bash
-cd ~/path/to/cuckle-trade-tracker   # your actual clone folder — NOT a literal placeholder
-```
-
-Then always:
+| Environment | Command |
+| --- | --- |
+| **Cursor Cloud Agent** | Already at `/workspace` — skip `cd` |
+| **Mac / PC** | `cd ~/Documents/cuckle-trade-tracker` (your clone path) |
 
 ```bash
 git fetch origin

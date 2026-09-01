@@ -135,9 +135,11 @@
       min-height: 44px; touch-action: manipulation;
     }
     button.row, button.chip, button.tab { cursor: pointer; }
-    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible {
+    button.tab:focus-visible, button.chip:focus-visible, button.row:focus-visible,
+    .row[role="button"]:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
+    .row[role="button"] { cursor: pointer; }
     .you { color: var(--text); font-weight: 650; }
     /* Four tabs at 375px wrapped onto two lines. They share the row instead. */
     .nav { display: flex; gap: 8px; flex-wrap: nowrap; margin: 12px 0 16px; }
@@ -338,7 +340,7 @@
     .row-x > .detail { margin: 0; padding: 12px; border-top: 1px solid var(--line); }
     .row-x.open > .detail { display: block; }
     /* Rows this device has voted on, in the gold the vote buttons already use. */
-    button.row.voted { border-color: #6b5a2e; }
+    button.row.voted, .row.voted { border-color: #6b5a2e; }
     .bags { display: grid; gap: 12px; }
     @media (min-width: 640px) { .bags { grid-template-columns: 1fr 1fr; } }
     .bags > * { min-width: 0; }
@@ -1534,7 +1536,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "headerBrand20260901025500";
+    const DATA_V = "dropAppName20260901030500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2284,7 +2286,8 @@
       // The two sides are exact mirrors, so one score signs both: the seat carries s, the
       // counterparty carries -s. The names go back to plain ink -- the colour belongs on the
       // figure it describes, not on the label beside it.
-      return '<button type="button" class="row' + (voted ? " voted" : "") + '" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
+      // Seat names stay clickable (seat-link); the row itself opens the trade.
+      return '<div class="row' + (voted ? " voted" : "") + '" role="button" tabindex="0" data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '">'
         + '<div class="row-top tape">'
         + '<div class="side"><div class="side-line"><span class="names">' + seatLabel(r.name) + "</span>" + tapeFigures(s, got) + "</div></div>"
         + '<div class="side right"><div class="side-line"><span class="names">' + seatLabel(r.other) + "</span>" + tapeFigures(s == null ? null : -s, sent) + "</div></div>"
@@ -2292,7 +2295,7 @@
         + (r.headline ? '<span class="date sub-note">' + esc(r.headline) + "</span>" : "")
         + "</div></div>"
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
-        + "</button>";
+        + "</div>";
     }
 
     function yearsOn(days) {
@@ -6596,22 +6599,37 @@
     }
 
     document.getElementById("app").addEventListener("keydown", (e) => {
-      if (e.key !== "Enter") return;
+      if (e.key !== "Enter" && e.key !== " ") return;
       const t = e.target;
       if (!t) return;
       if (t.id === "gateUser" || t.id === "gatePass") {
+        if (e.key !== "Enter") return;
         e.preventDefault();
         onGateSubmit();
         return;
       }
       if (t.id === "joinLeagueId" || t.id === "joinEspnId") {
+        if (e.key !== "Enter") return;
         e.preventDefault();
         onCreateLeague();
         return;
       }
       if (t.id === "redeemCode") {
+        if (e.key !== "Enter") return;
         e.preventDefault();
         onRedeemInvite();
+        return;
+      }
+      const seatLink = t.closest && t.closest("[data-who]");
+      if (seatLink && seatLink.dataset.who && (t === seatLink || seatLink.contains(t))) {
+        e.preventDefault();
+        selectMe(seatLink.dataset.who);
+        return;
+      }
+      const boardRow = t.closest && t.closest("[data-board-open]");
+      if (boardRow && boardRow.dataset.boardOpen && t === boardRow) {
+        e.preventDefault();
+        openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen);
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {

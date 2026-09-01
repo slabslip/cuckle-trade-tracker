@@ -1541,7 +1541,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "leagueHomeChrome20260901030000";
+    const DATA_V = "dropAppName20260901030500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6604,22 +6604,37 @@ const html = `<!DOCTYPE html>
     }
 
     document.getElementById("app").addEventListener("keydown", (e) => {
-      if (e.key !== "Enter") return;
+      if (e.key !== "Enter" && e.key !== " ") return;
       const t = e.target;
       if (!t) return;
       if (t.id === "gateUser" || t.id === "gatePass") {
+        if (e.key !== "Enter") return;
         e.preventDefault();
         onGateSubmit();
         return;
       }
       if (t.id === "joinLeagueId" || t.id === "joinEspnId") {
+        if (e.key !== "Enter") return;
         e.preventDefault();
         onCreateLeague();
         return;
       }
       if (t.id === "redeemCode") {
+        if (e.key !== "Enter") return;
         e.preventDefault();
         onRedeemInvite();
+        return;
+      }
+      const seatLink = t.closest && t.closest("[data-who]");
+      if (seatLink && seatLink.dataset.who && (t === seatLink || seatLink.contains(t))) {
+        e.preventDefault();
+        selectMe(seatLink.dataset.who);
+        return;
+      }
+      const boardRow = t.closest && t.closest("[data-board-open]");
+      if (boardRow && boardRow.dataset.boardOpen && t === boardRow) {
+        e.preventDefault();
+        openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen);
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {
@@ -7822,9 +7837,19 @@ if (!inline.includes("function reigningChampName()")
 if (!inline.includes("function seatTitle(title)")) {
   throw new Error("bag headings must flair seat names through seatTitle()");
 }
-// Header back arrow: leave a seat and return to Your leagues.
+// Header back arrow: clear seat / nested views; stay on this league's home (never Your leagues).
 if (!inline.includes('document.getElementById("goHome").addEventListener("click", () => {')) {
   throw new Error("the leagues back control must clear the seat -- it is the only exit from a seat now");
+}
+{
+  const at = inline.indexOf('document.getElementById("goHome").addEventListener("click"');
+  const src = inline.slice(at, at + 450);
+  if (src.includes("goAppHome(")) {
+    throw new Error("goHome must not call goAppHome — it stays on this league home");
+  }
+  if (!src.includes("clearLeague()") || !src.includes("openLeagueDashboard(activeLeague)")) {
+    throw new Error("goHome must clearLeague on dash, or openLeagueDashboard when off-dash with an active league");
+  }
 }
 if (!inline.includes("clearLeague()") || !fnBody("clearLeague").includes("\n      me = null;")) {
   throw new Error("the leagues back path must still call clearLeague to leave a seat");

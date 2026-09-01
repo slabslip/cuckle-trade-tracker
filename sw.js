@@ -1,6 +1,6 @@
 /* Chuckle Fantasy — installable shell. Cache the app shell; network-first for JSON. */
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
-const CACHE = "chuckle-shell-v47-header-brand";
+const CACHE = "chuckle-shell-v49-drop-app-name";
 /* Do not precache index.html — Design Mode must never boot from a stale shell snapshot. */
 const SHELL = ["./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
 
@@ -38,18 +38,18 @@ self.addEventListener("fetch", (event) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));
         return res;
-      }).catch(() => caches.match("./index.html"))),
+      })),
     );
     return;
   }
-  // data/*.json — network first, cache fallback for offline meter paint.
-  if (url.pathname.includes("/data/")) {
-    event.respondWith(
-      fetch(req).then((res) => {
+  // JSON / assets: network-first, cache fallback.
+  event.respondWith(
+    fetch(req).then((res) => {
+      if (res.ok && (url.pathname.includes("/data/") || url.pathname.endsWith(".js"))) {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));
-        return res;
-      }).catch(() => caches.match(req)),
-    );
-  }
+      }
+      return res;
+    }).catch(() => caches.match(req)),
+  );
 });

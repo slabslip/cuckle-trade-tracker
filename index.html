@@ -5812,9 +5812,9 @@
       const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
 
       const onPointerDown = (e) => {
-      if (e.button != null && e.button !== 0) return;
-      if (e.target.closest("a.news-hero-link")) return;
-      if (e.target.closest("[data-news-del]")) return;
+        if (e.button != null && e.button !== 0) return;
+        if (e.target.closest("a.news-hero-link")) return;
+        if (e.target.closest("[data-news-del]")) return;
         // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
         applyBrand();

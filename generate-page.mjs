@@ -951,25 +951,31 @@ const html = `<!DOCTYPE html>
       font-size: 0.6875rem; color: var(--dim); line-height: 1.25;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
     }
-    /* Trade chip: seat row + compact gold "+" asset lines (dashboard surface). */
+    /* Trade chip: seat + assets in row 1; = totals share row 2 so they stay even
+       even when the bags have different leg counts. */
     .h2h-chip.is-trade {
       background: #1a1810;
       border-color: #6b5a2e;
-      gap: 10px 8px;
+      gap: 8px 8px;
       padding: 12px 12px 10px;
-      /* Stretch both seats so = totals share one baseline at the bottom. */
-      align-items: stretch;
+      align-items: start;
     }
     .h2h-chip.is-trade .h2h-vs {
       align-self: center; margin-top: 0;
       background: #241f14; border-color: #6b5a2e; color: #e0b44c;
     }
     .h2h-chip.is-trade .h2h-side {
-      gap: 6px; min-height: 0; height: 100%;
+      gap: 6px; min-height: 0;
     }
     .h2h-chip.is-trade .h2h-assets {
-      flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px;
-      min-height: 0;
+      display: flex; flex-direction: column; gap: 4px;
+      min-height: 0; width: 100%;
+    }
+    .h2h-chip.is-trade .lh-trade-sum {
+      margin-top: 0;
+    }
+    .h2h-chip.is-trade .h2h-sum-gap {
+      min-width: 28px;
     }
     /* Both trade seats read LTR like the left column (avatar · name · figs). */
     .h2h-chip.is-trade .h2h-side.is-right {
@@ -1042,7 +1048,7 @@ const html = `<!DOCTYPE html>
       white-space: nowrap; text-align: right; min-width: 4.75ch;
     }
     .lh-trade-sum {
-      margin-top: auto; padding-top: 4px;
+      padding-top: 4px;
       border-top: 1px solid #3a3428;
     }
     .lh-trade-sum .lh-trade-eq {
@@ -1051,9 +1057,12 @@ const html = `<!DOCTYPE html>
       padding-right: 2px;
     }
     .lh-trade-sum .lh-trade-num { color: var(--text); }
-    .lh-trade-sum.is-high .lh-trade-num { color: var(--green); }
-    .lh-trade-sum.is-low .lh-trade-num { color: var(--red); }
-    .lh-trade-sum.is-even .lh-trade-num { color: var(--text); }
+    .lh-trade-sum.is-high .lh-trade-num,
+    .lh-trade-sum.is-high .lh-trade-eq { color: var(--green); }
+    .lh-trade-sum.is-low .lh-trade-num,
+    .lh-trade-sum.is-low .lh-trade-eq { color: var(--red); }
+    .lh-trade-sum.is-even .lh-trade-num,
+    .lh-trade-sum.is-even .lh-trade-eq { color: var(--text); }
     /* Value lean mid + per-side voter flairs under left | VS | right. */
     .h2h-trade-lean {
       grid-column: 1 / -1;
@@ -1517,7 +1526,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "dropAsYearNotes20260901022300";
+    const DATA_V = "alignTradeSums20260901022530";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5288,11 +5297,12 @@ const html = `<!DOCTYPE html>
         else if (l < r) { leftTone = "low"; rightTone = "high"; }
         else { leftTone = "even"; rightTone = "even"; }
       }
-      const sideHtml = (side, rightAlign, win, verdict, sumTone) => {
+      const sideHtml = (side, rightAlign, win, verdict) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
-        // Avatar + seat name + book WINNER/LOSER — bag totals live in the arithmetic column.
+        // Avatar + seat name + book WINNER/LOSER. Bag totals sit on a shared chip row below
+        // both sides so unequal leg counts cannot stagger the = lines.
         return '<div class="' + cls + '">'
           + '<div class="h2h-top">'
           + h2hAvatarHtml(side.name, side.avatar, { win: win })
@@ -5304,14 +5314,20 @@ const html = `<!DOCTYPE html>
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
             + '<div class="lh-trade-lab"><b>…</b></div>'
             + '<span class="lh-trade-num lh-trade-val">—</span></div>')
-          + latestTradeSumHtml(legs, sumTone)
           + "</div></div>";
       };
+      const leftSumHtml = latestTradeSumHtml(left.legs, leftTone)
+        || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
+      const rightSumHtml = latestTradeSumHtml(right.legs, rightTone)
+        || '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>';
       return '<div class="h2h-chip is-trade" role="group" aria-label="'
         + esc(latest.name) + " vs " + esc(latest.other) + '">'
-        + sideHtml(left, false, leftWin, leftVerdict, leftTone)
+        + sideHtml(left, false, leftWin, leftVerdict)
         + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-        + sideHtml(right, true, rightWin, rightVerdict, rightTone)
+        + sideHtml(right, true, rightWin, rightVerdict)
+        + leftSumHtml
+        + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
+        + rightSumHtml
         + latestTradeLeanFooterHtml(latest, lean)
         + "</div>";
       }

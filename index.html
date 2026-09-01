@@ -2077,7 +2077,7 @@
     let cuffFilterOpen = false;
     let cuffFilterFa = false; // cuff is unrostered
     let cuffFilterHeld = false; // cuff is rostered by someone
-    let cuffFilterSelf = false; // starter owner also owns the cuff
+    let cuffFilterOther = false; // cuff owned by someone other than the starter's manager (poach)
     let titles = null;
     let marks = null;
     let news = null;
@@ -2086,7 +2086,7 @@
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "cuffsBoard20260901143000";
+    const DATA_V = "cuffsPoachBoard20260901153000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2415,7 +2415,7 @@
       cuffFilterOpen = false;
       cuffFilterFa = false;
       cuffFilterHeld = false;
-      cuffFilterSelf = false;
+      cuffFilterOther = false;
     }
 
     /**
@@ -2433,7 +2433,7 @@
 
     function cuffFiltersActive() {
       return cuffFilterMine || !!cuffFilterOwner || !!cuffFilterPos
-        || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterSelf;
+        || !!cuffFilterQ.trim() || cuffFilterFa || cuffFilterHeld || cuffFilterOther;
     }
 
     function pickRoundLabel(n) {
@@ -2832,7 +2832,7 @@
         if (cuffFilterPos && r.pos !== cuffFilterPos) return false;
         if (cuffFilterFa && r.cuff_owned) return false;
         if (cuffFilterHeld && !r.cuff_owned) return false;
-        if (cuffFilterSelf && !(r.cuff_owned && r.owner && r.owner === r.cuff_owner)) return false;
+        if (cuffFilterOther && !(r.cuff_owned && r.owner && r.cuff_owner && r.owner !== r.cuff_owner)) return false;
         if (q) {
           const blob = [r.starter, r.cuff, r.owner, r.cuff_owner, r.nfl_team, r.slot]
             .filter(Boolean).join(" ").toLowerCase();
@@ -2844,13 +2844,13 @@
 
     /**
      * Top holders of NFL depth cuffs on league slot-1 starters.
-     * kind: "total" (any cuff owned) | "self" (own starter + own cuff) | "rb" (RB cuffs only).
+     * kind: "total" (any cuff owned) | "other" (poached — cuff of someone else's starter) | "rb" (RB cuffs only).
      */
     function cuffLeaders(kind, limit) {
       const counts = new Map();
       for (const r of (cuffs && cuffs.rows) || []) {
         if (!r.cuff_owned || !r.cuff_owner) continue;
-        if (kind === "self" && r.owner !== r.cuff_owner) continue;
+        if (kind === "other" && r.owner === r.cuff_owner) continue;
         if (kind === "rb" && r.pos !== "RB") continue;
         counts.set(r.cuff_owner, (counts.get(r.cuff_owner) || 0) + 1);
       }
@@ -2858,14 +2858,14 @@
       return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, top);
     }
 
-    /** Idle quick-view: who holds the most cuffs — All / Self-cuffed / RB. */
+    /** Idle quick-view under home chips: All / Other teams' cuffs (poachers) / RB. */
     function cuffsBoard() {
       const cols = [
         { lab: "All", kind: "total", aria: "Filter to all held cuffs" },
-        { lab: "Self", kind: "self", aria: "Filter to self-cuffed starters" },
+        { lab: "Other", kind: "other", aria: "Filter to other teams' cuffs (poachers)" },
         { lab: "RB", kind: "rb", aria: "Filter to RB cuffs held" },
       ];
-      const aria = "Cuff holders: total, self-cuffed, and RB cuffs";
+      const aria = "Cuff holders: all, other teams' cuffs, and RB cuffs";
       const headBtns = cols.map((c) =>
         '<button type="button" class="pick-intel-board-lab" data-cuffs-board="' + c.kind + '"'
         + ' aria-label="' + esc(c.aria) + '">' + esc(c.lab) + "</button>"
@@ -2943,9 +2943,9 @@
           + ' aria-label="Clear held cuffs filter">held'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
-      if (cuffFilterSelf) {
-        chips.push('<button type="button" class="pick-intel-sum" data-cuff-self="1"'
-          + ' aria-label="Clear self-cuff filter">self-cuffed'
+      if (cuffFilterOther) {
+        chips.push('<button type="button" class="pick-intel-sum" data-cuff-other="1"'
+          + ' aria-label="Clear other-teams cuffs filter">other teams'
           + '<span class="x" aria-hidden="true">×</span></button>');
       }
       if (cuffFilterQ.trim()) {
@@ -2988,7 +2988,7 @@
 
     /**
      * Open the full Cuffs screen. Home chips land here so search/filter has room;
-     * mode presets search / my cuffs / cuff free / held / self / rb (board columns).
+     * mode presets search / my cuffs / cuff free / held / other / rb (board columns).
      */
     function openCuffsPage(mode) {
       clearCuffFilters();
@@ -2998,8 +2998,8 @@
         cuffFilterFa = true;
       } else if (mode === "held" || mode === "total") {
         cuffFilterHeld = true;
-      } else if (mode === "self") {
-        cuffFilterSelf = true;
+      } else if (mode === "other") {
+        cuffFilterOther = true;
       } else if (mode === "rb") {
         cuffFilterHeld = true;
         cuffFilterPos = "RB";
@@ -3074,7 +3074,7 @@
         if (cuffFilterMine && seat) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on your starters";
         else if (cuffFilterOwner) hint = rows.length + " cuff" + (rows.length === 1 ? "" : "s") + " on " + cuffFilterOwner + "'s starters";
         else if (cuffFilterFa) hint = rows.length + " starter" + (rows.length === 1 ? "" : "s") + " whose cuff is a free agent";
-        else if (cuffFilterSelf) hint = rows.length + " self-cuffed starter" + (rows.length === 1 ? "" : "s");
+        else if (cuffFilterOther) hint = rows.length + " other-team cuff" + (rows.length === 1 ? "" : "s") + " (poached)";
         else if (cuffFilterHeld && cuffFilterPos) hint = rows.length + " held " + cuffFilterPos + " cuff" + (rows.length === 1 ? "" : "s");
         else if (cuffFilterHeld) hint = rows.length + " held cuff" + (rows.length === 1 ? "" : "s");
         else hint = rows.length + " cuff row" + (rows.length === 1 ? "" : "s");
@@ -8757,7 +8757,7 @@
         if (cuffFilterMine) {
           cuffFilterOwner = "";
           cuffFilterHeld = false;
-          cuffFilterSelf = false;
+          cuffFilterOther = false;
           cuffFilterFa = false;
         }
         cuffFilterOpen = false;
@@ -8769,7 +8769,7 @@
         cuffFilterFa = !cuffFilterFa;
         if (cuffFilterFa) {
           cuffFilterHeld = false;
-          cuffFilterSelf = false;
+          cuffFilterOther = false;
         }
         render();
         return;
@@ -8779,15 +8779,15 @@
         cuffFilterHeld = !cuffFilterHeld;
         if (cuffFilterHeld) {
           cuffFilterFa = false;
-          cuffFilterSelf = false;
+          cuffFilterOther = false;
         }
         render();
         return;
       }
-      const cuffSelf = e.target.closest("[data-cuff-self]");
-      if (cuffSelf) {
-        cuffFilterSelf = !cuffFilterSelf;
-        if (cuffFilterSelf) {
+      const cuffOther = e.target.closest("[data-cuff-other]");
+      if (cuffOther) {
+        cuffFilterOther = !cuffFilterOther;
+        if (cuffFilterOther) {
           cuffFilterFa = false;
           cuffFilterHeld = false;
         }

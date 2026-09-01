@@ -1896,16 +1896,16 @@ const html = `<!DOCTYPE html>
       display: flex; align-items: center; gap: 8px; justify-content: space-between;
     }
     .ds-h-row .ds-h { margin: 0; flex: 1 1 auto; min-width: 0; }
-    /* Floating score menu — positioned under the chip that opened it. */
+    /* Floating score menu — compact list under the chip that opened it. */
     #scoreAs.score-as-portal {
       position: fixed; z-index: 40;
-      width: min(280px, calc(100vw - 32px)); margin: 0; padding: 6px;
-      max-height: min(70dvh, 420px); overflow-y: auto;
+      width: min(168px, calc(100vw - 32px)); margin: 0; padding: 4px;
+      max-height: min(70dvh, 280px); overflow-y: auto;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.55);
     }
     #scoreAs.score-as-portal:not([hidden]) {
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex; flex-direction: column; gap: 2px;
     }
     #scoreAs.score-as-portal[hidden], #scoreAs.score-as-portal:empty { display: none !important; }
 
@@ -1939,12 +1939,14 @@ const html = `<!DOCTYPE html>
 
     #scoreAs button.score-opt {
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
-      min-height: 44px; padding: 8px 10px; cursor: pointer;
+      background: #1c1c22; border: 1px solid transparent; border-radius: 7px;
+      min-height: 34px; padding: 6px 10px; cursor: pointer;
+      line-height: 1.2;
     }
-    #scoreAs button.score-opt.on { border-color: #6b5a2e; }
-    #scoreAs button.score-opt b { display: block; font-weight: 650; }
-    #scoreAs button.score-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
+    #scoreAs button.score-opt.on { border-color: #6b5a2e; background: #221e14; }
+    #scoreAs button.score-opt b {
+      display: block; font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.01em;
+    }
     #scoreAs button.score-opt:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
@@ -2193,7 +2195,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "newsCuffTap20260901163000";
+    const DATA_V = "scoreAsCompact20260901164500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2220,11 +2222,11 @@ const html = `<!DOCTYPE html>
     let dataSet = null;
     let dsOpen = false;
     const WINDOWS = [
-      ["t0", "At trade", "Who won on accept day. Picks still picks."],
-      ["y1", "1 season", "Avg value through the rest of this season — or the next season if the deal was in the offseason. Hides unfinished spans."],
-      ["y2", "2 seasons", "Rest of this season plus the next — or the next two from the offseason. Hides unfinished spans."],
-      ["y3", "First 3 years", "Who won after 3 years. Hides younger deals."],
-      ["all", "Since trade", "Who is winning from accept through today."],
+      ["t0", "Date of Trade", "Value on the day the trade was accepted."],
+      ["y1", "1 season", "Average value through the rest of this season (or the next season from the offseason)."],
+      ["y2", "2 seasons", "Rest of this season plus the next (or the next two from the offseason)."],
+      ["y3", "3 seasons", "Through three seasons from the trade."],
+      ["all", "as of today", "Value from accept through today."],
     ];
     let view = "home";
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
@@ -3974,7 +3976,8 @@ const html = `<!DOCTYPE html>
       const today = (league && league.today) || "";
       if (lens === "y1") return seasonLived(date, 1, today);
       if (lens === "y2") return seasonLived(date, 2, today);
-      const need = { t0: 0, y3: 3, all: 1 }[lens];
+      if (lens === "y3") return seasonLived(date, 3, today);
+      const need = { t0: 0, all: 1 }[lens];
       if (!need) return true;
       return date <= addYears(today, -need);
     }
@@ -8152,13 +8155,15 @@ const html = `<!DOCTYPE html>
       const one = noun || "deal";
       const many = one + "s";
       if (lens === "t0" || lens === "all" || shown === all) return shown + " " + (shown === 1 ? one : many);
-      const span = { y1: "1 season", y2: "2 seasons", y3: "3 years" }[lens] || clockName();
+      const span = { y1: "1 season", y2: "2 seasons", y3: "3 seasons" }[lens] || clockName();
       return shown + " of " + all + " lived " + span;
     }
 
     function scoreOpt(row) {
-      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '">'
-        + "<b>" + row[1] + "</b><span>" + row[2] + "</span></button>";
+      // Title-only rows keep the portal short; longer copy stays on title/aria for hover & SR.
+      return '<button type="button" class="score-opt' + (lens === row[0] ? " on" : "") + '" data-lens="' + row[0] + '"'
+        + ' title="' + esc(row[2] || row[1]) + '" aria-label="' + esc(row[1]) + '">'
+        + "<b>" + esc(row[1]) + "</b></button>";
     }
 
     /**
@@ -10409,9 +10414,21 @@ if (!inline.includes("chipLensHtml()") || !inline.includes('chipLensHtml({ inlin
 }
 if (!inline.includes("function defaultLensForDate(")
   || !inline.includes('seasonLived(date, 2, today) ? "y2" : "all"')
+  || !inline.includes('["t0", "Date of Trade"')
   || !inline.includes('["y1", "1 season"')
-  || !inline.includes('["y2", "2 seasons"')) {
-  throw new Error("Trade score lens y1/y2 must be season spans; default y2 after 2 seasons else to-date");
+  || !inline.includes('["y2", "2 seasons"')
+  || !inline.includes('["y3", "3 seasons"')
+  || !inline.includes('["all", "as of today"')) {
+  throw new Error("Trade score menu must ship Date of Trade / 1–3 seasons / as of today");
+}
+{
+  const optFn = fnSrc("scoreOpt");
+  if (!optFn.includes("<b>") || optFn.includes("<span>")) {
+    throw new Error("scoreOpt must be compact title-only rows (no description span)");
+  }
+}
+if (!html.includes("width: min(168px") || !html.includes("min-height: 34px")) {
+  throw new Error("score-as portal must stay compact (narrow + short options)");
 }
 if (!inline.includes('class="chip-lens') || !html.includes("button.chip-lens-btn")) {
   throw new Error("chip-lens styles and buttons must ship");

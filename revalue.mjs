@@ -231,12 +231,12 @@ function windowAsOfs(t0, today, years) {
   return yearEnds(t0, end);
 }
 
-/** y1/y2 are NFL-season spans; y3/all stay calendar year-end means. */
+/** y1/y2/y3 are NFL-season spans; all stays calendar year-end mean through today. */
 function lensAsOfs(key, t0, today) {
   if (key === "t0") return [t0];
   if (key === "y1") return seasonAsOfs(t0, today, 1);
   if (key === "y2") return seasonAsOfs(t0, today, 2);
-  if (key === "y3") return windowAsOfs(t0, today, 3);
+  if (key === "y3") return seasonAsOfs(t0, today, 3);
   return windowAsOfs(t0, today, null);
 }
 

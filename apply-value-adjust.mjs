@@ -84,13 +84,13 @@ function addYears(ymd, n) {
   return `${y}-${String(p[1]).padStart(2, "0")}-${String(Math.min(p[2], dim)).padStart(2, "0")}`;
 }
 
-/** t0/all unfiltered; y1/y2 need their season span finished; y3 stays calendar years. */
+/** t0/all unfiltered; y1/y2/y3 need their season span finished. */
 function chipLived(date, lens, today) {
   if (lens === "t0" || lens === "all") return true;
   if (lens === "y1") return seasonLived(date, 1, today);
   if (lens === "y2") return seasonLived(date, 2, today);
-  const need = { y3: 3 }[lens];
-  return !need || date <= addYears(today, -need);
+  if (lens === "y3") return seasonLived(date, 3, today);
+  return true;
 }
 
 /** Same rule as the browser's displayDelta: round each bag, then subtract. */

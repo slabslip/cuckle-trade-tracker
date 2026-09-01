@@ -5235,8 +5235,8 @@ const html = `<!DOCTYPE html>
     const AUTH_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/auth/v1";
     const FN_API = "https://gtqyvnkkjiksmmtmzubw.supabase.co/functions/v1";
     // App accounts use username → synthetic email. Confirm email must be OFF.
-    // Synthetic only (Confirm email OFF). ".invalid" is rejected by GoTrue email validation.
-    const AUTH_EMAIL_DOMAIN = "users.cuckle.example.com";
+    // Synthetic only (Confirm email OFF). Use .invalid — GoTrue rejects .example.com.
+    const AUTH_EMAIL_DOMAIN = "users.cuckle.invalid";
     // First hosted league — legacy data/ui is its ready dataset.
     const CUCKLE_LEAGUE_ID = "1315431339301806080";
     const LEAGUE_KEY = "cuckle.active_league.v1";

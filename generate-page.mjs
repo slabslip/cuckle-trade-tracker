@@ -1372,6 +1372,13 @@ const html = `<!DOCTYPE html>
     .lh-trade-sum.is-low .lh-trade-eq { color: var(--red); }
     .lh-trade-sum.is-even .lh-trade-num,
     .lh-trade-sum.is-even .lh-trade-eq { color: var(--text); }
+    /* Value Adjustment on compact trade chips — same gold ink as .leg.va in bag detail. */
+    .lh-trade-va {
+      margin-top: 2px; padding-top: 4px;
+      border-top: 1px solid var(--line);
+    }
+    .lh-trade-va .lh-trade-lab b { font-weight: 650; color: var(--text); }
+    .lh-trade-va .lh-trade-num { color: #d4c07a; }
     /* Value lean mid + per-side voter flairs under left | VS | right. */
     .h2h-trade-lean {
       grid-column: 1 / -1;
@@ -6037,6 +6044,16 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    /** Compact Value Adjustment row — mirrors bagBlock's .leg.va on the H2H chip. */
+    function latestTradeVaHtml(va) {
+      if (!va || !Math.round(va)) return "";
+      return '<div class="lh-trade-asset lh-trade-va">'
+        + '<span class="lh-trade-plus" aria-hidden="true"></span>'
+        + '<div class="lh-trade-lab"><b>Value Adjustment</b></div>'
+        + '<span class="lh-trade-num lh-trade-val">' + esc(signedNum(va)) + "</span>"
+        + "</div>";
+    }
+
     /**
      * Bag totals + mirrored delta for the Latest trade chip.
      * Prefer VA-adjusted seat bags (same applyVa path as tradeRow); until they load,
@@ -6261,15 +6278,23 @@ const html = `<!DOCTYPE html>
       const seats = voteSeats(latest);
       const hit = bagHitForTx(latest.transaction_id);
       if (hit) {
-        const bag = (hit.windows && hit.windows[lens])
-          || hit.even || hit.realized || null;
+        const bag = applyVa(
+          (hit.windows && hit.windows[lens]) || hit.even || hit.realized || null,
+          isMulti(hit),
+        );
         const other = seats.find((s) => s.uid !== latest.user_id);
         return [
-          { name: latest.name, uid: latest.user_id, legs: (bag && bag.legs) || [] },
+          {
+            name: latest.name,
+            uid: latest.user_id,
+            legs: (bag && bag.legs) || [],
+            value_adjust: bag && bag.value_adjust,
+          },
           {
             name: latest.other,
             uid: other ? other.uid : null,
             legs: (bag && bag.sent) || [],
+            value_adjust: bag && bag.value_adjust_sent,
           },
         ];
       }
@@ -6439,6 +6464,7 @@ const html = `<!DOCTYPE html>
       const sideHtml = (side, rightAlign, win) => {
         const legs = side.legs || [];
         const assets = legs.map(latestTradeAssetHtml).join("");
+        const vaRow = latestTradeVaHtml(side.value_adjust);
         const cls = rightAlign ? "h2h-side is-right" : "h2h-side is-left";
         // Avatar + seat name. Bag totals sit on a shared chip row below both sides so unequal
         // leg counts cannot stagger the = lines.
@@ -6452,6 +6478,7 @@ const html = `<!DOCTYPE html>
           + (assets || '<div class="lh-trade-asset"><span class="lh-trade-plus" aria-hidden="true">+</span>'
             + '<div class="lh-trade-lab"><b>…</b></div>'
             + '<span class="lh-trade-num lh-trade-val">—</span></div>')
+          + vaRow
           + "</div></div>";
       };
       const leftSumHtml = latestTradeSumHtml(left.legs, leftTone)
@@ -8550,6 +8577,18 @@ if (inline.includes('day-alert-h">Champions Path')) {
   }
   if (html.includes(".h2h-verdict")) {
     throw new Error("stylesheet must not style removed h2h-verdict labels on trade chips");
+  }
+  if (!inline.includes("function latestTradeVaHtml(") || !inline.includes("latestTradeVaHtml(")
+    || !html.includes(".lh-trade-va")) {
+    throw new Error("Latest trade chip must show Value Adjustment when present (latestTradeVaHtml / .lh-trade-va)");
+  }
+  {
+    const vaAt = inline.indexOf("function latestTradeVaHtml(");
+    const vaStop = inline.indexOf("\n    function ", vaAt + 10);
+    const vaFn = inline.slice(vaAt, vaStop < 0 ? vaAt + 400 : vaStop);
+    if (!vaFn.includes("Value Adjustment") || !vaFn.includes("signedNum(va)")) {
+      throw new Error("latestTradeVaHtml must mirror bagBlock Value Adjustment row");
+    }
   }
   {
     const markAt = inline.indexOf("function seatVoteMarkHtml(");

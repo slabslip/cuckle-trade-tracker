@@ -703,7 +703,7 @@
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
     /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
     body.has-news-pullup {
-      padding-bottom: calc(var(--news-pullup-peek, 148px) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--news-pullup-peek, 168px) + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
       overflow: hidden;
@@ -712,7 +712,7 @@
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 148px;
+      --news-pullup-peek: 128px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -732,7 +732,7 @@
       background: #1a1810;
       border: 1px solid #6b5a2e;
       border-bottom: 0;
-      border-radius: 18px 18px 0 0;
+      border-radius: 14px 14px 0 0;
       transform: translateY(calc(100% - var(--news-pullup-peek)));
       transition: transform 0.32s cubic-bezier(0.2, 0.85, 0.25, 1);
       will-change: transform;
@@ -745,30 +745,32 @@
     }
     .news-pullup-top {
       flex: 0 0 auto;
-      padding: 8px 16px 6px;
+      padding: 3px 12px 0;
       cursor: pointer;
       touch-action: none;
       user-select: none;
     }
     .news-pullup-grab {
-      display: flex; justify-content: center; padding: 2px 0 8px;
+      display: flex; justify-content: center; padding: 1px 0 3px;
     }
     .news-pullup-knob {
-      width: 36px; height: 4px; border-radius: 999px;
+      width: 32px; height: 3px; border-radius: 999px;
       background: #6b5a2e;
     }
     .news-pullup-title-row {
-      display: flex; align-items: baseline; gap: 10px;
+      display: flex; align-items: baseline; gap: 6px;
       width: 100%;
     }
-    .news-pullup-title-row .day-alert-h { min-width: 0; flex: 1 1 auto; }
+    .news-pullup-title-row .day-alert-h {
+      min-width: 0; flex: 1 1 auto;
+      font-size: 0.8125rem; line-height: 1.2;
+    }
     .news-pullup-count {
-      flex: 0 0 auto; font-size: 0.75rem; color: var(--dim);
+      flex: 0 0 auto; font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
-      position: relative;
-      padding: 4px 16px 14px;
+      padding: 0 12px 6px;
       min-height: 0;
     }
     .news-pullup-peek-block[hidden] { display: none; }
@@ -783,67 +785,74 @@
       flex: 1 1 auto; min-height: 0;
       overflow-y: auto; overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
-      padding: 0 16px 20px;
+      padding: 0 12px 14px;
       touch-action: pan-y;
     }
     .news-pullup-panel[hidden] { display: none; }
-    .news-pullup-row {
-      padding: 12px 0;
-      border-top: 1px solid #3a3428;
-    }
-    .news-pullup-row:first-child { border-top: 0; padding-top: 4px; }
+    .news-pullup-row { padding: 0 0 8px; }
+    .news-pullup-row:last-child { padding-bottom: 0; }
     .news-pullup-empty {
-      padding: 12px 0; color: var(--muted); font-size: 0.875rem; line-height: 1.4;
+      padding: 8px 0; color: var(--muted); font-size: 0.8125rem; line-height: 1.35;
     }
-    /* Peek / row stack: seat tag + source bubble → summary → account + time (+ link). */
+    /* Peek / row card: seat tag + source bubble → summary → @handle · time · See tweet · Remove. */
+    .news-pullup-card {
+      background: #12120e; border: 1px solid #2e2a22; border-radius: 8px;
+      padding: 7px 9px;
+    }
     .news-hero-head {
       display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 10px; margin: 0 0 6px;
+      gap: 6px; margin: 0 0 3px;
     }
     .news-hero-who {
       flex: 1 1 auto; min-width: 0;
-      font-size: 0.8125rem; font-weight: 650; line-height: 1.3;
-      color: #e0b44c; margin: 0;
+      font-size: 0.75rem; font-weight: 700; line-height: 1.25;
+      color: var(--text); margin: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .news-hero-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
-    .news-hero-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
+    .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
+    .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-src-bubble {
       flex: 0 0 auto; max-width: 46%;
-      font-size: 0.625rem; font-weight: 650; line-height: 1.2;
-      color: #d4c48a; background: rgba(107, 90, 46, 0.32);
-      border: 1px solid rgba(107, 90, 46, 0.55);
-      border-radius: 999px; padding: 3px 8px;
+      font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
+      color: #e0b44c; background: transparent;
+      border: 1px solid rgba(107, 90, 46, 0.65);
+      border-radius: 999px; padding: 1px 6px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .news-pullup-line {
-      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
-      overflow: hidden; color: var(--text); font-size: 0.8125rem; line-height: 1.38;
-      margin: 0 0 8px;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+      overflow: hidden; color: var(--text); font-size: 0.75rem; line-height: 1.32;
+      margin: 0 0 4px;
     }
     .news-pullup.is-open .news-pullup-line {
       -webkit-line-clamp: unset; display: block;
+      font-size: 0.8125rem; line-height: 1.38; margin: 0 0 6px;
     }
     .news-hero-foot {
       display: flex; align-items: center; flex-wrap: wrap;
-      gap: 4px 10px; min-height: 1.1rem;
-      font-size: 0.6875rem; line-height: 1.3; color: var(--dim);
+      gap: 2px 4px; min-height: 0;
+      font-size: 0.625rem; line-height: 1.2; color: var(--dim);
     }
-    .news-pullup-peek-block .news-hero-foot { padding-right: 4.75rem; }
+    .news-hero-foot .news-hero-sep { opacity: 0.45; margin: 0 1px; }
     .news-hero-handle {
-      font-weight: 600; color: #a8a8b0;
+      font-weight: 600; color: var(--dim);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .news-hero-when { color: var(--dim); white-space: nowrap; }
     a.news-hero-link {
-      font-size: 0.6875rem; font-weight: 650; line-height: 1.3;
-      color: #e0b44c; text-decoration: none; white-space: nowrap;
+      display: inline-flex; align-items: center;
+      font-size: 0.625rem; font-weight: 650; line-height: 1.2;
+      color: var(--dim); text-decoration: underline; white-space: nowrap;
     }
-    a.news-hero-link:hover, a.news-hero-link:focus-visible { text-decoration: underline; }
-    .news-pullup-peek-block > a.news-hero-link {
-      position: absolute; right: 16px; bottom: 14px;
+    a.news-hero-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-hero-foot .news-del {
+      display: inline-flex; align-items: center; margin: 0; padding: 0;
+      background: none; border: 0; color: var(--dim);
+      font: inherit; font-size: 0.625rem; font-weight: 650; text-decoration: none;
+      cursor: pointer;
     }
-    .news-pullup-row a.news-hero-link { margin-left: auto; }
+    .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
     /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
     .lh-actions {
       margin: 18px 0 22px;
@@ -5803,8 +5812,9 @@
       const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
 
       const onPointerDown = (e) => {
-        if (e.button != null && e.button !== 0) return;
-        if (e.target.closest("a.news-hero-link")) return;
+      if (e.button != null && e.button !== 0) return;
+      if (e.target.closest("a.news-hero-link")) return;
+      if (e.target.closest("[data-news-del]")) return;
         // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
         applyBrand();
@@ -5854,6 +5864,7 @@
         sheet.style.transform = "";
         if (wasTap) {
           if (e && e.target && e.target.closest("a.news-hero-link")) return;
+          if (e && e.target && e.target.closest("[data-news-del]")) return;
           if (newsPullupOpen) setNewsPullupOpen(false);
           else setNewsPullupOpen(true);
           return;
@@ -5914,7 +5925,7 @@
       if (!it) {
         return {
           source: "News", line: "Nothing shared yet.", who: "",
-          handle: "", when: "", postUrl: "",
+          handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
         };
       }
       const source = newsSourceBubble(it);
@@ -5934,13 +5945,39 @@
       const when = ago(it.published);
       const url = String(it.source_url || "");
       const postUrl = /^https?:\/\//i.test(url) ? url : "";
-      return { source: source, line: line, who: who, handle: handleLab, when: when, postUrl: postUrl };
+      const xLink = /^https:\/\/x\.com\/[A-Za-z0-9_]{1,15}\/status\/[0-9]{1,25}$/.test(url) ? url : "";
+      const itemId = String(it.id || "");
+      const subId = itemId ? newsSubmissionId(itemId) : "";
+      const canRemove = !!(isNewsAdmin() && subId);
+      return {
+        source: source, line: line, who: who, handle: handleLab, when: when,
+        postUrl: postUrl, xLink: xLink, itemId: itemId, canRemove: canRemove,
+      };
     }
 
-    function newsPullupLinkHtml(bit) {
-      if (!bit.postUrl) return "";
-      return '<a class="news-hero-link" href="' + esc(bit.postUrl)
-        + '" target="_blank" rel="noopener noreferrer">See post</a>';
+    function newsPullupFootHtml(bit) {
+      const footBits = [];
+      if (bit.handle) footBits.push('<span class="news-hero-handle">' + esc(bit.handle) + "</span>");
+      if (bit.when) footBits.push('<span class="news-hero-when">' + esc(bit.when) + "</span>");
+      if (bit.xLink) {
+        footBits.push(
+          '<a class="news-hero-link" href="' + esc(bit.xLink)
+            + '" target="_blank" rel="noopener noreferrer">See tweet</a>'
+        );
+      }
+      if (bit.canRemove && bit.itemId) {
+        footBits.push(
+          '<button type="button" class="news-del" data-news-del="' + esc(bit.itemId) + '"'
+            + (newsDelPending === bit.itemId ? " disabled" : "")
+            + ' aria-label="Remove this post from the feed">'
+            + (newsDelPending === bit.itemId ? "Removing\u2026" : "Remove")
+            + "</button>"
+        );
+      }
+      if (!footBits.length) return "";
+      return '<div class="news-hero-foot">'
+        + footBits.join('<span class="news-hero-sep" aria-hidden="true">\u00b7</span>')
+        + "</div>";
     }
 
     function newsPullupItemInnerHtml(bit) {
@@ -5949,17 +5986,12 @@
         + (bit.source ? '<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>" : "")
         + "</div>";
       const summary = '<div class="news-pullup-line">' + esc(bit.line) + "</div>";
-      const footBits = [];
-      if (bit.handle) footBits.push('<span class="news-hero-handle">' + esc(bit.handle) + "</span>");
-      if (bit.when) footBits.push('<span class="news-hero-when">' + esc(bit.when) + "</span>");
-      const foot = footBits.length
-        ? '<div class="news-hero-foot">' + footBits.join("") + "</div>"
-        : "";
-      return head + summary + foot;
+      const foot = newsPullupFootHtml(bit);
+      return '<div class="news-pullup-card">' + head + summary + foot + "</div>";
     }
 
     function newsPullupItemHtml(bit) {
-      return newsPullupItemInnerHtml(bit) + newsPullupLinkHtml(bit);
+      return newsPullupItemInnerHtml(bit);
     }
 
     function newsPullupPeekHtml(bit) {
@@ -5967,9 +5999,7 @@
         + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
         + ' aria-label="Open the News Feed">'
         + newsPullupItemInnerHtml(bit)
-        + "</div>"
-        + newsPullupLinkHtml(bit)
-        + "</div>";
+        + "</div></div>";
     }
 
     /**
@@ -5989,7 +6019,7 @@
       }
       const latestBit = items.length
         ? newsHeroLine(items[0])
-        : { source: "News", line: emptyLine, who: "", handle: "", when: "", postUrl: "" };
+        : { source: "News", line: emptyLine, who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
       const rows = items.length
         ? items.map((it) => {
             const bit = newsHeroLine(it);

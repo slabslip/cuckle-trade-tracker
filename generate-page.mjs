@@ -518,29 +518,46 @@ const html = `<!DOCTYPE html>
     button.day-in .day-in-val em { font-style: normal; font-weight: 650; color: var(--text); flex: 0 0 auto; margin-left: auto; }
     /* button.day-in span is a block-level dim caption; the delta is neither. */
     button.day-in .day-in-val .delta { display: inline; margin: 0; font-size: inherit; }
-    .vote { margin: 10px 0 0; }
-    .vote-h { font-weight: 650; }
-    .vote-opts { display: flex; gap: 8px; margin-top: 8px; }
-    /* Two names side by side leaves each about 114px at 320px, which clipped
-       KingHenryXXVI. Stacked, each gets the full 240px and no manager in the league
-       comes close -- the same trade the tape row makes one screen up. */
+    /* Vote chip: same dark gold frame as .h2h-chip.is-trade, tucked under the trade. */
+    .vote { margin: 0; }
+    .vote-opts { display: flex; gap: 6px; margin: 0; }
     @media (max-width: 360px) { .vote-opts { flex-direction: column; } }
     button.vote-opt {
-      flex: 1 1 0; min-width: 0; min-height: 48px;
+      flex: 1 1 0; min-width: 0; min-height: 40px;
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 8px 12px; cursor: pointer;
+      background: #14120c; border: 1px solid #3a3428; border-radius: 10px;
+      padding: 6px 10px; cursor: pointer; touch-action: manipulation;
     }
-    button.vote-opt.on { background: #1a1810; border-color: #6b5a2e; }
+    button.vote-opt.on { background: #241f14; border-color: #6b5a2e; }
     button.vote-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.vote-opt b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    button.vote-opt span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
-    /* On the trade's own screen the vote is a section of the page, not a tail on a row. */
+    button.vote-opt b { display: block; font-weight: 650; font-size: 0.8125rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+    button.vote-opt span { display: block; color: var(--dim); font-size: 0.6875rem; margin-top: 2px; }
     .vote-card {
-      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 12px; margin: 12px 0 0;
+      background: #1a1810; border: 1px solid #6b5a2e; border-radius: 14px;
+      padding: 8px 10px; margin: 2px 0 0; box-sizing: border-box;
     }
     .vote-card .vote { margin: 0; }
+    .vote.is-done { margin: 0; }
+    button.vote-done {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: none; border: 0; padding: 2px 0; margin: 0;
+      cursor: pointer; touch-action: manipulation; min-height: 36px;
+    }
+    button.vote-done:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 6px; }
+    .vote-done-k { color: var(--dim); font-size: 0.6875rem; font-weight: 500; flex: 0 0 auto; }
+    button.vote-done b { font-weight: 650; font-size: 0.8125rem; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vote-done-tally {
+      margin-left: auto; flex: 0 0 auto;
+      font-variant-numeric: tabular-nums; font-weight: 700;
+      font-size: 0.8125rem; color: var(--text);
+    }
+    .vote-edit-cancel {
+      display: block; margin: 6px 0 0; padding: 0; min-height: 0;
+      font-size: 0.6875rem; color: var(--dim);
+    }
     /* Claim-seat form: Phase 1 identity for votes. Same surfaces as the rest of the page. */
     .claim-box { margin-top: 8px; display: grid; gap: 8px; }
     .claim-box label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
@@ -1246,7 +1263,7 @@ const html = `<!DOCTYPE html>
       gap: 4px;
     }
     div.lh-trade-feed-card.is-selected .vote-card {
-      margin-top: 10px;
+      margin-top: 2px;
     }
     #tapeFilters {
       margin: 0 0 14px;
@@ -2001,7 +2018,7 @@ const html = `<!DOCTYPE html>
     const newsGone = new Set();
     let newsDelPending = null;
     let lens = "all";
-    const DATA_V = "voteNoAuthBar20260901141000";
+    const DATA_V = "voteChipCompact20260901142000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2081,6 +2098,9 @@ const html = `<!DOCTYPE html>
     let voteToast = null;
     // Transaction id when a data-vote-open control opened the vote sheet overlay.
     let voteSheetTx = null;
+    voteEditTx = null;
+    // Trade id when the voter re-opens options on an already-cast ballot.
+    let voteEditTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.
     let focusNext = null;
     const seatCache = {};
@@ -5692,6 +5712,7 @@ const html = `<!DOCTYPE html>
       if (choice == null) delete box.votes[transactionId];
       else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
       voteBoxWrite(box);
+      voteEditTx = null;
       votePush(transactionId, choice, seat);
     }
 
@@ -5736,19 +5757,29 @@ const html = `<!DOCTYPE html>
 
     function voteBlock(r) {
       const seats = voteSeats(r);
-      const head = '<div class="vote"><div class="vote-h">Who actually won it?</div>';
       // N-way trades get no vote: "which side won" has no head-to-head answer across three
       // bags, and N-way is already the special case that carries no Value Adjustment.
       if (seats.length !== 2 || voteParties(r) > 2) {
-        return head + "</div>";
+        return '<div class="vote"></div>';
       }
       if (!authSeatId() || !authSession) {
-        return head
-          + ""
-          + claimFormHtml()
-          + "</div>";
+        return '<div class="vote">' + claimFormHtml() + "</div>";
       }
       const v = readVotes(r.transaction_id);
+      const editing = voteEditTx === r.transaction_id;
+      // After a ballot: one compact row (Voted · name · a–b). Tap to change.
+      if (v.choice && !editing) {
+        const won = seats.find((s) => s.uid === v.choice);
+        const a = v.tally[seats[0].uid] || 0;
+        const b = v.tally[seats[1].uid] || 0;
+        return '<div class="vote is-done">'
+          + '<button type="button" class="vote-done" data-vote-edit="' + esc(r.transaction_id) + '"'
+          + ' aria-label="Change vote">'
+          + '<span class="vote-done-k">Voted</span>'
+          + "<b>" + seatLabel(won ? won.name : "?", { link: false }) + "</b>"
+          + '<span class="vote-done-tally">' + a + "–" + b + "</span>"
+          + "</button></div>";
+      }
       const opts = seats.map((s) => {
         const on = v.choice === s.uid;
         const n = v.tally[s.uid] || 0;
@@ -5760,8 +5791,11 @@ const html = `<!DOCTYPE html>
           + ' aria-pressed="' + (on ? "true" : "false") + '">'
           + "<b>" + seatLabel(s.name, { link: false }) + "</b><span>" + line + "</span></button>";
       }).join("");
-      return head
+      return '<div class="vote' + (v.choice ? " is-edit" : "") + '">'
         + '<div class="vote-opts">' + opts + "</div>"
+        + (v.choice
+          ? '<button type="button" class="linkish vote-edit-cancel" data-vote-edit-cancel="1">Done</button>'
+          : "")
         + "</div>";
     }
 
@@ -7886,6 +7920,7 @@ const html = `<!DOCTYPE html>
       titleYear = null;
       voteToast = null;
       voteSheetTx = null;
+      voteEditTx = null;
       focusNext = ".screen-h";
       if (tradeSeat && !seatCache[tradeSeat]) seatData(tradeSeat).then(() => render());
       render();
@@ -7918,6 +7953,7 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       voteToast = toast || null;
       voteSheetTx = null;
+      voteEditTx = null;
       focusNext = ".screen-h";
       say("");
       render();
@@ -8089,6 +8125,7 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       voteToast = null;
       voteSheetTx = null;
+      voteEditTx = null;
       focusNext = ".screen-h";
       render();
     }
@@ -8097,6 +8134,7 @@ const html = `<!DOCTYPE html>
       if (e.key === "Escape" && voteSheetTx) {
         e.preventDefault();
         voteSheetTx = null;
+        voteEditTx = null;
         render();
         return;
       }
@@ -8444,6 +8482,19 @@ const html = `<!DOCTYPE html>
       const voteSheetClose = e.target.closest("[data-vote-sheet-close]");
       if (voteSheetClose) {
         voteSheetTx = null;
+        voteEditTx = null;
+        render();
+        return;
+      }
+      const voteEditBtn = e.target.closest("[data-vote-edit]");
+      if (voteEditBtn) {
+        voteEditTx = voteEditBtn.dataset.voteEdit || null;
+        render();
+        return;
+      }
+      const voteEditCancel = e.target.closest("[data-vote-edit-cancel]");
+      if (voteEditCancel) {
+        voteEditTx = null;
         render();
         return;
       }
@@ -9924,10 +9975,19 @@ for (const need of [
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 2000 : stop);
   if (fn.includes("League tally as of") || fn.includes('<p class="caption">')
-    || fn.includes("auth-bar") || fn.includes("Voting as")) {
-    throw new Error("voteBlock must not ship tally caption or Voting as auth-bar");
+    || fn.includes("auth-bar") || fn.includes("Voting as")
+    || fn.includes("Who actually won")) {
+    throw new Error("voteBlock must stay compact — no tally caption, auth-bar, or Who actually won header");
+  }
+  if (!fn.includes("vote is-done") || !fn.includes("data-vote-edit") || !fn.includes("vote-done-tally")) {
+    throw new Error("voteBlock must collapse to Voted + tally after a ballot (vote is-done)");
   }
 }
+if (!html.includes(".vote-card") || !html.includes("background: #1a1810")
+  || !html.includes("button.vote-done")) {
+  throw new Error("vote chip must match trade gold-frame styles (vote-card / vote-done)");
+}
+
 for (const ban of [
     "Pick a set to open it",
     "Each title year. Previous season",

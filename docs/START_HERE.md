@@ -35,7 +35,7 @@ git pull origin main
 
 Full click-by-click detail: [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 
-### 1. Supabase SQL (seven files, in order)
+### 1. Supabase SQL (in order)
 
 Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**:
 
@@ -47,8 +47,9 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 6. `db/wave2b-vote-unique.sql`
 7. `db/wave5-invite-plain.sql`
 8. `db/wave6-one-seat-redeem.sql`
+9. `db/wave8-vote-tally-members.sql` — tallies count **current claimed seats only**; view must use `security_invoker = false` so every device can read counts
 
-Optional vote clean slate: `scripts/wipe-trade-votes.sql` → `truncate public.trade_votes ...`
+**Vote clean slate (Ducks + Truman + any seat):** run `scripts/wipe-trade-votes.sql` (`truncate public.trade_votes`), then re-run `db/wave8-vote-tally-members.sql` (or at least `db/wave8b-tally-view-fix.sql`). Deploy the page with `VOTE_KEY = cuckle.votes.v4`, then hard-refresh every phone so localStorage cannot re-upload old ballots. Everyone votes again from zero.
 
 ### 2. Supabase Auth settings
 

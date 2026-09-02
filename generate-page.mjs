@@ -10790,8 +10790,39 @@ const html = `<!DOCTYPE html>
       }
     })();
     // Installable shell (browser + home-screen). Push stays parked.
+    // On every visit/refresh: fetch a fresh sw.js (ignore HTTP cache), activate it, and
+    // reload once so claimed seats pick up merges to main without ?v= cache-bust links.
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch((err) => console.warn("sw", err));
+      (function armServiceWorkerAutoUpdate() {
+        var reloaded = false;
+        // First install also fires controllerchange — only reload on a *replacement* SW.
+        var hadController = !!navigator.serviceWorker.controller;
+        function reloadOnce() {
+          if (!hadController) { hadController = true; return; }
+          if (reloaded) return;
+          try {
+            if (sessionStorage.getItem("cuckle.swReloaded") === "1") return;
+            sessionStorage.setItem("cuckle.swReloaded", "1");
+          } catch (_) {}
+          reloaded = true;
+          location.reload();
+        }
+        navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
+        navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(function (reg) {
+          function check() {
+            try { reg.update(); } catch (_) {}
+          }
+          check();
+          document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") check();
+          });
+          window.addEventListener("focus", check);
+          // Clear the one-shot reload guard after a quiet moment so the *next* deploy can reload again.
+          setTimeout(function () {
+            try { sessionStorage.removeItem("cuckle.swReloaded"); } catch (_) {}
+          }, 4000);
+        }).catch(function (err) { console.warn("sw", err); });
+      })();
     }
   </script>
 </body>
@@ -10807,6 +10838,13 @@ for (const marker of ["<<<<<<<", ">>>>>>>", "\n=======\n"]) {
 // One DATA_V, or the cache key is whichever line the browser reached last.
 const dataVs = html.match(/const DATA_V = "[^"]*"/g) || [];
 if (dataVs.length !== 1) throw new Error(`expected exactly one DATA_V, found ${dataVs.length}: ${dataVs.join(", ")}`);
+
+if (!html.includes('updateViaCache: "none"')
+  || !html.includes("controllerchange")
+  || !html.includes("cuckle.swReloaded")
+  || !html.includes("reg.update()")) {
+  throw new Error("service worker must auto-update on refresh (updateViaCache none + controllerchange reload)");
+}
 
 // A lone backslash inside the template literal above is swallowed before it reaches the browser,
 // which once turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its

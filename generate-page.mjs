@@ -805,6 +805,12 @@ const html = `<!DOCTYPE html>
       user-select: none;
       -webkit-user-select: none;
       display: block;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Expanded: fat title chrome so iPhone can tap / drag-down to minimize. */
+    .news-pullup.is-open .news-pullup-top {
+      min-height: 44px;
+      padding: 6px 12px 8px;
     }
     .news-pullup-title-row {
       display: grid;
@@ -813,16 +819,22 @@ const html = `<!DOCTYPE html>
       column-gap: 8px;
       width: 100%;
       min-height: 22px;
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .news-pullup.is-open .news-pullup-title-row {
+      min-height: 44px;
     }
     .news-pullup-title-row .day-alert-h {
       min-width: 0;
       justify-self: start;
       font-size: 0.8125rem; line-height: 1.2;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      pointer-events: none;
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
-      /* Visual knob only — hit area is .news-pullup-top. */
+      /* Visual knob only — hit area is .news-pullup-top / title-row. */
       justify-self: center;
       height: 22px;
       min-height: 22px;
@@ -831,7 +843,11 @@ const html = `<!DOCTYPE html>
       margin: 0;
       padding: 0 10px;
       box-sizing: border-box;
-      pointer-events: auto;
+      pointer-events: none;
+    }
+    .news-pullup.is-open .news-pullup-grab {
+      height: 44px;
+      min-height: 44px;
     }
     .news-pullup-knob {
       width: 52px; height: 6px; border-radius: 999px;
@@ -844,6 +860,7 @@ const html = `<!DOCTYPE html>
       text-align: right;
       font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
       white-space: nowrap;
+      pointer-events: none;
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
@@ -4801,8 +4818,8 @@ const html = `<!DOCTYPE html>
           + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
           + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
           + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
-          + ' aria-label="News Feed — drag up to open, tap to close when open">'
-          + '<div class="news-pullup-title-row">'
+          + ' aria-label="News Feed — drag up to open, tap or drag down to minimize when open">'
+          + '<div class="news-pullup-title-row" data-news-pullup-title-row>'
           + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
           + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
           + '</div></div>'
@@ -7425,6 +7442,15 @@ const html = `<!DOCTYPE html>
       const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
       const sheet = root.querySelector("[data-news-pullup-sheet]");
+      const topChrome = root.querySelector("[data-news-pullup-top]");
+      if (topChrome) {
+        topChrome.setAttribute(
+          "aria-label",
+          newsPullupOpen
+            ? "Minimize News Feed — tap or drag down"
+            : "News Feed — drag up to open, tap title to expand"
+        );
+      }
       if (panel) panel.hidden = !newsPullupOpen;
       if (peekBlock) peekBlock.hidden = newsPullupOpen;
       // Keep scrim in DOM (transparent) briefly after close so it can still catch hits while
@@ -7474,6 +7500,8 @@ const html = `<!DOCTYPE html>
     /**
      * Wire the bottom News Feed pull-up: drag/flick open & close, tap top/scrim to close,
      * tap peek to open. Sheet expands up to just under the Chuckle Fantasy brand.
+     * When open, the whole title row (News Feed | grab | count) is the minimize control —
+     * tap or drag/slide down closes on iPhone.
      */
     function armNewsPullup() {
       // Preserve open/closed across re-renders (vote settle, bag warm, pick filter). Only tear
@@ -7500,6 +7528,7 @@ const html = `<!DOCTYPE html>
       setNewsPullupOpen(wasOpen);
 
       let drag = null;
+      let lastMinimizeAt = 0;
       const peekH = () => {
         const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
         const n = parseFloat(raw);
@@ -7541,7 +7570,8 @@ const html = `<!DOCTYPE html>
         drag.vel = (e.clientY - drag.lastY) / dt;
         drag.lastY = e.clientY;
         drag.lastT = now;
-        if (Math.abs(dy) > 6) drag.moved = true;
+        // iPhone finger jitter is often >6px — keep taps feeling like taps.
+        if (Math.abs(dy) > 10) drag.moved = true;
         sheet.style.transform = "translateY(" + ty + "px)";
       };
 
@@ -7565,6 +7595,7 @@ const html = `<!DOCTYPE html>
           if (e && e.target && e.target.closest("a.news-hero-link")) return;
           if (e && e.target && e.target.closest("[data-news-del]")) return;
           if (newsPullupOpen) {
+            lastMinimizeAt = Date.now();
             setNewsPullupOpen(false);
             swallowNewsPullupClickThrough();
             if (e) {
@@ -7580,12 +7611,30 @@ const html = `<!DOCTYPE html>
         else if (flickClose) setNewsPullupOpen(false);
         else setNewsPullupOpen(ty < limit * 0.55);
         // Drag/flick dismiss can also leave a click on Recent Trade under the sheet.
-        if (wasOpenBefore && !newsPullupOpen) swallowNewsPullupClickThrough();
+        if (wasOpenBefore && !newsPullupOpen) {
+          lastMinimizeAt = Date.now();
+          swallowNewsPullupClickThrough();
+        }
+      };
+
+      // iOS sometimes drops pointerup after setPointerCapture fails — click still fires.
+      const onTopClick = (e) => {
+        if (!newsPullupOpen) return;
+        if (Date.now() - lastMinimizeAt < 450) return;
+        if (e.target.closest("a.news-hero-link")) return;
+        if (e.target.closest("[data-news-del]")) return;
+        if (e.target.closest("[data-news-pullup-panel]")) return;
+        lastMinimizeAt = Date.now();
+        e.preventDefault();
+        e.stopPropagation();
+        setNewsPullupOpen(false);
+        swallowNewsPullupClickThrough();
       };
 
       const onScrimClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        lastMinimizeAt = Date.now();
         setNewsPullupOpen(false);
         swallowNewsPullupClickThrough();
       };
@@ -7598,12 +7647,29 @@ const html = `<!DOCTYPE html>
         setNewsPullupOpen(!newsPullupOpen);
       };
 
+      const onTopKey = (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        if (newsPullupOpen) {
+          lastMinimizeAt = Date.now();
+          setNewsPullupOpen(false);
+          swallowNewsPullupClickThrough();
+        } else {
+          setNewsPullupOpen(true);
+        }
+      };
+
+      // Title row lives inside top chrome — one listener set avoids double-firing on iOS.
       const targets = [top, peek, peekBlock].filter(Boolean);
       for (const el of targets) {
         el.addEventListener("pointerdown", onPointerDown);
         el.addEventListener("pointermove", onPointerMove);
         el.addEventListener("pointerup", endDrag);
         el.addEventListener("pointercancel", endDrag);
+      }
+      if (top) {
+        top.addEventListener("click", onTopClick);
+        top.addEventListener("keydown", onTopKey);
       }
       if (peek) peek.addEventListener("keydown", onPeekKey);
       if (scrim) scrim.addEventListener("click", onScrimClick);
@@ -7615,6 +7681,10 @@ const html = `<!DOCTYPE html>
           el.removeEventListener("pointermove", onPointerMove);
           el.removeEventListener("pointerup", endDrag);
           el.removeEventListener("pointercancel", endDrag);
+        }
+        if (top) {
+          top.removeEventListener("click", onTopClick);
+          top.removeEventListener("keydown", onTopKey);
         }
         if (peek) peek.removeEventListener("keydown", onPeekKey);
         if (scrim) scrim.removeEventListener("click", onScrimClick);
@@ -7832,8 +7902,8 @@ const html = `<!DOCTYPE html>
         + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
         + '<div class="news-pullup-top" data-news-pullup-top'
         + ' role="button" tabindex="0"'
-        + ' aria-label="News Feed — drag up to open, tap to close when open">'
-        + '<div class="news-pullup-title-row">'
+        + ' aria-label="News Feed — drag up to open, tap or drag down to minimize when open">'
+        + '<div class="news-pullup-title-row" data-news-pullup-title-row>'
         + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
         + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
         + '<span class="news-pullup-knob"></span></div>'
@@ -12308,6 +12378,11 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !html.includes("height: 22px")
   || !html.includes("min-width: 72px")
   || !html.includes("-webkit-line-clamp: 3")
+  || !html.includes(".news-pullup.is-open .news-pullup-top")
+  || !html.includes(".news-pullup.is-open .news-pullup-title-row")
+  || !html.includes("data-news-pullup-title-row")
+  || !inline.includes("Minimize News Feed — tap or drag down")
+  || !inline.includes("onTopClick")
   || !html.includes("has-news-pullup-open #app > :not(#newsPullup)")
   || !html.includes("--news-pullup-peek: 100px")) {
   throw new Error("News Feed grab must be a large hit target and lock home while open/closing");

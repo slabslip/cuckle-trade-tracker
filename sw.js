@@ -2,7 +2,11 @@
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
 /* Deploys: merge to main → GitHub Pages. Clients call reg.update() on load/focus; skipWaiting+claim
    then controllerchange reloads once so a normal refresh picks up upgrades. */
+<<<<<<< HEAD
 const CACHE = "chuckle-shell-v152-iphone-minimize";
+=======
+const CACHE = "chuckle-shell-v146-design-picker";
+>>>>>>> 759d509 (Align Design Mode picker boxes with the iPhone stage.)
 /* Do not precache index.html — Design Mode must never boot from a stale shell snapshot. */
 const SHELL = ["./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
 

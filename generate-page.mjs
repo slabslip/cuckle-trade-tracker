@@ -6656,8 +6656,15 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       const sent = choice == null ? VOTE_CLEARED : choice;
+      // Design Mode has a fake JWT — settle locally so the home vote feed can be walked.
+      if (authSession.access_token === "design-mode" || isDesignLeagueHome()) {
+        votePending.add(transactionId);
+        voteWriteError = "";
+        voteSettle(transactionId, sent);
+        return;
+      }
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       votePending.add(transactionId);
       voteWriteError = "";
       const payload = {

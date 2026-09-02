@@ -735,24 +735,29 @@ const html = `<!DOCTYPE html>
     body.has-news-pullup-open {
       overflow: hidden;
     }
-    /* While the sheet collapses, shield the whole viewport so Recent Trade cannot receive the tap. */
+    /* While open or collapsing: home under the sheet cannot receive taps (Recent Trade etc.). */
+    body.has-news-pullup-open #app > :not(#newsPullup),
+    body.has-news-pullup-closing #app > :not(#newsPullup) {
+      pointer-events: none !important;
+    }
     body.has-news-pullup-closing {
       cursor: default;
     }
     .news-pullup-click-guard {
       position: fixed;
       inset: 0;
-      z-index: 9998;
+      z-index: 2147483000;
       background: transparent;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
       cursor: default;
+      pointer-events: auto;
     }
     .news-pullup {
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 88px;
+      --news-pullup-peek: 120px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -785,31 +790,40 @@ const html = `<!DOCTYPE html>
     }
     .news-pullup-top {
       flex: 0 0 auto;
-      /* Large chrome hit target — the gold knob alone is too easy to miss, and a miss
-         after close used to land on Recent Trade behind the collapsing sheet. */
-      min-height: 52px;
-      padding: 10px 12px 8px;
+      position: relative;
+      z-index: 2;
+      /* Solid chrome so feed cards never paint through the minimize hit target. */
+      background: #1a1810;
+      /* Large chrome — minimize must be easy; misses used to open Recent Trade underneath. */
+      min-height: 64px;
+      padding: 8px 12px 10px;
       box-sizing: border-box;
       cursor: pointer;
       touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      gap: 6px;
+      gap: 8px;
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
-      /* Invisible pad around the knob so tap/swipe-down is reliable (~44px tall). */
-      min-height: 28px;
-      margin: -6px 0 0;
-      padding: 10px 48px 6px;
+      /* Fixed 44px hit pad — do not shrink (iOS was collapsing the old padded box to ~7px). */
+      flex: 0 0 44px;
+      height: 44px;
+      min-height: 44px;
+      width: 100%;
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
+      pointer-events: auto;
     }
     .news-pullup-knob {
-      width: 44px; height: 5px; border-radius: 999px;
+      width: 52px; height: 6px; border-radius: 999px;
       background: #c4a04a;
       box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.25);
+      pointer-events: none;
     }
     .news-pullup-title-row {
       display: flex; align-items: baseline; gap: 6px;
@@ -2305,8 +2319,8 @@ const html = `<!DOCTYPE html>
       if (guard && guard.parentNode) guard.parentNode.removeChild(guard);
     }
     function swallowNewsPullupClickThrough() {
-      // iOS often delivers the synthetic click ~300–600ms after pointerup; keep the gate wide.
-      newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 900);
+      // iOS often delivers the synthetic click hundreds of ms after pointerup; keep the gate wide.
+      newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 1600);
       try { document.body.classList.add("has-news-pullup-closing"); } catch (_) {}
       if (newsPullupClickGuardTimer) clearTimeout(newsPullupClickGuardTimer);
       // Physical full-viewport shield — event swallow alone still let Recent Trade open on some phones.
@@ -2323,21 +2337,27 @@ const html = `<!DOCTYPE html>
               if (e.stopImmediatePropagation) e.stopImmediatePropagation();
             } catch (_) {}
           };
-          guard.addEventListener("pointerdown", kill, true);
-          guard.addEventListener("pointerup", kill, true);
-          guard.addEventListener("click", kill, true);
-          guard.addEventListener("touchstart", kill, true);
-          guard.addEventListener("touchend", kill, true);
+          const opts = { capture: true, passive: false };
+          guard.addEventListener("pointerdown", kill, opts);
+          guard.addEventListener("pointerup", kill, opts);
+          guard.addEventListener("click", kill, opts);
+          guard.addEventListener("touchstart", kill, opts);
+          guard.addEventListener("touchend", kill, opts);
           document.body.appendChild(guard);
         } catch (_) {}
       }
       newsPullupClickGuardTimer = setTimeout(function () {
         newsPullupClickGuardTimer = 0;
         clearNewsPullupClickGuard();
-      }, 920);
+      }, 1650);
     }
     function newsPullupClickThroughBlocked() {
+      // Post-close ghost-click window only (not while the feed is interactively open).
       return Date.now() < newsPullupSwallowClicksUntil;
+    }
+    function newsPullupLocksHome() {
+      // While open or collapsing, never navigate away from league home.
+      return newsPullupOpen || newsPullupClickThroughBlocked();
     }
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
@@ -5569,7 +5589,7 @@ const html = `<!DOCTYPE html>
     }
 
     function goBottomNav(which) {
-      if (newsPullupClickThroughBlocked()) return;
+      if (newsPullupLocksHome()) return;
       if (appScreen !== "dash") return;
       dsOpen = false;
       lensOpen = false;
@@ -7324,6 +7344,8 @@ const html = `<!DOCTYPE html>
         if (e.target.closest("[data-news-del]")) return;
         // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
+        // Arm the click-through shield before the sheet moves — iOS click lands after collapse.
+        if (newsPullupOpen) swallowNewsPullupClickThrough();
         applyBrand();
         const ty = newsPullupOpen ? 0 : maxTy();
         drag = {
@@ -9539,8 +9561,8 @@ const html = `<!DOCTYPE html>
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
     function openTrade(tx, uid) {
       if (!tx) return;
-      // News Feed just minimized — never navigate away from league home via click-through.
-      if (newsPullupClickThroughBlocked()) return;
+      // News Feed open or just minimized — never leave league home via click-through.
+      if (newsPullupLocksHome()) return;
       view = "trade";
       openId = tx;
       tradeSeat = uid || null;
@@ -9576,7 +9598,7 @@ const html = `<!DOCTYPE html>
      * renderLeagueTrades carries its own <h2>, so the destination is still named).
      */
     function openTradesList(toast) {
-      if (newsPullupClickThroughBlocked()) return;
+      if (newsPullupLocksHome()) return;
       me = null;
       data = null;
       view = "trades";
@@ -9644,7 +9666,18 @@ const html = `<!DOCTYPE html>
     // Recent Trade / other home controls that were under the sheet.
     function blockGhostUiClick(e) {
       const now = Date.now();
-      if (now < voteModalSwallowClicksUntil || now < newsPullupSwallowClicksUntil) {
+      if (now < voteModalSwallowClicksUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        return;
+      }
+      if (now < newsPullupSwallowClicksUntil || newsPullupOpen) {
+        // Let the News Feed chrome finish its own close gesture; block everything else
+        // (Recent Trade, nav, search all trades, etc.).
+        try {
+          if (e.target && e.target.closest && e.target.closest("#newsPullup")) return;
+        } catch (_) {}
         e.preventDefault();
         e.stopPropagation();
         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -9868,7 +9901,7 @@ const html = `<!DOCTYPE html>
       }
       const boardRow = t.closest && t.closest("[data-board-open]");
       if (boardRow && boardRow.dataset.boardOpen && t === boardRow) {
-        if (newsPullupClickThroughBlocked()) {
+        if (newsPullupLocksHome()) {
           e.preventDefault();
           return;
         }
@@ -9877,11 +9910,22 @@ const html = `<!DOCTYPE html>
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {
-      // Before everything: leaving a screen must not read as a click on what is on it.
+      // Before everything: post-close ghost clicks must not activate home controls.
+      // Clicks inside the News Feed sheet itself are allowed (delete / links / swipe chrome).
       if (newsPullupClickThroughBlocked()) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
+        try {
+          if (e.target && e.target.closest && e.target.closest("#newsPullup")) {
+            /* feed chrome / cards */
+          } else {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+        } catch (_) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
       }
       const backBtn = e.target.closest("[data-back]");
       if (backBtn) {
@@ -10412,8 +10456,8 @@ const html = `<!DOCTYPE html>
       if (boardOpen) {
         // Vote CTA sits inside the Recent Trade card; never treat it as open-trade.
         if (e.target.closest("[data-vote-open]")) return;
-        // News Feed just closed under this finger — stay on league home.
-        if (newsPullupClickThroughBlocked()) {
+        // News Feed open/closing under this finger — stay on league home.
+        if (newsPullupLocksHome()) {
           e.preventDefault();
           e.stopPropagation();
           return;
@@ -12057,12 +12101,15 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !inline.includes("newsPullupClickGuard")
   || !inline.includes("has-news-pullup-closing")
   || !html.includes("news-pullup-click-guard")
-  || !inline.includes("if (newsPullupClickThroughBlocked()) return;")
-  || !html.includes("min-height: 52px")
+  || !inline.includes("function newsPullupLocksHome(")
+  || !inline.includes("if (newsPullupLocksHome()) return;")
+  || !html.includes("min-height: 64px")
   || !html.includes(".news-pullup-grab {")
-  || !html.includes("min-height: 28px")
-  || !html.includes("--news-pullup-peek: 88px")) {
-  throw new Error("News Feed grab must be a large hit target and swallow post-close click-through");
+  || !html.includes("height: 44px")
+  || !html.includes("flex: 0 0 44px")
+  || !html.includes("has-news-pullup-open #app > :not(#newsPullup)")
+  || !html.includes("--news-pullup-peek: 120px")) {
+  throw new Error("News Feed grab must be a large hit target and lock home while open/closing");
 }
 for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   // it.also and it.published are read into locals and formatted by ago()/length before use;

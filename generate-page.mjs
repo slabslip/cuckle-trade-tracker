@@ -1398,6 +1398,32 @@ const html = `<!DOCTYPE html>
     }
     button.vote-sheet-close:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .vote-sheet-panel .vote-card { margin: 0; border: 0; padding: 0; background: transparent; }
+    .vote-confirm-k {
+      margin: 0 36px 8px 0; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+    }
+    .vote-confirm-pick {
+      margin: 0 36px 12px 0; font-size: 1.05rem; font-weight: 700; color: var(--text);
+      line-height: 1.25;
+    }
+    .vote-confirm-tally {
+      display: grid; gap: 8px; margin: 0; padding: 0; list-style: none;
+    }
+    .vote-confirm-tally li {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: #121218;
+    }
+    .vote-confirm-tally li.is-pick {
+      border-color: #6b5a2e; background: #1a1810;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.28);
+    }
+    .vote-confirm-tally b { font-size: 0.9rem; min-width: 0; }
+    .vote-confirm-tally span {
+      flex: 0 0 auto; font-variant-numeric: tabular-nums;
+      color: var(--dim); font-size: 0.8rem; font-weight: 650;
+    }
+    .vote-confirm-marks { margin-top: 10px; }
     /* Trade detail feed: selected card stays open with bags + vote beneath the H2H chip. */
     div.lh-trade-feed-card.is-selected {
       cursor: default;
@@ -2285,6 +2311,9 @@ const html = `<!DOCTYPE html>
     let voteToast = null;
     // Transaction id when a data-vote-open control opened the vote sheet overlay.
     let voteSheetTx = null;
+    // After casting from league home: confirmation + live tally until the manager dismisses.
+    // Dismissing advances Recent Trade to the next unvoted deal.
+    let voteConfirmTx = null;
     // Trade id when the voter re-opens options on an already-cast ballot.
     let voteEditTx = null;
     // The screen heading to move focus to after the next render, or null to keep focus put.
@@ -5222,7 +5251,8 @@ const html = `<!DOCTYPE html>
     // needle, the even book, VA, the lens windows, today_delta, partner grades or any board
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
-    const VOTE_KEY = "cuckle.votes.v3";
+    // Bump this when wiping Supabase trade_votes so heal cannot re-upload stale device ballots.
+    const VOTE_KEY = "cuckle.votes.v4";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
@@ -5265,6 +5295,9 @@ const html = `<!DOCTYPE html>
     // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
     // the vote itself is already in localStorage, so nothing here can lose it.
     const votePending = new Set();
+    // Shown briefly when a write fails so the manager knows to retry (not silent local-only).
+    let voteWriteError = "";
+    let voteReloadAt = 0;
     // Claimed-seat session: { access_token, refresh_token, expires_at, user_id, username, seat_user_id, seat_name }
     let authSession = null;
     let authBusy = false;
@@ -6434,6 +6467,9 @@ const html = `<!DOCTYPE html>
       markOpen = null;
       titleYear = null;
       voteToast = null;
+      voteSheetTx = null;
+      voteConfirmTx = null;
+      voteEditTx = null;
       dsOpen = false;
       lensOpen = false;
       yearFilterOpen = false;
@@ -6480,26 +6516,45 @@ const html = `<!DOCTYPE html>
     // trade already counts us. Without it the choice is between double-counting our own vote and
     // hiding it, and both are wrong.
     //
-    // A third read pulls every ballot's voter+choice so the Latest trade lean can paint each
-    // voter's seat flair under the side they picked. SELECT on trade_votes is public; if that
-    // read fails we still keep tallies and fall back to count-only marks.
+    // Ballots (voter+choice) load first and are the source of truth for flairs. If the tallies
+    // view 401s or is missing, we synthesize counts from those ballots so every claimed seat
+    // still sees every other manager's vote.
     async function voteLoad() {
       voteLiveState = "loading";
       await authRefreshIfNeeded();
       const ids = voteVoterIds();
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      const memberIds = new Set(
+        (members || []).map((m) => (m && m.user_id != null ? String(m.user_id) : "")).filter(Boolean)
+      );
       try {
         const tallyQ = VOTE_API + "/trade_vote_tallies?select=*&sleeper_league_id=eq."
           + encodeURIComponent(leagueId);
         const mineQ = ids.length
           ? VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",")
             + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
+            + "&choice=neq." + encodeURIComponent(VOTE_CLEARED)
           : null;
         const ballotsQ = VOTE_API + "/trade_votes?select=transaction_id,choice,voter&sleeper_league_id=eq."
-          + encodeURIComponent(leagueId);
-        let rows;
-        let mineRows = [];
+          + encodeURIComponent(leagueId)
+          + "&choice=neq." + encodeURIComponent(VOTE_CLEARED);
+
+        // Ballots first so a broken tallies view cannot hide other managers' votes.
         let ballotRows = [];
+        try {
+          ballotRows = await voteGet(ballotsQ);
+        } catch (ballotErr) {
+          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          try {
+            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter"
+              + "&choice=neq." + encodeURIComponent(VOTE_CLEARED));
+          } catch (ballotErr2) {
+            ballotRows = [];
+          }
+        }
+
+        let rows = null;
+        let mineRows = [];
         try {
           const parts = [voteGet(tallyQ)];
           if (mineQ) parts.push(voteGet(mineQ));
@@ -6507,32 +6562,31 @@ const html = `<!DOCTYPE html>
           rows = got[0];
           mineRows = got[1] || [];
         } catch (scopedErr) {
-          // Wave 2 SQL not applied yet — fall back to unscoped tallies.
-          console.warn("scoped vote load failed; falling back", scopedErr);
-          const got = await Promise.all([
-            voteGet(VOTE_API + "/trade_vote_tallies?select=*"),
-            ids.length
-              ? voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",") + ")")
-              : Promise.resolve([]),
-          ]);
-          rows = got[0];
-          mineRows = got[1] || [];
-        }
-        try {
-          ballotRows = await voteGet(ballotsQ);
-        } catch (ballotErr) {
-          console.warn("vote ballot marks load failed; count-only lean", ballotErr);
+          console.warn("scoped vote tallies failed; using ballots", scopedErr);
           try {
-            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter");
-          } catch (ballotErr2) {
-            ballotRows = [];
+            mineRows = mineQ ? await voteGet(mineQ) : [];
+          } catch (mineErr) {
+            mineRows = [];
           }
+          rows = null;
         }
+
         const totals = {};
-        for (const r of rows || []) {
-          if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
-          const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
-          box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+        if (rows && rows.length) {
+          for (const r of rows) {
+            if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
+            const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+            box[r.choice] = (box[r.choice] || 0) + (r.votes || 0);
+          }
+        } else {
+          // Synthesize tallies from raw ballots so a broken tallies view cannot hide
+          // everyone else's votes (Ducks flair / counts on Latest trade).
+          for (const r of ballotRows || []) {
+            if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+            if (memberIds.size && !memberIds.has(String(r.voter))) continue;
+            const box = totals[r.transaction_id] || (totals[r.transaction_id] = {});
+            box[r.choice] = (box[r.choice] || 0) + 1;
+          }
         }
         const mine = {};
         for (const r of mineRows || []) {
@@ -6543,11 +6597,13 @@ const html = `<!DOCTYPE html>
         const ballots = {};
         for (const r of ballotRows || []) {
           if (!r || !r.transaction_id || !r.voter || !r.choice || r.choice === VOTE_CLEARED) continue;
+          if (memberIds.size && !memberIds.has(String(r.voter))) continue;
           const box = ballots[r.transaction_id] || (ballots[r.transaction_id] = {});
           box[r.voter] = r.choice;
         }
         voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine, ballots: ballots };
         voteLiveState = "ok";
+        voteReloadAt = Date.now();
       } catch (err) {
         console.error(err);
         voteLive = null;
@@ -6555,6 +6611,16 @@ const html = `<!DOCTYPE html>
       }
       voteHeal();
       render();
+    }
+
+    // Re-pull league ballots when the manager returns to the tab so Ducks/Truman/new seats
+    // see each other's votes without a full page reload.
+    function voteReloadIfStale(minMs) {
+      if (document.visibilityState && document.visibilityState !== "visible") return;
+      if (appScreen !== "dash" || !activeLeague) return;
+      const gap = minMs == null ? 2000 : minMs;
+      if (Date.now() - voteReloadAt < gap) return;
+      voteLoad().catch((err) => console.error(err));
     }
 
     // localStorage owns "my vote", so a trade where Supabase disagrees gets the local vote pushed
@@ -6567,13 +6633,14 @@ const html = `<!DOCTYPE html>
     // someone actually taps to clear.
     //
     // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
+    // Heal retries do not pass priorLocal — a failed heal leaves local as-is for the next pass.
     function voteHeal() {
       if (voteLiveState !== "ok") return;
       if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
         const local = votes[tx].choice || null;
-        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId());
+        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId(), null);
       }
     }
 
@@ -6581,7 +6648,9 @@ const html = `<!DOCTYPE html>
     // its conflict target explicitly because PostgREST otherwise infers the primary key, which is
     // the surrogate id — leave it off and a second vote fails on the unique constraint.
     // voter is rewritten by the trade_votes_force_voter trigger; we still send the claimed seat.
-    function votePush(transactionId, choice, seat) {
+    // priorLocal: when set (user tap), a failed write restores that ballot so this phone cannot
+    // look like it voted when Supabase never got the row — that was how Ducks saw 2 and Truman 1.
+    function votePush(transactionId, choice, seat, priorLocal) {
       if (!authSession || !authSession.access_token || !seat) {
         votePending.delete(transactionId);
         render();
@@ -6590,6 +6659,7 @@ const html = `<!DOCTYPE html>
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       const sent = choice == null ? VOTE_CLEARED : choice;
       votePending.add(transactionId);
+      voteWriteError = "";
       const payload = {
         transaction_id: transactionId,
         choice: sent,
@@ -6604,14 +6674,34 @@ const html = `<!DOCTYPE html>
         }, true),
         body: JSON.stringify(payload),
         signal: voteAbort(),
-      }).then((res) => {
-        if (!res.ok) throw new Error("vote write " + res.status);
+      }).then(async (res) => {
+        if (!res.ok) {
+          let detail = "";
+          try { detail = (await res.text() || "").slice(0, 180); } catch (e) { /* ignore */ }
+          throw new Error("vote write " + res.status + (detail ? ": " + detail : ""));
+        }
         return res.json();
       }).then((rows) => {
         const row = (rows || [])[0];
         voteSettle(transactionId, row && row.choice ? row.choice : sent);
+        // Full refresh so this device immediately picks up any concurrent ballots from
+        // other claimed seats (and confirms ours landed in the public SELECT).
+        voteLoad().catch((err) => console.error(err));
       }).catch((err) => {
         console.error(err);
+        votePending.delete(transactionId);
+        if (priorLocal !== undefined) {
+          const box = voteBoxRead();
+          if (priorLocal && priorLocal.choice) {
+            box.votes[transactionId] = priorLocal;
+          } else {
+            delete box.votes[transactionId];
+          }
+          voteBoxWrite(box);
+        }
+        voteWriteError = "Vote didn’t save — check connection and try again.";
+        voteToast = null;
+        say(voteWriteError);
         render();
       });
     }
@@ -6771,11 +6861,18 @@ const html = `<!DOCTYPE html>
         return;
       }
       const box = voteBoxRead();
+      const prev = box.votes[transactionId]
+        ? {
+            choice: box.votes[transactionId].choice,
+            seat: box.votes[transactionId].seat,
+            ts: box.votes[transactionId].ts,
+          }
+        : null;
       if (choice == null) delete box.votes[transactionId];
       else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
       voteBoxWrite(box);
       voteEditTx = null;
-      votePush(transactionId, choice, seat);
+      votePush(transactionId, choice, seat, prev);
     }
 
     function voteSeats(r) {
@@ -6817,6 +6914,39 @@ const html = `<!DOCTYPE html>
         + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
         + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
         + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + "</div></div>";
+    }
+
+    /** Post-cast confirm on league home: your pick + current league tally, then X to advance. */
+    function voteConfirmHtml() {
+      if (!voteConfirmTx) return "";
+      const r = tradeSide(voteConfirmTx, null);
+      if (!r) return "";
+      const seats = voteSeats(r);
+      const v = readVotes(voteConfirmTx);
+      const won = seats.find((s) => s.uid === v.choice);
+      const rows = seats.map((s) => {
+        const n = v.tally[s.uid] || 0;
+        const pct = v.votes ? Math.round(n / v.votes * 100) : 0;
+        const line = v.votes
+          ? n + (n === 1 ? " vote" : " votes") + " · " + pct + "%"
+          : "0 votes";
+        return '<li class="' + (v.choice === s.uid ? "is-pick" : "") + '">'
+          + "<b>" + seatLabel(s.name, { link: false }) + "</b>"
+          + "<span>" + esc(line) + "</span></li>";
+      }).join("");
+      const marks = latestTradeLeanFooterHtml(r, latestTradeLean(r));
+      return '<div class="vote-sheet vote-confirm" role="presentation">'
+        + '<button type="button" class="vote-sheet-scrim" data-vote-confirm-close tabindex="-1"'
+        + ' aria-label="Dismiss vote confirmation"></button>'
+        + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" aria-label="Vote recorded" tabindex="-1">'
+        + '<button type="button" class="vote-sheet-close" data-vote-confirm-close aria-label="Close">×</button>'
+        + '<p class="vote-confirm-k">Vote recorded</p>'
+        + '<p class="vote-confirm-pick">You have <b>'
+        + seatLabel(won ? won.name : "?", { link: false })
+        + "</b> winning</p>"
+        + '<ul class="vote-confirm-tally">' + rows + "</ul>"
+        + (marks ? '<div class="vote-confirm-marks">' + marks + "</div>" : "")
         + "</div></div>";
     }
 
@@ -7329,9 +7459,9 @@ const html = `<!DOCTYPE html>
 
 
     /**
-     * Pick the most recent trade side for the league-home Latest trade card.
+     * Absolute newest trade side on the tape (ignores whether this seat has voted).
      */
-    function latestTradeSide() {
+    function latestTradeAbsolute() {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       let best = null;
       for (const r of sides) {
@@ -7341,6 +7471,21 @@ const html = `<!DOCTYPE html>
         }
       }
       return best;
+    }
+
+    /**
+     * League-home Recent Trade: next newest 2-party deal this claimed seat has not voted on.
+     * Voting + dismissing the confirm popup advances the feed to the following trade.
+     * Unclaimed visitors still see the absolute latest (CTA opens claim via the vote sheet).
+     */
+    function latestTradeSide() {
+      if (!authSeatId() || !authSession) return latestTradeAbsolute();
+      for (const r of leagueTrades()) {
+        if (voteSeats(r).length !== 2 || voteParties(r) > 2) continue;
+        if (readVotes(r.transaction_id).choice) continue;
+        return r;
+      }
+      return null;
     }
 
     /** Sleeper-style short name: "Blake Corum" → "B. Corum". */
@@ -8127,9 +8272,11 @@ const html = `<!DOCTYPE html>
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
+          // CTA opens the vote sheet on home (does not leave the dashboard). Chip still
+          // opens trade detail via data-board-open on the card.
           const voteCta = voted ? "" : '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
+            + ' data-vote-open="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Who won this trade? Cast your vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
@@ -8142,8 +8289,8 @@ const html = `<!DOCTYPE html>
           // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
           const voteCta = '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Open trade details to vote">Who won this trade?</button>';
+            + ' data-vote-open="' + esc(latest.transaction_id) + '"'
+            + ' aria-label="Who won this trade? Cast your vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
@@ -8159,6 +8306,12 @@ const html = `<!DOCTYPE html>
             + "</div>"
             + "</div>";
         }
+      } else if (authSeatId() && authSession && latestTradeAbsolute()) {
+        tradeBox = '<div class="champ-alert lh-progress lh-latest-trade is-caught-up">'
+          + recentTradeHeaderHtml()
+          + '<p class="caption" style="margin:8px 0 0">You’re caught up — every recent two-team trade has your vote. '
+          + "New deals show up here first.</p>"
+          + "</div>";
       }
       if (!tradeBox) return "";
       return '<section class="lh-section">' + tradeBox + "</section>";
@@ -9144,8 +9297,8 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
-      app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();
-      document.body.classList.toggle("has-vote-sheet", !!voteSheetTx);
+      app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml() + voteConfirmHtml();
+      document.body.classList.toggle("has-vote-sheet", !!(voteSheetTx || voteConfirmTx));
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
@@ -9156,6 +9309,10 @@ const html = `<!DOCTYPE html>
       const land = focusNext ? app.querySelector(focusNext) : null;
       focusNext = null;
       if (land) land.focus({ preventScroll: true });
+      else if (voteConfirmTx) {
+        const sheet = app.querySelector(".vote-confirm .vote-sheet-panel");
+        if (sheet) sheet.focus({ preventScroll: true });
+      }
       else if (voteSheetTx) {
         const sheet = app.querySelector(".vote-sheet-panel");
         if (sheet) sheet.focus({ preventScroll: true });
@@ -9194,6 +9351,7 @@ const html = `<!DOCTYPE html>
       titleYear = null;
       voteToast = null;
       voteSheetTx = null;
+      voteConfirmTx = null;
       voteEditTx = null;
       {
         const side = tradeSide(tx, uid) || tradeSide(tx, null);
@@ -9234,6 +9392,7 @@ const html = `<!DOCTYPE html>
       applyDefaultLens(null);
       voteToast = toast || null;
       voteSheetTx = null;
+      voteConfirmTx = null;
       voteEditTx = null;
       focusNext = ".screen-h";
       say("");
@@ -9437,6 +9596,7 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       voteToast = null;
       voteSheetTx = null;
+      voteConfirmTx = null;
       voteEditTx = null;
       focusNext = ".screen-h";
       render();
@@ -9451,9 +9611,10 @@ const html = `<!DOCTYPE html>
     });
 
     document.getElementById("app").addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && voteSheetTx) {
+      if (e.key === "Escape" && (voteSheetTx || voteConfirmTx)) {
         e.preventDefault();
         voteSheetTx = null;
+        voteConfirmTx = null;
         voteEditTx = null;
         render();
         return;
@@ -9935,7 +10096,18 @@ const html = `<!DOCTYPE html>
       }
       const voteOpenBtn = e.target.closest("[data-vote-open]");
       if (voteOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        voteConfirmTx = null;
         voteSheetTx = voteOpenBtn.dataset.voteOpen || null;
+        render();
+        return;
+      }
+      const voteConfirmClose = e.target.closest("[data-vote-confirm-close]");
+      if (voteConfirmClose) {
+        // Dismiss confirm → Recent Trade advances to the next unvoted deal.
+        voteConfirmTx = null;
+        voteEditTx = null;
         render();
         return;
       }
@@ -9966,13 +10138,20 @@ const html = `<!DOCTYPE html>
         const pick = voteBtn.dataset.voteSeat;
         const next = readVotes(tx).choice === pick ? null : pick;
         writeVote(tx, next);
-        // Casting a vote on the trade feed shows a toast and stays put so the user can keep
-        // browsing. Clearing a vote stays put too. Unclaimed: writeVote only opens the claim form.
-        if (view === "trade" && next && authSeatId()) {
+        // League home: confirm popup with live tally; X advances the Recent Trade queue.
+        // Trade detail: toast and stay put. Clearing a vote stays put.
+        if (next && authSeatId() && view === "home" && !me) {
+          voteSheetTx = null;
+          voteConfirmTx = tx;
+          voteToast = null;
+          say("Vote recorded");
+        } else if (view === "trade" && next && authSeatId()) {
           const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
           voteToast = { tx: tx, name: (won && won.name) || "" };
+          voteConfirmTx = null;
         } else {
           voteToast = null;
+          if (!next) voteConfirmTx = null;
         }
         render();
         return;
@@ -10099,6 +10278,10 @@ const html = `<!DOCTYPE html>
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
       else if (closedFilter) render();
     });
+    document.addEventListener("visibilitychange", () => { voteReloadIfStale(); });
+    window.addEventListener("focus", () => { voteReloadIfStale(); });
+    // Soft poll on the dashboard so peer ballots land without requiring a tab switch.
+    setInterval(() => { voteReloadIfStale(10000); }, 12000);
     document.addEventListener("change", (e) => {
       const tapeYearLab = e.target.closest("[data-tape-year]");
       if (tapeYearLab) {
@@ -10392,7 +10575,8 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
 for (const need of ["function recentTradeHeaderHtml(", "Recent Trade", "data-trades-list=\"1\"",
-  "search all trades", "function latestTradeSide(", "function ensureWeekMatchups(",
+  "search all trades", "function latestTradeSide(", "function latestTradeAbsolute(",
+  "function ensureWeekMatchups(",
   "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
   "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
   "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
@@ -10405,16 +10589,19 @@ if (inline.includes('day-alert-h">Champions Path')) {
 {
   const at = inline.indexOf("function leagueInProgress(");
   const stop = inline.indexOf("\n    function ", at + 10);
-  const prog = inline.slice(at, stop < 0 ? at + 800 : stop);
+  const prog = inline.slice(at, stop < 0 ? at + 1200 : stop);
   if (!prog.includes("recentTradeHeaderHtml()") || !prog.includes("lh-latest-trade")
-    || !prog.includes("data-board-open")) {
-    throw new Error("leagueInProgress must mount Recent Trade (lh-latest-trade) that opens via data-board-open");
+    || !prog.includes("data-board-open") || !prog.includes("data-vote-open=")) {
+    throw new Error("leagueInProgress must mount Recent Trade with vote sheet CTA (data-vote-open)");
   }
-  if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")) {
-    throw new Error("leagueInProgress must mount Who won this trade? vote CTA on Recent Trade");
+  if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")
+    || !prog.includes("caught up") || !inline.includes("function latestTradeAbsolute(")
+    || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")) {
+    throw new Error("league home Recent Trade must queue unvoted deals and confirm with tally popup");
   }
-  if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")) {
-    throw new Error("Recent Trade vote CTA styles must ship (lh-trade-vote-cta / lh-trade-chip-wrap)");
+  if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")
+    || !html.includes(".vote-confirm-tally")) {
+    throw new Error("Recent Trade vote CTA / confirm tally styles must ship");
   }
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
@@ -10770,8 +10957,8 @@ if (inline.includes("const leagueChip") || inline.includes("leagueChip +")
     || /class="caption" style="margin:0 0 8px"[\s\S]{0,160}data-app-home="1"/.test(inline)) {
   throw new Error("league dash must not rebuild the leagues caption row inside #app");
 }
-if (!inline.includes("app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();")) {
-  throw new Error("league dash render must compose syncNote + seatName + nav + body with no caption row");
+if (!inline.includes("app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml() + voteConfirmHtml();")) {
+  throw new Error("league dash render must compose syncNote + seatName + nav + body + vote sheets with no caption row");
 }
 // day-alert-top header row still hosts Pause; keep its min-width guard.
 for (const need of [".day-alert-top .day-alert-h { min-width: 0; }"]) {
@@ -11078,7 +11265,7 @@ if (!inline.includes("    function showMenu(menu) {") && !inline.includes("    f
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
   "+ seatLabel(me.name) + \"</h2>\"",
-  "app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml();",
+  "app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml() + voteConfirmHtml();",
 ]) {
   if (!inline.includes(need)) throw new Error(`generated script lost the seat heading: ${need}`);
 }
@@ -11226,8 +11413,23 @@ for (const ban of [
   if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
     throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
   }
-  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v3"')) {
-    throw new Error("VOTE_KEY must be cuckle.votes.v3 so prior local ballots are wiped for public launch");
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v4"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v4 so local heal cannot re-upload ballots after a Supabase wipe");
+  }
+  if (!inline.includes("using ballots")
+    || !inline.includes("Synthesize tallies from raw ballots")
+    || !inline.includes("voteReloadIfStale")
+    || !inline.includes("priorLocal")) {
+    throw new Error("voteLoad/votePush must sync ballots across devices (ballot fallback, reload, revert on fail)");
+  }
+  {
+    const wave8 = fs.readFileSync(`${ROOT}db/wave8-vote-tally-members.sql`, "utf8");
+    if (!wave8.includes("league_memberships")
+      || !wave8.includes("trade_vote_tallies")
+      || !wave8.includes("inner join public.league_memberships")
+      || !wave8.includes("security_invoker = false")) {
+      throw new Error("wave8 must rebuild trade_vote_tallies (members join, security_invoker=false for anon)");
+    }
   }
   if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
     throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");

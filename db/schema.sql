@@ -145,8 +145,33 @@ returns trigger
 language plpgsql
 as $$
 begin
+  -- New initial cast after a cleared sentinel: start a fresh edit window.
+  if old.choice = '__none__'
+     and new.choice is distinct from old.choice
+     and new.choice is distinct from '__none__' then
+    new.created_at := now();
+    new.updated_at := now();
+    return new;
+  end if;
+
   new.updated_at := now();
   new.created_at := old.created_at;
+
+  if new.choice is not distinct from old.choice then
+    return new;
+  end if;
+
+  -- One vote: do not clear a real ballot. Change sides within 24h instead.
+  if old.choice is distinct from '__none__' and new.choice = '__none__' then
+    raise exception 'vote cannot be cleared; change sides within 24 hours of first cast'
+      using errcode = 'check_violation';
+  end if;
+
+  if old.created_at <= (now() - interval '24 hours') then
+    raise exception 'vote locked after 24 hours'
+      using errcode = 'check_violation';
+  end if;
+
   return new;
 end $$;
 

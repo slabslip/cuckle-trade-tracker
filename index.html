@@ -540,6 +540,8 @@
       cursor: pointer; touch-action: manipulation; min-height: 36px;
     }
     button.vote-done:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; border-radius: 6px; }
+    .vote.is-locked .vote-done { cursor: default; opacity: 0.92; }
+    .vote-lock-note { margin: 6px 0 0; color: var(--dim); font-size: 0.6875rem; }
     .vote-done-k { color: var(--dim); font-size: 0.6875rem; font-weight: 500; flex: 0 0 auto; }
     button.vote-done b { font-weight: 650; font-size: 0.8125rem; min-width: 0;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -4961,7 +4963,7 @@
       return voteToast
         ? '<p class="vote-note">Vote recorded'
           + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
-          + ". Open it again to change your vote, or tap the same side to clear it.</p>"
+          + ". One vote per trade — you can change sides within 24 hours of your first cast.</p>"
         : "";
     }
 
@@ -5381,9 +5383,11 @@
     // A paused free-tier project can hang rather than refuse. Nothing about a vote may wait
     // forever on it.
     const VOTE_TIMEOUT = 8000;
+    // One ballot per claimed seat per trade. Side can change until this window after first cast.
+    const VOTE_EDIT_MS = 24 * 60 * 60 * 1000;
     // The league tally as Supabase reports it. Stays null on any failure, so the UI falls back to
     // the committed book or to this device alone rather than inventing a count.
-    //   { asOf, totals: { tx: { choice: n } }, mine: { tx: choice } }
+    //   { asOf, totals, mine: { tx: choice }, mineAt: { tx: created_at ISO }, ballots }
     let voteLive = null;
     let voteLiveState = "idle";
     // Trades whose local vote has not been confirmed by Supabase yet. Drives the caption only —
@@ -6637,7 +6641,7 @@
         const tallyQ = VOTE_API + "/trade_vote_tallies?select=*&sleeper_league_id=eq."
           + encodeURIComponent(leagueId);
         const mineQ = ids.length
-          ? VOTE_API + "/trade_votes?select=transaction_id,choice&voter=in.(" + ids.join(",")
+          ? VOTE_API + "/trade_votes?select=transaction_id,choice,created_at&voter=in.(" + ids.join(",")
             + ")&sleeper_league_id=eq." + encodeURIComponent(leagueId)
             + "&choice=neq." + encodeURIComponent(VOTE_CLEARED)
           : null;
@@ -6695,9 +6699,11 @@
           }
         }
         const mine = {};
+        const mineAt = {};
         for (const r of mineRows || []) {
           if (!r || !r.transaction_id || !r.choice || r.choice === VOTE_CLEARED) continue;
           mine[r.transaction_id] = r.choice;
+          if (r.created_at) mineAt[r.transaction_id] = r.created_at;
         }
         // voter → choice per trade. Cleared rows stay out; one voter can only pick one side.
         const ballots = {};
@@ -6707,7 +6713,7 @@
           const box = ballots[r.transaction_id] || (ballots[r.transaction_id] = {});
           box[r.voter] = r.choice;
         }
-        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine, ballots: ballots };
+        voteLive = { asOf: voteStamp(new Date()), totals: totals, mine: mine, mineAt: mineAt, ballots: ballots };
         voteLiveState = "ok";
         voteReloadAt = Date.now();
       } catch (err) {
@@ -6715,6 +6721,7 @@
         voteLive = null;
         voteLiveState = "fail";
       }
+      voteHydrateFromServer();
       voteHeal();
       render();
     }
@@ -6729,24 +6736,91 @@
       voteLoad().catch((err) => console.error(err));
     }
 
-    // localStorage owns "my vote", so a trade where Supabase disagrees gets the local vote pushed
-    // again. This is the retry for a write that failed while offline.
-    //
-    // Deliberately one-directional: a trade with no local vote is NOT cleared on the server just
-    // because this device has not heard of it. The same person on a phone and a laptop resolves to
-    // the same voter once they claim a seat, and inferring a clear from local absence would have
-    // the second device silently delete the first device's vote. A clear is only ever sent when
-    // someone actually taps to clear.
+    function voteCreatedAtMs(iso) {
+      if (!iso) return 0;
+      const n = Date.parse(iso);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    /** True when the initial cast is older than VOTE_EDIT_MS (locked: one vote, no more changes). */
+    function voteIsLockedAt(createdAtIso) {
+      const t0 = voteCreatedAtMs(createdAtIso);
+      if (!t0) return false; // unknown cast time — allow edit until server created_at arrives
+      return (Date.now() - t0) >= VOTE_EDIT_MS;
+    }
+
+    function voteCreatedAtFor(transactionId, localEntry) {
+      if (localEntry && localEntry.createdAt) return localEntry.createdAt;
+      if (voteLive && voteLive.mineAt && voteLive.mineAt[transactionId]) {
+        return voteLive.mineAt[transactionId];
+      }
+      if (localEntry && localEntry.ts) return localEntry.ts; // legacy local-only first write
+      return null;
+    }
+
+    function voteIsLocked(transactionId) {
+      const local = voteBoxRead().votes[transactionId] || null;
+      return voteIsLockedAt(voteCreatedAtFor(transactionId, local));
+    }
+
+    /**
+     * Phone and laptop must show the same ballot. Pull server "mine" into localStorage when
+     * this device has no local row (or only a stale unlocked mismatch that the server locked).
+     * Never invent a clear from local absence.
+     */
+    function voteHydrateFromServer() {
+      if (voteLiveState !== "ok" || !voteLive || !authSeatId()) return;
+      const seat = authSeatId();
+      const box = voteBoxRead();
+      let dirty = false;
+      const mine = voteLive.mine || {};
+      const mineAt = voteLive.mineAt || {};
+      for (const tx of Object.keys(mine)) {
+        const serverChoice = mine[tx];
+        if (!serverChoice || serverChoice === VOTE_CLEARED) continue;
+        const createdAt = mineAt[tx] || null;
+        const local = box.votes[tx];
+        if (!local || !local.choice) {
+          box.votes[tx] = { choice: serverChoice, seat: seat, ts: createdAt || new Date().toISOString(), createdAt: createdAt || null };
+          dirty = true;
+          continue;
+        }
+        // Carry first-cast time onto legacy local rows.
+        if (createdAt && local.createdAt !== createdAt) {
+          local.createdAt = createdAt;
+          dirty = true;
+        }
+        // Locked server ballot wins over a divergent local edit attempt.
+        if (createdAt && voteIsLockedAt(createdAt) && local.choice !== serverChoice) {
+          local.choice = serverChoice;
+          local.seat = seat;
+          local.createdAt = createdAt;
+          dirty = true;
+        }
+      }
+      if (dirty) voteBoxWrite(box);
+    }
+
+    // localStorage may be ahead while offline; push local → server when unlocked and divergent.
+    // Never clear the server from local absence. Heal passes priorLocal so a failed retry cannot
+    // wipe the only ballot on this device.
     //
     // Phase 1: heal only runs when a seat is claimed — anon can no longer write.
-    // Heal retries do not pass priorLocal — a failed heal leaves local as-is for the next pass.
     function voteHeal() {
       if (voteLiveState !== "ok") return;
       if (!authSeatId()) return;
       const votes = voteBoxRead().votes;
       for (const tx of Object.keys(votes)) {
-        const local = votes[tx].choice || null;
-        if (local && voteLive.mine[tx] !== local) votePush(tx, local, authSeatId(), null);
+        const entry = votes[tx];
+        const local = (entry && entry.choice) || null;
+        if (!local) continue;
+        const onServer = (voteLive.mine && voteLive.mine[tx]) || null;
+        if (onServer === local) continue;
+        if (voteIsLocked(tx)) continue; // do not fight a locked server row
+        const prior = entry
+          ? { choice: entry.choice, seat: entry.seat, ts: entry.ts, createdAt: entry.createdAt || null }
+          : null;
+        votePush(tx, local, authSeatId(), prior);
       }
     }
 
@@ -6762,6 +6836,12 @@
 
     function voteWriteErrorMessage(err) {
       const raw = String((err && err.message) || err || "");
+      if (/vote locked after 24 hours|locked after 24/i.test(raw)) {
+        return "Vote locked — you can only change it within 24 hours of your first cast.";
+      }
+      if (/vote cannot be cleared|cannot be cleared/i.test(raw)) {
+        return "You already voted — change sides within 24 hours of your first cast.";
+      }
       if (/no membership/i.test(raw)) {
         return "Vote didn’t save — re-open the league from App home so your seat is claimed.";
       }
@@ -6788,7 +6868,9 @@
       if (authSession.access_token === "design-mode" || isDesignLeagueHome()) {
         votePending.add(transactionId);
         voteWriteError = "";
-        voteSettle(transactionId, sent);
+        const local = voteBoxRead().votes[transactionId];
+        const created = (local && local.createdAt) || (local && local.ts) || new Date().toISOString();
+        voteSettle(transactionId, sent, created);
         return;
       }
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
@@ -6837,7 +6919,11 @@
         let rows = [];
         try { rows = await res.json(); } catch (e) { rows = []; }
         const row = (rows || [])[0];
-        voteSettle(transactionId, row && row.choice ? row.choice : sent);
+        voteSettle(
+          transactionId,
+          row && row.choice ? row.choice : sent,
+          row && row.created_at ? row.created_at : null,
+        );
         // Refresh peer ballots, but keep an open home confirm up (do not auto-dismiss).
         voteLoad().catch((err) => console.error(err));
       } catch (err) {
@@ -6863,7 +6949,7 @@
 
     // Fold a confirmed write into the cached tally so the count converges without a second read.
     // Only our own contribution moves; everyone else's stands.
-    function voteSettle(transactionId, choice) {
+    function voteSettle(transactionId, choice, createdAt) {
       votePending.delete(transactionId);
       if (voteLive) {
         const totals = voteLive.totals[transactionId] || (voteLive.totals[transactionId] = {});
@@ -6873,8 +6959,17 @@
           if (was) totals[was] = Math.max(0, (totals[was] || 0) - 1);
           if (now) totals[now] = (totals[now] || 0) + 1;
         }
-        if (now) voteLive.mine[transactionId] = now;
-        else delete voteLive.mine[transactionId];
+        if (!voteLive.mineAt) voteLive.mineAt = {};
+        if (now) {
+          voteLive.mine[transactionId] = now;
+          if (createdAt) voteLive.mineAt[transactionId] = createdAt;
+          else if (!voteLive.mineAt[transactionId]) {
+            voteLive.mineAt[transactionId] = new Date().toISOString();
+          }
+        } else {
+          delete voteLive.mine[transactionId];
+          delete voteLive.mineAt[transactionId];
+        }
         // Keep the flair map in step with the settled ballot so the lean row does not wait
         // for another full voteLoad.
         const seat = authSeatId();
@@ -6886,6 +6981,15 @@
         }
         // asOf is deliberately NOT advanced. It dates the league read, and our own vote landing
         // says nothing about anyone else's. Moving it would claim the other counts were rechecked.
+      }
+      // Keep local first-cast time stable across devices.
+      if (choice && choice !== VOTE_CLEARED && createdAt) {
+        const box = voteBoxRead();
+        const entry = box.votes[transactionId];
+        if (entry) {
+          if (!entry.createdAt) entry.createdAt = createdAt;
+          voteBoxWrite(box);
+        }
       }
       render();
     }
@@ -6962,17 +7066,22 @@
     // "my vote"; Supabase is the source of truth for "the league tally".
     function readVotes(transactionId) {
       const mine = voteBoxRead().votes[transactionId] || null;
-      const local = (mine && mine.choice) || null;
+      const onServer = (voteLive && voteLive.mine && voteLive.mine[transactionId]) || null;
+      // Same seat on phone and laptop: prefer local when present (includes in-flight), else server.
+      const local = (mine && mine.choice) || onServer || null;
+      const createdAt = voteCreatedAtFor(transactionId, mine);
+      const locked = !!(local && voteIsLockedAt(createdAt));
       let tally, league, asOf, source;
       if (voteLive) {
         tally = Object.assign({}, voteLive.totals[transactionId] || {});
         // Where the server's record of our ballot disagrees with localStorage, localStorage wins
-        // on screen and the difference is exactly what is still in flight. This is what makes a
-        // fresh vote show up at once and a failed write show up as ours rather than as nobody's.
-        const onServer = voteLive.mine[transactionId] || null;
-        if (onServer !== local) {
-          if (onServer) tally[onServer] = Math.max(0, (tally[onServer] || 0) - 1);
-          if (local) tally[local] = (tally[local] || 0) + 1;
+        // on screen and the difference is exactly what is still in flight — unless locked, in
+        // which case the server ballot is authoritative.
+        const serverChoice = voteLive.mine[transactionId] || null;
+        const shown = locked ? (serverChoice || local) : local;
+        if (serverChoice !== shown) {
+          if (serverChoice) tally[serverChoice] = Math.max(0, (tally[serverChoice] || 0) - 1);
+          if (shown) tally[shown] = (tally[shown] || 0) + 1;
         }
         league = true;
         asOf = voteLive.asOf;
@@ -6980,8 +7089,6 @@
       } else {
         const entry = (voteBook && voteBook.votes && voteBook.votes[transactionId]) || null;
         tally = Object.assign({}, (entry && entry.totals) || {});
-        // A committed voters map tells us our vote is already in the league totals, so it is
-        // added locally only when it is not.
         const alreadyCounted = !!(entry && entry.voters && mine && mine.seat && entry.voters[mine.seat]);
         if (local && !alreadyCounted) tally[local] = (tally[local] || 0) + 1;
         league = !!entry;
@@ -6989,25 +7096,31 @@
         source = entry ? "book" : "local";
       }
       let votes = 0;
-      // Object.keys snapshots, so dropping the emptied seats mid-loop is safe. A seat at zero is
-      // not a seat with no votes to show — it must not sit in the denominator.
       for (const k of Object.keys(tally)) {
         if (!tally[k]) delete tally[k];
         else votes += tally[k];
       }
+      const shownChoice = locked
+        ? ((voteLive && voteLive.mine && voteLive.mine[transactionId]) || local)
+        : local;
       return {
-        choice: local,
-        seat: (mine && mine.seat) || null,
+        choice: shownChoice,
+        seat: (mine && mine.seat) || authSeatId() || null,
         tally: tally,
         votes: votes,
         league: league,
         asOf: asOf,
         source: source,
         pending: votePending.has(transactionId),
+        createdAt: createdAt,
+        locked: locked,
+        canEdit: !!(shownChoice && !locked),
       };
     }
 
-    // writeVote(transactionId, choice) -> void. One vote per trade; a null choice clears it.
+    // writeVote(transactionId, choice) -> void.
+    // One ballot per claimed seat per trade. Null clears are rejected once cast — change sides
+    // within 24h of the initial cast instead. After 24h the ballot is locked on every device.
     // Phase 1: gated on a claimed seat. The Teams picker is not enough — invite code required.
     function writeVote(transactionId, choice) {
       const seat = authSeatId();
@@ -7016,15 +7129,54 @@
         return;
       }
       const box = voteBoxRead();
-      const prev = box.votes[transactionId]
+      const prevEntry = box.votes[transactionId] || null;
+      const prev = prevEntry
         ? {
-            choice: box.votes[transactionId].choice,
-            seat: box.votes[transactionId].seat,
-            ts: box.votes[transactionId].ts,
+            choice: prevEntry.choice,
+            seat: prevEntry.seat,
+            ts: prevEntry.ts,
+            createdAt: prevEntry.createdAt || null,
           }
         : null;
-      if (choice == null) delete box.votes[transactionId];
-      else box.votes[transactionId] = { choice: choice, seat: seat, ts: new Date().toISOString() };
+      const had = !!(prev && prev.choice);
+      const serverChoice = (voteLive && voteLive.mine && voteLive.mine[transactionId]) || null;
+      const existing = (prev && prev.choice) || serverChoice || null;
+
+      // One vote: never clear a cast ballot (old same-side-tap clear removed).
+      if (choice == null) {
+        if (existing) {
+          voteWriteError = "You already voted — change sides within 24 hours of your first cast.";
+          say(voteWriteError);
+          render();
+          return;
+        }
+        voteEditTx = null;
+        return;
+      }
+
+      if (existing && existing === choice) {
+        voteEditTx = null;
+        render();
+        return;
+      }
+
+      const createdAt = voteCreatedAtFor(transactionId, prevEntry);
+      if (existing && voteIsLockedAt(createdAt)) {
+        voteWriteError = "Vote locked — you can only change it within 24 hours of your first cast.";
+        say(voteWriteError);
+        voteEditTx = null;
+        render();
+        return;
+      }
+
+      const nowIso = new Date().toISOString();
+      box.votes[transactionId] = {
+        choice: choice,
+        seat: seat,
+        ts: nowIso,
+        // First cast stamps createdAt; edits keep the original.
+        createdAt: had ? (prev.createdAt || createdAt || prev.ts || nowIso) : (createdAt || nowIso),
+      };
       voteBoxWrite(box);
       voteEditTx = null;
       votePush(transactionId, choice, seat, prev);
@@ -7116,15 +7268,25 @@
         return '<div class="vote">' + claimFormHtml() + "</div>";
       }
       const v = readVotes(r.transaction_id);
-      const editing = voteEditTx === r.transaction_id;
-      // After a ballot: one compact row (Voted · name · a–b). Tap to change.
+      const editing = voteEditTx === r.transaction_id && v.canEdit;
+      // After a ballot: one compact row (Voted · name · a–b). Tap to change only while unlocked.
       if (v.choice && !editing) {
         const won = seats.find((s) => s.uid === v.choice);
         const a = v.tally[seats[0].uid] || 0;
         const b = v.tally[seats[1].uid] || 0;
+        if (v.locked) {
+          return '<div class="vote is-done is-locked">'
+            + '<div class="vote-done" role="status" aria-label="Vote locked">'
+            + '<span class="vote-done-k">Voted</span>'
+            + "<b>" + seatLabel(won ? won.name : "?", { link: false }) + "</b>"
+            + '<span class="vote-done-tally">' + a + "–" + b + "</span>"
+            + "</div>"
+            + '<p class="caption vote-lock-note">Locked — one vote, editable for 24 hours after first cast.</p>'
+            + "</div>";
+        }
         return '<div class="vote is-done">'
           + '<button type="button" class="vote-done" data-vote-edit="' + esc(r.transaction_id) + '"'
-          + ' aria-label="Change vote">'
+          + ' aria-label="Change vote (within 24 hours)">'
           + '<span class="vote-done-k">Voted</span>'
           + "<b>" + seatLabel(won ? won.name : "?", { link: false }) + "</b>"
           + '<span class="vote-done-tally">' + a + "–" + b + "</span>"
@@ -10401,7 +10563,14 @@
       }
       const voteEditBtn = e.target.closest("[data-vote-edit]");
       if (voteEditBtn) {
-        voteEditTx = voteEditBtn.dataset.voteEdit || null;
+        const tx = voteEditBtn.dataset.voteEdit || null;
+        if (tx && readVotes(tx).locked) {
+          say("Vote locked — you can only change it within 24 hours of your first cast.");
+          voteEditTx = null;
+          render();
+          return;
+        }
+        voteEditTx = tx;
         render();
         return;
       }
@@ -10417,7 +10586,20 @@
       if (voteBtn) {
         const tx = voteBtn.dataset.vote;
         const pick = voteBtn.dataset.voteSeat;
-        const next = readVotes(tx).choice === pick ? null : pick;
+        const cur = readVotes(tx);
+        // One vote: tapping the same side does nothing (no clear). Other side changes within 24h.
+        if (cur.choice === pick) {
+          voteEditTx = null;
+          render();
+          return;
+        }
+        if (cur.locked) {
+          say("Vote locked — you can only change it within 24 hours of your first cast.");
+          voteEditTx = null;
+          render();
+          return;
+        }
+        const next = pick;
         writeVote(tx, next);
         // League home: confirm popup with live tally; X advances the Recent Trade queue.
         // Trade detail: toast and stay put. Clearing a vote stays put.

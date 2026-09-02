@@ -5878,8 +5878,9 @@ const html = `<!DOCTYPE html>
     }
 
     // AbortSignal.timeout is missing on Safari before 16, where undefined just means no timeout.
-    function voteAbort() {
-      try { return AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(VOTE_TIMEOUT) : undefined; }
+    function voteAbort(ms) {
+      const n = ms == null ? VOTE_TIMEOUT : ms;
+      try { return AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(n) : undefined; }
       catch (err) { return undefined; }
     }
 
@@ -5896,11 +5897,11 @@ const html = `<!DOCTYPE html>
       catch (err) { return d.toISOString(); }
     }
 
-    async function authRefreshIfNeeded() {
+    async function authRefreshIfNeeded(force) {
       if (!authSession || !authSession.refresh_token) return;
       const exp = Number(authSession.expires_at) || 0;
       // Refresh a minute early. expires_at is unix seconds.
-      if (exp && (exp - 60) * 1000 > Date.now()) return;
+      if (!force && exp && (exp - 60) * 1000 > Date.now()) return;
       try {
         const res = await fetch(AUTH_API + "/token?grant_type=refresh_token", {
           method: "POST",
@@ -5910,9 +5911,18 @@ const html = `<!DOCTYPE html>
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ refresh_token: authSession.refresh_token }),
-          signal: voteAbort(),
+          signal: voteAbort(15000),
         });
-        if (!res.ok) throw new Error("refresh " + res.status);
+        if (!res.ok) {
+          // Only clear the session on a real auth rejection — not a blip / timeout.
+          if (res.status === 401 || res.status === 403) {
+            authClear();
+            throw new Error("refresh " + res.status);
+          }
+          console.warn("refresh " + res.status);
+          if (force) throw new Error("refresh " + res.status);
+          return;
+        }
         const data = await res.json();
         authSave({
           access_token: data.access_token,
@@ -5928,7 +5938,8 @@ const html = `<!DOCTYPE html>
         });
       } catch (err) {
         console.error(err);
-        authClear();
+        if (force) throw err;
+        // Non-force refresh failure: keep the existing session so reads/UI still work.
       }
     }
 
@@ -6658,6 +6669,27 @@ const html = `<!DOCTYPE html>
     // priorLocal: when set (user tap), a failed write restores that ballot so this phone cannot
     // look like it voted when Supabase never got the row — that was how Ducks saw 2 and Truman 1.
     function votePush(transactionId, choice, seat, priorLocal) {
+      votePushAsync(transactionId, choice, seat, priorLocal).catch((err) => console.error(err));
+    }
+
+    function voteWriteErrorMessage(err) {
+      const raw = String((err && err.message) || err || "");
+      if (/no membership/i.test(raw)) {
+        return "Vote didn’t save — re-open the league from App home so your seat is claimed.";
+      }
+      if (/refresh 401|refresh 403|signed out|401/i.test(raw)) {
+        return "Vote didn’t save — sign in again, then retry.";
+      }
+      if (/on conflict|unique|42P10/i.test(raw)) {
+        return "Vote didn’t save — database vote unique key missing (run wave9 SQL).";
+      }
+      if (/42501|permission denied|403/i.test(raw)) {
+        return "Vote didn’t save — seat permission blocked (run wave9 SQL).";
+      }
+      return "Vote didn’t save — check connection and try again.";
+    }
+
+    async function votePushAsync(transactionId, choice, seat, priorLocal) {
       if (!authSession || !authSession.access_token || !seat) {
         votePending.delete(transactionId);
         render();
@@ -6674,33 +6706,53 @@ const html = `<!DOCTYPE html>
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       votePending.add(transactionId);
       voteWriteError = "";
-      const payload = {
-        transaction_id: transactionId,
-        choice: sent,
-        voter: seat,
-        sleeper_league_id: leagueId,
+
+      const postOnce = () => {
+        const payload = {
+          transaction_id: transactionId,
+          choice: sent,
+          voter: seat,
+          sleeper_league_id: leagueId,
+        };
+        return fetch(VOTE_API + "/trade_votes?on_conflict=sleeper_league_id,transaction_id,voter", {
+          method: "POST",
+          headers: voteHeaders({
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=representation",
+          }, true),
+          body: JSON.stringify(payload),
+          signal: voteAbort(15000),
+        });
       };
-      fetch(VOTE_API + "/trade_votes?on_conflict=sleeper_league_id,transaction_id,voter", {
-        method: "POST",
-        headers: voteHeaders({
-          "Content-Type": "application/json",
-          Prefer: "resolution=merge-duplicates,return=representation",
-        }, true),
-        body: JSON.stringify(payload),
-        signal: voteAbort(),
-      }).then(async (res) => {
+
+      try {
+        // Always refresh before a write — expired JWTs were failing home casts with a
+        // generic "didn’t save" after the wipe/reclaim stretch.
+        try { await authRefreshIfNeeded(false); } catch (refreshErr) { /* read path soft */ }
+        if (!authSession || !authSession.access_token) {
+          throw new Error("signed out");
+        }
+
+        let res = await postOnce();
+        if (res.status === 401) {
+          try { await authRefreshIfNeeded(true); } catch (refreshErr) {
+            throw new Error("signed out");
+          }
+          if (!authSession || !authSession.access_token) throw new Error("signed out");
+          res = await postOnce();
+        }
         if (!res.ok) {
           let detail = "";
-          try { detail = (await res.text() || "").slice(0, 180); } catch (e) { /* ignore */ }
+          try { detail = (await res.text() || "").slice(0, 240); } catch (e) { /* ignore */ }
           throw new Error("vote write " + res.status + (detail ? ": " + detail : ""));
         }
-        return res.json();
-      }).then((rows) => {
+        let rows = [];
+        try { rows = await res.json(); } catch (e) { rows = []; }
         const row = (rows || [])[0];
         voteSettle(transactionId, row && row.choice ? row.choice : sent);
         // Refresh peer ballots, but keep an open home confirm up (do not auto-dismiss).
         voteLoad().catch((err) => console.error(err));
-      }).catch((err) => {
+      } catch (err) {
         console.error(err);
         votePending.delete(transactionId);
         if (priorLocal !== undefined) {
@@ -6714,11 +6766,11 @@ const html = `<!DOCTYPE html>
         }
         // Failed home cast: drop the optimistic confirm so we do not show a phantom tally.
         if (voteConfirmTx === transactionId) voteConfirmTx = null;
-        voteWriteError = "Vote didn’t save — check connection and try again.";
+        voteWriteError = voteWriteErrorMessage(err);
         voteToast = null;
         say(voteWriteError);
         render();
-      });
+      }
     }
 
     // Fold a confirmed write into the cached tally so the count converges without a second read.
@@ -11477,6 +11529,20 @@ for (const ban of [
       || !wave8.includes("security_invoker = false")) {
       throw new Error("wave8 must rebuild trade_vote_tallies (members join, security_invoker=false for anon)");
     }
+  }
+  {
+    const wave9 = fs.readFileSync(`${ROOT}db/wave9-vote-write-fix.sql`, "utf8");
+    if (!wave9.includes("trade_votes_auth_insert")
+      || !wave9.includes("trade_votes.sleeper_league_id")
+      || !wave9.includes("exists (")
+      || !wave9.includes("grant insert, update on table public.trade_votes to authenticated")) {
+      throw new Error("wave9 must fix trade_votes write RLS (membership exists check + grants)");
+    }
+  }
+  if (!inline.includes("function votePushAsync(")
+    || !inline.includes("function voteWriteErrorMessage(")
+    || !inline.includes("authRefreshIfNeeded(true)")) {
+    throw new Error("votePush must refresh JWT and retry once before failing a home cast");
   }
   if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
     throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");

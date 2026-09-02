@@ -1315,13 +1315,13 @@ const html = `<!DOCTYPE html>
     /* Recent Trade chip + vote CTA below the card (never over bag totals / lean marks). */
     div.lh-latest-trade .lh-trade-chip-wrap {
       position: relative; width: 100%;
-      display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+      display: flex; flex-direction: column; align-items: stretch; gap: 14px;
     }
     button.lh-trade-vote-cta {
       position: static; left: auto; bottom: auto;
       transform: none; z-index: auto;
       align-self: center;
-      margin: 0; padding: 9px 18px;
+      margin: 2px 0 0; padding: 9px 18px;
       font: inherit; font-size: 0.75rem; font-weight: 650; line-height: 1.2;
       color: #e0b44c; white-space: nowrap;
       background: #1a1810;

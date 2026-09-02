@@ -9448,6 +9448,13 @@
      * Score-window control: compact chip buttons in value surfaces; menu portals via #scoreAs.
      * Document-level so it works from chips inside #app and options outside it.
      */
+    // Capture-phase: kill the click that follows opening the vote confirm (or sheet) so the
+    // same tap cannot hit the new scrim/X and dismiss before the tally is readable.
+    document.addEventListener("click", (e) => {
+      if (Date.now() >= voteModalSwallowClicksUntil) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
     document.addEventListener("click", (e) => {
       const opt = e.target.closest("#scoreAs [data-lens]");
       if (opt) {

@@ -10115,6 +10115,7 @@ const html = `<!DOCTYPE html>
         // Dismiss confirm → Recent Trade advances to the next unvoted deal.
         voteConfirmTx = null;
         voteEditTx = null;
+        say("");
         render();
         return;
       }

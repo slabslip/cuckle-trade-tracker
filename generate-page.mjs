@@ -10173,6 +10173,8 @@ const html = `<!DOCTYPE html>
       // opens the trade as a whole screen instead of expanding inside its card.
       const boardOpen = e.target.closest("[data-board-open]");
       if (boardOpen) {
+        // Vote CTA sits inside the Recent Trade card; never treat it as open-trade.
+        if (e.target.closest("[data-vote-open]")) return;
         openTrade(boardOpen.dataset.id, boardOpen.dataset.boardOpen);
         return;
       }

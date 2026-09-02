@@ -2286,7 +2286,11 @@ const html = `<!DOCTYPE html>
     // click so closing News does not open the trade page.
     let newsPullupSwallowClicksUntil = 0;
     function swallowNewsPullupClickThrough() {
-      newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 500);
+      // iOS often delivers the synthetic click ~300–600ms after pointerup; keep the gate wide.
+      newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 900);
+    }
+    function newsPullupClickThroughBlocked() {
+      return Date.now() < newsPullupSwallowClicksUntil;
     }
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
@@ -7168,7 +7172,11 @@ const html = `<!DOCTYPE html>
     function setNewsPullupOpen(open) {
       const root = document.getElementById("newsPullup");
       if (!root) return;
+      const wasOpen = newsPullupOpen;
       newsPullupOpen = !!open;
+      // Closing always arms the click-through gate — minimize must never activate Recent Trade
+      // (or any other control) that was under the expanded sheet.
+      if (wasOpen && !newsPullupOpen) swallowNewsPullupClickThrough();
       root.classList.toggle("is-open", newsPullupOpen);
       root.setAttribute("aria-expanded", newsPullupOpen ? "true" : "false");
       const panel = root.querySelector("[data-news-pullup-panel]");
@@ -9541,15 +9549,19 @@ const html = `<!DOCTYPE html>
      */
     // Capture-phase: kill the click that follows opening the vote confirm (or sheet) so the
     // same tap cannot hit the new scrim/X and dismiss before the tally is readable.
-    // Also kill the click that follows collapsing the News Feed pull-up so it cannot open
+    // Also kill pointerup/click that follows collapsing the News Feed pull-up so it cannot open
     // Recent Trade / other home controls that were under the sheet.
-    document.addEventListener("click", (e) => {
+    function blockGhostUiClick(e) {
       const now = Date.now();
       if (now < voteModalSwallowClicksUntil || now < newsPullupSwallowClicksUntil) {
         e.preventDefault();
         e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       }
-    }, true);
+    }
+    document.addEventListener("pointerup", blockGhostUiClick, true);
+    document.addEventListener("click", blockGhostUiClick, true);
+    document.addEventListener("touchend", blockGhostUiClick, true);
     document.addEventListener("click", (e) => {
       const opt = e.target.closest("#scoreAs [data-lens]");
       if (opt) {
@@ -9765,12 +9777,21 @@ const html = `<!DOCTYPE html>
       }
       const boardRow = t.closest && t.closest("[data-board-open]");
       if (boardRow && boardRow.dataset.boardOpen && t === boardRow) {
+        if (newsPullupClickThroughBlocked()) {
+          e.preventDefault();
+          return;
+        }
         e.preventDefault();
         openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen);
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {
       // Before everything: leaving a screen must not read as a click on what is on it.
+      if (newsPullupClickThroughBlocked()) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       const backBtn = e.target.closest("[data-back]");
       if (backBtn) {
         // Only ever reached on a cold deep link, where there is no entry behind us to pop.
@@ -10300,6 +10321,12 @@ const html = `<!DOCTYPE html>
       if (boardOpen) {
         // Vote CTA sits inside the Recent Trade card; never treat it as open-trade.
         if (e.target.closest("[data-vote-open]")) return;
+        // News Feed just closed under this finger — stay on league home.
+        if (newsPullupClickThroughBlocked()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         openTrade(boardOpen.dataset.id, boardOpen.dataset.boardOpen);
         return;
       }

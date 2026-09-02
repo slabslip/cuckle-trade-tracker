@@ -730,6 +730,19 @@
     body.has-news-pullup-open {
       overflow: hidden;
     }
+    /* While the sheet collapses, shield the whole viewport so Recent Trade cannot receive the tap. */
+    body.has-news-pullup-closing {
+      cursor: default;
+    }
+    .news-pullup-click-guard {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      background: transparent;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: default;
+    }
     .news-pullup {
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
@@ -2280,9 +2293,43 @@
     // click lands on whatever is now behind it (Recent Trade → trade detail). Swallow that
     // click so closing News does not open the trade page.
     let newsPullupSwallowClicksUntil = 0;
+    let newsPullupClickGuardTimer = 0;
+    function clearNewsPullupClickGuard() {
+      try { document.body.classList.remove("has-news-pullup-closing"); } catch (_) {}
+      const guard = document.getElementById("newsPullupClickGuard");
+      if (guard && guard.parentNode) guard.parentNode.removeChild(guard);
+    }
     function swallowNewsPullupClickThrough() {
       // iOS often delivers the synthetic click ~300–600ms after pointerup; keep the gate wide.
       newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 900);
+      try { document.body.classList.add("has-news-pullup-closing"); } catch (_) {}
+      if (newsPullupClickGuardTimer) clearTimeout(newsPullupClickGuardTimer);
+      // Physical full-viewport shield — event swallow alone still let Recent Trade open on some phones.
+      if (!document.getElementById("newsPullupClickGuard")) {
+        try {
+          const guard = document.createElement("div");
+          guard.id = "newsPullupClickGuard";
+          guard.className = "news-pullup-click-guard";
+          guard.setAttribute("aria-hidden", "true");
+          const kill = function (e) {
+            try {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            } catch (_) {}
+          };
+          guard.addEventListener("pointerdown", kill, true);
+          guard.addEventListener("pointerup", kill, true);
+          guard.addEventListener("click", kill, true);
+          guard.addEventListener("touchstart", kill, true);
+          guard.addEventListener("touchend", kill, true);
+          document.body.appendChild(guard);
+        } catch (_) {}
+      }
+      newsPullupClickGuardTimer = setTimeout(function () {
+        newsPullupClickGuardTimer = 0;
+        clearNewsPullupClickGuard();
+      }, 920);
     }
     function newsPullupClickThroughBlocked() {
       return Date.now() < newsPullupSwallowClicksUntil;
@@ -5517,6 +5564,7 @@
     }
 
     function goBottomNav(which) {
+      if (newsPullupClickThroughBlocked()) return;
       if (appScreen !== "dash") return;
       dsOpen = false;
       lensOpen = false;
@@ -7171,7 +7219,12 @@
       newsPullupOpen = !!open;
       // Closing always arms the click-through gate — minimize must never activate Recent Trade
       // (or any other control) that was under the expanded sheet.
-      if (wasOpen && !newsPullupOpen) swallowNewsPullupClickThrough();
+      var snapHome = false;
+      if (wasOpen && !newsPullupOpen) {
+        swallowNewsPullupClickThrough();
+        // Expand → minimize must always leave the user on league home.
+        if (view !== "home") snapHome = true;
+      }
       root.classList.toggle("is-open", newsPullupOpen);
       root.setAttribute("aria-expanded", newsPullupOpen ? "true" : "false");
       const panel = root.querySelector("[data-news-pullup-panel]");
@@ -7180,13 +7233,48 @@
       const sheet = root.querySelector("[data-news-pullup-sheet]");
       if (panel) panel.hidden = !newsPullupOpen;
       if (peekBlock) peekBlock.hidden = newsPullupOpen;
-      if (scrim) scrim.hidden = !newsPullupOpen;
+      // Keep scrim in DOM (transparent) briefly after close so it can still catch hits while
+      // the sheet animates down — hidden is applied by the click-guard timeout path too.
+      if (scrim) {
+        if (newsPullupOpen) {
+          scrim.hidden = false;
+          scrim.style.opacity = "";
+        } else if (wasOpen) {
+          scrim.hidden = false;
+          scrim.style.opacity = "0";
+          setTimeout(function () {
+            if (!newsPullupOpen && scrim) {
+              scrim.hidden = true;
+              scrim.style.opacity = "";
+            }
+          }, 400);
+        } else {
+          scrim.hidden = true;
+          scrim.style.opacity = "";
+        }
+      }
       document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
       if (sheet) {
         sheet.style.transform = "";
         sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
       }
       if (newsPullupOpen && panel) panel.scrollTop = 0;
+      if (snapHome) {
+        view = "home";
+        openId = null;
+        tradeSeat = null;
+        partnerName = null;
+        openPick = null;
+        openDraft = null;
+        markOpen = null;
+        lensOpen = false;
+        titleYear = null;
+        voteSheetTx = null;
+        voteConfirmTx = null;
+        voteEditTx = null;
+        focusNext = null;
+        render();
+      }
     }
 
     /**
@@ -9446,6 +9534,8 @@
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
     function openTrade(tx, uid) {
       if (!tx) return;
+      // News Feed just minimized — never navigate away from league home via click-through.
+      if (newsPullupClickThroughBlocked()) return;
       view = "trade";
       openId = tx;
       tradeSeat = uid || null;
@@ -9481,6 +9571,7 @@
      * renderLeagueTrades carries its own <h2>, so the destination is still named).
      */
     function openTradesList(toast) {
+      if (newsPullupClickThroughBlocked()) return;
       me = null;
       data = null;
       view = "trades";
@@ -10316,6 +10407,12 @@
       if (boardOpen) {
         // Vote CTA sits inside the Recent Trade card; never treat it as open-trade.
         if (e.target.closest("[data-vote-open]")) return;
+        // News Feed just closed under this finger — stay on league home.
+        if (newsPullupClickThroughBlocked()) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         openTrade(boardOpen.dataset.id, boardOpen.dataset.boardOpen);
         return;
       }

@@ -796,9 +796,9 @@ const html = `<!DOCTYPE html>
       z-index: 2;
       /* Solid chrome so feed cards never paint through the minimize hit target. */
       background: #1a1810;
-      /* One chrome row: title + yellow grab + count, level with each other. */
-      min-height: 48px;
-      padding: 6px 12px 8px;
+      /* Compact title | grab | count — whole top is the drag/tap target. */
+      min-height: 28px;
+      padding: 4px 12px 2px;
       box-sizing: border-box;
       cursor: pointer;
       touch-action: none;
@@ -812,7 +812,7 @@ const html = `<!DOCTYPE html>
       align-items: center;
       column-gap: 8px;
       width: 100%;
-      min-height: 44px;
+      min-height: 22px;
     }
     .news-pullup-title-row .day-alert-h {
       min-width: 0;
@@ -822,10 +822,10 @@ const html = `<!DOCTYPE html>
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
-      /* Tall hit pad centered in the title row, even with News Feed / count. */
+      /* Visual knob only — hit area is .news-pullup-top. */
       justify-self: center;
-      height: 44px;
-      min-height: 44px;
+      height: 22px;
+      min-height: 22px;
       width: auto;
       min-width: 72px;
       margin: 0;
@@ -847,7 +847,7 @@ const html = `<!DOCTYPE html>
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
-      padding: 0 12px 4px;
+      padding: 0 12px 6px;
       min-height: 0;
     }
     .news-pullup-peek-block[hidden] { display: none; }
@@ -858,7 +858,7 @@ const html = `<!DOCTYPE html>
       width: 100%; display: block;
     }
     .news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    /* Collapsed peek: seat tag + one-line teaser only — no card chrome or footer. */
+    /* Collapsed peek: seat tag + multi-line teaser — no card chrome or footer. */
     .news-pullup-peek-inner { min-height: 0; padding: 0; }
     .news-pullup-peek-who {
       font-size: 0.6875rem; font-weight: 700; line-height: 1.2;
@@ -870,7 +870,10 @@ const html = `<!DOCTYPE html>
     .news-pullup-peek-line {
       font-size: 0.6875rem; line-height: 1.25; color: var(--muted);
       margin: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
     }
     .news-pullup-panel {
       flex: 1 1 auto; min-height: 0;
@@ -12300,10 +12303,11 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !html.includes("news-pullup-click-guard")
   || !inline.includes("function newsPullupLocksHome(")
   || !inline.includes("if (newsPullupLocksHome()) return;")
-  || !html.includes("min-height: 48px")
+  || !html.includes("min-height: 28px")
   || !html.includes(".news-pullup-grab {")
-  || !html.includes("height: 44px")
+  || !html.includes("height: 22px")
   || !html.includes("min-width: 72px")
+  || !html.includes("-webkit-line-clamp: 3")
   || !html.includes("has-news-pullup-open #app > :not(#newsPullup)")
   || !html.includes("--news-pullup-peek: 100px")) {
   throw new Error("News Feed grab must be a large hit target and lock home while open/closing");

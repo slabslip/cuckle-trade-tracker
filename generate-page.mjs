@@ -7668,6 +7668,9 @@ const html = `<!DOCTYPE html>
 
       let drag = null;
       let lastMinimizeAt = 0;
+      // Swallow the leftover click that follows a pointer tap (desktop + iOS), without
+      // blocking a real second click to toggle back.
+      let suppressChromeClickUntil = 0;
       const peekH = () => {
         const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
         const n = parseFloat(raw);
@@ -7765,8 +7768,9 @@ const html = `<!DOCTYPE html>
           snapSheet(() => {
             if (e && e.target && e.target.closest("a.news-hero-link")) return;
             if (e && e.target && e.target.closest("[data-news-del]")) return;
+            lastMinimizeAt = Date.now();
+            suppressChromeClickUntil = Date.now() + 80;
             if (fromOpen) {
-              lastMinimizeAt = Date.now();
               setNewsPullupOpen(false);
               swallowNewsPullupClickThrough();
               if (e) {
@@ -7796,19 +7800,21 @@ const html = `<!DOCTYPE html>
         }
       };
 
-      // iOS sometimes drops pointerup after setPointerCapture fails — click still fires.
-      const onTopClick = (e) => {
-        if (!newsPullupOpen) return;
-        if (Date.now() - lastMinimizeAt < 450) return;
+      // Desktop Simple Browser often delivers click without a usable pointer gesture.
+      // Toggle from the title chrome / peek so mouse click expands as well as minimizes.
+      const onChromeClick = (e) => {
+        if (Date.now() < suppressChromeClickUntil) return;
         if (e.target.closest("a.news-hero-link")) return;
         if (e.target.closest("[data-news-del]")) return;
         if (e.target.closest("[data-news-pullup-panel]")) return;
+        suppressChromeClickUntil = Date.now() + 80;
         lastMinimizeAt = Date.now();
         e.preventDefault();
         e.stopPropagation();
+        const next = !newsPullupOpen;
         snapSheet(() => {
-          setNewsPullupOpen(false);
-          swallowNewsPullupClickThrough();
+          setNewsPullupOpen(next);
+          if (!next) swallowNewsPullupClickThrough();
         });
       };
 
@@ -7852,11 +7858,9 @@ const html = `<!DOCTYPE html>
         el.addEventListener("pointermove", onPointerMove);
         el.addEventListener("pointerup", endDrag);
         el.addEventListener("pointercancel", endDrag);
+        el.addEventListener("click", onChromeClick);
       }
-      if (top) {
-        top.addEventListener("click", onTopClick);
-        top.addEventListener("keydown", onTopKey);
-      }
+      if (top) top.addEventListener("keydown", onTopKey);
       if (peek) peek.addEventListener("keydown", onPeekKey);
       if (scrim) scrim.addEventListener("click", onScrimClick);
       window.addEventListener("resize", onResize);
@@ -7867,11 +7871,9 @@ const html = `<!DOCTYPE html>
           el.removeEventListener("pointermove", onPointerMove);
           el.removeEventListener("pointerup", endDrag);
           el.removeEventListener("pointercancel", endDrag);
+          el.removeEventListener("click", onChromeClick);
         }
-        if (top) {
-          top.removeEventListener("click", onTopClick);
-          top.removeEventListener("keydown", onTopKey);
-        }
+        if (top) top.removeEventListener("keydown", onTopKey);
         if (peek) peek.removeEventListener("keydown", onPeekKey);
         if (scrim) scrim.removeEventListener("click", onScrimClick);
         window.removeEventListener("resize", onResize);
@@ -12571,7 +12573,7 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !html.includes(".news-pullup.is-open .news-pullup-title-row")
   || !html.includes("data-news-pullup-title-row")
   || !inline.includes("Minimize News Feed — tap or drag down")
-  || !inline.includes("onTopClick")
+  || !inline.includes("onChromeClick")
   || !html.includes("has-news-pullup-open #app > :not(#newsPullup)")
   || !html.includes("--news-pullup-peek: 100px")) {
   throw new Error("News Feed grab must be a large hit target and lock home while open/closing");
@@ -12831,6 +12833,7 @@ if (!sheetRules.includes(".news-pullup.is-open .news-pullup-sheet")
 }
 if (!inline.includes("function armNewsPullup()") || !inline.includes("setNewsPullupOpen")
   || !inline.includes("openSheetH") || !inline.includes("armSheetDragLayout")
+  || !inline.includes("onChromeClick")
   || !inline.includes("snapSheet") || !inline.includes("dy < -28") || !inline.includes("dy > 28")) {
   throw new Error("news pull-up must ship open/close + drag wiring");
 }

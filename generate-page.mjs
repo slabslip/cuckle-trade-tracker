@@ -17,6 +17,20 @@ const html = `<!DOCTYPE html>
   <link rel="apple-touch-icon" href="data/ui/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="data/ui/icon-192.png" />
   <title>Chuckle Fantasy</title>
+  <script>
+    /* Design Mode: lock to iPhone CSS viewport before first paint (Simple Browser is often wider). */
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        if (q.get("design") === "league-home"
+          || sessionStorage.getItem("cuckle.design.league_home") === "1") {
+          document.documentElement.classList.add("design-iphone");
+          var m = document.querySelector('meta[name="viewport"]');
+          if (m) m.setAttribute("content", "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
   <style>
     :root {
       --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
@@ -38,6 +52,79 @@ const html = `<!DOCTYPE html>
         max(24px, env(safe-area-inset-bottom, 0px))
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
+    }
+    /*
+     * Design Mode iPhone stage (html.design-iphone):
+     * Lock a 390×844 phone box. Do NOT use transform on body — that desyncs Cursor Design
+     * Mode blue hit boxes from the real chips. Pin fixed layers with --design-* vars instead.
+     */
+    html.design-iphone {
+      background: #121216;
+      height: 100%;
+      --design-left: 0px;
+      --design-top: 16px;
+      --design-width: 390px;
+      --design-height: 844px;
+    }
+    html.design-iphone body {
+      width: 390px;
+      max-width: 390px;
+      height: 844px;
+      max-height: 844px;
+      margin: 16px auto !important;
+      /* iPhone 14/15 Pro-ish safe areas (status island + home indicator) */
+      padding-top: 47px;
+      padding-right: 16px;
+      padding-bottom: 34px;
+      padding-left: 16px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+      box-sizing: border-box;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px #2a2a32, 0 22px 60px rgba(0,0,0,0.55);
+      -webkit-overflow-scrolling: touch;
+    }
+    html.design-iphone body.has-news-pullup-open,
+    html.design-iphone body.has-vote-sheet {
+      overflow: hidden;
+    }
+    /* Fixed chrome shares the stage box. No transform on these — Design picker uses rects. */
+    html.design-iphone .news-pullup,
+    html.design-iphone .vote-sheet,
+    html.design-iphone .news-pullup-click-guard {
+      left: var(--design-left) !important;
+      top: var(--design-top) !important;
+      width: var(--design-width) !important;
+      height: var(--design-height) !important;
+      right: auto !important;
+      bottom: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      transform: none !important;
+    }
+    /* .bottom-nav normally uses left:50% + translateX(-50%) — that skews Design blue boxes. */
+    html.design-iphone #bottomNav,
+    html.design-iphone .bottom-nav {
+      left: var(--design-left) !important;
+      right: auto !important;
+      width: var(--design-width) !important;
+      max-width: none !important;
+      margin: 0 !important;
+      transform: none !important;
+      bottom: auto !important;
+      top: calc(var(--design-top) + var(--design-height) - 72px) !important;
+      height: auto !important;
+      padding-bottom: 8px !important;
+      box-sizing: border-box !important;
+    }
+    html.design-iphone .news-pullup-sheet {
+      height: calc(var(--design-height) - var(--brand-offset));
+      max-height: calc(var(--design-height) - var(--brand-offset));
+    }
+    html.design-iphone .vote-sheet-panel {
+      max-height: min(85%, 560px);
     }
     /* This header must never clip, and the rule is load-bearing again. It held the seat picker
        until the Teams chip replaced it, and overflow: hidden here clipped that menu to the 44px
@@ -5495,19 +5582,50 @@ const html = `<!DOCTYPE html>
      * flag sticky for the tab — syncUrl strips ?design=, and removing the flag on first boot
      * let a Design Mode reload run soft-delete sync and blank the News Feed.
      */
-    function isDesignLeagueHome() {
+    function syncDesignIphoneStage() {
+      if (!document.documentElement.classList.contains("design-iphone")) return;
       try {
-        if (sessionStorage.getItem("cuckle.design.league_home") === "1") return true;
+        var r = document.body.getBoundingClientRect();
+        var root = document.documentElement.style;
+        root.setProperty("--design-left", Math.round(r.left) + "px");
+        root.setProperty("--design-top", Math.round(r.top) + "px");
+        root.setProperty("--design-width", Math.round(r.width) + "px");
+        root.setProperty("--design-height", Math.round(r.height) + "px");
+      } catch (err) { /* ignore */ }
+    }
+
+    function armDesignIphoneStage() {
+      try {
+        document.documentElement.classList.add("design-iphone");
+        var m = document.querySelector('meta[name="viewport"]');
+        if (m) m.setAttribute("content", "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+      } catch (err) { /* ignore */ }
+      syncDesignIphoneStage();
+      if (window.__designIphoneArmed) return;
+      window.__designIphoneArmed = true;
+      window.addEventListener("resize", syncDesignIphoneStage);
+      window.addEventListener("scroll", syncDesignIphoneStage, true);
+      // After fonts/layout settle — keeps Design picker boxes on the chips.
+      setTimeout(syncDesignIphoneStage, 0);
+      setTimeout(syncDesignIphoneStage, 250);
+      setTimeout(syncDesignIphoneStage, 1000);
+    }
+
+    function isDesignLeagueHome() {
+      var on = false;
+      try {
+        if (sessionStorage.getItem("cuckle.design.league_home") === "1") on = true;
       } catch (err) { /* private mode */ }
       try {
         if ((new URLSearchParams(location.search).get("design") || "") === "league-home") {
           try { sessionStorage.setItem("cuckle.design.league_home", "1"); } catch (err2) { /* ignore */ }
-          return true;
+          on = true;
         }
       } catch (err) { /* ignore */ }
       // Seeded by design-league-home.html — never a real Supabase JWT.
-      if (authSession && authSession.access_token === "design-mode") return true;
-      return false;
+      if (authSession && authSession.access_token === "design-mode") on = true;
+      if (on) armDesignIphoneStage();
+      return on;
     }
 
     function authLoad() {
@@ -9718,6 +9836,7 @@ const html = `<!DOCTYPE html>
       paintBottomNav();
       syncUrl();
       armNewsPullup();
+      if (typeof syncDesignIphoneStage === "function") syncDesignIphoneStage();
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
@@ -12590,6 +12709,15 @@ if (!inline.includes("function isDesignLeagueHome()")
   || !inline.includes('access_token === "design-mode"')
   || !inline.includes('q.set("design", "league-home")')) {
   throw new Error("Design Mode must keep isDesignLeagueHome() sticky (token + session + URL)");
+if (!html.includes("html.design-iphone body")
+  || !html.includes("width: 390px")
+  || !html.includes("height: 844px")
+  || !html.includes("--design-left")
+  || !inline.includes("function syncDesignIphoneStage(")
+  || !inline.includes("function armDesignIphoneStage(")
+  || html.includes("transform: translateZ(0)")) {
+  throw new Error("Design Mode must lock a 390x844 stage without transform (picker boxes stay aligned)");
+}
 }
 if (!inline.includes("if (!isDesignLeagueHome()) loadNewsDeleted()")
   || inline.includes("sessionStorage.removeItem(\"cuckle.design.league_home\")")) {

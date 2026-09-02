@@ -126,10 +126,20 @@ const html = `<!DOCTYPE html>
       height: calc(100% - var(--brand-offset));
       max-height: calc(100% - var(--brand-offset));
     }
+    html.design-iphone .news-pullup.is-open .news-pullup-sheet {
+      transform: none !important;
+      height: calc(100% - var(--brand-offset)) !important;
+      max-height: calc(100% - var(--brand-offset)) !important;
+    }
+    /* Collapsed rest: peek-tall only — never a full-height sheet translateY'd off-stage. */
     html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet {
-      transform: none;
-      height: var(--news-pullup-peek);
-      max-height: var(--news-pullup-peek);
+      transform: none !important;
+      height: var(--news-pullup-peek) !important;
+      max-height: var(--news-pullup-peek) !important;
+      transition: none;
+    }
+    .news-pullup.is-snap .news-pullup-sheet {
+      transition: none !important;
     }
     html.design-iphone .vote-sheet-panel {
       max-height: min(85%, 560px);
@@ -7647,7 +7657,6 @@ const html = `<!DOCTYPE html>
       const sheet = root.querySelector("[data-news-pullup-sheet]");
       const top = root.querySelector("[data-news-pullup-top]");
       const peek = root.querySelector("[data-news-pullup-peek]");
-      const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
       if (!sheet) return;
 
@@ -7684,9 +7693,18 @@ const html = `<!DOCTYPE html>
         sheet.style.maxHeight = "";
         sheet.style.transform = "";
       };
+      // Drop transition for one frame so open/close never leaves a mid-translate ghost.
+      const snapSheet = (fn) => {
+        root.classList.add("is-snap");
+        clearSheetDragLayout();
+        if (fn) fn();
+        void sheet.offsetHeight;
+        root.classList.remove("is-snap");
+      };
 
       const onPointerDown = (e) => {
         if (e.button != null && e.button !== 0) return;
+        if (drag) return; // ignore nested/duplicate downs (peek inside peekBlock)
         if (e.target.closest("a.news-hero-link")) return;
         if (e.target.closest("[data-news-del]")) return;
         // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
@@ -7703,6 +7721,7 @@ const html = `<!DOCTYPE html>
           lastT: performance.now(),
           vel: 0,
           moved: false,
+          fromOpen: newsPullupOpen,
         };
         try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
         root.classList.add("is-dragging");
@@ -7719,47 +7738,58 @@ const html = `<!DOCTYPE html>
         drag.vel = (e.clientY - drag.lastY) / dt;
         drag.lastY = e.clientY;
         drag.lastT = now;
-        // iPhone finger jitter is often >6px — keep taps feeling like taps.
-        if (Math.abs(dy) > 10) drag.moved = true;
+        // iPhone finger jitter is often a few px — keep taps feeling like taps.
+        if (Math.abs(dy) > 12) drag.moved = true;
         sheet.style.transform = "translateY(" + ty + "px)";
       };
 
       const endDrag = (e) => {
-        if (!drag || (e && e.pointerId !== drag.id)) return;
+        if (!drag || (e && e.pointerId != null && e.pointerId !== drag.id)) return;
         const rawTy = sheet.style.transform || "";
-        let ty = newsPullupOpen ? 0 : maxTy();
+        let ty = drag.fromOpen ? 0 : maxTy();
         if (rawTy.indexOf("translateY(") === 0) {
           const n = parseFloat(rawTy.slice(11));
           if (Number.isFinite(n)) ty = n;
         }
-        const limit = maxTy();
-        const flickOpen = drag.vel < -0.45;
-        const flickClose = drag.vel > 0.45;
+        const limit = Math.max(1, maxTy());
+        const dy = (e && e.clientY != null ? e.clientY : drag.lastY) - drag.startY;
+        const flickOpen = drag.vel < -0.35;
+        const flickClose = drag.vel > 0.35;
         const wasTap = !drag.moved;
+        const fromOpen = drag.fromOpen;
         const wasOpenBefore = newsPullupOpen;
         drag = null;
         root.classList.remove("is-dragging");
-        clearSheetDragLayout();
+
         if (wasTap) {
-          if (e && e.target && e.target.closest("a.news-hero-link")) return;
-          if (e && e.target && e.target.closest("[data-news-del]")) return;
-          if (newsPullupOpen) {
-            lastMinimizeAt = Date.now();
-            setNewsPullupOpen(false);
-            swallowNewsPullupClickThrough();
-            if (e) {
-              e.preventDefault();
-              e.stopPropagation();
+          snapSheet(() => {
+            if (e && e.target && e.target.closest("a.news-hero-link")) return;
+            if (e && e.target && e.target.closest("[data-news-del]")) return;
+            if (fromOpen) {
+              lastMinimizeAt = Date.now();
+              setNewsPullupOpen(false);
+              swallowNewsPullupClickThrough();
+              if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            } else {
+              setNewsPullupOpen(true);
             }
-          } else {
-            setNewsPullupOpen(true);
-          }
+          });
           return;
         }
-        if (flickOpen) setNewsPullupOpen(true);
-        else if (flickClose) setNewsPullupOpen(false);
-        else setNewsPullupOpen(ty < limit * 0.55);
-        // Drag/flick dismiss can also leave a click on Recent Trade under the sheet.
+
+        // Phone-friendly thresholds: a short intentional swipe should commit.
+        // From collapsed: open on upward flick, upward drag ≥28px, or past ~25% open.
+        // From open: close on downward flick, downward drag ≥28px, or past ~25% closed.
+        let nextOpen;
+        if (fromOpen) {
+          nextOpen = !(flickClose || dy > 28 || ty > limit * 0.25);
+        } else {
+          nextOpen = !!(flickOpen || dy < -28 || ty < limit * 0.75);
+        }
+        snapSheet(() => setNewsPullupOpen(nextOpen));
         if (wasOpenBefore && !newsPullupOpen) {
           lastMinimizeAt = Date.now();
           swallowNewsPullupClickThrough();
@@ -7776,16 +7806,20 @@ const html = `<!DOCTYPE html>
         lastMinimizeAt = Date.now();
         e.preventDefault();
         e.stopPropagation();
-        setNewsPullupOpen(false);
-        swallowNewsPullupClickThrough();
+        snapSheet(() => {
+          setNewsPullupOpen(false);
+          swallowNewsPullupClickThrough();
+        });
       };
 
       const onScrimClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
         lastMinimizeAt = Date.now();
-        setNewsPullupOpen(false);
-        swallowNewsPullupClickThrough();
+        snapSheet(() => {
+          setNewsPullupOpen(false);
+          swallowNewsPullupClickThrough();
+        });
       };
 
       const onResize = () => applyBrand();
@@ -7793,7 +7827,7 @@ const html = `<!DOCTYPE html>
       const onPeekKey = (e) => {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
-        setNewsPullupOpen(!newsPullupOpen);
+        snapSheet(() => setNewsPullupOpen(!newsPullupOpen));
       };
 
       const onTopKey = (e) => {
@@ -7801,15 +7835,18 @@ const html = `<!DOCTYPE html>
         e.preventDefault();
         if (newsPullupOpen) {
           lastMinimizeAt = Date.now();
-          setNewsPullupOpen(false);
-          swallowNewsPullupClickThrough();
+          snapSheet(() => {
+            setNewsPullupOpen(false);
+            swallowNewsPullupClickThrough();
+          });
         } else {
-          setNewsPullupOpen(true);
+          snapSheet(() => setNewsPullupOpen(true));
         }
       };
 
-      // Title row lives inside top chrome — one listener set avoids double-firing on iOS.
-      const targets = [top, peek, peekBlock].filter(Boolean);
+      // One surface only: top chrome + peek control. Do NOT also bind peekBlock —
+      // peek lives inside it and bubbling double-fired pointerdown on iPhone.
+      const targets = [top, peek].filter(Boolean);
       for (const el of targets) {
         el.addEventListener("pointerdown", onPointerDown);
         el.addEventListener("pointermove", onPointerMove);
@@ -7838,7 +7875,7 @@ const html = `<!DOCTYPE html>
         if (peek) peek.removeEventListener("keydown", onPeekKey);
         if (scrim) scrim.removeEventListener("click", onScrimClick);
         window.removeEventListener("resize", onResize);
-        root.classList.remove("is-dragging", "is-open");
+        root.classList.remove("is-dragging", "is-open", "is-snap");
         sheet.style.transform = "";
         sheet.style.height = "";
         sheet.style.maxHeight = "";
@@ -12788,11 +12825,13 @@ if (!sheetRules.includes("@media (prefers-reduced-motion: reduce)")) {
 if (!sheetRules.includes(".news-pullup.is-open .news-pullup-sheet")
   || !sheetRules.includes("transform: translateY(calc(100% - var(--news-pullup-peek)))")
   || !sheetRules.includes("html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet")
-  || !sheetRules.includes("height: var(--news-pullup-peek)")) {
+  || !sheetRules.includes("height: var(--news-pullup-peek)")
+  || !sheetRules.includes(".news-pullup.is-snap .news-pullup-sheet")) {
   throw new Error("news pull-up must keep collapsed peek + expanded sheet transforms");
 }
 if (!inline.includes("function armNewsPullup()") || !inline.includes("setNewsPullupOpen")
-  || !inline.includes("openSheetH") || !inline.includes("armSheetDragLayout")) {
+  || !inline.includes("openSheetH") || !inline.includes("armSheetDragLayout")
+  || !inline.includes("snapSheet") || !inline.includes("dy < -28") || !inline.includes("dy > 28")) {
   throw new Error("news pull-up must ship open/close + drag wiring");
 }
 if (!inline.includes("flickOpen") || !inline.includes("flickClose")) {

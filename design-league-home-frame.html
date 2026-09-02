@@ -23,7 +23,8 @@
     .phone {
       position: relative;
       width: 390px;
-      height: min(844px, calc(100vh - 72px));
+      /* Exact iPhone CSS height — do not shrink with desktop vh (that skewed News Feed). */
+      height: 844px;
       border-radius: 54px;
       padding: 12px;
       background: linear-gradient(160deg, #3a3a42 0%, #1c1c20 40%, #0e0e10 100%);
@@ -69,9 +70,9 @@
 <body>
   <div class="stage">
     <p class="title">iPhone preview — PSA league home</p>
-    <p class="hint">News Feed + Latest trade inside the bezel.
-      For clickable Design Mode DOM (no bezel), open
-      <a href="./design-league-home.html">design-league-home.html</a>.</p>
+    <p class="hint">Visual bezel only (iframe). For <b>selectable chips</b> at true iPhone size, open
+      <a href="./design-league-home.html">design-league-home.html</a>
+      — Design Mode locks a 390×844 stage so News Feed matches the phone.</p>
     <p class="urls">Also:
       <code>iphone-preview.html</code> ·
       <code>preview.html</code> ·

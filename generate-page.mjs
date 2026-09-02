@@ -730,7 +730,7 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
     /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
     body.has-news-pullup {
-      padding-bottom: calc(var(--news-pullup-peek, 68px) + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--news-pullup-peek, 88px) + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
       overflow: hidden;
@@ -739,7 +739,7 @@ const html = `<!DOCTYPE html>
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 68px;
+      --news-pullup-peek: 88px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -772,17 +772,31 @@ const html = `<!DOCTYPE html>
     }
     .news-pullup-top {
       flex: 0 0 auto;
-      padding: 3px 12px 0;
+      /* Large chrome hit target — the gold knob alone is too easy to miss, and a miss
+         after close used to land on Recent Trade behind the collapsing sheet. */
+      min-height: 52px;
+      padding: 10px 12px 8px;
+      box-sizing: border-box;
       cursor: pointer;
       touch-action: none;
       user-select: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 6px;
     }
     .news-pullup-grab {
-      display: flex; justify-content: center; padding: 1px 0 3px;
+      display: flex; justify-content: center; align-items: center;
+      /* Invisible pad around the knob so tap/swipe-down is reliable (~44px tall). */
+      min-height: 28px;
+      margin: -6px 0 0;
+      padding: 10px 48px 6px;
+      box-sizing: border-box;
     }
     .news-pullup-knob {
-      width: 32px; height: 3px; border-radius: 999px;
-      background: #6b5a2e;
+      width: 44px; height: 5px; border-radius: 999px;
+      background: #c4a04a;
+      box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.25);
     }
     .news-pullup-title-row {
       display: flex; align-items: baseline; gap: 6px;
@@ -2267,6 +2281,13 @@ const html = `<!DOCTYPE html>
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
     let newsPullupOpen = false;
     let newsPullupCleanup = null;
+    // After tap-to-close, the sheet collapses under the finger and the browser's follow-up
+    // click lands on whatever is now behind it (Recent Trade → trade detail). Swallow that
+    // click so closing News does not open the trade page.
+    let newsPullupSwallowClicksUntil = 0;
+    function swallowNewsPullupClickThrough() {
+      newsPullupSwallowClicksUntil = Math.max(newsPullupSwallowClicksUntil, Date.now() + 500);
+    }
     // Sleeper week matchups for the home strip (previous completed week when possible).
     let weekMatchups = null; // { week, label, pairs: [{a,b,aPts,bPts}] } | "empty"
     let weekMatchupsLoading = false;
@@ -4701,8 +4722,8 @@ const html = `<!DOCTYPE html>
           + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
           + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
           + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
-          + ' aria-label="News Feed">'
-          + '<div class="news-pullup-grab" aria-hidden="true"><span class="news-pullup-knob"></span></div>'
+          + ' aria-label="News Feed — drag up to open, tap to close when open">'
+          + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
           + '<div class="news-pullup-title-row">'
           + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div></div></div>'
           + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
@@ -7197,24 +7218,37 @@ const html = `<!DOCTYPE html>
         const flickOpen = drag.vel < -0.45;
         const flickClose = drag.vel > 0.45;
         const wasTap = !drag.moved;
+        const wasOpenBefore = newsPullupOpen;
         drag = null;
         root.classList.remove("is-dragging");
         sheet.style.transform = "";
         if (wasTap) {
           if (e && e.target && e.target.closest("a.news-hero-link")) return;
           if (e && e.target && e.target.closest("[data-news-del]")) return;
-          if (newsPullupOpen) setNewsPullupOpen(false);
-          else setNewsPullupOpen(true);
+          if (newsPullupOpen) {
+            setNewsPullupOpen(false);
+            swallowNewsPullupClickThrough();
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          } else {
+            setNewsPullupOpen(true);
+          }
           return;
         }
         if (flickOpen) setNewsPullupOpen(true);
         else if (flickClose) setNewsPullupOpen(false);
         else setNewsPullupOpen(ty < limit * 0.55);
+        // Drag/flick dismiss can also leave a click on Recent Trade under the sheet.
+        if (wasOpenBefore && !newsPullupOpen) swallowNewsPullupClickThrough();
       };
 
       const onScrimClick = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         setNewsPullupOpen(false);
+        swallowNewsPullupClickThrough();
       };
 
       const onResize = () => applyBrand();
@@ -9455,10 +9489,14 @@ const html = `<!DOCTYPE html>
      */
     // Capture-phase: kill the click that follows opening the vote confirm (or sheet) so the
     // same tap cannot hit the new scrim/X and dismiss before the tally is readable.
+    // Also kill the click that follows collapsing the News Feed pull-up so it cannot open
+    // Recent Trade / other home controls that were under the sheet.
     document.addEventListener("click", (e) => {
-      if (Date.now() >= voteModalSwallowClicksUntil) return;
-      e.preventDefault();
-      e.stopPropagation();
+      const now = Date.now();
+      if (now < voteModalSwallowClicksUntil || now < newsPullupSwallowClicksUntil) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }, true);
     document.addEventListener("click", (e) => {
       const opt = e.target.closest("#scoreAs [data-lens]");
@@ -11789,6 +11827,14 @@ if (!inline.includes("function renderNewsPage()") || !inline.includes('view === 
 }
 if (!inline.includes("function armNewsPullup()") || !inline.includes("data-news-pullup-peek")) {
   throw new Error("the News Feed pull-up must ship with peek + drag chrome");
+}
+if (!inline.includes("function swallowNewsPullupClickThrough()")
+  || !inline.includes("newsPullupSwallowClicksUntil")
+  || !html.includes("min-height: 52px")
+  || !html.includes(".news-pullup-grab {")
+  || !html.includes("min-height: 28px")
+  || !html.includes("--news-pullup-peek: 88px")) {
+  throw new Error("News Feed grab must be a large hit target and swallow post-close click-through");
 }
 for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   // it.also and it.published are read into locals and formatted by ago()/length before use;

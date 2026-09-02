@@ -754,7 +754,7 @@
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 120px;
+      --news-pullup-peek: 100px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -791,28 +791,40 @@
       z-index: 2;
       /* Solid chrome so feed cards never paint through the minimize hit target. */
       background: #1a1810;
-      /* Large chrome — minimize must be easy; misses used to open Recent Trade underneath. */
-      min-height: 64px;
-      padding: 8px 12px 10px;
+      /* Compact title | grab | count — whole top is the drag/tap target. */
+      min-height: 28px;
+      padding: 4px 12px 2px;
       box-sizing: border-box;
       cursor: pointer;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      gap: 8px;
+      display: block;
+    }
+    .news-pullup-title-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      column-gap: 8px;
+      width: 100%;
+      min-height: 22px;
+    }
+    .news-pullup-title-row .day-alert-h {
+      min-width: 0;
+      justify-self: start;
+      font-size: 0.8125rem; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
-      /* Fixed 44px hit pad — do not shrink (iOS was collapsing the old padded box to ~7px). */
-      flex: 0 0 44px;
-      height: 44px;
-      min-height: 44px;
-      width: 100%;
+      /* Visual knob only — hit area is .news-pullup-top. */
+      justify-self: center;
+      height: 22px;
+      min-height: 22px;
+      width: auto;
+      min-width: 72px;
       margin: 0;
-      padding: 0;
+      padding: 0 10px;
       box-sizing: border-box;
       pointer-events: auto;
     }
@@ -822,20 +834,15 @@
       box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.25);
       pointer-events: none;
     }
-    .news-pullup-title-row {
-      display: flex; align-items: baseline; gap: 6px;
-      width: 100%;
-    }
-    .news-pullup-title-row .day-alert-h {
-      min-width: 0; flex: 1 1 auto;
-      font-size: 0.8125rem; line-height: 1.2;
-    }
     .news-pullup-count {
-      flex: 0 0 auto; font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
+      justify-self: end;
+      text-align: right;
+      font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
+      white-space: nowrap;
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
-      padding: 0 12px 4px;
+      padding: 0 12px 6px;
       min-height: 0;
     }
     .news-pullup-peek-block[hidden] { display: none; }
@@ -846,7 +853,7 @@
       width: 100%; display: block;
     }
     .news-pullup-peek:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    /* Collapsed peek: seat tag + one-line teaser only — no card chrome or footer. */
+    /* Collapsed peek: seat tag + multi-line teaser — no card chrome or footer. */
     .news-pullup-peek-inner { min-height: 0; padding: 0; }
     .news-pullup-peek-who {
       font-size: 0.6875rem; font-weight: 700; line-height: 1.2;
@@ -858,7 +865,10 @@
     .news-pullup-peek-line {
       font-size: 0.6875rem; line-height: 1.25; color: var(--muted);
       margin: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
     }
     .news-pullup-panel {
       flex: 1 1 auto; min-height: 0;
@@ -1735,22 +1745,18 @@
     .h2h-trade-lean .delta { font-size: inherit; }
     .h2h-lean-side {
       min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px;
-      align-items: stretch;
     }
-    .h2h-lean-side.is-left { text-align: left; }
-    .h2h-lean-side.is-right { text-align: right; }
-    /* Flairs on the outer edge; vote total hugs the center ("who won" CTA) as a scoreboard. */
+    .h2h-lean-side.is-left { text-align: left; align-items: flex-start; }
+    .h2h-lean-side.is-right { text-align: right; align-items: flex-end; }
+    /* Emoji flairs, then tally immediately to their right (grows with the emoji list). */
     .h2h-lean-marks {
-      display: flex; align-items: center; gap: 6px;
-      width: 100%; max-width: 100%;
+      display: inline-flex; align-items: center; gap: 4px;
+      max-width: 100%; width: auto;
     }
     .h2h-lean-flairs {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+      display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px;
       min-width: 0;
     }
-    .h2h-lean-side.is-left .h2h-lean-n { margin-left: auto; }
-    .h2h-lean-side.is-right .h2h-lean-marks { flex-direction: row-reverse; }
-    .h2h-lean-side.is-right .h2h-lean-n { margin-left: auto; }
     .h2h-lean-marks .h2h-lean-flair-link {
       display: inline-flex; align-items: center; line-height: 0;
     }
@@ -4791,9 +4797,10 @@
           + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
           + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
           + ' aria-label="News Feed — drag up to open, tap to close when open">'
-          + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
           + '<div class="news-pullup-title-row">'
-          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div></div></div>'
+          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
+          + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
+          + '</div></div>'
           + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
           + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
           + ' aria-label="Open the News Feed">'
@@ -7821,10 +7828,10 @@
         + '<div class="news-pullup-top" data-news-pullup-top'
         + ' role="button" tabindex="0"'
         + ' aria-label="News Feed — drag up to open, tap to close when open">'
-        + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
-        + '<span class="news-pullup-knob"></span></div>'
         + '<div class="news-pullup-title-row">'
         + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
+        + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
+        + '<span class="news-pullup-knob"></span></div>'
         + '<span class="news-pullup-count" data-news-pullup-count">' + esc(countLab) + "</span>"
         + "</div></div>"
         + newsPullupPeekHtml(latestBit)
@@ -8047,7 +8054,7 @@
             flairsHtml = '<div class="h2h-lean-flairs">' + flairs.join("") + "</div>";
           }
         }
-        // Scoreboard total sits on the inner edge (toward mid / "who won"), not beside flairs.
+        // Tally sits just right of the emoji list and stays at the end as more voters appear.
         const scoreHtml = n > 0 ? '<span class="h2h-lean-n">' + n + "</span>" : "";
         // No votes yet: leave the marks row blank (no "—" / "0" filler).
         if (!flairsHtml && !scoreHtml) {

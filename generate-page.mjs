@@ -759,7 +759,7 @@ const html = `<!DOCTYPE html>
       position: fixed; left: 0; right: 0; bottom: 0; top: 0;
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
-      --news-pullup-peek: 120px;
+      --news-pullup-peek: 100px;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -796,28 +796,40 @@ const html = `<!DOCTYPE html>
       z-index: 2;
       /* Solid chrome so feed cards never paint through the minimize hit target. */
       background: #1a1810;
-      /* Large chrome — minimize must be easy; misses used to open Recent Trade underneath. */
-      min-height: 64px;
-      padding: 8px 12px 10px;
+      /* One chrome row: title + yellow grab + count, level with each other. */
+      min-height: 48px;
+      padding: 6px 12px 8px;
       box-sizing: border-box;
       cursor: pointer;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      gap: 8px;
+      display: block;
+    }
+    .news-pullup-title-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      column-gap: 8px;
+      width: 100%;
+      min-height: 44px;
+    }
+    .news-pullup-title-row .day-alert-h {
+      min-width: 0;
+      justify-self: start;
+      font-size: 0.8125rem; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
-      /* Fixed 44px hit pad — do not shrink (iOS was collapsing the old padded box to ~7px). */
-      flex: 0 0 44px;
+      /* Tall hit pad centered in the title row, even with News Feed / count. */
+      justify-self: center;
       height: 44px;
       min-height: 44px;
-      width: 100%;
+      width: auto;
+      min-width: 72px;
       margin: 0;
-      padding: 0;
+      padding: 0 10px;
       box-sizing: border-box;
       pointer-events: auto;
     }
@@ -827,16 +839,11 @@ const html = `<!DOCTYPE html>
       box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.25);
       pointer-events: none;
     }
-    .news-pullup-title-row {
-      display: flex; align-items: baseline; gap: 6px;
-      width: 100%;
-    }
-    .news-pullup-title-row .day-alert-h {
-      min-width: 0; flex: 1 1 auto;
-      font-size: 0.8125rem; line-height: 1.2;
-    }
     .news-pullup-count {
-      flex: 0 0 auto; font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
+      justify-self: end;
+      text-align: right;
+      font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
+      white-space: nowrap;
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
@@ -4792,9 +4799,10 @@ const html = `<!DOCTYPE html>
           + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
           + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
           + ' aria-label="News Feed — drag up to open, tap to close when open">'
-          + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
           + '<div class="news-pullup-title-row">'
-          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div></div></div>'
+          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
+          + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
+          + '</div></div>'
           + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
           + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
           + ' aria-label="Open the News Feed">'
@@ -7822,10 +7830,10 @@ const html = `<!DOCTYPE html>
         + '<div class="news-pullup-top" data-news-pullup-top'
         + ' role="button" tabindex="0"'
         + ' aria-label="News Feed — drag up to open, tap to close when open">'
-        + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
-        + '<span class="news-pullup-knob"></span></div>'
         + '<div class="news-pullup-title-row">'
         + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
+        + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
+        + '<span class="news-pullup-knob"></span></div>'
         + '<span class="news-pullup-count" data-news-pullup-count">' + esc(countLab) + "</span>"
         + "</div></div>"
         + newsPullupPeekHtml(latestBit)
@@ -12292,12 +12300,12 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !html.includes("news-pullup-click-guard")
   || !inline.includes("function newsPullupLocksHome(")
   || !inline.includes("if (newsPullupLocksHome()) return;")
-  || !html.includes("min-height: 64px")
+  || !html.includes("min-height: 48px")
   || !html.includes(".news-pullup-grab {")
   || !html.includes("height: 44px")
-  || !html.includes("flex: 0 0 44px")
+  || !html.includes("min-width: 72px")
   || !html.includes("has-news-pullup-open #app > :not(#newsPullup)")
-  || !html.includes("--news-pullup-peek: 120px")) {
+  || !html.includes("--news-pullup-peek: 100px")) {
   throw new Error("News Feed grab must be a large hit target and lock home while open/closing");
 }
 for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {

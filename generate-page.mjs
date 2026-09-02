@@ -1740,22 +1740,18 @@ const html = `<!DOCTYPE html>
     .h2h-trade-lean .delta { font-size: inherit; }
     .h2h-lean-side {
       min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 2px;
-      align-items: stretch;
     }
-    .h2h-lean-side.is-left { text-align: left; }
-    .h2h-lean-side.is-right { text-align: right; }
-    /* Flairs on the outer edge; vote total hugs the center ("who won" CTA) as a scoreboard. */
+    .h2h-lean-side.is-left { text-align: left; align-items: flex-start; }
+    .h2h-lean-side.is-right { text-align: right; align-items: flex-end; }
+    /* Emoji flairs, then tally immediately to their right (grows with the emoji list). */
     .h2h-lean-marks {
-      display: flex; align-items: center; gap: 6px;
-      width: 100%; max-width: 100%;
+      display: inline-flex; align-items: center; gap: 4px;
+      max-width: 100%; width: auto;
     }
     .h2h-lean-flairs {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+      display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px;
       min-width: 0;
     }
-    .h2h-lean-side.is-left .h2h-lean-n { margin-left: auto; }
-    .h2h-lean-side.is-right .h2h-lean-marks { flex-direction: row-reverse; }
-    .h2h-lean-side.is-right .h2h-lean-n { margin-left: auto; }
     .h2h-lean-marks .h2h-lean-flair-link {
       display: inline-flex; align-items: center; line-height: 0;
     }
@@ -8052,7 +8048,7 @@ const html = `<!DOCTYPE html>
             flairsHtml = '<div class="h2h-lean-flairs">' + flairs.join("") + "</div>";
           }
         }
-        // Scoreboard total sits on the inner edge (toward mid / "who won"), not beside flairs.
+        // Tally sits just right of the emoji list and stays at the end as more voters appear.
         const scoreHtml = n > 0 ? '<span class="h2h-lean-n">' + n + "</span>" : "";
         // No votes yet: leave the marks row blank (no "—" / "0" filler).
         if (!flairsHtml && !scoreHtml) {
@@ -11190,8 +11186,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
       throw new Error("Lean footer must separate flairs from the vote scoreboard (h2h-lean-flairs / h2h-lean-n)");
     }
   }
-  if (!html.includes(".h2h-lean-flairs") || !html.includes(".h2h-lean-side.is-left .h2h-lean-n")) {
-    throw new Error("Lean vote scoreboard styles must pin totals toward the center");
+  if (!html.includes(".h2h-lean-flairs") || !html.includes("inline-flex")
+    || !html.includes(".h2h-lean-marks {")
+    || html.includes(".h2h-lean-side.is-left .h2h-lean-n { margin-left: auto; }")) {
+    throw new Error("Lean vote tally must sit just right of the emoji list (not pinned to center)");
   }
   {
     const cardAt = inline.indexOf("function latestTradeCardHtml(");

@@ -103,6 +103,7 @@ const html = `<!DOCTYPE html>
       margin: 0 !important;
       box-sizing: border-box !important;
       transform: none !important;
+      overflow: hidden !important;
     }
     /* .bottom-nav normally uses left:50% + translateX(-50%) — that skews Design blue boxes. */
     html.design-iphone #bottomNav,
@@ -119,9 +120,16 @@ const html = `<!DOCTYPE html>
       padding-bottom: 8px !important;
       box-sizing: border-box !important;
     }
+    /* Open / dragging: full sheet under the brand. Collapsed: peek-tall only (no translate
+       past the stage — that made Design Mode outlines run off the phone). */
     html.design-iphone .news-pullup-sheet {
-      height: calc(var(--design-height) - var(--brand-offset));
-      max-height: calc(var(--design-height) - var(--brand-offset));
+      height: calc(100% - var(--brand-offset));
+      max-height: calc(100% - var(--brand-offset));
+    }
+    html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet {
+      transform: none;
+      height: var(--news-pullup-peek);
+      max-height: var(--news-pullup-peek);
     }
     html.design-iphone .vote-sheet-panel {
       max-height: min(85%, 560px);
@@ -847,6 +855,8 @@ const html = `<!DOCTYPE html>
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
       --news-pullup-peek: 100px;
+      /* Clip the translated sheet so it never paints past the overlay root (Design stage). */
+      overflow: hidden;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -859,8 +869,8 @@ const html = `<!DOCTYPE html>
     .news-pullup-sheet {
       pointer-events: auto;
       position: absolute; left: 0; right: 0; bottom: 0;
-      height: calc(100dvh - var(--brand-offset));
-      max-height: calc(100dvh - var(--brand-offset));
+      height: calc(100% - var(--brand-offset));
+      max-height: calc(100% - var(--brand-offset));
       display: flex; flex-direction: column;
       box-sizing: border-box;
       background: #1a1810;
@@ -7594,6 +7604,8 @@ const html = `<!DOCTYPE html>
       document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
       if (sheet) {
         sheet.style.transform = "";
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
         sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
       }
       if (newsPullupOpen && panel) panel.scrollTop = 0;
@@ -7652,7 +7664,26 @@ const html = `<!DOCTYPE html>
         const n = parseFloat(raw);
         return Number.isFinite(n) ? n : 148;
       };
-      const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
+      // Full open height (parent minus brand). Do not use sheet.offsetHeight when collapsed —
+      // Design Mode sizes the resting sheet to peek only so outlines stay on-stage.
+      const openSheetH = () => {
+        const raw = getComputedStyle(root).getPropertyValue("--brand-offset").trim();
+        const brand = parseFloat(raw);
+        const b = Number.isFinite(brand) ? brand : 56;
+        return Math.max(0, root.clientHeight - b);
+      };
+      const maxTy = () => Math.max(0, openSheetH() - peekH());
+      const armSheetDragLayout = (ty) => {
+        const h = openSheetH();
+        sheet.style.height = h + "px";
+        sheet.style.maxHeight = h + "px";
+        sheet.style.transform = "translateY(" + ty + "px)";
+      };
+      const clearSheetDragLayout = () => {
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
+        sheet.style.transform = "";
+      };
 
       const onPointerDown = (e) => {
         if (e.button != null && e.button !== 0) return;
@@ -7675,7 +7706,7 @@ const html = `<!DOCTYPE html>
         };
         try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
         root.classList.add("is-dragging");
-        sheet.style.transform = "translateY(" + ty + "px)";
+        armSheetDragLayout(ty);
         e.preventDefault();
       };
 
@@ -7708,7 +7739,7 @@ const html = `<!DOCTYPE html>
         const wasOpenBefore = newsPullupOpen;
         drag = null;
         root.classList.remove("is-dragging");
-        sheet.style.transform = "";
+        clearSheetDragLayout();
         if (wasTap) {
           if (e && e.target && e.target.closest("a.news-hero-link")) return;
           if (e && e.target && e.target.closest("[data-news-del]")) return;
@@ -7809,6 +7840,8 @@ const html = `<!DOCTYPE html>
         window.removeEventListener("resize", onResize);
         root.classList.remove("is-dragging", "is-open");
         sheet.style.transform = "";
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
       };
     }
 
@@ -12753,10 +12786,13 @@ if (!sheetRules.includes("@media (prefers-reduced-motion: reduce)")) {
   throw new Error("news pull-up must keep a prefers-reduced-motion branch that disables its sheet transition");
 }
 if (!sheetRules.includes(".news-pullup.is-open .news-pullup-sheet")
-  || !sheetRules.includes("transform: translateY(calc(100% - var(--news-pullup-peek)))")) {
+  || !sheetRules.includes("transform: translateY(calc(100% - var(--news-pullup-peek)))")
+  || !sheetRules.includes("html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet")
+  || !sheetRules.includes("height: var(--news-pullup-peek)")) {
   throw new Error("news pull-up must keep collapsed peek + expanded sheet transforms");
 }
-if (!inline.includes("function armNewsPullup()") || !inline.includes("setNewsPullupOpen")) {
+if (!inline.includes("function armNewsPullup()") || !inline.includes("setNewsPullupOpen")
+  || !inline.includes("openSheetH") || !inline.includes("armSheetDragLayout")) {
   throw new Error("news pull-up must ship open/close + drag wiring");
 }
 if (!inline.includes("flickOpen") || !inline.includes("flickClose")) {
@@ -12794,15 +12830,16 @@ if (!inline.includes("function isDesignLeagueHome()")
   || !inline.includes('access_token === "design-mode"')
   || !inline.includes('q.set("design", "league-home")')) {
   throw new Error("Design Mode must keep isDesignLeagueHome() sticky (token + session + URL)");
+}
 if (!html.includes("html.design-iphone body")
   || !html.includes("width: 390px")
   || !html.includes("height: 844px")
   || !html.includes("--design-left")
   || !inline.includes("function syncDesignIphoneStage(")
   || !inline.includes("function armDesignIphoneStage(")
+  || !html.includes("html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet")
   || html.includes("transform: translateZ(0)")) {
   throw new Error("Design Mode must lock a 390x844 stage without transform (picker boxes stay aligned)");
-}
 }
 if (!inline.includes("if (!isDesignLeagueHome()) loadNewsDeleted()")
   || inline.includes("sessionStorage.removeItem(\"cuckle.design.league_home\")")) {

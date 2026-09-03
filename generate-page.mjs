@@ -623,6 +623,11 @@ const html = `<!DOCTYPE html>
     button.vote-opt b { display: block; font-weight: 650; font-size: 0.8125rem;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
     button.vote-opt span { display: block; color: var(--dim); font-size: 0.6875rem; margin-top: 2px; }
+    button.vote-opt.is-fair {
+      flex: 0.72 1 0; text-align: center;
+    }
+    button.vote-opt.is-fair b { text-align: center; }
+    button.vote-opt.is-fair span { text-align: center; }
     .vote-card {
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 14px;
       padding: 8px 10px; margin: 2px 0 0; box-sizing: border-box;
@@ -1903,6 +1908,12 @@ const html = `<!DOCTYPE html>
       min-width: 0; max-width: 11rem;
       text-align: center; justify-self: center;
       font-size: 0.625rem; line-height: 1.25; color: var(--dim);
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .h2h-lean-mid .h2h-lean-marks { justify-content: center; }
+    .h2h-lean-fair-k {
+      font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim); line-height: 1;
     }
     .h2h-lean-empty { color: #6b5a2e; }
     /* Kept for smoke / old markup; trade assets are text-first now. */
@@ -5097,11 +5108,15 @@ const html = `<!DOCTYPE html>
     }
 
     function voteToastHtml() {
-      return voteToast
-        ? '<p class="vote-note">Vote recorded'
-          + (voteToast.name ? " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one" : "")
-          + ". One vote per trade — you can change sides within 24 hours of your first cast.</p>"
-        : "";
+      if (!voteToast) return "";
+      let bit = "";
+      if (voteToast.fair) {
+        bit = " — you marked that one <b>Fair</b>";
+      } else if (voteToast.name) {
+        bit = " — you have <b>" + seatLabel(voteToast.name) + "</b> winning that one";
+      }
+      return '<p class="vote-note">Vote recorded' + bit
+        + ". One vote per trade — you can change sides within 24 hours of your first cast.</p>";
     }
 
     /** Year / team / player filter row + dropdown panel for league-wide trade feeds. */
@@ -5517,6 +5532,9 @@ const html = `<!DOCTYPE html>
     // a delete verb would let any league member erase everybody else's votes. A cleared vote is
     // this sentinel, which trade_vote_tallies filters out — see db/schema.sql section 3.
     const VOTE_CLEARED = "__none__";
+    // Third ballot option: trade was even / neither side won. Stored like a seat uid so
+    // tallies group it; never a real Sleeper id (those are numeric snowflakes).
+    const VOTE_FAIR = "__fair__";
     // A paused free-tier project can hang rather than refuse. Nothing about a vote may wait
     // forever on it.
     const VOTE_TIMEOUT = 8000;
@@ -7360,6 +7378,40 @@ const html = `<!DOCTYPE html>
       return seats;
     }
 
+    function isVoteFair(choice) {
+      return choice === VOTE_FAIR;
+    }
+
+    /** Display label for a ballot choice (seat name or Fair). */
+    function voteChoiceLabel(choice, seats) {
+      if (isVoteFair(choice)) return "Fair";
+      const hit = (seats || []).find(function (s) { return s.uid === choice; });
+      return hit ? hit.name : "?";
+    }
+
+    /** Compact a–f–b tally string (team A, Fair, team B). */
+    function voteTallyTriple(v, seats) {
+      const a = v.tally[seats[0].uid] || 0;
+      const f = v.tally[VOTE_FAIR] || 0;
+      const b = v.tally[seats[1].uid] || 0;
+      return a + "–" + f + "–" + b;
+    }
+
+    function voteOptButtonHtml(tx, choice, labelHtml, v, fair) {
+      const on = v.choice === choice;
+      const n = v.tally[choice] || 0;
+      const line = v.votes
+        ? n + (n === 1 ? " vote · " : " votes · ") + Math.round(n / v.votes * 100) + "%"
+        : "tap to vote";
+      return '<button type="button" class="vote-opt'
+        + (on ? " on" : "")
+        + (fair ? " is-fair" : "")
+        + '"'
+        + ' data-vote="' + esc(tx) + '" data-vote-seat="' + esc(choice) + '"'
+        + ' aria-pressed="' + (on ? "true" : "false") + '">'
+        + "<b>" + labelHtml + "</b><span>" + line + "</span></button>";
+    }
+
     function voteParties(r) {
       // Prefer the bag already painted for this tx (seat tab / feed cache) so N-way detection
       // cannot disagree between the H2H chip and the vote buttons on the same card.
@@ -7399,15 +7451,30 @@ const html = `<!DOCTYPE html>
       if (!r) return "";
       const seats = voteSeats(r);
       const v = readVotes(voteConfirmTx);
-      const won = seats.find((s) => s.uid === v.choice);
-      const rows = seats.map((s) => {
-        const n = v.tally[s.uid] || 0;
+      const fairPick = isVoteFair(v.choice);
+      const pickHtml = fairPick
+        ? 'You marked this trade <b>Fair</b>'
+        : ('You have <b>'
+          + seatLabel(voteChoiceLabel(v.choice, seats), { link: false })
+          + "</b> winning");
+      // Team A · Fair · Team B — same order as the vote buttons.
+      const rowDefs = seats.length === 2
+        ? [
+            { uid: seats[0].uid, label: seatLabel(seats[0].name, { link: false }) },
+            { uid: VOTE_FAIR, label: "Fair" },
+            { uid: seats[1].uid, label: seatLabel(seats[1].name, { link: false }) },
+          ]
+        : seats.map(function (s) {
+            return { uid: s.uid, label: seatLabel(s.name, { link: false }) };
+          });
+      const rows = rowDefs.map(function (row) {
+        const n = v.tally[row.uid] || 0;
         const pct = v.votes ? Math.round(n / v.votes * 100) : 0;
         const line = v.votes
           ? n + (n === 1 ? " vote" : " votes") + " · " + pct + "%"
           : "0 votes";
-        return '<li class="' + (v.choice === s.uid ? "is-pick" : "") + '">'
-          + "<b>" + seatLabel(s.name, { link: false }) + "</b>"
+        return '<li class="' + (v.choice === row.uid ? "is-pick" : "") + '">'
+          + "<b>" + row.label + "</b>"
           + "<span>" + esc(line) + "</span></li>";
       }).join("");
       const marks = latestTradeLeanFooterHtml(r, latestTradeLean(r));
@@ -7417,9 +7484,7 @@ const html = `<!DOCTYPE html>
         + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" aria-label="Vote recorded" tabindex="-1">'
         + '<button type="button" class="vote-sheet-close" data-vote-confirm-close aria-label="Close">×</button>'
         + '<p class="vote-confirm-k">Vote recorded</p>'
-        + '<p class="vote-confirm-pick">You have <b>'
-        + seatLabel(won ? won.name : "?", { link: false })
-        + "</b> winning</p>"
+        + '<p class="vote-confirm-pick">' + pickHtml + "</p>"
         + '<ul class="vote-confirm-tally">' + rows + "</ul>"
         + (marks ? '<div class="vote-confirm-marks">' + marks + "</div>" : "")
         + "</div></div>";
@@ -7437,17 +7502,18 @@ const html = `<!DOCTYPE html>
       }
       const v = readVotes(r.transaction_id);
       const editing = voteEditTx === r.transaction_id && v.canEdit;
-      // After a ballot: one compact row (Voted · name · a–b). Tap to change only while unlocked.
+      // After a ballot: one compact row (Voted · name|Fair · a–f–b). Tap to change while unlocked.
       if (v.choice && !editing) {
-        const won = seats.find((s) => s.uid === v.choice);
-        const a = v.tally[seats[0].uid] || 0;
-        const b = v.tally[seats[1].uid] || 0;
+        const pickLab = isVoteFair(v.choice)
+          ? "Fair"
+          : seatLabel(voteChoiceLabel(v.choice, seats), { link: false });
+        const triple = voteTallyTriple(v, seats);
         if (v.locked) {
           return '<div class="vote is-done is-locked">'
             + '<div class="vote-done" role="status" aria-label="Vote locked">'
             + '<span class="vote-done-k">Voted</span>'
-            + "<b>" + seatLabel(won ? won.name : "?", { link: false }) + "</b>"
-            + '<span class="vote-done-tally">' + a + "–" + b + "</span>"
+            + "<b>" + pickLab + "</b>"
+            + '<span class="vote-done-tally">' + triple + "</span>"
             + "</div>"
             + '<p class="caption vote-lock-note">Locked — one vote, editable for 24 hours after first cast.</p>'
             + "</div>";
@@ -7456,21 +7522,16 @@ const html = `<!DOCTYPE html>
           + '<button type="button" class="vote-done" data-vote-edit="' + esc(r.transaction_id) + '"'
           + ' aria-label="Change vote (within 24 hours)">'
           + '<span class="vote-done-k">Voted</span>'
-          + "<b>" + seatLabel(won ? won.name : "?", { link: false }) + "</b>"
-          + '<span class="vote-done-tally">' + a + "–" + b + "</span>"
+          + "<b>" + pickLab + "</b>"
+          + '<span class="vote-done-tally">' + triple + "</span>"
           + "</button></div>";
       }
-      const opts = seats.map((s) => {
-        const on = v.choice === s.uid;
-        const n = v.tally[s.uid] || 0;
-        const line = v.votes
-          ? n + (n === 1 ? " vote · " : " votes · ") + Math.round(n / v.votes * 100) + "%"
-          : "tap to vote";
-        return '<button type="button" class="vote-opt' + (on ? " on" : "") + '"'
-          + ' data-vote="' + esc(r.transaction_id) + '" data-vote-seat="' + esc(s.uid) + '"'
-          + ' aria-pressed="' + (on ? "true" : "false") + '">'
-          + "<b>" + seatLabel(s.name, { link: false }) + "</b><span>" + line + "</span></button>";
-      }).join("");
+      // Team A | Fair | Team B — Fair sits between the two seats.
+      const opts = voteOptButtonHtml(
+          r.transaction_id, seats[0].uid, seatLabel(seats[0].name, { link: false }), v, false)
+        + voteOptButtonHtml(r.transaction_id, VOTE_FAIR, "Fair", v, true)
+        + voteOptButtonHtml(
+          r.transaction_id, seats[1].uid, seatLabel(seats[1].name, { link: false }), v, false);
       return '<div class="vote' + (v.choice ? " is-edit" : "") + '">'
         + '<div class="vote-opts">' + opts + "</div>"
         + (v.choice
@@ -8457,10 +8518,37 @@ const html = `<!DOCTYPE html>
         }
       }
 
-      // Empty mid keeps the 3-col grid so vote marks stay under each seat.
+      // Mid column: Fair ballots (flairs + count). Keeps the 3-col grid under each seat.
+      const fairMarks = voteMarks(latest.transaction_id);
+      const fairVoters = fairMarks[VOTE_FAIR] || [];
+      const fairN = (readVotes(latest.transaction_id).tally[VOTE_FAIR] || fairVoters.length || 0);
+      let fairMid = '<div class="h2h-lean-mid" aria-hidden="true"></div>';
+      if (fairN > 0 || fairVoters.length) {
+        let flairsHtml = "";
+        if (fairVoters.length) {
+          const sorted = fairVoters.slice().sort(function (a, b) {
+            return seatNameForUid(a).localeCompare(seatNameForUid(b));
+          });
+          const flairs = sorted.map(function (vid) {
+            return seatVoteMarkHtml(seatNameForUid(vid));
+          }).filter(Boolean);
+          if (flairs.length) {
+            flairsHtml = '<div class="h2h-lean-flairs">' + flairs.join("") + "</div>";
+          }
+        }
+        const scoreHtml = fairN > 0 ? '<span class="h2h-lean-n">' + fairN + "</span>" : "";
+        const label = fairN === 1 ? "1 Fair vote" : fairN + " Fair votes";
+        fairMid = '<div class="h2h-lean-mid"'
+          + (fairN > 0 ? ' aria-label="' + esc(label) + '"' : ' aria-hidden="true"')
+          + '>'
+          + '<div class="h2h-lean-marks is-fair">' + flairsHtml + scoreHtml + "</div>"
+          + '<span class="h2h-lean-fair-k">Fair</span>'
+          + "</div>";
+      }
+
       return '<div class="h2h-trade-lean">'
         + sideMarksHtml(left, false)
-        + '<div class="h2h-lean-mid" aria-hidden="true"></div>'
+        + fairMid
         + sideMarksHtml(right, true)
         + "</div>";
     }
@@ -10994,8 +11082,12 @@ const html = `<!DOCTYPE html>
           // Same tap that cast the vote must not land on the new confirm scrim/X.
           swallowVoteModalClickThrough();
         } else if (view === "trade" && next && authSeatId()) {
-          const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
-          voteToast = { tx: tx, name: (won && won.name) || "" };
+          if (isVoteFair(next)) {
+            voteToast = { tx: tx, name: "", fair: true };
+          } else {
+            const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
+            voteToast = { tx: tx, name: (won && won.name) || "", fair: false };
+          }
           voteConfirmTx = null;
         } else {
           voteToast = null;
@@ -12246,6 +12338,18 @@ for (const need of [
   if (!fn.includes("vote is-done") || !fn.includes("data-vote-edit") || !fn.includes("vote-done-tally")) {
     throw new Error("voteBlock must collapse to Voted + tally after a ballot (vote is-done)");
   }
+  if (!fn.includes("VOTE_FAIR") || !fn.includes('"Fair"') || !fn.includes("is-fair")
+    || !fn.includes("voteOptButtonHtml") || !fn.includes("voteTallyTriple")) {
+    throw new Error("voteBlock must offer Fair between the two team buttons (VOTE_FAIR)");
+  }
+}
+if (!inline.includes('const VOTE_FAIR = "__fair__"')
+  || !inline.includes("function isVoteFair(")
+  || !inline.includes("You marked this trade <b>Fair</b>")) {
+  throw new Error("vote system must store Fair as __fair__ and confirm with Fair copy");
+}
+if (!html.includes("button.vote-opt.is-fair") || !html.includes(".h2h-lean-fair-k")) {
+  throw new Error("Fair vote option needs is-fair button + lean Fair label styles");
 }
 if (!html.includes(".vote-card") || !html.includes("background: #1a1810")
   || !html.includes("button.vote-done")) {

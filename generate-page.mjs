@@ -158,6 +158,10 @@ const html = `<!DOCTYPE html>
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
       width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
+      overflow: hidden;
+    }
+    button.go-home img.brand-mark {
+      display: block; width: 44px; height: 44px; object-fit: cover;
     }
     button.go-home:focus-visible, button.go-settings:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
@@ -2252,10 +2256,8 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="League home">
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-        <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-      </svg>
+    <button type="button" class="go-home" id="goHome" aria-label="Chuckle Fantasy — League home">
+      <img class="brand-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" />
     </button>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
@@ -11733,6 +11735,10 @@ for (const marker of ["<<<<<<<", ">>>>>>>", "\n=======\n"]) {
 const dataVs = html.match(/const DATA_V = "[^"]*"/g) || [];
 if (dataVs.length !== 1) throw new Error(`expected exactly one DATA_V, found ${dataVs.length}: ${dataVs.join(", ")}`);
 
+if (!html.includes('img class="brand-mark"') || !html.includes('data/ui/brand-mark.png')
+  || !html.includes('Chuckle Fantasy — League home')) {
+  throw new Error("dashboard home control must use the Chuckle Fantasy brand-mark icon");
+}
 if (!html.includes('updateViaCache: "none"')
   || !html.includes("controllerchange")
   || !html.includes("cuckle.swReloaded")

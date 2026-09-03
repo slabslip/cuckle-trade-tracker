@@ -1,7 +1,7 @@
 {
   "name": "Chuckle Fantasy",
   "short_name": "Chuckle",
-  "description": "Multi-league fantasy trade meter — Sleeper seats, CF invites, league home.",
+  "description": "Chuckle Fantasy — old trades, fresh laughs. Multi-league fantasy trade meter.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -2,9 +2,14 @@
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
 /* Deploys: merge to main → GitHub Pages. Clients call reg.update() on load/focus; skipWaiting+claim
    then controllerchange reloads once so a normal refresh picks up upgrades. */
-const CACHE = "chuckle-shell-v169-stats-home";
+const CACHE = "chuckle-shell-v170-brand-logo";
 /* Do not precache index.html — Design Mode must never boot from a stale shell snapshot. */
-const SHELL = ["./manifest.webmanifest", "./data/ui/icon-192.png", "./data/ui/icon-512.png"];
+const SHELL = [
+  "./manifest.webmanifest",
+  "./data/ui/icon-192.png",
+  "./data/ui/icon-512.png",
+  "./data/ui/brand-mark.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

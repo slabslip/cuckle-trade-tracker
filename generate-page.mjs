@@ -47,7 +47,7 @@ const html = `<!DOCTYPE html>
       font-size: 16px;
       max-width: 920px; margin: 0 auto;
       padding:
-        max(16px, env(safe-area-inset-top, 0px))
+        max(8px, env(safe-area-inset-top, 0px))
         max(16px, env(safe-area-inset-right, 0px))
         max(24px, env(safe-area-inset-bottom, 0px))
         max(16px, env(safe-area-inset-left, 0px));
@@ -62,7 +62,7 @@ const html = `<!DOCTYPE html>
       background: #121216;
       height: 100%;
       --design-left: 0px;
-      --design-top: 16px;
+      --design-top: 8px;
       --design-width: 390px;
       --design-height: 844px;
     }
@@ -71,9 +71,9 @@ const html = `<!DOCTYPE html>
       max-width: 390px;
       height: 844px;
       max-height: 844px;
-      margin: 16px auto !important;
-      /* iPhone 14/15 Pro-ish safe areas (status island + home indicator) */
-      padding-top: 47px;
+      margin: 8px auto !important;
+      /* Tight top inset — keep a little air under the stage edge; real phones still use safe-area. */
+      padding-top: 10px;
       padding-right: 16px;
       padding-bottom: 34px;
       padding-left: 16px;
@@ -140,7 +140,7 @@ const html = `<!DOCTYPE html>
     h1.brand {
       position: relative;
       display: flex; align-items: center; gap: 10px;
-      font-size: 1.4rem; font-weight: 650; margin: 0 0 12px; letter-spacing: -0.02em;
+      font-size: 1.4rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
       overflow: visible;
     }
     /* League name sits where the app wordmark used to — absolute center of the brand row. */

@@ -184,6 +184,18 @@ const ADVERSARIAL = [
     why: "A possessive. normName() deletes the apostrophe without a space, so without normText()'s possessive step this reads 'lamar jacksons' and matches nobody.",
   },
   {
+    id: "lead-over-comparison",
+    source: "written",
+    provenance: "composed from live tweet:97 (RotoSurgeon) — equal 0.90 scores sorted alphabetically and tagged Cedric Tillman",
+    text: "Michael Wilson averaged 21.2 fantasy PPG from Week 11-Week 18 last year (WR2 behind Puka) Has any WR ever produced like that for 8 weeks and just never been fantasy relevant again? We’ve seen it for a month~ with guys like Travis Fulgham and Cedric Tillman…but 2 months??",
+    expect: {
+      reason: "matched_multi",
+      players: ["Cedric Tillman", "Michael Wilson", "Puka Nacua"],
+      top: "Michael Wilson",
+    },
+    why: "Wilson leads; Tillman is a later comparison. Equal confidence must not crown Tillman via A-before-M.",
+  },
+  {
     id: "the-jalon-daniels-headline",
     source: "real",
     provenance: "Rotowire, verbatim from rss-corpus.json — the headline that produced today's mis-attribution",
@@ -325,6 +337,10 @@ test("the adversarial cases behave as designed", () => {
     assert.equal(r.reason, c.expect.reason, `${c.id}: reason (${JSON.stringify(r.notes || [])})`);
     const players = r.subjects.filter((s) => s.publish).map((s) => s.player).sort();
     assert.deepEqual(players, [...c.expect.players].sort(), `${c.id}: players`);
+    if (c.expect.top) {
+      const top = r.subjects.find((s) => s.publish);
+      assert.equal(top && top.player, c.expect.top, `${c.id}: top subject`);
+    }
     if (c.expect.notify !== undefined) {
       assert.equal(r.subjects.some((s) => s.notify), c.expect.notify, `${c.id}: notify`);
     }
@@ -332,6 +348,23 @@ test("the adversarial cases behave as designed", () => {
       assert.ok(r.subjects.some((s) => s.evidence === c.expect.evidence), `${c.id}: evidence ${c.expect.evidence}, got ${r.subjects.map((s) => s.evidence)}`);
     }
   }
+});
+
+test("equal-confidence multi-match prefers the earliest named lead", () => {
+  // tweet:97: Wilson and Tillman both clear 0.90; alphabetical sort used to put Tillman first,
+  // so the feed chip and summary prefix named the comparison instead of the subject.
+  const text = "Michael Wilson averaged 21.2 fantasy PPG from Week 11-Week 18 last year (WR2 behind Puka) Has any WR ever produced like that for 8 weeks and just never been fantasy relevant again? We’ve seen it for a month~ with guys like Travis Fulgham and Cedric Tillman…but 2 months??";
+  const r = matchText(text, index);
+  assert.equal(r.subjects[0].player, "Michael Wilson");
+  const sum = summariseTweet({
+    title: text,
+    player: r.subjects[0].player,
+    team: r.subjects[0].player_team,
+    position: r.subjects[0].player_position,
+    tweet_handle: "RotoSurgeon",
+  });
+  assert.match(sum, /^Michael Wilson\b/);
+  assert.doesNotMatch(sum, /Cedric Tillman \(/);
 });
 
 test("a collision is decided by a margin, not by an id tie-break", () => {

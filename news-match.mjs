@@ -514,31 +514,42 @@ export function matchText(text, index) {
   const found = new Map();
   const notes = [];
 
-  const take = (playerId, evidence, confidence, why) => {
+  /**
+   * Keep the strongest hit. Equal confidence keeps the *earliest* mention in the text — that is
+   * who the sentence is about when a later name is comparison/context ("Wilson … guys like
+   * Tillman"). Alphabetical name was the old tie-break and wrongly crowned Cedric Tillman as the
+   * subject of a Michael Wilson lead.
+   */
+  const take = (playerId, evidence, confidence, why, mentionAt = Number.POSITIVE_INFINITY) => {
     const prev = found.get(playerId);
-    if (prev && prev.confidence >= confidence) return;
-    found.set(playerId, { player_id: playerId, evidence, confidence, why });
+    if (prev) {
+      if (prev.confidence > confidence) return;
+      if (prev.confidence === confidence && prev.mentionAt <= mentionAt) return;
+    }
+    found.set(playerId, { player_id: playerId, evidence, confidence, why, mentionAt });
   };
 
   // 1. Full names.
   for (const [key, ids] of index.nameKeys) {
-    if (!hay.includes(` ${key} `)) continue;
+    const at = hay.indexOf(` ${key} `);
+    if (at < 0) continue;
     const res = resolveName(key, index, teams);
     if (!res) {
       // The key is a rostered player's name but the dictionary has no such entry under it,
       // which only happens for a search_full_name variant. Fall back to the roster entry.
-      for (const id of ids) take(id, "name_variant", 0.85, `matched "${key}" as a name variant`);
+      for (const id of ids) take(id, "name_variant", 0.85, `matched "${key}" as a name variant`, at);
       continue;
     }
     if (!res.player_id) { notes.push(`refused "${key}": ${res.why}`); continue; }
     if (!index.rostered.has(res.player_id)) continue;
     const conf = res.resolved_by === "unique" ? 0.90 : res.resolved_by === "team" ? 0.85 : 0.65;
-    take(res.player_id, res.resolved_by === "unique" ? "name" : `name_collision_${res.resolved_by}`, conf, res.why);
+    take(res.player_id, res.resolved_by === "unique" ? "name" : `name_collision_${res.resolved_by}`, conf, res.why, at);
   }
 
   // 2. Aliases.
   for (const [key, ids] of index.aliasKeys) {
-    if (!hay.includes(` ${key} `)) continue;
+    const at = hay.indexOf(` ${key} `);
+    if (at < 0) continue;
     if (ids.size > 1) {
       // Resolve a shared alias with team context, or leave it alone.
       const settled = [...ids].filter((id) => {
@@ -546,7 +557,7 @@ export function matchText(text, index) {
         return row && row.team && teams.has(row.team);
       });
       if (settled.length === 1) {
-        take(settled[0], "alias_collision_team", 0.75, `alias "${key}" shared by ${ids.size} rostered players, settled by team context`);
+        take(settled[0], "alias_collision_team", 0.75, `alias "${key}" shared by ${ids.size} rostered players, settled by team context`, at);
       } else {
         notes.push(`refused alias "${key}": shared by ${ids.size} rostered players, no team context`);
       }
@@ -555,7 +566,7 @@ export function matchText(text, index) {
     const id = [...ids][0];
     const row = index.rostered.get(id);
     const bump = row && row.team && teams.has(row.team) ? 0.05 : 0;
-    take(id, "alias", 0.70 + bump, `alias "${key}" -> ${row ? row.name : id}`);
+    take(id, "alias", 0.70 + bump, `alias "${key}" -> ${row ? row.name : id}`, at);
   }
 
   // 3. Surnames — but only when no full name was found. A surname sitting beside a full name is
@@ -567,7 +578,8 @@ export function matchText(text, index) {
   if (!found.size) {
     const titleCased = looksTitleCased(raw);
     for (const [surname, ids] of index.surnameRostered) {
-      if (!hay.includes(` ${surname} `)) continue;
+      const at = hay.indexOf(` ${surname} `);
+      if (at < 0) continue;
       if (titleCased) {
         notes.push(`refused surname "${surname}": the text is title-cased, so capitalisation carries no signal`);
         continue;
@@ -578,7 +590,7 @@ export function matchText(text, index) {
       }
       const resolved = resolveSurname(surname, ids, index, teams);
       if (!resolved.player_id) { notes.push(`refused surname "${surname}": ${resolved.why}`); continue; }
-      take(resolved.player_id, resolved.evidence, resolved.confidence, resolved.why);
+      take(resolved.player_id, resolved.evidence, resolved.confidence, resolved.why, at);
     }
   }
 
@@ -613,12 +625,17 @@ export function matchText(text, index) {
       manager: own.manager,
       evidence: hit.evidence,
       confidence,
+      mentionAt: hit.mentionAt,
       publish: confidence >= PUBLISH_MIN,
       notify: confidence >= NOTIFY_MIN,
       why: [hit.why, ...adjust].join("; "),
     });
   }
-  subjects.sort((a, b) => b.confidence - a.confidence || a.player.localeCompare(b.player));
+  // Confidence first; equal scores prefer the name that appears first in the text (lead subject
+  // over later comparisons); name sort is only a last resort for stable output.
+  subjects.sort((a, b) => b.confidence - a.confidence
+    || a.mentionAt - b.mentionAt
+    || a.player.localeCompare(b.player));
   const publishable = subjects.filter((s) => s.publish);
   return {
     ...base,

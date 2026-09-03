@@ -12,6 +12,20 @@
   <link rel="apple-touch-icon" href="data/ui/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="data/ui/icon-192.png" />
   <title>Chuckle Fantasy</title>
+  <script>
+    /* Design Mode: lock to iPhone CSS viewport before first paint (Simple Browser is often wider). */
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        if (q.get("design") === "league-home"
+          || sessionStorage.getItem("cuckle.design.league_home") === "1") {
+          document.documentElement.classList.add("design-iphone");
+          var m = document.querySelector('meta[name="viewport"]');
+          if (m) m.setAttribute("content", "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
   <style>
     :root {
       --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
@@ -33,6 +47,97 @@
         max(24px, env(safe-area-inset-bottom, 0px))
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
+    }
+    /*
+     * Design Mode iPhone stage (html.design-iphone):
+     * Lock a 390×844 phone box. Do NOT use transform on body — that desyncs Cursor Design
+     * Mode blue hit boxes from the real chips. Pin fixed layers with --design-* vars instead.
+     */
+    html.design-iphone {
+      background: #121216;
+      height: 100%;
+      --design-left: 0px;
+      --design-top: 16px;
+      --design-width: 390px;
+      --design-height: 844px;
+    }
+    html.design-iphone body {
+      width: 390px;
+      max-width: 390px;
+      height: 844px;
+      max-height: 844px;
+      margin: 16px auto !important;
+      /* iPhone 14/15 Pro-ish safe areas (status island + home indicator) */
+      padding-top: 47px;
+      padding-right: 16px;
+      padding-bottom: 34px;
+      padding-left: 16px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+      box-sizing: border-box;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px #2a2a32, 0 22px 60px rgba(0,0,0,0.55);
+      -webkit-overflow-scrolling: touch;
+    }
+    html.design-iphone body.has-news-pullup-open,
+    html.design-iphone body.has-vote-sheet {
+      overflow: hidden;
+    }
+    /* Fixed chrome shares the stage box. No transform on these — Design picker uses rects. */
+    html.design-iphone .news-pullup,
+    html.design-iphone .vote-sheet,
+    html.design-iphone .news-pullup-click-guard {
+      left: var(--design-left) !important;
+      top: var(--design-top) !important;
+      width: var(--design-width) !important;
+      height: var(--design-height) !important;
+      right: auto !important;
+      bottom: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      transform: none !important;
+      overflow: hidden !important;
+    }
+    /* .bottom-nav normally uses left:50% + translateX(-50%) — that skews Design blue boxes. */
+    html.design-iphone #bottomNav,
+    html.design-iphone .bottom-nav {
+      left: var(--design-left) !important;
+      right: auto !important;
+      width: var(--design-width) !important;
+      max-width: none !important;
+      margin: 0 !important;
+      transform: none !important;
+      bottom: auto !important;
+      top: calc(var(--design-top) + var(--design-height) - 72px) !important;
+      height: auto !important;
+      padding-bottom: 8px !important;
+      box-sizing: border-box !important;
+    }
+    /* Open / dragging: full sheet under the brand. Collapsed: peek-tall only (no translate
+       past the stage — that made Design Mode outlines run off the phone). */
+    html.design-iphone .news-pullup-sheet {
+      height: calc(100% - var(--brand-offset));
+      max-height: calc(100% - var(--brand-offset));
+    }
+    html.design-iphone .news-pullup.is-open .news-pullup-sheet {
+      transform: none !important;
+      height: calc(100% - var(--brand-offset)) !important;
+      max-height: calc(100% - var(--brand-offset)) !important;
+    }
+    /* Collapsed rest: peek-tall only — never a full-height sheet translateY'd off-stage. */
+    html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet {
+      transform: none !important;
+      height: var(--news-pullup-peek) !important;
+      max-height: var(--news-pullup-peek) !important;
+      transition: none;
+    }
+    .news-pullup.is-snap .news-pullup-sheet {
+      transition: none !important;
+    }
+    html.design-iphone .vote-sheet-panel {
+      max-height: min(85%, 560px);
     }
     /* This header must never clip, and the rule is load-bearing again. It held the seat picker
        until the Teams chip replaced it, and overflow: hidden here clipped that menu to the 44px
@@ -755,6 +860,8 @@
       z-index: 40; pointer-events: none;
       --brand-offset: 56px;
       --news-pullup-peek: 100px;
+      /* Clip the translated sheet so it never paints past the overlay root (Design stage). */
+      overflow: hidden;
     }
     .news-pullup-scrim {
       position: absolute; inset: 0;
@@ -767,8 +874,8 @@
     .news-pullup-sheet {
       pointer-events: auto;
       position: absolute; left: 0; right: 0; bottom: 0;
-      height: calc(100dvh - var(--brand-offset));
-      max-height: calc(100dvh - var(--brand-offset));
+      height: calc(100% - var(--brand-offset));
+      max-height: calc(100% - var(--brand-offset));
       display: flex; flex-direction: column;
       box-sizing: border-box;
       background: #1a1810;
@@ -800,6 +907,12 @@
       user-select: none;
       -webkit-user-select: none;
       display: block;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Expanded: large thumb chrome so one tap / drag-down closes reliably on iPhone. */
+    .news-pullup.is-open .news-pullup-top {
+      min-height: 64px;
+      padding: 10px 12px 12px;
     }
     .news-pullup-title-row {
       display: grid;
@@ -808,16 +921,26 @@
       column-gap: 8px;
       width: 100%;
       min-height: 22px;
+      pointer-events: auto;
+      touch-action: none;
+    }
+    .news-pullup.is-open .news-pullup-title-row {
+      min-height: 56px;
     }
     .news-pullup-title-row .day-alert-h {
       min-width: 0;
       justify-self: start;
       font-size: 0.8125rem; line-height: 1.2;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      pointer-events: none;
+    }
+    .news-pullup.is-open .news-pullup-title-row .day-alert-h {
+      font-size: 0.875rem;
+      font-weight: 650;
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
-      /* Visual knob only — hit area is .news-pullup-top. */
+      /* Visual knob only — hit area is .news-pullup-top / title-row. */
       justify-self: center;
       height: 22px;
       min-height: 22px;
@@ -826,7 +949,15 @@
       margin: 0;
       padding: 0 10px;
       box-sizing: border-box;
-      pointer-events: auto;
+      pointer-events: none;
+    }
+    .news-pullup.is-open .news-pullup-grab {
+      height: 56px;
+      min-height: 56px;
+      min-width: 132px;
+    }
+    .news-pullup.is-open .news-pullup-knob {
+      width: 64px; height: 7px;
     }
     .news-pullup-knob {
       width: 52px; height: 6px; border-radius: 999px;
@@ -839,6 +970,7 @@
       text-align: right;
       font-size: 0.6875rem; line-height: 1.2; color: var(--dim);
       white-space: nowrap;
+      pointer-events: none;
     }
     .news-pullup-peek-block {
       flex: 0 0 auto;
@@ -4796,8 +4928,8 @@
           + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
           + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
           + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
-          + ' aria-label="News Feed — drag up to open, tap to close when open">'
-          + '<div class="news-pullup-title-row">'
+          + ' aria-label="News Feed — drag up to open, tap or drag down to minimize when open">'
+          + '<div class="news-pullup-title-row" data-news-pullup-title-row>'
           + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
           + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
           + '</div></div>'
@@ -5497,19 +5629,50 @@
      * flag sticky for the tab — syncUrl strips ?design=, and removing the flag on first boot
      * let a Design Mode reload run soft-delete sync and blank the News Feed.
      */
-    function isDesignLeagueHome() {
+    function syncDesignIphoneStage() {
+      if (!document.documentElement.classList.contains("design-iphone")) return;
       try {
-        if (sessionStorage.getItem("cuckle.design.league_home") === "1") return true;
+        var r = document.body.getBoundingClientRect();
+        var root = document.documentElement.style;
+        root.setProperty("--design-left", Math.round(r.left) + "px");
+        root.setProperty("--design-top", Math.round(r.top) + "px");
+        root.setProperty("--design-width", Math.round(r.width) + "px");
+        root.setProperty("--design-height", Math.round(r.height) + "px");
+      } catch (err) { /* ignore */ }
+    }
+
+    function armDesignIphoneStage() {
+      try {
+        document.documentElement.classList.add("design-iphone");
+        var m = document.querySelector('meta[name="viewport"]');
+        if (m) m.setAttribute("content", "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+      } catch (err) { /* ignore */ }
+      syncDesignIphoneStage();
+      if (window.__designIphoneArmed) return;
+      window.__designIphoneArmed = true;
+      window.addEventListener("resize", syncDesignIphoneStage);
+      window.addEventListener("scroll", syncDesignIphoneStage, true);
+      // After fonts/layout settle — keeps Design picker boxes on the chips.
+      setTimeout(syncDesignIphoneStage, 0);
+      setTimeout(syncDesignIphoneStage, 250);
+      setTimeout(syncDesignIphoneStage, 1000);
+    }
+
+    function isDesignLeagueHome() {
+      var on = false;
+      try {
+        if (sessionStorage.getItem("cuckle.design.league_home") === "1") on = true;
       } catch (err) { /* private mode */ }
       try {
         if ((new URLSearchParams(location.search).get("design") || "") === "league-home") {
           try { sessionStorage.setItem("cuckle.design.league_home", "1"); } catch (err2) { /* ignore */ }
-          return true;
+          on = true;
         }
       } catch (err) { /* ignore */ }
       // Seeded by design-league-home.html — never a real Supabase JWT.
-      if (authSession && authSession.access_token === "design-mode") return true;
-      return false;
+      if (authSession && authSession.access_token === "design-mode") on = true;
+      if (on) armDesignIphoneStage();
+      return on;
     }
 
     function authLoad() {
@@ -7420,6 +7583,15 @@
       const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
       const sheet = root.querySelector("[data-news-pullup-sheet]");
+      const topChrome = root.querySelector("[data-news-pullup-top]");
+      if (topChrome) {
+        topChrome.setAttribute(
+          "aria-label",
+          newsPullupOpen
+            ? "Minimize News Feed — tap or drag down"
+            : "News Feed — drag up to open, tap title to expand"
+        );
+      }
       if (panel) panel.hidden = !newsPullupOpen;
       if (peekBlock) peekBlock.hidden = newsPullupOpen;
       // Keep scrim in DOM (transparent) briefly after close so it can still catch hits while
@@ -7445,6 +7617,8 @@
       document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
       if (sheet) {
         sheet.style.transform = "";
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
         sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
       }
       if (newsPullupOpen && panel) panel.scrollTop = 0;
@@ -7469,6 +7643,8 @@
     /**
      * Wire the bottom News Feed pull-up: drag/flick open & close, tap top/scrim to close,
      * tap peek to open. Sheet expands up to just under the Chuckle Fantasy brand.
+     * When open, the whole title row (News Feed | grab | count) is the minimize control —
+     * tap or drag/slide down closes on iPhone.
      */
     function armNewsPullup() {
       // Preserve open/closed across re-renders (vote settle, bag warm, pick filter). Only tear
@@ -7484,7 +7660,6 @@
       const sheet = root.querySelector("[data-news-pullup-sheet]");
       const top = root.querySelector("[data-news-pullup-top]");
       const peek = root.querySelector("[data-news-pullup-peek]");
-      const peekBlock = root.querySelector("[data-news-pullup-peek-block]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
       if (!sheet) return;
 
@@ -7495,15 +7670,47 @@
       setNewsPullupOpen(wasOpen);
 
       let drag = null;
+      let lastMinimizeAt = 0;
+      // Swallow the leftover click that follows a pointer tap (desktop + iOS), without
+      // blocking a real second click to toggle back.
+      let suppressChromeClickUntil = 0;
       const peekH = () => {
         const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
         const n = parseFloat(raw);
         return Number.isFinite(n) ? n : 148;
       };
-      const maxTy = () => Math.max(0, sheet.offsetHeight - peekH());
+      // Full open height (parent minus brand). Do not use sheet.offsetHeight when collapsed —
+      // Design Mode sizes the resting sheet to peek only so outlines stay on-stage.
+      const openSheetH = () => {
+        const raw = getComputedStyle(root).getPropertyValue("--brand-offset").trim();
+        const brand = parseFloat(raw);
+        const b = Number.isFinite(brand) ? brand : 56;
+        return Math.max(0, root.clientHeight - b);
+      };
+      const maxTy = () => Math.max(0, openSheetH() - peekH());
+      const armSheetDragLayout = (ty) => {
+        const h = openSheetH();
+        sheet.style.height = h + "px";
+        sheet.style.maxHeight = h + "px";
+        sheet.style.transform = "translateY(" + ty + "px)";
+      };
+      const clearSheetDragLayout = () => {
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
+        sheet.style.transform = "";
+      };
+      // Drop transition for one frame so open/close never leaves a mid-translate ghost.
+      const snapSheet = (fn) => {
+        root.classList.add("is-snap");
+        clearSheetDragLayout();
+        if (fn) fn();
+        void sheet.offsetHeight;
+        root.classList.remove("is-snap");
+      };
 
       const onPointerDown = (e) => {
         if (e.button != null && e.button !== 0) return;
+        if (drag) return; // ignore nested/duplicate downs (peek inside peekBlock)
         if (e.target.closest("a.news-hero-link")) return;
         if (e.target.closest("[data-news-del]")) return;
         // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
@@ -7520,10 +7727,11 @@
           lastT: performance.now(),
           vel: 0,
           moved: false,
+          fromOpen: newsPullupOpen,
         };
         try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
         root.classList.add("is-dragging");
-        sheet.style.transform = "translateY(" + ty + "px)";
+        armSheetDragLayout(ty);
         e.preventDefault();
       };
 
@@ -7536,53 +7744,91 @@
         drag.vel = (e.clientY - drag.lastY) / dt;
         drag.lastY = e.clientY;
         drag.lastT = now;
-        if (Math.abs(dy) > 6) drag.moved = true;
+        // iPhone finger jitter is often a few px — keep taps feeling like taps.
+        if (Math.abs(dy) > 12) drag.moved = true;
         sheet.style.transform = "translateY(" + ty + "px)";
       };
 
       const endDrag = (e) => {
-        if (!drag || (e && e.pointerId !== drag.id)) return;
+        if (!drag || (e && e.pointerId != null && e.pointerId !== drag.id)) return;
         const rawTy = sheet.style.transform || "";
-        let ty = newsPullupOpen ? 0 : maxTy();
+        let ty = drag.fromOpen ? 0 : maxTy();
         if (rawTy.indexOf("translateY(") === 0) {
           const n = parseFloat(rawTy.slice(11));
           if (Number.isFinite(n)) ty = n;
         }
-        const limit = maxTy();
-        const flickOpen = drag.vel < -0.45;
-        const flickClose = drag.vel > 0.45;
+        const limit = Math.max(1, maxTy());
+        const dy = (e && e.clientY != null ? e.clientY : drag.lastY) - drag.startY;
+        const flickOpen = drag.vel < -0.35;
+        const flickClose = drag.vel > 0.35;
         const wasTap = !drag.moved;
+        const fromOpen = drag.fromOpen;
         const wasOpenBefore = newsPullupOpen;
         drag = null;
         root.classList.remove("is-dragging");
-        sheet.style.transform = "";
+
         if (wasTap) {
-          if (e && e.target && e.target.closest("a.news-hero-link")) return;
-          if (e && e.target && e.target.closest("[data-news-del]")) return;
-          if (newsPullupOpen) {
-            setNewsPullupOpen(false);
-            swallowNewsPullupClickThrough();
-            if (e) {
-              e.preventDefault();
-              e.stopPropagation();
+          snapSheet(() => {
+            if (e && e.target && e.target.closest("a.news-hero-link")) return;
+            if (e && e.target && e.target.closest("[data-news-del]")) return;
+            lastMinimizeAt = Date.now();
+            suppressChromeClickUntil = Date.now() + 80;
+            if (fromOpen) {
+              setNewsPullupOpen(false);
+              swallowNewsPullupClickThrough();
+              if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            } else {
+              setNewsPullupOpen(true);
             }
-          } else {
-            setNewsPullupOpen(true);
-          }
+          });
           return;
         }
-        if (flickOpen) setNewsPullupOpen(true);
-        else if (flickClose) setNewsPullupOpen(false);
-        else setNewsPullupOpen(ty < limit * 0.55);
-        // Drag/flick dismiss can also leave a click on Recent Trade under the sheet.
-        if (wasOpenBefore && !newsPullupOpen) swallowNewsPullupClickThrough();
+
+        // Phone-friendly thresholds: a short intentional swipe should commit.
+        // From collapsed: open on upward flick, upward drag ≥28px, or past ~25% open.
+        // From open: close on downward flick, downward drag ≥28px, or past ~25% closed.
+        let nextOpen;
+        if (fromOpen) {
+          nextOpen = !(flickClose || dy > 28 || ty > limit * 0.25);
+        } else {
+          nextOpen = !!(flickOpen || dy < -28 || ty < limit * 0.75);
+        }
+        snapSheet(() => setNewsPullupOpen(nextOpen));
+        if (wasOpenBefore && !newsPullupOpen) {
+          lastMinimizeAt = Date.now();
+          swallowNewsPullupClickThrough();
+        }
+      };
+
+      // Desktop Simple Browser often delivers click without a usable pointer gesture.
+      // Toggle from the title chrome / peek so mouse click expands as well as minimizes.
+      const onChromeClick = (e) => {
+        if (Date.now() < suppressChromeClickUntil) return;
+        if (e.target.closest("a.news-hero-link")) return;
+        if (e.target.closest("[data-news-del]")) return;
+        if (e.target.closest("[data-news-pullup-panel]")) return;
+        suppressChromeClickUntil = Date.now() + 80;
+        lastMinimizeAt = Date.now();
+        e.preventDefault();
+        e.stopPropagation();
+        const next = !newsPullupOpen;
+        snapSheet(() => {
+          setNewsPullupOpen(next);
+          if (!next) swallowNewsPullupClickThrough();
+        });
       };
 
       const onScrimClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        setNewsPullupOpen(false);
-        swallowNewsPullupClickThrough();
+        lastMinimizeAt = Date.now();
+        snapSheet(() => {
+          setNewsPullupOpen(false);
+          swallowNewsPullupClickThrough();
+        });
       };
 
       const onResize = () => applyBrand();
@@ -7590,16 +7836,34 @@
       const onPeekKey = (e) => {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
-        setNewsPullupOpen(!newsPullupOpen);
+        snapSheet(() => setNewsPullupOpen(!newsPullupOpen));
       };
 
-      const targets = [top, peek, peekBlock].filter(Boolean);
+      const onTopKey = (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        if (newsPullupOpen) {
+          lastMinimizeAt = Date.now();
+          snapSheet(() => {
+            setNewsPullupOpen(false);
+            swallowNewsPullupClickThrough();
+          });
+        } else {
+          snapSheet(() => setNewsPullupOpen(true));
+        }
+      };
+
+      // One surface only: top chrome + peek control. Do NOT also bind peekBlock —
+      // peek lives inside it and bubbling double-fired pointerdown on iPhone.
+      const targets = [top, peek].filter(Boolean);
       for (const el of targets) {
         el.addEventListener("pointerdown", onPointerDown);
         el.addEventListener("pointermove", onPointerMove);
         el.addEventListener("pointerup", endDrag);
         el.addEventListener("pointercancel", endDrag);
+        el.addEventListener("click", onChromeClick);
       }
+      if (top) top.addEventListener("keydown", onTopKey);
       if (peek) peek.addEventListener("keydown", onPeekKey);
       if (scrim) scrim.addEventListener("click", onScrimClick);
       window.addEventListener("resize", onResize);
@@ -7610,12 +7874,16 @@
           el.removeEventListener("pointermove", onPointerMove);
           el.removeEventListener("pointerup", endDrag);
           el.removeEventListener("pointercancel", endDrag);
+          el.removeEventListener("click", onChromeClick);
         }
+        if (top) top.removeEventListener("keydown", onTopKey);
         if (peek) peek.removeEventListener("keydown", onPeekKey);
         if (scrim) scrim.removeEventListener("click", onScrimClick);
         window.removeEventListener("resize", onResize);
-        root.classList.remove("is-dragging", "is-open");
+        root.classList.remove("is-dragging", "is-open", "is-snap");
         sheet.style.transform = "";
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
       };
     }
 
@@ -7827,8 +8095,8 @@
         + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
         + '<div class="news-pullup-top" data-news-pullup-top'
         + ' role="button" tabindex="0"'
-        + ' aria-label="News Feed — drag up to open, tap to close when open">'
-        + '<div class="news-pullup-title-row">'
+        + ' aria-label="News Feed — drag up to open, tap or drag down to minimize when open">'
+        + '<div class="news-pullup-title-row" data-news-pullup-title-row>'
         + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
         + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true">'
         + '<span class="news-pullup-knob"></span></div>'
@@ -9720,6 +9988,7 @@
       paintBottomNav();
       syncUrl();
       armNewsPullup();
+      if (typeof syncDesignIphoneStage === "function") syncDesignIphoneStage();
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */

@@ -1139,6 +1139,21 @@
       width: 56px; height: 56px; border-radius: 50%;
       background: #1c1c22; border: 1px solid var(--line);
       display: grid; place-items: center; color: var(--text); flex: 0 0 auto;
+      overflow: hidden;
+    }
+    button.lh-action .lh-ico.lh-ico-flair {
+      padding: 0; border-color: #3a3428;
+    }
+    button.lh-action .lh-ico img.lh-seat-flair {
+      display: block; width: 100%; height: 100%;
+      object-fit: cover; border-radius: 50%;
+    }
+    button.lh-action .lh-ico .lh-seat-glyph {
+      font-size: 1.5rem; line-height: 1;
+    }
+    button.lh-action .lh-ico .lh-seat-initials {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em;
+      color: var(--muted);
     }
     button.lh-action.on .lh-ico { border-color: #6b5a2e; }
     button.lh-action .lh-lab {
@@ -4545,7 +4560,7 @@
       return '<span class="home-chip slot" aria-hidden="true">—</span>';
     }
 
-    /** One circular quick-action cell (Trades / Teams). */
+    /** One circular quick-action cell (Teams / Champions / …). */
     function lhNavAction(nav, lab, path) {
       return '<button type="button" class="lh-action" data-lh-nav="' + esc(nav) + '"'
         + ' aria-label="' + esc(lab) + '">'
@@ -4555,15 +4570,47 @@
     }
 
     /**
-     * PSA-style quick actions: Trades, Teams, Champions, League Data Sets.
+     * Personal league-home chip: that manager's seat flair + "{team} stats".
+     * Opens their team home (marks / best-worst / partners). Falls back to My Trades
+     * when the session has no claimed seat yet.
+     */
+    function lhSeatStatsAction() {
+      const name = authSeatCanonName() || authSeatName();
+      if (!name) {
+        return lhNavAction("trades", "My Trades",
+          "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z");
+      }
+      const lab = name + " stats";
+      const f = SEAT_FLAIR[name];
+      let ico = "";
+      if (f && f.img) {
+        ico = '<span class="lh-ico lh-ico-flair" aria-hidden="true">'
+          + '<img class="lh-seat-flair" src="' + esc(f.img) + "?" + DATA_V
+          + '" width="56" height="56" alt="" decoding="async" /></span>';
+      } else if (f && f.glyph) {
+        ico = '<span class="lh-ico lh-ico-flair" aria-hidden="true">'
+          + '<span class="lh-seat-glyph">' + f.glyph + "</span></span>";
+      } else {
+        const initials = String(name).replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+        ico = '<span class="lh-ico" aria-hidden="true">'
+          + '<span class="lh-seat-initials">' + esc(initials) + "</span></span>";
+      }
+      // data-who → selectMe (team home). Same destination as tapping the seat name elsewhere.
+      return '<button type="button" class="lh-action" data-who="' + esc(name) + '"'
+        + ' aria-label="' + esc(lab) + '">'
+        + ico
+        + '<span class="lh-lab">' + esc(lab) + "</span></button>";
+    }
+
+    /**
+     * PSA-style quick actions: {team} stats, Teams, Champions, League Data Sets.
      * The Data Sets menu is emitted here rather than inside its trigger, so it is absolutely
      * positioned against this .ds-wrap and drops the full width of the row.
      */
     function homeChips() {
       return '<div class="lh-actions ds-wrap">'
         + '<div class="lh-action-row">'
-        + lhNavAction("trades", "My Trades",
-          "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z")
+        + lhSeatStatsAction()
         + lhNavAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
         + '<button type="button" class="lh-action" data-view="titles" aria-label="Champions Path">'

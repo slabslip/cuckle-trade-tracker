@@ -1484,31 +1484,40 @@ const html = `<!DOCTYPE html>
       padding: 0; margin: 0 0 16px; min-height: 0; height: auto;
     }
     div.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    /* Recent Trade chip + vote CTA below the card (never over bag totals / lean marks). */
+    /* Recent Trade chip: vote CTA lives in the lean mid (between vote flairs). */
     div.lh-latest-trade .lh-trade-chip-wrap {
       position: relative; width: 100%;
-      display: flex; flex-direction: column; align-items: stretch; gap: 14px;
+      display: flex; flex-direction: column; align-items: stretch; gap: 0;
     }
+    /* Compact vote chip — sits in .h2h-lean-mid between left/right flair columns. */
     button.lh-trade-vote-cta {
-      position: static; left: auto; bottom: auto;
-      transform: none; z-index: auto;
-      align-self: center;
-      margin: 2px 0 0; padding: 9px 18px;
-      font: inherit; font-size: 0.75rem; font-weight: 650; line-height: 1.2;
+      appearance: none;
+      display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+      position: relative; z-index: 2;
+      margin: 0; padding: 2px 7px; min-height: 22px; min-width: 0;
+      font: inherit; font-size: 0.5625rem; font-weight: 700; line-height: 1;
+      letter-spacing: 0.05em; text-transform: lowercase;
       color: #e0b44c; white-space: nowrap;
-      background: #1a1810;
+      background: #14120c;
       border: 1px solid rgba(224, 180, 76, 0.55);
       border-radius: 999px; cursor: pointer; touch-action: manipulation;
       box-shadow: none;
     }
+    button.lh-trade-vote-cta .lh-trade-vote-ico {
+      display: inline-flex; width: 10px; height: 10px; flex: 0 0 auto;
+    }
+    button.lh-trade-vote-cta .lh-trade-vote-ico svg { display: block; width: 10px; height: 10px; }
+    button.lh-trade-vote-cta .lh-trade-vote-lab { flex: 0 0 auto; }
     button.lh-trade-vote-cta:hover {
-      background: #241f14;
+      background: #1a1810;
       border-color: rgba(224, 180, 76, 0.72);
     }
     button.lh-trade-vote-cta:focus-visible {
       outline: 2px solid #e0b44c; outline-offset: 2px;
     }
-    div.lh-latest-trade.voted button.lh-trade-vote-cta { display: none; }
+    div.lh-latest-trade.voted button.lh-trade-vote-cta,
+    .h2h-chip.is-trade.voted button.lh-trade-vote-cta { display: none; }
+    .h2h-lean-mid .lh-trade-vote-cta { justify-self: center; }
     /* League trades feed: stacked Latest-trade-style H2H cards, newest first. */
     .trades-feed {
       display: flex; flex-direction: column; gap: 18px;
@@ -8463,7 +8472,22 @@ const html = `<!DOCTYPE html>
       };
     }
 
-    /** Under the chip: voter flairs under left | VS | right. */
+    /** Compact vote control for the lean mid — opens the vote sheet without leaving home. */
+    function tradeVoteOpenHtml(tx) {
+      if (!tx) return "";
+      if (readVotes(tx).choice) return "";
+      // Ballot glyph + "vote" label — small enough to sit between side flair columns.
+      return '<button type="button" class="lh-trade-vote-cta"'
+        + ' data-vote-open="' + esc(tx) + '"'
+        + ' aria-label="Vote on this trade">'
+        + '<span class="lh-trade-vote-ico" aria-hidden="true">'
+        + '<svg viewBox="0 0 24 24" focusable="false">'
+        + '<path fill="currentColor" d="M7 3h10a2 2 0 0 1 2 2v14l-7-3-7 3V5a2 2 0 0 1 2-2zm2 5v2h6V8H9zm0 4v2h4v-2H9z"/>'
+        + "</svg></span>"
+        + '<span class="lh-trade-vote-lab">vote</span></button>';
+    }
+
+    /** Under the chip: voter flairs under left | vote/Fair | right. */
     function latestTradeLeanFooterHtml(latest, lean) {
       const seats = voteSeats(latest);
       const canVote = seats.length === 2 && voteParties(latest) <= 2;
@@ -8515,11 +8539,13 @@ const html = `<!DOCTYPE html>
         }
       }
 
-      // Mid column: Fair ballots (flairs + count). Keeps the 3-col grid under each seat.
+      const mine = readVotes(latest.transaction_id);
+      const voteBtn = tradeVoteOpenHtml(latest.transaction_id);
+      // Mid column: compact vote control between side flairs; Fair tallies stack under it.
       const fairMarks = voteMarks(latest.transaction_id);
       const fairVoters = fairMarks[VOTE_FAIR] || [];
-      const fairN = (readVotes(latest.transaction_id).tally[VOTE_FAIR] || fairVoters.length || 0);
-      let fairMid = '<div class="h2h-lean-mid" aria-hidden="true"></div>';
+      const fairN = (mine.tally[VOTE_FAIR] || fairVoters.length || 0);
+      let fairBits = "";
       if (fairN > 0 || fairVoters.length) {
         let flairsHtml = "";
         if (fairVoters.length) {
@@ -8535,17 +8561,22 @@ const html = `<!DOCTYPE html>
         }
         const scoreHtml = fairN > 0 ? '<span class="h2h-lean-n">' + fairN + "</span>" : "";
         const label = fairN === 1 ? "1 Fair vote" : fairN + " Fair votes";
-        fairMid = '<div class="h2h-lean-mid"'
-          + (fairN > 0 ? ' aria-label="' + esc(label) + '"' : ' aria-hidden="true"')
-          + '>'
-          + '<div class="h2h-lean-marks is-fair">' + flairsHtml + scoreHtml + "</div>"
-          + '<span class="h2h-lean-fair-k">Fair</span>'
+        fairBits = '<div class="h2h-lean-marks is-fair"'
+          + (fairN > 0 ? ' aria-label="' + esc(label) + '"' : "")
+          + '>' + flairsHtml + scoreHtml + "</div>"
+          + '<span class="h2h-lean-fair-k">Fair</span>';
+      }
+      let mid = '<div class="h2h-lean-mid" aria-hidden="true"></div>';
+      if (voteBtn || fairBits) {
+        mid = '<div class="h2h-lean-mid">'
+          + voteBtn
+          + fairBits
           + "</div>";
       }
 
       return '<div class="h2h-trade-lean">'
         + sideMarksHtml(left, false)
-        + fairMid
+        + mid
         + sideMarksHtml(right, true)
         + "</div>";
     }
@@ -8748,6 +8779,7 @@ const html = `<!DOCTYPE html>
         + '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>'
         + '<div class="h2h-sum-gap" aria-hidden="true"></div>'
         + '<div class="lh-trade-sum is-empty" aria-hidden="true"></div>'
+        + latestTradeLeanFooterHtml(latest, null)
         + "</div>";
     }
 
@@ -9112,24 +9144,17 @@ const html = `<!DOCTYPE html>
           const chip = latestTradeBagsReady(latest.transaction_id)
             ? latestTradeCardHtml(latest)
             : latestTradeSkeletonHtml(latest);
-          // CTA opens the vote sheet on home (does not leave the dashboard). Chip still
-          // opens trade detail via data-board-open on the card.
-          const voteCta = voted ? "" : '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-vote-open="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Cast your vote">Who won this trade?</button>';
+          // Vote CTA sits in the chip lean mid (between flairs). Chip still opens via data-board-open.
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
+            + '<div class="lh-trade-chip-wrap">' + chip + "</div>"
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
         } catch (err) {
           // Bag/format bugs must not erase the rest of league home (News Feed).
           console.error(err);
-          const voteCta = '<button type="button" class="lh-trade-vote-cta"'
-            + ' data-vote-open="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Who won this trade? Cast your vote">Who won this trade?</button>';
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
@@ -9139,8 +9164,8 @@ const html = `<!DOCTYPE html>
             + '<div class="h2h-vs" aria-hidden="true">VS</div>'
             + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
             + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
+            + latestTradeLeanFooterHtml(latest, null)
             + "</div>"
-            + voteCta
             + "</div>"
             + "</div>";
         }
@@ -11569,21 +11594,22 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("recentTradeHeaderHtml()") || prog.includes("day-alert-h")) {
     throw new Error("leagueInProgress must not mount the Recent Trade header row");
   }
-  if (!prog.includes("lh-latest-trade")
-    || !prog.includes("data-board-open") || !prog.includes("data-vote-open=")) {
-    throw new Error("leagueInProgress must mount Recent Trade with vote sheet CTA (data-vote-open)");
+  if (!prog.includes("lh-latest-trade") || !prog.includes("data-board-open")
+    || !prog.includes("latestTradeLeanFooterHtml(") || prog.includes("Who won this trade?")) {
+    throw new Error("leagueInProgress must mount Recent Trade chip with lean-mid vote (no Who won CTA)");
   }
-  if (!prog.includes("lh-trade-vote-cta") || !prog.includes("Who won this trade?")
+  if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
+    || !inline.includes("data-vote-open=")
     || !prog.includes("caught up") || !inline.includes("function latestTradeAbsolute(")
     || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")) {
     throw new Error("league home Recent Trade must queue unvoted deals and confirm with tally popup");
   }
   if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")
     || !html.includes(".vote-confirm-tally")
-    || !html.includes("button.lh-trade-vote-cta {\n      position: static")
+    || !html.includes(".h2h-lean-mid .lh-trade-vote-cta")
     || !inline.includes("function swallowVoteModalClickThrough(")
     || !inline.includes("voteModalSwallowClicksUntil")) {
-    throw new Error("Recent Trade CTA must sit below the chip (not absolute) and confirm must swallow ghost clicks");
+    throw new Error("Recent Trade vote CTA must sit in lean mid between flairs; confirm must swallow ghost clicks");
   }
   if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
@@ -11649,8 +11675,9 @@ if (inline.includes('day-alert-h">Champions Path')) {
     if (foot.includes("Value leans ") || foot.includes("Who won?") || foot.includes("Value even")) {
       throw new Error("Latest trade lean footer must not show mid Value leans / Who won? copy");
     }
-    if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")) {
-      throw new Error("Lean footer must separate flairs from the vote scoreboard (h2h-lean-flairs / h2h-lean-n)");
+    if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")
+      || !foot.includes("tradeVoteOpenHtml(") || !foot.includes("h2h-lean-mid")) {
+      throw new Error("Lean footer must put vote CTA between flair columns (tradeVoteOpenHtml / h2h-lean-mid)");
     }
   }
   if (!html.includes(".h2h-lean-flairs") || !html.includes("inline-flex")

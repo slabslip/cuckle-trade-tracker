@@ -5576,7 +5576,7 @@
     let gateInviteSeatId = null;
     let gateInviteClaimed = false;
     let gateSuggestedUser = null;
-    let gateMode = "signup"; // signup | signin — get started first
+    let gateMode = "signin"; // signin | signup — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
 
@@ -5730,7 +5730,7 @@
       } catch (err) { /* ignore */ }
       authError = "";
       appScreen = "gate";
-      gateMode = "signup";
+      gateMode = "signin";
       paintSettingsBtn();
       paintLeagueSub();
       paintBottomNav();
@@ -6655,9 +6655,9 @@
       const el = document.getElementById("redeemCode");
       redeemCode = el ? String(el.value || "").trim() : redeemCode;
       if (!authSession) {
-        joinError = "Create an account or sign in first, then redeem your invite.";
+        joinError = "Sign in or create an account first, then redeem your invite.";
         appScreen = "gate";
-        gateMode = "signup";
+        gateMode = "signin";
         render();
         return;
       }
@@ -9759,7 +9759,7 @@
         + '<p class="caption" style="margin:12px 0 0">'
         + (gateMode === "signup"
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
+          : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
         + "</p></div>"
         + "</div>";
     }

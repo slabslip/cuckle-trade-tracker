@@ -5581,7 +5581,7 @@ const html = `<!DOCTYPE html>
     let gateInviteSeatId = null;
     let gateInviteClaimed = false;
     let gateSuggestedUser = null;
-    let gateMode = "signup"; // signup | signin — get started first
+    let gateMode = "signin"; // signin | signup — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
 
@@ -5735,7 +5735,7 @@ const html = `<!DOCTYPE html>
       } catch (err) { /* ignore */ }
       authError = "";
       appScreen = "gate";
-      gateMode = "signup";
+      gateMode = "signin";
       paintSettingsBtn();
       paintLeagueSub();
       paintBottomNav();
@@ -6660,9 +6660,9 @@ const html = `<!DOCTYPE html>
       const el = document.getElementById("redeemCode");
       redeemCode = el ? String(el.value || "").trim() : redeemCode;
       if (!authSession) {
-        joinError = "Create an account or sign in first, then redeem your invite.";
+        joinError = "Sign in or create an account first, then redeem your invite.";
         appScreen = "gate";
-        gateMode = "signup";
+        gateMode = "signin";
         render();
         return;
       }
@@ -9764,7 +9764,7 @@ const html = `<!DOCTYPE html>
         + '<p class="caption" style="margin:12px 0 0">'
         + (gateMode === "signup"
           ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-          : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
+          : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
         + "</p></div>"
         + "</div>";
     }
@@ -12736,6 +12736,11 @@ if (!inline.includes('replace(/\\s+/g, "")') || inline.includes('name.replace(/s
 }
 if (!inline.includes("data-gate-form") || !inline.includes("seat ticket")) {
   throw new Error("invite gate must be a real form and say the CF- code is a seat ticket, not the password");
+}
+if (!inline.includes('let gateMode = "signin"')
+  || !inline.includes("No account yet?")
+  || !inline.includes('data-gate-mode="signup">Create an account</button>')) {
+  throw new Error("cold landing must default to Sign in with a Create an account prompt");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");

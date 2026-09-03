@@ -167,6 +167,7 @@ const html = `<!DOCTYPE html>
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     button.go-settings[hidden] { display: none; }
+    button.go-home[hidden] { display: none; }
     /* Settings takes the former clock slot on the right; lens sits beside the back control. */
     /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
     .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
@@ -684,6 +685,18 @@ const html = `<!DOCTYPE html>
     /* App shell — multi-league home / join / account gate */
     .app-shell { max-width: 420px; margin: 24px auto 0; }
     .app-shell h2 { margin-top: 0; }
+    /* Landing gate: logo alone above the sign-in card (no wordmark). */
+    .gate-brand {
+      display: flex; justify-content: center; align-items: center;
+      margin: 8px 0 20px;
+    }
+    .gate-brand img {
+      display: block; width: 112px; height: 112px;
+      object-fit: contain;
+    }
+    @media (min-width: 420px) {
+      .gate-brand img { width: 128px; height: 128px; }
+    }
     .app-card {
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
       padding: 14px; margin: 0 0 12px;
@@ -2518,7 +2531,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "avatar20260903232731";
+    const DATA_V = "gate20260903235213";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5945,6 +5958,7 @@ const html = `<!DOCTYPE html>
       appScreen = "gate";
       gateMode = "signin";
       paintSettingsBtn();
+      paintBrandHome();
       paintLeagueSub();
       paintBottomNav();
     }
@@ -5966,6 +5980,13 @@ const html = `<!DOCTYPE html>
       const btn = document.getElementById("goSettings");
       if (!btn) return;
       btn.hidden = !authSession;
+    }
+
+    /** Top-left brand control: hide on the login gate so the centered gate logo is the only mark. */
+    function paintBrandHome() {
+      const btn = document.getElementById("goHome");
+      if (!btn) return;
+      btn.hidden = appScreen === "gate";
     }
 
     function bottomNavKey() {
@@ -6839,6 +6860,7 @@ const html = `<!DOCTYPE html>
         seat_name: null,
       });
       paintSettingsBtn();
+      paintBrandHome();
     }
 
     async function authSignIn(username, password) {
@@ -6873,6 +6895,7 @@ const html = `<!DOCTYPE html>
         seat_name: null,
       });
       paintSettingsBtn();
+      paintBrandHome();
     }
 
     async function loadMemberships() {
@@ -10273,8 +10296,12 @@ const html = `<!DOCTYPE html>
       const go = invited
         ? (gateMode === "signup" ? "Create account & join" : "Sign in & join")
         : (gateMode === "signup" ? "Create account" : "Sign in");
-      return '<div class="app-shell">'
-        + '<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>'
+      return '<div class="app-shell gate-shell">'
+        + '<div class="gate-brand">'
+        + '<img src="data/ui/gate-logo.png?' + DATA_V + '" width="128" height="128"'
+        + ' alt="Chuckle Fantasy" decoding="async" />'
+        + "</div>"
+        + '<h2 class="screen-h sr-only" tabindex="-1">' + esc(title) + "</h2>"
         + (invited
           ? ('<p class="caption">Seat invite <code style="user-select:all">'
             + esc(String(redeemCode).toUpperCase()) + "</code>"
@@ -10692,6 +10719,7 @@ const html = `<!DOCTYPE html>
           : appScreen === "profile" ? renderProfile()
           : renderAppHome();
         paintSettingsBtn();
+        paintBrandHome();
         if (appScreen === "profile") queueMicrotask(() => paintProfileCrop());
         const land = focusNext ? app.querySelector(focusNext) : null;
         focusNext = null;
@@ -10712,6 +10740,7 @@ const html = `<!DOCTYPE html>
         const hasBook = !!(league && members);
         if (!hasBook) {
           paintSettingsBtn();
+          paintBrandHome();
           paintLeagueSub();
           paintBottomNav();
           app.innerHTML = renderPendingLeague();
@@ -10719,6 +10748,7 @@ const html = `<!DOCTYPE html>
         }
       }
       paintSettingsBtn();
+      paintBrandHome();
       paintLeagueSub();
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
@@ -12129,6 +12159,7 @@ const html = `<!DOCTYPE html>
       loadInvitePreview().catch((err) => console.error(err));
     }
     paintSettingsBtn();
+    paintBrandHome();
     paintLeagueSub();
     paintBottomNav();
     document.getElementById("app").hidden = false;
@@ -13527,6 +13558,12 @@ if (!inline.includes('replace(/\\s+/g, "")') || inline.includes('name.replace(/s
 if (!inline.includes("data-gate-form") || !inline.includes("seat ticket")) {
   throw new Error("invite gate must be a real form and say the CF- code is a seat ticket, not the password");
 }
+
+if (!inline.includes("gate-brand") || !inline.includes("data/ui/gate-logo.png")
+  || inline.includes('<h2 class="screen-h" tabindex="-1">Chuckle Fantasy</h2>')) {
+  throw new Error("login gate must center gate-logo and not show Chuckle Fantasy as the visible heading");
+}
+
 if (!inline.includes('let gateMode = "signin"')
   || !inline.includes("No account yet?")
   || !inline.includes('data-gate-mode="signup">Create an account</button>')) {

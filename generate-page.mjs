@@ -2552,9 +2552,13 @@ const html = `<!DOCTYPE html>
     let voteToast = null;
     // Transaction id when a data-vote-open control opened the vote sheet overlay.
     let voteSheetTx = null;
+    // Framing seat (chip left) for the open vote sheet — must match the H2H card the CTA sat under.
+    let voteSheetSeat = null;
     // After casting from league home: confirmation + live tally until the manager dismisses.
     // Dismissing advances Recent Trade to the next unvoted deal.
     let voteConfirmTx = null;
+    // Framing seat for the confirm panel (same left/right as the Recent Trade chip just voted).
+    let voteConfirmSeat = null;
     // Swallow the click that follows opening/closing a vote modal (same ghost-click class as
     // news pull-up dismiss → otherwise the confirm scrim/X eats the vote tap immediately).
     let voteModalSwallowClicksUntil = 0;
@@ -6768,7 +6772,9 @@ const html = `<!DOCTYPE html>
       titleYear = null;
       voteToast = null;
       voteSheetTx = null;
+      voteSheetSeat = null;
       voteConfirmTx = null;
+      voteConfirmSeat = null;
       voteEditTx = null;
       dsOpen = false;
       lensOpen = false;
@@ -7129,7 +7135,10 @@ const html = `<!DOCTYPE html>
           voteBoxWrite(box);
         }
         // Failed home cast: drop the optimistic confirm so we do not show a phantom tally.
-        if (voteConfirmTx === transactionId) voteConfirmTx = null;
+        if (voteConfirmTx === transactionId) {
+          voteConfirmTx = null;
+          voteConfirmSeat = null;
+        }
         voteWriteError = voteWriteErrorMessage(err);
         voteToast = null;
         say(voteWriteError);
@@ -7372,12 +7381,21 @@ const html = `<!DOCTYPE html>
       votePush(transactionId, choice, seat, prev);
     }
 
+    /**
+     * Two parties for a trade, ordered to match the H2H chip: left = framing row's seat
+     * (r.user_id / r.name), right = counterparty. trade_boards.sides insertion order alone is
+     * NOT chip order — opening a deal via the other seat (tradeSeat / seat tab "me") flips
+     * name|other on the chip while sides order stays fixed; vote buttons must follow the chip.
+     */
     function voteSeats(r) {
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const seats = [];
       for (const s of sides) {
         if (s.transaction_id !== r.transaction_id) continue;
         if (!seats.some((x) => x.uid === s.user_id)) seats.push({ uid: s.user_id, name: s.name });
+      }
+      if (r && r.user_id && seats.length === 2 && seats[1].uid === r.user_id) {
+        seats.reverse();
       }
       return seats;
     }
@@ -7437,7 +7455,7 @@ const html = `<!DOCTYPE html>
     /** Modal overlay with the existing voteBlock side buttons and tallies. */
     function voteSheetHtml() {
       if (!voteSheetTx) return "";
-      const r = tradeSide(voteSheetTx, null);
+      const r = tradeSide(voteSheetTx, voteSheetSeat) || tradeSide(voteSheetTx, null);
       if (!r) return "";
       return '<div class="vote-sheet" role="presentation">'
         + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
@@ -7451,7 +7469,7 @@ const html = `<!DOCTYPE html>
     /** Post-cast confirm on league home: your pick + current league tally, then X to advance. */
     function voteConfirmHtml() {
       if (!voteConfirmTx) return "";
-      const r = tradeSide(voteConfirmTx, null);
+      const r = tradeSide(voteConfirmTx, voteConfirmSeat) || tradeSide(voteConfirmTx, null);
       if (!r) return "";
       const seats = voteSeats(r);
       const v = readVotes(voteConfirmTx);
@@ -7706,7 +7724,9 @@ const html = `<!DOCTYPE html>
         lensOpen = false;
         titleYear = null;
         voteSheetTx = null;
+        voteSheetSeat = null;
         voteConfirmTx = null;
+        voteConfirmSeat = null;
         voteEditTx = null;
         focusNext = null;
         render();
@@ -8473,12 +8493,14 @@ const html = `<!DOCTYPE html>
     }
 
     /** Compact vote control for the lean mid — opens the vote sheet without leaving home. */
-    function tradeVoteOpenHtml(tx) {
+    function tradeVoteOpenHtml(tx, leftUid) {
       if (!tx) return "";
       if (readVotes(tx).choice) return "";
       // Ballot glyph + "vote" label — small enough to sit between side flair columns.
+      // data-vote-open-seat carries the chip's left seat so the sheet matches name|other.
       return '<button type="button" class="lh-trade-vote-cta"'
         + ' data-vote-open="' + esc(tx) + '"'
+        + (leftUid ? ' data-vote-open-seat="' + esc(leftUid) + '"' : "")
         + ' aria-label="Vote on this trade">'
         + '<span class="lh-trade-vote-ico" aria-hidden="true">'
         + '<svg viewBox="0 0 24 24" focusable="false">'
@@ -8524,23 +8546,12 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-lean-marks">' + flairsHtml + scoreHtml + "</div></div>";
       };
 
-      const leftUid = seats[0] ? seats[0].uid : null;
-      const rightUid = seats[1] ? seats[1].uid : null;
-      // Align marks to the same left/right seats the chip paints (latest.name is left).
-      let left = leftUid;
-      let right = rightUid;
-      if (seats.length === 2 && latest.user_id) {
-        if (seats[0].uid === latest.user_id) {
-          left = seats[0].uid;
-          right = seats[1].uid;
-        } else if (seats[1].uid === latest.user_id) {
-          left = seats[1].uid;
-          right = seats[0].uid;
-        }
-      }
+      // voteSeats already puts framing seat (latest.user_id) on the left — same as the chip.
+      const left = seats[0] ? seats[0].uid : null;
+      const right = seats[1] ? seats[1].uid : null;
 
       const mine = readVotes(latest.transaction_id);
-      const voteBtn = tradeVoteOpenHtml(latest.transaction_id);
+      const voteBtn = tradeVoteOpenHtml(latest.transaction_id, latest.user_id);
       // Mid column: compact vote control between side flairs; Fair tallies stack under it.
       const fairMarks = voteMarks(latest.transaction_id);
       const fairVoters = fairMarks[VOTE_FAIR] || [];
@@ -8716,6 +8727,7 @@ const html = `<!DOCTYPE html>
           },
         ];
       }
+      // No bag: still name-left / other-right (voteSeats already matches framing user_id).
       const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
       const out = [];
       for (const s of seats) {
@@ -10216,7 +10228,9 @@ const html = `<!DOCTYPE html>
       titleYear = null;
       voteToast = null;
       voteSheetTx = null;
+      voteSheetSeat = null;
       voteConfirmTx = null;
+      voteConfirmSeat = null;
       voteEditTx = null;
       {
         const side = tradeSide(tx, uid) || tradeSide(tx, null);
@@ -10258,7 +10272,9 @@ const html = `<!DOCTYPE html>
       applyDefaultLens(null);
       voteToast = toast || null;
       voteSheetTx = null;
+      voteSheetSeat = null;
       voteConfirmTx = null;
+      voteConfirmSeat = null;
       voteEditTx = null;
       focusNext = ".screen-h";
       say("");
@@ -10488,7 +10504,9 @@ const html = `<!DOCTYPE html>
       lensOpen = false;
       voteToast = null;
       voteSheetTx = null;
+      voteSheetSeat = null;
       voteConfirmTx = null;
+      voteConfirmSeat = null;
       voteEditTx = null;
       focusNext = ".screen-h";
       render();
@@ -10506,7 +10524,9 @@ const html = `<!DOCTYPE html>
       if (e.key === "Escape" && (voteSheetTx || voteConfirmTx)) {
         e.preventDefault();
         voteSheetTx = null;
+        voteSheetSeat = null;
         voteConfirmTx = null;
+        voteConfirmSeat = null;
         voteEditTx = null;
         render();
         return;
@@ -11011,7 +11031,9 @@ const html = `<!DOCTYPE html>
         e.preventDefault();
         e.stopPropagation();
         voteConfirmTx = null;
+        voteConfirmSeat = null;
         voteSheetTx = voteOpenBtn.dataset.voteOpen || null;
+        voteSheetSeat = voteOpenBtn.dataset.voteOpenSeat || null;
         swallowVoteModalClickThrough();
         render();
         return;
@@ -11025,6 +11047,7 @@ const html = `<!DOCTYPE html>
         }
         // Dismiss confirm → Recent Trade advances to the next unvoted deal.
         voteConfirmTx = null;
+        voteConfirmSeat = null;
         voteEditTx = null;
         say("");
         swallowVoteModalClickThrough();
@@ -11039,6 +11062,7 @@ const html = `<!DOCTYPE html>
           return;
         }
         voteSheetTx = null;
+        voteSheetSeat = null;
         voteEditTx = null;
         render();
         return;
@@ -11086,7 +11110,13 @@ const html = `<!DOCTYPE html>
         // League home: confirm popup with live tally; X advances the Recent Trade queue.
         // Trade detail: toast and stay put. Clearing a vote stays put.
         if (next && authSeatId() && view === "home" && !me) {
+          // Capture framing before closing the sheet / opening confirm (chip left seat).
+          const sheetSeat = voteSheetSeat;
+          const latest = latestTradeSide();
+          voteConfirmSeat = sheetSeat
+            || ((latest && String(latest.transaction_id) === String(tx)) ? (latest.user_id || null) : null);
           voteSheetTx = null;
+          voteSheetSeat = null;
           voteConfirmTx = tx;
           voteToast = null;
           say("Vote recorded");
@@ -11096,13 +11126,18 @@ const html = `<!DOCTYPE html>
           if (isVoteFair(next)) {
             voteToast = { tx: tx, name: "", fair: true };
           } else {
-            const won = voteSeats({ transaction_id: tx }).find((s) => s.uid === next);
+            const frame = tradeSide(tx, tradeSeat) || tradeSide(tx, null) || { transaction_id: tx };
+            const won = voteSeats(frame).find((s) => s.uid === next);
             voteToast = { tx: tx, name: (won && won.name) || "", fair: false };
           }
           voteConfirmTx = null;
+          voteConfirmSeat = null;
         } else {
           voteToast = null;
-          if (!next) voteConfirmTx = null;
+          if (!next) {
+            voteConfirmTx = null;
+            voteConfirmSeat = null;
+          }
         }
         render();
         return;
@@ -11600,8 +11635,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
+    || !inline.includes("data-vote-open-seat=")
     || !prog.includes("caught up") || !inline.includes("function latestTradeAbsolute(")
-    || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")) {
+    || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")
+    || !inline.includes("voteSheetSeat") || !inline.includes("voteConfirmSeat")) {
     throw new Error("league home Recent Trade must queue unvoted deals and confirm with tally popup");
   }
   if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")
@@ -11678,6 +11715,9 @@ if (inline.includes('day-alert-h">Champions Path')) {
     if (!foot.includes("h2h-lean-flairs") || !foot.includes("h2h-lean-n")
       || !foot.includes("tradeVoteOpenHtml(") || !foot.includes("h2h-lean-mid")) {
       throw new Error("Lean footer must put vote CTA between flair columns (tradeVoteOpenHtml / h2h-lean-mid)");
+    }
+    if (!foot.includes("tradeVoteOpenHtml(latest.transaction_id, latest.user_id)")) {
+      throw new Error("Lean vote CTA must pass chip left seat into tradeVoteOpenHtml");
     }
   }
   if (!html.includes(".h2h-lean-flairs") || !html.includes("inline-flex")
@@ -12361,6 +12401,22 @@ for (const need of [
   if (!fn.includes("VOTE_FAIR") || !fn.includes('"Fair"')
     || !fn.includes("voteOptButtonHtml") || !fn.includes("voteTallyTriple")) {
     throw new Error("voteBlock must offer Fair between the two team buttons (VOTE_FAIR)");
+  }
+}
+{
+  // Vote option order must follow the H2H chip (framing r.user_id left), not sides[] alone.
+  const at = inline.indexOf("function voteSeats(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
+  if (!fn.includes("seats.reverse()") || !fn.includes("r.user_id")
+    || !fn.includes("seats[1].uid === r.user_id")) {
+    throw new Error("voteSeats must put framing r.user_id on the left so vote buttons match the chip");
+  }
+  if (!inline.includes("tradeSide(voteSheetTx, voteSheetSeat)")
+    || !inline.includes("tradeSide(voteConfirmTx, voteConfirmSeat)")
+    || !inline.includes("data-vote-open-seat=")
+    || !inline.includes("tradeVoteOpenHtml(latest.transaction_id, latest.user_id)")) {
+    throw new Error("vote sheet/confirm must reuse chip left seat (voteSheetSeat / data-vote-open-seat)");
   }
 }
 if (!inline.includes('const VOTE_FAIR = "__fair__"')

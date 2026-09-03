@@ -7742,7 +7742,11 @@ const html = `<!DOCTYPE html>
           newsPullupSettleTimer = null;
         }
       }
-      function finishSettle(open) {
+      function finishSettle(open, gen) {
+        // Consume this settle generation so transitionend + timeout cannot double-run,
+        // and so a newer drag/settle cannot be clobbered by a stale finisher.
+        if (gen !== settleGen) return;
+        settleGen += 1;
         clearSettleTimer();
         root.classList.remove("is-settling", "is-dragging");
         sheet.style.transition = "";
@@ -7755,6 +7759,7 @@ const html = `<!DOCTYPE html>
       /** Animate from the current translateY to fully open (0) or peek (maxTy). */
       function settleTo(open) {
         clearSettleTimer();
+        const gen = ++settleGen;
         newsPullupGestureLock = true;
         applyBrand();
         const from = readTy();
@@ -7771,7 +7776,7 @@ const html = `<!DOCTYPE html>
         if (reduceMotion || Math.abs(from - to) < 1) {
           sheet.style.transition = "none";
           sheet.style.transform = "translateY(" + to + "px)";
-          finishSettle(open);
+          finishSettle(open, gen);
           return;
         }
         root.classList.add("is-settling");
@@ -7785,12 +7790,12 @@ const html = `<!DOCTYPE html>
           if (ev && ev.target !== sheet) return;
           if (ev && ev.propertyName && ev.propertyName !== "transform") return;
           sheet.removeEventListener("transitionend", onEnd);
-          finishSettle(open);
+          finishSettle(open, gen);
         }
         sheet.addEventListener("transitionend", onEnd);
         newsPullupSettleTimer = setTimeout(function () {
           try { sheet.removeEventListener("transitionend", onEnd); } catch (e) {}
-          finishSettle(open);
+          finishSettle(open, gen);
         }, SETTLE_MS + 80);
       }
       function endDrag(e) {
@@ -7846,6 +7851,8 @@ const html = `<!DOCTYPE html>
         // Arm the click-through shield before the sheet moves — iOS click lands after collapse.
         if (newsPullupOpen) swallowNewsPullupClickThrough();
         clearSettleTimer();
+        // Invalidate any in-flight settleTo finisher (transitionend/timeout) before we drag.
+        settleGen += 1;
         root.classList.remove("is-settling");
         sheet.style.transition = "none";
         applyBrand();
@@ -7982,6 +7989,25 @@ const html = `<!DOCTYPE html>
       };
     }
 
+    function newsSourceBubble(it) {
+      if (it && (it.category === "tweet" || it.source === "x:submission")) return "X";
+      const cat = NEWS_CATS[it && it.category] || "News";
+      const label = String((it && it.source_label) || "").trim();
+      if (label === "From X" || label === "Shared from X") return "X";
+      if (label && label.charAt(0) !== "@") return label;
+      return cat === "From X" ? "X" : cat;
+    }
+
+    /** Map NFL position abbreviations to shared pos-* colour classes. */
+    const NEWS_POS_SLUG = {
+      QB: "qb", RB: "rb", WR: "wr", TE: "te", K: "k",
+      FB: "rb", HB: "rb", DST: "def", DEF: "def",
+      DL: "def", LB: "def", DB: "def", CB: "def", S: "def", DT: "def", DE: "def",
+    };
+    function newsPosSlug(pos) {
+      const p = String(pos || "").toUpperCase();
+      return NEWS_POS_SLUG[p] || "oth";
+    }
     function newsPlayerSpanHtml(name, pos, playerId) {
       const slug = newsPosSlug(pos);
       const tag = pos

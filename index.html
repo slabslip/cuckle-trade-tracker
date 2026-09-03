@@ -115,26 +115,12 @@
       padding-bottom: 8px !important;
       box-sizing: border-box !important;
     }
-    /* Open / dragging: full sheet under the brand. Collapsed: peek-tall only (no translate
-       past the stage — that made Design Mode outlines run off the phone). */
+    /* Open / dragging: full sheet under the brand. Always transform-based (same as
+       production) so Design Mode and phone share one gesture model. Overflow on the
+       root clips any off-stage paint. */
     html.design-iphone .news-pullup-sheet {
       height: calc(100% - var(--brand-offset));
       max-height: calc(100% - var(--brand-offset));
-    }
-    html.design-iphone .news-pullup.is-open .news-pullup-sheet {
-      transform: none !important;
-      height: calc(100% - var(--brand-offset)) !important;
-      max-height: calc(100% - var(--brand-offset)) !important;
-    }
-    /* Collapsed rest: peek-tall only — never a full-height sheet translateY'd off-stage. */
-    html.design-iphone .news-pullup:not(.is-open):not(.is-dragging) .news-pullup-sheet {
-      transform: none !important;
-      height: var(--news-pullup-peek) !important;
-      max-height: var(--news-pullup-peek) !important;
-      transition: none;
-    }
-    .news-pullup.is-snap .news-pullup-sheet {
-      transition: none !important;
     }
     html.design-iphone .vote-sheet-panel {
       max-height: min(85%, 560px);
@@ -883,14 +869,18 @@
       border-bottom: 0;
       border-radius: 14px 14px 0 0;
       transform: translateY(calc(100% - var(--news-pullup-peek)));
-      transition: transform 0.32s cubic-bezier(0.2, 0.85, 0.25, 1);
+      transition: transform 0.28s cubic-bezier(0.2, 0.85, 0.25, 1);
       will-change: transform;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .news-pullup.is-open .news-pullup-sheet { transform: translateY(0); }
     .news-pullup.is-dragging .news-pullup-sheet { transition: none; }
+    .news-pullup.is-settling .news-pullup-sheet {
+      transition: transform 0.28s cubic-bezier(0.2, 0.85, 0.25, 1);
+    }
     @media (prefers-reduced-motion: reduce) {
-      .news-pullup-sheet, .news-pullup-scrim { transition: none; }
+      .news-pullup-sheet, .news-pullup-scrim,
+      .news-pullup.is-settling .news-pullup-sheet { transition: none; }
     }
     .news-pullup-top {
       flex: 0 0 auto;
@@ -2443,6 +2433,9 @@
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
     let newsPullupOpen = false;
     let newsPullupCleanup = null;
+    let newsPullupGestureLock = false;
+    let newsPullupSettleTimer = 0;
+    let newsPullupArmedRoot = null;
     // After tap-to-close, the sheet collapses under the finger and the browser's follow-up
     // click lands on whatever is now behind it (Recent Trade → trade detail). Swallow that
     // click so closing News does not open the trade page.
@@ -7556,6 +7549,11 @@
     }
 
     function clearNewsPullup() {
+      if (newsPullupSettleTimer) {
+        clearTimeout(newsPullupSettleTimer);
+        newsPullupSettleTimer = null;
+      }
+      newsPullupGestureLock = false;
       if (newsPullupCleanup) {
         newsPullupCleanup();
         newsPullupCleanup = null;
@@ -7564,7 +7562,8 @@
       document.body.classList.remove("has-news-pullup", "has-news-pullup-open");
     }
 
-    function setNewsPullupOpen(open) {
+    function setNewsPullupOpen(open, opts) {
+      opts = opts || {};
       const root = document.getElementById("newsPullup");
       if (!root) return;
       const wasOpen = newsPullupOpen;
@@ -7577,6 +7576,7 @@
         // Expand → minimize must always leave the user on league home.
         if (view !== "home") snapHome = true;
       }
+      if (!opts.keepTransform) root.classList.remove("is-settling", "is-dragging");
       root.classList.toggle("is-open", newsPullupOpen);
       root.setAttribute("aria-expanded", newsPullupOpen ? "true" : "false");
       const panel = root.querySelector("[data-news-pullup-panel]");
@@ -7615,13 +7615,16 @@
         }
       }
       document.body.classList.toggle("has-news-pullup-open", newsPullupOpen);
-      if (sheet) {
+      if (sheet && !opts.keepTransform) {
         sheet.style.transform = "";
+        sheet.style.transition = "";
         sheet.style.height = "";
         sheet.style.maxHeight = "";
         sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
+      } else if (sheet) {
+        sheet.setAttribute("aria-modal", newsPullupOpen ? "true" : "false");
       }
-      if (newsPullupOpen && panel) panel.scrollTop = 0;
+      if (newsPullupOpen && panel && !opts.keepScroll) panel.scrollTop = 0;
       if (snapHome) {
         view = "home";
         openId = null;
@@ -7643,85 +7646,213 @@
     /**
      * Wire the bottom News Feed pull-up: drag/flick open & close, tap top/scrim to close,
      * tap peek to open. Sheet expands up to just under the Chuckle Fantasy brand.
-     * When open, the whole title row (News Feed | grab | count) is the minimize control —
-     * tap or drag/slide down closes on iPhone.
+     * Always transform-only (full-height sheet + translateY). Settle animates from the
+     * finger's release position — never snap-jump. Mid-gesture re-render keeps listeners.
      */
     function armNewsPullup() {
-      // Preserve open/closed across re-renders (vote settle, bag warm, pick filter). Only tear
-      // down prior listeners — clearNewsPullup() would force the sheet closed every paint.
+      const root = document.getElementById("newsPullup");
+      // Mid-gesture / mid-settle: keep existing pointer listeners on the *same* DOM node.
+      // Re-arming would tear down capture mid-swipe. If render() remounted the sheet, the
+      // old listeners are dead — drop the lock and re-wire onto the new root.
+      if (newsPullupGestureLock && root && newsPullupArmedRoot === root) return;
+      if (newsPullupGestureLock && root && newsPullupArmedRoot !== root) {
+        newsPullupGestureLock = false;
+        if (newsPullupSettleTimer) {
+          clearTimeout(newsPullupSettleTimer);
+          newsPullupSettleTimer = null;
+        }
+      }
       const wasOpen = newsPullupOpen;
       if (newsPullupCleanup) {
         newsPullupCleanup();
         newsPullupCleanup = null;
       }
-      const root = document.getElementById("newsPullup");
-      if (!root) return;
+      if (!root) {
+        newsPullupArmedRoot = null;
+        return;
+      }
       document.body.classList.add("has-news-pullup");
+      newsPullupArmedRoot = root;
       const sheet = root.querySelector("[data-news-pullup-sheet]");
       const top = root.querySelector("[data-news-pullup-top]");
       const peek = root.querySelector("[data-news-pullup-peek]");
       const scrim = root.querySelector("[data-news-pullup-scrim]");
-      if (!sheet) return;
+      if (!sheet || !top) return;
 
-      const applyBrand = () => {
+      const applyBrand = function () {
         root.style.setProperty("--brand-offset", newsPullupBrandOffset() + "px");
       };
       applyBrand();
       setNewsPullupOpen(wasOpen);
 
+      const PEAK_FALLBACK = 100;
+      const TAP_SLOP = 12;
+      const SHORT_SWIPE = 28;
+      const FLICK_V = 0.35;
+      const SETTLE_MS = 280;
       let drag = null;
-      let lastMinimizeAt = 0;
-      // Swallow the leftover click that follows a pointer tap (desktop + iOS), without
-      // blocking a real second click to toggle back.
       let suppressChromeClickUntil = 0;
-      const peekH = () => {
+      let settleGen = 0;
+      const cleanups = [];
+
+      function peekH() {
         const raw = getComputedStyle(root).getPropertyValue("--news-pullup-peek").trim();
         const n = parseFloat(raw);
-        return Number.isFinite(n) ? n : 148;
-      };
-      // Full open height (parent minus brand). Do not use sheet.offsetHeight when collapsed —
-      // Design Mode sizes the resting sheet to peek only so outlines stay on-stage.
-      const openSheetH = () => {
+        return Number.isFinite(n) && n > 0 ? n : PEAK_FALLBACK;
+      }
+      function openSheetH() {
         const raw = getComputedStyle(root).getPropertyValue("--brand-offset").trim();
         const brand = parseFloat(raw);
         const b = Number.isFinite(brand) ? brand : 56;
         return Math.max(0, root.clientHeight - b);
-      };
-      const maxTy = () => Math.max(0, openSheetH() - peekH());
-      const armSheetDragLayout = (ty) => {
-        const h = openSheetH();
-        sheet.style.height = h + "px";
-        sheet.style.maxHeight = h + "px";
-        sheet.style.transform = "translateY(" + ty + "px)";
-      };
-      const clearSheetDragLayout = () => {
+      }
+      /** Collapsed translateY must match CSS: calc(100% - peek) of the sheet. */
+      function maxTy() {
+        return Math.max(0, openSheetH() - peekH());
+      }
+      function clamp(n, a, b) {
+        return Math.max(a, Math.min(b, n));
+      }
+      function readTy() {
+        const inline = sheet.style.transform;
+        if (inline && inline.indexOf("translateY") !== -1) {
+          const m = inline.match(/translateY((-?[d.]+)px)/);
+          if (m) {
+            const n = parseFloat(m[1]);
+            if (Number.isFinite(n)) return n;
+          }
+        }
+        const t = getComputedStyle(sheet).transform;
+        if (!t || t === "none") return newsPullupOpen ? 0 : maxTy();
+        const nums = t.match(/matrix(?:3d)?(([^)]+))/);
+        if (!nums) return newsPullupOpen ? 0 : maxTy();
+        const parts = nums[1].split(",").map(function (x) { return parseFloat(x.trim()); });
+        if (parts.length === 6) return parts[5] || 0;
+        if (parts.length === 16) return parts[13] || 0;
+        return newsPullupOpen ? 0 : maxTy();
+      }
+      function clearSettleTimer() {
+        if (newsPullupSettleTimer) {
+          clearTimeout(newsPullupSettleTimer);
+          newsPullupSettleTimer = null;
+        }
+      }
+      function finishSettle(open, gen) {
+        if (gen !== settleGen) return;
+        clearSettleTimer();
+        root.classList.remove("is-settling", "is-dragging");
+        sheet.style.transition = "";
+        sheet.style.transform = "";
         sheet.style.height = "";
         sheet.style.maxHeight = "";
-        sheet.style.transform = "";
-      };
-      // Drop transition for one frame so open/close never leaves a mid-translate ghost.
-      const snapSheet = (fn) => {
-        root.classList.add("is-snap");
-        clearSheetDragLayout();
-        if (fn) fn();
+        newsPullupGestureLock = false;
+        setNewsPullupOpen(open);
+      }
+      /** Animate from the current translateY to fully open (0) or peek (maxTy). */
+      function settleTo(open) {
+        clearSettleTimer();
+        const gen = ++settleGen;
+        newsPullupGestureLock = true;
+        applyBrand();
+        const from = readTy();
+        const to = open ? 0 : maxTy();
+        // Opening: show the feed panel immediately so content is visible while rising.
+        if (open && !newsPullupOpen) {
+          setNewsPullupOpen(true, { keepTransform: true, keepScroll: true });
+          sheet.style.transform = "translateY(" + from + "px)";
+        }
+        // Closing while still marked open: keep is-open until the settle ends so the
+        // panel/scrim do not vanish mid-slide (that used to look like a snap).
+        const reduceMotion = window.matchMedia
+          && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion || Math.abs(from - to) < 1) {
+          sheet.style.transition = "none";
+          sheet.style.transform = "translateY(" + to + "px)";
+          finishSettle(open, gen);
+          return;
+        }
+        root.classList.add("is-settling");
+        root.classList.remove("is-dragging");
+        sheet.style.transition = "none";
+        sheet.style.transform = "translateY(" + from + "px)";
         void sheet.offsetHeight;
-        root.classList.remove("is-snap");
-      };
-
-      const onPointerDown = (e) => {
+        sheet.style.transition = "transform " + SETTLE_MS + "ms cubic-bezier(0.22, 1, 0.36, 1)";
+        sheet.style.transform = "translateY(" + to + "px)";
+        function onEnd(ev) {
+          if (ev && ev.target !== sheet) return;
+          if (ev && ev.propertyName && ev.propertyName !== "transform") return;
+          sheet.removeEventListener("transitionend", onEnd);
+          finishSettle(open, gen);
+        }
+        sheet.addEventListener("transitionend", onEnd);
+        newsPullupSettleTimer = setTimeout(function () {
+          try { sheet.removeEventListener("transitionend", onEnd); } catch (e) {}
+          finishSettle(open, gen);
+        }, SETTLE_MS + 80);
+      }
+      function endDrag(e) {
+        if (!drag || (e && e.pointerId != null && e.pointerId !== drag.id)) return;
+        const fromOpen = drag.fromOpen;
+        const dy = (e && e.clientY != null ? e.clientY : drag.lastY) - drag.startY;
+        const wasTap = !drag.moved;
+        const flickOpen = drag.vel < -FLICK_V;
+        const flickClose = drag.vel > FLICK_V;
+        const ty = readTy();
+        const limit = Math.max(1, maxTy());
+        const captureEl = drag.el;
+        const pid = drag.id;
+        drag = null;
+        root.classList.remove("is-dragging");
+        try {
+          if (captureEl && pid != null) captureEl.releasePointerCapture(pid);
+        } catch (err) {}
+        suppressChromeClickUntil = Date.now() + 450;
+        let nextOpen;
+        if (wasTap) {
+          if (e && e.target && e.target.closest("a.news-hero-link")) {
+            newsPullupGestureLock = false;
+            sheet.style.transition = "";
+            sheet.style.transform = "";
+            return;
+          }
+          if (e && e.target && e.target.closest("[data-news-del]")) {
+            newsPullupGestureLock = false;
+            sheet.style.transition = "";
+            sheet.style.transform = "";
+            return;
+          }
+          nextOpen = !fromOpen;
+        } else if (fromOpen) {
+          // From open: close on downward flick, short drag down, or past ~25% closed.
+          nextOpen = !(flickClose || dy > SHORT_SWIPE || ty > limit * 0.25);
+        } else {
+          // From collapsed: open on upward flick, short drag up, or past ~25% open.
+          nextOpen = !!(flickOpen || dy < -SHORT_SWIPE || ty < limit * 0.75);
+        }
+        if (fromOpen && !nextOpen) swallowNewsPullupClickThrough();
+        settleTo(nextOpen);
+      }
+      function onPointerDown(e) {
         if (e.button != null && e.button !== 0) return;
-        if (drag) return; // ignore nested/duplicate downs (peek inside peekBlock)
+        if (drag) return;
         if (e.target.closest("a.news-hero-link")) return;
         if (e.target.closest("[data-news-del]")) return;
-        // Expanded panel scrolls on its own — only the chrome starts a sheet drag.
+        if (e.target.closest("[data-news-cuff]")) return;
+        // Expanded panel scrolls on its own — only chrome/peek start a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
         // Arm the click-through shield before the sheet moves — iOS click lands after collapse.
         if (newsPullupOpen) swallowNewsPullupClickThrough();
+        clearSettleTimer();
+        root.classList.remove("is-settling");
+        sheet.style.transition = "none";
         applyBrand();
-        const ty = newsPullupOpen ? 0 : maxTy();
+        // Prefer live computed translate so interrupting a settle does not jump.
+        const ty = readTy();
         drag = {
           id: e.pointerId,
+          el: e.currentTarget,
           startY: e.clientY,
+          startX: e.clientX,
           originTy: ty,
           lastY: e.clientY,
           lastT: performance.now(),
@@ -7729,161 +7860,122 @@
           moved: false,
           fromOpen: newsPullupOpen,
         };
-        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+        newsPullupGestureLock = true;
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
         root.classList.add("is-dragging");
-        armSheetDragLayout(ty);
-        e.preventDefault();
-      };
-
-      const onPointerMove = (e) => {
+        sheet.style.transform = "translateY(" + ty + "px)";
+        // Touch: block page scroll under the sheet. Mouse: allow click fallback.
+        if (e.pointerType === "touch") e.preventDefault();
+      }
+      function onPointerMove(e) {
         if (!drag || e.pointerId !== drag.id) return;
         const now = performance.now();
         const dy = e.clientY - drag.startY;
-        const ty = Math.min(maxTy(), Math.max(0, drag.originTy + dy));
+        const dx = e.clientX - drag.startX;
         const dt = Math.max(1, now - drag.lastT);
         drag.vel = (e.clientY - drag.lastY) / dt;
         drag.lastY = e.clientY;
         drag.lastT = now;
         // iPhone finger jitter is often a few px — keep taps feeling like taps.
-        if (Math.abs(dy) > 12) drag.moved = true;
-        sheet.style.transform = "translateY(" + ty + "px)";
-      };
-
-      const endDrag = (e) => {
-        if (!drag || (e && e.pointerId != null && e.pointerId !== drag.id)) return;
-        const rawTy = sheet.style.transform || "";
-        let ty = drag.fromOpen ? 0 : maxTy();
-        if (rawTy.indexOf("translateY(") === 0) {
-          const n = parseFloat(rawTy.slice(11));
-          if (Number.isFinite(n)) ty = n;
-        }
-        const limit = Math.max(1, maxTy());
-        const dy = (e && e.clientY != null ? e.clientY : drag.lastY) - drag.startY;
-        const flickOpen = drag.vel < -0.35;
-        const flickClose = drag.vel > 0.35;
-        const wasTap = !drag.moved;
-        const fromOpen = drag.fromOpen;
-        const wasOpenBefore = newsPullupOpen;
-        drag = null;
-        root.classList.remove("is-dragging");
-
-        if (wasTap) {
-          snapSheet(() => {
-            if (e && e.target && e.target.closest("a.news-hero-link")) return;
-            if (e && e.target && e.target.closest("[data-news-del]")) return;
-            lastMinimizeAt = Date.now();
-            suppressChromeClickUntil = Date.now() + 80;
-            if (fromOpen) {
-              setNewsPullupOpen(false);
-              swallowNewsPullupClickThrough();
-              if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            } else {
-              setNewsPullupOpen(true);
-            }
-          });
+        if (Math.abs(dy) > TAP_SLOP || Math.abs(dx) > TAP_SLOP) drag.moved = true;
+        sheet.style.transform = "translateY(" + clamp(drag.originTy + dy, 0, maxTy()) + "px)";
+        if (e.pointerType === "touch") e.preventDefault();
+      }
+      function onChromeClick(e) {
+        if (Date.now() < suppressChromeClickUntil) {
+          e.preventDefault();
+          e.stopPropagation();
           return;
         }
-
-        // Phone-friendly thresholds: a short intentional swipe should commit.
-        // From collapsed: open on upward flick, upward drag ≥28px, or past ~25% open.
-        // From open: close on downward flick, downward drag ≥28px, or past ~25% closed.
-        let nextOpen;
-        if (fromOpen) {
-          nextOpen = !(flickClose || dy > 28 || ty > limit * 0.25);
-        } else {
-          nextOpen = !!(flickOpen || dy < -28 || ty < limit * 0.75);
-        }
-        snapSheet(() => setNewsPullupOpen(nextOpen));
-        if (wasOpenBefore && !newsPullupOpen) {
-          lastMinimizeAt = Date.now();
-          swallowNewsPullupClickThrough();
-        }
-      };
-
-      // Desktop Simple Browser often delivers click without a usable pointer gesture.
-      // Toggle from the title chrome / peek so mouse click expands as well as minimizes.
-      const onChromeClick = (e) => {
-        if (Date.now() < suppressChromeClickUntil) return;
         if (e.target.closest("a.news-hero-link")) return;
         if (e.target.closest("[data-news-del]")) return;
         if (e.target.closest("[data-news-pullup-panel]")) return;
-        suppressChromeClickUntil = Date.now() + 80;
-        lastMinimizeAt = Date.now();
+        suppressChromeClickUntil = Date.now() + 450;
         e.preventDefault();
         e.stopPropagation();
         const next = !newsPullupOpen;
-        snapSheet(() => {
-          setNewsPullupOpen(next);
-          if (!next) swallowNewsPullupClickThrough();
-        });
-      };
-
-      const onScrimClick = (e) => {
+        if (newsPullupOpen && !next) swallowNewsPullupClickThrough();
+        settleTo(next);
+      }
+      function onScrimPointer(e) {
+        if (e.button != null && e.button !== 0) return;
         e.preventDefault();
         e.stopPropagation();
-        lastMinimizeAt = Date.now();
-        snapSheet(() => {
-          setNewsPullupOpen(false);
-          swallowNewsPullupClickThrough();
-        });
-      };
-
-      const onResize = () => applyBrand();
-
-      const onPeekKey = (e) => {
+        swallowNewsPullupClickThrough();
+        settleTo(false);
+      }
+      function onPeekKey(e) {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
-        snapSheet(() => setNewsPullupOpen(!newsPullupOpen));
-      };
-
-      const onTopKey = (e) => {
+        settleTo(!newsPullupOpen);
+      }
+      function onTopKey(e) {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
         if (newsPullupOpen) {
-          lastMinimizeAt = Date.now();
-          snapSheet(() => {
-            setNewsPullupOpen(false);
-            swallowNewsPullupClickThrough();
-          });
+          swallowNewsPullupClickThrough();
+          settleTo(false);
         } else {
-          snapSheet(() => setNewsPullupOpen(true));
+          settleTo(true);
         }
-      };
+      }
+      function onKey(e) {
+        if (e.key === "Escape" && newsPullupOpen) {
+          e.preventDefault();
+          swallowNewsPullupClickThrough();
+          settleTo(false);
+        }
+      }
+      function onResize() {
+        applyBrand();
+      }
 
       // One surface only: top chrome + peek control. Do NOT also bind peekBlock —
       // peek lives inside it and bubbling double-fired pointerdown on iPhone.
+      // Do NOT bind the whole sheet — that hijacks panel scroll when open.
       const targets = [top, peek].filter(Boolean);
-      for (const el of targets) {
-        el.addEventListener("pointerdown", onPointerDown);
-        el.addEventListener("pointermove", onPointerMove);
-        el.addEventListener("pointerup", endDrag);
-        el.addEventListener("pointercancel", endDrag);
-        el.addEventListener("click", onChromeClick);
+      const ptrOpts = { passive: false };
+      for (let i = 0; i < targets.length; i++) {
+        (function (el) {
+          el.addEventListener("pointerdown", onPointerDown, ptrOpts);
+          el.addEventListener("pointermove", onPointerMove, ptrOpts);
+          el.addEventListener("pointerup", endDrag);
+          el.addEventListener("pointercancel", endDrag);
+          el.addEventListener("click", onChromeClick);
+          cleanups.push(function () {
+            el.removeEventListener("pointerdown", onPointerDown, ptrOpts);
+            el.removeEventListener("pointermove", onPointerMove, ptrOpts);
+            el.removeEventListener("pointerup", endDrag);
+            el.removeEventListener("pointercancel", endDrag);
+            el.removeEventListener("click", onChromeClick);
+          });
+        })(targets[i]);
       }
-      if (top) top.addEventListener("keydown", onTopKey);
-      if (peek) peek.addEventListener("keydown", onPeekKey);
-      if (scrim) scrim.addEventListener("click", onScrimClick);
+      top.addEventListener("keydown", onTopKey);
+      cleanups.push(function () { top.removeEventListener("keydown", onTopKey); });
+      if (peek) {
+        peek.addEventListener("keydown", onPeekKey);
+        cleanups.push(function () { peek.removeEventListener("keydown", onPeekKey); });
+      }
+      if (scrim) {
+        scrim.addEventListener("pointerdown", onScrimPointer);
+        cleanups.push(function () { scrim.removeEventListener("pointerdown", onScrimPointer); });
+      }
+      document.addEventListener("keydown", onKey);
+      cleanups.push(function () { document.removeEventListener("keydown", onKey); });
       window.addEventListener("resize", onResize);
+      cleanups.push(function () { window.removeEventListener("resize", onResize); });
 
-      newsPullupCleanup = () => {
-        for (const el of targets) {
-          el.removeEventListener("pointerdown", onPointerDown);
-          el.removeEventListener("pointermove", onPointerMove);
-          el.removeEventListener("pointerup", endDrag);
-          el.removeEventListener("pointercancel", endDrag);
-          el.removeEventListener("click", onChromeClick);
-        }
-        if (top) top.removeEventListener("keydown", onTopKey);
-        if (peek) peek.removeEventListener("keydown", onPeekKey);
-        if (scrim) scrim.removeEventListener("click", onScrimClick);
-        window.removeEventListener("resize", onResize);
-        root.classList.remove("is-dragging", "is-open", "is-snap");
+      newsPullupCleanup = function () {
+        clearSettleTimer();
+        cleanups.forEach(function (fn) { try { fn(); } catch (e) {} });
+        root.classList.remove("is-dragging", "is-settling");
+        sheet.style.transition = "";
         sheet.style.transform = "";
         sheet.style.height = "";
         sheet.style.maxHeight = "";
+        newsPullupGestureLock = false;
+        drag = null;
       };
     }
 

@@ -4571,17 +4571,19 @@
 
     /**
      * Personal league-home chip: that manager's seat flair + "{team} stats".
-     * Opens their team home (marks / best-worst / partners). Falls back to My Trades
-     * when the session has no claimed seat yet.
+     * Always opens their team home (view=home). Uses data-lh-nav=mystats + seat id so every
+     * claimed seat resolves even when members.json is still loading or team_name was renamed.
      */
     function lhSeatStatsAction() {
+      const seatId = authSeatId();
       const name = authSeatCanonName() || authSeatName();
-      if (!name) {
+      if (!seatId) {
+        // No claimed seat yet — league trades list is the only useful destination.
         return lhNavAction("trades", "My Trades",
           "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z");
       }
-      const lab = name + " stats";
-      const f = SEAT_FLAIR[name];
+      const lab = (name || "Team") + " stats";
+      const f = name ? SEAT_FLAIR[name] : null;
       let ico = "";
       if (f && f.img) {
         ico = '<span class="lh-ico lh-ico-flair" aria-hidden="true">'
@@ -4591,15 +4593,56 @@
         ico = '<span class="lh-ico lh-ico-flair" aria-hidden="true">'
           + '<span class="lh-seat-glyph">' + f.glyph + "</span></span>";
       } else {
-        const initials = String(name).replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+        const initials = String(name || "TM").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "TM";
         ico = '<span class="lh-ico" aria-hidden="true">'
           + '<span class="lh-seat-initials">' + esc(initials) + "</span></span>";
       }
-      // data-who → selectMe (team home). Same destination as tapping the seat name elsewhere.
-      return '<button type="button" class="lh-action" data-who="' + esc(name) + '"'
+      return '<button type="button" class="lh-action" data-lh-nav="mystats"'
+        + ' data-seat-stats="' + esc(seatId) + '"'
         + ' aria-label="' + esc(lab) + '">'
         + ico
         + '<span class="lh-lab">' + esc(lab) + "</span></button>";
+    }
+
+    /**
+     * Open the signed-in manager's team home (stats). Seat id from auth — not the trades tab.
+     */
+    function openMyTeamHome(seatIdHint) {
+      if (appScreen !== "dash") return;
+      // Leaving league home for team stats — collapse News Feed so the destination paints clean.
+      try {
+        if (typeof setNewsPullupOpen === "function" && newsPullupOpen) setNewsPullupOpen(false);
+      } catch (err) { /* ignore */ }
+      const seatId = seatIdHint || authSeatId();
+      if (!seatId) {
+        say("Claim a seat to open your team stats.");
+        return;
+      }
+      dsOpen = false;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      tapeFilterOpen = false;
+      openPick = null;
+      openDraft = null;
+      partnerName = null;
+      markOpen = null;
+      voteToast = null;
+      openId = null;
+      tradeSeat = null;
+      titleYear = null;
+      // Force team home — never inherit a sticky trades/partners tab from a prior visit.
+      view = "home";
+      focusNext = ".screen-h";
+      const open = () => selectMe(seatId, false);
+      if (members && members.length) open();
+      else {
+        loadMembers().then(open).catch((err) => {
+          console.error(err);
+          say("Could not load that team. Check your connection and try again.");
+          render();
+        });
+      }
     }
 
     /**
@@ -5854,7 +5897,7 @@
     }
 
     function goBottomNav(which) {
-      if (newsPullupLocksHome()) return;
+      if (which !== "mystats" && newsPullupLocksHome()) return;
       if (appScreen !== "dash") return;
       dsOpen = false;
       lensOpen = false;
@@ -5865,6 +5908,10 @@
       partnerName = null;
       markOpen = null;
       voteToast = null;
+      if (which === "mystats") {
+        openMyTeamHome();
+        return;
+      }
       if (which === "account") {
         me = null;
         data = null;

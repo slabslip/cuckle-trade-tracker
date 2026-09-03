@@ -519,7 +519,7 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-weight: 650; }
     .day-alert-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.8125rem; margin-top: 2px; }
     a.champ-alert .day-alert-h { line-height: 1.3; }
-    /* News Feed hero header row: title + Pause. Recent Trade header carries search all trades. */
+    /* News Feed hero header row: title + Pause. */
     .day-alert-top { display: flex; align-items: flex-start; gap: 12px; }
     /* A flex item's automatic minimum is min-content, so the heading would widen the card
        past the viewport rather than give Pause room. Same guard as the card itself. */
@@ -1477,24 +1477,13 @@ const html = `<!DOCTYPE html>
        A div (not button) so seat-link names/flair can nest without illegal nested buttons. */
     div.champ-alert.lh-progress.lh-latest-trade {
       display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
-      gap: 10px; width: 100%; box-sizing: border-box;
+      gap: 0; width: 100%; box-sizing: border-box;
       font: inherit; color: inherit; text-align: left;
       cursor: pointer; touch-action: manipulation;
       background: transparent; border: 0; border-radius: 0;
       padding: 0; margin: 0 0 16px; min-height: 0; height: auto;
     }
     div.lh-latest-trade:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    div.lh-latest-trade .day-alert-h {
-      font-weight: 650; color: var(--text); line-height: 1.3; margin: 0;
-    }
-    button.lh-trade-all-btn {
-      flex: 0 0 auto; appearance: none; font: inherit;
-      font-size: 0.8125rem; font-weight: 500; line-height: 1.2;
-      color: var(--muted); background: none; border: 0; padding: 0;
-      cursor: pointer; text-decoration: underline; white-space: nowrap;
-      min-height: 44px; margin: -8px 0;
-    }
-    button.lh-trade-all-btn:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Recent Trade chip + vote CTA below the card (never over bag totals / lean marks). */
     div.lh-latest-trade .lh-trade-chip-wrap {
       position: relative; width: 100%;
@@ -2117,7 +2106,6 @@ const html = `<!DOCTYPE html>
     .chip-lens-bar {
       display: flex; justify-content: flex-end; margin: 0 0 8px;
     }
-    .lh-latest-trade .day-alert-h,
     .ds-h-row {
       display: flex; align-items: center; gap: 8px; justify-content: space-between;
     }
@@ -9114,14 +9102,6 @@ const html = `<!DOCTYPE html>
      * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
      * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
-    function recentTradeHeaderHtml() {
-      return '<div class="day-alert-h">'
-        + '<span>Recent Trade</span>'
-        + '<button type="button" class="lh-trade-all-btn" data-trades-list="1"'
-        + ' aria-label="Search all trades">search all trades</button>'
-        + "</div>";
-    }
-
     function leagueInProgress() {
       ensureLatestTradeBags();
       const latest = latestTradeSide();
@@ -9141,7 +9121,6 @@ const html = `<!DOCTYPE html>
             + (voted ? " voted" : "") + '"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + recentTradeHeaderHtml()
             + '<div class="lh-trade-chip-wrap">' + chip + voteCta + "</div>"
             + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
             + "</div>";
@@ -9154,7 +9133,6 @@ const html = `<!DOCTYPE html>
           tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
             + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
             + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + recentTradeHeaderHtml()
             + '<div class="lh-trade-chip-wrap">'
             + '<div class="h2h-chip is-trade" role="group">'
             + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
@@ -9168,8 +9146,7 @@ const html = `<!DOCTYPE html>
         }
       } else if (authSeatId() && authSession && latestTradeAbsolute()) {
         tradeBox = '<div class="champ-alert lh-progress lh-latest-trade is-caught-up">'
-          + recentTradeHeaderHtml()
-          + '<p class="caption" style="margin:8px 0 0">You’re caught up — every recent two-team trade has your vote. '
+          + '<p class="caption" style="margin:0">You’re caught up — every recent two-team trade has your vote. '
           + "New deals show up here first.</p>"
           + "</div>";
       }
@@ -10311,7 +10288,7 @@ const html = `<!DOCTYPE html>
       }
       if (now < newsPullupSwallowClicksUntil || newsPullupOpen) {
         // Let the News Feed chrome finish its own close gesture; block everything else
-        // (Recent Trade, nav, search all trades, etc.).
+        // (Recent Trade card, nav, chips, etc.).
         try {
           if (e.target && e.target.closest && e.target.closest("#newsPullup")) return;
         } catch (_) {}
@@ -11569,14 +11546,18 @@ if (!inline.includes('score1(n).replace(/\\.0$/, "")')) {
   throw new Error("scoreShort lost its trailing-zero strip -- the card would read 190.0, not 190");
 }
 // League home's progress card is Latest trade (opens via data-board-open), not Champions Path.
-for (const need of ["function recentTradeHeaderHtml(", "Recent Trade", "data-trades-list=\"1\"",
-  "search all trades", "function latestTradeSide(", "function latestTradeAbsolute(",
+for (const need of ["Recent Trade", "function latestTradeSide(", "function latestTradeAbsolute(",
   "function ensureWeekMatchups(",
   "function ensureLatestTradeBags(", "function latestTradeCardHtml(", "function h2hMatchCardHtml(",
   "function h2hMetaLine(", "function h2hSeatTitleHtml(", "h2h-chip", "h2h-av-wrap", "h2h-medal",
   "api.sleeper.app/v1", "function matchupStripHtml(", "Championship week", "winners_bracket",
   'label += " · Championship week"', "tryWeek > champWeek", "previous_league_id", "aRank", "bRank"]) {
   if (!inline.includes(need)) throw new Error(`league home in-progress section lost ${need}`);
+}
+if (inline.includes("function recentTradeHeaderHtml(")
+  || inline.includes(">search all trades</button>")
+  || inline.includes("class=\"lh-trade-all-btn\"")) {
+  throw new Error("league home must not mount the Recent Trade header row above the chip");
 }
 if (inline.includes('day-alert-h">Champions Path')) {
   throw new Error("league home must not mount a Champions Path progress card -- Latest trade replaced it");
@@ -11585,7 +11566,10 @@ if (inline.includes('day-alert-h">Champions Path')) {
   const at = inline.indexOf("function leagueInProgress(");
   const stop = inline.indexOf("\n    function ", at + 10);
   const prog = inline.slice(at, stop < 0 ? at + 1200 : stop);
-  if (!prog.includes("recentTradeHeaderHtml()") || !prog.includes("lh-latest-trade")
+  if (prog.includes("recentTradeHeaderHtml()") || prog.includes("day-alert-h")) {
+    throw new Error("leagueInProgress must not mount the Recent Trade header row");
+  }
+  if (!prog.includes("lh-latest-trade")
     || !prog.includes("data-board-open") || !prog.includes("data-vote-open=")) {
     throw new Error("leagueInProgress must mount Recent Trade with vote sheet CTA (data-vote-open)");
   }

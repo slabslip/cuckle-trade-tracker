@@ -7738,15 +7738,23 @@
         }
       }
       function finishSettle(open, gen) {
+        // Consume this settle generation so transitionend + timeout cannot double-run,
+        // and so a newer drag/settle cannot be clobbered by a stale finisher.
         if (gen !== settleGen) return;
+        settleGen += 1;
         clearSettleTimer();
         root.classList.remove("is-settling", "is-dragging");
-        sheet.style.transition = "";
+        // Freeze motion, sync is-open FIRST, then drop the inline translate.
+        // Clearing transform while still .is-open made close settle flash to 0 then
+        // jump to peek — the main iPhone “snap / jump” glitch on minimize.
+        sheet.style.transition = "none";
+        newsPullupGestureLock = false;
+        setNewsPullupOpen(open, { keepTransform: true });
         sheet.style.transform = "";
         sheet.style.height = "";
         sheet.style.maxHeight = "";
-        newsPullupGestureLock = false;
-        setNewsPullupOpen(open);
+        void sheet.offsetHeight;
+        sheet.style.transition = "";
       }
       /** Animate from the current translateY to fully open (0) or peek (maxTy). */
       function settleTo(open) {
@@ -7843,6 +7851,8 @@
         // Arm the click-through shield before the sheet moves — iOS click lands after collapse.
         if (newsPullupOpen) swallowNewsPullupClickThrough();
         clearSettleTimer();
+        // Invalidate any in-flight settleTo finisher (transitionend/timeout) before we drag.
+        settleGen += 1;
         root.classList.remove("is-settling");
         sheet.style.transition = "none";
         applyBrand();

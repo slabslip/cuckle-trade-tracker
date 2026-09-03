@@ -182,6 +182,7 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 6. [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) — league-scoped vote uniqueness
 7. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
 8. [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) — refuse seat-switch overwrite on redeem
+9. [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql) — `seat_avatars` for Settings → Profile photo crops
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
@@ -257,6 +258,7 @@ PWA manifest + service worker. Live dogfood remains the checkboxes above.
 | [`db/wave2b-vote-unique.sql`](../db/wave2b-vote-unique.sql) | Unique `(league, tx, voter)` |
 | [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) | Unclaimed `code_plain` for invite console |
 | [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) | One seat per account per league on redeem |
+| [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql) | Custom seat avatar crops (Profile) |
 | [`build.mjs`](../build.mjs) / [`lib.mjs`](../lib.mjs) | Scoped pipeline |
 | [`mark-league-ready.mjs`](../mark-league-ready.mjs) | Status flip |
 | [`manifest.webmanifest`](../manifest.webmanifest) / [`sw.js`](../sw.js) | PWA install shell |

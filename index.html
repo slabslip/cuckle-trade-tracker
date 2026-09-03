@@ -223,6 +223,9 @@
       display: inline-block; width: 1.15em; height: 1.15em;
       vertical-align: -0.2em; object-fit: contain; flex: 0 0 auto;
     }
+    img.seat-flair-custom {
+      object-fit: cover; border-radius: 50%;
+    }
     /* Team name + flair → that team's home. Inline so it nests inside tape / H2H chrome. */
     .seat-link {
       appearance: none; font: inherit; color: inherit; text-decoration: none;
@@ -693,6 +696,37 @@
     }
     .app-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
     .app-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; flex: 1 1 100%; }
+    /* Settings → Profile: square crop → circular preview used as seat flair app-wide. */
+    .profile-av-row {
+      display: flex; align-items: center; gap: 14px; margin: 8px 0 12px;
+    }
+    .profile-av-preview {
+      width: 72px; height: 72px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+      background: var(--bg); border: 1px solid var(--line);
+      display: grid; place-items: center;
+    }
+    .profile-av-preview img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .profile-av-preview .profile-av-glyph {
+      font-size: 2rem; line-height: 1;
+    }
+    .profile-crop {
+      position: relative; width: 100%; max-width: 280px; aspect-ratio: 1;
+      margin: 10px auto; border-radius: 12px; overflow: hidden;
+      background: #111; border: 1px solid var(--line); touch-action: none;
+      cursor: grab; user-select: none;
+    }
+    .profile-crop:active { cursor: grabbing; }
+    .profile-crop canvas { width: 100%; height: 100%; display: block; }
+    .profile-crop-hint {
+      font-size: 0.75rem; color: var(--dim); text-align: center; margin: 0 0 8px;
+    }
+    .profile-zoom {
+      display: grid; gap: 4px; margin: 0 0 10px;
+      font-size: 0.8125rem; color: var(--dim);
+    }
+    .profile-zoom input[type="range"] { width: 100%; }
     .league-row {
       display: flex; align-items: center; gap: 10px; width: 100%;
       appearance: none; font: inherit; color: inherit; text-align: left;
@@ -1922,7 +1956,7 @@
     .h2h-lean-marks img.seat-flair,
     .h2h-lean-marks img.h2h-lean-flair {
       width: 14px; height: 14px; vertical-align: -2px;
-      border-radius: 2px;
+      border-radius: 50%; object-fit: cover;
     }
     .h2h-lean-glyph { font-size: 0.75rem; line-height: 1; }
     .h2h-lean-n {
@@ -2333,6 +2367,48 @@
       ChiefGumby: { img: "data/ui/flair-chiefgumby.png" },
       KingHenryXXVI: { img: "data/ui/flair-kinghenryxxvi.png" },
     });
+    /**
+     * Custom avatars from Settings → Profile. Keyed by Sleeper seat uid and by canonical
+     * members.json name. Defaults stay in SEAT_FLAIR until a seat uploads a crop.
+     */
+    const AVATAR_STORE_KEY = "cuckle.seat_avatars.v1";
+    let seatAvatarByUid = Object.create(null);
+    let seatAvatarByName = Object.create(null);
+    function safeAvatarData(s) {
+      const t = String(s == null ? "" : s);
+      if (t.length < 64 || t.length > 120000) return null;
+      // Built with RegExp() so the image MIME slash cannot terminate a /.../ literal in the page script.
+      return new RegExp("^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$").test(t) ? t : null;
+    }
+    function flairImgSrc(img) {
+      const s = String(img || "");
+      if (!s) return "";
+      if (s.indexOf("data:") === 0) return s;
+      return esc(s) + "?" + DATA_V;
+    }
+    /** Resolve flair for a painted seat name: custom upload first, then shipped default. */
+    function flairEntry(name) {
+      const n = String(name == null ? "" : name);
+      if (!n) return null;
+      if (seatAvatarByName[n]) return { img: seatAvatarByName[n], custom: true };
+      const m = (members || []).find((x) => x && x.name === n);
+      if (m && seatAvatarByUid[String(m.user_id)]) {
+        return { img: seatAvatarByUid[String(m.user_id)], custom: true };
+      }
+      return SEAT_FLAIR[n] || null;
+    }
+    function setSeatAvatar(uid, name, dataUrl) {
+      const data = safeAvatarData(dataUrl);
+      const id = uid != null && uid !== "" ? String(uid) : "";
+      const n = name != null && name !== "" ? String(name) : "";
+      if (data) {
+        if (id) seatAvatarByUid[id] = data;
+        if (n) seatAvatarByName[n] = data;
+      } else {
+        if (id) delete seatAvatarByUid[id];
+        if (n) delete seatAvatarByName[n];
+      }
+    }
     // Gold, the same #e0b44c the alert cards and the vote outline use. Decorates the
     // reigning champion beside their name everywhere seatLabel paints — never the name itself.
     const CROWN = '<svg class="crown" viewBox="0 0 24 24" width="16" height="16"'
@@ -2346,18 +2422,19 @@
       return m && m.name ? String(m.name) : "";
     }
     function seatFlairHtml(name) {
-      const f = SEAT_FLAIR[name];
+      const f = flairEntry(name);
       if (!f) return "";
       if (f.glyph) return " " + f.glyph;
       if (f.img) {
-        return ' <img class="seat-flair" src="' + esc(f.img) + "?" + DATA_V
+        const cls = f.custom ? "seat-flair seat-flair-custom" : "seat-flair";
+        return ' <img class="' + cls + '" src="' + flairImgSrc(f.img)
           + '" width="16" height="16" alt="" decoding="async" />';
       }
       return "";
     }
     /** Plain-text flair for aria-labels (no markup). Image flair / crown are silent. */
     function seatFlairText(name) {
-      const f = SEAT_FLAIR[name];
+      const f = flairEntry(name);
       return f && f.glyph ? " " + f.glyph : "";
     }
     /**
@@ -2436,7 +2513,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260903231904";
+    const DATA_V = "avatar20260903232731";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4585,11 +4662,12 @@
           "M3 4.4h3.4v3.4H3zM9 4.9h12v2.4H9zM3 10.3h3.4v3.4H3zM9 10.8h12v2.4H9zM3 16.2h3.4v3.4H3zM9 16.7h12v2.4H9z");
       }
       const lab = (name || "Team") + " stats";
-      const f = name ? SEAT_FLAIR[name] : null;
+      const f = name ? flairEntry(name) : null;
       let ico = "";
       if (f && f.img) {
+        const flairCls = f.custom ? "lh-seat-flair lh-seat-flair-custom" : "lh-seat-flair";
         ico = '<span class="lh-ico lh-ico-flair" aria-hidden="true">'
-          + '<img class="lh-seat-flair" src="' + esc(f.img) + "?" + DATA_V
+          + '<img class="' + flairCls + '" src="' + flairImgSrc(f.img)
           + '" width="56" height="56" alt="" decoding="async" /></span>';
       } else if (f && f.glyph) {
         ico = '<span class="lh-ico lh-ico-flair" aria-hidden="true">'
@@ -5705,6 +5783,10 @@
     let gateMode = "signin"; // signin | signup — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
+    let profileNote = "";
+    let profileBusy = false;
+    /** In-progress crop: { url, img, zoom, ox, oy } — img is HTMLImageElement once loaded. */
+    let profileCrop = null;
 
     function inviteCodeVisible(inv) {
       return !!(inv && !inv.claimed && inv.code && String(inv.code).indexOf("(") !== 0);
@@ -6044,12 +6126,335 @@
       }
       joinError = "";
       settingsCopyNote = "";
+      profileNote = "";
+      profileCrop = null;
       appScreen = "settings";
       focusNext = ".screen-h";
       loadMemberships().then(() => render()).catch((err) => {
         console.error(err);
         render();
       });
+    }
+
+    function openProfile() {
+      if (!authSession) {
+        openSettings();
+        return;
+      }
+      profileNote = "";
+      profileBusy = false;
+      profileCrop = null;
+      appScreen = "profile";
+      focusNext = ".screen-h";
+      render();
+      // After paint, if a crop is mid-edit we re-arm; otherwise show current avatar only.
+      queueMicrotask(() => paintProfileCrop());
+    }
+
+    function avatarLeagueId() {
+      return (activeLeague && activeLeague.sleeper_league_id)
+        || CUCKLE_LEAGUE_ID
+        || null;
+    }
+
+    function readLocalAvatarStore() {
+      try {
+        const raw = localStorage.getItem(AVATAR_STORE_KEY);
+        const j = raw ? JSON.parse(raw) : {};
+        return j && typeof j === "object" ? j : {};
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function writeLocalAvatarStore(store) {
+      try { localStorage.setItem(AVATAR_STORE_KEY, JSON.stringify(store)); }
+      catch (err) { /* quota / private */ }
+    }
+
+    function applyLocalAvatarsForLeague(leagueId) {
+      const store = readLocalAvatarStore();
+      const pack = store[String(leagueId)] || {};
+      for (const uid of Object.keys(pack)) {
+        const data = safeAvatarData(pack[uid]);
+        if (!data) continue;
+        seatAvatarByUid[String(uid)] = data;
+        const m = (members || []).find((x) => x && String(x.user_id) === String(uid));
+        if (m && m.name) seatAvatarByName[m.name] = data;
+      }
+    }
+
+    function persistLocalAvatar(leagueId, uid, dataUrl) {
+      const store = readLocalAvatarStore();
+      const key = String(leagueId);
+      const pack = Object.assign({}, store[key] || {});
+      if (dataUrl) pack[String(uid)] = dataUrl;
+      else delete pack[String(uid)];
+      store[key] = pack;
+      writeLocalAvatarStore(store);
+    }
+
+    /**
+     * Pull custom seat avatars for the active league. Anon-readable so vote marks show
+     * every voter's crop. Falls back to localStorage when the table is not installed yet
+     * or Design Mode has no real JWT.
+     */
+    async function loadSeatAvatars() {
+      const lid = avatarLeagueId();
+      if (!lid) return;
+      applyLocalAvatarsForLeague(lid);
+      if (isDesignLeagueHome()) return;
+      try {
+        const res = await fetch(
+          VOTE_API + "/seat_avatars?select=sleeper_user_id,avatar_data&sleeper_league_id=eq."
+            + encodeURIComponent(lid),
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON },
+            signal: voteAbort(),
+          },
+        );
+        if (!res.ok) return;
+        const rows = await res.json();
+        for (const r of rows || []) {
+          const data = safeAvatarData(r && r.avatar_data);
+          if (!data) continue;
+          const uid = String(r.sleeper_user_id);
+          seatAvatarByUid[uid] = data;
+          const m = (members || []).find((x) => x && String(x.user_id) === uid);
+          if (m && m.name) seatAvatarByName[m.name] = data;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function exportCroppedAvatar() {
+      if (!profileCrop || !profileCrop.img) return null;
+      const size = 128;
+      const out = document.createElement("canvas");
+      out.width = size;
+      out.height = size;
+      const ctx = out.getContext("2d");
+      if (!ctx) return null;
+      const img = profileCrop.img;
+      const zoom = Math.max(1, Math.min(3, Number(profileCrop.zoom) || 1));
+      const base = Math.max(img.naturalWidth / size, img.naturalHeight / size);
+      const scale = base / zoom;
+      const dw = img.naturalWidth / scale;
+      const dh = img.naturalHeight / scale;
+      const ox = Number(profileCrop.ox) || 0;
+      const oy = Number(profileCrop.oy) || 0;
+      const dx = (size - dw) / 2 + ox;
+      const dy = (size - dh) / 2 + oy;
+      ctx.fillStyle = "#1a1a1e";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, dx, dy, dw, dh);
+      let dataUrl = out.toDataURL("image/jpeg", 0.85);
+      if (!safeAvatarData(dataUrl) || dataUrl.length > 100000) {
+        dataUrl = out.toDataURL("image/jpeg", 0.7);
+      }
+      return safeAvatarData(dataUrl);
+    }
+
+    function paintProfileCrop() {
+      const canvas = document.getElementById("profileCropCanvas");
+      if (!canvas || !profileCrop || !profileCrop.img) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const css = canvas.clientWidth || 280;
+      canvas.width = Math.round(css * dpr);
+      canvas.height = Math.round(css * dpr);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const size = css;
+      const img = profileCrop.img;
+      const zoom = Math.max(1, Math.min(3, Number(profileCrop.zoom) || 1));
+      const base = Math.max(img.naturalWidth / size, img.naturalHeight / size);
+      const scale = base / zoom;
+      const dw = img.naturalWidth / scale;
+      const dh = img.naturalHeight / scale;
+      const ox = Number(profileCrop.ox) || 0;
+      const oy = Number(profileCrop.oy) || 0;
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (size - dw) / 2 + ox, (size - dh) / 2 + oy, dw, dh);
+      // Soft vignette ring so the circular crop is obvious.
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size * 0.46, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    let profileDrag = null;
+    document.addEventListener("pointerdown", (e) => {
+      const stage = e.target && e.target.closest && e.target.closest("[data-profile-crop-stage]");
+      if (!stage || !profileCrop || !profileCrop.img) return;
+      profileDrag = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        ox: Number(profileCrop.ox) || 0,
+        oy: Number(profileCrop.oy) || 0,
+      };
+      try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      e.preventDefault();
+    });
+    document.addEventListener("pointermove", (e) => {
+      if (!profileDrag || e.pointerId !== profileDrag.id || !profileCrop) return;
+      profileCrop.ox = profileDrag.ox + (e.clientX - profileDrag.x);
+      profileCrop.oy = profileDrag.oy + (e.clientY - profileDrag.y);
+      paintProfileCrop();
+    });
+    document.addEventListener("pointerup", (e) => {
+      if (profileDrag && e.pointerId === profileDrag.id) profileDrag = null;
+    });
+    document.addEventListener("pointercancel", (e) => {
+      if (profileDrag && e.pointerId === profileDrag.id) profileDrag = null;
+    });
+
+    function beginProfileCrop(file) {
+      if (!file || !String(file.type || "").startsWith("image/")) {
+        profileNote = "Choose a photo (JPEG, PNG, or WebP).";
+        render();
+        return;
+      }
+      if (file.size > 12 * 1024 * 1024) {
+        profileNote = "That image is too large — try one under 12 MB.";
+        render();
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        if (profileCrop && profileCrop.url) URL.revokeObjectURL(profileCrop.url);
+        profileCrop = { url: url, img: img, zoom: 1.15, ox: 0, oy: 0 };
+        profileNote = "";
+        render();
+        queueMicrotask(() => paintProfileCrop());
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        profileNote = "Could not read that image.";
+        render();
+      };
+      img.src = url;
+    }
+
+    async function saveProfileAvatar() {
+      if (profileBusy) return;
+      const lid = avatarLeagueId();
+      const uid = authSeatId();
+      const name = authSeatCanonName() || authSeatName();
+      if (!lid || !uid) {
+        profileNote = "Claim a seat in a league before setting an avatar.";
+        render();
+        return;
+      }
+      const dataUrl = exportCroppedAvatar();
+      if (!dataUrl) {
+        profileNote = "Crop a photo first.";
+        render();
+        return;
+      }
+      profileBusy = true;
+      profileNote = "";
+      render();
+      try {
+        setSeatAvatar(uid, name, dataUrl);
+        persistLocalAvatar(lid, uid, dataUrl);
+        if (!(authSession && authSession.access_token === "design-mode") && !isDesignLeagueHome()) {
+          await authRefreshIfNeeded();
+          const res = await fetch(
+            VOTE_API + "/seat_avatars?on_conflict=sleeper_league_id,sleeper_user_id",
+            {
+              method: "POST",
+              headers: {
+                apikey: VOTE_ANON,
+                Authorization: "Bearer " + authSession.access_token,
+                "Content-Type": "application/json",
+                Prefer: "resolution=merge-duplicates,return=minimal",
+              },
+              body: JSON.stringify({
+                sleeper_league_id: lid,
+                sleeper_user_id: String(uid),
+                avatar_data: dataUrl,
+                updated_at: new Date().toISOString(),
+              }),
+              signal: voteAbort(),
+            },
+          );
+          if (!res.ok) {
+            const t = await res.text();
+            if (res.status === 404 || /relation .* does not exist/i.test(t)) {
+              profileNote = "Saved on this device. Run db/wave11-profile-avatar.sql in Supabase so every device sees it.";
+            } else {
+              throw new Error("Could not save avatar (" + res.status + "): " + t.slice(0, 160));
+            }
+          } else {
+            profileNote = "Avatar saved — it will show on votes, names, and chips.";
+          }
+        } else {
+          profileNote = "Avatar saved for Design Mode on this device.";
+        }
+        if (profileCrop && profileCrop.url) URL.revokeObjectURL(profileCrop.url);
+        profileCrop = null;
+      } catch (err) {
+        profileNote = (err && err.message) || "Could not save avatar.";
+        console.error(err);
+      } finally {
+        profileBusy = false;
+        render();
+      }
+    }
+
+    async function resetProfileAvatar() {
+      if (profileBusy) return;
+      const lid = avatarLeagueId();
+      const uid = authSeatId();
+      const name = authSeatCanonName() || authSeatName();
+      if (!lid || !uid) {
+        profileNote = "Claim a seat first.";
+        render();
+        return;
+      }
+      profileBusy = true;
+      profileNote = "";
+      render();
+      try {
+        setSeatAvatar(uid, name, null);
+        persistLocalAvatar(lid, uid, null);
+        if (profileCrop && profileCrop.url) URL.revokeObjectURL(profileCrop.url);
+        profileCrop = null;
+        if (!(authSession && authSession.access_token === "design-mode") && !isDesignLeagueHome()) {
+          await authRefreshIfNeeded();
+          const res = await fetch(
+            VOTE_API + "/seat_avatars?sleeper_league_id=eq." + encodeURIComponent(lid)
+              + "&sleeper_user_id=eq." + encodeURIComponent(String(uid)),
+            {
+              method: "DELETE",
+              headers: {
+                apikey: VOTE_ANON,
+                Authorization: "Bearer " + authSession.access_token,
+              },
+              signal: voteAbort(),
+            },
+          );
+          if (!res.ok && res.status !== 404) {
+            const t = await res.text();
+            if (!/relation .* does not exist/i.test(t)) {
+              throw new Error("Could not reset avatar (" + res.status + ")");
+            }
+          }
+        }
+        profileNote = "Back to your default team flair.";
+      } catch (err) {
+        profileNote = (err && err.message) || "Could not reset avatar.";
+        console.error(err);
+      } finally {
+        profileBusy = false;
+        render();
+      }
     }
 
     function goAppHome() {
@@ -6916,6 +7321,9 @@
       syncUrl();
       await loadMembers();
       voteLoad().catch((err) => console.error(err));
+      loadSeatAvatars().then(() => {
+        if (appScreen === "dash") render();
+      }).catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
       if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
@@ -7333,12 +7741,15 @@
      */
     function seatVoteMarkHtml(name) {
       const n = String(name == null ? "" : name);
-      const f = SEAT_FLAIR[n];
+      const f = flairEntry(n);
       let inner = "";
       if (f && f.glyph) {
         inner = '<span class="h2h-lean-glyph" aria-hidden="true">' + f.glyph + "</span>";
       } else if (f && f.img) {
-        inner = '<img class="seat-flair h2h-lean-flair" src="' + esc(f.img) + "?" + DATA_V
+        const cls = f.custom
+          ? "seat-flair h2h-lean-flair seat-flair-custom"
+          : "seat-flair h2h-lean-flair";
+        inner = '<img class="' + cls + '" src="' + flairImgSrc(f.img)
           + '" width="14" height="14" alt="" decoding="async" />';
       } else {
         return "";
@@ -8722,9 +9133,9 @@
         inner = '<div class="h2h-av"><img src="' + esc(avatarUrl) + '" alt="" width="40" height="40"'
           + ' loading="lazy" decoding="async" /></div>';
       } else {
-        const f = SEAT_FLAIR[name];
+        const f = flairEntry(name);
         if (f && f.img) {
-          inner = '<div class="h2h-av"><img src="' + esc(f.img) + "?" + DATA_V
+          inner = '<div class="h2h-av"><img src="' + flairImgSrc(f.img)
             + '" alt="" width="40" height="40" loading="lazy" decoding="async" /></div>';
         } else {
           const initials = String(name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
@@ -10095,6 +10506,7 @@
         + '<p class="caption" style="margin:0">Signed in as <b>' + esc(uname) + "</b></p>"
         + '<p class="caption">Auth email (synthetic, never mailed): <code>' + esc(email) + "</code></p>"
         + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-app-profile="1">Profile</button>'
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>"
         + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
@@ -10104,6 +10516,71 @@
         + '<div class="app-actions" style="margin-top:8px">'
         + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
         + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div></div>";
+    }
+
+    function renderProfile() {
+      const uname = (authSession && authSession.username) || "—";
+      const profileSeat = authSeatCanonName() || authSeatName() || null;
+      const seatId = authSeatId();
+      const f = profileSeat ? flairEntry(profileSeat) : null;
+      const defaultFlair = profileSeat ? SEAT_FLAIR[profileSeat] : null;
+      let preview = "";
+      if (f && f.img) {
+        preview = '<img src="' + flairImgSrc(f.img) + '" alt="" width="72" height="72" />';
+      } else if (f && f.glyph) {
+        preview = '<span class="profile-av-glyph" aria-hidden="true">' + f.glyph + "</span>";
+      } else {
+        const initials = String(profileSeat || uname || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "?";
+        preview = '<span class="profile-av-glyph">' + esc(initials) + "</span>";
+      }
+      const cropBlock = profileCrop && profileCrop.img
+        ? '<p class="profile-crop-hint">Drag to pan. Use zoom, then save — we crop a square for votes and names.</p>'
+          + '<div class="profile-crop" id="profileCropStage" data-profile-crop-stage="1">'
+          + '<canvas id="profileCropCanvas" width="280" height="280" aria-label="Crop avatar"></canvas>'
+          + "</div>"
+          + '<label class="profile-zoom">Zoom'
+          + '<input type="range" id="profileZoom" min="1" max="3" step="0.05" value="'
+          + esc(String(profileCrop.zoom || 1.15)) + '" data-profile-zoom="1" /></label>'
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-profile-save="1"'
+          + (profileBusy ? " disabled" : "") + ">"
+          + (profileBusy ? "Saving…" : "Save avatar") + "</button>"
+          + '<button type="button" class="chip" data-profile-cancel-crop="1"'
+          + (profileBusy ? " disabled" : "") + ">Cancel</button>"
+          + "</div>"
+        : "";
+      const hasCustom = !!(seatId && seatAvatarByUid[String(seatId)]);
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
+        + '<h2 class="screen-h" tabindex="-1">Profile</h2>'
+        + '<div class="app-card"><h3>Avatar</h3>'
+        + '<p class="caption" style="margin:0">Shown next to your name, on trade vote marks, and on your team chip. Defaults stay until you upload a photo.</p>'
+        + '<div class="profile-av-row">'
+        + '<div class="profile-av-preview" aria-hidden="true">' + preview + "</div>"
+        + '<div>'
+        + '<p class="caption" style="margin:0">Signed in as <b>' + esc(uname) + "</b></p>"
+        + (profileSeat
+          ? '<p class="caption" style="margin:4px 0 0">Seat <b>' + esc(profileSeat) + "</b></p>"
+          : '<p class="caption" style="margin:4px 0 0">No seat claimed yet — redeem an invite first.</p>')
+        + (defaultFlair && defaultFlair.img && !hasCustom
+          ? '<p class="caption" style="margin:4px 0 0">Using your league default flair.</p>'
+          : "")
+        + (hasCustom ? '<p class="caption" style="margin:4px 0 0">Custom photo active.</p>' : "")
+        + "</div></div>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-profile-pick="1"'
+        + (profileBusy || !seatId ? " disabled" : "") + ">Upload photo</button>"
+        + '<input type="file" id="profileFile" accept="image/jpeg,image/png,image/webp,image/*" hidden'
+        + ' data-profile-file="1" />'
+        + (hasCustom
+          ? '<button type="button" class="chip" data-profile-reset="1"'
+            + (profileBusy ? " disabled" : "") + ">Use default flair</button>"
+          : "")
+        + "</div>"
+        + cropBlock
+        + (profileNote ? '<p class="caption" role="status" style="margin-top:10px">' + esc(profileNote) + "</p>" : "")
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + "</div></div>";
     }
 
@@ -10198,7 +10675,7 @@
       // Multi-league app shell — before the per-league dashboard.
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
           || appScreen === "invites" || appScreen === "redeem" || appScreen === "inviteConfirm"
-          || appScreen === "settings") {
+          || appScreen === "settings" || appScreen === "profile") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
         app.innerHTML = appScreen === "gate" ? renderAppGate()
@@ -10207,8 +10684,10 @@
           : appScreen === "redeem" ? renderRedeemInvite()
           : appScreen === "inviteConfirm" ? renderInviteConfirm()
           : appScreen === "settings" ? renderSettings()
+          : appScreen === "profile" ? renderProfile()
           : renderAppHome();
         paintSettingsBtn();
+        if (appScreen === "profile") queueMicrotask(() => paintProfileCrop());
         const land = focusNext ? app.querySelector(focusNext) : null;
         focusNext = null;
         if (land) land.focus({ preventScroll: true });
@@ -11037,6 +11516,35 @@
         openSettings();
         return;
       }
+      const appProfile = e.target.closest("[data-app-profile]");
+      if (appProfile) {
+        openProfile();
+        return;
+      }
+      const profileSave = e.target.closest("[data-profile-save]");
+      if (profileSave) {
+        saveProfileAvatar().catch((err) => console.error(err));
+        return;
+      }
+      const profilePick = e.target.closest("[data-profile-pick]");
+      if (profilePick) {
+        const inp = document.getElementById("profileFile");
+        if (inp) inp.click();
+        return;
+      }
+      const profileReset = e.target.closest("[data-profile-reset]");
+      if (profileReset) {
+        resetProfileAvatar().catch((err) => console.error(err));
+        return;
+      }
+      const profileCancel = e.target.closest("[data-profile-cancel-crop]");
+      if (profileCancel) {
+        if (profileCrop && profileCrop.url) URL.revokeObjectURL(profileCrop.url);
+        profileCrop = null;
+        profileNote = "";
+        render();
+        return;
+      }
       const appCreate = e.target.closest("[data-app-create]");
       if (appCreate) {
         appScreen = "create";
@@ -11548,10 +12056,21 @@
         render();
         return;
       }
+      if (e.target && e.target.id === "profileFile" && e.target.files && e.target.files[0]) {
+        beginProfileCrop(e.target.files[0]);
+        e.target.value = "";
+        return;
+      }
     });
     document.getElementById("app").addEventListener("input", (e) => {
       if (e.target && e.target.id === "gateUser") {
         gateUsernameDraft = String(e.target.value || "");
+        return;
+      }
+      if (e.target && (e.target.id === "profileZoom" || e.target.dataset.profileZoom)) {
+        if (!profileCrop) return;
+        profileCrop.zoom = Math.max(1, Math.min(3, Number(e.target.value) || 1));
+        paintProfileCrop();
         return;
       }
       const cuffQBox = e.target.closest("[data-cuff-q]");

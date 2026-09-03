@@ -7760,6 +7760,14 @@
         }
         // Closing while still marked open: keep is-open until the settle ends so the
         // panel/scrim do not vanish mid-slide (that used to look like a snap).
+        const reduceMotion = window.matchMedia
+          && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion || Math.abs(from - to) < 1) {
+          sheet.style.transition = "none";
+          sheet.style.transform = "translateY(" + to + "px)";
+          finishSettle(open);
+          return;
+        }
         root.classList.add("is-settling");
         root.classList.remove("is-dragging");
         sheet.style.transition = "none";

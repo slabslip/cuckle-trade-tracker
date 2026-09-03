@@ -7697,6 +7697,7 @@ const html = `<!DOCTYPE html>
       const SETTLE_MS = 280;
       let drag = null;
       let suppressChromeClickUntil = 0;
+      let settleGen = 0;
       const cleanups = [];
 
       function peekH() {

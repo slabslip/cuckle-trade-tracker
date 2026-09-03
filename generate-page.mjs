@@ -844,7 +844,10 @@ const html = `<!DOCTYPE html>
     .news-pullup-click-guard {
       position: fixed;
       inset: 0;
-      z-index: 2147483000;
+      /* Below .news-pullup (40) so peek/chrome stay interactive; above home content.
+         The old 2147483000 value covered the sheet and, with an early swallow on
+         pointerdown, blocked iPhone swipe/tap minimize mid-gesture. */
+      z-index: 35;
       background: transparent;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
@@ -2458,6 +2461,10 @@ const html = `<!DOCTYPE html>
     let newsPullupSwallowClicksUntil = 0;
     let newsPullupClickGuardTimer = 0;
     function clearNewsPullupClickGuard() {
+      if (newsPullupClickGuardTimer) {
+        clearTimeout(newsPullupClickGuardTimer);
+        newsPullupClickGuardTimer = 0;
+      }
       try { document.body.classList.remove("has-news-pullup-closing"); } catch (_) {}
       const guard = document.getElementById("newsPullupClickGuard");
       if (guard && guard.parentNode) guard.parentNode.removeChild(guard);
@@ -7828,6 +7835,11 @@ const html = `<!DOCTYPE html>
         const gen = ++settleGen;
         newsPullupGestureLock = true;
         applyBrand();
+        // Close only: arm the click-through shield AFTER the gesture ends. Doing this on
+        // pointerdown (while open) parked a full-viewport guard over the sheet and ate
+        // pointermove/up on iPhone — swipe/tap minimize never finished.
+        if (!open) swallowNewsPullupClickThrough();
+        else clearNewsPullupClickGuard();
         const from = readTy();
         const to = open ? 0 : maxTy();
         // Opening: show the feed panel immediately so content is visible while rising.
@@ -7903,7 +7915,6 @@ const html = `<!DOCTYPE html>
           // From collapsed: open on upward flick, short drag up, or past ~25% open.
           nextOpen = !!(flickOpen || dy < -SHORT_SWIPE || ty < limit * 0.75);
         }
-        if (fromOpen && !nextOpen) swallowNewsPullupClickThrough();
         settleTo(nextOpen);
       }
       function onPointerDown(e) {
@@ -7914,8 +7925,8 @@ const html = `<!DOCTYPE html>
         if (e.target.closest("[data-news-cuff]")) return;
         // Expanded panel scrolls on its own — only chrome/peek start a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
-        // Arm the click-through shield before the sheet moves — iOS click lands after collapse.
-        if (newsPullupOpen) swallowNewsPullupClickThrough();
+        // Do NOT swallowNewsPullupClickThrough() here — that inserts a full-screen guard
+        // above the sheet and blocks pointermove/up on iPhone (collapse never completes).
         clearSettleTimer();
         // Invalidate any in-flight settleTo finisher (transitionend/timeout) before we drag.
         settleGen += 1;
@@ -7957,6 +7968,10 @@ const html = `<!DOCTYPE html>
         sheet.style.transform = "translateY(" + clamp(drag.originTy + dy, 0, maxTy()) + "px)";
         if (e.pointerType === "touch") e.preventDefault();
       }
+      function onLostCapture(e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        endDrag(e);
+      }
       function onChromeClick(e) {
         if (Date.now() < suppressChromeClickUntil) {
           e.preventDefault();
@@ -7969,15 +7984,12 @@ const html = `<!DOCTYPE html>
         suppressChromeClickUntil = Date.now() + 450;
         e.preventDefault();
         e.stopPropagation();
-        const next = !newsPullupOpen;
-        if (newsPullupOpen && !next) swallowNewsPullupClickThrough();
-        settleTo(next);
+        settleTo(!newsPullupOpen);
       }
       function onScrimPointer(e) {
         if (e.button != null && e.button !== 0) return;
         e.preventDefault();
         e.stopPropagation();
-        swallowNewsPullupClickThrough();
         settleTo(false);
       }
       function onPeekKey(e) {
@@ -7988,17 +8000,12 @@ const html = `<!DOCTYPE html>
       function onTopKey(e) {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
-        if (newsPullupOpen) {
-          swallowNewsPullupClickThrough();
-          settleTo(false);
-        } else {
-          settleTo(true);
-        }
+        if (newsPullupOpen) settleTo(false);
+        else settleTo(true);
       }
       function onKey(e) {
         if (e.key === "Escape" && newsPullupOpen) {
           e.preventDefault();
-          swallowNewsPullupClickThrough();
           settleTo(false);
         }
       }
@@ -8017,12 +8024,14 @@ const html = `<!DOCTYPE html>
           el.addEventListener("pointermove", onPointerMove, ptrOpts);
           el.addEventListener("pointerup", endDrag);
           el.addEventListener("pointercancel", endDrag);
+          el.addEventListener("lostpointercapture", onLostCapture);
           el.addEventListener("click", onChromeClick);
           cleanups.push(function () {
             el.removeEventListener("pointerdown", onPointerDown, ptrOpts);
             el.removeEventListener("pointermove", onPointerMove, ptrOpts);
             el.removeEventListener("pointerup", endDrag);
             el.removeEventListener("pointercancel", endDrag);
+            el.removeEventListener("lostpointercapture", onLostCapture);
             el.removeEventListener("click", onChromeClick);
           });
         })(targets[i]);
@@ -12338,14 +12347,15 @@ for (const need of [
   if (!fn.includes("vote is-done") || !fn.includes("data-vote-edit") || !fn.includes("vote-done-tally")) {
     throw new Error("voteBlock must collapse to Voted + tally after a ballot (vote is-done)");
   }
-  if (!fn.includes("VOTE_FAIR") || !fn.includes('"Fair"') || !fn.includes("is-fair")
+  if (!fn.includes("VOTE_FAIR") || !fn.includes('"Fair"')
     || !fn.includes("voteOptButtonHtml") || !fn.includes("voteTallyTriple")) {
     throw new Error("voteBlock must offer Fair between the two team buttons (VOTE_FAIR)");
   }
 }
 if (!inline.includes('const VOTE_FAIR = "__fair__"')
   || !inline.includes("function isVoteFair(")
-  || !inline.includes("You marked this trade <b>Fair</b>")) {
+  || !inline.includes("You marked this trade <b>Fair</b>")
+  || !inline.includes('fair ? " is-fair"')) {
   throw new Error("vote system must store Fair as __fair__ and confirm with Fair copy");
 }
 if (!html.includes("button.vote-opt.is-fair") || !html.includes(".h2h-lean-fair-k")) {
@@ -12793,6 +12803,17 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !html.includes("has-news-pullup-open #app > :not(#newsPullup)")
   || !html.includes("--news-pullup-peek: 100px")) {
   throw new Error("News Feed grab must be a large hit target and lock home while open/closing");
+}
+// Collapse must not arm the full-screen guard on pointerdown — that blocked iPhone minimize.
+if (inline.includes("if (newsPullupOpen) swallowNewsPullupClickThrough();")) {
+  throw new Error("must not swallow/guard on pointerdown while open — that blocks iPhone collapse");
+}
+if (!html.includes(".news-pullup-click-guard") || !html.includes("z-index: 35")
+  || html.includes("z-index: 2147483000")) {
+  throw new Error("news pull-up click guard must sit below the sheet (z-index 35, not 2147483000)");
+}
+if (!inline.includes("lostpointercapture") || !inline.includes("if (!open) swallowNewsPullupClickThrough();")) {
+  throw new Error("collapse must swallow only on settleTo(false) and handle lostpointercapture");
 }
 for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   // it.also and it.published are read into locals and formatted by ago()/length before use;

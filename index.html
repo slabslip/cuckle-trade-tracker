@@ -839,7 +839,10 @@
     .news-pullup-click-guard {
       position: fixed;
       inset: 0;
-      z-index: 2147483000;
+      /* Below .news-pullup (40) so peek/chrome stay interactive; above home content.
+         The old 2147483000 value covered the sheet and, with an early swallow on
+         pointerdown, blocked iPhone swipe/tap minimize mid-gesture. */
+      z-index: 35;
       background: transparent;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
@@ -7823,6 +7826,11 @@
         const gen = ++settleGen;
         newsPullupGestureLock = true;
         applyBrand();
+        // Close only: arm the click-through shield AFTER the gesture ends. Doing this on
+        // pointerdown (while open) parked a full-viewport guard over the sheet and ate
+        // pointermove/up on iPhone — swipe/tap minimize never finished.
+        if (!open) swallowNewsPullupClickThrough();
+        else clearNewsPullupClickGuard();
         const from = readTy();
         const to = open ? 0 : maxTy();
         // Opening: show the feed panel immediately so content is visible while rising.
@@ -7898,7 +7906,6 @@
           // From collapsed: open on upward flick, short drag up, or past ~25% open.
           nextOpen = !!(flickOpen || dy < -SHORT_SWIPE || ty < limit * 0.75);
         }
-        if (fromOpen && !nextOpen) swallowNewsPullupClickThrough();
         settleTo(nextOpen);
       }
       function onPointerDown(e) {
@@ -7909,8 +7916,8 @@
         if (e.target.closest("[data-news-cuff]")) return;
         // Expanded panel scrolls on its own — only chrome/peek start a sheet drag.
         if (newsPullupOpen && e.target.closest("[data-news-pullup-panel]")) return;
-        // Arm the click-through shield before the sheet moves — iOS click lands after collapse.
-        if (newsPullupOpen) swallowNewsPullupClickThrough();
+        // Do NOT swallowNewsPullupClickThrough() here — that inserts a full-screen guard
+        // above the sheet and blocks pointermove/up on iPhone (collapse never completes).
         clearSettleTimer();
         // Invalidate any in-flight settleTo finisher (transitionend/timeout) before we drag.
         settleGen += 1;
@@ -7952,6 +7959,10 @@
         sheet.style.transform = "translateY(" + clamp(drag.originTy + dy, 0, maxTy()) + "px)";
         if (e.pointerType === "touch") e.preventDefault();
       }
+      function onLostCapture(e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        endDrag(e);
+      }
       function onChromeClick(e) {
         if (Date.now() < suppressChromeClickUntil) {
           e.preventDefault();
@@ -7964,15 +7975,12 @@
         suppressChromeClickUntil = Date.now() + 450;
         e.preventDefault();
         e.stopPropagation();
-        const next = !newsPullupOpen;
-        if (newsPullupOpen && !next) swallowNewsPullupClickThrough();
-        settleTo(next);
+        settleTo(!newsPullupOpen);
       }
       function onScrimPointer(e) {
         if (e.button != null && e.button !== 0) return;
         e.preventDefault();
         e.stopPropagation();
-        swallowNewsPullupClickThrough();
         settleTo(false);
       }
       function onPeekKey(e) {
@@ -7983,17 +7991,12 @@
       function onTopKey(e) {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
-        if (newsPullupOpen) {
-          swallowNewsPullupClickThrough();
-          settleTo(false);
-        } else {
-          settleTo(true);
-        }
+        if (newsPullupOpen) settleTo(false);
+        else settleTo(true);
       }
       function onKey(e) {
         if (e.key === "Escape" && newsPullupOpen) {
           e.preventDefault();
-          swallowNewsPullupClickThrough();
           settleTo(false);
         }
       }
@@ -8012,12 +8015,14 @@
           el.addEventListener("pointermove", onPointerMove, ptrOpts);
           el.addEventListener("pointerup", endDrag);
           el.addEventListener("pointercancel", endDrag);
+          el.addEventListener("lostpointercapture", onLostCapture);
           el.addEventListener("click", onChromeClick);
           cleanups.push(function () {
             el.removeEventListener("pointerdown", onPointerDown, ptrOpts);
             el.removeEventListener("pointermove", onPointerMove, ptrOpts);
             el.removeEventListener("pointerup", endDrag);
             el.removeEventListener("pointercancel", endDrag);
+            el.removeEventListener("lostpointercapture", onLostCapture);
             el.removeEventListener("click", onChromeClick);
           });
         })(targets[i]);

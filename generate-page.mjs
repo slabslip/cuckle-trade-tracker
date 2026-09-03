@@ -1542,6 +1542,10 @@ const html = `<!DOCTYPE html>
       font-weight: 500; color: var(--dim); line-height: 1.2; margin: 0;
       font-size: 0.6875rem;
     }
+    div.lh-trade-feed-card button.day-alert-h {
+      font-weight: 500; color: var(--dim); line-height: 1.2; margin: 0;
+      font-size: 0.6875rem;
+    }
     div.lh-trade-feed-card.voted .h2h-chip.is-trade,
     div.lh-latest-trade.voted .h2h-chip.is-trade {
       border-color: #6b5a2e;
@@ -1613,6 +1617,14 @@ const html = `<!DOCTYPE html>
     }
     div.lh-trade-feed-card.is-selected .vote-card {
       margin-top: 2px;
+    }
+    button.lh-trade-feed-collapse {
+      appearance: none; display: block; width: 100%; margin: 0; padding: 0;
+      border: 0; background: transparent; text-align: left; cursor: pointer;
+      font: inherit; color: inherit; touch-action: manipulation;
+    }
+    button.lh-trade-feed-collapse:focus-visible {
+      outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     #tapeFilters {
       margin: 0 0 14px;
@@ -5230,11 +5242,18 @@ const html = `<!DOCTYPE html>
     /** One seat trade as the same H2H + vote card the league feed uses. */
     function seatTradeFeedCardHtml(t) {
       const side = seatTradeSide(t);
-      return side ? tradeFeedCardHtml(side) : "";
+      if (!side) return "";
+      // Seat surfaces expand in place (audit: Trades tab / best / worst / partners) — never
+      // jump to the league-wide ?view=trade screen the board-open path uses.
+      if (openId === t.transaction_id) {
+        return tradeFeedSelectedHtml(side, { seatInline: true });
+      }
+      return tradeFeedCardHtml(side, { seatExpand: true });
     }
 
     /** One feed card: home Latest-trade H2H chip, framed with date + open-trade attrs. */
-    function tradeFeedCardHtml(r) {
+    function tradeFeedCardHtml(r, opts) {
+      const seatExpand = !!(opts && opts.seatExpand);
       const voted = !!readVotes(r.transaction_id).choice;
       const showVote = feedVoteTxSet().has(r.transaction_id);
       let chip = "";
@@ -5251,9 +5270,13 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
           + "</div>";
       }
-      // Vote buttons cannot nest inside a role=button card — open-trade lives on the main block.
+      // Vote buttons cannot nest inside a role=button card — open lives on the main block.
+      // Seat expand uses data-seat-trade-open (inline); league feed uses data-board-open (screen).
       const main = '<div class="lh-trade-feed-main" role="button" tabindex="0"'
-        + ' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'
+        + (seatExpand
+          ? (' data-seat-trade-open="' + esc(r.transaction_id) + '"'
+            + ' aria-expanded="false"')
+          : (' data-board-open="' + esc(r.user_id) + '" data-id="' + esc(r.transaction_id) + '"'))
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
         + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
         + chip
@@ -5266,7 +5289,8 @@ const html = `<!DOCTYPE html>
     }
 
 
-    function tradeFeedSelectedHtml(r) {
+    function tradeFeedSelectedHtml(r, opts) {
+      const seatInline = !!(opts && opts.seatInline);
       const voted = !!readVotes(r.transaction_id).choice;
       let chip = "";
       try {
@@ -5282,10 +5306,16 @@ const html = `<!DOCTYPE html>
           + '<div class="h2h-meta">' + esc(r.headline || "Open trade") + "</div></div>"
           + "</div>";
       }
+      // Seat inline: date row collapses the expand; picks/votes stay interactive below.
+      const head = seatInline
+        ? ('<button type="button" class="day-alert-h lh-trade-feed-collapse" data-seat-trade-open="'
+          + esc(r.transaction_id) + '" aria-expanded="true"'
+          + ' aria-label="Collapse trade details">' + esc(r.date || "Trade") + "</button>")
+        : ('<div class="day-alert-h">' + esc(r.date || "") + "</div>");
       return '<div class="lh-trade-feed-card is-selected' + (voted ? " voted" : "") + '"'
         + ' data-id="' + esc(r.transaction_id) + '"'
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
-        + '<div class="day-alert-h">' + esc(r.date || "") + "</div>"
+        + head
         + chip
         + '<div class="vote-card">' + voteBlock(r) + "</div>"
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
@@ -10566,6 +10596,15 @@ const html = `<!DOCTYPE html>
         }
         e.preventDefault();
         openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen);
+        return;
+      }
+      const seatTradeRow = t.closest && t.closest("[data-seat-trade-open]");
+      if (seatTradeRow && t === seatTradeRow) {
+        e.preventDefault();
+        const tx = seatTradeRow.dataset.seatTradeOpen;
+        openId = openId === tx ? null : tx;
+        openPick = null;
+        render();
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {
@@ -11144,7 +11183,26 @@ const html = `<!DOCTYPE html>
       }
       const pickBtn = e.target.closest("[data-pick]");
       if (pickBtn) {
+        // Collapsed seat cards: first tap expands the trade, not a nested hop path.
+        const seatTradeOpen = e.target.closest("[data-seat-trade-open]");
+        if (seatTradeOpen && openId !== seatTradeOpen.dataset.seatTradeOpen) {
+          openId = seatTradeOpen.dataset.seatTradeOpen;
+          openPick = null;
+          render();
+          return;
+        }
         openPick = openPick === pickBtn.dataset.pick ? null : pickBtn.dataset.pick;
+        render();
+        return;
+      }
+      // Seat My Trades / best / worst / partners: expand full details inline (chip + vote).
+      const seatTradeOpenBtn = e.target.closest("[data-seat-trade-open]");
+      if (seatTradeOpenBtn) {
+        if (e.target.closest("[data-vote-open]")) return;
+        if (e.target.closest("[data-vote]") || e.target.closest("[data-vote-edit]")) return;
+        const tx = seatTradeOpenBtn.dataset.seatTradeOpen;
+        openId = openId === tx ? null : tx;
+        openPick = null;
         render();
         return;
       }
@@ -12534,9 +12592,33 @@ for (const ban of [
     || !inline.includes("authRefreshIfNeeded(true)")) {
     throw new Error("votePush must refresh JWT and retry once before failing a home cast");
   }
-  if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
-    throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");
+}
+{
+  const at = inline.indexOf("function seatTradeFeedCardHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 800 : stop);
+  if (!fn.includes("seatExpand: true") || !fn.includes("tradeFeedSelectedHtml(")
+    || !fn.includes("seatInline: true") || !fn.includes("openId === t.transaction_id")) {
+    throw new Error("seatTradeFeedCardHtml must expand inline (seatExpand / selected), not openTrade");
   }
+}
+{
+  const at = inline.indexOf("function tradeFeedCardHtml(");
+  const stop = inline.indexOf("\n    function ", at + 10);
+  const fn = inline.slice(at, stop < 0 ? at + 1800 : stop);
+  if (!fn.includes("data-seat-trade-open=") || !fn.includes("seatExpand")) {
+    throw new Error("tradeFeedCardHtml must support data-seat-trade-open for seat My Trades expand");
+  }
+}
+if (!inline.includes('closest("[data-seat-trade-open]")')
+  || !inline.includes("Collapsed seat cards: first tap expands")) {
+  throw new Error("click handler must expand seat trade chips inline (data-seat-trade-open)");
+}
+if (!html.includes("button.lh-trade-feed-collapse")) {
+  throw new Error("selected seat trade must ship a collapse control for the date row");
+}
+if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("function seatTradeSide(")) {
+  throw new Error("seat trade surfaces must share seatTradeFeedCardHtml with the league feed");
 }
 {
   const at = inline.indexOf("function renderTrades(");

@@ -914,10 +914,10 @@ const html = `<!DOCTYPE html>
       display: block;
       -webkit-tap-highlight-color: transparent;
     }
-    /* Expanded: fat title chrome so iPhone can tap / drag-down to minimize. */
+    /* Expanded: large thumb chrome so one tap / drag-down closes reliably on iPhone. */
     .news-pullup.is-open .news-pullup-top {
-      min-height: 44px;
-      padding: 6px 12px 8px;
+      min-height: 64px;
+      padding: 10px 12px 12px;
     }
     .news-pullup-title-row {
       display: grid;
@@ -930,7 +930,7 @@ const html = `<!DOCTYPE html>
       touch-action: none;
     }
     .news-pullup.is-open .news-pullup-title-row {
-      min-height: 44px;
+      min-height: 56px;
     }
     .news-pullup-title-row .day-alert-h {
       min-width: 0;
@@ -938,6 +938,10 @@ const html = `<!DOCTYPE html>
       font-size: 0.8125rem; line-height: 1.2;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       pointer-events: none;
+    }
+    .news-pullup.is-open .news-pullup-title-row .day-alert-h {
+      font-size: 0.875rem;
+      font-weight: 650;
     }
     .news-pullup-grab {
       display: flex; justify-content: center; align-items: center;
@@ -953,8 +957,12 @@ const html = `<!DOCTYPE html>
       pointer-events: none;
     }
     .news-pullup.is-open .news-pullup-grab {
-      height: 44px;
-      min-height: 44px;
+      height: 56px;
+      min-height: 56px;
+      min-width: 132px;
+    }
+    .news-pullup.is-open .news-pullup-knob {
+      width: 64px; height: 7px;
     }
     .news-pullup-knob {
       width: 52px; height: 6px; border-radius: 999px;
@@ -12571,6 +12579,8 @@ if (!inline.includes("function swallowNewsPullupClickThrough()")
   || !html.includes("-webkit-line-clamp: 3")
   || !html.includes(".news-pullup.is-open .news-pullup-top")
   || !html.includes(".news-pullup.is-open .news-pullup-title-row")
+  || !html.includes("min-height: 64px")
+  || !html.includes("min-height: 56px")
   || !html.includes("data-news-pullup-title-row")
   || !inline.includes("Minimize News Feed — tap or drag down")
   || !inline.includes("onChromeClick")

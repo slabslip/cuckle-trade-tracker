@@ -7749,12 +7749,17 @@ const html = `<!DOCTYPE html>
         settleGen += 1;
         clearSettleTimer();
         root.classList.remove("is-settling", "is-dragging");
-        sheet.style.transition = "";
+        // Freeze motion, sync is-open FIRST, then drop the inline translate.
+        // Clearing transform while still .is-open made close settle flash to 0 then
+        // jump to peek — the main iPhone “snap / jump” glitch on minimize.
+        sheet.style.transition = "none";
+        newsPullupGestureLock = false;
+        setNewsPullupOpen(open, { keepTransform: true });
         sheet.style.transform = "";
         sheet.style.height = "";
         sheet.style.maxHeight = "";
-        newsPullupGestureLock = false;
-        setNewsPullupOpen(open);
+        void sheet.offsetHeight;
+        sheet.style.transition = "";
       }
       /** Animate from the current translateY to fully open (0) or peek (maxTy). */
       function settleTo(open) {

@@ -800,7 +800,8 @@ only your slips; another seat’s team page shows that seat’s public W/L + sli
 Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md),
 [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped);
 [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) (**v1.1 planned** —
-join open public bets / more exposure; see [`LEDGER_SDD.md`](LEDGER_SDD.md)).
+join open public bets / more exposure; product: [`LEDGER_SDD.md`](LEDGER_SDD.md);
+build: [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md)).
 
 The Ledger tab in the app reads `ledger_bets` with the signed-in member JWT (same
 pattern as `trade_votes`). Design Mode seeds sample slips without Supabase.

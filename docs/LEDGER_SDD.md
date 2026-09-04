@@ -152,6 +152,7 @@ On another seat’s team page (Teams → seat):
 
 ## Join / more exposure (v1.1 — planned)
 
+**Implementation SDD:** [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md)  
 Design archive: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md).
 
 After both original parties lock (`open`) and the slip is **public**, any other

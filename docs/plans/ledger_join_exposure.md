@@ -1,7 +1,8 @@
 # Join open bets / more exposure
 
 **Status:** Planned (v1.1) — not built yet.  
-Canonical product rules: [`docs/LEDGER_SDD.md`](../LEDGER_SDD.md).
+Canonical product rules: [`docs/LEDGER_SDD.md`](../LEDGER_SDD.md).  
+**Implementation SDD:** [`docs/LEDGER_JOIN_SDD.md`](../LEDGER_JOIN_SDD.md).
 
 ---
 

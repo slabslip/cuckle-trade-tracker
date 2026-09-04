@@ -7,9 +7,12 @@ Ledger works end-to-end.
 | Artifact | Role |
 | --- | --- |
 | [`LEDGER_SDD.md`](LEDGER_SDD.md) | Product rules (canonical) |
+| [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md) | v1 go-live runbook (wave12/13 + ingest) |
+| [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) | v1.1 join / more exposure build design |
 | [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) | Shipped plan: League tab + Ledger v1 |
 | [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) | Shipped plan: my slips, privacy, team W/L |
-| **This file** | Architecture + ordered implementation steps |
+| [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) | Planning archive for join SDD |
+| **This file** | Architecture + ordered v1 implementation steps |
 
 ---
 
@@ -279,11 +282,12 @@ Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
 ## 9. Next: join / more exposure (v1.1)
 
-**Not part of Steps 1–8.** Design is documented; schema/UI are not built yet.
+**Not part of Steps 1–8.** Spec ready to build; schema/UI not on `main` yet.
 
+- **Implementation SDD:** [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md)  
 - Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md) § Join / more exposure  
-- Full plan: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md)  
+- Planning archive: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md)  
 - Future build: `db/wave14-ledger-join.sql` + Open board / Join sheet / Accept exposure UI
 
-When implementing v1.1, add wave14 to the SQL checklist above and extend acceptance
-criteria for join request → opposite-side Accept → leg settle with parent.
+When implementing v1.1, follow [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) §7, add wave14
+to the SQL checklist above, and extend acceptance criteria for join → Accept → leg settle.

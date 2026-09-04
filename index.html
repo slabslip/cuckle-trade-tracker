@@ -165,26 +165,22 @@
       pointer-events: none;
     }
     h1.brand .league-sub[hidden] { display: none; }
+    /* Matched pair: Chuckle mark + tiny label (home left, settings right). */
     button.go-home, button.go-settings {
       flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
-      overflow: hidden;
-    }
-    /* Top-right Settings: Chuckle mark + tiny label (not a bare gear). */
-    button.go-settings {
       width: auto; min-width: 44px; height: auto; min-height: 44px;
       padding: 4px 6px 3px; gap: 1px;
-      grid-template-rows: auto auto; align-items: center; justify-items: center;
+      display: grid; grid-template-rows: auto auto;
+      align-items: center; justify-items: center; cursor: pointer;
       overflow: visible;
     }
     button.go-home img.brand-mark,
     button.go-settings img.settings-mark {
       display: block; width: 44px; height: 44px; object-fit: cover;
+      border-radius: 6px;
     }
-    button.go-settings img.settings-mark {
-      width: 28px; height: 28px; border-radius: 6px;
-    }
+    button.go-home .brand-lab,
     button.go-settings .settings-lab {
       display: block; font-size: 0.5625rem; line-height: 1; font-weight: 600;
       letter-spacing: 0.02em; color: var(--dim); text-transform: lowercase;
@@ -2333,11 +2329,12 @@
   <h1 class="brand">
     <button type="button" class="go-home" id="goHome" aria-label="Chuckle Fantasy — League home">
       <img class="brand-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" data-brand-mark="1" />
+      <span class="brand-lab">home</span>
     </button>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
-        <img class="settings-mark" src="data/ui/brand-mark.png" width="28" height="28" alt="" decoding="async" data-settings-mark="1" />
+        <img class="settings-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" data-settings-mark="1" />
         <span class="settings-lab">settings</span>
       </button>
     </span>
@@ -2558,7 +2555,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "settings-tabs20260904003300";
+    const DATA_V = "brand-home-lab20260904021000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12351,7 +12348,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v177-settings-tabs";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v178-brand-home-lab";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

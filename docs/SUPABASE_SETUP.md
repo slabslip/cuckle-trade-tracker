@@ -805,7 +805,7 @@ Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab
 join open public bets / more exposure; product: [`LEDGER_SDD.md`](LEDGER_SDD.md);
 build: [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md));
 [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)
-(**v1.2 / v1.3 planned** — Add bet on Ledger, tab badge, SMS Accept ping).
+(**v1.2 / v1.3 planned** — note → Finish → Send, Ledger badge, SMS on Send).
 
 The Ledger tab in the app reads `ledger_bets` with the signed-in member JWT (same
 pattern as `trade_votes`). Design Mode seeds sample slips without Supabase.

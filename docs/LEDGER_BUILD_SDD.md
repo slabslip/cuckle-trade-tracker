@@ -9,7 +9,7 @@ Ledger works end-to-end.
 | [`LEDGER_SDD.md`](LEDGER_SDD.md) | Product rules (canonical) |
 | [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md) | v1 go-live runbook (wave12/13 + ingest) |
 | [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) | v1.1 join / more exposure build design |
-| [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) | v1.2 Add bet + bell; v1.3 SMS (planned) |
+| [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) | v1.2 note → Send; v1.3 SMS on Send (planned) |
 | [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) | Shipped plan: League tab + Ledger v1 |
 | [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) | Shipped plan: my slips, privacy, team W/L |
 | [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) | Planning archive for join SDD |
@@ -288,7 +288,7 @@ Then on the iPhone: remove money / odds / title menus. Capture is `raw_text` + t
 - Commissioner force-edit after open
 - Discord ingest
 - SMS vendor / collecting phone numbers (until **v1.3**)
-- In-app **Add bet** form and Ledger tab badge (until **v1.2**)
+- Draft notes, Finish slip, Send, Ledger badge (until **v1.2**)
 
 Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
@@ -308,16 +308,16 @@ to the SQL checklist above, and extend acceptance criteria for join → Accept �
 
 ---
 
-## 10. Next: compose + Accept alerts (v1.2 / v1.3)
+## 10. Next: note → Finish → Send (v1.2 / v1.3)
 
-**Not part of Steps 1–8.** Docs only; no form, badge, phone column, or SMS yet.
+**Not part of Steps 1–8.** Docs only.
 
-- **Product:** [`LEDGER_SDD.md`](LEDGER_SDD.md) § Add bet + Accept alerts  
+- **Product:** [`LEDGER_SDD.md`](LEDGER_SDD.md) § Note → Finish → Send  
 - **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)
 
 | Version | What to build later |
 | --- | --- |
-| **v1.2** | **Add bet** on Ledger (two seat chips, title, amount, odds). Gold badge on the Ledger tab when a `proposed` slip waits on your lock. Persist `?tab=ledger` in `setHomeTab` / `syncUrl` (needed for the SMS link). |
-| **v1.3** | Optional phone on the seat (Settings). Edge Function texts the counterparty after insert/Complete: title + `https://slabslip.github.io/cuckle-trade-tracker/?tab=ledger`. Skip if no number. |
+| **v1.2** | Shortcut = note only (`raw_text` + I am). SQL: draft `needs_review`, nullable `side_b`, filer-only RLS. **Finish slip** in You/Them + put-in/win words. **Send to [name]** then Yes/No. Badge = sent-to-you (not drafts). `?tab=ledger`. |
+| **v1.3** | Optional phone. SMS **once per Send** to Them: “wants a $N bet… say yes or no” + Ledger link. No SMS on note create. |
 
-Phone is notify-only. Shortcut sides stay two team taps.
+Do not SMS or badge a `$0` note. Do not use phone numbers to pick Shortcut sides.

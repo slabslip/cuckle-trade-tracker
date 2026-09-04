@@ -19,8 +19,9 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 
 ## Product rules
 
-1. **Proposer auto-locks.** When a slip is created (Shortcut or in-app), the proposer’s
-   side is already locked.
+1. **Proposer locks on Send, not on a note.** A Shortcut (or Add note) only saves
+   the group text as a **draft** the filer can see. Locks start when they tap
+   **Send to [name]**. Then the other person says **Yes, I’m in** or **No**.
 2. **Counterparty Accept or Decline.** The other party must Accept (locks their side →
    status `open`) or Decline (terminal `declined`).
 3. **Identity is Sleeper `user_id`.** Display names change; seats do not.
@@ -38,18 +39,16 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
    other league member may request to take a side (pick side + stake). An existing
    party on the **opposite** side Accepts (takes more exposure) or Declines. Private
    bets stay two-party. Full design: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md).
-10. **Add bet on Ledger (v1.2 — planned).** Signed-in claimed seat can compose a slip
-    on the Ledger tab: two different league seats, title, amount, odds, optional
-    deadline / visibility / source note. Proposer auto-locks. Same status machine as
-    Shortcut. Full design: [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
-11. **Ledger bell (v1.2 — planned).** Unread = `proposed` slips where you are a party
-    and your `side_*_lock` is false. Gold badge on the **Ledger** top tab. Opening
-    Ledger (or Accept/Decline) clears that slip for you (`localStorage` v1; optional
-    `ledger_bet_events` kind `seen` later).
-12. **SMS Accept ping (v1.3 — planned).** Optional phone on the seat (Settings). After
-    insert/Complete, text the counterparty a dashboard link that opens Ledger
-    (`?tab=ledger`). Phone is notify-only — it does not choose Shortcut sides.
-    Identity stays Sleeper `user_id`.
+10. **Note → Finish → Send (v1.2 — planned).** Shortcut (or Add note) saves
+    `source_text` only. **Finish slip** on Ledger picks Them + plain-language money
+    (“You put in $X. If you win you get $Y.”). **Send to [name]** makes it a real
+    `proposed` slip. Full design: [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
+11. **Ledger badge (v1.2 — planned).** Count of slips **sent to you** (amount > 0,
+    you have not said Yes/No). Gold mark on the Ledger tab. Opening the tab does
+    not clear it. Yes / No / they Cancel does. No `localStorage` seen-store.
+12. **SMS on Send only (v1.3 — planned).** Optional phone in Settings. After Send,
+    text Them (not the filer): who wants a $N bet + `?tab=ledger`. No SMS on note
+    create. Phone does not pick Shortcut sides. Identity stays Sleeper `user_id`.
 
 ### Status machine
 
@@ -151,9 +150,9 @@ Fast path: Copy the message → Home Screen **Chuckle Ledger** → two team taps
   are walkable without SQL.
 - **v1.1:** second section **Open board** — public `open` slips you are not on, with
   **Join** (see below).
-- **v1.2:** **Add bet** control on this tab (not team home). Seat chips; cannot pick
-  the same seat twice. JWT insert (`ledger_bets_insert_member`). List sorts “needs
-  your accept” first. Bell on the Ledger tab.
+- **v1.2:** **Finish slip** / **Add note** on this tab. Draft notes are filer-only.
+  Review copy is You vs Them + put in / win, not “odds” or “side A”. Badge on the
+  Ledger tab for slips sent to you.
 
 ## Team home public Ledger
 
@@ -192,28 +191,25 @@ already a party on that parent.
 
 ---
 
-## Add bet + Accept alerts (v1.2 / v1.3 — planned)
+## Note → Finish → Send (v1.2 / v1.3 — planned)
 
 **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
 
-Shortcut capture (group text + two seats) stays the fast path. **Add bet** is the
-other door when there is no message to share.
+The Shortcut only **expedites the group text into a note**. It does not create a
+bet the other person must Accept.
 
-**v1.2 — compose + bell (no SMS)**
+**v1.2**
 
-- **Add bet** on Ledger: pick two seats, title, amount, odds, optional deadline /
-  visibility / paste of group text into `source_text`.
-- Proposer auto-locks; counterparty Accepts. Complete still used for Shortcut `$0`
-  rows.
-- Badge on the Ledger top-tab when you have a proposed slip waiting on your lock.
-- Deep link: persist `homeTab` as `?tab=ledger` so SMS (v1.3) and shares land here.
+- Draft note: `needs_review`, `side_b` null, filer-only (SQL wave to relax
+  `side_a <> side_b` / NOT NULL).
+- **Finish slip:** You / Them, what’s the bet, you put in / you win / they put in /
+  they win. **Send to [name]** → `proposed`, you locked, they see Yes/No.
+- Badge = sent-to-you only. `?tab=ledger` deep link.
+- Review card never says odds or side A.
 
-**v1.3 — phone + SMS**
+**v1.3**
 
-- Optional `phone` on `league_memberships` (or Settings). Not required to file a bet.
-- After insert/Complete, SMS the counterparty if they have a number: who proposed,
-  title, link to `?tab=ledger`.
-- No SMS until a number is saved. Vendor is an operator secret.
+- Optional phone. SMS **once per Send** to Them. Skip if no number. No SMS on note.
 
 ---
 
@@ -232,9 +228,11 @@ other door when there is no message to share.
 | Join private / non-open slip | Reject (v1.1) |
 | Join when already a party | Reject (v1.1) |
 | Opposite side Declines join | Request `declined`; parent unchanged |
-| Add bet same seat twice | Reject (v1.2) |
-| Add bet signed out / no seat | CTA; no insert |
-| SMS with no phone on seat | Skip send (v1.3) |
+| Draft note / no Them yet | Filer only; no badge, no SMS (v1.2) |
+| Send with $0 or no Them | Block |
+| SMS opened as the wrong seat | CTA; do not Yes (v1.3) |
+| SMS with no phone on Them | Send still works; badge only (v1.3) |
+| Duplicate Send | No second SMS (v1.3) |
 
 ---
 
@@ -245,9 +243,9 @@ other door when there is no message to share.
 - Separate `ledger_notes` table (use `ledger_bet_events` kind `note` later)
 - Discord bot ingest
 - Join / more exposure (**v1.1** — see above)
-- In-app **Add bet** + Ledger bell (**v1.2** — see above)
-- Seat phone + SMS Accept ping (**v1.3** — see above)
-- Using phone numbers to pick Shortcut sides (still two team taps)
+- Note → Finish → Send + Ledger badge (**v1.2** — see above)
+- Seat phone + SMS on Send (**v1.3** — see above)
+- Using phone numbers to pick Shortcut sides
 
 ---
 
@@ -258,4 +256,4 @@ Cursor plans (archived; this SDD is canonical):
 - [`docs/plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) — League tab + Ledger v1 (shipped)
 - [`docs/plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) — my slips, privacy, team public W/L (shipped)
 - [`docs/plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) — join open bets / more exposure (**planned** v1.1)
-- [`docs/plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) — Add bet, Ledger bell, SMS Accept ping (**planned** v1.2 / v1.3)
+- [`docs/plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) — Note → Finish → Send, badge, SMS (**planned** v1.2 / v1.3)

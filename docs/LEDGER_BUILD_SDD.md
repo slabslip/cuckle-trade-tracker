@@ -274,3 +274,16 @@ Expect:
 - Discord ingest
 
 Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
+
+---
+
+## 9. Next: join / more exposure (v1.1)
+
+**Not part of Steps 1–8.** Design is documented; schema/UI are not built yet.
+
+- Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md) § Join / more exposure  
+- Full plan: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md)  
+- Future build: `db/wave14-ledger-join.sql` + Open board / Join sheet / Accept exposure UI
+
+When implementing v1.1, add wave14 to the SQL checklist above and extend acceptance
+criteria for join request → opposite-side Accept → leg settle with parent.

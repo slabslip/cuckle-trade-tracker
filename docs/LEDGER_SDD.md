@@ -34,6 +34,10 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 8. **Team home public ledger.** Another seat’s team page shows that seat’s **public**
    slips plus W/L money (taken from / lost to) and bets they lost. Private slips never
    appear there.
+9. **Join / more exposure (v1.1 — planned).** On a locked **public** `open` bet, any
+   other league member may request to take a side (pick side + stake). An existing
+   party on the **opposite** side Accepts (takes more exposure) or Declines. Private
+   bets stay two-party. Full design: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md).
 
 ### Status machine
 
@@ -42,9 +46,12 @@ proposed → open          (both side_*_lock true)
 proposed → declined      (counterparty Decline)
 proposed → canceled      (proposer Cancel)
 proposed → expired       (deadline_at passed)
-open → settled           (party Settle with winner)
+open → settled           (party Settle with winner; accepted join legs settle with parent)
 open → canceled          (admin void — future)
 ```
+
+While `open`, pending **join requests** may accumulate; they do not change parent
+`status` until Accept (leg added) or Decline/Cancel (request ends).
 
 ---
 
@@ -128,6 +135,8 @@ Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
   - Either party: toggle `visibility` public ↔ private
 - Design Mode seeds sample slips (including settled public W/L) so Ledger + team home
   are walkable without SQL.
+- **v1.1:** second section **Open board** — public `open` slips you are not on, with
+  **Join** (see below).
 
 ## Team home public Ledger
 
@@ -137,6 +146,31 @@ On another seat’s team page (Teams → seat):
 - **Lost money to** — settled public losses, summed by opponent
 - **Bets lost** — those losing slips (title, opponent, amount)
 - Public open + settled cards for that seat (read-only unless you are a party)
+- **v1.1:** **Join** on public `open` cards when you are not already a party
+
+---
+
+## Join / more exposure (v1.1 — planned)
+
+Design archive: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md).
+
+After both original parties lock (`open`) and the slip is **public**, any other
+league member may:
+
+1. Open the slip (Open board or team-home card).
+2. Choose **side A or side B** and a stake (UI defaults to the original amount; editable).
+3. Submit a **join request** (`pending`).
+
+An existing locked party on the **opposite** side then **Accepts** (takes more
+exposure — request becomes an accepted **leg**) or **Declines**. v1: first Accept
+wins; one Accept is enough.
+
+**Settlement:** parent settle (winner / push) applies to all accepted legs; W/L
+money sums per leg. Parent `amount_cents` stays the original stake; **exposure
+totals** = sum of accepted legs per side.
+
+**Not joinable:** `private` slips, `proposed` / terminal statuses, or when you are
+already a party on that parent.
 
 ---
 
@@ -152,6 +186,9 @@ On another seat’s team page (Teams → seat):
 | Deadline passed while proposed | `expired` (RPC + client) |
 | Signed out | Read CTA; no Accept |
 | Edit after both locked | v1: cancel + recreate |
+| Join private / non-open slip | Reject (v1.1) |
+| Join when already a party | Reject (v1.1) |
+| Opposite side Declines join | Request `declined`; parent unchanged |
 
 ---
 
@@ -162,12 +199,14 @@ On another seat’s team page (Teams → seat):
 - Commissioner Admin toggle / force-edit after open
 - Separate `ledger_notes` table (use `ledger_bet_events` kind `note` later)
 - Discord bot ingest
+- Join / more exposure (tracked as **v1.1** — see plan above)
 
 ---
 
 ## Planning history
 
-Shipped Cursor plans (archived; this SDD is canonical):
+Cursor plans (archived; this SDD is canonical):
 
-- [`docs/plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) — League tab + Ledger v1
-- [`docs/plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) — my slips, privacy, team public W/L
+- [`docs/plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) — League tab + Ledger v1 (shipped)
+- [`docs/plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) — my slips, privacy, team public W/L (shipped)
+- [`docs/plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) — join open bets / more exposure (**planned** v1.1)

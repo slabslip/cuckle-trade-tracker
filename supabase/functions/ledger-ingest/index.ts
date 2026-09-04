@@ -1,7 +1,6 @@
-// Supabase Edge Function: iPhone Shortcut → ledger_bets ingest.
-// Secrets: LEDGER_INGEST_SECRET (shared with Shortcut), SUPABASE_SERVICE_ROLE_KEY (auto),
-//          SUPABASE_URL (auto).
-// Accept rule: proposer auto-locks; counterparty must Accept in-app.
+// Supabase Edge Function: iPhone Shortcut → ledger_bets ingest (capture-first).
+// Phone sends raw_text + two seat IDs. Money / title are finished on the Ledger tab.
+// Secrets: LEDGER_INGEST_SECRET, SUPABASE_SERVICE_ROLE_KEY (auto), SUPABASE_URL (auto).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -9,6 +8,25 @@ const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-ledger-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+/** Canonical + common aliases for this league (emoji team_name norms to empty). */
+const SEAT_ALIASES: Record<string, string> = {
+  arae: "458004578168729600",
+  themorningchubbs: "458004578168729600",
+  bigjberg: "458315051980288000",
+  theiceberg: "458315051980288000",
+  bubbacuckshremp: "458723431387492352",
+  chiefgumby: "457945712932417536",
+  darkwingducks2023: "458766127967760384",
+  evilducks: "458766127967760384",
+  kinghenryxxvi: "458715702119886848",
+  sf69erss: "457779824002330624",
+  tedcumberbatch: "470311990468800512",
+  tipsup: "457784547094818816",
+  thetips: "457784547094818816",
+  trumancooper: "458342725222133760",
+  ducktipsyumm: "458342725222133760",
 };
 
 function json(status: number, body: Record<string, unknown>) {
@@ -55,7 +73,6 @@ Deno.serve(async (req) => {
 
   const sb = createClient(url, key, { auth: { persistSession: false } });
 
-  // Load memberships for name resolution in this league.
   const { data: mems, error: memErr } = await sb
     .from("league_memberships")
     .select("sleeper_user_id, team_name")
@@ -68,16 +85,22 @@ Deno.serve(async (req) => {
     if (!label) return null;
     const raw = String(label).trim();
     if (!raw) return null;
-    // Already a snowflake id?
     if (/^\d{6,}$/.test(raw)) {
       const hit = seats.find((s) => s.sleeper_user_id === raw);
       return hit ? hit.sleeper_user_id : raw;
     }
     const n = normName(raw);
-    const exact = seats.filter((s) => normName(s.team_name) === n);
+    if (!n) return null;
+    if (SEAT_ALIASES[n]) return SEAT_ALIASES[n];
+    const exact = seats.filter((s) => {
+      const tn = normName(s.team_name);
+      return tn && tn === n;
+    });
     if (exact.length === 1) return exact[0].sleeper_user_id;
     const fuzzy = seats.filter((s) => {
       const tn = normName(s.team_name);
+      if (!tn || tn.length < 2) return false;
+      if (n.length < 3 && tn !== n) return false;
       return tn.includes(n) || n.includes(tn);
     });
     if (fuzzy.length === 1) return fuzzy[0].sleeper_user_id;
@@ -92,8 +115,6 @@ Deno.serve(async (req) => {
   let sideB = resolveSeat(sideBName);
   let proposer = resolveSeat(submittedBy) || sideA;
 
-  // Lightweight parse from raw_text when structured fields missing:
-  // "Name vs Name — title — $100 even"
   if ((!sideA || !sideB) && rawText) {
     const vs = rawText.match(/^(.+?)\s+vs\.?\s+(.+?)(?:\s+[—\-:|]|\s*$)/i);
     if (vs) {
@@ -105,7 +126,7 @@ Deno.serve(async (req) => {
   if (!sideA || !sideB) {
     return json(422, {
       ok: false,
-      error: "could not resolve both parties — check side_a_name / side_b_name",
+      error: "could not resolve both parties — send side_a_name / side_b_name as seat ids",
       needs_review: true,
     });
   }
@@ -119,21 +140,18 @@ Deno.serve(async (req) => {
     amountCents = Math.round(Number(body.amount_cents));
   } else if (body.amount != null && body.amount !== "") {
     amountCents = Math.round(Number(body.amount) * 100);
-  } else if (rawText) {
-    const m = rawText.match(/\$\s*([0-9]+(?:\.[0-9]+)?)/);
-    if (m) amountCents = Math.round(parseFloat(m[1]) * 100);
   }
   if (!Number.isFinite(amountCents) || amountCents < 0) amountCents = 0;
 
-  const title = String(body.title || rawText.split(/[—\n]/)[0] || "Bet").trim().slice(0, 160);
+  const firstLine = rawText.split(/\r?\n/)[0] || "";
+  const title = String(body.title || firstLine || "Bet").trim().slice(0, 160);
   const terms = String(body.terms || rawText || title).trim();
-  const odds = body.odds != null ? String(body.odds).trim() : null;
+  const odds = body.odds != null && String(body.odds).trim() !== "" ? String(body.odds).trim() : null;
   const deadline = body.deadline ? new Date(String(body.deadline)).toISOString() : null;
 
-  const hashBase = [leagueId, sideA, sideB, String(amountCents), title.toLowerCase(), (odds || "").toLowerCase()].join("|");
+  const hashBase = [leagueId, sideA, sideB, rawText.toLowerCase()].join("|");
   const raw_hash = await sha256Hex(hashBase);
 
-  // Idempotent: same hash within league returns existing row.
   const { data: existing } = await sb
     .from("ledger_bets")
     .select("id, status")

@@ -8,7 +8,8 @@ Season-long (and shorter) bets between league members — stakes, odds, terms, a
 
 Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) ·
 [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)  
-Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)
+Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)  
+**v1.2 / v1.3 implementation:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)
 
 ### Nav
 
@@ -19,10 +20,12 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 
 ## Product rules
 
-1. **Proposer auto-locks.** When a slip is created (Shortcut or in-app), the proposer’s
-   side is already locked.
-2. **Counterparty Accept or Decline.** The other party must Accept (locks their side →
-   status `open`) or Decline (terminal `declined`).
+1. **Proposer locks on Send, not on a note.** A Shortcut (or Add note) only saves
+   the group text as a **draft** the filer can see. Locks start when they tap
+   **Send to [name]**. Then the other person says **Yes, I’m in** or **No**.
+2. **Counterparty Yes or No (v1 labels: Accept / Decline).** After Send, Them locks
+   their side → status `open`, or declines → terminal `declined`. v1.2 buttons say
+   **Yes, I’m in** / **No**; the database stays `accepted` / `declined`.
 3. **Identity is Sleeper `user_id`.** Display names change; seats do not.
 4. **Opinion only.** Ledger never feeds the trade meter, VA, lenses, or rankings.
 5. **Tip Slip screenshot** is a product reference for information architecture, not a
@@ -38,6 +41,17 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
    other league member may request to take a side (pick side + stake). An existing
    party on the **opposite** side Accepts (takes more exposure) or Declines. Private
    bets stay two-party. Full design: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md).
+10. **Note → Finish → Send (v1.2 — planned).** Shortcut (or Add note) saves
+    `source_text` only. **Finish slip** on Ledger picks Them + plain-language money
+    (“You put in $X. If you win you get $Y.”). **Send to [name]** makes it a real
+    `proposed` slip. Build: [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md). Locked plan:
+    [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
+11. **Ledger badge (v1.2 — planned).** Count of slips **sent to you** (amount > 0,
+    you have not said Yes/No). Gold mark on the Ledger tab. Opening the tab does
+    not clear it. Yes / No / they Cancel does. No `localStorage` seen-store.
+12. **SMS on Send only (v1.3 — planned).** Optional phone in Settings. After Send,
+    text Them (not the filer) + `?tab=ledger`. No SMS on note create. Phone does
+    not pick Shortcut sides. Identity stays Sleeper `user_id`.
 
 ### Status machine
 
@@ -72,45 +86,46 @@ While `open`, pending **join requests** may accumulate; they do not change paren
 3. Deploy `supabase/functions/ledger-ingest`.
 4. Note the URL: `https://<project>.supabase.co/functions/v1/ledger-ingest`
 
-### 3. iPhone Shortcut
+### 3. iPhone Shortcut (capture-first)
 
-Create a Shortcut (separate from the News share Shortcut):
+Create a Shortcut (separate from the News share Shortcut). **Do not** ask for
+amount, odds, deadline, or visibility on the phone. The group text is the proof;
+money and wording are finished on Ledger (**Complete**).
 
-1. **Receive** Text (or Share Sheet from Messages).
-2. Optional Ask for: title, amount (number), odds, side A name, side B name, deadline.
-3. **Get Contents of URL** — POST JSON to the function URL.
+1. Receive Text from Share Sheet (or Clipboard if run from the Home Screen).
+2. Dictionary of league seats → Sleeper user ids.
+3. Choose **Your side** and **Their side** (two taps).
+4. **Get Contents of URL** — POST JSON.
 
 **Headers**
 
 | Header | Value |
 | --- | --- |
 | `Content-Type` | `application/json` |
+| `apikey` | anon / public key |
+| `Authorization` | `Bearer <same anon key>` |
 | `x-ledger-secret` | same as `LEDGER_INGEST_SECRET` |
-| `Authorization` | `Bearer <anon key>` (Supabase gateway often wants apikey/anon) |
 
-**Body (v1)**
+**Body (capture-first)**
 
 ```json
 {
   "sleeper_league_id": "1315431339301806080",
-  "submitted_by": "TrumanCooper",
-  "raw_text": "Truman vs Sam — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
-  "title": "Stribling will finish the season as SF WR1",
-  "amount": 100,
-  "odds": "even",
-  "side_a_name": "Truman",
-  "side_b_name": "Sam",
-  "deadline": "2026-12-18",
-  "visibility": "public"
+  "submitted_by": "458342725222133760",
+  "raw_text": "<shared group text>",
+  "side_a_name": "458342725222133760",
+  "side_b_name": "457784547094818816"
 }
 ```
 
-- `amount` is **dollars** (stored as cents). Or send `amount_cents`.
-- `visibility` is optional (`public` default; `private` hides from non-parties).
-- Names resolve against `league_memberships.team_name` (normalized). Ambiguous → HTTP 422
-  `needs_review` — do not invent a seat.
-- Idempotent: same league + parties + amount + title + odds hash returns the existing
-  `bet_id` (`deduped: true`).
+- `side_*` / `submitted_by` are Sleeper **user ids** (or canonical names
+  `TrumanCooper`, `TipsUp`, …). Emoji team names do not resolve.
+- `raw_text` is required. Stored as `source_text` + `terms`. `title` defaults to
+  the first line. `amount_cents` defaults to `0` until Complete on the site.
+- Optional extras (`title`, `amount`, `odds`, `deadline`, `visibility`) are still
+  accepted if sent; the Shortcut should omit them.
+- Idempotent: same league + sides + `raw_text` returns the existing `bet_id`
+  (`deduped: true`).
 
 **Success response**
 
@@ -118,7 +133,7 @@ Create a Shortcut (separate from the News share Shortcut):
 { "ok": true, "bet_id": "…", "status": "proposed", "deduped": false }
 ```
 
-Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
+Fast path: Copy the message → Home Screen **Chuckle Ledger** → two team taps.
 
 ---
 
@@ -126,10 +141,11 @@ Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
 
 - Summary: total / open / settled / pending / next deadline (**your** slips only)
 - Toolbar: **Refresh** (no league-wide All filter)
-- Cards: title, parties, amount, odds, terms, status chip, Public/Private toggle,
-  deadline, actions
+- Cards: title, parties, amount, odds, **quoted `source_text`** (group-text proof),
+  status chip, Public/Private toggle, deadline, actions
 - Actions by role:
-  - Counterparty on `proposed`: Accept / Decline
+  - Either party on `proposed`: **Complete** (title, amount, odds, deadline)
+  - Counterparty on `proposed`: Accept / Decline (toast if amount is still `$0`)
   - Proposer on `proposed`: Cancel
   - Either party on `open`: Settle (I won / They won / Push)
   - Either party: toggle `visibility` public ↔ private
@@ -137,6 +153,9 @@ Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
   are walkable without SQL.
 - **v1.1:** second section **Open board** — public `open` slips you are not on, with
   **Join** (see below).
+- **v1.2:** **Finish slip** / **Add note** on this tab. Draft notes are filer-only.
+  Review copy is You vs Them + put in / win, not “odds” or “side A”. Badge on the
+  Ledger tab for slips sent to you.
 
 ## Team home public Ledger
 
@@ -175,6 +194,29 @@ already a party on that parent.
 
 ---
 
+## Note → Finish → Send (v1.2 / v1.3 — planned)
+
+**Implementation SDD:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)  
+**Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
+
+The Shortcut only **expedites the group text into a note**. It does not create a
+bet the other person must Accept.
+
+**v1.2**
+
+- Draft note: `needs_review`, `side_b` null, filer-only (SQL wave to relax
+  `side_a <> side_b` / NOT NULL).
+- **Finish slip:** You / Them, what’s the bet, you put in / you win / they put in /
+  they win. **Send to [name]** → `proposed`, you locked, they see Yes/No.
+- Badge = sent-to-you only. `?tab=ledger` deep link.
+- Review card never says odds or side A.
+
+**v1.3**
+
+- Optional phone. SMS **once per Send** to Them. Skip if no number. No SMS on note.
+
+---
+
 ## Edge cases (summary)
 
 | Case | Behavior |
@@ -190,17 +232,24 @@ already a party on that parent.
 | Join private / non-open slip | Reject (v1.1) |
 | Join when already a party | Reject (v1.1) |
 | Opposite side Declines join | Request `declined`; parent unchanged |
+| Draft note / no Them yet | Filer only; no badge, no SMS (v1.2) |
+| Send with $0 or no Them | Block |
+| SMS opened as the wrong seat | CTA; do not Yes (v1.3) |
+| SMS with no phone on Them | Send still works; badge only (v1.3) |
+| Duplicate Send | No second SMS (v1.3) |
 
 ---
 
 ## What is not in v1
 
 - Tip Slip green/cream skin
-- In-app “compose bet” form (Shortcut is the capture path)
 - Commissioner Admin toggle / force-edit after open
 - Separate `ledger_notes` table (use `ledger_bet_events` kind `note` later)
 - Discord bot ingest
-- Join / more exposure (tracked as **v1.1** — see plan above)
+- Join / more exposure (**v1.1** — see above)
+- Note → Finish → Send + Ledger badge (**v1.2** — see above)
+- Seat phone + SMS on Send (**v1.3** — see above)
+- Using phone numbers to pick Shortcut sides
 
 ---
 
@@ -211,3 +260,4 @@ Cursor plans (archived; this SDD is canonical):
 - [`docs/plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) — League tab + Ledger v1 (shipped)
 - [`docs/plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) — my slips, privacy, team public W/L (shipped)
 - [`docs/plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) — join open bets / more exposure (**planned** v1.1)
+- [`docs/plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) — Note → Finish → Send, badge, SMS (**planned** v1.2 / v1.3)

@@ -7,6 +7,7 @@
 | --- | --- |
 | [`LEDGER_SDD.md`](LEDGER_SDD.md) | Product rules (canonical, all versions) |
 | [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md) | v1 go-live runbook (wave12/13 + ingest) |
+| [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 Note → Finish → Send (do not mix into this SDD) |
 | [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) | Planning archive that fed this SDD |
 | **This file** | v1.1 build design: schema, RLS, UI, acceptance, ordered steps |
 

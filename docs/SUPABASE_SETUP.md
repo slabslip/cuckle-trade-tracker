@@ -794,14 +794,18 @@ only your slips; another seat’s team page shows that seat’s public W/L + sli
 2. Run [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)
    (adds `visibility` + SELECT RLS: party or public).
 3. Deploy Edge Function `ledger-ingest` with secret `LEDGER_INGEST_SECRET`.
-4. Build the iPhone Shortcut per [`docs/LEDGER_SDD.md`](LEDGER_SDD.md)
+4. Build the capture-first iPhone Shortcut (group text + two seats only) per
+   [`docs/LEDGER_SDD.md`](LEDGER_SDD.md)
    (full operator checklist: [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)).
+   Finish amount / odds on Ledger **Complete**, then Accept.
 
 Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md),
 [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped);
 [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) (**v1.1 planned** —
 join open public bets / more exposure; product: [`LEDGER_SDD.md`](LEDGER_SDD.md);
-build: [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md)).
+build: [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md));
+[`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)
+(locked); build: [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md).
 
 The Ledger tab in the app reads `ledger_bets` with the signed-in member JWT (same
 pattern as `trade_votes`). Design Mode seeds sample slips without Supabase.

@@ -9,6 +9,8 @@ Ledger works end-to-end.
 | [`LEDGER_SDD.md`](LEDGER_SDD.md) | Product rules (canonical) |
 | [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md) | v1 go-live runbook (wave12/13 + ingest) |
 | [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) | v1.1 join / more exposure build design |
+| [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 build + push-to-URL steps |
+| [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) | Locked plan: note → Send; SMS on Send |
 | [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) | Shipped plan: League tab + Ledger v1 |
 | [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) | Shipped plan: my slips, privacy, team W/L |
 | [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) | Planning archive for join SDD |
@@ -23,7 +25,8 @@ Ship a Tip-Slip–style bet Ledger for Chuckle Fantasy:
 1. **League** leftmost tab (Latest trade) — already shipped.
 2. **Ledger** tab — my slips only; Accept / Decline / Cancel / Settle; Public/Private.
 3. **Team home** — that seat’s public W/L money + public slips.
-4. **Capture path** — iPhone Shortcut → Edge Function `ledger-ingest` → `ledger_bets`.
+4. **Capture path** — iPhone Shortcut (group text + two seats) → `ledger-ingest`
+   → `ledger_bets` → Ledger **Complete** then Accept.
 
 ---
 
@@ -57,8 +60,8 @@ flowchart TB
 | --- | --- |
 | SQL wave12 | Tables, status machine, party UPDATE RLS, expire RPC |
 | SQL wave13 | `visibility`, SELECT = member AND (party OR public) |
-| `ledger-ingest` | Secret-gated Shortcut POST; name resolve; idempotent insert |
-| App (JWT) | Read/patch own slips; team page reads public slips |
+| `ledger-ingest` | Secret-gated capture POST; two seats + `raw_text`; `$0` ok |
+| App (JWT) | Read/patch; Complete on proposed; team page reads public slips |
 
 **Project URL:** `https://gtqyvnkkjiksmmtmzubw.supabase.co`  
 **Function URL (after deploy):**  
@@ -76,7 +79,7 @@ flowchart TB
 | [`generate-page.mjs`](../generate-page.mjs) | `renderLedger`, team Ledger, visibility toggle |
 | Design Mode | Seed slips so UI is demoable without SQL |
 
-You do **not** need to rewrite app code to go live — only Supabase + Shortcut.
+Go-live is Supabase + slim Shortcut + this app build (Complete on Ledger).
 
 ---
 
@@ -114,9 +117,9 @@ returns other members’ public slips).
 - [ ] wave12 + wave13 ran without error in SQL Editor
 - [ ] `ledger_bets` / `ledger_bet_events` exist; `visibility` column present
 - [ ] `ledger-ingest` deployed; `LEDGER_INGEST_SECRET` set
-- [ ] curl smoke test returns `{ "ok": true, "bet_id": "…" }`
-- [ ] Signed-in member sees that slip on **Ledger** (My slips)
-- [ ] Counterparty can Accept → status `open`
+- [ ] curl smoke test returns `{ "ok": true, "bet_id": "…" }` (two seat **ids** + `raw_text`)
+- [ ] Signed-in member sees that slip on **Ledger** with quoted group text
+- [ ] Party can **Complete** title / amount / odds, then counterparty Accept → `open`
 - [ ] Either party can toggle Private; other members do **not** see it on team home
 - [ ] Team home for a seat shows public Taken from / Lost to / Bets lost when settled public slips exist
 - [ ] Design Mode still shows seeded slips without Supabase
@@ -191,7 +194,8 @@ npx supabase functions deploy ledger-ingest --no-verify-jwt
 
 ### Step 6 — Smoke-test with curl
 
-Replace `YOUR_SECRET` and `YOUR_ANON_KEY` (Settings → API → `anon` `public`):
+Replace `YOUR_SECRET` and `YOUR_ANON_KEY` (Settings → API → `anon` `public`).
+Use **seat ids**, not nicknames:
 
 ```bash
 curl -sS -X POST \
@@ -202,15 +206,10 @@ curl -sS -X POST \
   -H 'x-ledger-secret: YOUR_SECRET' \
   -d '{
     "sleeper_league_id": "1315431339301806080",
-    "submitted_by": "TrumanCooper",
-    "raw_text": "Truman vs Sam — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
-    "title": "Stribling will finish the season as SF WR1",
-    "amount": 100,
-    "odds": "even",
-    "side_a_name": "Truman",
-    "side_b_name": "Sam",
-    "deadline": "2026-12-18",
-    "visibility": "public"
+    "submitted_by": "458342725222133760",
+    "raw_text": "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even",
+    "side_a_name": "458342725222133760",
+    "side_b_name": "457784547094818816"
   }'
 ```
 
@@ -223,31 +222,34 @@ Expect:
 | Result | Meaning |
 | --- | --- |
 | `401 unauthorized` | Secret mismatch / header name wrong (`x-ledger-secret`) |
-| `422` / `needs_review` | Name did not resolve uniquely — use exact team names from memberships |
+| `422` / `needs_review` | Sides missing or the same — send two different seat ids |
 | `500 LEDGER_INGEST_SECRET missing` | Secret not set on the function |
 
-### Step 7 — Build the iPhone Shortcut
+### Step 7 — Build the iPhone Shortcut (two taps)
 
-1. Shortcuts app → **+** → name it e.g. **Chuckle Ledger**.
-2. **Receive** → Text (or Share Sheet).
-3. Optional **Ask for Input** for title / amount / names / deadline.
-4. **Get Contents of URL**:
-   - Method: **POST**
-   - URL: `https://gtqyvnkkjiksmmtmzubw.supabase.co/functions/v1/ledger-ingest`
-   - Headers: `Content-Type` = `application/json`, `x-ledger-secret` = secret,
-     `Authorization` = `Bearer <anon key>`, `apikey` = `<anon key>`
-   - Request Body: JSON (Dictionary → JSON) matching the curl body. Use Shortcut
-     variables for `raw_text` / names / amount.
-5. **Show Notification** with response `bet_id` / status.
-6. Test: share a Messages bet text → run Shortcut → check Table Editor for a new row.
+Delete any amount / odds / title / deadline / visibility menus. Keep only:
+
+1. Share Sheet or Clipboard → variable `RawText`
+2. Dictionary of the 10 seats → ids
+3. Choose Your side → `SideA`; Their side → `SideB`
+4. **Get Contents of URL** POST to
+   `https://gtqyvnkkjiksmmtmzubw.supabase.co/functions/v1/ledger-ingest`
+   - Headers: `Content-Type` = `application/json`, `apikey` + `Authorization: Bearer <anon>`,
+     `x-ledger-secret` = secret
+   - JSON: `sleeper_league_id`, `submitted_by`=`SideA`, `raw_text`=`RawText`,
+     `side_a_name`=`SideA`, `side_b_name`=`SideB`
+
+Fast path: Copy the message → Home Screen icon → two team taps. Favorite the
+Shortcut in the share sheet so it is not under View More.
 
 ### Step 8 — Verify in the app
 
 1. Sign in as a claimed seat (not Design Mode alone for live data).
-2. Open **Ledger** → Refresh → see the proposed slip.
-3. Sign in as the **other** party (or use a second device) → **Accept** → status `open`.
-4. Toggle **Private** → confirm another member’s **team home** does not list that slip.
-5. Settle a public slip → on the winner/loser’s **team home**, check Taken from / Lost to / Bets lost.
+2. Open **Ledger** → Refresh → quoted group text on the card.
+3. **Complete** title / amount / odds → Save.
+4. Other party **Accept** → status `open`.
+5. Toggle **Private** → confirm another member’s **team home** does not list that slip.
+6. Settle a public slip → on the winner/loser’s **team home**, check Taken from / Lost to / Bets lost.
 
 ### Step 9 — Design Mode sanity (no SQL required)
 
@@ -265,16 +267,29 @@ Expect:
 | Accept fails silently / toast error | Not a party; or RLS UPDATE denied — confirm your Sleeper seat matches `side_a`/`side_b` |
 | Team home missing W/L | No **settled** + **public** slips for that seat yet |
 | Shortcut 401 | Secret or header typo; redeploy after setting secret |
-| Stale UI | Hard-refresh; SW cache is `chuckle-shell-v197-ledger-privacy` on current main |
+| `sides must be two different seats` | Same seat twice, or a name (not an id) collapsed via empty team_name — use ids |
+| Stale UI | Hard-refresh after this ship (`chuckle-shell-v198-ledger-capture`) |
+
+### After merge — redeploy ingest + slim the phone
+
+From repo root on the shipped commit:
+
+```bash
+npx supabase functions deploy ledger-ingest --no-verify-jwt
+```
+
+Then on the iPhone: remove money / odds / title menus. Capture is `raw_text` + two seats only.
 
 ---
 
 ## 8. Out of scope (do not build in this go-live)
 
-- In-app compose-bet form
+- Long Shortcut money / odds menus (finish those on Ledger **Complete**)
 - Tip Slip green/cream skin
 - Commissioner force-edit after open
 - Discord ingest
+- SMS vendor / collecting phone numbers (until **v1.3**)
+- Draft notes, Finish slip, Send, Ledger badge (until **v1.2**)
 
 Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
@@ -291,3 +306,15 @@ Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
 When implementing v1.1, follow [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) §7, add wave14
 to the SQL checklist above, and extend acceptance criteria for join → Accept → leg settle.
+
+---
+
+## 10. Next: note → Finish → Send (v1.2 / v1.3)
+
+**Not part of Steps 1–8.** Follow the implementation SDD when you build it.
+
+- **Implementation:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) (§11 order, §12 push to Pages)  
+- **Product:** [`LEDGER_SDD.md`](LEDGER_SDD.md) § Note → Finish → Send  
+- **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)
+
+Any claimed seat files. Share the Shortcut once. Do not SMS or badge a draft note.

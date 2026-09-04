@@ -2722,7 +2722,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v194-league-ledger";
+    const DATA_V = "v196-history-back";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6821,11 +6821,15 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Brand Back (chevron):
-     * - overlays close first
+     * Brand Back (chevron) — hierarchical, parent first:
+     * - overlays / vote sheets close first
+     * - Past Champions year → champions list → History tab
+     * - Draft Data / Cuffs (from History) → History tab
+     * - History data-set drill → History list
+     * - Teams / Ledger / History tabs → League (Latest trade)
      * - league homepage → Your leagues drawer
      * - Team settings → team home
-     * - nested screens → league homepage
+     * - other nested screens → league homepage
      */
     function onBrandBack() {
       if (leaguesDrawerOpen) {
@@ -6840,6 +6844,21 @@ const html = `<!DOCTYPE html>
         voteConfirmSeat = null;
         voteEditTx = null;
         render();
+        return;
+      }
+      // Past Champions year detail → champions list (same as ← All champions chip).
+      if (appScreen === "dash" && !me && view === "titles" && titleYear) {
+        goBack(() => {
+          titleYear = null;
+          focusNext = ".screen-h";
+          render();
+        });
+        return;
+      }
+      // History full-screen children → History tab (not league home / clearLeague).
+      if (appScreen === "dash" && !me
+          && (view === "titles" || view === "draftdata" || view === "cuffs")) {
+        goBack(() => setHomeTab("history", { force: true }));
         return;
       }
       // League-home History drill-in: clear the selected set first, keep the History tab.
@@ -6867,6 +6886,29 @@ const html = `<!DOCTYPE html>
         closeLeaguesDrawer(true);
         appScreen = "dash";
         openMyTeamHome();
+        return;
+      }
+      // Seat meter: section tabs / trade → seat home; seat home → prior screen (Teams if cold).
+      if (appScreen === "dash" && me) {
+        if (view !== "home") {
+          goBack(() => {
+            view = "home";
+            openId = null;
+            tradeSeat = null;
+            partnerName = null;
+            openPick = null;
+            openDraft = null;
+            markOpen = null;
+            focusNext = ".screen-h";
+            render();
+          });
+          return;
+        }
+        goBack(() => {
+          me = null;
+          data = null;
+          setHomeTab("teams", { force: true });
+        });
         return;
       }
       returnToLeagueHome();
@@ -12053,10 +12095,19 @@ const html = `<!DOCTYPE html>
         if (back) back.focus({ preventScroll: true });
         return true;
       }
+      // Match brand Back: History children before top-tab / league-home steps.
+      if (view === "titles" && titleYear) {
+        goBack(() => { titleYear = null; focusNext = ".screen-h"; render(); });
+        return true;
+      }
+      if (view === "titles" || view === "draftdata" || view === "cuffs") {
+        goBack(() => setHomeTab("history", { force: true }));
+        return true;
+      }
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
       if (view === "home" && homeTab && homeTab !== "league") { setHomeTab("league", { force: true }); return true; }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
-      if (view === "datasets") { setHomeTab(null); return true; }
+      if (view === "datasets") { setHomeTab("history", { force: true }); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
       if (tapeFilterOpen) { tapeFilterOpen = false; render(); return true; }
@@ -12234,7 +12285,9 @@ const html = `<!DOCTYPE html>
         goBack(() => {
           if (view === "trade") openTradesList();
           else if (view === "titles" && titleYear) openTitles();
-          else clearLeague();
+          else if (view === "titles" || view === "draftdata" || view === "cuffs") {
+            setHomeTab("history", { force: true });
+          } else clearLeague();
         });
         return;
       }
@@ -13289,7 +13342,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v194-league-ledger";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v196-history-back";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -13354,13 +13407,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v194-league-ledger")) {
+  || !html.includes("chuckle-shell-v196-history-back")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v194-league-ledger")
+  || !swSrc.includes("chuckle-shell-v196-history-back")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -15193,6 +15246,25 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
   }
   if (/appScreen !== "dash"[\s\S]{0,80}goAppHome\(\)/.test(backFn)) {
     throw new Error("onBrandBack must not send non-dash screens to goAppHome — return to league home");
+  }
+  // History children must return to History, not clearLeague / league home.
+  if (!backFn.includes('view === "titles"') || !backFn.includes('view === "draftdata"')
+    || !backFn.includes('view === "cuffs"')
+    || !backFn.includes('setHomeTab("history"')
+    || !backFn.includes("titleYear")) {
+    throw new Error("onBrandBack must return titles/draftdata/cuffs to History (year detail → list first)");
+  }
+  // Teams → seat → Back should restore Teams (not clearLeague / League tab).
+  if (!backFn.includes('setHomeTab("teams"') || !backFn.includes("&& me")) {
+    throw new Error("onBrandBack must return seat home to Teams tab (history pop when possible)");
+  }
+}
+{
+  const escFn = fnSrc("closeTopmost");
+  if (!escFn.includes('view === "titles"') || !escFn.includes('view === "draftdata"')
+    || !escFn.includes('view === "cuffs"')
+    || !escFn.includes('setHomeTab("history"')) {
+    throw new Error("closeTopmost Escape must return History children to History tab");
   }
 }
 {

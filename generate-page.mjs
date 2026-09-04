@@ -2304,7 +2304,7 @@ const html = `<!DOCTYPE html>
 <body>
   <h1 class="brand">
     <button type="button" class="go-home" id="goHome" aria-label="Chuckle Fantasy — League home">
-      <img class="brand-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" />
+      <img class="brand-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" data-brand-mark="1" />
     </button>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
@@ -2531,7 +2531,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gate20260904000313";
+    const DATA_V = "home20260904000635";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3985,6 +3985,12 @@ const html = `<!DOCTYPE html>
 
     function clearLeague() {
       clearNewsPullup();
+      // Blank the panel first so a prior team/trade paint cannot flash for a frame as the
+      // "old homepage" while league home is composed.
+      try {
+        const app = document.getElementById("app");
+        if (app) app.innerHTML = "";
+      } catch (err) { /* ignore */ }
       me = null;
       data = null;
       view = "home";
@@ -4021,8 +4027,9 @@ const html = `<!DOCTYPE html>
       clearCuffFilters();
       cuffs = null;
       say("");
-      // League home has no screen heading, so this only asks render() for the scroll to top.
-      focusNext = ".screen-h";
+      // League home has no .screen-h — do not hunt for one (avoids odd focus/scroll flashes).
+      focusNext = null;
+      window.scrollTo(0, 0);
       syncUrl();
       render();
     }
@@ -12238,6 +12245,14 @@ const html = `<!DOCTYPE html>
     // Installable shell (browser + home-screen). Push stays parked.
     // On every visit/refresh: fetch a fresh sw.js (ignore HTTP cache), activate it, and
     // reload once so claimed seats pick up merges to main without ?v= cache-bust links.
+    // Bust the top-left mark the same way JSON is busted — it is not in the HTML template's
+    // DATA_V string, so set it once the const exists.
+    try {
+      var brandImg = document.querySelector("img[data-brand-mark], img.brand-mark");
+      if (brandImg && typeof DATA_V === "string") {
+        brandImg.src = "data/ui/brand-mark.png?" + DATA_V;
+      }
+    } catch (_) {}
     if ("serviceWorker" in navigator) {
       (function armServiceWorkerAutoUpdate() {
         var reloaded = false;
@@ -12254,6 +12269,16 @@ const html = `<!DOCTYPE html>
           location.reload();
         }
         navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
+        // Drop any Cache Storage buckets left by older SW versions that still held HTML.
+        function purgeStaleCaches() {
+          if (!("caches" in window)) return Promise.resolve();
+          return caches.keys().then(function (keys) {
+            return Promise.all(keys.filter(function (k) {
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v175-home-flash";
+            }).map(function (k) { return caches.delete(k); }));
+          }).catch(function () {});
+        }
+        purgeStaleCaches();
         navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(function (reg) {
           function check() {
             try { reg.update(); } catch (_) {}
@@ -12292,14 +12317,29 @@ if (!html.includes('img class="brand-mark"') || !html.includes('data/ui/brand-ma
 if (!html.includes('updateViaCache: "none"')
   || !html.includes("controllerchange")
   || !html.includes("cuckle.swReloaded")
-  || !html.includes("reg.update()")) {
-  throw new Error("service worker must auto-update on refresh (updateViaCache none + controllerchange reload)");
+  || !html.includes("reg.update()")
+  || !html.includes("purgeStaleCaches")
+  || !html.includes("chuckle-shell-v175-home-flash")) {
+  throw new Error("service worker must auto-update on refresh and purge stale shell caches");
+}
+const swSrc = fs.readFileSync("sw.js", "utf8");
+if (swSrc.includes('caches.match("./index.html")')
+  || swSrc.includes("brand-mark.png")
+  || !swSrc.includes("chuckle-shell-v175-home-flash")
+  || !swSrc.includes("isAppDocument")
+  || !swSrc.includes("Chuckle Fantasy needs a network")) {
+  throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
 }
 
 // A lone backslash inside the template literal above is swallowed before it reaches the browser,
 // which once turned /^pick:\d{4}:4:/ into /^pick:d{4}:4:/ and cost the browser's applyVa its
 // late-4th half weight. Escapes are written \\ in the template; assert they survived.
 const inline = html.slice(html.indexOf("<script>"));
+if (!inline.includes("Blank the panel first")
+  || !inline.includes("app.innerHTML = \"\"")
+  || !html.includes("purgeStaleCaches")) {
+  throw new Error("clearLeague must blank #app; boot must purge stale shell caches");
+}
 for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
 }

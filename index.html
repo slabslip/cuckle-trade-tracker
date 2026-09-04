@@ -5210,9 +5210,9 @@
     function ledgerSeatLabel(uid) {
       if (!uid) return "—";
       const m = (members || []).find((x) => String(x.user_id) === String(uid));
-      if (m && m.name) return seatLabel(m.name);
+      if (m && m.name) return String(m.name);
       const mem = (memberships || []).find((x) => String(x.sleeper_user_id) === String(uid));
-      if (mem && mem.team_name) return seatLabel(mem.team_name);
+      if (mem && mem.team_name) return String(mem.team_name);
       return String(uid).slice(0, 6) + "…";
     }
 

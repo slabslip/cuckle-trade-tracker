@@ -51,7 +51,7 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 10. `db/wave9-vote-write-fix.sql` — fix vote INSERT RLS / membership sync so home casts save
 11. `db/wave12-ledger.sql` — bet Ledger tables + RLS + expire RPC
 12. `db/wave13-ledger-visibility.sql` — `visibility` (public/private) + party-or-public SELECT RLS
-13. `db/wave15-ledger-notes.sql` — **v1.2, not yet in repo** — nullable `side_b` + filer-only drafts. Run only when building [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md). Do not run for v1 go-live.
+13. `db/wave15-ledger-notes.sql` — **v1.2** — nullable `side_b`, filer-only drafts, Finish/Send. Run after merging the note/send PR.
 
 **Ledger:** after wave12 + wave13, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
 Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  

@@ -794,10 +794,10 @@ only your slips; another seat’s team page shows that seat’s public W/L + sli
 2. Run [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)
    (adds `visibility` + SELECT RLS: party or public).
 3. Deploy Edge Function `ledger-ingest` with secret `LEDGER_INGEST_SECRET`.
-4. Build the capture-first iPhone Shortcut (group text + two seats only) per
-   [`docs/LEDGER_SDD.md`](LEDGER_SDD.md)
-   (full operator checklist: [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)).
-   Finish amount / odds on Ledger **Complete**, then Accept.
+4. Run [`db/wave15-ledger-notes.sql`](../db/wave15-ledger-notes.sql) for Add note /
+   Finish / Send (nullable `side_b`, filer-only drafts).
+5. Ledger **Add note** starts a draft. Finish You / Them / four dollar boxes, then
+   **Send to [name]**. Shortcut comes later. Product: [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md).
 
 Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md),
 [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped);

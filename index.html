@@ -2598,7 +2598,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news-no-chips20260904142500";
+    const DATA_V = "settings-no-auth-email20260904143000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -10799,7 +10799,6 @@
 
     function renderSettingsProfileTab() {
       const uname = (authSession && authSession.username) || "—";
-      const email = authEmailForUsername(uname);
       const profileSeat = authSeatCanonName() || authSeatName() || null;
       const seatId = authSeatId();
       const f = profileSeat ? flairEntry(profileSeat) : null;
@@ -10865,8 +10864,6 @@
         + "</div>"
         + '<div class="app-card"><h3>Login & contact</h3>'
         + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
-        + '<p class="caption">Auth email (synthetic, never mailed): <code style="word-break:break-all">'
-        + esc(email) + "</code></p>"
         + (memList
           ? ('<h3 style="margin-top:14px;font-size:0.95rem">Your teams</h3>'
             + memList)
@@ -12629,7 +12626,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v184-news-no-chips";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v185-settings-no-auth-email";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

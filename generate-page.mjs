@@ -2603,7 +2603,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news-no-chips20260904142500";
+    const DATA_V = "settings-no-auth-email20260904143000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12631,7 +12631,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v184-news-no-chips";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v185-settings-no-auth-email";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12683,13 +12683,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v184-news-no-chips")) {
+  || !html.includes("chuckle-shell-v185-settings-no-auth-email")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v184-news-no-chips")
+  || !swSrc.includes("chuckle-shell-v185-settings-no-auth-email")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -14414,6 +14414,7 @@ if (inline.includes("Your team, login, and avatar.")
   || inline.includes("Leagues you own, create new ones, or redeem an invite.")
   || inline.includes("Shown next to your name, on trade vote marks")
   || inline.includes("Leagues where you have a claimed seat.")
+  || inline.includes("Auth email (synthetic, never mailed)")
   || inline.includes("← Your leagues")
   || inline.includes("← League home")) {
   throw new Error("Settings must drop descriptive blurbs; remove ← Your leagues / ← League home chips (top-bar back)");

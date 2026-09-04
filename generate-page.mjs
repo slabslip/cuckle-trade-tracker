@@ -2722,7 +2722,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v195-history-back";
+    const DATA_V = "v196-history-back";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6886,6 +6886,29 @@ const html = `<!DOCTYPE html>
         closeLeaguesDrawer(true);
         appScreen = "dash";
         openMyTeamHome();
+        return;
+      }
+      // Seat meter: section tabs / trade → seat home; seat home → prior screen (Teams if cold).
+      if (appScreen === "dash" && me) {
+        if (view !== "home") {
+          goBack(() => {
+            view = "home";
+            openId = null;
+            tradeSeat = null;
+            partnerName = null;
+            openPick = null;
+            openDraft = null;
+            markOpen = null;
+            focusNext = ".screen-h";
+            render();
+          });
+          return;
+        }
+        goBack(() => {
+          me = null;
+          data = null;
+          setHomeTab("teams", { force: true });
+        });
         return;
       }
       returnToLeagueHome();
@@ -13319,7 +13342,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v195-history-back";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v196-history-back";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -13384,13 +13407,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v195-history-back")) {
+  || !html.includes("chuckle-shell-v196-history-back")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v195-history-back")
+  || !swSrc.includes("chuckle-shell-v196-history-back")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -15230,6 +15253,10 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
     || !backFn.includes('setHomeTab("history"')
     || !backFn.includes("titleYear")) {
     throw new Error("onBrandBack must return titles/draftdata/cuffs to History (year detail → list first)");
+  }
+  // Teams → seat → Back should restore Teams (not clearLeague / League tab).
+  if (!backFn.includes('setHomeTab("teams"') || !backFn.includes("&& me")) {
+    throw new Error("onBrandBack must return seat home to Teams tab (history pop when possible)");
   }
 }
 {

@@ -2717,7 +2717,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v195-history-back";
+    const DATA_V = "v196-history-back";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6881,6 +6881,29 @@
         closeLeaguesDrawer(true);
         appScreen = "dash";
         openMyTeamHome();
+        return;
+      }
+      // Seat meter: section tabs / trade → seat home; seat home → prior screen (Teams if cold).
+      if (appScreen === "dash" && me) {
+        if (view !== "home") {
+          goBack(() => {
+            view = "home";
+            openId = null;
+            tradeSeat = null;
+            partnerName = null;
+            openPick = null;
+            openDraft = null;
+            markOpen = null;
+            focusNext = ".screen-h";
+            render();
+          });
+          return;
+        }
+        goBack(() => {
+          me = null;
+          data = null;
+          setHomeTab("teams", { force: true });
+        });
         return;
       }
       returnToLeagueHome();
@@ -13314,7 +13337,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v195-history-back";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v196-history-back";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

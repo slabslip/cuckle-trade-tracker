@@ -2,7 +2,7 @@
 /* Bump CACHE whenever index.html layout changes so Design Mode is not stuck on an old shell. */
 /* Deploys: merge to main → GitHub Pages. Clients call reg.update() on load/focus; skipWaiting+claim
    then controllerchange reloads once so a normal refresh picks up upgrades. */
-const CACHE = "chuckle-shell-v173-gate-placeholder";
+const CACHE = "chuckle-shell-v174-username-ph";
 /* Do not precache index.html — Design Mode must never boot from a stale shell snapshot. */
 const SHELL = [
   "./manifest.webmanifest",

@@ -787,10 +787,14 @@ The only thing left is the one `create or replace view` in Step 3a.
 ## 10. Ledger (bet slips)
 
 Season-long bets between members with Shortcut ingest and accept/lock.
+Slips default to **public**; either party can mark **private**. Own Ledger shows
+only your slips; another seat’s team page shows that seat’s public W/L + slips.
 
 1. Run [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) in the SQL Editor.
-2. Deploy Edge Function `ledger-ingest` with secret `LEDGER_INGEST_SECRET`.
-3. Build the iPhone Shortcut per [`docs/LEDGER_SDD.md`](LEDGER_SDD.md).
+2. Run [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)
+   (adds `visibility` + SELECT RLS: party or public).
+3. Deploy Edge Function `ledger-ingest` with secret `LEDGER_INGEST_SECRET`.
+4. Build the iPhone Shortcut per [`docs/LEDGER_SDD.md`](LEDGER_SDD.md).
 
 The Ledger tab in the app reads `ledger_bets` with the signed-in member JWT (same
 pattern as `trade_votes`). Design Mode seeds sample slips without Supabase.

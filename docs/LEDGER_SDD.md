@@ -18,6 +18,13 @@ Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/funct
 4. **Opinion only.** Ledger never feeds the trade meter, VA, lenses, or rankings.
 5. **Tip Slip screenshot** is a product reference for information architecture, not a
    visual skin. Chuckle stays dark + gold.
+6. **Own Ledger = my slips only.** The Ledger tab lists bets where you are a party —
+   never a league-wide browse.
+7. **Public by default.** `visibility` is `public` or `private` (default `public`).
+   Either party may toggle anytime. Private slips are visible only to the two parties.
+8. **Team home public ledger.** Another seat’s team page shows that seat’s **public**
+   slips plus W/L money (taken from / lost to) and bets they lost. Private slips never
+   appear there.
 
 ### Status machine
 
@@ -36,7 +43,9 @@ open → canceled          (admin void — future)
 
 ### 1. Run SQL
 
-Paste [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) into the Supabase SQL Editor and **Run**.
+1. Paste [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) into the Supabase SQL Editor and **Run**.
+2. Paste [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql) and **Run**
+   (adds `visibility` + tightens SELECT RLS to party-or-public).
 
 ### 2. Deploy Edge Function `ledger-ingest`
 
@@ -75,11 +84,13 @@ Create a Shortcut (separate from the News share Shortcut):
   "odds": "even",
   "side_a_name": "Truman",
   "side_b_name": "Sam",
-  "deadline": "2026-12-18"
+  "deadline": "2026-12-18",
+  "visibility": "public"
 }
 ```
 
 - `amount` is **dollars** (stored as cents). Or send `amount_cents`.
+- `visibility` is optional (`public` default; `private` hides from non-parties).
 - Names resolve against `league_memberships.team_name` (normalized). Ambiguous → HTTP 422
   `needs_review` — do not invent a seat.
 - Idempotent: same league + parties + amount + title + odds hash returns the existing
@@ -97,14 +108,26 @@ Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
 
 ## In-app Ledger tab
 
-- Summary: total / open / settled / pending / next deadline
-- Filters: **My slips** | **All** | Refresh
-- Cards: title, parties, amount, odds, terms, status chip, deadline, actions
+- Summary: total / open / settled / pending / next deadline (**your** slips only)
+- Toolbar: **Refresh** (no league-wide All filter)
+- Cards: title, parties, amount, odds, terms, status chip, Public/Private toggle,
+  deadline, actions
 - Actions by role:
   - Counterparty on `proposed`: Accept / Decline
   - Proposer on `proposed`: Cancel
   - Either party on `open`: Settle (I won / They won / Push)
-- Design Mode seeds two sample slips so the UI is walkable without SQL.
+  - Either party: toggle `visibility` public ↔ private
+- Design Mode seeds sample slips (including settled public W/L) so Ledger + team home
+  are walkable without SQL.
+
+## Team home public Ledger
+
+On another seat’s team page (Teams → seat):
+
+- **Taken money from** — settled public wins, summed by opponent
+- **Lost money to** — settled public losses, summed by opponent
+- **Bets lost** — those losing slips (title, opponent, amount)
+- Public open + settled cards for that seat (read-only unless you are a party)
 
 ---
 

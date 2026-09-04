@@ -144,6 +144,9 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, bet_id: existing.id, status: existing.status, deduped: true });
   }
 
+  const visRaw = String(body.visibility || "public").trim().toLowerCase();
+  const visibility = visRaw === "private" ? "private" : "public";
+
   const row = {
     sleeper_league_id: leagueId,
     title,
@@ -160,6 +163,7 @@ Deno.serve(async (req) => {
     side_a_lock: proposer === sideA,
     side_b_lock: proposer === sideB,
     deadline_at: deadline,
+    visibility,
     source: "shortcut",
     source_text: rawText || null,
     raw_hash,

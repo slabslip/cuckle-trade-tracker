@@ -2669,7 +2669,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v191-home-beside-name";
+    const DATA_V = "v192-ledger-chip";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3966,8 +3966,8 @@ const html = `<!DOCTYPE html>
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger"];
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
@@ -4760,6 +4760,9 @@ const html = `<!DOCTYPE html>
 
     function dsMenu() {
       return '<div class="ds-list" id="dataSets" role="listbox" aria-label="League lists">'
+        + '<button type="button" role="option" aria-selected="false" class="ds-opt"'
+        + ' data-view="titles" aria-label="Past Champions">'
+        + "<b>Past Champions</b><span>Every title path in this league.</span></button>"
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
@@ -4876,19 +4879,18 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Gold segmented bar: Teams | Champions | Data — docked above the News Feed peek.
-     * Team flair lives in the brand-end (top right) and opens team home.
-     * Data opens the full-screen Data tab (Draft Data, Cuffs, league lists).
+     * Gold segmented bar: Teams | Ledger | Data — docked above the News Feed peek.
+     * Past Champions lives on the Data tab (top of league lists). Ledger is a stub for now.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" aria-label="League shortcuts">'
         + '<div class="lh-action-row">'
         + lhNavAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
-        + '<button type="button" class="lh-action" data-view="titles" aria-label="Champions Path">'
+        + '<button type="button" class="lh-action' + (view === "ledger" ? " on" : "") + '" data-view="ledger" aria-label="Ledger">'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
-        + '<path fill="currentColor" d="M7 4h10v2.2l-1.2.8V10c0 2.1-1.4 3.9-3.3 4.5V17H15v2H9v-2h2.5v-2.5C9.6 13.9 8.2 12.1 8.2 10V7l-1.2-.8z"/></svg></span>'
-        + '<span class="lh-lab">Champions</span></button>'
+        + '<path fill="currentColor" d="M6 3.5h9.2L18 6.8V20.5H6zm3.2 5.2h5.6v1.6H9.2zm0 3.4h5.6v1.6H9.2zm0 3.4h4.2v1.6H9.2z"/></svg></span>'
+        + '<span class="lh-lab">Ledger</span></button>'
         + dataSetRow()
         + "</div>"
         + "</nav>";
@@ -4919,7 +4921,7 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Full-screen Data tab: Draft Data + Cuffs first, then the league list sets.
+     * Full-screen Data tab: Draft Data + Cuffs first, then Past Champions + league list sets.
      * Choosing a set shows that list; back returns here, then top-bar back to league home.
      */
     function renderDataSetsPage() {
@@ -5053,12 +5055,17 @@ const html = `<!DOCTYPE html>
         + lineup + "</div>";
     }
 
+    function renderLedger() {
+      return '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
+        + '<p class="caption">Coming soon — the league ledger opens from here.</p>';
+    }
+
     function renderTitles() {
       const list = (titles && titles.titles) || [];
       if (!list.length) return '<p class="caption">No championship path yet. Run <code>node title-path.mjs</code>.</p>';
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
-      return '<h2 class="screen-h" tabindex="-1">Champions Path</h2>'
+      return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
@@ -11202,7 +11209,7 @@ const html = `<!DOCTYPE html>
       // that leave, so the next one added cannot forget. Same condition as the renderer below.
       if (!(view === "home" && !(me && data))) dsOpen = false;
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
-      const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" ? ["home", "trades", "partners", "drafts"] : [];
+      const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" && view !== "ledger" ? ["home", "trades", "partners", "drafts"] : [];
       // The four tabs are sections of one manager's page and none of them names that manager,
       // so this does -- once, above the row, on every one of them. It doubles as the screen
       // heading those four screens never had: focusNext = ".screen-h" now lands on the name of
@@ -11235,6 +11242,7 @@ const html = `<!DOCTYPE html>
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
+        : view === "ledger" ? renderLedger()
         : view === "account" ? renderAccountPage()
         : view === "teams" ? renderTeamsPage()
         : view === "news" ? renderNewsPage()
@@ -12753,7 +12761,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v191-home-beside-name";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v192-ledger-chip";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12821,13 +12829,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v191-home-beside-name")) {
+  || !html.includes("chuckle-shell-v192-ledger-chip")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v191-home-beside-name")
+  || !swSrc.includes("chuckle-shell-v192-ledger-chip")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13966,8 +13974,9 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   if (fn.includes("lhSeatStatsAction(") || fn.includes('"My Trades"') || fn.includes("mystats")) {
     throw new Error("homeChips must not mount team stats — brand-end goTeamHome owns that door");
   }
-  if (!fn.includes('lhNavAction("teams"') || !fn.includes("dataSetRow(") || !fn.includes("Champions")) {
-    throw new Error("homeChips must keep Teams, Champions, and Data");
+  if (!fn.includes('lhNavAction("teams"') || !fn.includes("dataSetRow(") || !fn.includes("Ledger")
+    || fn.includes(">Champions<") || fn.includes('data-view="titles"')) {
+    throw new Error("homeChips must keep Teams, Ledger, and Data — Past Champions lives on the Data tab");
   }
 }
 if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
@@ -14021,6 +14030,17 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
     throw new Error("Data tab must mount Draft Data + Cuffs above league lists");
   }
 }
+if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('data-view="titles"')) {
+  throw new Error("Data tab league lists must lead with Past Champions");
+}
+if (!inline.includes("function renderLedger(") || !inline.includes('view === "ledger" ? renderLedger()')
+  || !inline.includes('>Ledger</h2>')) {
+  throw new Error("Ledger chip must open a Ledger stub screen");
+}
+if (!inline.includes(">Past Champions</h2>")) {
+  throw new Error("titles list must render as Past Champions");
+}
+
 if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine="1"')
   || !inline.includes('data-pick-rounds') || !inline.includes('data-pick-years')
   || !inline.includes('data-pick-step-round')

@@ -2609,7 +2609,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260904132928";
+    const DATA_V = "settings-trim20260904141500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3481,8 +3481,7 @@ const html = `<!DOCTYPE html>
     }
 
     function renderDraftDataPage() {
-      return '<button type="button" class="chip back" data-view="home">← League home</button>'
-        + '<h2 class="screen-h" tabindex="-1">Draft Data</h2>'
+      return '<h2 class="screen-h" tabindex="-1">Draft Data</h2>'
         + pickIntel();
     }
 
@@ -3779,8 +3778,7 @@ const html = `<!DOCTYPE html>
     }
 
     function renderCuffsPage() {
-      return '<button type="button" class="chip back" data-view="home">← League home</button>'
-        + '<h2 class="screen-h" tabindex="-1">Cuffs</h2>'
+      return '<h2 class="screen-h" tabindex="-1">Cuffs</h2>'
         + cuffsPanel();
     }
 
@@ -4881,8 +4879,7 @@ const html = `<!DOCTYPE html>
         return '<button type="button" class="chip back" data-dset-list="1">← Data Sets</button>'
           + dataSetPanel();
       }
-      return '<button type="button" class="chip back" data-view="home">← League home</button>'
-        + '<h2 class="screen-h" tabindex="-1">League Data Sets</h2>'
+      return '<h2 class="screen-h" tabindex="-1">League Data Sets</h2>'
         + dsMenu();
     }
 
@@ -5268,11 +5265,10 @@ const html = `<!DOCTYPE html>
 
     function renderNewsPage() {
       // Same feed the hero opens. Heading comes from renderNewsBody(); replace it with a
-      // screen heading and a way back to league home.
+      // screen heading. Top-bar back returns to league home.
       return renderNewsBody().replace(
         "<h2>News and Alerts</h2>",
-        '<button type="button" class="chip" data-view="home" style="margin:0 0 10px">← League home</button>'
-          + '<h2 class="screen-h" tabindex="-1">News and Alerts</h2>'
+        '<h2 class="screen-h" tabindex="-1">News and Alerts</h2>'
       );
     }
 
@@ -10715,7 +10711,6 @@ const html = `<!DOCTYPE html>
 
     function renderCreateLeague() {
       return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
         + '<div class="app-card"><h3>League IDs</h3>'
         + '<div class="app-form">'
@@ -10810,7 +10805,6 @@ const html = `<!DOCTYPE html>
         + "</div>";
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-settings="leagues">← Settings</button>'
-        + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
         + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
@@ -10868,7 +10862,6 @@ const html = `<!DOCTYPE html>
           + esc(m.team_name || "—") + "</p>";
       }).join("");
       return '<div class="app-card"><h3>Avatar</h3>'
-        + '<p class="caption" style="margin:0">Shown next to your name, on trade vote marks, and on your team chip. Defaults stay until you upload a photo.</p>'
         + '<div class="profile-av-row">'
         + '<div class="profile-av-preview" aria-hidden="true">' + preview + "</div>"
         + '<div>'
@@ -10899,7 +10892,6 @@ const html = `<!DOCTYPE html>
         + esc(email) + "</code></p>"
         + (memList
           ? ('<h3 style="margin-top:14px;font-size:0.95rem">Your teams</h3>'
-            + '<p class="caption" style="margin:0 0 4px">Leagues where you have a claimed seat.</p>'
             + memList)
           : '<p class="caption">No claimed seats yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
@@ -10929,10 +10921,9 @@ const html = `<!DOCTYPE html>
                 + '">Open dashboard</button>'
               : "")
             + "</div>"
-            + '<p class="caption" style="margin:8px 0 0">Transfer admin or reissue a seat after a manager leaves: open <b>Send / manage invites</b>.</p>'
             + "</div>";
         }).join("")
-        : '<div class="app-card"><p class="caption" style="margin:0">You have not created a league yet. Create one to become commissioner and mint seat invites.</p></div>';
+        : '<div class="app-card"><p class="caption" style="margin:0">No leagues created yet.</p></div>';
       return (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
@@ -10950,16 +10941,11 @@ const html = `<!DOCTYPE html>
         + '<button type="button" role="tab" class="tab' + (settingsTab === "leagues" ? " on" : "") + '"'
         + ' data-settings-tab="leagues" aria-selected="' + (settingsTab === "leagues" ? "true" : "false") + '">Leagues</button>'
         + "</div>";
-      const sub = settingsTab === "profile"
-        ? "Your team, login, and avatar."
-        : "Leagues you own, create new ones, or redeem an invite.";
       const body = settingsTab === "leagues"
         ? renderSettingsLeaguesTab()
         : renderSettingsProfileTab();
       return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
-        + '<p class="caption" style="margin:0 0 4px">' + sub + "</p>"
         + tabNav
         + body
         + "</div>";
@@ -10973,7 +10959,6 @@ const html = `<!DOCTYPE html>
 
     function renderRedeemInvite() {
       return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Redeem invite</h2>'
         + '<div class="app-card"><h3>Invite code</h3>'
         + '<div class="app-form">'
@@ -11049,7 +11034,6 @@ const html = `<!DOCTYPE html>
     function renderPendingLeague() {
       const L = activeLeague || {};
       return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(L.name || "League") + "</h2>"
         + '<div class="sync-banner">You are in as <b>' + esc(L.team_name || "your team") + "</b>. "
         + "This league is registered. The full trade meter syncs next — Cuckle-ready leagues open the dashboard immediately; new leagues show here until their data is built.</div>"
@@ -12668,7 +12652,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v182-league-reselect";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v183-settings-trim";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12720,13 +12704,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v182-league-reselect")) {
+  || !html.includes("chuckle-shell-v183-settings-trim")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v182-league-reselect")
+  || !swSrc.includes("chuckle-shell-v183-settings-trim")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -14443,6 +14427,15 @@ if (!html.includes('class="go-settings"') || !html.includes("settings-gear")
   || !inline.includes("function renderSettingsProfileTab(")
   || !inline.includes("function renderSettingsLeaguesTab(")) {
   throw new Error("Settings must use a gear icon and Profile/Leagues tabs (default Profile)");
+}
+// Settings is headings + controls only — no section blurbs; top-bar back replaces in-page league backs.
+if (inline.includes("Your team, login, and avatar.")
+  || inline.includes("Leagues you own, create new ones, or redeem an invite.")
+  || inline.includes("Shown next to your name, on trade vote marks")
+  || inline.includes("Leagues where you have a claimed seat.")
+  || inline.includes("← Your leagues")
+  || inline.includes("← League home")) {
+  throw new Error("Settings must drop descriptive blurbs; remove ← Your leagues / ← League home chips (top-bar back)");
 }
 if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel")
   || !inline.includes("function openLeaguesDrawer(")

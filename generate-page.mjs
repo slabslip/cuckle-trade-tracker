@@ -960,10 +960,9 @@ const html = `<!DOCTYPE html>
     /* League home — PSA-inspired hierarchy. Gold accent stays product DNA (not PSA red).
        News Feed is a bottom pull-up sheet (peek + drag to expand under the brand). */
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
-    /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
+    /* Peek height reserves scroll room so Latest trade is not trapped under the sheet. */
     body.has-news-pullup {
-      /* Peek + gold nav bar docked just above it. */
-      padding-bottom: calc(var(--news-pullup-peek, 100px) + var(--lh-nav-h, 52px) + 10px
+      padding-bottom: calc(var(--news-pullup-peek, 100px) + 10px
         + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
@@ -1261,44 +1260,40 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
-    /* Gold segmented shortcuts — docked just above the News Feed peek (not mid-screen). */
-    :root { --lh-nav-h: 52px; --lh-gold: #e0b44c; }
+    /* League-home top tabs — Teams | Ledger | History above Latest trade (in-place toggle). */
+    :root { --lh-nav-h: 44px; --lh-gold: #e0b44c; }
     .lh-actions {
-      position: fixed; z-index: 36;
-      left: 50%; transform: translateX(-50%);
-      bottom: calc(var(--news-pullup-peek, 100px) + env(safe-area-inset-bottom, 0px));
-      width: min(calc(100% - 32px), 888px);
-      margin: 0; box-sizing: border-box;
-      background: #0b0b0d;
-      border: 1px solid var(--lh-gold);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    body.has-news-pullup-open .lh-actions,
-    body.has-news-pullup-closing .lh-actions {
-      visibility: hidden; pointer-events: none;
+      position: relative; z-index: 5;
+      width: 100%;
+      margin: 0 0 14px; box-sizing: border-box;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(224, 180, 76, 0.35);
+      border-radius: 0;
+      overflow: visible;
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0; align-items: stretch; min-height: var(--lh-nav-h);
     }
     button.lh-action {
-      appearance: none; font: inherit; color: var(--lh-gold);
+      appearance: none; font: inherit; color: rgba(224, 180, 76, 0.72);
       background: transparent; border: 0; border-radius: 0;
-      padding: 10px 8px; margin: 0;
+      padding: 10px 8px 12px; margin: 0;
       display: flex; flex-direction: row; align-items: center; justify-content: center;
       gap: 8px;
       cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
       min-height: var(--lh-nav-h);
+      box-shadow: inset 0 -2px 0 transparent;
     }
     button.lh-action + button.lh-action {
-      border-left: 1px solid var(--lh-gold);
+      border-left: 0;
     }
     button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
     button.lh-action .lh-ico {
       width: auto; height: auto; border-radius: 0;
       background: transparent; border: 0; padding: 0;
-      display: grid; place-items: center; color: var(--lh-gold); flex: 0 0 auto;
+      display: grid; place-items: center; color: inherit; flex: 0 0 auto;
       overflow: visible;
     }
     button.lh-action .lh-ico svg {
@@ -1316,13 +1311,17 @@ const html = `<!DOCTYPE html>
     }
     button.lh-action .lh-ico .lh-seat-initials {
       font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em;
-      color: var(--lh-gold);
+      color: inherit;
     }
-    button.lh-action.on { background: rgba(224, 180, 76, 0.12); }
-    button.lh-action.on .lh-ico { border: 0; }
+    button.lh-action.on {
+      color: var(--lh-gold);
+      background: transparent;
+      box-shadow: inset 0 -2px 0 var(--lh-gold);
+    }
+    button.lh-action.on .lh-ico { border: 0; color: var(--lh-gold); }
     button.lh-action .lh-lab {
       font-size: 0.8125rem; font-weight: 650; line-height: 1.2;
-      text-align: center; color: var(--lh-gold); max-width: 100%;
+      text-align: center; color: inherit; max-width: 100%;
       overflow-wrap: anywhere; letter-spacing: -0.01em;
     }
     .lh-section { margin: 0 0 18px; }
@@ -2669,7 +2668,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260904170029";
+    const DATA_V = "v193-home-top-tabs";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2703,6 +2702,8 @@ const html = `<!DOCTYPE html>
       ["all", "as of today", "Weekly average value from accept through today."],
     ];
     let view = "home";
+    // League-home top tabs: null = Latest trade; teams | ledger | history swap body in place.
+    let homeTab = null;
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
     let newsPullupOpen = false;
     let newsPullupCleanup = null;
@@ -4159,6 +4160,7 @@ const html = `<!DOCTYPE html>
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
+      homeTab = null;
       clearPickFilters();
       clearCuffFilters();
       cuffs = null;
@@ -4768,33 +4770,41 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Quick-action door to the Data tab (Draft Data, Cuffs, and league list sets).
-     * The visible label is the constant "Data" and never the selection -- the chosen set is
-     * named by the heading on the list screen and by aria-selected inside the menu. The
-     * accessible name carries the selection so nothing is lost to a screen reader.
-     *
-     * With nothing selected the accessible name says "none selected".
+     * History tab in the top league-home tab bar (Draft Data, Cuffs, league lists).
+     * Visible label is always "History"; accessible name carries any selected set.
      */
     function dataSetRow() {
       const cur = dataSet ? dataSetDef(dataSet) : null;
       const named = cur
-        ? ' aria-label="Data, ' + esc(cur[1]) + ' selected"'
-        : ' aria-label="Data, none selected"';
-      // Gold-bar cell; opens the full-screen Data tab (not a dropdown).
-      return '<button type="button" class="lh-action' + (view === "datasets" ? " on" : "") + '" data-dset-open="1"'
+        ? ' aria-label="History, ' + esc(cur[1]) + ' selected"'
+        : ' aria-label="History, none selected"';
+      const on = homeTab === "history";
+      return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="history"'
+        + ' aria-selected="' + (on ? "true" : "false") + '"'
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
-        + '<span class="lh-lab">Data</span></button>';
+        + '<span class="lh-lab">History</span></button>';
     }
 
     function chipSlot() {
       return '<span class="home-chip slot" aria-hidden="true">—</span>';
     }
 
-    /** One gold-bar quick-action cell (Teams / Champions / …). */
+    /** Bottom-nav style action (mystats / trades) — not the top league-home tabs. */
     function lhNavAction(nav, lab, path) {
       return '<button type="button" class="lh-action" data-lh-nav="' + esc(nav) + '"'
+        + ' aria-label="' + esc(lab) + '">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
+        + '<path fill="currentColor" d="' + path + '"/></svg></span>'
+        + '<span class="lh-lab">' + esc(lab) + "</span></button>";
+    }
+
+    /** One top tab cell for in-place league-home toggling. */
+    function homeTabAction(tab, lab, path) {
+      const on = homeTab === tab;
+      return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="' + esc(tab) + '"'
+        + ' aria-selected="' + (on ? "true" : "false") + '"'
         + ' aria-label="' + esc(lab) + '">'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="' + path + '"/></svg></span>'
@@ -4879,21 +4889,50 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Gold segmented bar: Teams | Ledger | Data — docked above the News Feed peek.
-     * Past Champions lives on the Data tab (top of league lists). Ledger is a stub for now.
+     * Top tabs on league home: Teams | Ledger | History — above Latest trade.
+     * Tapping swaps the body in place (active tab underlined); Home clears back to Latest trade.
+     * Past Champions lives on the History tab (top of league lists). Ledger is a stub for now.
      */
     function homeChips() {
-      return '<nav class="lh-actions ds-wrap" aria-label="League shortcuts">'
+      return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
         + '<div class="lh-action-row">'
-        + lhNavAction("teams", "Teams",
+        + homeTabAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
-        + '<button type="button" class="lh-action' + (view === "ledger" ? " on" : "") + '" data-view="ledger" aria-label="Ledger">'
-        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
-        + '<path fill="currentColor" d="M6 3.5h9.2L18 6.8V20.5H6zm3.2 5.2h5.6v1.6H9.2zm0 3.4h5.6v1.6H9.2zm0 3.4h4.2v1.6H9.2z"/></svg></span>'
-        + '<span class="lh-lab">Ledger</span></button>'
+        + homeTabAction("ledger", "Ledger",
+          "M6 3.5h9.2L18 6.8V20.5H6zm3.2 5.2h5.6v1.6H9.2zm0 3.4h5.6v1.6H9.2zm0 3.4h4.2v1.6H9.2z")
         + dataSetRow()
         + "</div>"
         + "</nav>";
+    }
+
+    /**
+     * Toggle a league-home top tab in place. Same tab again returns to Latest trade.
+     * Pass { force: true } to open a tab without toggle-off (History door / deep links).
+     */
+    function setHomeTab(tab, opts) {
+      const force = !!(opts && opts.force);
+      let next = null;
+      if (tab) next = (!force && homeTab === tab) ? null : tab;
+      if (next !== "history") dataSet = null;
+      homeTab = next;
+      me = null;
+      data = null;
+      view = "home";
+      openId = null;
+      tradeSeat = null;
+      titleYear = null;
+      partnerName = null;
+      openPick = null;
+      openDraft = null;
+      markOpen = null;
+      dsOpen = false;
+      lensOpen = false;
+      yearFilterOpen = false;
+      draftFilterOpen = false;
+      tapeFilterOpen = false;
+      voteToast = null;
+      focusNext = next ? '[data-home-tab="' + next + '"]' : null;
+      render();
     }
 
     /**
@@ -4921,15 +4960,15 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Full-screen Data tab: Draft Data + Cuffs first, then Past Champions + league list sets.
-     * Choosing a set shows that list; back returns here, then top-bar back to league home.
+     * History tab body: Draft Data + Cuffs first, then Past Champions + league list sets.
+     * Choosing a set shows that list; back returns here, then top-bar back to Latest trade.
      */
     function renderDataSetsPage() {
       if (dataSet) {
-        return '<button type="button" class="chip back" data-dset-list="1">← Data</button>'
+        return '<button type="button" class="chip back" data-dset-list="1">← History</button>'
           + dataSetPanel();
       }
-      return '<h2 class="screen-h" tabindex="-1">Data</h2>'
+      return '<h2 class="screen-h" tabindex="-1">History</h2>'
         + pickIntelHome()
         + cuffsHome()
         + '<h3 class="ds-lists-h">League lists</h3>'
@@ -5271,15 +5310,25 @@ const html = `<!DOCTYPE html>
       // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
       // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
       // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
-      // Draft Data + Cuffs live on the Data tab (view=datasets), not on league home.
+      // Top tabs (Teams | Ledger | History) sit above Latest trade and swap body in place.
       let hero = "";
       let chips = "";
       let progress = "";
-      let sets = "";
-      try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
+      let tabBody = "";
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
-      try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
-      sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
+      if (!chips) {
+        try { chips = homeChips(); } catch (err2) { console.error(err2); }
+      }
+      if (homeTab === "teams") {
+        try { tabBody = renderTeamsPage(); } catch (err) { console.error(err); tabBody = ""; }
+      } else if (homeTab === "ledger") {
+        try { tabBody = renderLedger(); } catch (err) { console.error(err); tabBody = ""; }
+      } else if (homeTab === "history") {
+        try { tabBody = renderDataSetsPage(); } catch (err) { console.error(err); tabBody = ""; }
+      } else {
+        try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
+      }
+      try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
       // but a thrown path above used to leave a blank first viewport in Design Mode.
       if (!hero) {
@@ -5304,12 +5353,8 @@ const html = `<!DOCTYPE html>
           + '<div class="news-pullup-empty">The feed could not be shown. Open for details.</div>'
           + "</div></div></aside>";
       }
-      if (!chips) {
-        try { chips = homeChips(); } catch (err2) { console.error(err2); }
-      }
-      // Latest trade → News Feed pull-up; gold nav bar docks above the peek.
-      // Draft Data / Cuffs → Data tab.
-      return progress + sets + chips + hero;
+      // Tabs → tab body (or Latest trade) → News Feed pull-up.
+      return chips + (tabBody || progress) + hero;
     }
 
     function renderNews() {
@@ -6367,6 +6412,18 @@ const html = `<!DOCTYPE html>
         voteConfirmSeat = null;
         voteEditTx = null;
         render();
+        return;
+      }
+      // League-home History drill-in: clear the selected set first, keep the History tab.
+      if (appScreen === "dash" && !me && view === "home" && homeTab === "history" && dataSet) {
+        dataSet = null;
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      // Top tabs: Back returns to Latest trade (same shell) instead of leaving the league.
+      if (appScreen === "dash" && !me && view === "home" && homeTab) {
+        setHomeTab(null);
         return;
       }
       if (isLeagueHomeSurface()) {
@@ -11204,6 +11261,11 @@ const html = `<!DOCTYPE html>
       paintLeagueSub();
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
+      // Legacy full-screen doors → in-place league-home tabs.
+      if (!me && (view === "teams" || view === "ledger" || view === "datasets")) {
+        homeTab = view === "datasets" ? "history" : view;
+        view = "home";
+      }
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
       // cannot survive a navigation off it. Done here rather than in each of the six functions
       // that leave, so the next one added cannot forget. Same condition as the renderer below.
@@ -11564,8 +11626,10 @@ const html = `<!DOCTYPE html>
         if (back) back.focus({ preventScroll: true });
         return true;
       }
+      if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
+      if (view === "home" && homeTab) { setHomeTab(null); return true; }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
-      if (view === "datasets") { view = "home"; dataSet = null; focusNext = null; render(); return true; }
+      if (view === "datasets") { setHomeTab(null); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
       if (tapeFilterOpen) { tapeFilterOpen = false; render(); return true; }
@@ -11606,7 +11670,10 @@ const html = `<!DOCTYPE html>
       if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
       dataSet = id;
       dsOpen = false;
-      view = "datasets";
+      homeTab = "history";
+      me = null;
+      data = null;
+      view = "home";
       openId = null;
       tradeSeat = null;
       focusNext = "[data-dset-head]";
@@ -11621,22 +11688,15 @@ const html = `<!DOCTYPE html>
     }
 
     function openDataSets() {
-      dsOpen = false;
-      lensOpen = false;
-      yearFilterOpen = false;
-      draftFilterOpen = false;
-      openId = null;
-      tradeSeat = null;
-      markOpen = null;
-      dataSet = null;
-      view = "datasets";
-      focusNext = ".screen-h";
-      render();
+      setHomeTab("history", { force: true });
     }
 
     function showDataSetList() {
       dataSet = null;
-      view = "datasets";
+      homeTab = "history";
+      me = null;
+      data = null;
+      view = "home";
       focusNext = ".screen-h";
       render();
     }
@@ -11754,6 +11814,12 @@ const html = `<!DOCTYPE html>
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
 
+      // League-home top tabs: bounce in place (Teams / Ledger / History).
+      const homeTabBtn = e.target.closest("[data-home-tab]");
+      if (homeTabBtn) {
+        setHomeTab(homeTabBtn.getAttribute("data-home-tab"));
+        return;
+      }
       // League-home quick actions: same destinations as bottom nav.
       const lhNav = e.target.closest("[data-lh-nav]");
       if (lhNav) {
@@ -12761,7 +12827,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v192-ledger-chip";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v193-home-top-tabs";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12829,13 +12895,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v192-ledger-chip")) {
+  || !html.includes("chuckle-shell-v193-home-top-tabs")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v192-ledger-chip")
+  || !swSrc.includes("chuckle-shell-v193-home-top-tabs")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13306,25 +13372,24 @@ if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-lis
 }
 // League home's five lists open as a full-screen Data tab (not a dropdown).
 // The quick-action trigger is the door; losing it loses the only path to four of the five lists.
-if (!inline.includes('<span class="lh-lab">Data</span>')) {
-  throw new Error('the Data trigger must ship -- it is the only door to four of the five sets');
+if (!inline.includes('<span class="lh-lab">History</span>')) {
+  throw new Error('the History tab must ship -- it is the only door to four of the five sets');
 }
-if (!inline.includes("Data, ' + esc(cur[1]) + ' selected")) {
-  throw new Error("the Data trigger must name the selected set in its accessible name");
+if (!inline.includes("History, ' + esc(cur[1]) + ' selected")) {
+  throw new Error("the History tab must name the selected set in its accessible name");
 }
-// Full-screen Data tab: options stay a listbox for a11y, but openDataSets navigates view=datasets.
+// History top tab: listbox stays; openDataSets forces the History home tab in place.
 for (const need of [
   'id="dataSets"',
   'role="listbox" aria-label="League lists"',
   "function openDataSets()",
   "function renderDataSetsPage()",
-  'view = "datasets"',
-  'view === "datasets" ? renderDataSetsPage()',
-  'data-dset-open="1"',
+  "function setHomeTab(",
+  'data-home-tab="history"',
   "function showDataSetList()",
   'data-dset-list="1"',
 ]) {
-  if (!inline.includes(need)) throw new Error(`Data full-screen path lost: ${need}`);
+  if (!inline.includes(need)) throw new Error(`History top-tab path lost: ${need}`);
 }
 // Dropdown chrome must stay gone.
 for (const gone of [
@@ -13343,7 +13408,7 @@ for (const gone of [
       return rest.slice(0, rest.indexOf("\n    function "));
     })();
     if (openSrc.includes("showMenu(")) {
-      throw new Error("openDataSets must not open a floating menu -- it navigates to view=datasets");
+      throw new Error("openDataSets must not open a floating menu -- it opens the History home tab");
     }
     continue;
   }
@@ -13363,8 +13428,8 @@ const fnBody = (name) => {
 for (const need of ['role="option"', 'data-dset="']) {
   if (!fnSrc("dsOpt").includes(need)) throw new Error(`a data set option lost ${need}`);
 }
-if (!fnSrc("dataSetRow").includes('data-dset-open="1"')) {
-  throw new Error("the Data trigger lost data-dset-open");
+if (!fnSrc("dataSetRow").includes('data-home-tab="history"')) {
+  throw new Error("the History tab lost data-home-tab");
 }
 if (fnSrc("dataSetRow").includes("aria-haspopup") || fnSrc("dataSetRow").includes("aria-expanded")) {
   throw new Error("the Data Sets trigger must not advertise a popup listbox anymore");
@@ -13398,7 +13463,7 @@ for (const gone of ["dsNoneOpt", "clearDataSet", "data-dset-none", "<b>None</b><
 if (fnSrc("dsMenu").includes("dsNoneOpt")) {
   throw new Error("dsMenu must not compose a None option");
 }
-if (!fnSrc("dataSetRow").includes('aria-label="Data, none selected"')) {
+if (!fnSrc("dataSetRow").includes('aria-label="History, none selected"')) {
   throw new Error("the trigger must say \"none selected\" when no set is on screen");
 }
 for (const gone of ["openPacks", "togglePack", "data-pack", "pack-head"]) {
@@ -13410,11 +13475,11 @@ if (!fnSrc("selectDataSet").includes("function selectDataSet(id)")) {
 if (!inline.includes("selectDataSet(")) {
   throw new Error("selectDataSet() must remain the route into a set");
 }
-if (!fnSrc("openDataSets").includes('view = "datasets"')) {
-  throw new Error("openDataSets must navigate to the datasets screen");
+if (!fnSrc("openDataSets").includes('setHomeTab("history"')) {
+  throw new Error("openDataSets must open the History home tab");
 }
-if (!fnSrc("selectDataSet").includes('view = "datasets"')) {
-  throw new Error("selectDataSet must keep the user on the datasets screen");
+if (!fnSrc("selectDataSet").includes('homeTab = "history"') || !fnSrc("selectDataSet").includes('view = "home"')) {
+  throw new Error("selectDataSet must keep the user on the History home tab");
 }
 for (const need of ['data-dset-head="1"', "head.focus({ preventScroll: true })"]) {
   if (!inline.includes(need)) throw new Error(`the selected set's heading lost its focus handle: ${need}`);
@@ -13590,8 +13655,8 @@ if (seatPlaces.filter((p) => p === 1).length !== 1) {
 if (html.includes("max-height: min(calc(5 * 76px + 30px)") || html.includes("max-height: min(calc(6 * 76px")) {
   throw new Error("Data Sets must not keep a dropdown max-height cap -- the list is a full screen");
 }
-if (!fnBody("openDataSets").includes('view = "datasets"')) {
-  throw new Error("openDataSets() must navigate to view=datasets");
+if (!fnBody("openDataSets").includes('setHomeTab("history"')) {
+  throw new Error("openDataSets() must open the History home tab");
 }
 if (fnBody("openDataSets").includes("showMenu(") || fnBody("openDataSets").includes("showMenu(")) {
   throw new Error("openDataSets() must not scroll a floating menu into view");
@@ -13958,12 +14023,12 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
 }
 {
   const lhCss = html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {"));
-  if (!lhCss.includes("position: fixed") || !lhCss.includes("var(--lh-gold")
-    || !lhCss.includes("var(--news-pullup-peek") || !lhCss.includes("border-left: 1px solid var(--lh-gold)")) {
-    throw new Error("league home shortcuts must be a gold segmented bar docked above the News Feed peek");
+  if (!lhCss.includes("position: relative") || !lhCss.includes("var(--lh-gold")
+    || !lhCss.includes("inset 0 -2px 0") || lhCss.includes("position: fixed")) {
+    throw new Error("league home tabs must sit at the top with a gold underline on the active tab");
   }
-  if (!inline.includes('aria-label="League shortcuts"')) {
-    throw new Error("homeChips must expose a League shortcuts nav landmark");
+  if (!inline.includes('aria-label="League home tabs"')) {
+    throw new Error("homeChips must expose a League home tabs landmark");
   }
 }
 
@@ -13974,9 +14039,12 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   if (fn.includes("lhSeatStatsAction(") || fn.includes('"My Trades"') || fn.includes("mystats")) {
     throw new Error("homeChips must not mount team stats — brand-end goTeamHome owns that door");
   }
-  if (!fn.includes('lhNavAction("teams"') || !fn.includes("dataSetRow(") || !fn.includes("Ledger")
+  if (!fn.includes('homeTabAction("teams"') || !fn.includes("dataSetRow(") || !fn.includes('homeTabAction("ledger"')
     || fn.includes(">Champions<") || fn.includes('data-view="titles"')) {
-    throw new Error("homeChips must keep Teams, Ledger, and Data — Past Champions lives on the Data tab");
+    throw new Error("homeChips must keep Teams, Ledger, and History — Past Champions lives on History");
+  }
+  if (!fnSrc("dataSetRow").includes(">History<") || !fnSrc("dataSetRow").includes('data-home-tab="history"')) {
+    throw new Error("History tab label must ship on dataSetRow");
   }
 }
 if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
@@ -14020,22 +14088,22 @@ if (!html.includes("img.lh-seat-flair") || !html.includes("lh-ico-flair")) {
 }
 if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
   || homeReturn.includes("intel") || /cuffsHtml/.test(homeReturn)) {
-  throw new Error("renderLeagueHome must not mount Draft Data / Cuffs — those live on the Data tab");
+  throw new Error("renderLeagueHome must not mount Draft Data / Cuffs except via the History tab body");
 }
 {
   const dataPage = fnSrc("renderDataSetsPage");
   if (!dataPage.includes("pickIntelHome()") || !dataPage.includes("cuffsHome()")
     || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
-    || !dataPage.includes(">Data</h2>")) {
-    throw new Error("Data tab must mount Draft Data + Cuffs above league lists");
+    || !dataPage.includes(">History</h2>")) {
+    throw new Error("History tab must mount Draft Data + Cuffs above league lists");
   }
 }
 if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('data-view="titles"')) {
-  throw new Error("Data tab league lists must lead with Past Champions");
+  throw new Error("History league lists must lead with Past Champions");
 }
-if (!inline.includes("function renderLedger(") || !inline.includes('view === "ledger" ? renderLedger()')
+if (!inline.includes("function renderLedger(") || !inline.includes('homeTab === "ledger"')
   || !inline.includes('>Ledger</h2>')) {
-  throw new Error("Ledger chip must open a Ledger stub screen");
+  throw new Error("Ledger tab must open a Ledger stub on league home");
 }
 if (!inline.includes(">Past Champions</h2>")) {
   throw new Error("titles list must render as Past Champions");
@@ -14165,7 +14233,7 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
   }
   if (inline.includes("cuffsHtml = cuffsHome()")
     && inline.includes("return progress + chips + intel + cuffsHtml")) {
-    throw new Error("renderLeagueHome must not mount cuffsHome — Data tab owns Draft Data / Cuffs");
+    throw new Error("renderLeagueHome must not mount cuffsHome except via the History tab body");
   }
 
   const homeCuffs = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
@@ -14175,7 +14243,7 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
   }
   if (!fnSrc("renderDataSetsPage").includes("cuffsHome()")
     || !fnSrc("renderDataSetsPage").includes("pickIntelHome()")) {
-    throw new Error("Data tab must mount cuffsHome + pickIntelHome");
+    throw new Error("History tab must mount cuffsHome + pickIntelHome");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
     || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {

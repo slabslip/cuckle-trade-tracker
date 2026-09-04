@@ -959,7 +959,9 @@ const html = `<!DOCTYPE html>
     .day-alert-h { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
     /* Peek height reserves scroll room so Latest trade / chips are not trapped under the sheet. */
     body.has-news-pullup {
-      padding-bottom: calc(var(--news-pullup-peek, 88px) + env(safe-area-inset-bottom, 0px));
+      /* Peek + gold nav bar docked just above it. */
+      padding-bottom: calc(var(--news-pullup-peek, 100px) + var(--lh-nav-h, 52px) + 10px
+        + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open {
       overflow: hidden;
@@ -1256,46 +1258,69 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
-    /* Sits under Latest trade — top gap separates the H2H card from the quick-action row. */
+    /* Gold segmented shortcuts — docked just above the News Feed peek (not mid-screen). */
+    :root { --lh-nav-h: 52px; --lh-gold: #e0b44c; }
     .lh-actions {
-      margin: 18px 0 22px;
+      position: fixed; z-index: 36;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(var(--news-pullup-peek, 100px) + env(safe-area-inset-bottom, 0px));
+      width: min(calc(100% - 32px), 888px);
+      margin: 0; box-sizing: border-box;
+      background: #0b0b0d;
+      border: 1px solid var(--lh-gold);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    body.has-news-pullup-open .lh-actions,
+    body.has-news-pullup-closing .lh-actions {
+      visibility: hidden; pointer-events: none;
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px 8px; align-items: start;
+      gap: 0; align-items: stretch; min-height: var(--lh-nav-h);
     }
     button.lh-action {
-      appearance: none; font: inherit; color: var(--text);
-      background: transparent; border: 0; padding: 4px 0; margin: 0;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      appearance: none; font: inherit; color: var(--lh-gold);
+      background: transparent; border: 0; border-radius: 0;
+      padding: 10px 8px; margin: 0;
+      display: flex; flex-direction: row; align-items: center; justify-content: center;
+      gap: 8px;
       cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
+      min-height: var(--lh-nav-h);
     }
-    button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-action + button.lh-action {
+      border-left: 1px solid var(--lh-gold);
+    }
+    button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
     button.lh-action .lh-ico {
-      width: 56px; height: 56px; border-radius: 50%;
-      background: #1c1c22; border: 1px solid var(--line);
-      display: grid; place-items: center; color: var(--text); flex: 0 0 auto;
-      overflow: hidden;
+      width: auto; height: auto; border-radius: 0;
+      background: transparent; border: 0; padding: 0;
+      display: grid; place-items: center; color: var(--lh-gold); flex: 0 0 auto;
+      overflow: visible;
+    }
+    button.lh-action .lh-ico svg {
+      display: block; width: 18px; height: 18px;
     }
     button.lh-action .lh-ico.lh-ico-flair {
-      padding: 0; border-color: #3a3428;
+      padding: 0; border: 0;
     }
     button.lh-action .lh-ico img.lh-seat-flair {
-      display: block; width: 100%; height: 100%;
+      display: block; width: 22px; height: 22px;
       object-fit: cover; border-radius: 50%;
     }
     button.lh-action .lh-ico .lh-seat-glyph {
-      font-size: 1.5rem; line-height: 1;
+      font-size: 1rem; line-height: 1;
     }
     button.lh-action .lh-ico .lh-seat-initials {
-      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em;
-      color: var(--muted);
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em;
+      color: var(--lh-gold);
     }
-    button.lh-action.on .lh-ico { border-color: #6b5a2e; }
+    button.lh-action.on { background: rgba(224, 180, 76, 0.12); }
+    button.lh-action.on .lh-ico { border: 0; }
     button.lh-action .lh-lab {
-      font-size: 0.6875rem; font-weight: 600; line-height: 1.25;
-      text-align: center; color: var(--muted); max-width: 100%;
-      overflow-wrap: anywhere;
+      font-size: 0.8125rem; font-weight: 650; line-height: 1.2;
+      text-align: center; color: var(--lh-gold); max-width: 100%;
+      overflow-wrap: anywhere; letter-spacing: -0.01em;
     }
     .lh-section { margin: 0 0 18px; }
     .pick-intel {
@@ -2636,7 +2661,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v189-brand-home-center";
+    const DATA_V = "v190-gold-nav-bar";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4744,10 +4769,10 @@ const html = `<!DOCTYPE html>
       const named = cur
         ? ' aria-label="Data, ' + esc(cur[1]) + ' selected"'
         : ' aria-label="Data, none selected"';
-      // Circular quick-action cell; opens the full-screen Data tab (not a dropdown).
+      // Gold-bar cell; opens the full-screen Data tab (not a dropdown).
       return '<button type="button" class="lh-action' + (view === "datasets" ? " on" : "") + '" data-dset-open="1"'
         + named + '>'
-        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
         + '<span class="lh-lab">Data</span></button>';
     }
@@ -4756,11 +4781,11 @@ const html = `<!DOCTYPE html>
       return '<span class="home-chip slot" aria-hidden="true">—</span>';
     }
 
-    /** One circular quick-action cell (Teams / Champions / …). */
+    /** One gold-bar quick-action cell (Teams / Champions / …). */
     function lhNavAction(nav, lab, path) {
       return '<button type="button" class="lh-action" data-lh-nav="' + esc(nav) + '"'
         + ' aria-label="' + esc(lab) + '">'
-        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="' + path + '"/></svg></span>'
         + '<span class="lh-lab">' + esc(lab) + "</span></button>";
     }
@@ -4843,22 +4868,22 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * PSA-style quick actions: Teams, Champions, Data.
+     * Gold segmented bar: Teams | Champions | Data — docked above the News Feed peek.
      * Team flair lives in the brand-end (top right) and opens team home.
      * Data opens the full-screen Data tab (Draft Data, Cuffs, league lists).
      */
     function homeChips() {
-      return '<div class="lh-actions ds-wrap">'
+      return '<nav class="lh-actions ds-wrap" aria-label="League shortcuts">'
         + '<div class="lh-action-row">'
         + lhNavAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
         + '<button type="button" class="lh-action" data-view="titles" aria-label="Champions Path">'
-        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="M7 4h10v2.2l-1.2.8V10c0 2.1-1.4 3.9-3.3 4.5V17H15v2H9v-2h2.5v-2.5C9.6 13.9 8.2 12.1 8.2 10V7l-1.2-.8z"/></svg></span>'
         + '<span class="lh-lab">Champions</span></button>'
         + dataSetRow()
         + "</div>"
-        + "</div>";
+        + "</nav>";
     }
 
     /**
@@ -5267,8 +5292,9 @@ const html = `<!DOCTYPE html>
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
-      // Latest trade → quick actions → News Feed pull-up. Draft Data / Cuffs → Data tab.
-      return progress + chips + sets + hero;
+      // Latest trade → News Feed pull-up; gold nav bar docks above the peek.
+      // Draft Data / Cuffs → Data tab.
+      return progress + sets + chips + hero;
     }
 
     function renderNews() {
@@ -12677,7 +12703,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v189-brand-home-center";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v190-gold-nav-bar";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12736,13 +12762,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v189-brand-home-center")) {
+  || !html.includes("chuckle-shell-v190-gold-nav-bar")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v189-brand-home-center")
+  || !swSrc.includes("chuckle-shell-v190-gold-nav-bar")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13860,6 +13886,17 @@ const homeReturn = homeCompose.slice(0, homeCompose.indexOf("\n    }"));
 if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   throw new Error("renderLeagueHome must still compose dayAlert() + homeChips()");
 }
+{
+  const lhCss = html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {"));
+  if (!lhCss.includes("position: fixed") || !lhCss.includes("var(--lh-gold")
+    || !lhCss.includes("var(--news-pullup-peek") || !lhCss.includes("border-left: 1px solid var(--lh-gold)")) {
+    throw new Error("league home shortcuts must be a gold segmented bar docked above the News Feed peek");
+  }
+  if (!inline.includes('aria-label="League shortcuts"')) {
+    throw new Error("homeChips must expose a League shortcuts nav landmark");
+  }
+}
+
 {
   const at = inline.indexOf("function homeChips(");
   const stop = inline.indexOf("\n    function ", at + 10);

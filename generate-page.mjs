@@ -1140,12 +1140,6 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
-    .news-hero-players {
-      flex: 1 1 100%; min-width: 0;
-      display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0;
-      font-size: 0.6875rem; line-height: 1.3; margin: 0;
-    }
-    .news-hero-players .news-hero-sep { margin: 0 4px; color: var(--dim); }
     .news-hero-src-bubble {
       flex: 0 0 auto;
       font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
@@ -2609,7 +2603,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "settings-trim20260904141500";
+    const DATA_V = "news-no-chips20260904142500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9064,22 +9058,12 @@ const html = `<!DOCTYPE html>
       if (cursor < raw.length) html += esc(raw.slice(cursor));
       return html || esc(raw);
     }
-    /** Seat chips for every matched player (covers names truncated out of the summary line). */
-    function newsPlayersChipsHtml(it) {
-      const subjects = newsPullupSubjects(it);
-      if (!subjects.length) return "";
-      return '<div class="news-hero-players">'
-        + subjects.map((s) => newsPlayerSpanHtml(s.player, s.player_position || null, s.player_id)).join(
-          '<span class="news-hero-sep" aria-hidden="true">\\u00b7</span>'
-        )
-        + "</div>";
-    }
 
     function newsHeroLine(it) {
       if (!it) {
         return {
           source: "News", line: "Nothing shared yet.", lineHtml: "", categoryTag: "", who: "",
-          playersHtml: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
+          handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
         };
       }
       const source = newsSourceBubble(it);
@@ -9095,7 +9079,6 @@ const html = `<!DOCTYPE html>
       const who = whoNames.length
         ? whoNames.map((n) => seatLabel(n)).join(" · ")
         : "";
-      const playersHtml = newsPlayersChipsHtml(it);
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
       const categoryTag = newsCategoryTagFromLine(line);
       const lineHtml = newsPullupLineHtml(line, it);
@@ -9108,7 +9091,7 @@ const html = `<!DOCTYPE html>
       const canRemove = !!(isNewsAdmin() && subId);
       return {
         source: source, line: line, lineHtml: lineHtml, categoryTag: categoryTag,
-        who: who, playersHtml: playersHtml, handle: handleLab, when: when,
+        who: who, handle: handleLab, when: when,
         postUrl: postUrl, xLink: xLink, itemId: itemId, canRemove: canRemove,
       };
     }
@@ -9144,7 +9127,6 @@ const html = `<!DOCTYPE html>
       if (bit.source) tagBits.push('<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>");
       const head = '<div class="news-hero-head">'
         + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
-        + (bit.playersHtml || "")
         + (tagBits.length ? '<div class="news-hero-tags">' + tagBits.join("") + "</div>" : "")
         + "</div>";
       const summary = '<div class="news-pullup-line">' + (bit.lineHtml || esc(bit.line)) + "</div>";
@@ -12652,7 +12634,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v183-settings-trim";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v184-news-no-chips";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12704,13 +12686,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v183-settings-trim")) {
+  || !html.includes("chuckle-shell-v184-news-no-chips")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v183-settings-trim")
+  || !swSrc.includes("chuckle-shell-v184-news-no-chips")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13098,7 +13080,6 @@ if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src-bubble")
     !itemHtml
     || itemHtml.indexOf("news-hero-head") < 0
     || itemHtml.indexOf("news-hero-who") < 0
-    || itemHtml.indexOf("playersHtml") < 0
     || itemHtml.indexOf("news-hero-tags") < 0
     || itemHtml.indexOf("newsCatTagHtml") < 0
     || itemHtml.indexOf("news-hero-src-bubble") < 0
@@ -13109,10 +13090,13 @@ if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src-bubble")
     || footHtml.indexOf("news-hero-foot") < 0
     || footHtml.indexOf("See tweet</a>") < 0
     || footHtml.indexOf("news-hero-sep") < 0
-    || !html.includes(".news-hero-players")
-    || !inline.includes("function newsPlayersChipsHtml(")
   ) {
-    throw new Error("News pull-up must show seat tags, every player chip, category, and foot link");
+    throw new Error("News pull-up must show seat tags, summary highlights, category, and foot link");
+  }
+  // Players are tagged only by highlighting names in the summary — no duplicate chips up top.
+  if (itemHtml.includes("playersHtml") || inline.includes("function newsPlayersChipsHtml(")
+    || html.includes(".news-hero-players")) {
+    throw new Error("News pull-up must not show player chips in the head (highlight summary names only)");
   }
 }
 if (!html.includes(".news-player.pos-qb") || !html.includes(".news-cat-tag") || !html.includes(".news-pos-tag")) {

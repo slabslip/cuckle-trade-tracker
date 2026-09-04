@@ -2756,7 +2756,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260904224800";
+    const DATA_V = "ledger20260904225500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5234,8 +5234,7 @@
           id: "design-bet-capture",
           sleeper_league_id: (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID,
           title: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even",
-          terms: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even
-just filed from the group text",
+          terms: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even\njust filed from the group text",
           odds: null,
           amount_cents: 0,
           currency: "USD",
@@ -5249,8 +5248,7 @@ just filed from the group text",
           winner: null,
           visibility: "public",
           source: "shortcut",
-          source_text: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even
-just filed from the group text",
+          source_text: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even\njust filed from the group text",
           created_at: new Date().toISOString(),
         },
         {
@@ -5481,8 +5479,7 @@ just filed from the group text",
       const src = String(b.source_text || "").trim();
       const title = String(b.title || "").trim();
       if (!src || !title) return false;
-      const first = src.split(/?
-/)[0].trim().slice(0, 160);
+      const first = src.split(/\r?\n/)[0].trim().slice(0, 160);
       return title === src.slice(0, 160) || title === first;
     }
 
@@ -5495,11 +5492,10 @@ just filed from the group text",
     function ledgerHintFromSource(b) {
       const src = String((b && (b.source_text || b.terms)) || "");
       const dollars = [];
-      const re = /$s*([0-9]+(?:.[0-9]+)?)/g;
+      const re = /\$\s*([0-9]+(?:\.[0-9]+)?)/g;
       let m;
       while ((m = re.exec(src))) dollars.push(m[1]);
-      const firstLine = src.split(/?
-/)[0].replace(/s+[—–-]s+$s*d[d.]*.*$/, "").trim().slice(0, 160);
+      const firstLine = src.split(/\r?\n/)[0].replace(/\s+[—–-]\s+\$\s*\d[\d.]*.*$/, "").trim().slice(0, 160);
       const title = (b && b.title && !ledgerTitleIsRaw(b))
         ? String(b.title)
         : (firstLine || (b && b.title) || "");
@@ -13732,7 +13728,7 @@ just filed from the group text",
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v198-ledger-capture";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v199-ledger-syntax";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

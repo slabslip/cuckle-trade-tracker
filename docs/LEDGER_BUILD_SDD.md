@@ -268,7 +268,7 @@ Shortcut in the share sheet so it is not under View More.
 | Team home missing W/L | No **settled** + **public** slips for that seat yet |
 | Shortcut 401 | Secret or header typo; redeploy after setting secret |
 | `sides must be two different seats` | Same seat twice, or a name (not an id) collapsed via empty team_name — use ids |
-| Stale UI | Hard-refresh after this ship (`chuckle-shell-v198-ledger-capture`) |
+| Stale UI | Hard-refresh after this ship (`chuckle-shell-v199-ledger-syntax`) |
 
 ### After merge — redeploy ingest + slim the phone
 

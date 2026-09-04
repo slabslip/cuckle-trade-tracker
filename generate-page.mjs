@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /** Per-person dashboard. Loads data/ui/*.json — serve over http. */
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { ROOT } from "./lib.mjs";
 
 const html = `<!DOCTYPE html>
@@ -2761,7 +2764,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260904224800";
+    const DATA_V = "ledger20260904225500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5239,7 +5242,7 @@ const html = `<!DOCTYPE html>
           id: "design-bet-capture",
           sleeper_league_id: (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID,
           title: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even",
-          terms: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even\njust filed from the group text",
+          terms: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even\\njust filed from the group text",
           odds: null,
           amount_cents: 0,
           currency: "USD",
@@ -5253,7 +5256,7 @@ const html = `<!DOCTYPE html>
           winner: null,
           visibility: "public",
           source: "shortcut",
-          source_text: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even\njust filed from the group text",
+          source_text: "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even\\njust filed from the group text",
           created_at: new Date().toISOString(),
         },
         {
@@ -5484,7 +5487,7 @@ const html = `<!DOCTYPE html>
       const src = String(b.source_text || "").trim();
       const title = String(b.title || "").trim();
       if (!src || !title) return false;
-      const first = src.split(/\r?\n/)[0].trim().slice(0, 160);
+      const first = src.split(/\\r?\\n/)[0].trim().slice(0, 160);
       return title === src.slice(0, 160) || title === first;
     }
 
@@ -5497,10 +5500,10 @@ const html = `<!DOCTYPE html>
     function ledgerHintFromSource(b) {
       const src = String((b && (b.source_text || b.terms)) || "");
       const dollars = [];
-      const re = /\$\s*([0-9]+(?:\.[0-9]+)?)/g;
+      const re = /\\$\\s*([0-9]+(?:\\.[0-9]+)?)/g;
       let m;
       while ((m = re.exec(src))) dollars.push(m[1]);
-      const firstLine = src.split(/\r?\n/)[0].replace(/\s+[—–-]\s+\$\s*\d[\d.]*.*$/, "").trim().slice(0, 160);
+      const firstLine = src.split(/\\r?\\n/)[0].replace(/\\s+[—–-]\\s+\\$\\s*\\d[\\d.]*.*$/, "").trim().slice(0, 160);
       const title = (b && b.title && !ledgerTitleIsRaw(b))
         ? String(b.title)
         : (firstLine || (b && b.title) || "");
@@ -13733,7 +13736,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v198-ledger-capture";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v199-ledger-syntax";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -13768,6 +13771,13 @@ for (const marker of ["<<<<<<<", ">>>>>>>", "\n=======\n"]) {
 // One DATA_V, or the cache key is whichever line the browser reached last.
 const dataVs = html.match(/const DATA_V = "[^"]*"/g) || [];
 if (dataVs.length !== 1) throw new Error(`expected exactly one DATA_V, found ${dataVs.length}: ${dataVs.join(", ")}`);
+const pageScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+const tmpJs = path.join(os.tmpdir(), "cuckle-index-check.js");
+fs.writeFileSync(tmpJs, pageScripts.join("\n;\n"));
+const chk = spawnSync(process.execPath, ["--check", tmpJs], { encoding: "utf8" });
+if (chk.status !== 0) {
+  throw new Error("generated page JavaScript does not parse:\n" + (chk.stderr || chk.stdout || ""));
+}
 
 if (!html.includes('property="og:image"')
   || !html.includes("data/ui/og-image.png")
@@ -13798,13 +13808,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v198-ledger-capture")) {
+  || !html.includes("chuckle-shell-v199-ledger-syntax")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v198-ledger-capture")
+  || !swSrc.includes("chuckle-shell-v199-ledger-syntax")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13821,6 +13831,11 @@ if (!inline.includes("Blank the panel first")
 }
 for (const need of ["/^pick:\\d{4}:4:/", "/\\.0$/", "/^[\\w.-]+$/"]) {
   if (!inline.includes(need)) throw new Error(`generated script lost a regex escape: ${need}`);
+}
+for (const need of ["src.split(/\\r?\\n/)", "/\\$\\s*([0-9]+(?:\\.[0-9]+)?)/g"]) {
+  if (!inline.includes(need)) {
+    throw new Error("ledger seed/hint regexes must keep their backslashes (a lone \\n black-screens the page)");
+  }
 }
 // The champ final caption builder still ships for Champions Path detail / titles.json readers,
 // even though league home's progress card is now Latest trade (not the championship bout).

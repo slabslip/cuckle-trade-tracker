@@ -9,7 +9,8 @@ Ledger works end-to-end.
 | [`LEDGER_SDD.md`](LEDGER_SDD.md) | Product rules (canonical) |
 | [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md) | v1 go-live runbook (wave12/13 + ingest) |
 | [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) | v1.1 join / more exposure build design |
-| [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) | v1.2 note → Send; v1.3 SMS on Send (planned) |
+| [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 build + push-to-URL steps |
+| [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) | Locked plan: note → Send; SMS on Send |
 | [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) | Shipped plan: League tab + Ledger v1 |
 | [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) | Shipped plan: my slips, privacy, team W/L |
 | [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) | Planning archive for join SDD |
@@ -310,14 +311,10 @@ to the SQL checklist above, and extend acceptance criteria for join → Accept �
 
 ## 10. Next: note → Finish → Send (v1.2 / v1.3)
 
-**Not part of Steps 1–8.** Docs only.
+**Not part of Steps 1–8.** Follow the implementation SDD when you build it.
 
+- **Implementation:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) (§11 order, §12 push to Pages)  
 - **Product:** [`LEDGER_SDD.md`](LEDGER_SDD.md) § Note → Finish → Send  
 - **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)
 
-| Version | What to build later |
-| --- | --- |
-| **v1.2** | Shortcut = note only (`raw_text` + I am). SQL: draft `needs_review`, nullable `side_b`, filer-only RLS. **Finish slip** in You/Them + put-in/win words. **Send to [name]** then Yes/No. Badge = sent-to-you (not drafts). `?tab=ledger`. |
-| **v1.3** | Optional phone. SMS **once per Send** to Them: “wants a $N bet… say yes or no” + Ledger link. No SMS on note create. |
-
-Do not SMS or badge a `$0` note. Do not use phone numbers to pick Shortcut sides.
+Any claimed seat files. Share the Shortcut once. Do not SMS or badge a draft note.

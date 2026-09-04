@@ -51,10 +51,12 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 10. `db/wave9-vote-write-fix.sql` — fix vote INSERT RLS / membership sync so home casts save
 11. `db/wave12-ledger.sql` — bet Ledger tables + RLS + expire RPC
 12. `db/wave13-ledger-visibility.sql` — `visibility` (public/private) + party-or-public SELECT RLS
+13. `db/wave15-ledger-notes.sql` — **v1.2, not yet in repo** — nullable `side_b` + filer-only drafts. Run only when building [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md). Do not run for v1 go-live.
 
 **Ledger:** after wave12 + wave13, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
 Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  
-Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md), [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped); [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) (v1.1); [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) (v1.2 note → Send, v1.3 SMS on Send).
+**v1.2 / v1.3 build + ship to URL:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md).  
+Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md), [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped); [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) (v1.1); [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) (locked).
 
 **Vote clean slate (Ducks + Truman + any seat):** run `scripts/wipe-trade-votes.sql` (`truncate public.trade_votes`), then re-run `db/wave8-vote-tally-members.sql` (or at least `db/wave8b-tally-view-fix.sql`). Deploy the page with `VOTE_KEY = cuckle.votes.v4`, then hard-refresh every phone so localStorage cannot re-upload old ballots. Everyone votes again from zero.
 
@@ -117,6 +119,7 @@ Full meter pipeline: see [`README.md`](../README.md).
 | [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) | Votes, news queue, RLS |
 | [`PRODUCT.md`](PRODUCT.md) | Meter canon |
 | [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) | Own domain later |
+| [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 Note → Finish → Send + push to Pages |
 
 ---
 

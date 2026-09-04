@@ -8,7 +8,8 @@ Season-long (and shorter) bets between league members — stakes, odds, terms, a
 
 Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) ·
 [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)  
-Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)
+Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)  
+**v1.2 / v1.3 implementation:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)
 
 ### Nav
 
@@ -22,8 +23,9 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 1. **Proposer locks on Send, not on a note.** A Shortcut (or Add note) only saves
    the group text as a **draft** the filer can see. Locks start when they tap
    **Send to [name]**. Then the other person says **Yes, I’m in** or **No**.
-2. **Counterparty Accept or Decline.** The other party must Accept (locks their side →
-   status `open`) or Decline (terminal `declined`).
+2. **Counterparty Yes or No (v1 labels: Accept / Decline).** After Send, Them locks
+   their side → status `open`, or declines → terminal `declined`. v1.2 buttons say
+   **Yes, I’m in** / **No**; the database stays `accepted` / `declined`.
 3. **Identity is Sleeper `user_id`.** Display names change; seats do not.
 4. **Opinion only.** Ledger never feeds the trade meter, VA, lenses, or rankings.
 5. **Tip Slip screenshot** is a product reference for information architecture, not a
@@ -42,13 +44,14 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 10. **Note → Finish → Send (v1.2 — planned).** Shortcut (or Add note) saves
     `source_text` only. **Finish slip** on Ledger picks Them + plain-language money
     (“You put in $X. If you win you get $Y.”). **Send to [name]** makes it a real
-    `proposed` slip. Full design: [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
+    `proposed` slip. Build: [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md). Locked plan:
+    [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
 11. **Ledger badge (v1.2 — planned).** Count of slips **sent to you** (amount > 0,
     you have not said Yes/No). Gold mark on the Ledger tab. Opening the tab does
     not clear it. Yes / No / they Cancel does. No `localStorage` seen-store.
 12. **SMS on Send only (v1.3 — planned).** Optional phone in Settings. After Send,
-    text Them (not the filer): who wants a $N bet + `?tab=ledger`. No SMS on note
-    create. Phone does not pick Shortcut sides. Identity stays Sleeper `user_id`.
+    text Them (not the filer) + `?tab=ledger`. No SMS on note create. Phone does
+    not pick Shortcut sides. Identity stays Sleeper `user_id`.
 
 ### Status machine
 
@@ -193,6 +196,7 @@ already a party on that parent.
 
 ## Note → Finish → Send (v1.2 / v1.3 — planned)
 
+**Implementation SDD:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)  
 **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
 
 The Shortcut only **expedites the group text into a note**. It does not create a

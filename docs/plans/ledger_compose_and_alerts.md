@@ -1,21 +1,23 @@
 # Note → Finish → Send → Yes / No
 
-**Status:** Planned (refined) — not built yet.  
-Canonical product: [`docs/LEDGER_SDD.md`](../LEDGER_SDD.md).  
-v1 go-live (Shortcut + Complete as shipped): [`docs/LEDGER_BUILD_SDD.md`](../LEDGER_BUILD_SDD.md).
+**Status:** Final locked plan. Do not reopen these decisions.  
+**Build this:** [`docs/LEDGER_NOTE_SDD.md`](../LEDGER_NOTE_SDD.md)  
+**Product one-liners:** [`docs/LEDGER_SDD.md`](../LEDGER_SDD.md) rules 10–12  
+**v1 already live:** [`docs/LEDGER_BUILD_SDD.md`](../LEDGER_BUILD_SDD.md)
 
 The group-text Shortcut is only a **note**. It starts a slip. It is not the bet.
-The dashboard writes the bet in plain language. SMS and the Ledger badge fire
-only when someone taps **Send to [name]** — never on a half-empty capture.
+**Any claimed seat** files their own note from their own texts. You are not the
+clerk. The dashboard writes the bet in plain language. SMS and the Ledger badge
+fire only on **Send to [name]**.
 
 ```mermaid
 flowchart LR
-  txt[Group text]
-  sc[Shortcut: save note]
-  draft[My note only]
+  txt[Anyone's group text]
+  sc[Their Shortcut]
+  draft[Their note only]
   finish[Finish slip]
-  sent[Waiting on them]
-  sms[SMS plus Ledger badge]
+  sent[Waiting on Them]
+  sms[SMS plus badge]
   yes[Yes I am in or No]
   txt --> sc --> draft --> finish --> sent
   sent --> sms --> yes
@@ -23,27 +25,46 @@ flowchart LR
 
 ---
 
-## Why the old v1.2/v1.3 write-up was wrong
+## Locked decisions
 
-| Old rule | Bug | Now |
-| --- | --- | --- |
-| Shortcut picks two seats and locks the proposer | Other person can see or Accept a `$0` empty slip | Note is **draft**. No locks. Only the filer sees it until Send |
-| SMS on insert or Complete | Texts “accept” before there is a bet | SMS **only** on Send (stake > 0, two seats, one-line title) |
-| Bell = any proposed where your lock is false | Drafts and `$0` notes badge everyone | Bell = **sent to you**, amount &gt; 0, you have not said Yes/No |
-| `localStorage` “seen” | Badge returns on the other phone | No seen-store. Badge = live count |
-| “Odds” / side A / side B on the card | First-time bettors do not know what that means | **You** vs **Them**. You put in $X. If you win you get $Y. |
-| Add bet **and** Complete as two UIs | Same job, two names | One **Finish slip** sheet |
-| Join mixed into this “next” | Noise | Join stays v1.1, not this flow |
+| Decision | Lock |
+|---|---|
+| Table | `ledger_bets` (there is no `ledger_slips`) |
+| Note row | `status = needs_review`, `side_b` null, both locks false, `visibility = private` |
+| Send | `status = proposed`, you locked, Them unlocked |
+| Yes | Today’s Accept → both locks → `open` |
+| No | Today’s Decline → `declined` |
+| Badge | Slips **sent to you** (`proposed`, you unlocked, amount > 0). Opening the tab does not clear it |
+| SMS | Only on Send, only to Them, only if they opted in. Never on note create |
+| Copy | You / Them / put in / win. Never odds, side A, Accept, Decline on the Finish card |
+| Who files | Every claimed seat. Same Shortcut. You are not the clerk |
+| Join | Separate SDD. Do not mix |
+
+Until wave15 ships, live ingest still needs two seat IDs. Hide that slip from Them in the app until Send if you must ship UI first.
 
 ---
 
-## Three jobs (keep them separate)
+## Why the first v1.2/v1.3 draft was wrong
+
+| Old rule | Bug | Now |
+|---|---|---|
+| Shortcut picks two seats and locks the proposer | Other person can Accept a `$0` slip | Draft. No locks. Filer-only until Send |
+| SMS on insert or Complete | Texts “accept” before there is a bet | SMS **only** on Send |
+| Bell = any proposed where lock is false | Drafts badge everyone | Badge = **sent to you** |
+| `localStorage` seen | Wrong on the other phone | Live count |
+| Odds / side A on the card | First-time bettors bounce | You vs Them. You put in $X. If you win you get $Y |
+| Only Truman files | You become the clerk | Every member installs the same Shortcut |
+| Add bet and Complete as two UIs | Same job | One **Finish slip** |
+
+---
+
+## Three jobs
 
 1. **Note** — save the group text so it is not forgotten.
-2. **Finish + Send** — name the two people and the money in words, then notify.
-3. **Yes / No** — the other person agrees or does not. That is the handshake.
+2. **Finish + Send** — who, what’s the bet, money in words, then notify.
+3. **Yes / No** — the other person agrees. Handshake.
 
-Someone who has never bet should only need to read:
+Review copy (never say odds, side A, proposed, lock):
 
 > **You** vs **TipsUp**.  
 > The bet: Stribling finishes SF WR1.  
@@ -51,108 +72,59 @@ Someone who has never bet should only need to read:
 > If they win they get **$100**.  
 > **Yes, I’m in** · **No**
 
-No “odds”, no “side A”, no “proposed”, no “lock”.
-
 ---
 
 ## v1.2 — Note, Finish, Send, badge
 
-### Shortcut (thinner)
-
-Share or Copy the message. One tap: **I am** (or remember last seat). Do **not**
-pick the other team on the phone.
-
-POST: `raw_text` + `submitted_by` only.
-
-Ingest creates a **draft note**:
-
-- `source_text` / `terms` = the message
-- `title` = first line
-- `amount_cents` = 0
-- `proposer` = you
-- `status` = `needs_review` (draft)
-- `side_a` = you
-- `side_b` = **null** until Finish
-
-**Schema:** allow `side_b` null when `status = needs_review`. Today both sides
-are `NOT NULL` and must differ — that is why the live Shortcut asked for two
-IDs. Draft notes need a small SQL wave (e.g. wave15) + RLS: only the proposer
-can SELECT a draft.
-
-If we ship Finish before that SQL, keep two phone taps but **hide the row from
-the other seat until Send**. Same product; worse phone.
-
-### Finish slip (dashboard)
-
-One sheet for a Shortcut note **or** **Add note** (blank, paste optional).
-
-- **You** (fixed = signed-in seat)
-- **Them** (chips; cannot be you)
-- **What’s the bet?** (one line)
-- **You put in $** / **You win $**
-- **They put in $** / **They win $**  
-  Defaults for even: they put in = you win, they win = you put in
-- Quoted group text stays on the card (read-only)
-
-**Send to [name]** blocked unless Them is set, title is non-empty, and
-**You put in** &gt; 0.
-
-On Send: fill `side_b`, amounts/odds (store cents; **display** the sentences
-above), `status = proposed`, lock **you** only, then SMS (v1.3) + their badge.
-
-### Review (them)
-
-Same sentences with You/Them flipped. **Yes, I’m in** (Accept) / **No** (Decline).
-Not the words Accept or Decline on the button.
-
-### Ledger badge
-
-Count of slips **sent to you** (you are the unlocked other party, amount &gt; 0,
-`proposed`). Opening the tab does **not** clear it. Yes / No / they Cancel does.
-No `localStorage`.
-
-### Deep link
-
-`?tab=ledger` in `setHomeTab` / `syncUrl` so the SMS opens this tab.
-
-Drafts and unsent notes never appear on team-home public Ledger.
+**Shortcut:** Share/Copy + **I am**. POST `raw_text` + `submitted_by`.  
+**Draft:** `needs_review`, `side_b` null, filer-only (wave15).  
+**Finish:** Them, title, four money boxes, quoted note. **Send** blocked if $0 or no Them.  
+**Badge:** sent-to-you only. `?tab=ledger`. Drafts never on team home.
 
 ---
 
-## v1.3 — SMS (after Send only)
+## v1.3 — SMS on Send only
 
-| Rule | Detail |
-| --- | --- |
-| Phone | Optional in Settings. Not required to Send |
-| When | Once per Send, to **Them** only |
-| Body | “[Name] wants a $[you put in] bet with you on Chuckle. Open Ledger to say yes or no.” + `?tab=ledger` |
-| Skip | No number; duplicate Send; filer |
-| No SMS | On note create, on Finish without Send, on Cancel (v1) |
-| Identity | Sleeper `user_id`. Phone does not pick sides |
+Optional phone on Settings → Profile (`app_profiles.phone_e164`). One text to Them:
+“sent you a slip… say if you're in” + Ledger link. Skip if no number. No SMS on
+note. Phone does not pick sides.
+
+---
+
+## Every member (not you)
+
+Share the Shortcut iCloud link once in the league chat. Each person installs,
+picks I am, favorites the share sheet. They file from **their** threads. You
+only Finish/Yes if you are on that slip.
+
+A PWA cannot sit on the Messages share row. A native iOS **Share Extension**
+(v1.4, optional) is the only way to make hold-message → Chuckle a single tap.
+No app can read the group chat by itself.
+
+Build order and push-to-URL: [`LEDGER_NOTE_SDD.md`](../LEDGER_NOTE_SDD.md) §11–12.
 
 ---
 
 ## Edge cases
 
 | Case | Behavior |
-| --- | --- |
-| Two people note the same text | Two drafts (OK). Hash = filer + text, not both sides |
+|---|---|
+| Two people note the same text | Two drafts. Hash = filer + text |
 | Send with $0 or no Them | Block. No SMS |
 | Wrong Them before Send | Change chip |
-| Wrong Them after Send | Cancel and redo (v1) |
-| SMS opened while signed in as someone else | CTA; do not Yes the wrong seat |
-| Them has no phone | Send still works; badge only |
-| They already said Yes | Link shows the open slip, not Yes/No |
-| Filer Cancels after SMS | Badge gone. No “cancelled” text (v1) |
+| Wrong Them after Send | Cancel and redo |
+| SMS as the wrong login | CTA; do not Yes |
+| Them has no phone | Send works; badge only |
+| Already Yes | Link shows the open slip |
+| Cancel after SMS | Badge gone. No cancel text (v1) |
 | Duplicate Send | No second SMS |
-| Same person both sides | Reject |
 | Draft on team home | Never listed |
-| Join / Open board | Not this flow (v1.1) |
 
 ---
 
-## Out of scope this doc pass
+## Out of scope (do not build from this plan)
 
-- Building Finish / badge / SQL / SMS
-- Phone numbers as Shortcut pickers
-- PWA push, iMessage, email
+- Auto-reading iMessage
+- Native Share Extension (v1.4)
+- Join / more exposure ([`LEDGER_JOIN_SDD.md`](../LEDGER_JOIN_SDD.md))
+- Renaming accept / decline in the database

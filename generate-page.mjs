@@ -176,14 +176,31 @@ const html = `<!DOCTYPE html>
       width: 44px; height: 44px; padding: 0; display: grid; place-items: center; cursor: pointer;
       overflow: hidden;
     }
-    button.go-home img.brand-mark {
+    /* Top-right Settings: Chuckle mark + tiny label (not a bare gear). */
+    button.go-settings {
+      width: auto; min-width: 44px; height: auto; min-height: 44px;
+      padding: 4px 6px 3px; gap: 1px;
+      grid-template-rows: auto auto; align-items: center; justify-items: center;
+      overflow: visible;
+    }
+    button.go-home img.brand-mark,
+    button.go-settings img.settings-mark {
       display: block; width: 44px; height: 44px; object-fit: cover;
+    }
+    button.go-settings img.settings-mark {
+      width: 28px; height: 28px; border-radius: 6px;
+    }
+    button.go-settings .settings-lab {
+      display: block; font-size: 0.5625rem; line-height: 1; font-weight: 600;
+      letter-spacing: 0.02em; color: var(--dim); text-transform: lowercase;
     }
     button.go-home:focus-visible, button.go-settings:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     button.go-settings[hidden] { display: none; }
     button.go-home[hidden] { display: none; }
+    /* Settings Profile | Leagues — reuse .nav / .tab; slight top gap under the screen title. */
+    .settings-tabs.nav { margin: 4px 0 14px; }
     /* Settings takes the former clock slot on the right; lens sits beside the back control. */
     /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
     .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
@@ -2325,9 +2342,8 @@ const html = `<!DOCTYPE html>
     <span class="league-sub" id="leagueSub" hidden></span>
     <span class="brand-end">
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-          <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
-        </svg>
+        <img class="settings-mark" src="data/ui/brand-mark.png" width="28" height="28" alt="" decoding="async" data-settings-mark="1" />
+        <span class="settings-lab">settings</span>
       </button>
     </span>
   </h1>
@@ -2547,7 +2563,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260904001839";
+    const DATA_V = "settings-tabs20260904003300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5824,6 +5840,7 @@ const html = `<!DOCTYPE html>
     let gateMode = "signin"; // signin | signup — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
+    let settingsTab = "profile"; // profile | leagues — Settings screen default is Profile
     let profileNote = "";
     let profileBusy = false;
     /** In-progress crop: { url, img, zoom, ox, oy } — img is HTMLImageElement once loaded. */
@@ -6165,7 +6182,7 @@ const html = `<!DOCTYPE html>
       return Promise.resolve();
     }
 
-    function openSettings() {
+    function openSettings(tab) {
       if (!authSession) {
         appScreen = "gate";
         gateMode = "signin";
@@ -6175,29 +6192,27 @@ const html = `<!DOCTYPE html>
       }
       joinError = "";
       settingsCopyNote = "";
-      profileNote = "";
-      profileCrop = null;
+      const next = tab === "leagues" ? "leagues" : "profile";
+      // Fresh entry into Settings: drop an abandoned crop. Tab switches keep it.
+      if (appScreen !== "settings") {
+        profileNote = "";
+        profileCrop = null;
+      }
+      settingsTab = next;
       appScreen = "settings";
       focusNext = ".screen-h";
-      loadMemberships().then(() => render()).catch((err) => {
+      loadMemberships().then(() => {
+        render();
+        if (settingsTab === "profile") queueMicrotask(() => paintProfileCrop());
+      }).catch((err) => {
         console.error(err);
         render();
+        if (settingsTab === "profile") queueMicrotask(() => paintProfileCrop());
       });
     }
 
     function openProfile() {
-      if (!authSession) {
-        openSettings();
-        return;
-      }
-      profileNote = "";
-      profileBusy = false;
-      profileCrop = null;
-      appScreen = "profile";
-      focusNext = ".screen-h";
-      render();
-      // After paint, if a crop is mid-edit we re-arm; otherwise show current avatar only.
-      queueMicrotask(() => paintProfileCrop());
+      openSettings("profile");
     }
 
     function avatarLeagueId() {
@@ -10509,7 +10524,7 @@ const html = `<!DOCTYPE html>
           : '<p class="caption">No other members yet. Someone must redeem an invite before you can transfer.</p>')
         + "</div>";
       return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
+        + '<button type="button" class="chip back" data-app-settings="leagues">← Settings</button>'
         + ' <button type="button" class="chip back" data-app-home="1">Your leagues</button>'
         + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
         + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
@@ -10526,56 +10541,9 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    function renderSettings() {
+    function renderSettingsProfileTab() {
       const uname = (authSession && authSession.username) || "—";
       const email = authEmailForUsername(uname);
-      const owned = ownedLeagues || [];
-      const memById = {};
-      for (const m of memberships || []) memById[m.sleeper_league_id] = m;
-      const adminRows = owned.length
-        ? owned.map((o) => {
-          const mem = memById[o.sleeper_league_id];
-          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
-          return '<div class="app-card">'
-            + "<h3>" + esc(o.name) + "</h3>"
-            + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
-            + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
-            + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
-            + "</p>"
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
-            + '">Send / manage invites</button>'
-            + (mem
-              ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
-                + '">Open dashboard</button>'
-              : "")
-            + "</div>"
-            + '<p class="caption" style="margin:8px 0 0">Transfer admin or reissue a seat after a manager leaves: open <b>Send / manage invites</b>.</p>'
-            + "</div>";
-        }).join("")
-        : '<p class="caption">You have not created a league yet. Create one from Your leagues to become commissioner and mint seat invites.</p>';
-      return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
-        + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
-        + '<div class="app-card"><h3>Account</h3>'
-        + '<p class="caption" style="margin:0">Signed in as <b>' + esc(uname) + "</b></p>"
-        + '<p class="caption">Auth email (synthetic, never mailed): <code>' + esc(email) + "</code></p>"
-        + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-app-profile="1">Profile</button>'
-        + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
-        + "</div></div>"
-        + '<h3 class="screen-h" style="font-size:1rem;margin-top:18px">Admin · leagues you created</h3>'
-        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
-        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
-        + adminRows
-        + '<div class="app-actions" style="margin-top:8px">'
-        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
-        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
-        + "</div></div>";
-    }
-
-    function renderProfile() {
-      const uname = (authSession && authSession.username) || "—";
       const profileSeat = authSeatCanonName() || authSeatName() || null;
       const seatId = authSeatId();
       const f = profileSeat ? flairEntry(profileSeat) : null;
@@ -10606,18 +10574,21 @@ const html = `<!DOCTYPE html>
           + "</div>"
         : "";
       const hasCustom = !!(seatId && seatAvatarByUid[String(seatId)]);
-      return '<div class="app-shell">'
-        + '<button type="button" class="chip back" data-app-settings="1">← Settings</button>'
-        + '<h2 class="screen-h" tabindex="-1">Profile</h2>'
-        + '<div class="app-card"><h3>Avatar</h3>'
+      const seatLine = profileSeat
+        ? '<p class="caption" style="margin:4px 0 0">Seat / team <b>' + esc(profileSeat) + "</b></p>"
+        : '<p class="caption" style="margin:4px 0 0">No seat claimed yet — redeem an invite from the Leagues tab.</p>';
+      const memList = (memberships || []).map((m) => {
+        const leagueLab = m.name || (m.leagues && m.leagues.name) || m.sleeper_league_id || "League";
+        return '<p class="caption" style="margin:6px 0 0"><b>' + esc(String(leagueLab)) + "</b> — "
+          + esc(m.team_name || "—") + "</p>";
+      }).join("");
+      return '<div class="app-card"><h3>Avatar</h3>'
         + '<p class="caption" style="margin:0">Shown next to your name, on trade vote marks, and on your team chip. Defaults stay until you upload a photo.</p>'
         + '<div class="profile-av-row">'
         + '<div class="profile-av-preview" aria-hidden="true">' + preview + "</div>"
         + '<div>'
         + '<p class="caption" style="margin:0">Signed in as <b>' + esc(uname) + "</b></p>"
-        + (profileSeat
-          ? '<p class="caption" style="margin:4px 0 0">Seat <b>' + esc(profileSeat) + "</b></p>"
-          : '<p class="caption" style="margin:4px 0 0">No seat claimed yet — redeem an invite first.</p>')
+        + seatLine
         + (defaultFlair && defaultFlair.img && !hasCustom
           ? '<p class="caption" style="margin:4px 0 0">Using your league default flair.</p>'
           : "")
@@ -10636,7 +10607,83 @@ const html = `<!DOCTYPE html>
         + cropBlock
         + (profileNote ? '<p class="caption" role="status" style="margin-top:10px">' + esc(profileNote) + "</p>" : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div>"
+        + '<div class="app-card"><h3>Login & contact</h3>'
+        + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
+        + '<p class="caption">Auth email (synthetic, never mailed): <code style="word-break:break-all">'
+        + esc(email) + "</code></p>"
+        + (memList
+          ? ('<h3 style="margin-top:14px;font-size:0.95rem">Your teams</h3>'
+            + '<p class="caption" style="margin:0 0 4px">Leagues where you have a claimed seat.</p>'
+            + memList)
+          : '<p class="caption">No claimed seats yet.</p>')
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>";
+    }
+
+    function renderSettingsLeaguesTab() {
+      const owned = ownedLeagues || [];
+      const memById = {};
+      for (const m of memberships || []) memById[m.sleeper_league_id] = m;
+      const adminRows = owned.length
+        ? owned.map((o) => {
+          const mem = memById[o.sleeper_league_id];
+          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+          return '<div class="app-card">'
+            + "<h3>" + esc(o.name) + "</h3>"
+            + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
+            + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
+            + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
+            + "</p>"
+            + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
+            + '">Send / manage invites</button>'
+            + (mem
+              ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
+                + '">Open dashboard</button>'
+              : "")
+            + "</div>"
+            + '<p class="caption" style="margin:8px 0 0">Transfer admin or reissue a seat after a manager leaves: open <b>Send / manage invites</b>.</p>'
+            + "</div>";
+        }).join("")
+        : '<div class="app-card"><p class="caption" style="margin:0">You have not created a league yet. Create one to become commissioner and mint seat invites.</p></div>';
+      return (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
+        + adminRows
+        + '<div class="app-actions" style="margin-top:8px">'
+        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div>";
+    }
+
+    function renderSettings() {
+      if (settingsTab !== "leagues") settingsTab = "profile";
+      const tabNav = '<div class="nav settings-tabs" role="tablist" aria-label="Settings">'
+        + '<button type="button" role="tab" class="tab' + (settingsTab === "profile" ? " on" : "") + '"'
+        + ' data-settings-tab="profile" aria-selected="' + (settingsTab === "profile" ? "true" : "false") + '">Profile</button>'
+        + '<button type="button" role="tab" class="tab' + (settingsTab === "leagues" ? " on" : "") + '"'
+        + ' data-settings-tab="leagues" aria-selected="' + (settingsTab === "leagues" ? "true" : "false") + '">Leagues</button>'
+        + "</div>";
+      const sub = settingsTab === "profile"
+        ? "Your team, login, and avatar."
+        : "Leagues you own, create new ones, or redeem an invite.";
+      const body = settingsTab === "leagues"
+        ? renderSettingsLeaguesTab()
+        : renderSettingsProfileTab();
+      return '<div class="app-shell">'
+        + '<button type="button" class="chip back" data-app-home="1">← Your leagues</button>'
+        + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
+        + '<p class="caption" style="margin:0 0 4px">' + sub + "</p>"
+        + tabNav
+        + body
+        + "</div>";
+    }
+
+    function renderProfile() {
+      // Legacy screen id — Profile now lives under Settings → Profile.
+      settingsTab = "profile";
+      return renderSettings();
     }
 
     function renderRedeemInvite() {
@@ -10743,6 +10790,9 @@ const html = `<!DOCTYPE html>
           : renderAppHome();
         paintSettingsBtn();
         paintBrandHome();
+        if (appScreen === "settings" && settingsTab === "profile") {
+          queueMicrotask(() => paintProfileCrop());
+        }
         if (appScreen === "profile") queueMicrotask(() => paintProfileCrop());
         const land = focusNext ? app.querySelector(focusNext) : null;
         focusNext = null;
@@ -11571,7 +11621,19 @@ const html = `<!DOCTYPE html>
       }
       const appSettings = e.target.closest("[data-app-settings]");
       if (appSettings) {
-        openSettings();
+        const tab = appSettings.getAttribute("data-app-settings");
+        openSettings(tab === "leagues" ? "leagues" : "profile");
+        return;
+      }
+      const settingsTabBtn = e.target.closest("[data-settings-tab]");
+      if (settingsTabBtn) {
+        const next = settingsTabBtn.getAttribute("data-settings-tab") === "leagues" ? "leagues" : "profile";
+        if (settingsTab !== next) {
+          settingsTab = next;
+          focusNext = null;
+          render();
+          if (settingsTab === "profile") queueMicrotask(() => paintProfileCrop());
+        }
         return;
       }
       const appProfile = e.target.closest("[data-app-profile]");
@@ -12268,6 +12330,10 @@ const html = `<!DOCTYPE html>
       if (brandImg && typeof DATA_V === "string") {
         brandImg.src = "data/ui/brand-mark.png?" + DATA_V;
       }
+      var settingsImg = document.querySelector("img[data-settings-mark], img.settings-mark");
+      if (settingsImg && typeof DATA_V === "string") {
+        settingsImg.src = "data/ui/brand-mark.png?" + DATA_V;
+      }
     } catch (_) {}
     if ("serviceWorker" in navigator) {
       (function armServiceWorkerAutoUpdate() {
@@ -12290,7 +12356,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v176-og-image";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v177-settings-tabs";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12342,13 +12408,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v176-og-image")) {
+  || !html.includes("chuckle-shell-v177-settings-tabs")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v176-og-image")
+  || !swSrc.includes("chuckle-shell-v177-settings-tabs")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -14045,6 +14111,15 @@ if (!inline.includes("function flairEntry(") || !inline.includes("function openP
 if (!html.includes("profile-crop") || !html.includes("profile-av-preview")
   || !html.includes("seat-flair-custom")) {
   throw new Error("Profile crop CSS and custom flair class must ship");
+}
+if (!html.includes('class="go-settings"') || !html.includes("settings-lab")
+  || !html.includes('data-settings-mark')
+  || !inline.includes('data-settings-tab="profile"')
+  || !inline.includes('data-settings-tab="leagues"')
+  || !inline.includes('settingsTab = "profile"')
+  || !inline.includes("function renderSettingsProfileTab(")
+  || !inline.includes("function renderSettingsLeaguesTab(")) {
+  throw new Error("Settings must use Chuckle mark + label and Profile/Leagues tabs (default Profile)");
 }
 
 // ---------------------------------------------------------------------------------------------

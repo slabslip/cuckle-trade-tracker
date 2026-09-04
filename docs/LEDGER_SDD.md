@@ -3,6 +3,9 @@
 Season-long (and shorter) bets between league members — stakes, odds, terms, and an
 **accept / lock** handshake. Lives on the **Ledger** top tab.
 
+**Go-live / buildout runbook:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)
+(architecture + ordered Supabase / Shortcut steps).
+
 Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) ·
 [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)  
 Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)

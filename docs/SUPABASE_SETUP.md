@@ -794,7 +794,8 @@ only your slips; another seat’s team page shows that seat’s public W/L + sli
 2. Run [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)
    (adds `visibility` + SELECT RLS: party or public).
 3. Deploy Edge Function `ledger-ingest` with secret `LEDGER_INGEST_SECRET`.
-4. Build the iPhone Shortcut per [`docs/LEDGER_SDD.md`](LEDGER_SDD.md).
+4. Build the iPhone Shortcut per [`docs/LEDGER_SDD.md`](LEDGER_SDD.md)
+   (full operator checklist: [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)).
 
 Planning archive (shipped): [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md),
 [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md).

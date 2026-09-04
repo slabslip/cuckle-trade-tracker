@@ -177,8 +177,8 @@ const html = `<!DOCTYPE html>
       pointer-events: none;
     }
     h1.brand .league-sub[hidden] { display: none; }
-    /* Icon chrome: back chevron left, gear settings right — plain marks, 44px hit targets. */
-    button.go-back, button.go-settings {
+    /* Icon chrome: back chevron left; brand-end is team flair (league home) or settings gear. */
+    button.go-back, button.go-settings, button.go-team {
       flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
       background: transparent; border: 0; border-radius: 10px;
       width: 44px; height: 44px; padding: 0;
@@ -187,11 +187,29 @@ const html = `<!DOCTYPE html>
     button.go-back svg, button.go-settings svg {
       display: block; width: 22px; height: 22px;
     }
-    button.go-back:focus-visible, button.go-settings:focus-visible {
+    button.go-back:focus-visible, button.go-settings:focus-visible, button.go-team:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
-    button.go-settings[hidden] { display: none; }
+    button.go-settings[hidden], button.go-team[hidden] { display: none; }
     button.go-back[hidden] { display: none; }
+    button.go-team {
+      border-radius: 50%; overflow: hidden;
+      border: 1px solid #3a3428; background: #1c1c22;
+    }
+    button.go-team .go-team-ico {
+      display: grid; place-items: center; width: 100%; height: 100%;
+      overflow: hidden; border-radius: 50%;
+    }
+    button.go-team .go-team-ico img.go-team-flair {
+      display: block; width: 100%; height: 100%;
+      object-fit: cover; border-radius: 50%;
+    }
+    button.go-team .go-team-ico .go-team-glyph {
+      font-size: 1.15rem; line-height: 1;
+    }
+    button.go-team .go-team-ico .go-team-initials {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: var(--muted);
+    }
     /* Full-screen Your leagues panel — slides in from the left over the league dash. */
     .leagues-drawer {
       position: fixed; inset: 0; z-index: 90;
@@ -223,7 +241,7 @@ const html = `<!DOCTYPE html>
     body.has-leagues-drawer { overflow: hidden; }
     /* Settings Profile | Leagues — reuse .nav / .tab; slight top gap under the screen title. */
     .settings-tabs.nav { margin: 4px 0 14px; }
-    /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
+    /* Right slot is .brand-end (team flair on league home, settings gear on team home). */
     .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
     .brand-end:empty { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
@@ -1235,7 +1253,7 @@ const html = `<!DOCTYPE html>
       margin: 18px 0 22px;
     }
     .lh-action-row {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px 8px; align-items: start;
     }
     button.lh-action {
@@ -2370,6 +2388,9 @@ const html = `<!DOCTYPE html>
       <span class="league-sub" id="leagueSub" hidden></span>
     </span>
     <span class="brand-end">
+      <button type="button" class="go-team" id="goTeamHome" aria-label="My team" hidden>
+        <span class="go-team-ico" id="goTeamHomeIco" aria-hidden="true"></span>
+      </button>
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
         <svg class="settings-gear" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
           <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 14.3 2h-4.6a.5.5 0 0 0-.49.42l-.36 2.54c-.6.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.31 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.43 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.49.4 1.03.71 1.63.94l.36 2.54c.05.24.25.42.49.42h4.6c.24 0 .44-.18.49-.42l.36-2.54c.6-.24 1.14-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
@@ -2606,7 +2627,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v186-home-data-tab";
+    const DATA_V = "v187-team-gear-flow";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4813,13 +4834,13 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * PSA-style quick actions: {team} stats, Teams, Champions, Data.
+     * PSA-style quick actions: Teams, Champions, Data.
+     * Team flair lives in the brand-end (top right) and opens team home.
      * Data opens the full-screen Data tab (Draft Data, Cuffs, league lists).
      */
     function homeChips() {
       return '<div class="lh-actions ds-wrap">'
         + '<div class="lh-action-row">'
-        + lhSeatStatsAction()
         + lhNavAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
         + '<button type="button" class="lh-action" data-view="titles" aria-label="Champions Path">'
@@ -6054,10 +6075,46 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    /**
+     * Brand-end right slot:
+     * - League home + claimed seat → team flair (opens team home)
+     * - Team home / nested / Settings → settings gear (opens Team settings)
+     * - Authed with no seat on league home → settings gear (claim path)
+     */
+    function brandTeamIcoHtml(name) {
+      const f = name ? flairEntry(name) : null;
+      if (f && f.img) {
+        const flairCls = f.custom ? "go-team-flair go-team-flair-custom" : "go-team-flair";
+        return '<img class="' + flairCls + '" src="' + flairImgSrc(f.img)
+          + '" width="44" height="44" alt="" decoding="async" />';
+      }
+      if (f && f.glyph) {
+        return '<span class="go-team-glyph">' + f.glyph + "</span>";
+      }
+      const initials = String(name || "TM").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "TM";
+      return '<span class="go-team-initials">' + esc(initials) + "</span>";
+    }
+
     function paintSettingsBtn() {
-      const btn = document.getElementById("goSettings");
-      if (!btn) return;
-      btn.hidden = !authSession;
+      const settingsBtn = document.getElementById("goSettings");
+      const teamBtn = document.getElementById("goTeamHome");
+      const teamIco = document.getElementById("goTeamHomeIco");
+      if (!settingsBtn) return;
+      const onLeagueHome = appScreen === "dash" && !me && view === "home";
+      const seatId = authSeatId();
+      const teamSeat = authSeatCanonName() || authSeatName();
+      const showTeam = !!(authSession && onLeagueHome && seatId);
+      const showSettings = !!(authSession && !showTeam);
+      settingsBtn.hidden = !showSettings;
+      if (showSettings) settingsBtn.setAttribute("aria-label", "Team settings");
+      if (teamBtn) {
+        teamBtn.hidden = !showTeam;
+        if (showTeam) {
+          const lab = (teamSeat || "Team") + " — open team home";
+          teamBtn.setAttribute("aria-label", lab);
+          if (teamIco) teamIco.innerHTML = brandTeamIcoHtml(teamSeat);
+        }
+      }
     }
 
     /** Top-left back control: hide on the login gate so the centered gate logo is the only mark. */
@@ -6262,6 +6319,14 @@ const html = `<!DOCTYPE html>
           return;
         }
         openLeaguesDrawer();
+        return;
+      }
+      // Team settings → team home; team home / nested → league home.
+      if ((appScreen === "settings" || appScreen === "profile")
+          && activeLeague && authSeatId()) {
+        closeLeaguesDrawer(true);
+        appScreen = "dash";
+        openMyTeamHome();
         return;
       }
       returnToLeagueHome();
@@ -10912,7 +10977,7 @@ const html = `<!DOCTYPE html>
         ? renderSettingsLeaguesTab()
         : renderSettingsProfileTab();
       return '<div class="app-shell">'
-        + '<h2 class="screen-h" tabindex="-1">Settings</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Team settings</h2>'
         + tabNav
         + body
         + "</div>";
@@ -11239,6 +11304,10 @@ const html = `<!DOCTYPE html>
     }
 
     document.getElementById("goHome").addEventListener("click", () => onBrandBack());
+    document.getElementById("goTeamHome").addEventListener("click", () => {
+      closeLeaguesDrawer(true);
+      openMyTeamHome();
+    });
     document.getElementById("goSettings").addEventListener("click", () => {
       closeLeaguesDrawer(true);
       openSettings();
@@ -12619,7 +12688,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v186-home-data-tab";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v187-team-gear-flow";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12671,13 +12740,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v186-home-data-tab")) {
+  || !html.includes("chuckle-shell-v187-team-gear-flow")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v186-home-data-tab")
+  || !swSrc.includes("chuckle-shell-v187-team-gear-flow")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13768,8 +13837,25 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   const at = inline.indexOf("function homeChips(");
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
-  if (!fn.includes("lhSeatStatsAction(") || fn.includes('"My Trades"')) {
-    throw new Error("homeChips must use lhSeatStatsAction (team flair + stats), not My Trades");
+  if (fn.includes("lhSeatStatsAction(") || fn.includes('"My Trades"') || fn.includes("mystats")) {
+    throw new Error("homeChips must not mount team stats — brand-end goTeamHome owns that door");
+  }
+  if (!fn.includes('lhNavAction("teams"') || !fn.includes("dataSetRow(") || !fn.includes("Champions")) {
+    throw new Error("homeChips must keep Teams, Champions, and Data");
+  }
+}
+if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
+  || !inline.includes("function brandTeamIcoHtml(")
+  || !inline.includes("function paintSettingsBtn(")
+  || !inline.includes("openMyTeamHome()")
+  || !inline.includes('getElementById("goTeamHome")')) {
+  throw new Error("league home brand-end must mount goTeamHome flair → openMyTeamHome");
+}
+{
+  const paint = fnSrc("paintSettingsBtn");
+  if (!paint.includes("showTeam") || !paint.includes("goTeamHome")
+    || !paint.includes("brandTeamIcoHtml(") || !paint.includes('view === "home"')) {
+    throw new Error("paintSettingsBtn must swap team flair on league home vs settings gear");
   }
 }
 {
@@ -14452,7 +14538,19 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
 if (/\bsettings-lab\b/.test(html) || /class="brand-lab"/.test(html)
   || /\bdata-settings-mark\b/.test(html) || /\bsettings-mark\b/.test(html)
   || /\bgo-home\b/.test(html)) {
-  throw new Error("brand row must not keep Chuckle-mark settings/home labels — back chevron + gear only");
+  throw new Error("brand row must not keep Chuckle-mark settings/home labels — back + team flair / gear");
+}
+if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
+  throw new Error("brand-end must include goTeamHome for league-home team flair");
+}
+{
+  const backFn = fnSrc("onBrandBack");
+  if (!backFn.includes('appScreen === "settings"') || !backFn.includes("openMyTeamHome()")) {
+    throw new Error("onBrandBack from Team settings must return to team home");
+  }
+}
+if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "Team settings"')) {
+  throw new Error("Settings screen must render as Team settings from the team-home gear");
 }
 
 // ---------------------------------------------------------------------------------------------

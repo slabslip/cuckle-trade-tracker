@@ -304,7 +304,7 @@ const html = `<!DOCTYPE html>
     img.seat-flair-custom {
       object-fit: cover; border-radius: 50%;
     }
-    /* Team name + flair → that team's home. Inline so it nests inside tape / H2H chrome. */
+    /* Team name (+ crown award) → that team's home. Inline so it nests inside tape / H2H chrome. */
     .seat-link {
       appearance: none; font: inherit; color: inherit; text-decoration: none;
       background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
@@ -2465,9 +2465,10 @@ const html = `<!DOCTYPE html>
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
     /**
-     * Seat flair on the painted name only. Matching, data-who, data-partner and the news
-     * matcher keep the bare Sleeper name; this is what the eye reads next to it.
-     * Order: reigning-champ crown (most recent title year) → name → glyph/img flair.
+     * Seat identity on the painted name only. Matching, data-who, data-partner and the news
+     * matcher keep the bare Sleeper name; H2H / brand-end already show the team pic on the
+     * left, so the label is name + awards only (no trailing emoji/img flair).
+     * Order: name → reigning-champ crown (and any future awards) on the right.
      */
     const SEAT_FLAIR = Object.assign(Object.create(null), {
       SF69erss: { img: "data/ui/flair-sf69erss.png" },
@@ -2524,7 +2525,7 @@ const html = `<!DOCTYPE html>
       }
     }
     // Gold, the same #e0b44c the alert cards and the vote outline use. Decorates the
-    // reigning champion beside their name everywhere seatLabel paints — never the name itself.
+    // reigning champion to the right of their name everywhere seatLabel paints.
     const CROWN = '<svg class="crown" viewBox="0 0 24 24" width="16" height="16"'
       + ' aria-hidden="true" focusable="false">'
       + '<path fill="#e0b44c" d="M2 7l4.7 3.1L12 3.4l5.3 6.7L22 7l-1.7 11.4H3.7L2 7z"/></svg>';
@@ -2552,7 +2553,8 @@ const html = `<!DOCTYPE html>
       return f && f.glyph ? " " + f.glyph : "";
     }
     /**
-     * Painted seat name: crown → name → flair. By default a seat-link with data-who so taps
+     * Painted seat name: name → crown/awards. Team pic/emoji lives left of the name in H2H
+     * avatars and brand-end — not repeated here. By default a seat-link with data-who so taps
      * open that team's home. Pass { link: false } inside another control that already owns
      * the destination (Teams rows, vote options) to avoid nested interactive markup.
      */
@@ -2563,8 +2565,8 @@ const html = `<!DOCTYPE html>
       if (n.includes(" · ")) {
         return n.split(" · ").map((part) => seatLabel(part, opts)).join(" · ");
       }
-      const crown = reigningChampName() === n ? CROWN + " " : "";
-      const inner = crown + esc(n) + seatFlairHtml(n);
+      const crown = reigningChampName() === n ? " " + CROWN : "";
+      const inner = esc(n) + crown;
       if (!link || !n) return inner;
       return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(n) + '"'
         + ' aria-label="' + esc(n) + '">' + inner + "</span>";
@@ -2627,7 +2629,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v187-team-gear-flow";
+    const DATA_V = "v188-name-flair-dedupe";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9618,14 +9620,14 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
-    /** Team name on the chip; crown/flair keyed by Sleeper handle when they differ. */
+    /** Team name on the chip; crown award on the right. Pic is the left avatar, not trailing flair. */
     function h2hSeatTitleHtml(side) {
       const title = side.name || side.handle || "";
       const flairKey = side.flairName || side.handle || side.name || "";
       const who = side.handle || side.name || title;
       const champ = reigningChampName();
-      const crown = (champ && (champ === flairKey || champ === title)) ? CROWN + " " : "";
-      const inner = crown + esc(title) + seatFlairHtml(flairKey);
+      const crown = (champ && (champ === flairKey || champ === title)) ? " " + CROWN : "";
+      const inner = esc(title) + crown;
       if (!who) return inner;
       return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(who) + '"'
         + ' aria-label="' + esc(who) + '">' + inner + "</span>";
@@ -12688,7 +12690,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v187-team-gear-flow";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v188-name-flair-dedupe";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12740,13 +12742,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v187-team-gear-flow")) {
+  || !html.includes("chuckle-shell-v188-name-flair-dedupe")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v187-team-gear-flow")
+  || !swSrc.includes("chuckle-shell-v188-name-flair-dedupe")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13462,6 +13464,27 @@ if (seatPlaces.some((p) => !Number.isInteger(p)) || new Set(seatPlaces).size !==
 }
 if (seatPlaces.filter((p) => p === 1).length !== 1) {
   throw new Error("exactly one member wears the crown");
+
+// Name chrome: team pic lives left of names (H2H avatars / brand-end); labels are name + awards only.
+{
+  const seatFn = fnSrc("seatLabel");
+  if (seatFn.includes("seatFlairHtml(") || seatFn.includes("CROWN + \" \"")
+    || seatFn.includes("CROWN + ' '") || /crown \+ esc\(n\)/.test(seatFn)) {
+    throw new Error("seatLabel must paint name then crown — no trailing seat flair, no leading crown");
+  }
+  if (!seatFn.includes('esc(n) + crown') && !seatFn.includes("esc(n) + crown")) {
+    throw new Error("seatLabel must append the crown after the name");
+  }
+}
+{
+  const h2hFn = fnSrc("h2hSeatTitleHtml");
+  if (h2hFn.includes("seatFlairHtml(") || /crown \+ esc\(title\)/.test(h2hFn)) {
+    throw new Error("h2hSeatTitleHtml must not repeat seat flair after the left avatar");
+  }
+  if (!h2hFn.includes("esc(title) + crown")) {
+    throw new Error("h2hSeatTitleHtml must put the crown after the team name");
+  }
+}
 }
 // Data Sets is a full-screen list now — no absolutely positioned menu cap.
 if (html.includes("max-height: min(calc(5 * 76px + 30px)") || html.includes("max-height: min(calc(6 * 76px")) {

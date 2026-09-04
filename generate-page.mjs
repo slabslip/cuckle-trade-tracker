@@ -159,37 +159,50 @@ const html = `<!DOCTYPE html>
       font-size: 1.15rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
       overflow: visible; min-height: 44px;
     }
-    /* League name is absolutely centered; side slots (home / brand-end) stay 44px hit targets. */
+    /* Centered cluster: Home icon + league name (both → league home). Side slots are back / brand-end. */
     h1.brand .brand-title {
       position: absolute; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; justify-content: center;
-      gap: 0; min-width: 0; max-width: calc(100% - 112px);
+      gap: 6px; min-width: 0; max-width: calc(100% - 112px);
       margin: 0; padding: 0; pointer-events: none;
     }
     h1.brand .brand-title[hidden] { display: none; }
-    h1.brand .league-sub {
-      margin: 0; padding: 0; color: inherit;
-      font-size: inherit; font-weight: inherit; letter-spacing: inherit;
-      text-align: center; line-height: 1.15; min-width: 0;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      pointer-events: none;
+    h1.brand .brand-title .go-home,
+    h1.brand .brand-title .league-sub {
+      pointer-events: auto;
     }
-    h1.brand .league-sub[hidden] { display: none; }
-    /* Icon chrome: Home left (always → league home); brand-end is team flair or settings gear. */
-    button.go-home, button.go-settings, button.go-team {
+    button.league-sub {
+      appearance: none; font: inherit; color: inherit;
+      background: transparent; border: 0; border-radius: 8px;
+      margin: 0; padding: 4px 2px; cursor: pointer;
+      font-size: inherit; font-weight: inherit; letter-spacing: inherit;
+      text-align: center; line-height: 1.15; min-width: 0; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    button.league-sub:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.league-sub[hidden] { display: none; }
+    /* Icon chrome: back chevron left; Home sits beside the centered league name; brand-end right. */
+    button.go-back, button.go-home, button.go-settings, button.go-team {
       flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
       background: transparent; border: 0; border-radius: 10px;
       width: 44px; height: 44px; padding: 0;
       display: grid; place-items: center; cursor: pointer;
     }
-    button.go-home svg, button.go-settings svg {
+    h1.brand .brand-title button.go-home {
+      width: 36px; height: 36px; border-radius: 9px;
+    }
+    button.go-back svg, button.go-home svg, button.go-settings svg {
       display: block; width: 22px; height: 22px;
     }
-    button.go-home:focus-visible, button.go-settings:focus-visible, button.go-team:focus-visible {
+    h1.brand .brand-title button.go-home svg {
+      width: 20px; height: 20px;
+    }
+    button.go-back:focus-visible, button.go-home:focus-visible,
+    button.go-settings:focus-visible, button.go-team:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
-    button.go-settings[hidden], button.go-team[hidden] { display: none; }
-    button.go-home[hidden] { display: none; }
+    button.go-settings[hidden], button.go-team[hidden],
+    button.go-home[hidden], button.go-back[hidden] { display: none; }
     button.go-team {
       border-radius: 50%; overflow: hidden;
       border: 1px solid #3a3428; background: #1c1c22;
@@ -208,16 +221,6 @@ const html = `<!DOCTYPE html>
     button.go-team .go-team-ico .go-team-initials {
       font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: var(--muted);
     }
-
-    /* Drawer / in-panel back chevron (not the brand Home control). */
-    button.go-back {
-      flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
-      background: transparent; border: 0; border-radius: 10px;
-      width: 44px; height: 44px; padding: 0;
-      display: grid; place-items: center; cursor: pointer;
-    }
-    button.go-back svg { display: block; width: 22px; height: 22px; }
-    button.go-back:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Full-screen Your leagues panel — slides in from the left over the league dash. */
     .leagues-drawer {
       position: fixed; inset: 0; z-index: 90;
@@ -2411,13 +2414,18 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="League home">
-      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-        <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
+    <button type="button" class="go-back" id="goBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 6l-6 6 6 6"/>
       </svg>
     </button>
     <span class="brand-title" id="brandTitle" hidden>
-      <span class="league-sub" id="leagueSub" hidden></span>
+      <button type="button" class="go-home" id="goHome" aria-label="League home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
+        </svg>
+      </button>
+      <button type="button" class="league-sub" id="leagueSub" hidden aria-label="League home"></button>
     </span>
     <span class="brand-end">
       <button type="button" class="go-team" id="goTeamHome" aria-label="My team" hidden>
@@ -2661,7 +2669,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v190-gold-nav-bar";
+    const DATA_V = "v191-home-beside-name";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6101,8 +6109,10 @@ const html = `<!DOCTYPE html>
       if (!leagueSub) return;
       const show = !!(activeLeague && appScreen !== "gate" && appScreen !== "home");
       if (show) {
+        const lab = activeLeague.name || "League";
         leagueSub.hidden = false;
-        leagueSub.textContent = activeLeague.name || "League";
+        leagueSub.textContent = lab;
+        leagueSub.setAttribute("aria-label", lab + " — league home");
         if (brandTitle) brandTitle.hidden = false;
       } else {
         leagueSub.hidden = true;
@@ -6153,11 +6163,13 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    /** Top-left Home: hide on the login gate / multi-league home. */
+    /** Top-left Back + centered Home: hide on the login gate / multi-league home. */
     function paintBrandHome() {
-      const btn = document.getElementById("goHome");
-      if (!btn) return;
-      btn.hidden = appScreen === "gate" || appScreen === "home";
+      const hide = appScreen === "gate" || appScreen === "home";
+      const back = document.getElementById("goBack");
+      const home = document.getElementById("goHome");
+      if (back) back.hidden = hide;
+      if (home) home.hidden = hide;
     }
 
     function leaguesListHtml() {
@@ -6329,14 +6341,50 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Brand Home — always lands on the active league homepage, from any screen.
-     * Overlays (vote sheet / news pull-up / leagues drawer) close first.
-     * Already on league home: collapse news if open; do not open the leagues drawer.
+     * Brand Back (chevron):
+     * - overlays close first
+     * - league homepage → Your leagues drawer
+     * - Team settings → team home
+     * - nested screens → league homepage
      */
     function onBrandBack() {
       if (leaguesDrawerOpen) {
-        closeLeaguesDrawer(true);
+        closeLeaguesDrawer();
+        return;
       }
+      if (appScreen === "gate" || appScreen === "home") return;
+      if (voteSheetTx || voteConfirmTx) {
+        voteSheetTx = null;
+        voteSheetSeat = null;
+        voteConfirmTx = null;
+        voteConfirmSeat = null;
+        voteEditTx = null;
+        render();
+        return;
+      }
+      if (isLeagueHomeSurface()) {
+        if (typeof newsPullupLocksHome === "function" && newsPullupOpen) {
+          if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+          return;
+        }
+        openLeaguesDrawer();
+        return;
+      }
+      if ((appScreen === "settings" || appScreen === "profile")
+          && activeLeague && authSeatId()) {
+        closeLeaguesDrawer(true);
+        appScreen = "dash";
+        openMyTeamHome();
+        return;
+      }
+      returnToLeagueHome();
+    }
+
+    /**
+     * Centered Home icon + league name — always land on the active league homepage.
+     */
+    function goLeagueHome() {
+      if (leaguesDrawerOpen) closeLeaguesDrawer(true);
       if (appScreen === "gate" || appScreen === "home") return;
       if (voteSheetTx || voteConfirmTx) {
         voteSheetTx = null;
@@ -11326,7 +11374,9 @@ const html = `<!DOCTYPE html>
       return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
     }
 
-    document.getElementById("goHome").addEventListener("click", () => onBrandBack());
+    document.getElementById("goBack").addEventListener("click", () => onBrandBack());
+    document.getElementById("goHome").addEventListener("click", () => goLeagueHome());
+    document.getElementById("leagueSub").addEventListener("click", () => goLeagueHome());
     document.getElementById("goTeamHome").addEventListener("click", () => {
       closeLeaguesDrawer(true);
       openMyTeamHome();
@@ -12703,7 +12753,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v190-gold-nav-bar";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v191-home-beside-name";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12748,27 +12798,36 @@ if (!html.includes('property="og:image"')
 }
 if (html.includes('img class="brand-mark"') || html.includes('data/ui/brand-mark.png')
   || html.includes('data-brand-mark')) {
-  throw new Error("Chuckle brand-mark must stay out of the brand row — Home icon replaces it");
+  throw new Error("Chuckle brand-mark must stay out of the brand row — Home sits beside the league name");
+}
+if (!html.includes('id="goBack"') || !html.includes('aria-label="Back"')
+  || !html.includes('class="go-back"')) {
+  throw new Error("dashboard brand row must keep a top-left Back chevron (id=goBack)");
 }
 if (!html.includes('class="go-home"') || !html.includes('aria-label="League home"')
-  || !html.includes('id="goHome"')) {
-  throw new Error("dashboard brand row must use a Home control (id=goHome) that returns to league home");
+  || !html.includes('id="goHome"')
+  || !html.includes('class="brand-title"')
+  || html.indexOf('id="goHome"') < html.indexOf('id="brandTitle"')
+  || html.indexOf('id="goHome"') > html.indexOf('id="leagueSub"')) {
+  throw new Error("Home icon must sit inside centered brand-title, left of the league name");
 }
-if (!html.includes('class="go-back"')) {
-  throw new Error("leagues drawer must keep a go-back chevron for closing the panel");
+if (!html.includes('button type="button" class="league-sub"')
+  && !html.includes('button type="button" class="league-sub" id="leagueSub"')
+  && !html.includes('class="league-sub" id="leagueSub"')) {
+  throw new Error("league name must be a clickable control that goes to league home");
 }
 if (!html.includes('updateViaCache: "none"')
   || !html.includes("controllerchange")
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v190-gold-nav-bar")) {
+  || !html.includes("chuckle-shell-v191-home-beside-name")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v190-gold-nav-bar")
+  || !swSrc.includes("chuckle-shell-v191-home-beside-name")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13053,10 +13112,10 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) 
   if (!titleDecl.includes("left: 50%") || !titleDecl.includes("translateX(-50%)")) {
     throw new Error("h1.brand .brand-title must absolutely center the league name");
   }
-  const subRule = html.slice(html.indexOf("    h1.brand .league-sub {"));
+  const subRule = html.slice(html.indexOf("    button.league-sub {"));
   const decl = subRule.slice(0, subRule.indexOf("}"));
   if (!decl.includes("text-align: center")) {
-    throw new Error("h1.brand .league-sub must be center-aligned");
+    throw new Error("button.league-sub must be center-aligned");
   }
   if (!html.includes('class="brand-title"') || !html.includes('id="brandTitle"')) {
     throw new Error("league name must ship inside centered .brand-title");
@@ -13064,16 +13123,19 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) 
   if (html.includes("brand-mark") || html.includes("data-brand-mark")) {
     throw new Error("brand-title must not keep the Chuckle logo mark");
   }
+  if (!titleDecl.includes("gap: 6px")) {
+    throw new Error("brand-title must gap Home icon beside the league name");
+  }
 }
 
-if (!html.includes('id="leagueSub"') || !html.includes("h1.brand .league-sub")) {
+if (!html.includes('id="leagueSub"') || !html.includes("button.league-sub")) {
   throw new Error("league name must ship in the brand row (#leagueSub)");
 }
 if (/<p[^>]*id="leagueSub"/.test(html) || /<p class="league-sub"/.test(html)) {
   throw new Error("league name must not remain a separate <p> under the brand — it belongs in h1.brand");
 }
 if (!inline.includes("function paintLeagueSub()")
-    || !inline.includes('leagueSub.textContent = activeLeague.name || "League"')
+    || !inline.includes('activeLeague.name || "League"')
     || !inline.includes('appScreen !== "gate"')
     || !inline.includes('appScreen !== "home"')) {
   throw new Error("paintLeagueSub must show the centered league name on every non-gate screen");
@@ -14564,20 +14626,34 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
   || !inline.includes("function openLeaguesDrawer(")
   || !inline.includes("function closeLeaguesDrawer(")
   || !inline.includes("function onBrandBack(")
+  || !inline.includes("function goLeagueHome(")
   || !inline.includes("function isLeagueHomeSurface(")
   || !inline.includes("function returnToLeagueHome(")
   || !inline.includes("function openLeagueFromMembership(")) {
-  throw new Error("leagues drawer helpers must ship; Home always returns to league home");
+  throw new Error("brand Back / Home helpers and leagues drawer must ship");
 }
 {
   const backFn = fnSrc("onBrandBack");
-  if (!backFn.includes("returnToLeagueHome()") || backFn.includes("openLeaguesDrawer()")
-    || backFn.includes("openMyTeamHome()")) {
-    throw new Error("onBrandBack (Home) must always returnToLeagueHome — never leagues drawer or team home");
+  if (!backFn.includes("isLeagueHomeSurface()") || !backFn.includes("returnToLeagueHome()")
+    || !backFn.includes("openLeaguesDrawer()") || !backFn.includes("openMyTeamHome()")) {
+    throw new Error("onBrandBack must open leagues drawer on league home and return to team home from settings");
   }
   if (/appScreen !== "dash"[\s\S]{0,80}goAppHome\(\)/.test(backFn)) {
     throw new Error("onBrandBack must not send non-dash screens to goAppHome — return to league home");
   }
+}
+{
+  const homeFn = fnSrc("goLeagueHome");
+  if (!homeFn.includes("returnToLeagueHome()") || homeFn.includes("openLeaguesDrawer()")
+    || homeFn.includes("openMyTeamHome()")) {
+    throw new Error("goLeagueHome must always returnToLeagueHome — never leagues drawer or team home");
+  }
+}
+if (!inline.includes('getElementById("goBack")')
+  || !inline.includes('getElementById("goHome")')
+  || !inline.includes('getElementById("leagueSub")')
+  || !inline.includes("goLeagueHome()")) {
+  throw new Error("Back / Home / league name must wire to onBrandBack and goLeagueHome");
 }
 // Your leagues drawer is outside #app — league rows must open from the drawer click root.
 {
@@ -14608,9 +14684,9 @@ if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
   throw new Error("brand-end must include goTeamHome for league-home team flair");
 }
 {
-  const backFn = fnSrc("onBrandBack");
-  if (backFn.includes("openMyTeamHome()") || backFn.includes('appScreen === "settings"')) {
-    throw new Error("Home must not special-case Team settings — always league home");
+  const homeFn = fnSrc("goLeagueHome");
+  if (homeFn.includes("openMyTeamHome()") || homeFn.includes('appScreen === "settings"')) {
+    throw new Error("goLeagueHome must not special-case Team settings — always league home");
   }
 }
 if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "Team settings"')) {

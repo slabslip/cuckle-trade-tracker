@@ -154,37 +154,50 @@
       font-size: 1.15rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
       overflow: visible; min-height: 44px;
     }
-    /* League name is absolutely centered; side slots (home / brand-end) stay 44px hit targets. */
+    /* Centered cluster: Home icon + league name (both → league home). Side slots are back / brand-end. */
     h1.brand .brand-title {
       position: absolute; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; justify-content: center;
-      gap: 0; min-width: 0; max-width: calc(100% - 112px);
+      gap: 6px; min-width: 0; max-width: calc(100% - 112px);
       margin: 0; padding: 0; pointer-events: none;
     }
     h1.brand .brand-title[hidden] { display: none; }
-    h1.brand .league-sub {
-      margin: 0; padding: 0; color: inherit;
-      font-size: inherit; font-weight: inherit; letter-spacing: inherit;
-      text-align: center; line-height: 1.15; min-width: 0;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      pointer-events: none;
+    h1.brand .brand-title .go-home,
+    h1.brand .brand-title .league-sub {
+      pointer-events: auto;
     }
-    h1.brand .league-sub[hidden] { display: none; }
-    /* Icon chrome: Home left (always → league home); brand-end is team flair or settings gear. */
-    button.go-home, button.go-settings, button.go-team {
+    button.league-sub {
+      appearance: none; font: inherit; color: inherit;
+      background: transparent; border: 0; border-radius: 8px;
+      margin: 0; padding: 4px 2px; cursor: pointer;
+      font-size: inherit; font-weight: inherit; letter-spacing: inherit;
+      text-align: center; line-height: 1.15; min-width: 0; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    button.league-sub:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.league-sub[hidden] { display: none; }
+    /* Icon chrome: back chevron left; Home sits beside the centered league name; brand-end right. */
+    button.go-back, button.go-home, button.go-settings, button.go-team {
       flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
       background: transparent; border: 0; border-radius: 10px;
       width: 44px; height: 44px; padding: 0;
       display: grid; place-items: center; cursor: pointer;
     }
-    button.go-home svg, button.go-settings svg {
+    h1.brand .brand-title button.go-home {
+      width: 36px; height: 36px; border-radius: 9px;
+    }
+    button.go-back svg, button.go-home svg, button.go-settings svg {
       display: block; width: 22px; height: 22px;
     }
-    button.go-home:focus-visible, button.go-settings:focus-visible, button.go-team:focus-visible {
+    h1.brand .brand-title button.go-home svg {
+      width: 20px; height: 20px;
+    }
+    button.go-back:focus-visible, button.go-home:focus-visible,
+    button.go-settings:focus-visible, button.go-team:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
-    button.go-settings[hidden], button.go-team[hidden] { display: none; }
-    button.go-home[hidden] { display: none; }
+    button.go-settings[hidden], button.go-team[hidden],
+    button.go-home[hidden], button.go-back[hidden] { display: none; }
     button.go-team {
       border-radius: 50%; overflow: hidden;
       border: 1px solid #3a3428; background: #1c1c22;
@@ -203,16 +216,6 @@
     button.go-team .go-team-ico .go-team-initials {
       font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; color: var(--muted);
     }
-
-    /* Drawer / in-panel back chevron (not the brand Home control). */
-    button.go-back {
-      flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
-      background: transparent; border: 0; border-radius: 10px;
-      width: 44px; height: 44px; padding: 0;
-      display: grid; place-items: center; cursor: pointer;
-    }
-    button.go-back svg { display: block; width: 22px; height: 22px; }
-    button.go-back:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Full-screen Your leagues panel — slides in from the left over the league dash. */
     .leagues-drawer {
       position: fixed; inset: 0; z-index: 90;
@@ -2406,13 +2409,18 @@
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="League home">
-      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-        <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
+    <button type="button" class="go-back" id="goBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 6l-6 6 6 6"/>
       </svg>
     </button>
     <span class="brand-title" id="brandTitle" hidden>
-      <span class="league-sub" id="leagueSub" hidden></span>
+      <button type="button" class="go-home" id="goHome" aria-label="League home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z"/>
+        </svg>
+      </button>
+      <button type="button" class="league-sub" id="leagueSub" hidden aria-label="League home"></button>
     </span>
     <span class="brand-end">
       <button type="button" class="go-team" id="goTeamHome" aria-label="My team" hidden>
@@ -2656,7 +2664,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "v190-gold-nav-bar";
+    const DATA_V = "v191-home-beside-name";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6096,8 +6104,10 @@
       if (!leagueSub) return;
       const show = !!(activeLeague && appScreen !== "gate" && appScreen !== "home");
       if (show) {
+        const lab = activeLeague.name || "League";
         leagueSub.hidden = false;
-        leagueSub.textContent = activeLeague.name || "League";
+        leagueSub.textContent = lab;
+        leagueSub.setAttribute("aria-label", lab + " — league home");
         if (brandTitle) brandTitle.hidden = false;
       } else {
         leagueSub.hidden = true;
@@ -6148,11 +6158,13 @@
       }
     }
 
-    /** Top-left Home: hide on the login gate / multi-league home. */
+    /** Top-left Back + centered Home: hide on the login gate / multi-league home. */
     function paintBrandHome() {
-      const btn = document.getElementById("goHome");
-      if (!btn) return;
-      btn.hidden = appScreen === "gate" || appScreen === "home";
+      const hide = appScreen === "gate" || appScreen === "home";
+      const back = document.getElementById("goBack");
+      const home = document.getElementById("goHome");
+      if (back) back.hidden = hide;
+      if (home) home.hidden = hide;
     }
 
     function leaguesListHtml() {
@@ -6324,14 +6336,50 @@
     }
 
     /**
-     * Brand Home — always lands on the active league homepage, from any screen.
-     * Overlays (vote sheet / news pull-up / leagues drawer) close first.
-     * Already on league home: collapse news if open; do not open the leagues drawer.
+     * Brand Back (chevron):
+     * - overlays close first
+     * - league homepage → Your leagues drawer
+     * - Team settings → team home
+     * - nested screens → league homepage
      */
     function onBrandBack() {
       if (leaguesDrawerOpen) {
-        closeLeaguesDrawer(true);
+        closeLeaguesDrawer();
+        return;
       }
+      if (appScreen === "gate" || appScreen === "home") return;
+      if (voteSheetTx || voteConfirmTx) {
+        voteSheetTx = null;
+        voteSheetSeat = null;
+        voteConfirmTx = null;
+        voteConfirmSeat = null;
+        voteEditTx = null;
+        render();
+        return;
+      }
+      if (isLeagueHomeSurface()) {
+        if (typeof newsPullupLocksHome === "function" && newsPullupOpen) {
+          if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+          return;
+        }
+        openLeaguesDrawer();
+        return;
+      }
+      if ((appScreen === "settings" || appScreen === "profile")
+          && activeLeague && authSeatId()) {
+        closeLeaguesDrawer(true);
+        appScreen = "dash";
+        openMyTeamHome();
+        return;
+      }
+      returnToLeagueHome();
+    }
+
+    /**
+     * Centered Home icon + league name — always land on the active league homepage.
+     */
+    function goLeagueHome() {
+      if (leaguesDrawerOpen) closeLeaguesDrawer(true);
       if (appScreen === "gate" || appScreen === "home") return;
       if (voteSheetTx || voteConfirmTx) {
         voteSheetTx = null;
@@ -11321,7 +11369,9 @@
       return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
     }
 
-    document.getElementById("goHome").addEventListener("click", () => onBrandBack());
+    document.getElementById("goBack").addEventListener("click", () => onBrandBack());
+    document.getElementById("goHome").addEventListener("click", () => goLeagueHome());
+    document.getElementById("leagueSub").addEventListener("click", () => goLeagueHome());
     document.getElementById("goTeamHome").addEventListener("click", () => {
       closeLeaguesDrawer(true);
       openMyTeamHome();
@@ -12698,7 +12748,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v190-gold-nav-bar";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v191-home-beside-name";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

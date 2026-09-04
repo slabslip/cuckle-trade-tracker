@@ -10,9 +10,25 @@ const html = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta name="theme-color" content="#0b0b0d" />
+  <meta name="description" content="Chuckle Fantasy — old trades, fresh laughs. Dynasty trade meter for your league." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="canonical" href="https://slabslip.github.io/cuckle-trade-tracker/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Chuckle Fantasy" />
+  <meta property="og:title" content="Chuckle Fantasy" />
+  <meta property="og:description" content="Old trades. Fresh laughs. Dynasty trade meter for your league." />
+  <meta property="og:url" content="https://slabslip.github.io/cuckle-trade-tracker/" />
+  <meta property="og:image" content="https://slabslip.github.io/cuckle-trade-tracker/data/ui/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Chuckle Fantasy — Old trades. Fresh laughs." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Chuckle Fantasy" />
+  <meta name="twitter:description" content="Old trades. Fresh laughs. Dynasty trade meter for your league." />
+  <meta name="twitter:image" content="https://slabslip.github.io/cuckle-trade-tracker/data/ui/og-image.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="data/ui/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="data/ui/icon-192.png" />
@@ -2531,7 +2547,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "home20260904000635";
+    const DATA_V = "og20260904000925";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12274,7 +12290,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v175-home-flash";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v176-og-image";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12310,6 +12326,13 @@ for (const marker of ["<<<<<<<", ">>>>>>>", "\n=======\n"]) {
 const dataVs = html.match(/const DATA_V = "[^"]*"/g) || [];
 if (dataVs.length !== 1) throw new Error(`expected exactly one DATA_V, found ${dataVs.length}: ${dataVs.join(", ")}`);
 
+if (!html.includes('property="og:image"')
+  || !html.includes("data/ui/og-image.png")
+  || !html.includes('name="twitter:card"')
+  || !html.includes("summary_large_image")
+  || !html.includes('property="og:title"')) {
+  throw new Error("index head must ship Open Graph + Twitter card tags for link previews");
+}
 if (!html.includes('img class="brand-mark"') || !html.includes('data/ui/brand-mark.png')
   || !html.includes('Chuckle Fantasy — League home')) {
   throw new Error("dashboard home control must use the Chuckle Fantasy brand-mark icon");
@@ -12319,13 +12342,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v175-home-flash")) {
+  || !html.includes("chuckle-shell-v176-og-image")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v175-home-flash")
+  || !swSrc.includes("chuckle-shell-v176-og-image")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");

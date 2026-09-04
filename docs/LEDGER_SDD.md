@@ -3,8 +3,14 @@
 Season-long (and shorter) bets between league members — stakes, odds, terms, and an
 **accept / lock** handshake. Lives on the **Ledger** top tab.
 
-Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql)  
+Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) ·
+[`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)  
 Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)
+
+### Nav
+
+Top tabs: **`League | Teams | Ledger | History`**. League is far left (Latest trade).
+There is no brand Home icon (`#goHome`); the centered league name returns to League.
 
 ---
 
@@ -153,3 +159,12 @@ On another seat’s team page (Teams → seat):
 - Commissioner Admin toggle / force-edit after open
 - Separate `ledger_notes` table (use `ledger_bet_events` kind `note` later)
 - Discord bot ingest
+
+---
+
+## Planning history
+
+Shipped Cursor plans (archived; this SDD is canonical):
+
+- [`docs/plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) — League tab + Ledger v1
+- [`docs/plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) — my slips, privacy, team public W/L

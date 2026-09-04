@@ -49,6 +49,10 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 8. `db/wave6-one-seat-redeem.sql`
 9. `db/wave8-vote-tally-members.sql` — tallies count **current claimed seats only**; view must use `security_invoker = false` so every device can read counts
 10. `db/wave9-vote-write-fix.sql` — fix vote INSERT RLS / membership sync so home casts save
+11. `db/wave12-ledger.sql` — bet Ledger tables + RLS + expire RPC
+12. `db/wave13-ledger-visibility.sql` — `visibility` (public/private) + party-or-public SELECT RLS
+
+**Ledger:** after wave12 + wave13, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`). Full recipe: [`LEDGER_SDD.md`](LEDGER_SDD.md). Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md), [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md).
 
 **Vote clean slate (Ducks + Truman + any seat):** run `scripts/wipe-trade-votes.sql` (`truncate public.trade_votes`), then re-run `db/wave8-vote-tally-members.sql` (or at least `db/wave8b-tally-view-fix.sql`). Deploy the page with `VOTE_KEY = cuckle.votes.v4`, then hard-refresh every phone so localStorage cannot re-upload old ballots. Everyone votes again from zero.
 

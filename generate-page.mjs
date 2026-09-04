@@ -2109,10 +2109,13 @@ const html = `<!DOCTYPE html>
       display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; text-wrap: pretty;
     }
     #dataSets button.ds-opt:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    /* The name of the set on screen. The trigger above reads the constant "League Data Sets", so
-       this is the only thing that says which one you are looking at. */
+    /* Selected set heading on the Data hub. */
     h2.ds-h { margin: 0 0 2px; font-size: 1.05rem; overflow-wrap: anywhere; }
     h2.ds-h:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
+    h3.ds-lists-h {
+      margin: 18px 0 8px; font-size: 0.8125rem; font-weight: 650;
+      color: var(--muted); letter-spacing: -0.01em;
+    }
     #dsBody .caption { margin: 0 0 8px; }
     /* News and Alerts. The user asked for "scrolling", and this scrolls because a finger or a
        wheel moves it -- there is no animation here at all.
@@ -2603,7 +2606,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260904150459";
+    const DATA_V = "v186-home-data-tab";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4693,43 +4696,32 @@ const html = `<!DOCTYPE html>
     }
 
     function dsMenu() {
-      return '<div class="ds-list" id="dataSets" role="listbox" aria-label="League Data Sets">'
+      return '<div class="ds-list" id="dataSets" role="listbox" aria-label="League lists">'
         + DATA_SETS.map(dsOpt).join("")
         + "</div>";
     }
 
     /**
-     * The one control that replaced the five pack headers. Same shape as the Score as button and
-     * the seat picker: a trigger, an absolutely positioned panel of options, outside-click and
-     * Escape to close.
+     * Quick-action door to the Data tab (Draft Data, Cuffs, and league list sets).
+     * The visible label is the constant "Data" and never the selection -- the chosen set is
+     * named by the heading on the list screen and by aria-selected inside the menu. The
+     * accessible name carries the selection so nothing is lost to a screen reader.
      *
-     * The visible label is the constant "League Data Sets" and never the selection -- the seat
-     * picker settled on that convention for the same reason, and the chosen set is named by the
-     * heading immediately below and by aria-selected inside the menu. The accessible name carries
-     * the selection so nothing is lost to a screen reader.
-     *
-     * With nothing selected there is no heading below and nothing else on screen says so, so the
-     * accessible name says "none selected" -- the one state where the label's silence would
-     * otherwise leave a screen reader with no reading at all.
+     * With nothing selected the accessible name says "none selected".
      */
     function dataSetRow() {
       const cur = dataSet ? dataSetDef(dataSet) : null;
       const named = cur
-        ? ' aria-label="League Data Sets, ' + esc(cur[1]) + ' selected"'
-        : ' aria-label="League Data Sets, none selected"';
-      // Circular quick-action cell; opens the full-screen Data Sets list (not a dropdown).
+        ? ' aria-label="Data, ' + esc(cur[1]) + ' selected"'
+        : ' aria-label="Data, none selected"';
+      // Circular quick-action cell; opens the full-screen Data tab (not a dropdown).
       return '<button type="button" class="lh-action' + (view === "datasets" ? " on" : "") + '" data-dset-open="1"'
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
-        + '<span class="lh-lab">Data Sets</span></button>';
+        + '<span class="lh-lab">Data</span></button>';
     }
 
-    /**
-     * A cell nobody has decided on yet. Deliberately not a button and deliberately not
-     * addressable: no tabindex, no data-*, no role, nothing for a handler to find. Kept for
-     * smoke/history; league home no longer mounts empty slots beside Data Sets.
-     */
     function chipSlot() {
       return '<span class="home-chip slot" aria-hidden="true">—</span>';
     }
@@ -4821,9 +4813,8 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * PSA-style quick actions: {team} stats, Teams, Champions, League Data Sets.
-     * The Data Sets menu is emitted here rather than inside its trigger, so it is absolutely
-     * positioned against this .ds-wrap and drops the full width of the row.
+     * PSA-style quick actions: {team} stats, Teams, Champions, Data.
+     * Data opens the full-screen Data tab (Draft Data, Cuffs, league lists).
      */
     function homeChips() {
       return '<div class="lh-actions ds-wrap">'
@@ -4865,15 +4856,18 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Full-screen League Data Sets: the five sets as a page list. Choosing one shows that set
-     * on this screen; back returns to the list, then to league home.
+     * Full-screen Data tab: Draft Data + Cuffs first, then the league list sets.
+     * Choosing a set shows that list; back returns here, then top-bar back to league home.
      */
     function renderDataSetsPage() {
       if (dataSet) {
-        return '<button type="button" class="chip back" data-dset-list="1">← Data Sets</button>'
+        return '<button type="button" class="chip back" data-dset-list="1">← Data</button>'
           + dataSetPanel();
       }
-      return '<h2 class="screen-h" tabindex="-1">League Data Sets</h2>'
+      return '<h2 class="screen-h" tabindex="-1">Data</h2>'
+        + pickIntelHome()
+        + cuffsHome()
+        + '<h3 class="ds-lists-h">League lists</h3>'
         + dsMenu();
     }
 
@@ -5207,14 +5201,13 @@ const html = `<!DOCTYPE html>
       // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
       // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
       // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
+      // Draft Data + Cuffs live on the Data tab (view=datasets), not on league home.
       let hero = "";
       let chips = "";
       let progress = "";
       let sets = "";
-      let intel = "";
       try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
-      try { intel = pickIntelHome(); } catch (err) { console.error(err); intel = ""; }
       try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       sets = ""; // Data sets live on view=datasets — home no longer mounts a selected set body.
       // Never paint a home with a missing News Feed shell — dayAlert should always return one,
@@ -5244,13 +5237,8 @@ const html = `<!DOCTYPE html>
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
-      if (!intel) {
-        try { intel = pickIntelHome(); } catch (err3) { console.error(err3); }
-      }
-      let cuffsHtml = "";
-      try { cuffsHtml = cuffsHome(); } catch (err4) { console.error(err4); cuffsHtml = ""; }
-      // Latest trade → quick actions → Draft Data → Cuffs → data set body → News Feed pull-up.
-      return progress + chips + intel + cuffsHtml + sets + hero;
+      // Latest trade → quick actions → News Feed pull-up. Draft Data / Cuffs → Data tab.
+      return progress + chips + sets + hero;
     }
 
     function renderNews() {
@@ -12631,7 +12619,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v185-settings-no-auth-email";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v186-home-data-tab";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12683,13 +12671,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v185-settings-no-auth-email")) {
+  || !html.includes("chuckle-shell-v186-home-data-tab")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v185-settings-no-auth-email")
+  || !swSrc.includes("chuckle-shell-v186-home-data-tab")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -13145,29 +13133,18 @@ const homeFn = inline.slice(inline.indexOf("function renderLeagueHome()"));
 if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-list")) {
   throw new Error("renderLeagueHome grew a standalone trades-list control — Trades quick action is the door");
 }
-// League home's five lists open as a full-screen Data Sets page (not a dropdown).
+// League home's five lists open as a full-screen Data tab (not a dropdown).
 // The quick-action trigger is the door; losing it loses the only path to four of the five lists.
-if (!inline.includes('"League Data Sets"')) {
-  throw new Error('the League Data Sets trigger must ship -- it is the only door to four of the five sets');
+if (!inline.includes('<span class="lh-lab">Data</span>')) {
+  throw new Error('the Data trigger must ship -- it is the only door to four of the five sets');
 }
-if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' selected"')
-  && !inline.includes("aria-label=\"League Data Sets, ' + esc(cur[1]) + ' selected\"")) {
-  // Accept the live emitter form used in dataSetRow().
+if (!inline.includes("Data, ' + esc(cur[1]) + ' selected")) {
+  throw new Error("the Data trigger must name the selected set in its accessible name");
 }
-if (!inline.includes('aria-label="League Data Sets, \' + esc(cur[1]) + \' selected"')
-  && !/aria-label="League Data Sets, ' \+ esc\(cur\[1\]\) \+ ' selected"/.test(inline)
-  && !/aria-label="League Data Sets, ' \+ esc\(cur\[1\]\) \+ ' selected"/.test(inline)) {
-  if (!inline.includes("League Data Sets, ' + esc(cur[1]) + ' selected")) {
-    throw new Error("the League Data Sets trigger must name the selected set in its accessible name");
-  }
-}
-if (!inline.includes('<span class="lh-lab">Data Sets</span>')) {
-  throw new Error("the League Data Sets trigger label must stay a constant, not the selected set");
-}
-// Full-screen list page: options stay a listbox for a11y, but openDataSets navigates view=datasets.
+// Full-screen Data tab: options stay a listbox for a11y, but openDataSets navigates view=datasets.
 for (const need of [
   'id="dataSets"',
-  'role="listbox" aria-label="League Data Sets"',
+  'role="listbox" aria-label="League lists"',
   "function openDataSets()",
   "function renderDataSetsPage()",
   'view = "datasets"',
@@ -13176,7 +13153,7 @@ for (const need of [
   "function showDataSetList()",
   'data-dset-list="1"',
 ]) {
-  if (!inline.includes(need)) throw new Error(`Data Sets full-screen path lost: ${need}`);
+  if (!inline.includes(need)) throw new Error(`Data full-screen path lost: ${need}`);
 }
 // Dropdown chrome must stay gone.
 for (const gone of [
@@ -13216,7 +13193,7 @@ for (const need of ['role="option"', 'data-dset="']) {
   if (!fnSrc("dsOpt").includes(need)) throw new Error(`a data set option lost ${need}`);
 }
 if (!fnSrc("dataSetRow").includes('data-dset-open="1"')) {
-  throw new Error("the League Data Sets trigger lost data-dset-open");
+  throw new Error("the Data trigger lost data-dset-open");
 }
 if (fnSrc("dataSetRow").includes("aria-haspopup") || fnSrc("dataSetRow").includes("aria-expanded")) {
   throw new Error("the Data Sets trigger must not advertise a popup listbox anymore");
@@ -13250,7 +13227,7 @@ for (const gone of ["dsNoneOpt", "clearDataSet", "data-dset-none", "<b>None</b><
 if (fnSrc("dsMenu").includes("dsNoneOpt")) {
   throw new Error("dsMenu must not compose a None option");
 }
-if (!fnSrc("dataSetRow").includes('aria-label="League Data Sets, none selected"')) {
+if (!fnSrc("dataSetRow").includes('aria-label="Data, none selected"')) {
   throw new Error("the trigger must say \"none selected\" when no set is on screen");
 }
 for (const gone of ["openPacks", "togglePack", "data-pack", "pack-head"]) {
@@ -13820,8 +13797,17 @@ if (!inline.includes('which === "mystats"') || !inline.includes("openMyTeamHome(
 if (!html.includes("img.lh-seat-flair") || !html.includes("lh-ico-flair")) {
   throw new Error("league-home stats chip needs seat-flair icon styles");
 }
-if (!homeReturn.includes("pickIntelHome()") || !homeReturn.includes("intel")) {
-  throw new Error("renderLeagueHome must mount pickIntelHome between quick actions and the News Feed");
+if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
+  || homeReturn.includes("intel") || /cuffsHtml/.test(homeReturn)) {
+  throw new Error("renderLeagueHome must not mount Draft Data / Cuffs — those live on the Data tab");
+}
+{
+  const dataPage = fnSrc("renderDataSetsPage");
+  if (!dataPage.includes("pickIntelHome()") || !dataPage.includes("cuffsHome()")
+    || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
+    || !dataPage.includes(">Data</h2>")) {
+    throw new Error("Data tab must mount Draft Data + Cuffs above league lists");
+  }
 }
 if (!inline.includes("function pickIntel()") || !inline.includes('data-pick-mine="1"')
   || !inline.includes('data-pick-rounds') || !inline.includes('data-pick-years')
@@ -13945,14 +13931,19 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
       throw new Error("cuffsBoard must not show a held year gutter label");
     }
   }
-  if (!inline.includes("cuffsHtml = cuffsHome()")) {
-    throw new Error("renderLeagueHome must mount cuffsHome, not cuffsPanel");
+  if (inline.includes("cuffsHtml = cuffsHome()")
+    && inline.includes("return progress + chips + intel + cuffsHtml")) {
+    throw new Error("renderLeagueHome must not mount cuffsHome — Data tab owns Draft Data / Cuffs");
   }
 
   const homeCuffs = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
   const homeCuffsReturn = homeCuffs.slice(0, homeCuffs.indexOf("\n    }"));
-  if (!homeCuffsReturn.includes("cuffsHome()") || !homeCuffsReturn.includes("cuffsHtml")) {
-    throw new Error("renderLeagueHome must mount cuffsHome under Draft Data");
+  if (homeCuffsReturn.includes("cuffsHome()") || homeCuffsReturn.includes("cuffsHtml")) {
+    throw new Error("renderLeagueHome must not mount cuffsHome under Draft Data");
+  }
+  if (!fnSrc("renderDataSetsPage").includes("cuffsHome()")
+    || !fnSrc("renderDataSetsPage").includes("pickIntelHome()")) {
+    throw new Error("Data tab must mount cuffsHome + pickIntelHome");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
     || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {

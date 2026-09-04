@@ -9,6 +9,7 @@ Ledger works end-to-end.
 | [`LEDGER_SDD.md`](LEDGER_SDD.md) | Product rules (canonical) |
 | [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md) | v1 go-live runbook (wave12/13 + ingest) |
 | [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) | v1.1 join / more exposure build design |
+| [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) | v1.2 Add bet + bell; v1.3 SMS (planned) |
 | [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md) | Shipped plan: League tab + Ledger v1 |
 | [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) | Shipped plan: my slips, privacy, team W/L |
 | [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) | Planning archive for join SDD |
@@ -286,6 +287,8 @@ Then on the iPhone: remove money / odds / title menus. Capture is `raw_text` + t
 - Tip Slip green/cream skin
 - Commissioner force-edit after open
 - Discord ingest
+- SMS vendor / collecting phone numbers (until **v1.3**)
+- In-app **Add bet** form and Ledger tab badge (until **v1.2**)
 
 Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
@@ -302,3 +305,19 @@ Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
 When implementing v1.1, follow [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md) §7, add wave14
 to the SQL checklist above, and extend acceptance criteria for join → Accept → leg settle.
+
+---
+
+## 10. Next: compose + Accept alerts (v1.2 / v1.3)
+
+**Not part of Steps 1–8.** Docs only; no form, badge, phone column, or SMS yet.
+
+- **Product:** [`LEDGER_SDD.md`](LEDGER_SDD.md) § Add bet + Accept alerts  
+- **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)
+
+| Version | What to build later |
+| --- | --- |
+| **v1.2** | **Add bet** on Ledger (two seat chips, title, amount, odds). Gold badge on the Ledger tab when a `proposed` slip waits on your lock. Persist `?tab=ledger` in `setHomeTab` / `syncUrl` (needed for the SMS link). |
+| **v1.3** | Optional phone on the seat (Settings). Edge Function texts the counterparty after insert/Complete: title + `https://slabslip.github.io/cuckle-trade-tracker/?tab=ledger`. Skip if no number. |
+
+Phone is notify-only. Shortcut sides stay two team taps.

@@ -203,12 +203,12 @@ curl -sS -X POST \
   -d '{
     "sleeper_league_id": "1315431339301806080",
     "submitted_by": "TrumanCooper",
-    "raw_text": "Truman vs Sam — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
+    "raw_text": "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
     "title": "Stribling will finish the season as SF WR1",
     "amount": 100,
     "odds": "even",
-    "side_a_name": "Truman",
-    "side_b_name": "Sam",
+    "side_a_name": "TrumanCooper",
+    "side_b_name": "TipsUp",
     "deadline": "2026-12-18",
     "visibility": "public"
   }'
@@ -223,7 +223,7 @@ Expect:
 | Result | Meaning |
 | --- | --- |
 | `401 unauthorized` | Secret mismatch / header name wrong (`x-ledger-secret`) |
-| `422` / `needs_review` | Name did not resolve uniquely — use exact team names from memberships |
+| `422` / `needs_review` | Name did not resolve uniquely — use exact `league_memberships.team_name` (this league has no seat named Sam; use e.g. `TrumanCooper` vs `TipsUp`) |
 | `500 LEDGER_INGEST_SECRET missing` | Secret not set on the function |
 
 ### Step 7 — Build the iPhone Shortcut

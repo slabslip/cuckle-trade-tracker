@@ -110,6 +110,60 @@ Deno.serve(async (req) => {
   const sideAName = String(body.side_a_name || body.side_a || "").trim();
   const sideBName = String(body.side_b_name || body.side_b || "").trim();
   const submittedBy = String(body.submitted_by || "").trim();
+  const noteMode = !sideAName && !sideBName;
+
+  if (noteMode) {
+    const filer = resolveSeat(submittedBy);
+    if (!filer) {
+      return json(422, { ok: false, error: "unknown filer — send submitted_by as a seat id" });
+    }
+    if (!rawText) return json(400, { ok: false, error: "raw_text required" });
+    const firstLine = rawText.split(/\r?\n/)[0] || "";
+    const title = String(body.title || firstLine || "Note").trim().slice(0, 160);
+    const raw_hash = await sha256Hex([leagueId, filer, rawText.toLowerCase()].join("|"));
+    const { data: existingNote } = await sb
+      .from("ledger_bets")
+      .select("id, status")
+      .eq("sleeper_league_id", leagueId)
+      .eq("raw_hash", raw_hash)
+      .maybeSingle();
+    if (existingNote && existingNote.id) {
+      return json(200, { ok: true, bet_id: existingNote.id, status: existingNote.status, deduped: true });
+    }
+    const noteRow = {
+      sleeper_league_id: leagueId,
+      title,
+      terms: rawText,
+      odds: null,
+      amount_cents: 0,
+      currency: "USD",
+      side_a: filer,
+      side_b: null,
+      proposer: filer,
+      status: "needs_review",
+      side_a_lock: false,
+      side_b_lock: false,
+      deadline_at: null,
+      visibility: "private",
+      source: "shortcut",
+      source_text: rawText,
+      raw_hash,
+      terms_json: {},
+    };
+    const { data: insertedNote, error: noteErr } = await sb
+      .from("ledger_bets")
+      .insert(noteRow)
+      .select("id, status")
+      .single();
+    if (noteErr) return json(500, { ok: false, error: noteErr.message });
+    await sb.from("ledger_bet_events").insert({
+      bet_id: insertedNote.id,
+      actor: filer,
+      kind: "created",
+      payload: { source: "shortcut", note: true, raw_text: rawText },
+    });
+    return json(200, { ok: true, bet_id: insertedNote.id, status: insertedNote.status, deduped: false });
+  }
 
   let sideA = resolveSeat(sideAName);
   let sideB = resolveSeat(sideBName);

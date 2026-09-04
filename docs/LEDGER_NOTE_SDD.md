@@ -1,7 +1,7 @@
 # Ledger note → Finish → Send — implementation SDD
 
 **Audience:** the next coding agent (or you) who will write SQL + ingest + dashboard + optional SMS.  
-**Status:** Spec ready to build. v1 capture-first is on the capture PR; this is **v1.2 / v1.3**.  
+**Status:** v1.2 in-app path is on `cursor/ledger-note-send-af37` (Add note / Finish / Send / Yes-No / badge). Shortcut and SMS still later.  
 **Locked plan (why):** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)  
 **Product rules:** [`LEDGER_SDD.md`](LEDGER_SDD.md)  
 **v1 go-live (already running):** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)

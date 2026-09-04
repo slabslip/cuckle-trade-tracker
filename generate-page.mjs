@@ -10804,7 +10804,6 @@ const html = `<!DOCTYPE html>
 
     function renderSettingsProfileTab() {
       const uname = (authSession && authSession.username) || "—";
-      const email = authEmailForUsername(uname);
       const profileSeat = authSeatCanonName() || authSeatName() || null;
       const seatId = authSeatId();
       const f = profileSeat ? flairEntry(profileSeat) : null;
@@ -10870,8 +10869,6 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + '<div class="app-card"><h3>Login & contact</h3>'
         + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
-        + '<p class="caption">Auth email (synthetic, never mailed): <code style="word-break:break-all">'
-        + esc(email) + "</code></p>"
         + (memList
           ? ('<h3 style="margin-top:14px;font-size:0.95rem">Your teams</h3>'
             + memList)

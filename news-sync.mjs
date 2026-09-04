@@ -391,7 +391,7 @@ function matchTweetSubjects(text, matchIndex) {
   const res = matchText(text, matchIndex);
   const publishable = (res.subjects || []).filter((s) => s.publish);
   const seats = new Set(publishable.map((s) => s.user_id));
-  // One subject per seat, confidence order preserved (publishable is already sorted).
+  // One subject per seat for the primary addressee list; confidence order preserved.
   const bySeat = [];
   const seen = new Set();
   for (const s of publishable) {
@@ -401,9 +401,10 @@ function matchTweetSubjects(text, matchIndex) {
   }
   return {
     res,
+    // Every publishable rostered player named in the text — the row ships all of them for
+    // highlight + team tags, not just the strongest.
     publishable,
-    // The strongest publishable subject, which is what the row's meta line prints. Subjects come
-    // back sorted by confidence, so this is subjects[0] of the publishable set.
+    // The strongest publishable subject, which is what the row's primary meta line prints.
     top: publishable[0] || null,
     // Below-threshold evidence still gets reported, so "where does the line fall in practice" is
     // answerable from --report rather than by guessing.
@@ -412,6 +413,33 @@ function matchTweetSubjects(text, matchIndex) {
     addressable: seats.size === 1 ? publishable[0] : null,
     multi: seats.size > 1 ? bySeat : null,
   };
+}
+
+/** Compact player list persisted on each news row for multi-highlight + team tags. */
+function playersFromSubjects(subjects) {
+  if (!subjects || !Array.isArray(subjects.publishable)) return [];
+  return subjects.publishable.map((s) => ({
+    player_id: s.player_id,
+    player: s.player,
+    player_team: s.player_team || null,
+    player_position: s.player_position || null,
+    user_id: s.user_id || "",
+    manager: s.manager || "",
+    confidence: s.confidence,
+  }));
+}
+
+/** Unique fantasy seats that own any publishable matched player (order = confidence). */
+function managersFromSubjects(subjects) {
+  if (!subjects || !Array.isArray(subjects.publishable)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const s of subjects.publishable) {
+    if (!s.manager || seen.has(s.user_id)) continue;
+    seen.add(s.user_id);
+    out.push(s.manager);
+  }
+  return out;
 }
 
 /**
@@ -596,16 +624,23 @@ async function ingestSubmissions(ownership, index, members, {
     let how = "none";
     let taggedManagers = null;
     const target = resolveTarget(sub.target_name, members, aliasesByCanon);
-    // Always run the matcher: even when target_name is authoritative for the *seat*, the player
-    // in the text still fills the meta line and the locker-room summary. Addressing still only
-    // comes from target_name or from subjects.addressable / subjects.multi below — never from a
-    // below-threshold hit.
+    // Always run the matcher: even when target_name is authoritative for the *seat*, every
+    // rostered player named in the text still fills players[] (highlights + related team tags).
+    // Addressing still only comes from target_name or from subjects.addressable / subjects.multi
+    // below — never from a below-threshold hit.
     const subjects = matchTweetSubjects(tweet.text, matchIndex);
+    const playersList = playersFromSubjects(subjects);
+    // Fantasy seats that own any matched player — every related team gets tagged on the row.
+    const playerManagers = managersFromSubjects(subjects);
 
     if (target) {
       own = target;
       how = "target_name";
+      // Keep the named seat first, then every other seat that owns a matched player.
       taggedManagers = [target.manager];
+      for (const name of playerManagers) {
+        if (!taggedManagers.includes(name)) taggedManagers.push(name);
+      }
       report.targeted++;
       if (subjects.top) {
         const s = subjects.top;
@@ -616,7 +651,7 @@ async function ingestSubmissions(ownership, index, members, {
       own = { user_id: s.user_id, manager: s.manager };
       player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
       how = "player_auto";
-      taggedManagers = [s.manager];
+      taggedManagers = playerManagers.length ? playerManagers : [s.manager];
       report.auto_tagged++;
     } else if (subjects.multi) {
       // Several seats cleared the bar (roundup naming multiple rostered players). Tag them all;
@@ -627,7 +662,7 @@ async function ingestSubmissions(ownership, index, members, {
       const s = subjects.top || tagged[0];
       player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
       how = "player_auto_multi";
-      taggedManagers = tagged.map((t) => t.manager);
+      taggedManagers = playerManagers.length ? playerManagers : tagged.map((t) => t.manager);
       report.auto_tagged_multi = (report.auto_tagged_multi || 0) + 1;
     } else {
       // Not addressed, but a player above the threshold still identifies the story.
@@ -635,6 +670,7 @@ async function ingestSubmissions(ownership, index, members, {
         const s = subjects.top;
         player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
         how = "player";
+        taggedManagers = playerManagers.length ? playerManagers : null;
         report.player_only++;
       }
     }
@@ -651,6 +687,7 @@ async function ingestSubmissions(ownership, index, members, {
       manager: own ? own.manager : "(the league)",
       managers: taggedManagers,
       player: player ? player.name : null,
+      players: playersList.map((p) => p.player),
       // The score, and the distance to the line. `best` is the top subject whether or not it
       // published, so a refusal below the threshold reports the number it was refused at.
       confidence: subjects && subjects.best ? subjects.best.confidence : null,
@@ -665,6 +702,7 @@ async function ingestSubmissions(ownership, index, members, {
     rows.push(await toTweetRow(sub, tweet, own, player, how, {
       managers: members.map((m) => m.name),
       taggedManagers,
+      players: playersList,
       cachedLine: previousLines.get(`tweet:${sub.id}`),
     }));
     report.published++;
@@ -788,11 +826,25 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     title: tweet.text,
     tweet_handle: tweet.author_handle,
   };
-  // Multi-tag rows speak about the story, not at one seat — empty manager forces summariseTweet().
   const voiceManager = how === "player_auto_multi" ? "" : (own ? own.manager : "");
   const tagged = Array.isArray(opts.taggedManagers) && opts.taggedManagers.length
     ? opts.taggedManagers.filter(Boolean)
     : (own && own.manager ? [own.manager] : []);
+  // Every matched rostered player for multi-highlight. Fall back to the primary player so older
+  // call sites without opts.players still paint one name.
+  let players = Array.isArray(opts.players)
+    ? opts.players.filter((p) => p && p.player_id && p.player)
+    : [];
+  if (!players.length && player && player.player_id && player.name) {
+    players = [{
+      player_id: player.player_id,
+      player: player.name,
+      player_team: player.team || null,
+      player_position: player.position || null,
+      user_id: own ? own.user_id : "",
+      manager: own ? own.manager : "",
+    }];
+  }
   const league_line = await leagueLineAsync(item, { manager: voiceManager }, {
     managers: opts.managers,
     cachedLine: opts.cachedLine,
@@ -807,6 +859,7 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
       created_at: sub.created_at,
       tip: agentTip,
       player: player ? player.name : "",
+      players: players.map((p) => p.player),
       managers: tagged,
       poke_kind: tweetPokeKind(tweet.text),
       league_line,
@@ -822,11 +875,13 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     player_id: player ? player.player_id : "",
     player_team: player ? player.team : null,
     player_position: player ? player.position : null,
+    // All publishable matched players — UI highlights each name and tags every related seat.
+    players,
     user_id: own ? own.user_id : "",
     manager: own ? own.manager : "",
-    // Every seat tagged on this row. One name for player_auto / target_name; several for
-    // player_auto_multi. The UI header joins them; older pages that only read `manager` still
-    // see the primary seat.
+    // Every seat tagged on this row. One name for player_auto / target_name; several when
+    // multiple seats own matched players. The UI header joins them; older pages that only read
+    // `manager` still see the primary seat.
     managers: tagged,
     category: "tweet",
     severity: 4,
@@ -1518,6 +1573,31 @@ async function main() {
       for (const name of it.managers) {
         if (!knownNames.has(name)) {
           throw new Error(`self-check failed: item ${it.id} tags unknown manager ${JSON.stringify(name)}`);
+        }
+      }
+    }
+    // Every matched rostered player ships on players[] so the UI can highlight them all and
+    // tag every related fantasy seat. Primary player_* fields stay for back-compat.
+    if (it.player_id || it.player) {
+      if (!Array.isArray(it.players) || !it.players.length) {
+        throw new Error(`self-check failed: item ${it.id} has a primary player but empty players[]`);
+      }
+    }
+    if (Array.isArray(it.players)) {
+      for (const p of it.players) {
+        if (!p || !p.player_id || !p.player) {
+          throw new Error(`self-check failed: item ${it.id} has a players[] entry missing id/name`);
+        }
+        if (p.manager && !knownNames.has(p.manager)) {
+          throw new Error(`self-check failed: item ${it.id} player ${p.player} tags unknown manager ${p.manager}`);
+        }
+      }
+      if (it.players.length > 1 && Array.isArray(it.managers) && it.managers.length) {
+        // Every seat that owns a matched player must appear in managers[].
+        for (const p of it.players) {
+          if (p.manager && !it.managers.includes(p.manager)) {
+            throw new Error(`self-check failed: item ${it.id} matched ${p.player} for ${p.manager} but managers[] omits them`);
+          }
         }
       }
     }

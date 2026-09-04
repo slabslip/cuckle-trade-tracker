@@ -1140,6 +1140,12 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
+    .news-hero-players {
+      flex: 1 1 100%; min-width: 0;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0;
+      font-size: 0.6875rem; line-height: 1.3; margin: 0;
+    }
+    .news-hero-players .news-hero-sep { margin: 0 4px; color: var(--dim); }
     .news-hero-src-bubble {
       flex: 0 0 auto;
       font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
@@ -2603,7 +2609,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "back-league-home20260904124500";
+    const DATA_V = "news-multi-player20260904125500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5098,9 +5104,19 @@ const html = `<!DOCTYPE html>
         const when = ago(it.published);
         const cat = NEWS_CATS[it.category] || "News";
         const also = (it.also || []).length ? " +" + (it.also || []).length + " more" : "";
+        const playerBits = (Array.isArray(it.players) && it.players.length)
+          ? it.players.filter((p) => p && p.player).map((p) => {
+            return esc(p.player)
+              + (p.player_team ? " \\u00b7 " + esc(p.player_team) : "")
+              + (p.player_position ? " " + esc(p.player_position) : "");
+          })
+          : (it.player
+            ? [esc(it.player)
+              + (it.player_team ? " \\u00b7 " + esc(it.player_team) : "")
+              + (it.player_position ? " " + esc(it.player_position) : "")]
+            : []);
         const where = [
-          esc(it.player) + (it.player_team ? " \\u00b7 " + esc(it.player_team) : "")
-            + (it.player_position ? " " + esc(it.player_position) : ""),
+          playerBits.join(" · "),
           esc(it.source_label || it.source) + esc(also),
           when ? esc(when) : "",
         ].filter(Boolean).join(" \\u00b7 ");
@@ -5122,7 +5138,7 @@ const html = `<!DOCTYPE html>
         const inner = '<div class="news-top"><span class="news-who">' + who + "</span>"
           + '<span class="news-cat">' + esc(cat) + "</span></div>"
           + noteBit
-          + '<div class="news-line">' + esc(it.league_line) + "</div>"
+          + '<div class="news-line">' + newsPullupLineHtml(it.league_line, it) + "</div>"
           + (it.headline ? '<div class="news-head">\\u201c' + esc(it.headline) + "\\u201d</div>" : "")
           + '<div class="news-meta">' + where + "</div>";
 
@@ -5175,7 +5191,7 @@ const html = `<!DOCTYPE html>
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
             + noteBit
-            + '<div class="news-line news-line-tweet">' + esc(it.league_line) + "</div>"
+            + '<div class="news-line news-line-tweet">' + newsPullupLineHtml(it.league_line, it) + "</div>"
             + foot
             + "</div>";
         }
@@ -8943,37 +8959,97 @@ const html = `<!DOCTYPE html>
       return '<span class="news-cat-tag cat-' + esc(slug) + '">' + esc(label) + "</span>";
     }
     /**
-     * Highlight the ingest-matched rostered subject only (it.player + it.player_id).
+     * Highlight every ingest-matched rostered subject (it.players[], or legacy it.player).
      * No free POS-Name scanning — that could colour a free agent who shares a wire tag.
+     * Only roster-matched subjects (player_id from ingest) become links into Cuffs.
      */
+    function newsPullupSubjects(it) {
+      if (!it) return [];
+      if (Array.isArray(it.players) && it.players.length) {
+        return it.players.filter((p) => p && p.player && p.player_id);
+      }
+      if (it.player && it.player_id) {
+        return [{
+          player: it.player,
+          player_id: it.player_id,
+          player_position: it.player_position || null,
+          player_team: it.player_team || null,
+          manager: it.manager || "",
+        }];
+      }
+      return [];
+    }
+    /** Full name plus first/last tokens so "Puka" and "Wilson" still light up in the line. */
+    function newsPlayerNamePatterns(playerName) {
+      const name = String(playerName || "").trim();
+      if (!name) return [];
+      const parts = name.split(/\\s+/).filter(Boolean);
+      const out = [name];
+      if (parts.length > 1) {
+        const last = parts[parts.length - 1];
+        const first = parts[0];
+        if (last.length >= 4) out.push(last);
+        if (first.length >= 4) out.push(first);
+      }
+      return out;
+    }
     function newsPullupLineHtml(line, it) {
       const raw = String(line || "");
       if (!raw) return "";
-      const playerId = it && it.player_id ? String(it.player_id) : "";
-      const playerName = it && it.player ? String(it.player) : "";
-      if (!playerId || !playerName) return esc(raw);
-      const pos = it.player_position || null;
-      // Nested escapes: this file is an outer template literal. Use \${ so a literal
-      // dollar-brace lands in the shipped script; \\\\ becomes \\ in the browser RegExp.
-      const escaped = playerName.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
-      const re = new RegExp("\\\\b" + escaped + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "gi");
+      const subjects = newsPullupSubjects(it);
+      if (!subjects.length) return esc(raw);
+      // Longest patterns first so "Keenan Allen" wins over "Allen".
+      const hits = [];
+      for (const s of subjects) {
+        const patterns = newsPlayerNamePatterns(s.player)
+          .slice()
+          .sort((a, b) => b.length - a.length || a.localeCompare(b));
+        for (const pat of patterns) {
+          // Nested escapes: this file is an outer template literal. Use \${ so a literal
+          // dollar-brace lands in the shipped script; \\\\ becomes \\ in the browser RegExp.
+          const escaped = pat.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+          const re = new RegExp("\\\\b" + escaped + "(?:['\u2019]s?)?(?=\\\\s|[,.;!?]|$)", "gi");
+          let m;
+          while ((m = re.exec(raw)) !== null) {
+            hits.push({
+              start: m.index,
+              end: m.index + m[0].length,
+              name: String(s.player),
+              pos: s.player_position || null,
+              playerId: String(s.player_id),
+            });
+          }
+        }
+      }
+      if (!hits.length) return esc(raw);
+      hits.sort((a, b) => a.start - b.start || b.end - a.end);
       let html = "";
       let cursor = 0;
-      let m;
-      while ((m = re.exec(raw)) !== null) {
-        if (m.index > cursor) html += esc(raw.slice(cursor, m.index));
-        html += newsPlayerSpanHtml(playerName, pos, playerId);
-        cursor = m.index + m[0].length;
+      for (const hit of hits) {
+        if (hit.start < cursor) continue; // overlap with a longer earlier name
+        if (hit.start > cursor) html += esc(raw.slice(cursor, hit.start));
+        html += newsPlayerSpanHtml(hit.name, hit.pos, hit.playerId);
+        cursor = hit.end;
       }
       if (cursor < raw.length) html += esc(raw.slice(cursor));
       return html || esc(raw);
+    }
+    /** Seat chips for every matched player (covers names truncated out of the summary line). */
+    function newsPlayersChipsHtml(it) {
+      const subjects = newsPullupSubjects(it);
+      if (!subjects.length) return "";
+      return '<div class="news-hero-players">'
+        + subjects.map((s) => newsPlayerSpanHtml(s.player, s.player_position || null, s.player_id)).join(
+          '<span class="news-hero-sep" aria-hidden="true">\\u00b7</span>'
+        )
+        + "</div>";
     }
 
     function newsHeroLine(it) {
       if (!it) {
         return {
           source: "News", line: "Nothing shared yet.", lineHtml: "", categoryTag: "", who: "",
-          handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
+          playersHtml: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
         };
       }
       const source = newsSourceBubble(it);
@@ -8989,6 +9065,7 @@ const html = `<!DOCTYPE html>
       const who = whoNames.length
         ? whoNames.map((n) => seatLabel(n)).join(" · ")
         : "";
+      const playersHtml = newsPlayersChipsHtml(it);
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
       const categoryTag = newsCategoryTagFromLine(line);
       const lineHtml = newsPullupLineHtml(line, it);
@@ -9001,7 +9078,7 @@ const html = `<!DOCTYPE html>
       const canRemove = !!(isNewsAdmin() && subId);
       return {
         source: source, line: line, lineHtml: lineHtml, categoryTag: categoryTag,
-        who: who, handle: handleLab, when: when,
+        who: who, playersHtml: playersHtml, handle: handleLab, when: when,
         postUrl: postUrl, xLink: xLink, itemId: itemId, canRemove: canRemove,
       };
     }
@@ -9037,6 +9114,7 @@ const html = `<!DOCTYPE html>
       if (bit.source) tagBits.push('<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>");
       const head = '<div class="news-hero-head">'
         + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
+        + (bit.playersHtml || "")
         + (tagBits.length ? '<div class="news-hero-tags">' + tagBits.join("") + "</div>" : "")
         + "</div>";
       const summary = '<div class="news-pullup-line">' + (bit.lineHtml || esc(bit.line)) + "</div>";
@@ -12534,7 +12612,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v180-back-league-home";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v181-news-multi-player";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12586,13 +12664,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v180-back-league-home")) {
+  || !html.includes("chuckle-shell-v181-news-multi-player")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v180-back-league-home")
+  || !swSrc.includes("chuckle-shell-v181-news-multi-player")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -12970,30 +13048,39 @@ if (!html.includes(".news-hero-who") || !html.includes(".news-hero-src-bubble")
   throw new Error("News Feed must style seat tag, source bubble, card, foot row, and post link");
 }
 {
-  const itemHtml = inline.slice(inline.indexOf("function newsPullupItemInnerHtml("),
-    inline.indexOf("function newsPullupItemInnerHtml(") + 700);
-  const footHtml = inline.slice(inline.indexOf("function newsPullupFootHtml("),
-    inline.indexOf("function newsPullupItemInnerHtml("));
-  if (!(itemHtml.indexOf("news-hero-head") >= 0
-      && itemHtml.indexOf("news-hero-who") >= 0
-      && itemHtml.indexOf("news-hero-tags") >= 0
-      && itemHtml.indexOf("newsCatTagHtml") >= 0
-      && itemHtml.indexOf("news-hero-src-bubble") >= 0
-      && itemHtml.indexOf("bit.lineHtml") >= 0
-      && itemHtml.indexOf("news-pullup-line") > itemHtml.indexOf("news-hero-head")
-      && itemHtml.indexOf("newsPullupFootHtml") >= 0
-      && itemHtml.indexOf("news-pullup-card") >= 0
-      && footHtml.indexOf("news-hero-foot") >= 0
-      && footHtml.indexOf("See tweet</a>") >= 0
-      && footHtml.indexOf("news-hero-sep") >= 0)) {
-    throw new Error("News pull-up item must order: card > head (seat + category/source tags), rich summary, foot (handle · time · See tweet · Remove)");
+  const itemStart = inline.indexOf("function newsPullupItemInnerHtml(");
+  const footStart = inline.indexOf("function newsPullupFootHtml(");
+  const itemHtml = itemStart >= 0 ? inline.slice(itemStart, itemStart + 1100) : "";
+  const footHtml = footStart >= 0 && itemStart > footStart
+    ? inline.slice(footStart, itemStart)
+    : "";
+  if (
+    !itemHtml
+    || itemHtml.indexOf("news-hero-head") < 0
+    || itemHtml.indexOf("news-hero-who") < 0
+    || itemHtml.indexOf("playersHtml") < 0
+    || itemHtml.indexOf("news-hero-tags") < 0
+    || itemHtml.indexOf("newsCatTagHtml") < 0
+    || itemHtml.indexOf("news-hero-src-bubble") < 0
+    || itemHtml.indexOf("bit.lineHtml") < 0
+    || itemHtml.indexOf("news-pullup-line") <= itemHtml.indexOf("news-hero-head")
+    || itemHtml.indexOf("newsPullupFootHtml") < 0
+    || itemHtml.indexOf("news-pullup-card") < 0
+    || footHtml.indexOf("news-hero-foot") < 0
+    || footHtml.indexOf("See tweet</a>") < 0
+    || footHtml.indexOf("news-hero-sep") < 0
+    || !html.includes(".news-hero-players")
+    || !inline.includes("function newsPlayersChipsHtml(")
+  ) {
+    throw new Error("News pull-up must show seat tags, every player chip, category, and foot link");
   }
 }
 if (!html.includes(".news-player.pos-qb") || !html.includes(".news-cat-tag") || !html.includes(".news-pos-tag")) {
   throw new Error("News pull-up expanded rows must ship position-coloured players and category tags");
 }
-if (!inline.includes("function newsPullupLineHtml(") || !inline.includes("function newsCategoryTagFromLine(")) {
-  throw new Error("News pull-up must derive category tags and highlight players in expanded summaries");
+if (!inline.includes("function newsPullupLineHtml(") || !inline.includes("function newsCategoryTagFromLine(")
+  || !inline.includes("function newsPullupSubjects(") || !inline.includes("it.players")) {
+  throw new Error("News pull-up must highlight every matched player in it.players[]");
 }
 if (!inline.includes('data-news-cuff="') || !inline.includes("data-news-cuff-name")
   || !inline.includes('closest("[data-news-cuff]")')
@@ -13974,7 +14061,7 @@ for (const raw of newsBody.match(/\+ *it\.[A-Za-z_.]+/g) || []) {
   if (/it\.(also|published)\b/.test(raw)) continue;
   throw new Error(`renderNews interpolates a news field without esc(): ${raw.trim()}`);
 }
-for (const need of ["esc(it.league_line)", "esc(it.headline)", "esc(it.player)",
+for (const need of ["newsPullupLineHtml(it.league_line, it)", "esc(it.headline)", "esc(it.player)",
   "esc(it.source_label || it.source)", "esc(it.player_team)", "esc(it.player_position)",
   "esc(cat)", "esc(also)", "esc(when)", 'esc(safe) + \'" target="_blank"',
   // Manager tags: single or multi. Names go through seatLabel (esc + optional flair).
@@ -14020,7 +14107,7 @@ if (/news-tweet-link" href="' \+ esc\(safe\)/.test(newsBody)) {
 //
 //   * Putting the full tweet back in .news-tweet-text reintroduces the sprawl.
 //   * The row reverting to <a class="news-row"> for tweets would put See tweet inside a link.
-//   * Dropping esc(it.league_line) would ship the roast raw or empty.
+//   * Dropping escape of league_line would ship the roast raw or empty.
 const tweetBranch = newsBody.slice(newsBody.indexOf('if (it.category === "tweet" && it.tweet_text) {'));
 const tweetRender = tweetBranch.slice(0, tweetBranch.indexOf("\n        }"));
 if (!tweetRender || tweetRender.length < 200) throw new Error("the shared tweet branch of renderNews() did not ship");
@@ -14030,8 +14117,8 @@ if (!tweetRender.includes("'<div class=\"news-row news-row-tweet\">'")) {
 if (/<a class="news-row"/.test(tweetRender)) {
   throw new Error("a shared tweet row became a link, which nests See tweet inside another control (defect A1)");
 }
-if (!tweetRender.includes('esc(it.league_line)')) {
-  throw new Error("the shared tweet must render the locker-room league_line, escaped");
+if (!tweetRender.includes("newsPullupLineHtml(it.league_line, it)")) {
+  throw new Error("the shared tweet must render league_line through newsPullupLineHtml (multi-player highlight)");
 }
 if (!tweetRender.includes('class="news-line news-line-tweet"')) {
   throw new Error("the shared tweet summary must use the compact .news-line-tweet class");

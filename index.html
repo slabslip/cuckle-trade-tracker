@@ -1135,6 +1135,12 @@
     }
     .news-hero-who .seat-flair { width: 11px; height: 11px; vertical-align: -1px; }
     .news-hero-who .crown { width: 11px; height: 11px; vertical-align: -1px; }
+    .news-hero-players {
+      flex: 1 1 100%; min-width: 0;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0;
+      font-size: 0.6875rem; line-height: 1.3; margin: 0;
+    }
+    .news-hero-players .news-hero-sep { margin: 0 4px; color: var(--dim); }
     .news-hero-src-bubble {
       flex: 0 0 auto;
       font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
@@ -2598,7 +2604,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "back-league-home20260904124500";
+    const DATA_V = "news-multi-player20260904125500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5093,9 +5099,19 @@
         const when = ago(it.published);
         const cat = NEWS_CATS[it.category] || "News";
         const also = (it.also || []).length ? " +" + (it.also || []).length + " more" : "";
+        const playerBits = (Array.isArray(it.players) && it.players.length)
+          ? it.players.filter((p) => p && p.player).map((p) => {
+            return esc(p.player)
+              + (p.player_team ? " \u00b7 " + esc(p.player_team) : "")
+              + (p.player_position ? " " + esc(p.player_position) : "");
+          })
+          : (it.player
+            ? [esc(it.player)
+              + (it.player_team ? " \u00b7 " + esc(it.player_team) : "")
+              + (it.player_position ? " " + esc(it.player_position) : "")]
+            : []);
         const where = [
-          esc(it.player) + (it.player_team ? " \u00b7 " + esc(it.player_team) : "")
-            + (it.player_position ? " " + esc(it.player_position) : ""),
+          playerBits.join(" · "),
           esc(it.source_label || it.source) + esc(also),
           when ? esc(when) : "",
         ].filter(Boolean).join(" \u00b7 ");
@@ -5117,7 +5133,7 @@
         const inner = '<div class="news-top"><span class="news-who">' + who + "</span>"
           + '<span class="news-cat">' + esc(cat) + "</span></div>"
           + noteBit
-          + '<div class="news-line">' + esc(it.league_line) + "</div>"
+          + '<div class="news-line">' + newsPullupLineHtml(it.league_line, it) + "</div>"
           + (it.headline ? '<div class="news-head">\u201c' + esc(it.headline) + "\u201d</div>" : "")
           + '<div class="news-meta">' + where + "</div>";
 
@@ -5170,7 +5186,7 @@
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
             + noteBit
-            + '<div class="news-line news-line-tweet">' + esc(it.league_line) + "</div>"
+            + '<div class="news-line news-line-tweet">' + newsPullupLineHtml(it.league_line, it) + "</div>"
             + foot
             + "</div>";
         }
@@ -8938,37 +8954,97 @@
       return '<span class="news-cat-tag cat-' + esc(slug) + '">' + esc(label) + "</span>";
     }
     /**
-     * Highlight the ingest-matched rostered subject only (it.player + it.player_id).
+     * Highlight every ingest-matched rostered subject (it.players[], or legacy it.player).
      * No free POS-Name scanning — that could colour a free agent who shares a wire tag.
+     * Only roster-matched subjects (player_id from ingest) become links into Cuffs.
      */
+    function newsPullupSubjects(it) {
+      if (!it) return [];
+      if (Array.isArray(it.players) && it.players.length) {
+        return it.players.filter((p) => p && p.player && p.player_id);
+      }
+      if (it.player && it.player_id) {
+        return [{
+          player: it.player,
+          player_id: it.player_id,
+          player_position: it.player_position || null,
+          player_team: it.player_team || null,
+          manager: it.manager || "",
+        }];
+      }
+      return [];
+    }
+    /** Full name plus first/last tokens so "Puka" and "Wilson" still light up in the line. */
+    function newsPlayerNamePatterns(playerName) {
+      const name = String(playerName || "").trim();
+      if (!name) return [];
+      const parts = name.split(/\s+/).filter(Boolean);
+      const out = [name];
+      if (parts.length > 1) {
+        const last = parts[parts.length - 1];
+        const first = parts[0];
+        if (last.length >= 4) out.push(last);
+        if (first.length >= 4) out.push(first);
+      }
+      return out;
+    }
     function newsPullupLineHtml(line, it) {
       const raw = String(line || "");
       if (!raw) return "";
-      const playerId = it && it.player_id ? String(it.player_id) : "";
-      const playerName = it && it.player ? String(it.player) : "";
-      if (!playerId || !playerName) return esc(raw);
-      const pos = it.player_position || null;
-      // Nested escapes: this file is an outer template literal. Use ${ so a literal
-      // dollar-brace lands in the shipped script; \\ becomes \ in the browser RegExp.
-      const escaped = playerName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const re = new RegExp("\\b" + escaped + "(?:['’]s?)?(?=\\s|[,.;!?]|$)", "gi");
+      const subjects = newsPullupSubjects(it);
+      if (!subjects.length) return esc(raw);
+      // Longest patterns first so "Keenan Allen" wins over "Allen".
+      const hits = [];
+      for (const s of subjects) {
+        const patterns = newsPlayerNamePatterns(s.player)
+          .slice()
+          .sort((a, b) => b.length - a.length || a.localeCompare(b));
+        for (const pat of patterns) {
+          // Nested escapes: this file is an outer template literal. Use ${ so a literal
+          // dollar-brace lands in the shipped script; \\ becomes \ in the browser RegExp.
+          const escaped = pat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const re = new RegExp("\\b" + escaped + "(?:['’]s?)?(?=\\s|[,.;!?]|$)", "gi");
+          let m;
+          while ((m = re.exec(raw)) !== null) {
+            hits.push({
+              start: m.index,
+              end: m.index + m[0].length,
+              name: String(s.player),
+              pos: s.player_position || null,
+              playerId: String(s.player_id),
+            });
+          }
+        }
+      }
+      if (!hits.length) return esc(raw);
+      hits.sort((a, b) => a.start - b.start || b.end - a.end);
       let html = "";
       let cursor = 0;
-      let m;
-      while ((m = re.exec(raw)) !== null) {
-        if (m.index > cursor) html += esc(raw.slice(cursor, m.index));
-        html += newsPlayerSpanHtml(playerName, pos, playerId);
-        cursor = m.index + m[0].length;
+      for (const hit of hits) {
+        if (hit.start < cursor) continue; // overlap with a longer earlier name
+        if (hit.start > cursor) html += esc(raw.slice(cursor, hit.start));
+        html += newsPlayerSpanHtml(hit.name, hit.pos, hit.playerId);
+        cursor = hit.end;
       }
       if (cursor < raw.length) html += esc(raw.slice(cursor));
       return html || esc(raw);
+    }
+    /** Seat chips for every matched player (covers names truncated out of the summary line). */
+    function newsPlayersChipsHtml(it) {
+      const subjects = newsPullupSubjects(it);
+      if (!subjects.length) return "";
+      return '<div class="news-hero-players">'
+        + subjects.map((s) => newsPlayerSpanHtml(s.player, s.player_position || null, s.player_id)).join(
+          '<span class="news-hero-sep" aria-hidden="true">\u00b7</span>'
+        )
+        + "</div>";
     }
 
     function newsHeroLine(it) {
       if (!it) {
         return {
           source: "News", line: "Nothing shared yet.", lineHtml: "", categoryTag: "", who: "",
-          handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
+          playersHtml: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false,
         };
       }
       const source = newsSourceBubble(it);
@@ -8984,6 +9060,7 @@
       const who = whoNames.length
         ? whoNames.map((n) => seatLabel(n)).join(" · ")
         : "";
+      const playersHtml = newsPlayersChipsHtml(it);
       const line = it.league_line || it.headline || it.note || "Open the full feed.";
       const categoryTag = newsCategoryTagFromLine(line);
       const lineHtml = newsPullupLineHtml(line, it);
@@ -8996,7 +9073,7 @@
       const canRemove = !!(isNewsAdmin() && subId);
       return {
         source: source, line: line, lineHtml: lineHtml, categoryTag: categoryTag,
-        who: who, handle: handleLab, when: when,
+        who: who, playersHtml: playersHtml, handle: handleLab, when: when,
         postUrl: postUrl, xLink: xLink, itemId: itemId, canRemove: canRemove,
       };
     }
@@ -9032,6 +9109,7 @@
       if (bit.source) tagBits.push('<span class="news-hero-src-bubble">' + esc(bit.source) + "</span>");
       const head = '<div class="news-hero-head">'
         + (bit.who ? '<div class="news-hero-who">' + bit.who + "</div>" : "")
+        + (bit.playersHtml || "")
         + (tagBits.length ? '<div class="news-hero-tags">' + tagBits.join("") + "</div>" : "")
         + "</div>";
       const summary = '<div class="news-pullup-line">' + (bit.lineHtml || esc(bit.line)) + "</div>";
@@ -12529,7 +12607,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v180-back-league-home";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v181-news-multi-player";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

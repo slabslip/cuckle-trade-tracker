@@ -155,49 +155,74 @@ const html = `<!DOCTYPE html>
        h1.brand a plus the trigger's own font step, not a clip. */
     h1.brand {
       position: relative;
-      display: flex; align-items: center; gap: 10px;
-      font-size: 1.4rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
-      overflow: visible;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 1.15rem; font-weight: 650; margin: 0 0 6px; letter-spacing: -0.02em;
+      overflow: visible; min-height: 44px;
     }
-    /* League name sits where the app wordmark used to — absolute center of the brand row. */
+    /* League name + avatar sit with the back control (Sleeper-style left cluster). */
+    h1.brand .brand-title {
+      display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto;
+      margin: 0; padding: 0;
+    }
+    h1.brand .brand-title[hidden] { display: none; }
+    h1.brand .brand-title img.brand-mark {
+      display: block; width: 28px; height: 28px; object-fit: cover;
+      border-radius: 6px; flex: 0 0 auto;
+    }
     h1.brand .league-sub {
-      position: absolute; left: 50%; transform: translateX(-50%);
       margin: 0; padding: 0; color: inherit;
       font-size: inherit; font-weight: inherit; letter-spacing: inherit;
-      text-align: center; line-height: 44px; min-height: 44px;
-      max-width: min(52%, calc(100% - 168px));
+      text-align: left; line-height: 1.15; min-width: 0;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       pointer-events: none;
     }
     h1.brand .league-sub[hidden] { display: none; }
-    /* Matched pair: Chuckle mark + tiny label (home left, settings right). */
-    button.go-home, button.go-settings {
-      flex: 0 0 auto; appearance: none; font: inherit; color: inherit;
-      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      width: auto; min-width: 44px; height: auto; min-height: 44px;
-      padding: 4px 6px 3px; gap: 1px;
-      display: grid; grid-template-rows: auto auto;
-      align-items: center; justify-items: center; cursor: pointer;
-      overflow: visible;
+    /* Icon chrome: back chevron left, gear settings right — plain marks, 44px hit targets. */
+    button.go-back, button.go-settings {
+      flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
+      background: transparent; border: 0; border-radius: 10px;
+      width: 44px; height: 44px; padding: 0;
+      display: grid; place-items: center; cursor: pointer;
     }
-    button.go-home img.brand-mark,
-    button.go-settings img.settings-mark {
-      display: block; width: 44px; height: 44px; object-fit: cover;
-      border-radius: 6px;
+    button.go-back svg, button.go-settings svg {
+      display: block; width: 22px; height: 22px;
     }
-    button.go-home .brand-lab,
-    button.go-settings .settings-lab {
-      display: block; font-size: 0.5625rem; line-height: 1; font-weight: 600;
-      letter-spacing: 0.02em; color: var(--dim); text-transform: lowercase;
-    }
-    button.go-home:focus-visible, button.go-settings:focus-visible {
+    button.go-back:focus-visible, button.go-settings:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
     button.go-settings[hidden] { display: none; }
-    button.go-home[hidden] { display: none; }
+    button.go-back[hidden] { display: none; }
+    /* Full-screen Your leagues panel — slides in from the left over the league dash. */
+    .leagues-drawer {
+      position: fixed; inset: 0; z-index: 90;
+      pointer-events: none;
+    }
+    html.design-iphone .leagues-drawer {
+      position: absolute; inset: 0;
+    }
+    .leagues-drawer.is-open { pointer-events: auto; }
+    .leagues-drawer-panel {
+      position: absolute; inset: 0;
+      background: var(--bg, #0b0b0d); color: var(--text);
+      transform: translateX(-100%);
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: auto; -webkit-overflow-scrolling: touch;
+      padding: 10px 16px 28px;
+      box-sizing: border-box;
+    }
+    .leagues-drawer.is-open .leagues-drawer-panel { transform: translateX(0); }
+    @media (prefers-reduced-motion: reduce) {
+      .leagues-drawer-panel { transition: none; }
+    }
+    .leagues-drawer-head {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 12px; min-height: 44px;
+    }
+    .leagues-drawer-head h2 {
+      margin: 0; font-size: 1.15rem; font-weight: 650; letter-spacing: -0.02em;
+    }
+    body.has-leagues-drawer { overflow: hidden; }
     /* Settings Profile | Leagues — reuse .nav / .tab; slight top gap under the screen title. */
     .settings-tabs.nav { margin: 4px 0 14px; }
-    /* Settings takes the former clock slot on the right; lens sits beside the back control. */
     /* Right slot is .brand-end (settings). Score lens stays left of the centered league name. */
     .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
     .brand-end:empty { display: none; }
@@ -2332,18 +2357,36 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <h1 class="brand">
-    <button type="button" class="go-home" id="goHome" aria-label="Chuckle Fantasy — League home">
-      <img class="brand-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" data-brand-mark="1" />
-      <span class="brand-lab">home</span>
+    <button type="button" class="go-back" id="goHome" aria-label="Back">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 6l-6 6 6 6"/>
+      </svg>
     </button>
-    <span class="league-sub" id="leagueSub" hidden></span>
+    <span class="brand-title" id="brandTitle" hidden>
+      <img class="brand-mark" src="data/ui/brand-mark.png" width="28" height="28" alt="" decoding="async" data-brand-mark="1" />
+      <span class="league-sub" id="leagueSub" hidden></span>
+    </span>
     <span class="brand-end">
       <button type="button" class="go-settings" id="goSettings" aria-label="Settings" hidden>
-        <img class="settings-mark" src="data/ui/brand-mark.png" width="44" height="44" alt="" decoding="async" data-settings-mark="1" />
-        <span class="settings-lab">settings</span>
+        <svg class="settings-gear" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 14.3 2h-4.6a.5.5 0 0 0-.49.42l-.36 2.54c-.6.24-1.14.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.31 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.43 14.5a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.49.4 1.03.71 1.63.94l.36 2.54c.05.24.25.42.49.42h4.6c.24 0 .44-.18.49-.42l.36-2.54c.6-.24 1.14-.55 1.63-.94l2.39.96c.25.1.54 0 .68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+        </svg>
       </button>
     </span>
   </h1>
+  <div id="leaguesDrawer" class="leagues-drawer" hidden aria-hidden="true">
+    <div class="leagues-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="leaguesDrawerTitle">
+      <div class="leagues-drawer-head">
+        <button type="button" class="go-back" data-leagues-drawer-close="1" aria-label="Back to league">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 6l-6 6 6 6"/>
+          </svg>
+        </button>
+        <h2 id="leaguesDrawerTitle">Your leagues</h2>
+      </div>
+      <div id="leaguesDrawerBody"></div>
+    </div>
+  </div>
   <div id="scoreAs" class="score-as-portal" hidden></div>
   <p id="lead"></p>
   <div id="app" tabindex="-1" hidden></div>
@@ -2560,7 +2603,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260904090610";
+    const DATA_V = "league-header-back20260904123500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5838,6 +5881,7 @@ const html = `<!DOCTYPE html>
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
     let settingsTab = "profile"; // profile | leagues — Settings screen default is Profile
+    let leaguesDrawerOpen = false;
     let profileNote = "";
     let profileBusy = false;
     /** In-progress crop: { url, img, zoom, ox, oy } — img is HTMLImageElement once loaded. */
@@ -6000,16 +6044,19 @@ const html = `<!DOCTYPE html>
       paintBottomNav();
     }
 
-    /** League name under the brand — only while viewing a league dash. */
+    /** League name + avatar under the brand — only while viewing a league dash. */
     function paintLeagueSub() {
       const leagueSub = document.getElementById("leagueSub");
+      const brandTitle = document.getElementById("brandTitle");
       if (!leagueSub) return;
       if (activeLeague && appScreen === "dash") {
         leagueSub.hidden = false;
         leagueSub.textContent = activeLeague.name || "League";
+        if (brandTitle) brandTitle.hidden = false;
       } else {
         leagueSub.hidden = true;
         leagueSub.textContent = "";
+        if (brandTitle) brandTitle.hidden = true;
       }
     }
 
@@ -6019,11 +6066,134 @@ const html = `<!DOCTYPE html>
       btn.hidden = !authSession;
     }
 
-    /** Top-left brand control: hide on the login gate so the centered gate logo is the only mark. */
+    /** Top-left back control: hide on the login gate so the centered gate logo is the only mark. */
     function paintBrandHome() {
       const btn = document.getElementById("goHome");
       if (!btn) return;
-      btn.hidden = appScreen === "gate";
+      btn.hidden = appScreen === "gate" || appScreen === "home";
+    }
+
+    function leaguesListHtml() {
+      const uname = (authSession && authSession.username) || "you";
+      const memIds = new Set((memberships || []).map((m) => m.sleeper_league_id));
+      const rows = (memberships || []).map((m) => {
+        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
+        const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
+        return '<div class="league-block">'
+          + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
+          + "<div><b>" + esc(m.name) + "</b>"
+          + "<span>" + esc(m.team_name) + " · " + st
+          + (m.season ? " · " + esc(m.season) : "")
+          + (isComm ? " · Commissioner" : "")
+          + "</span></div>"
+          + '<span class="chev" aria-hidden="true">›</span></button>'
+          + (isComm
+            ? '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
+              + '">Manage invites</button>'
+            : "")
+          + "</div>";
+      }).join("");
+      const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
+        const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+        return '<div class="league-block">'
+          + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
+          + "<span>Commissioner · " + st
+          + (o.season ? " · " + esc(o.season) : "")
+          + " · claim your seat to open the meter</span></div></div>"
+          + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
+          + '">Invites & claim seat</button>'
+          + "</div>";
+      }).join("");
+      const body = rows + ownedOnly;
+      return '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
+        + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
+        + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
+        + (body || '<p class="caption">No leagues yet.</p>')
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + "</div>";
+    }
+
+    function paintLeaguesDrawer() {
+      const body = document.getElementById("leaguesDrawerBody");
+      if (body) body.innerHTML = leaguesListHtml();
+    }
+
+    function openLeaguesDrawer() {
+      if (!authSession) {
+        openSettings();
+        return;
+      }
+      const drawer = document.getElementById("leaguesDrawer");
+      if (!drawer) return;
+      if (typeof setNewsPullupOpen === "function" && newsPullupOpen) setNewsPullupOpen(false);
+      leaguesDrawerOpen = true;
+      drawer.hidden = false;
+      drawer.setAttribute("aria-hidden", "false");
+      document.body.classList.add("has-leagues-drawer");
+      paintLeaguesDrawer();
+      loadMemberships().then(() => {
+        if (leaguesDrawerOpen) paintLeaguesDrawer();
+      }).catch((err) => console.error(err));
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (leaguesDrawerOpen) drawer.classList.add("is-open");
+        });
+      });
+    }
+
+    function closeLeaguesDrawer(immediate) {
+      const drawer = document.getElementById("leaguesDrawer");
+      leaguesDrawerOpen = false;
+      document.body.classList.remove("has-leagues-drawer");
+      if (!drawer) return;
+      const finish = () => {
+        if (leaguesDrawerOpen) return;
+        drawer.hidden = true;
+        drawer.setAttribute("aria-hidden", "true");
+      };
+      const wasOpen = drawer.classList.contains("is-open");
+      drawer.classList.remove("is-open");
+      if (immediate || !wasOpen) {
+        finish();
+        return;
+      }
+      const panel = drawer.querySelector(".leagues-drawer-panel");
+      let done = false;
+      const onEnd = (ev) => {
+        if (ev && ev.target !== panel) return;
+        if (done) return;
+        done = true;
+        if (panel) panel.removeEventListener("transitionend", onEnd);
+        finish();
+      };
+      if (panel) panel.addEventListener("transitionend", onEnd);
+      setTimeout(onEnd, 400);
+    }
+
+    /** Brand back: nested dash → league home; league home → leagues drawer; other app screens → Your leagues. */
+    function onBrandBack() {
+      if (leaguesDrawerOpen) {
+        closeLeaguesDrawer();
+        return;
+      }
+      if (appScreen === "gate" || appScreen === "home") return;
+      if (appScreen !== "dash") {
+        goAppHome();
+        return;
+      }
+      if (typeof newsPullupLocksHome === "function" && newsPullupOpen) {
+        if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+        return;
+      }
+      const nested = !!(me || (view && view !== "home") || openId || tradeSeat || partnerName
+        || openPick || openDraft || markOpen || titleYear || dataSet || dsOpen);
+      if (nested) {
+        clearLeague();
+        return;
+      }
+      openLeaguesDrawer();
     }
 
     function bottomNavKey() {
@@ -6519,6 +6689,7 @@ const html = `<!DOCTYPE html>
     }
 
     function goAppHome() {
+      closeLeaguesDrawer(true);
       appScreen = "home";
       joinError = "";
       settingsCopyNote = "";
@@ -10381,47 +10552,9 @@ const html = `<!DOCTYPE html>
     }
 
     function renderAppHome() {
-      const uname = (authSession && authSession.username) || "you";
-      const memIds = new Set((memberships || []).map((m) => m.sleeper_league_id));
-      const rows = (memberships || []).map((m) => {
-        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
-        const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
-        return '<div class="league-block">'
-          + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
-          + "<div><b>" + esc(m.name) + "</b>"
-          + "<span>" + esc(m.team_name) + " · " + st
-          + (m.season ? " · " + esc(m.season) : "")
-          + (isComm ? " · Commissioner" : "")
-          + "</span></div>"
-          + '<span class="chev" aria-hidden="true">›</span></button>'
-          + (isComm
-            ? '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
-              + '">Manage invites</button>'
-            : "")
-          + "</div>";
-      }).join("");
-      const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
-        const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
-        return '<div class="league-block">'
-          + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
-          + "<span>Commissioner · " + st
-          + (o.season ? " · " + esc(o.season) : "")
-          + " · claim your seat to open the meter</span></div></div>"
-          + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
-          + '">Invites & claim seat</button>'
-          + "</div>";
-      }).join("");
-      const body = rows + ownedOnly;
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your leagues</h2>'
-        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
-        + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
-        + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (body || '<p class="caption">No leagues yet.</p>')
-        + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
-        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
-        + "</div>"
+        + leaguesListHtml()
         + "</div>";
     }
 
@@ -10999,15 +11132,19 @@ const html = `<!DOCTYPE html>
       return parts.length ? el.tagName.toLowerCase() + parts.join("") : null;
     }
 
-    document.getElementById("goHome").addEventListener("click", () => {
-      // Always this league's home: clear seat / nested views. Never Your leagues / goAppHome.
-      if (activeLeague && appScreen !== "dash") {
-        openLeagueDashboard(activeLeague);
-        return;
-      }
-      clearLeague();
+    document.getElementById("goHome").addEventListener("click", () => onBrandBack());
+    document.getElementById("goSettings").addEventListener("click", () => {
+      closeLeaguesDrawer(true);
+      openSettings();
     });
-    document.getElementById("goSettings").addEventListener("click", () => openSettings());
+    const leaguesDrawerEl = document.getElementById("leaguesDrawer");
+    if (leaguesDrawerEl) {
+      leaguesDrawerEl.addEventListener("click", (e) => {
+        if (e.target.closest("[data-leagues-drawer-close]")) {
+          closeLeaguesDrawer();
+        }
+      });
+    }
     const bottomNavEl = document.getElementById("bottomNav");
     if (bottomNavEl) {
       bottomNavEl.addEventListener("click", (e) => {
@@ -11619,6 +11756,7 @@ const html = `<!DOCTYPE html>
       const appSettings = e.target.closest("[data-app-settings]");
       if (appSettings) {
         const tab = appSettings.getAttribute("data-app-settings");
+        closeLeaguesDrawer(true);
         openSettings(tab === "leagues" ? "leagues" : "profile");
         return;
       }
@@ -11664,6 +11802,7 @@ const html = `<!DOCTYPE html>
       }
       const appCreate = e.target.closest("[data-app-create]");
       if (appCreate) {
+        closeLeaguesDrawer(true);
         appScreen = "create";
         joinError = "";
         createdInvites = null;
@@ -11674,6 +11813,7 @@ const html = `<!DOCTYPE html>
       }
       const appRedeem = e.target.closest("[data-app-redeem]");
       if (appRedeem) {
+        closeLeaguesDrawer(true);
         appScreen = "redeem";
         joinError = "";
         focusNext = ".screen-h";
@@ -11692,6 +11832,7 @@ const html = `<!DOCTYPE html>
       }
       const manageInvites = e.target.closest("[data-manage-invites]");
       if (manageInvites) {
+        closeLeaguesDrawer(true);
         openInviteConsole(manageInvites.dataset.manageInvites).catch((err) => console.error(err));
         return;
       }
@@ -11741,6 +11882,7 @@ const html = `<!DOCTYPE html>
         const id = openLeagueBtn.dataset.openLeague;
         const m = (memberships || []).find((x) => x.sleeper_league_id === id);
         if (m) {
+          closeLeaguesDrawer(true);
           const leagueInfo = {
             sleeper_league_id: m.sleeper_league_id,
             name: m.name,
@@ -12327,10 +12469,6 @@ const html = `<!DOCTYPE html>
       if (brandImg && typeof DATA_V === "string") {
         brandImg.src = "data/ui/brand-mark.png?" + DATA_V;
       }
-      var settingsImg = document.querySelector("img[data-settings-mark], img.settings-mark");
-      if (settingsImg && typeof DATA_V === "string") {
-        settingsImg.src = "data/ui/brand-mark.png?" + DATA_V;
-      }
     } catch (_) {}
     if ("serviceWorker" in navigator) {
       (function armServiceWorkerAutoUpdate() {
@@ -12353,7 +12491,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v178-brand-home-lab";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v179-league-header-back";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -12397,21 +12535,21 @@ if (!html.includes('property="og:image"')
   throw new Error("index head must ship Open Graph + Twitter card tags for link previews");
 }
 if (!html.includes('img class="brand-mark"') || !html.includes('data/ui/brand-mark.png')
-  || !html.includes('Chuckle Fantasy — League home')) {
-  throw new Error("dashboard home control must use the Chuckle Fantasy brand-mark icon");
+  || !html.includes('class="go-back"') || !html.includes('aria-label="Back"')) {
+  throw new Error("dashboard brand row must use back chevron + Chuckle brand-mark beside the league name");
 }
 if (!html.includes('updateViaCache: "none"')
   || !html.includes("controllerchange")
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v178-brand-home-lab")) {
+  || !html.includes("chuckle-shell-v179-league-header-back")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v178-brand-home-lab")
+  || !swSrc.includes("chuckle-shell-v179-league-header-back")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -12688,13 +12826,16 @@ if (!brandRule.slice(0, brandRule.indexOf("}")).includes("overflow: visible")) {
   throw new Error("h1.brand must declare overflow: visible -- brand chrome must not clip");
 }
 if (!brandRule.slice(0, brandRule.indexOf("}")).includes("position: relative")) {
-  throw new Error("h1.brand must be position: relative -- the centered league name is absolute against it");
+  throw new Error("h1.brand must be position: relative");
 }
 {
   const subRule = html.slice(html.indexOf("    h1.brand .league-sub {"));
   const decl = subRule.slice(0, subRule.indexOf("}"));
-  if (!decl.includes("left: 50%") || !decl.includes("translateX(-50%)")) {
-    throw new Error("h1.brand .league-sub must be absolutely centered (left: 50% + translateX(-50%))");
+  if (decl.includes("left: 50%") || decl.includes("translateX(-50%)")) {
+    throw new Error("h1.brand .league-sub must sit in the left brand-title cluster (not absolute-centered)");
+  }
+  if (!html.includes('class="brand-title"') || !html.includes('id="brandTitle"')) {
+    throw new Error("league name must ship inside .brand-title with the Chuckle mark");
   }
 }
 
@@ -14109,19 +14250,25 @@ if (!html.includes("profile-crop") || !html.includes("profile-av-preview")
   || !html.includes("seat-flair-custom")) {
   throw new Error("Profile crop CSS and custom flair class must ship");
 }
-if (!html.includes('class="go-settings"') || !html.includes("settings-lab")
-  || !html.includes('data-settings-mark')
+if (!html.includes('class="go-settings"') || !html.includes("settings-gear")
   || !inline.includes('data-settings-tab="profile"')
   || !inline.includes('data-settings-tab="leagues"')
   || !inline.includes('settingsTab = "profile"')
   || !inline.includes("function renderSettingsProfileTab(")
   || !inline.includes("function renderSettingsLeaguesTab(")) {
-  throw new Error("Settings must use Chuckle mark + label and Profile/Leagues tabs (default Profile)");
+  throw new Error("Settings must use a gear icon and Profile/Leagues tabs (default Profile)");
 }
-if (!html.includes('class="brand-lab">home</span>')
-  || !html.includes('width="44" height="44" alt="" decoding="async" data-settings-mark')
-  || html.includes("button.go-settings img.settings-mark {\n      width: 28px")) {
-  throw new Error("Home and Settings brand controls must match (44px mark + home/settings labels)");
+if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel")
+  || !inline.includes("function openLeaguesDrawer(")
+  || !inline.includes("function closeLeaguesDrawer(")
+  || !inline.includes("function onBrandBack(")
+  || !inline.includes("openLeaguesDrawer()")) {
+  throw new Error("League home back must open a full-screen leagues drawer that slides in from the left");
+}
+if (/\bsettings-lab\b/.test(html) || /class="brand-lab"/.test(html)
+  || /\bdata-settings-mark\b/.test(html) || /\bsettings-mark\b/.test(html)
+  || /\bgo-home\b/.test(html)) {
+  throw new Error("brand row must not keep Chuckle-mark settings/home labels — back chevron + gear only");
 }
 
 // ---------------------------------------------------------------------------------------------

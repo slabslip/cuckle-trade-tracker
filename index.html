@@ -2604,7 +2604,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news-multi-player20260904125500";
+    const DATA_V = "league-reselect20260904131000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6129,6 +6129,40 @@
     function paintLeaguesDrawer() {
       const body = document.getElementById("leaguesDrawerBody");
       if (body) body.innerHTML = leaguesListHtml();
+    }
+
+    /**
+     * Open a membership league from Settings or the Your leagues drawer.
+     * The drawer lives outside #app, so this must be callable from both click roots.
+     */
+    function openLeagueFromMembership(id) {
+      const lid = String(id || "");
+      const m = (memberships || []).find((x) => String(x.sleeper_league_id) === lid);
+      if (!m) return false;
+      closeLeaguesDrawer(true);
+      const leagueInfo = {
+        sleeper_league_id: m.sleeper_league_id,
+        name: m.name,
+        status: m.status || "pending_sync",
+        sleeper_user_id: m.sleeper_user_id,
+        team_name: m.team_name,
+      };
+      if (authSession) {
+        authSave(Object.assign({}, authSession, {
+          seat_user_id: m.sleeper_user_id,
+          seat_name: m.team_name,
+        }));
+      }
+      voteSeatRemember(m.sleeper_user_id);
+      openLeagueDashboard(leagueInfo).catch((err) => {
+        console.error(err);
+        saveActiveLeague(leagueInfo);
+        appScreen = "dash";
+        members = null;
+        league = null;
+        render();
+      });
+      return true;
     }
 
     function openLeaguesDrawer() {
@@ -11255,9 +11289,57 @@
     });
     const leaguesDrawerEl = document.getElementById("leaguesDrawer");
     if (leaguesDrawerEl) {
+      // Drawer is outside #app — handle every leaguesListHtml control here (not only Close).
       leaguesDrawerEl.addEventListener("click", (e) => {
         if (e.target.closest("[data-leagues-drawer-close]")) {
           closeLeaguesDrawer();
+          return;
+        }
+        const openLeagueBtn = e.target.closest("[data-open-league]");
+        if (openLeagueBtn) {
+          openLeagueFromMembership(openLeagueBtn.dataset.openLeague);
+          return;
+        }
+        const manageInvites = e.target.closest("[data-manage-invites]");
+        if (manageInvites) {
+          closeLeaguesDrawer(true);
+          openInviteConsole(manageInvites.dataset.manageInvites).catch((err) => console.error(err));
+          return;
+        }
+        const appSettings = e.target.closest("[data-app-settings]");
+        if (appSettings) {
+          const tab = appSettings.getAttribute("data-app-settings");
+          closeLeaguesDrawer(true);
+          openSettings(tab === "leagues" ? "leagues" : "profile");
+          return;
+        }
+        const signOut = e.target.closest("[data-auth-signout]");
+        if (signOut) {
+          closeLeaguesDrawer(true);
+          authClear();
+          document.getElementById("app").hidden = false;
+          focusNext = ".screen-h";
+          render();
+          return;
+        }
+        const appCreate = e.target.closest("[data-app-create]");
+        if (appCreate) {
+          closeLeaguesDrawer(true);
+          appScreen = "create";
+          joinError = "";
+          createdInvites = null;
+          inviteTab = "unclaimed";
+          focusNext = ".screen-h";
+          render();
+          return;
+        }
+        const appRedeem = e.target.closest("[data-app-redeem]");
+        if (appRedeem) {
+          closeLeaguesDrawer(true);
+          appScreen = "redeem";
+          joinError = "";
+          focusNext = ".screen-h";
+          render();
         }
       });
     }
@@ -11995,33 +12077,7 @@
       }
       const openLeagueBtn = e.target.closest("[data-open-league]");
       if (openLeagueBtn) {
-        const id = openLeagueBtn.dataset.openLeague;
-        const m = (memberships || []).find((x) => x.sleeper_league_id === id);
-        if (m) {
-          closeLeaguesDrawer(true);
-          const leagueInfo = {
-            sleeper_league_id: m.sleeper_league_id,
-            name: m.name,
-            status: m.status || "pending_sync",
-            sleeper_user_id: m.sleeper_user_id,
-            team_name: m.team_name,
-          };
-          if (authSession) {
-            authSave(Object.assign({}, authSession, {
-              seat_user_id: m.sleeper_user_id,
-              seat_name: m.team_name,
-            }));
-          }
-          voteSeatRemember(m.sleeper_user_id);
-          openLeagueDashboard(leagueInfo).catch((err) => {
-            console.error(err);
-            saveActiveLeague(leagueInfo);
-            appScreen = "dash";
-            members = null;
-            league = null;
-            render();
-          });
-        }
+        openLeagueFromMembership(openLeagueBtn.dataset.openLeague);
         return;
       }
       const signOut = e.target.closest("[data-auth-signout]");
@@ -12607,7 +12663,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v181-news-multi-player";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v182-league-reselect";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

@@ -72,45 +72,46 @@ While `open`, pending **join requests** may accumulate; they do not change paren
 3. Deploy `supabase/functions/ledger-ingest`.
 4. Note the URL: `https://<project>.supabase.co/functions/v1/ledger-ingest`
 
-### 3. iPhone Shortcut
+### 3. iPhone Shortcut (capture-first)
 
-Create a Shortcut (separate from the News share Shortcut):
+Create a Shortcut (separate from the News share Shortcut). **Do not** ask for
+amount, odds, deadline, or visibility on the phone. The group text is the proof;
+money and wording are finished on Ledger (**Complete**).
 
-1. **Receive** Text (or Share Sheet from Messages).
-2. Optional Ask for: title, amount (number), odds, side A name, side B name, deadline.
-3. **Get Contents of URL** — POST JSON to the function URL.
+1. Receive Text from Share Sheet (or Clipboard if run from the Home Screen).
+2. Dictionary of league seats → Sleeper user ids.
+3. Choose **Your side** and **Their side** (two taps).
+4. **Get Contents of URL** — POST JSON.
 
 **Headers**
 
 | Header | Value |
 | --- | --- |
 | `Content-Type` | `application/json` |
+| `apikey` | anon / public key |
+| `Authorization` | `Bearer <same anon key>` |
 | `x-ledger-secret` | same as `LEDGER_INGEST_SECRET` |
-| `Authorization` | `Bearer <anon key>` (Supabase gateway often wants apikey/anon) |
 
-**Body (v1)**
+**Body (capture-first)**
 
 ```json
 {
   "sleeper_league_id": "1315431339301806080",
-  "submitted_by": "TrumanCooper",
-  "raw_text": "Truman vs Sam — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
-  "title": "Stribling will finish the season as SF WR1",
-  "amount": 100,
-  "odds": "even",
-  "side_a_name": "Truman",
-  "side_b_name": "Sam",
-  "deadline": "2026-12-18",
-  "visibility": "public"
+  "submitted_by": "458342725222133760",
+  "raw_text": "<shared group text>",
+  "side_a_name": "458342725222133760",
+  "side_b_name": "457784547094818816"
 }
 ```
 
-- `amount` is **dollars** (stored as cents). Or send `amount_cents`.
-- `visibility` is optional (`public` default; `private` hides from non-parties).
-- Names resolve against `league_memberships.team_name` (normalized). Ambiguous → HTTP 422
-  `needs_review` — do not invent a seat.
-- Idempotent: same league + parties + amount + title + odds hash returns the existing
-  `bet_id` (`deduped: true`).
+- `side_*` / `submitted_by` are Sleeper **user ids** (or canonical names
+  `TrumanCooper`, `TipsUp`, …). Emoji team names do not resolve.
+- `raw_text` is required. Stored as `source_text` + `terms`. `title` defaults to
+  the first line. `amount_cents` defaults to `0` until Complete on the site.
+- Optional extras (`title`, `amount`, `odds`, `deadline`, `visibility`) are still
+  accepted if sent; the Shortcut should omit them.
+- Idempotent: same league + sides + `raw_text` returns the existing `bet_id`
+  (`deduped: true`).
 
 **Success response**
 
@@ -118,7 +119,7 @@ Create a Shortcut (separate from the News share Shortcut):
 { "ok": true, "bet_id": "…", "status": "proposed", "deduped": false }
 ```
 
-Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
+Fast path: Copy the message → Home Screen **Chuckle Ledger** → two team taps.
 
 ---
 
@@ -126,10 +127,11 @@ Show that in a Shortcut notification: “Slip proposed — waiting on Sam.”
 
 - Summary: total / open / settled / pending / next deadline (**your** slips only)
 - Toolbar: **Refresh** (no league-wide All filter)
-- Cards: title, parties, amount, odds, terms, status chip, Public/Private toggle,
-  deadline, actions
+- Cards: title, parties, amount, odds, **quoted `source_text`** (group-text proof),
+  status chip, Public/Private toggle, deadline, actions
 - Actions by role:
-  - Counterparty on `proposed`: Accept / Decline
+  - Either party on `proposed`: **Complete** (title, amount, odds, deadline)
+  - Counterparty on `proposed`: Accept / Decline (toast if amount is still `$0`)
   - Proposer on `proposed`: Cancel
   - Either party on `open`: Settle (I won / They won / Push)
   - Either party: toggle `visibility` public ↔ private

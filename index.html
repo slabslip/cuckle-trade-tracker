@@ -2598,7 +2598,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "league-header-back20260904123500";
+    const DATA_V = "back-league-home20260904124500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6167,28 +6167,71 @@
       setTimeout(onEnd, 400);
     }
 
-    /** Brand back: nested dash → league home; league home → leagues drawer; other app screens → Your leagues. */
+    /** True only on the league dash homepage (Latest trade / chips), not seat or nested screens. */
+    function isLeagueHomeSurface() {
+      return appScreen === "dash"
+        && !me
+        && view === "home"
+        && !openId
+        && !tradeSeat
+        && !partnerName
+        && !openPick
+        && !openDraft
+        && !markOpen
+        && !titleYear
+        && !dataSet
+        && !dsOpen;
+    }
+
+    /** Leave any nested dash/app screen and land on the active league homepage. */
+    function returnToLeagueHome() {
+      closeLeaguesDrawer(true);
+      if (!activeLeague) {
+        goAppHome();
+        return;
+      }
+      if (typeof setNewsPullupOpen === "function" && newsPullupOpen) {
+        try { setNewsPullupOpen(false); } catch (err) { /* ignore */ }
+      }
+      voteSheetTx = null;
+      voteSheetSeat = null;
+      voteConfirmTx = null;
+      voteConfirmSeat = null;
+      voteEditTx = null;
+      appScreen = "dash";
+      clearLeague();
+    }
+
+    /**
+     * Brand back:
+     * - overlays (vote sheet / news pull-up) close first
+     * - every nested screen → league homepage
+     * - league homepage only → Your leagues drawer
+     */
     function onBrandBack() {
       if (leaguesDrawerOpen) {
         closeLeaguesDrawer();
         return;
       }
       if (appScreen === "gate" || appScreen === "home") return;
-      if (appScreen !== "dash") {
-        goAppHome();
+      if (voteSheetTx || voteConfirmTx) {
+        voteSheetTx = null;
+        voteSheetSeat = null;
+        voteConfirmTx = null;
+        voteConfirmSeat = null;
+        voteEditTx = null;
+        render();
         return;
       }
-      if (typeof newsPullupLocksHome === "function" && newsPullupOpen) {
-        if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+      if (isLeagueHomeSurface()) {
+        if (typeof newsPullupLocksHome === "function" && newsPullupOpen) {
+          if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(false);
+          return;
+        }
+        openLeaguesDrawer();
         return;
       }
-      const nested = !!(me || (view && view !== "home") || openId || tradeSeat || partnerName
-        || openPick || openDraft || markOpen || titleYear || dataSet || dsOpen);
-      if (nested) {
-        clearLeague();
-        return;
-      }
-      openLeaguesDrawer();
+      returnToLeagueHome();
     }
 
     function bottomNavKey() {
@@ -12486,7 +12529,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v179-league-header-back";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v180-back-league-home";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

@@ -113,12 +113,12 @@ sequenceDiagram
 {
   "sleeper_league_id": "…",
   "submitted_by": "optional display or sleeper id",
-  "raw_text": "Truman vs Sam — Stribling SF WR1 — $100 even — ends Dec 18",
+  "raw_text": "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even — ends Dec 18",
   "title": "optional",
   "amount": 100,
   "odds": "even",
-  "side_a_name": "Truman",
-  "side_b_name": "Sam",
+  "side_a_name": "TrumanCooper",
+  "side_b_name": "TipsUp",
   "deadline": "2026-12-18"
 }
 ```

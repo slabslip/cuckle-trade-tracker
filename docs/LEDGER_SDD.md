@@ -94,12 +94,12 @@ Create a Shortcut (separate from the News share Shortcut):
 {
   "sleeper_league_id": "1315431339301806080",
   "submitted_by": "TrumanCooper",
-  "raw_text": "Truman vs Sam — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
+  "raw_text": "TrumanCooper vs TipsUp — Stribling SF WR1 — $100 even — ends Dec 18, 2026",
   "title": "Stribling will finish the season as SF WR1",
   "amount": 100,
   "odds": "even",
-  "side_a_name": "Truman",
-  "side_b_name": "Sam",
+  "side_a_name": "TrumanCooper",
+  "side_b_name": "TipsUp",
   "deadline": "2026-12-18",
   "visibility": "public"
 }
@@ -107,8 +107,9 @@ Create a Shortcut (separate from the News share Shortcut):
 
 - `amount` is **dollars** (stored as cents). Or send `amount_cents`.
 - `visibility` is optional (`public` default; `private` hides from non-parties).
-- Names resolve against `league_memberships.team_name` (normalized). Ambiguous → HTTP 422
-  `needs_review` — do not invent a seat.
+- Names resolve against `league_memberships.team_name` (normalized). Use exact seat
+  names from this league (`TrumanCooper`, `TipsUp`, …) — short nicknames like `Sam`
+  are not seats. Ambiguous / same-seat → HTTP 422 `needs_review` — do not invent a seat.
 - Idempotent: same league + parties + amount + title + odds hash returns the existing
   `bet_id` (`deduped: true`).
 

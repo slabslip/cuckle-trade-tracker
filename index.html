@@ -1614,8 +1614,20 @@
       background: #1a1a20; color: var(--text); font-size: 0.8125rem; line-height: 1.4;
     }
     .ledger-card .lc-foot {
-      margin-top: 8px; font-size: 0.75rem; color: var(--dim);
+      margin: 0; font-size: 0.75rem; color: var(--dim);
     }
+    .ledger-card .lc-bottom {
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+      margin-top: 8px;
+    }
+    .ledger-card .lc-bottom .lc-foot { flex: 1 1 auto; min-width: 0; }
+    .ledger-card .lc-trash {
+      flex: 0 0 auto; margin-left: auto; padding: 6px; border: 0; border-radius: 8px;
+      background: transparent; color: var(--dim); line-height: 0; cursor: pointer;
+      touch-action: manipulation;
+    }
+    .ledger-card .lc-trash:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .ledger-card .lc-trash svg { display: block; }
     .team-ledger { margin-top: 1.25rem; }
     .team-ledger .tl-block { margin: 0.75rem 0 1rem; }
     .team-ledger .tl-row {
@@ -2975,7 +2987,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905160500";
+    const DATA_V = "ledger20260905161500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6513,8 +6525,7 @@
         const needsMe = (String(b.side_a) === String(seat) && !b.side_a_lock)
           || (String(b.side_b) === String(seat) && !b.side_b_lock);
         if (needsMe) return { cls: "needs", lab: "Sent to you, you have not accepted this version" };
-        const waiting = String(b.side_a) === String(seat) ? b.side_b : b.side_a;
-        return { cls: "needs", lab: "Waiting on " + ledgerSeatLabel(waiting) };
+        return { cls: "needs", lab: "Pending, awaiting a response" };
       }
       if (ledgerIsDisputed(b)) return { cls: "disputed", lab: "Disputed — league vote" };
       if (b.status === "open" && ledgerClockPassed(b)) {
@@ -6557,9 +6568,6 @@
               btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Accept</button>';
             }
           }
-          if ((isParty || isProposer) && String(ledgerCounterId) !== String(b.id)) {
-            btns += '<button type="button" class="chip" data-ledger-cancel="' + esc(b.id) + '">Trash</button>';
-          }
         }
         if (b.status === "open" && ledgerClockPassed(b) && isParty && !ledgerIsDisputed(b)) {
           const myClaim = isA ? b.side_a_claim : b.side_b_claim;
@@ -6576,6 +6584,26 @@
       const vis = b.status === "needs_review" ? "" : ledgerVisibilityToggle(b, { readOnly: !canToggle });
       if (!btns && !vis) return "";
       return (btns ? '<div class="lc-actions">' + btns + "</div>" : "") + vis;
+    }
+
+    function ledgerCanDeletePending(b, opts) {
+      if (!b || (opts && opts.readOnly)) return false;
+      if (b.status !== "proposed" || ledgerNeedsDetails(b)) return false;
+      if (ledgerBusyId === b.id || String(ledgerCounterId) === String(b.id)) return false;
+      const seat = authSeatId();
+      if (!seat) return false;
+      const isParty = String(b.side_a) === String(seat) || String(b.side_b) === String(seat);
+      const isProposer = String(b.proposer) === String(seat);
+      return !!(isParty || isProposer);
+    }
+
+    function ledgerPendingTrashHtml(b, opts) {
+      if (!ledgerCanDeletePending(b, opts)) return "";
+      return '<button type="button" class="lc-trash" data-ledger-cancel="' + esc(b.id)
+        + '" aria-label="Delete pending wager">'
+        + '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
+        + '<path fill="currentColor" d="M9 3h6l1 2h5v2H3V5h5l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM6 7h12v12c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V7z"/>'
+        + "</svg></button>";
     }
 
     function ledgerVisibilityToggle(b, opts) {
@@ -6639,6 +6667,9 @@
         ? ((typeof ledgerDescHighlightHtml === "function")
           ? ledgerDescHighlightHtml(desc, null) : esc(desc))
         : "";
+      const foot = footBits.length ? '<p class="lc-foot">' + esc(footBits.join(" · ")) + "</p>" : "";
+      const trash = ledgerPendingTrashHtml(b, opts);
+      const bottom = (foot || trash) ? '<div class="lc-bottom">' + foot + trash + "</div>" : "";
       return '<article class="ledger-card" data-ledger-id="' + esc(b.id) + '">'
         + '<div class="lc-top">'
         + '<h3 class="lc-title">' + titleHtml + "</h3>"
@@ -6659,7 +6690,7 @@
         + ledgerCounterFormHtml(b, opts)
         + ledgerVoteHtml(b, opts)
         + ledgerCardActions(b, opts)
-        + (footBits.length ? '<p class="lc-foot">' + esc(footBits.join(" · ")) + "</p>" : "")
+        + bottom
         + "</article>";
     }
 

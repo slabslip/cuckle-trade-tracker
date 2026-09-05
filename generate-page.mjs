@@ -2856,7 +2856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905023000";
+    const DATA_V = "ledger20260905023500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6178,10 +6178,11 @@ const html = `<!DOCTYPE html>
         they_put_cents = you_win_cents;
         they_win_cents = U;
       } else if (U > 0 && O > 0) {
-        you_put_cents = U;
-        you_win_cents = Math.round(U * O / 100);
-        they_put_cents = you_win_cents;
-        they_win_cents = U;
+        // Plus is the line you send them. They are the dog: they put the stake, you lay the plus.
+        they_put_cents = U;
+        they_win_cents = Math.round(U * O / 100);
+        you_put_cents = they_win_cents;
+        you_win_cents = U;
       }
       const nLab = U ? String(U / 100) : "N";
       let words = "Enter a stake to see what each side puts in and wins.";
@@ -6192,7 +6193,7 @@ const html = `<!DOCTYPE html>
           + " to win $" + (you_win_cents / 100) + ". They put in $" + (they_put_cents / 100)
           + " to win $" + (they_win_cents / 100) + ".";
       } else if (U && O > 0) {
-        words = "House dog " + ledgerFmtOdds(O) + ". You put in $" + (you_put_cents / 100)
+        words = "You send " + ledgerFmtOdds(O) + ". You put in $" + (you_put_cents / 100)
           + " to win $" + (you_win_cents / 100) + ". They put in $" + (they_put_cents / 100)
           + " to win $" + (they_win_cents / 100) + ".";
       }
@@ -6814,7 +6815,8 @@ const html = `<!DOCTYPE html>
       const themField = kind === "counter"
         ? '<label class="lc-team"><input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly aria-label="Team"></label>'
           + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
-        : '<label class="lc-team"><select name="them" required data-ledger-wager-live="1" aria-label="Team">'
+        : '<div class="caption">Select team to send wager</div>'
+          + '<label class="lc-team"><select name="them" required data-ledger-wager-live="1" aria-label="Select team to send wager">'
           + optsHtml + "</select></label>";
       const sendLab = kind === "counter"
         ? "Send back"
@@ -6830,7 +6832,7 @@ const html = `<!DOCTYPE html>
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
-        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Steps of 100. They get the other side.</span></label>'
+        + '<span class="caption">\u2212500 you are favorite · 0 even · +500 you send them plus. Steps of 100. They get the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
         + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1">' + esc(desc) + "</textarea></label>"
         + '<div class="caption">Clock</div>'
@@ -16837,6 +16839,9 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerSend(", true],
     ["function ledgerWagerSave(", true],
     ["function ledgerOddsPreview(", true],
+    ["You send ", true],
+    ["Select team to send wager", true],
+    ["House dog ", false],
     ["function ledgerSnapOdds(", true],
     ["function ledgerCaptureCompose(", true],
     ["function ledgerParkCompose(", true],

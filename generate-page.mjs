@@ -2983,7 +2983,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905152000";
+    const DATA_V = "ledger20260905154000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7617,6 +7617,14 @@ const html = `<!DOCTYPE html>
       return '<form class="ledger-add" ' + formAttr + ">"
         + ledgerAgentHtml(kind)
         + themField
+        + '<label>What\u2019s the bet<div class="lc-desc-box">'
+        + '<div class="lc-desc-hi" data-ledger-desc-hi aria-hidden="true"></div>'
+        + '<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1" data-ledger-desc="1"'
+        + ' spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"'
+        + ' lang="en" data-gramm="false">'
+        + esc(desc) + "</textarea>"
+        + '<div class="lc-desc-sugs" data-ledger-desc-sugs hidden></div>'
+        + "</div></label>"
         + '<label>Your wager <span class="lc-odds-lab lc-stake-lab" data-ledger-stake-lab>$'
         + esc(String(stake)) + "</span>"
         + '<input type="range" min="0" max="' + (LEDGER_STAKE_STOPS.length - 1) + '" step="1" value="'
@@ -7628,14 +7636,6 @@ const html = `<!DOCTYPE html>
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
         + '<span class="caption">\u2212500 you are favorite · 0 even · +500 you offer them plus. Steps of 100. They get the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
-        + '<label>What\u2019s the bet<div class="lc-desc-box">'
-        + '<div class="lc-desc-hi" data-ledger-desc-hi aria-hidden="true"></div>'
-        + '<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1" data-ledger-desc="1"'
-        + ' spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"'
-        + ' lang="en" data-gramm="false">'
-        + esc(desc) + "</textarea>"
-        + '<div class="lc-desc-sugs" data-ledger-desc-sugs hidden></div>'
-        + "</div></label>"
         + ledgerClockChipsHtml(clockKind, clock)
         + (kind === "counter" ? "" : ledgerSendPickHtml(them))
         + '<div class="lc-complete-actions">'
@@ -17913,6 +17913,15 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
   ];
   const bad = ledgerNeed.filter(([s, want]) => inline.includes(s) !== want).map(([s, want]) => (want ? "missing " : "forbidden ") + s);
   if (bad.length) throw new Error("Ledger must be my-slips-only with New wager / counter / claim + team-home public W/L: " + bad.join(" | "));
+  const formAt = inline.indexOf("function ledgerWagerFormHtml(");
+  const formStop = inline.indexOf("\n    function ", formAt + 10);
+  const formFn = inline.slice(formAt, formStop < 0 ? formAt + 5000 : formStop);
+  const descAt = formFn.indexOf("lc-desc-box");
+  const stakeAt = formFn.indexOf("<label>Your wager ");
+  const oddsAt = formFn.indexOf("<label>Odds meter ");
+  if (descAt < 0 || stakeAt < 0 || oddsAt < 0 || descAt > stakeAt || stakeAt > oddsAt) {
+    throw new Error("New wager must put What's the bet above Your wager and Odds meter");
+  }
 }
 {
   const wave13 = fs.readFileSync(`${ROOT}db/wave13-ledger-visibility.sql`, "utf8");

@@ -1577,6 +1577,14 @@ const html = `<!DOCTYPE html>
       width: 100%; accent-color: var(--lh-gold, #e0b44c);
     }
     .ledger-add .caption { text-transform: none; letter-spacing: 0; font-weight: 400; }
+    .ledger-add input[name="clock"][hidden] { display: none; }
+    .lc-send-pick {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0;
+    }
+    .lc-send-pick[hidden] { display: none; }
+    .lc-send-pick .chip.on {
+      border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
+    }
     .lc-odds-lab {
       font-size: 0.95rem; font-weight: 700; color: var(--lh-gold, #e0b44c);
       font-variant-numeric: tabular-nums;
@@ -2959,7 +2967,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905144000";
+    const DATA_V = "ledger20260905150000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6136,6 +6144,18 @@ const html = `<!DOCTYPE html>
 
     function ledgerRefreshThemOptions(form) {
       if (!form) return;
+      const box = form.querySelector("[data-ledger-send-pick]");
+      if (box) {
+        const hid = form.querySelector("[name=them]");
+        const cur = (hid && hid.value) || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
+        const others = ledgerOtherSeats();
+        box.innerHTML = others.map((m) => {
+          const on = String(m.user_id) === String(cur) ? " on" : "";
+          return '<button type="button" class="chip' + on + '" data-ledger-send-them="'
+            + esc(m.user_id) + '">' + esc(m.name || m.user_id) + "</button>";
+        }).join("");
+        return;
+      }
       const sel = form.querySelector("select[name=them]");
       if (!sel) return;
       const cur = sel.value || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
@@ -6715,23 +6735,25 @@ const html = `<!DOCTYPE html>
         + '<span class="caption">From your wagers</span>' + chips.join("") + "</div>";
     }
 
-    function ledgerClockChipsHtml(selected) {
+    function ledgerClockChipsHtml(selected, dateVal) {
       const kinds = [
+        ["date", "Select own date"],
         ["this_week", "This NFL week"],
         ["next_week", "Next NFL week"],
         ["regular", "Through regular season"],
         ["season", "Regular + playoffs"],
         ["playoffs", "Playoffs only"],
-        ["date", "Custom date"],
       ];
       const cur = selected || "this_week";
-      return '<div class="lc-clock-chips" role="group" aria-label="Clock">'
+      return '<label class="lc-clock-lab">Clock'
+        + '<select name="clock_kind" data-ledger-wager-live="1">'
         + kinds.map((k) => {
-          const on = k[0] === cur ? " on" : "";
-          return '<button type="button" class="chip' + on + '" data-ledger-clock="' + k[0] + '">'
-            + esc(k[1]) + "</button>";
+          const sel = k[0] === cur ? " selected" : "";
+          return '<option value="' + k[0] + '"' + sel + ">" + esc(k[1]) + "</option>";
         }).join("")
-        + "</div>";
+        + "</select>"
+        + '<input name="clock" type="date" value="' + esc(dateVal || "") + '"'
+        + (cur === "date" ? "" : " hidden") + ' data-ledger-wager-live="1"></label>';
     }
 
     function ledgerHintHtml(b) {
@@ -7251,7 +7273,9 @@ const html = `<!DOCTYPE html>
           }
         });
       });
-      if (kind) ledgerApplyClockKind(form, kind);
+      if (kind && form.getAttribute("data-ledger-clock-manual") !== "1") {
+        ledgerApplyClockKind(form, kind);
+      }
     }
     function ledgerDescExpandFinished(form) {
       const ta = form && form.querySelector("textarea[name=desc]");
@@ -7397,8 +7421,15 @@ const html = `<!DOCTYPE html>
     function ledgerApplyClockKind(form, kind) {
       if (!form) return;
       const next = kind || "this_week";
-      const hid = form.querySelector("[name=clock_kind]");
+      const sel = form.querySelector("select[name=clock_kind]");
+      if (sel) sel.value = next;
+      const hid = form.querySelector("input[name=clock_kind]");
       if (hid) hid.value = next;
+      const dateEl = form.querySelector("input[name=clock]");
+      if (dateEl) {
+        if (next === "date") dateEl.removeAttribute("hidden");
+        else dateEl.setAttribute("hidden", "");
+      }
       const dateField = form.querySelector("[data-ledger-clock-date]");
       if (dateField) {
         if (next === "date") dateField.removeAttribute("hidden");
@@ -7426,6 +7457,7 @@ const html = `<!DOCTYPE html>
         const oddsEl = form.querySelector("[name=odds]");
         if (oddsEl) oddsEl.value = String(ledgerSnapOdds(val));
       } else if (field === "clock") {
+        form.setAttribute("data-ledger-clock-manual", "1");
         ledgerApplyClockKind(form, val);
       } else if (field === "desc") {
         const ta = form.querySelector("[name=desc]");
@@ -7438,7 +7470,6 @@ const html = `<!DOCTYPE html>
     function ledgerWagerFormHtml(kind, b) {
       const seat = authSeatId();
       if (!seat) return "";
-      const others = ledgerOtherSeats();
       const draft = ledgerDraftFor(kind, b);
       const them = draft ? draft.them : ((kind === "counter" && b)
         ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
@@ -7456,23 +7487,20 @@ const html = `<!DOCTYPE html>
       const clock = draft ? String(draft.clock || "")
         : ((kind === "counter" && b && clockKind === "date") ? ledgerClockValue(b.deadline_at) : "");
       const preview = ledgerOddsPreview(ledgerDollarsToCents(stake), odds);
-      const optsHtml = ['<option value="">team</option>'].concat(others.map((m) => {
-        const sel = String(m.user_id) === String(them) ? " selected" : "";
-        return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name || m.user_id) + "</option>";
-      })).join("");
       const formAttr = kind === "counter"
         ? 'data-ledger-counter-form="' + esc(b.id) + '"'
         : 'data-ledger-wager-form="1"';
       const themField = kind === "counter"
         ? '<label class="lc-team"><input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly aria-label="Team"></label>'
           + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
-        : '<label>Choose a team to send wager<select name="them" required data-ledger-wager-live="1">'
-          + optsHtml + "</select></label>";
+        : '<input type="hidden" name="them" value="' + esc(them || "") + '">';
       const sendLab = kind === "counter"
         ? "Send back"
         : ledgerSendLabel(them);
       const cancelAttr = kind === "counter" ? "data-ledger-counter-cancel" : "data-ledger-wager-cancel";
-      const dateShow = clockKind === "date" ? "" : " hidden";
+      const sendBtn = kind === "counter"
+        ? '<button type="submit" class="chip" data-ledger-send-lab>' + esc(sendLab) + "</button>"
+        : '<button type="button" class="chip" data-ledger-send-open="1" data-ledger-send-lab>' + esc(sendLab) + "</button>";
       return '<form class="ledger-add" ' + formAttr + ">"
         + ledgerAgentHtml(kind)
         + themField
@@ -7496,15 +7524,23 @@ const html = `<!DOCTYPE html>
         + esc(desc) + "</textarea>"
         + '<div class="lc-desc-sugs" data-ledger-desc-sugs hidden></div>'
         + "</div></label>"
-        + '<div class="caption">Clock</div>'
-        + ledgerClockChipsHtml(clockKind)
-        + '<input type="hidden" name="clock_kind" value="' + esc(clockKind) + '">'
-        + '<label data-ledger-clock-date' + dateShow + '>Custom date<input name="clock" type="date" value="'
-        + esc(clock) + '" data-ledger-wager-live="1"></label>'
+        + ledgerClockChipsHtml(clockKind, clock)
+        + (kind === "counter" ? "" : ledgerSendPickHtml(them))
         + '<div class="lc-complete-actions">'
-        + '<button type="submit" class="chip" data-ledger-send-lab>' + esc(sendLab) + "</button>"
+        + sendBtn
         + '<button type="button" class="chip" ' + cancelAttr + '="1">Trash</button>'
         + "</div></form>";
+    }
+
+    function ledgerSendPickHtml(them) {
+      const others = ledgerOtherSeats();
+      return '<div class="lc-send-pick" data-ledger-send-pick hidden>'
+        + others.map((m) => {
+          const on = String(m.user_id) === String(them || "") ? " on" : "";
+          return '<button type="button" class="chip' + on + '" data-ledger-send-them="'
+            + esc(m.user_id) + '">' + esc(m.name || m.user_id) + "</button>";
+        }).join("")
+        + "</div>";
     }
 
     function ledgerCounterFormHtml(b, opts) {
@@ -8057,10 +8093,12 @@ const html = `<!DOCTYPE html>
       };
     }
 
-    function ledgerWagerValidate(parsed, seat) {
+    function ledgerWagerValidate(parsed, seat, opts) {
       if (!parsed || !seat) return "Claim a seat first.";
-      if (!parsed.them) return "Pick a team.";
-      if (parsed.them === String(seat)) return "Pick a different team.";
+      if (!(opts && opts.skipThem)) {
+        if (!parsed.them) return "Pick a team.";
+        if (parsed.them === String(seat)) return "Pick a different team.";
+      }
       if (!parsed.desc || !parsed.title) return "Write what the bet is.";
       if (!parsed.stake) return "Enter your wager.";
       if (!parsed.clock_kind) return "Pick a clock.";
@@ -8087,6 +8125,30 @@ const html = `<!DOCTYPE html>
       d.setAttribute("role", "status");
       d.textContent = msg;
       h.insertAdjacentElement("afterend", d);
+    }
+
+    function ledgerOpenSendPick(form) {
+      if (!form) return;
+      const parsed = ledgerReadWagerForm(form);
+      const err = ledgerWagerValidate(parsed, authSeatId(), { skipThem: true });
+      if (err) {
+        ledgerFlashToast(err);
+        return;
+      }
+      const box = form.querySelector("[data-ledger-send-pick]");
+      if (!box) {
+        ledgerFlashToast("Pick a team.");
+        return;
+      }
+      if (!box.querySelector("[data-ledger-send-them]")) {
+        ledgerRefreshThemOptions(form);
+      }
+      if (!box.querySelector("[data-ledger-send-them]")) {
+        ledgerFlashToast("No other teams yet.");
+        return;
+      }
+      if (box.hasAttribute("hidden")) box.removeAttribute("hidden");
+      else box.setAttribute("hidden", "");
     }
 
     async function ledgerWagerSave() {
@@ -15043,10 +15105,25 @@ const html = `<!DOCTYPE html>
         return;
       }
       const ledgerClockBtn = e.target.closest("[data-ledger-clock]");
-      if (ledgerClockBtn) {
+      if (ledgerClockBtn && ledgerClockBtn.tagName !== "SELECT") {
         const kind = ledgerClockBtn.getAttribute("data-ledger-clock") || "this_week";
         const form = ledgerClockBtn.closest("form");
         ledgerApplyClockKind(form, kind);
+        return;
+      }
+      const sendOpen = e.target.closest("[data-ledger-send-open]");
+      if (sendOpen) {
+        const form = sendOpen.closest("form");
+        ledgerOpenSendPick(form);
+        return;
+      }
+      const sendThem = e.target.closest("[data-ledger-send-them]");
+      if (sendThem) {
+        const form = sendThem.closest("form");
+        const hid = form && form.querySelector("[name=them]");
+        if (hid) hid.value = sendThem.getAttribute("data-ledger-send-them") || "";
+        if (form) ledgerCaptureCompose(form);
+        ledgerWagerSave();
         return;
       }
       const descPick = e.target.closest("[data-ledger-desc-pick]");
@@ -16024,6 +16101,10 @@ const html = `<!DOCTYPE html>
       const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
       if (wagerLive) {
         const form = wagerLive.form || wagerLive.closest("form");
+        if (wagerLive.getAttribute("name") === "clock_kind") {
+          form.setAttribute("data-ledger-clock-manual", "1");
+          ledgerApplyClockKind(form, wagerLive.value);
+        }
         ledgerCaptureCompose(form, { merge: true });
         ledgerHydrateCompose(form);
         ledgerPaintWagerPreview(form, { capture: false });
@@ -17556,7 +17637,13 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ['data-ledger-form-slot="1"', true],
     ["Send Wager to", true],
     [">team</option>", true],
-    ["<label>Choose a team to send wager<select", true],
+    ["<label>Choose a team to send wager<select", false],
+    ["Select own date", true],
+    ['data-ledger-send-open="1"', true],
+    ["function ledgerOpenSendPick(", true],
+    ["function ledgerSendPickHtml(", true],
+    [">Custom date<input", false],
+    ['<div class="caption">Clock</div>', false],
     ["function ledgerPaintDescBox(", true],
     ["function ledgerDescSuggest(", true],
     ["The San Francisco 49ers", true],
@@ -17572,6 +17659,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["ledgerDescHighlightHtml(b.title", true],
     ["function ledgerDescGhostParts(", false],
     ["function ledgerSyncClockFromDesc(", true],
+    ['data-ledger-clock-manual"', true],
     ["wager-clock-tag", true],
     ["wager-pos-tag", true],
     ["this season", true],

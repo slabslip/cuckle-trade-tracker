@@ -6033,7 +6033,9 @@ const html = `<!DOCTYPE html>
         if (!ledgerOnLedgerSurface()) return;
         if (ledgerPtrDrag && ledgerPtrDrag.refreshing) return;
         if (!e.touches || e.touches.length !== 1) return;
-        if (e.target.closest("input, select, textarea, button, a, label, [contenteditable]")) {
+        const t = e.target;
+        if (t && typeof t.closest === "function"
+          && t.closest("input, select, textarea, button, a, label, [contenteditable]")) {
           ledgerPtrDrag = null;
           return;
         }

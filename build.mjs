@@ -25,6 +25,8 @@ const steps = [
   ["title-path.mjs", leagueId],
   ["apply-value-adjust.mjs", leagueId],
   ["build-cuffs.mjs", leagueId],
+  ["build-calculator.mjs", leagueId],
+  ["build-cosmetics.mjs", leagueId],
 ];
 
 // Site shell is Cuckle-hosted; only regenerate index.html for the default league.

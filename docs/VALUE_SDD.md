@@ -275,3 +275,18 @@ custom = (1 - w) * dp_even + w * ktc_sf   // only if a KTC file has as_of <= tha
 - Do **not** paste the 2026-08-28 KTC book onto 2019–2025 year-ends. Those stay flatten-only until we have a snap for that week.
 
 Dashboard hops use the same even-flatten book as trade bags. Raw DP is not shown.
+
+---
+
+## 12. Calculator book (HAVE) and reserved leftover (WANT)
+
+**HAVE.** `?view=calc` prices a hypothetical 2-team swap on the **today / `even` book**
+(flatten + 40/60 KTC) plus Value Adjustment via the same `applyVa` the trade rows use. The catalog
+is `data/ui/calculator.json` from `build-calculator.mjs`: rostered players and still-held picks
+only. Votes do not appear on a hypothetical and do not change the number. This is the first
+reachable screen that **renders** `even`. The five Score-as windows stay flatten-only.
+
+**Reserved — do not paint over.** League **residual** (what the rest of the league’s bags look
+like after this even deal) and a **vote-nudge** (a later, optional prompt that a priced deal is
+worth an opinion) stay specified, not built. Residual is a later VALUE pass. Vote-nudge is a later
+VOTES / PRODUCT pass. Neither may write a vote into the book.

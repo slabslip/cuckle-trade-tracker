@@ -9,9 +9,11 @@ verification walkthrough live in [`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md); 
 [`db/schema.sql`](../db/schema.sql); the adapter is §5.
 
 **Hard rule: a vote is not a value.** Votes never enter the needle, the even book, Value
-Adjustment, the lens windows, `today_delta`, partner grades, `aged`, or any board ranking. One
-identity per number. Votes live in their own table, their own file, behind their own two
-functions, in their own UI block. Nothing in the value spine may read them, now or later.
+Adjustment, the lens windows, `today_delta`, partner grades, `aged`, any board ranking, or the
+**calculator**. One identity per number. Votes live in their own table, their own file, behind
+their own two functions, in their own UI block. Nothing in the value spine may read them, now or
+later. A reserved later **vote-nudge** (prompt to opine on a priced deal) still writes only a
+vote — never a delta.
 
 ---
 

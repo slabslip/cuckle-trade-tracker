@@ -2,7 +2,7 @@
 
 **Role:** The single **want** source for this tracker. Spine, who “you” are, clocks, in/out, build order, CUT/PARKED.
 
-**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
+**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Titles/emblems → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
 
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
@@ -23,7 +23,9 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. Show **your** after-action score first (Home). League tape is the water cooler (League).
+4. **Home** is the daily paper (league deal + news; signed-in **Your 3** actions only — no bag
+   hero). **Teams** is first-person after a seat. Price a hypothetical on **`?view=calc`**. League
+   tape stays the water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
 
 That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle.
@@ -51,11 +53,15 @@ at **0**. That rule is the whole retirement test: a cheap rostered QB2 is not re
 expensive stale row with no team and no KTC line is. The explicit `RETIRED_SLEEPER_IDS` set still
 wins outright.
 
-`even` is what the pipeline's own aggregates are built on. **No reachable screen renders it** —
-`sideOf()` reads `windows[lens]`, which every trade has, so the `even` fallback never fires. That
-is a live gap, not a design: see `DASHBOARD_AUDIT.md` §8c / D5, which measures the difference at a
-mean of 975 across 582 sides and asks whether the blend should get a named clock of its own.
-Until that is answered, **do not describe "Since trade" to a user as a today price.**
+`even` is what the pipeline's own aggregates are built on. Trade rows still read `windows[lens]`,
+so `sideOf()`’s `even` fallback never fires there. **The calculator is the first reachable screen
+that renders `even`** (today book + VA). That closes the “no screen draws it” gap for a
+hypothetical; it does **not** add a sixth Score-as clock. See `DASHBOARD_AUDIT.md` §8c / D5 for
+the measured window-vs-blend gap. Until that is answered, **do not describe "Since trade" to a
+user as a today price.**
+
+**Reserved, not this pass:** league residual after a priced even deal, and a later vote-nudge
+that may prompt an opinion on that deal. Votes still never enter the book.
 
 Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the needle. One-ways and FAAB-only never enter the meter.
 
@@ -108,6 +114,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Auto-publish / scheduled rebuild for every newly joined league (manual/Action sync first).
 - PWA install prompt + web push.
 - Native App Store / Play wrappers.
+- League residual on the calc book; accept-odds / suggested counter; public/private marketplace.
+- Equipped title/emblem painted on names (header, news, trade cards, ledger, smack).
+- League Oracle, waiver hot sheet, lineup-vs-optimal, playoff-odds engine, push “3 actions today”.
 
 ---
 
@@ -115,7 +124,11 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 
 `node build.mjs` is the whole rebuild and it is the only rebuild:
 `sleeper-sync` → `draft-resolve` → `value-snapshot` → `revalue` → `title-path` →
-`apply-value-adjust` → `generate-page`.
+`apply-value-adjust` → `build-cuffs` → `build-calculator` → `build-cosmetics` →
+`generate-page`.
+
+Home digest + calc + barracks archive: [`plans/home_digest.md`](plans/home_digest.md).
+Titles/emblems law: [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
 
 `apply-value-adjust.mjs` is not optional. It owns the today blend, the Value Adjustment, the trade
 boards and `marks.json`, so a build without it ships the flatten-only book. `title-path.mjs` writes

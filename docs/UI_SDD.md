@@ -6,23 +6,27 @@ that file only. No chart library, no npm, no new tokens, no SlabSlip chrome.
 **This file describes what ships.** If it and the generator disagree, the generator wins and this
 file is wrong — fix it in the same pass. What we *want* → [`PRODUCT.md`](./PRODUCT.md). What the
 scripts emit → [`ARCHITECTURE.md`](./ARCHITECTURE.md). Pricing → [`VALUE_SDD.md`](./VALUE_SDD.md).
-Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
+Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 
 ---
 
 ## 1. Two rooms
 
-**League home** is what you get with no seat picked: the gold alert row, one **box of four chips**,
-and the News and Alerts feed. It is the water cooler. The `Score as` clock is not on it, because it
-is not on any screen — it is in the brand header, top right, on every screen it applies to (§2a).
+**Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
+the digest — signed-in **Your 3** (actions only), one Recent Trade card, **Price a deal**, one
+news story in-flow, and the News Feed pull-up. It is the water cooler. The `Score as` clock is
+not on it; the clock lives in the brand header on screens it applies to (§2a).
 
-**Team home** is what you get after picking a name in league home's **Teams** chip. **You are that
-seat.** Six style
-tiles, an optional league chart, your best and worst deal, your two edge partners, your best and
-worst rookie pick. Every number is first-person for that `user_id`.
+**Your 3** may name a wager, a vote, or roster-tagged news. That is an *action*, not a personal
+bag number. Lineup recaps, waivers, and bag totals stay off Home.
 
-Do not merge them. League home must not grow a personal number, and team home must not become a
-league recap.
+**Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
+Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
+best and worst rookie pick. Every number is first-person for that `user_id`.
+
+Do not merge them. Home must not grow a personal number, and team home must not become a league
+recap.
 
 ---
 
@@ -152,48 +156,54 @@ an open panel paints over the chip box it drops across — verified by hit-testi
 not by reading the sheet. Opening it closes every other popup and opening any of them closes it, so
 two menus can never be open over each other.
 
-All five are flatten-only. **The 40/60 KTC blend is not on this menu and is not on any screen** —
-it lives in each trade's `even` bag, which `sideOf()` never reaches because every trade has a
-`windows.all`. Whether it earns a sixth entry here is an open user decision
+All five are flatten-only. **The 40/60 KTC blend is not on this menu.** Trade rows still read
+`windows[lens]`. The calculator (`?view=calc`) is the first screen that **renders** the today /
+`even` blend. Whether the blend also earns a sixth Score-as entry is an open user decision
 (`DASHBOARD_AUDIT.md` §8c).
 
-URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>`.
-Boot reads every one of them; an unknown value falls back to league home rather than throwing.
-`history.replaceState` fires only when the URL string actually changes.
+URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>&tab=<homeTab>`.
+`tab` is `teams` / `ledger` / `history` when those top tabs are open; omitted on Home.
+Stored `homeTab=league` is an alias for Home. Boot reads every param; an unknown value falls back
+to Home rather than throwing. `history.replaceState` fires only when the URL string actually changes.
+
+### 2b. Top tabs
+
+Four chips, one row, no wrap: **Home | Teams | Ledger | History**. First tab label is **Home**.
+`homeTab` stores `home`. Ledger may badge. No fifth tab. Calculator and Titles and Emblems are
+sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 
 ---
 
-## 3. League home
+## 3. Home
 
-**Gold alert row** — two equal cards, stacked under 520px.
+**Your 3** — omit if signed out or empty. At most three action rows. Tap → Ledger, the deal vote,
+or the News Feed.
 
-- **Recent Trade** · the newest date on the tape. Named for recency, not for a clock, so there is
-  no "today" that can disagree with `league.today` and no empty state to caption. Each deal on
-  that date shows both seats and both bag totals on the selected clock. Tapping one expands the
-  full tape row plus the vote block.
-- **Champions Path** · the most recent title, its record, and how the title game went — who they
-  beat, the final score, and their top scorer that week. A season with no usable final falls back
-  to `· bracket` or `· points race`. Links to the Champions Path screen.
+**Recent Trade** · the newest date on the tape. Named for recency, not for a clock. Existing H2H
+gold card + “Who won this trade?”. Do not restyle into a new card system.
 
-**The chip box** — one card holding **four cells of equal size**: 2×2 below 560px, four across
-above it. Two lead somewhere and two are slots nobody has decided on yet.
+**Price a deal** · under the deal. Opens `?view=calc`.
 
-Equal is a grid property here, not something to eyeball. The columns are `repeat(n, minmax(0, 1fr))`
-— `minmax(0, …)` because a track's automatic minimum is `min-content`, so a plain `1fr` would let
-`League Data Sets` widen the row instead of wrapping inside its cell — and `grid-auto-rows: 1fr`
-is what makes the phone layout's two rows equal to each other rather than each sized to its own
-tallest chip. Measured at 320 / 375 / 390 / 1280 the four cells are 127×56, 154.5×56, 162×56 and
-209.5×56, identical within each width. The floor is 56px, not 44px, because the longest label has
-to hold two lines in a 127px cell at 320px.
+**One news story** in-flow (seat-tagged feed). The News Feed pull-up remains for the rest.
 
-Both menus are emitted by the box rather than by their triggers, so both are absolutely positioned
-against one ancestor: they drop the full width of the card instead of the width of the cell they
-were opened from, and there is a single overflow chain to keep open. A clip anywhere up that chain
-is what made the seat picker unusable twice, and it is asserted at generate time.
+Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.
 
-**Teams** — the only door into a seat, since the header's picker was removed. See §2.
+### 3b. Calculator
 
-**League Data Sets** — one chip, one list on screen. Five sets: Most lopsided trades · Most
+`?view=calc`. Two seats. Rostered players and still-held picks only. Price book is today / `even`
+(flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do not appear on a
+hypothetical and do not change the number.
+
+### 3c. Titles and Emblems
+
+Profile barracks (`?view=cosmetics`). Shared catalog of 25. Equip one title and one emblem.
+Locked shows the requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics
+paint across the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+
+**History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door
+into a seat (header picker stays gone — §2).
+
+**League Data Sets** (History) — one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. It replaced five collapsible packs
 stacked down the screen, any number of which could be open at once. The trigger's label is the
 constant `League Data Sets`, never the selection — the same convention the seat picker settled on —

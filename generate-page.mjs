@@ -5556,12 +5556,19 @@ const html = `<!DOCTYPE html>
       });
     }
 
+    function ledgerIsLiveSlip(b) {
+      if (!b) return false;
+      const s = b.status;
+      return s !== "declined" && s !== "canceled" && s !== "expired";
+    }
+
     /** Own Ledger tab: only slips where the signed-in seat is a party. */
     function ledgerFiltered() {
       const seat = authSeatId();
       const all = ledgerExpireLocal(ledgerBets || []);
       if (!seat) return [];
       return all.filter((b) => {
+        if (!ledgerIsLiveSlip(b)) return false;
         if (b.status === "needs_review") return String(b.proposer) === String(seat) || String(b.side_a) === String(seat);
         return String(b.side_a) === String(seat) || String(b.side_b) === String(seat);
       });
@@ -5576,6 +5583,7 @@ const html = `<!DOCTYPE html>
       const seat = String(seatId || "");
       if (!seat) return [];
       return ledgerExpireLocal(ledgerBets || []).filter((b) => {
+        if (!ledgerIsLiveSlip(b)) return false;
         if (b.status === "needs_review") return false;
         if (!ledgerIsPublic(b)) return false;
         return String(b.side_a) === seat || String(b.side_b) === seat;
@@ -5813,7 +5821,7 @@ const html = `<!DOCTYPE html>
       let btns = "";
       if (seat && !readOnly && ledgerBusyId !== b.id && (isParty || isProposer)) {
         if (b.status === "needs_review" && isProposer) {
-          btns += '<button type="button" class="chip" data-ledger-cancel="' + esc(b.id) + '">Cancel</button>';
+          btns += '<button type="button" class="chip" data-ledger-cancel="' + esc(b.id) + '">Trash</button>';
         }
         if (b.status === "proposed") {
           if (String(ledgerCompleteId) !== String(b.id) && ledgerNeedsDetails(b)) {
@@ -5823,15 +5831,13 @@ const html = `<!DOCTYPE html>
           if (isParty && !locked && String(ledgerCounterId) !== String(b.id)) {
             if (Number(b.amount_cents)) {
               btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Accept</button>'
-                + '<button type="button" class="chip" data-ledger-counter="' + esc(b.id) + '">Counter</button>'
-                + '<button type="button" class="chip" data-ledger-decline="' + esc(b.id) + '">No</button>';
+                + '<button type="button" class="chip" data-ledger-counter="' + esc(b.id) + '">Counter</button>';
             } else {
-              btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Accept</button>'
-                + '<button type="button" class="chip" data-ledger-decline="' + esc(b.id) + '">No</button>';
+              btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Accept</button>';
             }
           }
-          if (isProposer) {
-            btns += '<button type="button" class="chip" data-ledger-cancel="' + esc(b.id) + '">Cancel</button>';
+          if ((isParty || isProposer) && String(ledgerCounterId) !== String(b.id)) {
+            btns += '<button type="button" class="chip" data-ledger-cancel="' + esc(b.id) + '">Trash</button>';
           }
         }
         if (b.status === "open" && ledgerClockPassed(b) && isParty && !ledgerIsDisputed(b)) {
@@ -6021,7 +6027,7 @@ const html = `<!DOCTYPE html>
         + '<label>Clock<input name="clock" type="date" required value="' + esc(clock) + '"></label>'
         + '<div class="lc-complete-actions">'
         + '<button type="submit" class="chip" data-ledger-send-lab>' + esc(sendLab) + "</button>"
-        + '<button type="button" class="chip" ' + cancelAttr + '="1">Cancel</button>'
+        + '<button type="button" class="chip" ' + cancelAttr + '="1">Trash</button>'
         + "</div></form>";
     }
 
@@ -6114,7 +6120,7 @@ const html = `<!DOCTYPE html>
       }
       const addOpen = ledgerWagerOpen ? ledgerWagerFormHtml("new") : "";
       return '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
-        + '<p class="caption">New wager with a teammate. You are house. They Accept, Counter, or No. After the clock, both pick a winner. Settle cash however you want. This tab is just the record.</p>'
+        + '<p class="caption">New wager with a teammate. You are house. They Accept, Counter, or Trash. After the clock, both pick a winner. Settle cash however you want. This tab is just the record. Trashed and expired offers leave this list.</p>'
         + toast
         + ledgerSummaryHtml(list)
         + '<div class="ledger-filters" role="group" aria-label="Ledger tools">'
@@ -6191,8 +6197,8 @@ const html = `<!DOCTYPE html>
             return next;
           });
           ledgerToast = eventKind === "accepted" ? "Accepted."
-            : eventKind === "declined" ? "No."
-            : eventKind === "canceled" ? "Canceled."
+            : eventKind === "declined" ? "Trashed."
+            : eventKind === "canceled" ? "Trashed."
             : eventKind === "settled" ? "Settled. The W/L tab updated."
             : eventKind === "sent" ? "Sent. Waiting on them."
             : eventKind === "countered" ? "Sent back. Waiting on them."
@@ -6232,8 +6238,8 @@ const html = `<!DOCTYPE html>
           }).catch(() => null);
         }
         ledgerToast = eventKind === "accepted" ? "Accepted."
-          : eventKind === "declined" ? "No."
-          : eventKind === "canceled" ? "Canceled."
+          : eventKind === "declined" ? "Trashed."
+          : eventKind === "canceled" ? "Trashed."
           : eventKind === "settled" ? "Settled. The W/L tab updated."
           : eventKind === "sent" ? "Sent. Waiting on them."
           : eventKind === "countered" ? "Sent back. Waiting on them."
@@ -15910,6 +15916,8 @@ if (!inline.includes("function renderLedger(") || !inline.includes('homeTab === 
   || !inline.includes("function ledgerOddsPreview(")
   || !inline.includes("function ledgerClaim(")
   || !inline.includes("function ledgerVote(")
+  || !inline.includes("function ledgerIsLiveSlip(")
+  || !inline.includes(">Trash</button>")
   || !inline.includes("New wager")
   || !inline.includes('data-ledger-counter="')
   || !inline.includes('data-ledger-claim="')

@@ -25,10 +25,11 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
    house stake, a −500…0…+500 odds meter, description, and a clock, then **Send**.
    House = the first sender (`proposer` / `side_a`). They stay house when the other
    side counters. Shortcut “save the group text” is a later capture tool, not this tab.
-2. **Them Accept / Counter / No.** Accept locks their side → both locks promote to
-   `open`. No → `declined`. Counter revises stake / meter / description / clock and
-   Sends back (`offer_rev` bumps; house lock clears). Database events stay
-   `accepted` / `declined` / `countered`.
+2. **Them Accept / Counter / Trash.** Accept locks their side → both locks promote to
+   `open`. Either party may **Trash** a proposed slip (`canceled`) — it leaves the
+   feed. Counter revises stake / meter / description / clock and Sends back
+   (`offer_rev` bumps; house lock clears). Database events stay
+   `accepted` / `canceled` / `countered`. An unsaved compose is never stored.
 3. **Identity is Sleeper `user_id`.** Display names change; seats do not.
 4. **Opinion only.** Ledger never feeds the trade meter, VA, lenses, or rankings.
 5. **Tip Slip screenshot** is a product reference for information architecture, not a
@@ -52,7 +53,7 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 11. **Ledger badge.** Count of slips **sent to you** on the current version
     (amount > 0, your lock is false). Copy: “sent to you, you have not accepted
     this version.” Opening the tab does not clear it. Accept / No / they Cancel
-    does. No `localStorage` seen-store.
+    does. Trash / expire also drops it from the list. No `localStorage` seen-store.
 12. **After the clock.** Settle actions stay hidden until `deadline_at` has passed.
     Each party picks I won / They won / Push (`side_a_claim` / `side_b_claim`).
     Matching claims → `winner` + `settled` and the fun W/L tab updates. Mismatch
@@ -65,8 +66,8 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 ```
 proposed → proposed      (Counter: offer_rev++, sender locked, other unlocked)
 proposed → open          (both side_*_lock true)
-proposed → declined      (counterparty No)
-proposed → canceled      (proposer Cancel)
+proposed → canceled      (either party Trash)
+proposed → declined      (legacy No)
 proposed → expired       (deadline_at passed while still proposed)
 open → settled           (matching claims, or league-vote majority)
 open → open (disputed)   (both claims present and different; league votes)
@@ -156,9 +157,10 @@ Fast path: Copy the message → Home Screen **Chuckle Ledger** → two team taps
 - Cards: title, house vs Them, stake, house line, description, status chip,
   Public/Private toggle, clock, actions
 - Actions by role:
-  - Unlocked party on `proposed`: **Accept** / **Counter** / **No**
+  - Unlocked party on `proposed`: **Accept** / **Counter**
+  - Either party on `proposed` or an unsaved compose: **Trash** (never sent = not stored; sent = `canceled` and hidden)
   - Leftover $0 / Shortcut cards: **Complete** still available
-  - Proposer on `proposed`: Cancel
+  - `declined` / `canceled` / `expired` stay in the table but leave the feed
   - Either party on `open` **after the clock**: I won / They won / Push (claims)
   - Mismatched claims: every claimed seat votes; majority sets the W/L tab
   - Either party: toggle `visibility` public ↔ private

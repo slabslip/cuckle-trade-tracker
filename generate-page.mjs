@@ -1293,7 +1293,7 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
-    /* League-home top tabs — League | Teams | Ledger | History (in-place toggle). */
+    /* League-home top tabs — Home | Teams | Ledger | History (in-place toggle). */
     :root { --lh-nav-h: 44px; --lh-gold: #e0b44c; }
     .lh-actions {
       position: relative; z-index: 5;
@@ -1364,6 +1364,125 @@ const html = `<!DOCTYPE html>
       font-variant-numeric: tabular-nums; vertical-align: 1px;
     }
     .lh-section { margin: 0 0 18px; }
+    .your3 { margin: 0 0 16px; }
+    .your3-h {
+      margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    button.your3-row {
+      appearance: none; font: inherit; color: var(--text);
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px 14px; margin: 0 0 8px; min-height: 44px;
+      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
+    }
+    button.your3-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.your3-row:last-child { margin-bottom: 0; }
+    .home-news { margin: 0 0 16px; }
+    .home-news .news-pullup-card { margin: 0; }
+    button.lh-calc-door {
+      appearance: none; font: inherit; font-weight: 650; color: #e0b44c;
+      display: block; width: 100%; text-align: center; cursor: pointer;
+      background: transparent; border: 1px solid rgba(224, 180, 76, 0.5);
+      border-radius: 12px; padding: 12px 14px; margin: 10px 0 0; min-height: 44px;
+    }
+    button.lh-calc-door:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
+    .calc-stack { display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px; }
+    .calc-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-width: 0; overflow: hidden; }
+    .calc-block-h {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; background: #1a1a1e; border-bottom: 1px solid var(--line);
+    }
+    .calc-block-h span { font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c); }
+    .calc-block-h select {
+      flex: 1; min-width: 0; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px;
+    }
+    .calc-search { position: relative; padding: 10px 12px 8px; }
+    .calc-search input {
+      width: 100%; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+      padding: 0 40px 0 12px;
+    }
+    .calc-search-ico {
+      position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+      color: var(--dim); pointer-events: none; font-size: 0.95rem;
+    }
+    .calc-hits { padding: 0 12px 8px; }
+    button.calc-hit {
+      appearance: none; font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px; width: 100%;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
+    }
+    button.calc-hit:last-child { margin-bottom: 0; }
+    .calc-hit-name { font-weight: 650; min-width: 0; }
+    .calc-hit-meta { display: block; font-size: 0.72rem; color: var(--dim); font-weight: 500; }
+    .calc-hit-val { font-variant-numeric: tabular-nums; color: var(--lh-gold, #e0b44c); font-weight: 700; flex: 0 0 auto; }
+    .calc-asset {
+      display: flex; align-items: center; gap: 8px; min-width: 0;
+      padding: 8px 8px 8px 12px; border-top: 1px solid var(--line);
+    }
+    .calc-asset-main { flex: 1; min-width: 0; }
+    .calc-asset-name { font-weight: 650; color: var(--text); }
+    .calc-asset-meta { display: block; font-size: 0.72rem; color: var(--dim); }
+    .calc-asset-val { font-variant-numeric: tabular-nums; font-weight: 750; color: var(--lh-gold, #e0b44c); flex: 0 0 auto; }
+    .calc-asset button {
+      appearance: none; font: inherit; color: var(--dim); background: none; border: 0;
+      cursor: pointer; min-height: 44px; min-width: 44px; flex: 0 0 auto;
+    }
+    .calc-foot {
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+      padding: 10px 12px 12px; border-top: 1px solid var(--line);
+    }
+    .calc-pieces { font-size: 0.75rem; color: var(--muted); }
+    .calc-tot { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 1.25rem; color: var(--text); }
+    .calc-compare { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+    .calc-compare-labs {
+      display: flex; justify-content: space-between; gap: 10px; margin: 0 0 8px;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .calc-compare-labs > :last-child { text-align: right; }
+    .calc-compare-labs b { display: block; font-size: 0.95rem; font-variant-numeric: tabular-nums; color: var(--text); }
+    .calc-bar {
+      position: relative; height: 14px; border-radius: 999px; background: #2a2a30;
+      overflow: hidden; margin: 0 0 10px;
+    }
+    .calc-bar-a { height: 100%; background: var(--lh-gold, #e0b44c); }
+    .calc-bar-mid {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px;
+      background: repeating-linear-gradient(-45deg, var(--bg), var(--bg) 2px, var(--line) 2px, var(--line) 4px);
+    }
+    .calc-favor { font-weight: 750; margin: 0 0 4px; }
+    .calc-favor.is-up { color: var(--green); }
+    .calc-favor.is-down { color: var(--red); }
+    .calc-even { margin: 0; }
+    .calc-even-h {
+      font-size: 0.75rem; font-weight: 650; letter-spacing: 0.03em; text-transform: uppercase;
+      color: var(--dim); margin: 0 0 8px;
+    }
+    button.calc-even-add {
+      appearance: none; font: inherit; color: var(--text); background: var(--card);
+      border: 1px solid var(--line); border-radius: 10px; width: 100%;
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
+    }
+    button.calc-even-add .calc-hit-val { margin-left: auto; }
+    button.calc-even-plus {
+      appearance: none; font: inherit; font-weight: 750; color: var(--bg);
+      background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
+      min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
+    }
+    .cos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
+    button.cos-card {
+      appearance: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; min-height: 88px;
+    }
+    button.cos-card.is-locked { color: var(--dim); opacity: 0.55; }
+    button.cos-card.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35); }
+    .cos-name { font-weight: 700; display: block; margin: 0 0 4px; }
+    .cos-how { font-size: 0.75rem; color: var(--dim); }
     /* Bet Ledger */
     .ledger-sum {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3011,7 +3130,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260905184929";
+    const DATA_V = "homeDigest20260905185500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3045,8 +3164,18 @@ const html = `<!DOCTYPE html>
       ["all", "as of today", "Weekly average value from accept through today."],
     ];
     let view = "home";
-    // League-home top tabs: league (Latest trade) | teams | ledger | history.
-    let homeTab = "league";
+    // League-home top tabs: home (digest) | teams | ledger | history.
+    let homeTab = "home";
+    let calcBook = null;
+    let calcSeatA = "";
+    let calcSeatB = "";
+    let calcSide = "a";
+    let calcLegsA = [];
+    let calcLegsB = [];
+    let calcFilterA = "";
+    let calcFilterB = "";
+    let cosmeticsBook = null;
+    let cosmeticsEquip = { title: null, emblem: null };
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
     let ledgerBets = null;
     let ledgerLoadState = "idle";
@@ -3204,10 +3333,12 @@ const html = `<!DOCTYPE html>
         homeTab = startTab;
       } else {
         // Soft reload / PWA pull used to wipe the URL; session keeps the open league-home tab.
+        // Stored "league" is the retired first-tab name — treat as Home.
         try {
           const saved = String(sessionStorage.getItem("cuckle.homeTab") || "").toLowerCase();
           if (saved === "ledger" || saved === "teams" || saved === "history") homeTab = saved;
-        } catch (_) {}
+          else homeTab = "home";
+        } catch (_) { homeTab = "home"; }
       }
     }
 
@@ -4342,12 +4473,12 @@ const html = `<!DOCTYPE html>
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics"];
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -4356,6 +4487,8 @@ const html = `<!DOCTYPE html>
         getLeagueJson("votes.json").catch(() => null),
         getLeagueJson("picks.json").catch(() => null),
         getLeagueJson("cuffs.json").catch(() => null),
+        getLeagueJson("calculator.json").catch(() => null),
+        getLeagueJson("cosmetics.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -4375,6 +4508,13 @@ const html = `<!DOCTYPE html>
       try {
         voteBook = votesRaw && votesRaw.v === 1 && votesRaw.votes ? votesRaw : null;
       } catch (err) { voteBook = null; }
+      try {
+        calcBook = calcRaw && calcRaw.v === 1 ? calcRaw : null;
+      } catch (err) { calcBook = null; }
+      try {
+        cosmeticsBook = cosRaw && cosRaw.v === 1 && Array.isArray(cosRaw.catalog) ? cosRaw : null;
+      } catch (err) { cosmeticsBook = null; }
+      cosmeticsLoadEquip();
       try {
         if (picksRaw) applyPicksBook(picksRaw);
         else picks = picks || null;
@@ -4535,7 +4675,7 @@ const html = `<!DOCTYPE html>
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
-      homeTab = "league";
+      homeTab = "home";
       ledgerBets = null;
       ledgerLoadState = "idle";
       ledgerFilter = "mine";
@@ -4561,7 +4701,7 @@ const html = `<!DOCTYPE html>
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
       // Persist league-home tab so a document reload (browser PTR / SW) does not dump to League.
-      if (!me && view === "home" && homeTab && homeTab !== "league") q.set("tab", homeTab);
+      if (!me && view === "home" && homeTab && homeTab !== "home" && homeTabCanon(homeTab) !== "home") q.set("tab", homeTab);
       // Omit lens when it matches the age default so cold links re-age on load.
       if (lens && !lensIsAgeDefault()) q.set("lens", lens);
       // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
@@ -4572,7 +4712,7 @@ const html = `<!DOCTYPE html>
     function rememberHomeTab() {
       try {
         if (appScreen === "dash" && !me && view === "home") {
-          sessionStorage.setItem("cuckle.homeTab", homeTab || "league");
+          sessionStorage.setItem("cuckle.homeTab", homeTabCanon(homeTab));
         }
       } catch (_) {}
     }
@@ -4645,7 +4785,7 @@ const html = `<!DOCTYPE html>
         tradeSeat: q.get("seat") || null,
         // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
-        homeTab: (tab === "ledger" || tab === "teams" || tab === "history") ? tab : "league",
+        homeTab: (tab === "ledger" || tab === "teams" || tab === "history") ? tab : "home",
         d: 0,
       };
     }
@@ -4665,10 +4805,10 @@ const html = `<!DOCTYPE html>
         tradeSeat = want.tradeSeat || null;
         {
           const tab = String(want.homeTab || "").toLowerCase();
-          if (tab === "ledger" || tab === "teams" || tab === "history" || tab === "league") {
+          if (tab === "ledger" || tab === "teams" || tab === "history") {
             homeTab = tab;
-          } else if (!want.me && (view === "home" || view === "teams" || view === "ledger" || view === "datasets")) {
-            homeTab = "league";
+          } else {
+            homeTab = "home";
           }
         }
         if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
@@ -5204,8 +5344,17 @@ const html = `<!DOCTYPE html>
     }
 
     /** One top tab cell for in-place league-home toggling. */
+    function homeTabCanon(tab) {
+      const t = String(tab || "").toLowerCase();
+      if (t === "teams" || t === "ledger" || t === "history") return t;
+      return "home";
+    }
+    function isHomeDigest() {
+      return homeTabCanon(homeTab) === "home";
+    }
+
     function homeTabAction(tab, lab, path) {
-      const on = homeTab === tab;
+      const on = homeTabCanon(homeTab) === homeTabCanon(tab);
       if (tab === "ledger") ledgerEnsureLoaded();
       const n = tab === "ledger" ? ledgerBadgeCount() : 0;
       const badge = n ? '<span class="lh-badge">' + n + "</span>" : "";
@@ -5296,13 +5445,13 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Top tabs: League | Teams | Ledger | History — above Latest trade.
-     * League is the league-home body (Latest trade). Other tabs swap in place.
+     * Top tabs: Home | Teams | Ledger | History — above the daily digest.
+     * Home is the league-home body (Your 3 + deal + news). Other tabs swap in place.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
         + '<div class="lh-action-row">'
-        + homeTabAction("league", "League",
+        + homeTabAction("home", "Home",
           "M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z")
         + homeTabAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
@@ -5315,16 +5464,18 @@ const html = `<!DOCTYPE html>
 
     /**
      * Toggle a league-home top tab in place.
-     * League always lands on Latest trade (no toggle-off to empty).
-     * Other tabs: same tab again returns to League. Pass { force: true } to open without toggle-off.
+     * Home always lands on the digest (no toggle-off to empty).
+     * Other tabs: same tab again returns to Home. Pass { force: true } to open without toggle-off.
+     * Stored/clicked "league" is an alias for Home.
      */
     function setHomeTab(tab, opts) {
       const force = !!(opts && opts.force);
-      let next = "league";
-      if (tab === "league") next = "league";
-      else if (tab) next = (!force && homeTab === tab) ? "league" : tab;
+      const want = homeTabCanon(tab);
+      let next = "home";
+      if (want === "home") next = "home";
+      else if (want) next = (!force && homeTabCanon(homeTab) === want) ? "home" : want;
       if (next !== "history") dataSet = null;
-      homeTab = next || "league";
+      homeTab = next || "home";
       me = null;
       data = null;
       view = "home";
@@ -8903,7 +9054,7 @@ const html = `<!DOCTYPE html>
       // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
       // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
       // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
-      // Top tabs (League | Teams | Ledger | History) swap body in place.
+      // Top tabs (Home | Teams | Ledger | History) swap body in place.
       let hero = "";
       let chips = "";
       let progress = "";
@@ -8919,7 +9070,7 @@ const html = `<!DOCTYPE html>
       } else if (homeTab === "history") {
         try { tabBody = renderDataSetsPage(); } catch (err) { console.error(err); tabBody = ""; }
       } else {
-        // league (default) — Latest trade
+        // home (default) — digest
         try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       }
       try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
@@ -8982,6 +9133,7 @@ const html = `<!DOCTYPE html>
           ? '<p class="caption">Your seat <b>' + seatLabel(team) + "</b></p>"
           : '<p class="caption">No seat claimed in this league yet.</p>')
         + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-view="cosmetics">Titles and Emblems</button>'
         + '<button type="button" class="chip" data-app-settings="1">Open Settings</button>'
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>";
@@ -10033,8 +10185,8 @@ const html = `<!DOCTYPE html>
         return;
       }
       // Top tabs: Back returns to Latest trade (same shell) instead of leaving the league.
-      if (appScreen === "dash" && !me && view === "home" && homeTab && homeTab !== "league") {
-        setHomeTab("league", { force: true });
+      if (appScreen === "dash" && !me && view === "home" && homeTab && homeTabCanon(homeTab) !== "home") {
+        setHomeTab("home", { force: true });
         return;
       }
       if (isLeagueHomeSurface()) {
@@ -11427,7 +11579,13 @@ const html = `<!DOCTYPE html>
       // Deep-link ?me= is still honored inside loadMembers(); membership seat is not auto-picked.
       me = null;
       data = null;
-      view = "home";
+      // Keep a deep-linked sub-screen (calc, cosmetics, account). Drawer opens omit ?view= → Home.
+      let wantView = "home";
+      try {
+        const v = new URLSearchParams(location.search).get("view");
+        if (v && VIEWS.indexOf(v) >= 0) wantView = v;
+      } catch (err) { /* ignore */ }
+      view = wantView;
       openId = null;
       tradeSeat = null;
       partnerName = null;
@@ -12993,9 +13151,10 @@ const html = `<!DOCTYPE html>
           ? "The feed could not be loaded."
           : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
       }
-      const latestBit = items.length
-        ? newsHeroLine(items[0])
-        : { source: "News", line: emptyLine, lineHtml: "", categoryTag: "", who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
+      const peekItem = items.length > 1 ? items[1] : (items.length && view !== "home" ? items[0] : null);
+      const latestBit = peekItem
+        ? newsHeroLine(peekItem)
+        : { source: "News", line: emptyLine || (items.length ? "Open for the rest of the feed." : emptyLine), lineHtml: "", categoryTag: "", who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
       const rows = items.length
         ? items.map((it) => {
             const bit = newsHeroLine(it);
@@ -13867,6 +14026,317 @@ const html = `<!DOCTYPE html>
      * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
      * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
+
+    function cosmeticsLoadEquip() {
+      try {
+        const raw = localStorage.getItem("cuckle.cosmetics.equip.v1");
+        const found = raw ? JSON.parse(raw) : null;
+        if (found && typeof found === "object") {
+          cosmeticsEquip = {
+            title: found.title || null,
+            emblem: found.emblem || null,
+          };
+        }
+      } catch (err) { /* private mode */ }
+    }
+
+    function cosmeticsSaveEquip() {
+      try {
+        localStorage.setItem("cuckle.cosmetics.equip.v1", JSON.stringify(cosmeticsEquip));
+      } catch (err) { /* private mode */ }
+    }
+
+    function your3Html() {
+      if (!authSeatId() || !authSession) return "";
+      const seat = String(authSeatId());
+      const mySeatName = authSeatName() || "";
+      const rows = [];
+      const bets = ledgerExpireLocal ? ledgerExpireLocal(ledgerBets || []) : (ledgerBets || []);
+      const actionBet = (bets || []).find((b) => {
+        if (!b || !ledgerIsMine(b, seat)) return false;
+        if (b.status === "proposed" && Number(b.amount_cents)) {
+          const needA = String(b.side_a) === seat && !b.side_a_lock;
+          const needB = String(b.side_b) === seat && !b.side_b_lock;
+          if (needA || needB) return true;
+        }
+        if (typeof ledgerNeedsDetails === "function" && ledgerNeedsDetails(b) && ledgerIsMine(b, seat)) return true;
+        if (b.status === "open" && typeof ledgerClockPassed === "function" && ledgerClockPassed(b)) {
+          const claim = String(b.side_a) === seat ? b.side_a_claim : b.side_b_claim;
+          if (!claim) return true;
+        }
+        return false;
+      });
+      if (actionBet) {
+        const themId = String(actionBet.side_a) === seat ? actionBet.side_b : actionBet.side_a;
+        const them = (members || []).find((m) => String(m.user_id) === String(themId));
+        const dollars = actionBet.amount_cents ? ("$" + Math.round(Number(actionBet.amount_cents) / 100)) : "";
+        let lab = "Open your wager";
+        if (actionBet.status === "proposed") lab = "Accept " + ((them && them.name) || "a") + " wager";
+        else lab = "Pick a winner";
+        if (dollars) lab += " · " + dollars;
+        rows.push({ kind: "ledger", lab: lab });
+      }
+      const latest = latestTradeSide();
+      if (latest && latest.transaction_id && !readVotes(latest.transaction_id).choice) {
+        rows.push({
+          kind: "vote",
+          lab: "Vote: who won " + (latest.name || "this") + " vs " + (latest.other || "them"),
+          uid: latest.user_id,
+          tx: latest.transaction_id,
+        });
+      }
+      const items = typeof newsItemsLive === "function" ? newsItemsLive() : [];
+      const tagged = (items || []).find((it) => {
+        const names = (Array.isArray(it.managers) && it.managers.length)
+          ? it.managers : (it.manager ? [it.manager] : []);
+        return names.some((n) => n && (n === mySeatName || String(n) === seat));
+      });
+      if (tagged) {
+        rows.push({
+          kind: "news",
+          lab: tagged.league_line || tagged.headline || "News on your roster",
+        });
+      } else if (rows.length < 2) {
+        rows.push({ kind: "calc", lab: "Price a deal" });
+      }
+      if (!rows.length) return "";
+      return '<section class="your3" aria-label="Your 3">'
+        + '<div class="your3-h">Your 3</div>'
+        + rows.slice(0, 3).map((r) => {
+          const extra = r.kind === "vote"
+            ? ' data-board-open="' + esc(r.uid) + '" data-id="' + esc(r.tx) + '"'
+            : "";
+          return '<button type="button" class="your3-row" data-your3="' + esc(r.kind) + '"'
+            + extra + ">" + esc(r.lab) + "</button>";
+        }).join("")
+        + "</section>";
+    }
+
+    function homeNewsStoryHtml() {
+      const items = typeof newsItemsLive === "function" ? newsItemsLive() : [];
+      if (!items.length) return "";
+      const bit = newsHeroLine(items[0]);
+      return '<section class="home-news" aria-label="Latest news">'
+        + newsPullupItemHtml(bit) + "</section>";
+    }
+
+    function calcAssetById(id) {
+      const book = calcBook || { players: [], picks: [] };
+      return (book.players || []).concat(book.picks || []).find((a) => a.id === id) || null;
+    }
+
+    function calcFmt(n) {
+      if (n == null || Number.isNaN(n)) return "—";
+      return Math.round(n).toLocaleString();
+    }
+
+    function calcLegFromAsset(a) {
+      if (!a) return null;
+      return {
+        id: a.id,
+        kind: a.kind,
+        label: a.name,
+        asset_key: a.id,
+        value: a.value,
+        value_flat: a.value_flat,
+        became: a.kind === "player",
+        pos: a.pos || (a.kind === "pick" ? "PICK" : ""),
+        team: a.team || "",
+        age: a.age,
+      };
+    }
+
+    function calcMeta(a) {
+      if (!a) return "";
+      if (a.kind === "pick" || a.pos === "PICK") return a.label || a.name || "Pick";
+      const bits = [];
+      if (a.pos) bits.push(a.pos);
+      if (a.team) bits.push(a.team);
+      if (a.age != null && Number.isFinite(Number(a.age))) bits.push(Number(a.age).toFixed(1) + " y.o.");
+      return bits.join(" · ");
+    }
+
+    function calcPieces(legs) {
+      const counts = {};
+      (legs || []).forEach((l) => {
+        const key = l.pos || (l.kind === "pick" ? "PICK" : "—");
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const order = ["QB", "RB", "WR", "TE", "PICK"];
+      const keys = order.filter((k) => counts[k]).concat(Object.keys(counts).filter((k) => order.indexOf(k) < 0));
+      const parts = keys.map((k) => counts[k] + " " + k).join(" · ");
+      const n = (legs || []).length;
+      return n + " piece" + (n === 1 ? "" : "s") + (parts ? " · " + parts : "");
+    }
+
+    function calcRawSum(legs) {
+      return (legs || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+    }
+
+    function calcSideBag(legs, otherLegs) {
+      const mine = legs || [];
+      const theirs = otherLegs || [];
+      return applyVa({
+        legs: mine,
+        sent: theirs,
+        incomplete: mine.some((l) => l.value == null) || theirs.some((l) => l.value == null),
+      });
+    }
+
+    function calcSeatName(uid) {
+      const m = (members || []).find((x) => String(x.user_id) === String(uid));
+      return (m && m.name) || "Team";
+    }
+
+    function calcAssetsForSeat(uid, q) {
+      const book = calcBook || { players: [], picks: [] };
+      const needle = String(q || "").trim().toLowerCase();
+      const used = new Set((calcLegsA.concat(calcLegsB)).map((l) => l.id));
+      return (book.players || []).concat(book.picks || []).filter((a) => {
+        if (uid && String(a.owner_id) !== String(uid)) return false;
+        if (used.has(a.id)) return false;
+        if (needle && String(a.name || "").toLowerCase().indexOf(needle) < 0) return false;
+        return true;
+      });
+    }
+
+    function calcEvenHtml(need, shortSide) {
+      const uid = shortSide === "b" ? calcSeatB : calcSeatA;
+      if (!uid || need == null || need <= 0) return "";
+      const hits = calcAssetsForSeat(uid, "").filter((a) => a.value != null)
+        .slice()
+        .sort((x, y) => Math.abs(x.value - need) - Math.abs(y.value - need) || y.value - x.value)
+        .slice(0, 6);
+      if (!hits.length) return "";
+      return '<div class="calc-even">'
+        + '<div class="calc-even-h">Closest to even</div>'
+        + hits.map((a) =>
+          '<button type="button" class="calc-even-add" data-calc-add="' + esc(a.id) + '" data-calc-to="' + shortSide + '">'
+          + '<span class="calc-hit-name">' + esc(a.name)
+          + '<span class="calc-hit-meta">' + esc(calcMeta(a) || (a.kind === "pick" ? "Pick" : "Player")) + "</span></span>"
+          + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span>"
+          + '<span class="calc-even-plus" aria-hidden="true">+</span></button>'
+        ).join("")
+        + "</div>";
+    }
+
+    function calcCompareHtml() {
+      const a = calcSideBag(calcLegsA, calcLegsB);
+      const b = calcSideBag(calcLegsB, calcLegsA);
+      const rawA = calcRawSum(calcLegsA);
+      const rawB = calcRawSum(calcLegsB);
+      const d = displayDelta(rawA || null, rawB || null);
+      if (d == null || (!calcLegsA.length && !calcLegsB.length)) {
+        return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
+          + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
+      }
+      if (!calcLegsA.length || !calcLegsB.length) {
+        return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
+          + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
+      }
+      const tot = Math.abs(rawA) + Math.abs(rawB);
+      const pct = tot ? Math.max(4, Math.min(96, Math.round((rawA / tot) * 100))) : 50;
+      const nameA = calcSeatName(calcSeatA);
+      const nameB = calcSeatName(calcSeatB);
+      const even = Math.abs(d) < 25;
+      const favors = even ? "Even" : (d > 0 ? nameA : nameB);
+      const tone = even ? "" : (d > 0 ? " is-up" : " is-down");
+      const short = d > 0 ? "b" : "a";
+      const shortName = short === "b" ? nameB : nameA;
+      const need = Math.abs(d);
+      const va = (a.value_adjust || 0) + (b.value_adjust || 0);
+      return '<div class="calc-compare">'
+        + '<div class="calc-compare-labs"><div>' + esc(nameA) + "<b>" + calcFmt(rawA) + "</b></div>"
+        + "<div>" + esc(nameB) + "<b>" + calcFmt(rawB) + "</b></div></div>"
+        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " " + calcFmt(rawA) + " vs " + esc(nameB) + " " + calcFmt(rawB) + '">'
+        + '<div class="calc-bar-a" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
+        + '<div class="calc-favor' + tone + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
+        + (even ? "" : '<p class="caption">Add a piece worth ' + calcFmt(need) + " to " + esc(shortName) + ".</p>")
+        + (va ? '<p class="caption">Value Adjustment on the bags: ' + calcFmt(va) + "</p>" : "")
+        + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC. Votes do not move this number.</p>'
+        + (even ? "" : calcEvenHtml(need, short))
+        + "</div>";
+    }
+
+    function calcSeatSelect(side) {
+      const cur = side === "a" ? calcSeatA : calcSeatB;
+      const opts = (members || []).map((m) =>
+        '<option value="' + esc(m.user_id) + '"' + (String(cur) === String(m.user_id) ? " selected" : "") + ">"
+        + esc(m.name) + "</option>"
+      ).join("");
+      return '<select data-calc-seat="' + side + '" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
+        + '<option value="">Select team</option>' + opts + "</select>";
+    }
+
+    function calcSideHtml(side) {
+      const uid = side === "a" ? calcSeatA : calcSeatB;
+      const legs = side === "a" ? calcLegsA : calcLegsB;
+      const q = side === "a" ? calcFilterA : calcFilterB;
+      const hits = uid && String(q || "").trim()
+        ? calcAssetsForSeat(uid, q).slice(0, 8) : [];
+      const assets = legs.map((l) =>
+        '<div class="calc-asset">'
+        + '<div class="calc-asset-main"><span class="calc-asset-name">' + esc(l.label) + "</span>"
+        + '<span class="calc-asset-meta">' + esc(calcMeta(l)) + "</span></div>"
+        + '<span class="calc-asset-val">' + (l.value == null ? "—" : calcFmt(l.value)) + "</span>"
+        + '<button type="button" data-calc-drop="' + esc(l.id) + '" data-calc-from="' + side + '" aria-label="Remove">×</button></div>'
+      ).join("");
+      const hitRows = hits.map((a) =>
+        '<button type="button" class="calc-hit" data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '">'
+        + '<span class="calc-hit-name">' + esc(a.name)
+        + '<span class="calc-hit-meta">' + esc(calcMeta(a)) + "</span></span>"
+        + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></button>"
+      ).join("");
+      return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
+        + '<div class="calc-block-h"><span>' + (side === "a" ? "Team 1 gets" : "Team 2 gets") + "</span>"
+        + calcSeatSelect(side) + "</div>"
+        + '<div class="calc-search">'
+        + '<input type="search" value="' + esc(q) + '" data-calc-filter="' + side + '"'
+        + ' placeholder="Search for a player" ' + (uid ? "" : "disabled ") + "/>"
+        + '<span class="calc-search-ico" aria-hidden="true">⌕</span></div>'
+        + (hitRows ? '<div class="calc-hits">' + hitRows + "</div>" : "")
+        + assets
+        + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
+        + '<div class="calc-tot">' + (legs.length ? calcFmt(calcRawSum(legs)) : "0") + "</div></div>"
+        + "</section>";
+    }
+
+    function renderCalc() {
+      return backChip("Home")
+        + '<h2 class="screen-h" tabindex="-1">Price a deal</h2>'
+        + '<p class="caption">Search each roster. Today book (flatten + KTC) plus Value Adjustment.</p>'
+        + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
+    }
+
+    function cosmeticsUnlocked(id) {
+      const seat = authSeatId();
+      const map = cosmeticsBook && cosmeticsBook.unlocks || {};
+      const mine = seat && map[seat] ? map[seat] : {};
+      return mine[id] || null;
+    }
+
+    function renderCosmetics() {
+      const book = cosmeticsBook || { catalog: [] };
+      const titles = book.catalog.filter((c) => c.kind === "title");
+      const emblems = book.catalog.filter((c) => c.kind === "emblem");
+      const card = (c) => {
+        const got = cosmeticsUnlocked(c.id);
+        const on = cosmeticsEquip[c.kind] === c.id;
+        const locked = !got;
+        return '<button type="button" class="cos-card' + (locked ? " is-locked" : "") + (on ? " is-on" : "") + '"'
+          + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="' + esc(c.kind) + '">'
+          + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
+          + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
+      };
+      return backChip("Account")
+        + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
+        + '<p class="caption">Everyone chases the same 25. Equip one title and one emblem. Where they show is a later pass.</p>'
+        + "<h3>Titles</h3>"
+        + '<div class="cos-grid">' + titles.map(card).join("") + "</div>"
+        + "<h3>Emblems</h3>"
+        + '<div class="cos-grid">' + emblems.map(card).join("") + "</div>";
+    }
+
     function leagueInProgress() {
       ensureLatestTradeBags();
       const latest = latestTradeSide();
@@ -13908,8 +14378,11 @@ const html = `<!DOCTYPE html>
           + "New deals show up here first.</p>"
           + "</div>";
       }
-      if (!tradeBox) return "";
-      return '<section class="lh-section">' + tradeBox + "</section>";
+      if (!tradeBox && !authSeatId()) return your3Html() + homeNewsStoryHtml();
+      const door = '<button type="button" class="lh-calc-door" data-view="calc">Price a deal</button>';
+      return your3Html()
+        + (tradeBox ? '<section class="lh-section">' + tradeBox + door + "</section>" : "")
+        + homeNewsStoryHtml();
     }
 
 
@@ -14954,6 +15427,8 @@ const html = `<!DOCTYPE html>
         : view === "datasets" ? renderDataSetsPage()
         : view === "draftdata" ? renderDraftDataPage()
         : view === "cuffs" ? renderCuffsPage()
+        : view === "calc" ? renderCalc()
+        : view === "cosmetics" ? renderCosmetics()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
       // <body> and lose the keyboard's place. Re-find the same control by its data-* attrs.
@@ -15282,7 +15757,7 @@ const html = `<!DOCTYPE html>
         return true;
       }
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
-      if (view === "home" && homeTab && homeTab !== "league") { setHomeTab("league", { force: true }); return true; }
+      if (view === "home" && homeTab && homeTabCanon(homeTab) !== "home") { setHomeTab("home", { force: true }); return true; }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
       if (view === "datasets") { setHomeTab("history", { force: true }); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
@@ -15488,6 +15963,12 @@ const html = `<!DOCTYPE html>
           else if (view === "titles" && titleYear) openTitles();
           else if (view === "titles" || view === "draftdata" || view === "cuffs") {
             setHomeTab("history", { force: true });
+          } else if (view === "calc") {
+            view = "home";
+            setHomeTab("home", { force: true });
+          } else if (view === "cosmetics") {
+            view = "account";
+            render();
           } else clearLeague();
         });
         return;
@@ -16275,6 +16756,53 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const your3Btn = e.target.closest("[data-your3]");
+      if (your3Btn) {
+        const kind = your3Btn.getAttribute("data-your3");
+        if (kind === "ledger") { setHomeTab("ledger", { force: true }); return; }
+        if (kind === "calc") { view = "calc"; focusNext = ".screen-h"; render(); return; }
+        if (kind === "news") {
+          if (typeof setNewsPullupOpen === "function") setNewsPullupOpen(true);
+          return;
+        }
+        // vote uses data-board-open on the same button; fall through
+      }
+      const calcSeat = e.target.closest("[data-calc-seat]");
+      if (calcSeat && e.target.tagName === "SELECT") {
+        return;
+      }
+      const calcAdd = e.target.closest("[data-calc-add]");
+      if (calcAdd) {
+        const to = calcAdd.getAttribute("data-calc-to") || calcSide || "a";
+        const asset = calcLegFromAsset(calcAssetById(calcAdd.getAttribute("data-calc-add")));
+        if (asset) {
+          if (to === "b") { calcLegsB = calcLegsB.concat([asset]); calcFilterB = ""; }
+          else { calcLegsA = calcLegsA.concat([asset]); calcFilterA = ""; }
+          calcSide = to;
+        }
+        render();
+        return;
+      }
+      const calcDrop = e.target.closest("[data-calc-drop]");
+      if (calcDrop) {
+        const id = calcDrop.getAttribute("data-calc-drop");
+        const from = calcDrop.getAttribute("data-calc-from");
+        if (from === "b") calcLegsB = calcLegsB.filter((l) => l.id !== id);
+        else calcLegsA = calcLegsA.filter((l) => l.id !== id);
+        render();
+        return;
+      }
+      const cosBtn = e.target.closest("[data-cos-id]");
+      if (cosBtn) {
+        const id = cosBtn.getAttribute("data-cos-id");
+        const kind = cosBtn.getAttribute("data-cos-kind");
+        if (cosmeticsUnlocked(id)) {
+          cosmeticsEquip[kind] = cosmeticsEquip[kind] === id ? null : id;
+          cosmeticsSaveEquip();
+          render();
+        }
+        return;
+      }
       const viewBtn = e.target.closest("[data-view]");
       if (viewBtn) {
         if (viewBtn.tagName === "A") e.preventDefault();
@@ -16539,6 +17067,15 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const calcSeatSel = e.target.closest("[data-calc-seat]");
+      if (calcSeatSel) {
+        const side = calcSeatSel.getAttribute("data-calc-seat");
+        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcLegsB = []; calcFilterB = ""; }
+        else { calcSeatA = calcSeatSel.value || ""; calcLegsA = []; calcFilterA = ""; }
+        calcSide = side === "b" ? "b" : "a";
+        render();
+        return;
+      }
       if (e.target && e.target.id === "profileFile" && e.target.files && e.target.files[0]) {
         beginProfileCrop(e.target.files[0]);
         e.target.value = "";
@@ -16561,6 +17098,22 @@ const html = `<!DOCTYPE html>
         if (!profileCrop) return;
         profileCrop.zoom = Math.max(1, Math.min(3, Number(e.target.value) || 1));
         paintProfileCrop();
+        return;
+      }
+      const calcFilterBox = e.target.closest("[data-calc-filter]");
+      if (calcFilterBox) {
+        const side = calcFilterBox.getAttribute("data-calc-filter") || "a";
+        if (side === "b") calcFilterB = calcFilterBox.value || "";
+        else calcFilterA = calcFilterBox.value || "";
+        calcSide = side;
+        const start = calcFilterBox.selectionStart;
+        const end = calcFilterBox.selectionEnd;
+        render();
+        const back = document.querySelector('#app [data-calc-filter="' + side + '"]');
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
         return;
       }
       const cuffQBox = e.target.closest("[data-cuff-q]");
@@ -17952,10 +18505,10 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   if (fn.includes("lhSeatStatsAction(") || fn.includes('"My Trades"') || fn.includes("mystats")) {
     throw new Error("homeChips must not mount team stats — brand-end goTeamHome owns that door");
   }
-  if (!fn.includes('homeTabAction("league"') || !fn.includes('homeTabAction("teams"')
+  if (!fn.includes('homeTabAction("home"') || !fn.includes('homeTabAction("teams"')
     || !fn.includes("dataSetRow(") || !fn.includes('homeTabAction("ledger"')
     || fn.includes(">Champions<") || fn.includes('data-view="titles"')) {
-    throw new Error("homeChips must keep League, Teams, Ledger, and History");
+    throw new Error("homeChips must keep Home, Teams, Ledger, and History");
   }
   if (!fnSrc("dataSetRow").includes(">History<") || !fnSrc("dataSetRow").includes('data-home-tab="history"')) {
     throw new Error("History tab label must ship on dataSetRow");
@@ -18892,8 +19445,28 @@ if (/\bsettings-lab\b/.test(html) || /class="brand-lab"/.test(html)
   || /\bdata-settings-mark\b/.test(html) || /\bsettings-mark\b/.test(html)) {
   throw new Error("brand row must not keep Chuckle-mark settings/home labels — Home + team flair / gear");
 }
-if (!inline.includes('homeTabAction("league"') || !inline.includes('homeTab = "league"')) {
-  throw new Error("League tab must be the default league-home door");
+if (!inline.includes('homeTabAction("home"') || !inline.includes('homeTab = "home"')) {
+  throw new Error("Home tab must be the default league-home door");
+}
+if (!inline.includes("function homeTabCanon(")) {
+  throw new Error("homeTabCanon must exist");
+}
+if (!inline.includes("function your3Html(") || !inline.includes("function homeNewsStoryHtml(")
+  || !inline.includes("Price a deal") || !inline.includes("function renderCalc(")
+  || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
+  throw new Error("Home digest must ship Your 3, one news story, Price a deal, calc, and barracks");
+}
+if (!inline.includes("Team 1 gets") || !inline.includes("Search for a player")
+  || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {
+  throw new Error("calc must stack Team 1 / Team 2 with per-side search and a leftover bar");
+}
+if (!inline.includes("function calcSideBag(legs, otherLegs)")
+  || !inline.includes("sent: theirs")) {
+  throw new Error("calc must applyVa as a 2-team bag (other side is sent)");
+}
+if (!inline.includes("async function openLeagueDashboard(")
+  || !inline.includes("Keep a deep-linked sub-screen")) {
+  throw new Error("openLeagueDashboard must honor ?view= for calc and cosmetics");
 }
 if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
   throw new Error("brand-end must include goTeamHome for league-home team flair");

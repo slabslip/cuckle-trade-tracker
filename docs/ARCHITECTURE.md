@@ -4,7 +4,7 @@
 
 **Repo:** `github.com/slabslip/cuckle-trade-tracker`, public, GitHub Pages deploys from `main`.
 (Earlier revisions of this file said "not a git repo" — stale since 2026-08-28.)
-Vanilla Node. No `package.json`. Rebuild is `node build.mjs` (or the seven scripts in order).
+Vanilla Node. No `package.json`. Rebuild is `node build.mjs` (pipeline scripts in order).
 Serve `index.html` via `python3 -m http.server` from the tracker folder.
 
 ---
@@ -27,11 +27,17 @@ title-path.mjs
 apply-value-adjust.mjs
   → rewrites data/ui/league.json + me/<user_id>.json in place
   → data/ui/marks.json
+build-cuffs.mjs
+  → data/ui/cuffs.json
+build-calculator.mjs
+  → data/ui/calculator.json          (rostered players + still-held picks, today / even)
+build-cosmetics.mjs
+  → data/ui/cosmetics.json           (25 catalog + computed unlocks)
 generate-page.mjs
   → index.html  (inline CSS + JS; fetches data/ui/*.json)
 ```
 
-`build.mjs` runs those seven in order. `value-snapshot.mjs --latest-only` skips git history.
+`build.mjs` runs those steps in order. `value-snapshot.mjs --latest-only` skips git history.
 
 **`apply-value-adjust.mjs` is not optional.** It owns the today blend (40% flatten / 60% KTC
 Superflex, retired → 0), the Value Adjustment, `trade_boards` and `marks.json`. A build without it
@@ -208,13 +214,13 @@ Leg: `{ label, kind, asset_key, value, flag, became, value_flat }`. `value_flat`
 flatten price and is kept deliberately: without `value_curve.json` in the checkout it is the only
 record of it, and `apply-value-adjust.mjs` reprices idempotently from it.
 
-**`even` still ships but no screen draws it.** `sideOf(t)` is
+**`even` still ships on trade rows but those rows do not draw it.** `sideOf(t)` is
 `(t.windows && t.windows[lens]) || t.even || t.realized`, and all 586 trades carry `windows.all`,
-so the fallback never fires. `even` remains the basis of the pipeline's own aggregates
-(`league.traders[].even_per_trade`, board headlines, the zero-sum checks). Measured gap between
-`even.today_delta` and the `windows.all.today_delta` the page renders: mean **975** over 582
-sides, max **5,715**. Logged as `DASHBOARD_AUDIT.md` §8c / D5 — a user decision, not a defect to
-patch.
+so the fallback never fires on a tape card. `even` remains the basis of the pipeline's own
+aggregates (`league.traders[].even_per_trade`, board headlines, the zero-sum checks) **and** the
+calculator catalog (`calculator.json`). Measured gap between `even.today_delta` and the
+`windows.all.today_delta` the tape still draws: mean **975** over 582 sides, max **5,715**.
+Logged as `DASHBOARD_AUDIT.md` §8c / D5 — a user decision, not a defect to patch.
 
 File sizes 156–602 KB (SF69erss largest), 3.0 MB for all ten.
 

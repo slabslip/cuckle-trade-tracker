@@ -121,3 +121,30 @@ Truman answers these. Each item: what we assumed, why it matters, recommended de
 **Why it matters:** Today −1940 is partly “Saquon still 2226, Zeke stuck at 3.” Forcing 0 on first missed monthly file would also zero a one-month scrape miss.
 
 **Recommended:** Leave Today as last-known. Use the 3y floor for dead years. If we later zero Today, require N consecutive missing months, not one gap.
+
+---
+
+## 13. Calc residual and a vote-nudge — when?
+
+**Assumed (this pass):** Calculator prices a 2-team hypothetical on `even` + VA only. League
+residual (how the rest of the bags move) and a later prompt to vote on a priced deal stay
+specified, not built. See [`VALUE_SDD.md`](VALUE_SDD.md) §12 and [`VOTES_SDD.md`](VOTES_SDD.md).
+
+**Why it matters:** Residual is a second identity if it shares a hero with the even delta. A
+nudge that wrote a vote into the book would break the hard rule.
+
+**Recommended:** Next VALUE pass after Home digest. Residual is its own figure. Vote-nudge
+writes only a vote.
+
+---
+
+## 14. Where do equipped titles and emblems paint?
+
+**Assumed (this pass):** Barracks + persist only. Header, news byline, trade cards, ledger, and
+smack do not read the equipped pair yet. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
+
+**Why it matters:** Painting on every name before the catalog is trusted will lock a chrome
+decision we have not looked at on 390.
+
+**Recommended:** Show the pair on names after the barracks has been used in-season. No new
+tokens when we do.

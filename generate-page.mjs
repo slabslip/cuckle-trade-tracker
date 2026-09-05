@@ -10,7 +10,7 @@ const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta name="theme-color" content="#0b0b0d" />
   <meta name="description" content="Chuckle Fantasy — old trades, fresh laughs. Dynasty trade meter for your league." />
@@ -71,6 +71,10 @@ const html = `<!DOCTYPE html>
         max(24px, env(safe-area-inset-bottom, 0px))
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
+    }
+    /* iOS zooms the page when a focused control is under 16px. Keep every field at 16px. */
+    input, select, textarea {
+      font-size: 16px;
     }
     /*
      * Design Mode iPhone stage (html.design-iphone):
@@ -1403,7 +1407,7 @@ const html = `<!DOCTYPE html>
     .ledger-card .lc-complete input {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
-      color: var(--text); font-size: 0.9375rem;
+      color: var(--text); font-size: 16px;
     }
     .ledger-card .lc-complete-actions {
       display: flex; flex-wrap: wrap; gap: 6px;
@@ -1418,12 +1422,12 @@ const html = `<!DOCTYPE html>
     .ledger-add textarea, .ledger-card textarea {
       width: 100%; min-height: 72px; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
-      color: var(--text); font-size: 0.9375rem; resize: vertical;
+      color: var(--text); font-size: 16px; resize: vertical;
     }
     .ledger-add select, .ledger-card select {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
-      color: var(--text); font-size: 0.9375rem;
+      color: var(--text); font-size: 16px;
     }
     .ledger-add label {
       display: grid; gap: 4px; font-size: 0.7rem; text-transform: uppercase;
@@ -1433,7 +1437,7 @@ const html = `<!DOCTYPE html>
     .ledger-add input[type="text"] {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
-      color: var(--text); font-size: 0.9375rem;
+      color: var(--text); font-size: 16px;
     }
     .ledger-add input[type="range"], .ledger-card input[type="range"] {
       width: 100%; accent-color: var(--lh-gold, #e0b44c);
@@ -1769,7 +1773,7 @@ const html = `<!DOCTYPE html>
     .cuffs-intel button.cuffs-pos:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .cuffs-intel select.cuffs-team-sel,
     .cuffs-intel input.cuffs-q {
-      width: 100%; box-sizing: border-box; font: inherit; font-size: 0.875rem;
+      width: 100%; box-sizing: border-box; font: inherit; font-size: 16px;
       color: var(--text); background: var(--card); border: 1px solid var(--line);
       border-radius: 10px; min-height: 36px; padding: 6px 10px;
     }
@@ -2820,7 +2824,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905014200";
+    const DATA_V = "ledger20260905014600";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15325,6 +15329,11 @@ if (!html.includes('button type="button" class="league-sub"')
   && !html.includes('button type="button" class="league-sub" id="leagueSub"')
   && !html.includes('class="league-sub" id="leagueSub"')) {
   throw new Error("league name must be a clickable control that goes to league home");
+}
+if (!html.includes('maximum-scale=1, viewport-fit=cover')
+  || !html.includes("input, select, textarea {")
+  || !html.includes("font-size: 16px;")) {
+  throw new Error("viewport and form controls must stay at 16px so iOS does not zoom on focus");
 }
 if (!html.includes('updateViaCache: "none"')
   || !html.includes("controllerchange")

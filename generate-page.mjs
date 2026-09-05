@@ -87,6 +87,11 @@ const html = `<!DOCTYPE html>
       text-size-adjust: 100%;
       touch-action: manipulation;
     }
+    /* Ledger pull-to-refresh: keep overscroll in-app so Safari/Chrome do not reload the document. */
+    html.ledger-ptr-armed,
+    html.ledger-ptr-armed body {
+      overscroll-behavior-y: contain;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 16px;
@@ -1402,6 +1407,17 @@ const html = `<!DOCTYPE html>
       flex: 1 1 auto; min-width: 0; width: auto;
       padding: 8px 10px; border: 1px solid #2a2a32; border-radius: 8px;
       background: #0e0e12; color: var(--text); font-size: 16px;
+    }
+    /* In-place Ledger pull-to-refresh cue (document reload would dump homeTab back to League). */
+    .ledger-ptr {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      height: 0; overflow: hidden; margin: 0; padding: 0;
+      color: var(--muted); font-size: 0.75rem; font-weight: 650;
+      letter-spacing: 0.02em; pointer-events: none;
+    }
+    .ledger-ptr.is-refreshing {
+      height: 36px;
+      color: var(--lh-gold, #e0b44c);
     }
     .ledger-card {
       background: #141418; border: 1px solid #2a2a32; border-radius: 12px;
@@ -2995,7 +3011,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905161500";
+    const DATA_V = "ledger20260905165700";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3184,7 +3200,15 @@ const html = `<!DOCTYPE html>
     if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
     {
       const startTab = String(params.get("tab") || "").toLowerCase();
-      if (startTab === "ledger" || startTab === "teams" || startTab === "history") homeTab = startTab;
+      if (startTab === "ledger" || startTab === "teams" || startTab === "history") {
+        homeTab = startTab;
+      } else {
+        // Soft reload / PWA pull used to wipe the URL; session keeps the open league-home tab.
+        try {
+          const saved = String(sessionStorage.getItem("cuckle.homeTab") || "").toLowerCase();
+          if (saved === "ledger" || saved === "teams" || saved === "history") homeTab = saved;
+        } catch (_) {}
+      }
     }
 
     // A missing year-end is a gap in the tape, not a value of zero: break the path there.
@@ -4536,11 +4560,21 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
+      // Persist league-home tab so a document reload (browser PTR / SW) does not dump to League.
+      if (!me && view === "home" && homeTab && homeTab !== "league") q.set("tab", homeTab);
       // Omit lens when it matches the age default so cold links re-age on load.
       if (lens && !lensIsAgeDefault()) q.set("lens", lens);
       // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
       if (isDesignLeagueHome()) q.set("design", "league-home");
       return "?" + q.toString();
+    }
+
+    function rememberHomeTab() {
+      try {
+        if (appScreen === "dash" && !me && view === "home") {
+          sessionStorage.setItem("cuckle.homeTab", homeTab || "league");
+        }
+      } catch (_) {}
     }
 
     /**
@@ -4575,6 +4609,7 @@ const html = `<!DOCTYPE html>
         openId: openId,
         tradeSeat: tradeSeat,
         lens: lens,
+        homeTab: homeTab || "league",
         d: depth,
       };
     }
@@ -4601,6 +4636,7 @@ const html = `<!DOCTYPE html>
       const q = new URLSearchParams(location.search);
       const name = q.get("me");
       const seat = name ? members.find((m) => m.user_id === name || m.name === name) : null;
+      const tab = String(q.get("tab") || "").toLowerCase();
       return {
         me: (seat && seat.user_id) || null,
         view: q.get("view") || "home",
@@ -4609,6 +4645,7 @@ const html = `<!DOCTYPE html>
         tradeSeat: q.get("seat") || null,
         // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
+        homeTab: (tab === "ledger" || tab === "teams" || tab === "history") ? tab : "league",
         d: 0,
       };
     }
@@ -4626,6 +4663,14 @@ const html = `<!DOCTYPE html>
         titleYear = want.titleYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
+        {
+          const tab = String(want.homeTab || "").toLowerCase();
+          if (tab === "ledger" || tab === "teams" || tab === "history" || tab === "league") {
+            homeTab = tab;
+          } else if (!want.me && (view === "home" || view === "teams" || view === "ledger" || view === "datasets")) {
+            homeTab = "league";
+          }
+        }
         if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
           lens = want.lens;
         } else if (view === "trade" && openId) {
@@ -5908,6 +5953,144 @@ const html = `<!DOCTYPE html>
       }).catch(() => {
         if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
       });
+    }
+
+    /**
+     * Force a ledger refetch without leaving the Ledger tab.
+     * soft: keep painted slips while loading (pull-to-refresh). hard: blank then load (Refresh chip).
+     */
+    function ledgerRefresh(opts) {
+      const soft = !!(opts && opts.soft);
+      if (ledgerLoadState === "loading") return Promise.resolve();
+      if (!soft) ledgerBets = null;
+      return ledgerFetch().then(() => {
+        ledgerPtrClear();
+        if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
+      }).catch(() => {
+        ledgerPtrClear();
+        if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
+      });
+    }
+
+    function ledgerOnLedgerSurface() {
+      return appScreen === "dash" && view === "home" && homeTab === "ledger" && !me
+        && !(typeof ledgerComposeOpen === "function" && ledgerComposeOpen());
+    }
+
+    function ledgerScrollTop() {
+      if (document.documentElement.classList.contains("design-iphone")) {
+        return document.body.scrollTop || 0;
+      }
+      return window.scrollY || document.documentElement.scrollTop || 0;
+    }
+
+    let ledgerPtrDrag = null;
+    let ledgerPtrPullPx = 0;
+
+    function ledgerPtrPaint(dy, refreshing) {
+      const el = document.querySelector("#app [data-ledger-ptr]");
+      if (!el) return;
+      if (refreshing) {
+        el.classList.add("is-refreshing");
+        el.style.height = "36px";
+        el.textContent = "Refreshing…";
+        el.removeAttribute("aria-hidden");
+        return;
+      }
+      el.classList.remove("is-refreshing");
+      const h = Math.min(56, Math.max(0, Math.round(dy * 0.5)));
+      el.style.height = h + "px";
+      if (h > 10) {
+        el.textContent = h >= 40 ? "Release to refresh" : "Pull to refresh";
+        el.removeAttribute("aria-hidden");
+      } else {
+        el.textContent = "";
+        el.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    function ledgerPtrClear() {
+      ledgerPtrPullPx = 0;
+      if (ledgerPtrDrag) ledgerPtrDrag.refreshing = false;
+      ledgerPtrDrag = null;
+      const el = document.querySelector("#app [data-ledger-ptr]");
+      if (el) {
+        el.classList.remove("is-refreshing");
+        el.style.height = "0px";
+        el.textContent = "";
+        el.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    function ledgerPtrSyncArmed() {
+      document.documentElement.classList.toggle("ledger-ptr-armed", ledgerOnLedgerSurface());
+    }
+
+    function armLedgerPullToRefresh() {
+      const THRESH = 64;
+      const TAP_SLOP = 10;
+      document.addEventListener("touchstart", (e) => {
+        if (!ledgerOnLedgerSurface()) return;
+        if (ledgerPtrDrag && ledgerPtrDrag.refreshing) return;
+        if (!e.touches || e.touches.length !== 1) return;
+        const t = e.target;
+        if (t && typeof t.closest === "function"
+          && t.closest("input, select, textarea, button, a, label, [contenteditable]")) {
+          ledgerPtrDrag = null;
+          return;
+        }
+        ledgerPtrDrag = {
+          startY: e.touches[0].clientY,
+          startX: e.touches[0].clientX,
+          pulling: false,
+          refreshing: false,
+          atTop: ledgerScrollTop() <= 1,
+        };
+        ledgerPtrPullPx = 0;
+      }, { passive: true, capture: true });
+      document.addEventListener("touchmove", (e) => {
+        if (!ledgerPtrDrag || ledgerPtrDrag.refreshing) return;
+        if (!ledgerOnLedgerSurface()) {
+          ledgerPtrDrag = null;
+          return;
+        }
+        if (!e.touches || !e.touches.length) return;
+        const y = e.touches[0].clientY;
+        const x = e.touches[0].clientX;
+        const dy = y - ledgerPtrDrag.startY;
+        const dx = x - ledgerPtrDrag.startX;
+        if (!ledgerPtrDrag.pulling) {
+          if (dy < TAP_SLOP) return;
+          if (Math.abs(dx) > Math.abs(dy)) {
+            ledgerPtrDrag = null;
+            return;
+          }
+          if (!ledgerPtrDrag.atTop || ledgerScrollTop() > 1) {
+            ledgerPtrDrag = null;
+            return;
+          }
+          ledgerPtrDrag.pulling = true;
+        }
+        if (dy > 0) {
+          // Block the browser/PWA document reload that would dump homeTab back to League.
+          e.preventDefault();
+          ledgerPtrPullPx = dy;
+          ledgerPtrPaint(dy, false);
+        }
+      }, { passive: false, capture: true });
+      function endPtr() {
+        if (!ledgerPtrDrag) return;
+        const drag = ledgerPtrDrag;
+        if (drag.pulling && !drag.refreshing && ledgerPtrPullPx >= THRESH) {
+          drag.refreshing = true;
+          ledgerPtrPaint(0, true);
+          ledgerRefresh({ soft: true });
+          return;
+        }
+        ledgerPtrClear();
+      }
+      document.addEventListener("touchend", endPtr, { passive: true, capture: true });
+      document.addEventListener("touchcancel", () => { ledgerPtrClear(); }, { passive: true, capture: true });
     }
 
     function ledgerIsLiveSlip(b) {
@@ -7842,7 +8025,9 @@ const html = `<!DOCTYPE html>
           + "<span>Propose a NEW Wager</span></button>"
         : "";
       const feed = ledgerFeed === "settled" || ledgerFeed === "closed" ? ledgerFeed : "live";
-      return '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
+      const ptr = '<div class="ledger-ptr" data-ledger-ptr="1" aria-hidden="true"></div>';
+      return ptr
+        + '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
         + toast
         + propose
         + ledgerSummaryHtml(list)
@@ -14815,6 +15000,8 @@ const html = `<!DOCTYPE html>
       paintLeagueSub();
       paintBottomNav();
       syncUrl();
+      rememberHomeTab();
+      ledgerPtrSyncArmed();
       armNewsPullup();
       if (typeof syncDesignIphoneStage === "function") syncDesignIphoneStage();
     }
@@ -15363,9 +15550,7 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (e.target.closest("[data-ledger-refresh]")) {
-        ledgerLoadState = "idle";
-        ledgerBets = null;
-        ledgerEnsureLoaded();
+        ledgerRefresh();
         return;
       }
       if (e.target.closest("[data-ledger-wager-cancel]")) {
@@ -16182,6 +16367,7 @@ const html = `<!DOCTYPE html>
     window.addEventListener("focus", () => { voteReloadIfStale(); });
     // Soft poll on the dashboard so peer ballots land without requiring a tab switch.
     setInterval(() => { voteReloadIfStale(10000); }, 12000);
+    armLedgerPullToRefresh();
     document.addEventListener("change", (e) => {
       const tapeYearLab = e.target.closest("[data-tape-year]");
       if (tapeYearLab) {
@@ -16535,7 +16721,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v205-ledger-nozoom";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v206-ledger-ptr";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -16616,13 +16802,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v205-ledger-nozoom")) {
+  || !html.includes("chuckle-shell-v206-ledger-ptr")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v205-ledger-nozoom")
+  || !swSrc.includes("chuckle-shell-v206-ledger-ptr")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -17836,6 +18022,14 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     [">Ledger</h2>", true],
     ["function ledgerAccept(", true],
     ["function ledgerEnsureLoaded(", true],
+    ["function ledgerRefresh(", true],
+    ["function armLedgerPullToRefresh(", true],
+    ["function ledgerPtrSyncArmed(", true],
+    ['data-ledger-ptr="1"', true],
+    ["Release to refresh", true],
+    ["overscroll-behavior-y: contain", true],
+    ['q.set("tab", homeTab)', true],
+    ['sessionStorage.setItem("cuckle.homeTab"', true],
     ['data-ledger-accept="', true],
     ["Sent to you, you have not accepted this version", true],
     ["function ledgerCompleteSave(", true],

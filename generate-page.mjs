@@ -2905,7 +2905,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905130000";
+    const DATA_V = "ledger20260905131000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6890,6 +6890,7 @@ const html = `<!DOCTYPE html>
         }
         const parts = n.split(/\\s+/).filter(Boolean);
         const last = parts.length > 1 ? parts[parts.length - 1] : "";
+        const first = parts.length > 1 ? parts[0] : "";
         const row = {
           kind: "player",
           display: n,
@@ -6898,6 +6899,8 @@ const html = `<!DOCTYPE html>
           id: id ? String(id) : "",
           rank: Number(rank) || 9999,
           rostered: !!rostered,
+          first: first,
+          firstNorm: ledgerNorm(first),
           last: last,
           lastNorm: ledgerNorm(last),
           key: key,
@@ -6938,8 +6941,10 @@ const html = `<!DOCTYPE html>
         aliasTo[ledgerNorm(pair[0])] = pair[1];
       });
       const lastCount = Object.create(null);
+      const firstCount = Object.create(null);
       players.forEach((p) => {
         if (p.lastNorm && p.lastNorm.length >= 4) lastCount[p.lastNorm] = (lastCount[p.lastNorm] || 0) + 1;
+        if (p.firstNorm && p.firstNorm.length >= 3) firstCount[p.firstNorm] = (firstCount[p.firstNorm] || 0) + 1;
       });
       ledgerEntityIndex = {
         players: players,
@@ -6947,6 +6952,7 @@ const html = `<!DOCTYPE html>
         pos: LEDGER_POS_WORDS,
         aliasTo: aliasTo,
         lastCount: lastCount,
+        firstCount: firstCount,
       };
       return ledgerEntityIndex;
     }
@@ -7081,6 +7087,7 @@ const html = `<!DOCTYPE html>
         const slug = "news-player pos-" + newsPosSlug(p.pos);
         findAll(p.display, slug);
         if (p.last && p.last.length >= 4 && idx.lastCount[p.lastNorm] === 1) findAll(p.last, slug);
+        if (p.first && p.firstNorm && p.firstNorm.length >= 3 && idx.firstCount[p.firstNorm] === 1) findAll(p.first, slug);
       });
       Object.keys(idx.aliasTo).forEach((alias) => {
         const full = idx.aliasTo[alias];
@@ -7143,6 +7150,79 @@ const html = `<!DOCTYPE html>
       });
       if (kind) ledgerApplyClockKind(form, kind);
     }
+    function ledgerDescExpandFinished(form) {
+      const ta = form && form.querySelector("textarea[name=desc]");
+      if (!ta) return false;
+      const raw = String(ta.value || "");
+      if (!raw) return false;
+      const caret = ta.selectionEnd != null ? ta.selectionEnd : raw.length;
+      const open = (document.activeElement === ta) ? ledgerDescOpenWord(raw, caret) : null;
+      const idx = ledgerEnsureEntityIndex();
+      const claimed = [];
+      const addClaim = function (start, end) {
+        if (start < 0 || end <= start) return;
+        for (let i = 0; i < claimed.length; i++) {
+          if (!(end <= claimed[i].start || start >= claimed[i].end)) return;
+        }
+        claimed.push({ start: start, end: end });
+      };
+      const findSpans = function (needle, fn) {
+        if (!needle || needle.length < 2) return;
+        const re = new RegExp("\\\\b" + ledgerEscRe(needle) + "\\\\b", "gi");
+        let m;
+        while ((m = re.exec(raw))) fn(m.index, m.index + m[0].length, m[0]);
+      };
+      idx.players.forEach((p) => findSpans(p.display, addClaim));
+      idx.teams.forEach((t) => findSpans(t.display, addClaim));
+      const reps = [];
+      const addRep = function (start, end, next) {
+        if (!next || start < 0 || end <= start) return;
+        if (open && !(end <= open.start || start >= open.end)) return;
+        if (ledgerNorm(raw.slice(start, end)) === ledgerNorm(next)) return;
+        for (let i = 0; i < claimed.length; i++) {
+          if (!(end <= claimed[i].start || start >= claimed[i].end)) return;
+        }
+        for (let i = 0; i < reps.length; i++) {
+          if (!(end <= reps[i].start || start >= reps[i].end)) return;
+        }
+        reps.push({ start: start, end: end, next: next });
+      };
+      const posSkip = Object.create(null);
+      idx.pos.forEach((p) => p.names.forEach((nm) => { posSkip[ledgerNorm(nm)] = 1; }));
+      idx.players.forEach((p) => {
+        if (p.last && p.lastNorm && p.lastNorm.length >= 4 && idx.lastCount[p.lastNorm] === 1) {
+          findSpans(p.last, function (start, end) { addRep(start, end, p.display); });
+        }
+        if (p.first && p.firstNorm && p.firstNorm.length >= 3 && idx.firstCount[p.firstNorm] === 1) {
+          findSpans(p.first, function (start, end) { addRep(start, end, p.display); });
+        }
+      });
+      Object.keys(idx.aliasTo).forEach((alias) => {
+        if (alias.length < 3 || posSkip[alias]) return;
+        findSpans(alias, function (start, end) { addRep(start, end, idx.aliasTo[alias]); });
+      });
+      idx.teams.forEach((t) => {
+        t.names.forEach((nm) => {
+          if (!nm || nm.length < 3 || nm.indexOf("the ") === 0) return;
+          findSpans(nm, function (start, end) { addRep(start, end, t.display); });
+        });
+      });
+      if (!reps.length) return false;
+      reps.sort((a, b) => b.start - a.start);
+      let nextVal = raw;
+      let nextCaret = caret;
+      reps.forEach((r) => {
+        nextVal = nextVal.slice(0, r.start) + r.next + nextVal.slice(r.end);
+        const delta = r.next.length - (r.end - r.start);
+        if (nextCaret >= r.end) nextCaret += delta;
+        else if (nextCaret > r.start) nextCaret = r.start + r.next.length;
+      });
+      if (nextVal === raw) return false;
+      ta.value = nextVal;
+      try { ta.setSelectionRange(nextCaret, nextCaret); } catch (_) {}
+      if (typeof ledgerCaptureCompose === "function") ledgerCaptureCompose(form, { merge: true });
+      return true;
+    }
     function ledgerPaintDescBox(form) {
       if (!form) return;
       const ta = form.querySelector("textarea[name=desc]");
@@ -7150,6 +7230,7 @@ const html = `<!DOCTYPE html>
       const sugs = form.querySelector("[data-ledger-desc-sugs]");
       if (!ta || !hi) return;
       if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
+      ledgerDescExpandFinished(form);
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
       const open = (document.activeElement === ta) ? ledgerDescOpenWord(ta.value, caret) : null;
       const box = ta.closest(".lc-desc-box");
@@ -17339,6 +17420,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["De'Zhaun Stribling", true],
     ["function ledgerDescBestPhrase(", true],
     ["function ledgerDescOpenWord(", true],
+    ["function ledgerDescExpandFinished(", true],
     ["function ledgerDescGhostParts(", false],
     ["function ledgerSyncClockFromDesc(", true],
     ["wager-clock-tag", true],

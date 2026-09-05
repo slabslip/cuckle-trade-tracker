@@ -1436,7 +1436,15 @@
     .ledger-card .lc-source {
       margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--lh-gold, #e0b44c);
       background: #1a1a20; color: var(--text); font-size: 0.8125rem; line-height: 1.4;
-      white-space: pre-wrap;
+      white-space: pre-wrap; text-transform: none; letter-spacing: 0;
+    }
+    .ledger-card .lc-source .news-player,
+    .ledger-card .lc-source .wager-team-tag,
+    .ledger-card .lc-source .wager-clock-tag,
+    .ledger-card .lc-source .news-pos-tag,
+    .ledger-card .lc-source .wager-pos-tag {
+      display: inline; font-size: inherit; font-weight: 650;
+      letter-spacing: 0; vertical-align: baseline; margin: 0; opacity: 1;
     }
     .ledger-card .lc-complete {
       display: grid; gap: 8px; margin-top: 10px;
@@ -6482,7 +6490,8 @@
         + "</div>"
         + '<p class="lc-meta">' + meta + "</p>"
         + (b.source_text
-          ? '<div class="lc-source">' + esc(b.source_text) + "</div>"
+          ? '<div class="lc-source">' + ((typeof ledgerDescHighlightHtml === "function")
+            ? ledgerDescHighlightHtml(b.source_text, null) : esc(b.source_text)) + "</div>"
           : "")
         + (termsHtml ? '<p class="lc-terms">' + termsHtml + "</p>" : "")
         + (descHtml ? '<p class="lc-terms">' + descHtml + "</p>" : "")

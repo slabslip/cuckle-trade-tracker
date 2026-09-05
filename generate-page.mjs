@@ -7050,7 +7050,11 @@ const html = `<!DOCTYPE html>
         if (!n || n.length < 3) return;
         const key = ledgerNorm(n);
         if (!key || seen[key]) {
-          if (seen[key] && rostered) seen[key].rostered = true;
+          if (seen[key]) {
+            if (rostered) seen[key].rostered = true;
+            if (team && !seen[key].team) seen[key].team = String(team || "").toUpperCase();
+            if (pos && !seen[key].pos) seen[key].pos = String(pos || "").toUpperCase();
+          }
           return;
         }
         const parts = n.split(/\\s+/).filter(Boolean);
@@ -7318,13 +7322,13 @@ const html = `<!DOCTYPE html>
         ledgerApplyClockKind(form, kind);
       }
     }
-    function ledgerDescExpandFinished(form) {
+    function ledgerDescExpandFinished(form, opts) {
       const ta = form && form.querySelector("textarea[name=desc]");
       if (!ta) return false;
       const raw = String(ta.value || "");
       if (!raw) return false;
       const caret = ta.selectionEnd != null ? ta.selectionEnd : raw.length;
-      const open = (document.activeElement === ta) ? ledgerDescOpenWord(raw, caret) : null;
+      const open = (opts && opts.ignoreOpen) ? null : ((document.activeElement === ta) ? ledgerDescOpenWord(raw, caret) : null);
       const idx = ledgerEnsureEntityIndex();
       const claimed = [];
       const addClaim = function (start, end) {
@@ -7407,9 +7411,14 @@ const html = `<!DOCTYPE html>
       return true;
     }
     function ledgerNflTeamDisplay(abbr) {
-      const key = String(abbr || "").toUpperCase();
+      const raw = String(abbr || "").trim();
+      if (!raw) return "";
+      const key = raw.toUpperCase();
+      const low = raw.toLowerCase();
       for (let i = 0; i < LEDGER_NFL_TEAMS.length; i++) {
-        if (LEDGER_NFL_TEAMS[i].abbr === key) return LEDGER_NFL_TEAMS[i].display;
+        const t = LEDGER_NFL_TEAMS[i];
+        if (t.abbr === key) return t.display;
+        if ((t.names || []).indexOf(low) >= 0) return t.display;
       }
       return "";
     }
@@ -7452,8 +7461,7 @@ const html = `<!DOCTYPE html>
       for (let i = matches.length - 1; i >= 0; i--) {
         const hit = matches[i];
         const player = ledgerLastTaggedPlayerBefore(out, hit.index);
-        if (!player || !player.team) continue;
-        const label = ledgerNflTeamDisplay(player.team);
+        const label = player ? ledgerNflTeamDisplay(player.team) : "";
         if (!label) continue;
         out = out.slice(0, hit.index) + label + out.slice(hit.index + hit.len);
         const delta = label.length - hit.len;
@@ -7474,14 +7482,16 @@ const html = `<!DOCTYPE html>
       ta.style.height = "0px";
       ta.style.height = Math.max(72, ta.scrollHeight) + "px";
     }
-    function ledgerPaintDescBox(form) {
+    function ledgerPaintDescBox(form, opts) {
       if (!form) return;
       const ta = form.querySelector("textarea[name=desc]");
       const hi = form.querySelector("[data-ledger-desc-hi]");
       const sugs = form.querySelector("[data-ledger-desc-sugs]");
       if (!ta || !hi) return;
       if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
-      if (ledgerDescWordJustClosed(ta)) ledgerDescExpandFinished(form);
+      if ((opts && opts.forceClose) || ledgerDescWordJustClosed(ta)) {
+        ledgerDescExpandFinished(form, { ignoreOpen: !!(opts && opts.forceClose) });
+      }
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
       const open = (document.activeElement === ta) ? ledgerDescOpenWord(ta.value, caret) : null;
       const box = ta.closest(".lc-desc-box");
@@ -8241,6 +8251,7 @@ const html = `<!DOCTYPE html>
 
     function ledgerOpenSendPick(form) {
       if (!form) return;
+      ledgerPaintDescBox(form, { forceClose: true });
       const parsed = ledgerReadWagerForm(form);
       const err = ledgerWagerValidate(parsed, authSeatId(), { skipThem: true });
       if (err) {
@@ -16261,6 +16272,7 @@ const html = `<!DOCTYPE html>
       const form = field.form || field.closest("form");
       if (!form) return;
       ledgerCaptureCompose(form, { merge: true });
+      ledgerPaintDescBox(form, { forceClose: true });
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
@@ -17825,6 +17837,8 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerDescOpenWord(", true],
     ["function ledgerDescExpandFinished(", true],
     ["function ledgerDescResolveOnHisTeam(", true],
+    ["ignoreOpen", true],
+    ["forceClose", true],
     ["function ledgerLastTaggedPlayerBefore(", true],
     ["on (?:his|her|their) team", true],
     ["function ledgerOtherSeatsByWagerFreq(", true],

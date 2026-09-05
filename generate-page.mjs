@@ -2967,7 +2967,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905150000";
+    const DATA_V = "ledger20260905151000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6208,7 +6208,7 @@ const html = `<!DOCTYPE html>
       if (them && !them.value && d.them) them.value = d.them;
       if (stake && !String(stake.value || "").trim() && d.stake) stake.value = d.stake;
       if (form.querySelector("[data-ledger-stake-range]")) {
-        ledgerApplyStakeSlider(form, (stake && stake.value) || d.stake || 25);
+        ledgerApplyStakeSlider(form, (stake && stake.value) || d.stake || 100);
       }
       if (desc && !String(desc.value || "").trim() && d.desc) desc.value = d.desc;
       if (desc) ledgerPaintDescBox(form);
@@ -6272,7 +6272,8 @@ const html = `<!DOCTYPE html>
       return o;
     }
 
-    const LEDGER_STAKE_STOPS = [25, 50, 100, 150, 200, 250, 300, 350, 400];
+    const LEDGER_STAKE_STOPS = [10, 20, 30, 40, 50, 100, 150, 200, 250, 300];
+    const LEDGER_STAKE_DEFAULT = 100;
 
     function ledgerStakeStopIndex(dollars) {
       const n = Number(dollars);
@@ -6744,7 +6745,7 @@ const html = `<!DOCTYPE html>
         ["season", "Regular + playoffs"],
         ["playoffs", "Playoffs only"],
       ];
-      const cur = selected || "this_week";
+      const cur = selected || "date";
       return '<label class="lc-clock-lab">Clock'
         + '<select name="clock_kind" data-ledger-wager-live="1">'
         + kinds.map((k) => {
@@ -7474,7 +7475,7 @@ const html = `<!DOCTYPE html>
       const them = draft ? draft.them : ((kind === "counter" && b)
         ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
         : "");
-      const stakeRaw = draft ? draft.stake : ((kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : 25);
+      const stakeRaw = draft ? draft.stake : ((kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : LEDGER_STAKE_DEFAULT);
       const stake = ledgerSnapStakeDollars(stakeRaw);
       const odds = draft ? ledgerSnapOdds(draft.odds) : ((kind === "counter" && b) ? ledgerSnapOdds(ledgerHouseOddsOf(b)) : 0);
       const moneyLine = (kind === "counter" && b) ? ledgerNamedTerms(b) : "";
@@ -7483,7 +7484,7 @@ const html = `<!DOCTYPE html>
         : "");
       const clockKind = draft && draft.clock_kind
         ? String(draft.clock_kind)
-        : ((kind === "counter" && b && b.clock_kind) ? String(b.clock_kind) : "this_week");
+        : ((kind === "counter" && b && b.clock_kind) ? String(b.clock_kind) : "date");
       const clock = draft ? String(draft.clock || "")
         : ((kind === "counter" && b && clockKind === "date") ? ledgerClockValue(b.deadline_at) : "");
       const preview = ledgerOddsPreview(ledgerDollarsToCents(stake), odds);
@@ -7506,10 +7507,9 @@ const html = `<!DOCTYPE html>
         + themField
         + '<label>Your wager <span class="lc-odds-lab lc-stake-lab" data-ledger-stake-lab>$'
         + esc(String(stake)) + "</span>"
-        + '<input type="range" min="0" max="8" step="1" value="'
+        + '<input type="range" min="0" max="' + (LEDGER_STAKE_STOPS.length - 1) + '" step="1" value="'
         + esc(String(ledgerStakeStopIndex(stake))) + '" data-ledger-stake-range data-ledger-wager-live="1">'
-        + '<input type="hidden" name="stake" value="' + esc(String(stake)) + '">'
-        + '<span class="caption">$25 first, then $50, then $50 up to $400.</span></label>'
+        + '<input type="hidden" name="stake" value="' + esc(String(stake)) + '"></label>'
         + '<label>Odds meter <span class="lc-odds-lab" data-ledger-odds-lab>'
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
@@ -17678,8 +17678,10 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerApplyStakeSlider(", true],
     ["data-ledger-stake-lab", true],
     ["data-ledger-stake-range", true],
-    ["LEDGER_STAKE_STOPS = [25, 50, 100, 150, 200, 250, 300, 350, 400]", true],
-    ["$25 first, then $50, then $50 up to $400.", true],
+    ["LEDGER_STAKE_STOPS = [10, 20, 30, 40, 50, 100, 150, 200, 250, 300]", true],
+    ["LEDGER_STAKE_DEFAULT = 100", true],
+    ["$25 first, then $50, then $50 up to $400.", false],
+    ['? String(b.clock_kind) : "date"', true],
     ["<label>Your wager ($)", false],
     ["function ledgerDueCount(", true],
     ["function ledgerResolveClocks(", true],

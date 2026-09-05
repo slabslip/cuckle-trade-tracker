@@ -2824,7 +2824,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905014600";
+    const DATA_V = "ledger20260905015200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2870,6 +2870,8 @@ const html = `<!DOCTYPE html>
     let ledgerWagerOpen = false;
     let ledgerCounterId = null;
     let ledgerComposeDraft = null;
+    let ledgerComposeNode = null;
+    let ledgerComposeFocus = null;
     let ledgerVotes = [];
     let ledgerFeed = "live";
     let ledgerNflState = null;
@@ -3180,11 +3182,11 @@ const html = `<!DOCTYPE html>
       getLeagueJson("picks.json").then((book) => {
         applyPicksBook(book);
         picksLoading = false;
-        if (view === "home" && !me) render();
+        if (view === "home" && !me) ledgerMaybeRender();
       }).catch((err) => {
         console.error(err);
         picksLoading = false;
-        if (view === "home" && !me) render();
+        if (view === "home" && !me) ledgerMaybeRender();
       });
     }
 
@@ -4230,7 +4232,7 @@ const html = `<!DOCTYPE html>
         applyDefaultLens(null);
       }
       document.getElementById("app").hidden = false;
-      render();
+      ledgerMaybeRender();
     }
 
     /**
@@ -5729,9 +5731,9 @@ const html = `<!DOCTYPE html>
       if (ledgerLoadState === "loading") return;
       if (ledgerLoadState === "ok" && ledgerBets) return;
       ledgerFetch().then(() => {
-        if (homeTab === "ledger" || (me && data)) render();
+        if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
       }).catch(() => {
-        if (homeTab === "ledger" || (me && data)) render();
+        if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
       });
     }
 
@@ -5890,6 +5892,90 @@ const html = `<!DOCTYPE html>
       return o > 0 ? ("+" + o) : String(o);
     }
 
+    function ledgerComposeHold() {
+      let hold = document.getElementById("ledgerComposeHold");
+      if (!hold) {
+        hold = document.createElement("div");
+        hold.id = "ledgerComposeHold";
+        hold.hidden = true;
+        document.body.appendChild(hold);
+      }
+      return hold;
+    }
+
+    function ledgerComposeOpen() {
+      return !!(ledgerWagerOpen || ledgerCounterId);
+    }
+
+    function ledgerMaybeRender() {
+      if (ledgerComposeOpen()) {
+        const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
+        if (form) {
+          ledgerCaptureCompose(form);
+          ledgerRefreshThemOptions(form);
+        }
+        return false;
+      }
+      render();
+      return true;
+    }
+
+    function ledgerParkCompose() {
+      const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
+      if (!form) return;
+      const ae = document.activeElement;
+      if (ae && form.contains(ae)) {
+        ledgerComposeFocus = {
+          name: ae.getAttribute("name") || "",
+          start: ae.selectionStart,
+          end: ae.selectionEnd,
+        };
+      } else {
+        ledgerComposeFocus = null;
+      }
+      ledgerCaptureCompose(form);
+      ledgerComposeNode = form;
+      ledgerComposeHold().appendChild(form);
+    }
+
+    function ledgerUnparkCompose() {
+      if (!ledgerComposeNode) return;
+      const slot = document.querySelector("[data-ledger-form-slot]");
+      if (slot) {
+        slot.replaceWith(ledgerComposeNode);
+        ledgerRefreshThemOptions(ledgerComposeNode);
+        ledgerRestoreComposeFocus();
+        return;
+      }
+      if (!ledgerWagerOpen && !ledgerCounterId) {
+        if (ledgerComposeNode.parentNode) ledgerComposeNode.parentNode.removeChild(ledgerComposeNode);
+        ledgerComposeNode = null;
+        const hold = document.getElementById("ledgerComposeHold");
+        if (hold && hold.parentNode) hold.parentNode.removeChild(hold);
+      }
+    }
+
+    function ledgerRememberCompose() {
+      const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
+      if (form && (ledgerWagerOpen || ledgerCounterId)) {
+        ledgerComposeNode = form;
+        ledgerRefreshThemOptions(form);
+      }
+    }
+
+    function ledgerRefreshThemOptions(form) {
+      if (!form) return;
+      const sel = form.querySelector("select[name=them]");
+      if (!sel) return;
+      const cur = sel.value || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
+      const others = ledgerOtherSeats();
+      sel.innerHTML = ['<option value="">Team</option>'].concat(others.map((m) => {
+        const selected = String(m.user_id) === String(cur) ? " selected" : "";
+        return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
+      })).join("");
+      if (cur) sel.value = cur;
+    }
+
     function ledgerCaptureCompose(form) {
       if (!ledgerWagerOpen && !ledgerCounterId) return;
       if (!form) {
@@ -5898,7 +5984,7 @@ const html = `<!DOCTYPE html>
       if (!form) return;
       const fd = new FormData(form);
       const counter = form.getAttribute("data-ledger-counter-form");
-      ledgerComposeDraft = {
+      const next = {
         kind: counter ? "counter" : "new",
         id: counter || "",
         them: String(fd.get("them") || ""),
@@ -5908,10 +5994,48 @@ const html = `<!DOCTYPE html>
         clock_kind: String(fd.get("clock_kind") || "this_week"),
         clock: String(fd.get("clock") || ""),
       };
+      const prev = ledgerComposeDraft;
+      if (prev && prev.kind === next.kind && String(prev.id || "") === String(next.id || "")) {
+        if (!next.them && prev.them) next.them = prev.them;
+        if (!String(next.stake || "").trim() && prev.stake) next.stake = prev.stake;
+        if (!next.desc && prev.desc) next.desc = prev.desc;
+        if (!next.clock && prev.clock) next.clock = prev.clock;
+      }
+      ledgerComposeDraft = next;
     }
 
     function ledgerClearCompose() {
       ledgerComposeDraft = null;
+      ledgerComposeFocus = null;
+      if (ledgerComposeNode && ledgerComposeNode.parentNode) {
+        ledgerComposeNode.parentNode.removeChild(ledgerComposeNode);
+      }
+      ledgerComposeNode = null;
+      const hold = document.getElementById("ledgerComposeHold");
+      if (hold && hold.parentNode) hold.parentNode.removeChild(hold);
+    }
+
+    function ledgerRestoreComposeFocus() {
+      if (!ledgerComposeFocus || !ledgerComposeNode) return;
+      const name = ledgerComposeFocus.name;
+      let el = null;
+      if (name) {
+        const fields = ledgerComposeNode.querySelectorAll("[name]");
+        for (let i = 0; i < fields.length; i++) {
+          if (fields[i].getAttribute("name") === name) { el = fields[i]; break; }
+        }
+      }
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      try {
+        if (ledgerComposeFocus.start != null && typeof el.setSelectionRange === "function") {
+          el.setSelectionRange(ledgerComposeFocus.start, ledgerComposeFocus.end);
+        }
+      } catch (_) { /* range inputs */ }
+    }
+
+    function ledgerSendLabel(them) {
+      return them ? ("Send Wager to " + ledgerSeatLabel(them)) : "Send Wager to";
     }
 
     function ledgerDraftFor(kind, b) {
@@ -6323,7 +6447,7 @@ const html = `<!DOCTYPE html>
       const chips = [];
       if (kind !== "counter" && s.them) {
         chips.push('<button type="button" class="chip" data-ledger-style="them" data-val="'
-          + esc(s.them) + '">Them: ' + esc(ledgerSeatLabel(s.them)) + "</button>");
+          + esc(s.them) + '">' + esc(ledgerSeatLabel(s.them)) + "</button>");
       }
       if (s.stake) {
         chips.push('<button type="button" class="chip" data-ledger-style="stake" data-val="'
@@ -6563,7 +6687,6 @@ const html = `<!DOCTYPE html>
       const seat = authSeatId();
       if (!seat) return "";
       const others = ledgerOtherSeats();
-      if (!others.length && typeof loadMembers === "function") loadMembers().catch(() => {});
       const draft = ledgerDraftFor(kind, b);
       const them = draft ? draft.them : ((kind === "counter" && b)
         ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
@@ -6580,7 +6703,7 @@ const html = `<!DOCTYPE html>
       const clock = draft ? String(draft.clock || "")
         : ((kind === "counter" && b && clockKind === "date") ? ledgerClockValue(b.deadline_at) : "");
       const preview = ledgerOddsPreview(ledgerDollarsToCents(stake), odds);
-      const optsHtml = ['<option value="">Them…</option>'].concat(others.map((m) => {
+      const optsHtml = ['<option value="">Team</option>'].concat(others.map((m) => {
         const sel = String(m.user_id) === String(them) ? " selected" : "";
         return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name || m.user_id) + "</option>";
       })).join("");
@@ -6588,12 +6711,13 @@ const html = `<!DOCTYPE html>
         ? 'data-ledger-counter-form="' + esc(b.id) + '"'
         : 'data-ledger-wager-form="1"';
       const themField = kind === "counter"
-        ? '<label>Them<input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly></label>'
+        ? '<label>Team<input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly></label>'
           + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
-        : '<label>Them<select name="them" required data-ledger-wager-live="1">' + optsHtml + "</select></label>";
+        : '<label class="lc-team"><select name="them" required data-ledger-wager-live="1" aria-label="Team">'
+          + optsHtml + "</select></label>";
       const sendLab = kind === "counter"
         ? "Send back"
-        : (them ? ("Send to " + ledgerSeatLabel(them)) : "Send to Them");
+        : ledgerSendLabel(them);
       const cancelAttr = kind === "counter" ? "data-ledger-counter-cancel" : "data-ledger-wager-cancel";
       const dateShow = clockKind === "date" ? "" : " hidden";
       return '<form class="ledger-add" ' + formAttr + ">"
@@ -6626,6 +6750,10 @@ const html = `<!DOCTYPE html>
       if (String(ledgerCounterId) !== String(b.id)) return "";
       const isParty = String(b.side_a) === String(seat) || String(b.side_b) === String(seat);
       if (!isParty) return "";
+      if (ledgerComposeNode
+        && String(ledgerComposeNode.getAttribute("data-ledger-counter-form") || "") === String(b.id)) {
+        return '<div data-ledger-form-slot="1"></div>';
+      }
       return ledgerWagerFormHtml("counter", b);
     }
 
@@ -6715,7 +6843,8 @@ const html = `<!DOCTYPE html>
       } else {
         body = list.map((b) => ledgerCardHtml(b)).join("");
       }
-      const addOpen = ledgerWagerOpen ? ledgerWagerFormHtml("new") : "";
+      const addOpen = !ledgerWagerOpen ? ""
+        : (ledgerComposeNode ? '<div data-ledger-form-slot="1"></div>' : ledgerWagerFormHtml("new"));
       const feedChip = (id, lab) => {
         const on = ledgerFeed === id ? " on" : "";
         return '<button type="button" class="chip' + on + '" data-ledger-feed="' + id + '">' + lab + "</button>";
@@ -7122,7 +7251,7 @@ const html = `<!DOCTYPE html>
       if (box) box.textContent = prev.words;
       if (send && form.hasAttribute("data-ledger-wager-form")) {
         const them = String(fd.get("them") || "");
-        send.textContent = them ? ("Send to " + ledgerSeatLabel(them)) : "Send to Them";
+        send.textContent = ledgerSendLabel(them);
       }
     }
 
@@ -10094,7 +10223,7 @@ const html = `<!DOCTYPE html>
       await loadMembers();
       voteLoad().catch((err) => console.error(err));
       loadSeatAvatars().then(() => {
-        if (appScreen === "dash") render();
+        if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
@@ -12192,8 +12321,8 @@ const html = `<!DOCTYPE html>
               if (latestTradeBagsPromise === done) latestTradeBagsPromise = null;
             });
           }
-          if (appScreen === "dash" && view === "home" && !me) render();
-          if (appScreen === "dash" && view === "trades" && !me) render();
+          if (appScreen === "dash" && view === "home" && !me) ledgerMaybeRender();
+          if (appScreen === "dash" && view === "trades" && !me) ledgerMaybeRender();
         }
       })();
       return latestTradeBagsPromise;
@@ -12222,7 +12351,7 @@ const html = `<!DOCTYPE html>
           delete tradeBagPending[tx];
           if (appScreen !== "dash") return;
           if (view === "trades" || view === "trade" || view === "partners"
-            || view === "home" || view === "datasets") render();
+            || view === "home" || view === "datasets") ledgerMaybeRender();
         })();
       }
     }
@@ -12491,7 +12620,7 @@ const html = `<!DOCTYPE html>
         }
         weekMatchupsLoading = false;
         // Re-paint league home strip if we are still looking at it.
-        if (appScreen === "dash" && view === "home" && !me) render();
+        if (appScreen === "dash" && view === "home" && !me) ledgerMaybeRender();
       })();
     }
 
@@ -13477,7 +13606,7 @@ const html = `<!DOCTYPE html>
     }
 
     function render() {
-      ledgerCaptureCompose();
+      ledgerParkCompose();
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
@@ -13591,6 +13720,8 @@ const html = `<!DOCTYPE html>
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
       app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml() + voteConfirmHtml();
+      ledgerUnparkCompose();
+      ledgerRememberCompose();
       document.body.classList.toggle("has-vote-sheet", !!(voteSheetTx || voteConfirmTx));
       if (newsScroll) {
         const box = app.querySelector(".news-box");
@@ -14163,7 +14294,7 @@ const html = `<!DOCTYPE html>
         ledgerWagerOpen = true;
         ledgerCounterId = null;
         ledgerToast = null;
-        if (typeof loadMembers === "function") loadMembers().catch(() => {});
+        if (!(members && members.length) && typeof loadMembers === "function") loadMembers().catch(() => {});
         render();
         return;
       }
@@ -14173,7 +14304,7 @@ const html = `<!DOCTYPE html>
         ledgerCounterId = ledgerCounterBtn.getAttribute("data-ledger-counter");
         ledgerWagerOpen = false;
         ledgerToast = null;
-        if (typeof loadMembers === "function") loadMembers().catch(() => {});
+        if (!(members && members.length) && typeof loadMembers === "function") loadMembers().catch(() => {});
         render();
         return;
       }
@@ -15263,7 +15394,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v203-ledger-odds100";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v204-ledger-persist";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -15340,13 +15471,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v203-ledger-odds100")) {
+  || !html.includes("chuckle-shell-v204-ledger-persist")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v203-ledger-odds100")
+  || !swSrc.includes("chuckle-shell-v204-ledger-persist")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -16568,7 +16699,16 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerOddsPreview(", true],
     ["function ledgerSnapOdds(", true],
     ["function ledgerCaptureCompose(", true],
+    ["function ledgerParkCompose(", true],
+    ["function ledgerUnparkCompose(", true],
+    ["function ledgerRememberCompose(", true],
+    ["function ledgerMaybeRender(", true],
+    ["function ledgerSendLabel(", true],
     ["ledgerComposeDraft", true],
+    ['data-ledger-form-slot="1"', true],
+    ["Send Wager to", true],
+    [">Team</option>", true],
+    ["Send to Them", false],
     ['step="100"', true],
     ["function ledgerClaim(", true],
     ["function ledgerVote(", true],

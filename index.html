@@ -2816,7 +2816,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905015200";
+    const DATA_V = "ledger20260905020100";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3724,12 +3724,12 @@
       getLeagueJson("cuffs.json").then((book) => {
         cuffs = book && book.v === 1 && Array.isArray(book.rows) ? book : { v: 1, rows: [] };
         cuffsLoading = false;
-        render();
+        ledgerMaybeRender();
       }).catch((err) => {
         console.error(err);
         cuffs = { v: 1, rows: [] };
         cuffsLoading = false;
-        render();
+        ledgerMaybeRender();
       });
     }
 
@@ -5895,8 +5895,47 @@
       return hold;
     }
 
+    const LEDGER_COMPOSE_KEY = "cuckle.ledger.compose.v1";
+
     function ledgerComposeOpen() {
       return !!(ledgerWagerOpen || ledgerCounterId);
+    }
+
+    function ledgerComposeStayPut() {
+      if (!ledgerComposeOpen()) return false;
+      if (focusNext) return false;
+      if (appScreen !== "dash" || view !== "home" || homeTab !== "ledger") return false;
+      return !!document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
+    }
+
+    function ledgerPersistCompose() {
+      try {
+        if (!ledgerComposeOpen() || !ledgerComposeDraft) {
+          sessionStorage.removeItem(LEDGER_COMPOSE_KEY);
+          return;
+        }
+        sessionStorage.setItem(LEDGER_COMPOSE_KEY, JSON.stringify({
+          open: !!ledgerWagerOpen,
+          counterId: ledgerCounterId || null,
+          draft: ledgerComposeDraft,
+        }));
+      } catch (_) { /* private mode */ }
+    }
+
+    function ledgerRestorePersistedCompose() {
+      try {
+        const raw = sessionStorage.getItem(LEDGER_COMPOSE_KEY);
+        if (!raw) return;
+        const bag = JSON.parse(raw);
+        if (!bag || !bag.draft || !bag.draft.kind) return;
+        ledgerComposeDraft = bag.draft;
+        ledgerWagerOpen = !!bag.open;
+        ledgerCounterId = bag.counterId || null;
+        if (ledgerWagerOpen || ledgerCounterId) {
+          homeTab = "ledger";
+          view = "home";
+        }
+      } catch (_) { /* ignore */ }
     }
 
     function ledgerMaybeRender() {
@@ -5994,11 +6033,13 @@
         if (!next.clock && prev.clock) next.clock = prev.clock;
       }
       ledgerComposeDraft = next;
+      ledgerPersistCompose();
     }
 
     function ledgerClearCompose() {
       ledgerComposeDraft = null;
       ledgerComposeFocus = null;
+      try { sessionStorage.removeItem(LEDGER_COMPOSE_KEY); } catch (_) { /* ignore */ }
       if (ledgerComposeNode && ledgerComposeNode.parentNode) {
         ledgerComposeNode.parentNode.removeChild(ledgerComposeNode);
       }
@@ -10341,7 +10382,7 @@
       }
       voteHydrateFromServer();
       voteHeal();
-      render();
+      ledgerMaybeRender();
     }
 
     // Re-pull league ballots when the manager returns to the tab so Ducks/Truman/new seats
@@ -13598,6 +13639,11 @@
     }
 
     function render() {
+      if (ledgerComposeStayPut()) {
+        const live = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
+        ledgerCaptureCompose(live);
+        return;
+      }
       ledgerParkCompose();
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
@@ -15267,6 +15313,12 @@
     });
     // App boot: account gate → league home → dashboard. The meter only loads after a league
     // is selected. Vote tallies still load after paint when we enter a ready league.
+    ledgerRestorePersistedCompose();
+    window.addEventListener("beforeunload", function () {
+      if (!ledgerComposeOpen()) return;
+      ledgerCaptureCompose();
+      ledgerPersistCompose();
+    });
     authLoad();
     const inviteParam = (params.get("invite") || "").trim();
     if (inviteParam) {
@@ -15374,6 +15426,10 @@
           if (!hadController) { hadController = true; return; }
           if (reloaded) return;
           try {
+            if (typeof ledgerComposeOpen === "function" && ledgerComposeOpen()) {
+              try { ledgerCaptureCompose(); ledgerPersistCompose(); } catch (_) {}
+              return;
+            }
             if (sessionStorage.getItem("cuckle.swReloaded") === "1") return;
             sessionStorage.setItem("cuckle.swReloaded", "1");
           } catch (_) {}

@@ -1395,22 +1395,20 @@ const html = `<!DOCTYPE html>
     button.lh-calc-door:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
     .calc-stack { display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px; }
     .calc-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-width: 0; overflow: hidden; }
+    .calc-seat { min-width: 0; }
     .calc-block-h {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 10px 12px; background: #1a1a1e; border-bottom: 1px solid var(--line);
     }
-    .calc-block-h span { font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c); }
-    .calc-seat { position: relative; flex: 1; min-width: 0; }
+    .calc-block-h span { font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c); flex: 0 0 auto; }
     button.calc-seat-btn {
       appearance: none; font: inherit; font-size: 16px; color: var(--text); text-align: left;
-      width: 100%; min-height: 44px; background: var(--bg); border: 1px solid var(--line);
+      flex: 1; min-width: 0; min-height: 44px; background: var(--bg); border: 1px solid var(--line);
       border-radius: 10px; padding: 0 10px; cursor: pointer;
     }
     .calc-seat-list {
-      position: absolute; z-index: 8; left: 0; right: 0; top: calc(100% + 4px);
-      max-height: min(50vh, 360px); overflow-y: auto; -webkit-overflow-scrolling: touch;
-      background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+      max-height: min(70vh, 528px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+      background: var(--bg); border-bottom: 1px solid var(--line);
     }
     button.calc-seat-opt {
       appearance: none; font: inherit; font-size: 16px; color: var(--text); text-align: left;
@@ -3162,7 +3160,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcSeatMenu20260905197000";
+    const DATA_V = "calcSeatListFull20260905198000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14417,9 +14415,10 @@ const html = `<!DOCTYPE html>
           + esc(m.name) + "</button>"
         ));
       return '<div class="calc-seat' + (open ? " is-open" : "") + '">'
+        + '<div class="calc-block-h"><span>' + (side === "a" ? "Team 1 gets" : "Team 2 gets") + "</span>"
         + '<button type="button" class="calc-seat-btn" data-calc-seat-open="' + side + '"'
         + ' aria-label="' + aria + '" aria-expanded="' + (open ? "true" : "false") + '">'
-        + esc(lab) + "</button>"
+        + esc(lab) + "</button></div>"
         + (open
           ? '<div class="calc-seat-list" role="listbox" aria-label="' + aria + '">' + opts.join("") + "</div>"
           : "")
@@ -14474,8 +14473,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" data-calc-drop="' + esc(l.id) + '" data-calc-from="' + side + '" aria-label="Remove">×</button></div>'
       ).join("");
       return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
-        + '<div class="calc-block-h"><span>' + (side === "a" ? "Team 1 gets" : "Team 2 gets") + "</span>"
-        + calcSeatSelect(side) + "</div>"
+        + calcSeatSelect(side)
         + '<div class="calc-search">'
         + '<input type="search" value="' + esc(q) + '" data-calc-filter="' + side + '"'
         + ' placeholder="Search players and picks" />'
@@ -19716,6 +19714,13 @@ if (!inline.includes("function calcArmQuiet(") || !inline.includes("calcIsQuiet(
   if (!inline.includes("data-calc-seat-pick") || !inline.includes("calcSeatIgnoreOpenUntil")
     || !inline.includes("calcSeatMenu = \"\"")) {
     throw new Error("calc team picker must close on pick and ignore the ghost tap");
+  }
+}
+{
+  const cssAt = html.indexOf(".calc-seat-list {");
+  const css = html.slice(cssAt, cssAt + 280);
+  if (cssAt < 0 || css.includes("position: absolute") || css.includes("max-height: min(50vh, 360px)")) {
+    throw new Error("calc team list must sit in flow so overflow:hidden on the card cannot clip it");
   }
 }
 if (!inline.includes("function calcSideBag(legs, otherLegs)")

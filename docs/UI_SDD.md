@@ -199,7 +199,9 @@ Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not
 
 `?view=calc`. Two sides stacked (Team 1 gets / Team 2 gets). Team pickers are optional
 button menus (not a native `<select>` — remounting that on iOS reopened the team list).
-Picking a name closes the menu and ignores the ghost tap that would open it again.
+The open list sits **in flow** under the header so `.calc-block { overflow: hidden }` cannot
+clip it to two names. Picking a name closes the menu and ignores the ghost tap that would
+open it again.
 Search is always on. With no team, typing players or picks searches the whole today book
 (research — owner in the meta, not tied to a seat). Choosing a team only scopes the next
 search — it does **not** open the player list or wipe pieces already on that side. After a

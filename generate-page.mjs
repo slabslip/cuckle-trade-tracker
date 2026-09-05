@@ -1390,7 +1390,7 @@ const html = `<!DOCTYPE html>
       appearance: none; font: inherit; font-weight: 650; color: #e0b44c;
       display: block; width: 100%; text-align: center; cursor: pointer;
       background: transparent; border: 1px solid rgba(224, 180, 76, 0.5);
-      border-radius: 12px; padding: 12px 14px; margin: 10px 0 0; min-height: 44px;
+      border-radius: 12px; padding: 12px 14px; margin: 0; min-height: 44px;
     }
     button.lh-calc-door:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
     .calc-stack { display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px; }
@@ -3136,7 +3136,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeYour3Empty20260905191000";
+    const DATA_V = "homeDropTradeChip20260905192000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14376,50 +14376,10 @@ const html = `<!DOCTYPE html>
     }
 
     function leagueInProgress() {
-      ensureLatestTradeBags();
-      const latest = latestTradeSide();
-      let tradeBox = "";
-      if (latest) {
-        try {
-          const voted = !!readVotes(latest.transaction_id).choice;
-          const chip = latestTradeBagsReady(latest.transaction_id)
-            ? latestTradeCardHtml(latest)
-            : latestTradeSkeletonHtml(latest);
-          // Vote CTA sits in the chip lean mid (between flairs). Chip still opens via data-board-open.
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
-            + (voted ? " voted" : "") + '"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="lh-trade-chip-wrap">' + chip + "</div>"
-            + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
-            + "</div>";
-        } catch (err) {
-          // Bag/format bugs must not erase the rest of league home (News Feed).
-          console.error(err);
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="lh-trade-chip-wrap">'
-            + '<div class="h2h-chip is-trade" role="group">'
-            + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
-            + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-            + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
-            + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
-            + latestTradeLeanFooterHtml(latest, null)
-            + "</div>"
-            + "</div>"
-            + "</div>";
-        }
-      } else if (authSeatId() && authSession && latestTradeAbsolute()) {
-        tradeBox = '<div class="champ-alert lh-progress lh-latest-trade is-caught-up">'
-          + '<p class="caption" style="margin:0">You’re caught up — every recent two-team trade has your vote. '
-          + "New deals show up here first.</p>"
-          + "</div>";
-      }
-      if (!tradeBox && !authSeatId()) return your3Html() + homeNewsStoryHtml();
+      // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc">Price a deal</button>';
       return your3Html()
-        + (tradeBox ? '<section class="lh-section">' + tradeBox + door + "</section>" : "")
+        + '<section class="lh-section">' + door + "</section>"
         + homeNewsStoryHtml();
     }
 
@@ -17456,17 +17416,22 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("recentTradeHeaderHtml()") || prog.includes("day-alert-h")) {
     throw new Error("leagueInProgress must not mount the Recent Trade header row");
   }
-  if (!prog.includes("lh-latest-trade") || !prog.includes("data-board-open")
-    || !prog.includes("latestTradeLeanFooterHtml(") || prog.includes("Who won this trade?")) {
-    throw new Error("leagueInProgress must mount Recent Trade chip with lean-mid vote (no Who won CTA)");
+  if (prog.includes("lh-latest-trade") || prog.includes("latestTradeCardHtml(")
+    || prog.includes("ensureLatestTradeBags(") || prog.includes("caught up")
+    || prog.includes("data-board-open")) {
+    throw new Error("leagueInProgress must not mount the Recent Trade chip; Your 3 owns the vote");
+  }
+  if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
+    || !prog.includes("homeNewsStoryHtml()")) {
+    throw new Error("Home digest is Your 3 + Price a deal + team news");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
     || !inline.includes("data-vote-open-seat=")
-    || !prog.includes("caught up") || !inline.includes("function latestTradeAbsolute(")
+    || !inline.includes("function latestTradeAbsolute(")
     || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")
     || !inline.includes("voteSheetSeat") || !inline.includes("voteConfirmSeat")) {
-    throw new Error("league home Recent Trade must queue unvoted deals and confirm with tally popup");
+    throw new Error("trade vote confirm must stay available from Your 3");
   }
   if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")
     || !html.includes(".vote-confirm-tally")
@@ -17475,8 +17440,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !inline.includes("voteModalSwallowClicksUntil")) {
     throw new Error("Recent Trade vote CTA must sit in lean mid between flairs; confirm must swallow ghost clicks");
   }
-  if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
-    || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
+  if (!inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
     || !inline.includes("function latestTradeLean(") || !inline.includes("function legValueText(")
     || !inline.includes("latestTradeLeanFooterHtml(") || !inline.includes("lh-trade-val")
     || !inline.includes("lh-trade-num") || !inline.includes("latestTradeSumHtml(")
@@ -17486,9 +17450,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !html.includes(".h2h-av-wrap") || !html.includes(".h2h-medal")
     || !html.includes(".lh-trade-val") || !html.includes(".lh-trade-num") || !html.includes(".lh-trade-sum")
     || !html.includes(".h2h-trade-lean")
-    || !html.includes(".h2h-lean-marks") || !html.includes(".h2h-lean-n")
-    || !html.includes("div.champ-alert.lh-progress.lh-latest-trade")) {
-    throw new Error("Latest trade must be the H2H VS chip (h2h-chip is-trade), not a stacked bag list");
+    || !html.includes(".h2h-lean-marks") || !html.includes(".h2h-lean-n")) {
+    throw new Error("Trade feed H2H chip helpers must stay (h2h-chip is-trade), not a stacked bag list");
   }
   if (!inline.includes("function latestTradeLean(") || !inline.includes("applyVa(")
     || !inline.includes("windowScore(latest)")) {

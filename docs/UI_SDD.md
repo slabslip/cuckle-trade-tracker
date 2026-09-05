@@ -14,14 +14,15 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
-the digest — signed-in **Your 3** (notifications only), one Recent Trade card, **Price a deal**,
-signed-in **On your roster** news, and the News Feed pull-up. It is the water cooler. The `Score as`
-clock is not on it; the clock lives in the brand header on screens it applies to (§2a).
+the digest — signed-in **Your 3** (notifications only), **Price a deal**, signed-in **On your
+roster** news, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
+it; the clock lives in the brand header on screens it applies to (§2a).
 
 **Your 3** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
 and nothing is waiting, keep the heading and leave the slot blank — do not fill it. That is an
 *action*, not a personal bag number. Lineup recaps, waivers, and bag totals stay off Home. The
-calculator door stays under Recent Trade — it is not a Your 3 row.
+calculator door is its own row — it is not a Your 3 filler. Home does not remount the Recent
+Trade chip; the vote notification is the door into that deal.
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
 Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
@@ -182,10 +183,10 @@ sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 or a blank reserved slot when nothing is waiting. Tap → Ledger or the deal vote. Do not fill
 with the calculator or a news teaser.
 
-**Recent Trade** · the newest date on the tape. Named for recency, not for a clock. Existing H2H
-gold card + “Who won this trade?”. Do not restyle into a new card system.
+**No Recent Trade chip on Home.** The vote row in Your 3 opens the deal. The H2H chip still
+renders on the open-trade screen and on Teams / History feed cards.
 
-**Price a deal** · under the deal. Opens `?view=calc`.
+**Price a deal** · its own row on Home. Opens `?view=calc`.
 
 **On your roster** — signed-in only. Up to three feed items that tag that manager’s players,
 ranked by category + recency (injury is one tag among roster move, depth chart, and the rest).

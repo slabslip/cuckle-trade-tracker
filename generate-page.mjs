@@ -2937,7 +2937,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905135000";
+    const DATA_V = "ledger20260905140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6865,7 +6865,7 @@ const html = `<!DOCTYPE html>
     const LEDGER_POS_WORDS = [
       { key: "QB", slug: "qb", names: ["qb", "qb1", "qb2", "qb 1", "qb 2", "quarterback"] },
       { key: "RB", slug: "rb", names: ["rb", "rb1", "rb2", "rb3", "rb 1", "rb 2", "running back"] },
-      { key: "WR", slug: "wr", names: ["wr", "wr1", "wr2", "wr3", "wr 1", "wr 2", "wr 3", "wide receiver"] },
+      { key: "WR", slug: "wr", names: ["wr", "wr1", "wr2", "wr3", "wr 1", "wr 2", "wr 3", "we 1", "we 2", "we 3", "we1", "wide receiver"] },
       { key: "TE", slug: "te", names: ["te", "te1", "te2", "te 1", "tight end"] },
       { key: "K", slug: "k", names: ["k", "k1", "kicker"] },
       { key: "DEF", slug: "def", names: ["def", "dst", "defense"] },
@@ -7148,8 +7148,9 @@ const html = `<!DOCTYPE html>
         findAll(c.display, "wager-clock-tag");
         c.names.forEach((nm) => { if (nm.length >= 4) findAll(nm, "wager-clock-tag"); });
       });
-      raw.replace(/\\b((?:QB|RB|WR|TE|K|DEF|DST)(?:\\s*\\d)?)\\b/gi, function (m, _g, off) {
-        addHit(off, off + m.length, "wager-pos-tag pos-" + newsPosSlug(m.replace(/[\\s\\d]+$/g, "")));
+      raw.replace(/\\b((?:QB|RB|WR|TE|K|DEF|DST)(?:\\s*\\d)?|we\\s*[1-3])\\b/gi, function (m, _g, off) {
+        const slug = /^we/i.test(m) ? "wr" : newsPosSlug(m.replace(/[\\s\\d]+$/g, ""));
+        addHit(off, off + m.length, "wager-pos-tag pos-" + slug);
         return m;
       });
       hits.sort((a, b) => a.start - b.start);
@@ -7251,6 +7252,17 @@ const html = `<!DOCTYPE html>
           findSpans(nm, function (start, end) { addRep(start, end, t.display); });
         });
       });
+      const weRe = /\\bwe(\\s*[1-3])?\\b/gi;
+      let weM;
+      while ((weM = weRe.exec(raw))) {
+        const start = weM.index;
+        const end = start + weM[0].length;
+        const left = raw.slice(Math.max(0, start - 20), start).toLowerCase();
+        const rank = weM[1] || "";
+        const afterAs = /(?:^|[\\s,.;:])(?:as|finish(?:es)?|at)\\s+$/.test(left);
+        if (!rank && !afterAs) continue;
+        addRep(start, end, "WR" + rank);
+      }
       if (!reps.length) return false;
       reps.sort((a, b) => b.start - a.start);
       let nextVal = raw;
@@ -7416,7 +7428,9 @@ const html = `<!DOCTYPE html>
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
         + '<label>What\u2019s the bet<div class="lc-desc-box">'
         + '<div class="lc-desc-hi" data-ledger-desc-hi aria-hidden="true"></div>'
-        + '<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1" data-ledger-desc="1">'
+        + '<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1" data-ledger-desc="1"'
+        + ' spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"'
+        + ' lang="en" data-gramm="false">'
         + esc(desc) + "</textarea>"
         + '<div class="lc-desc-sugs" data-ledger-desc-sugs hidden></div>'
         + "</div></label>"
@@ -17478,6 +17492,8 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerDescBestPhrase(", true],
     ["function ledgerDescOpenWord(", true],
     ["function ledgerDescExpandFinished(", true],
+    ['spellcheck="false"', true],
+    ['autocorrect="off"', true],
     ["function ledgerDescFitTa(", true],
     ["function ledgerDescWordJustClosed(", true],
     ["ledgerDescHighlightHtml(b.title", true],

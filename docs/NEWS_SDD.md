@@ -546,9 +546,10 @@ caught in review before it reaches the page.
    in your own register and they go straight into `news-voice.mjs` — or into the LLM prompt.
 2. **Cadence.** Twice a day is the recommendation. In-season Sunday evening could be a third run.
 3. **The LLM path.** Worth cents a month, and it needs a key you own and a provider you choose.
-4. **Whether news should ever be per-seat.** Today the feed is league-wide on league home, showing
-   everyone's news. A manager's own tab could carry only theirs. That is additive and cheap — the
-   rows already carry `user_id`.
+4. **Whether news should ever be per-seat.** **Settled for Home.** The News Feed pull-up stays
+   league-wide. Signed-in Home also paints **On your roster** — up to three items that tag that
+   manager (`user_id` / `managers[]` / `players[]`), ranked by category + recency. Injury is one
+   tag, not the only one. Signed-out Home does not duplicate the peek.
 5. **Whether "Ruled out" should supersede "Questionable"** rather than sit beside it. That is the
    thread model in §7, and a `v: 2`.
 

@@ -14,12 +14,13 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
-the digest — signed-in **Your 3** (actions only), one Recent Trade card, **Price a deal**, one
-news story in-flow, and the News Feed pull-up. It is the water cooler. The `Score as` clock is
-not on it; the clock lives in the brand header on screens it applies to (§2a).
+the digest — signed-in **Your 3** (notifications only), one Recent Trade card, **Price a deal**,
+signed-in **On your roster** news, and the News Feed pull-up. It is the water cooler. The `Score as`
+clock is not on it; the clock lives in the brand header on screens it applies to (§2a).
 
-**Your 3** may name a wager, a vote, or roster-tagged news. That is an *action*, not a personal
-bag number. Lineup recaps, waivers, and bag totals stay off Home.
+**Your 3** may name a wager or an uncast vote. Omit the strip when signed out or when nothing is
+waiting. That is an *action*, not a personal bag number. Lineup recaps, waivers, and bag totals
+stay off Home. The calculator door stays under Recent Trade — it is not a Your 3 row.
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
 Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
@@ -176,15 +177,18 @@ sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 
 ## 3. Home
 
-**Your 3** — omit if signed out or empty. At most three action rows. Tap → Ledger, the deal vote,
-or the News Feed.
+**Your 3** — omit if signed out or empty. At most three notification rows (wager / uncast vote).
+Tap → Ledger or the deal vote. Do not fill with the calculator or a news teaser.
 
 **Recent Trade** · the newest date on the tape. Named for recency, not for a clock. Existing H2H
 gold card + “Who won this trade?”. Do not restyle into a new card system.
 
 **Price a deal** · under the deal. Opens `?view=calc`.
 
-**One news story** in-flow (seat-tagged feed). The News Feed pull-up remains for the rest.
+**On your roster** — signed-in only. Up to three feed items that tag that manager’s players,
+ranked by category + recency (injury is one tag among roster move, depth chart, and the rest).
+Omit when signed out or when nothing hits the seat. The News Feed pull-up stays the league-wide
+preview and is not skipped to avoid a duplicate.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.
 

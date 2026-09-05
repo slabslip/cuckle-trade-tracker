@@ -23,9 +23,9 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. **Home** is the daily paper (league deal + news; signed-in **Your 3** actions only — no bag
-   hero). **Teams** is first-person after a seat. Price a hypothetical on **`?view=calc`**. League
-   tape stays the water cooler.
+4. **Home** is the daily paper (league deal + News Feed peek; signed-in **Your 3** notifications
+   and **On your roster** news — no bag hero). **Teams** is first-person after a seat. Price a
+   hypothetical on **`?view=calc`**. League tape stays the water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
 
 That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle.

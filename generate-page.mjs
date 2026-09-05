@@ -1379,7 +1379,12 @@ const html = `<!DOCTYPE html>
     button.your3-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.your3-row:last-child { margin-bottom: 0; }
     .home-news { margin: 0 0 16px; }
-    .home-news .news-pullup-card { margin: 0; }
+    .home-news-h {
+      margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .home-news .news-pullup-card { margin: 0 0 10px; }
+    .home-news .news-pullup-card:last-child { margin-bottom: 0; }
     button.lh-calc-door {
       appearance: none; font: inherit; font-weight: 650; color: #e0b44c;
       display: block; width: 100%; text-align: center; cursor: pointer;
@@ -3130,7 +3135,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeDigest20260905185500";
+    const DATA_V = "homeTeamNews20260905190500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13151,7 +13156,7 @@ const html = `<!DOCTYPE html>
           ? "The feed could not be loaded."
           : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
       }
-      const peekItem = items.length > 1 ? items[1] : (items.length && view !== "home" ? items[0] : null);
+      const peekItem = items[0] || null;
       const latestBit = peekItem
         ? newsHeroLine(peekItem)
         : { source: "News", line: emptyLine || (items.length ? "Open for the rest of the feed." : emptyLine), lineHtml: "", categoryTag: "", who: "", handle: "", when: "", postUrl: "", xLink: "", itemId: "", canRemove: false };
@@ -14049,7 +14054,6 @@ const html = `<!DOCTYPE html>
     function your3Html() {
       if (!authSeatId() || !authSession) return "";
       const seat = String(authSeatId());
-      const mySeatName = authSeatName() || "";
       const rows = [];
       const bets = ledgerExpireLocal ? ledgerExpireLocal(ledgerBets || []) : (ledgerBets || []);
       const actionBet = (bets || []).find((b) => {
@@ -14085,20 +14089,6 @@ const html = `<!DOCTYPE html>
           tx: latest.transaction_id,
         });
       }
-      const items = typeof newsItemsLive === "function" ? newsItemsLive() : [];
-      const tagged = (items || []).find((it) => {
-        const names = (Array.isArray(it.managers) && it.managers.length)
-          ? it.managers : (it.manager ? [it.manager] : []);
-        return names.some((n) => n && (n === mySeatName || String(n) === seat));
-      });
-      if (tagged) {
-        rows.push({
-          kind: "news",
-          lab: tagged.league_line || tagged.headline || "News on your roster",
-        });
-      } else if (rows.length < 2) {
-        rows.push({ kind: "calc", lab: "Price a deal" });
-      }
       if (!rows.length) return "";
       return '<section class="your3" aria-label="Your 3">'
         + '<div class="your3-h">Your 3</div>'
@@ -14112,12 +14102,55 @@ const html = `<!DOCTYPE html>
         + "</section>";
     }
 
+    function newsHitsMyTeam(it) {
+      if (!it || !authSeatId()) return false;
+      const seat = String(authSeatId());
+      const names = [authSeatCanonName(), authSeatName()].filter(Boolean);
+      const hitName = (n) => n && names.some((mine) => String(n) === String(mine));
+      if (it.user_id && String(it.user_id) === seat) return true;
+      if (hitName(it.manager)) return true;
+      if (Array.isArray(it.managers) && it.managers.some(hitName)) return true;
+      if (Array.isArray(it.players)) {
+        for (const p of it.players) {
+          if (!p) continue;
+          if (p.user_id && String(p.user_id) === seat) return true;
+          if (hitName(p.manager)) return true;
+        }
+      }
+      return false;
+    }
+
+    /** Rank roster news without touching the value book. Injury is one tag, not the only one. */
+    function newsTeamImportance(it) {
+      const line = String((it && (it.league_line || it.headline || it.note)) || "");
+      const tag = (typeof newsCategoryTagFromLine === "function" ? newsCategoryTagFromLine(line) : "")
+        .toLowerCase();
+      let cat = 30;
+      if (/injury|suspension/.test(tag)) cat = 80;
+      else if (/roster move|depth chart|trade/.test(tag)) cat = 70;
+      else if (/off the field|buzz/.test(tag)) cat = 55;
+      else if (tag) cat = 45;
+      const sev = Number(it && it.severity) || 0;
+      const ageH = (Date.now() - Number((it && it.published) || 0)) / 3600000;
+      const recency = ageH < 24 ? 25 : ageH < 72 ? 15 : ageH < 168 ? 8 : 0;
+      const names = (it && Array.isArray(it.managers) && it.managers.length)
+        ? it.managers : ((it && it.manager) ? [it.manager] : []);
+      const exclusive = names.length === 1 ? 8 : 0;
+      return cat + sev * 2 + recency + exclusive;
+    }
+
     function homeNewsStoryHtml() {
+      if (!authSeatId() || !authSession) return "";
       const items = typeof newsItemsLive === "function" ? newsItemsLive() : [];
-      if (!items.length) return "";
-      const bit = newsHeroLine(items[0]);
-      return '<section class="home-news" aria-label="Latest news">'
-        + newsPullupItemHtml(bit) + "</section>";
+      const mine = (items || []).filter(newsHitsMyTeam)
+        .slice()
+        .sort((a, b) => newsTeamImportance(b) - newsTeamImportance(a) || (b.published || 0) - (a.published || 0))
+        .slice(0, 3);
+      if (!mine.length) return "";
+      return '<section class="home-news" aria-label="On your roster">'
+        + '<div class="home-news-h">On your roster</div>'
+        + mine.map((it) => newsPullupItemHtml(newsHeroLine(it))).join("")
+        + "</section>";
     }
 
     function calcAssetById(id) {
@@ -19455,6 +19488,15 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
   || !inline.includes("Price a deal") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
   throw new Error("Home digest must ship Your 3, one news story, Price a deal, calc, and barracks");
+}
+if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
+  || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")) {
+  throw new Error("Home in-flow news must be signed-in roster hits; peek stays the latest league item");
+}
+if (inline.includes("items.length > 1 ? items[1]")
+  || inline.includes('kind: "calc", lab: "Price a deal"')
+  || inline.includes('kind: "news"')) {
+  throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Your 3");
 }
 if (!inline.includes("Team 1 gets") || !inline.includes("Search for a player")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {

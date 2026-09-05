@@ -2856,7 +2856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905024500";
+    const DATA_V = "ledger20260905025000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6802,7 +6802,7 @@ const html = `<!DOCTYPE html>
       const themField = kind === "counter"
         ? '<label class="lc-team"><input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly aria-label="Team"></label>'
           + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
-        : '<label class="lc-team"><select name="them" required data-ledger-wager-live="1" aria-label="Team">'
+        : '<label>Choose a team to send wager<select name="them" required data-ledger-wager-live="1">'
           + optsHtml + "</select></label>";
       const sendLab = kind === "counter"
         ? "Send back"
@@ -16844,6 +16844,8 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ['data-ledger-form-slot="1"', true],
     ["Send Wager to", true],
     [">team</option>", true],
+    ["Choose a team to send wager", true],
+    ['aria-label="Team">', false],
     ["They get the other side.", true],
     ["Send to Them", false],
     ["Them gets the other side.", false],

@@ -1452,6 +1452,37 @@ const html = `<!DOCTYPE html>
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
       color: var(--text); font-size: 16px; resize: vertical;
     }
+    .lc-desc-box { position: relative; }
+    .lc-desc-box textarea,
+    .lc-desc-hi {
+      font-family: inherit; font-size: 16px !important; line-height: 1.35;
+      letter-spacing: 0; white-space: pre-wrap; word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+    .lc-desc-hi {
+      position: absolute; inset: 0; padding: 8px 10px;
+      border: 1px solid transparent; border-radius: 8px;
+      color: var(--text); overflow: hidden; pointer-events: none;
+      white-space: pre-wrap;
+    }
+    .lc-desc-box textarea[data-ledger-desc] {
+      position: relative; z-index: 1;
+      background: transparent;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      caret-color: var(--text);
+    }
+    .lc-desc-box textarea[data-ledger-desc]::selection {
+      background: rgba(224, 180, 76, 0.32);
+      color: transparent;
+    }
+    .lc-desc-ghost { color: var(--dim); font-weight: 400; }
+    .wager-team-tag { color: var(--lh-gold, #e0b44c); font-weight: 650; }
+    .lc-desc-sugs {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0;
+    }
+    .lc-desc-sugs[hidden] { display: none; }
+    .lc-desc-sugs .chip { text-transform: none; letter-spacing: 0; }
     .ledger-add select, .ledger-card select {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
@@ -2856,7 +2887,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905025500";
+    const DATA_V = "ledger20260905031000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2904,6 +2935,8 @@ const html = `<!DOCTYPE html>
     let ledgerComposeDraft = null;
     let ledgerComposeNode = null;
     let ledgerComposeFocus = null;
+    let ledgerEntityIndex = null;
+    let ledgerDescPending = null;
     let ledgerVotes = [];
     let ledgerFeed = "live";
     let ledgerNflState = null;
@@ -6083,6 +6116,7 @@ const html = `<!DOCTYPE html>
       if (them && !them.value && d.them) them.value = d.them;
       if (stake && !String(stake.value || "").trim() && d.stake) stake.value = d.stake;
       if (desc && !String(desc.value || "").trim() && d.desc) desc.value = d.desc;
+      if (desc) ledgerPaintDescBox(form);
       if (clock && !clock.value && d.clock) clock.value = d.clock;
       const send = form.querySelector("[data-ledger-send-lab]");
       if (send && form.hasAttribute("data-ledger-wager-form")) {
@@ -6732,6 +6766,334 @@ const html = `<!DOCTYPE html>
       return cand[0] || null;
     }
 
+    const LEDGER_NFL_TEAMS = [
+      { abbr: "ARI", display: "The Arizona Cardinals", names: ["the arizona cardinals", "arizona cardinals", "arizona", "cardinals", "ari"] },
+      { abbr: "ATL", display: "The Atlanta Falcons", names: ["the atlanta falcons", "atlanta falcons", "atlanta", "falcons", "atl"] },
+      { abbr: "BAL", display: "The Baltimore Ravens", names: ["the baltimore ravens", "baltimore ravens", "baltimore", "ravens", "bal"] },
+      { abbr: "BUF", display: "The Buffalo Bills", names: ["the buffalo bills", "buffalo bills", "buffalo", "bills", "buf"] },
+      { abbr: "CAR", display: "The Carolina Panthers", names: ["the carolina panthers", "carolina panthers", "carolina", "panthers", "car"] },
+      { abbr: "CHI", display: "The Chicago Bears", names: ["the chicago bears", "chicago bears", "chicago", "bears", "chi"] },
+      { abbr: "CIN", display: "The Cincinnati Bengals", names: ["the cincinnati bengals", "cincinnati bengals", "cincinnati", "bengals", "cin"] },
+      { abbr: "CLE", display: "The Cleveland Browns", names: ["the cleveland browns", "cleveland browns", "cleveland", "browns", "cle"] },
+      { abbr: "DAL", display: "The Dallas Cowboys", names: ["the dallas cowboys", "dallas cowboys", "dallas", "cowboys", "dal"] },
+      { abbr: "DEN", display: "The Denver Broncos", names: ["the denver broncos", "denver broncos", "denver", "broncos", "den"] },
+      { abbr: "DET", display: "The Detroit Lions", names: ["the detroit lions", "detroit lions", "detroit", "lions", "det"] },
+      { abbr: "GB", display: "The Green Bay Packers", names: ["the green bay packers", "green bay packers", "green bay", "packers", "gb", "gbp"] },
+      { abbr: "HOU", display: "The Houston Texans", names: ["the houston texans", "houston texans", "houston", "texans", "hou"] },
+      { abbr: "IND", display: "The Indianapolis Colts", names: ["the indianapolis colts", "indianapolis colts", "indianapolis", "colts", "ind"] },
+      { abbr: "JAX", display: "The Jacksonville Jaguars", names: ["the jacksonville jaguars", "jacksonville jaguars", "jacksonville", "jaguars", "jags", "jax"] },
+      { abbr: "KC", display: "The Kansas City Chiefs", names: ["the kansas city chiefs", "kansas city chiefs", "kansas city", "chiefs", "kc"] },
+      { abbr: "LAC", display: "The Los Angeles Chargers", names: ["the los angeles chargers", "los angeles chargers", "chargers", "bolts", "lac"] },
+      { abbr: "LAR", display: "The Los Angeles Rams", names: ["the los angeles rams", "los angeles rams", "rams", "lar"] },
+      { abbr: "LV", display: "The Las Vegas Raiders", names: ["the las vegas raiders", "las vegas raiders", "las vegas", "raiders", "lv"] },
+      { abbr: "MIA", display: "The Miami Dolphins", names: ["the miami dolphins", "miami dolphins", "miami", "dolphins", "mia"] },
+      { abbr: "MIN", display: "The Minnesota Vikings", names: ["the minnesota vikings", "minnesota vikings", "minnesota", "vikings", "min"] },
+      { abbr: "NE", display: "The New England Patriots", names: ["the new england patriots", "new england patriots", "new england", "patriots", "pats", "ne"] },
+      { abbr: "NO", display: "The New Orleans Saints", names: ["the new orleans saints", "new orleans saints", "new orleans", "saints", "no"] },
+      { abbr: "NYG", display: "The New York Giants", names: ["the new york giants", "new york giants", "giants", "nyg"] },
+      { abbr: "NYJ", display: "The New York Jets", names: ["the new york jets", "new york jets", "jets", "nyj"] },
+      { abbr: "PHI", display: "The Philadelphia Eagles", names: ["the philadelphia eagles", "philadelphia eagles", "philadelphia", "eagles", "phi"] },
+      { abbr: "PIT", display: "The Pittsburgh Steelers", names: ["the pittsburgh steelers", "pittsburgh steelers", "pittsburgh", "steelers", "pit"] },
+      { abbr: "SEA", display: "The Seattle Seahawks", names: ["the seattle seahawks", "seattle seahawks", "seattle", "seahawks", "sea"] },
+      { abbr: "SF", display: "The San Francisco 49ers", names: ["the san francisco 49ers", "san francisco 49ers", "san francisco", "49ers", "niners", "sf", "sfo"] },
+      { abbr: "TB", display: "The Tampa Bay Buccaneers", names: ["the tampa bay buccaneers", "tampa bay buccaneers", "tampa bay", "buccaneers", "bucs", "tb"] },
+      { abbr: "TEN", display: "The Tennessee Titans", names: ["the tennessee titans", "tennessee titans", "tennessee", "titans", "ten"] },
+      { abbr: "WAS", display: "The Washington Commanders", names: ["the washington commanders", "washington commanders", "washington", "commanders", "was"] },
+    ];
+    const LEDGER_POS_WORDS = [
+      { key: "QB", slug: "qb", names: ["qb", "qb1", "qb2", "quarterback"] },
+      { key: "RB", slug: "rb", names: ["rb", "rb1", "rb2", "rb3", "running back"] },
+      { key: "WR", slug: "wr", names: ["wr", "wr1", "wr2", "wr3", "wide receiver"] },
+      { key: "TE", slug: "te", names: ["te", "te1", "te2", "tight end"] },
+      { key: "K", slug: "k", names: ["k", "k1", "kicker"] },
+      { key: "DEF", slug: "def", names: ["def", "dst", "defense"] },
+    ];
+    const LEDGER_PLAYER_ALIASES = [
+      ["zeke", "Ezekiel Elliott"],
+      ["cmc", "Christian McCaffrey"],
+      ["ajb", "A.J. Brown"],
+      ["jsn", "Jaxon Smith-Njigba"],
+      ["dk", "DK Metcalf"],
+      ["nuk", "DeAndre Hopkins"],
+      ["cheetah", "Tyreek Hill"],
+      ["hollywood", "Marquise Brown"],
+      ["etn", "Travis Etienne"],
+      ["jamo", "Jameson Williams"],
+      ["mvs", "Marquez Valdes-Scantling"],
+      ["saquon", "Saquon Barkley"],
+      ["bijan", "Bijan Robinson"],
+      ["puka", "Puka Nacua"],
+      ["tua", "Tua Tagovailoa"],
+      ["breece", "Breece Hall"],
+      ["jahmyr", "Jahmyr Gibbs"],
+      ["amon ra", "Amon-Ra St. Brown"],
+      ["stribling", "De'Zhaun Stribling"],
+      ["deshaun stribling", "De'Zhaun Stribling"],
+    ];
+
+    function ledgerNorm(s) {
+      return String(s || "").toLowerCase().replace(/['\\u2019]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    }
+    function ledgerEscRe(s) {
+      return String(s || "").replace(/[.*+?^$()|[\\]\\\\{}]/g, "\\\\$&");
+    }
+    function ledgerWarmDescIndex() {
+      const go = function () {
+        ledgerEntityIndex = null;
+        const form = document.querySelector("[data-ledger-wager-form], [data-ledger-counter-form]");
+        if (form) ledgerPaintDescBox(form);
+      };
+      if (ktcBySleeper) {
+        go();
+        return;
+      }
+      if (typeof ensureKtcBook === "function") {
+        ensureKtcBook().then(go).catch(go);
+      }
+    }
+    function ledgerEnsureEntityIndex() {
+      if (ledgerEntityIndex) return ledgerEntityIndex;
+      const players = [];
+      const seen = Object.create(null);
+      const addPlayer = function (name, pos, team, id, rank, rostered) {
+        const n = String(name || "").trim();
+        if (!n || n.length < 3) return;
+        const key = ledgerNorm(n);
+        if (!key || seen[key]) {
+          if (seen[key] && rostered) seen[key].rostered = true;
+          return;
+        }
+        const parts = n.split(/\\s+/).filter(Boolean);
+        const last = parts.length > 1 ? parts[parts.length - 1] : "";
+        const row = {
+          kind: "player",
+          display: n,
+          pos: String(pos || "").toUpperCase(),
+          team: String(team || "").toUpperCase(),
+          id: id ? String(id) : "",
+          rank: Number(rank) || 9999,
+          rostered: !!rostered,
+          last: last,
+          lastNorm: ledgerNorm(last),
+          key: key,
+        };
+        seen[key] = row;
+        players.push(row);
+      };
+      if (ktcBySleeper) {
+        Object.keys(ktcBySleeper).forEach((id) => {
+          const p = ktcBySleeper[id];
+          if (p && p.name) addPlayer(p.name, p.pos, p.team, p.sleeper_id || id, p.ktc_rank, false);
+        });
+      }
+      const newsBook = (typeof news !== "undefined" && news && news.items) ? news.items : [];
+      for (let i = 0; i < newsBook.length; i++) {
+        const it = newsBook[i];
+        const plist = (it && it.players) || [];
+        for (let j = 0; j < plist.length; j++) {
+          const p = plist[j];
+          if (p) addPlayer(p.player, p.player_position, p.player_team, p.player_id, 50, true);
+        }
+        if (it) addPlayer(it.player, it.player_position, it.player_team, it.player_id, 50, true);
+      }
+      const cuffRows = (typeof cuffs !== "undefined" && cuffs && cuffs.rows) ? cuffs.rows : [];
+      for (let i = 0; i < cuffRows.length; i++) {
+        const r = cuffRows[i];
+        if (!r) continue;
+        addPlayer(r.starter, r.pos, r.nfl_team, r.starter_id, 40, true);
+        addPlayer(r.cuff, r.pos, r.nfl_team, r.cuff_id, 80, true);
+      }
+      addPlayer("Derrick Henry", "RB", "BAL", "4983", 20, false);
+      addPlayer("Christian McCaffrey", "RB", "SF", "4034", 10, false);
+      addPlayer("Nico Collins", "WR", "HOU", "7569", 30, false);
+      addPlayer("Amon-Ra St. Brown", "WR", "DET", "7547", 15, false);
+      addPlayer("De'Zhaun Stribling", "WR", "SF", "13417", 94, false);
+      const aliasTo = Object.create(null);
+      LEDGER_PLAYER_ALIASES.forEach((pair) => {
+        aliasTo[ledgerNorm(pair[0])] = pair[1];
+      });
+      const lastCount = Object.create(null);
+      players.forEach((p) => {
+        if (p.lastNorm && p.lastNorm.length >= 4) lastCount[p.lastNorm] = (lastCount[p.lastNorm] || 0) + 1;
+      });
+      ledgerEntityIndex = {
+        players: players,
+        teams: LEDGER_NFL_TEAMS,
+        pos: LEDGER_POS_WORDS,
+        aliasTo: aliasTo,
+        lastCount: lastCount,
+      };
+      return ledgerEntityIndex;
+    }
+    function ledgerDescPhraseAt(text, caret) {
+      const raw = String(text || "");
+      const n = Math.max(0, Math.min(raw.length, Number(caret) || 0));
+      const left = raw.slice(0, n);
+      const m = left.match(/(?:^|[\\s,.;:!?(\\[])([A-Za-z0-9''\\u2019.-]+(?:\\s+[A-Za-z0-9''\\u2019.-]+){0,3})$/);
+      if (!m) return { start: n, end: n, text: "" };
+      const phrase = m[1];
+      return { start: n - phrase.length, end: n, text: phrase };
+    }
+    function ledgerDescSuggest(phrase) {
+      const q = ledgerNorm(phrase);
+      if (!q || q.length < 2) return [];
+      const idx = ledgerEnsureEntityIndex();
+      const out = [];
+      const seen = Object.create(null);
+      const push = function (row, score) {
+        const k = row.kind + ":" + row.display;
+        if (seen[k]) return;
+        seen[k] = 1;
+        out.push({
+          kind: row.kind,
+          display: row.display,
+          pos: row.pos || "",
+          slug: row.slug || (row.pos ? newsPosSlug(row.pos) : ""),
+          score: score,
+        });
+      };
+      idx.pos.forEach((p) => {
+        for (let i = 0; i < p.names.length; i++) {
+          const nm = p.names[i];
+          if (nm === q || nm.indexOf(q) === 0) {
+            push({ kind: "pos", display: p.key, pos: p.key, slug: p.slug }, nm === q ? 400 : 280);
+          }
+        }
+      });
+      idx.teams.forEach((t) => {
+        const disp = ledgerNorm(t.display);
+        if (disp === q || disp.indexOf(q) === 0) push({ kind: "team", display: t.display, slug: "team" }, disp === q ? 380 : 260);
+        for (let i = 0; i < t.names.length; i++) {
+          const nm = t.names[i];
+          if (nm === q || (q.length >= 3 && nm.indexOf(q) === 0)) {
+            push({ kind: "team", display: t.display, slug: "team" }, nm === q ? 360 : 240 + Math.min(20, nm.length));
+          }
+        }
+      });
+      const aliasFull = idx.aliasTo[q];
+      idx.players.forEach((p) => {
+        let score = 0;
+        if (p.key === q || p.key.indexOf(q) === 0) score = (p.key === q ? 350 : 220) + (p.rostered ? 40 : 0) - Math.min(30, p.rank / 40);
+        else if (p.lastNorm && p.lastNorm.length >= 4 && (p.lastNorm === q || p.lastNorm.indexOf(q) === 0)) {
+          const uniq = idx.lastCount[p.lastNorm] === 1;
+          if (p.lastNorm === q && uniq) score = 340 + (p.rostered ? 40 : 0);
+          else if (q.length >= 4) score = 200 + (p.rostered ? 30 : 0) - Math.min(20, p.rank / 50);
+        }
+        if (aliasFull && ledgerNorm(aliasFull) === p.key) score = Math.max(score, 370);
+        if (score) push(p, score);
+      });
+      out.sort((a, b) => b.score - a.score || a.display.localeCompare(b.display));
+      return out.slice(0, 6);
+    }
+    function ledgerDescHighlightHtml(text, ghost) {
+      const raw = String(text || "");
+      if (!raw) return "";
+      const idx = ledgerEnsureEntityIndex();
+      const hits = [];
+      const addHit = function (start, end, cls) {
+        if (start < 0 || end <= start) return;
+        for (let i = 0; i < hits.length; i++) {
+          if (!(end <= hits[i].start || start >= hits[i].end)) return;
+        }
+        hits.push({ start: start, end: end, cls: cls });
+      };
+      const findAll = function (needle, cls) {
+        if (!needle || needle.length < 2) return;
+        const re = new RegExp("\\\\b" + ledgerEscRe(needle) + "\\\\b", "gi");
+        let m;
+        while ((m = re.exec(raw))) addHit(m.index, m.index + m[0].length, cls);
+      };
+      idx.players.slice().sort((a, b) => b.display.length - a.display.length).forEach((p) => {
+        const slug = "news-player pos-" + newsPosSlug(p.pos);
+        findAll(p.display, slug);
+        if (p.last && p.last.length >= 4 && idx.lastCount[p.lastNorm] === 1) findAll(p.last, slug);
+      });
+      idx.teams.forEach((t) => {
+        findAll(t.display, "wager-team-tag");
+        t.names.forEach((nm) => {
+          if (nm.length >= 4 && nm.indexOf("the ") !== 0) findAll(nm, "wager-team-tag");
+        });
+      });
+      raw.replace(/\\b((?:QB|RB|WR|TE|K|DEF|DST)\\d?)\\b/gi, function (m, _g, off) {
+        addHit(off, off + m.length, "news-pos-tag pos-" + newsPosSlug(m.replace(/\\d+$/, "")));
+        return m;
+      });
+      hits.sort((a, b) => a.start - b.start);
+      let html = "";
+      let at = 0;
+      hits.forEach((h) => {
+        html += esc(raw.slice(at, h.start));
+        html += '<span class="' + h.cls + '">' + esc(raw.slice(h.start, h.end)) + "</span>";
+        at = h.end;
+      });
+      html += esc(raw.slice(at));
+      if (ghost) html += '<span class="lc-desc-ghost">' + esc(ghost) + "</span>";
+      return html;
+    }
+    function ledgerDescGhostFor(phrase, top) {
+      if (!top || !phrase) return "";
+      const typed = String(phrase);
+      const disp = String(top.display);
+      if (disp.toLowerCase().indexOf(typed.toLowerCase()) === 0) return disp.slice(typed.length);
+      if (top.kind === "player") {
+        const parts = disp.split(/\\s+/);
+        const last = parts[parts.length - 1] || "";
+        if (last.toLowerCase().indexOf(typed.toLowerCase()) === 0) return last.slice(typed.length);
+      }
+      return "";
+    }
+    function ledgerPaintDescBox(form) {
+      if (!form) return;
+      const ta = form.querySelector("textarea[name=desc]");
+      const hi = form.querySelector("[data-ledger-desc-hi]");
+      const sugs = form.querySelector("[data-ledger-desc-sugs]");
+      if (!ta || !hi) return;
+      if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
+      const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
+      const phrase = ledgerDescPhraseAt(ta.value, caret);
+      const picks = phrase.text ? ledgerDescSuggest(phrase.text) : [];
+      const top = picks[0] || null;
+      const ghost = (document.activeElement === ta) ? ledgerDescGhostFor(phrase.text, top) : "";
+      ledgerDescPending = (top && phrase.text)
+        ? { start: phrase.start, end: phrase.end, display: top.display, kind: top.kind }
+        : null;
+      hi.innerHTML = ledgerDescHighlightHtml(ta.value, ghost);
+      hi.scrollTop = ta.scrollTop;
+      if (sugs) {
+        if (!picks.length || document.activeElement !== ta) {
+          sugs.hidden = true;
+          sugs.innerHTML = "";
+        } else {
+          sugs.hidden = false;
+          sugs.innerHTML = picks.map((p) => {
+            const cls = p.kind === "player"
+              ? ("chip news-player pos-" + (p.slug || "oth"))
+              : p.kind === "pos"
+                ? ("chip news-pos-tag pos-" + (p.slug || "oth"))
+                : "chip wager-team-tag";
+            return '<button type="button" class="' + cls + '" data-ledger-desc-pick="1" data-val="'
+              + esc(p.display) + '">' + esc(p.display) + "</button>";
+          }).join("");
+        }
+      }
+    }
+    function ledgerAcceptDescSuggest(form, display) {
+      const ta = form && form.querySelector("textarea[name=desc]");
+      if (!ta) return;
+      const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
+      const phrase = ledgerDescPhraseAt(ta.value, caret);
+      const next = display || (ledgerDescPending && ledgerDescPending.display);
+      if (!next || !phrase.text) return;
+      const before = ta.value.slice(0, phrase.start);
+      const after = ta.value.slice(phrase.end);
+      ta.value = before + next + after;
+      const put = before.length + next.length;
+      try { ta.setSelectionRange(put, put); } catch (_) {}
+      ledgerDescPending = null;
+      ledgerPaintDescBox(form);
+      if (typeof ledgerPaintWagerPreview === "function") ledgerPaintWagerPreview(form);
+    }
+
     function ledgerApplyClockKind(form, kind) {
       if (!form) return;
       const next = kind || "this_week";
@@ -6769,6 +7131,7 @@ const html = `<!DOCTYPE html>
       } else if (field === "desc") {
         const ta = form.querySelector("[name=desc]");
         if (ta) ta.value = val;
+        ledgerPaintDescBox(form);
       }
       if (typeof ledgerPaintWagerPreview === "function") ledgerPaintWagerPreview(form);
     }
@@ -6821,7 +7184,12 @@ const html = `<!DOCTYPE html>
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
         + '<span class="caption">\u2212500 you are favorite · 0 even · +500 you offer them plus. Steps of 100. They get the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
-        + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1">' + esc(desc) + "</textarea></label>"
+        + '<label>What\u2019s the bet<div class="lc-desc-box">'
+        + '<div class="lc-desc-hi" data-ledger-desc-hi aria-hidden="true"></div>'
+        + '<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1" data-ledger-desc="1">'
+        + esc(desc) + "</textarea>"
+        + '<div class="lc-desc-sugs" data-ledger-desc-sugs hidden></div>'
+        + "</div></label>"
         + '<div class="caption">Clock</div>'
         + ledgerClockChipsHtml(clockKind)
         + '<input type="hidden" name="clock_kind" value="' + esc(clockKind) + '">'
@@ -14256,6 +14624,15 @@ const html = `<!DOCTYPE html>
     });
 
     document.getElementById("app").addEventListener("keydown", (e) => {
+      const descTa = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
+      if (descTa && (e.key === "Tab" || e.key === "Enter" || e.key === "ArrowRight") && ledgerDescPending) {
+        const atEnd = descTa.selectionStart === descTa.selectionEnd && descTa.selectionEnd === ledgerDescPending.end;
+        if (atEnd && (e.key === "Tab" || e.key === "Enter" || (e.key === "ArrowRight" && descTa.selectionEnd === descTa.value.length))) {
+          e.preventDefault();
+          ledgerAcceptDescSuggest(descTa.form || descTa.closest("form"), ledgerDescPending.display);
+          return;
+        }
+      }
       if (e.key === "Escape" && (voteSheetTx || voteConfirmTx)) {
         e.preventDefault();
         voteSheetTx = null;
@@ -14370,6 +14747,14 @@ const html = `<!DOCTYPE html>
         ledgerApplyClockKind(form, kind);
         return;
       }
+      const descPick = e.target.closest("[data-ledger-desc-pick]");
+      if (descPick) {
+        const form = descPick.closest("form");
+        ledgerAcceptDescSuggest(form, descPick.getAttribute("data-val") || "");
+        const ta = form && form.querySelector("textarea[name=desc]");
+        if (ta) ta.focus({ preventScroll: true });
+        return;
+      }
       const ledgerStyleBtn = e.target.closest("[data-ledger-style]");
       if (ledgerStyleBtn) {
         ledgerApplyStyleChip(ledgerStyleBtn);
@@ -14395,6 +14780,7 @@ const html = `<!DOCTYPE html>
         ledgerCounterId = null;
         ledgerToast = null;
         if (!(members && members.length) && typeof loadMembers === "function") loadMembers().catch(() => {});
+        ledgerWarmDescIndex();
         render();
         return;
       }
@@ -14405,6 +14791,7 @@ const html = `<!DOCTYPE html>
         ledgerWagerOpen = false;
         ledgerToast = null;
         if (!(members && members.length) && typeof loadMembers === "function") loadMembers().catch(() => {});
+        ledgerWarmDescIndex();
         render();
         return;
       }
@@ -15308,6 +15695,16 @@ const html = `<!DOCTYPE html>
         render();
       }
     });
+    document.getElementById("app").addEventListener("focusin", (e) => {
+      const ta = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
+      if (ta) ledgerPaintDescBox(ta.form || ta.closest("form"));
+    });
+    document.getElementById("app").addEventListener("scroll", (e) => {
+      const ta = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
+      if (!ta) return;
+      const hi = (ta.form || ta.closest("form") || document).querySelector("[data-ledger-desc-hi]");
+      if (hi) hi.scrollTop = ta.scrollTop;
+    }, true);
     document.getElementById("app").addEventListener("pointerdown", (e) => {
       if (!ledgerComposeOpen()) return;
       const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
@@ -15346,7 +15743,9 @@ const html = `<!DOCTYPE html>
     document.getElementById("app").addEventListener("input", (e) => {
       const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
       if (wagerLive) {
-        ledgerPaintWagerPreview(wagerLive.form || wagerLive.closest("form"));
+        const form = wagerLive.form || wagerLive.closest("form");
+        ledgerPaintWagerPreview(form);
+        if (wagerLive.getAttribute("name") === "desc") ledgerPaintDescBox(form);
         return;
       }
       if (e.target && e.target.id === "gateUser") {
@@ -16850,6 +17249,11 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["Send Wager to", true],
     [">team</option>", true],
     ["<label>Choose a team to send wager<select", true],
+    ["function ledgerPaintDescBox(", true],
+    ["function ledgerDescSuggest(", true],
+    ["The San Francisco 49ers", true],
+    ["data-ledger-desc-hi", true],
+    ["De'Zhaun Stribling", true],
     ["They get the other side.", true],
     ["Send to Them", false],
     ["Them gets the other side.", false],

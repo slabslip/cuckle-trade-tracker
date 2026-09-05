@@ -6729,7 +6729,7 @@ const html = `<!DOCTYPE html>
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
-        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Steps of 100. Them gets the other side.</span></label>'
+        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Steps of 100. They get the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
         + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1">' + esc(desc) + "</textarea></label>"
         + '<div class="caption">Clock</div>'
@@ -6839,7 +6839,7 @@ const html = `<!DOCTYPE html>
           ? '<p class="caption">No settled slips yet.</p>'
           : (ledgerFeed === "closed"
             ? '<p class="caption">No trashed or expired offers.</p>'
-            : '<p class="caption">No slips yet. Tap New wager, pick Them, set a stake and the odds meter, pick an NFL clock, then Send.</p>');
+            : '<p class="caption">No slips yet. Tap New wager, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>');
       } else {
         body = list.map((b) => ledgerCardHtml(b)).join("");
       }
@@ -7290,8 +7290,8 @@ const html = `<!DOCTYPE html>
 
     function ledgerWagerValidate(parsed, seat) {
       if (!parsed || !seat) return "Claim a seat first.";
-      if (!parsed.them) return "Pick Them.";
-      if (parsed.them === String(seat)) return "Them has to be someone else.";
+      if (!parsed.them) return "Pick a team.";
+      if (parsed.them === String(seat)) return "Pick a different team.";
       if (!parsed.desc || !parsed.title) return "Write what the bet is.";
       if (!parsed.stake) return "Enter your wager.";
       if (!parsed.clock_kind) return "Pick a clock.";
@@ -16708,7 +16708,9 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ['data-ledger-form-slot="1"', true],
     ["Send Wager to", true],
     [">Team</option>", true],
+    ["They get the other side.", true],
     ["Send to Them", false],
+    ["Them gets the other side.", false],
     ['step="100"', true],
     ["function ledgerClaim(", true],
     ["function ledgerVote(", true],

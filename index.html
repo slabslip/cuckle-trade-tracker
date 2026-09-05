@@ -1473,6 +1473,11 @@
       color: transparent;
     }
     .lc-desc-ghost { color: var(--dim); font-weight: 400; }
+    .lc-desc-box.is-desc-ghost textarea[data-ledger-desc] { caret-color: transparent; }
+    .lc-desc-caret {
+      display: inline-block; width: 1.5px; height: 1.15em;
+      margin: 0 0 -2px; background: var(--text); vertical-align: text-bottom;
+    }
     .wager-team-tag { color: var(--lh-gold, #e0b44c); font-weight: 650; }
     .wager-clock-tag { color: #7ad1ff; font-weight: 650; }
     .lc-desc-hi .news-pos-tag,
@@ -2889,7 +2894,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905035000";
+    const DATA_V = "ledger20260905035500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7017,6 +7022,7 @@
         else if (p.lastNorm && p.lastNorm.length >= 4 && (p.lastNorm === q || p.lastNorm.indexOf(q) === 0)) {
           const uniq = idx.lastCount[p.lastNorm] === 1;
           if (p.lastNorm === q && uniq) score = 340 + (p.rostered ? 40 : 0);
+          else if (q.length >= 5 && uniq) score = 330 + (p.rostered ? 20 : 0);
           else if (q.length >= 4) score = 200 + (p.rostered ? 30 : 0) - Math.min(20, p.rank / 50);
         }
         if (aliasFull && ledgerNorm(aliasFull) === p.key) score = Math.max(score, 370);
@@ -7025,7 +7031,7 @@
       out.sort((a, b) => b.score - a.score || a.display.localeCompare(b.display));
       return out.slice(0, 6);
     }
-    function ledgerDescHighlightHtml(text, ghost) {
+    function ledgerDescHighlightHtml(text, ghostAt) {
       const raw = String(text || "");
       if (!raw) return "";
       const idx = ledgerEnsureEntityIndex();
@@ -7063,29 +7069,74 @@
         return m;
       });
       hits.sort((a, b) => a.start - b.start);
+      const g = ghostAt && (ghostAt.lead || ghostAt.tail) ? ghostAt : null;
+      let leadDone = false;
+      let tailDone = false;
       let html = "";
       let at = 0;
+      const paintGhost = function (pos) {
+        if (!g) return;
+        if (!leadDone && pos === g.start && g.lead) {
+          html += '<span class="lc-desc-ghost">' + esc(g.lead) + "</span>";
+          leadDone = true;
+        }
+        if (!tailDone && pos === g.end && g.tail) {
+          html += '<span class="lc-desc-ghost">' + esc(g.tail) + "</span>";
+          tailDone = true;
+        }
+      };
+      const paintPlain = function (upTo) {
+        if (upTo < at) return;
+        const marks = [];
+        if (g) {
+          if (g.start >= at && g.start <= upTo) marks.push(g.start);
+          if (g.end >= at && g.end <= upTo && g.end !== g.start) marks.push(g.end);
+        }
+        marks.sort((a, b) => a - b);
+        let i = 0;
+        while (at < upTo) {
+          paintGhost(at);
+          let next = upTo;
+          while (i < marks.length && marks[i] <= at) i++;
+          if (i < marks.length && marks[i] < next) next = marks[i];
+          if (next > at) {
+            html += esc(raw.slice(at, next));
+            at = next;
+          } else {
+            break;
+          }
+        }
+        paintGhost(upTo);
+      };
       hits.forEach((h) => {
-        html += esc(raw.slice(at, h.start));
+        paintPlain(h.start);
         html += '<span class="' + h.cls + '">' + esc(raw.slice(h.start, h.end)) + "</span>";
         at = h.end;
+        paintGhost(h.end);
       });
-      html += esc(raw.slice(at));
-      if (ghost) html += '<span class="lc-desc-ghost">' + esc(ghost) + "</span>";
+      paintPlain(raw.length);
+      if (g && g.lead) html += '<span class="lc-desc-caret"></span>';
       return html;
     }
-    function ledgerDescGhostFor(phrase, top) {
-      if (!top || !phrase) return "";
+    function ledgerDescGhostParts(phrase, top) {
+      if (!top || !phrase) return { lead: "", tail: "" };
+      if (top.kind === "clock" || top.kind === "pos") return { lead: "", tail: "" };
       const typed = String(phrase);
       const disp = String(top.display);
-      if (disp.toLowerCase().indexOf(typed.toLowerCase()) === 0) return disp.slice(typed.length);
-      if (top.kind === "player" || top.kind === "team") return disp;
-      if (top.kind === "player") {
-        const parts = disp.split(/\s+/);
-        const last = parts[parts.length - 1] || "";
-        if (last.toLowerCase().indexOf(typed.toLowerCase()) === 0) return last.slice(typed.length);
+      if (!disp || ledgerNorm(typed) === ledgerNorm(disp)) return { lead: "", tail: "" };
+      const typedL = typed.toLowerCase();
+      const dispL = disp.toLowerCase();
+      if (dispL.indexOf(typedL) === 0) return { lead: "", tail: disp.slice(typed.length) };
+      const parts = disp.split(/\s+/);
+      const last = parts[parts.length - 1] || "";
+      const first = parts.slice(0, -1).join(" ");
+      if (last.length >= 4 && last.toLowerCase().indexOf(typedL) === 0) {
+        return { lead: first ? first + " " : "", tail: last.slice(typed.length) };
       }
-      return "";
+      if (typed.length >= 4 && dispL.lastIndexOf(typedL) === dispL.length - typedL.length) {
+        return { lead: disp.slice(0, disp.length - typed.length), tail: "" };
+      }
+      return { lead: "", tail: disp };
     }
     function ledgerDescConfident(picks) {
       if (!picks || !picks.length) return false;
@@ -7131,14 +7182,18 @@
       const picks = best.picks;
       const top = picks[0] || null;
       const confident = ledgerDescConfident(picks);
-      const ghost = (document.activeElement === ta && top && top.kind !== "clock"
-        && String(top.display).toLowerCase().indexOf(String(phrase.text).toLowerCase()) === 0)
-        ? String(top.display).slice(String(phrase.text).length)
-        : "";
+      const parts = (document.activeElement === ta && confident && top)
+        ? ledgerDescGhostParts(phrase.text, top)
+        : { lead: "", tail: "" };
+      const ghostAt = (parts.lead || parts.tail)
+        ? { start: phrase.start, end: phrase.end, lead: parts.lead, tail: parts.tail }
+        : null;
+      const box = ta.closest(".lc-desc-box");
+      if (box) box.classList.toggle("is-desc-ghost", !!(parts.lead));
       ledgerDescPending = (top && phrase.text)
         ? { start: phrase.start, end: phrase.end, display: top.display, kind: top.kind, clock: top.clock || "", confident: confident }
         : null;
-      hi.innerHTML = ledgerDescHighlightHtml(ta.value, ghost);
+      hi.innerHTML = ledgerDescHighlightHtml(ta.value, ghostAt);
       hi.scrollTop = ta.scrollTop;
       if (sugs) {
         if (!picks.length || document.activeElement !== ta) {
@@ -7160,12 +7215,6 @@
         }
       }
       ledgerSyncClockFromDesc(form);
-      if ((!opts || !opts.noAutofill) && confident && top && document.activeElement === ta
-        && top.kind !== "clock" && top.kind !== "pos"
-        && ledgerNorm(phrase.text) !== ledgerNorm(top.display)
-        && String(phrase.text).length >= 4) {
-        ledgerAcceptDescSuggest(form, top.display);
-      }
     }
     function ledgerAcceptDescSuggest(form, display, extra) {
       const ta = form && form.querySelector("textarea[name=desc]");

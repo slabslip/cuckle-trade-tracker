@@ -114,7 +114,7 @@ returns other members’ public slips).
 
 ## 5. Acceptance criteria (go-live done when)
 
-- [ ] wave12 + wave13 + wave16 ran without error in SQL Editor
+- [ ] wave12 + wave13 + wave16 + wave17 ran without error in SQL Editor
 - [ ] `ledger_bets` / `ledger_bet_events` exist; `visibility` column present
 - [ ] `ledger-ingest` deployed; `LEDGER_INGEST_SECRET` set
 - [ ] curl smoke test returns `{ "ok": true, "bet_id": "…" }` (two seat **ids** + `raw_text`)
@@ -157,6 +157,12 @@ Hard-refresh after Pages deploys (or wait ~1–2 minutes after merge).
 1. Same SQL Editor.
 2. Paste all of `db/wave16-ledger-wager.sql` → **Run**.
 3. Confirm `ledger_bets` has `house_odds` + `offer_rev`, and table `ledger_settle_votes` exists.
+
+### Step 2c — Run wave17 SQL (NFL clocks + hints)
+
+1. Same SQL Editor.
+2. Paste all of `db/wave17-ledger-clock.sql` → **Run**.
+3. Confirm `ledger_bets` has `clock_kind` + `clock_meta` + `suggest_note`, and table `ledger_seat_style` exists.
 
 ### Step 3 — Create ingest secret
 

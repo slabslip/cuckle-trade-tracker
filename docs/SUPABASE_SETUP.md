@@ -798,7 +798,9 @@ only your slips; another seat’s team page shows that seat’s public W/L + sli
    Shortcut drafts must stay insertable (nullable `side_b`, filer-only).
 5. Run [`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) for dashboard
    **New wager** (`house_odds`, `offer_rev`, league settle votes).
-6. Ledger starts with **New wager** (Them, stake, odds meter, description, clock).
+6. Run [`db/wave17-ledger-clock.sql`](../db/wave17-ledger-clock.sql) for NFL clocks
+   (`clock_kind`, `clock_meta`, win hints, seat style).
+7. Ledger starts with **New wager** (Them, stake, odds meter, description, NFL clock).
    Shortcut note capture comes later. Product: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
 Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md),

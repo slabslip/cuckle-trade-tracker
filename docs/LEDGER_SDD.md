@@ -8,7 +8,8 @@ Season-long (and shorter) bets between league members — stakes, odds, terms, a
 
 Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) ·
 [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql) ·
-[`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql)  
+[`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) ·
+[`db/wave17-ledger-clock.sql`](../db/wave17-ledger-clock.sql)  
 Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)  
 **Shortcut note (later):** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)
 
@@ -51,15 +52,38 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
     after lock). Live preview is derived from stake + house American line
     (`house_odds`, Them is the opposite sign).
 11. **Ledger badge.** Count of slips **sent to you** on the current version
-    (amount > 0, your lock is false). Copy: “sent to you, you have not accepted
-    this version.” Opening the tab does not clear it. Accept / No / they Cancel
+    (amount > 0, your lock is false) plus **Due** slips (`open`, clock resolved,
+    I have not claimed). Copy for accepts: “sent to you, you have not accepted
+    this version.” Opening the tab does not clear Due. Claim / settle / vote
     does. Trash / expire also drops it from the list. No `localStorage` seen-store.
-12. **After the clock.** Settle actions stay hidden until `deadline_at` has passed.
-    Each party picks I won / They won / Push (`side_a_claim` / `side_b_claim`).
-    Matching claims → `winner` + `settled` and the fun W/L tab updates. Mismatch
-    → slip stays `open` (disputed); every claimed seat votes on
-    `ledger_settle_votes`; simple majority of votes cast sets official `winner`.
-    Ties stay disputed. **Payout is off-app.** SMS and Shortcut stay later.
+    On Ledger open, one toast: “Clock’s up on N wagers. Pick a winner.”
+12. **NFL clocks.** Store intent (`clock_kind` + `clock_meta`), not only a date.
+    Chips: This NFL week / Next NFL week / Through regular season / Regular +
+    playoffs / Playoffs only / Custom date. `deadline_at` is the
+    resolved-or-estimated stamp. On every fetch, re-resolve live kinds from
+    Sleeper `state/nfl`. If the real end is later than the estimate, push
+    `deadline_at` forward — never fire claims early. Playoffs-only sent during
+    regular stays `open`; claims stay hidden until `season_type` is `post` **and
+    then** the season ends. Proposed slips expire if the clock fires before both
+    lock. Open slips do **not** expire; they become Due. After the clock, each
+    party picks I won / They won / Push. Matching claims → `winner` + `settled`.
+    Mismatch → league vote on `ledger_settle_votes`; majority of votes cast
+    sets official `winner`. Ties stay disputed. **Payout is off-app.** SMS stays later.
+13. **Live / Settled / Closed + win hint.** Own Ledger chips filter **my slips
+    only**: Live (proposed / open / leftover drafts), Settled (official W/L),
+    Closed (canceled / expired / declined). Team home stays public Live +
+    Settled — Closed never appears on someone else’s page. After a
+    `this_week` / `next_week` clock, if the description matches a rostered
+    player we already have, show “Chuckle read: {player} {points} in week {n}.
+    This is a hint, not the official winner.” Store `suggest_pick` +
+    `suggest_note`. **Never** write `winner` from the hint. Season-long
+    free text gets no hint.
+14. **Compose agent.** While New wager / Counter is open, gold chips prefill
+    Them / stake / meter / clock / last lines from **this seat’s** accepted
+    `open` / `settled` history in this league. Trash / expire do not train.
+    No external LLM. Private slips of other people are never used. After
+    Accept or settle, the next compose re-reads history. That is the v1
+    learning loop. Ledger stays opinion-only (rule 4).
 
 ### Status machine
 
@@ -89,6 +113,8 @@ While `open`, pending **join requests** may accumulate; they do not change paren
 3. Paste [`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) and **Run**
    (`house_odds`, `offer_rev`, `ledger_settle_votes` + majority trigger). Wave15
    is only needed if leftover Shortcut drafts should stay insertable.
+4. Paste [`db/wave17-ledger-clock.sql`](../db/wave17-ledger-clock.sql) and **Run**
+   (`clock_kind`, `clock_meta`, `suggest_*`, `ledger_seat_style`).
 
 ### 2. Deploy Edge Function `ledger-ingest`
 
@@ -154,18 +180,20 @@ Fast path: Copy the message → Home Screen **Chuckle Ledger** → two team taps
 
 - Summary: total / open / settled / pending / next deadline (**your** slips only)
 - Toolbar: **New wager** + **Refresh** (no league-wide All filter)
+- Feed chips: **Live / Settled / Closed** (my slips only)
 - Cards: title, house vs Them, stake, house line, description, status chip,
-  Public/Private toggle, clock, actions
+  Public/Private toggle, NFL clock, optional Chuckle-read hint, actions
 - Actions by role:
   - Unlocked party on `proposed`: **Accept** / **Counter**
   - Either party on `proposed` or an unsaved compose: **Trash** (never sent = not stored; sent = `canceled` and hidden)
   - Leftover $0 / Shortcut cards: **Complete** still available
-  - `declined` / `canceled` / `expired` stay in the table but leave the feed
+  - `declined` / `canceled` / `expired` stay in the table; Closed feed shows them
   - Either party on `open` **after the clock**: I won / They won / Push (claims)
   - Mismatched claims: every claimed seat votes; majority sets the W/L tab
   - Either party: toggle `visibility` public ↔ private
-- Design Mode seeds sample slips (including a past-clock dispute) so Ledger + team
-  home are walkable without SQL.
+- New wager / Counter: NFL clock chips + “From your wagers” prefill chips
+- Design Mode seeds a Due Henry slip, a Closed trash, and a past-clock dispute
+  so clocks / hint / Closed are walkable without SQL.
 - **v1.1:** second section **Open board** — public `open` slips you are not on, with
   **Join** (see below).
 - Shortcut note capture stays later. This tab does not start with Add note.
@@ -177,7 +205,8 @@ On another seat’s team page (Teams → seat):
 - **Taken money from** — settled public wins, summed by opponent
 - **Lost money to** — settled public losses, summed by opponent
 - **Bets lost** — those losing slips (title, opponent, amount)
-- Public open + settled cards for that seat (read-only unless you are a party)
+- Public open + settled cards for that seat (read-only unless you are a party).
+  Closed (canceled / expired / declined) never appears here.
 - **v1.1:** **Join** on public `open` cards when you are not already a party
 
 ---
@@ -238,6 +267,8 @@ later capture tool. It does not replace the house / meter / clock handshake.
 | Draft note / no Them yet | Filer only leftover; no badge (Shortcut later) |
 | Send with $0, no Them, or no clock | Block |
 | Claims before the clock | Hidden |
+| Playoffs-only during regular | Open; claims hidden until postseason ends |
+| Week-clock player match | Hint only; never writes `winner` |
 | Matching claims | `settled` + W/L tab |
 | Mismatched claims | League vote; majority settles the tab |
 | Vote tie | Stay disputed |

@@ -30,7 +30,7 @@ apply-value-adjust.mjs
 build-cuffs.mjs
   → data/ui/cuffs.json
 build-calculator.mjs
-  → data/ui/calculator.json          (rostered players + still-held picks, today / even)
+  → data/ui/calculator.json          (rostered players + still-held picks, Sleeper roster_ord, today / even)
 build-cosmetics.mjs
   → data/ui/cosmetics.json           (25 catalog + computed unlocks)
 generate-page.mjs

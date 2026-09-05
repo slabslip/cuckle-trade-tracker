@@ -197,6 +197,16 @@ function hopOwner(row) {
   return hops[hops.length - 1].to || hops[hops.length - 1].from || null;
 }
 
+/** Sleeper team page: starters (slot order), bench, IR, taxi. */
+function sleeperRosterIds(r) {
+  const starters = (r.starters || []).map(String).filter((id) => id && id !== "0");
+  const reserve = (r.reserve || []).map(String).filter(Boolean);
+  const taxi = (r.taxi || []).map(String).filter(Boolean);
+  const taken = new Set(starters.concat(reserve, taxi));
+  const bench = (r.players || []).map(String).filter((id) => id && !taken.has(id));
+  return starters.concat(bench, reserve, taxi);
+}
+
 const curve = readJson("value_curve.json", []);
 const members = readJson("members.json", []) || [];
 const rosters = readJson("rosters_now.json", []) || [];
@@ -226,12 +236,15 @@ const players = [];
 for (const r of rosters) {
   const ownerId = String(r.owner_id || "");
   const ownerName = nameById[ownerId] || ownerId;
-  for (const pid of r.players || []) {
+  const ordered = sleeperRosterIds(r);
+  ordered.forEach((pid, i) => {
     const p = playersNfl[String(pid)] || {};
     const name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ")
       || ktcNameBySid[String(pid)] || String(pid);
-    players.push(pricePlayer(pid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice));
-  }
+    const row = pricePlayer(pid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice);
+    row.roster_ord = i;
+    players.push(row);
+  });
 }
 
 const picksOut = [];
@@ -242,8 +255,21 @@ for (const [key, row] of Object.entries(picks)) {
   picksOut.push(pricePick(key, row, ownerId, ownerName || "", curveIdx, vmax, today, todayPrice));
 }
 
-players.sort((a, b) => (b.value || 0) - (a.value || 0) || a.name.localeCompare(b.name));
-picksOut.sort((a, b) => (b.value || 0) - (a.value || 0) || a.name.localeCompare(b.name));
+picksOut.sort((a, b) => {
+  const y = Number(a.year) - Number(b.year);
+  if (y) return y;
+  const r = Number(a.round) - Number(b.round);
+  if (r) return r;
+  return (Number(a.slot) || 0) - (Number(b.slot) || 0) || String(a.name).localeCompare(String(b.name));
+});
+const pickOrdByOwner = new Map();
+for (const row of picksOut) {
+  const n = pickOrdByOwner.get(row.owner_id) || 0;
+  row.roster_ord = 1000 + n;
+  pickOrdByOwner.set(row.owner_id, n + 1);
+}
+players.sort((a, b) => String(a.owner_id).localeCompare(String(b.owner_id))
+  || (a.roster_ord - b.roster_ord) || a.name.localeCompare(b.name));
 
 const book = {
   v: 1,

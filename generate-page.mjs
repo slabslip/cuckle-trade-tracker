@@ -2820,7 +2820,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905014000";
+    const DATA_V = "ledger20260905014200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2865,6 +2865,7 @@ const html = `<!DOCTYPE html>
     let ledgerCompleteId = null;
     let ledgerWagerOpen = false;
     let ledgerCounterId = null;
+    let ledgerComposeDraft = null;
     let ledgerVotes = [];
     let ledgerFeed = "live";
     let ledgerNflState = null;
@@ -5885,6 +5886,39 @@ const html = `<!DOCTYPE html>
       return o > 0 ? ("+" + o) : String(o);
     }
 
+    function ledgerCaptureCompose(form) {
+      if (!ledgerWagerOpen && !ledgerCounterId) return;
+      if (!form) {
+        form = document.querySelector("[data-ledger-wager-form], [data-ledger-counter-form]");
+      }
+      if (!form) return;
+      const fd = new FormData(form);
+      const counter = form.getAttribute("data-ledger-counter-form");
+      ledgerComposeDraft = {
+        kind: counter ? "counter" : "new",
+        id: counter || "",
+        them: String(fd.get("them") || ""),
+        stake: String(fd.get("stake") || ""),
+        odds: String(ledgerSnapOdds(fd.get("odds"))),
+        desc: String(fd.get("desc") || ""),
+        clock_kind: String(fd.get("clock_kind") || "this_week"),
+        clock: String(fd.get("clock") || ""),
+      };
+    }
+
+    function ledgerClearCompose() {
+      ledgerComposeDraft = null;
+    }
+
+    function ledgerDraftFor(kind, b) {
+      const d = ledgerComposeDraft;
+      if (!d) return null;
+      if (kind === "counter") {
+        if (d.kind !== "counter" || !b || String(d.id) !== String(b.id)) return null;
+      } else if (d.kind !== "new") return null;
+      return d;
+    }
+
     function ledgerSnapOdds(n) {
       let o = Math.round(Number(n) || 0);
       o = Math.round(o / 100) * 100;
@@ -6494,6 +6528,7 @@ const html = `<!DOCTYPE html>
       for (let i = 0; i < chips.length; i++) {
         chips[i].classList.toggle("on", chips[i].getAttribute("data-ledger-clock") === next);
       }
+      ledgerCaptureCompose(form);
     }
 
     function ledgerApplyStyleChip(btn) {
@@ -6525,20 +6560,25 @@ const html = `<!DOCTYPE html>
       if (!seat) return "";
       const others = ledgerOtherSeats();
       if (!others.length && typeof loadMembers === "function") loadMembers().catch(() => {});
-      const them = (kind === "counter" && b)
+      const draft = ledgerDraftFor(kind, b);
+      const them = draft ? draft.them : ((kind === "counter" && b)
         ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
-        : "";
-      const stake = (kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : "";
-      const odds = (kind === "counter" && b) ? ledgerSnapOdds(ledgerHouseOddsOf(b)) : 0;
+        : "");
+      const stake = draft ? draft.stake : ((kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : "");
+      const odds = draft ? ledgerSnapOdds(draft.odds) : ((kind === "counter" && b) ? ledgerSnapOdds(ledgerHouseOddsOf(b)) : 0);
       const moneyLine = (kind === "counter" && b) ? ledgerNamedTerms(b) : "";
-      const desc = (kind === "counter" && b)
+      const desc = draft ? draft.desc : ((kind === "counter" && b)
         ? String((b.terms && b.terms !== moneyLine) ? b.terms : (b.title || ""))
-        : "";
-      const clockKind = (kind === "counter" && b && b.clock_kind) ? String(b.clock_kind) : "this_week";
-      const clock = (kind === "counter" && b && clockKind === "date") ? ledgerClockValue(b.deadline_at) : "";
+        : "");
+      const clockKind = draft && draft.clock_kind
+        ? String(draft.clock_kind)
+        : ((kind === "counter" && b && b.clock_kind) ? String(b.clock_kind) : "this_week");
+      const clock = draft ? String(draft.clock || "")
+        : ((kind === "counter" && b && clockKind === "date") ? ledgerClockValue(b.deadline_at) : "");
       const preview = ledgerOddsPreview(ledgerDollarsToCents(stake), odds);
       const optsHtml = ['<option value="">Them…</option>'].concat(others.map((m) => {
-        return '<option value="' + esc(m.user_id) + '">' + esc(m.name || m.user_id) + "</option>";
+        const sel = String(m.user_id) === String(them) ? " selected" : "";
+        return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name || m.user_id) + "</option>";
       })).join("");
       const formAttr = kind === "counter"
         ? 'data-ledger-counter-form="' + esc(b.id) + '"'
@@ -6555,7 +6595,7 @@ const html = `<!DOCTYPE html>
       return '<form class="ledger-add" ' + formAttr + ">"
         + ledgerAgentHtml(kind)
         + themField
-        + '<label>Your wager ($)<input name="stake" type="number" min="1" step="1" inputmode="decimal" value="'
+        + '<label>Your wager ($)<input name="stake" type="text" inputmode="decimal" autocomplete="off" value="'
         + esc(stake) + '" required data-ledger-wager-live="1"></label>'
         + '<label>Odds meter <span class="lc-odds-lab" data-ledger-odds-lab>'
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
@@ -6563,12 +6603,12 @@ const html = `<!DOCTYPE html>
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
         + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Steps of 100. Them gets the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
-        + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required>' + esc(desc) + "</textarea></label>"
+        + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1">' + esc(desc) + "</textarea></label>"
         + '<div class="caption">Clock</div>'
         + ledgerClockChipsHtml(clockKind)
         + '<input type="hidden" name="clock_kind" value="' + esc(clockKind) + '">'
         + '<label data-ledger-clock-date' + dateShow + '>Custom date<input name="clock" type="date" value="'
-        + esc(clock) + '"></label>'
+        + esc(clock) + '" data-ledger-wager-live="1"></label>'
         + '<div class="lc-complete-actions">'
         + '<button type="submit" class="chip" data-ledger-send-lab>' + esc(sendLab) + "</button>"
         + '<button type="button" class="chip" ' + cancelAttr + '="1">Trash</button>'
@@ -7067,6 +7107,7 @@ const html = `<!DOCTYPE html>
 
     function ledgerPaintWagerPreview(form) {
       if (!form) return;
+      ledgerCaptureCompose(form);
       const fd = new FormData(form);
       const o = ledgerSnapOdds(fd.get("odds"));
       const prev = ledgerOddsPreview(ledgerDollarsToCents(fd.get("stake")), o);
@@ -7192,6 +7233,7 @@ const html = `<!DOCTYPE html>
           row.created_at = new Date().toISOString();
           ledgerBets = [row].concat(ledgerBets || []);
           ledgerWagerOpen = false;
+          ledgerClearCompose();
           ledgerToast = "Sent. Waiting on them.";
           return;
         }
@@ -7208,6 +7250,7 @@ const html = `<!DOCTYPE html>
         const inserted = Array.isArray(rows) ? rows[0] : rows;
         if (inserted) ledgerBets = [inserted].concat(ledgerBets || []);
         ledgerWagerOpen = false;
+        ledgerClearCompose();
         ledgerToast = "Sent. Waiting on them.";
         await fetch(VOTE_API + "/ledger_bet_events", {
           method: "POST",
@@ -7244,6 +7287,7 @@ const html = `<!DOCTYPE html>
       if (!iAmHouse && !iAmThem) return;
       const rev = (Number(b.offer_rev) || 1) + 1;
       ledgerCounterId = null;
+      ledgerClearCompose();
       ledgerPatch(id, {
         title: parsed.title,
         terms: parsed.desc,
@@ -13429,6 +13473,7 @@ const html = `<!DOCTYPE html>
     }
 
     function render() {
+      ledgerCaptureCompose();
       const app = document.getElementById("app");
       // Multi-league app shell — before the per-league dashboard.
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
@@ -14106,6 +14151,7 @@ const html = `<!DOCTYPE html>
       }
       if (e.target.closest("[data-ledger-wager-cancel]")) {
         ledgerWagerOpen = false;
+        ledgerClearCompose();
         render();
         return;
       }
@@ -14129,6 +14175,7 @@ const html = `<!DOCTYPE html>
       }
       if (e.target.closest("[data-ledger-counter-cancel]")) {
         ledgerCounterId = null;
+        ledgerClearCompose();
         render();
         return;
       }
@@ -16511,6 +16558,8 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerWagerSave(", true],
     ["function ledgerOddsPreview(", true],
     ["function ledgerSnapOdds(", true],
+    ["function ledgerCaptureCompose(", true],
+    ["ledgerComposeDraft", true],
     ['step="100"', true],
     ["function ledgerClaim(", true],
     ["function ledgerVote(", true],

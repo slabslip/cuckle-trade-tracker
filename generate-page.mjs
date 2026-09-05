@@ -1364,6 +1364,66 @@ const html = `<!DOCTYPE html>
       font-variant-numeric: tabular-nums; vertical-align: 1px;
     }
     .lh-section { margin: 0 0 18px; }
+    .lh-dash-h {
+      margin: 0 0 8px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .lh-inbox { display: grid; gap: 8px; margin: 0 0 10px; }
+    .lh-inbox-empty {
+      margin: 0 0 14px; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid #2a2a32; background: #121218; color: var(--muted);
+      font-size: 0.875rem; line-height: 1.35;
+    }
+    button.lh-inbox-row {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      width: 100%; box-sizing: border-box; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin: 0; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid #2a2a32; background: #141418;
+      touch-action: manipulation;
+    }
+    button.lh-inbox-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .lh-inbox-kicker {
+      display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--lh-gold, #e0b44c); margin: 0 0 2px;
+    }
+    .lh-inbox-main { display: block; font-size: 0.9rem; font-weight: 650; line-height: 1.25; }
+    .lh-inbox-go { flex: 0 0 auto; color: var(--lh-gold, #e0b44c); font-weight: 750; font-size: 1.1rem; }
+    .lh-pulse {
+      margin: 0 0 14px; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid #2a2a32; background: #121218;
+    }
+    .lh-pulse-line { margin: 0; font-size: 0.9rem; font-weight: 650; line-height: 1.3; }
+    .lh-pulse-meta { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); }
+    button.lh-pulse-open {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      width: 100%; box-sizing: border-box; cursor: pointer;
+      margin: 0; padding: 0; border: 0; background: transparent;
+      touch-action: manipulation;
+    }
+    button.lh-pulse-open:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .lh-stand-list { display: grid; gap: 6px; }
+    button.lh-stand-row {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      width: 100%; box-sizing: border-box; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      margin: 0; padding: 8px 10px; border-radius: 10px;
+      border: 1px solid #2a2a32; background: #141418;
+      touch-action: manipulation;
+    }
+    button.lh-stand-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .lh-stand-place {
+      flex: 0 0 auto; min-width: 1.6em; font-variant-numeric: tabular-nums;
+      font-weight: 750; color: var(--lh-gold, #e0b44c); font-size: 0.85rem;
+    }
+    .lh-stand-name {
+      flex: 1 1 auto; min-width: 0; font-weight: 650; font-size: 0.875rem;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .lh-stand-you { color: var(--muted); font-weight: 500; font-size: 0.75rem; }
+    .lh-stand-more { margin: 8px 0 0; }
+    .lh-standings-peek { margin: 0 0 8px; }
+
     /* Bet Ledger */
     .ledger-sum {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3011,7 +3071,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905165700";
+    const DATA_V = "leaguehome20260905172000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5178,16 +5238,17 @@ const html = `<!DOCTYPE html>
      */
     function dataSetRow() {
       const cur = dataSet ? dataSetDef(dataSet) : null;
+      // Visible label is Tape (league memory / research); tab id stays "history" for ?tab=.
       const named = cur
-        ? ' aria-label="History, ' + esc(cur[1]) + ' selected"'
-        : ' aria-label="History, none selected"';
+        ? ' aria-label="Tape, ' + esc(cur[1]) + ' selected"'
+        : ' aria-label="Tape, none selected"';
       const on = homeTab === "history";
       return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="history"'
         + ' aria-selected="' + (on ? "true" : "false") + '"'
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
-        + '<span class="lh-lab">History</span></button>';
+        + '<span class="lh-lab">Tape</span></button>';
     }
 
     function chipSlot() {
@@ -5206,8 +5267,10 @@ const html = `<!DOCTYPE html>
     /** One top tab cell for in-place league-home toggling. */
     function homeTabAction(tab, lab, path) {
       const on = homeTab === tab;
-      if (tab === "ledger") ledgerEnsureLoaded();
-      const n = tab === "ledger" ? ledgerBadgeCount() : 0;
+      if (tab === "ledger" || tab === "league") ledgerEnsureLoaded();
+      let n = 0;
+      if (tab === "ledger") n = ledgerBadgeCount();
+      else if (tab === "league") n = leagueVoteBadgeCount();
       const badge = n ? '<span class="lh-badge">' + n + "</span>" : "";
       const aria = n ? lab + ", " + n + " waiting" : lab;
       return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="' + esc(tab) + '"'
@@ -5314,15 +5377,16 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Toggle a league-home top tab in place.
-     * League always lands on Latest trade (no toggle-off to empty).
-     * Other tabs: same tab again returns to League. Pass { force: true } to open without toggle-off.
+     * Open a league-home top tab in place.
+     * League always lands on the dashboard body (no toggle-off to empty).
+     * Other tabs stay put when re-tapped — use brand name / Back for League.
+     * Pass { force: true } when a caller must open a tab regardless of current tab.
      */
     function setHomeTab(tab, opts) {
       const force = !!(opts && opts.force);
       let next = "league";
       if (tab === "league") next = "league";
-      else if (tab) next = (!force && homeTab === tab) ? "league" : tab;
+      else if (tab) next = tab;
       if (next !== "history") dataSet = null;
       homeTab = next || "league";
       me = null;
@@ -5376,10 +5440,10 @@ const html = `<!DOCTYPE html>
      */
     function renderDataSetsPage() {
       if (dataSet) {
-        return '<button type="button" class="chip back" data-dset-list="1">← History</button>'
+        return '<button type="button" class="chip back" data-dset-list="1">← Tape</button>'
           + dataSetPanel();
       }
-      return '<h2 class="screen-h" tabindex="-1">History</h2>'
+      return '<h2 class="screen-h" tabindex="-1">Tape</h2>'
         + pickIntelHome()
         + cuffsHome()
         + '<h3 class="ds-lists-h">League lists</h3>'
@@ -6223,6 +6287,33 @@ const html = `<!DOCTYPE html>
           || (String(b.side_b) === String(me) && !b.side_b_lock);
       }).length;
       return accept + ledgerDueCount();
+    }
+
+    function ledgerAcceptCount() {
+      const me = authSeatId();
+      if (!me) return 0;
+      return (ledgerBets || []).filter((b) => {
+        if (!b || b.status !== "proposed" || !Number(b.amount_cents)) return false;
+        return (String(b.side_a) === String(me) && !b.side_a_lock)
+          || (String(b.side_b) === String(me) && !b.side_b_lock);
+      }).length;
+    }
+
+    /** League-tab badge: unvoted two-team trades waiting for this claimed seat. */
+    function leagueVoteBadgeCount() {
+      if (!authSeatId() || !authSession) return 0;
+      let n = 0;
+      for (const r of leagueTrades()) {
+        if (voteSeats(r).length !== 2 || voteParties(r) > 2) continue;
+        if (readVotes(r.transaction_id).choice) continue;
+        n += 1;
+      }
+      return n;
+    }
+
+    function ledgerOpenLeagueCount() {
+      return (ledgerExpireLocal(ledgerBets || [])).filter((b) =>
+        b && (b.status === "open" || b.status === "proposed")).length;
     }
 
     function ledgerOtherSeats() {
@@ -13867,49 +13958,144 @@ const html = `<!DOCTYPE html>
      * Latest trade card only. Prior-week matchup strip is parked (matchupStripHtml /
      * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
+    function leagueTradeHeroHtml(latest) {
+      if (!latest) return "";
+      try {
+        const voted = !!readVotes(latest.transaction_id).choice;
+        const chip = latestTradeBagsReady(latest.transaction_id)
+          ? latestTradeCardHtml(latest)
+          : latestTradeSkeletonHtml(latest);
+        return '<div class="champ-alert lh-progress lh-latest-trade'
+          + (voted ? " voted" : "") + '"'
+          + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+          + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+          + '<div class="lh-trade-chip-wrap">' + chip + "</div>"
+          + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
+          + "</div>";
+      } catch (err) {
+        console.error(err);
+        return '<div class="champ-alert lh-progress lh-latest-trade"'
+          + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
+          + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
+          + '<div class="lh-trade-chip-wrap">'
+          + '<div class="h2h-chip is-trade" role="group">'
+          + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
+          + '<div class="h2h-vs" aria-hidden="true">VS</div>'
+          + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
+          + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
+          + latestTradeLeanFooterHtml(latest, null)
+          + "</div></div></div>";
+      }
+    }
+
+    function leagueLedgerInboxHtml() {
+      if (!authSeatId() || !authSession) return "";
+      const accept = ledgerAcceptCount();
+      const due = ledgerDueCount();
+      const rows = [];
+      if (accept) {
+        rows.push('<button type="button" class="lh-inbox-row" data-home-tab="ledger">'
+          + '<span><span class="lh-inbox-kicker">Ledger</span>'
+          + '<span class="lh-inbox-main">' + accept + " wager" + (accept === 1 ? "" : "s")
+          + " waiting for your accept</span></span>"
+          + '<span class="lh-inbox-go" aria-hidden="true">›</span></button>');
+      }
+      if (due) {
+        rows.push('<button type="button" class="lh-inbox-row" data-home-tab="ledger">'
+          + '<span><span class="lh-inbox-kicker">Due</span>'
+          + '<span class="lh-inbox-main">' + due + " wager" + (due === 1 ? "" : "s")
+          + " need a claim</span></span>"
+          + '<span class="lh-inbox-go" aria-hidden="true">›</span></button>');
+      }
+      return rows.join("");
+    }
+
+    function leaguePulseHtml(absolute, unvoted) {
+      const openN = ledgerOpenLeagueCount();
+      let body = "";
+      if (absolute && (!unvoted
+        || String(absolute.transaction_id) !== String(unvoted.transaction_id))) {
+        const voted = !!(authSeatId() && authSession && readVotes(absolute.transaction_id).choice);
+        body = '<button type="button" class="lh-pulse-open"'
+          + ' data-board-open="' + esc(absolute.user_id) + '" data-id="' + esc(absolute.transaction_id) + '">'
+          + '<p class="lh-pulse-line">' + esc(absolute.name) + " vs " + esc(absolute.other) + "</p>"
+          + '<p class="lh-pulse-meta">' + (voted ? "You voted · " : "")
+          + esc(absolute.headline || "Latest league trade") + "</p>"
+          + "</button>";
+      } else if (absolute && unvoted
+        && String(absolute.transaction_id) === String(unvoted.transaction_id)) {
+        body = '<p class="lh-pulse-line">Newest deal is in your inbox above.</p>'
+          + '<p class="lh-pulse-meta">Vote there — it is the latest two-team trade.</p>';
+      } else {
+        body = '<p class="lh-pulse-line">No new trades this week.</p>'
+          + '<p class="lh-pulse-meta">When a deal lands, it shows up here.</p>';
+      }
+      const openLine = openN
+        ? '<p class="lh-pulse-meta">' + openN + " open wager" + (openN === 1 ? "" : "s")
+          + " league-wide</p>"
+        : "";
+      return '<div class="lh-pulse">'
+        + '<div class="lh-dash-h">League pulse</div>'
+        + body + openLine + "</div>";
+    }
+
+    function leagueStandingsPeekHtml() {
+      const mySeat = authSeatId() || (me && me.user_id) || null;
+      const rows = (members || []).slice().sort((a, b) => (a.place || 99) - (b.place || 99));
+      if (!rows.length) return "";
+      const list = rows.map((m) => {
+        const mine = mySeat && m.user_id === mySeat;
+        const place = m.place ? String(m.place) : "—";
+        return '<button type="button" class="lh-stand-row" data-who="' + esc(m.user_id) + '">'
+          + '<span class="lh-stand-place">' + esc(place) + "</span>"
+          + seatFlairHtml(m.name)
+          + '<span class="lh-stand-name">' + esc(m.name || "Team")
+          + (mine ? ' <span class="lh-stand-you">(you)</span>' : "")
+          + "</span></button>";
+      }).join("");
+      return '<div class="lh-standings-peek">'
+        + '<div class="lh-dash-h">Standings</div>'
+        + '<div class="lh-stand-list" role="list">' + list + "</div>"
+        + '<div class="lh-stand-more">'
+        + '<button type="button" class="chip" data-home-tab="teams">All teams</button>'
+        + "</div></div>";
+    }
+
+    /**
+     * League tab home base: action inbox (vote + ledger needing you), league pulse,
+     * and a standings peek. Personal after-action score stays on team home.
+     */
     function leagueInProgress() {
       ensureLatestTradeBags();
-      const latest = latestTradeSide();
-      let tradeBox = "";
-      if (latest) {
-        try {
-          const voted = !!readVotes(latest.transaction_id).choice;
-          const chip = latestTradeBagsReady(latest.transaction_id)
-            ? latestTradeCardHtml(latest)
-            : latestTradeSkeletonHtml(latest);
-          // Vote CTA sits in the chip lean mid (between flairs). Chip still opens via data-board-open.
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade'
-            + (voted ? " voted" : "") + '"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="lh-trade-chip-wrap">' + chip + "</div>"
-            + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
-            + "</div>";
-        } catch (err) {
-          // Bag/format bugs must not erase the rest of league home (News Feed).
-          console.error(err);
-          tradeBox = '<div class="champ-alert lh-progress lh-latest-trade"'
-            + ' data-board-open="' + esc(latest.user_id) + '" data-id="' + esc(latest.transaction_id) + '"'
-            + ' aria-label="Recent Trade: ' + esc(latest.name) + " vs " + esc(latest.other) + '">'
-            + '<div class="lh-trade-chip-wrap">'
-            + '<div class="h2h-chip is-trade" role="group">'
-            + '<div class="h2h-side is-left"><div class="h2h-name">' + seatLabel(latest.name) + "</div></div>"
-            + '<div class="h2h-vs" aria-hidden="true">VS</div>'
-            + '<div class="h2h-side is-right"><div class="h2h-name">' + seatLabel(latest.other) + "</div>"
-            + '<div class="h2h-meta">' + esc(latest.headline || "Open trade") + "</div></div>"
-            + latestTradeLeanFooterHtml(latest, null)
-            + "</div>"
-            + "</div>"
-            + "</div>";
+      if (authSeatId() && authSession) ledgerEnsureLoaded();
+      const unvoted = latestTradeSide();
+      const absolute = latestTradeAbsolute();
+      const parts = [];
+
+      const tradeHero = unvoted
+        ? leagueTradeHeroHtml(unvoted)
+        : ((!authSeatId() || !authSession) ? leagueTradeHeroHtml(absolute) : "");
+      const ledgerRows = leagueLedgerInboxHtml();
+      let inboxInner = "";
+      if (tradeHero) inboxInner += tradeHero;
+      if (ledgerRows) inboxInner += '<div class="lh-inbox">' + ledgerRows + "</div>";
+      if (!tradeHero && !ledgerRows) {
+        if (authSeatId() && authSession) {
+          inboxInner = '<div class="lh-inbox-empty">You’re caught up — every recent two-team trade has your vote'
+            + (absolute ? ", and no ledger actions are waiting" : "")
+            + ". New deals show up here first.</div>";
         }
-      } else if (authSeatId() && authSession && latestTradeAbsolute()) {
-        tradeBox = '<div class="champ-alert lh-progress lh-latest-trade is-caught-up">'
-          + '<p class="caption" style="margin:0">You’re caught up — every recent two-team trade has your vote. '
-          + "New deals show up here first.</p>"
-          + "</div>";
       }
-      if (!tradeBox) return "";
-      return '<section class="lh-section">' + tradeBox + "</section>";
+      if (inboxInner) {
+        parts.push('<section class="lh-section">'
+          + '<div class="lh-dash-h">Needs you</div>'
+          + inboxInner + "</section>");
+      }
+
+      parts.push('<section class="lh-section">' + leaguePulseHtml(absolute, unvoted) + "</section>");
+      const stand = leagueStandingsPeekHtml();
+      if (stand) parts.push('<section class="lh-section">' + stand + "</section>");
+      return parts.join("");
     }
 
 
@@ -16721,7 +16907,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v206-ledger-ptr";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v207-league-home";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -16802,13 +16988,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v206-ledger-ptr")) {
+  || !html.includes("chuckle-shell-v207-league-home")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v206-ledger-ptr")
+  || !swSrc.includes("chuckle-shell-v207-league-home")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -16865,14 +17051,22 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("recentTradeHeaderHtml()") || prog.includes("day-alert-h")) {
     throw new Error("leagueInProgress must not mount the Recent Trade header row");
   }
-  if (!prog.includes("lh-latest-trade") || !prog.includes("data-board-open")
-    || !prog.includes("latestTradeLeanFooterHtml(") || prog.includes("Who won this trade?")) {
+  if ((!prog.includes("lh-latest-trade") && !inline.includes("function leagueTradeHeroHtml("))
+    || !inline.includes("data-board-open=")
+    || !inline.includes("latestTradeLeanFooterHtml(") || prog.includes("Who won this trade?")) {
     throw new Error("leagueInProgress must mount Recent Trade chip with lean-mid vote (no Who won CTA)");
+  }
+  if (!inline.includes("function leagueVoteBadgeCount(") || !inline.includes("function leaguePulseHtml(")
+    || !inline.includes("function leagueStandingsPeekHtml(") || !inline.includes("function leagueLedgerInboxHtml(")
+    || !inline.includes("Needs you") || !inline.includes("League pulse") || !inline.includes("Standings")
+    || !inline.includes("lh-inbox-row") || !inline.includes("lh-stand-row")
+    || !inline.includes('data-home-tab="teams"')) {
+    throw new Error("League home must ship action inbox + pulse + standings peek");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
     || !inline.includes("data-vote-open-seat=")
-    || !prog.includes("caught up") || !inline.includes("function latestTradeAbsolute(")
+    || (!prog.includes("caught up") && !inline.includes("caught up")) || !inline.includes("function latestTradeAbsolute(")
     || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")
     || !inline.includes("voteSheetSeat") || !inline.includes("voteConfirmSeat")) {
     throw new Error("league home Recent Trade must queue unvoted deals and confirm with tally popup");
@@ -16884,7 +17078,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !inline.includes("voteModalSwallowClicksUntil")) {
     throw new Error("Recent Trade vote CTA must sit in lean mid between flairs; confirm must swallow ghost clicks");
   }
-  if (!prog.includes("latestTradeCardHtml(") || !prog.includes("ensureLatestTradeBags(")
+  if ((!prog.includes("latestTradeCardHtml(") && !inline.includes("latestTradeCardHtml("))
+    || (!prog.includes("ensureLatestTradeBags(") && !inline.includes("ensureLatestTradeBags("))
     || !inline.includes("function latestTradeCardHtml(") || !inline.includes("h2h-chip is-trade")
     || !inline.includes("function latestTradeLean(") || !inline.includes("function legValueText(")
     || !inline.includes("latestTradeLeanFooterHtml(") || !inline.includes("lh-trade-val")
@@ -17284,11 +17479,11 @@ if (homeFn.slice(0, homeFn.indexOf("\n    function ")).includes("data-trades-lis
 }
 // League home's five lists open as a full-screen Data tab (not a dropdown).
 // The quick-action trigger is the door; losing it loses the only path to four of the five lists.
-if (!inline.includes('<span class="lh-lab">History</span>')) {
-  throw new Error('the History tab must ship -- it is the only door to four of the five sets');
+if (!inline.includes('<span class="lh-lab">Tape</span>')) {
+  throw new Error('the Tape tab must ship -- it is the only door to four of the five sets');
 }
-if (!inline.includes("History, ' + esc(cur[1]) + ' selected")) {
-  throw new Error("the History tab must name the selected set in its accessible name");
+if (!inline.includes("Tape, ' + esc(cur[1]) + ' selected")) {
+  throw new Error("the Tape tab must name the selected set in its accessible name");
 }
 // History top tab: listbox stays; openDataSets forces the History home tab in place.
 for (const need of [
@@ -17332,6 +17527,17 @@ const fnSrc = (name) => {
   const rest = inline.slice(at + 4);
   return rest.slice(0, rest.indexOf("\n    function "));
 };
+
+{
+  const setFn = fnSrc("setHomeTab");
+  if (setFn.includes('homeTab === tab) ? "league"')) {
+    throw new Error("setHomeTab must stay on Teams/Ledger/Tape when re-tapped (no bounce to League)");
+  }
+  const tabFn = fnSrc("homeTabAction");
+  if (!tabFn.includes('tab === "league"') || !tabFn.includes("leagueVoteBadgeCount(")) {
+    throw new Error("League tab must badge unvoted trades via leagueVoteBadgeCount");
+  }
+}
 const fnBody = (name) => {
   const src = fnSrc(name);
   const end = src.indexOf("\n    }");
@@ -17375,7 +17581,7 @@ for (const gone of ["dsNoneOpt", "clearDataSet", "data-dset-none", "<b>None</b><
 if (fnSrc("dsMenu").includes("dsNoneOpt")) {
   throw new Error("dsMenu must not compose a None option");
 }
-if (!fnSrc("dataSetRow").includes('aria-label="History, none selected"')) {
+if (!fnSrc("dataSetRow").includes('aria-label="Tape, none selected"')) {
   throw new Error("the trigger must say \"none selected\" when no set is on screen");
 }
 for (const gone of ["openPacks", "togglePack", "data-pack", "pack-head"]) {
@@ -17955,10 +18161,10 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
   if (!fn.includes('homeTabAction("league"') || !fn.includes('homeTabAction("teams"')
     || !fn.includes("dataSetRow(") || !fn.includes('homeTabAction("ledger"')
     || fn.includes(">Champions<") || fn.includes('data-view="titles"')) {
-    throw new Error("homeChips must keep League, Teams, Ledger, and History");
+    throw new Error("homeChips must keep League, Teams, Ledger, and Tape");
   }
-  if (!fnSrc("dataSetRow").includes(">History<") || !fnSrc("dataSetRow").includes('data-home-tab="history"')) {
-    throw new Error("History tab label must ship on dataSetRow");
+  if (!fnSrc("dataSetRow").includes(">Tape<") || !fnSrc("dataSetRow").includes('data-home-tab="history"')) {
+    throw new Error("Tape tab label must ship on dataSetRow");
   }
 }
 if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
@@ -18008,8 +18214,8 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
   const dataPage = fnSrc("renderDataSetsPage");
   if (!dataPage.includes("pickIntelHome()") || !dataPage.includes("cuffsHome()")
     || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
-    || !dataPage.includes(">History</h2>")) {
-    throw new Error("History tab must mount Draft Data + Cuffs above league lists");
+    || !dataPage.includes(">Tape</h2>")) {
+    throw new Error("Tape tab must mount Draft Data + Cuffs above league lists");
   }
 }
 if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('data-view="titles"')) {

@@ -1365,6 +1365,7 @@ const html = `<!DOCTYPE html>
     }
     .lh-section { margin: 0 0 18px; }
     .your3 { margin: 0 0 16px; }
+    .your3.is-empty { min-height: 96px; }
     .your3-h {
       margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
@@ -3135,7 +3136,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeTeamNews20260905190500";
+    const DATA_V = "homeYour3Empty20260905191000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14089,7 +14090,11 @@ const html = `<!DOCTYPE html>
           tx: latest.transaction_id,
         });
       }
-      if (!rows.length) return "";
+      if (!rows.length) {
+        return '<section class="your3 is-empty" aria-label="Your 3">'
+          + '<div class="your3-h">Your 3</div>'
+          + "</section>";
+      }
       return '<section class="your3" aria-label="Your 3">'
         + '<div class="your3-h">Your 3</div>'
         + rows.slice(0, 3).map((r) => {
@@ -19490,7 +19495,8 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
   throw new Error("Home digest must ship Your 3, one news story, Price a deal, calc, and barracks");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
-  || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")) {
+  || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")
+  || !inline.includes('class="your3 is-empty"')) {
   throw new Error("Home in-flow news must be signed-in roster hits; peek stays the latest league item");
 }
 if (inline.includes("items.length > 1 ? items[1]")

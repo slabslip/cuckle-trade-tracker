@@ -18,8 +18,9 @@ plans stay as history; do not paste them here.
 - Hybrid Home: league water cooler on top (one Recent Trade + **Price a deal** + existing News
   Feed peek). Signed-in **Your 3** (wager / vote only) and **On your roster** (team-tagged
   feed hits, not a second copy of the league peek). No bag hero.
-- Your 3 (omit empties, omit when signed out): Ledger involving you; an uncast vote on the deal
-  on this page. Do not fill with the calculator or a news teaser.
+- Your 3 (omit when signed out; blank reserved slot when signed in with nothing waiting):
+  Ledger involving you; an uncast vote on the deal on this page. Do not fill with the
+  calculator or a news teaser.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /
   `even` (flatten + 40/60 KTC) + `applyVa`. Votes never enter the number.
 - Residual + reserved vote-nudge are specified in VALUE / VOTES / PRODUCT — not built.

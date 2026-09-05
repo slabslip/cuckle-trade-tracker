@@ -18,9 +18,10 @@ the digest — signed-in **Your 3** (notifications only), one Recent Trade card,
 signed-in **On your roster** news, and the News Feed pull-up. It is the water cooler. The `Score as`
 clock is not on it; the clock lives in the brand header on screens it applies to (§2a).
 
-**Your 3** may name a wager or an uncast vote. Omit the strip when signed out or when nothing is
-waiting. That is an *action*, not a personal bag number. Lineup recaps, waivers, and bag totals
-stay off Home. The calculator door stays under Recent Trade — it is not a Your 3 row.
+**Your 3** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
+and nothing is waiting, keep the heading and leave the slot blank — do not fill it. That is an
+*action*, not a personal bag number. Lineup recaps, waivers, and bag totals stay off Home. The
+calculator door stays under Recent Trade — it is not a Your 3 row.
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
 Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
@@ -177,8 +178,9 @@ sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 
 ## 3. Home
 
-**Your 3** — omit if signed out or empty. At most three notification rows (wager / uncast vote).
-Tap → Ledger or the deal vote. Do not fill with the calculator or a news teaser.
+**Your 3** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
+or a blank reserved slot when nothing is waiting. Tap → Ledger or the deal vote. Do not fill
+with the calculator or a news teaser.
 
 **Recent Trade** · the newest date on the tape. Named for recency, not for a clock. Existing H2H
 gold card + “Who won this trade?”. Do not restyle into a new card system.

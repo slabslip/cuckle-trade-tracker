@@ -1357,6 +1357,7 @@
     }
     .lh-section { margin: 0 0 18px; }
     .your3 { margin: 0 0 16px; }
+    .your3.is-empty { min-height: 96px; }
     .your3-h {
       margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
@@ -3127,7 +3128,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeTeamNews20260905190500";
+    const DATA_V = "homeYour3Empty20260905191000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14081,7 +14082,11 @@
           tx: latest.transaction_id,
         });
       }
-      if (!rows.length) return "";
+      if (!rows.length) {
+        return '<section class="your3 is-empty" aria-label="Your 3">'
+          + '<div class="your3-h">Your 3</div>'
+          + "</section>";
+      }
       return '<section class="your3" aria-label="Your 3">'
         + '<div class="your3-h">Your 3</div>'
         + rows.slice(0, 3).map((r) => {

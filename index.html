@@ -5743,7 +5743,7 @@
         if (!ledgerIsMine(b, seat)) return false;
         if (ledgerFeed === "settled") return b.status === "settled";
         if (ledgerFeed === "closed") return !ledgerIsLiveSlip(b);
-        return ledgerIsLiveSlip(b);
+        return ledgerIsLiveSlip(b) && b.status !== "settled";
       });
     }
 

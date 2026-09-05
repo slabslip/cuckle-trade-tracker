@@ -5751,7 +5751,7 @@ const html = `<!DOCTYPE html>
         if (!ledgerIsMine(b, seat)) return false;
         if (ledgerFeed === "settled") return b.status === "settled";
         if (ledgerFeed === "closed") return !ledgerIsLiveSlip(b);
-        return ledgerIsLiveSlip(b);
+        return ledgerIsLiveSlip(b) && b.status !== "settled";
       });
     }
 
@@ -16515,6 +16515,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["This NFL week", true],
     ['data-ledger-feed="', true],
     ['feedChip("live"', true],
+    ["ledgerIsLiveSlip(b) && b.status !== \"settled\"", true],
     ["Pick a winner.", true],
     ["Chuckle read:", true],
     ["This is a hint, not the official winner.", true],

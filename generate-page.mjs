@@ -10,7 +10,7 @@ const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache" />
   <meta name="theme-color" content="#0b0b0d" />
   <meta name="description" content="Chuckle Fantasy — old trades, fresh laughs. Dynasty trade meter for your league." />
@@ -45,9 +45,30 @@ const html = `<!DOCTYPE html>
           || sessionStorage.getItem("cuckle.design.league_home") === "1") {
           document.documentElement.classList.add("design-iphone");
           var m = document.querySelector('meta[name="viewport"]');
-          if (m) m.setAttribute("content", "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+          if (m) m.setAttribute("content", "width=390, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
         }
       } catch (e) { /* ignore */ }
+    })();
+    (function armIosNoFocusZoom() {
+      function applyViewport() {
+        var m = document.querySelector('meta[name="viewport"]');
+        if (!m) return;
+        var design = document.documentElement.classList.contains("design-iphone");
+        m.setAttribute("content", design
+          ? "width=390, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+          : "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
+      }
+      applyViewport();
+      document.addEventListener("focusin", function (e) {
+        var t = e.target;
+        if (!t || !t.tagName) return;
+        var tag = t.tagName;
+        if (tag !== "INPUT" && tag !== "SELECT" && tag !== "TEXTAREA") return;
+        applyViewport();
+        try {
+          if (parseFloat(window.getComputedStyle(t).fontSize) < 16) t.style.fontSize = "16px";
+        } catch (err) { /* ignore */ }
+      }, true);
     })();
   </script>
   <style>
@@ -60,7 +81,12 @@ const html = `<!DOCTYPE html>
       --pos-k: #9a9aa3; --pos-def: #e05555; --pos-oth: #c8c8d0;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    html, body {
+      margin: 0; background: var(--bg); color: var(--text); overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 16px;
@@ -72,9 +98,11 @@ const html = `<!DOCTYPE html>
         max(16px, env(safe-area-inset-left, 0px));
       -webkit-tap-highlight-color: rgba(255,255,255,0.08);
     }
-    /* iOS zooms the page when a focused control is under 16px. Keep every field at 16px. */
+    /* iOS zooms the page when a focused control is under 16px, and later rules that
+       use font: inherit inside a 0.7rem label will undo a plain 16px. Force it. */
     input, select, textarea {
-      font-size: 16px;
+      font-size: 16px !important;
+      touch-action: manipulation;
     }
     /*
      * Design Mode iPhone stage (html.design-iphone):
@@ -750,7 +778,7 @@ const html = `<!DOCTYPE html>
     .claim-box { margin-top: 8px; display: grid; gap: 8px; }
     .claim-box label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
     .claim-box select, .claim-box input {
-      font: inherit; color: var(--text); background: var(--bg);
+      font-size: 16px; color: var(--text); background: var(--bg);
       border: 1px solid var(--line); border-radius: 10px;
       min-height: 44px; padding: 0 12px; width: 100%;
     }
@@ -788,7 +816,7 @@ const html = `<!DOCTYPE html>
     .app-form { display: grid; gap: 8px; margin-top: 8px; }
     .app-form label { display: grid; gap: 4px; font-size: 0.8125rem; color: var(--dim); }
     .app-form input, .app-form select {
-      font: inherit; color: var(--text); background: var(--bg);
+      font-size: 16px; color: var(--text); background: var(--bg);
       border: 1px solid var(--line); border-radius: 10px;
       min-height: 44px; padding: 0 12px; width: 100%;
     }
@@ -2828,7 +2856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905020400";
+    const DATA_V = "ledger20260905022100";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8479,7 +8507,7 @@ const html = `<!DOCTYPE html>
       try {
         document.documentElement.classList.add("design-iphone");
         var m = document.querySelector('meta[name="viewport"]');
-        if (m) m.setAttribute("content", "width=390, initial-scale=1, maximum-scale=1, viewport-fit=cover");
+        if (m) m.setAttribute("content", "width=390, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
       } catch (err) { /* ignore */ }
       syncDesignIphoneStage();
       if (window.__designIphoneArmed) return;
@@ -15455,7 +15483,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v204-ledger-persist";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v205-ledger-nozoom";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -15522,23 +15550,27 @@ if (!html.includes('button type="button" class="league-sub"')
   && !html.includes('class="league-sub" id="leagueSub"')) {
   throw new Error("league name must be a clickable control that goes to league home");
 }
-if (!html.includes('maximum-scale=1, viewport-fit=cover')
+if (!html.includes("maximum-scale=1")
+  || !html.includes("user-scalable=no")
+  || !html.includes("minimum-scale=1")
   || !html.includes("input, select, textarea {")
-  || !html.includes("font-size: 16px;")) {
-  throw new Error("viewport and form controls must stay at 16px so iOS does not zoom on focus");
+  || !html.includes("font-size: 16px !important")
+  || !html.includes("function armIosNoFocusZoom(")
+  || !html.includes("-webkit-text-size-adjust: 100%")) {
+  throw new Error("viewport and form controls must lock scale and stay at 16px so iOS does not zoom on focus");
 }
 if (!html.includes('updateViaCache: "none"')
   || !html.includes("controllerchange")
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v204-ledger-persist")) {
+  || !html.includes("chuckle-shell-v205-ledger-nozoom")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v204-ledger-persist")
+  || !swSrc.includes("chuckle-shell-v205-ledger-nozoom")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");

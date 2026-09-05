@@ -23,7 +23,7 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 ## Product rules
 
 1. **House sends a wager.** Ledger starts with **New wager**, not a note. Pick Them,
-   house stake, a −500…0…+500 odds meter, description, and a clock, then **Send**.
+   house stake, a −500…0…+500 odds meter in steps of 100, description, and a clock, then **Send**.
    House = the first sender (`proposer` / `side_a`). They stay house when the other
    side counters. Shortcut “save the group text” is a later capture tool, not this tab.
 2. **Them Accept / Counter / Trash.** Accept locks their side → both locks promote to

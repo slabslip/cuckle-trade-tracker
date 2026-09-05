@@ -2,7 +2,7 @@
 
 **Audience:** the next coding agent who wires Shortcut / SMS after the dashboard
 wager handshake is live.  
-**Status:** Dashboard start path is **New wager** (Them, stake, −500…+500 meter,
+**Status:** Dashboard start path is **New wager** (Them, stake, −500…+500 meter in steps of 100,
 description, clock, Send / Counter / Accept). A note is **Shortcut-only, later**.
 Do not put Add note / Save note / four dollar boxes back on Ledger.  
 **Product rules:** [`LEDGER_SDD.md`](LEDGER_SDD.md) (rules 1, 10–14).  

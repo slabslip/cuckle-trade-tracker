@@ -147,11 +147,15 @@ function pricePlayer(sid, name, ownerId, ownerName, curveIdx, vmax, today, today
     raw,
     value: flat,
   }, todayPrice);
+  const ktc = ktcBySid[String(sid)] || {};
   return {
     id: key,
     kind: "player",
     sleeper_id: String(sid),
     name,
+    pos: ktc.pos || "",
+    team: ktc.team || "",
+    age: ktc.age == null ? null : Number(ktc.age),
     owner_id: ownerId,
     owner: ownerName,
     value: value == null ? null : Math.round(value),
@@ -176,6 +180,7 @@ function pricePick(key, row, ownerId, ownerName, curveIdx, vmax, today, todayPri
     id: key,
     kind: "pick",
     name: row.label || key,
+    pos: "PICK",
     year,
     round,
     slot,
@@ -197,9 +202,12 @@ const members = readJson("members.json", []) || [];
 const rosters = readJson("rosters_now.json", []) || [];
 const playersNfl = readJson("players.nfl.json", {}) || {};
 const ktcSnap = readJson("ktc/latest.json", {}) || {};
+const ktcBySid = Object.fromEntries(
+  (ktcSnap.players || []).filter((p) => p.sleeper_id)
+    .map((p) => [String(p.sleeper_id), p]),
+);
 const ktcNameBySid = Object.fromEntries(
-  (ktcSnap.players || []).filter((p) => p.sleeper_id && p.name)
-    .map((p) => [String(p.sleeper_id), p.name]),
+  Object.entries(ktcBySid).filter(([, p]) => p.name).map(([id, p]) => [id, p.name]),
 );
 const picksPath = `${leagueUiDir()}/picks.json`;
 const picks = existsSync(picksPath)

@@ -1387,24 +1387,91 @@ const html = `<!DOCTYPE html>
       border-radius: 12px; padding: 12px 14px; margin: 10px 0 0; min-height: 44px;
     }
     button.lh-calc-door:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
-    .calc-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 12px; }
-    .calc-side { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
-    .calc-side.on { border-color: #e0b44c; }
-    .calc-side-h { font-size: 0.8125rem; font-weight: 650; margin: 0 0 8px; color: var(--text); }
-    .calc-asset { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8125rem; margin: 0 0 4px; }
-    .calc-side select { width: 100%; min-height: 44px; font-size: 16px; margin: 0 0 8px; }
-    .calc-asset button { appearance: none; font: inherit; color: var(--dim); background: none; border: 0; cursor: pointer; min-height: 44px; min-width: 44px; }
-    .calc-tot { font-weight: 750; font-variant-numeric: tabular-nums; margin-top: 8px; }
-    .calc-delta { font-weight: 750; font-variant-numeric: tabular-nums; margin: 0 0 12px; }
-    .calc-delta.is-up { color: var(--green); }
-    .calc-delta.is-down { color: var(--red); }
-    .calc-pick { margin: 0 0 14px; }
-    .calc-list { max-height: 240px; overflow: auto; }
-    button.calc-add {
+    .calc-stack { display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px; }
+    .calc-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-width: 0; overflow: hidden; }
+    .calc-block-h {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; background: #1a1a1e; border-bottom: 1px solid var(--line);
+    }
+    .calc-block-h span { font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c); }
+    .calc-block-h select {
+      flex: 1; min-width: 0; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px;
+    }
+    .calc-search { position: relative; padding: 10px 12px 8px; }
+    .calc-search input {
+      width: 100%; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+      padding: 0 40px 0 12px;
+    }
+    .calc-search-ico {
+      position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
+      color: var(--dim); pointer-events: none; font-size: 0.95rem;
+    }
+    .calc-hits { padding: 0 12px 8px; }
+    button.calc-hit {
+      appearance: none; font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 10px; width: 100%;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
+    }
+    button.calc-hit:last-child { margin-bottom: 0; }
+    .calc-hit-name { font-weight: 650; min-width: 0; }
+    .calc-hit-meta { display: block; font-size: 0.72rem; color: var(--dim); font-weight: 500; }
+    .calc-hit-val { font-variant-numeric: tabular-nums; color: var(--lh-gold, #e0b44c); font-weight: 700; flex: 0 0 auto; }
+    .calc-asset {
+      display: flex; align-items: center; gap: 8px; min-width: 0;
+      padding: 8px 8px 8px 12px; border-top: 1px solid var(--line);
+    }
+    .calc-asset-main { flex: 1; min-width: 0; }
+    .calc-asset-name { font-weight: 650; color: var(--text); }
+    .calc-asset-meta { display: block; font-size: 0.72rem; color: var(--dim); }
+    .calc-asset-val { font-variant-numeric: tabular-nums; font-weight: 750; color: var(--lh-gold, #e0b44c); flex: 0 0 auto; }
+    .calc-asset button {
+      appearance: none; font: inherit; color: var(--dim); background: none; border: 0;
+      cursor: pointer; min-height: 44px; min-width: 44px; flex: 0 0 auto;
+    }
+    .calc-foot {
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+      padding: 10px 12px 12px; border-top: 1px solid var(--line);
+    }
+    .calc-pieces { font-size: 0.75rem; color: var(--muted); }
+    .calc-tot { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 1.25rem; color: var(--text); }
+    .calc-compare { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+    .calc-compare-labs {
+      display: flex; justify-content: space-between; gap: 10px; margin: 0 0 8px;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .calc-compare-labs > :last-child { text-align: right; }
+    .calc-compare-labs b { display: block; font-size: 0.95rem; font-variant-numeric: tabular-nums; color: var(--text); }
+    .calc-bar {
+      position: relative; height: 14px; border-radius: 999px; background: #2a2a30;
+      overflow: hidden; margin: 0 0 10px;
+    }
+    .calc-bar-a { height: 100%; background: var(--lh-gold, #e0b44c); }
+    .calc-bar-mid {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px;
+      background: repeating-linear-gradient(-45deg, var(--bg), var(--bg) 2px, var(--line) 2px, var(--line) 4px);
+    }
+    .calc-favor { font-weight: 750; margin: 0 0 4px; }
+    .calc-favor.is-up { color: var(--green); }
+    .calc-favor.is-down { color: var(--red); }
+    .calc-even { margin: 0; }
+    .calc-even-h {
+      font-size: 0.75rem; font-weight: 650; letter-spacing: 0.03em; text-transform: uppercase;
+      color: var(--dim); margin: 0 0 8px;
+    }
+    button.calc-even-add {
       appearance: none; font: inherit; color: var(--text); background: var(--card);
       border: 1px solid var(--line); border-radius: 10px; width: 100%;
-      display: flex; justify-content: space-between; gap: 8px;
+      display: flex; align-items: center; gap: 8px;
       padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
+    }
+    button.calc-even-add .calc-hit-val { margin-left: auto; }
+    button.calc-even-plus {
+      appearance: none; font: inherit; font-weight: 750; color: var(--bg);
+      background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
+      min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
     .cos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
     button.cos-card {
@@ -3063,7 +3130,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeDigest20260905182000";
+    const DATA_V = "homeDigest20260905184700";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3105,7 +3172,8 @@ const html = `<!DOCTYPE html>
     let calcSide = "a";
     let calcLegsA = [];
     let calcLegsB = [];
-    let calcFilter = "";
+    let calcFilterA = "";
+    let calcFilterB = "";
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
@@ -14057,6 +14125,11 @@ const html = `<!DOCTYPE html>
       return (book.players || []).concat(book.picks || []).find((a) => a.id === id) || null;
     }
 
+    function calcFmt(n) {
+      if (n == null || Number.isNaN(n)) return "—";
+      return Math.round(n).toLocaleString();
+    }
+
     function calcLegFromAsset(a) {
       if (!a) return null;
       return {
@@ -14067,7 +14140,33 @@ const html = `<!DOCTYPE html>
         value: a.value,
         value_flat: a.value_flat,
         became: a.kind === "player",
+        pos: a.pos || (a.kind === "pick" ? "PICK" : ""),
+        team: a.team || "",
+        age: a.age,
       };
+    }
+
+    function calcMeta(a) {
+      if (!a) return "";
+      if (a.kind === "pick" || a.pos === "PICK") return a.label || a.name || "Pick";
+      const bits = [];
+      if (a.pos) bits.push(a.pos);
+      if (a.team) bits.push(a.team);
+      if (a.age != null && Number.isFinite(Number(a.age))) bits.push(Number(a.age).toFixed(1) + " y.o.");
+      return bits.join(" · ");
+    }
+
+    function calcPieces(legs) {
+      const counts = {};
+      (legs || []).forEach((l) => {
+        const key = l.pos || (l.kind === "pick" ? "PICK" : "—");
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      const order = ["QB", "RB", "WR", "TE", "PICK"];
+      const keys = order.filter((k) => counts[k]).concat(Object.keys(counts).filter((k) => order.indexOf(k) < 0));
+      const parts = keys.map((k) => counts[k] + " " + k).join(" · ");
+      const n = (legs || []).length;
+      return n + " piece" + (n === 1 ? "" : "s") + (parts ? " · " + parts : "");
     }
 
     function calcSideBag(legs, otherLegs) {
@@ -14080,29 +14179,73 @@ const html = `<!DOCTYPE html>
       });
     }
 
-    function calcDeltaHtml() {
+    function calcSeatName(uid) {
+      const m = (members || []).find((x) => String(x.user_id) === String(uid));
+      return (m && m.name) || "Team";
+    }
+
+    function calcAssetsForSeat(uid, q) {
+      const book = calcBook || { players: [], picks: [] };
+      const needle = String(q || "").trim().toLowerCase();
+      const used = new Set((calcLegsA.concat(calcLegsB)).map((l) => l.id));
+      return (book.players || []).concat(book.picks || []).filter((a) => {
+        if (uid && String(a.owner_id) !== String(uid)) return false;
+        if (used.has(a.id)) return false;
+        if (needle && String(a.name || "").toLowerCase().indexOf(needle) < 0) return false;
+        return true;
+      });
+    }
+
+    function calcEvenHtml(need, shortSide) {
+      const uid = shortSide === "b" ? calcSeatB : calcSeatA;
+      if (!uid || need == null || need <= 0) return "";
+      const hits = calcAssetsForSeat(uid, "").filter((a) => a.value != null)
+        .slice()
+        .sort((x, y) => Math.abs(x.value - need) - Math.abs(y.value - need) || y.value - x.value)
+        .slice(0, 6);
+      if (!hits.length) return "";
+      return '<div class="calc-even">'
+        + '<div class="calc-even-h">Closest to even</div>'
+        + hits.map((a) =>
+          '<button type="button" class="calc-even-add" data-calc-add="' + esc(a.id) + '" data-calc-to="' + shortSide + '">'
+          + '<span class="calc-hit-name">' + esc(a.name)
+          + '<span class="calc-hit-meta">' + esc(calcMeta(a) || (a.kind === "pick" ? "Pick" : "Player")) + "</span></span>"
+          + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span>"
+          + '<span class="calc-even-plus" aria-hidden="true">+</span></button>'
+        ).join("")
+        + "</div>";
+    }
+
+    function calcCompareHtml() {
       const a = calcSideBag(calcLegsA, calcLegsB);
       const b = calcSideBag(calcLegsB, calcLegsA);
       const d = displayDelta(a.today, b.today);
-      if (d == null) return '<p class="caption">Add priced assets on both sides.</p>';
-      const tone = d > 0 ? " is-up" : (d < 0 ? " is-down" : "");
+      if (d == null) {
+        return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
+          + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
+      }
+      const tot = Math.abs(a.today || 0) + Math.abs(b.today || 0);
+      const pct = tot ? Math.max(4, Math.min(96, Math.round(((a.today || 0) / tot) * 100))) : 50;
+      const nameA = calcSeatName(calcSeatA);
+      const nameB = calcSeatName(calcSeatB);
+      const even = Math.abs(d) < 25;
+      const favors = even ? "Even" : (d > 0 ? nameA : nameB);
+      const tone = even ? "" : (d > 0 ? " is-up" : " is-down");
+      const short = d > 0 ? "b" : "a";
+      const shortName = short === "b" ? nameB : nameA;
+      const need = Math.abs(d);
       const va = (a.value_adjust || 0) + (b.value_adjust || 0);
-      return '<div class="calc-delta' + tone + '">Left − right: ' + (d > 0 ? "+" : "") + d + "</div>"
-        + (va ? '<p class="caption">Value Adjustment on the bags: ' + Math.round(va) + "</p>" : "")
-        + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p>';
-    }
-
-    function calcAssetsForSeat(uid) {
-      const book = calcBook || { players: [], picks: [] };
-      const q = String(calcFilter || "").trim().toLowerCase();
-      const used = new Set((calcLegsA.concat(calcLegsB)).map((l) => l.id));
-      const rows = (book.players || []).concat(book.picks || []).filter((a) => {
-        if (uid && String(a.owner_id) !== String(uid)) return false;
-        if (used.has(a.id)) return false;
-        if (q && String(a.name || "").toLowerCase().indexOf(q) < 0) return false;
-        return true;
-      });
-      return rows.slice(0, 40);
+      return '<div class="calc-compare">'
+        + '<div class="calc-compare-labs"><div>' + esc(nameA) + "<b>" + calcFmt(a.today) + "</b></div>"
+        + "<div>" + esc(nameB) + "<b>" + calcFmt(b.today) + "</b></div></div>"
+        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " " + calcFmt(a.today) + " vs " + esc(nameB) + " " + calcFmt(b.today) + '">'
+        + '<div class="calc-bar-a" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
+        + '<div class="calc-favor' + tone + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
+        + (even ? "" : '<p class="caption">Add a piece worth ' + calcFmt(need) + " to " + esc(shortName) + ".</p>")
+        + (va ? '<p class="caption">Value Adjustment on the bags: ' + calcFmt(va) + "</p>" : "")
+        + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC. Votes do not move this number.</p>'
+        + (even ? "" : calcEvenHtml(need, short))
+        + "</div>";
     }
 
     function calcSeatSelect(side) {
@@ -14111,7 +14254,7 @@ const html = `<!DOCTYPE html>
         '<option value="' + esc(m.user_id) + '"' + (String(cur) === String(m.user_id) ? " selected" : "") + ">"
         + esc(m.name) + "</option>"
       ).join("");
-      return '<select data-calc-seat="' + side + '" aria-label="' + (side === "a" ? "Left team" : "Right team") + '">'
+      return '<select data-calc-seat="' + side + '" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
         + '<option value="">Select team</option>' + opts + "</select>";
     }
 
@@ -14120,37 +14263,41 @@ const html = `<!DOCTYPE html>
       const legs = side === "a" ? calcLegsA : calcLegsB;
       const other = side === "a" ? calcLegsB : calcLegsA;
       const bag = calcSideBag(legs, other);
-      const on = calcSide === side ? " on" : "";
+      const q = side === "a" ? calcFilterA : calcFilterB;
+      const hits = uid && String(q || "").trim()
+        ? calcAssetsForSeat(uid, q).slice(0, 8) : [];
       const assets = legs.map((l) =>
-        '<div class="calc-asset"><span>' + esc(l.label) + "</span>"
-        + '<span>' + (l.value == null ? "—" : l.value)
-        + ' <button type="button" data-calc-drop="' + esc(l.id) + '" data-calc-from="' + side + '" aria-label="Remove">×</button></span></div>'
+        '<div class="calc-asset">'
+        + '<div class="calc-asset-main"><span class="calc-asset-name">' + esc(l.label) + "</span>"
+        + '<span class="calc-asset-meta">' + esc(calcMeta(l)) + "</span></div>"
+        + '<span class="calc-asset-val">' + (l.value == null ? "—" : calcFmt(l.value)) + "</span>"
+        + '<button type="button" data-calc-drop="' + esc(l.id) + '" data-calc-from="' + side + '" aria-label="Remove">×</button></div>'
       ).join("");
-      return '<div class="calc-side' + on + '">'
-        + '<div class="calc-side-h">' + (side === "a" ? "Left" : "Right") + "</div>"
-        + calcSeatSelect(side)
+      const hitRows = hits.map((a) =>
+        '<button type="button" class="calc-hit" data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '">'
+        + '<span class="calc-hit-name">' + esc(a.name)
+        + '<span class="calc-hit-meta">' + esc(calcMeta(a)) + "</span></span>"
+        + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></button>"
+      ).join("");
+      return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
+        + '<div class="calc-block-h"><span>' + (side === "a" ? "Team 1 gets" : "Team 2 gets") + "</span>"
+        + calcSeatSelect(side) + "</div>"
+        + '<div class="calc-search">'
+        + '<input type="search" value="' + esc(q) + '" data-calc-filter="' + side + '"'
+        + ' placeholder="Search for a player" ' + (uid ? "" : "disabled ") + "/>"
+        + '<span class="calc-search-ico" aria-hidden="true">⌕</span></div>'
+        + (hitRows ? '<div class="calc-hits">' + hitRows + "</div>" : "")
         + assets
-        + '<div class="calc-tot">' + (bag.today == null ? "—" : Math.round(bag.today)) + "</div>"
-        + '<button type="button" class="chip" data-calc-pick="' + side + '">Add from roster</button>'
-        + "</div>";
+        + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
+        + '<div class="calc-tot">' + (legs.length ? calcFmt(bag.today) : "0") + "</div></div>"
+        + "</section>";
     }
 
     function renderCalc() {
-      const list = calcAssetsForSeat(calcSide === "a" ? calcSeatA : calcSeatB);
-      const picks = list.map((a) =>
-        '<button type="button" class="calc-add" data-calc-add="' + esc(a.id) + '">'
-        + "<span>" + esc(a.name) + "</span><span>" + (a.value == null ? "—" : a.value) + "</span></button>"
-      ).join("");
       return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Price a deal</h2>'
-        + '<p class="caption">Two seats. Today book (flatten + KTC) plus Value Adjustment. Votes do not move this number.</p>'
-        + '<div class="calc-sides">' + calcSideHtml("a") + calcSideHtml("b") + "</div>"
-        + calcDeltaHtml()
-        + '<div class="calc-pick">'
-        + '<label class="caption">Search this roster</label>'
-        + '<input type="search" value="' + esc(calcFilter) + '" data-calc-filter="1" placeholder="Player or pick" />'
-        + '<div class="calc-list">' + (picks || '<p class="caption">Pick a team, then tap assets.</p>') + "</div>"
-        + "</div>";
+        + '<p class="caption">Search each roster. Today book (flatten + KTC) plus Value Adjustment.</p>'
+        + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
 
     function cosmeticsUnlocked(id) {
@@ -16616,18 +16763,14 @@ const html = `<!DOCTYPE html>
       if (calcSeat && e.target.tagName === "SELECT") {
         return;
       }
-      const calcPick = e.target.closest("[data-calc-pick]");
-      if (calcPick) {
-        calcSide = calcPick.getAttribute("data-calc-pick") || "a";
-        render();
-        return;
-      }
       const calcAdd = e.target.closest("[data-calc-add]");
       if (calcAdd) {
+        const to = calcAdd.getAttribute("data-calc-to") || calcSide || "a";
         const asset = calcLegFromAsset(calcAssetById(calcAdd.getAttribute("data-calc-add")));
         if (asset) {
-          if (calcSide === "b") calcLegsB = calcLegsB.concat([asset]);
-          else calcLegsA = calcLegsA.concat([asset]);
+          if (to === "b") { calcLegsB = calcLegsB.concat([asset]); calcFilterB = ""; }
+          else { calcLegsA = calcLegsA.concat([asset]); calcFilterA = ""; }
+          calcSide = to;
         }
         render();
         return;
@@ -16919,8 +17062,8 @@ const html = `<!DOCTYPE html>
       const calcSeatSel = e.target.closest("[data-calc-seat]");
       if (calcSeatSel) {
         const side = calcSeatSel.getAttribute("data-calc-seat");
-        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcLegsB = []; }
-        else { calcSeatA = calcSeatSel.value || ""; calcLegsA = []; }
+        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcLegsB = []; calcFilterB = ""; }
+        else { calcSeatA = calcSeatSel.value || ""; calcLegsA = []; calcFilterA = ""; }
         calcSide = side === "b" ? "b" : "a";
         render();
         return;
@@ -16951,11 +17094,14 @@ const html = `<!DOCTYPE html>
       }
       const calcFilterBox = e.target.closest("[data-calc-filter]");
       if (calcFilterBox) {
-        calcFilter = calcFilterBox.value || "";
+        const side = calcFilterBox.getAttribute("data-calc-filter") || "a";
+        if (side === "b") calcFilterB = calcFilterBox.value || "";
+        else calcFilterA = calcFilterBox.value || "";
+        calcSide = side;
         const start = calcFilterBox.selectionStart;
         const end = calcFilterBox.selectionEnd;
         render();
-        const back = document.querySelector("#app [data-calc-filter]");
+        const back = document.querySelector('#app [data-calc-filter="' + side + '"]');
         if (back) {
           back.focus({ preventScroll: true });
           try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
@@ -19301,6 +19447,10 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
   || !inline.includes("Price a deal") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
   throw new Error("Home digest must ship Your 3, one news story, Price a deal, calc, and barracks");
+}
+if (!inline.includes("Team 1 gets") || !inline.includes("Search for a player")
+  || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {
+  throw new Error("calc must stack Team 1 / Team 2 with per-side search and a leftover bar");
 }
 if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("sent: theirs")) {

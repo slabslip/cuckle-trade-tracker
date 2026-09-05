@@ -1428,7 +1428,11 @@ const html = `<!DOCTYPE html>
       width: 100%; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
       color: var(--text); font-size: 16px;
+      text-transform: none; letter-spacing: 0;
     }
+    .ledger-add label.lc-team { text-transform: none; }
+    .ledger-add select[name="them"]:invalid,
+    .ledger-card select[name="them"]:invalid { color: var(--muted); }
     .ledger-add label {
       display: grid; gap: 4px; font-size: 0.7rem; text-transform: uppercase;
       letter-spacing: 0.03em; color: var(--muted);
@@ -2824,7 +2828,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905020100";
+    const DATA_V = "ledger20260905020400";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6008,7 +6012,7 @@ const html = `<!DOCTYPE html>
       if (!sel) return;
       const cur = sel.value || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
       const others = ledgerOtherSeats();
-      sel.innerHTML = ['<option value="">Team</option>'].concat(others.map((m) => {
+      sel.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
         const selected = String(m.user_id) === String(cur) ? " selected" : "";
         return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
       })).join("");
@@ -6338,7 +6342,7 @@ const html = `<!DOCTYPE html>
       const draft = b.status === "needs_review";
       const houseLab = ledgerSeatLabel(b.side_a || b.proposer);
       const meta = draft
-        ? "Leftover draft — pick Them, then Send"
+        ? "Leftover draft — pick a team, then Send"
         : (esc(houseLab) + " (house) vs " + esc(ledgerSeatLabel(b.side_b)) + line);
       const named = !draft ? ledgerNamedTerms(b) : "";
       const desc = (b.terms && b.terms !== b.title && b.terms !== b.source_text && b.terms !== named)
@@ -6381,14 +6385,14 @@ const html = `<!DOCTYPE html>
       const them = b.side_b || "";
       const others = ledgerOtherSeats();
       if (!others.length && typeof loadMembers === "function") loadMembers().catch(() => {});
-      const optsHtml = ['<option value="">Them…</option>'].concat(others.map((m) => {
+      const optsHtml = ['<option value="">team</option>'].concat(others.map((m) => {
         const sel = String(m.user_id) === String(them) ? " selected" : "";
         return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name || m.user_id) + "</option>";
       })).join("");
-      const themName = them ? ledgerSeatLabel(them) : "them";
+      const themName = them ? ledgerSeatLabel(them) : "";
       return '<form class="lc-complete" data-ledger-finish-form="' + esc(b.id) + '">'
         + '<label>You<input type="text" value="' + esc(ledgerSeatLabel(seat)) + '" readonly></label>'
-        + '<label>Them<select name="them" required>' + optsHtml + "</select></label>"
+        + '<label class="lc-team"><select name="them" required aria-label="Team">' + optsHtml + "</select></label>"
         + '<label>What\u2019s the bet<input name="title" type="text" maxlength="160" value="' + esc(hint.title) + '" required></label>'
         + '<div class="lc-money">'
         + '<label>You put in ($)<input name="you_put" type="number" min="1" step="1" inputmode="decimal" value="' + esc(ledgerCentsToDollars(money.you_put_cents) || hint.amount) + '"></label>'
@@ -6398,7 +6402,8 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + '<div class="lc-complete-actions">'
         + '<button type="submit" class="chip">Save</button>'
-        + '<button type="button" class="chip" data-ledger-send="' + esc(b.id) + '">Send to ' + esc(themName) + "</button>"
+        + '<button type="button" class="chip" data-ledger-send="' + esc(b.id) + '">'
+        + esc(themName ? ("Send Wager to " + themName) : "Send Wager to") + "</button>"
         + "</div></form>";
     }
 
@@ -6744,7 +6749,7 @@ const html = `<!DOCTYPE html>
       const clock = draft ? String(draft.clock || "")
         : ((kind === "counter" && b && clockKind === "date") ? ledgerClockValue(b.deadline_at) : "");
       const preview = ledgerOddsPreview(ledgerDollarsToCents(stake), odds);
-      const optsHtml = ['<option value="">Team</option>'].concat(others.map((m) => {
+      const optsHtml = ['<option value="">team</option>'].concat(others.map((m) => {
         const sel = String(m.user_id) === String(them) ? " selected" : "";
         return '<option value="' + esc(m.user_id) + '"' + sel + ">" + esc(m.name || m.user_id) + "</option>";
       })).join("");
@@ -6752,7 +6757,7 @@ const html = `<!DOCTYPE html>
         ? 'data-ledger-counter-form="' + esc(b.id) + '"'
         : 'data-ledger-wager-form="1"';
       const themField = kind === "counter"
-        ? '<label>Team<input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly></label>'
+        ? '<label class="lc-team"><input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly aria-label="Team"></label>'
           + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
         : '<label class="lc-team"><select name="them" required data-ledger-wager-live="1" aria-label="Team">'
           + optsHtml + "</select></label>";
@@ -7226,7 +7231,7 @@ const html = `<!DOCTYPE html>
       }
       const seat = authSeatId();
       if (parsed.them && seat && parsed.them === String(seat)) {
-        ledgerToast = "Them has to be someone else.";
+        ledgerToast = "Pick a different team.";
         render();
         return;
       }
@@ -7244,12 +7249,12 @@ const html = `<!DOCTYPE html>
       const seat = authSeatId();
       if (!parsed || !seat) return;
       if (!parsed.them) {
-        ledgerToast = "Pick Them before you Send.";
+        ledgerToast = "Pick a team before you Send.";
         render();
         return;
       }
       if (parsed.them === String(seat)) {
-        ledgerToast = "Them has to be someone else.";
+        ledgerToast = "Pick a different team.";
         render();
         return;
       }
@@ -16767,10 +16772,12 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["ledgerComposeDraft", true],
     ['data-ledger-form-slot="1"', true],
     ["Send Wager to", true],
-    [">Team</option>", true],
+    [">team</option>", true],
     ["They get the other side.", true],
     ["Send to Them", false],
     ["Them gets the other side.", false],
+    [">Them…</option>", false],
+    ["<label>Them<", false],
     ['step="100"', true],
     ["function ledgerClaim(", true],
     ["function ledgerVote(", true],

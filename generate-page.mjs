@@ -1414,7 +1414,12 @@ const html = `<!DOCTYPE html>
       position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
       color: var(--dim); pointer-events: none; font-size: 0.95rem;
     }
-    .calc-hits { padding: 0 12px 8px; }
+    .calc-hits {
+      padding: 0 12px 8px;
+      max-height: min(52vh, 360px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     button.calc-hit {
       appearance: none; font: inherit; color: var(--text); background: var(--bg);
       border: 1px solid var(--line); border-radius: 10px; width: 100%;
@@ -3136,7 +3141,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cuckleCalcLabel20260905192500";
+    const DATA_V = "calcRosterSleeper20260905193500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3180,6 +3185,8 @@ const html = `<!DOCTYPE html>
     let calcLegsB = [];
     let calcFilterA = "";
     let calcFilterB = "";
+    let calcOpenA = false;
+    let calcOpenB = false;
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
@@ -14235,6 +14242,12 @@ const html = `<!DOCTYPE html>
         if (used.has(a.id)) return false;
         if (needle && String(a.name || "").toLowerCase().indexOf(needle) < 0) return false;
         return true;
+      }).slice().sort((a, b) => {
+        const oa = a.roster_ord == null ? 9999 : Number(a.roster_ord);
+        const ob = b.roster_ord == null ? 9999 : Number(b.roster_ord);
+        if (oa !== ob) return oa - ob;
+        if (a.kind !== b.kind) return a.kind === "player" ? -1 : 1;
+        return String(a.name || "").localeCompare(String(b.name || ""));
       });
     }
 
@@ -14310,8 +14323,9 @@ const html = `<!DOCTYPE html>
       const uid = side === "a" ? calcSeatA : calcSeatB;
       const legs = side === "a" ? calcLegsA : calcLegsB;
       const q = side === "a" ? calcFilterA : calcFilterB;
-      const hits = uid && String(q || "").trim()
-        ? calcAssetsForSeat(uid, q).slice(0, 8) : [];
+      const open = side === "a" ? calcOpenA : calcOpenB;
+      const hits = uid && (open || String(q || "").trim())
+        ? calcAssetsForSeat(uid, q) : [];
       const assets = legs.map((l) =>
         '<div class="calc-asset">'
         + '<div class="calc-asset-main"><span class="calc-asset-name">' + esc(l.label) + "</span>"
@@ -16774,11 +16788,13 @@ const html = `<!DOCTYPE html>
         const to = calcAdd.getAttribute("data-calc-to") || calcSide || "a";
         const asset = calcLegFromAsset(calcAssetById(calcAdd.getAttribute("data-calc-add")));
         if (asset) {
-          if (to === "b") { calcLegsB = calcLegsB.concat([asset]); calcFilterB = ""; }
-          else { calcLegsA = calcLegsA.concat([asset]); calcFilterA = ""; }
+          if (to === "b") { calcLegsB = calcLegsB.concat([asset]); calcFilterB = ""; calcOpenB = true; }
+          else { calcLegsA = calcLegsA.concat([asset]); calcFilterA = ""; calcOpenA = true; }
           calcSide = to;
         }
         render();
+        const back = document.querySelector('#app [data-calc-filter="' + to + '"]');
+        if (back) back.focus({ preventScroll: true });
         return;
       }
       const calcDrop = e.target.closest("[data-calc-drop]");
@@ -17012,6 +17028,18 @@ const html = `<!DOCTYPE html>
     document.getElementById("app").addEventListener("focusin", (e) => {
       const ta = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
       if (ta) ledgerPaintDescBox(ta.form || ta.closest("form"));
+      const calcSearch = e.target && e.target.closest && e.target.closest("[data-calc-filter]");
+      if (calcSearch) {
+        const side = calcSearch.getAttribute("data-calc-filter") || "a";
+        const already = side === "b" ? calcOpenB : calcOpenA;
+        if (side === "b") calcOpenB = true;
+        else calcOpenA = true;
+        calcSide = side;
+        if (!(side === "b" ? calcSeatB : calcSeatA) || already) return;
+        render();
+        const back = document.querySelector('#app [data-calc-filter="' + side + '"]');
+        if (back) back.focus({ preventScroll: true });
+      }
     });
     document.getElementById("app").addEventListener("scroll", (e) => {
       const ta = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
@@ -17025,6 +17053,23 @@ const html = `<!DOCTYPE html>
       if (form) ledgerCaptureCompose(form, { merge: false });
     }, true);
     document.getElementById("app").addEventListener("focusout", (e) => {
+      const calcSearch = e.target && e.target.closest && e.target.closest("[data-calc-filter]");
+      if (calcSearch) {
+        const side = calcSearch.getAttribute("data-calc-filter") || "a";
+        const next = e.relatedTarget;
+        const nextHit = next && next.closest && next.closest("[data-calc-add]");
+        if (nextHit && nextHit.getAttribute("data-calc-to") === side) return;
+        setTimeout(() => {
+          const still = document.activeElement;
+          const stillSearch = still && still.closest && still.closest("[data-calc-filter]");
+          const stillHit = still && still.closest && still.closest("[data-calc-add]");
+          if (stillSearch && stillSearch.getAttribute("data-calc-filter") === side) return;
+          if (stillHit && stillHit.getAttribute("data-calc-to") === side) return;
+          if (side === "b") calcOpenB = false;
+          else calcOpenA = false;
+          if (view === "calc") render();
+        }, 180);
+      }
       const field = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
       if (!field) return;
       const form = field.form || field.closest("form");
@@ -17068,8 +17113,8 @@ const html = `<!DOCTYPE html>
       const calcSeatSel = e.target.closest("[data-calc-seat]");
       if (calcSeatSel) {
         const side = calcSeatSel.getAttribute("data-calc-seat");
-        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcLegsB = []; calcFilterB = ""; }
-        else { calcSeatA = calcSeatSel.value || ""; calcLegsA = []; calcFilterA = ""; }
+        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcLegsB = []; calcFilterB = ""; calcOpenB = false; }
+        else { calcSeatA = calcSeatSel.value || ""; calcLegsA = []; calcFilterA = ""; calcOpenA = false; }
         calcSide = side === "b" ? "b" : "a";
         render();
         return;
@@ -17101,8 +17146,8 @@ const html = `<!DOCTYPE html>
       const calcFilterBox = e.target.closest("[data-calc-filter]");
       if (calcFilterBox) {
         const side = calcFilterBox.getAttribute("data-calc-filter") || "a";
-        if (side === "b") calcFilterB = calcFilterBox.value || "";
-        else calcFilterA = calcFilterBox.value || "";
+        if (side === "b") { calcFilterB = calcFilterBox.value || ""; calcOpenB = true; }
+        else { calcFilterA = calcFilterBox.value || ""; calcOpenA = true; }
         calcSide = side;
         const start = calcFilterBox.selectionStart;
         const end = calcFilterBox.selectionEnd;
@@ -19473,6 +19518,17 @@ if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price
 if (!inline.includes("Team 1 gets") || !inline.includes("Search for a player")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {
   throw new Error("calc must stack Team 1 / Team 2 with per-side search and a leftover bar");
+}
+if (!inline.includes("a.roster_ord") || !inline.includes("calcOpenA")
+  || !inline.includes("roster_ord == null")) {
+  throw new Error("calc search must drop that seat's roster in Sleeper roster_ord");
+}
+{
+  const sideAt = inline.indexOf("function calcSideHtml(");
+  const sideFn = inline.slice(sideAt, sideAt + 900);
+  if (sideFn.includes(".slice(0, 8)") || !sideFn.includes("open || String(q")) {
+    throw new Error("calc search must list the full Sleeper roster on focus, not 8 name hits");
+  }
 }
 if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("sent: theirs")) {

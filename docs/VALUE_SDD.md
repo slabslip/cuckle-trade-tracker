@@ -283,7 +283,8 @@ Dashboard hops use the same even-flatten book as trade bags. Raw DP is not shown
 **HAVE.** `?view=calc` prices a hypothetical 2-team swap on the **today / `even` book**
 (flatten + 40/60 KTC) plus Value Adjustment via the same `applyVa` the trade rows use. The catalog
 is `data/ui/calculator.json` from `build-calculator.mjs`: rostered players and still-held picks
-only. Votes do not appear on a hypothetical and do not change the number. This is the first
+only, each with `roster_ord` in Sleeper team-page order (starters, bench, IR, taxi; picks after).
+Votes do not appear on a hypothetical and do not change the number. This is the first
 reachable screen that **renders** `even`. The five Score-as windows stay flatten-only.
 
 **Reserved — do not paint over.** League **residual** (what the rest of the league’s bags look

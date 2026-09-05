@@ -120,6 +120,9 @@ async function main() {
           roster_id: r.roster_id,
           owner_id: r.owner_id,
           players: r.players || [],
+          starters: r.starters || [],
+          reserve: r.reserve || [],
+          taxi: r.taxi || [],
         });
       }
     }

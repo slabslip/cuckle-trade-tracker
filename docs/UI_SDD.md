@@ -197,11 +197,12 @@ Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not
 
 ### 3b. Calculator
 
-`?view=calc`. Two seats stacked (Team 1 gets / Team 2 gets). Search lives under each header and
-only that roster. Selected assets are rows (name, pos/team, value, remove). Compare bar + favor
-copy + closest leftover pieces from the short roster. Price book is today / `even` (flatten +
-40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do not appear on a
-hypothetical and do not change the number.
+`?view=calc`. Two seats stacked (Team 1 gets / Team 2 gets). Search lives under each header.
+Clicking it drops that roster in **Sleeper order** (starters, bench, IR, taxi, then still-held
+picks). Typing filters the same list without re-sorting. Selected assets are rows (name,
+pos/team, value, remove). Compare bar + favor copy + closest leftover pieces from the short
+roster. Price book is today / `even` (flatten + 40/60 KTC) plus Value Adjustment via the
+existing `applyVa`. Votes do not appear on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 

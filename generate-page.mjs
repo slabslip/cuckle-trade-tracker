@@ -1391,6 +1391,7 @@ const html = `<!DOCTYPE html>
     }
     .ledger-card .lc-title {
       margin: 0; font-size: 1rem; font-weight: 700; line-height: 1.25; color: var(--text);
+      text-transform: none; letter-spacing: 0;
     }
     .ledger-card .lc-amt {
       flex: 0 0 auto; font-size: 1.25rem; font-weight: 750;
@@ -1401,7 +1402,27 @@ const html = `<!DOCTYPE html>
     }
     .ledger-card .lc-terms {
       margin: 8px 0 0; font-size: 0.875rem; color: var(--text); line-height: 1.35;
+      text-transform: none; letter-spacing: 0;
     }
+    .ledger-card .lc-title .news-player,
+    .ledger-card .lc-title .wager-team-tag,
+    .ledger-card .lc-title .wager-clock-tag,
+    .ledger-card .lc-title .news-pos-tag,
+    .ledger-card .lc-title .wager-pos-tag,
+    .ledger-card .lc-terms .news-player,
+    .ledger-card .lc-terms .wager-team-tag,
+    .ledger-card .lc-terms .wager-clock-tag,
+    .ledger-card .lc-terms .news-pos-tag,
+    .ledger-card .lc-terms .wager-pos-tag {
+      display: inline; font-size: inherit; font-weight: 650;
+      letter-spacing: 0; vertical-align: baseline; margin: 0; opacity: 1;
+    }
+    .ledger-card .wager-pos-tag.pos-qb { color: var(--pos-qb); }
+    .ledger-card .wager-pos-tag.pos-rb { color: var(--pos-rb); }
+    .ledger-card .wager-pos-tag.pos-wr { color: var(--pos-wr); }
+    .ledger-card .wager-pos-tag.pos-te { color: var(--pos-te); }
+    .ledger-card .wager-pos-tag.pos-k { color: var(--pos-k); }
+    .ledger-card .wager-pos-tag.pos-def { color: var(--pos-def); }
     .ledger-card .lc-status {
       display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 999px;
       font-size: 0.7rem; font-weight: 650; letter-spacing: 0.02em;
@@ -1459,15 +1480,17 @@ const html = `<!DOCTYPE html>
     .lc-desc-box { position: relative; }
     .lc-desc-box textarea,
     .lc-desc-hi {
-      font-family: inherit; font-size: 16px !important; line-height: 1.35;
-      letter-spacing: 0; white-space: pre-wrap; word-wrap: break-word;
-      overflow-wrap: anywhere;
+      font-family: inherit; font-size: 16px !important; font-weight: 400;
+      line-height: 1.35; letter-spacing: 0;
+      box-sizing: border-box; width: 100%; margin: 0;
+      padding: 8px 10px; border: 1px solid #2a2a32; border-radius: 8px;
+      white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;
+      overflow: hidden; resize: none;
     }
     .lc-desc-hi {
-      position: absolute; inset: 0; padding: 8px 10px;
-      border: 1px solid transparent; border-radius: 8px;
-      color: var(--text); overflow: hidden; pointer-events: none;
-      white-space: pre-wrap;
+      position: absolute; inset: 0;
+      border-color: transparent;
+      color: var(--text); pointer-events: none;
     }
     .lc-desc-box textarea[data-ledger-desc] {
       position: relative; z-index: 1;
@@ -1475,6 +1498,7 @@ const html = `<!DOCTYPE html>
       color: transparent;
       -webkit-text-fill-color: transparent;
       caret-color: var(--text);
+      min-height: 72px;
     }
     .lc-desc-box textarea[data-ledger-desc]::selection {
       background: rgba(224, 180, 76, 0.32);
@@ -1487,7 +1511,7 @@ const html = `<!DOCTYPE html>
     .lc-desc-hi .wager-clock-tag,
     .lc-desc-hi .news-pos-tag,
     .lc-desc-hi .wager-pos-tag {
-      display: inline; font-size: inherit; font-weight: 650;
+      display: inline; font-size: inherit; font-weight: inherit;
       letter-spacing: 0; vertical-align: baseline; margin: 0; opacity: 1;
     }
     .lc-desc-hi .wager-pos-tag.pos-qb { color: var(--pos-qb); }
@@ -2905,7 +2929,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905131000";
+    const DATA_V = "ledger20260905135000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6448,17 +6472,28 @@ const html = `<!DOCTYPE html>
       const payout = (b.status === "open" || b.status === "settled")
         ? '<p class="caption">Settle cash however you want. This tab is just the record.</p>'
         : "";
+      const titleHtml = (typeof ledgerDescHighlightHtml === "function")
+        ? ledgerDescHighlightHtml(b.title || (draft ? "Draft" : "Wager"), null)
+        : esc(b.title || (draft ? "Draft" : "Wager"));
+      const termsHtml = termsLine
+        ? (named ? esc(named) : ((typeof ledgerDescHighlightHtml === "function")
+          ? ledgerDescHighlightHtml(termsLine, null) : esc(termsLine)))
+        : "";
+      const descHtml = (desc && named)
+        ? ((typeof ledgerDescHighlightHtml === "function")
+          ? ledgerDescHighlightHtml(desc, null) : esc(desc))
+        : "";
       return '<article class="ledger-card" data-ledger-id="' + esc(b.id) + '">'
         + '<div class="lc-top">'
-        + '<h3 class="lc-title">' + esc(b.title || (draft ? "Draft" : "Wager")) + "</h3>"
+        + '<h3 class="lc-title">' + titleHtml + "</h3>"
         + '<div class="lc-amt">' + esc(draft ? "" : ledgerFmtDollars(b.amount_cents)) + "</div>"
         + "</div>"
         + '<p class="lc-meta">' + meta + "</p>"
         + (b.source_text
           ? '<div class="lc-source">' + esc(b.source_text) + "</div>"
           : "")
-        + (termsLine ? '<p class="lc-terms">' + esc(termsLine) + "</p>" : "")
-        + (desc && named ? '<p class="lc-terms">' + esc(desc) + "</p>" : "")
+        + (termsHtml ? '<p class="lc-terms">' + termsHtml + "</p>" : "")
+        + (descHtml ? '<p class="lc-terms">' + descHtml + "</p>" : "")
         + '<span class="lc-status ' + chip.cls + '">' + esc(chip.lab) + "</span>"
         + ledgerHintHtml(b)
         + payout
@@ -7223,6 +7258,18 @@ const html = `<!DOCTYPE html>
       if (typeof ledgerCaptureCompose === "function") ledgerCaptureCompose(form, { merge: true });
       return true;
     }
+    function ledgerDescWordJustClosed(ta) {
+      if (!ta) return false;
+      if (document.activeElement !== ta) return true;
+      const n = ta.selectionEnd != null ? ta.selectionEnd : String(ta.value || "").length;
+      if (n <= 0) return false;
+      return /[\\s,.;:!?)]/.test(String(ta.value).charAt(n - 1));
+    }
+    function ledgerDescFitTa(ta) {
+      if (!ta) return;
+      ta.style.height = "0px";
+      ta.style.height = Math.max(72, ta.scrollHeight) + "px";
+    }
     function ledgerPaintDescBox(form) {
       if (!form) return;
       const ta = form.querySelector("textarea[name=desc]");
@@ -7230,13 +7277,14 @@ const html = `<!DOCTYPE html>
       const sugs = form.querySelector("[data-ledger-desc-sugs]");
       if (!ta || !hi) return;
       if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
-      ledgerDescExpandFinished(form);
+      if (ledgerDescWordJustClosed(ta)) ledgerDescExpandFinished(form);
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
       const open = (document.activeElement === ta) ? ledgerDescOpenWord(ta.value, caret) : null;
       const box = ta.closest(".lc-desc-box");
       if (box) box.classList.remove("is-desc-ghost");
       ledgerDescPending = null;
       hi.innerHTML = ledgerDescHighlightHtml(ta.value, open);
+      ledgerDescFitTa(ta);
       hi.scrollTop = ta.scrollTop;
       if (sugs) {
         sugs.hidden = true;
@@ -17421,6 +17469,9 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerDescBestPhrase(", true],
     ["function ledgerDescOpenWord(", true],
     ["function ledgerDescExpandFinished(", true],
+    ["function ledgerDescFitTa(", true],
+    ["function ledgerDescWordJustClosed(", true],
+    ["ledgerDescHighlightHtml(b.title", true],
     ["function ledgerDescGhostParts(", false],
     ["function ledgerSyncClockFromDesc(", true],
     ["wager-clock-tag", true],

@@ -2856,7 +2856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905022100";
+    const DATA_V = "ledger20260905023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5943,7 +5943,6 @@ const html = `<!DOCTYPE html>
 
     function ledgerComposeStayPut() {
       if (!ledgerComposeOpen()) return false;
-      if (focusNext) return false;
       if (appScreen !== "dash" || view !== "home" || homeTab !== "ledger") return false;
       return !!document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
     }
@@ -5982,8 +5981,10 @@ const html = `<!DOCTYPE html>
       if (ledgerComposeOpen()) {
         const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
         if (form) {
-          ledgerCaptureCompose(form);
-          ledgerRefreshThemOptions(form);
+          ledgerCaptureCompose(form, { merge: true });
+          ledgerHydrateCompose(form);
+          const ae = document.activeElement;
+          if (!ae || ae.getAttribute("name") !== "them") ledgerRefreshThemOptions(form);
         }
         return false;
       }
@@ -6004,7 +6005,8 @@ const html = `<!DOCTYPE html>
       } else {
         ledgerComposeFocus = null;
       }
-      ledgerCaptureCompose(form);
+      ledgerCaptureCompose(form, { merge: true });
+      ledgerHydrateCompose(form);
       ledgerComposeNode = form;
       ledgerComposeHold().appendChild(form);
     }
@@ -6014,7 +6016,9 @@ const html = `<!DOCTYPE html>
       const slot = document.querySelector("[data-ledger-form-slot]");
       if (slot) {
         slot.replaceWith(ledgerComposeNode);
-        ledgerRefreshThemOptions(ledgerComposeNode);
+        ledgerHydrateCompose(ledgerComposeNode);
+        const ae = document.activeElement;
+        if (!ae || ae.getAttribute("name") !== "them") ledgerRefreshThemOptions(ledgerComposeNode);
         ledgerRestoreComposeFocus();
         return;
       }
@@ -6030,7 +6034,9 @@ const html = `<!DOCTYPE html>
       const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
       if (form && (ledgerWagerOpen || ledgerCounterId)) {
         ledgerComposeNode = form;
-        ledgerRefreshThemOptions(form);
+        ledgerHydrateCompose(form);
+        const ae = document.activeElement;
+        if (!ae || ae.getAttribute("name") !== "them") ledgerRefreshThemOptions(form);
       }
     }
 
@@ -6047,7 +6053,7 @@ const html = `<!DOCTYPE html>
       if (cur) sel.value = cur;
     }
 
-    function ledgerCaptureCompose(form) {
+    function ledgerCaptureCompose(form, opts) {
       if (!ledgerWagerOpen && !ledgerCounterId) return;
       if (!form) {
         form = document.querySelector("[data-ledger-wager-form], [data-ledger-counter-form]");
@@ -6065,15 +6071,36 @@ const html = `<!DOCTYPE html>
         clock_kind: String(fd.get("clock_kind") || "this_week"),
         clock: String(fd.get("clock") || ""),
       };
+      const merge = !opts || opts.merge !== false;
       const prev = ledgerComposeDraft;
+      const ae = document.activeElement;
+      const focused = (ae && form.contains(ae)) ? (ae.getAttribute("name") || "") : "";
       if (prev && prev.kind === next.kind && String(prev.id || "") === String(next.id || "")) {
-        if (!next.them && prev.them) next.them = prev.them;
-        if (!String(next.stake || "").trim() && prev.stake) next.stake = prev.stake;
-        if (!next.desc && prev.desc) next.desc = prev.desc;
-        if (!next.clock && prev.clock) next.clock = prev.clock;
+        if (!next.them && prev.them && (merge || focused !== "them")) next.them = prev.them;
+        if (!String(next.stake || "").trim() && prev.stake && (merge || focused !== "stake")) next.stake = prev.stake;
+        if (!next.desc && prev.desc && (merge || focused !== "desc")) next.desc = prev.desc;
+        if (!next.clock && prev.clock && (merge || focused !== "clock")) next.clock = prev.clock;
       }
       ledgerComposeDraft = next;
       ledgerPersistCompose();
+    }
+
+    function ledgerHydrateCompose(form) {
+      const d = ledgerComposeDraft;
+      if (!form || !d) return;
+      const them = form.querySelector("[name=them]");
+      const stake = form.querySelector("[name=stake]");
+      const desc = form.querySelector("[name=desc]");
+      const clock = form.querySelector("[name=clock]");
+      if (them && !them.value && d.them) them.value = d.them;
+      if (stake && !String(stake.value || "").trim() && d.stake) stake.value = d.stake;
+      if (desc && !String(desc.value || "").trim() && d.desc) desc.value = d.desc;
+      if (clock && !clock.value && d.clock) clock.value = d.clock;
+      const send = form.querySelector("[data-ledger-send-lab]");
+      if (send && form.hasAttribute("data-ledger-wager-form")) {
+        const who = (them && them.value) || d.them;
+        send.textContent = ledgerSendLabel(who);
+      }
     }
 
     function ledgerClearCompose() {
@@ -7312,9 +7339,9 @@ const html = `<!DOCTYPE html>
       }, "sent", { send: true });
     }
 
-    function ledgerPaintWagerPreview(form) {
+    function ledgerPaintWagerPreview(form, opts) {
       if (!form) return;
-      ledgerCaptureCompose(form);
+      if (!opts || opts.capture !== false) ledgerCaptureCompose(form, { merge: false });
       const fd = new FormData(form);
       const o = ledgerSnapOdds(fd.get("odds"));
       const prev = ledgerOddsPreview(ledgerDollarsToCents(fd.get("stake")), o);
@@ -13682,7 +13709,8 @@ const html = `<!DOCTYPE html>
     function render() {
       if (ledgerComposeStayPut()) {
         const live = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
-        ledgerCaptureCompose(live);
+        ledgerCaptureCompose(live, { merge: true });
+        ledgerHydrateCompose(live);
         return;
       }
       ledgerParkCompose();
@@ -14369,7 +14397,10 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      if (e.target.closest("[data-ledger-wager]")) {
+      if (e.target.closest("[data-ledger-wager]")
+        && !e.target.closest("[data-ledger-wager-form]")
+        && !e.target.closest("[data-ledger-wager-cancel]")
+        && !e.target.closest("[data-ledger-wager-live]")) {
         ledgerWagerOpen = true;
         ledgerCounterId = null;
         ledgerToast = null;
@@ -15287,10 +15318,26 @@ const html = `<!DOCTYPE html>
         render();
       }
     });
+    document.getElementById("app").addEventListener("pointerdown", (e) => {
+      if (!ledgerComposeOpen()) return;
+      const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
+      if (form) ledgerCaptureCompose(form, { merge: false });
+    }, true);
+    document.getElementById("app").addEventListener("focusout", (e) => {
+      const field = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
+      if (!field) return;
+      const form = field.form || field.closest("form");
+      if (!form) return;
+      ledgerCaptureCompose(form, { merge: true });
+      ledgerHydrateCompose(form);
+    }, true);
     document.getElementById("app").addEventListener("change", (e) => {
       const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
       if (wagerLive) {
-        ledgerPaintWagerPreview(wagerLive.form || wagerLive.closest("form"));
+        const form = wagerLive.form || wagerLive.closest("form");
+        ledgerCaptureCompose(form, { merge: true });
+        ledgerHydrateCompose(form);
+        ledgerPaintWagerPreview(form, { capture: false });
         return;
       }
       const cuffOwnerSel = e.target.closest("[data-cuff-owner]");
@@ -16797,6 +16844,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerRememberCompose(", true],
     ["function ledgerMaybeRender(", true],
     ["function ledgerComposeStayPut(", true],
+    ["function ledgerHydrateCompose(", true],
     ["function ledgerPersistCompose(", true],
     ["function ledgerRestorePersistedCompose(", true],
     ["cuckle.ledger.compose.v1", true],

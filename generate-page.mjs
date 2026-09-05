@@ -2856,7 +2856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905025000";
+    const DATA_V = "ledger20260905025500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6166,23 +6166,24 @@ const html = `<!DOCTYPE html>
         they_put_cents = you_win_cents;
         they_win_cents = U;
       } else if (U > 0 && O > 0) {
-        you_put_cents = U;
-        you_win_cents = Math.round(U * O / 100);
-        they_put_cents = you_win_cents;
-        they_win_cents = U;
+        // Plus is the line you offer them. $100 at +200: they risk 100, you risk 200.
+        they_put_cents = U;
+        they_win_cents = Math.round(U * O / 100);
+        you_put_cents = they_win_cents;
+        you_win_cents = U;
       }
       const nLab = U ? String(U / 100) : "N";
       let words = "Enter a stake to see what each side puts in and wins.";
       if (U && !O) {
-        words = "Even. Both put in $" + nLab + ". Winner profits $" + nLab + ".";
+        words = "Even. Both risk $" + nLab + ". Winner profits $" + nLab + ".";
       } else if (U && O < 0) {
-        words = "House favorite " + ledgerFmtOdds(O) + ". You put in $" + (you_put_cents / 100)
-          + " to win $" + (you_win_cents / 100) + ". They put in $" + (they_put_cents / 100)
+        words = "You are favorite " + ledgerFmtOdds(O) + ". You risk $" + (you_put_cents / 100)
+          + " to win $" + (you_win_cents / 100) + ". They risk $" + (they_put_cents / 100)
           + " to win $" + (they_win_cents / 100) + ".";
       } else if (U && O > 0) {
-        words = "House dog " + ledgerFmtOdds(O) + ". You put in $" + (you_put_cents / 100)
-          + " to win $" + (you_win_cents / 100) + ". They put in $" + (they_put_cents / 100)
-          + " to win $" + (they_win_cents / 100) + ".";
+        words = "You offer " + ledgerFmtOdds(O) + ". They risk $" + (they_put_cents / 100)
+          + " to win $" + (they_win_cents / 100) + ". You risk $" + (you_put_cents / 100)
+          + " to win $" + (you_win_cents / 100) + ".";
       }
       return {
         you_put_cents: you_put_cents,
@@ -6818,7 +6819,7 @@ const html = `<!DOCTYPE html>
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
-        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Steps of 100. They get the other side.</span></label>'
+        + '<span class="caption">\u2212500 you are favorite · 0 even · +500 you offer them plus. Steps of 100. They get the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
         + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required data-ledger-wager-live="1">' + esc(desc) + "</textarea></label>"
         + '<div class="caption">Clock</div>'
@@ -16823,6 +16824,10 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerSend(", true],
     ["function ledgerWagerSave(", true],
     ["function ledgerOddsPreview(", true],
+    ["You offer ", true],
+    ["They risk $", true],
+    ["House dog ", false],
+    ["house dog", false],
     ["function ledgerSnapOdds(", true],
     ["function ledgerCaptureCompose(", true],
     ["function ledgerParkCompose(", true],

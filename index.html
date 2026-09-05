@@ -1392,10 +1392,25 @@
       padding: 10px 12px; background: #1a1a1e; border-bottom: 1px solid var(--line);
     }
     .calc-block-h span { font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c); }
-    .calc-block-h select {
-      flex: 1; min-width: 0; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
-      background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 0 10px;
+    .calc-seat { position: relative; flex: 1; min-width: 0; }
+    button.calc-seat-btn {
+      appearance: none; font: inherit; font-size: 16px; color: var(--text); text-align: left;
+      width: 100%; min-height: 44px; background: var(--bg); border: 1px solid var(--line);
+      border-radius: 10px; padding: 0 10px; cursor: pointer;
     }
+    .calc-seat-list {
+      position: absolute; z-index: 8; left: 0; right: 0; top: calc(100% + 4px);
+      max-height: min(50vh, 360px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+    }
+    button.calc-seat-opt {
+      appearance: none; font: inherit; font-size: 16px; color: var(--text); text-align: left;
+      display: block; width: 100%; min-height: 44px; background: transparent; border: 0;
+      border-bottom: 1px solid var(--line); padding: 0 12px; cursor: pointer;
+    }
+    button.calc-seat-opt:last-child { border-bottom: 0; }
+    button.calc-seat-opt.is-on { color: var(--lh-gold, #e0b44c); font-weight: 650; }
     .calc-search { position: relative; padding: 10px 12px 8px; }
     .calc-search input {
       width: 100%; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
@@ -3139,7 +3154,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcSelectQuiet20260905196000";
+    const DATA_V = "calcSeatMenu20260905197000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3186,6 +3201,8 @@
     let calcOpenA = false;
     let calcOpenB = false;
     let calcQuietUntil = 0;
+    let calcSeatMenu = "";
+    let calcSeatIgnoreOpenUntil = 0;
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
@@ -14380,12 +14397,25 @@
 
     function calcSeatSelect(side) {
       const cur = side === "a" ? calcSeatA : calcSeatB;
-      const opts = (members || []).map((m) =>
-        '<option value="' + esc(m.user_id) + '"' + (String(cur) === String(m.user_id) ? " selected" : "") + ">"
-        + esc(m.name) + "</option>"
-      ).join("");
-      return '<select data-calc-seat="' + side + '" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
-        + '<option value="">Select team</option>' + opts + "</select>";
+      const open = calcSeatMenu === side;
+      const lab = cur ? calcSeatName(cur, "Select team") : "Select team";
+      const aria = side === "a" ? "Team 1" : "Team 2";
+      const opts = ['<button type="button" class="calc-seat-opt' + (!cur ? " is-on" : "")
+        + '" data-calc-seat-pick="' + side + '" data-uid="">Select team</button>']
+        .concat((members || []).map((m) =>
+          '<button type="button" class="calc-seat-opt'
+          + (String(cur) === String(m.user_id) ? " is-on" : "")
+          + '" data-calc-seat-pick="' + side + '" data-uid="' + esc(m.user_id) + '">'
+          + esc(m.name) + "</button>"
+        ));
+      return '<div class="calc-seat' + (open ? " is-open" : "") + '">'
+        + '<button type="button" class="calc-seat-btn" data-calc-seat-open="' + side + '"'
+        + ' aria-label="' + aria + '" aria-expanded="' + (open ? "true" : "false") + '">'
+        + esc(lab) + "</button>"
+        + (open
+          ? '<div class="calc-seat-list" role="listbox" aria-label="' + aria + '">' + opts.join("") + "</div>"
+          : "")
+        + "</div>";
     }
 
     function calcHitBtn(a, side, showOwner) {
@@ -16875,8 +16905,34 @@
         }
         // vote uses data-board-open on the same button; fall through
       }
-      const calcSeat = e.target.closest("[data-calc-seat]");
-      if (calcSeat && e.target.tagName === "SELECT") {
+      const calcSeatOpen = e.target.closest("[data-calc-seat-open]");
+      if (calcSeatOpen) {
+        const side = calcSeatOpen.getAttribute("data-calc-seat-open");
+        if (Date.now() < calcSeatIgnoreOpenUntil) return;
+        calcSeatMenu = calcSeatMenu === side ? "" : side;
+        if (calcSeatMenu) {
+          if (side === "b") calcOpenB = false;
+          else calcOpenA = false;
+        }
+        render();
+        return;
+      }
+      const calcSeatPick = e.target.closest("[data-calc-seat-pick]");
+      if (calcSeatPick) {
+        const side = calcSeatPick.getAttribute("data-calc-seat-pick");
+        const uid = calcSeatPick.getAttribute("data-uid") || "";
+        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = false; }
+        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = false; }
+        calcSide = side === "b" ? "b" : "a";
+        calcSeatMenu = "";
+        calcSeatIgnoreOpenUntil = Date.now() + 450;
+        calcArmQuiet(500);
+        render();
+        const btn = document.querySelector('#app [data-calc-seat-open="' + side + '"]');
+        if (btn) {
+          btn.style.pointerEvents = "none";
+          setTimeout(() => { if (btn.isConnected) btn.style.pointerEvents = ""; }, 450);
+        }
         return;
       }
       const calcAdd = e.target.closest("[data-calc-add]");
@@ -17130,7 +17186,8 @@
       const calcSearch = e.target && e.target.closest && e.target.closest("[data-calc-filter]");
       if (calcSearch) {
         const side = calcSearch.getAttribute("data-calc-filter") || "a";
-        const fromSeat = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest("[data-calc-seat]");
+        const fromSeat = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".calc-seat");
+        if (calcSeatMenu) calcSeatMenu = "";
         if (calcIsQuiet() || fromSeat) {
           if (side === "b") calcOpenB = false;
           else calcOpenA = false;
@@ -17153,6 +17210,10 @@
       if (hi) hi.scrollTop = ta.scrollTop;
     }, true);
     document.getElementById("app").addEventListener("pointerdown", (e) => {
+      if (view === "calc" && calcSeatMenu && !e.target.closest(".calc-seat")) {
+        calcSeatMenu = "";
+        render();
+      }
       if (!ledgerComposeOpen()) return;
       const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
       if (form) ledgerCaptureCompose(form, { merge: false });
@@ -17217,26 +17278,6 @@
         cuffFilterOwner = cuffOwnerSel.value || "";
         if (cuffFilterOwner) cuffFilterMine = false;
         render();
-        return;
-      }
-      const calcSeatSel = e.target.closest("[data-calc-seat]");
-      if (calcSeatSel) {
-        const side = calcSeatSel.getAttribute("data-calc-seat");
-        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcFilterB = ""; calcOpenB = false; }
-        else { calcSeatA = calcSeatSel.value || ""; calcFilterA = ""; calcOpenA = false; }
-        calcSide = side === "b" ? "b" : "a";
-        calcArmQuiet(500);
-        render();
-        calcBlurSearch();
-        setTimeout(() => {
-          if (!calcIsQuiet()) return;
-          calcCloseSide(side);
-          calcBlurSearch();
-          const box = document.querySelector('#app [data-calc-filter="' + side + '"]');
-          const block = box && box.closest(".calc-block");
-          if (view === "calc" && block && block.querySelector(".calc-hits")) render();
-          calcBlurSearch();
-        }, 60);
         return;
       }
       if (e.target && e.target.id === "profileFile" && e.target.files && e.target.files[0]) {

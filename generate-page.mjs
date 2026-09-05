@@ -19467,6 +19467,9 @@ if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "news"')) {
   throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Your 3");
 }
+if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price a deal</h2>")) {
+  throw new Error("calc door and title must say Cuckle trade calculator");
+}
 if (!inline.includes("Team 1 gets") || !inline.includes("Search for a player")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {
   throw new Error("calc must stack Team 1 / Team 2 with per-side search and a leftover bar");

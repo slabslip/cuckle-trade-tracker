@@ -3122,7 +3122,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeDigest20260905184700";
+    const DATA_V = "homeDigest20260905185500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14263,8 +14263,6 @@
     function calcSideHtml(side) {
       const uid = side === "a" ? calcSeatA : calcSeatB;
       const legs = side === "a" ? calcLegsA : calcLegsB;
-      const other = side === "a" ? calcLegsB : calcLegsA;
-      const bag = calcSideBag(legs, other);
       const q = side === "a" ? calcFilterA : calcFilterB;
       const hits = uid && String(q || "").trim()
         ? calcAssetsForSeat(uid, q).slice(0, 8) : [];

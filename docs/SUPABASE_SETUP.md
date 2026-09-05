@@ -794,10 +794,12 @@ only your slips; another seat’s team page shows that seat’s public W/L + sli
 2. Run [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)
    (adds `visibility` + SELECT RLS: party or public).
 3. Deploy Edge Function `ledger-ingest` with secret `LEDGER_INGEST_SECRET`.
-4. Run [`db/wave15-ledger-notes.sql`](../db/wave15-ledger-notes.sql) for Add note /
-   Finish / Send (nullable `side_b`, filer-only drafts).
-5. Ledger **Add note** starts a draft. Finish You / Them / four dollar boxes, then
-   **Send to [name]**. Shortcut comes later. Product: [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md).
+4. Run [`db/wave15-ledger-notes.sql`](../db/wave15-ledger-notes.sql) if leftover
+   Shortcut drafts must stay insertable (nullable `side_b`, filer-only).
+5. Run [`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) for dashboard
+   **New wager** (`house_odds`, `offer_rev`, league settle votes).
+6. Ledger starts with **New wager** (Them, stake, odds meter, description, clock).
+   Shortcut note capture comes later. Product: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 
 Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md),
 [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped);

@@ -1415,15 +1415,38 @@ const html = `<!DOCTYPE html>
       display: grid; gap: 8px; margin: 0 0 12px; padding: 12px;
       background: #141418; border: 1px solid #2a2a32; border-radius: 12px;
     }
-    .ledger-add textarea {
+    .ledger-add textarea, .ledger-card textarea {
       width: 100%; min-height: 72px; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
       color: var(--text); font-size: 0.9375rem; resize: vertical;
     }
-    .ledger-add select {
+    .ledger-add select, .ledger-card select {
       width: 100%; box-sizing: border-box; padding: 8px 10px;
       border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
       color: var(--text); font-size: 0.9375rem;
+    }
+    .ledger-add label {
+      display: grid; gap: 4px; font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.03em; color: var(--muted);
+    }
+    .ledger-add input[type="number"], .ledger-add input[type="date"],
+    .ledger-add input[type="text"] {
+      width: 100%; box-sizing: border-box; padding: 8px 10px;
+      border: 1px solid #2a2a32; border-radius: 8px; background: #0e0e12;
+      color: var(--text); font-size: 0.9375rem;
+    }
+    .ledger-add input[type="range"], .ledger-card input[type="range"] {
+      width: 100%; accent-color: var(--lh-gold, #e0b44c);
+    }
+    .ledger-add .caption { text-transform: none; letter-spacing: 0; font-weight: 400; }
+    .lc-odds-lab {
+      font-size: 0.95rem; font-weight: 700; color: var(--lh-gold, #e0b44c);
+      font-variant-numeric: tabular-nums;
+    }
+    .ledger-card .lc-status.disputed { border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c); }
+    .lc-preview {
+      margin: 0; padding: 8px 10px; border-left: 3px solid var(--lh-gold, #e0b44c);
+      background: #1a1a20; color: var(--text); font-size: 0.8125rem; line-height: 1.4;
     }
     .ledger-card .lc-foot {
       margin-top: 8px; font-size: 0.75rem; color: var(--dim);
@@ -2787,7 +2810,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260904233000";
+    const DATA_V = "ledger20260905001800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -2830,7 +2853,9 @@ const html = `<!DOCTYPE html>
     let ledgerToast = null;
     let ledgerBusyId = null;
     let ledgerCompleteId = null;
-    let ledgerAddNoteOpen = false;
+    let ledgerWagerOpen = false;
+    let ledgerCounterId = null;
+    let ledgerVotes = [];
     // News Feed bottom pull-up (league home). Peek shows the latest item; drag opens full sheet.
     let newsPullupOpen = false;
     let newsPullupCleanup = null;
@@ -5250,28 +5275,6 @@ const html = `<!DOCTYPE html>
       const past = new Date(Date.now() - 40 * 86400000).toISOString();
       return [
         {
-          id: "design-bet-note",
-          sleeper_league_id: (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID,
-          title: "berg goes off you owe me a beer",
-          terms: "berg goes off you owe me a beer",
-          odds: null,
-          amount_cents: 0,
-          currency: "USD",
-          side_a: a,
-          side_b: null,
-          proposer: a,
-          status: "needs_review",
-          side_a_lock: false,
-          side_b_lock: false,
-          deadline_at: null,
-          winner: null,
-          visibility: "private",
-          source: "manual",
-          source_text: "berg goes off you owe me a beer",
-          terms_json: {},
-          created_at: new Date().toISOString(),
-        },
-        {
           id: "design-bet-1",
           sleeper_league_id: (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID,
           title: "Stribling will finish the season as SF WR1",
@@ -5290,6 +5293,8 @@ const html = `<!DOCTYPE html>
           visibility: "public",
           source: "shortcut",
           source_text: "Sam vs Truman — Stribling SF WR1 — $100 even",
+          house_odds: 0,
+          offer_rev: 1,
           created_at: new Date().toISOString(),
         },
         {
@@ -5332,14 +5337,41 @@ const html = `<!DOCTYPE html>
           visibility: "public",
           source: "manual",
           source_text: null,
+          house_odds: -110,
+          offer_rev: 1,
           created_at: new Date().toISOString(),
+        },
+        {
+          id: "design-bet-dispute",
+          sleeper_league_id: (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID,
+          title: "Berg scores a TD this week",
+          terms: "You put in $100. If you win you get $100. They put in $100. If they win they get $100.",
+          odds: "0",
+          amount_cents: 10000,
+          currency: "USD",
+          side_a: a,
+          side_b: other,
+          proposer: a,
+          status: "open",
+          side_a_lock: true,
+          side_b_lock: true,
+          deadline_at: past,
+          winner: null,
+          side_a_claim: "side_a",
+          side_b_claim: "side_b",
+          visibility: "public",
+          source: "manual",
+          source_text: null,
+          house_odds: 0,
+          offer_rev: 1,
+          created_at: past,
         },
         {
           id: "design-bet-3",
           sleeper_league_id: (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID,
           title: "McCaffrey finishes top-5 RB",
           terms: "CMC finishes as a top-5 fantasy RB (PPR).",
-          odds: "even",
+          odds: "0",
           amount_cents: 2500,
           currency: "USD",
           side_a: a,
@@ -5353,6 +5385,8 @@ const html = `<!DOCTYPE html>
           visibility: "public",
           source: "shortcut",
           source_text: null,
+          house_odds: 0,
+          offer_rev: 1,
           created_at: past,
         },
         {
@@ -5445,12 +5479,23 @@ const html = `<!DOCTYPE html>
     async function ledgerFetch() {
       const lid = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) {
-        ledgerBets = ledgerExpireLocal(ledgerDesignSeed());
+        const seed = ledgerDesignSeed();
+        ledgerBets = ledgerExpireLocal(seed);
+        const dispute = seed.find((b) => b.id === "design-bet-dispute");
+        const voter = dispute
+          ? ((members || []).map((m) => m.user_id).find((id) => id
+            && String(id) !== String(dispute.side_a)
+            && String(id) !== String(dispute.side_b)) || "457779824002330624")
+          : null;
+        ledgerVotes = (dispute && voter)
+          ? [{ id: "design-vote-1", bet_id: dispute.id, voter: voter, pick: "side_a" }]
+          : [];
         ledgerLoadState = "ok";
         return;
       }
       if (!authSession || !authSession.access_token) {
         ledgerBets = [];
+        ledgerVotes = [];
         ledgerLoadState = "ok";
         return;
       }
@@ -5469,11 +5514,35 @@ const html = `<!DOCTYPE html>
         if (!res.ok) throw new Error("ledger " + res.status);
         const rows = await res.json();
         ledgerBets = ledgerExpireLocal(Array.isArray(rows) ? rows : []);
+        await ledgerLoadVotes(ledgerBets);
         ledgerLoadState = "ok";
       } catch (err) {
         console.error(err);
         ledgerLoadState = "err";
         if (!ledgerBets) ledgerBets = [];
+      }
+    }
+
+    async function ledgerLoadVotes(bets) {
+      const ids = (bets || []).map((b) => b && b.id)
+        .filter((id) => id && /^[0-9a-f-]{36}$/i.test(String(id)));
+      if (!ids.length) {
+        ledgerVotes = [];
+        return;
+      }
+      try {
+        const res = await fetch(
+          VOTE_API + "/ledger_settle_votes?select=*&bet_id=in.(" + ids.join(",") + ")",
+          { headers: ledgerAuthHeaders() }
+        );
+        if (!res.ok) {
+          ledgerVotes = [];
+          return;
+        }
+        const rows = await res.json();
+        ledgerVotes = Array.isArray(rows) ? rows : [];
+      } catch (_) {
+        ledgerVotes = [];
       }
     }
 
@@ -5607,6 +5676,87 @@ const html = `<!DOCTYPE html>
       return String(n / 100);
     }
 
+    function ledgerFmtOdds(n) {
+      const o = Math.round(Number(n) || 0);
+      if (!o) return "0";
+      return o > 0 ? ("+" + o) : String(o);
+    }
+
+    function ledgerHouseOddsOf(b) {
+      if (b && b.house_odds != null && b.house_odds !== "") {
+        const n = Number(b.house_odds);
+        if (Number.isFinite(n)) return n;
+      }
+      const raw = String((b && b.odds) || "").replace(/even/i, "0").replace(/^\\+/, "");
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function ledgerOddsPreview(stakeCents, houseOdds) {
+      const U = Math.max(0, Math.round(Number(stakeCents) || 0));
+      let O = Math.round(Number(houseOdds) || 0);
+      if (O < -500) O = -500;
+      if (O > 500) O = 500;
+      let you_put_cents = U;
+      let you_win_cents = U;
+      let they_put_cents = U;
+      let they_win_cents = U;
+      if (U > 0 && O < 0) {
+        you_put_cents = U;
+        you_win_cents = Math.round(U * 100 / Math.abs(O));
+        they_put_cents = you_win_cents;
+        they_win_cents = U;
+      } else if (U > 0 && O > 0) {
+        you_put_cents = U;
+        you_win_cents = Math.round(U * O / 100);
+        they_put_cents = you_win_cents;
+        they_win_cents = U;
+      }
+      const nLab = U ? String(U / 100) : "N";
+      let words = "Enter a stake to see what each side puts in and wins.";
+      if (U && !O) {
+        words = "Even. Both put in $" + nLab + ". Winner profits $" + nLab + ".";
+      } else if (U && O < 0) {
+        words = "House favorite " + ledgerFmtOdds(O) + ". You put in $" + (you_put_cents / 100)
+          + " to win $" + (you_win_cents / 100) + ". They put in $" + (they_put_cents / 100)
+          + " to win $" + (they_win_cents / 100) + ".";
+      } else if (U && O > 0) {
+        words = "House dog " + ledgerFmtOdds(O) + ". You put in $" + (you_put_cents / 100)
+          + " to win $" + (you_win_cents / 100) + ". They put in $" + (they_put_cents / 100)
+          + " to win $" + (they_win_cents / 100) + ".";
+      }
+      return {
+        you_put_cents: you_put_cents,
+        you_win_cents: you_win_cents,
+        they_put_cents: they_put_cents,
+        they_win_cents: they_win_cents,
+        house_odds: O,
+        words: words,
+      };
+    }
+
+    function ledgerClockPassed(b) {
+      if (!b || !b.deadline_at) return false;
+      const t = new Date(b.deadline_at).getTime();
+      return Number.isFinite(t) && t < Date.now();
+    }
+
+    function ledgerIsDisputed(b) {
+      return !!(b && b.status === "open" && b.side_a_claim && b.side_b_claim
+        && b.side_a_claim !== b.side_b_claim);
+    }
+
+    function ledgerNamedTerms(b) {
+      const money = ledgerReadTerms(b);
+      if (!money.you_put_cents) return "";
+      const house = ledgerSeatLabel(b.side_a || b.proposer);
+      const them = ledgerSeatLabel(b.side_b);
+      return house + " puts in $" + (money.you_put_cents / 100)
+        + ". If they win they get $" + (money.you_win_cents / 100)
+        + ". " + them + " puts in $" + (money.they_put_cents / 100)
+        + ". If they win they get $" + (money.they_win_cents / 100) + ".";
+    }
+
     function ledgerReadTerms(b) {
       const j = (b && b.terms_json && typeof b.terms_json === "object") ? b.terms_json : {};
       return {
@@ -5633,9 +5783,17 @@ const html = `<!DOCTYPE html>
       if (b.status === "proposed" && seat) {
         const needsMe = (String(b.side_a) === String(seat) && !b.side_a_lock)
           || (String(b.side_b) === String(seat) && !b.side_b_lock);
-        if (needsMe) return { cls: "needs", lab: "Needs your yes" };
+        if (needsMe) return { cls: "needs", lab: "Sent to you, you have not accepted this version" };
         const waiting = String(b.side_a) === String(seat) ? b.side_b : b.side_a;
         return { cls: "needs", lab: "Waiting on " + ledgerSeatLabel(waiting) };
+      }
+      if (ledgerIsDisputed(b)) return { cls: "disputed", lab: "Disputed — league vote" };
+      if (b.status === "open" && ledgerClockPassed(b)) {
+        const isA = seat && String(b.side_a) === String(seat);
+        const isB = seat && String(b.side_b) === String(seat);
+        const myClaim = isA ? b.side_a_claim : (isB ? b.side_b_claim : null);
+        if ((isA || isB) && !myClaim) return { cls: "needs", lab: "Clock ended — pick a winner" };
+        return { cls: "needs", lab: "Waiting on a winner pick" };
       }
       if (b.status === "open") return { cls: "open", lab: "Open" };
       if (b.status === "settled") return { cls: "settled", lab: "Settled" };
@@ -5662,20 +5820,29 @@ const html = `<!DOCTYPE html>
             btns += '<button type="button" class="chip" data-ledger-complete="' + esc(b.id) + '">Complete</button>';
           }
           const locked = isA ? b.side_a_lock : b.side_b_lock;
-          if (isParty && !locked) {
-            btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Yes, I\u2019m in</button>'
-              + '<button type="button" class="chip" data-ledger-decline="' + esc(b.id) + '">No</button>';
+          if (isParty && !locked && String(ledgerCounterId) !== String(b.id)) {
+            if (Number(b.amount_cents)) {
+              btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Accept</button>'
+                + '<button type="button" class="chip" data-ledger-counter="' + esc(b.id) + '">Counter</button>'
+                + '<button type="button" class="chip" data-ledger-decline="' + esc(b.id) + '">No</button>';
+            } else {
+              btns += '<button type="button" class="chip" data-ledger-accept="' + esc(b.id) + '">Accept</button>'
+                + '<button type="button" class="chip" data-ledger-decline="' + esc(b.id) + '">No</button>';
+            }
           }
           if (isProposer) {
             btns += '<button type="button" class="chip" data-ledger-cancel="' + esc(b.id) + '">Cancel</button>';
           }
         }
-        if (b.status === "open") {
-          const meSide = isA ? "side_a" : "side_b";
-          const themSide = isA ? "side_b" : "side_a";
-          btns += '<button type="button" class="chip" data-ledger-settle="' + esc(b.id) + '" data-winner="' + meSide + '">I won</button>'
-            + '<button type="button" class="chip" data-ledger-settle="' + esc(b.id) + '" data-winner="' + themSide + '">They won</button>'
-            + '<button type="button" class="chip" data-ledger-settle="' + esc(b.id) + '" data-winner="push">Push</button>';
+        if (b.status === "open" && ledgerClockPassed(b) && isParty && !ledgerIsDisputed(b)) {
+          const myClaim = isA ? b.side_a_claim : b.side_b_claim;
+          if (!myClaim) {
+            const meSide = isA ? "side_a" : "side_b";
+            const themSide = isA ? "side_b" : "side_a";
+            btns += '<button type="button" class="chip" data-ledger-claim="' + esc(b.id) + '" data-winner="' + meSide + '">I won</button>'
+              + '<button type="button" class="chip" data-ledger-claim="' + esc(b.id) + '" data-winner="' + themSide + '">They won</button>'
+              + '<button type="button" class="chip" data-ledger-claim="' + esc(b.id) + '" data-winner="push">Push</button>';
+          }
         }
       }
       const canToggle = isParty && !readOnly && ledgerBusyId !== b.id && b.status !== "needs_review";
@@ -5701,7 +5868,9 @@ const html = `<!DOCTYPE html>
 
     function ledgerCardHtml(b, opts) {
       const chip = ledgerStatusChip(b);
-      const odds = b.odds ? (" · " + esc(b.odds)) : "";
+      const line = b.house_odds != null && b.house_odds !== ""
+        ? (" · house " + esc(ledgerFmtOdds(b.house_odds)))
+        : (b.odds ? (" · " + esc(b.odds)) : "");
       const footBits = [];
       const left = ledgerDaysLeft(b.deadline_at);
       if (left) footBits.push(left);
@@ -5712,22 +5881,28 @@ const html = `<!DOCTYPE html>
           }));
         } catch (_) {}
       }
+      if (b.offer_rev && Number(b.offer_rev) > 1) footBits.push("offer v" + Number(b.offer_rev));
       if (b.winner) {
         const wLab = b.winner === "push" ? "Push"
           : (b.winner === "side_a" ? ledgerSeatLabel(b.side_a) : ledgerSeatLabel(b.side_b));
         footBits.push("winner " + wLab);
       }
       const draft = b.status === "needs_review";
+      const houseLab = ledgerSeatLabel(b.side_a || b.proposer);
       const meta = draft
-        ? "Your note — pick Them, then Send"
-        : (esc(ledgerSeatLabel(b.side_a)) + " vs " + esc(ledgerSeatLabel(b.side_b)) + odds);
-      const money = ledgerReadTerms(b);
-      const termsLine = (!draft && money.you_put_cents)
-        ? ledgerPlainTerms(money)
-        : (b.terms && b.terms !== b.title && b.terms !== b.source_text ? b.terms : "");
+        ? "Leftover draft — pick Them, then Send"
+        : (esc(houseLab) + " (house) vs " + esc(ledgerSeatLabel(b.side_b)) + line);
+      const named = !draft ? ledgerNamedTerms(b) : "";
+      const desc = (b.terms && b.terms !== b.title && b.terms !== b.source_text && b.terms !== named)
+        ? b.terms
+        : "";
+      const termsLine = named || desc;
+      const payout = (b.status === "open" || b.status === "settled")
+        ? '<p class="caption">Settle cash however you want. This tab is just the record.</p>'
+        : "";
       return '<article class="ledger-card" data-ledger-id="' + esc(b.id) + '">'
         + '<div class="lc-top">'
-        + '<h3 class="lc-title">' + esc(b.title || (draft ? "Your note" : "Bet")) + "</h3>"
+        + '<h3 class="lc-title">' + esc(b.title || (draft ? "Draft" : "Wager")) + "</h3>"
         + '<div class="lc-amt">' + esc(draft ? "" : ledgerFmtDollars(b.amount_cents)) + "</div>"
         + "</div>"
         + '<p class="lc-meta">' + meta + "</p>"
@@ -5735,9 +5910,13 @@ const html = `<!DOCTYPE html>
           ? '<div class="lc-source">' + esc(b.source_text) + "</div>"
           : "")
         + (termsLine ? '<p class="lc-terms">' + esc(termsLine) + "</p>" : "")
+        + (desc && named ? '<p class="lc-terms">' + esc(desc) + "</p>" : "")
         + '<span class="lc-status ' + chip.cls + '">' + esc(chip.lab) + "</span>"
+        + payout
         + ledgerFinishFormHtml(b, opts)
         + ledgerCompleteFormHtml(b, opts)
+        + ledgerCounterFormHtml(b, opts)
+        + ledgerVoteHtml(b, opts)
         + ledgerCardActions(b, opts)
         + (footBits.length ? '<p class="lc-foot">' + esc(footBits.join(" · ")) + "</p>" : "")
         + "</article>";
@@ -5793,6 +5972,102 @@ const html = `<!DOCTYPE html>
         + "</div></form>";
     }
 
+    function ledgerClockValue(iso) {
+      if (!iso) return "";
+      try { return new Date(iso).toISOString().slice(0, 10); } catch (_) { return ""; }
+    }
+
+    function ledgerWagerFormHtml(kind, b) {
+      const seat = authSeatId();
+      if (!seat) return "";
+      const others = ledgerOtherSeats();
+      if (!others.length && typeof loadMembers === "function") loadMembers().catch(() => {});
+      const them = (kind === "counter" && b)
+        ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
+        : "";
+      const stake = (kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : "";
+      const odds = (kind === "counter" && b) ? ledgerHouseOddsOf(b) : 0;
+      const moneyLine = (kind === "counter" && b) ? ledgerNamedTerms(b) : "";
+      const desc = (kind === "counter" && b)
+        ? String((b.terms && b.terms !== moneyLine) ? b.terms : (b.title || ""))
+        : "";
+      const clock = (kind === "counter" && b) ? ledgerClockValue(b.deadline_at) : "";
+      const preview = ledgerOddsPreview(ledgerDollarsToCents(stake), odds);
+      const optsHtml = ['<option value="">Them…</option>'].concat(others.map((m) => {
+        return '<option value="' + esc(m.user_id) + '">' + esc(m.name || m.user_id) + "</option>";
+      })).join("");
+      const formAttr = kind === "counter"
+        ? 'data-ledger-counter-form="' + esc(b.id) + '"'
+        : 'data-ledger-wager-form="1"';
+      const themField = kind === "counter"
+        ? '<label>Them<input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly></label>'
+          + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
+        : '<label>Them<select name="them" required data-ledger-wager-live="1">' + optsHtml + "</select></label>";
+      const sendLab = kind === "counter"
+        ? "Send back"
+        : (them ? ("Send to " + ledgerSeatLabel(them)) : "Send to Them");
+      const cancelAttr = kind === "counter" ? "data-ledger-counter-cancel" : "data-ledger-wager-cancel";
+      return '<form class="ledger-add" ' + formAttr + ">"
+        + themField
+        + '<label>Your wager ($)<input name="stake" type="number" min="1" step="1" inputmode="decimal" value="'
+        + esc(stake) + '" required data-ledger-wager-live="1"></label>'
+        + '<label>Odds meter <span class="lc-odds-lab" data-ledger-odds-lab>'
+        + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
+        + '<input name="odds" type="range" min="-500" max="500" step="5" value="'
+        + esc(String(odds)) + '" data-ledger-wager-live="1">'
+        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Them gets the other side.</span></label>'
+        + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
+        + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required>' + esc(desc) + "</textarea></label>"
+        + '<label>Clock<input name="clock" type="date" required value="' + esc(clock) + '"></label>'
+        + '<div class="lc-complete-actions">'
+        + '<button type="submit" class="chip" data-ledger-send-lab>' + esc(sendLab) + "</button>"
+        + '<button type="button" class="chip" ' + cancelAttr + '="1">Cancel</button>'
+        + "</div></form>";
+    }
+
+    function ledgerCounterFormHtml(b, opts) {
+      const readOnly = !!(opts && opts.readOnly);
+      const seat = authSeatId();
+      if (readOnly || !seat || !b || b.status !== "proposed") return "";
+      if (String(ledgerCounterId) !== String(b.id)) return "";
+      const isParty = String(b.side_a) === String(seat) || String(b.side_b) === String(seat);
+      if (!isParty) return "";
+      return ledgerWagerFormHtml("counter", b);
+    }
+
+    function ledgerVoteHtml(b, opts) {
+      if (!ledgerIsDisputed(b)) return "";
+      const seat = authSeatId();
+      const votes = (ledgerVotes || []).filter((v) => String(v.bet_id) === String(b.id));
+      const nA = votes.filter((v) => v.pick === "side_a").length;
+      const nB = votes.filter((v) => v.pick === "side_b").length;
+      const nP = votes.filter((v) => v.pick === "push").length;
+      const mine = votes.find((v) => String(v.voter) === String(seat));
+      const house = ledgerSeatLabel(b.side_a);
+      const them = ledgerSeatLabel(b.side_b);
+      const voteBtn = (pick, lab) => {
+        const on = mine && mine.pick === pick ? " on" : "";
+        return '<button type="button" class="chip' + on + '" data-ledger-vote="' + esc(b.id)
+          + '" data-pick="' + pick + '">' + esc(lab) + "</button>";
+      };
+      let html = '<p class="caption">Both sides named a different winner. Every claimed seat can vote. Majority of votes cast sets the W/L tab. Ties stay disputed.</p>'
+        + '<p class="caption">' + esc(house) + " " + nA + " · " + esc(them) + " " + nB + " · Push " + nP + "</p>";
+      if (b.side_a_claim && b.side_b_claim) {
+        const aLab = b.side_a_claim === "push" ? "Push" : ledgerSeatLabel(b.side_a_claim === "side_a" ? b.side_a : b.side_b);
+        const bLab = b.side_b_claim === "push" ? "Push" : ledgerSeatLabel(b.side_b_claim === "side_a" ? b.side_a : b.side_b);
+        html += '<p class="caption">' + esc(house) + " picked " + esc(aLab) + ". "
+          + esc(them) + " picked " + esc(bLab) + ".</p>";
+      }
+      if (seat) {
+        html += '<div class="lc-actions">'
+          + voteBtn("side_a", house)
+          + voteBtn("side_b", them)
+          + voteBtn("push", "Push")
+          + "</div>";
+      }
+      return html;
+    }
+
     function ledgerSummaryHtml(list) {
       const rows = list || [];
       const open = rows.filter((b) => b.status === "open");
@@ -5832,26 +6107,19 @@ const html = `<!DOCTYPE html>
         body = '<p class="caption">Sign in and claim a seat to see your slips.</p>';
       } else if (!authSeatId()) {
         body = '<p class="caption">Claim a seat to see bets you have with league mates.</p>';
-      } else if (!list.length && !ledgerAddNoteOpen) {
-        body = '<p class="caption">No slips yet. Tap Add note, write the bet in your own words, pick Them, then Send.</p>';
+      } else if (!list.length && !ledgerWagerOpen) {
+        body = '<p class="caption">No slips yet. Tap New wager, pick Them, set a stake and the odds meter, write the bet, set the clock, then Send.</p>';
       } else {
         body = list.map((b) => ledgerCardHtml(b)).join("");
       }
-      const addOpen = ledgerAddNoteOpen
-        ? '<form class="ledger-add" data-ledger-add-form="1">'
-          + '<label>What\u2019s the bet<textarea name="note" maxlength="2000" placeholder="Paste the group text, or type the bet." required></textarea></label>'
-          + '<div class="lc-complete-actions">'
-          + '<button type="submit" class="chip">Save note</button>'
-          + '<button type="button" class="chip" data-ledger-add-cancel="1">Cancel</button>'
-          + "</div></form>"
-        : "";
+      const addOpen = ledgerWagerOpen ? ledgerWagerFormHtml("new") : "";
       return '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
-        + '<p class="caption">Add a note, finish You vs Them in dollars, then Send. They tap Yes, I\u2019m in or No. Public after Send; toggle Private to hide from team pages.</p>'
+        + '<p class="caption">New wager with a teammate. You are house. They Accept, Counter, or No. After the clock, both pick a winner. Settle cash however you want. This tab is just the record.</p>'
         + toast
         + ledgerSummaryHtml(list)
         + '<div class="ledger-filters" role="group" aria-label="Ledger tools">'
         + (authSeatId()
-          ? '<button type="button" class="chip" data-ledger-add="1">Add note</button>'
+          ? '<button type="button" class="chip" data-ledger-wager="1">New wager</button>'
           : "")
         + '<button type="button" class="chip" data-ledger-refresh="1">Refresh</button>'
         + "</div>"
@@ -5894,7 +6162,7 @@ const html = `<!DOCTYPE html>
         : '<p class="caption">No public slips for this team yet.</p>';
       return '<section class="team-ledger" aria-label="Ledger">'
         + "<h2>Ledger</h2>"
-        + '<p class="caption">Public slips only. Private bets stay between the parties.</p>'
+        + '<p class="caption">Public slips only. Private bets stay between the parties. Settle cash however you want. This tab is just the record.</p>'
         + '<div class="tl-block"><h3>Taken money from</h3>'
         + moneyRows(money.takenFrom, "No public wins yet.") + "</div>"
         + '<div class="tl-block"><h3>Lost money to</h3>'
@@ -5922,11 +6190,14 @@ const html = `<!DOCTYPE html>
             if (next.status === "proposed" && next.side_a_lock && next.side_b_lock) next.status = "open";
             return next;
           });
-          ledgerToast = eventKind === "accepted" ? "You\u2019re in."
+          ledgerToast = eventKind === "accepted" ? "Accepted."
             : eventKind === "declined" ? "No."
             : eventKind === "canceled" ? "Canceled."
-            : eventKind === "settled" ? "Settled."
+            : eventKind === "settled" ? "Settled. The W/L tab updated."
             : eventKind === "sent" ? "Sent. Waiting on them."
+            : eventKind === "countered" ? "Sent back. Waiting on them."
+            : eventKind === "claimed" ? "Pick saved."
+            : eventKind === "voted" ? "Vote in."
             : eventKind === "edited"
               ? ((eventPayload && eventPayload.complete) || (patch && patch.title != null)
                 ? "Slip updated."
@@ -5960,11 +6231,14 @@ const html = `<!DOCTYPE html>
             }),
           }).catch(() => null);
         }
-        ledgerToast = eventKind === "accepted" ? "You\u2019re in."
+        ledgerToast = eventKind === "accepted" ? "Accepted."
           : eventKind === "declined" ? "No."
           : eventKind === "canceled" ? "Canceled."
-          : eventKind === "settled" ? "Settled."
+          : eventKind === "settled" ? "Settled. The W/L tab updated."
           : eventKind === "sent" ? "Sent. Waiting on them."
+          : eventKind === "countered" ? "Sent back. Waiting on them."
+          : eventKind === "claimed" ? "Pick saved."
+          : eventKind === "voted" ? "Vote in."
           : eventKind === "edited"
             ? ((eventPayload && eventPayload.complete) || (patch && patch.title != null)
               ? "Slip updated."
@@ -6005,9 +6279,110 @@ const html = `<!DOCTYPE html>
       ledgerPatch(id, { status: "canceled" }, "canceled", {});
     }
 
-    function ledgerSettle(id, winner) {
+    function ledgerClaim(id, winner) {
       if (!winner || ["side_a", "side_b", "push"].indexOf(winner) < 0) return;
-      ledgerPatch(id, { status: "settled", winner: winner }, "settled", { winner: winner });
+      const seat = authSeatId();
+      const b = (ledgerBets || []).find((x) => String(x.id) === String(id));
+      if (!b || !seat || b.status !== "open") return;
+      if (!ledgerClockPassed(b)) {
+        ledgerToast = "Wait until the clock ends.";
+        render();
+        return;
+      }
+      const isA = String(b.side_a) === String(seat);
+      const isB = String(b.side_b) === String(seat);
+      if (!isA && !isB) return;
+      const patch = isA ? { side_a_claim: winner } : { side_b_claim: winner };
+      const other = isA ? b.side_b_claim : b.side_a_claim;
+      if (other && other === winner) {
+        patch.status = "settled";
+        patch.winner = winner;
+        ledgerPatch(id, patch, "settled", { winner: winner, claim: winner });
+        return;
+      }
+      ledgerPatch(id, patch, "claimed", { claim: winner });
+    }
+
+    function ledgerApplyVoteMajority(id) {
+      const votes = (ledgerVotes || []).filter((v) => String(v.bet_id) === String(id));
+      let nA = 0, nB = 0, nP = 0;
+      for (const v of votes) {
+        if (v.pick === "side_a") nA += 1;
+        else if (v.pick === "side_b") nB += 1;
+        else if (v.pick === "push") nP += 1;
+      }
+      let winner = null;
+      if (nA > nB && nA > nP) winner = "side_a";
+      else if (nB > nA && nB > nP) winner = "side_b";
+      else if (nP > nA && nP > nB) winner = "push";
+      if (!winner) return;
+      ledgerBets = (ledgerBets || []).map((b) => {
+        if (String(b.id) !== String(id) || b.status !== "open") return b;
+        return Object.assign({}, b, { status: "settled", winner: winner });
+      });
+    }
+
+    async function ledgerVote(id, pick) {
+      if (!pick || ["side_a", "side_b", "push"].indexOf(pick) < 0) return;
+      const seat = authSeatId();
+      const b = (ledgerBets || []).find((x) => String(x.id) === String(id));
+      if (!b || !seat || !ledgerIsDisputed(b)) return;
+      ledgerBusyId = id;
+      ledgerToast = null;
+      render();
+      try {
+        if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) {
+          ledgerVotes = (ledgerVotes || []).filter((v) =>
+            !(String(v.bet_id) === String(id) && String(v.voter) === String(seat)));
+          ledgerVotes.push({
+            id: "design-vote-" + Date.now(),
+            bet_id: id,
+            voter: seat,
+            pick: pick,
+          });
+          ledgerApplyVoteMajority(id);
+          ledgerToast = "Vote in.";
+          return;
+        }
+        const existing = (ledgerVotes || []).find((v) =>
+          String(v.bet_id) === String(id) && String(v.voter) === String(seat));
+        if (existing && existing.id) {
+          const res = await fetch(VOTE_API + "/ledger_settle_votes?id=eq." + encodeURIComponent(existing.id), {
+            method: "PATCH",
+            headers: Object.assign({}, ledgerAuthHeaders(), { Prefer: "return=representation" }),
+            body: JSON.stringify({ pick: pick }),
+          });
+          if (!res.ok) throw new Error("vote " + res.status);
+        } else {
+          const res = await fetch(VOTE_API + "/ledger_settle_votes", {
+            method: "POST",
+            headers: Object.assign({}, ledgerAuthHeaders(), { Prefer: "return=representation" }),
+            body: JSON.stringify({ bet_id: id, voter: seat, pick: pick }),
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error(t || ("vote " + res.status));
+          }
+        }
+        await fetch(VOTE_API + "/ledger_bet_events", {
+          method: "POST",
+          headers: ledgerAuthHeaders(),
+          body: JSON.stringify({
+            bet_id: id,
+            actor: seat,
+            kind: "voted",
+            payload: { pick: pick },
+          }),
+        }).catch(() => null);
+        ledgerToast = "Vote in.";
+        await ledgerFetch();
+      } catch (err) {
+        console.error(err);
+        ledgerToast = "Could not save that vote. Run wave16 SQL if this is the first dispute.";
+      } finally {
+        ledgerBusyId = null;
+        if (homeTab === "ledger" || (me && data)) render();
+      }
     }
 
     function ledgerCompleteOpen(id) {
@@ -6122,50 +6497,123 @@ const html = `<!DOCTYPE html>
       }, "sent", { send: true });
     }
 
-    async function ledgerAddNoteSave() {
-      const form = document.querySelector("[data-ledger-add-form]");
+    function ledgerPaintWagerPreview(form) {
       if (!form) return;
-      const text = String(new FormData(form).get("note") || "").trim();
+      const fd = new FormData(form);
+      const prev = ledgerOddsPreview(ledgerDollarsToCents(fd.get("stake")), fd.get("odds"));
+      const o = Math.round(Number(fd.get("odds")) || 0);
+      const lab = form.querySelector("[data-ledger-odds-lab]");
+      const box = form.querySelector("[data-ledger-odds-preview]");
+      const send = form.querySelector("[data-ledger-send-lab]");
+      if (lab) lab.textContent = o ? ledgerFmtOdds(o) : "even";
+      if (box) box.textContent = prev.words;
+      if (send && form.hasAttribute("data-ledger-wager-form")) {
+        const them = String(fd.get("them") || "");
+        send.textContent = them ? ("Send to " + ledgerSeatLabel(them)) : "Send to Them";
+      }
+    }
+
+    function ledgerReadWagerForm(sel) {
+      const form = typeof sel === "string" ? document.querySelector(sel) : sel;
+      if (!form) return null;
+      const fd = new FormData(form);
+      const them = String(fd.get("them") || "").trim();
+      const desc = String(fd.get("desc") || "").trim();
+      const stake = ledgerDollarsToCents(fd.get("stake"));
+      let odds = Math.round(Number(fd.get("odds")) || 0);
+      if (odds < -500) odds = -500;
+      if (odds > 500) odds = 500;
+      const clockRaw = String(fd.get("clock") || "").trim();
+      let deadline_at = null;
+      if (clockRaw) {
+        const t = new Date(clockRaw + "T23:59:59");
+        if (Number.isFinite(t.getTime())) deadline_at = t.toISOString();
+      }
+      const money = ledgerOddsPreview(stake, odds);
+      const title = desc.split(/\\r?\\n/)[0].trim().slice(0, 160);
+      return {
+        them: them,
+        desc: desc,
+        title: title,
+        stake: stake,
+        odds: odds,
+        deadline_at: deadline_at,
+        money: money,
+      };
+    }
+
+    function ledgerWagerValidate(parsed, seat) {
+      if (!parsed || !seat) return "Claim a seat first.";
+      if (!parsed.them) return "Pick Them.";
+      if (parsed.them === String(seat)) return "Them has to be someone else.";
+      if (!parsed.desc || !parsed.title) return "Write what the bet is.";
+      if (!parsed.stake) return "Enter your wager.";
+      if (!parsed.deadline_at) return "Set the clock.";
+      if (new Date(parsed.deadline_at).getTime() <= Date.now()) return "Clock has to be in the future.";
+      return "";
+    }
+
+    function ledgerFlashToast(msg) {
+      ledgerToast = msg;
+      const existing = document.querySelector("#app .ledger-toast");
+      if (existing) {
+        existing.textContent = msg;
+        return;
+      }
+      const h = document.querySelector("#app .screen-h");
+      if (!h) return;
+      const d = document.createElement("div");
+      d.className = "ledger-toast";
+      d.setAttribute("role", "status");
+      d.textContent = msg;
+      h.insertAdjacentElement("afterend", d);
+    }
+
+    async function ledgerWagerSave() {
+      const parsed = ledgerReadWagerForm("[data-ledger-wager-form]");
       const seat = authSeatId();
       const lid = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
-      if (!seat) {
-        ledgerToast = "Claim a seat first.";
-        render();
+      const err = ledgerWagerValidate(parsed, seat);
+      if (err) {
+        ledgerFlashToast(err);
         return;
       }
-      if (!text) {
-        ledgerToast = "Write the bet, or paste the group text.";
-        render();
-        return;
-      }
-      const first = text.split(/\\r?\\n/)[0].trim().slice(0, 160) || "Note";
       const row = {
         sleeper_league_id: lid,
-        title: first,
-        terms: text,
-        source_text: text,
-        amount_cents: 0,
+        title: parsed.title,
+        terms: parsed.desc,
+        odds: ledgerFmtOdds(parsed.odds),
+        house_odds: parsed.odds,
+        amount_cents: parsed.stake,
         currency: "USD",
         side_a: seat,
-        side_b: null,
+        side_b: parsed.them,
         proposer: seat,
-        status: "needs_review",
-        side_a_lock: false,
+        status: "proposed",
+        side_a_lock: true,
         side_b_lock: false,
-        visibility: "private",
+        deadline_at: parsed.deadline_at,
+        visibility: "public",
         source: "manual",
-        terms_json: {},
+        terms_json: {
+          you_put_cents: parsed.money.you_put_cents,
+          you_win_cents: parsed.money.you_win_cents,
+          they_put_cents: parsed.money.they_put_cents,
+          they_win_cents: parsed.money.they_win_cents,
+          house_odds: parsed.odds,
+        },
+        offer_rev: 1,
       };
       ledgerBusyId = "new";
       ledgerToast = null;
       render();
       try {
         if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) {
-          row.id = "design-note-" + Date.now();
+          row.id = "design-wager-" + Date.now();
           row.created_at = new Date().toISOString();
           ledgerBets = [row].concat(ledgerBets || []);
-          ledgerAddNoteOpen = false;
-          ledgerToast = "Note saved. Finish the slip, then Send.";
+          ledgerWagerOpen = false;
+          ledgerToast = "Sent. Waiting on them.";
           return;
         }
         const res = await fetch(VOTE_API + "/ledger_bets", {
@@ -6180,26 +6628,62 @@ const html = `<!DOCTYPE html>
         const rows = await res.json();
         const inserted = Array.isArray(rows) ? rows[0] : rows;
         if (inserted) ledgerBets = [inserted].concat(ledgerBets || []);
-        ledgerAddNoteOpen = false;
-        ledgerToast = "Note saved. Finish the slip, then Send.";
+        ledgerWagerOpen = false;
+        ledgerToast = "Sent. Waiting on them.";
         await fetch(VOTE_API + "/ledger_bet_events", {
           method: "POST",
           headers: ledgerAuthHeaders(),
           body: JSON.stringify({
             bet_id: inserted && inserted.id,
             actor: seat,
-            kind: "created",
-            payload: { source: "manual", note: true },
+            kind: "sent",
+            payload: { source: "manual", wager: true, offer_rev: 1 },
           }),
         }).catch(() => null);
         await ledgerFetch();
-      } catch (err) {
-        console.error(err);
-        ledgerToast = "Could not save that note. Run wave15 SQL if this is the first note.";
+      } catch (err2) {
+        console.error(err2);
+        ledgerToast = "Could not send that wager. Run wave16 SQL if this is the first New wager.";
       } finally {
         ledgerBusyId = null;
         if (homeTab === "ledger") render();
       }
+    }
+
+    function ledgerCounterSave(id) {
+      const parsed = ledgerReadWagerForm('[data-ledger-counter-form="' + String(id).replace(/"/g, "") + '"]');
+      const seat = authSeatId();
+      const b = (ledgerBets || []).find((x) => String(x.id) === String(id));
+      const err = ledgerWagerValidate(parsed, seat);
+      if (err) {
+        ledgerFlashToast(err);
+        return;
+      }
+      if (!b || b.status !== "proposed") return;
+      const iAmHouse = String(b.side_a) === String(seat);
+      const iAmThem = String(b.side_b) === String(seat);
+      if (!iAmHouse && !iAmThem) return;
+      const rev = (Number(b.offer_rev) || 1) + 1;
+      ledgerCounterId = null;
+      ledgerPatch(id, {
+        title: parsed.title,
+        terms: parsed.desc,
+        odds: ledgerFmtOdds(parsed.odds),
+        house_odds: parsed.odds,
+        amount_cents: parsed.stake,
+        deadline_at: parsed.deadline_at,
+        terms_json: {
+          you_put_cents: parsed.money.you_put_cents,
+          you_win_cents: parsed.money.you_win_cents,
+          they_put_cents: parsed.money.they_put_cents,
+          they_win_cents: parsed.money.they_win_cents,
+          house_odds: parsed.odds,
+        },
+        offer_rev: rev,
+        status: "proposed",
+        side_a_lock: iAmHouse,
+        side_b_lock: iAmThem,
+      }, "countered", { offer_rev: rev });
     }
 
     function ledgerSetVisibility(id, vis) {
@@ -12896,10 +13380,16 @@ const html = `<!DOCTYPE html>
         ledgerFinishSave(finishForm.getAttribute("data-ledger-finish-form"));
         return;
       }
-      const addForm = e.target && e.target.closest && e.target.closest("[data-ledger-add-form]");
-      if (addForm) {
+      const wagerForm = e.target && e.target.closest && e.target.closest("[data-ledger-wager-form]");
+      if (wagerForm) {
         e.preventDefault();
-        ledgerAddNoteSave();
+        ledgerWagerSave();
+        return;
+      }
+      const counterForm = e.target && e.target.closest && e.target.closest("[data-ledger-counter-form]");
+      if (counterForm) {
+        e.preventDefault();
+        ledgerCounterSave(counterForm.getAttribute("data-ledger-counter-form"));
         return;
       }
       if (!e.target || !e.target.closest || !e.target.closest("[data-gate-form]")) return;
@@ -13015,15 +13505,31 @@ const html = `<!DOCTYPE html>
         ledgerEnsureLoaded();
         return;
       }
-      if (e.target.closest("[data-ledger-add-cancel]")) {
-        ledgerAddNoteOpen = false;
+      if (e.target.closest("[data-ledger-wager-cancel]")) {
+        ledgerWagerOpen = false;
         render();
         return;
       }
-      if (e.target.closest("[data-ledger-add]")) {
-        ledgerAddNoteOpen = true;
+      if (e.target.closest("[data-ledger-wager]")) {
+        ledgerWagerOpen = true;
+        ledgerCounterId = null;
         ledgerToast = null;
         if (typeof loadMembers === "function") loadMembers().catch(() => {});
+        render();
+        return;
+      }
+      const ledgerCounterBtn = e.target.closest("[data-ledger-counter]");
+      if (ledgerCounterBtn && !e.target.closest("[data-ledger-counter-form]")
+        && !e.target.closest("[data-ledger-counter-cancel]")) {
+        ledgerCounterId = ledgerCounterBtn.getAttribute("data-ledger-counter");
+        ledgerWagerOpen = false;
+        ledgerToast = null;
+        if (typeof loadMembers === "function") loadMembers().catch(() => {});
+        render();
+        return;
+      }
+      if (e.target.closest("[data-ledger-counter-cancel]")) {
+        ledgerCounterId = null;
         render();
         return;
       }
@@ -13068,9 +13574,25 @@ const html = `<!DOCTYPE html>
       }
       const ledgerSettleBtn = e.target.closest("[data-ledger-settle]");
       if (ledgerSettleBtn) {
-        ledgerSettle(
+        ledgerClaim(
           ledgerSettleBtn.getAttribute("data-ledger-settle"),
           ledgerSettleBtn.getAttribute("data-winner")
+        );
+        return;
+      }
+      const ledgerClaimBtn = e.target.closest("[data-ledger-claim]");
+      if (ledgerClaimBtn) {
+        ledgerClaim(
+          ledgerClaimBtn.getAttribute("data-ledger-claim"),
+          ledgerClaimBtn.getAttribute("data-winner")
+        );
+        return;
+      }
+      const ledgerVoteBtn = e.target.closest("[data-ledger-vote]");
+      if (ledgerVoteBtn) {
+        ledgerVote(
+          ledgerVoteBtn.getAttribute("data-ledger-vote"),
+          ledgerVoteBtn.getAttribute("data-pick")
         );
         return;
       }
@@ -13906,6 +14428,11 @@ const html = `<!DOCTYPE html>
       }
     });
     document.getElementById("app").addEventListener("change", (e) => {
+      const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
+      if (wagerLive) {
+        ledgerPaintWagerPreview(wagerLive.form || wagerLive.closest("form"));
+        return;
+      }
       const cuffOwnerSel = e.target.closest("[data-cuff-owner]");
       if (cuffOwnerSel) {
         cuffFilterOwner = cuffOwnerSel.value || "";
@@ -13920,6 +14447,11 @@ const html = `<!DOCTYPE html>
       }
     });
     document.getElementById("app").addEventListener("input", (e) => {
+      const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
+      if (wagerLive) {
+        ledgerPaintWagerPreview(wagerLive.form || wagerLive.closest("form"));
+        return;
+      }
       if (e.target && e.target.id === "gateUser") {
         gateUsernameDraft = String(e.target.value || "");
         return;
@@ -14081,7 +14613,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v200-ledger-note";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v201-ledger-wager";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -14153,13 +14685,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v200-ledger-note")) {
+  || !html.includes("chuckle-shell-v201-ledger-wager")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v200-ledger-note")
+  || !swSrc.includes("chuckle-shell-v201-ledger-wager")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -15371,12 +15903,16 @@ if (!inline.includes("function renderLedger(") || !inline.includes('homeTab === 
   || !inline.includes("function ledgerAccept(")
   || !inline.includes("function ledgerEnsureLoaded(")
   || !inline.includes('data-ledger-accept="')
-  || !inline.includes("Needs your yes")
+  || !inline.includes("Sent to you, you have not accepted this version")
   || !inline.includes("function ledgerCompleteSave(")
   || !inline.includes("function ledgerSend(")
-  || !inline.includes("function ledgerAddNoteSave(")
-  || !inline.includes("Add note")
-  || !inline.includes("Yes, I")
+  || !inline.includes("function ledgerWagerSave(")
+  || !inline.includes("function ledgerOddsPreview(")
+  || !inline.includes("function ledgerClaim(")
+  || !inline.includes("function ledgerVote(")
+  || !inline.includes("New wager")
+  || !inline.includes('data-ledger-counter="')
+  || !inline.includes('data-ledger-claim="')
   || !inline.includes("Finish this slip")
   || !inline.includes('class="lc-source"')
   || !inline.includes("Needs details")
@@ -15387,9 +15923,11 @@ if (!inline.includes("function renderLedger(") || !inline.includes('homeTab === 
   || !inline.includes("Taken money from")
   || !inline.includes("Lost money to")
   || !inline.includes("Bets lost")
+  || inline.includes("Add note")
+  || inline.includes("function ledgerAddNoteSave(")
   || inline.includes('data-ledger-filter="all"')
   || inline.includes(">All</button>")) {
-  throw new Error("Ledger must be my-slips-only with privacy toggle + team-home public W/L");
+  throw new Error("Ledger must be my-slips-only with New wager / counter / claim + team-home public W/L");
 }
 {
   const wave13 = fs.readFileSync(`${ROOT}db/wave13-ledger-visibility.sql`, "utf8");
@@ -15408,6 +15946,16 @@ if (!inline.includes("function renderLedger(") || !inline.includes('homeTab === 
     || !wave15.includes("terms_json")
     || !wave15.includes("ledger_bets_sides_ok")) {
     throw new Error("wave15 must allow one-sided draft notes + terms_json");
+  }
+}
+{
+  const wave16 = fs.readFileSync(`${ROOT}db/wave16-ledger-wager.sql`, "utf8");
+  if (!wave16.includes("offer_rev")
+    || !wave16.includes("house_odds")
+    || !wave16.includes("ledger_settle_votes")
+    || !wave16.includes("ledger_apply_settle_majority")
+    || !wave16.includes("ledger_bets_house_odds_check")) {
+    throw new Error("wave16 must add house_odds, offer_rev, settle votes + majority trigger");
   }
 }
 if (!inline.includes(">Past Champions</h2>")) {

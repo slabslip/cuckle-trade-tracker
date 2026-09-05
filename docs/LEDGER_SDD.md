@@ -7,9 +7,10 @@ Season-long (and shorter) bets between league members — stakes, odds, terms, a
 (architecture + ordered Supabase / Shortcut steps).
 
 Companion SQL: [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) ·
-[`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql)  
+[`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql) ·
+[`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql)  
 Ingest function: [`supabase/functions/ledger-ingest/index.ts`](../supabase/functions/ledger-ingest/index.ts)  
-**v1.2 / v1.3 implementation:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)
+**Shortcut note (later):** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)
 
 ### Nav
 
@@ -20,12 +21,14 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
 
 ## Product rules
 
-1. **Proposer locks on Send, not on a note.** A Shortcut (or Add note) only saves
-   the group text as a **draft** the filer can see. Locks start when they tap
-   **Send to [name]**. Then the other person says **Yes, I’m in** or **No**.
-2. **Counterparty Yes or No (v1 labels: Accept / Decline).** After Send, Them locks
-   their side → status `open`, or declines → terminal `declined`. v1.2 buttons say
-   **Yes, I’m in** / **No**; the database stays `accepted` / `declined`.
+1. **House sends a wager.** Ledger starts with **New wager**, not a note. Pick Them,
+   house stake, a −500…0…+500 odds meter, description, and a clock, then **Send**.
+   House = the first sender (`proposer` / `side_a`). They stay house when the other
+   side counters. Shortcut “save the group text” is a later capture tool, not this tab.
+2. **Them Accept / Counter / No.** Accept locks their side → both locks promote to
+   `open`. No → `declined`. Counter revises stake / meter / description / clock and
+   Sends back (`offer_rev` bumps; house lock clears). Database events stay
+   `accepted` / `declined` / `countered`.
 3. **Identity is Sleeper `user_id`.** Display names change; seats do not.
 4. **Opinion only.** Ledger never feeds the trade meter, VA, lenses, or rankings.
 5. **Tip Slip screenshot** is a product reference for information architecture, not a
@@ -41,26 +44,32 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
    other league member may request to take a side (pick side + stake). An existing
    party on the **opposite** side Accepts (takes more exposure) or Declines. Private
    bets stay two-party. Full design: [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md).
-10. **Note → Finish → Send (v1.2 — planned).** Shortcut (or Add note) saves
-    `source_text` only. **Finish slip** on Ledger picks Them + plain-language money
-    (“You put in $X. If you win you get $Y.”). **Send to [name]** makes it a real
-    `proposed` slip. Build: [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md). Locked plan:
-    [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
-11. **Ledger badge (v1.2 — planned).** Count of slips **sent to you** (amount > 0,
-    you have not said Yes/No). Gold mark on the Ledger tab. Opening the tab does
-    not clear it. Yes / No / they Cancel does. No `localStorage` seen-store.
-12. **SMS on Send only (v1.3 — planned).** Optional phone in Settings. After Send,
-    text Them (not the filer) + `?tab=ledger`. No SMS on note create. Phone does
-    not pick Shortcut sides. Identity stays Sleeper `user_id`.
+10. **Negotiate until both lock.** Offers stay `proposed` until both parties accept
+    the **same** `offer_rev`. Any counter resets the other side’s lock. Locked
+    `open` slips are not edited (cancel only if already allowed; default: no edit
+    after lock). Live preview is derived from stake + house American line
+    (`house_odds`, Them is the opposite sign).
+11. **Ledger badge.** Count of slips **sent to you** on the current version
+    (amount > 0, your lock is false). Copy: “sent to you, you have not accepted
+    this version.” Opening the tab does not clear it. Accept / No / they Cancel
+    does. No `localStorage` seen-store.
+12. **After the clock.** Settle actions stay hidden until `deadline_at` has passed.
+    Each party picks I won / They won / Push (`side_a_claim` / `side_b_claim`).
+    Matching claims → `winner` + `settled` and the fun W/L tab updates. Mismatch
+    → slip stays `open` (disputed); every claimed seat votes on
+    `ledger_settle_votes`; simple majority of votes cast sets official `winner`.
+    Ties stay disputed. **Payout is off-app.** SMS and Shortcut stay later.
 
 ### Status machine
 
 ```
+proposed → proposed      (Counter: offer_rev++, sender locked, other unlocked)
 proposed → open          (both side_*_lock true)
-proposed → declined      (counterparty Decline)
+proposed → declined      (counterparty No)
 proposed → canceled      (proposer Cancel)
-proposed → expired       (deadline_at passed)
-open → settled           (party Settle with winner; accepted join legs settle with parent)
+proposed → expired       (deadline_at passed while still proposed)
+open → settled           (matching claims, or league-vote majority)
+open → open (disputed)   (both claims present and different; league votes)
 open → canceled          (admin void — future)
 ```
 
@@ -76,6 +85,9 @@ While `open`, pending **join requests** may accumulate; they do not change paren
 1. Paste [`db/wave12-ledger.sql`](../db/wave12-ledger.sql) into the Supabase SQL Editor and **Run**.
 2. Paste [`db/wave13-ledger-visibility.sql`](../db/wave13-ledger-visibility.sql) and **Run**
    (adds `visibility` + tightens SELECT RLS to party-or-public).
+3. Paste [`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) and **Run**
+   (`house_odds`, `offer_rev`, `ledger_settle_votes` + majority trigger). Wave15
+   is only needed if leftover Shortcut drafts should stay insertable.
 
 ### 2. Deploy Edge Function `ledger-ingest`
 
@@ -140,22 +152,21 @@ Fast path: Copy the message → Home Screen **Chuckle Ledger** → two team taps
 ## In-app Ledger tab
 
 - Summary: total / open / settled / pending / next deadline (**your** slips only)
-- Toolbar: **Refresh** (no league-wide All filter)
-- Cards: title, parties, amount, odds, **quoted `source_text`** (group-text proof),
-  status chip, Public/Private toggle, deadline, actions
+- Toolbar: **New wager** + **Refresh** (no league-wide All filter)
+- Cards: title, house vs Them, stake, house line, description, status chip,
+  Public/Private toggle, clock, actions
 - Actions by role:
-  - Either party on `proposed`: **Complete** (title, amount, odds, deadline)
-  - Counterparty on `proposed`: Accept / Decline (toast if amount is still `$0`)
+  - Unlocked party on `proposed`: **Accept** / **Counter** / **No**
+  - Leftover $0 / Shortcut cards: **Complete** still available
   - Proposer on `proposed`: Cancel
-  - Either party on `open`: Settle (I won / They won / Push)
+  - Either party on `open` **after the clock**: I won / They won / Push (claims)
+  - Mismatched claims: every claimed seat votes; majority sets the W/L tab
   - Either party: toggle `visibility` public ↔ private
-- Design Mode seeds sample slips (including settled public W/L) so Ledger + team home
-  are walkable without SQL.
+- Design Mode seeds sample slips (including a past-clock dispute) so Ledger + team
+  home are walkable without SQL.
 - **v1.1:** second section **Open board** — public `open` slips you are not on, with
   **Join** (see below).
-- **v1.2:** **Finish slip** / **Add note** on this tab. Draft notes are filer-only.
-  Review copy is You vs Them + put in / win, not “odds” or “side A”. Badge on the
-  Ledger tab for slips sent to you.
+- Shortcut note capture stays later. This tab does not start with Add note.
 
 ## Team home public Ledger
 
@@ -194,26 +205,16 @@ already a party on that parent.
 
 ---
 
-## Note → Finish → Send (v1.2 / v1.3 — planned)
+## Shortcut note (later — not the dashboard start)
 
 **Implementation SDD:** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md)  
 **Archive:** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md).
 
-The Shortcut only **expedites the group text into a note**. It does not create a
-bet the other person must Accept.
+The dashboard start path is **New wager**. A Shortcut that saves group text is a
+later capture tool. It does not replace the house / meter / clock handshake.
 
-**v1.2**
-
-- Draft note: `needs_review`, `side_b` null, filer-only (SQL wave to relax
-  `side_a <> side_b` / NOT NULL).
-- **Finish slip:** You / Them, what’s the bet, you put in / you win / they put in /
-  they win. **Send to [name]** → `proposed`, you locked, they see Yes/No.
-- Badge = sent-to-you only. `?tab=ledger` deep link.
-- Review card never says odds or side A.
-
-**v1.3**
-
-- Optional phone. SMS **once per Send** to Them. Skip if no number. No SMS on note.
+- Draft note: `needs_review`, filer-only. Finish leftover $0 cards if they exist.
+- SMS on Send and phone numbers stay later (v1.3).
 
 ---
 
@@ -232,9 +233,13 @@ bet the other person must Accept.
 | Join private / non-open slip | Reject (v1.1) |
 | Join when already a party | Reject (v1.1) |
 | Opposite side Declines join | Request `declined`; parent unchanged |
-| Draft note / no Them yet | Filer only; no badge, no SMS (v1.2) |
-| Send with $0 or no Them | Block |
-| SMS opened as the wrong seat | CTA; do not Yes (v1.3) |
+| Draft note / no Them yet | Filer only leftover; no badge (Shortcut later) |
+| Send with $0, no Them, or no clock | Block |
+| Claims before the clock | Hidden |
+| Matching claims | `settled` + W/L tab |
+| Mismatched claims | League vote; majority settles the tab |
+| Vote tie | Stay disputed |
+| SMS opened as the wrong seat | CTA; do not Accept (v1.3) |
 | SMS with no phone on Them | Send still works; badge only (v1.3) |
 | Duplicate Send | No second SMS (v1.3) |
 
@@ -247,8 +252,7 @@ bet the other person must Accept.
 - Separate `ledger_notes` table (use `ledger_bet_events` kind `note` later)
 - Discord bot ingest
 - Join / more exposure (**v1.1** — see above)
-- Note → Finish → Send + Ledger badge (**v1.2** — see above)
-- Seat phone + SMS on Send (**v1.3** — see above)
+- Shortcut note capture + SMS on Send (**later**)
 - Using phone numbers to pick Shortcut sides
 
 ---

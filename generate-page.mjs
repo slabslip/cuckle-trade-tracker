@@ -2938,7 +2938,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905143000";
+    const DATA_V = "ledger20260905143500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7461,8 +7461,7 @@ const html = `<!DOCTYPE html>
         + esc(String(stake)) + "</span>"
         + '<input type="range" min="0" max="' + (LEDGER_STAKE_STOPS.length - 1) + '" step="1" value="'
         + esc(String(ledgerStakeStopIndex(stake))) + '" data-ledger-stake-range data-ledger-wager-live="1">'
-        + '<input type="hidden" name="stake" value="' + esc(String(stake)) + '">'
-        + '<span class="caption">$100 in the middle. Left $50, then $10 down to $10. Right $50 up to $400.</span></label>'
+        + '<input type="hidden" name="stake" value="' + esc(String(stake)) + '"></label>'
         + '<label>Odds meter <span class="lc-odds-lab" data-ledger-odds-lab>'
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
@@ -17567,7 +17566,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["data-ledger-stake-range", true],
     ["LEDGER_STAKE_STOPS = [10, 20, 30, 40, 50, 100, 150, 200, 250, 300, 350, 400]", true],
     ["LEDGER_STAKE_DEFAULT = 100", true],
-    ["$100 in the middle. Left $50, then $10 down to $10. Right $50 up to $400.", true],
+    ["$100 in the middle. Left $50, then $10 down to $10. Right $50 up to $400.", false],
     ["$25 first, then $50, then $50 up to $400.", false],
     ["<label>Your wager ($)", false],
     ["function ledgerDueCount(", true],

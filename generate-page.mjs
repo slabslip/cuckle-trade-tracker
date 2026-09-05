@@ -11511,7 +11511,13 @@ const html = `<!DOCTYPE html>
       // Deep-link ?me= is still honored inside loadMembers(); membership seat is not auto-picked.
       me = null;
       data = null;
-      view = "home";
+      // Keep a deep-linked sub-screen (calc, cosmetics, account). Drawer opens omit ?view= → Home.
+      let wantView = "home";
+      try {
+        const v = new URLSearchParams(location.search).get("view");
+        if (v && VIEWS.indexOf(v) >= 0) wantView = v;
+      } catch (err) { /* ignore */ }
+      view = wantView;
       openId = null;
       tradeSeat = null;
       partnerName = null;
@@ -19299,6 +19305,10 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
 if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("sent: theirs")) {
   throw new Error("calc must applyVa as a 2-team bag (other side is sent)");
+}
+if (!inline.includes("async function openLeagueDashboard(")
+  || !inline.includes("Keep a deep-linked sub-screen")) {
+  throw new Error("openLeagueDashboard must honor ?view= for calc and cosmetics");
 }
 if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
   throw new Error("brand-end must include goTeamHome for league-home team flair");

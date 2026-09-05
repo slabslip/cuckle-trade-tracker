@@ -1494,6 +1494,7 @@ const html = `<!DOCTYPE html>
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
     }
     .ledger-add {
+      position: relative;
       display: grid; gap: 8px; margin: 0 0 12px; padding: 12px;
       background: #141418; border: 1px solid #2a2a32; border-radius: 12px;
     }
@@ -1579,12 +1580,27 @@ const html = `<!DOCTYPE html>
     .ledger-add .caption { text-transform: none; letter-spacing: 0; font-weight: 400; }
     .ledger-add input[name="clock"][hidden] { display: none; }
     .lc-send-pick {
-      display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0;
+      display: grid; gap: 8px; margin: 8px 0 0;
     }
     .lc-send-pick[hidden] { display: none; }
-    .lc-send-pick .chip.on {
-      border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
+    .lc-review-scrim {
+      position: absolute; inset: 0; z-index: 6;
+      display: flex; align-items: center; justify-content: center;
+      padding: 12px; background: rgba(0,0,0,0.62);
+      border-radius: 12px;
     }
+    .lc-review-scrim[hidden] { display: none; }
+    .lc-review {
+      width: 100%; max-height: 100%; overflow: auto;
+      background: #1a1a22; border: 1px solid var(--lh-gold, #e0b44c);
+      border-radius: 12px; padding: 14px; display: grid; gap: 8px;
+    }
+    .lc-review-title {
+      margin: 0; font-weight: 700; color: var(--lh-gold, #e0b44c);
+    }
+    .lc-review-body { display: grid; gap: 6px; }
+    .lc-review-body p { margin: 0; }
+    .lc-review-desc { white-space: pre-wrap; }
     .lc-odds-lab {
       font-size: 0.95rem; font-weight: 700; color: var(--lh-gold, #e0b44c);
       font-variant-numeric: tabular-nums;
@@ -2967,7 +2983,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905151000";
+    const DATA_V = "ledger20260905152000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6019,6 +6035,30 @@ const html = `<!DOCTYPE html>
       return (members || []).filter((m) => m && m.user_id && String(m.user_id) !== me);
     }
 
+    function ledgerThemWagerCounts() {
+      const me = String(authSeatId() || "");
+      const counts = Object.create(null);
+      ledgerOtherSeats().forEach((m) => { counts[String(m.user_id)] = 0; });
+      (ledgerBets || []).forEach((b) => {
+        if (!b || !me) return;
+        if (b.status !== "open" && b.status !== "settled" && b.status !== "proposed") return;
+        const a = String(b.side_a || "");
+        const t = String(b.side_b || "");
+        if (a === me && counts[t] != null) counts[t] += 1;
+        else if (t === me && counts[a] != null) counts[a] += 1;
+      });
+      return counts;
+    }
+
+    function ledgerOtherSeatsByWagerFreq() {
+      const counts = ledgerThemWagerCounts();
+      return ledgerOtherSeats().slice().sort((a, b) => {
+        const d = (counts[String(b.user_id)] || 0) - (counts[String(a.user_id)] || 0);
+        if (d) return d;
+        return String(a.name || a.user_id).localeCompare(String(b.name || b.user_id));
+      });
+    }
+
     function ledgerDollarsToCents(raw) {
       const n = Number(raw);
       if (!Number.isFinite(n) || n <= 0) return 0;
@@ -6144,27 +6184,27 @@ const html = `<!DOCTYPE html>
 
     function ledgerRefreshThemOptions(form) {
       if (!form) return;
-      const box = form.querySelector("[data-ledger-send-pick]");
-      if (box) {
+      const sel = form.querySelector("[data-ledger-send-select]");
+      if (sel) {
         const hid = form.querySelector("[name=them]");
         const cur = (hid && hid.value) || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
-        const others = ledgerOtherSeats();
-        box.innerHTML = others.map((m) => {
-          const on = String(m.user_id) === String(cur) ? " on" : "";
-          return '<button type="button" class="chip' + on + '" data-ledger-send-them="'
-            + esc(m.user_id) + '">' + esc(m.name || m.user_id) + "</button>";
-        }).join("");
+        const others = ledgerOtherSeatsByWagerFreq();
+        sel.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
+          const selected = String(m.user_id) === String(cur) ? " selected" : "";
+          return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
+        })).join("");
+        if (cur) sel.value = cur;
         return;
       }
-      const sel = form.querySelector("select[name=them]");
-      if (!sel) return;
-      const cur = sel.value || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
-      const others = ledgerOtherSeats();
-      sel.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
+      const legacy = form.querySelector("select[name=them]");
+      if (!legacy) return;
+      const cur = legacy.value || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
+      const others = ledgerOtherSeatsByWagerFreq();
+      legacy.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
         const selected = String(m.user_id) === String(cur) ? " selected" : "";
         return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
       })).join("");
-      if (cur) sel.value = cur;
+      if (cur) legacy.value = cur;
     }
 
     function ledgerCaptureCompose(form, opts) {
@@ -7346,21 +7386,81 @@ const html = `<!DOCTYPE html>
         if (!rank && !afterAs) continue;
         addRep(start, end, "WR" + rank);
       }
-      if (!reps.length) return false;
-      reps.sort((a, b) => b.start - a.start);
       let nextVal = raw;
       let nextCaret = caret;
-      reps.forEach((r) => {
-        nextVal = nextVal.slice(0, r.start) + r.next + nextVal.slice(r.end);
-        const delta = r.next.length - (r.end - r.start);
-        if (nextCaret >= r.end) nextCaret += delta;
-        else if (nextCaret > r.start) nextCaret = r.start + r.next.length;
-      });
+      if (reps.length) {
+        reps.sort((a, b) => b.start - a.start);
+        reps.forEach((r) => {
+          nextVal = nextVal.slice(0, r.start) + r.next + nextVal.slice(r.end);
+          const delta = r.next.length - (r.end - r.start);
+          if (nextCaret >= r.end) nextCaret += delta;
+          else if (nextCaret > r.start) nextCaret = r.start + r.next.length;
+        });
+      }
+      const teamNext = ledgerDescResolveOnHisTeam(nextVal, nextCaret, open);
+      nextVal = teamNext.value;
+      nextCaret = teamNext.caret;
       if (nextVal === raw) return false;
       ta.value = nextVal;
       try { ta.setSelectionRange(nextCaret, nextCaret); } catch (_) {}
       if (typeof ledgerCaptureCompose === "function") ledgerCaptureCompose(form, { merge: true });
       return true;
+    }
+    function ledgerNflTeamDisplay(abbr) {
+      const key = String(abbr || "").toUpperCase();
+      for (let i = 0; i < LEDGER_NFL_TEAMS.length; i++) {
+        if (LEDGER_NFL_TEAMS[i].abbr === key) return LEDGER_NFL_TEAMS[i].display;
+      }
+      return "";
+    }
+    function ledgerLastTaggedPlayerBefore(text, beforeIdx) {
+      const idx = ledgerEnsureEntityIndex();
+      const slice = String(text || "").slice(0, Math.max(0, Number(beforeIdx) || 0));
+      let best = null;
+      let bestAt = -1;
+      const consider = function (needle, player) {
+        if (!needle || needle.length < 2 || !player || !player.team) return;
+        const re = new RegExp("\\\\b" + ledgerEscRe(needle) + "\\\\b", "gi");
+        let m;
+        while ((m = re.exec(slice))) {
+          if (m.index >= bestAt) {
+            bestAt = m.index;
+            best = player;
+          }
+        }
+      };
+      idx.players.forEach((p) => {
+        consider(p.display, p);
+        if (p.last && p.lastNorm && p.lastNorm.length >= 4 && idx.lastCount[p.lastNorm] === 1) {
+          consider(p.last, p);
+        }
+      });
+      return best;
+    }
+    function ledgerDescResolveOnHisTeam(raw, caret, open) {
+      const text = String(raw || "");
+      const re = /\\bon (?:his|her|their) team\\b/gi;
+      const matches = [];
+      let m;
+      while ((m = re.exec(text))) {
+        if (open && !(m.index + m[0].length <= open.start || m.index >= open.end)) continue;
+        matches.push({ index: m.index, len: m[0].length });
+      }
+      if (!matches.length) return { value: text, caret: caret };
+      let out = text;
+      let nextCaret = caret;
+      for (let i = matches.length - 1; i >= 0; i--) {
+        const hit = matches[i];
+        const player = ledgerLastTaggedPlayerBefore(out, hit.index);
+        if (!player || !player.team) continue;
+        const label = ledgerNflTeamDisplay(player.team);
+        if (!label) continue;
+        out = out.slice(0, hit.index) + label + out.slice(hit.index + hit.len);
+        const delta = label.length - hit.len;
+        if (nextCaret >= hit.index + hit.len) nextCaret += delta;
+        else if (nextCaret > hit.index) nextCaret = hit.index + label.length;
+      }
+      return { value: out, caret: nextCaret };
     }
     function ledgerDescWordJustClosed(ta) {
       if (!ta) return false;
@@ -7450,8 +7550,10 @@ const html = `<!DOCTYPE html>
       const field = btn.getAttribute("data-ledger-style");
       const val = btn.getAttribute("data-val") || "";
       if (field === "them") {
-        const sel = form.querySelector("[name=them]");
-        if (sel) sel.value = val;
+        const hid = form.querySelector("[name=them]");
+        if (hid) hid.value = val;
+        const sendSel = form.querySelector("[data-ledger-send-select]");
+        if (sendSel) sendSel.value = val;
       } else if (field === "stake") {
         ledgerApplyStakeSlider(form, val);
       } else if (field === "odds") {
@@ -7533,13 +7635,23 @@ const html = `<!DOCTYPE html>
     }
 
     function ledgerSendPickHtml(them) {
-      const others = ledgerOtherSeats();
+      const others = ledgerOtherSeatsByWagerFreq();
       return '<div class="lc-send-pick" data-ledger-send-pick hidden>'
+        + '<label class="lc-team">Send wager to<select data-ledger-send-select>'
+        + '<option value="">team</option>'
         + others.map((m) => {
-          const on = String(m.user_id) === String(them || "") ? " on" : "";
-          return '<button type="button" class="chip' + on + '" data-ledger-send-them="'
-            + esc(m.user_id) + '">' + esc(m.name || m.user_id) + "</button>";
+          const selected = String(m.user_id) === String(them || "") ? " selected" : "";
+          return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
         }).join("")
+        + "</select></label>"
+        + '<div class="lc-review-scrim" data-ledger-review hidden>'
+        + '<div class="lc-review" role="dialog" aria-modal="true" aria-labelledby="ledgerReviewTitle">'
+        + '<p class="lc-review-title" id="ledgerReviewTitle">Review wager</p>'
+        + '<div class="lc-review-body" data-ledger-review-body></div>'
+        + '<div class="lc-complete-actions">'
+        + '<button type="button" class="chip" data-ledger-review-send>Send wager</button>'
+        + '<button type="button" class="chip" data-ledger-review-back>Back</button>'
+        + "</div></div></div>"
         + "</div>";
     }
 
@@ -8140,15 +8252,68 @@ const html = `<!DOCTYPE html>
         ledgerFlashToast("Pick a team.");
         return;
       }
-      if (!box.querySelector("[data-ledger-send-them]")) {
-        ledgerRefreshThemOptions(form);
-      }
-      if (!box.querySelector("[data-ledger-send-them]")) {
+      ledgerRefreshThemOptions(form);
+      if (!box.querySelector("[data-ledger-send-select]") || !ledgerOtherSeats().length) {
         ledgerFlashToast("No other teams yet.");
         return;
       }
-      if (box.hasAttribute("hidden")) box.removeAttribute("hidden");
-      else box.setAttribute("hidden", "");
+      const review = form.querySelector("[data-ledger-review]");
+      if (box.hasAttribute("hidden")) {
+        box.removeAttribute("hidden");
+        const hid = form.querySelector("[name=them]");
+        if (hid && hid.value) ledgerShowReview(form);
+        else ledgerHideReview(form);
+        return;
+      }
+      if (review && !review.hasAttribute("hidden")) return;
+      box.setAttribute("hidden", "");
+    }
+
+    function ledgerHideReview(form) {
+      const box = form && form.querySelector("[data-ledger-review]");
+      if (box) box.setAttribute("hidden", "");
+    }
+
+    function ledgerReviewHtml(form, parsed) {
+      const clockEl = form && form.querySelector("[name=clock]");
+      const clockLab = parsed.clock_kind === "date"
+        ? ((clockEl && clockEl.value) || "Select own date")
+        : (ledgerClockKindLabel(parsed.clock_kind) || parsed.clock_kind);
+      return '<p><span class="caption">Send to</span> ' + esc(ledgerSeatLabel(parsed.them)) + "</p>"
+        + '<p><span class="caption">Your wager</span> $' + esc(String(parsed.stake / 100)) + "</p>"
+        + '<p><span class="caption">Odds</span> ' + esc(parsed.odds ? ledgerFmtOdds(parsed.odds) : "even") + "</p>"
+        + '<p class="lc-review-desc">' + esc(parsed.desc) + "</p>"
+        + '<p><span class="caption">Clock</span> ' + esc(clockLab) + "</p>"
+        + '<p class="lc-preview">' + esc(parsed.money && parsed.money.words ? parsed.money.words : "") + "</p>";
+    }
+
+    function ledgerShowReview(form) {
+      if (!form) return;
+      const parsed = ledgerReadWagerForm(form);
+      const err = ledgerWagerValidate(parsed, authSeatId());
+      if (err) {
+        ledgerFlashToast(err);
+        return;
+      }
+      const body = form.querySelector("[data-ledger-review-body]");
+      const box = form.querySelector("[data-ledger-review]");
+      if (!body || !box) return;
+      body.innerHTML = ledgerReviewHtml(form, parsed);
+      box.removeAttribute("hidden");
+    }
+
+    function ledgerOnSendTeamPicked(form, sel) {
+      if (!form || !sel) return;
+      const hid = form.querySelector("[name=them]");
+      const val = sel.value || "";
+      if (hid) hid.value = val;
+      ledgerCaptureCompose(form);
+      ledgerPaintWagerPreview(form, { capture: false });
+      if (!val) {
+        ledgerHideReview(form);
+        return;
+      }
+      ledgerShowReview(form);
     }
 
     async function ledgerWagerSave() {
@@ -15117,12 +15282,13 @@ const html = `<!DOCTYPE html>
         ledgerOpenSendPick(form);
         return;
       }
-      const sendThem = e.target.closest("[data-ledger-send-them]");
-      if (sendThem) {
-        const form = sendThem.closest("form");
-        const hid = form && form.querySelector("[name=them]");
-        if (hid) hid.value = sendThem.getAttribute("data-ledger-send-them") || "";
-        if (form) ledgerCaptureCompose(form);
+      const reviewBack = e.target.closest("[data-ledger-review-back]");
+      if (reviewBack) {
+        ledgerHideReview(reviewBack.closest("form"));
+        return;
+      }
+      const reviewSend = e.target.closest("[data-ledger-review-send]");
+      if (reviewSend) {
         ledgerWagerSave();
         return;
       }
@@ -16098,6 +16264,12 @@ const html = `<!DOCTYPE html>
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
+      const sendSel = e.target && e.target.closest && e.target.closest("[data-ledger-send-select]");
+      if (sendSel) {
+        const form = sendSel.closest("form");
+        if (form) ledgerOnSendTeamPicked(form, sendSel);
+        return;
+      }
       const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
       if (wagerLive) {
         const form = wagerLive.form || wagerLive.closest("form");
@@ -17652,6 +17824,17 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerDescBestPhrase(", true],
     ["function ledgerDescOpenWord(", true],
     ["function ledgerDescExpandFinished(", true],
+    ["function ledgerDescResolveOnHisTeam(", true],
+    ["function ledgerLastTaggedPlayerBefore(", true],
+    ["on (?:his|her|their) team", true],
+    ["function ledgerOtherSeatsByWagerFreq(", true],
+    ["function ledgerThemWagerCounts(", true],
+    ["data-ledger-send-select", true],
+    ["data-ledger-review", true],
+    ["function ledgerShowReview(", true],
+    ["function ledgerReviewHtml(", true],
+    ["Review wager", true],
+    ['data-ledger-send-them="', false],
     ['spellcheck="false"', true],
     ['autocorrect="off"', true],
     ["function ledgerDescFitTa(", true],

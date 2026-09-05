@@ -14,7 +14,7 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
-the digest — signed-in **Your 3** (notifications only), **Price a deal**, signed-in **On your
+the digest — signed-in **Your 3** (notifications only), **Cuckle trade calculator**, signed-in **On your
 roster** news, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
 it; the clock lives in the brand header on screens it applies to (§2a).
 
@@ -186,7 +186,7 @@ with the calculator or a news teaser.
 **No Recent Trade chip on Home.** The vote row in Your 3 opens the deal. The H2H chip still
 renders on the open-trade screen and on Teams / History feed cards.
 
-**Price a deal** · its own row on Home. Opens `?view=calc`.
+**Cuckle trade calculator** · its own row on Home. Opens `?view=calc`.
 
 **On your roster** — signed-in only. Up to three feed items that tag that manager’s players,
 ranked by category + recency (injury is one tag among roster move, depth chart, and the rest).

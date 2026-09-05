@@ -3128,7 +3128,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeDropTradeChip20260905192000";
+    const DATA_V = "cuckleCalcLabel20260905192500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14333,7 +14333,7 @@
 
     function renderCalc() {
       return backChip("Home")
-        + '<h2 class="screen-h" tabindex="-1">Price a deal</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
         + '<p class="caption">Search each roster. Today book (flatten + KTC) plus Value Adjustment.</p>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
@@ -14369,7 +14369,7 @@
 
     function leagueInProgress() {
       // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
-      const door = '<button type="button" class="lh-calc-door" data-view="calc">Price a deal</button>';
+      const door = '<button type="button" class="lh-calc-door" data-view="calc">Cuckle trade calculator</button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
         + homeNewsStoryHtml();

@@ -3136,7 +3136,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeDropTradeChip20260905192000";
+    const DATA_V = "cuckleCalcLabel20260905192500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14341,7 +14341,7 @@ const html = `<!DOCTYPE html>
 
     function renderCalc() {
       return backChip("Home")
-        + '<h2 class="screen-h" tabindex="-1">Price a deal</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
         + '<p class="caption">Search each roster. Today book (flatten + KTC) plus Value Adjustment.</p>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
@@ -14377,7 +14377,7 @@ const html = `<!DOCTYPE html>
 
     function leagueInProgress() {
       // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
-      const door = '<button type="button" class="lh-calc-door" data-view="calc">Price a deal</button>';
+      const door = '<button type="button" class="lh-calc-door" data-view="calc">Cuckle trade calculator</button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
         + homeNewsStoryHtml();
@@ -17423,7 +17423,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
   }
   if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
     || !prog.includes("homeNewsStoryHtml()")) {
-    throw new Error("Home digest is Your 3 + Price a deal + team news");
+    throw new Error("Home digest is Your 3 + Cuckle trade calculator + team news");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -19453,9 +19453,9 @@ if (!inline.includes("function homeTabCanon(")) {
   throw new Error("homeTabCanon must exist");
 }
 if (!inline.includes("function your3Html(") || !inline.includes("function homeNewsStoryHtml(")
-  || !inline.includes("Price a deal") || !inline.includes("function renderCalc(")
+  || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
-  throw new Error("Home digest must ship Your 3, one news story, Price a deal, calc, and barracks");
+  throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")
@@ -19466,6 +19466,9 @@ if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "calc", lab: "Price a deal"')
   || inline.includes('kind: "news"')) {
   throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Your 3");
+}
+if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price a deal</h2>")) {
+  throw new Error("calc door and title must say Cuckle trade calculator");
 }
 if (!inline.includes("Team 1 gets") || !inline.includes("Search for a player")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {

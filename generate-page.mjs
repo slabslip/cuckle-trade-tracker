@@ -2983,7 +2983,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905155700";
+    const DATA_V = "ledger20260905160500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6059,6 +6059,43 @@ const html = `<!DOCTYPE html>
       });
     }
 
+    function ledgerSeatPartnerRows() {
+      const me = String(authSeatId() || "");
+      if (!me) return [];
+      if (data && String(data.user_id) === me && data.partners) return data.partners;
+      if (seatCache[me] && seatCache[me].partners) return seatCache[me].partners;
+      if (typeof seatData === "function") {
+        seatData(me).then(function () {
+          const form = document.querySelector("[data-ledger-wager-form]");
+          if (form) ledgerRefreshThemOptions(form);
+        }).catch(function () {});
+      }
+      return [];
+    }
+
+    function ledgerPartnerTradeCounts() {
+      const counts = Object.create(null);
+      ledgerOtherSeats().forEach((m) => { counts[String(m.user_id)] = 0; });
+      ledgerSeatPartnerRows().forEach((p) => {
+        if (!p) return;
+        const id = String(p.user_id || "");
+        if (counts[id] != null) counts[id] = Number(p.trades) || 0;
+      });
+      return counts;
+    }
+
+    function ledgerOtherSeatsByTradeFreq() {
+      const trades = ledgerPartnerTradeCounts();
+      const wagers = ledgerThemWagerCounts();
+      return ledgerOtherSeats().slice().sort((a, b) => {
+        const td = (trades[String(b.user_id)] || 0) - (trades[String(a.user_id)] || 0);
+        if (td) return td;
+        const wd = (wagers[String(b.user_id)] || 0) - (wagers[String(a.user_id)] || 0);
+        if (wd) return wd;
+        return String(a.name || a.user_id).localeCompare(String(b.name || b.user_id));
+      });
+    }
+
     function ledgerDollarsToCents(raw) {
       const n = Number(raw);
       if (!Number.isFinite(n) || n <= 0) return 0;
@@ -6188,7 +6225,7 @@ const html = `<!DOCTYPE html>
       if (sel) {
         const hid = form.querySelector("[name=them]");
         const cur = (hid && hid.value) || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
-        const others = ledgerOtherSeatsByWagerFreq();
+        const others = ledgerOtherSeatsByTradeFreq();
         sel.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
           const selected = String(m.user_id) === String(cur) ? " selected" : "";
           return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
@@ -6199,7 +6236,7 @@ const html = `<!DOCTYPE html>
       const legacy = form.querySelector("select[name=them]");
       if (!legacy) return;
       const cur = legacy.value || (ledgerComposeDraft && ledgerComposeDraft.them) || "";
-      const others = ledgerOtherSeatsByWagerFreq();
+      const others = ledgerOtherSeatsByTradeFreq();
       legacy.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
         const selected = String(m.user_id) === String(cur) ? " selected" : "";
         return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
@@ -6292,7 +6329,7 @@ const html = `<!DOCTYPE html>
     }
 
     function ledgerSendLabel(them) {
-      return them ? ("Send Wager to " + ledgerSeatLabel(them)) : "Send Wager to";
+      return "Review";
     }
 
     function ledgerDraftFor(kind, b) {
@@ -7645,9 +7682,9 @@ const html = `<!DOCTYPE html>
     }
 
     function ledgerSendPickHtml(them) {
-      const others = ledgerOtherSeatsByWagerFreq();
-      return '<div class="lc-send-pick" data-ledger-send-pick hidden>'
-        + '<label class="lc-team">Send wager to<select data-ledger-send-select>'
+      const others = ledgerOtherSeatsByTradeFreq();
+      return '<div class="lc-send-pick" data-ledger-send-pick>'
+        + '<label class="lc-team">Select team as counterparty<select data-ledger-send-select>'
         + '<option value="">team</option>'
         + others.map((m) => {
           const selected = String(m.user_id) === String(them || "") ? " selected" : "";
@@ -8252,32 +8289,14 @@ const html = `<!DOCTYPE html>
     function ledgerOpenSendPick(form) {
       if (!form) return;
       ledgerPaintDescBox(form, { forceClose: true });
+      ledgerRefreshThemOptions(form);
       const parsed = ledgerReadWagerForm(form);
-      const err = ledgerWagerValidate(parsed, authSeatId(), { skipThem: true });
+      const err = ledgerWagerValidate(parsed, authSeatId());
       if (err) {
         ledgerFlashToast(err);
         return;
       }
-      const box = form.querySelector("[data-ledger-send-pick]");
-      if (!box) {
-        ledgerFlashToast("Pick a team.");
-        return;
-      }
-      ledgerRefreshThemOptions(form);
-      if (!box.querySelector("[data-ledger-send-select]") || !ledgerOtherSeats().length) {
-        ledgerFlashToast("No other teams yet.");
-        return;
-      }
-      const review = form.querySelector("[data-ledger-review]");
-      if (box.hasAttribute("hidden")) {
-        box.removeAttribute("hidden");
-        const hid = form.querySelector("[name=them]");
-        if (hid && hid.value) ledgerShowReview(form);
-        else ledgerHideReview(form);
-        return;
-      }
-      if (review && !review.hasAttribute("hidden")) return;
-      box.setAttribute("hidden", "");
+      ledgerShowReview(form);
     }
 
     function ledgerHideReview(form) {
@@ -8320,11 +8339,7 @@ const html = `<!DOCTYPE html>
       if (hid) hid.value = val;
       ledgerCaptureCompose(form);
       ledgerPaintWagerPreview(form, { capture: false });
-      if (!val) {
-        ledgerHideReview(form);
-        return;
-      }
-      ledgerShowReview(form);
+      if (!val) ledgerHideReview(form);
     }
 
     async function ledgerWagerSave() {
@@ -17820,6 +17835,10 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["ledgerComposeDraft", true],
     ['data-ledger-form-slot="1"', true],
     ["Send Wager to", true],
+    ['return "Review";', true],
+    ["Select team as counterparty", true],
+    ["function ledgerOtherSeatsByTradeFreq(", true],
+    ["function ledgerPartnerTradeCounts(", true],
     [">team</option>", true],
     ["<label>Choose a team to send wager<select", false],
     ["Select own date", true],

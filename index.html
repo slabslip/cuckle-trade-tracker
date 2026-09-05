@@ -2848,7 +2848,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905024500";
+    const DATA_V = "ledger20260905025000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6794,7 +6794,7 @@
       const themField = kind === "counter"
         ? '<label class="lc-team"><input type="text" value="' + esc(ledgerSeatLabel(them)) + '" readonly aria-label="Team"></label>'
           + '<input type="hidden" name="them" value="' + esc(them || "") + '">'
-        : '<label class="lc-team"><select name="them" required data-ledger-wager-live="1" aria-label="Team">'
+        : '<label>Choose a team to send wager<select name="them" required data-ledger-wager-live="1">'
           + optsHtml + "</select></label>";
       const sendLab = kind === "counter"
         ? "Send back"

@@ -2820,7 +2820,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905013600";
+    const DATA_V = "ledger20260905014000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5885,6 +5885,14 @@ const html = `<!DOCTYPE html>
       return o > 0 ? ("+" + o) : String(o);
     }
 
+    function ledgerSnapOdds(n) {
+      let o = Math.round(Number(n) || 0);
+      o = Math.round(o / 100) * 100;
+      if (o < -500) o = -500;
+      if (o > 500) o = 500;
+      return o;
+    }
+
     function ledgerHouseOddsOf(b) {
       if (b && b.house_odds != null && b.house_odds !== "") {
         const n = Number(b.house_odds);
@@ -5897,9 +5905,7 @@ const html = `<!DOCTYPE html>
 
     function ledgerOddsPreview(stakeCents, houseOdds) {
       const U = Math.max(0, Math.round(Number(stakeCents) || 0));
-      let O = Math.round(Number(houseOdds) || 0);
-      if (O < -500) O = -500;
-      if (O > 500) O = 500;
+      const O = ledgerSnapOdds(houseOdds);
       let you_put_cents = U;
       let you_win_cents = U;
       let they_put_cents = U;
@@ -6286,8 +6292,9 @@ const html = `<!DOCTYPE html>
           + esc(String(s.stake / 100)) + '">$' + esc(String(s.stake / 100)) + "</button>");
       }
       if (s.odds != null) {
+        const snapped = ledgerSnapOdds(s.odds);
         chips.push('<button type="button" class="chip" data-ledger-style="odds" data-val="'
-          + esc(String(s.odds)) + '">' + esc(s.odds ? ledgerFmtOdds(s.odds) : "even") + "</button>");
+          + esc(String(snapped)) + '">' + esc(snapped ? ledgerFmtOdds(snapped) : "even") + "</button>");
       }
       if (s.clock) {
         chips.push('<button type="button" class="chip" data-ledger-style="clock" data-val="'
@@ -6503,7 +6510,7 @@ const html = `<!DOCTYPE html>
         if (stake) stake.value = val;
       } else if (field === "odds") {
         const oddsEl = form.querySelector("[name=odds]");
-        if (oddsEl) oddsEl.value = val;
+        if (oddsEl) oddsEl.value = String(ledgerSnapOdds(val));
       } else if (field === "clock") {
         ledgerApplyClockKind(form, val);
       } else if (field === "desc") {
@@ -6522,7 +6529,7 @@ const html = `<!DOCTYPE html>
         ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
         : "";
       const stake = (kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : "";
-      const odds = (kind === "counter" && b) ? ledgerHouseOddsOf(b) : 0;
+      const odds = (kind === "counter" && b) ? ledgerSnapOdds(ledgerHouseOddsOf(b)) : 0;
       const moneyLine = (kind === "counter" && b) ? ledgerNamedTerms(b) : "";
       const desc = (kind === "counter" && b)
         ? String((b.terms && b.terms !== moneyLine) ? b.terms : (b.title || ""))
@@ -6552,9 +6559,9 @@ const html = `<!DOCTYPE html>
         + esc(stake) + '" required data-ledger-wager-live="1"></label>'
         + '<label>Odds meter <span class="lc-odds-lab" data-ledger-odds-lab>'
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
-        + '<input name="odds" type="range" min="-500" max="500" step="5" value="'
+        + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
-        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Them gets the other side.</span></label>'
+        + '<span class="caption">\u2212500 house favorite · 0 even · +500 house dog. Steps of 100. Them gets the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
         + '<label>What\u2019s the bet<textarea name="desc" maxlength="2000" required>' + esc(desc) + "</textarea></label>"
         + '<div class="caption">Clock</div>'
@@ -7061,8 +7068,8 @@ const html = `<!DOCTYPE html>
     function ledgerPaintWagerPreview(form) {
       if (!form) return;
       const fd = new FormData(form);
-      const prev = ledgerOddsPreview(ledgerDollarsToCents(fd.get("stake")), fd.get("odds"));
-      const o = Math.round(Number(fd.get("odds")) || 0);
+      const o = ledgerSnapOdds(fd.get("odds"));
+      const prev = ledgerOddsPreview(ledgerDollarsToCents(fd.get("stake")), o);
       const lab = form.querySelector("[data-ledger-odds-lab]");
       const box = form.querySelector("[data-ledger-odds-preview]");
       const send = form.querySelector("[data-ledger-send-lab]");
@@ -7081,9 +7088,7 @@ const html = `<!DOCTYPE html>
       const them = String(fd.get("them") || "").trim();
       const desc = String(fd.get("desc") || "").trim();
       const stake = ledgerDollarsToCents(fd.get("stake"));
-      let odds = Math.round(Number(fd.get("odds")) || 0);
-      if (odds < -500) odds = -500;
-      if (odds > 500) odds = 500;
+      const odds = ledgerSnapOdds(fd.get("odds"));
       const clockRaw = String(fd.get("clock") || "").trim();
       let kind = String(fd.get("clock_kind") || "this_week").trim();
       if (["this_week","next_week","regular","season","playoffs","date"].indexOf(kind) < 0) kind = "this_week";
@@ -15207,7 +15212,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v202-ledger-clocks";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v203-ledger-odds100";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -15279,13 +15284,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v202-ledger-clocks")) {
+  || !html.includes("chuckle-shell-v203-ledger-odds100")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v202-ledger-clocks")
+  || !swSrc.includes("chuckle-shell-v203-ledger-odds100")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -16505,6 +16510,8 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerSend(", true],
     ["function ledgerWagerSave(", true],
     ["function ledgerOddsPreview(", true],
+    ["function ledgerSnapOdds(", true],
+    ['step="100"', true],
     ["function ledgerClaim(", true],
     ["function ledgerVote(", true],
     ["function ledgerIsLiveSlip(", true],

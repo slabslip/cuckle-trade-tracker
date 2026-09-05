@@ -1382,6 +1382,27 @@ const html = `<!DOCTYPE html>
     .ledger-filters .chip.on {
       border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
     }
+    button.ledger-propose {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; box-sizing: border-box;
+      margin: 0 0 12px; padding: 12px 14px;
+      border-radius: 12px; border: 1px solid var(--lh-gold, #e0b44c);
+      background: #141418; color: var(--lh-gold, #e0b44c);
+      font: inherit; font-size: 0.95rem; font-weight: 750;
+      letter-spacing: 0.02em; cursor: pointer;
+      touch-action: manipulation;
+    }
+    button.ledger-propose svg { display: block; width: 20px; height: 20px; flex: 0 0 auto; }
+    button.ledger-propose:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .ledger-feed-bar {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 10px;
+    }
+    .ledger-feed-bar select[data-ledger-feed] {
+      flex: 1 1 auto; min-width: 0; width: auto;
+      padding: 8px 10px; border: 1px solid #2a2a32; border-radius: 8px;
+      background: #0e0e12; color: var(--text); font-size: 16px;
+    }
     .ledger-card {
       background: #141418; border: 1px solid #2a2a32; border-radius: 12px;
       padding: 12px 12px 10px; margin: 0 0 10px;
@@ -2938,7 +2959,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905141000";
+    const DATA_V = "ledger20260905144000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7582,32 +7603,32 @@ const html = `<!DOCTYPE html>
           ? '<p class="caption">No settled slips yet.</p>'
           : (ledgerFeed === "closed"
             ? '<p class="caption">No trashed or expired offers.</p>'
-            : '<p class="caption">No slips yet. Tap New wager, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>');
+            : '<p class="caption">No slips yet. Tap Propose a NEW Wager, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>');
       } else {
         body = list.map((b) => ledgerCardHtml(b)).join("");
       }
       const addOpen = !ledgerWagerOpen ? ""
         : (ledgerComposeNode ? '<div data-ledger-form-slot="1"></div>' : ledgerWagerFormHtml("new"));
-      const feedChip = (id, lab) => {
-        const on = ledgerFeed === id ? " on" : "";
-        return '<button type="button" class="chip' + on + '" data-ledger-feed="' + id + '">' + lab + "</button>";
-      };
+      const propose = authSeatId()
+        ? '<button type="button" class="ledger-propose" data-ledger-wager="1">'
+          + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">'
+          + '<path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>'
+          + "<span>Propose a NEW Wager</span></button>"
+        : "";
+      const feed = ledgerFeed === "settled" || ledgerFeed === "closed" ? ledgerFeed : "live";
       return '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
-        + '<p class="caption">New wager with a teammate. You are house. They Accept, Counter, or Trash. Pick an NFL clock. After it fires, both pick a winner. Settle cash however you want. This tab is just the record.</p>'
         + toast
+        + propose
         + ledgerSummaryHtml(list)
-        + '<div class="ledger-feed" role="group" aria-label="Ledger feed">'
-        + feedChip("live", "Live")
-        + feedChip("settled", "Settled")
-        + feedChip("closed", "Closed")
-        + "</div>"
-        + '<div class="ledger-filters" role="group" aria-label="Ledger tools">'
-        + (authSeatId()
-          ? '<button type="button" class="chip" data-ledger-wager="1">New wager</button>'
-          : "")
+        + addOpen
+        + '<div class="ledger-feed-bar">'
+        + '<select data-ledger-feed="1" aria-label="Show slips">'
+        + '<option value="live"' + (feed === "live" ? " selected" : "") + ">Live</option>"
+        + '<option value="settled"' + (feed === "settled" ? " selected" : "") + ">Settled</option>"
+        + '<option value="closed"' + (feed === "closed" ? " selected" : "") + ">Closed</option>"
+        + "</select>"
         + '<button type="button" class="chip" data-ledger-refresh="1">Refresh</button>'
         + "</div>"
-        + addOpen
         + body;
     }
 
@@ -15016,7 +15037,7 @@ const html = `<!DOCTYPE html>
         return;
       }
       const ledgerFeedBtn = e.target.closest("[data-ledger-feed]");
-      if (ledgerFeedBtn) {
+      if (ledgerFeedBtn && ledgerFeedBtn.tagName !== "SELECT") {
         ledgerFeed = ledgerFeedBtn.getAttribute("data-ledger-feed") || "live";
         render();
         return;
@@ -16006,6 +16027,12 @@ const html = `<!DOCTYPE html>
         ledgerCaptureCompose(form, { merge: true });
         ledgerHydrateCompose(form);
         ledgerPaintWagerPreview(form, { capture: false });
+        return;
+      }
+      const ledgerFeedSel = e.target.closest("select[data-ledger-feed]");
+      if (ledgerFeedSel) {
+        ledgerFeed = ledgerFeedSel.value || "live";
+        render();
         return;
       }
       const cuffOwnerSel = e.target.closest("[data-cuff-owner]");
@@ -17570,7 +17597,10 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerResolveClocks(", true],
     ["This NFL week", true],
     ['data-ledger-feed="', true],
-    ['feedChip("live"', true],
+    ['feedChip("live"', false],
+    ["Propose a NEW Wager", true],
+    [">New wager</button>", false],
+    ["New wager with a teammate", false],
     ["ledgerIsLiveSlip(b) && b.status !== \"settled\"", true],
     ["Pick a winner.", true],
     ["Chuckle read:", true],

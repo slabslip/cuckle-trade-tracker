@@ -7273,7 +7273,9 @@ const html = `<!DOCTYPE html>
           }
         });
       });
-      if (kind) ledgerApplyClockKind(form, kind);
+      if (kind && form.getAttribute("data-ledger-clock-manual") !== "1") {
+        ledgerApplyClockKind(form, kind);
+      }
     }
     function ledgerDescExpandFinished(form) {
       const ta = form && form.querySelector("textarea[name=desc]");
@@ -7455,6 +7457,7 @@ const html = `<!DOCTYPE html>
         const oddsEl = form.querySelector("[name=odds]");
         if (oddsEl) oddsEl.value = String(ledgerSnapOdds(val));
       } else if (field === "clock") {
+        form.setAttribute("data-ledger-clock-manual", "1");
         ledgerApplyClockKind(form, val);
       } else if (field === "desc") {
         const ta = form.querySelector("[name=desc]");
@@ -16099,6 +16102,7 @@ const html = `<!DOCTYPE html>
       if (wagerLive) {
         const form = wagerLive.form || wagerLive.closest("form");
         if (wagerLive.getAttribute("name") === "clock_kind") {
+          form.setAttribute("data-ledger-clock-manual", "1");
           ledgerApplyClockKind(form, wagerLive.value);
         }
         ledgerCaptureCompose(form, { merge: true });
@@ -17655,6 +17659,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["ledgerDescHighlightHtml(b.title", true],
     ["function ledgerDescGhostParts(", false],
     ["function ledgerSyncClockFromDesc(", true],
+    ['data-ledger-clock-manual"', true],
     ["wager-clock-tag", true],
     ["wager-pos-tag", true],
     ["this season", true],

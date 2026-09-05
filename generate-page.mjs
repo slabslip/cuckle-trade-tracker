@@ -1399,7 +1399,7 @@ const html = `<!DOCTYPE html>
       margin: 0 0 10px;
     }
     .ledger-feed-bar select[data-ledger-feed] {
-      flex: 1 1 auto; min-width: 0; width: auto;
+      flex: 1 1 auto; min-width: 0; width: 100%;
       padding: 8px 10px; border: 1px solid #2a2a32; border-radius: 8px;
       background: #0e0e12; color: var(--text); font-size: 16px;
     }
@@ -2959,7 +2959,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905144000";
+    const DATA_V = "ledger20260905144500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5260,7 +5260,7 @@ const html = `<!DOCTYPE html>
       draftFilterOpen = false;
       tapeFilterOpen = false;
       voteToast = null;
-      if (homeTab === "ledger") ledgerEnsureLoaded();
+      if (homeTab === "ledger") ledgerReload();
       focusNext = '[data-home-tab="' + homeTab + '"]';
       render();
     }
@@ -5867,6 +5867,11 @@ const html = `<!DOCTYPE html>
     function ledgerEnsureLoaded() {
       if (ledgerLoadState === "loading") return;
       if (ledgerLoadState === "ok" && ledgerBets) return;
+      ledgerReload();
+    }
+
+    function ledgerReload() {
+      if (ledgerLoadState === "loading") return;
       ledgerFetch().then(() => {
         if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
       }).catch(() => {
@@ -7627,7 +7632,6 @@ const html = `<!DOCTYPE html>
         + '<option value="settled"' + (feed === "settled" ? " selected" : "") + ">Settled</option>"
         + '<option value="closed"' + (feed === "closed" ? " selected" : "") + ">Closed</option>"
         + "</select>"
-        + '<button type="button" class="chip" data-ledger-refresh="1">Refresh</button>'
         + "</div>"
         + body;
     }
@@ -17599,6 +17603,9 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ['data-ledger-feed="', true],
     ['feedChip("live"', false],
     ["Propose a NEW Wager", true],
+    ["function ledgerReload(", true],
+    [">Refresh</button>", false],
+    [">Retry</button>", true],
     [">New wager</button>", false],
     ["New wager with a teammate", false],
     ["ledgerIsLiveSlip(b) && b.status !== \"settled\"", true],

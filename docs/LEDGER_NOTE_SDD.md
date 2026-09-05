@@ -5,7 +5,7 @@ wager handshake is live.
 **Status:** Dashboard start path is **New wager** (Them, stake, −500…+500 meter,
 description, clock, Send / Counter / Accept). A note is **Shortcut-only, later**.
 Do not put Add note / Save note / four dollar boxes back on Ledger.  
-**Product rules:** [`LEDGER_SDD.md`](LEDGER_SDD.md) (rules 1, 10–12).  
+**Product rules:** [`LEDGER_SDD.md`](LEDGER_SDD.md) (rules 1, 10–14).  
 **SQL:** [`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) for the
 dashboard handshake; wave15 only if leftover drafts must stay insertable.  
 **v1 go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)

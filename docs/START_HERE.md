@@ -53,8 +53,9 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 12. `db/wave13-ledger-visibility.sql` — `visibility` (public/private) + party-or-public SELECT RLS
 13. `db/wave15-ledger-notes.sql` — leftover Shortcut drafts (`side_b` nullable, filer-only).
 14. `db/wave16-ledger-wager.sql` — **New wager** handshake: `house_odds`, `offer_rev`, `ledger_settle_votes`. Run after merging the wager PR.
+15. `db/wave17-ledger-clock.sql` — NFL clocks (`clock_kind` / `clock_meta`), win hints, seat style. Run after wave16.
 
-**Ledger:** after wave12 + wave13 + wave16, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
+**Ledger:** after wave12 + wave13 + wave16 + wave17, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
 Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  
 **Shortcut note (later):** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md).  
 Planning archive: [`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md), [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped); [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) (v1.1); [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) (locked).

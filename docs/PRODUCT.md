@@ -23,7 +23,7 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. **Home** is the daily paper (News Feed peek + **Price a deal**; signed-in **Your 3**
+4. **Home** is the daily paper (News Feed peek + **Cuckle trade calculator**; signed-in **Your 3**
    notifications and **On your roster** news — no bag hero, no Recent Trade chip). **Teams** is
    first-person after a seat. Price a hypothetical on **`?view=calc`**. League tape stays the
    water cooler.

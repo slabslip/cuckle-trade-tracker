@@ -15,7 +15,7 @@ plans stay as history; do not paste them here.
 
 - Four top tabs, one row: **Home | Teams | Ledger | History**. No fifth tab. No `#goHome` icon.
 - First tab label **Home**. `homeTab` stores `"home"`; `"league"` is an alias.
-- Hybrid Home: league water cooler on top (**Price a deal** + existing News Feed peek).
+- Hybrid Home: league water cooler on top (**Cuckle trade calculator** + existing News Feed peek).
   Signed-in **Your 3** (wager / vote only) and **On your roster** (team-tagged feed hits, not
   a second copy of the league peek). No bag hero. No Recent Trade chip on Home — the vote
   notification is the door.

@@ -1480,19 +1480,22 @@ const html = `<!DOCTYPE html>
       background: rgba(224, 180, 76, 0.32);
       color: transparent;
     }
-    .lc-desc-ghost { color: var(--dim); font-weight: 400; }
-    .lc-desc-box.is-desc-ghost textarea[data-ledger-desc] { caret-color: transparent; }
-    .lc-desc-caret {
-      display: inline-block; width: 1.5px; height: 1.15em;
-      margin: 0 0 -2px; background: var(--text); vertical-align: text-bottom;
-    }
     .wager-team-tag { color: var(--lh-gold, #e0b44c); font-weight: 650; }
     .wager-clock-tag { color: #7ad1ff; font-weight: 650; }
+    .lc-desc-hi .news-player,
+    .lc-desc-hi .wager-team-tag,
+    .lc-desc-hi .wager-clock-tag,
     .lc-desc-hi .news-pos-tag,
     .lc-desc-hi .wager-pos-tag {
       display: inline; font-size: inherit; font-weight: 650;
       letter-spacing: 0; vertical-align: baseline; margin: 0; opacity: 1;
     }
+    .lc-desc-hi .wager-pos-tag.pos-qb { color: var(--pos-qb); }
+    .lc-desc-hi .wager-pos-tag.pos-rb { color: var(--pos-rb); }
+    .lc-desc-hi .wager-pos-tag.pos-wr { color: var(--pos-wr); }
+    .lc-desc-hi .wager-pos-tag.pos-te { color: var(--pos-te); }
+    .lc-desc-hi .wager-pos-tag.pos-k { color: var(--pos-k); }
+    .lc-desc-hi .wager-pos-tag.pos-def { color: var(--pos-def); }
     .lc-desc-sugs {
       display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0;
     }
@@ -2902,7 +2905,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905035500";
+    const DATA_V = "ledger20260905123000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7039,13 +7042,30 @@ const html = `<!DOCTYPE html>
       out.sort((a, b) => b.score - a.score || a.display.localeCompare(b.display));
       return out.slice(0, 6);
     }
-    function ledgerDescHighlightHtml(text, ghostAt) {
+    function ledgerDescOpenWord(text, caret) {
+      const raw = String(text || "");
+      const n = Math.max(0, Math.min(raw.length, Number(caret) || 0));
+      const left = raw.slice(0, n);
+      const m = left.match(/[A-Za-z0-9''\\u2019.-]+$/);
+      if (!m) return null;
+      const start = n - m[0].length;
+      const after = raw.charAt(n);
+      if (after && /[A-Za-z0-9''\\u2019.-]/.test(after)) {
+        let end = n;
+        while (end < raw.length && /[A-Za-z0-9''\\u2019.-]/.test(raw.charAt(end))) end++;
+        return { start: start, end: end };
+      }
+      if (!after || !/[\\s,.;:!?)]/.test(after)) return { start: start, end: n };
+      return null;
+    }
+    function ledgerDescHighlightHtml(text, open) {
       const raw = String(text || "");
       if (!raw) return "";
       const idx = ledgerEnsureEntityIndex();
       const hits = [];
       const addHit = function (start, end, cls) {
         if (start < 0 || end <= start) return;
+        if (open && !(end <= open.start || start >= open.end)) return;
         for (let i = 0; i < hits.length; i++) {
           if (!(end <= hits[i].start || start >= hits[i].end)) return;
         }
@@ -7062,6 +7082,11 @@ const html = `<!DOCTYPE html>
         findAll(p.display, slug);
         if (p.last && p.last.length >= 4 && idx.lastCount[p.lastNorm] === 1) findAll(p.last, slug);
       });
+      Object.keys(idx.aliasTo).forEach((alias) => {
+        const full = idx.aliasTo[alias];
+        const p = idx.players.find((row) => row.key === ledgerNorm(full));
+        if (p && alias.length >= 3) findAll(alias, "news-player pos-" + newsPosSlug(p.pos));
+      });
       idx.teams.forEach((t) => {
         findAll(t.display, "wager-team-tag");
         t.names.forEach((nm) => {
@@ -7077,74 +7102,15 @@ const html = `<!DOCTYPE html>
         return m;
       });
       hits.sort((a, b) => a.start - b.start);
-      const g = ghostAt && (ghostAt.lead || ghostAt.tail) ? ghostAt : null;
-      let leadDone = false;
-      let tailDone = false;
       let html = "";
       let at = 0;
-      const paintGhost = function (pos) {
-        if (!g) return;
-        if (!leadDone && pos === g.start && g.lead) {
-          html += '<span class="lc-desc-ghost">' + esc(g.lead) + "</span>";
-          leadDone = true;
-        }
-        if (!tailDone && pos === g.end && g.tail) {
-          html += '<span class="lc-desc-ghost">' + esc(g.tail) + "</span>";
-          tailDone = true;
-        }
-      };
-      const paintPlain = function (upTo) {
-        if (upTo < at) return;
-        const marks = [];
-        if (g) {
-          if (g.start >= at && g.start <= upTo) marks.push(g.start);
-          if (g.end >= at && g.end <= upTo && g.end !== g.start) marks.push(g.end);
-        }
-        marks.sort((a, b) => a - b);
-        let i = 0;
-        while (at < upTo) {
-          paintGhost(at);
-          let next = upTo;
-          while (i < marks.length && marks[i] <= at) i++;
-          if (i < marks.length && marks[i] < next) next = marks[i];
-          if (next > at) {
-            html += esc(raw.slice(at, next));
-            at = next;
-          } else {
-            break;
-          }
-        }
-        paintGhost(upTo);
-      };
       hits.forEach((h) => {
-        paintPlain(h.start);
+        html += esc(raw.slice(at, h.start));
         html += '<span class="' + h.cls + '">' + esc(raw.slice(h.start, h.end)) + "</span>";
         at = h.end;
-        paintGhost(h.end);
       });
-      paintPlain(raw.length);
-      if (g && g.lead) html += '<span class="lc-desc-caret"></span>';
+      html += esc(raw.slice(at));
       return html;
-    }
-    function ledgerDescGhostParts(phrase, top) {
-      if (!top || !phrase) return { lead: "", tail: "" };
-      if (top.kind === "clock" || top.kind === "pos") return { lead: "", tail: "" };
-      const typed = String(phrase);
-      const disp = String(top.display);
-      if (!disp || ledgerNorm(typed) === ledgerNorm(disp)) return { lead: "", tail: "" };
-      const typedL = typed.toLowerCase();
-      const dispL = disp.toLowerCase();
-      if (dispL.indexOf(typedL) === 0) return { lead: "", tail: disp.slice(typed.length) };
-      const parts = disp.split(/\\s+/);
-      const last = parts[parts.length - 1] || "";
-      const first = parts.slice(0, -1).join(" ");
-      if (last.length >= 4 && last.toLowerCase().indexOf(typedL) === 0) {
-        return { lead: first ? first + " " : "", tail: last.slice(typed.length) };
-      }
-      if (typed.length >= 4 && dispL.lastIndexOf(typedL) === dispL.length - typedL.length) {
-        return { lead: disp.slice(0, disp.length - typed.length), tail: "" };
-      }
-      return { lead: "", tail: disp };
     }
     function ledgerDescConfident(picks) {
       if (!picks || !picks.length) return false;
@@ -7177,7 +7143,7 @@ const html = `<!DOCTYPE html>
       });
       if (kind) ledgerApplyClockKind(form, kind);
     }
-    function ledgerPaintDescBox(form, opts) {
+    function ledgerPaintDescBox(form) {
       if (!form) return;
       const ta = form.querySelector("textarea[name=desc]");
       const hi = form.querySelector("[data-ledger-desc-hi]");
@@ -7185,42 +7151,15 @@ const html = `<!DOCTYPE html>
       if (!ta || !hi) return;
       if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
-      const best = ledgerDescBestPhrase(ta.value, caret);
-      const phrase = best.phrase;
-      const picks = best.picks;
-      const top = picks[0] || null;
-      const confident = ledgerDescConfident(picks);
-      const parts = (document.activeElement === ta && confident && top)
-        ? ledgerDescGhostParts(phrase.text, top)
-        : { lead: "", tail: "" };
-      const ghostAt = (parts.lead || parts.tail)
-        ? { start: phrase.start, end: phrase.end, lead: parts.lead, tail: parts.tail }
-        : null;
+      const open = (document.activeElement === ta) ? ledgerDescOpenWord(ta.value, caret) : null;
       const box = ta.closest(".lc-desc-box");
-      if (box) box.classList.toggle("is-desc-ghost", !!(parts.lead));
-      ledgerDescPending = (top && phrase.text)
-        ? { start: phrase.start, end: phrase.end, display: top.display, kind: top.kind, clock: top.clock || "", confident: confident }
-        : null;
-      hi.innerHTML = ledgerDescHighlightHtml(ta.value, ghostAt);
+      if (box) box.classList.remove("is-desc-ghost");
+      ledgerDescPending = null;
+      hi.innerHTML = ledgerDescHighlightHtml(ta.value, open);
       hi.scrollTop = ta.scrollTop;
       if (sugs) {
-        if (!picks.length || document.activeElement !== ta) {
-          sugs.hidden = true;
-          sugs.innerHTML = "";
-        } else {
-          sugs.hidden = false;
-          sugs.innerHTML = picks.map((p) => {
-            const cls = p.kind === "player"
-              ? ("chip news-player pos-" + (p.slug || "oth"))
-              : p.kind === "pos"
-                ? ("chip wager-pos-tag pos-" + (p.slug || "oth"))
-                : p.kind === "clock"
-                  ? "chip wager-clock-tag"
-                  : "chip wager-team-tag";
-            return '<button type="button" class="' + cls + '" data-ledger-desc-pick="1" data-val="'
-              + esc(p.display) + '">' + esc(p.display) + "</button>";
-          }).join("");
-        }
+        sugs.hidden = true;
+        sugs.innerHTML = "";
       }
       ledgerSyncClockFromDesc(form);
     }
@@ -7233,7 +7172,7 @@ const html = `<!DOCTYPE html>
       const next = display || (ledgerDescPending && ledgerDescPending.display);
       if (!next || !phrase.text) return;
       if (ledgerNorm(phrase.text) === ledgerNorm(next) && !extra) {
-        ledgerPaintDescBox(form, { noAutofill: true });
+        ledgerPaintDescBox(form);
         return;
       }
       const before = ta.value.slice(0, phrase.start);
@@ -7243,7 +7182,7 @@ const html = `<!DOCTYPE html>
       const put = before.length + next.length + add.length;
       try { ta.setSelectionRange(put, put); } catch (_) {}
       ledgerDescPending = null;
-      ledgerPaintDescBox(form, { noAutofill: true });
+      ledgerPaintDescBox(form);
       if (typeof ledgerPaintWagerPreview === "function") ledgerPaintWagerPreview(form);
     }
 
@@ -14777,23 +14716,6 @@ const html = `<!DOCTYPE html>
     });
 
     document.getElementById("app").addEventListener("keydown", (e) => {
-      const descTa = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
-      if (descTa && ledgerDescPending && ledgerDescPending.confident) {
-        const atEnd = descTa.selectionStart === descTa.selectionEnd && descTa.selectionEnd === ledgerDescPending.end;
-        const form = descTa.form || descTa.closest("form");
-        if (e.key === " " && atEnd
-          && ledgerDescPending.kind !== "pos" && ledgerDescPending.kind !== "clock") {
-          e.preventDefault();
-          ledgerAcceptDescSuggest(form, ledgerDescPending.display, " ");
-          return;
-        }
-        if (atEnd && ledgerDescPending.kind !== "pos" && ledgerDescPending.kind !== "clock"
-          && (e.key === "Tab" || e.key === "Enter" || (e.key === "ArrowRight" && descTa.selectionEnd === descTa.value.length))) {
-          e.preventDefault();
-          ledgerAcceptDescSuggest(form, ledgerDescPending.display);
-          return;
-        }
-      }
       if (e.key === "Escape" && (voteSheetTx || voteConfirmTx)) {
         e.preventDefault();
         voteSheetTx = null;
@@ -17416,7 +17338,8 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["data-ledger-desc-hi", true],
     ["De'Zhaun Stribling", true],
     ["function ledgerDescBestPhrase(", true],
-    ["function ledgerDescGhostParts(", true],
+    ["function ledgerDescOpenWord(", true],
+    ["function ledgerDescGhostParts(", false],
     ["function ledgerSyncClockFromDesc(", true],
     ["wager-clock-tag", true],
     ["wager-pos-tag", true],

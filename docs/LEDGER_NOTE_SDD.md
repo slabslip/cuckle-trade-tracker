@@ -1,12 +1,16 @@
-# Ledger note → Finish → Send — implementation SDD
+# Ledger Shortcut note — later capture (not the dashboard start)
 
-**Audience:** the next coding agent (or you) who will write SQL + ingest + dashboard + optional SMS.  
-**Status:** v1.2 in-app path is on `cursor/ledger-note-send-af37` (Add note / Finish / Send / Yes-No / badge). Shortcut and SMS still later.  
-**Locked plan (why):** [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md)  
-**Product rules:** [`LEDGER_SDD.md`](LEDGER_SDD.md)  
-**v1 go-live (already running):** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)
+**Audience:** the next coding agent who wires Shortcut / SMS after the dashboard
+wager handshake is live.  
+**Status:** Dashboard start path is **New wager** (Them, stake, −500…+500 meter,
+description, clock, Send / Counter / Accept). A note is **Shortcut-only, later**.
+Do not put Add note / Save note / four dollar boxes back on Ledger.  
+**Product rules:** [`LEDGER_SDD.md`](LEDGER_SDD.md) (rules 1, 10–12).  
+**SQL:** [`db/wave16-ledger-wager.sql`](../db/wave16-ledger-wager.sql) for the
+dashboard handshake; wave15 only if leftover drafts must stay insertable.  
+**v1 go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md)
 
-Do **not** mix in join / exposure ([`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md)). That stays v1.1.
+Do **not** mix in join / exposure ([`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md)).
 
 Live URL (GitHub Pages from `main`): https://slabslip.github.io/cuckle-trade-tracker/
 
@@ -14,33 +18,37 @@ Live URL (GitHub Pages from `main`): https://slabslip.github.io/cuckle-trade-tra
 
 ## 1. Goal
 
-Anyone in the league can:
+**On Ledger today:** place a wager with a teammate (house / meter / clock).
+Language is wager / send / counter / accept / lock.
 
-1. Drop a group-chat line into a Shortcut (or later a Share Extension).
-2. Open Chuckle → Ledger → **Finish slip** (You / Them / four dollar boxes).
-3. Tap **Send to [name]**.
-4. Them sees **Yes, I’m in** / **No**.
-5. Optionally get an SMS **only when someone Sends to them**.
+**Later (this doc):** a Shortcut that only **saves the group text** so someone
+can finish money on the site if they want. It is not the start button.
+
+Anyone in the league can later:
+
+1. Drop a group-chat line into a Shortcut (or a Share Extension).
+2. Open Chuckle → Ledger and attach that text to a **New wager**, or finish a
+   leftover $0 card.
+3. Them **Accept** / **Counter** / **No**.
+4. Optionally get an SMS **only when someone Sends to them**.
 
 Truman is not the clerk.
 
-### In scope
+### In scope (later Shortcut)
 
-1. SQL `wave15` — nullable `side_b`, no auto-lock on drafts, filer-only SELECT, `terms_json`, optional phone.
-2. `ledger-ingest` note mode (`raw_text` + `submitted_by` only).
-3. Ledger **Finish slip** + **Send to [name]** (replace Complete).
-4. Them: **Yes, I’m in** / **No** (same DB as Accept / Decline).
-5. Ledger tab badge = slips sent to you.
-6. Optional v1.3 SMS on Send.
-7. Slim Shortcut + Pages push steps.
+1. `ledger-ingest` note mode (`raw_text` + `submitted_by` only).
+2. Leftover **Complete** on $0 / old cards (not a new compose UI).
+3. Optional v1.3 SMS on Send.
+4. Slim Shortcut + Pages push steps.
 
 ### Out of scope
 
+- Dashboard **Add note** / **Save note** / four empty dollar boxes as the start path.
 - Join / `ledger_join_requests` / wave14.
 - Native iOS Share Extension (v1.4).
 - Auto-reading iMessage.
 - SMS on note create.
-- Renaming `accepted` / `declined` in the database.
+- In-app payout.
 
 ---
 

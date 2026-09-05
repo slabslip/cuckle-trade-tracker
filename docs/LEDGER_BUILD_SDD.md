@@ -114,7 +114,7 @@ returns other members’ public slips).
 
 ## 5. Acceptance criteria (go-live done when)
 
-- [ ] wave12 + wave13 ran without error in SQL Editor
+- [ ] wave12 + wave13 + wave16 ran without error in SQL Editor
 - [ ] `ledger_bets` / `ledger_bet_events` exist; `visibility` column present
 - [ ] `ledger-ingest` deployed; `LEDGER_INGEST_SECRET` set
 - [ ] curl smoke test returns `{ "ok": true, "bet_id": "…" }` (two seat **ids** + `raw_text`)
@@ -151,6 +151,12 @@ Hard-refresh after Pages deploys (or wait ~1–2 minutes after merge).
 1. Same SQL Editor.
 2. Paste all of `db/wave13-ledger-visibility.sql` → **Run**.
 3. Confirm `ledger_bets` has a `visibility` column (default `public`).
+
+### Step 2b — Run wave16 SQL (New wager handshake)
+
+1. Same SQL Editor.
+2. Paste all of `db/wave16-ledger-wager.sql` → **Run**.
+3. Confirm `ledger_bets` has `house_odds` + `offer_rev`, and table `ledger_settle_votes` exists.
 
 ### Step 3 — Create ingest secret
 
@@ -284,12 +290,12 @@ Then on the iPhone: remove money / odds / title menus. Capture is `raw_text` + t
 
 ## 8. Out of scope (do not build in this go-live)
 
-- Long Shortcut money / odds menus (finish those on Ledger **Complete**)
+- Long Shortcut money / odds menus (dashboard start is **New wager**)
 - Tip Slip green/cream skin
 - Commissioner force-edit after open
 - Discord ingest
 - SMS vendor / collecting phone numbers (until **v1.3**)
-- Draft notes, Finish slip, Send, Ledger badge (until **v1.2**)
+- Shortcut note capture (later; not the Ledger start button)
 
 Product detail and edge-case tables: [`LEDGER_SDD.md`](LEDGER_SDD.md).
 

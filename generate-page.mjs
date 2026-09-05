@@ -3147,7 +3147,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcResearch20260905195500";
+    const DATA_V = "calcSelectQuiet20260905196000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3193,6 +3193,7 @@ const html = `<!DOCTYPE html>
     let calcFilterB = "";
     let calcOpenA = false;
     let calcOpenB = false;
+    let calcQuietUntil = 0;
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
@@ -14171,6 +14172,34 @@ const html = `<!DOCTYPE html>
         + "</section>";
     }
 
+    function calcArmQuiet(ms) {
+      calcQuietUntil = Date.now() + (ms || 500);
+    }
+
+    function calcIsQuiet() {
+      return Date.now() < calcQuietUntil;
+    }
+
+    function calcFocusSearch(side, range) {
+      const back = document.querySelector('#app [data-calc-filter="' + side + '"]');
+      if (!back) return null;
+      back.focus({ preventScroll: true });
+      if (range) {
+        try { back.setSelectionRange(range.start, range.end); } catch (err) { /* ignore */ }
+      }
+      return back;
+    }
+
+    function calcBlurSearch() {
+      const el = document.activeElement;
+      if (el && el.closest && el.closest("[data-calc-filter]")) el.blur();
+    }
+
+    function calcCloseSide(side) {
+      if (side === "b") { calcOpenB = false; calcFilterB = ""; }
+      else { calcOpenA = false; calcFilterA = ""; }
+    }
+
     function calcAssetById(id) {
       const book = calcBook || { players: [], picks: [] };
       return (book.players || []).concat(book.picks || []).find((a) => a.id === id) || null;
@@ -16863,13 +16892,16 @@ const html = `<!DOCTYPE html>
         const to = calcAdd.getAttribute("data-calc-to") || calcSide || "a";
         const asset = calcLegFromAsset(calcAssetById(calcAdd.getAttribute("data-calc-add")));
         if (asset) {
-          if (to === "b") { calcLegsB = calcLegsB.concat([asset]); calcFilterB = ""; calcOpenB = true; }
-          else { calcLegsA = calcLegsA.concat([asset]); calcFilterA = ""; calcOpenA = true; }
+          const bag = to === "b" ? calcLegsB : calcLegsA;
+          if (!bag.some((l) => l.id === asset.id)) {
+            if (to === "b") { calcLegsB = calcLegsB.concat([asset]); calcFilterB = ""; calcOpenB = !!calcSeatB; }
+            else { calcLegsA = calcLegsA.concat([asset]); calcFilterA = ""; calcOpenA = !!calcSeatA; }
+          } else if (to === "b") { calcFilterB = ""; }
+          else { calcFilterA = ""; }
           calcSide = to;
         }
         render();
-        const back = document.querySelector('#app [data-calc-filter="' + to + '"]');
-        if (back) back.focus({ preventScroll: true });
+        calcFocusSearch(to);
         return;
       }
       const calcDrop = e.target.closest("[data-calc-drop]");
@@ -17106,14 +17138,20 @@ const html = `<!DOCTYPE html>
       const calcSearch = e.target && e.target.closest && e.target.closest("[data-calc-filter]");
       if (calcSearch) {
         const side = calcSearch.getAttribute("data-calc-filter") || "a";
+        const fromSeat = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest("[data-calc-seat]");
+        if (calcIsQuiet() || fromSeat) {
+          if (side === "b") calcOpenB = false;
+          else calcOpenA = false;
+          calcBlurSearch();
+          return;
+        }
         const already = side === "b" ? calcOpenB : calcOpenA;
         if (side === "b") calcOpenB = true;
         else calcOpenA = true;
         calcSide = side;
         if (!(side === "b" ? calcSeatB : calcSeatA) || already) return;
         render();
-        const back = document.querySelector('#app [data-calc-filter="' + side + '"]');
-        if (back) back.focus({ preventScroll: true });
+        calcFocusSearch(side);
       }
     });
     document.getElementById("app").addEventListener("scroll", (e) => {
@@ -17138,11 +17176,15 @@ const html = `<!DOCTYPE html>
           const still = document.activeElement;
           const stillSearch = still && still.closest && still.closest("[data-calc-filter]");
           const stillHit = still && still.closest && still.closest("[data-calc-add]");
-          if (stillSearch && stillSearch.getAttribute("data-calc-filter") === side) return;
-          if (stillHit && stillHit.getAttribute("data-calc-to") === side) return;
+          const stillSide = stillSearch && stillSearch.getAttribute("data-calc-filter");
+          const stillHitTo = stillHit && stillHit.getAttribute("data-calc-to");
+          if (stillSide === side || stillHitTo === side) return;
           if (side === "b") calcOpenB = false;
           else calcOpenA = false;
-          if (view === "calc") render();
+          if (view !== "calc") return;
+          const keep = stillSide || stillHitTo || "";
+          render();
+          if (keep) calcFocusSearch(keep);
         }, 180);
       }
       const field = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
@@ -17188,10 +17230,21 @@ const html = `<!DOCTYPE html>
       const calcSeatSel = e.target.closest("[data-calc-seat]");
       if (calcSeatSel) {
         const side = calcSeatSel.getAttribute("data-calc-seat");
-        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcLegsB = []; calcFilterB = ""; calcOpenB = false; }
-        else { calcSeatA = calcSeatSel.value || ""; calcLegsA = []; calcFilterA = ""; calcOpenA = false; }
+        if (side === "b") { calcSeatB = calcSeatSel.value || ""; calcFilterB = ""; calcOpenB = false; }
+        else { calcSeatA = calcSeatSel.value || ""; calcFilterA = ""; calcOpenA = false; }
         calcSide = side === "b" ? "b" : "a";
+        calcArmQuiet(500);
         render();
+        calcBlurSearch();
+        setTimeout(() => {
+          if (!calcIsQuiet()) return;
+          calcCloseSide(side);
+          calcBlurSearch();
+          const box = document.querySelector('#app [data-calc-filter="' + side + '"]');
+          const block = box && box.closest(".calc-block");
+          if (view === "calc" && block && block.querySelector(".calc-hits")) render();
+          calcBlurSearch();
+        }, 60);
         return;
       }
       if (e.target && e.target.id === "profileFile" && e.target.files && e.target.files[0]) {
@@ -17221,17 +17274,14 @@ const html = `<!DOCTYPE html>
       const calcFilterBox = e.target.closest("[data-calc-filter]");
       if (calcFilterBox) {
         const side = calcFilterBox.getAttribute("data-calc-filter") || "a";
+        calcQuietUntil = 0;
         if (side === "b") { calcFilterB = calcFilterBox.value || ""; calcOpenB = true; }
         else { calcFilterA = calcFilterBox.value || ""; calcOpenA = true; }
         calcSide = side;
         const start = calcFilterBox.selectionStart;
         const end = calcFilterBox.selectionEnd;
         render();
-        const back = document.querySelector('#app [data-calc-filter="' + side + '"]');
-        if (back) {
-          back.focus({ preventScroll: true });
-          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
-        }
+        calcFocusSearch(side, { start: start, end: end });
         return;
       }
       const cuffQBox = e.target.closest("[data-cuff-q]");
@@ -19611,6 +19661,10 @@ if (!inline.includes("a.roster_ord") || !inline.includes("calcOpenA")
   if (!inline.includes("if (!uid && !needle) return []")) {
     throw new Error("calc research search must wait for a query when no team is selected");
   }
+}
+if (!inline.includes("function calcArmQuiet(") || !inline.includes("calcIsQuiet()")
+  || !inline.includes("calcBlurSearch(") || inline.includes("calcLegsB = []; calcFilterB")) {
+  throw new Error("calc team select must not reopen the roster list or wipe the bag");
 }
 if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("sent: theirs")) {

@@ -2889,7 +2889,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905033000";
+    const DATA_V = "ledger20260905034000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6943,6 +6943,24 @@
       const phrase = m[1];
       return { start: n - phrase.length, end: n, text: phrase };
     }
+    function ledgerDescBestPhrase(text, caret) {
+      const full = ledgerDescPhraseAt(text, caret);
+      if (!full.text) return { phrase: full, picks: [] };
+      const words = String(full.text).split(/\s+/).filter(Boolean);
+      let best = { phrase: full, picks: ledgerDescSuggest(full.text) };
+      if (ledgerDescConfident(best.picks)) return best;
+      for (let n = words.length - 1; n >= 1; n--) {
+        const bit = words.slice(-n).join(" ");
+        const start = full.end - bit.length;
+        const phrase = { start: start, end: full.end, text: bit };
+        const picks = ledgerDescSuggest(bit);
+        if (picks.length && (!best.picks.length || picks[0].score > (best.picks[0].score || 0))) {
+          best = { phrase: phrase, picks: picks };
+        }
+        if (ledgerDescConfident(picks)) return { phrase: phrase, picks: picks };
+      }
+      return best;
+    }
     function ledgerDescSuggest(phrase) {
       const q = ledgerNorm(phrase);
       if (!q || q.length < 2) return [];
@@ -7108,19 +7126,19 @@
       if (!ta || !hi) return;
       if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
-      const phrase = ledgerDescPhraseAt(ta.value, caret);
-      const picks = phrase.text ? ledgerDescSuggest(phrase.text) : [];
+      const best = ledgerDescBestPhrase(ta.value, caret);
+      const phrase = best.phrase;
+      const picks = best.picks;
       const top = picks[0] || null;
       const confident = ledgerDescConfident(picks);
-      const ghost = (document.activeElement === ta && top && top.kind !== "clock")
-        ? ledgerDescGhostFor(phrase.text, top)
+      const ghost = (document.activeElement === ta && top && top.kind !== "clock"
+        && String(top.display).toLowerCase().indexOf(String(phrase.text).toLowerCase()) === 0)
+        ? String(top.display).slice(String(phrase.text).length)
         : "";
       ledgerDescPending = (top && phrase.text)
         ? { start: phrase.start, end: phrase.end, display: top.display, kind: top.kind, clock: top.clock || "", confident: confident }
         : null;
-      hi.innerHTML = ledgerDescHighlightHtml(ta.value, (ghost && ghost !== phrase.text) ? (
-        (String(top.display).toLowerCase().indexOf(String(phrase.text).toLowerCase()) === 0) ? ghost : ""
-      ) : ghost);
+      hi.innerHTML = ledgerDescHighlightHtml(ta.value, ghost);
       hi.scrollTop = ta.scrollTop;
       if (sugs) {
         if (!picks.length || document.activeElement !== ta) {
@@ -7153,7 +7171,8 @@
       const ta = form && form.querySelector("textarea[name=desc]");
       if (!ta) return;
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
-      const phrase = ledgerDescPhraseAt(ta.value, caret);
+      const best = ledgerDescBestPhrase(ta.value, caret);
+      const phrase = best.phrase;
       const next = display || (ledgerDescPending && ledgerDescPending.display);
       if (!next || !phrase.text) return;
       if (ledgerNorm(phrase.text) === ledgerNorm(next) && !extra) {
@@ -14705,12 +14724,14 @@
       if (descTa && ledgerDescPending && ledgerDescPending.confident) {
         const atEnd = descTa.selectionStart === descTa.selectionEnd && descTa.selectionEnd === ledgerDescPending.end;
         const form = descTa.form || descTa.closest("form");
-        if (e.key === " " && atEnd) {
+        if (e.key === " " && atEnd
+          && ledgerDescPending.kind !== "pos" && ledgerDescPending.kind !== "clock") {
           e.preventDefault();
           ledgerAcceptDescSuggest(form, ledgerDescPending.display, " ");
           return;
         }
-        if (atEnd && (e.key === "Tab" || e.key === "Enter" || (e.key === "ArrowRight" && descTa.selectionEnd === descTa.value.length))) {
+        if (atEnd && ledgerDescPending.kind !== "pos" && ledgerDescPending.kind !== "clock"
+          && (e.key === "Tab" || e.key === "Enter" || (e.key === "ArrowRight" && descTa.selectionEnd === descTa.value.length))) {
           e.preventDefault();
           ledgerAcceptDescSuggest(form, ledgerDescPending.display);
           return;

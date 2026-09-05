@@ -1552,6 +1552,7 @@
       font-size: 0.95rem; font-weight: 700; color: var(--lh-gold, #e0b44c);
       font-variant-numeric: tabular-nums;
     }
+    .lc-stake-lab { min-width: 3.4rem; display: inline-block; text-align: right; }
     .ledger-card .lc-status.disputed { border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c); }
     .lc-clock-chips, .lc-agent, .ledger-feed {
       display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px;
@@ -2929,7 +2930,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905140000";
+    const DATA_V = "ledger20260905141000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6157,6 +6158,9 @@
       const clock = form.querySelector("[name=clock]");
       if (them && !them.value && d.them) them.value = d.them;
       if (stake && !String(stake.value || "").trim() && d.stake) stake.value = d.stake;
+      if (form.querySelector("[data-ledger-stake-range]")) {
+        ledgerApplyStakeSlider(form, (stake && stake.value) || d.stake || 25);
+      }
       if (desc && !String(desc.value || "").trim() && d.desc) desc.value = d.desc;
       if (desc) ledgerPaintDescBox(form);
       if (clock && !clock.value && d.clock) clock.value = d.clock;
@@ -6217,6 +6221,39 @@
       if (o < -500) o = -500;
       if (o > 500) o = 500;
       return o;
+    }
+
+    const LEDGER_STAKE_STOPS = [25, 50, 100, 150, 200, 250, 300, 350, 400];
+
+    function ledgerStakeStopIndex(dollars) {
+      const n = Number(dollars);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < LEDGER_STAKE_STOPS.length; i++) {
+        const d = Math.abs(LEDGER_STAKE_STOPS[i] - n);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      return best;
+    }
+
+    function ledgerSnapStakeDollars(dollars) {
+      return LEDGER_STAKE_STOPS[ledgerStakeStopIndex(dollars)];
+    }
+
+    function ledgerApplyStakeSlider(form, dollars) {
+      const snapped = ledgerSnapStakeDollars(dollars);
+      if (!form) return snapped;
+      const hid = form.querySelector("[name=stake]");
+      const range = form.querySelector("[data-ledger-stake-range]");
+      const lab = form.querySelector("[data-ledger-stake-lab]");
+      if (hid) hid.value = String(snapped);
+      if (range) range.value = String(ledgerStakeStopIndex(snapped));
+      if (lab) lab.textContent = "$" + snapped;
+      return snapped;
     }
 
     function ledgerHouseOddsOf(b) {
@@ -7355,8 +7392,7 @@
         const sel = form.querySelector("[name=them]");
         if (sel) sel.value = val;
       } else if (field === "stake") {
-        const stake = form.querySelector("[name=stake]");
-        if (stake) stake.value = val;
+        ledgerApplyStakeSlider(form, val);
       } else if (field === "odds") {
         const oddsEl = form.querySelector("[name=odds]");
         if (oddsEl) oddsEl.value = String(ledgerSnapOdds(val));
@@ -7378,7 +7414,8 @@
       const them = draft ? draft.them : ((kind === "counter" && b)
         ? (String(b.side_a) === String(seat) ? b.side_b : b.side_a)
         : "");
-      const stake = draft ? draft.stake : ((kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : "");
+      const stakeRaw = draft ? draft.stake : ((kind === "counter" && b) ? ledgerCentsToDollars(b.amount_cents) : 25);
+      const stake = ledgerSnapStakeDollars(stakeRaw);
       const odds = draft ? ledgerSnapOdds(draft.odds) : ((kind === "counter" && b) ? ledgerSnapOdds(ledgerHouseOddsOf(b)) : 0);
       const moneyLine = (kind === "counter" && b) ? ledgerNamedTerms(b) : "";
       const desc = draft ? draft.desc : ((kind === "counter" && b)
@@ -7410,8 +7447,12 @@
       return '<form class="ledger-add" ' + formAttr + ">"
         + ledgerAgentHtml(kind)
         + themField
-        + '<label>Your wager ($)<input name="stake" type="text" inputmode="decimal" autocomplete="off" value="'
-        + esc(stake) + '" required data-ledger-wager-live="1"></label>'
+        + '<label>Your wager <span class="lc-odds-lab lc-stake-lab" data-ledger-stake-lab>$'
+        + esc(String(stake)) + "</span>"
+        + '<input type="range" min="0" max="8" step="1" value="'
+        + esc(String(ledgerStakeStopIndex(stake))) + '" data-ledger-stake-range data-ledger-wager-live="1">'
+        + '<input type="hidden" name="stake" value="' + esc(String(stake)) + '">'
+        + '<span class="caption">$25 first, then $50, then $50 up to $400.</span></label>'
         + '<label>Odds meter <span class="lc-odds-lab" data-ledger-odds-lab>'
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
@@ -7934,6 +7975,11 @@
 
     function ledgerPaintWagerPreview(form, opts) {
       if (!form) return;
+      const stakeRange = form.querySelector("[data-ledger-stake-range]");
+      if (stakeRange) {
+        const idx = Math.max(0, Math.min(LEDGER_STAKE_STOPS.length - 1, Math.round(Number(stakeRange.value) || 0)));
+        ledgerApplyStakeSlider(form, LEDGER_STAKE_STOPS[idx]);
+      }
       if (!opts || opts.capture !== false) ledgerCaptureCompose(form, { merge: false });
       const fd = new FormData(form);
       const o = ledgerSnapOdds(fd.get("odds"));

@@ -14169,6 +14169,10 @@ const html = `<!DOCTYPE html>
       return n + " piece" + (n === 1 ? "" : "s") + (parts ? " · " + parts : "");
     }
 
+    function calcRawSum(legs) {
+      return (legs || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+    }
+
     function calcSideBag(legs, otherLegs) {
       const mine = legs || [];
       const theirs = otherLegs || [];
@@ -14219,13 +14223,19 @@ const html = `<!DOCTYPE html>
     function calcCompareHtml() {
       const a = calcSideBag(calcLegsA, calcLegsB);
       const b = calcSideBag(calcLegsB, calcLegsA);
-      const d = displayDelta(a.today, b.today);
-      if (d == null) {
+      const rawA = calcRawSum(calcLegsA);
+      const rawB = calcRawSum(calcLegsB);
+      const d = displayDelta(rawA || null, rawB || null);
+      if (d == null || (!calcLegsA.length && !calcLegsB.length)) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
           + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
       }
-      const tot = Math.abs(a.today || 0) + Math.abs(b.today || 0);
-      const pct = tot ? Math.max(4, Math.min(96, Math.round(((a.today || 0) / tot) * 100))) : 50;
+      if (!calcLegsA.length || !calcLegsB.length) {
+        return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
+          + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
+      }
+      const tot = Math.abs(rawA) + Math.abs(rawB);
+      const pct = tot ? Math.max(4, Math.min(96, Math.round((rawA / tot) * 100))) : 50;
       const nameA = calcSeatName(calcSeatA);
       const nameB = calcSeatName(calcSeatB);
       const even = Math.abs(d) < 25;
@@ -14236,9 +14246,9 @@ const html = `<!DOCTYPE html>
       const need = Math.abs(d);
       const va = (a.value_adjust || 0) + (b.value_adjust || 0);
       return '<div class="calc-compare">'
-        + '<div class="calc-compare-labs"><div>' + esc(nameA) + "<b>" + calcFmt(a.today) + "</b></div>"
-        + "<div>" + esc(nameB) + "<b>" + calcFmt(b.today) + "</b></div></div>"
-        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " " + calcFmt(a.today) + " vs " + esc(nameB) + " " + calcFmt(b.today) + '">'
+        + '<div class="calc-compare-labs"><div>' + esc(nameA) + "<b>" + calcFmt(rawA) + "</b></div>"
+        + "<div>" + esc(nameB) + "<b>" + calcFmt(rawB) + "</b></div></div>"
+        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " " + calcFmt(rawA) + " vs " + esc(nameB) + " " + calcFmt(rawB) + '">'
         + '<div class="calc-bar-a" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
         + '<div class="calc-favor' + tone + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
         + (even ? "" : '<p class="caption">Add a piece worth ' + calcFmt(need) + " to " + esc(shortName) + ".</p>")
@@ -14261,8 +14271,6 @@ const html = `<!DOCTYPE html>
     function calcSideHtml(side) {
       const uid = side === "a" ? calcSeatA : calcSeatB;
       const legs = side === "a" ? calcLegsA : calcLegsB;
-      const other = side === "a" ? calcLegsB : calcLegsA;
-      const bag = calcSideBag(legs, other);
       const q = side === "a" ? calcFilterA : calcFilterB;
       const hits = uid && String(q || "").trim()
         ? calcAssetsForSeat(uid, q).slice(0, 8) : [];
@@ -14289,7 +14297,7 @@ const html = `<!DOCTYPE html>
         + (hitRows ? '<div class="calc-hits">' + hitRows + "</div>" : "")
         + assets
         + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
-        + '<div class="calc-tot">' + (legs.length ? calcFmt(bag.today) : "0") + "</div></div>"
+        + '<div class="calc-tot">' + (legs.length ? calcFmt(calcRawSum(legs)) : "0") + "</div></div>"
         + "</section>";
     }
 

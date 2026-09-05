@@ -2856,7 +2856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledger20260905023000";
+    const DATA_V = "ledger20260905024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5941,43 +5941,31 @@ const html = `<!DOCTYPE html>
       return !!(ledgerWagerOpen || ledgerCounterId);
     }
 
+    function ledgerOnComposePage() {
+      return appScreen === "dash" && view === "home" && homeTab === "ledger";
+    }
+
     function ledgerComposeStayPut() {
-      if (!ledgerComposeOpen()) return false;
-      if (appScreen !== "dash" || view !== "home" || homeTab !== "ledger") return false;
+      if (!ledgerComposeOpen() || !ledgerOnComposePage()) return false;
       return !!document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
     }
 
-    function ledgerPersistCompose() {
-      try {
-        if (!ledgerComposeOpen() || !ledgerComposeDraft) {
-          sessionStorage.removeItem(LEDGER_COMPOSE_KEY);
-          return;
-        }
-        sessionStorage.setItem(LEDGER_COMPOSE_KEY, JSON.stringify({
-          open: !!ledgerWagerOpen,
-          counterId: ledgerCounterId || null,
-          draft: ledgerComposeDraft,
-        }));
-      } catch (_) { /* private mode */ }
+    function ledgerForgetPersistedCompose() {
+      try { sessionStorage.removeItem(LEDGER_COMPOSE_KEY); } catch (_) { /* private mode */ }
     }
 
-    function ledgerRestorePersistedCompose() {
-      try {
-        const raw = sessionStorage.getItem(LEDGER_COMPOSE_KEY);
-        if (!raw) return;
-        const bag = JSON.parse(raw);
-        if (!bag || !bag.draft || !bag.draft.kind) return;
-        ledgerComposeDraft = bag.draft;
-        ledgerWagerOpen = !!bag.open;
-        ledgerCounterId = bag.counterId || null;
-        if (ledgerWagerOpen || ledgerCounterId) {
-          homeTab = "ledger";
-          view = "home";
-        }
-      } catch (_) { /* ignore */ }
+    function ledgerAbandonCompose() {
+      ledgerWagerOpen = false;
+      ledgerCounterId = null;
+      ledgerClearCompose();
+    }
+
+    function ledgerDropComposeIfLeft() {
+      if (ledgerComposeOpen() && !ledgerOnComposePage()) ledgerAbandonCompose();
     }
 
     function ledgerMaybeRender() {
+      ledgerDropComposeIfLeft();
       if (ledgerComposeOpen()) {
         const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
         if (form) {
@@ -5993,6 +5981,7 @@ const html = `<!DOCTYPE html>
     }
 
     function ledgerParkCompose() {
+      if (!ledgerComposeOpen() || !ledgerOnComposePage()) return;
       const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
       if (!form) return;
       const ae = document.activeElement;
@@ -6082,7 +6071,6 @@ const html = `<!DOCTYPE html>
         if (!next.clock && prev.clock && (merge || focused !== "clock")) next.clock = prev.clock;
       }
       ledgerComposeDraft = next;
-      ledgerPersistCompose();
     }
 
     function ledgerHydrateCompose(form) {
@@ -13707,6 +13695,7 @@ const html = `<!DOCTYPE html>
     }
 
     function render() {
+      ledgerDropComposeIfLeft();
       if (ledgerComposeStayPut()) {
         const live = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
         ledgerCaptureCompose(live, { merge: true });
@@ -15401,11 +15390,9 @@ const html = `<!DOCTYPE html>
     });
     // App boot: account gate → league home → dashboard. The meter only loads after a league
     // is selected. Vote tallies still load after paint when we enter a ready league.
-    ledgerRestorePersistedCompose();
-    window.addEventListener("beforeunload", function () {
-      if (!ledgerComposeOpen()) return;
-      ledgerCaptureCompose();
-      ledgerPersistCompose();
+    ledgerForgetPersistedCompose();
+    window.addEventListener("pagehide", function () {
+      ledgerAbandonCompose();
     });
     authLoad();
     const inviteParam = (params.get("invite") || "").trim();
@@ -15515,7 +15502,6 @@ const html = `<!DOCTYPE html>
           if (reloaded) return;
           try {
             if (typeof ledgerComposeOpen === "function" && ledgerComposeOpen()) {
-              try { ledgerCaptureCompose(); ledgerPersistCompose(); } catch (_) {}
               return;
             }
             if (sessionStorage.getItem("cuckle.swReloaded") === "1") return;
@@ -16845,8 +16831,13 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerMaybeRender(", true],
     ["function ledgerComposeStayPut(", true],
     ["function ledgerHydrateCompose(", true],
-    ["function ledgerPersistCompose(", true],
-    ["function ledgerRestorePersistedCompose(", true],
+    ["function ledgerAbandonCompose(", true],
+    ["function ledgerOnComposePage(", true],
+    ["function ledgerDropComposeIfLeft(", true],
+    ["function ledgerForgetPersistedCompose(", true],
+    ["function ledgerPersistCompose(", false],
+    ["function ledgerRestorePersistedCompose(", false],
+    ["sessionStorage.setItem(LEDGER_COMPOSE_KEY", false],
     ["cuckle.ledger.compose.v1", true],
     ["function ledgerSendLabel(", true],
     ["ledgerComposeDraft", true],

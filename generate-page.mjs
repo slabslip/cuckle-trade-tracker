@@ -1480,8 +1480,22 @@ const html = `<!DOCTYPE html>
       background: rgba(224, 180, 76, 0.32);
       color: transparent;
     }
-    .lc-desc-ghost { color: var(--dim); font-weight: 400; }
     .wager-team-tag { color: var(--lh-gold, #e0b44c); font-weight: 650; }
+    .wager-clock-tag { color: #7ad1ff; font-weight: 650; }
+    .lc-desc-hi .news-player,
+    .lc-desc-hi .wager-team-tag,
+    .lc-desc-hi .wager-clock-tag,
+    .lc-desc-hi .news-pos-tag,
+    .lc-desc-hi .wager-pos-tag {
+      display: inline; font-size: inherit; font-weight: 650;
+      letter-spacing: 0; vertical-align: baseline; margin: 0; opacity: 1;
+    }
+    .lc-desc-hi .wager-pos-tag.pos-qb { color: var(--pos-qb); }
+    .lc-desc-hi .wager-pos-tag.pos-rb { color: var(--pos-rb); }
+    .lc-desc-hi .wager-pos-tag.pos-wr { color: var(--pos-wr); }
+    .lc-desc-hi .wager-pos-tag.pos-te { color: var(--pos-te); }
+    .lc-desc-hi .wager-pos-tag.pos-k { color: var(--pos-k); }
+    .lc-desc-hi .wager-pos-tag.pos-def { color: var(--pos-def); }
     .lc-desc-sugs {
       display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0;
     }
@@ -2891,7 +2905,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260905125636";
+    const DATA_V = "ledger20260905130000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6805,12 +6819,19 @@ const html = `<!DOCTYPE html>
       { abbr: "WAS", display: "The Washington Commanders", names: ["the washington commanders", "washington commanders", "washington", "commanders", "was"] },
     ];
     const LEDGER_POS_WORDS = [
-      { key: "QB", slug: "qb", names: ["qb", "qb1", "qb2", "quarterback"] },
-      { key: "RB", slug: "rb", names: ["rb", "rb1", "rb2", "rb3", "running back"] },
-      { key: "WR", slug: "wr", names: ["wr", "wr1", "wr2", "wr3", "wide receiver"] },
-      { key: "TE", slug: "te", names: ["te", "te1", "te2", "tight end"] },
+      { key: "QB", slug: "qb", names: ["qb", "qb1", "qb2", "qb 1", "qb 2", "quarterback"] },
+      { key: "RB", slug: "rb", names: ["rb", "rb1", "rb2", "rb3", "rb 1", "rb 2", "running back"] },
+      { key: "WR", slug: "wr", names: ["wr", "wr1", "wr2", "wr3", "wr 1", "wr 2", "wr 3", "wide receiver"] },
+      { key: "TE", slug: "te", names: ["te", "te1", "te2", "te 1", "tight end"] },
       { key: "K", slug: "k", names: ["k", "k1", "kicker"] },
       { key: "DEF", slug: "def", names: ["def", "dst", "defense"] },
+    ];
+    const LEDGER_CLOCK_WORDS = [
+      { clock: "season", display: "this season", names: ["this season", "the season", "this nfl season"] },
+      { clock: "this_week", display: "this week", names: ["this week", "this nfl week"] },
+      { clock: "next_week", display: "next week", names: ["next week", "next nfl week"] },
+      { clock: "regular", display: "regular season", names: ["regular season", "through regular season"] },
+      { clock: "playoffs", display: "playoffs", names: ["playoffs", "playoffs only"] },
     ];
     const LEDGER_PLAYER_ALIASES = [
       ["zeke", "Ezekiel Elliott"],
@@ -6938,6 +6959,24 @@ const html = `<!DOCTYPE html>
       const phrase = m[1];
       return { start: n - phrase.length, end: n, text: phrase };
     }
+    function ledgerDescBestPhrase(text, caret) {
+      const full = ledgerDescPhraseAt(text, caret);
+      if (!full.text) return { phrase: full, picks: [] };
+      const words = String(full.text).split(/\\s+/).filter(Boolean);
+      let best = { phrase: full, picks: ledgerDescSuggest(full.text) };
+      if (ledgerDescConfident(best.picks)) return best;
+      for (let n = words.length - 1; n >= 1; n--) {
+        const bit = words.slice(-n).join(" ");
+        const start = full.end - bit.length;
+        const phrase = { start: start, end: full.end, text: bit };
+        const picks = ledgerDescSuggest(bit);
+        if (picks.length && (!best.picks.length || picks[0].score > (best.picks[0].score || 0))) {
+          best = { phrase: phrase, picks: picks };
+        }
+        if (ledgerDescConfident(picks)) return { phrase: phrase, picks: picks };
+      }
+      return best;
+    }
     function ledgerDescSuggest(phrase) {
       const q = ledgerNorm(phrase);
       if (!q || q.length < 2) return [];
@@ -6953,9 +6992,22 @@ const html = `<!DOCTYPE html>
           display: row.display,
           pos: row.pos || "",
           slug: row.slug || (row.pos ? newsPosSlug(row.pos) : ""),
+          clock: row.clock || "",
           score: score,
         });
       };
+      LEDGER_CLOCK_WORDS.forEach((c) => {
+        const disp = ledgerNorm(c.display);
+        if (disp === q || disp.indexOf(q) === 0) {
+          push({ kind: "clock", display: c.display, clock: c.clock, slug: "clock" }, disp === q ? 390 : 270);
+        }
+        for (let i = 0; i < c.names.length; i++) {
+          const nm = c.names[i];
+          if (nm === q || (q.length >= 4 && nm.indexOf(q) === 0)) {
+            push({ kind: "clock", display: c.display, clock: c.clock, slug: "clock" }, nm === q ? 385 : 250);
+          }
+        }
+      });
       idx.pos.forEach((p) => {
         for (let i = 0; i < p.names.length; i++) {
           const nm = p.names[i];
@@ -6981,6 +7033,7 @@ const html = `<!DOCTYPE html>
         else if (p.lastNorm && p.lastNorm.length >= 4 && (p.lastNorm === q || p.lastNorm.indexOf(q) === 0)) {
           const uniq = idx.lastCount[p.lastNorm] === 1;
           if (p.lastNorm === q && uniq) score = 340 + (p.rostered ? 40 : 0);
+          else if (q.length >= 5 && uniq) score = 330 + (p.rostered ? 20 : 0);
           else if (q.length >= 4) score = 200 + (p.rostered ? 30 : 0) - Math.min(20, p.rank / 50);
         }
         if (aliasFull && ledgerNorm(aliasFull) === p.key) score = Math.max(score, 370);
@@ -6989,13 +7042,30 @@ const html = `<!DOCTYPE html>
       out.sort((a, b) => b.score - a.score || a.display.localeCompare(b.display));
       return out.slice(0, 6);
     }
-    function ledgerDescHighlightHtml(text, ghost) {
+    function ledgerDescOpenWord(text, caret) {
+      const raw = String(text || "");
+      const n = Math.max(0, Math.min(raw.length, Number(caret) || 0));
+      const left = raw.slice(0, n);
+      const m = left.match(/[A-Za-z0-9''\\u2019.-]+$/);
+      if (!m) return null;
+      const start = n - m[0].length;
+      const after = raw.charAt(n);
+      if (after && /[A-Za-z0-9''\\u2019.-]/.test(after)) {
+        let end = n;
+        while (end < raw.length && /[A-Za-z0-9''\\u2019.-]/.test(raw.charAt(end))) end++;
+        return { start: start, end: end };
+      }
+      if (!after || !/[\\s,.;:!?)]/.test(after)) return { start: start, end: n };
+      return null;
+    }
+    function ledgerDescHighlightHtml(text, open) {
       const raw = String(text || "");
       if (!raw) return "";
       const idx = ledgerEnsureEntityIndex();
       const hits = [];
       const addHit = function (start, end, cls) {
         if (start < 0 || end <= start) return;
+        if (open && !(end <= open.start || start >= open.end)) return;
         for (let i = 0; i < hits.length; i++) {
           if (!(end <= hits[i].start || start >= hits[i].end)) return;
         }
@@ -7012,14 +7082,23 @@ const html = `<!DOCTYPE html>
         findAll(p.display, slug);
         if (p.last && p.last.length >= 4 && idx.lastCount[p.lastNorm] === 1) findAll(p.last, slug);
       });
+      Object.keys(idx.aliasTo).forEach((alias) => {
+        const full = idx.aliasTo[alias];
+        const p = idx.players.find((row) => row.key === ledgerNorm(full));
+        if (p && alias.length >= 3) findAll(alias, "news-player pos-" + newsPosSlug(p.pos));
+      });
       idx.teams.forEach((t) => {
         findAll(t.display, "wager-team-tag");
         t.names.forEach((nm) => {
           if (nm.length >= 4 && nm.indexOf("the ") !== 0) findAll(nm, "wager-team-tag");
         });
       });
-      raw.replace(/\\b((?:QB|RB|WR|TE|K|DEF|DST)\\d?)\\b/gi, function (m, _g, off) {
-        addHit(off, off + m.length, "news-pos-tag pos-" + newsPosSlug(m.replace(/\\d+$/, "")));
+      LEDGER_CLOCK_WORDS.forEach((c) => {
+        findAll(c.display, "wager-clock-tag");
+        c.names.forEach((nm) => { if (nm.length >= 4) findAll(nm, "wager-clock-tag"); });
+      });
+      raw.replace(/\\b((?:QB|RB|WR|TE|K|DEF|DST)(?:\\s*\\d)?)\\b/gi, function (m, _g, off) {
+        addHit(off, off + m.length, "wager-pos-tag pos-" + newsPosSlug(m.replace(/[\\s\\d]+$/g, "")));
         return m;
       });
       hits.sort((a, b) => a.start - b.start);
@@ -7031,20 +7110,38 @@ const html = `<!DOCTYPE html>
         at = h.end;
       });
       html += esc(raw.slice(at));
-      if (ghost) html += '<span class="lc-desc-ghost">' + esc(ghost) + "</span>";
       return html;
     }
-    function ledgerDescGhostFor(phrase, top) {
-      if (!top || !phrase) return "";
-      const typed = String(phrase);
-      const disp = String(top.display);
-      if (disp.toLowerCase().indexOf(typed.toLowerCase()) === 0) return disp.slice(typed.length);
-      if (top.kind === "player") {
-        const parts = disp.split(/\\s+/);
-        const last = parts[parts.length - 1] || "";
-        if (last.toLowerCase().indexOf(typed.toLowerCase()) === 0) return last.slice(typed.length);
-      }
-      return "";
+    function ledgerDescConfident(picks) {
+      if (!picks || !picks.length) return false;
+      const top = picks[0];
+      const next = picks[1];
+      if (next && top.score - next.score < 45) return false;
+      if (top.kind === "clock") return top.score >= 300;
+      if (top.kind === "pos") return top.score >= 380;
+      return top.score >= 320;
+    }
+    function ledgerSyncClockFromDesc(form) {
+      if (!form) return;
+      const ta = form.querySelector("textarea[name=desc]");
+      if (!ta) return;
+      const raw = String(ta.value || "");
+      let bestAt = -1;
+      let kind = "";
+      LEDGER_CLOCK_WORDS.forEach((c) => {
+        c.names.concat([c.display]).forEach((nm) => {
+          if (!nm) return;
+          const re = new RegExp("\\\\b" + ledgerEscRe(nm) + "\\\\b", "gi");
+          let m;
+          while ((m = re.exec(raw))) {
+            if (m.index >= bestAt) {
+              bestAt = m.index;
+              kind = c.clock;
+            }
+          }
+        });
+      });
+      if (kind) ledgerApplyClockKind(form, kind);
     }
     function ledgerPaintDescBox(form) {
       if (!form) return;
@@ -7054,44 +7151,35 @@ const html = `<!DOCTYPE html>
       if (!ta || !hi) return;
       if (!ktcBySleeper && typeof ensureKtcBook === "function") ledgerWarmDescIndex();
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
-      const phrase = ledgerDescPhraseAt(ta.value, caret);
-      const picks = phrase.text ? ledgerDescSuggest(phrase.text) : [];
-      const top = picks[0] || null;
-      const ghost = (document.activeElement === ta) ? ledgerDescGhostFor(phrase.text, top) : "";
-      ledgerDescPending = (top && phrase.text)
-        ? { start: phrase.start, end: phrase.end, display: top.display, kind: top.kind }
-        : null;
-      hi.innerHTML = ledgerDescHighlightHtml(ta.value, ghost);
+      const open = (document.activeElement === ta) ? ledgerDescOpenWord(ta.value, caret) : null;
+      const box = ta.closest(".lc-desc-box");
+      if (box) box.classList.remove("is-desc-ghost");
+      ledgerDescPending = null;
+      hi.innerHTML = ledgerDescHighlightHtml(ta.value, open);
       hi.scrollTop = ta.scrollTop;
       if (sugs) {
-        if (!picks.length || document.activeElement !== ta) {
-          sugs.hidden = true;
-          sugs.innerHTML = "";
-        } else {
-          sugs.hidden = false;
-          sugs.innerHTML = picks.map((p) => {
-            const cls = p.kind === "player"
-              ? ("chip news-player pos-" + (p.slug || "oth"))
-              : p.kind === "pos"
-                ? ("chip news-pos-tag pos-" + (p.slug || "oth"))
-                : "chip wager-team-tag";
-            return '<button type="button" class="' + cls + '" data-ledger-desc-pick="1" data-val="'
-              + esc(p.display) + '">' + esc(p.display) + "</button>";
-          }).join("");
-        }
+        sugs.hidden = true;
+        sugs.innerHTML = "";
       }
+      ledgerSyncClockFromDesc(form);
     }
-    function ledgerAcceptDescSuggest(form, display) {
+    function ledgerAcceptDescSuggest(form, display, extra) {
       const ta = form && form.querySelector("textarea[name=desc]");
       if (!ta) return;
       const caret = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
-      const phrase = ledgerDescPhraseAt(ta.value, caret);
+      const best = ledgerDescBestPhrase(ta.value, caret);
+      const phrase = best.phrase;
       const next = display || (ledgerDescPending && ledgerDescPending.display);
       if (!next || !phrase.text) return;
+      if (ledgerNorm(phrase.text) === ledgerNorm(next) && !extra) {
+        ledgerPaintDescBox(form);
+        return;
+      }
       const before = ta.value.slice(0, phrase.start);
       const after = ta.value.slice(phrase.end);
-      ta.value = before + next + after;
-      const put = before.length + next.length;
+      const add = extra ? extra : "";
+      ta.value = before + next + add + after;
+      const put = before.length + next.length + add.length;
       try { ta.setSelectionRange(put, put); } catch (_) {}
       ledgerDescPending = null;
       ledgerPaintDescBox(form);
@@ -14628,15 +14716,6 @@ const html = `<!DOCTYPE html>
     });
 
     document.getElementById("app").addEventListener("keydown", (e) => {
-      const descTa = e.target && e.target.closest && e.target.closest("textarea[data-ledger-desc]");
-      if (descTa && (e.key === "Tab" || e.key === "Enter" || e.key === "ArrowRight") && ledgerDescPending) {
-        const atEnd = descTa.selectionStart === descTa.selectionEnd && descTa.selectionEnd === ledgerDescPending.end;
-        if (atEnd && (e.key === "Tab" || e.key === "Enter" || (e.key === "ArrowRight" && descTa.selectionEnd === descTa.value.length))) {
-          e.preventDefault();
-          ledgerAcceptDescSuggest(descTa.form || descTa.closest("form"), ledgerDescPending.display);
-          return;
-        }
-      }
       if (e.key === "Escape" && (voteSheetTx || voteConfirmTx)) {
         e.preventDefault();
         voteSheetTx = null;
@@ -17258,6 +17337,13 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["The San Francisco 49ers", true],
     ["data-ledger-desc-hi", true],
     ["De'Zhaun Stribling", true],
+    ["function ledgerDescBestPhrase(", true],
+    ["function ledgerDescOpenWord(", true],
+    ["function ledgerDescGhostParts(", false],
+    ["function ledgerSyncClockFromDesc(", true],
+    ["wager-clock-tag", true],
+    ["wager-pos-tag", true],
+    ["this season", true],
     ["They get the other side.", true],
     ["Send to Them", false],
     ["Them gets the other side.", false],

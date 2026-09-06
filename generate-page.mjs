@@ -1542,22 +1542,22 @@ const html = `<!DOCTYPE html>
       width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%;
     }
     .cos-titles {
-      display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px;
+      display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px;
     }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
       border: 1px solid var(--line); border-radius: 8px; padding: 0;
-      background: #12151c; overflow: hidden; min-height: 34px; height: 34px;
+      background: #12151c; overflow: hidden; min-height: 48px; height: 48px;
       position: relative; text-align: left;
     }
     button.cos-title.is-locked { opacity: 0.45; }
     button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
-      display: block; width: 100%; height: 34px; object-fit: cover; object-position: center;
+      display: block; width: 100%; height: 48px; object-fit: cover; object-position: center 42%;
     }
     .cos-title-fallback {
-      display: flex; align-items: center; justify-content: center; height: 34px;
+      display: flex; align-items: center; justify-content: center; height: 48px;
       padding: 0 10px; font-size: 0.72rem; font-weight: 750; letter-spacing: 0.05em;
       text-transform: uppercase; color: #f0e6cc;
       background: linear-gradient(90deg, #1c2230, #3a4558 50%, #1c2230);
@@ -14935,8 +14935,8 @@ const html = `<!DOCTYPE html>
       const path = cosmeticsArtPath("title", c.id);
       const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0 && COS_TITLE_ART.has(c.id);
       if (path) {
-        return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-          + '" alt="' + esc(c.name) + '" width="768" height="34" loading="lazy" decoding="async" />';
+      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+        + '" alt="' + esc(c.name) + '" width="768" height="48" loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";

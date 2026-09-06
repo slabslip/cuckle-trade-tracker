@@ -1510,8 +1510,8 @@
       background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
-    /* Titles & Emblems — banner art is 840×297. Keep that ratio and
-       object-fit:contain so the full design + words show edge-to-edge. */
+    /* Titles & Emblems — title banners keep their natural art ratio (fill width,
+       never crop). Emblem marks sit in a readable 4-col grid. */
     .cos-plate {
       margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
@@ -1519,13 +1519,13 @@
     }
     .cos-plate-banner {
       flex: 1 1 auto; min-width: 0; width: 100%;
-      aspect-ratio: 840 / 297; height: auto; max-height: none;
+      height: auto; max-height: none;
       object-fit: contain; object-position: center;
       display: block; background: #1a1d26;
     }
     .cos-plate-banner.is-text {
       display: flex; align-items: center; justify-content: center;
-      aspect-ratio: 840 / 297; height: auto;
+      min-height: 72px; height: auto;
       padding: 0 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.04em;
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
@@ -1620,7 +1620,7 @@
     }
     .cos-profile-plate .cos-plate-banner,
     .cos-profile-plate .cos-plate-banner.is-text {
-      aspect-ratio: 840 / 297; height: auto;
+      height: auto; min-height: 56px;
     }
     .cos-profile-plate .cos-plate-emblem {
       width: clamp(44px, 16%, 60px); padding: 4px;
@@ -1649,7 +1649,7 @@
       width: 44px; height: 44px;
     }
     .cos-sheet-banner {
-      width: 100%; height: auto; aspect-ratio: 840 / 297;
+      width: 100%; height: auto;
       object-fit: contain; object-position: center;
       border-radius: 8px; margin: 0 0 10px;
       display: block; background: #12151c;
@@ -3307,7 +3307,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906235600";
+    const DATA_V = "news20260906235400";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14949,7 +14949,7 @@
       const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0 && COS_TITLE_ART.has(c.id);
       if (path) {
       return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="840" height="297" loading="lazy" decoding="async" />';
+        + '" alt="' + esc(c.name) + '" width="840" loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";

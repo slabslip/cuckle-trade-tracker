@@ -216,8 +216,10 @@ on a hypothetical and do not change the number.
 ### 3c. Titles and Emblems
 
 Profile barracks (`?view=cosmetics`). Shared catalog of 25. Equip one title and one emblem.
-Locked shows the requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics
-paint across the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+Championship titles outrank every other award in sort and prestige. Locked shows the
+requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics paint across
+the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
+[`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door
 into a seat (header picker stays gone — §2).

@@ -4,7 +4,8 @@
 **On your roster** news, 2-team calculator on the today / `even` book, 25 titles/emblems + barracks.
 
 Canonical product rules: [`docs/UI_SDD.md`](../UI_SDD.md) §1–3c, [`docs/VALUE_SDD.md`](../VALUE_SDD.md) §12,
-[`docs/COSMETICS_SDD.md`](../COSMETICS_SDD.md), [`docs/PRODUCT.md`](../PRODUCT.md).
+[`docs/COSMETICS_SDD.md`](../COSMETICS_SDD.md), [`docs/PRODUCT.md`](../PRODUCT.md),
+[`docs/plans/awards_titles_emblems.md`](./awards_titles_emblems.md).
 
 This file is the archive of the Home digest working paper. Law lives in `docs/`. Older artifact
 plans stay as history; do not paste them here.
@@ -26,10 +27,11 @@ plans stay as history; do not paste them here.
   `even` (flatten + 40/60 KTC) + `applyVa`. Votes never enter the number.
 - Residual + reserved vote-nudge are specified in VALUE / VOTES / PRODUCT — not built.
 - Barracks `?view=cosmetics`: 25 shared titles/emblems, unlock from history, equip 1 + 1.
-  Flex across the app is later.
+  Championship ladder is the top of the catalog (see awards plan). Flex across the app is later.
 - Existing CSS tokens only. Votes stay opinion-only.
 
 ## Parked (own later pass)
 
 Oracle, waiver AI, playoff-odds, marketplace + accept odds, decision journal, push,
-Flutter rewrite, cosmetics painted on names, Manager DNA chat.
+Flutter rewrite, cosmetics painted on names, Manager DNA chat, weekly/waiver grind awards
+(see [`awards_titles_emblems.md`](./awards_titles_emblems.md)).

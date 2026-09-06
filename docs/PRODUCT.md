@@ -2,7 +2,7 @@
 
 **Role:** The single **want** source for this tracker. Spine, who “you” are, clocks, in/out, build order, CUT/PARKED.
 
-**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Titles/emblems → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
+**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Titles/emblems → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md). Award ladder + parked grind → [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
 
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
@@ -118,6 +118,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - League residual on the calc book; accept-odds / suggested counter; public/private marketplace.
 - Equipped title/emblem painted on names (header, news, trade cards, ledger, smack).
 - League Oracle, waiver hot sheet, lineup-vs-optimal, playoff-odds engine, push “3 actions today”.
+- Expanded award grind (weekly scores, legal lineups, waiver throne, streaks). Championship
+  ladder stays the top of [`COSMETICS_SDD.md`](COSMETICS_SDD.md); the rest is
+  [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md) until those engines exist.
 
 ---
 
@@ -129,7 +132,8 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 `generate-page`.
 
 Home digest + calc + barracks archive: [`plans/home_digest.md`](plans/home_digest.md).
-Titles/emblems law: [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
+Titles/emblems law: [`COSMETICS_SDD.md`](COSMETICS_SDD.md). Award expansion:
+[`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
 
 `apply-value-adjust.mjs` is not optional. It owns the today blend, the Value Adjustment, the trade
 boards and `marks.json`, so a build without it ships the flatten-only book. `title-path.mjs` writes

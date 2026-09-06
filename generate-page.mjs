@@ -1432,6 +1432,7 @@ const html = `<!DOCTYPE html>
       padding: 8px 12px;
       max-height: min(52vh, 400px);
       overflow-y: auto;
+      overflow-anchor: none;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
@@ -1447,14 +1448,15 @@ const html = `<!DOCTYPE html>
     }
     .calc-group:first-child { padding-top: 2px; }
     .calc-empty { font-size: 0.78rem; color: var(--dim); padding: 6px 4px 8px; }
-    button.calc-hit {
+    .calc-hit {
       appearance: none; font: inherit; color: var(--text); background: var(--bg);
       border: 1px solid var(--line); border-radius: 10px; width: 100%;
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
+      box-sizing: border-box; -webkit-user-select: none; user-select: none;
     }
-    button.calc-hit:last-child { margin-bottom: 0; }
-    button.calc-hit.is-on {
+    .calc-hit:last-child { margin-bottom: 0; }
+    .calc-hit.is-on {
       border-color: #e0b44c;
       box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45);
       background: #1c1a14;
@@ -3174,7 +3176,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcRosterRefresh20260906140000";
+    const DATA_V = "calcRosterStay20260906134500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3211,6 +3213,20 @@ const html = `<!DOCTYPE html>
     // League-home top tabs: home (digest) | teams | ledger | history.
     let homeTab = "home";
     let calcBook = null;
+    // Stale calculator.json still shipped raw Sleeper ids as the row title + "Player".
+    const CALC_ID_NAMES = {
+      "13264": { name: "Dohnte Meyers", pos: "WR", team: "CIN" },
+      "11237": { name: "Jacob Saylors", pos: "RB", team: "DET" },
+      "13425": { name: "Jalon Daniels", pos: "QB", team: "TB" },
+      "2078": { name: "Odell Beckham", pos: "WR", team: "NYG" },
+      "8116": { name: "Pierre Strong", pos: "RB", team: "GB" },
+      "13602": { name: "Jack Strand", pos: "QB", team: "ATL" },
+      "13726": { name: "Camden Brown", pos: "WR", team: "DAL" },
+      "13394": { name: "Josh Cameron", pos: "WR", team: "JAX" },
+      "13199": { name: "Montorie Foster", pos: "WR", team: "SEA" },
+      "13434": { name: "Will Kacmarek", pos: "TE", team: "MIA" },
+      "13324": { name: "Matt Hibner", pos: "TE", team: "BAL" },
+    };
     let calcSeatA = "";
     let calcSeatB = "";
     let calcSide = "a";
@@ -4564,6 +4580,8 @@ const html = `<!DOCTYPE html>
       } catch (err) { voteBook = null; }
       try {
         calcBook = calcRaw && calcRaw.v === 1 ? calcRaw : null;
+        calcApplyNameMap();
+        calcRepairNames();
       } catch (err) { calcBook = null; }
       try {
         cosmeticsBook = cosRaw && cosRaw.v === 1 && Array.isArray(cosRaw.catalog) ? cosRaw : null;
@@ -14262,6 +14280,61 @@ const html = `<!DOCTYPE html>
       return (book.players || []).concat(book.picks || []).find((a) => a.id === id) || null;
     }
 
+    function calcLooksLikeId(name) {
+      return !name || /^\d+$/.test(String(name));
+    }
+
+    function calcValueNum(a) {
+      const n = Number(a && a.value);
+      return Number.isFinite(n) ? n : -1;
+    }
+
+    function calcDisplayName(a) {
+      if (!a) return "";
+      if (!calcLooksLikeId(a.name)) return a.name;
+      const sid = String(a.sleeper_id || a.name || "");
+      const known = CALC_ID_NAMES[sid];
+      if (known && known.name) return known.name;
+      if (a.label && !calcLooksLikeId(a.label)) return a.label;
+      return "";
+    }
+
+    function calcApplyNameMap() {
+      const book = calcBook;
+      if (!book || !Array.isArray(book.players)) return;
+      for (let i = 0; i < book.players.length; i++) {
+        const p = book.players[i];
+        const sid = String(p.sleeper_id || "");
+        const known = CALC_ID_NAMES[sid];
+        if (!known) continue;
+        if (calcLooksLikeId(p.name)) p.name = known.name;
+        if (!p.pos && known.pos) p.pos = known.pos;
+        if (!p.team && known.team) p.team = known.team;
+      }
+    }
+
+    async function calcRepairNames() {
+      const book = calcBook;
+      if (!book || !Array.isArray(book.players)) return;
+      calcApplyNameMap();
+      const need = book.players.filter((p) => calcLooksLikeId(p.name) && p.sleeper_id);
+      if (!need.length) return;
+      let changed = false;
+      for (let i = 0; i < need.length; i++) {
+        const p = need[i];
+        try {
+          const res = await fetch("https://api.sleeper.app/v1/players/nfl/" + encodeURIComponent(p.sleeper_id));
+          if (!res.ok) continue;
+          const row = await res.json();
+          const name = row && (row.full_name || [row.first_name, row.last_name].filter(Boolean).join(" "));
+          if (name) { p.name = name; changed = true; }
+          if (row && !p.pos) p.pos = row.position || (row.fantasy_positions && row.fantasy_positions[0]) || p.pos;
+          if (row && !p.team && row.team) p.team = row.team;
+        } catch (err) { /* leave the row; map already tried */ }
+      }
+      if (changed && view === "calc") render();
+    }
+
     function calcFmt(n) {
       if (n == null || Number.isNaN(n)) return "—";
       return Math.round(n).toLocaleString();
@@ -14358,18 +14431,18 @@ const html = `<!DOCTYPE html>
       });
       if (uid) {
         return pool.slice().sort((a, b) => {
-          return (Number(b.value) || 0) - (Number(a.value) || 0)
-            || String(a.name || "").localeCompare(String(b.name || ""));
+          return calcValueNum(b) - calcValueNum(a)
+            || String(calcDisplayName(a) || a.name || "").localeCompare(String(calcDisplayName(b) || b.name || ""));
         });
       }
       return pool.slice().sort((a, b) => {
-        const na = String(a.name || "").toLowerCase();
-        const nb = String(b.name || "").toLowerCase();
+        const na = String(calcDisplayName(a) || a.name || "").toLowerCase();
+        const nb = String(calcDisplayName(b) || b.name || "").toLowerCase();
         const sa = na.indexOf(needle) === 0 ? 0 : na.indexOf(needle) >= 0 ? 1 : 2;
         const sb = nb.indexOf(needle) === 0 ? 0 : nb.indexOf(needle) >= 0 ? 1 : 2;
         if (sa !== sb) return sa - sb;
-        return (Number(b.value) || 0) - (Number(a.value) || 0)
-          || String(a.name || "").localeCompare(String(b.name || ""));
+        return calcValueNum(b) - calcValueNum(a)
+          || String(na).localeCompare(String(nb));
       });
     }
 
@@ -14482,9 +14555,23 @@ const html = `<!DOCTYPE html>
 
     function calcRestoreHitsScroll(side) {
       const top = side === "b" ? calcHitsScrollB : calcHitsScrollA;
-      queueMicrotask(() => {
+      const apply = () => {
         const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
         if (el) el.scrollTop = top;
+      };
+      apply();
+      queueMicrotask(apply);
+    }
+
+    function calcBindHits() {
+      ["a", "b"].forEach((side) => {
+        const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
+        if (!el) return;
+        el.addEventListener("scroll", () => calcRememberHitsScroll(side), { passive: true });
+        el.addEventListener("touchstart", () => {
+          const ae = document.activeElement;
+          if (ae && el.contains(ae) && ae !== el && ae.blur) ae.blur();
+        }, { passive: true });
       });
     }
 
@@ -14524,10 +14611,12 @@ const html = `<!DOCTYPE html>
       const attr = mode === "toggle"
         ? ' data-calc-toggle="' + esc(a.id) + '" data-calc-to="' + side + '"'
         : ' data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '"';
-      return '<button type="button" class="calc-hit' + (on ? " is-on" : "") + '"' + attr + ">"
-        + '<span class="calc-hit-name">' + esc(a.name)
-        + '<span class="calc-hit-meta">' + esc(calcMeta(a, showOwner) || (a.kind === "pick" ? "Pick" : "Player")) + "</span></span>"
-        + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></button>";
+      const name = calcDisplayName(a) || a.name || "";
+      const meta = calcMeta(a, showOwner) || (a.kind === "pick" || a.pos === "PICK" ? "Pick" : (a.pos || ""));
+      return '<div role="button" tabindex="-1" class="calc-hit' + (on ? " is-on" : "") + '"' + attr + ">"
+        + '<span class="calc-hit-name">' + esc(name)
+        + (meta ? '<span class="calc-hit-meta">' + esc(meta) + "</span>" : "") + "</span>"
+        + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></div>";
     }
 
     function calcHitsHtml(uid, q, open, side) {
@@ -15717,6 +15806,11 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
+      const calcPageY = (view === "calc" && !focusNext) ? window.scrollY : 0;
+      if (view === "calc") {
+        calcRememberHitsScroll("a");
+        calcRememberHitsScroll("b");
+      }
       app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml() + voteConfirmHtml();
       ledgerUnparkCompose();
       ledgerRememberCompose();
@@ -15724,6 +15818,12 @@ const html = `<!DOCTYPE html>
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
+      }
+      if (view === "calc") {
+        calcRestoreHitsScroll("a");
+        calcRestoreHitsScroll("b");
+        calcBindHits();
+        if (calcPageY) window.scrollTo(0, calcPageY);
       }
       // A new screen puts focus on its own heading and starts at the top, so a keyboard or a
       // screen reader lands on the new content instead of holding the old screen's place.
@@ -17661,7 +17761,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v206-ledger-ptr";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v207-calc-roster";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -17742,13 +17842,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v206-ledger-ptr")) {
+  || !html.includes("chuckle-shell-v207-calc-roster")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v206-ledger-ptr")
+  || !swSrc.includes("chuckle-shell-v207-calc-roster")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -19896,8 +19996,13 @@ if (!inline.includes("calcOpenA")
   || inline.includes("Draft picks") || inline.includes('calc-group">Players')
   || !inline.includes("function calcHitsHtml(") || !inline.includes("function calcAssetNeedle(")
   || !fnSrc("calcAssetsForSeat").includes("seen.has(a.id)")
-  || !fnSrc("calcAssetsForSeat").includes("(Number(b.value) || 0) - (Number(a.value) || 0)")) {
-  throw new Error("calc team roster must be one unique list by today value, high first");
+  || !inline.includes("function calcValueNum(")
+  || !fnSrc("calcAssetsForSeat").includes("calcValueNum(b) - calcValueNum(a)")
+  || !inline.includes("function calcDisplayName(") || !inline.includes("CALC_ID_NAMES")
+  || !inline.includes("overflow-anchor: none")
+  || !inline.includes("function calcBindHits(")
+  || !fnSrc("render").includes('calcRestoreHitsScroll("a")')) {
+  throw new Error("calc team roster must stay scrolled, hide raw ids, and sort by today value");
 }
 {
   const sideAt = inline.indexOf("function calcSideHtml(");

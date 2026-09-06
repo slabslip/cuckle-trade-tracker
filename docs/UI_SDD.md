@@ -206,7 +206,8 @@ With no team, search stays on: typing players or picks searches the whole today 
 (research — owner in the meta). Choosing a team **drops the search bar** and opens a
 **self-contained scroll list** of that seat’s remaining roster plus still-held draft picks —
 **one list, highest today value first**, no second Players / Draft picks grouping, no
-duplicate rows. Every row shows the today value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
+duplicate rows, no raw Sleeper ids labeled “Player”. The pane keeps its scroll through
+re-renders; a team change starts at the top. Every row shows the today value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
 the highlighted set to that side and closes the list. **Close** dismisses without adding.
 **Add from roster** reopens it. It does not wipe pieces already on that side. Selected
 assets are rows (name, pos/team, value, remove). Compare bar + favor copy + closest leftover

@@ -1379,13 +1379,20 @@ const html = `<!DOCTYPE html>
     }
     button.your3-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.your3-row:last-child { margin-bottom: 0; }
-    .home-news { margin: 0 0 16px; }
-    .home-news-h {
+    .home-cos { margin: 0 0 16px; }
+    .home-cos-h {
       margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
     }
-    .home-news .news-pullup-card { margin: 0 0 10px; }
-    .home-news .news-pullup-card:last-child { margin-bottom: 0; }
+    button.home-cos-door {
+      appearance: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px 14px; min-height: 64px;
+    }
+    button.home-cos-door strong { display: block; font-weight: 750; color: var(--lh-gold, #e0b44c); }
+    button.home-cos-door small { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    button.home-cos-door em { font-style: normal; font-size: 0.72rem; color: var(--dim); flex: 0 0 auto; }
     button.lh-calc-door {
       appearance: none; font: inherit; font-weight: 650; color: #e0b44c;
       display: block; width: 100%; text-align: center; cursor: pointer;
@@ -1513,6 +1520,17 @@ const html = `<!DOCTYPE html>
     button.cos-card.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35); }
     .cos-name { font-weight: 700; display: block; margin: 0 0 4px; }
     .cos-how { font-size: 0.75rem; color: var(--dim); }
+    .seat-title {
+      font-size: 0.72rem; font-weight: 650; color: var(--lh-gold, #e0b44c);
+      letter-spacing: 0.02em;
+    }
+    .seat-emblem {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 16px; padding: 0 4px; margin: 0 0 0 2px;
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.04em;
+      color: var(--bg); background: var(--lh-gold, #e0b44c); border-radius: 4px;
+      vertical-align: 2px;
+    }
     /* Bet Ledger */
     .ledger-sum {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3097,7 +3115,8 @@ const html = `<!DOCTYPE html>
         return n.split(" · ").map((part) => seatLabel(part, opts)).join(" · ");
       }
       const crown = reigningChampName() === n ? " " + CROWN : "";
-      const inner = esc(n) + crown;
+      const cos = typeof seatCosmeticsHtml === "function" ? seatCosmeticsHtml(n) : "";
+      const inner = esc(n) + cos + crown;
       if (!link || !n) return inner;
       return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(n) + '"'
         + ' aria-label="' + esc(n) + '">' + inner + "</span>";
@@ -3160,7 +3179,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906010636";
+    const DATA_V = "homeTitles20260906021000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14136,55 +14155,55 @@ const html = `<!DOCTYPE html>
         + "</section>";
     }
 
-    function newsHitsMyTeam(it) {
-      if (!it || !authSeatId()) return false;
-      const seat = String(authSeatId());
-      const names = [authSeatCanonName(), authSeatName()].filter(Boolean);
-      const hitName = (n) => n && names.some((mine) => String(n) === String(mine));
-      if (it.user_id && String(it.user_id) === seat) return true;
-      if (hitName(it.manager)) return true;
-      if (Array.isArray(it.managers) && it.managers.some(hitName)) return true;
-      if (Array.isArray(it.players)) {
-        for (const p of it.players) {
-          if (!p) continue;
-          if (p.user_id && String(p.user_id) === seat) return true;
-          if (hitName(p.manager)) return true;
-        }
+    function cosmeticsCatalogItem(id) {
+      const book = cosmeticsBook || { catalog: [] };
+      return (book.catalog || []).find((c) => c && c.id === id) || null;
+    }
+
+    function cosmeticsEmblemMark(c) {
+      const n = String((c && c.name) || "").trim();
+      const parts = n.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return n.slice(0, 2).toUpperCase();
+    }
+
+    function cosmeticsMineOn() {
+      if (!authSeatId() || !authSession) return { title: null, emblem: null };
+      const title = cosmeticsEquip.title && cosmeticsUnlocked(cosmeticsEquip.title)
+        ? cosmeticsCatalogItem(cosmeticsEquip.title) : null;
+      const emblem = cosmeticsEquip.emblem && cosmeticsUnlocked(cosmeticsEquip.emblem)
+        ? cosmeticsCatalogItem(cosmeticsEquip.emblem) : null;
+      return { title: title, emblem: emblem };
+    }
+
+    function seatCosmeticsHtml(name) {
+      const mine = authSeatName() || authSeatCanonName();
+      if (!mine || String(name) !== String(mine)) return "";
+      const on = cosmeticsMineOn();
+      let html = "";
+      if (on.title) html += ' <span class="seat-title">' + esc(on.title.name) + "</span>";
+      if (on.emblem) {
+        html += ' <span class="seat-emblem" title="' + esc(on.emblem.name) + '">'
+          + esc(cosmeticsEmblemMark(on.emblem)) + "</span>";
       }
-      return false;
+      return html;
     }
 
-    /** Rank roster news without touching the value book. Injury is one tag, not the only one. */
-    function newsTeamImportance(it) {
-      const line = String((it && (it.league_line || it.headline || it.note)) || "");
-      const tag = (typeof newsCategoryTagFromLine === "function" ? newsCategoryTagFromLine(line) : "")
-        .toLowerCase();
-      let cat = 30;
-      if (/injury|suspension/.test(tag)) cat = 80;
-      else if (/roster move|depth chart|trade/.test(tag)) cat = 70;
-      else if (/off the field|buzz/.test(tag)) cat = 55;
-      else if (tag) cat = 45;
-      const sev = Number(it && it.severity) || 0;
-      const ageH = (Date.now() - Number((it && it.published) || 0)) / 3600000;
-      const recency = ageH < 24 ? 25 : ageH < 72 ? 15 : ageH < 168 ? 8 : 0;
-      const names = (it && Array.isArray(it.managers) && it.managers.length)
-        ? it.managers : ((it && it.manager) ? [it.manager] : []);
-      const exclusive = names.length === 1 ? 8 : 0;
-      return cat + sev * 2 + recency + exclusive;
-    }
-
-    function homeNewsStoryHtml() {
-      if (!authSeatId() || !authSession) return "";
-      const items = typeof newsItemsLive === "function" ? newsItemsLive() : [];
-      const mine = (items || []).filter(newsHitsMyTeam)
-        .slice()
-        .sort((a, b) => newsTeamImportance(b) - newsTeamImportance(a) || (b.published || 0) - (a.published || 0))
-        .slice(0, 3);
-      if (!mine.length) return "";
-      return '<section class="home-news" aria-label="On your roster">'
-        + '<div class="home-news-h">On your roster</div>'
-        + mine.map((it) => newsPullupItemHtml(newsHeroLine(it))).join("")
-        + "</section>";
+    function homeCosmeticsHtml() {
+      const book = cosmeticsBook || { catalog: [] };
+      const n = (book.catalog || []).length || 25;
+      const signed = !!(authSeatId() && authSession);
+      const map = signed && book.unlocks && authSeatId() ? (book.unlocks[String(authSeatId())] || {}) : {};
+      const got = Object.keys(map).length;
+      const on = signed ? cosmeticsMineOn() : { title: null, emblem: null };
+      const titleLab = on.title ? on.title.name : (signed ? "No title equipped" : "Titles and Emblems");
+      const emblemLab = on.emblem ? on.emblem.name : (signed ? "No emblem equipped" : "Everyone chases the same 25");
+      const meta = signed ? (got + " of " + n + " unlocked") : "Open the barracks";
+      return '<section class="home-cos" aria-label="Titles and Emblems">'
+        + '<div class="home-cos-h">Titles and Emblems</div>'
+        + '<button type="button" class="home-cos-door" data-view="cosmetics">'
+        + '<span><strong>' + esc(titleLab) + "</strong><small>" + esc(emblemLab) + "</small></span>"
+        + "<em>" + esc(meta) + "</em></button></section>";
     }
 
     function calcArmQuiet(ms) {
@@ -14512,9 +14531,9 @@ const html = `<!DOCTYPE html>
           + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
           + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
       };
-      return backChip("Account")
+      return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Everyone chases the same 25. Equip one title and one emblem. Where they show is a later pass.</p>'
+        + '<p class="caption">Everyone chases the same 25. Equip one title and one emblem. They show on your name and on Home.</p>'
         + "<h3>Titles</h3>"
         + '<div class="cos-grid">' + titles.map(card).join("") + "</div>"
         + "<h3>Emblems</h3>"
@@ -14526,7 +14545,7 @@ const html = `<!DOCTYPE html>
       const door = '<button type="button" class="lh-calc-door" data-view="calc">Cuckle trade calculator</button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
-        + homeNewsStoryHtml();
+        + homeCosmeticsHtml();
     }
 
 
@@ -16111,8 +16130,8 @@ const html = `<!DOCTYPE html>
             view = "home";
             setHomeTab("home", { force: true });
           } else if (view === "cosmetics") {
-            view = "account";
-            render();
+            view = "home";
+            setHomeTab("home", { force: true });
           } else clearLeague();
         });
         return;
@@ -17631,8 +17650,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("leagueInProgress must not mount the Recent Trade chip; Your 3 owns the vote");
   }
   if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
-    || !prog.includes("homeNewsStoryHtml()")) {
-    throw new Error("Home digest is Your 3 + Cuckle trade calculator + team news");
+    || !prog.includes("homeCosmeticsHtml()")) {
+    throw new Error("Home digest is Your 3 + Cuckle trade calculator + Titles and Emblems");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -18312,8 +18331,8 @@ if (seatPlaces.filter((p) => p === 1).length !== 1) {
     || seatFn.includes("CROWN + ' '") || /crown \+ esc\(n\)/.test(seatFn)) {
     throw new Error("seatLabel must paint name then crown — no trailing seat flair, no leading crown");
   }
-  if (!seatFn.includes('esc(n) + crown') && !seatFn.includes("esc(n) + crown")) {
-    throw new Error("seatLabel must append the crown after the name");
+  if (!seatFn.includes("esc(n) + cos + crown")) {
+    throw new Error("seatLabel must append equipped cosmetics then the crown after the name");
   }
 }
 {
@@ -19661,15 +19680,20 @@ if (!inline.includes('homeTabAction("home"') || !inline.includes('homeTab = "hom
 if (!inline.includes("function homeTabCanon(")) {
   throw new Error("homeTabCanon must exist");
 }
-if (!inline.includes("function your3Html(") || !inline.includes("function homeNewsStoryHtml(")
+if (!inline.includes("function your3Html(") || !inline.includes("function homeCosmeticsHtml(")
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
-  || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
-  throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
+  || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")
+  || !inline.includes("class=\"home-cos-door\"")) {
+  throw new Error("Home digest must ship Your 3, Cuckle trade calculator, Titles and Emblems, calc, and barracks");
 }
-if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
-  || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")
-  || !inline.includes('class="your3 is-empty"')) {
-  throw new Error("Home in-flow news must be signed-in roster hits; peek stays the latest league item");
+if (inline.includes("On your roster") || inline.includes("function homeNewsStoryHtml(")
+  || inline.includes("function newsHitsMyTeam(")) {
+  throw new Error("Home must not remount On your roster injury/news hits");
+}
+if (!inline.includes("const peekItem = items[0] || null")
+  || !inline.includes('class="your3 is-empty"')
+  || !inline.includes("function seatCosmeticsHtml(")) {
+  throw new Error("News peek stays the latest league item; equipped title/emblem paint on your name");
 }
 if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "calc", lab: "Price a deal"')

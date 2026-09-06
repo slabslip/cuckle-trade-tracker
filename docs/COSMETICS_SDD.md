@@ -1,8 +1,9 @@
 # CuckleChunckle — Titles and Emblems SDD
 
 Shared barracks. Visual only. Unlocks are computed from tape we already have. Equip is a
-profile write. **Where an equipped title or emblem paints** (header, news byline, trade cards,
-ledger, smack) is a later pass — this file does not unlock new chrome.
+profile write. Equipped title and emblem paint on **your** name (`seatLabel`) and on the
+Home **Titles and Emblems** door. Painting other managers’ equipped pair waits on a shared
+store.
 
 Want → [`PRODUCT.md`](./PRODUCT.md). Display chrome → [`UI_SDD.md`](./UI_SDD.md) §3c.
 
@@ -47,8 +48,9 @@ Later triggers (week bombs, FAAB, streaks) reuse these ids. Do not mint a second
 
 ## 3. Barracks
 
-`?view=cosmetics` from Account → **Titles and Emblems**. Two grids. Tap locked → requirement.
-Tap unlocked → receipt + Equip / unequip. Equip **one title** and **one emblem** at a time.
+`?view=cosmetics` from Home or Account → **Titles and Emblems**. Two grids. Tap locked →
+requirement. Tap unlocked → receipt + Equip / unequip. Equip **one title** and **one emblem**
+at a time. They show on your name and on the Home door.
 
 Persist the equipped pair on the signed-in profile. This pass: `localStorage` key
 `cuckle.cosmetics.equip.v1`. Same pattern as votes: page reads, profile writes. Supabase columns
@@ -60,6 +62,6 @@ No themes, no FAAB perk, no calc boost. Visual only.
 
 ## 4. Not this file
 
-- Painting equipped cosmetics on names across the app
+- Painting equipped cosmetics on **other** seats (needs a shared profile store)
 - Art pack, rarity themes, competitive perks
 - Oracle / DNA / weekly engines as new unlock sources

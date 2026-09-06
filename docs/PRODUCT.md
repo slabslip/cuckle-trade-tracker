@@ -24,7 +24,8 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
 4. **Home** is the daily paper (News Feed peek + **Cuckle trade calculator**; signed-in **Your 3**
-   notifications and **On your roster** news — no bag hero, no Recent Trade chip). **Teams** is
+   notifications and **Titles and Emblems** — no bag hero, no Recent Trade chip, no personal
+   injury strip). **Teams** is
    first-person after a seat. Price a hypothetical on **`?view=calc`**. League tape stays the
    water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
@@ -116,7 +117,7 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - PWA install prompt + web push.
 - Native App Store / Play wrappers.
 - League residual on the calc book; accept-odds / suggested counter; public/private marketplace.
-- Equipped title/emblem painted on names (header, news, trade cards, ledger, smack).
+- Equipped title/emblem painted on **other** seats (your pair already paints on your name).
 - League Oracle, waiver hot sheet, lineup-vs-optimal, playoff-odds engine, push “3 actions today”.
 
 ---

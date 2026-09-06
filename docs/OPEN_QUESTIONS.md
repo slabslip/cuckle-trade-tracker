@@ -140,22 +140,25 @@ writes only a vote.
 
 ## 14. Where do equipped titles and emblems paint?
 
-**Assumed (this pass):** Barracks + persist only. Header, news byline, trade cards, ledger, and
-smack do not read the equipped pair yet. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
+**Assumed (this pass):** Barracks + Profile calling card. Equipped **emblem** paints next to
+your own seat name via `seatLabel`. Header / news / trade / ledger / smack do not yet show
+equipped **titles**, and other seats stay undecorated until equip is a shared profile write.
+See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
 
-**Why it matters:** Painting on every name before the catalog is trusted will lock a chrome
-decision we have not looked at on 390.
+**Why it matters:** Painting titles on every name before the catalog is trusted will lock a
+chrome decision we have not looked at on 390.
 
-**Recommended:** Show the pair on names after the barracks has been used in-season. No new
-tokens when we do.
+**Recommended:** Keep emblem-on-your-name. Add title chrome after barracks has been used
+in-season and equip is on the account row. No new tokens when we do.
 
 ---
 
 ## 15. Do we mint the expanded award list now?
 
-**Assumed:** 27-id catalog (25 live + locked `four_time` / `five_time`). Championship rungs
-stay the highest prestige. Tier 1–4 grind and the “fresh 15” wait on weekly / waiver /
-lineup tape. See [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
+**Assumed:** 29-id catalog (27 live + locked `four_time` / `five_time`, including two- and
+three-time finalist emblems). Championship rungs stay the highest prestige. Tier 1–4 grind
+and the “fresh 15” wait on weekly / waiver / lineup tape. See
+[`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
 
 **Why it matters:** Unlocking “set lineup 4 straight weeks” or “reject 10 trades” from
 championship + trade JSON alone is a lie. Pairing every award as both an emblem id and a

@@ -1598,6 +1598,25 @@ const html = `<!DOCTYPE html>
     .cos-plate-emblem .cos-emoji-missing {
       width: 28px; height: 28px;
     }
+    /* Equipped emblem on your seat name — same density as the champ crown. */
+    .seat-cos-mark {
+      display: inline-grid; place-items: center; vertical-align: -0.15em;
+      width: 1.15em; height: 1.15em; margin-left: 0.15em;
+    }
+    .seat-cos-mark img {
+      width: 1.15em; height: 1.15em; object-fit: contain; display: block; border-radius: 50%;
+    }
+    .cos-profile-plate {
+      margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px;
+      overflow: hidden; background: #12151c;
+      display: flex; align-items: stretch; min-height: 36px;
+    }
+    .cos-profile-plate .cos-plate-banner,
+    .cos-profile-plate .cos-plate-banner.is-text { height: 36px; }
+    .cos-profile-plate .cos-plate-emblem { flex-basis: 36px; width: 36px; height: 36px; }
+    .cos-profile-plate .cos-plate-emblem img,
+    .cos-profile-plate .cos-emoji,
+    .cos-profile-plate .cos-emoji-missing { width: 24px; height: 24px; }
     .cos-sheet {
       position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
       justify-content: center; padding: 12px;
@@ -3211,7 +3230,8 @@ const html = `<!DOCTYPE html>
         return n.split(" · ").map((part) => seatLabel(part, opts)).join(" · ");
       }
       const crown = reigningChampName() === n ? " " + CROWN : "";
-      const inner = esc(n) + crown;
+      const cosMark = seatEquippedEmblemHtml(n);
+      const inner = esc(n) + crown + cosMark;
       if (!link || !n) return inner;
       return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(n) + '"'
         + ' aria-label="' + esc(n) + '">' + inner + "</span>";
@@ -9304,7 +9324,7 @@ const html = `<!DOCTYPE html>
           ? '<p class="caption">Your seat <b>' + seatLabel(team) + "</b></p>"
           : '<p class="caption">No seat claimed in this league yet.</p>')
         + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-view="cosmetics">Titles and Emblems</button>'
+        + '<button type="button" class="chip" data-open-cosmetics="account">Titles and Emblems</button>'
         + '<button type="button" class="chip" data-app-settings="1">Open Settings</button>'
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>";
@@ -10058,6 +10078,8 @@ const html = `<!DOCTYPE html>
       activeLeague = null;
       memberships = [];
       ownedLeagues = [];
+      cosmeticsEquip = { title: null, emblem: null };
+      cosmeticsDetailId = null;
       try {
         localStorage.removeItem(LEAGUE_KEY);
         localStorage.removeItem(MEMBERSHIPS_KEY);
@@ -10617,6 +10639,29 @@ const html = `<!DOCTYPE html>
       return [title && title.name, emblem && emblem.name].filter(Boolean);
     }
 
+    function cosmeticsPlateHtml(cls) {
+      const book = cosmeticsBook || { catalog: [] };
+      const eqTitle = book.catalog.find((c) => c.id === cosmeticsEquip.title);
+      const eqEmblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
+      const plateBanner = eqTitle
+        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
+        : '<span class="cos-plate-banner is-text">No title equipped</span>';
+      const plateEmblem = eqEmblem
+        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
+        : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
+      return '<div class="' + (cls || "cos-plate") + '" aria-label="Equipped calling card">'
+        + plateBanner + plateEmblem + "</div>";
+    }
+
+    /** Emblem mark after your own seat name only — Wave 1 show-off; others stay bare. */
+    function seatEquippedEmblemHtml(name) {
+      const mine = authSeatCanonName();
+      if (!mine || String(name) !== String(mine)) return "";
+      const id = cosmeticsEquip && cosmeticsEquip.emblem;
+      if (!id || !cosmeticsUnlocked(id)) return "";
+      return cosmeticsEmblemMark(id, "seat-cos-mark");
+    }
+
     function openCosmetics(from) {
       cosmeticsFrom = from === "settings" || from === "profile" ? "settings" : "account";
       view = "cosmetics";
@@ -10957,6 +11002,8 @@ const html = `<!DOCTYPE html>
         if (league) localStorage.setItem(LEAGUE_KEY, JSON.stringify(league));
         else localStorage.removeItem(LEAGUE_KEY);
       } catch (err) { /* ignore */ }
+      // Per-seat equip key depends on league + seat — reload when the active league changes.
+      cosmeticsLoadEquip();
     }
 
     function saveMemberships(list) {
@@ -14221,22 +14268,55 @@ const html = `<!DOCTYPE html>
      * ensureWeekMatchups kept for a rethink of what belongs under Latest trade).
      */
 
+    function cosmeticsEquipKey() {
+      const league = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID || "";
+      const seat = authSeatId() || "";
+      if (league && seat) return "cuckle.cosmetics.equip.v1." + league + "." + seat;
+      if (seat) return "cuckle.cosmetics.equip.v1." + seat;
+      return "cuckle.cosmetics.equip.v1";
+    }
+
+    function cosmeticsNormalizeEquip(raw) {
+      const book = cosmeticsBook || { catalog: [] };
+      const byId = {};
+      for (const c of book.catalog || []) byId[c.id] = c;
+      let title = raw && raw.title ? String(raw.title) : null;
+      let emblem = raw && raw.emblem ? String(raw.emblem) : null;
+      // Signed-out / no seat: keep nothing equipped so a stale plate cannot leak.
+      if (!authSeatId()) return { title: null, emblem: null };
+      if (title) {
+        const c = byId[title];
+        if (!c || c.kind !== "title" || !cosmeticsUnlocked(title)) title = null;
+      }
+      if (emblem) {
+        const c = byId[emblem];
+        if (!c || c.kind !== "emblem" || !cosmeticsUnlocked(emblem)) emblem = null;
+      }
+      return { title: title || null, emblem: emblem || null };
+    }
+
     function cosmeticsLoadEquip() {
       try {
-        const raw = localStorage.getItem("cuckle.cosmetics.equip.v1");
-        const found = raw ? JSON.parse(raw) : null;
-        if (found && typeof found === "object") {
-          cosmeticsEquip = {
-            title: found.title || null,
-            emblem: found.emblem || null,
-          };
+        const key = cosmeticsEquipKey();
+        let raw = localStorage.getItem(key);
+        // Migrate the pre-seat global key once into the per-seat slot.
+        if (!raw && key !== "cuckle.cosmetics.equip.v1") {
+          raw = localStorage.getItem("cuckle.cosmetics.equip.v1");
         }
-      } catch (err) { /* private mode */ }
+        const found = raw ? JSON.parse(raw) : null;
+        const next = cosmeticsNormalizeEquip(found && typeof found === "object" ? found : null);
+        cosmeticsEquip = next;
+        if (raw && key !== "cuckle.cosmetics.equip.v1") {
+          try { localStorage.setItem(key, JSON.stringify(next)); } catch (err) { /* private mode */ }
+        }
+      } catch (err) {
+        cosmeticsEquip = { title: null, emblem: null };
+      }
     }
 
     function cosmeticsSaveEquip() {
       try {
-        localStorage.setItem("cuckle.cosmetics.equip.v1", JSON.stringify(cosmeticsEquip));
+        localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
       } catch (err) { /* private mode */ }
     }
 
@@ -14893,16 +14973,6 @@ const html = `<!DOCTYPE html>
       const book = cosmeticsBook || { catalog: [] };
       const titles = book.catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
       const emblems = book.catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
-      const eqTitle = book.catalog.find((c) => c.id === cosmeticsEquip.title);
-      const eqEmblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
-      const plateBanner = eqTitle
-        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
-        : '<span class="cos-plate-banner is-text">No title equipped</span>';
-      const plateEmblem = eqEmblem
-        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
-        : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
-      const plate = '<div class="cos-plate" aria-label="Equipped calling card">'
-        + plateBanner + plateEmblem + "</div>";
       const titleRow = (c) => {
         const got = cosmeticsUnlocked(c.id);
         const on = cosmeticsEquip.title === c.id;
@@ -14928,8 +14998,8 @@ const html = `<!DOCTYPE html>
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Championship titles sit at the top. Tap a banner or mark for its description. Equip one title and one emblem.</p>'
-        + plate
+        + '<p class="caption">Championship titles sit at the top. Tap a banner or mark, then Equip. Your emblem shows next to your name; the title lives on this calling card and Profile.</p>'
+        + cosmeticsPlateHtml("cos-plate")
         + "<h3>Titles</h3>"
         + '<div class="cos-titles">' + titles.map(titleRow).join("") + "</div>"
         + "<h3>Emblems</h3>"
@@ -15726,8 +15796,10 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + '<div class="app-card"><h3>Titles and Emblems</h3>'
         + (equipped.length
-          ? '<p class="caption" style="margin:0">Equipped <b>' + equipped.map(esc).join("</b> · <b>") + "</b></p>"
-          : '<p class="caption" style="margin:0">Nothing equipped yet.</p>')
+          ? (cosmeticsPlateHtml("cos-profile-plate")
+            + '<p class="caption" style="margin:8px 0 0">Equipped <b>' + equipped.map(esc).join("</b> · <b>") + "</b>"
+            + " — emblem shows next to your name.</p>")
+          : '<p class="caption" style="margin:0">Nothing equipped yet. Open the barracks to pick a title and an emblem.</p>')
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-open-cosmetics="settings">Open Titles and Emblems</button>'
         + "</div></div>"
@@ -17469,7 +17541,9 @@ const html = `<!DOCTYPE html>
       if (cosEquip) {
         const id = cosEquip.getAttribute("data-cos-equip");
         const kind = cosEquip.getAttribute("data-cos-kind");
-        if (id && kind && cosmeticsUnlocked(id)) {
+        const book = cosmeticsBook || { catalog: [] };
+        const row = book.catalog.find((c) => c.id === id);
+        if (id && kind && row && row.kind === kind && cosmeticsUnlocked(id)) {
           cosmeticsEquip[kind] = cosmeticsEquip[kind] === id ? null : id;
           cosmeticsSaveEquip();
           cosmeticsDetailId = null;
@@ -20084,6 +20158,12 @@ if (!html.includes('class="go-settings"') || !html.includes("settings-gear")
 if (!inline.includes("function openCosmetics(")
   || !inline.includes("function closeCosmeticsToProfile(")
   || !inline.includes('data-open-cosmetics="settings"')
+  || !inline.includes('data-open-cosmetics="account"')
+  || !inline.includes("function cosmeticsNormalizeEquip(")
+  || !inline.includes("function cosmeticsEquipKey(")
+  || !inline.includes("function seatEquippedEmblemHtml(")
+  || !inline.includes("function cosmeticsPlateHtml(")
+  || !inline.includes("seat-cos-mark")
   || !fnSrc("renderSettingsProfileTab").includes("Titles and Emblems")
   || !fnSrc("renderSettingsProfileTab").includes("Nothing equipped yet")) {
   throw new Error("Settings Profile must door into Titles and Emblems");
@@ -20179,7 +20259,8 @@ if (!inline.includes("function homeTabCanon(")) {
 }
 if (!inline.includes("function your3Html(") || !inline.includes("function homeNewsStoryHtml(")
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
-  || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
+  || !inline.includes("function renderCosmetics(") || !inline.includes('"cosmetics"')
+  || !inline.includes("data-open-cosmetics")) {
   throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
@@ -20193,11 +20274,12 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   || !inline.includes("cos-title-banner") || !inline.includes("cos-emblems")
   || !inline.includes("function cosmeticsDetailSheetHtml(")
   || !inline.includes("data-cos-detail-close")
-  || !inline.includes("Tap a banner or mark for its description")
+  || !inline.includes("Tap a banner or mark, then Equip")
   || !inline.includes("data/ui/cosmetics/emblem-")
   || !inline.includes("never Unicode emoji")
   || inline.includes("COS_EMBLEM_EMOJI")
-  || !inline.includes("class=\"cos-plate\"")) {
+  || !inline.includes("function cosmeticsPlateHtml(")
+  || !inline.includes("cos-plate")) {
   throw new Error("Titles and Emblems must use compact COD banners, custom emblem marks, and tap-to-read details");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")

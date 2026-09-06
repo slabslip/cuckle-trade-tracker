@@ -84,7 +84,8 @@ for (const t of titles) {
   const uid = String(t.user_id || "");
   champCount[uid] = (champCount[uid] || 0) + 1;
   titleBySeason[t.season] = t;
-  addUnlock(uid, "champion", receipt([t.season, t.name]));
+  // Career-count ladder is applied after the loop (higher replaces lower). Per-season
+  // champion receipts are kept only for one-time winners.
   if (t.repeat === "repeat") addUnlock(uid, "repeat", receipt([t.season, "back-to-back"]));
   if (t.repeat === "three_peat") addUnlock(uid, "three_peat", receipt([t.season, "three in a row"]));
   if (t.record && t.record.fpts_rank === 1) addUnlock(uid, "points_champ", receipt([t.season, "1st in points"]));
@@ -106,10 +107,11 @@ for (const t of titles) {
       `${t.final.top_bench.player} ${t.final.top_bench.points} on the pine`,
     ]));
   }
-  if (t.draft && t.draft.used && t.draft.used.some((u) => u.startup && String(t.season) === "2019")) {
-    addUnlock(uid, "founding_draft", receipt(["2019 startup", "later champion"]));
+  // Founding draft: 2019 startup players on a title roster (or legacy draft.startup flag).
+  const usedStartup = t.draft && t.draft.used && t.draft.used.some((u) => u.startup);
+  if (usedStartup || (t.draft && t.draft.startup)) {
+    addUnlock(uid, "founding_draft", receipt(["2019 startup", t.season + " title"]));
   }
-  if (t.draft && t.draft.startup) addUnlock(uid, "founding_draft", receipt(["2019 startup", t.season + " title"]));
   const mean = t.record && t.record.league_mean_trades;
   if (mean != null && t.record.trades < mean) {
     addUnlock(uid, "quiet_year", receipt([t.season, `${t.record.trades} trades vs ${mean} mean`]));
@@ -125,25 +127,30 @@ for (const t of titles) {
   }
 }
 
+// Championship career ladder: highest count rung replaces lower count rungs.
+// repeat / three_peat can sit beside the career-count title they earned.
+// titles.json is newest-first — first hit is the latest chip for a one-time winner receipt.
+const champLatest = {};
+for (const t of titles) {
+  const uid = String(t.user_id || "");
+  if (!uid || champLatest[uid]) continue;
+  champLatest[uid] = t;
+}
 for (const [uid, n] of Object.entries(champCount)) {
   if (n >= 5) addUnlock(uid, "five_time", receipt([`${n} titles`]));
-  if (n >= 4) addUnlock(uid, "four_time", receipt([`${n} titles`]));
-  if (n >= 3) addUnlock(uid, "three_time", receipt([`${n} titles`]));
-  if (n === 2) addUnlock(uid, "two_time", receipt([`${n} titles`]));
+  else if (n >= 4) addUnlock(uid, "four_time", receipt([`${n} titles`]));
+  else if (n >= 3) addUnlock(uid, "three_time", receipt([`${n} titles`]));
+  else if (n === 2) addUnlock(uid, "two_time", receipt([`${n} titles`]));
+  else if (n === 1) {
+    const t = champLatest[uid];
+    addUnlock(uid, "champion", receipt([t && t.season, t && t.name].filter(Boolean)));
+  }
 }
 
 for (const [uid, n] of Object.entries(finalistCount)) {
   const years = (finalistYears[uid] || []).slice().sort();
   if (n >= 3) addUnlock(uid, "three_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
   if (n >= 2) addUnlock(uid, "two_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
-}
-
-// Founding draft: any 2019 startup user who later won (ARae used startup and won 2019).
-for (const t of titles) {
-  if (!t.draft || !t.draft.used) continue;
-  if (t.draft.used.some((u) => u.startup)) {
-    addUnlock(String(t.user_id), "founding_draft", receipt(["startup draft", t.season]));
-  }
 }
 
 for (const m of members) {

@@ -3,7 +3,8 @@
 **Status:** Wave 1 shipping — barracks sort + reserved 4/5 titles. Do not mint a 70-id catalog.
 **Owner:** product + `build-cosmetics.mjs`
 **Shipped now:** 29-id catalog. Barracks `?view=cosmetics` from Settings → Profile and Account.
-Equip one title + one emblem. Paint on **your** seat only.
+Equip one title + one emblem. Your emblem paints on **your** seat name; title shows on the
+calling card / Profile plate.
 **This document:** review of the expanded award list (2026-09-06) and what we
 adopt vs park.
 
@@ -69,19 +70,19 @@ Already covered (keep; do not duplicate):
 | Two-time | `two_time` | title |
 | Three-time / Dynasty Established | `three_time` | title |
 | Three in a row | `three_peat` | title |
-| Finish 1st in total points | `points_champ` | title |
-| Win chip, not top-3 points | `bracket_thief` | title |
+| Finish 1st in total points | `points_champ` | emblem |
+| Win chip, not top points | `bracket_thief` | emblem |
 | Championship game | `finalist` | emblem |
 | Two / three chip-game losses | `two_time_finalist` / `three_time_finalist` | emblem |
-| Last place | `last_place` | title |
-| Playoff seasons / compete seasons | `iron_core` | title |
-| Career trades 8 / 15 / 30 | `volume`, `whale` | title |
-| Extractor / win-now / investor / firsts | matching emblems | emblem |
+| Last place | `last_place` | emblem |
+| Opening lineup retention | `iron_core` | emblem |
+| Career trades / extract | `volume`, `whale`, `extractor` | emblem |
+| Extractor / win-now / investor / firsts | matching title or emblem | title (`win_now`, `investor`) / emblem |
 | Playoff trades | `playoff_trader` | emblem |
 | Quiet year / manners | matching emblems | emblem |
 | Draft hit / sit right / bench crime | matching emblems | emblem |
 | Waiver touch | `waiver_touch` | emblem |
-| Opening day / founding draft | matching emblems | emblem |
+| Opening day / founding draft | matching title or emblem | emblem / title |
 
 **Ceiling copy:** treat `three_time` as elite in UI (subtitle, sort weight),
 not as a mid-card next to Waiver Touch.

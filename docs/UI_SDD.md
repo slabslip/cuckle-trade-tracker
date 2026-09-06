@@ -223,8 +223,9 @@ not appear on a hypothetical and do not change the number.
 Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 29.
 Equip one title and one emblem.
 Championship titles outrank every other award in sort and prestige. Locked shows the
-requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics paint across
-the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
+requirement; unlocked shows the receipt. Visual only. Your equipped emblem paints next to your
+seat name; the title shows on the barracks / Profile calling card. Broader title paint across
+the app is later — see [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door

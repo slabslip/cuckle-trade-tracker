@@ -60,9 +60,10 @@ do not have. Do not mint a 70-id second catalog from that list.
 
 ## 3. Barracks
 
-`?view=cosmetics` from Account → **Titles and Emblems**. Two grids. Championship titles first
-(see ladder above), then the rest by rarity. Tap locked → requirement. Tap unlocked → receipt
-+ Equip / unequip. Equip **one title** and **one emblem** at a time.
+`?view=cosmetics` from **Settings → Profile** (gear) and from Account → **Titles and Emblems**.
+Two grids. Championship titles first (see ladder above), then the rest by rarity. Tap locked
+→ requirement. Tap unlocked → receipt + Equip / unequip. Equip **one title** and **one emblem**
+at a time. Back from barracks returns to Profile when opened from Settings, Account otherwise.
 
 Persist the equipped pair on the signed-in profile. This pass: `localStorage` key
 `cuckle.cosmetics.equip.v1`. Same pattern as votes: page reads, profile writes. Supabase columns

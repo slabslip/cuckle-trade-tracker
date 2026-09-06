@@ -2,8 +2,8 @@
 
 **Status:** Wave 1 shipping — barracks sort + reserved 4/5 titles. Do not mint a 70-id catalog.
 **Owner:** product + `build-cosmetics.mjs`
-**Shipped now:** 27-id catalog, Home **Titles and Emblems** door → Account barracks
-(`?view=cosmetics`). Equip one title + one emblem. Paint on **your** seat only.
+**Shipped now:** 27-id catalog. Barracks `?view=cosmetics` from Settings → Profile and Account.
+Equip one title + one emblem. Paint on **your** seat only.
 **This document:** review of the expanded award list (2026-09-06) and what we
 adopt vs park.
 

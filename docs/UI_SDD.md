@@ -215,7 +215,8 @@ on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 
-Profile barracks (`?view=cosmetics`). Shared catalog of 27. Equip one title and one emblem.
+Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 27.
+Equip one title and one emblem.
 Championship titles outrank every other award in sort and prestige. Locked shows the
 requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics paint across
 the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and

@@ -35,6 +35,8 @@ const CATALOG = [
   { id: "champion", kind: "title", name: "Champion", how: "Win a league championship.", rarity: "gold" },
   { id: "points_champ", kind: "emblem", name: "Points Champ", how: "Finish first in points in a title season.", rarity: "gold" },
   { id: "bracket_thief", kind: "emblem", name: "Bracket Thief", how: "Win the title while not first in points.", rarity: "gold" },
+  { id: "three_time_finalist", kind: "emblem", name: "Three-Time Finalist", how: "Lose the championship game three times.", rarity: "silver" },
+  { id: "two_time_finalist", kind: "emblem", name: "Two-Time Finalist", how: "Lose the championship game twice.", rarity: "silver" },
   { id: "finalist", kind: "emblem", name: "Finalist", how: "Lose the championship game.", rarity: "silver" },
   { id: "last_place", kind: "emblem", name: "Last Place", how: "Finish last in a completed season.", rarity: "iron" },
   { id: "iron_core", kind: "emblem", name: "Iron Core", how: "Start a title game with 85% of the opening lineup.", rarity: "gold" },
@@ -75,6 +77,8 @@ function addUnlock(uid, id, got) {
 }
 
 const champCount = {};
+const finalistCount = {};
+const finalistYears = {};
 const titleBySeason = {};
 for (const t of titles) {
   const uid = String(t.user_id || "");
@@ -113,7 +117,11 @@ for (const t of titles) {
   const play = t.windows && t.windows.playoffs;
   if (play && play.trades > 0) addUnlock(uid, "playoff_trader", receipt([t.season, `${play.trades} playoff trades`]));
   if (t.final && t.final.ok && t.final.opponent_user_id) {
-    addUnlock(String(t.final.opponent_user_id), "finalist", receipt([t.season, `lost to ${t.name}`]));
+    const opp = String(t.final.opponent_user_id);
+    finalistCount[opp] = (finalistCount[opp] || 0) + 1;
+    if (!finalistYears[opp]) finalistYears[opp] = [];
+    finalistYears[opp].push(t.season);
+    addUnlock(opp, "finalist", receipt([t.season, `lost to ${t.name}`]));
   }
 }
 
@@ -122,6 +130,12 @@ for (const [uid, n] of Object.entries(champCount)) {
   if (n >= 4) addUnlock(uid, "four_time", receipt([`${n} titles`]));
   if (n >= 3) addUnlock(uid, "three_time", receipt([`${n} titles`]));
   if (n === 2) addUnlock(uid, "two_time", receipt([`${n} titles`]));
+}
+
+for (const [uid, n] of Object.entries(finalistCount)) {
+  const years = (finalistYears[uid] || []).slice().sort();
+  if (n >= 3) addUnlock(uid, "three_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
+  if (n >= 2) addUnlock(uid, "two_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
 }
 
 // Founding draft: any 2019 startup user who later won (ARae used startup and won 2019).

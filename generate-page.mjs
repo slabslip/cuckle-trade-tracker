@@ -3175,7 +3175,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcFavor20260906143000";
+    const DATA_V = "finalistAwards20260906144000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14696,7 +14696,10 @@ const html = `<!DOCTYPE html>
       return mine[id] || null;
     }
 
-    const COS_TITLE_LADDER = ["five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion"];
+    const COS_TITLE_LADDER = [
+      "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+      "three_time_finalist", "two_time_finalist", "finalist",
+    ];
     const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
 
     function cosmeticsSort(a, b) {
@@ -19953,9 +19956,10 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
   throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
+  || !inline.includes("three_time_finalist") || !inline.includes("two_time_finalist")
   || !inline.includes("Championship titles sit at the top")
   || inline.includes("Everyone chases the same 25")) {
-  throw new Error("barracks must sort the championship ladder first and drop the same-25 caption");
+  throw new Error("barracks must sort the championship ladder first and include finalist rungs");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")

@@ -11,7 +11,7 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 ## 1. One catalog
 
-Everyone chases the same 27 ids. Each id is one cosmetic: a short title string plus a mark.
+Everyone chases the same 29 ids. Each id is one cosmetic: a short title string plus a mark.
 `kind` is `title` or `emblem` — **not both**. Flavor writeups that pair an “emblem name” with a
 wearable title are copy for one card, not two catalog rows. Emblems v1 are initials / simple
 marks in existing CSS — not an art pack. Swap art later without changing ids.
@@ -28,13 +28,14 @@ Catalog + computed unlocks: `data/ui/cosmetics.json` from `build-cosmetics.mjs` 
 
 ---
 
-## 2. First 27 (from tape)
+## 2. Catalog (from tape)
 
 **Crown ladder** (highest first) — Eternal Champion (`five_time`, locked until 5), Dynasty
 Immortal (`four_time`, locked until 4), Three-Peat, Dynasty Established (`three_time`, three
 career titles), Back-to-Back, Two-Time Champion (**exactly** two), Champion.
 
-**Other crown** — Points Champ, Bracket Thief, Finalist, Last Place, Iron Core
+**Other crown** — Points Champ, Bracket Thief, Three-Time Finalist, Two-Time Finalist,
+Finalist (lost the championship game 3 / 2 / 1 times), Last Place, Iron Core
 (`from_opening / n >= 0.85`).
 
 **Tape** — Volume, Whale, Extractor, Win-Now, Investor, Firsts Merchant, Playoff Trader,

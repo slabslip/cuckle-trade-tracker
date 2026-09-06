@@ -2,7 +2,7 @@
 
 **Status:** Wave 1 shipping — barracks sort + reserved 4/5 titles. Do not mint a 70-id catalog.
 **Owner:** product + `build-cosmetics.mjs`
-**Shipped now:** 27-id catalog. Barracks `?view=cosmetics` from Settings → Profile and Account.
+**Shipped now:** 29-id catalog. Barracks `?view=cosmetics` from Settings → Profile and Account.
 Equip one title + one emblem. Paint on **your** seat only.
 **This document:** review of the expanded award list (2026-09-06) and what we
 adopt vs park.
@@ -71,7 +71,8 @@ Already covered (keep; do not duplicate):
 | Three in a row | `three_peat` | title |
 | Finish 1st in total points | `points_champ` | title |
 | Win chip, not top-3 points | `bracket_thief` | title |
-| Championship game | `finalist` | title |
+| Championship game | `finalist` | emblem |
+| Two / three chip-game losses | `two_time_finalist` / `three_time_finalist` | emblem |
 | Last place | `last_place` | title |
 | Playoff seasons / compete seasons | `iron_core` | title |
 | Career trades 8 / 15 / 30 | `volume`, `whale` | title |
@@ -154,7 +155,7 @@ this plan pass.
 
 1. **Wave 1 (this pass)** — barracks sort, crown copy (Back-to-Back, Dynasty
    Established, Dynasty Immortal, Eternal Champion), locked `four_time` /
-   `five_time` rows. Catalog is **27**.
+   `five_time` rows. Catalog is **29** (added two- and three-time finalist emblems).
 2. **Comeback Dynasty** — needs last-place *year* per seat, not only the
    latest `members.json` place-10. Do not guess from one season.
 3. **Pick Collector** if future-1st counts are trustworthy on every seat.

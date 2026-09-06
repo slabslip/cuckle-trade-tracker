@@ -1429,7 +1429,7 @@ const html = `<!DOCTYPE html>
     }
     .calc-hits {
       padding: 0 12px 8px;
-      max-height: min(52vh, 360px);
+      max-height: min(60vh, 480px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
@@ -3161,7 +3161,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906100943";
+    const DATA_V = "calcRoster20260906125500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14328,9 +14328,8 @@ const html = `<!DOCTYPE html>
 
     function calcAssetsForSeat(uid, q, open) {
       const book = calcBook || { players: [], picks: [] };
-      const needle = String(q || "").trim().toLowerCase();
+      const needle = uid ? "" : String(q || "").trim().toLowerCase();
       if (!uid && !needle) return [];
-      if (uid && !(open || needle)) return [];
       const used = new Set((calcLegsA.concat(calcLegsB)).map((l) => l.id));
       const pool = (book.players || []).concat(book.picks || []).filter((a) => {
         if (uid && String(a.owner_id) !== String(uid)) return false;
@@ -14459,11 +14458,7 @@ const html = `<!DOCTYPE html>
 
     function calcHitsHtml(uid, q, open, side) {
       const needle = String(q || "").trim();
-      if (uid) {
-        if (!(open || needle)) return "";
-      } else if (!needle) {
-        return "";
-      }
+      if (!uid && !needle) return "";
       const hits = calcAssetsForSeat(uid, q, open);
       if (!hits.length) {
         return '<div class="calc-hits"><div class="calc-empty">'
@@ -14499,10 +14494,12 @@ const html = `<!DOCTYPE html>
       ).join("");
       return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
         + calcSeatSelect(side)
-        + '<div class="calc-search">'
-        + '<input type="search" value="' + esc(q) + '" data-calc-filter="' + side + '"'
-        + ' placeholder="Search players and picks" />'
-        + '<span class="calc-search-ico" aria-hidden="true">⌕</span></div>'
+        + (uid
+          ? ""
+          : '<div class="calc-search">'
+            + '<input type="search" value="' + esc(q) + '" data-calc-filter="' + side + '"'
+            + ' placeholder="Search players and picks" />'
+            + '<span class="calc-search-ico" aria-hidden="true">⌕</span></div>')
         + calcHitsHtml(uid, q, open, side)
         + assets
         + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
@@ -14513,7 +14510,7 @@ const html = `<!DOCTYPE html>
     function renderCalc() {
       return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
-        + '<p class="caption">Type players or picks anytime. Pick a team only if you want that roster plus its remaining draft capital. Today book (flatten + KTC) plus Value Adjustment.</p>'
+        + '<p class="caption">Pick a team to scroll that roster and remaining picks — values on every row. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
 
@@ -16986,8 +16983,8 @@ const html = `<!DOCTYPE html>
       if (calcSeatPick) {
         const side = calcSeatPick.getAttribute("data-calc-seat-pick");
         const uid = calcSeatPick.getAttribute("data-uid") || "";
-        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = false; }
-        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = false; }
+        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = !!uid; }
+        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = !!uid; }
         calcSide = side === "b" ? "b" : "a";
         calcSeatMenu = "";
         calcSeatIgnoreOpenUntil = Date.now() + 450;
@@ -17014,7 +17011,7 @@ const html = `<!DOCTYPE html>
           calcSide = to;
         }
         render();
-        calcFocusSearch(to);
+        if (!(to === "b" ? calcSeatB : calcSeatA)) calcFocusSearch(to);
         return;
       }
       const calcDrop = e.target.closest("[data-calc-drop]");
@@ -19753,6 +19750,14 @@ if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price
 if (!inline.includes("Team 1 gets") || !inline.includes("Search players and picks")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {
   throw new Error("calc must stack Team 1 / Team 2 with per-side search and a leftover bar");
+}
+if (!fnSrc("calcSideHtml").includes("(uid")
+  || !fnSrc("calcSideHtml").includes("calc-search")
+  || fnSrc("calcAssetsForSeat").includes("uid && !(open || needle)")) {
+  throw new Error("calc must hide search after a team pick and show that roster immediately");
+}
+if (!fnSrc("calcHitBtn").includes("calc-hit-val") || !fnSrc("calcHitBtn").includes("calcFmt(a.value)")) {
+  throw new Error("calc roster rows must preview each asset's today value");
 }
 if (inline.includes("Search for a player") || inline.includes('placeholder="Search for a player"')) {
   throw new Error("calc search must stay open for players and picks without forcing a team");

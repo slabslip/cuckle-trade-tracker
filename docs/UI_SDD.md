@@ -202,16 +202,14 @@ button menus (not a native `<select>` — remounting that on iOS reopened the te
 The open list sits **in flow** under the header so `.calc-block { overflow: hidden }` cannot
 clip it to two names. Picking a name closes the menu and ignores the ghost tap that would
 open it again.
-Search is always on. With no team, typing players or picks searches the whole today book
-(research — owner in the meta, not tied to a seat). Choosing a team only scopes the next
-search — it does **not** open the player list or wipe pieces already on that side. After a
-team is chosen, focusing search (or typing) drops **that roster plus its still-held draft
-picks** in **Sleeper order** (starters, bench, IR, taxi, then picks under a Draft picks
-header). Typing filters the same list without re-sorting. Selected assets are rows (name,
-pos/team, value, remove). Compare bar + favor copy + closest leftover pieces (from the
-short roster when a team is set, else the unused book). Price book is today / `even`
-(flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do not appear
-on a hypothetical and do not change the number.
+With no team, search stays on: typing players or picks searches the whole today book
+(research — owner in the meta). Choosing a team **drops the search bar** and opens that
+seat’s remaining roster plus still-held draft picks in **Sleeper order** (starters, bench,
+IR, taxi, then picks). Every row shows the today value. It does not wipe pieces already on
+that side. Selected assets are rows (name, pos/team, value, remove). Compare bar + favor
+copy + closest leftover pieces (from the short roster when a team is set, else the unused
+book). Price book is today / `even` (flatten + 40/60 KTC) plus Value Adjustment via the
+existing `applyVa`. Votes do not appear on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 

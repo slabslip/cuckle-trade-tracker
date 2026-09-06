@@ -14277,13 +14277,17 @@ const html = `<!DOCTYPE html>
     }
 
     function cosmeticsNormalizeEquip(raw) {
-      const book = cosmeticsBook || { catalog: [] };
-      const byId = {};
-      for (const c of book.catalog || []) byId[c.id] = c;
+      const book = cosmeticsBook;
       let title = raw && raw.title ? String(raw.title) : null;
       let emblem = raw && raw.emblem ? String(raw.emblem) : null;
       // Signed-out / no seat: keep nothing equipped so a stale plate cannot leak.
       if (!authSeatId()) return { title: null, emblem: null };
+      // Catalog not loaded yet — keep the stored ids; re-validate once the book arrives.
+      if (!book || !Array.isArray(book.catalog)) {
+        return { title: title || null, emblem: emblem || null };
+      }
+      const byId = {};
+      for (const c of book.catalog) byId[c.id] = c;
       if (title) {
         const c = byId[title];
         if (!c || c.kind !== "title" || !cosmeticsUnlocked(title)) title = null;
@@ -14298,16 +14302,28 @@ const html = `<!DOCTYPE html>
     function cosmeticsLoadEquip() {
       try {
         const key = cosmeticsEquipKey();
+        const legacy = "cuckle.cosmetics.equip.v1";
         let raw = localStorage.getItem(key);
-        // Migrate the pre-seat global key once into the per-seat slot.
-        if (!raw && key !== "cuckle.cosmetics.equip.v1") {
-          raw = localStorage.getItem("cuckle.cosmetics.equip.v1");
+        let fromLegacy = false;
+        if (!raw && key !== legacy) {
+          raw = localStorage.getItem(legacy);
+          fromLegacy = !!raw;
         }
         const found = raw ? JSON.parse(raw) : null;
+        const prev = found && typeof found === "object"
+          ? { title: found.title || null, emblem: found.emblem || null }
+          : { title: null, emblem: null };
         const next = cosmeticsNormalizeEquip(found && typeof found === "object" ? found : null);
         cosmeticsEquip = next;
-        if (raw && key !== "cuckle.cosmetics.equip.v1") {
-          try { localStorage.setItem(key, JSON.stringify(next)); } catch (err) { /* private mode */ }
+        // Persist only when migrating the legacy key, or when a loaded catalog strips
+        // an id that is no longer valid — never while signed out / seat unknown.
+        const seatReady = !!authSeatId();
+        const bookReady = !!(cosmeticsBook && Array.isArray(cosmeticsBook.catalog));
+        const changed = prev.title !== next.title || prev.emblem !== next.emblem;
+        if (fromLegacy && seatReady) {
+          localStorage.setItem(key, JSON.stringify(next));
+        } else if (seatReady && bookReady && changed && raw) {
+          localStorage.setItem(key, JSON.stringify(next));
         }
       } catch (err) {
         cosmeticsEquip = { title: null, emblem: null };

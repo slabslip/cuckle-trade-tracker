@@ -14281,7 +14281,7 @@ const html = `<!DOCTYPE html>
     }
 
     function calcLooksLikeId(name) {
-      return !name || /^\d+$/.test(String(name));
+      return !name || /^[0-9]+$/.test(String(name));
     }
 
     function calcValueNum(a) {
@@ -14611,7 +14611,8 @@ const html = `<!DOCTYPE html>
       const attr = mode === "toggle"
         ? ' data-calc-toggle="' + esc(a.id) + '" data-calc-to="' + side + '"'
         : ' data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '"';
-      const name = calcDisplayName(a) || a.name || "";
+      const mapped = calcDisplayName(a);
+      const name = mapped || (!calcLooksLikeId(a.name) ? (a.name || "") : (a.pos || "Rostered"));
       const meta = calcMeta(a, showOwner) || (a.kind === "pick" || a.pos === "PICK" ? "Pick" : (a.pos || ""));
       return '<div role="button" tabindex="-1" class="calc-hit' + (on ? " is-on" : "") + '"' + attr + ">"
         + '<span class="calc-hit-name">' + esc(name)
@@ -20001,6 +20002,8 @@ if (!inline.includes("calcOpenA")
   || !inline.includes("function calcDisplayName(") || !inline.includes("CALC_ID_NAMES")
   || !inline.includes("overflow-anchor: none")
   || !inline.includes("function calcBindHits(")
+  || !fnSrc("calcLooksLikeId").includes("/^[0-9]+$/")
+  || fnSrc("calcLooksLikeId").includes("/^d+$/")
   || !fnSrc("render").includes('calcRestoreHitsScroll("a")')) {
   throw new Error("calc team roster must stay scrolled, hide raw ids, and sort by today value");
 }

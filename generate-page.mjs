@@ -1518,39 +1518,103 @@ const html = `<!DOCTYPE html>
       background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
-    .cos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
-    button.cos-card {
-      appearance: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
-      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 10px; min-height: 88px;
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    button.cos-card.is-locked { color: var(--dim); opacity: 0.55; }
-    button.cos-card.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35); }
-    button.cos-card.is-ladder { border-color: rgba(224, 180, 76, 0.45); }
-    .cos-art {
-      display: block; width: 100%; border-radius: 8px; background: #12151c;
-      object-fit: cover;
-    }
-    .cos-art.cos-art-title { aspect-ratio: 4 / 1; object-position: center; }
-    .cos-art.cos-art-emblem { aspect-ratio: 1 / 1; width: 56%; max-width: 112px; margin: 0 auto; object-fit: contain; background: transparent; }
-    .cos-name { font-weight: 700; display: block; margin: 0; }
-    .cos-how { font-size: 0.75rem; color: var(--dim); }
+    /* Titles & Emblems — COD calling-card density: thin banners + emoji-size marks. */
     .cos-plate {
-      margin: 0 0 14px; border: 1px solid var(--line); border-radius: 14px;
+      margin: 0 0 12px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
+      display: flex; align-items: stretch; min-height: 40px;
     }
-    .cos-plate > img { display: block; width: 100%; height: auto; }
-    .cos-plate-meta {
-      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-      border-top: 1px solid var(--line);
+    .cos-plate-banner {
+      flex: 1 1 auto; min-width: 0; height: 40px; object-fit: cover; object-position: center;
+      display: block; background: #1a1d26;
     }
-    .cos-plate-meta .cos-plate-emblem {
-      width: 40px; height: 40px; border-radius: 8px; object-fit: contain; flex: 0 0 auto;
+    .cos-plate-banner.is-text {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 10px; font-size: 0.78rem; font-weight: 750; letter-spacing: 0.04em;
+      text-transform: uppercase; color: #f2e6c4;
+      background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
     }
-    .cos-plate-meta .cos-plate-copy { min-width: 0; }
-    .cos-plate-meta .cos-plate-copy strong { display: block; font-size: 0.92rem; }
-    .cos-plate-meta .cos-plate-copy span { display: block; font-size: 0.75rem; color: var(--dim); }
+    .cos-plate-emblem {
+      flex: 0 0 40px; width: 40px; height: 40px; display: grid; place-items: center;
+      font-size: 1.25rem; line-height: 1; border-left: 1px solid var(--line);
+      background: #0e1016;
+    }
+    .cos-plate-emblem img {
+      width: 22px; height: 22px; object-fit: contain; display: block;
+    }
+    .cos-titles {
+      display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px;
+    }
+    button.cos-title {
+      appearance: none; font: inherit; color: var(--text); cursor: pointer;
+      border: 1px solid var(--line); border-radius: 8px; padding: 0;
+      background: #12151c; overflow: hidden; min-height: 34px; height: 34px;
+      position: relative; text-align: left;
+    }
+    button.cos-title.is-locked { opacity: 0.45; }
+    button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
+    button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
+    .cos-title-banner {
+      display: block; width: 100%; height: 34px; object-fit: cover; object-position: center;
+    }
+    .cos-title-fallback {
+      display: flex; align-items: center; justify-content: center; height: 34px;
+      padding: 0 10px; font-size: 0.72rem; font-weight: 750; letter-spacing: 0.05em;
+      text-transform: uppercase; color: #f0e6cc;
+      background: linear-gradient(90deg, #1c2230, #3a4558 50%, #1c2230);
+    }
+    .cos-title-fallback.is-gold {
+      background: linear-gradient(90deg, #2a2418, #5a4518 50%, #2a2418); color: #ffe6a0;
+    }
+    .cos-emblems {
+      display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px;
+      margin: 0 0 16px;
+    }
+    button.cos-emblem {
+      appearance: none; font: inherit; cursor: pointer; color: var(--text);
+      border: 1px solid var(--line); border-radius: 10px; background: var(--card);
+      min-height: 44px; min-width: 0; padding: 4px 2px 6px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    }
+    button.cos-emblem.is-locked { opacity: 0.4; }
+    button.cos-emblem.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
+    .cos-emoji {
+      font-size: 1.35rem; line-height: 1; width: 1.35rem; height: 1.35rem;
+      display: grid; place-items: center;
+    }
+    .cos-emoji img {
+      width: 1.25rem; height: 1.25rem; object-fit: contain; display: block;
+    }
+    .cos-emblem-lab {
+      font-size: 0.55rem; line-height: 1.1; color: var(--dim); text-align: center;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cos-sheet {
+      position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
+      justify-content: center; padding: 12px;
+    }
+    button.cos-sheet-scrim {
+      appearance: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+      position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55);
+    }
+    .cos-sheet-panel {
+      position: relative; z-index: 1; width: min(420px, 100%);
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px 16px 12px 12px;
+      padding: 14px 14px 16px; box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
+    }
+    .cos-sheet-head {
+      display: flex; align-items: center; gap: 10px; margin: 0 0 8px;
+    }
+    .cos-sheet-head .cos-emoji { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
+    .cos-sheet-banner {
+      width: 100%; height: 40px; object-fit: cover; border-radius: 8px; margin: 0 0 10px;
+      display: block; background: #12151c;
+    }
+    .cos-sheet-panel h3 { margin: 0; font-size: 1.05rem; }
+    .cos-sheet-panel .cos-sheet-how { margin: 6px 0 0; font-size: 0.88rem; color: var(--text); }
+    .cos-sheet-panel .cos-sheet-got { margin: 6px 0 0; font-size: 0.78rem; color: var(--dim); }
+    .cos-sheet-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .cos-sheet-actions .chip { flex: 1 1 auto; justify-content: center; }
     /* Bet Ledger */
     .ledger-sum {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3198,7 +3262,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmeticsArt20260906152000";
+    const DATA_V = "cosmeticsCompact20260906153500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3268,6 +3332,7 @@ const html = `<!DOCTYPE html>
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsFrom = "account";
+    let cosmeticsDetailId = null;
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
     let ledgerBets = null;
     let ledgerLoadState = "idle";
@@ -14738,6 +14803,27 @@ const html = `<!DOCTYPE html>
       "playoff_trader", "quiet_year", "manners", "draft_hit", "bench_crime", "waiver_touch",
       "opening_day",
     ]);
+    const COS_EMBLEM_EMOJI = {
+      points_champ: "🏆",
+      bracket_thief: "🦊",
+      three_time_finalist: "🥉",
+      two_time_finalist: "🥈",
+      finalist: "🥈",
+      last_place: "🚽",
+      iron_core: "🛡️",
+      volume: "🔄",
+      whale: "🐋",
+      extractor: "🧲",
+      firsts_merchant: "💎",
+      playoff_trader: "📅",
+      quiet_year: "😴",
+      manners: "🤝",
+      draft_hit: "🎯",
+      sit_right: "✅",
+      bench_crime: "🔥",
+      waiver_touch: "🧵",
+      opening_day: "🌅",
+    };
 
     function cosmeticsArtPath(kind, id) {
       if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
@@ -14745,12 +14831,25 @@ const html = `<!DOCTYPE html>
       return "";
     }
 
-    function cosmeticsArtImg(kind, id, cls) {
-      const path = cosmeticsArtPath(kind, id);
-      if (!path) return "";
-      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="" width="' + (kind === "title" ? "768" : "256") + '" height="'
-        + (kind === "title" ? "168" : "256") + '" loading="lazy" decoding="async" />';
+    function cosmeticsEmoji(id) {
+      return COS_EMBLEM_EMOJI[id] || "⭐";
+    }
+
+    function cosmeticsEmblemMark(id, cls) {
+      // Emblems paint as emoji-size marks. Prefer the emoji glyph; tiny art is a fallback only.
+      return '<span class="' + (cls || "cos-emoji") + '" aria-hidden="true">'
+        + cosmeticsEmoji(id) + "</span>";
+    }
+
+    function cosmeticsTitleBanner(c, cls) {
+      const path = cosmeticsArtPath("title", c.id);
+      const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0 && COS_TITLE_ART.has(c.id);
+      if (path) {
+        return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+          + '" alt="' + esc(c.name) + '" width="768" height="34" loading="lazy" decoding="async" />';
+      }
+      return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
+        + esc(c.name) + "</span>";
     }
 
     function cosmeticsSort(a, b) {
@@ -14765,44 +14864,83 @@ const html = `<!DOCTYPE html>
       return String(a.name || "").localeCompare(String(b.name || ""));
     }
 
+    function cosmeticsDetailSheetHtml() {
+      if (!cosmeticsDetailId) return "";
+      const book = cosmeticsBook || { catalog: [] };
+      const c = book.catalog.find((x) => x.id === cosmeticsDetailId);
+      if (!c) return "";
+      const got = cosmeticsUnlocked(c.id);
+      const on = cosmeticsEquip[c.kind] === c.id;
+      const locked = !got;
+      const head = c.kind === "emblem"
+        ? cosmeticsEmblemMark(c.id)
+        : cosmeticsTitleBanner(c, "cos-sheet-banner");
+      return '<div class="cos-sheet" role="dialog" aria-modal="true" aria-label="' + esc(c.name) + '">'
+        + '<button type="button" class="cos-sheet-scrim" data-cos-detail-close="1" aria-label="Close"></button>'
+        + '<div class="cos-sheet-panel">'
+        + (c.kind === "emblem"
+          ? ('<div class="cos-sheet-head">' + head + "<h3>" + esc(c.name) + "</h3></div>")
+          : (head + "<h3>" + esc(c.name) + "</h3>"))
+        + '<p class="cos-sheet-how">' + esc(c.how || "") + "</p>"
+        + '<p class="cos-sheet-got">'
+        + esc(locked ? ("Locked — " + (c.how || "Not unlocked yet.")) : ("Unlocked — " + got))
+        + "</p>"
+        + '<div class="cos-sheet-actions">'
+        + (locked
+          ? ""
+          : ('<button type="button" class="chip" data-cos-equip="' + esc(c.id) + '"'
+            + ' data-cos-kind="' + esc(c.kind) + '">'
+            + (on ? "Unequip" : "Equip") + "</button>"))
+        + '<button type="button" class="chip" data-cos-detail-close="1">Close</button>'
+        + "</div></div></div>";
+    }
+
     function renderCosmetics() {
       const book = cosmeticsBook || { catalog: [] };
       const titles = book.catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
       const emblems = book.catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
       const eqTitle = book.catalog.find((c) => c.id === cosmeticsEquip.title);
       const eqEmblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
-      const plateArt = cosmeticsArtPath("title", eqTitle && eqTitle.id) || "data/ui/cosmetics/nameplate-preview.png";
-      const plateEmblem = eqEmblem ? cosmeticsArtImg("emblem", eqEmblem.id, "cos-plate-emblem") : "";
-      const plate = '<div class="cos-plate">'
-        + '<img src="' + esc(plateArt) + "?" + DATA_V + '" alt="" width="768" height="168" decoding="async" />'
-        + '<div class="cos-plate-meta">'
-        + (plateEmblem || "")
-        + '<div class="cos-plate-copy"><strong>'
-        + esc(eqTitle ? eqTitle.name : "No title equipped")
-        + "</strong><span>"
-        + esc(eqEmblem ? eqEmblem.name : "No emblem equipped")
-        + "</span></div></div></div>";
-      const card = (c) => {
+      const plateBanner = eqTitle
+        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
+        : '<span class="cos-plate-banner is-text">No title equipped</span>';
+      const plateEmblem = eqEmblem
+        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
+        : '<div class="cos-plate-emblem" aria-hidden="true">☆</div>';
+      const plate = '<div class="cos-plate" aria-label="Equipped calling card">'
+        + plateBanner + plateEmblem + "</div>";
+      const titleRow = (c) => {
         const got = cosmeticsUnlocked(c.id);
-        const on = cosmeticsEquip[c.kind] === c.id;
+        const on = cosmeticsEquip.title === c.id;
         const locked = !got;
         const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0;
-        const art = cosmeticsArtImg(c.kind, c.id, "cos-art cos-art-" + c.kind);
-        return '<button type="button" class="cos-card' + (locked ? " is-locked" : "") + (on ? " is-on" : "")
-          + (ladder ? " is-ladder" : "") + '"'
-          + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="' + esc(c.kind) + '">'
-          + art
-          + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
-          + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
+        return '<button type="button" class="cos-title' + (locked ? " is-locked" : "")
+          + (on ? " is-on" : "") + (ladder ? " is-ladder" : "") + '"'
+          + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="title"'
+          + ' aria-label="' + esc(c.name + (on ? ", equipped" : "") + (locked ? ", locked" : "")) + '">'
+          + cosmeticsTitleBanner(c, "cos-title-banner")
+          + "</button>";
+      };
+      const emblemCell = (c) => {
+        const got = cosmeticsUnlocked(c.id);
+        const on = cosmeticsEquip.emblem === c.id;
+        const locked = !got;
+        return '<button type="button" class="cos-emblem' + (locked ? " is-locked" : "")
+          + (on ? " is-on" : "") + '"'
+          + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="emblem"'
+          + ' aria-label="' + esc(c.name + (on ? ", equipped" : "") + (locked ? ", locked" : "")) + '">'
+          + cosmeticsEmblemMark(c.id)
+          + '<span class="cos-emblem-lab">' + esc(c.name) + "</span></button>";
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Championship titles sit at the top. Five is the mountain. Equip one title and one emblem.</p>'
+        + '<p class="caption">Championship titles sit at the top. Tap a banner or mark for its description. Equip one title and one emblem.</p>'
         + plate
         + "<h3>Titles</h3>"
-        + '<div class="cos-grid">' + titles.map(card).join("") + "</div>"
+        + '<div class="cos-titles">' + titles.map(titleRow).join("") + "</div>"
         + "<h3>Emblems</h3>"
-        + '<div class="cos-grid">' + emblems.map(card).join("") + "</div>";
+        + '<div class="cos-emblems">' + emblems.map(emblemCell).join("") + "</div>"
+        + cosmeticsDetailSheetHtml();
     }
 
     function leagueInProgress() {
@@ -16186,6 +16324,11 @@ const html = `<!DOCTYPE html>
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
+      if (cosmeticsDetailId) {
+        cosmeticsDetailId = null;
+        render();
+        return true;
+      }
       if (lensOpen) {
         lensOpen = false;
         lensPicker = "trade";
@@ -16328,6 +16471,12 @@ const html = `<!DOCTYPE html>
     });
 
     document.getElementById("app").addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && cosmeticsDetailId) {
+        e.preventDefault();
+        cosmeticsDetailId = null;
+        render();
+        return;
+      }
       if (e.key === "Escape" && (voteSheetTx || voteConfirmTx)) {
         e.preventDefault();
         voteSheetTx = null;
@@ -17316,13 +17465,29 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const cosClose = e.target.closest("[data-cos-detail-close]");
+      if (cosClose) {
+        cosmeticsDetailId = null;
+        render();
+        return;
+      }
+      const cosEquip = e.target.closest("[data-cos-equip]");
+      if (cosEquip) {
+        const id = cosEquip.getAttribute("data-cos-equip");
+        const kind = cosEquip.getAttribute("data-cos-kind");
+        if (id && kind && cosmeticsUnlocked(id)) {
+          cosmeticsEquip[kind] = cosmeticsEquip[kind] === id ? null : id;
+          cosmeticsSaveEquip();
+          cosmeticsDetailId = null;
+          render();
+        }
+        return;
+      }
       const cosBtn = e.target.closest("[data-cos-id]");
       if (cosBtn) {
         const id = cosBtn.getAttribute("data-cos-id");
-        const kind = cosBtn.getAttribute("data-cos-kind");
-        if (cosmeticsUnlocked(id)) {
-          cosmeticsEquip[kind] = cosmeticsEquip[kind] === id ? null : id;
-          cosmeticsSaveEquip();
+        if (id) {
+          cosmeticsDetailId = id;
           render();
         }
         return;
@@ -17334,6 +17499,7 @@ const html = `<!DOCTYPE html>
         if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
         if (view === "cuffs" && nextView !== "cuffs") clearCuffFilters();
         view = nextView;
+        if (view !== "cosmetics") cosmeticsDetailId = null;
         openId = null;
         tradeSeat = null;
         openDraft = null;
@@ -20028,14 +20194,14 @@ if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || inline.includes("Everyone chases the same 25")) {
   throw new Error("barracks must sort the championship ladder first and include finalist rungs");
 }
-if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function cosmeticsArtImg(")
-  || !inline.includes("COS_TITLE_ART") || !inline.includes("COS_EMBLEM_ART")
-  || !inline.includes("cos-art cos-art-")
-  || !inline.includes("data/ui/cosmetics/title-")
-  || !inline.includes("data/ui/cosmetics/emblem-")
-  || !inline.includes("data/ui/cosmetics/nameplate-preview.png")
+if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function cosmeticsEmblemMark(")
+  || !inline.includes("COS_TITLE_ART") || !inline.includes("COS_EMBLEM_EMOJI")
+  || !inline.includes("cos-title-banner") || !inline.includes("cos-emblems")
+  || !inline.includes("function cosmeticsDetailSheetHtml(")
+  || !inline.includes("data-cos-detail-close")
+  || !inline.includes("Tap a banner or mark for its description")
   || !inline.includes("class=\"cos-plate\"")) {
-  throw new Error("Titles and Emblems must paint title banners, emblem art, and the nameplate preview");
+  throw new Error("Titles and Emblems must use compact COD banners, emoji marks, and tap-to-read details");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")

@@ -1510,85 +1510,100 @@
       background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
-    /* Titles & Emblems — COD calling-card density: thin banners + emoji-size marks. */
+    /* Titles & Emblems — banner art is 840×297. Keep that ratio and
+       object-fit:contain so the full design + words show edge-to-edge. */
     .cos-plate {
-      margin: 0 0 12px; border: 1px solid var(--line); border-radius: 10px;
+      margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
-      display: flex; align-items: stretch; min-height: 40px;
+      display: flex; align-items: stretch;
     }
     .cos-plate-banner {
-      flex: 1 1 auto; min-width: 0; height: 40px; object-fit: cover; object-position: center;
+      flex: 1 1 auto; min-width: 0; width: 100%;
+      aspect-ratio: 840 / 297; height: auto; max-height: none;
+      object-fit: contain; object-position: center;
       display: block; background: #1a1d26;
     }
     .cos-plate-banner.is-text {
       display: flex; align-items: center; justify-content: center;
-      padding: 0 10px; font-size: 0.78rem; font-weight: 750; letter-spacing: 0.04em;
+      aspect-ratio: 840 / 297; height: auto;
+      padding: 0 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.04em;
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
     }
     .cos-plate-emblem {
-      flex: 0 0 40px; width: 40px; height: 40px; display: grid; place-items: center;
+      flex: 0 0 auto; width: clamp(52px, 18%, 72px); align-self: stretch;
+      display: grid; place-items: center;
       border-left: 1px solid var(--line); background: #0e1016;
+      padding: 6px;
     }
     .cos-plate-emblem img {
-      width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%;
+      width: min(44px, 100%); height: min(44px, 100%);
+      object-fit: contain; display: block; border-radius: 50%;
     }
     .cos-titles {
-      display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px;
+      display: flex; flex-direction: column; gap: 12px; margin: 0 0 16px;
     }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
-      border: 1px solid var(--line); border-radius: 8px; padding: 0;
-      background: #12151c; overflow: hidden; min-height: 48px; height: 48px;
-      position: relative; text-align: left;
+      border: 1px solid var(--line); border-radius: 12px; padding: 4px;
+      background: #0a0c10; overflow: hidden; height: auto; min-height: 0;
+      position: relative; text-align: left; line-height: 0;
     }
     button.cos-title.is-locked { opacity: 0.45; }
-    button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
+    button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
-      display: block; width: 100%; height: 48px; object-fit: cover; object-position: center 42%;
+      display: block; width: 100%; height: auto;
+      object-fit: contain; object-position: center;
+      background: #0a0c10; border-radius: 8px;
     }
     .cos-title-fallback {
-      display: flex; align-items: center; justify-content: center; height: 48px;
-      padding: 0 10px; font-size: 0.72rem; font-weight: 750; letter-spacing: 0.05em;
-      text-transform: uppercase; color: #f0e6cc;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 72px; height: auto; line-height: 1.2;
+      padding: 16px 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.05em;
+      text-transform: uppercase; color: #f0e6cc; border-radius: 8px;
       background: linear-gradient(90deg, #1c2230, #3a4558 50%, #1c2230);
     }
     .cos-title-fallback.is-gold {
       background: linear-gradient(90deg, #2a2418, #5a4518 50%, #2a2418); color: #ffe6a0;
     }
     .cos-emblems {
-      display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
       margin: 0 0 16px;
+    }
+    @media (min-width: 420px) {
+      .cos-emblems { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     }
     button.cos-emblem {
       appearance: none; font: inherit; cursor: pointer; color: var(--text);
-      border: 1px solid var(--line); border-radius: 10px; background: var(--card);
-      min-height: 44px; min-width: 0; padding: 4px 2px 6px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+      min-height: 72px; min-width: 0; padding: 8px 4px 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     }
     button.cos-emblem.is-locked { opacity: 0.4; }
-    button.cos-emblem.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
+    button.cos-emblem.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
     .cos-emoji {
-      width: 28px; height: 28px; line-height: 1;
+      width: 40px; height: 40px; line-height: 1;
       display: grid; place-items: center; flex: 0 0 auto;
     }
     .cos-emoji img {
-      width: 28px; height: 28px; object-fit: contain; display: block;
+      width: 40px; height: 40px; object-fit: contain; display: block;
       border-radius: 50%;
     }
     .cos-emoji-missing {
-      width: 28px; height: 28px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: #2a2d36; border: 1px solid var(--line);
     }
     .cos-emblem-lab {
-      font-size: 0.55rem; line-height: 1.1; color: var(--dim); text-align: center;
-      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 0.62rem; line-height: 1.15; color: var(--dim); text-align: center;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+      white-space: normal; word-break: break-word;
     }
     .cos-plate-emblem .cos-emoji,
     .cos-plate-emblem .cos-emoji img,
     .cos-plate-emblem .cos-emoji-missing {
-      width: 28px; height: 28px;
+      width: min(44px, 100%); height: min(44px, 100%);
     }
     /* Equipped emblem on your seat name — same density as the champ crown. */
     .seat-cos-mark {
@@ -1601,14 +1616,18 @@
     .cos-profile-plate {
       margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
-      display: flex; align-items: stretch; min-height: 36px;
+      display: flex; align-items: stretch;
     }
     .cos-profile-plate .cos-plate-banner,
-    .cos-profile-plate .cos-plate-banner.is-text { height: 36px; }
-    .cos-profile-plate .cos-plate-emblem { flex-basis: 36px; width: 36px; height: 36px; }
+    .cos-profile-plate .cos-plate-banner.is-text {
+      aspect-ratio: 840 / 297; height: auto;
+    }
+    .cos-profile-plate .cos-plate-emblem {
+      width: clamp(44px, 16%, 60px); padding: 4px;
+    }
     .cos-profile-plate .cos-plate-emblem img,
     .cos-profile-plate .cos-emoji,
-    .cos-profile-plate .cos-emoji-missing { width: 24px; height: 24px; }
+    .cos-profile-plate .cos-emoji-missing { width: min(36px, 100%); height: min(36px, 100%); }
     .cos-sheet {
       position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
       justify-content: center; padding: 12px;
@@ -1627,10 +1646,12 @@
     }
     .cos-sheet-head .cos-emoji,
     .cos-sheet-head .cos-emoji img {
-      width: 40px; height: 40px;
+      width: 44px; height: 44px;
     }
     .cos-sheet-banner {
-      width: 100%; height: 40px; object-fit: cover; border-radius: 8px; margin: 0 0 10px;
+      width: 100%; height: auto; aspect-ratio: 840 / 297;
+      object-fit: contain; object-position: center;
+      border-radius: 8px; margin: 0 0 10px;
       display: block; background: #12151c;
     }
     .cos-sheet-panel h3 { margin: 0; font-size: 1.05rem; }
@@ -3286,7 +3307,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906222551";
+    const DATA_V = "news20260906235600";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14928,7 +14949,7 @@
       const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0 && COS_TITLE_ART.has(c.id);
       if (path) {
       return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="768" height="48" loading="lazy" decoding="async" />';
+        + '" alt="' + esc(c.name) + '" width="840" height="297" loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";

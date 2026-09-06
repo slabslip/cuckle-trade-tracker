@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * League calculator catalog: rostered players + still-held picks on the today book
- * (flatten + 40/60 KTC). Same flatten constants as revalue.mjs.
+ * League calculator catalog: unique rostered players + still-held picks on the today
+ * book (flatten + 40/60 KTC), sorted by today value. Same flatten constants as revalue.mjs.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { leagueUiDir, pickTier, readJson, setLeagueId, writeUi } from "./lib.mjs";
@@ -136,7 +136,7 @@ function pickValue(index, year, round, slot, asOf) {
   return tryRound(r0) || tryRound(_pickMaxRound) || { value: null };
 }
 
-function pricePlayer(sid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice) {
+function pricePlayer(sid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice, extra = {}) {
   const key = `player:${sid}`;
   const raw = playerValue(curveIdx, key, today).value;
   const flat = raw == null ? null : flatten(raw, vmax);
@@ -148,14 +148,15 @@ function pricePlayer(sid, name, ownerId, ownerName, curveIdx, vmax, today, today
     value: flat,
   }, todayPrice);
   const ktc = ktcBySid[String(sid)] || {};
+  const age = ktc.age == null ? extra.age : ktc.age;
   return {
     id: key,
     kind: "player",
     sleeper_id: String(sid),
     name,
-    pos: ktc.pos || "",
-    team: ktc.team || "",
-    age: ktc.age == null ? null : Number(ktc.age),
+    pos: ktc.pos || extra.pos || "",
+    team: ktc.team || extra.team || "",
+    age: age == null || age === "" ? null : Number(age),
     owner_id: ownerId,
     owner: ownerName,
     value: value == null ? null : Math.round(value),
@@ -197,14 +198,40 @@ function hopOwner(row) {
   return hops[hops.length - 1].to || hops[hops.length - 1].from || null;
 }
 
-/** Sleeper team page: starters (slot order), bench, IR, taxi. */
+/** Sleeper team page: starters, bench, IR, taxi — each player once. */
 function sleeperRosterIds(r) {
   const starters = (r.starters || []).map(String).filter((id) => id && id !== "0");
   const reserve = (r.reserve || []).map(String).filter(Boolean);
   const taxi = (r.taxi || []).map(String).filter(Boolean);
   const taken = new Set(starters.concat(reserve, taxi));
   const bench = (r.players || []).map(String).filter((id) => id && !taken.has(id));
-  return starters.concat(bench, reserve, taxi);
+  const out = [];
+  const seen = new Set();
+  for (const id of starters.concat(bench, reserve, taxi)) {
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+function looksLikeId(name) {
+  return !name || /^\d+$/.test(String(name));
+}
+
+async function sleeperPlayer(pid) {
+  const res = await fetch(`https://api.sleeper.app/v1/players/nfl/${encodeURIComponent(pid)}`);
+  if (!res.ok) return null;
+  const p = await res.json();
+  if (!p || typeof p !== "object") return null;
+  const name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ");
+  if (!name) return null;
+  return {
+    name,
+    pos: p.position || (p.fantasy_positions && p.fantasy_positions[0]) || "",
+    team: p.team || "",
+    age: p.age == null ? null : Number(p.age),
+  };
 }
 
 const curve = readJson("value_curve.json", []);
@@ -237,14 +264,20 @@ for (const r of rosters) {
   const ownerId = String(r.owner_id || "");
   const ownerName = nameById[ownerId] || ownerId;
   const ordered = sleeperRosterIds(r);
-  ordered.forEach((pid, i) => {
+  let i = 0;
+  for (const pid of ordered) {
     const p = playersNfl[String(pid)] || {};
-    const name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ")
+    let name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ")
       || ktcNameBySid[String(pid)] || String(pid);
-    const row = pricePlayer(pid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice);
-    row.roster_ord = i;
+    let extra = {};
+    if (looksLikeId(name)) {
+      extra = (await sleeperPlayer(pid)) || {};
+      if (extra.name) name = extra.name;
+    }
+    const row = pricePlayer(pid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice, extra);
+    row.roster_ord = i++;
     players.push(row);
-  });
+  }
 }
 
 const picksOut = [];
@@ -255,13 +288,9 @@ for (const [key, row] of Object.entries(picks)) {
   picksOut.push(pricePick(key, row, ownerId, ownerName || "", curveIdx, vmax, today, todayPrice));
 }
 
-picksOut.sort((a, b) => {
-  const y = Number(a.year) - Number(b.year);
-  if (y) return y;
-  const r = Number(a.round) - Number(b.round);
-  if (r) return r;
-  return (Number(a.slot) || 0) - (Number(b.slot) || 0) || String(a.name).localeCompare(String(b.name));
-});
+picksOut.sort((a, b) => String(a.owner_id).localeCompare(String(b.owner_id))
+  || (Number(b.value) || 0) - (Number(a.value) || 0)
+  || String(a.name || "").localeCompare(String(b.name || "")));
 const pickOrdByOwner = new Map();
 for (const row of picksOut) {
   const n = pickOrdByOwner.get(row.owner_id) || 0;
@@ -269,7 +298,8 @@ for (const row of picksOut) {
   pickOrdByOwner.set(row.owner_id, n + 1);
 }
 players.sort((a, b) => String(a.owner_id).localeCompare(String(b.owner_id))
-  || (a.roster_ord - b.roster_ord) || a.name.localeCompare(b.name));
+  || (Number(b.value) || 0) - (Number(a.value) || 0)
+  || String(a.name || "").localeCompare(String(b.name || "")));
 
 const book = {
   v: 1,

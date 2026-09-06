@@ -1427,25 +1427,40 @@ const html = `<!DOCTYPE html>
       position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
       color: var(--dim); pointer-events: none; font-size: 0.95rem;
     }
+    .calc-picker { background: var(--bg); border-bottom: 1px solid var(--line); }
     .calc-hits {
-      padding: 0 12px 8px;
-      max-height: min(60vh, 480px);
+      padding: 8px 12px;
+      max-height: min(52vh, 400px);
       overflow-y: auto;
+      overflow-anchor: none;
+      overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
+    .calc-picker-bar {
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+      padding: 8px 12px 10px; background: #1a1a1e; border-top: 1px solid var(--line);
+    }
+    .calc-picker-shut { padding: 8px 12px 10px; }
     .calc-group {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
       color: var(--dim); padding: 8px 4px 4px;
     }
     .calc-group:first-child { padding-top: 2px; }
     .calc-empty { font-size: 0.78rem; color: var(--dim); padding: 6px 4px 8px; }
-    button.calc-hit {
+    .calc-hit {
       appearance: none; font: inherit; color: var(--text); background: var(--bg);
       border: 1px solid var(--line); border-radius: 10px; width: 100%;
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
+      box-sizing: border-box; -webkit-user-select: none; user-select: none;
     }
-    button.calc-hit:last-child { margin-bottom: 0; }
+    .calc-hit:last-child { margin-bottom: 0; }
+    .calc-hit.is-on {
+      border-color: #e0b44c;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45);
+      background: #1c1a14;
+    }
     .calc-hit-name { font-weight: 650; min-width: 0; }
     .calc-hit-meta { display: block; font-size: 0.72rem; color: var(--dim); font-weight: 500; }
     .calc-hit-val { font-variant-numeric: tabular-nums; color: var(--lh-gold, #e0b44c); font-weight: 700; flex: 0 0 auto; }
@@ -3161,7 +3176,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906134049";
+    const DATA_V = "calcMerge20260906135000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3198,11 +3213,29 @@ const html = `<!DOCTYPE html>
     // League-home top tabs: home (digest) | teams | ledger | history.
     let homeTab = "home";
     let calcBook = null;
+    // Stale calculator.json still shipped raw Sleeper ids as the row title + "Player".
+    const CALC_ID_NAMES = {
+      "13264": { name: "Dohnte Meyers", pos: "WR", team: "CIN" },
+      "11237": { name: "Jacob Saylors", pos: "RB", team: "DET" },
+      "13425": { name: "Jalon Daniels", pos: "QB", team: "TB" },
+      "2078": { name: "Odell Beckham", pos: "WR", team: "NYG" },
+      "8116": { name: "Pierre Strong", pos: "RB", team: "GB" },
+      "13602": { name: "Jack Strand", pos: "QB", team: "ATL" },
+      "13726": { name: "Camden Brown", pos: "WR", team: "DAL" },
+      "13394": { name: "Josh Cameron", pos: "WR", team: "JAX" },
+      "13199": { name: "Montorie Foster", pos: "WR", team: "SEA" },
+      "13434": { name: "Will Kacmarek", pos: "TE", team: "MIA" },
+      "13324": { name: "Matt Hibner", pos: "TE", team: "BAL" },
+    };
     let calcSeatA = "";
     let calcSeatB = "";
     let calcSide = "a";
     let calcLegsA = [];
     let calcLegsB = [];
+    let calcPickA = [];
+    let calcPickB = [];
+    let calcHitsScrollA = 0;
+    let calcHitsScrollB = 0;
     let calcFilterA = "";
     let calcFilterB = "";
     let calcOpenA = false;
@@ -4547,6 +4580,8 @@ const html = `<!DOCTYPE html>
       } catch (err) { voteBook = null; }
       try {
         calcBook = calcRaw && calcRaw.v === 1 ? calcRaw : null;
+        calcApplyNameMap();
+        calcRepairNames();
       } catch (err) { calcBook = null; }
       try {
         cosmeticsBook = cosRaw && cosRaw.v === 1 && Array.isArray(cosRaw.catalog) ? cosRaw : null;
@@ -14245,6 +14280,61 @@ const html = `<!DOCTYPE html>
       return (book.players || []).concat(book.picks || []).find((a) => a.id === id) || null;
     }
 
+    function calcLooksLikeId(name) {
+      return !name || /^[0-9]+$/.test(String(name));
+    }
+
+    function calcValueNum(a) {
+      const n = Number(a && a.value);
+      return Number.isFinite(n) ? n : -1;
+    }
+
+    function calcDisplayName(a) {
+      if (!a) return "";
+      if (!calcLooksLikeId(a.name)) return a.name;
+      const sid = String(a.sleeper_id || a.name || "");
+      const known = CALC_ID_NAMES[sid];
+      if (known && known.name) return known.name;
+      if (a.label && !calcLooksLikeId(a.label)) return a.label;
+      return "";
+    }
+
+    function calcApplyNameMap() {
+      const book = calcBook;
+      if (!book || !Array.isArray(book.players)) return;
+      for (let i = 0; i < book.players.length; i++) {
+        const p = book.players[i];
+        const sid = String(p.sleeper_id || "");
+        const known = CALC_ID_NAMES[sid];
+        if (!known) continue;
+        if (calcLooksLikeId(p.name)) p.name = known.name;
+        if (!p.pos && known.pos) p.pos = known.pos;
+        if (!p.team && known.team) p.team = known.team;
+      }
+    }
+
+    async function calcRepairNames() {
+      const book = calcBook;
+      if (!book || !Array.isArray(book.players)) return;
+      calcApplyNameMap();
+      const need = book.players.filter((p) => calcLooksLikeId(p.name) && p.sleeper_id);
+      if (!need.length) return;
+      let changed = false;
+      for (let i = 0; i < need.length; i++) {
+        const p = need[i];
+        try {
+          const res = await fetch("https://api.sleeper.app/v1/players/nfl/" + encodeURIComponent(p.sleeper_id));
+          if (!res.ok) continue;
+          const row = await res.json();
+          const name = row && (row.full_name || [row.first_name, row.last_name].filter(Boolean).join(" "));
+          if (name) { p.name = name; changed = true; }
+          if (row && !p.pos) p.pos = row.position || (row.fantasy_positions && row.fantasy_positions[0]) || p.pos;
+          if (row && !p.team && row.team) p.team = row.team;
+        } catch (err) { /* leave the row; map already tried */ }
+      }
+      if (changed && view === "calc") render();
+    }
+
     function calcFmt(n) {
       if (n == null || Number.isNaN(n)) return "—";
       return Math.round(n).toLocaleString();
@@ -14331,29 +14421,28 @@ const html = `<!DOCTYPE html>
       const needle = uid ? "" : String(q || "").trim().toLowerCase();
       if (!uid && !needle) return [];
       const used = new Set((calcLegsA.concat(calcLegsB)).map((l) => l.id));
+      const seen = new Set();
       const pool = (book.players || []).concat(book.picks || []).filter((a) => {
+        if (!a || !a.id || seen.has(a.id) || used.has(a.id)) return false;
         if (uid && String(a.owner_id) !== String(uid)) return false;
-        if (used.has(a.id)) return false;
         if (!calcAssetNeedle(a, needle)) return false;
+        seen.add(a.id);
         return true;
       });
       if (uid) {
         return pool.slice().sort((a, b) => {
-          const oa = a.roster_ord == null ? 9999 : Number(a.roster_ord);
-          const ob = b.roster_ord == null ? 9999 : Number(b.roster_ord);
-          if (oa !== ob) return oa - ob;
-          if (a.kind !== b.kind) return a.kind === "player" ? -1 : 1;
-          return String(a.name || "").localeCompare(String(b.name || ""));
+          return calcValueNum(b) - calcValueNum(a)
+            || String(calcDisplayName(a) || a.name || "").localeCompare(String(calcDisplayName(b) || b.name || ""));
         });
       }
       return pool.slice().sort((a, b) => {
-        const na = String(a.name || "").toLowerCase();
-        const nb = String(b.name || "").toLowerCase();
+        const na = String(calcDisplayName(a) || a.name || "").toLowerCase();
+        const nb = String(calcDisplayName(b) || b.name || "").toLowerCase();
         const sa = na.indexOf(needle) === 0 ? 0 : na.indexOf(needle) >= 0 ? 1 : 2;
         const sb = nb.indexOf(needle) === 0 ? 0 : nb.indexOf(needle) >= 0 ? 1 : 2;
         if (sa !== sb) return sa - sb;
-        return (Number(b.value) || 0) - (Number(a.value) || 0)
-          || String(a.name || "").localeCompare(String(b.name || ""));
+        return calcValueNum(b) - calcValueNum(a)
+          || String(na).localeCompare(String(nb));
       });
     }
 
@@ -14449,35 +14538,123 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    function calcHitBtn(a, side, showOwner) {
-      return '<button type="button" class="calc-hit" data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '">'
-        + '<span class="calc-hit-name">' + esc(a.name)
-        + '<span class="calc-hit-meta">' + esc(calcMeta(a, showOwner) || (a.kind === "pick" ? "Pick" : "Player")) + "</span></span>"
-        + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></button>";
+    function calcPicksOf(side) {
+      return side === "b" ? calcPickB : calcPickA;
+    }
+
+    function calcPickHas(side, id) {
+      return calcPicksOf(side).indexOf(id) >= 0;
+    }
+
+    function calcRememberHitsScroll(side) {
+      const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
+      if (!el) return;
+      if (side === "b") calcHitsScrollB = el.scrollTop;
+      else calcHitsScrollA = el.scrollTop;
+    }
+
+    function calcRestoreHitsScroll(side) {
+      const top = side === "b" ? calcHitsScrollB : calcHitsScrollA;
+      const apply = () => {
+        const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
+        if (el) el.scrollTop = top;
+      };
+      apply();
+      queueMicrotask(apply);
+    }
+
+    function calcBindHits() {
+      ["a", "b"].forEach((side) => {
+        const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
+        if (!el) return;
+        el.addEventListener("scroll", () => calcRememberHitsScroll(side), { passive: true });
+        el.addEventListener("touchstart", () => {
+          const ae = document.activeElement;
+          if (ae && el.contains(ae) && ae !== el && ae.blur) ae.blur();
+        }, { passive: true });
+      });
+    }
+
+    function calcCommitPicks(side) {
+      const ids = calcPicksOf(side);
+      const bag = side === "b" ? calcLegsB : calcLegsA;
+      const add = [];
+      for (let i = 0; i < ids.length; i++) {
+        const asset = calcLegFromAsset(calcAssetById(ids[i]));
+        if (!asset) continue;
+        if (bag.some((l) => l.id === asset.id) || add.some((l) => l.id === asset.id)) continue;
+        add.push(asset);
+      }
+      if (side === "b") {
+        calcLegsB = bag.concat(add);
+        calcPickB = [];
+        calcOpenB = false;
+        calcFilterB = "";
+        calcHitsScrollB = 0;
+      } else {
+        calcLegsA = bag.concat(add);
+        calcPickA = [];
+        calcOpenA = false;
+        calcFilterA = "";
+        calcHitsScrollA = 0;
+      }
+      calcSide = side;
+    }
+
+    function calcClosePicker(side) {
+      if (side === "b") { calcPickB = []; calcOpenB = false; calcHitsScrollB = 0; }
+      else { calcPickA = []; calcOpenA = false; calcHitsScrollA = 0; }
+    }
+
+    function calcHitBtn(a, side, showOwner, mode) {
+      const on = mode === "toggle" && calcPickHas(side, a.id);
+      const attr = mode === "toggle"
+        ? ' data-calc-toggle="' + esc(a.id) + '" data-calc-to="' + side + '"'
+        : ' data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '"';
+      const mapped = calcDisplayName(a);
+      const name = mapped || (!calcLooksLikeId(a.name) ? (a.name || "") : (a.pos || "Rostered"));
+      const meta = calcMeta(a, showOwner) || (a.kind === "pick" || a.pos === "PICK" ? "Pick" : (a.pos || ""));
+      return '<div role="button" tabindex="-1" class="calc-hit' + (on ? " is-on" : "") + '"' + attr + ">"
+        + '<span class="calc-hit-name">' + esc(name)
+        + (meta ? '<span class="calc-hit-meta">' + esc(meta) + "</span>" : "") + "</span>"
+        + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></div>";
     }
 
     function calcHitsHtml(uid, q, open, side) {
       const needle = String(q || "").trim();
-      if (!uid && !needle) return "";
+      if (uid) {
+        if (calcSeatMenu === side) return "";
+        if (!open) {
+          return '<div class="calc-picker-shut">'
+            + '<button type="button" class="chip" data-calc-roster="' + side + '">Add from roster</button>'
+            + "</div>";
+        }
+      } else if (!needle) {
+        return "";
+      }
       const hits = calcAssetsForSeat(uid, q, open);
       if (!hits.length) {
-        return '<div class="calc-hits"><div class="calc-empty">'
+        const empty = '<div class="calc-hits" data-calc-hits="' + side + '"><div class="calc-empty">'
           + (uid ? "No matches on that roster." : "No matching players or picks.")
           + "</div></div>";
+        return uid ? ('<div class="calc-picker">' + empty + calcPickerBar(side) + "</div>") : empty;
       }
       if (uid) {
-        const players = hits.filter((a) => a.kind === "player");
-        const picks = hits.filter((a) => a.kind === "pick" || a.pos === "PICK");
-        let html = "";
-        if (players.length) {
-          html += '<div class="calc-group">Players</div>' + players.map((a) => calcHitBtn(a, side, false)).join("");
-        }
-        if (picks.length) {
-          html += '<div class="calc-group">Draft picks</div>' + picks.map((a) => calcHitBtn(a, side, false)).join("");
-        }
-        return html ? '<div class="calc-hits">' + html + "</div>" : "";
+        const html = hits.map((a) => calcHitBtn(a, side, false, "toggle")).join("");
+        return html
+          ? '<div class="calc-picker"><div class="calc-hits" data-calc-hits="' + side + '">' + html + "</div>"
+            + calcPickerBar(side) + "</div>"
+          : "";
       }
-      return '<div class="calc-hits">' + hits.map((a) => calcHitBtn(a, side, true)).join("") + "</div>";
+      return '<div class="calc-hits">' + hits.map((a) => calcHitBtn(a, side, true, "add")).join("") + "</div>";
+    }
+
+    function calcPickerBar(side) {
+      const n = calcPicksOf(side).length;
+      return '<div class="calc-picker-bar">'
+        + '<button type="button" class="chip" data-calc-close="' + side + '">Close</button>'
+        + '<button type="button" class="chip" data-calc-done="' + side + '">'
+        + (n ? ("Done · " + n) : "Done") + "</button></div>";
     }
 
     function calcSideHtml(side) {
@@ -14510,7 +14687,7 @@ const html = `<!DOCTYPE html>
     function renderCalc() {
       return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
-        + '<p class="caption">Pick a team to scroll that roster and remaining picks — values on every row. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
+        + '<p class="caption">Pick a team, highlight pieces, tap Done. One roster list, highest today value first. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
 
@@ -15630,6 +15807,11 @@ const html = `<!DOCTYPE html>
       // no reason.
       const newsBox = app.querySelector(".news-box");
       const newsScroll = newsBox ? newsBox.scrollTop : 0;
+      const calcPageY = (view === "calc" && !focusNext) ? window.scrollY : 0;
+      if (view === "calc") {
+        calcRememberHitsScroll("a");
+        calcRememberHitsScroll("b");
+      }
       app.innerHTML = syncNote + seatName + nav + body + voteSheetHtml() + voteConfirmHtml();
       ledgerUnparkCompose();
       ledgerRememberCompose();
@@ -15637,6 +15819,12 @@ const html = `<!DOCTYPE html>
       if (newsScroll) {
         const box = app.querySelector(".news-box");
         if (box) box.scrollTop = newsScroll;
+      }
+      if (view === "calc") {
+        calcRestoreHitsScroll("a");
+        calcRestoreHitsScroll("b");
+        calcBindHits();
+        if (calcPageY) window.scrollTo(0, calcPageY);
       }
       // A new screen puts focus on its own heading and starts at the top, so a keyboard or a
       // screen reader lands on the new content instead of holding the old screen's place.
@@ -16983,8 +17171,8 @@ const html = `<!DOCTYPE html>
       if (calcSeatPick) {
         const side = calcSeatPick.getAttribute("data-calc-seat-pick");
         const uid = calcSeatPick.getAttribute("data-uid") || "";
-        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = !!uid; }
-        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = !!uid; }
+        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = !!uid; calcPickB = []; calcHitsScrollB = 0; }
+        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = !!uid; calcPickA = []; calcHitsScrollA = 0; }
         calcSide = side === "b" ? "b" : "a";
         calcSeatMenu = "";
         calcSeatIgnoreOpenUntil = Date.now() + 450;
@@ -16995,6 +17183,43 @@ const html = `<!DOCTYPE html>
           btn.style.pointerEvents = "none";
           setTimeout(() => { if (btn.isConnected) btn.style.pointerEvents = ""; }, 450);
         }
+        return;
+      }
+      const calcToggle = e.target.closest("[data-calc-toggle]");
+      if (calcToggle) {
+        const to = calcToggle.getAttribute("data-calc-to") || calcSide || "a";
+        const id = calcToggle.getAttribute("data-calc-toggle");
+        if (id) {
+          const cur = calcPicksOf(to);
+          const next = cur.indexOf(id) >= 0 ? cur.filter((x) => x !== id) : cur.concat([id]);
+          if (to === "b") calcPickB = next;
+          else calcPickA = next;
+          calcSide = to;
+          calcToggle.classList.toggle("is-on", next.indexOf(id) >= 0);
+          const done = document.querySelector('#app [data-calc-done="' + to + '"]');
+          if (done) done.textContent = next.length ? ("Done · " + next.length) : "Done";
+        }
+        return;
+      }
+      const calcDone = e.target.closest("[data-calc-done]");
+      if (calcDone) {
+        calcCommitPicks(calcDone.getAttribute("data-calc-done") || "a");
+        render();
+        return;
+      }
+      const calcClose = e.target.closest("[data-calc-close]");
+      if (calcClose) {
+        calcClosePicker(calcClose.getAttribute("data-calc-close") || "a");
+        render();
+        return;
+      }
+      const calcRoster = e.target.closest("[data-calc-roster]");
+      if (calcRoster) {
+        const side = calcRoster.getAttribute("data-calc-roster") || "a";
+        if (side === "b") calcOpenB = true;
+        else calcOpenA = true;
+        calcSide = side;
+        render();
         return;
       }
       const calcAdd = e.target.closest("[data-calc-add]");
@@ -17537,7 +17762,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v206-ledger-ptr";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v207-calc-roster";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -17618,13 +17843,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v206-ledger-ptr")) {
+  || !html.includes("chuckle-shell-v207-calc-roster")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v206-ledger-ptr")
+  || !swSrc.includes("chuckle-shell-v207-calc-roster")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -19759,13 +19984,28 @@ if (!fnSrc("calcSideHtml").includes("(uid")
 if (!fnSrc("calcHitBtn").includes("calc-hit-val") || !fnSrc("calcHitBtn").includes("calcFmt(a.value)")) {
   throw new Error("calc roster rows must preview each asset's today value");
 }
+if (!inline.includes("function calcCommitPicks(") || !inline.includes("data-calc-toggle")
+  || !inline.includes("data-calc-done") || !inline.includes("data-calc-close")
+  || !inline.includes("data-calc-roster") || !inline.includes("overscroll-behavior: contain")
+  || !inline.includes("Add from roster")) {
+  throw new Error("calc roster must multi-highlight, scroll in its own pane, and Done/Close");
+}
 if (inline.includes("Search for a player") || inline.includes('placeholder="Search for a player"')) {
   throw new Error("calc search must stay open for players and picks without forcing a team");
 }
-if (!inline.includes("a.roster_ord") || !inline.includes("calcOpenA")
-  || !inline.includes("roster_ord == null") || !inline.includes("Draft picks")
-  || !inline.includes("function calcHitsHtml(") || !inline.includes("function calcAssetNeedle(")) {
-  throw new Error("calc search must drop that seat's roster and draft picks in Sleeper roster_ord");
+if (!inline.includes("calcOpenA")
+  || inline.includes("Draft picks") || inline.includes('calc-group">Players')
+  || !inline.includes("function calcHitsHtml(") || !inline.includes("function calcAssetNeedle(")
+  || !fnSrc("calcAssetsForSeat").includes("seen.has(a.id)")
+  || !inline.includes("function calcValueNum(")
+  || !fnSrc("calcAssetsForSeat").includes("calcValueNum(b) - calcValueNum(a)")
+  || !inline.includes("function calcDisplayName(") || !inline.includes("CALC_ID_NAMES")
+  || !inline.includes("overflow-anchor: none")
+  || !inline.includes("function calcBindHits(")
+  || !fnSrc("calcLooksLikeId").includes("/^[0-9]+$/")
+  || fnSrc("calcLooksLikeId").includes("/^d+$/")
+  || !fnSrc("render").includes('calcRestoreHitsScroll("a")')) {
+  throw new Error("calc team roster must stay scrolled, hide raw ids, and sort by today value");
 }
 {
   const sideAt = inline.indexOf("function calcSideHtml(");

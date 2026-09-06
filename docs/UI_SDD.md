@@ -14,8 +14,8 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
-the digest — signed-in **Your 3** (notifications only), **Cuckle trade calculator**, signed-in **On your
-roster** news, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
+the digest — signed-in **Your 3** (notifications only), **Cuckle trade calculator**, **Titles
+and Emblems**, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
 it; the clock lives in the brand header on screens it applies to (§2a).
 
 **Your 3** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
@@ -188,10 +188,9 @@ renders on the open-trade screen and on Teams / History feed cards.
 
 **Cuckle trade calculator** · its own row on Home. Opens `?view=calc`.
 
-**On your roster** — signed-in only. Up to three feed items that tag that manager’s players,
-ranked by category + recency (injury is one tag among roster move, depth chart, and the rest).
-Omit when signed out or when nothing hits the seat. The News Feed pull-up stays the league-wide
-preview and is not skipped to avoid a duplicate.
+**Titles and Emblems** · its own row on Home. Opens `?view=cosmetics`. Shows the equipped
+title and emblem (or empty copy) and how many of the 25 are unlocked. Injury / roster news
+stays in the News Feed pull-up — Home does not remount a personal injury strip.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.
 
@@ -215,9 +214,11 @@ on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 
-Profile barracks (`?view=cosmetics`). Shared catalog of 25. Equip one title and one emblem.
-Locked shows the requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics
-paint across the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+Profile barracks (`?view=cosmetics`) from Home or Account. Shared catalog of 25. Equip one
+title and one emblem. Locked shows the requirement; unlocked shows the receipt. Equipped
+cosmetics paint on **your** name (after the name, before the champ crown) and on the Home
+door. Other seats do not show your local equip. Visual only. See
+[`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
 
 **History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door
 into a seat (header picker stays gone — §2).

@@ -140,11 +140,6 @@ writes only a vote.
 
 ## 14. Where do equipped titles and emblems paint?
 
-**Assumed (this pass):** Barracks + persist only. Header, news byline, trade cards, ledger, and
-smack do not read the equipped pair yet. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
-
-**Why it matters:** Painting on every name before the catalog is trusted will lock a chrome
-decision we have not looked at on 390.
-
-**Recommended:** Show the pair on names after the barracks has been used in-season. No new
-tokens when we do.
+**Settled for you.** Equipped title and emblem paint on **your** name (`seatLabel`: name →
+title → emblem mark → champ crown) and on the Home door. Other seats wait on a shared store.
+See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).

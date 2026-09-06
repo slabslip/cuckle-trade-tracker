@@ -148,3 +148,19 @@ decision we have not looked at on 390.
 
 **Recommended:** Show the pair on names after the barracks has been used in-season. No new
 tokens when we do.
+
+---
+
+## 15. Do we mint the expanded award list now?
+
+**Assumed:** 27-id catalog (25 live + locked `four_time` / `five_time`). Championship rungs
+stay the highest prestige. Tier 1–4 grind and the “fresh 15” wait on weekly / waiver /
+lineup tape. See [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
+
+**Why it matters:** Unlocking “set lineup 4 straight weeks” or “reject 10 trades” from
+championship + trade JSON alone is a lie. Pairing every award as both an emblem id and a
+title id doubles the catalog and breaks equip-one-of-each.
+
+**Recommended:** Adopt the championship hierarchy as law. Sort barracks that way. Next
+computable add from existing tape is Comeback Dynasty (last place → chip within 3 years),
+then Pick Collector if future-1st counts are solid. Do not mint a second catalog.

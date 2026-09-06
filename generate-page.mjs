@@ -20028,9 +20028,11 @@ if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || inline.includes("Everyone chases the same 25")) {
   throw new Error("barracks must sort the championship ladder first and include finalist rungs");
 }
-if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("cos-art cos-art-")
-  || !inline.includes("data/ui/cosmetics/title-five_time.png")
-  || !inline.includes("data/ui/cosmetics/emblem-whale.png")
+if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function cosmeticsArtImg(")
+  || !inline.includes("COS_TITLE_ART") || !inline.includes("COS_EMBLEM_ART")
+  || !inline.includes("cos-art cos-art-")
+  || !inline.includes("data/ui/cosmetics/title-")
+  || !inline.includes("data/ui/cosmetics/emblem-")
   || !inline.includes("data/ui/cosmetics/nameplate-preview.png")
   || !inline.includes("class=\"cos-plate\"")) {
   throw new Error("Titles and Emblems must paint title banners, emblem art, and the nameplate preview");

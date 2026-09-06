@@ -14480,13 +14480,11 @@ const html = `<!DOCTYPE html>
       const b = calcSideBag(calcLegsB, calcLegsA);
       const sendA = calcRawSum(calcLegsA);
       const sendB = calcRawSum(calcLegsB);
+      const pricedA = (calcLegsA || []).some((l) => l.value != null);
+      const pricedB = (calcLegsB || []).some((l) => l.value != null);
       // Each card is a send pile. A receives what B sends. Positive = A comes out ahead.
-      const d = displayDelta(sendB || null, sendA || null);
-      if (d == null || (!calcLegsA.length && !calcLegsB.length)) {
-        return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
-          + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
-      }
-      if (!calcLegsA.length || !calcLegsB.length) {
+      const d = (pricedA && pricedB) ? displayDelta(sendB, sendA) : null;
+      if (d == null || !calcLegsA.length || !calcLegsB.length) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
           + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
       }
@@ -19978,7 +19976,7 @@ if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")
   || !fnSrc("calcCompareHtml").includes("would receive")
   || !fnSrc("calcCompareHtml").includes("can send")
-  || !fnSrc("calcCompareHtml").includes("displayDelta(sendB || null, sendA || null)")
+  || !fnSrc("calcCompareHtml").includes("displayDelta(sendB, sendA)")
   || fnSrc("calcCompareHtml").includes("is-up") || fnSrc("calcCompareHtml").includes("is-down")) {
   throw new Error("calc cards are send piles; Favors names the receiver of the larger pile");
 }

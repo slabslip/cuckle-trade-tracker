@@ -3161,7 +3161,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "awards20260906022000";
+    const DATA_V = "awardsSettings20260906024000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3212,6 +3212,7 @@ const html = `<!DOCTYPE html>
     let calcSeatIgnoreOpenUntil = 0;
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
+    let cosmeticsFrom = "account";
     // Live bet ledger (Supabase). Design Mode uses seeded sample slips.
     let ledgerBets = null;
     let ledgerLoadState = "idle";
@@ -10475,6 +10476,29 @@ const html = `<!DOCTYPE html>
       openSettings("profile");
     }
 
+    function cosmeticsEquipNames() {
+      const book = cosmeticsBook || { catalog: [] };
+      const title = book.catalog.find((c) => c.id === cosmeticsEquip.title);
+      const emblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
+      return [title && title.name, emblem && emblem.name].filter(Boolean);
+    }
+
+    function openCosmetics(from) {
+      cosmeticsFrom = from === "settings" || from === "profile" ? "settings" : "account";
+      view = "cosmetics";
+      appScreen = "dash";
+      focusNext = ".screen-h";
+      render();
+    }
+
+    function closeCosmeticsToProfile() {
+      view = "home";
+      lastUrl = urlNow();
+      lastScreen = screenKey();
+      try { history.replaceState(stateNow(), "", lastUrl); } catch (err) { /* ignore */ }
+      openSettings("profile");
+    }
+
     function avatarLeagueId() {
       return (activeLeague && activeLeague.sleeper_league_id)
         || CUCKLE_LEAGUE_ID
@@ -14530,7 +14554,7 @@ const html = `<!DOCTYPE html>
           + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
           + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
       };
-      return backChip("Account")
+      return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
         + '<p class="caption">Championship titles sit at the top. Five is the mountain. Equip one title and one emblem.</p>'
         + "<h3>Titles</h3>"
@@ -15292,6 +15316,7 @@ const html = `<!DOCTYPE html>
           + "</div>"
         : "";
       const hasCustom = !!(seatId && seatAvatarByUid[String(seatId)]);
+      const equipped = cosmeticsEquipNames();
       const seatLine = profileSeat
         ? '<p class="caption" style="margin:4px 0 0">Seat / team <b>' + esc(profileSeat) + "</b></p>"
         : '<p class="caption" style="margin:4px 0 0">No seat claimed yet — redeem an invite from the Leagues tab.</p>';
@@ -15325,6 +15350,13 @@ const html = `<!DOCTYPE html>
         + (profileNote ? '<p class="caption" role="status" style="margin-top:10px">' + esc(profileNote) + "</p>" : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + "</div>"
+        + '<div class="app-card"><h3>Titles and Emblems</h3>'
+        + (equipped.length
+          ? '<p class="caption" style="margin:0">Equipped <b>' + equipped.map(esc).join("</b> · <b>") + "</b></p>"
+          : '<p class="caption" style="margin:0">Nothing equipped yet.</p>')
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-open-cosmetics="settings">Open Titles and Emblems</button>'
+        + "</div></div>"
         + '<div class="app-card"><h3>Login & contact</h3>'
         + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
         + (memList
@@ -16119,6 +16151,10 @@ const html = `<!DOCTYPE html>
       }
       const backBtn = e.target.closest("[data-back]");
       if (backBtn) {
+        if (view === "cosmetics" && cosmeticsFrom === "settings") {
+          closeCosmeticsToProfile();
+          return;
+        }
         // Only ever reached on a cold deep link, where there is no entry behind us to pop.
         goBack(() => {
           if (view === "trade") openTradesList();
@@ -16618,6 +16654,11 @@ const html = `<!DOCTYPE html>
       const appProfile = e.target.closest("[data-app-profile]");
       if (appProfile) {
         openProfile();
+        return;
+      }
+      const openCos = e.target.closest("[data-open-cosmetics]");
+      if (openCos) {
+        openCosmetics(openCos.getAttribute("data-open-cosmetics"));
         return;
       }
       const profileSave = e.target.closest("[data-profile-save]");
@@ -19589,6 +19630,13 @@ if (!html.includes('class="go-settings"') || !html.includes("settings-gear")
   || !inline.includes("function renderSettingsProfileTab(")
   || !inline.includes("function renderSettingsLeaguesTab(")) {
   throw new Error("Settings must use a gear icon and Profile/Leagues tabs (default Profile)");
+}
+if (!inline.includes("function openCosmetics(")
+  || !inline.includes("function closeCosmeticsToProfile(")
+  || !inline.includes('data-open-cosmetics="settings"')
+  || !fnSrc("renderSettingsProfileTab").includes("Titles and Emblems")
+  || !fnSrc("renderSettingsProfileTab").includes("Nothing equipped yet")) {
+  throw new Error("Settings Profile must door into Titles and Emblems");
 }
 // Settings is headings + controls only — no section blurbs; top-bar back replaces in-page league backs.
 if (inline.includes("Your team, login, and avatar.")

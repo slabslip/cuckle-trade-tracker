@@ -3174,7 +3174,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcValue20260906132500";
+    const DATA_V = "calcRosterRefresh20260906140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14348,10 +14348,12 @@ const html = `<!DOCTYPE html>
       const needle = uid ? "" : String(q || "").trim().toLowerCase();
       if (!uid && !needle) return [];
       const used = new Set((calcLegsA.concat(calcLegsB)).map((l) => l.id));
+      const seen = new Set();
       const pool = (book.players || []).concat(book.picks || []).filter((a) => {
+        if (!a || !a.id || seen.has(a.id) || used.has(a.id)) return false;
         if (uid && String(a.owner_id) !== String(uid)) return false;
-        if (used.has(a.id)) return false;
         if (!calcAssetNeedle(a, needle)) return false;
+        seen.add(a.id);
         return true;
       });
       if (uid) {
@@ -14548,15 +14550,7 @@ const html = `<!DOCTYPE html>
         return uid ? ('<div class="calc-picker">' + empty + calcPickerBar(side) + "</div>") : empty;
       }
       if (uid) {
-        const players = hits.filter((a) => a.kind === "player");
-        const picks = hits.filter((a) => a.kind === "pick" || a.pos === "PICK");
-        let html = "";
-        if (players.length) {
-          html += '<div class="calc-group">Players</div>' + players.map((a) => calcHitBtn(a, side, false, "toggle")).join("");
-        }
-        if (picks.length) {
-          html += '<div class="calc-group">Draft picks</div>' + picks.map((a) => calcHitBtn(a, side, false, "toggle")).join("");
-        }
+        const html = hits.map((a) => calcHitBtn(a, side, false, "toggle")).join("");
         return html
           ? '<div class="calc-picker"><div class="calc-hits" data-calc-hits="' + side + '">' + html + "</div>"
             + calcPickerBar(side) + "</div>"
@@ -14603,7 +14597,7 @@ const html = `<!DOCTYPE html>
     function renderCalc() {
       return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
-        + '<p class="caption">Pick a team, highlight pieces, tap Done. The roster scrolls in its own list. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
+        + '<p class="caption">Pick a team, highlight pieces, tap Done. One roster list, highest today value first. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
 
@@ -19898,10 +19892,12 @@ if (!inline.includes("function calcCommitPicks(") || !inline.includes("data-calc
 if (inline.includes("Search for a player") || inline.includes('placeholder="Search for a player"')) {
   throw new Error("calc search must stay open for players and picks without forcing a team");
 }
-if (!inline.includes("calcOpenA") || !inline.includes("Draft picks")
+if (!inline.includes("calcOpenA")
+  || inline.includes("Draft picks") || inline.includes('calc-group">Players')
   || !inline.includes("function calcHitsHtml(") || !inline.includes("function calcAssetNeedle(")
+  || !fnSrc("calcAssetsForSeat").includes("seen.has(a.id)")
   || !fnSrc("calcAssetsForSeat").includes("(Number(b.value) || 0) - (Number(a.value) || 0)")) {
-  throw new Error("calc team roster must list players and picks by today value, high first");
+  throw new Error("calc team roster must be one unique list by today value, high first");
 }
 {
   const sideAt = inline.indexOf("function calcSideHtml(");

@@ -1427,12 +1427,20 @@ const html = `<!DOCTYPE html>
       position: absolute; right: 22px; top: 50%; transform: translateY(-50%);
       color: var(--dim); pointer-events: none; font-size: 0.95rem;
     }
+    .calc-picker { background: var(--bg); border-bottom: 1px solid var(--line); }
     .calc-hits {
-      padding: 0 12px 8px;
-      max-height: min(60vh, 480px);
+      padding: 8px 12px;
+      max-height: min(52vh, 400px);
       overflow-y: auto;
+      overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
+    .calc-picker-bar {
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+      padding: 8px 12px 10px; background: #1a1a1e; border-top: 1px solid var(--line);
+    }
+    .calc-picker-shut { padding: 8px 12px 10px; }
     .calc-group {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
       color: var(--dim); padding: 8px 4px 4px;
@@ -1446,6 +1454,11 @@ const html = `<!DOCTYPE html>
       padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer; text-align: left;
     }
     button.calc-hit:last-child { margin-bottom: 0; }
+    button.calc-hit.is-on {
+      border-color: #e0b44c;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45);
+      background: #1c1a14;
+    }
     .calc-hit-name { font-weight: 650; min-width: 0; }
     .calc-hit-meta { display: block; font-size: 0.72rem; color: var(--dim); font-weight: 500; }
     .calc-hit-val { font-variant-numeric: tabular-nums; color: var(--lh-gold, #e0b44c); font-weight: 700; flex: 0 0 auto; }
@@ -3161,7 +3174,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcRoster20260906125500";
+    const DATA_V = "calcMulti20260906131000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3203,6 +3216,10 @@ const html = `<!DOCTYPE html>
     let calcSide = "a";
     let calcLegsA = [];
     let calcLegsB = [];
+    let calcPickA = [];
+    let calcPickB = [];
+    let calcHitsScrollA = 0;
+    let calcHitsScrollB = 0;
     let calcFilterA = "";
     let calcFilterB = "";
     let calcOpenA = false;
@@ -14449,8 +14466,66 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    function calcHitBtn(a, side, showOwner) {
-      return '<button type="button" class="calc-hit" data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '">'
+    function calcPicksOf(side) {
+      return side === "b" ? calcPickB : calcPickA;
+    }
+
+    function calcPickHas(side, id) {
+      return calcPicksOf(side).indexOf(id) >= 0;
+    }
+
+    function calcRememberHitsScroll(side) {
+      const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
+      if (!el) return;
+      if (side === "b") calcHitsScrollB = el.scrollTop;
+      else calcHitsScrollA = el.scrollTop;
+    }
+
+    function calcRestoreHitsScroll(side) {
+      const top = side === "b" ? calcHitsScrollB : calcHitsScrollA;
+      queueMicrotask(() => {
+        const el = document.querySelector('#app [data-calc-hits="' + side + '"]');
+        if (el) el.scrollTop = top;
+      });
+    }
+
+    function calcCommitPicks(side) {
+      const ids = calcPicksOf(side);
+      const bag = side === "b" ? calcLegsB : calcLegsA;
+      const add = [];
+      for (let i = 0; i < ids.length; i++) {
+        const asset = calcLegFromAsset(calcAssetById(ids[i]));
+        if (!asset) continue;
+        if (bag.some((l) => l.id === asset.id) || add.some((l) => l.id === asset.id)) continue;
+        add.push(asset);
+      }
+      if (side === "b") {
+        calcLegsB = bag.concat(add);
+        calcPickB = [];
+        calcOpenB = false;
+        calcFilterB = "";
+        calcHitsScrollB = 0;
+      } else {
+        calcLegsA = bag.concat(add);
+        calcPickA = [];
+        calcOpenA = false;
+        calcFilterA = "";
+        calcHitsScrollA = 0;
+      }
+      calcSide = side;
+    }
+
+    function calcClosePicker(side) {
+      if (side === "b") { calcPickB = []; calcOpenB = false; calcHitsScrollB = 0; }
+      else { calcPickA = []; calcOpenA = false; calcHitsScrollA = 0; }
+    }
+
+    function calcHitBtn(a, side, showOwner, mode) {
+      const on = mode === "toggle" && calcPickHas(side, a.id);
+      const attr = mode === "toggle"
+        ? ' data-calc-toggle="' + esc(a.id) + '" data-calc-to="' + side + '"'
+        : ' data-calc-add="' + esc(a.id) + '" data-calc-to="' + side + '"';
+      return '<button type="button" class="calc-hit' + (on ? " is-on" : "") + '"' + attr + ">"
         + '<span class="calc-hit-name">' + esc(a.name)
         + '<span class="calc-hit-meta">' + esc(calcMeta(a, showOwner) || (a.kind === "pick" ? "Pick" : "Player")) + "</span></span>"
         + '<span class="calc-hit-val">' + calcFmt(a.value) + "</span></button>";
@@ -14458,26 +14533,47 @@ const html = `<!DOCTYPE html>
 
     function calcHitsHtml(uid, q, open, side) {
       const needle = String(q || "").trim();
-      if (!uid && !needle) return "";
+      if (uid) {
+        if (calcSeatMenu === side) return "";
+        if (!open) {
+          return '<div class="calc-picker-shut">'
+            + '<button type="button" class="chip" data-calc-roster="' + side + '">Add from roster</button>'
+            + "</div>";
+        }
+      } else if (!needle) {
+        return "";
+      }
       const hits = calcAssetsForSeat(uid, q, open);
       if (!hits.length) {
-        return '<div class="calc-hits"><div class="calc-empty">'
+        const empty = '<div class="calc-hits" data-calc-hits="' + side + '"><div class="calc-empty">'
           + (uid ? "No matches on that roster." : "No matching players or picks.")
           + "</div></div>";
+        return uid ? ('<div class="calc-picker">' + empty + calcPickerBar(side) + "</div>") : empty;
       }
       if (uid) {
         const players = hits.filter((a) => a.kind === "player");
         const picks = hits.filter((a) => a.kind === "pick" || a.pos === "PICK");
         let html = "";
         if (players.length) {
-          html += '<div class="calc-group">Players</div>' + players.map((a) => calcHitBtn(a, side, false)).join("");
+          html += '<div class="calc-group">Players</div>' + players.map((a) => calcHitBtn(a, side, false, "toggle")).join("");
         }
         if (picks.length) {
-          html += '<div class="calc-group">Draft picks</div>' + picks.map((a) => calcHitBtn(a, side, false)).join("");
+          html += '<div class="calc-group">Draft picks</div>' + picks.map((a) => calcHitBtn(a, side, false, "toggle")).join("");
         }
-        return html ? '<div class="calc-hits">' + html + "</div>" : "";
+        return html
+          ? '<div class="calc-picker"><div class="calc-hits" data-calc-hits="' + side + '">' + html + "</div>"
+            + calcPickerBar(side) + "</div>"
+          : "";
       }
-      return '<div class="calc-hits">' + hits.map((a) => calcHitBtn(a, side, true)).join("") + "</div>";
+      return '<div class="calc-hits">' + hits.map((a) => calcHitBtn(a, side, true, "add")).join("") + "</div>";
+    }
+
+    function calcPickerBar(side) {
+      const n = calcPicksOf(side).length;
+      return '<div class="calc-picker-bar">'
+        + '<button type="button" class="chip" data-calc-close="' + side + '">Close</button>'
+        + '<button type="button" class="chip" data-calc-done="' + side + '">'
+        + (n ? ("Done · " + n) : "Done") + "</button></div>";
     }
 
     function calcSideHtml(side) {
@@ -14510,7 +14606,7 @@ const html = `<!DOCTYPE html>
     function renderCalc() {
       return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
-        + '<p class="caption">Pick a team to scroll that roster and remaining picks — values on every row. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
+        + '<p class="caption">Pick a team, highlight pieces, tap Done. The roster scrolls in its own list. No team: search the whole book. Today book (flatten + KTC) plus Value Adjustment.</p>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml() + "</div>";
     }
 
@@ -16983,8 +17079,8 @@ const html = `<!DOCTYPE html>
       if (calcSeatPick) {
         const side = calcSeatPick.getAttribute("data-calc-seat-pick");
         const uid = calcSeatPick.getAttribute("data-uid") || "";
-        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = !!uid; }
-        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = !!uid; }
+        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = !!uid; calcPickB = []; calcHitsScrollB = 0; }
+        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = !!uid; calcPickA = []; calcHitsScrollA = 0; }
         calcSide = side === "b" ? "b" : "a";
         calcSeatMenu = "";
         calcSeatIgnoreOpenUntil = Date.now() + 450;
@@ -16995,6 +17091,43 @@ const html = `<!DOCTYPE html>
           btn.style.pointerEvents = "none";
           setTimeout(() => { if (btn.isConnected) btn.style.pointerEvents = ""; }, 450);
         }
+        return;
+      }
+      const calcToggle = e.target.closest("[data-calc-toggle]");
+      if (calcToggle) {
+        const to = calcToggle.getAttribute("data-calc-to") || calcSide || "a";
+        const id = calcToggle.getAttribute("data-calc-toggle");
+        if (id) {
+          calcRememberHitsScroll(to);
+          const cur = calcPicksOf(to);
+          const next = cur.indexOf(id) >= 0 ? cur.filter((x) => x !== id) : cur.concat([id]);
+          if (to === "b") calcPickB = next;
+          else calcPickA = next;
+          calcSide = to;
+        }
+        render();
+        calcRestoreHitsScroll(to);
+        return;
+      }
+      const calcDone = e.target.closest("[data-calc-done]");
+      if (calcDone) {
+        calcCommitPicks(calcDone.getAttribute("data-calc-done") || "a");
+        render();
+        return;
+      }
+      const calcClose = e.target.closest("[data-calc-close]");
+      if (calcClose) {
+        calcClosePicker(calcClose.getAttribute("data-calc-close") || "a");
+        render();
+        return;
+      }
+      const calcRoster = e.target.closest("[data-calc-roster]");
+      if (calcRoster) {
+        const side = calcRoster.getAttribute("data-calc-roster") || "a";
+        if (side === "b") calcOpenB = true;
+        else calcOpenA = true;
+        calcSide = side;
+        render();
         return;
       }
       const calcAdd = e.target.closest("[data-calc-add]");
@@ -19758,6 +19891,12 @@ if (!fnSrc("calcSideHtml").includes("(uid")
 }
 if (!fnSrc("calcHitBtn").includes("calc-hit-val") || !fnSrc("calcHitBtn").includes("calcFmt(a.value)")) {
   throw new Error("calc roster rows must preview each asset's today value");
+}
+if (!inline.includes("function calcCommitPicks(") || !inline.includes("data-calc-toggle")
+  || !inline.includes("data-calc-done") || !inline.includes("data-calc-close")
+  || !inline.includes("data-calc-roster") || !inline.includes("overscroll-behavior: contain")
+  || !inline.includes("Add from roster")) {
+  throw new Error("calc roster must multi-highlight, scroll in its own pane, and Done/Close");
 }
 if (inline.includes("Search for a player") || inline.includes('placeholder="Search for a player"')) {
   throw new Error("calc search must stay open for players and picks without forcing a team");

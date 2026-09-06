@@ -203,13 +203,16 @@ The open list sits **in flow** under the header so `.calc-block { overflow: hidd
 clip it to two names. Picking a name closes the menu and ignores the ghost tap that would
 open it again.
 With no team, search stays on: typing players or picks searches the whole today book
-(research — owner in the meta). Choosing a team **drops the search bar** and opens that
-seat’s remaining roster plus still-held draft picks in **Sleeper order** (starters, bench,
-IR, taxi, then picks). Every row shows the today value. It does not wipe pieces already on
-that side. Selected assets are rows (name, pos/team, value, remove). Compare bar + favor
-copy + closest leftover pieces (from the short roster when a team is set, else the unused
-book). Price book is today / `even` (flatten + 40/60 KTC) plus Value Adjustment via the
-existing `applyVa`. Votes do not appear on a hypothetical and do not change the number.
+(research — owner in the meta). Choosing a team **drops the search bar** and opens a
+**self-contained scroll list** of that seat’s remaining roster plus still-held draft picks
+in **Sleeper order** (starters, bench, IR, taxi, then picks). Every row shows the today
+value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
+the highlighted set to that side and closes the list. **Close** dismisses without adding.
+**Add from roster** reopens it. It does not wipe pieces already on that side. Selected
+assets are rows (name, pos/team, value, remove). Compare bar + favor copy + closest leftover
+pieces (from the short roster when a team is set, else the unused book). Price book is today
+/ `even` (flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do
+not appear on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 

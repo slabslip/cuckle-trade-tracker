@@ -1522,13 +1522,35 @@ const html = `<!DOCTYPE html>
     button.cos-card {
       appearance: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 12px; min-height: 88px;
+      padding: 10px; min-height: 88px;
+      display: flex; flex-direction: column; gap: 6px;
     }
     button.cos-card.is-locked { color: var(--dim); opacity: 0.55; }
     button.cos-card.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35); }
     button.cos-card.is-ladder { border-color: rgba(224, 180, 76, 0.45); }
-    .cos-name { font-weight: 700; display: block; margin: 0 0 4px; }
+    .cos-art {
+      display: block; width: 100%; border-radius: 8px; background: #12151c;
+      object-fit: cover;
+    }
+    .cos-art.cos-art-title { aspect-ratio: 4 / 1; object-position: center; }
+    .cos-art.cos-art-emblem { aspect-ratio: 1 / 1; width: 56%; max-width: 112px; margin: 0 auto; object-fit: contain; background: transparent; }
+    .cos-name { font-weight: 700; display: block; margin: 0; }
     .cos-how { font-size: 0.75rem; color: var(--dim); }
+    .cos-plate {
+      margin: 0 0 14px; border: 1px solid var(--line); border-radius: 14px;
+      overflow: hidden; background: #12151c;
+    }
+    .cos-plate > img { display: block; width: 100%; height: auto; }
+    .cos-plate-meta {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-top: 1px solid var(--line);
+    }
+    .cos-plate-meta .cos-plate-emblem {
+      width: 40px; height: 40px; border-radius: 8px; object-fit: contain; flex: 0 0 auto;
+    }
+    .cos-plate-meta .cos-plate-copy { min-width: 0; }
+    .cos-plate-meta .cos-plate-copy strong { display: block; font-size: 0.92rem; }
+    .cos-plate-meta .cos-plate-copy span { display: block; font-size: 0.75rem; color: var(--dim); }
     /* Bet Ledger */
     .ledger-sum {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3176,7 +3198,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcBarReceive20260906144500";
+    const DATA_V = "cosmeticsArt20260906152000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14707,6 +14729,29 @@ const html = `<!DOCTYPE html>
       "three_time_finalist", "two_time_finalist", "finalist",
     ];
     const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
+    const COS_TITLE_ART = new Set([
+      "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+    ]);
+    const COS_EMBLEM_ART = new Set([
+      "points_champ", "bracket_thief", "finalist", "two_time_finalist", "three_time_finalist",
+      "last_place", "iron_core", "volume", "whale", "extractor", "firsts_merchant",
+      "playoff_trader", "quiet_year", "manners", "draft_hit", "bench_crime", "waiver_touch",
+      "opening_day",
+    ]);
+
+    function cosmeticsArtPath(kind, id) {
+      if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
+      if (kind === "emblem" && COS_EMBLEM_ART.has(id)) return "data/ui/cosmetics/emblem-" + id + ".png";
+      return "";
+    }
+
+    function cosmeticsArtImg(kind, id, cls) {
+      const path = cosmeticsArtPath(kind, id);
+      if (!path) return "";
+      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+        + '" alt="" width="' + (kind === "title" ? "768" : "256") + '" height="'
+        + (kind === "title" ? "168" : "256") + '" loading="lazy" decoding="async" />';
+    }
 
     function cosmeticsSort(a, b) {
       const ia = COS_TITLE_LADDER.indexOf(a.id);
@@ -14724,20 +14769,36 @@ const html = `<!DOCTYPE html>
       const book = cosmeticsBook || { catalog: [] };
       const titles = book.catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
       const emblems = book.catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
+      const eqTitle = book.catalog.find((c) => c.id === cosmeticsEquip.title);
+      const eqEmblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
+      const plateArt = cosmeticsArtPath("title", eqTitle && eqTitle.id) || "data/ui/cosmetics/nameplate-preview.png";
+      const plateEmblem = eqEmblem ? cosmeticsArtImg("emblem", eqEmblem.id, "cos-plate-emblem") : "";
+      const plate = '<div class="cos-plate">'
+        + '<img src="' + esc(plateArt) + "?" + DATA_V + '" alt="" width="768" height="168" decoding="async" />'
+        + '<div class="cos-plate-meta">'
+        + (plateEmblem || "")
+        + '<div class="cos-plate-copy"><strong>'
+        + esc(eqTitle ? eqTitle.name : "No title equipped")
+        + "</strong><span>"
+        + esc(eqEmblem ? eqEmblem.name : "No emblem equipped")
+        + "</span></div></div></div>";
       const card = (c) => {
         const got = cosmeticsUnlocked(c.id);
         const on = cosmeticsEquip[c.kind] === c.id;
         const locked = !got;
         const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0;
+        const art = cosmeticsArtImg(c.kind, c.id, "cos-art cos-art-" + c.kind);
         return '<button type="button" class="cos-card' + (locked ? " is-locked" : "") + (on ? " is-on" : "")
           + (ladder ? " is-ladder" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="' + esc(c.kind) + '">'
+          + art
           + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
           + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
         + '<p class="caption">Championship titles sit at the top. Five is the mountain. Equip one title and one emblem.</p>'
+        + plate
         + "<h3>Titles</h3>"
         + '<div class="cos-grid">' + titles.map(card).join("") + "</div>"
         + "<h3>Emblems</h3>"
@@ -19966,6 +20027,13 @@ if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || !inline.includes("Championship titles sit at the top")
   || inline.includes("Everyone chases the same 25")) {
   throw new Error("barracks must sort the championship ladder first and include finalist rungs");
+}
+if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("cos-art cos-art-")
+  || !inline.includes("data/ui/cosmetics/title-five_time.png")
+  || !inline.includes("data/ui/cosmetics/emblem-whale.png")
+  || !inline.includes("data/ui/cosmetics/nameplate-preview.png")
+  || !inline.includes("class=\"cos-plate\"")) {
+  throw new Error("Titles and Emblems must paint title banners, emblem art, and the nameplate preview");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")

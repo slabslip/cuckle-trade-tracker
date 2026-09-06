@@ -17090,15 +17090,15 @@
         const to = calcToggle.getAttribute("data-calc-to") || calcSide || "a";
         const id = calcToggle.getAttribute("data-calc-toggle");
         if (id) {
-          calcRememberHitsScroll(to);
           const cur = calcPicksOf(to);
           const next = cur.indexOf(id) >= 0 ? cur.filter((x) => x !== id) : cur.concat([id]);
           if (to === "b") calcPickB = next;
           else calcPickA = next;
           calcSide = to;
+          calcToggle.classList.toggle("is-on", next.indexOf(id) >= 0);
+          const done = document.querySelector('#app [data-calc-done="' + to + '"]');
+          if (done) done.textContent = next.length ? ("Done · " + next.length) : "Done";
         }
-        render();
-        calcRestoreHitsScroll(to);
         return;
       }
       const calcDone = e.target.closest("[data-calc-done]");

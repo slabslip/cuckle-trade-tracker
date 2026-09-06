@@ -23,12 +23,16 @@ const titles = titlesBook.titles || [];
 const traders = league.traders || [];
 const seats = marks.seats || {};
 
+const TITLE_LADDER = ["five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion"];
+
 const CATALOG = [
-  { id: "champion", kind: "title", name: "Champion", how: "Win a league championship.", rarity: "gold" },
-  { id: "repeat", kind: "title", name: "Repeat", how: "Win back-to-back championships.", rarity: "gold" },
+  { id: "five_time", kind: "title", name: "Eternal Champion", how: "Win five career championships. The biggest unlock in the league.", rarity: "gold" },
+  { id: "four_time", kind: "title", name: "Dynasty Immortal", how: "Win four career championships.", rarity: "gold" },
   { id: "three_peat", kind: "title", name: "Three-Peat", how: "Win three championships in a row.", rarity: "gold" },
-  { id: "three_time", kind: "title", name: "Three-Time Champion", how: "Win three career championships.", rarity: "gold" },
+  { id: "three_time", kind: "title", name: "Dynasty Established", how: "Win three career championships.", rarity: "gold" },
+  { id: "repeat", kind: "title", name: "Back-to-Back", how: "Win back-to-back championships.", rarity: "gold" },
   { id: "two_time", kind: "title", name: "Two-Time Champion", how: "Win two career championships.", rarity: "gold" },
+  { id: "champion", kind: "title", name: "Champion", how: "Win a league championship.", rarity: "gold" },
   { id: "points_champ", kind: "emblem", name: "Points Champ", how: "Finish first in points in a title season.", rarity: "gold" },
   { id: "bracket_thief", kind: "emblem", name: "Bracket Thief", how: "Win the title while not first in points.", rarity: "gold" },
   { id: "finalist", kind: "emblem", name: "Finalist", how: "Lose the championship game.", rarity: "silver" },
@@ -114,6 +118,8 @@ for (const t of titles) {
 }
 
 for (const [uid, n] of Object.entries(champCount)) {
+  if (n >= 5) addUnlock(uid, "five_time", receipt([`${n} titles`]));
+  if (n >= 4) addUnlock(uid, "four_time", receipt([`${n} titles`]));
   if (n >= 3) addUnlock(uid, "three_time", receipt([`${n} titles`]));
   if (n === 2) addUnlock(uid, "two_time", receipt([`${n} titles`]));
 }
@@ -194,6 +200,11 @@ if (firstsUid && bestFirsts > 0) {
 }
 if (waiverUid && bestWaiver > 0) {
   addUnlock(String(waiverUid), "waiver_touch", receipt([`${bestWaiver} waiver adds`]));
+}
+
+const ladderIds = CATALOG.filter((c) => c.kind === "title").map((c) => c.id).slice(0, TITLE_LADDER.length);
+if (ladderIds.join() !== TITLE_LADDER.join()) {
+  throw new Error(`cosmetics catalog must lead with ${TITLE_LADDER.join(" → ")}`);
 }
 
 const book = {

@@ -1511,6 +1511,7 @@ const html = `<!DOCTYPE html>
     }
     button.cos-card.is-locked { color: var(--dim); opacity: 0.55; }
     button.cos-card.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.35); }
+    button.cos-card.is-ladder { border-color: rgba(224, 180, 76, 0.45); }
     .cos-name { font-weight: 700; display: block; margin: 0 0 4px; }
     .cos-how { font-size: 0.75rem; color: var(--dim); }
     /* Bet Ledger */
@@ -3160,7 +3161,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906010636";
+    const DATA_V = "awards20260906022000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14499,22 +14500,39 @@ const html = `<!DOCTYPE html>
       return mine[id] || null;
     }
 
+    const COS_TITLE_LADDER = ["five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion"];
+    const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
+
+    function cosmeticsSort(a, b) {
+      const ia = COS_TITLE_LADDER.indexOf(a.id);
+      const ib = COS_TITLE_LADDER.indexOf(b.id);
+      const ra = ia < 0 ? 100 : ia;
+      const rb = ib < 0 ? 100 : ib;
+      if (ra !== rb) return ra - rb;
+      const fa = COS_RARITY[a.rarity] ?? 9;
+      const fb = COS_RARITY[b.rarity] ?? 9;
+      if (fa !== fb) return fa - fb;
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    }
+
     function renderCosmetics() {
       const book = cosmeticsBook || { catalog: [] };
-      const titles = book.catalog.filter((c) => c.kind === "title");
-      const emblems = book.catalog.filter((c) => c.kind === "emblem");
+      const titles = book.catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
+      const emblems = book.catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
       const card = (c) => {
         const got = cosmeticsUnlocked(c.id);
         const on = cosmeticsEquip[c.kind] === c.id;
         const locked = !got;
-        return '<button type="button" class="cos-card' + (locked ? " is-locked" : "") + (on ? " is-on" : "") + '"'
+        const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0;
+        return '<button type="button" class="cos-card' + (locked ? " is-locked" : "") + (on ? " is-on" : "")
+          + (ladder ? " is-ladder" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="' + esc(c.kind) + '">'
           + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
           + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
       };
       return backChip("Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Everyone chases the same 25. Equip one title and one emblem. Where they show is a later pass.</p>'
+        + '<p class="caption">Championship titles sit at the top. Five is the mountain. Equip one title and one emblem.</p>'
         + "<h3>Titles</h3>"
         + '<div class="cos-grid">' + titles.map(card).join("") + "</div>"
         + "<h3>Emblems</h3>"
@@ -19665,6 +19683,11 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
   throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
+}
+if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
+  || !inline.includes("Championship titles sit at the top")
+  || inline.includes("Everyone chases the same 25")) {
+  throw new Error("barracks must sort the championship ladder first and drop the same-25 caption");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")

@@ -11,10 +11,10 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 ## 1. One catalog
 
-Everyone chases the same 25 ids. Each id is one cosmetic: a short title string plus a mark.
+Everyone chases the same 27 ids. Each id is one cosmetic: a short title string plus a mark.
 `kind` is `title` or `emblem` — **not both**. Flavor writeups that pair an “emblem name” with a
 wearable title are copy for one card, not two catalog rows. Emblems v1 are initials / simple
-marks in existing CSS — not a 25-asset art pack. Swap art later without changing ids.
+marks in existing CSS — not an art pack. Swap art later without changing ids.
 
 Catalog + computed unlocks: `data/ui/cosmetics.json` from `build-cosmetics.mjs` (after
 `title-path.mjs`). Inputs: `titles.json`, `league.json` `traders`, `marks.json`, `members.json`.
@@ -28,10 +28,13 @@ Catalog + computed unlocks: `data/ui/cosmetics.json` from `build-cosmetics.mjs` 
 
 ---
 
-## 2. First 25 (from tape)
+## 2. First 27 (from tape)
 
-**Crown** — Champion, Repeat, Three-Peat, Three-Time Champion (three career titles), Two-Time
-Champion (**exactly** two), Points Champ, Bracket Thief, Finalist, Last Place, Iron Core
+**Crown ladder** (highest first) — Eternal Champion (`five_time`, locked until 5), Dynasty
+Immortal (`four_time`, locked until 4), Three-Peat, Dynasty Established (`three_time`, three
+career titles), Back-to-Back, Two-Time Champion (**exactly** two), Champion.
+
+**Other crown** — Points Champ, Bracket Thief, Finalist, Last Place, Iron Core
 (`from_opening / n >= 0.85`).
 
 **Tape** — Volume, Whale, Extractor, Win-Now, Investor, Firsts Merchant, Playoff Trader,
@@ -40,15 +43,14 @@ Quiet Year.
 **Marks / sit / dunks** — Manners, Draft Hit, Sit Right, Bench Crime, Waiver Touch,
 Opening Day Champ (`from_opening >= 11`), Founding Draft (2019 startup pick, later a title).
 
-ARae’s three titles unlock **Three-Time Champion** for the pool; only he has it until someone
+ARae’s three titles unlock **Dynasty Established** for the pool; only he has it until someone
 else gets there. Treat that rung as elite — current league ceiling. Two-Time does not stack on
 Three-Time. Repeat (consecutive) can sit next to Two-Time.
 
 **Championship ladder is the highest prestige in the system.** Barracks sort and nameplate
-weight: reserved Five-Time → Four-Time → live Three-Peat (if earned) → Three-Time → Repeat →
-Two-Time → Champion, then every other title/emblem. Reserved ids `four_time` and `five_time`
-(God of the League / Eternal Champion) stay **unminted** until someone wins 4 / 5. Do not
-unlock empty god-tier rows.
+weight: Five-Time → Four-Time → Three-Peat → Three-Time → Repeat → Two-Time → Champion, then
+every other title/emblem. `four_time` and `five_time` ship as **locked catalog rows** (Eternal
+Champion / Dynasty Immortal). Do not write unlock receipts until someone wins 4 / 5.
 
 Later weekly/waiver/lineup awards (onboarding grind, streaks, pick collector, etc.) are listed
 in [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md). They wait on tape we

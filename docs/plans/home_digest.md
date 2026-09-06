@@ -1,7 +1,7 @@
 # Home digest — hybrid Home, calc, barracks
 
 **Status:** Shipped — first tab **Home**, signed-in Your 3 (notifications only), signed-in
-**On your roster** news, 2-team calculator on the today / `even` book, 25 titles/emblems + barracks.
+**On your roster** news, 2-team calculator on the today / `even` book, 27 titles/emblems + barracks.
 
 Canonical product rules: [`docs/UI_SDD.md`](../UI_SDD.md) §1–3c, [`docs/VALUE_SDD.md`](../VALUE_SDD.md) §12,
 [`docs/COSMETICS_SDD.md`](../COSMETICS_SDD.md), [`docs/PRODUCT.md`](../PRODUCT.md),
@@ -26,7 +26,7 @@ plans stay as history; do not paste them here.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /
   `even` (flatten + 40/60 KTC) + `applyVa`. Votes never enter the number.
 - Residual + reserved vote-nudge are specified in VALUE / VOTES / PRODUCT — not built.
-- Barracks `?view=cosmetics`: 25 shared titles/emblems, unlock from history, equip 1 + 1.
+- Barracks `?view=cosmetics`: 27 shared titles/emblems, unlock from history, equip 1 + 1.
   Championship ladder is the top of the catalog (see awards plan). Flex across the app is later.
 - Existing CSS tokens only. Votes stay opinion-only.
 

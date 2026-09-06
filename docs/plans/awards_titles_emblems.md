@@ -1,8 +1,8 @@
 # Awards, titles, and emblems
 
-**Status:** PLAN — prestige law + catalog map. Do not mint a 70-id catalog.
+**Status:** Wave 1 shipping — barracks sort + reserved 4/5 titles. Do not mint a 70-id catalog.
 **Owner:** product + `build-cosmetics.mjs`
-**Shipped now:** 25-id catalog, Home **Titles and Emblems** door → Account barracks
+**Shipped now:** 27-id catalog, Home **Titles and Emblems** door → Account barracks
 (`?view=cosmetics`). Equip one title + one emblem. Paint on **your** seat only.
 **This document:** review of the expanded award list (2026-09-06) and what we
 adopt vs park.
@@ -28,8 +28,8 @@ must treat them as the mountain, not as peer badges next to Waiver Touch.
 
 | Rank | Catalog id (planned / live) | Emblem name (flavor) | Title (what we mint) | Rule |
 | --- | --- | --- | --- | --- |
-| 1 | `five_time` **(reserve)** | Five-Time Champion | God of the League / Eternal Champion | 5 career championships. Biggest unlock in the system. |
-| 2 | `four_time` **(reserve)** | Four-Time Champion | Dynasty Immortal | 4 career championships. |
+| 1 | `five_time` **(locked row)** | Five-Time Champion | Eternal Champion | 5 career championships. Biggest unlock in the system. |
+| 2 | `four_time` **(locked row)** | Four-Time Champion | Dynasty Immortal | 4 career championships. |
 | 3 | `three_time` **(live)** | Three-Time Champion | Dynasty Established | 3 career championships. **Current league ceiling (ARae).** Elite. |
 | 4 | `repeat` **(live)** | Repeat Champion | Back-to-Back | 2 **consecutive** championships. |
 | 5 | `two_time` **(live)** | Repeat / Two-Time | Two-Time Champion | Exactly 2 career championships (not necessarily consecutive). |
@@ -44,9 +44,8 @@ Also live, still **below** the career-count ladder:
 the same seat (`two_time` does not also show `champion`). `repeat` can coexist
 with `two_time` when the two titles were consecutive.
 
-**Do not mint until earned:** `four_time` and `five_time` stay reserved ids.
-Nobody has 4. Adding empty locked rows now is optional UI; unlocking them
-without a fourth title is a lie.
+**Locked until earned:** `four_time` and `five_time` ship in the catalog so the
+mountain is visible. Nobody has 4. Unlock receipts stay empty until then.
 
 ## Model mismatch (do not “fix” by pairing)
 
@@ -151,18 +150,15 @@ existing `titles.json` (last place year + championship year ≤ +3). Still
 write the rule in `build-cosmetics.mjs` before unlocking — do not ship from
 this plan pass.
 
-## Implementation order (when we leave PLAN)
+## Implementation order
 
-1. **Barracks sort** — championship ladder first (reserved 5 / 4 locked at
-   bottom of the champ block or hidden until unlock), then live titles,
-   then emblems by current rarity. Home door copy can say the ceiling
-   (“ARae: Dynasty Established — three titles”).
-2. **Reserve ids** `four_time`, `five_time` in `CATALOG` with `kind: title`
-   and `unlock` from `champCount` — locked for everyone until earned.
-   Bump “25 ids” law to **27** only when those two rows ship.
-3. **Comeback Dynasty** if we want one new emblem from tape we already have.
-4. **Pick Collector** if future-1st counts are trustworthy on every seat.
-5. Everything else waits on weekly snapshot + waiver/lineup engines.
+1. **Wave 1 (this pass)** — barracks sort, crown copy (Back-to-Back, Dynasty
+   Established, Dynasty Immortal, Eternal Champion), locked `four_time` /
+   `five_time` rows. Catalog is **27**.
+2. **Comeback Dynasty** — needs last-place *year* per seat, not only the
+   latest `members.json` place-10. Do not guess from one season.
+3. **Pick Collector** if future-1st counts are trustworthy on every seat.
+4. Everything else waits on weekly snapshot + waiver/lineup engines.
 
 ## What we will not do
 

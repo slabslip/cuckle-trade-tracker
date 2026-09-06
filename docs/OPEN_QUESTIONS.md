@@ -153,10 +153,9 @@ tokens when we do.
 
 ## 15. Do we mint the expanded award list now?
 
-**Assumed:** Keep the 25-id catalog. Championship rungs stay the highest prestige. Reserved
-`four_time` / `five_time` stay unminted until earned. Tier 1–4 grind and the “fresh 15”
-wait on weekly / waiver / lineup tape. See
-[`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
+**Assumed:** 27-id catalog (25 live + locked `four_time` / `five_time`). Championship rungs
+stay the highest prestige. Tier 1–4 grind and the “fresh 15” wait on weekly / waiver /
+lineup tape. See [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
 
 **Why it matters:** Unlocking “set lineup 4 straight weeks” or “reject 10 trades” from
 championship + trade JSON alone is a lie. Pairing every award as both an emblem id and a

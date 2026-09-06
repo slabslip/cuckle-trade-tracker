@@ -1490,10 +1490,11 @@ const html = `<!DOCTYPE html>
     .calc-compare-labs > :last-child { text-align: right; }
     .calc-compare-labs b { display: block; font-size: 0.95rem; font-variant-numeric: tabular-nums; color: var(--text); }
     .calc-bar {
-      position: relative; height: 14px; border-radius: 999px; background: #2a2a30;
+      position: relative; display: flex; height: 14px; border-radius: 999px; background: #2a2a30;
       overflow: hidden; margin: 0 0 10px;
     }
     .calc-bar-a { height: 100%; background: var(--lh-gold, #e0b44c); }
+    .calc-bar-a.is-end { margin-left: auto; }
     .calc-bar-mid {
       position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px;
       background: repeating-linear-gradient(-45deg, var(--bg), var(--bg) 2px, var(--line) 2px, var(--line) 4px);
@@ -3175,7 +3176,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "finalistAwards20260906144000";
+    const DATA_V = "calcBarReceive20260906144500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14488,8 +14489,13 @@ const html = `<!DOCTYPE html>
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
           + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
       }
-      const tot = Math.abs(sendA) + Math.abs(sendB);
-      const pct = tot ? Math.max(4, Math.min(96, Math.round((sendA / tot) * 100))) : 50;
+      // Bar shows what each side would receive (the other pile). Gold fills toward the receiver.
+      const receiveA = sendB;
+      const receiveB = sendA;
+      const tot = Math.abs(receiveA) + Math.abs(receiveB);
+      const fillRight = receiveB > receiveA;
+      const fillShare = fillRight ? receiveB : receiveA;
+      const pct = tot ? Math.max(4, Math.min(96, Math.round((fillShare / tot) * 100))) : 50;
       const nameA = calcSeatName(calcSeatA, "Team 1");
       const nameB = calcSeatName(calcSeatB, "Team 2");
       const even = Math.abs(d) < 25;
@@ -14499,10 +14505,10 @@ const html = `<!DOCTYPE html>
       const need = Math.abs(d);
       const va = (a.value_adjust || 0) + (b.value_adjust || 0);
       return '<div class="calc-compare">'
-        + '<div class="calc-compare-labs"><div>' + esc(nameA) + " sends<b>" + calcFmt(sendA) + "</b></div>"
-        + "<div>" + esc(nameB) + " sends<b>" + calcFmt(sendB) + "</b></div></div>"
-        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " sends " + calcFmt(sendA) + ", " + esc(nameB) + " sends " + calcFmt(sendB) + '">'
-        + '<div class="calc-bar-a" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
+        + '<div class="calc-compare-labs"><div>' + esc(nameA) + " receives<b>" + calcFmt(receiveA) + "</b></div>"
+        + "<div>" + esc(nameB) + " receives<b>" + calcFmt(receiveB) + "</b></div></div>"
+        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " receives " + calcFmt(receiveA) + ", " + esc(nameB) + " receives " + calcFmt(receiveB) + '">'
+        + '<div class="calc-bar-a' + (fillRight ? " is-end" : "") + '" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
         + '<div class="calc-favor' + (even ? "" : " is-ahead") + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
         + (even ? "" : '<p class="caption">' + esc(favors) + " would receive " + calcFmt(need) + " more on our book.</p>")
         + (even ? "" : '<p class="caption">' + esc(shortName) + " can send " + calcFmt(need) + " more to even it.</p>")
@@ -19981,8 +19987,12 @@ if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !fnSrc("calcCompareHtml").includes("would receive")
   || !fnSrc("calcCompareHtml").includes("can send")
   || !fnSrc("calcCompareHtml").includes("displayDelta(sendB, sendA)")
+  || !fnSrc("calcCompareHtml").includes("receiveA")
+  || !fnSrc("calcCompareHtml").includes("receives<b>")
+  || fnSrc("calcCompareHtml").includes("sends<b>")
+  || !fnSrc("calcCompareHtml").includes("fillRight")
   || fnSrc("calcCompareHtml").includes("is-up") || fnSrc("calcCompareHtml").includes("is-down")) {
-  throw new Error("calc cards are send piles; Favors names the receiver of the larger pile");
+  throw new Error("calc cards are send piles; bar and Favors follow who receives more");
 }
 if (!fnSrc("calcSideHtml").includes("(uid")
   || !fnSrc("calcSideHtml").includes("calc-search")

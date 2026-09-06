@@ -211,8 +211,9 @@ duplicate rows, no raw Sleeper ids labeled “Player”. The pane keeps its scro
 re-renders; a team change starts at the top. Every row shows the today value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
 the highlighted set to that side and closes the list. **Close** dismisses without adding.
 **Add from roster** reopens it. It does not wipe pieces already on that side. Selected
-assets are rows (name, pos/team, value, remove). Compare bar is package size (who sends
-more), not who wins. **Favors** names the manager who would **receive** the larger pile.
+assets are rows (name, pos/team, value, remove). Compare bar is **receive** amounts (what
+each side would get), and gold fills toward the manager the value is going to — not send
+package size. **Favors** names the manager who would **receive** the larger pile.
 Even-up copy and leftover chips stay on the short **send** pile. Price book is today
 / `even` (flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do
 not appear on a hypothetical and do not change the number.

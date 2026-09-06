@@ -14531,7 +14531,7 @@ const html = `<!DOCTYPE html>
           + '<span class="cos-name">' + esc(c.name) + (on ? " · equipped" : "") + "</span>"
           + '<span class="cos-how">' + esc(locked ? ("Locked: " + c.how) : got) + "</span></button>";
       };
-      return backChip("Account")
+      return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
         + '<p class="caption">Everyone chases the same 25. Equip one title and one emblem. They show on your name and on Home.</p>'
         + "<h3>Titles</h3>"
@@ -16130,8 +16130,8 @@ const html = `<!DOCTYPE html>
             view = "home";
             setHomeTab("home", { force: true });
           } else if (view === "cosmetics") {
-            view = "account";
-            render();
+            view = "home";
+            setHomeTab("home", { force: true });
           } else clearLeague();
         });
         return;

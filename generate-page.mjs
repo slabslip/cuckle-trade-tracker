@@ -3174,7 +3174,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcMulti20260906131000";
+    const DATA_V = "calcValue20260906132500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14356,11 +14356,8 @@ const html = `<!DOCTYPE html>
       });
       if (uid) {
         return pool.slice().sort((a, b) => {
-          const oa = a.roster_ord == null ? 9999 : Number(a.roster_ord);
-          const ob = b.roster_ord == null ? 9999 : Number(b.roster_ord);
-          if (oa !== ob) return oa - ob;
-          if (a.kind !== b.kind) return a.kind === "player" ? -1 : 1;
-          return String(a.name || "").localeCompare(String(b.name || ""));
+          return (Number(b.value) || 0) - (Number(a.value) || 0)
+            || String(a.name || "").localeCompare(String(b.name || ""));
         });
       }
       return pool.slice().sort((a, b) => {
@@ -19901,10 +19898,10 @@ if (!inline.includes("function calcCommitPicks(") || !inline.includes("data-calc
 if (inline.includes("Search for a player") || inline.includes('placeholder="Search for a player"')) {
   throw new Error("calc search must stay open for players and picks without forcing a team");
 }
-if (!inline.includes("a.roster_ord") || !inline.includes("calcOpenA")
-  || !inline.includes("roster_ord == null") || !inline.includes("Draft picks")
-  || !inline.includes("function calcHitsHtml(") || !inline.includes("function calcAssetNeedle(")) {
-  throw new Error("calc search must drop that seat's roster and draft picks in Sleeper roster_ord");
+if (!inline.includes("calcOpenA") || !inline.includes("Draft picks")
+  || !inline.includes("function calcHitsHtml(") || !inline.includes("function calcAssetNeedle(")
+  || !fnSrc("calcAssetsForSeat").includes("(Number(b.value) || 0) - (Number(a.value) || 0)")) {
+  throw new Error("calc team roster must list players and picks by today value, high first");
 }
 {
   const sideAt = inline.indexOf("function calcSideHtml(");

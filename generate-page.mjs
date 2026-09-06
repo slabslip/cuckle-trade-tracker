@@ -1553,7 +1553,7 @@ const html = `<!DOCTYPE html>
     }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
-      border: 1px solid var(--line); border-radius: 12px; padding: 4px;
+      border: 1px solid var(--line); border-radius: 12px; padding: 8px;
       background: #0a0c10; overflow: hidden; height: auto; min-height: 0;
       position: relative; text-align: left; line-height: 0;
     }

@@ -10491,6 +10491,14 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    function closeCosmeticsToProfile() {
+      view = "home";
+      lastUrl = urlNow();
+      lastScreen = screenKey();
+      try { history.replaceState(stateNow(), "", lastUrl); } catch (err) { /* ignore */ }
+      openSettings("profile");
+    }
+
     function avatarLeagueId() {
       return (activeLeague && activeLeague.sleeper_league_id)
         || CUCKLE_LEAGUE_ID
@@ -16143,6 +16151,10 @@ const html = `<!DOCTYPE html>
       }
       const backBtn = e.target.closest("[data-back]");
       if (backBtn) {
+        if (view === "cosmetics" && cosmeticsFrom === "settings") {
+          closeCosmeticsToProfile();
+          return;
+        }
         // Only ever reached on a cold deep link, where there is no entry behind us to pop.
         goBack(() => {
           if (view === "trade") openTradesList();
@@ -16153,11 +16165,8 @@ const html = `<!DOCTYPE html>
             view = "home";
             setHomeTab("home", { force: true });
           } else if (view === "cosmetics") {
-            if (cosmeticsFrom === "settings") openSettings("profile");
-            else {
-              view = "account";
-              render();
-            }
+            view = "account";
+            render();
           } else clearLeague();
         });
         return;
@@ -19623,6 +19632,7 @@ if (!html.includes('class="go-settings"') || !html.includes("settings-gear")
   throw new Error("Settings must use a gear icon and Profile/Leagues tabs (default Profile)");
 }
 if (!inline.includes("function openCosmetics(")
+  || !inline.includes("function closeCosmeticsToProfile(")
   || !inline.includes('data-open-cosmetics="settings"')
   || !fnSrc("renderSettingsProfileTab").includes("Titles and Emblems")
   || !fnSrc("renderSettingsProfileTab").includes("Nothing equipped yet")) {

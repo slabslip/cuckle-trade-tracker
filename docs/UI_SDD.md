@@ -197,7 +197,8 @@ Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not
 
 ### 3b. Calculator
 
-`?view=calc`. Two sides stacked (Team 1 gets / Team 2 gets). Team pickers are optional
+`?view=calc`. Two sides stacked (Team 1 sends / Team 2 sends — the picked team's
+roster pieces they would give up). Team pickers are optional
 button menus (not a native `<select>` — remounting that on iOS reopened the team list).
 The open list sits **in flow** under the header so `.calc-block { overflow: hidden }` cannot
 clip it to two names. Picking a name closes the menu and ignores the ghost tap that would
@@ -210,8 +211,9 @@ duplicate rows, no raw Sleeper ids labeled “Player”. The pane keeps its scro
 re-renders; a team change starts at the top. Every row shows the today value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
 the highlighted set to that side and closes the list. **Close** dismisses without adding.
 **Add from roster** reopens it. It does not wipe pieces already on that side. Selected
-assets are rows (name, pos/team, value, remove). Compare bar + favor copy + closest leftover
-pieces (from the short roster when a team is set, else the unused book). Price book is today
+assets are rows (name, pos/team, value, remove). Compare bar is package size (who sends
+more), not who wins. **Favors** names the manager who would **receive** the larger pile.
+Even-up copy and leftover chips stay on the short **send** pile. Price book is today
 / `even` (flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do
 not appear on a hypothetical and do not change the number.
 

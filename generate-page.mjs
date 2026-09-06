@@ -1499,8 +1499,7 @@ const html = `<!DOCTYPE html>
       background: repeating-linear-gradient(-45deg, var(--bg), var(--bg) 2px, var(--line) 2px, var(--line) 4px);
     }
     .calc-favor { font-weight: 750; margin: 0 0 4px; }
-    .calc-favor.is-up { color: var(--green); }
-    .calc-favor.is-down { color: var(--red); }
+    .calc-favor.is-ahead { color: var(--lh-gold, #e0b44c); }
     .calc-even { margin: 0; }
     .calc-even-h {
       font-size: 0.75rem; font-weight: 650; letter-spacing: 0.03em; text-transform: uppercase;
@@ -3176,7 +3175,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcMerge20260906135000";
+    const DATA_V = "calcFavor20260906143000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14479,9 +14478,10 @@ const html = `<!DOCTYPE html>
     function calcCompareHtml() {
       const a = calcSideBag(calcLegsA, calcLegsB);
       const b = calcSideBag(calcLegsB, calcLegsA);
-      const rawA = calcRawSum(calcLegsA);
-      const rawB = calcRawSum(calcLegsB);
-      const d = displayDelta(rawA || null, rawB || null);
+      const sendA = calcRawSum(calcLegsA);
+      const sendB = calcRawSum(calcLegsB);
+      // Each card is a send pile. A receives what B sends. Positive = A comes out ahead.
+      const d = displayDelta(sendB || null, sendA || null);
       if (d == null || (!calcLegsA.length && !calcLegsB.length)) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
           + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
@@ -14490,24 +14490,24 @@ const html = `<!DOCTYPE html>
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p>'
           + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC.</p></div>';
       }
-      const tot = Math.abs(rawA) + Math.abs(rawB);
-      const pct = tot ? Math.max(4, Math.min(96, Math.round((rawA / tot) * 100))) : 50;
+      const tot = Math.abs(sendA) + Math.abs(sendB);
+      const pct = tot ? Math.max(4, Math.min(96, Math.round((sendA / tot) * 100))) : 50;
       const nameA = calcSeatName(calcSeatA, "Team 1");
       const nameB = calcSeatName(calcSeatB, "Team 2");
       const even = Math.abs(d) < 25;
       const favors = even ? "Even" : (d > 0 ? nameA : nameB);
-      const tone = even ? "" : (d > 0 ? " is-up" : " is-down");
-      const short = d > 0 ? "b" : "a";
+      const short = d > 0 ? "a" : "b";
       const shortName = short === "b" ? nameB : nameA;
       const need = Math.abs(d);
       const va = (a.value_adjust || 0) + (b.value_adjust || 0);
       return '<div class="calc-compare">'
-        + '<div class="calc-compare-labs"><div>' + esc(nameA) + "<b>" + calcFmt(rawA) + "</b></div>"
-        + "<div>" + esc(nameB) + "<b>" + calcFmt(rawB) + "</b></div></div>"
-        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " " + calcFmt(rawA) + " vs " + esc(nameB) + " " + calcFmt(rawB) + '">'
+        + '<div class="calc-compare-labs"><div>' + esc(nameA) + " sends<b>" + calcFmt(sendA) + "</b></div>"
+        + "<div>" + esc(nameB) + " sends<b>" + calcFmt(sendB) + "</b></div></div>"
+        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " sends " + calcFmt(sendA) + ", " + esc(nameB) + " sends " + calcFmt(sendB) + '">'
         + '<div class="calc-bar-a" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
-        + '<div class="calc-favor' + tone + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
-        + (even ? "" : '<p class="caption">Add a piece worth ' + calcFmt(need) + " to " + esc(shortName) + ".</p>")
+        + '<div class="calc-favor' + (even ? "" : " is-ahead") + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
+        + (even ? "" : '<p class="caption">' + esc(favors) + " would receive " + calcFmt(need) + " more on our book.</p>")
+        + (even ? "" : '<p class="caption">' + esc(shortName) + " can send " + calcFmt(need) + " more to even it.</p>")
         + (va ? '<p class="caption">Value Adjustment on the bags: ' + calcFmt(va) + "</p>" : "")
         + '<p class="caption">Our book: flatten + KTC blend + VA. Not raw KTC. Votes do not move this number.</p>'
         + (even ? "" : calcEvenHtml(need, short))
@@ -14528,7 +14528,7 @@ const html = `<!DOCTYPE html>
           + esc(m.name) + "</button>"
         ));
       return '<div class="calc-seat' + (open ? " is-open" : "") + '">'
-        + '<div class="calc-block-h"><span>' + (side === "a" ? "Team 1 gets" : "Team 2 gets") + "</span>"
+        + '<div class="calc-block-h"><span>' + esc(cur ? (calcSeatName(cur, aria) + " sends") : (side === "a" ? "Team 1 sends" : "Team 2 sends")) + "</span>"
         + '<button type="button" class="calc-seat-btn" data-calc-seat-open="' + side + '"'
         + ' aria-label="' + aria + '" aria-expanded="' + (open ? "true" : "false") + '">'
         + esc(lab) + "</button></div>"
@@ -19972,9 +19972,15 @@ if (inline.includes("items.length > 1 ? items[1]")
 if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price a deal</h2>")) {
   throw new Error("calc door and title must say Cuckle trade calculator");
 }
-if (!inline.includes("Team 1 gets") || !inline.includes("Search players and picks")
-  || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")) {
-  throw new Error("calc must stack Team 1 / Team 2 with per-side search and a leftover bar");
+if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
+  || !inline.includes("Team 1 sends") || !inline.includes("Team 2 sends")
+  || !inline.includes("Search players and picks")
+  || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")
+  || !fnSrc("calcCompareHtml").includes("would receive")
+  || !fnSrc("calcCompareHtml").includes("can send")
+  || !fnSrc("calcCompareHtml").includes("displayDelta(sendB || null, sendA || null)")
+  || fnSrc("calcCompareHtml").includes("is-up") || fnSrc("calcCompareHtml").includes("is-down")) {
+  throw new Error("calc cards are send piles; Favors names the receiver of the larger pile");
 }
 if (!fnSrc("calcSideHtml").includes("(uid")
   || !fnSrc("calcSideHtml").includes("calc-search")

@@ -1528,11 +1528,10 @@
     }
     .cos-plate-emblem {
       flex: 0 0 40px; width: 40px; height: 40px; display: grid; place-items: center;
-      font-size: 1.25rem; line-height: 1; border-left: 1px solid var(--line);
-      background: #0e1016;
+      border-left: 1px solid var(--line); background: #0e1016;
     }
     .cos-plate-emblem img {
-      width: 22px; height: 22px; object-fit: contain; display: block;
+      width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%;
     }
     .cos-titles {
       display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px;
@@ -1571,15 +1570,25 @@
     button.cos-emblem.is-locked { opacity: 0.4; }
     button.cos-emblem.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
     .cos-emoji {
-      font-size: 1.35rem; line-height: 1; width: 1.35rem; height: 1.35rem;
-      display: grid; place-items: center;
+      width: 28px; height: 28px; line-height: 1;
+      display: grid; place-items: center; flex: 0 0 auto;
     }
     .cos-emoji img {
-      width: 1.25rem; height: 1.25rem; object-fit: contain; display: block;
+      width: 28px; height: 28px; object-fit: contain; display: block;
+      border-radius: 50%;
+    }
+    .cos-emoji-missing {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #2a2d36; border: 1px solid var(--line);
     }
     .cos-emblem-lab {
       font-size: 0.55rem; line-height: 1.1; color: var(--dim); text-align: center;
       max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cos-plate-emblem .cos-emoji,
+    .cos-plate-emblem .cos-emoji img,
+    .cos-plate-emblem .cos-emoji-missing {
+      width: 28px; height: 28px;
     }
     .cos-sheet {
       position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
@@ -1597,7 +1606,10 @@
     .cos-sheet-head {
       display: flex; align-items: center; gap: 10px; margin: 0 0 8px;
     }
-    .cos-sheet-head .cos-emoji { font-size: 1.75rem; width: 1.75rem; height: 1.75rem; }
+    .cos-sheet-head .cos-emoji,
+    .cos-sheet-head .cos-emoji img {
+      width: 40px; height: 40px;
+    }
     .cos-sheet-banner {
       width: 100%; height: 40px; object-fit: cover; border-radius: 8px; margin: 0 0 10px;
       display: block; background: #12151c;
@@ -3254,7 +3266,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmeticsCompact20260906153500";
+    const DATA_V = "cosmeticsCustomMarks20260906154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14792,30 +14804,9 @@
     const COS_EMBLEM_ART = new Set([
       "points_champ", "bracket_thief", "finalist", "two_time_finalist", "three_time_finalist",
       "last_place", "iron_core", "volume", "whale", "extractor", "firsts_merchant",
-      "playoff_trader", "quiet_year", "manners", "draft_hit", "bench_crime", "waiver_touch",
-      "opening_day",
+      "playoff_trader", "quiet_year", "manners", "draft_hit", "sit_right", "bench_crime",
+      "waiver_touch", "opening_day",
     ]);
-    const COS_EMBLEM_EMOJI = {
-      points_champ: "🏆",
-      bracket_thief: "🦊",
-      three_time_finalist: "🥉",
-      two_time_finalist: "🥈",
-      finalist: "🥈",
-      last_place: "🚽",
-      iron_core: "🛡️",
-      volume: "🔄",
-      whale: "🐋",
-      extractor: "🧲",
-      firsts_merchant: "💎",
-      playoff_trader: "📅",
-      quiet_year: "😴",
-      manners: "🤝",
-      draft_hit: "🎯",
-      sit_right: "✅",
-      bench_crime: "🔥",
-      waiver_touch: "🧵",
-      opening_day: "🌅",
-    };
 
     function cosmeticsArtPath(kind, id) {
       if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
@@ -14823,14 +14814,17 @@
       return "";
     }
 
-    function cosmeticsEmoji(id) {
-      return COS_EMBLEM_EMOJI[id] || "⭐";
-    }
-
     function cosmeticsEmblemMark(id, cls) {
-      // Emblems paint as emoji-size marks. Prefer the emoji glyph; tiny art is a fallback only.
-      return '<span class="' + (cls || "cos-emoji") + '" aria-hidden="true">'
-        + cosmeticsEmoji(id) + "</span>";
+      // Custom flat marks, emoji-sized — never Unicode emoji.
+      const path = cosmeticsArtPath("emblem", id);
+      const wrap = cls || "cos-emoji";
+      if (!path) {
+        return '<span class="' + wrap + ' cos-emoji-missing" aria-hidden="true"></span>';
+      }
+      return '<span class="' + wrap + '" aria-hidden="true">'
+        + '<img src="' + esc(path) + "?" + DATA_V + '" alt="" width="28" height="28"'
+        + ' loading="lazy" decoding="async" />'
+        + "</span>";
     }
 
     function cosmeticsTitleBanner(c, cls) {
@@ -14898,7 +14892,7 @@
         : '<span class="cos-plate-banner is-text">No title equipped</span>';
       const plateEmblem = eqEmblem
         ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
-        : '<div class="cos-plate-emblem" aria-hidden="true">☆</div>';
+        : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
       const plate = '<div class="cos-plate" aria-label="Equipped calling card">'
         + plateBanner + plateEmblem + "</div>";
       const titleRow = (c) => {
@@ -16316,6 +16310,11 @@
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
+      if (cosmeticsDetailId) {
+        cosmeticsDetailId = null;
+        render();
+        return true;
+      }
       if (lensOpen) {
         lensOpen = false;
         lensPicker = "trade";

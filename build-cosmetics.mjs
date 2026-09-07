@@ -54,7 +54,11 @@ const CATALOG = [
   { id: "bench_crime", kind: "emblem", name: "Bench Crime", how: "Win a title with a bench scorer topping your starter that week.", rarity: "iron" },
   { id: "waiver_touch", kind: "emblem", name: "Waiver Touch", how: "Lead a title-path window in waiver adds.", rarity: "bronze" },
   { id: "opening_day", kind: "emblem", name: "Opening Day Champ", how: "Start 11 or more title-game players from the opening roster.", rarity: "gold" },
-  { id: "founding_draft", kind: "title", name: "Founding Draft", how: "Use a 2019 startup pick and later win a title.", rarity: "gold" },
+  { id: "comeback", kind: "title", name: "Comeback", how: "Win a title after finishing 5th or worse the year before.", rarity: "silver" },
+  { id: "high_wire", kind: "title", name: "High-Wire", how: "Win the championship game by under 10 points.", rarity: "silver" },
+  { id: "runaway", kind: "title", name: "Runaway", how: "Win a title with 12 or more regular-season wins.", rarity: "bronze" },
+  { id: "held_core", kind: "title", name: "The Core", how: "Start a title game with every starter from the opening roster.", rarity: "silver" },
+  { id: "dealmaker", kind: "title", name: "Dealmaker", how: "Win a title in a 15-trade year or busier.", rarity: "bronze" },
 ];
 
 function nth(n) {
@@ -97,6 +101,21 @@ for (const t of titles) {
     addUnlock(uid, "iron_core", receipt([t.season, `${from} of ${n} from opening`]));
   }
   if (from >= 11) addUnlock(uid, "opening_day", receipt([t.season, `${from} opening starters`]));
+  if (n && from != null && from === n) {
+    addUnlock(uid, "held_core", receipt([t.season, `${from} of ${n} from opening`]));
+  }
+  if (t.prior && Number(t.prior.place) >= 5) {
+    addUnlock(uid, "comeback", receipt([t.season, `from ${nth(t.prior.place)} the year before`]));
+  }
+  if (t.final && t.final.ok && t.final.margin != null && Number(t.final.margin) < 10) {
+    addUnlock(uid, "high_wire", receipt([t.season, `won by ${t.final.margin}`]));
+  }
+  if (t.record && Number(t.record.wins) >= 12) {
+    addUnlock(uid, "runaway", receipt([t.season, `${t.record.wins}–${t.record.losses}`]));
+  }
+  if (t.record && Number(t.record.trades) >= 15) {
+    addUnlock(uid, "dealmaker", receipt([t.season, `${t.record.trades} trades`]));
+  }
   if (t.record && t.record.sit >= 0.9) {
     addUnlock(uid, "sit_right", receipt([t.season, `sit ${Math.round(t.record.sit * 100)}%`]));
   }
@@ -106,10 +125,6 @@ for (const t of titles) {
       `${t.final.top_bench.player} ${t.final.top_bench.points} on the pine`,
     ]));
   }
-  if (t.draft && t.draft.used && t.draft.used.some((u) => u.startup && String(t.season) === "2019")) {
-    addUnlock(uid, "founding_draft", receipt(["2019 startup", "later champion"]));
-  }
-  if (t.draft && t.draft.startup) addUnlock(uid, "founding_draft", receipt(["2019 startup", t.season + " title"]));
   const mean = t.record && t.record.league_mean_trades;
   if (mean != null && t.record.trades < mean) {
     addUnlock(uid, "quiet_year", receipt([t.season, `${t.record.trades} trades vs ${mean} mean`]));
@@ -136,14 +151,6 @@ for (const [uid, n] of Object.entries(finalistCount)) {
   const years = (finalistYears[uid] || []).slice().sort();
   if (n >= 3) addUnlock(uid, "three_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
   if (n >= 2) addUnlock(uid, "two_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
-}
-
-// Founding draft: any 2019 startup user who later won (ARae used startup and won 2019).
-for (const t of titles) {
-  if (!t.draft || !t.draft.used) continue;
-  if (t.draft.used.some((u) => u.startup)) {
-    addUnlock(String(t.user_id), "founding_draft", receipt(["startup draft", t.season]));
-  }
 }
 
 for (const m of members) {
@@ -219,6 +226,17 @@ if (waiverUid && bestWaiver > 0) {
 const ladderIds = CATALOG.filter((c) => c.kind === "title").map((c) => c.id).slice(0, TITLE_LADDER.length);
 if (ladderIds.join() !== TITLE_LADDER.join()) {
   throw new Error(`cosmetics catalog must lead with ${TITLE_LADDER.join(" → ")}`);
+}
+if (CATALOG.some((c) => c.id === "founding_draft")) {
+  throw new Error("founding_draft is retired — do not mint it");
+}
+for (const id of ["comeback", "high_wire", "runaway", "held_core", "dealmaker"]) {
+  if (!CATALOG.some((c) => c.id === id && c.kind === "title")) {
+    throw new Error(`cosmetics catalog must include title ${id}`);
+  }
+}
+if (CATALOG.length !== 33) {
+  throw new Error(`expected 33 catalog ids after dropping founding_draft, found ${CATALOG.length}`);
 }
 
 const book = {

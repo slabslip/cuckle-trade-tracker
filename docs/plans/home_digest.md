@@ -1,7 +1,7 @@
 # Home digest — hybrid Home, calc, barracks
 
 **Status:** Shipped — first tab **Home**, signed-in Your 3 (notifications only), signed-in
-**On your roster** news, 2-team calculator on the today / `even` book, 27 titles/emblems + barracks.
+**On your roster** news, 2-team calculator on the today / `even` book, 33 titles/emblems + barracks.
 
 Canonical product rules: [`docs/UI_SDD.md`](../UI_SDD.md) §1–3c, [`docs/VALUE_SDD.md`](../VALUE_SDD.md) §12,
 [`docs/COSMETICS_SDD.md`](../COSMETICS_SDD.md), [`docs/PRODUCT.md`](../PRODUCT.md),

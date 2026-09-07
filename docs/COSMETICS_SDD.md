@@ -12,7 +12,7 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 ## 1. One catalog
 
-Everyone chases the same 29 ids. Each id is one cosmetic: a short title string plus a mark.
+Everyone chases the same 33 ids. Each id is one cosmetic: a short title string plus a mark.
 `kind` is `title` or `emblem` — **not both**. Flavor writeups that pair an “emblem name” with a
 wearable title are copy for one card, not two catalog rows. Emblems v1 are initials / simple
 marks in existing CSS — not an art pack. Swap art later without changing ids.
@@ -42,8 +42,12 @@ Finalist (lost the championship game 3 / 2 / 1 times), Last Place, Iron Core
 **Tape** — Volume, Whale, Extractor, Win-Now, Investor, Firsts Merchant, Playoff Trader,
 Quiet Year.
 
+**Title stories** (from title-season tape, not weekly grind) — Comeback (title after 5th-or-worse
+the year before), High-Wire (chip by under 10), Runaway (12+ regular-season wins), The Core
+(every title starter from opening), Dealmaker (15+ trades in the title year).
+
 **Marks / sit / dunks** — Manners, Draft Hit, Sit Right, Bench Crime, Waiver Touch,
-Opening Day Champ (`from_opening >= 11`), Founding Draft (2019 startup pick, later a title).
+Opening Day Champ (`from_opening >= 11`).
 
 ARae’s three titles unlock **Dynasty Established** for the pool; only he has it until someone
 else gets there. Treat that rung as elite — current league ceiling. Two-Time does not stack on

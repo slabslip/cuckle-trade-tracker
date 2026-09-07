@@ -2,7 +2,7 @@
 
 **Status:** Wave 1 shipping — barracks sort + reserved 4/5 titles. Do not mint a 70-id catalog.
 **Owner:** product + `build-cosmetics.mjs`
-**Shipped now:** 29-id catalog. Barracks `?view=cosmetics` from Settings → Profile and Account.
+**Shipped now:** 33-id catalog. Barracks `?view=cosmetics` from Settings → Profile and Account.
 Equip one title + one emblem. Paint the equipped pair on **every** seat's team home.
 **This document:** review of the expanded award list (2026-09-06) and what we
 adopt vs park.
@@ -81,7 +81,8 @@ Already covered (keep; do not duplicate):
 | Quiet year / manners | matching emblems | emblem |
 | Draft hit / sit right / bench crime | matching emblems | emblem |
 | Waiver touch | `waiver_touch` | emblem |
-| Opening day / founding draft | matching emblems | emblem |
+| Opening day | `opening_day` | emblem |
+| Comeback / High-Wire / Runaway / The Core / Dealmaker | matching titles | title |
 
 **Ceiling copy:** treat `three_time` as elite in UI (subtitle, sort weight),
 not as a mid-card next to Waiver Touch.
@@ -155,7 +156,8 @@ this plan pass.
 
 1. **Wave 1 (this pass)** — barracks sort, crown copy (Back-to-Back, Dynasty
    Established, Dynasty Immortal, Eternal Champion), locked `four_time` /
-   `five_time` rows. Catalog is **29** (added two- and three-time finalist emblems).
+   `five_time` rows. Catalog is **33** (dropped Founding Draft; added Comeback, High-Wire,
+   Runaway, The Core, Dealmaker).
 2. **Comeback Dynasty** — needs last-place *year* per seat, not only the
    latest `members.json` place-10. Do not guess from one season.
 3. **Pick Collector** if future-1st counts are trustworthy on every seat.

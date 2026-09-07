@@ -220,7 +220,7 @@ not appear on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 
-Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 29.
+Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 33.
 Equip one title and one emblem.
 Championship titles outrank every other award in sort and prestige. Locked shows the
 requirement; unlocked shows the receipt. Visual only. The equipped pair paints as a calling

@@ -3276,7 +3276,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "seatAwardsPlate20260907001500";
+    const DATA_V = "titlesFiveStories20260907003000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -20519,6 +20519,17 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
   } catch (err) {
     throw new Error("generated inline script failed to parse: " + (err && err.message ? err.message : err));
   }
+}
+
+{
+  const cosPath = `${ROOT}data/ui/cosmetics.json`;
+  const cos = JSON.parse(fs.readFileSync(cosPath, "utf8"));
+  const ids = (cos.catalog || []).map((c) => c.id);
+  if (ids.includes("founding_draft")) throw new Error("founding_draft must stay out of cosmetics.json");
+  for (const id of ["comeback", "high_wire", "runaway", "held_core", "dealmaker"]) {
+    if (!ids.includes(id)) throw new Error(`cosmetics.json missing title ${id}`);
+  }
+  if (ids.length !== 33) throw new Error(`cosmetics.json catalog must be 33, found ${ids.length}`);
 }
 
 fs.writeFileSync(`${ROOT}index.html`, html);

@@ -180,13 +180,15 @@ sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 ## 3. Home
 
 **Your 3** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
-or a blank reserved slot when nothing is waiting. Tap → Ledger or the deal vote. Do not fill
-with the calculator or a news teaser.
+or a blank reserved slot when nothing is waiting. Tap a wager → Ledger. Tap a vote → that
+deal’s review screen (H2H chip + **Who won this trade?**). Do not fill with the calculator
+or a news teaser.
 
 **No Recent Trade chip on Home.** The vote row in Your 3 opens the deal. The H2H chip still
 renders on the open-trade screen and on Teams / History feed cards.
 
-**Cuckle trade calculator** · its own row on Home. Opens `?view=calc`.
+**Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
+plate). Opens `?view=calc`.
 
 **Trade Desk** — three league conversation cards (two seats + one even-up starter from the
 today / `even` book). Tap opens the calculator with those sides prefilled. Signed-in: your

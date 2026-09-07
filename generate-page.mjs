@@ -756,7 +756,26 @@ const html = `<!DOCTYPE html>
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 14px;
       padding: 8px 10px; margin: 2px 0 0; box-sizing: border-box;
     }
+    .vote-card-k {
+      margin: 0 0 8px; font-size: 0.75rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
     .vote-card .vote { margin: 0; }
+    div.lh-trade-feed-card.is-selected .lh-trade-vote-cta { display: none; }
+    div.lh-trade-feed-card.is-selected .vote-card {
+      margin-top: 8px; padding: 12px;
+    }
+    div.lh-trade-feed-card.is-selected button.vote-opt {
+      min-height: 52px;
+    }
+    div.lh-trade-feed-card.is-selected button.vote-opt b {
+      white-space: normal; overflow: visible; text-overflow: unset;
+    }
+    .trade-review-vs {
+      margin: 0 0 12px; font-size: 1rem; font-weight: 650; color: var(--text);
+      line-height: 1.3;
+    }
+    .trades-feed.is-solo { margin-bottom: 8px; }
     .vote.is-done { margin: 0; }
     button.vote-done {
       display: flex; align-items: center; gap: 8px; width: 100%;
@@ -1416,12 +1435,20 @@ const html = `<!DOCTYPE html>
     }
     .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
-      appearance: none; font: inherit; font-weight: 650; color: #e0b44c;
-      display: block; width: 100%; text-align: center; cursor: pointer;
-      background: transparent; border: 1px solid rgba(224, 180, 76, 0.5);
-      border-radius: 12px; padding: 12px 14px; margin: 0; min-height: 44px;
+      appearance: none; font: inherit; color: #e0b44c;
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      position: relative;
+      background: #0a0c10; border: 1px solid #6b5a2e; border-radius: 12px;
+      padding: 3px; margin: 0; min-height: 0; overflow: hidden; line-height: 0;
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.22);
     }
     button.lh-calc-door:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
+    .lh-calc-banner {
+      display: block; width: 100%; height: auto;
+      aspect-ratio: 16 / 7; object-fit: cover; object-position: center 42%;
+      background: #0a0c10; border-radius: 9px;
+    }
+    .lh-calc-door-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
     .calc-stack { display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px; }
     .calc-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-width: 0; overflow: hidden; }
     .calc-seat { min-width: 0; }
@@ -3365,7 +3392,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homedesk20260907134500";
+    const DATA_V = "calcdoor20260907140500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3552,6 +3579,7 @@ const html = `<!DOCTYPE html>
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
+    let tradeSolo = false;
     let openPick = null;
     let openDraft = null;
     let partnerName = null;
@@ -9719,6 +9747,15 @@ const html = `<!DOCTYPE html>
           + '<p class="caption">That trade is not on the league tape.</p>'
           + '<button type="button" class="chip" data-trades-list="1">All league trades</button>';
       }
+      if (tradeSolo) {
+        ensureTradesFeedBags([selected]);
+        return backChip("Home")
+          + '<h2 class="screen-h" tabindex="-1">Review this trade</h2>'
+          + '<p class="trade-review-vs">' + seatLabel(selected.name, { link: false })
+          + " vs " + seatLabel(selected.other, { link: false }) + "</p>"
+          + voteToastHtml()
+          + '<div class="trades-feed is-solo">' + tradeFeedSelectedHtml(selected) + "</div>";
+      }
       const ctx = tapeTradesFiltered();
       const { lived, list, empty } = ctx;
       const rest = list.filter((r) => r.transaction_id !== openId);
@@ -12607,7 +12644,11 @@ const html = `<!DOCTYPE html>
       if (!r) return "";
       const inner = voteBlock(r);
       if (!inner || inner === '<div class="vote"></div>') return "";
-      return '<div class="vote-card">' + inner + "</div>";
+      const seats = voteSeats(r);
+      const needPick = seats.length === 2 && !(readVotes(r.transaction_id) || {}).choice;
+      return '<div class="vote-card">'
+        + (needPick ? '<p class="vote-card-k">Who won this trade?</p>' : "")
+        + inner + "</div>";
     }
 
     /** Modal overlay with the existing voteBlock side buttons and tallies. */
@@ -14640,8 +14681,7 @@ const html = `<!DOCTYPE html>
         + '<div class="your3-h">Your 3</div>'
         + rows.slice(0, 3).map((r) => {
           const extra = r.kind === "vote"
-            ? ' data-vote-open="' + esc(r.tx) + '"'
-              + (r.uid ? ' data-vote-open-seat="' + esc(r.uid) + '"' : "")
+            ? ' data-board-open="' + esc(r.uid) + '" data-id="' + esc(r.tx) + '" data-trade-solo="1"'
             : "";
           return '<button type="button" class="your3-row" data-your3="' + esc(r.kind) + '"'
             + extra + ">" + esc(r.lab) + "</button>";
@@ -15507,7 +15547,11 @@ const html = `<!DOCTYPE html>
 
     function leagueInProgress() {
       // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
-      const door = '<button type="button" class="lh-calc-door" data-view="calc">Cuckle trade calculator</button>';
+      const door = '<button type="button" class="lh-calc-door" data-view="calc"'
+        + ' aria-label="Cuckle trade calculator">'
+        + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
+        + ' width="1024" height="448" alt="">'
+        + '<span class="lh-calc-door-sr">Cuckle trade calculator</span></button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
         + homeDeskHtml();
@@ -16632,12 +16676,13 @@ const html = `<!DOCTYPE html>
     }
 
     /** Open one trade as its own screen. uid is the seat whose side frames it. */
-    function openTrade(tx, uid) {
+    function openTrade(tx, uid, opts) {
       if (!tx) return;
       // News Feed open or just minimized — never leave league home via click-through.
       if (newsPullupLocksHome()) return;
       view = "trade";
       openId = tx;
+      tradeSolo = !!(opts && opts.solo);
       tradeSeat = uid || null;
       partnerName = null;
       openPick = null;
@@ -17086,7 +17131,9 @@ const html = `<!DOCTYPE html>
           return;
         }
         e.preventDefault();
-        openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen);
+        openTrade(boardRow.dataset.id, boardRow.dataset.boardOpen, {
+          solo: boardRow.getAttribute("data-trade-solo") === "1",
+        });
         return;
       }
       const seatTradeRow = t.closest && t.closest("[data-seat-trade-open]");
@@ -17902,7 +17949,9 @@ const html = `<!DOCTYPE html>
           e.stopPropagation();
           return;
         }
-        openTrade(boardOpen.dataset.id, boardOpen.dataset.boardOpen);
+        openTrade(boardOpen.dataset.id, boardOpen.dataset.boardOpen, {
+          solo: boardOpen.getAttribute("data-trade-solo") === "1",
+        });
         return;
       }
       const markBtn = e.target.closest("[data-mark]");
@@ -19528,9 +19577,9 @@ for (const need of [
     || !fn.includes("tradeFeedCardHtml(") || !fn.includes("ensureTradesFeedBags(")) {
     throw new Error("renderTradeScreen must be an H2H trade feed with filters and selected trade expanded");
   }
-  if (!fn.includes("League trade data") || fn.includes('seatLabel(selected.name) + " vs "')
-    || fn.includes("Review this trade and browse")) {
-    throw new Error("renderTradeScreen title must be League trade data (no A vs B header / review caption)");
+  if (!fn.includes("League trade data") || !fn.includes("Review this trade")
+    || !fn.includes("tradeSolo") || !fn.includes("trades-feed is-solo")) {
+    throw new Error("renderTradeScreen must keep League trade data browse and a solo Review this trade path");
   }
   
 {
@@ -20867,6 +20916,14 @@ if (inline.includes("items.length > 1 ? items[1]")
 }
 if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price a deal</h2>")) {
   throw new Error("calc door and title must say Cuckle trade calculator");
+}
+if (!html.includes("lh-calc-banner") || !html.includes("data/ui/calc-door.png")
+  || !fs.existsSync(path.join(ROOT, "data/ui/calc-door.png"))) {
+  throw new Error("Home calc door must be the title-style calc-door banner");
+}
+if (!inline.includes('data-trade-solo="1"') || !inline.includes("function openTrade(tx, uid, opts)")
+  || !inline.includes("Who won this trade?")) {
+  throw new Error("Your 3 vote must open a solo trade review with Who won this trade?");
 }
 if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !inline.includes("Team 1 sends") || !inline.includes("Team 2 sends")

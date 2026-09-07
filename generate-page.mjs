@@ -3450,7 +3450,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcdoor20260907153000";
+    const DATA_V = "calcdoor20260907154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15667,10 +15667,10 @@ const html = `<!DOCTYPE html>
     function leagueInProgress() {
       // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
-        + ' aria-label="Cuckle trade calculator">'
+        + ' aria-label="Cuckle calculator">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
-        + ' width="1024" height="180" alt="">'
-        + '<span class="lh-calc-door-sr">Cuckle trade calculator</span></button>';
+        + ' width="1024" height="180" alt="Cuckle calculator">'
+        + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
         + homeDeskHtml();

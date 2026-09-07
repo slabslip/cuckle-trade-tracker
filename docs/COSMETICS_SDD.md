@@ -14,9 +14,11 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 Everyone chases the same 29 ids. Each id is one cosmetic: a short title string or a mark.
 `kind` is `title` or `emblem` — **not both**. Flavor writeups that pair an “emblem name” with a
-wearable title are copy for one card, not two catalog rows. Emblems ship as flat PNG marks in
-`data/ui/cosmetics/`; championship titles ship as thin COD-style banners. Text fallbacks cover
-ids without art yet (`win_now`, `investor`, `founding_draft`).
+wearable title are copy for one card, not two catalog rows. Emblems ship as centered circular
+PNG marks (transparent corners) in `data/ui/cosmetics/`, re-exported from
+`docs/design/cosmetics/ff-emblem-emoji-style-sheet-v2.png` via
+`scripts/export-cosmetics-emblems.py`. Championship titles ship as thin COD-style banners.
+Text fallbacks cover ids without art yet (`win_now`, `investor`, `founding_draft`).
 
 Catalog + computed unlocks: `data/ui/cosmetics.json` from `build-cosmetics.mjs` (after
 `title-path.mjs`). Inputs: `titles.json`, `league.json` `traders`, `marks.json`, `members.json`.

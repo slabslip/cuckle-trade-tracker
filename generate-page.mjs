@@ -1546,7 +1546,7 @@ const html = `<!DOCTYPE html>
     }
     .cos-plate-emblem img {
       width: min(44px, 100%); height: min(44px, 100%);
-      object-fit: contain; display: block; border-radius: 50%;
+      object-fit: contain; object-position: center; display: block;
     }
     .cos-titles {
       display: flex; flex-direction: column; gap: 12px; margin: 0 0 16px;
@@ -1594,9 +1594,11 @@ const html = `<!DOCTYPE html>
       width: 40px; height: 40px; line-height: 1;
       display: grid; place-items: center; flex: 0 0 auto;
     }
+    /* Emblem PNGs are already centered circular marks with transparent corners
+       (see scripts/export-cosmetics-emblems.py). Contain + no extra circle crop. */
     .cos-emoji img {
-      width: 40px; height: 40px; object-fit: contain; display: block;
-      border-radius: 50%;
+      width: 40px; height: 40px; object-fit: contain; object-position: center;
+      display: block;
     }
     .cos-emoji-missing {
       width: 40px; height: 40px; border-radius: 50%;
@@ -1619,7 +1621,8 @@ const html = `<!DOCTYPE html>
       width: 1.15em; height: 1.15em; margin-left: 0.15em;
     }
     .seat-cos-mark img {
-      width: 1.15em; height: 1.15em; object-fit: contain; display: block; border-radius: 50%;
+      width: 1.15em; height: 1.15em; object-fit: contain; object-position: center;
+      display: block;
     }
     .cos-profile-plate {
       margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px;
@@ -3315,7 +3318,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260906235400";
+    const DATA_V = "cosmetics20260907003000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

@@ -90,10 +90,10 @@ from missing weekly snapshots.
 ## 3. Barracks
 
 `?view=cosmetics` from **Settings → Profile** and Account → **Titles and Emblems**.
-Two grids: titles are a **15-column** picker of scaled-down full 1024×180 crops (two rows
-of 15 visible without scrolling; tap opens the full card). Emblems stay a 4–5 column mark
-grid. Equipped plate and detail sheet keep the large crop. Detail sheet names the matching
-mate. Equip one title + one emblem.
+Two grids: titles are a **3-column** picker of scaled-down full 1024×180 crops (15 rows
+for the current 44-title book; more titles keep wrapping). Tap opens the full card.
+Emblems stay a 4–5 column mark grid. Equipped plate and detail sheet keep the large crop.
+Detail sheet names the matching mate. Equip one title + one emblem.
 Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seatId>`
 (legacy `cuckle.cosmetics.equip.v1` migrates on load), plus a per-league map
 `cuckle.cosmetics.equip.by_seat.v1` so other managers' homes can paint offline.

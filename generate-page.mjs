@@ -5800,7 +5800,7 @@ const html = `<!DOCTYPE html>
 
     /**
      * Top tabs: Home | Teams | Ledger | History — above the daily digest.
-     * Home is the league-home body (Your 3 + deal + news). Other tabs swap in place.
+     * Home is the league-home body (Alerts + deal + news). Other tabs swap in place.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
@@ -14732,12 +14732,12 @@ const html = `<!DOCTYPE html>
         });
       }
       if (!rows.length) {
-        return '<section class="your3 is-empty" aria-label="Your 3">'
-          + '<div class="your3-h">Your 3</div>'
+        return '<section class="your3 is-empty" aria-label="Alerts">'
+          + '<div class="your3-h">Alerts</div>'
           + "</section>";
       }
-      return '<section class="your3" aria-label="Your 3">'
-        + '<div class="your3-h">Your 3</div>'
+      return '<section class="your3" aria-label="Alerts">'
+        + '<div class="your3-h">Alerts</div>'
         + rows.slice(0, 3).map((r) => {
           const extra = r.kind === "vote"
             ? ' data-board-open="' + esc(r.uid) + '" data-id="' + esc(r.tx) + '" data-trade-solo="1"'
@@ -15665,7 +15665,7 @@ const html = `<!DOCTYPE html>
     }
 
     function leagueInProgress() {
-      // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
+      // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="Cuckle calculator">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
@@ -18916,11 +18916,11 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("lh-latest-trade") || prog.includes("latestTradeCardHtml(")
     || prog.includes("ensureLatestTradeBags(") || prog.includes("caught up")
     || prog.includes("data-board-open")) {
-    throw new Error("leagueInProgress must not mount the Recent Trade chip; Your 3 owns the vote");
+    throw new Error("leagueInProgress must not mount the Recent Trade chip; Alerts owns the vote");
   }
   if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
     || !prog.includes("homeDeskHtml()")) {
-    throw new Error("Home digest is Your 3 + Cuckle trade calculator + Trade Desk");
+    throw new Error("Home digest is Alerts + Cuckle trade calculator + Trade Desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -18928,7 +18928,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !inline.includes("function latestTradeAbsolute(")
     || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")
     || !inline.includes("voteSheetSeat") || !inline.includes("voteConfirmSeat")) {
-    throw new Error("trade vote confirm must stay available from Your 3");
+    throw new Error("trade vote confirm must stay available from Alerts");
   }
   if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")
     || !html.includes(".vote-confirm-tally")
@@ -20971,7 +20971,7 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeDe
   || !inline.includes("data-open-cosmetics") || !inline.includes('data-desk-a="')
   || !inline.includes("Trade Desk") || !inline.includes("Who won this trade?")
   || !html.includes("align-items: flex-end") || html.includes(".vote-sheet {\n      position: fixed; inset: 0; z-index: 300;\n      display: grid; place-items: center")) {
-  throw new Error("Home digest must ship Your 3, Trade Desk, Cuckle trade calculator, calc, and barracks");
+  throw new Error("Home digest must ship Alerts, Trade Desk, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || !inline.includes("three_peat_mark") || !inline.includes("COS_CROWN_TITLES")
@@ -21034,6 +21034,10 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("const peekItem = items[0] || null")
   || !inline.includes('class="your3 is-empty"')
+  || !inline.includes('aria-label="Alerts"')
+  || !inline.includes('class="your3-h">Alerts<')
+  || inline.includes('aria-label="Your 3"')
+  || inline.includes('class="your3-h">Your 3<')
   || !inline.includes('aria-label="Trade Desk"')
   || inline.includes("On your roster")) {
   throw new Error("Home in-flow slot is Trade Desk; peek stays the latest league item");
@@ -21041,7 +21045,7 @@ if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function n
 if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "calc", lab: "Price a deal"')
   || inline.includes('kind: "news"')) {
-  throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Your 3");
+  throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Alerts");
 }
 if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price a deal</h2>")) {
   throw new Error("calc door and title must say Cuckle trade calculator");
@@ -21052,7 +21056,7 @@ if (!html.includes("lh-calc-banner") || !html.includes("data/ui/calc-door.png")
 }
 if (!inline.includes('data-trade-solo="1"') || !inline.includes("function openTrade(tx, uid, opts)")
   || !inline.includes("Who won this trade?")) {
-  throw new Error("Your 3 vote must open a solo trade review with Who won this trade?");
+  throw new Error("Alerts vote must open a solo trade review with Who won this trade?");
 }
 if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !inline.includes("Team 1 sends") || !inline.includes("Team 2 sends")

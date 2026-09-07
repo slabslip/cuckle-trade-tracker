@@ -1,7 +1,7 @@
 # CuckleChunckle — Trade votes SDD
 
 Who actually won a trade, as an **opinion**. Shipped 2026-08-29 on the Recent Trade card
-(that Home chip is gone — Home’s door is the Your 3 vote row). Connected to a real
+(that Home chip is gone — Home’s door is the Alerts vote row). Connected to a real
 cross-user store 2026-08-30.
 
 **The store is Supabase.** §3 below recommended a Cloudflare Worker with KV; that
@@ -20,7 +20,7 @@ vote — never a delta.
 
 ## 1. What ships today (Wave 2 vote identity)
 
-Home’s **Your 3** vote row opens the full trade. Under the expanded trade, and only there,
+Home’s **Alerts** vote row opens the full trade. Under the expanded trade, and only there,
 sits the vote block:
 
 ```
@@ -233,7 +233,7 @@ what shipped in §5.)*
 - No per-manager breakdown on screen yet, though the voter identity is recorded for it. It would
   be a list of unverified claims (§5.5), so it needs copy that says so before it earns a screen.
 - No vote on N-way trades (§1).
-- No vote on the Trades tab rows — only the open-trade screen (reached from Your 3). Trades-tab
+- No vote on the Trades tab rows — only the open-trade screen (reached from Alerts). Trades-tab
   rows are `<button>`s with the detail nested inside (audit A1); adding a control there means
   fixing that first.
 - No scheduled pull into `data/ui/votes.json`. The page reads the live tally directly, so the

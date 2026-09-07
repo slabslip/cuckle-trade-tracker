@@ -14,14 +14,14 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
-the digest — signed-in **Your 3** (notifications only), **Cuckle trade calculator**, signed-in **On your
-roster** news, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
+the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**, signed-in
+**Trade Desk**, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
 it; the clock lives in the brand header on screens it applies to (§2a).
 
-**Your 3** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
+**Alerts** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
 and nothing is waiting, keep the heading and leave the slot blank — do not fill it. That is an
 *action*, not a personal bag number. Lineup recaps, waivers, and bag totals stay off Home. The
-calculator door is its own row — it is not a Your 3 filler. Home does not remount the Recent
+calculator door is its own row — it is not an Alerts filler. Home does not remount the Recent
 Trade chip; the vote notification is the door into that deal.
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
@@ -179,12 +179,12 @@ sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 
 ## 3. Home
 
-**Your 3** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
+**Alerts** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
 or a blank reserved slot when nothing is waiting. Tap a wager → Ledger. Tap a vote → that
 deal’s review screen (H2H chip + **Who won this trade?**). Do not fill with the calculator
 or a news teaser.
 
-**No Recent Trade chip on Home.** The vote row in Your 3 opens the deal. The H2H chip still
+**No Recent Trade chip on Home.** The vote row in Alerts opens the deal. The H2H chip still
 renders on the open-trade screen and on Teams / History feed cards.
 
 **Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc

@@ -1,6 +1,6 @@
 # Home digest — hybrid Home, calc, barracks
 
-**Status:** Shipped — first tab **Home**, signed-in Your 3 (notifications only), signed-in
+**Status:** Shipped — first tab **Home**, signed-in Alerts (notifications only), signed-in
 **Trade Desk** (three even-up talks), 2-team calculator on the today / `even` book, titles/emblems + barracks.
 
 Canonical product rules: [`docs/UI_SDD.md`](../UI_SDD.md) §1–3c, [`docs/VALUE_SDD.md`](../VALUE_SDD.md) §12,
@@ -17,10 +17,10 @@ plans stay as history; do not paste them here.
 - Four top tabs, one row: **Home | Teams | Ledger | History**. No fifth tab. No `#goHome` icon.
 - First tab label **Home**. `homeTab` stores `"home"`; `"league"` is an alias.
 - Hybrid Home: league water cooler on top (**Cuckle trade calculator** + existing News Feed peek).
-  Signed-in **Your 3** (wager / vote only) and **Trade Desk** (three league talks into the
+  Signed-in **Alerts** (wager / vote only) and **Trade Desk** (three league talks into the
   calculator — not a second copy of the league peek). No bag hero. No Recent Trade chip on
   Home — the vote notification is the door.
-- Your 3 (omit when signed out; blank reserved slot when signed in with nothing waiting):
+- Alerts (omit when signed out; blank reserved slot when signed in with nothing waiting):
   Ledger involving you; an uncast vote on the deal on this page. Do not fill with the
   calculator or a news teaser.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /

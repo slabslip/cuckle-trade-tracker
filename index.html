@@ -5792,7 +5792,7 @@
 
     /**
      * Top tabs: Home | Teams | Ledger | History — above the daily digest.
-     * Home is the league-home body (Your 3 + deal + news). Other tabs swap in place.
+     * Home is the league-home body (Alerts + deal + news). Other tabs swap in place.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
@@ -14724,12 +14724,12 @@
         });
       }
       if (!rows.length) {
-        return '<section class="your3 is-empty" aria-label="Your 3">'
-          + '<div class="your3-h">Your 3</div>'
+        return '<section class="your3 is-empty" aria-label="Alerts">'
+          + '<div class="your3-h">Alerts</div>'
           + "</section>";
       }
-      return '<section class="your3" aria-label="Your 3">'
-        + '<div class="your3-h">Your 3</div>'
+      return '<section class="your3" aria-label="Alerts">'
+        + '<div class="your3-h">Alerts</div>'
         + rows.slice(0, 3).map((r) => {
           const extra = r.kind === "vote"
             ? ' data-board-open="' + esc(r.uid) + '" data-id="' + esc(r.tx) + '" data-trade-solo="1"'
@@ -15657,7 +15657,7 @@
     }
 
     function leagueInProgress() {
-      // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
+      // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="Cuckle calculator">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'

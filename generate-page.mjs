@@ -2421,23 +2421,33 @@ const html = `<!DOCTYPE html>
       display: flex; align-items: center; justify-content: center;
       min-width: 28px; align-self: center;
     }
-    /* Vote sheet: reuses voteBlock side buttons (SF69erss vs KingHenryXXVI style). */
+    /* Vote sheet: bottom sheet (same family as cosmetics), not a floating mid-screen hole. */
     body.has-vote-sheet { overflow: hidden; }
     .vote-sheet {
       position: fixed; inset: 0; z-index: 300;
-      display: grid; place-items: center; padding: 16px;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 12px 12px 16px;
       box-sizing: border-box;
     }
     button.vote-sheet-scrim {
       position: absolute; inset: 0; margin: 0; padding: 0; border: 0;
-      background: rgba(0, 0, 0, 0.55); cursor: pointer;
+      background: rgba(8, 8, 10, 0.72); cursor: pointer;
     }
     .vote-sheet-panel {
-      position: relative; z-index: 1; width: min(100%, 420px);
-      max-height: min(85dvh, 560px); overflow-y: auto;
-      background: var(--card); border: 1px solid #6b5a2e; border-radius: 14px;
-      padding: 12px 12px 14px; box-sizing: border-box;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      position: relative; z-index: 1; width: 100%;
+      max-height: min(70dvh, 480px); overflow-y: auto;
+      background: #141416; border: 1px solid #6b5a2e;
+      border-radius: 16px 16px 12px 12px;
+      padding: 16px 12px 14px; box-sizing: border-box;
+      box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.55);
+    }
+    .vote-sheet-k {
+      margin: 0 36px 10px 0; font-size: 0.75rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    .vote-sheet-vs {
+      margin: 0 36px 10px 0; font-size: 0.9375rem; font-weight: 650;
+      color: var(--text); line-height: 1.3;
     }
     button.vote-sheet-close {
       position: absolute; top: 8px; right: 8px;
@@ -3355,7 +3365,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homedesk20260907134000";
+    const DATA_V = "homedesk20260907134500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12607,11 +12617,18 @@ const html = `<!DOCTYPE html>
       if (!r) return "";
       const card = voteCardHtml(r);
       if (!card) return "";
+      const seats = voteSeats(r);
+      const vs = seats.length === 2
+        ? (seatLabel(seats[0].name, { link: false }) + " vs "
+          + seatLabel(seats[1].name, { link: false }))
+        : "";
       return '<div class="vote-sheet" role="presentation">'
         + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
         + ' aria-label="Close vote panel"></button>'
         + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
         + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
+        + '<p class="vote-sheet-k">Who won this trade?</p>'
+        + (vs ? '<p class="vote-sheet-vs">' + vs + "</p>" : "")
         + card
         + "</div></div>";
     }
@@ -20774,7 +20791,8 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeDe
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes('"cosmetics"')
   || !inline.includes("data-open-cosmetics") || !inline.includes('data-desk-a="')
-  || !inline.includes("Trade Desk")) {
+  || !inline.includes("Trade Desk") || !inline.includes("Who won this trade?")
+  || !html.includes("align-items: flex-end") || html.includes(".vote-sheet {\n      position: fixed; inset: 0; z-index: 300;\n      display: grid; place-items: center")) {
   throw new Error("Home digest must ship Your 3, Trade Desk, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")

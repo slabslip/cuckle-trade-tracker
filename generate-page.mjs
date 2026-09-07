@@ -1468,7 +1468,7 @@ const html = `<!DOCTYPE html>
     button.lh-calc-door:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
     .lh-calc-banner {
       display: block; width: 100%; height: auto;
-      aspect-ratio: 16 / 7; object-fit: cover; object-position: center 42%;
+      aspect-ratio: 32 / 9; object-fit: cover; object-position: center;
       background: #0a0c10; border-radius: 9px;
     }
     .lh-calc-door-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
@@ -3415,7 +3415,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcdoor20260907142500";
+    const DATA_V = "calcdoor20260907143200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15573,7 +15573,7 @@ const html = `<!DOCTYPE html>
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="Cuckle trade calculator">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
-        + ' width="1024" height="448" alt="">'
+        + ' width="1280" height="360" alt="">'
         + '<span class="lh-calc-door-sr">Cuckle trade calculator</span></button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"

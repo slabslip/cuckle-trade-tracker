@@ -32,7 +32,7 @@ build-cuffs.mjs
 build-calculator.mjs
   → data/ui/calculator.json          (rostered players + still-held picks, Sleeper roster_ord, today / even)
 build-cosmetics.mjs
-  → data/ui/cosmetics.json           (29 catalog + computed unlocks; award ladder → docs/plans/awards_titles_emblems.md)
+  → data/ui/cosmetics.json           (88 catalog (44 pairs) + computed unlocks; award ladder → docs/plans/awards_titles_emblems.md)
 generate-page.mjs
   → index.html  (inline CSS + JS; fetches data/ui/*.json)
 ```

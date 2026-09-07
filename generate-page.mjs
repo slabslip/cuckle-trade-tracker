@@ -3318,7 +3318,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmetics20260907003000";
+    const DATA_V = "cosmetics20260907010000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14921,10 +14921,18 @@ const html = `<!DOCTYPE html>
       return mine[id] || null;
     }
 
+    /* Prestige sort weight — titles and their matching emblems stay near each other. */
     const COS_TITLE_LADDER = [
-      "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
-      "three_time_finalist", "two_time_finalist", "finalist",
+      "five_time", "five_time_mark", "four_time", "four_time_mark",
+      "three_peat", "three_peat_mark", "three_time", "three_time_mark",
+      "repeat", "repeat_mark", "two_time", "two_time_mark", "champion", "champion_mark",
+      "three_time_finalist_title", "three_time_finalist",
+      "two_time_finalist_title", "two_time_finalist",
+      "finalist_title", "finalist",
     ];
+    const COS_CROWN_TITLES = new Set([
+      "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+    ]);
     const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
     const COS_TITLE_ART = new Set([
       "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
@@ -14935,6 +14943,11 @@ const html = `<!DOCTYPE html>
       "playoff_trader", "quiet_year", "manners", "draft_hit", "sit_right", "bench_crime",
       "waiver_touch", "opening_day",
     ]);
+    function cosmeticsPairMate(c) {
+      const book = cosmeticsBook || { catalog: [] };
+      if (!c || !c.pair) return null;
+      return book.catalog.find((x) => x.pair === c.pair && x.kind !== c.kind) || null;
+    }
 
     function cosmeticsArtPath(kind, id) {
       if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
@@ -14957,7 +14970,7 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsTitleBanner(c, cls) {
       const path = cosmeticsArtPath("title", c.id);
-      const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0 && COS_TITLE_ART.has(c.id);
+      const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
       return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
         + '" alt="' + esc(c.name) + '" width="840" loading="lazy" decoding="async" />';
@@ -14986,9 +14999,15 @@ const html = `<!DOCTYPE html>
       const got = cosmeticsUnlocked(c.id);
       const on = cosmeticsEquip[c.kind] === c.id;
       const locked = !got;
+      const mate = cosmeticsPairMate(c);
+      const mateGot = mate ? cosmeticsUnlocked(mate.id) : null;
       const head = c.kind === "emblem"
         ? cosmeticsEmblemMark(c.id)
         : cosmeticsTitleBanner(c, "cos-sheet-banner");
+      const mateLine = mate
+        ? ('<p class="cos-sheet-got">Matching ' + esc(mate.kind) + ": " + esc(mate.name)
+          + (mateGot ? " (unlocked)" : " (same gate — unlocks together)") + "</p>")
+        : "";
       return '<div class="cos-sheet" role="dialog" aria-modal="true" aria-label="' + esc(c.name) + '">'
         + '<button type="button" class="cos-sheet-scrim" data-cos-detail-close="1" aria-label="Close"></button>'
         + '<div class="cos-sheet-panel">'
@@ -14999,6 +15018,7 @@ const html = `<!DOCTYPE html>
         + '<p class="cos-sheet-got">'
         + esc(locked ? ("Locked — " + (c.how || "Not unlocked yet.")) : ("Unlocked — " + got))
         + "</p>"
+        + mateLine
         + '<div class="cos-sheet-actions">'
         + (locked
           ? ""
@@ -15017,7 +15037,7 @@ const html = `<!DOCTYPE html>
         const got = cosmeticsUnlocked(c.id);
         const on = cosmeticsEquip.title === c.id;
         const locked = !got;
-        const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0;
+        const ladder = COS_CROWN_TITLES.has(c.id);
         return '<button type="button" class="cos-title' + (locked ? " is-locked" : "")
           + (on ? " is-on" : "") + (ladder ? " is-ladder" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="title"'
@@ -15038,7 +15058,7 @@ const html = `<!DOCTYPE html>
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Championship titles sit at the top. Tap a banner or mark, then Equip. Your emblem shows next to your name; the title lives on this calling card and Profile.</p>'
+        + '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Championship ladder first; your emblem shows next to your name.</p>'
         + cosmeticsPlateHtml("cos-plate")
         + "<h3>Titles</h3>"
         + '<div class="cos-titles">' + titles.map(titleRow).join("") + "</div>"
@@ -20304,17 +20324,19 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeNe
   throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
+  || !inline.includes("three_peat_mark") || !inline.includes("COS_CROWN_TITLES")
   || !inline.includes("three_time_finalist") || !inline.includes("two_time_finalist")
-  || !inline.includes("Championship titles sit at the top")
+  || !inline.includes("function cosmeticsPairMate(")
+  || !inline.includes("Every award unlocks a matching title and emblem")
   || inline.includes("Everyone chases the same 25")) {
-  throw new Error("barracks must sort the championship ladder first and include finalist rungs");
+  throw new Error("barracks must sort the championship ladder first and include matched title/emblem pairs");
 }
 if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function cosmeticsEmblemMark(")
   || !inline.includes("COS_TITLE_ART") || !inline.includes("COS_EMBLEM_ART")
   || !inline.includes("cos-title-banner") || !inline.includes("cos-emblems")
   || !inline.includes("function cosmeticsDetailSheetHtml(")
   || !inline.includes("data-cos-detail-close")
-  || !inline.includes("Tap a banner or mark, then Equip")
+  || !inline.includes("Matching ")
   || !inline.includes("data/ui/cosmetics/emblem-")
   || !inline.includes("never Unicode emoji")
   || inline.includes("COS_EMBLEM_EMOJI")

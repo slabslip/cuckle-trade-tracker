@@ -155,15 +155,15 @@ in-season and equip is on the account row. No new tokens when we do.
 
 ## 15. Do we mint the expanded award list now?
 
-**Assumed:** 29-id catalog (27 live + locked `four_time` / `five_time`, including two- and
+**Assumed:** 88-id catalog (44 matched pairs, including locked `four_time` / `five_time` and two- and
 three-time finalist emblems). Championship rungs stay the highest prestige. Tier 1–4 grind
 and the “fresh 15” wait on weekly / waiver / lineup tape. See
 [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
 
 **Why it matters:** Unlocking “set lineup 4 straight weeks” or “reject 10 trades” from
-championship + trade JSON alone is a lie. Pairing every award as both an emblem id and a
-title id doubles the catalog and breaks equip-one-of-each.
+championship + trade JSON alone is a lie. Matched title↔emblem pairs are intentional; equip
+still allows only one of each slot.
 
 **Recommended:** Adopt the championship hierarchy as law. Sort barracks that way. Next
-computable add from existing tape is Comeback Dynasty (last place → chip within 3 years),
-then Pick Collector if future-1st counts are solid. Do not mint a second catalog.
+matched pairs + creative 15 are live. Remaining weekly Fresh 15 still wait on weekly tape.
+Comeback Dynasty (last → chip within 3 years) still needs multi-year place history.

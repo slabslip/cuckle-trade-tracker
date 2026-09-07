@@ -1386,6 +1386,35 @@ const html = `<!DOCTYPE html>
     }
     .home-news .news-pullup-card { margin: 0 0 10px; }
     .home-news .news-pullup-card:last-child { margin-bottom: 0; }
+    .home-desk { margin: 0 0 16px; }
+    .home-desk-h {
+      margin: 0 0 4px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .home-desk-sub {
+      margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
+    }
+    button.home-desk-row {
+      appearance: none; font: inherit; color: var(--text);
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px 14px; margin: 0 0 8px; min-height: 44px;
+      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
+    }
+    button.home-desk-row:last-child { margin-bottom: 0; }
+    button.home-desk-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .home-desk-pair {
+      font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c);
+      line-height: 1.25; margin: 0 0 4px;
+    }
+    .home-desk-line {
+      font-size: 0.9375rem; font-weight: 650; color: var(--text); line-height: 1.3;
+      margin: 0;
+    }
+    .home-desk-meta {
+      margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.3;
+    }
+    .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
       appearance: none; font: inherit; font-weight: 650; color: #e0b44c;
       display: block; width: 100%; text-align: center; cursor: pointer;
@@ -3326,7 +3355,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260907151925";
+    const DATA_V = "homedesk20260907134000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9629,7 +9658,7 @@ const html = `<!DOCTYPE html>
         + "</div>";
       return '<div class="lh-trade-feed-card' + (voted ? " voted" : "") + (showVote ? " has-vote" : "") + '">'
         + main
-        + (showVote ? '<div class="vote-card">' + voteBlock(r) + "</div>" : "")
+        + (showVote ? voteCardHtml(r) : "")
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
@@ -9663,7 +9692,7 @@ const html = `<!DOCTYPE html>
         + ' aria-label="' + esc(r.name) + " vs " + esc(r.other) + '">'
         + head
         + chip
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + voteCardHtml(r)
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
@@ -12563,17 +12592,27 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
+    /** Gold vote frame — omit when the deal has no 2-seat ballot (empty card was a hole). */
+    function voteCardHtml(r) {
+      if (!r) return "";
+      const inner = voteBlock(r);
+      if (!inner || inner === '<div class="vote"></div>') return "";
+      return '<div class="vote-card">' + inner + "</div>";
+    }
+
     /** Modal overlay with the existing voteBlock side buttons and tallies. */
     function voteSheetHtml() {
       if (!voteSheetTx) return "";
       const r = tradeSide(voteSheetTx, voteSheetSeat) || tradeSide(voteSheetTx, null);
       if (!r) return "";
+      const card = voteCardHtml(r);
+      if (!card) return "";
       return '<div class="vote-sheet" role="presentation">'
         + '<button type="button" class="vote-sheet-scrim" data-vote-sheet-close tabindex="-1"'
         + ' aria-label="Close vote panel"></button>'
         + '<div class="vote-sheet-panel" role="dialog" aria-modal="true" tabindex="-1">'
         + '<button type="button" class="vote-sheet-close" data-vote-sheet-close aria-label="Close">×</button>'
-        + '<div class="vote-card">' + voteBlock(r) + "</div>"
+        + card
         + "</div></div>";
     }
 
@@ -14584,7 +14623,8 @@ const html = `<!DOCTYPE html>
         + '<div class="your3-h">Your 3</div>'
         + rows.slice(0, 3).map((r) => {
           const extra = r.kind === "vote"
-            ? ' data-board-open="' + esc(r.uid) + '" data-id="' + esc(r.tx) + '"'
+            ? ' data-vote-open="' + esc(r.tx) + '"'
+              + (r.uid ? ' data-vote-open-seat="' + esc(r.uid) + '"' : "")
             : "";
           return '<button type="button" class="your3-row" data-your3="' + esc(r.kind) + '"'
             + extra + ">" + esc(r.lab) + "</button>";
@@ -14629,17 +14669,176 @@ const html = `<!DOCTYPE html>
       return cat + sev * 2 + recency + exclusive;
     }
 
-    function homeNewsStoryHtml() {
-      if (!authSeatId() || !authSession) return "";
-      const items = typeof newsItemsLive === "function" ? newsItemsLive() : [];
-      const mine = (items || []).filter(newsHitsMyTeam)
-        .slice()
-        .sort((a, b) => newsTeamImportance(b) - newsTeamImportance(a) || (b.published || 0) - (a.published || 0))
-        .slice(0, 3);
-      if (!mine.length) return "";
-      return '<section class="home-news" aria-label="On your roster">'
-        + '<div class="home-news-h">On your roster</div>'
-        + mine.map((it) => newsPullupItemHtml(newsHeroLine(it))).join("")
+    function homeDeskShortName(a) {
+      if (!a) return "a piece";
+      if (a.kind === "pick" || a.pos === "PICK") {
+        const raw = String(a.name || a.label || "").replace(/\\s*\\([^)]+\\)\\s*$/, "").trim();
+        return raw || "a pick";
+      }
+      return (typeof calcDisplayName === "function" ? calcDisplayName(a) : "") || a.name || "a player";
+    }
+
+    function homeDeskPickKey(a) {
+      if (!a) return "";
+      if (a.kind === "pick" || a.pos === "PICK") {
+        const m = String(a.name || a.label || "").match(/^(\\d{4})\\s+(\\d+(?:st|nd|rd|th))/i);
+        return m ? ("pick:" + m[1] + ":" + m[2].toLowerCase()) : ("pick:" + String(a.name || ""));
+      }
+      return "player:" + a.id;
+    }
+
+    function homeDeskBags() {
+      const book = calcBook || { players: [], picks: [] };
+      const by = new Map();
+      const all = (book.players || []).concat(book.picks || []);
+      for (let i = 0; i < all.length; i++) {
+        const a = all[i];
+        if (!a || a.value == null || !a.owner_id) continue;
+        const uid = String(a.owner_id);
+        if (!by.has(uid)) by.set(uid, []);
+        by.get(uid).push(a);
+      }
+      by.forEach(function (bag) {
+        bag.sort(function (x, y) { return calcValueNum(y) - calcValueNum(x); });
+      });
+      return by;
+    }
+
+    function homeDeskTalk(bagA, bagB) {
+      let best = null;
+      const consider = function (legsA, legsB, kind) {
+        const va = legsA.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+        const vb = legsB.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+        const gap = Math.abs(va - vb);
+        const mx = Math.max(va, vb);
+        const mn = Math.min(va, vb);
+        if (mn < 1800) return;
+        const rel = mx ? gap / mx : 1;
+        if (rel > 0.16 && gap > 700) return;
+        if (kind === "1for1" && homeDeskPickKey(legsA[0]) === homeDeskPickKey(legsB[0])) return;
+        let score = gap;
+        if (kind === "2for1") score += 50;
+        const playerN = legsA.concat(legsB).filter(function (x) {
+          return x.kind === "player" || (x.pos && x.pos !== "PICK");
+        }).length;
+        if (!playerN) score += 400;
+        if (kind === "1for1" && legsA[0].pos && legsB[0].pos
+          && legsA[0].pos === legsB[0].pos && legsA[0].pos !== "PICK") score += 60;
+        if (!best || score < best.score) {
+          best = { legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel, score: score };
+        }
+      };
+      const topA = bagA.slice(0, 10);
+      const topB = bagB.slice(0, 10);
+      for (let i = 0; i < topA.length; i++) {
+        for (let j = 0; j < topB.length; j++) consider([topA[i]], [topB[j]], "1for1");
+      }
+      for (let i = 0; i < Math.min(6, topA.length); i++) {
+        for (let j = 0; j < Math.min(8, topB.length); j++) {
+          for (let k = j + 1; k < Math.min(8, topB.length); k++) {
+            consider([topA[i]], [topB[j], topB[k]], "2for1");
+          }
+        }
+      }
+      for (let i = 0; i < Math.min(6, topB.length); i++) {
+        for (let j = 0; j < Math.min(8, topA.length); j++) {
+          for (let k = j + 1; k < Math.min(8, topA.length); k++) {
+            consider([topA[j], topA[k]], [topB[i]], "2for1");
+          }
+        }
+      }
+      return best;
+    }
+
+    function homeDeskCards() {
+      const seats = (members || []).filter(function (m) { return m && m.user_id; });
+      if (seats.length < 2) return [];
+      const bags = homeDeskBags();
+      const nameOf = function (uid) {
+        const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
+        return (hit && hit.name) || uid;
+      };
+      const cands = [];
+      for (let i = 0; i < seats.length; i++) {
+        for (let j = i + 1; j < seats.length; j++) {
+          const a = String(seats[i].user_id);
+          const b = String(seats[j].user_id);
+          const bagA = bags.get(a) || [];
+          const bagB = bags.get(b) || [];
+          const talk = (bagA.length && bagB.length) ? homeDeskTalk(bagA, bagB) : null;
+          cands.push({
+            a: a,
+            b: b,
+            nameA: seats[i].name || nameOf(a),
+            nameB: seats[j].name || nameOf(b),
+            talk: talk,
+            score: talk ? talk.score : 20000,
+          });
+        }
+      }
+      cands.sort(function (x, y) { return x.score - y.score; });
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const picks = [];
+      const used = new Set();
+      const take = function (row) {
+        if (!row || used.has(row.a) || used.has(row.b)) return;
+        picks.push(row);
+        used.add(row.a);
+        used.add(row.b);
+      };
+      if (mine) {
+        take(cands.find(function (row) { return (row.a === mine || row.b === mine) && row.talk; }));
+      }
+      for (let i = 0; i < cands.length && picks.length < 3; i++) take(cands[i]);
+      if (picks.length < 3) {
+        for (let i = 0; i < cands.length && picks.length < 3; i++) {
+          const row = cands[i];
+          if (picks.some(function (p) { return p.a === row.a && p.b === row.b; })) continue;
+          picks.push(row);
+        }
+      }
+      return picks.slice(0, 3).map(function (row) {
+        if (mine && row.b === mine && row.a !== mine) {
+          return {
+            a: row.b, b: row.a, nameA: row.nameB, nameB: row.nameA,
+            talk: row.talk && {
+              legsA: row.talk.legsB, legsB: row.talk.legsA,
+              kind: row.talk.kind, gap: row.talk.gap, rel: row.talk.rel, score: row.talk.score,
+            },
+          };
+        }
+        return row;
+      });
+    }
+
+    function homeDeskHtml() {
+      const cards = homeDeskCards();
+      if (!cards.length) return "";
+      return '<section class="home-desk" aria-label="Trade Desk">'
+        + '<div class="home-desk-h">Trade Desk</div>'
+        + '<p class="home-desk-sub">Three talks the board is asking for. Tap to price it.</p>'
+        + cards.map(function (row) {
+          const sendA = (row.talk && row.talk.legsA || []).map(function (a) { return a.id; }).join(",");
+          const sendB = (row.talk && row.talk.legsB || []).map(function (a) { return a.id; }).join(",");
+          const line = row.talk
+            ? (row.talk.legsA.map(homeDeskShortName).join(" + ")
+              + " for "
+              + row.talk.legsB.map(homeDeskShortName).join(" + "))
+            : "Open the calculator";
+          const even = row.talk && row.talk.rel < 0.06;
+          const meta = row.talk
+            ? (even ? "Even-up starter" : "A piece to even it")
+            : "Pick the sides";
+          return '<button type="button" class="home-desk-row" data-desk-a="' + esc(row.a) + '"'
+            + ' data-desk-b="' + esc(row.b) + '"'
+            + (sendA ? ' data-desk-send-a="' + esc(sendA) + '"' : "")
+            + (sendB ? ' data-desk-send-b="' + esc(sendB) + '"' : "")
+            + ' aria-label="' + esc(row.nameA + " and " + row.nameB + " — " + line) + '">'
+            + '<div class="home-desk-pair">' + esc(row.nameA) + " · " + esc(row.nameB) + "</div>"
+            + '<p class="home-desk-line">' + esc(line) + "</p>"
+            + '<p class="home-desk-meta">' + esc(meta) + "</p>"
+            + "</button>";
+        }).join("")
         + "</section>";
     }
 
@@ -15294,7 +15493,7 @@ const html = `<!DOCTYPE html>
       const door = '<button type="button" class="lh-calc-door" data-view="calc">Cuckle trade calculator</button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
-        + homeNewsStoryHtml();
+        + homeDeskHtml();
     }
 
 
@@ -17710,6 +17909,34 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const deskBtn = e.target.closest("[data-desk-a]");
+      if (deskBtn) {
+        const ids = function (raw) {
+          return String(raw || "").split(",").map(function (id) { return id.trim(); }).filter(Boolean);
+        };
+        const toLegs = function (list) {
+          return list.map(function (id) {
+            return typeof calcLegFromAsset === "function" ? calcLegFromAsset(calcAssetById(id)) : null;
+          }).filter(Boolean);
+        };
+        calcSeatA = deskBtn.getAttribute("data-desk-a") || "";
+        calcSeatB = deskBtn.getAttribute("data-desk-b") || "";
+        calcLegsA = toLegs(ids(deskBtn.getAttribute("data-desk-send-a")));
+        calcLegsB = toLegs(ids(deskBtn.getAttribute("data-desk-send-b")));
+        calcOpenA = false;
+        calcOpenB = false;
+        calcSeatMenu = "";
+        calcFilterA = "";
+        calcFilterB = "";
+        calcPickA = [];
+        calcPickB = [];
+        calcHitsScrollA = 0;
+        calcHitsScrollB = 0;
+        view = "calc";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
       const your3Btn = e.target.closest("[data-your3]");
       if (your3Btn) {
         const kind = your3Btn.getAttribute("data-your3");
@@ -18347,7 +18574,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v207-calc-roster";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v209-home-desk";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -18428,13 +18655,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v207-calc-roster")) {
+  || !html.includes("chuckle-shell-v209-home-desk")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v207-calc-roster")
+  || !swSrc.includes("chuckle-shell-v209-home-desk")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -18497,8 +18724,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("leagueInProgress must not mount the Recent Trade chip; Your 3 owns the vote");
   }
   if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
-    || !prog.includes("homeNewsStoryHtml()")) {
-    throw new Error("Home digest is Your 3 + Cuckle trade calculator + team news");
+    || !prog.includes("homeDeskHtml()")) {
+    throw new Error("Home digest is Your 3 + Cuckle trade calculator + Trade Desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -19389,7 +19616,7 @@ for (const ban of [
   const cardAt = inline.indexOf("function tradeFeedCardHtml(");
   const cardStop = inline.indexOf("\n    function ", cardAt + 10);
   const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 1800 : cardStop);
-  if (!cardFn.includes("voteBlock(") || !cardFn.includes("feedVoteTxSet(")
+  if (!cardFn.includes("voteCardHtml(") || !cardFn.includes("feedVoteTxSet(")
     || !cardFn.includes("lh-trade-feed-main") || !cardFn.includes("has-vote")) {
     throw new Error("tradeFeedCardHtml must mount vote chips for the newest FEED_VOTE_LIMIT trades");
   }
@@ -20542,11 +20769,13 @@ if (!inline.includes('homeTabAction("home"') || !inline.includes('homeTab = "hom
 if (!inline.includes("function homeTabCanon(")) {
   throw new Error("homeTabCanon must exist");
 }
-if (!inline.includes("function your3Html(") || !inline.includes("function homeNewsStoryHtml(")
+if (!inline.includes("function your3Html(") || !inline.includes("function homeDeskHtml(")
+  || !inline.includes("function homeDeskCards(") || !inline.includes("function voteCardHtml(")
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes('"cosmetics"')
-  || !inline.includes("data-open-cosmetics")) {
-  throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
+  || !inline.includes("data-open-cosmetics") || !inline.includes('data-desk-a="')
+  || !inline.includes("Trade Desk")) {
+  throw new Error("Home digest must ship Your 3, Trade Desk, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || !inline.includes("three_peat_mark") || !inline.includes("COS_CROWN_TITLES")
@@ -20607,9 +20836,11 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   }
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
-  || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")
-  || !inline.includes('class="your3 is-empty"')) {
-  throw new Error("Home in-flow news must be signed-in roster hits; peek stays the latest league item");
+  || !inline.includes("const peekItem = items[0] || null")
+  || !inline.includes('class="your3 is-empty"')
+  || !inline.includes('aria-label="Trade Desk"')
+  || inline.includes("On your roster")) {
+  throw new Error("Home in-flow slot is Trade Desk; peek stays the latest league item");
 }
 if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "calc", lab: "Price a deal"')

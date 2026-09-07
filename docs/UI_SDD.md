@@ -188,10 +188,10 @@ renders on the open-trade screen and on Teams / History feed cards.
 
 **Cuckle trade calculator** · its own row on Home. Opens `?view=calc`.
 
-**On your roster** — signed-in only. Up to three feed items that tag that manager’s players,
-ranked by category + recency (injury is one tag among roster move, depth chart, and the rest).
-Omit when signed out or when nothing hits the seat. The News Feed pull-up stays the league-wide
-preview and is not skipped to avoid a duplicate.
+**Trade Desk** — three league conversation cards (two seats + one even-up starter from the
+today / `even` book). Tap opens the calculator with those sides prefilled. Signed-in: your
+seat is card one when a clean match exists; the other two stay league-wide. No bag numbers.
+The News Feed pull-up stays the league-wide preview.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.
 

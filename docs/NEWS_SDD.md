@@ -547,9 +547,9 @@ caught in review before it reaches the page.
 2. **Cadence.** Twice a day is the recommendation. In-season Sunday evening could be a third run.
 3. **The LLM path.** Worth cents a month, and it needs a key you own and a provider you choose.
 4. **Whether news should ever be per-seat.** **Settled for Home.** The News Feed pull-up stays
-   league-wide. Signed-in Home also paints **On your roster** — up to three items that tag that
-   manager (`user_id` / `managers[]` / `players[]`), ranked by category + recency. Injury is one
-   tag, not the only one. Signed-out Home does not duplicate the peek.
+   league-wide. Home no longer paints a second **On your roster** strip — that slot is
+   **Trade Desk**. Injury tagging still ranks items inside the News Feed. Signed-out Home
+   does not duplicate the peek.
 5. **Whether "Ruled out" should supersede "Questionable"** rather than sit beside it. That is the
    thread model in §7, and a `v: 2`.
 

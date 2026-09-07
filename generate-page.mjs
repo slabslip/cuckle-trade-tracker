@@ -776,6 +776,25 @@ const html = `<!DOCTYPE html>
       line-height: 1.3;
     }
     .trades-feed.is-solo { margin-bottom: 8px; }
+    /* Solo review: two even columns. The page title already says vs — drop the
+       cramped VS pill and let seat names wrap instead of ellipsizing. */
+    .trades-feed.is-solo .h2h-chip.is-trade {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px 16px;
+      padding: 28px 12px 12px;
+    }
+    .trades-feed.is-solo .h2h-chip.is-trade .h2h-vs,
+    .trades-feed.is-solo .h2h-chip.is-trade .h2h-sum-gap { display: none; }
+    .trades-feed.is-solo .h2h-chip.is-trade .h2h-name {
+      display: block;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      overflow-wrap: anywhere;
+    }
+    .trades-feed.is-solo .h2h-chip.is-trade .h2h-top {
+      align-items: flex-start;
+    }
     .vote.is-done { margin: 0; }
     button.vote-done {
       display: flex; align-items: center; gap: 8px; width: 100%;
@@ -3392,7 +3411,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcdoor20260907140500";
+    const DATA_V = "calcdoor20260907141800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

@@ -777,7 +777,8 @@ const html = `<!DOCTYPE html>
     }
     .trades-feed.is-solo { margin-bottom: 8px; }
     /* Solo review: two even columns. The page title already says vs — drop the
-       cramped VS pill and let seat names wrap instead of ellipsizing. */
+       cramped VS pill. Avatar over name so long seats stay one word, not
+       TrumanCoop… or TedCumberbatc / h. */
     .trades-feed.is-solo .h2h-chip.is-trade {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 12px 16px;
@@ -785,15 +786,17 @@ const html = `<!DOCTYPE html>
     }
     .trades-feed.is-solo .h2h-chip.is-trade .h2h-vs,
     .trades-feed.is-solo .h2h-chip.is-trade .h2h-sum-gap { display: none; }
+    .trades-feed.is-solo .h2h-chip.is-trade .h2h-top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
     .trades-feed.is-solo .h2h-chip.is-trade .h2h-name {
       display: block;
       white-space: normal;
       overflow: visible;
       text-overflow: unset;
-      overflow-wrap: anywhere;
-    }
-    .trades-feed.is-solo .h2h-chip.is-trade .h2h-top {
-      align-items: flex-start;
+      overflow-wrap: break-word;
     }
     .vote.is-done { margin: 0; }
     button.vote-done {
@@ -3411,7 +3414,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcdoor20260907141800";
+    const DATA_V = "calcdoor20260907142200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

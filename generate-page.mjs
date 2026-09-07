@@ -1555,21 +1555,21 @@ const html = `<!DOCTYPE html>
     }
     .cos-titles {
       display: grid; grid-template-columns: repeat(15, minmax(0, 1fr));
-      gap: 2px; margin: 0 0 16px;
+      column-gap: 2px; row-gap: 6px; margin: 0 0 16px;
     }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
-      border: 1px solid var(--line); border-radius: 3px; padding: 1px;
+      border: 1px solid var(--line); border-radius: 3px; padding: 0;
       background: #0a0c10; overflow: hidden; height: auto; min-height: 0; min-width: 0;
-      position: relative; text-align: left; line-height: 0;
+      position: relative; text-align: left; line-height: 0; box-sizing: border-box;
     }
     button.cos-title.is-locked { opacity: 0.45; }
-    button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
+    button.cos-title.is-on { border-color: #e0b44c; box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.7); }
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
       display: block; width: 100%; aspect-ratio: 1024 / 180; height: auto;
       object-fit: cover; object-position: center;
-      background: #0a0c10; border-radius: 2px;
+      background: #0a0c10; border-radius: 0;
     }
     .cos-title-fallback {
       display: flex; align-items: center; justify-content: center;

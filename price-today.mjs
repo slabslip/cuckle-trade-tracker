@@ -1,10 +1,15 @@
-/** Today-only pricing: retired=0, else 0.40 flatten + 0.60 KTC when a snap exists. */
-import fs from "node:fs";
-import { DATA, pickTier, readJson } from "./lib.mjs";
+/** Today-only pricing: retired=0, else a renormalized multi-source blend. */
+import { pickTier, readJson } from "./lib.mjs";
+import { listSnapDates, loadSnapAsOf } from "./market-snap.mjs";
 
-export const TODAY_FLAT_W = 0.40;
-export const TODAY_KTC_W = 0.60;
+export const TODAY_FLAT_W = 0.25;
+export const TODAY_KTC_W = 0.30;
+export const TODAY_FC_W = 0.25;
+export const TODAY_DD_W = 0.20;
 export const TEAMS = 10;
+/** Treat a market board as already ~10k when its max sits in this band. */
+const SCALE_LO = 8000;
+const SCALE_HI = 12000;
 /** Done names missing from KTC. Hill (3321) is on KTC — do not list him. */
 export const RETIRED_SLEEPER_IDS = new Set([
   "3164", // Ezekiel Elliott
@@ -22,34 +27,43 @@ export function normName(name) {
 }
 
 export function listKtcSnaps() {
-  const dir = `${DATA}/ktc`;
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
-    .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
-    .map((f) => f.slice(0, 10))
-    .sort();
+  return listSnapDates("ktc");
 }
 
 /** Latest committed KTC file with as_of <= day. No file → null (flatten-only). */
 export function loadKtcAsOf(day) {
-  const dates = listKtcSnaps().filter((d) => d <= day);
-  if (dates.length) return readJson(`ktc/${dates[dates.length - 1]}.json`);
-  const latest = readJson("ktc/latest.json", null);
-  if (latest?.as_of && latest.as_of <= day) return latest;
-  return null;
+  return loadSnapAsOf("ktc", day);
 }
 
 export function buildKtcIndexes(snap) {
+  return buildMarketIndexes(snap);
+}
+
+export function buildMarketIndexes(snap) {
   const bySleeper = new Map();
   const byPick = new Map();
   const byName = new Map();
+  const values = [];
   for (const p of snap?.players || []) {
     if (p.pick_key) byPick.set(p.pick_key, p);
     if (p.sleeper_id) bySleeper.set(String(p.sleeper_id), p);
     const n = normName(p.name);
     if (n && !byName.has(n)) byName.set(n, p);
+    if (Number.isFinite(p.value)) values.push(p.value);
   }
-  return { bySleeper, byPick, byName, as_of: snap?.as_of || null };
+  return { bySleeper, byPick, byName, as_of: snap?.as_of || null, vmax: vmaxOf(values) };
+}
+
+function vmaxOf(values) {
+  let mx = 0;
+  for (const v of values) if (v > mx) mx = v;
+  return mx || null;
+}
+
+export function scaleToFlat(v, vmax) {
+  if (v == null || !Number.isFinite(v)) return null;
+  if (!vmax || (vmax >= SCALE_LO && vmax <= SCALE_HI)) return v;
+  return Math.round(10000 * v / vmax);
 }
 
 export function loadNflPlayers() {
@@ -138,34 +152,55 @@ export function isRetired(leg, ctx) {
   return !hasNflTeam(sid ? ctx.players[sid] : null);
 }
 
-export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
-  if (!leg) return null;
+export function marketValue(leg, idx, nameToId) {
+  if (!leg || !idx) return null;
   if (leg.kind === "pick" && !leg.became) {
     const key = pickvalKey(leg);
-    if (!key || !ktcByPick.has(key)) return null;
-    const v = ktcByPick.get(key).value;
+    if (!key || !idx.byPick.has(key)) return null;
+    const v = idx.byPick.get(key).value;
     return Number.isFinite(v) ? v : null;
   }
   const sid = sleeperIdFromLeg(leg, nameToId);
-  if (sid && ktcBySleeper.has(sid)) {
-    const v = ktcBySleeper.get(sid).value;
+  if (sid && idx.bySleeper.has(sid)) {
+    const v = idx.bySleeper.get(sid).value;
     if (Number.isFinite(v)) return v;
   }
-  // A KTC row without a sleeper_id still counts; isRetired already trusts this index.
-  if (ktcByName) {
-    const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
-    const row = name ? ktcByName.get(name) : null;
-    if (row && Number.isFinite(row.value)) return row.value;
-  }
+  const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
+  const row = name ? idx.byName.get(name) : null;
+  if (row && Number.isFinite(row.value)) return row.value;
   return null;
 }
 
+export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
+  return marketValue(leg, {
+    bySleeper: ktcBySleeper,
+    byPick: ktcByPick,
+    byName: ktcByName || new Map(),
+  }, nameToId);
+}
+
+function scaledMarket(leg, idx, nameToId) {
+  return scaleToFlat(marketValue(leg, idx, nameToId), idx?.vmax);
+}
+
+/**
+ * retired → 0
+ * else today = sum(w_i * scale_i(source_i)) / sum(w_i of sources that hit)
+ * Flatten-only when every market source misses. Do not invent a DP row from FC/DD.
+ */
 export function priceTodayValue(flattenValue, leg, ctx) {
   if (flattenValue == null || !Number.isFinite(flattenValue)) return flattenValue;
   if (isRetired(leg, ctx)) return 0;
-  const ktc = ktcValue(leg, ctx.ktc.bySleeper, ctx.ktc.byPick, ctx.nameToId, ctx.ktc.byName);
-  if (ktc == null) return flattenValue;
-  return Math.round(TODAY_FLAT_W * flattenValue + TODAY_KTC_W * ktc);
+  const parts = [
+    { w: TODAY_FLAT_W, v: flattenValue },
+    { w: TODAY_KTC_W, v: scaledMarket(leg, ctx.ktc, ctx.nameToId) },
+    { w: TODAY_FC_W, v: scaledMarket(leg, ctx.fc, ctx.nameToId) },
+    { w: TODAY_DD_W, v: scaledMarket(leg, ctx.dd, ctx.nameToId) },
+  ].filter((p) => p.v != null && Number.isFinite(p.v));
+  if (parts.length <= 1) return flattenValue;
+  const wsum = parts.reduce((s, p) => s + p.w, 0);
+  if (!wsum) return flattenValue;
+  return Math.round(parts.reduce((s, p) => s + p.w * p.v, 0) / wsum);
 }
 
 export function repriceTodayLegs(legs, ctx) {
@@ -178,13 +213,19 @@ export function repriceTodayLegs(legs, ctx) {
 }
 
 export function makeTodayPrice(asOf) {
-  const snap = loadKtcAsOf(asOf);
+  const ktcSnap = loadSnapAsOf("ktc", asOf);
+  const fcSnap = loadSnapAsOf("fc", asOf);
+  const ddSnap = loadSnapAsOf("dd", asOf);
   const players = loadNflPlayers();
   return {
     as_of: asOf,
-    ktc: buildKtcIndexes(snap),
+    ktc: buildMarketIndexes(ktcSnap),
+    fc: buildMarketIndexes(fcSnap),
+    dd: buildMarketIndexes(ddSnap),
     players,
     nameToId: nflNameIndex(players),
-    hasKtc: !!snap,
+    hasKtc: !!ktcSnap,
+    hasFc: !!fcSnap,
+    hasDd: !!ddSnap,
   };
 }

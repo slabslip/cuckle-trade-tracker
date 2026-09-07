@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Reprice today even bags (retired=0 + 40/60 KTC), then apply VA. Windows stay flatten. */
+/** Reprice today even bags (retired=0 + multi-source blend), then apply VA. Windows stay flatten. */
 import { readdirSync, readFileSync } from "node:fs";
 import { leagueUiDir, seasonLived, setLeagueId, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
@@ -281,7 +281,7 @@ function main() {
         };
       }
       // aged measures elapsed time, so both terms come from the flatten windows.
-      // even.today_delta is the 40/60 KTC blend; subtracting a flatten t0 from it
+      // even.today_delta is the multi-source today blend; subtracting a flatten t0 from it
       // would measure the pricing model as much as the passage of time.
       const allW = t.windows?.all;
       const t0W = t.windows?.t0;
@@ -436,7 +436,7 @@ function main() {
     zeke_today: zeke?.value,
     hill_today: hill?.value,
     baker_today: baker[0]?.value,
-    book: "even-today 40/60 ktc + va cap 3",
+    book: "even-today multi-source + va cap 3",
   }, null, 2));
 }
 

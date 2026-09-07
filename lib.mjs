@@ -34,7 +34,8 @@ export function leagueUiDir(id = LEAGUE_ID) {
 }
 
 function isSharedJson(name) {
-  return SHARED_JSON.has(name) || name.startsWith("ktc/") || name.startsWith("tx_cache/");
+  return SHARED_JSON.has(name) || name.startsWith("ktc/") || name.startsWith("fc/")
+    || name.startsWith("dd/") || name.startsWith("tx_cache/");
 }
 
 export function readJson(name, fallback = null) {

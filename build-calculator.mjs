@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * League calculator catalog: unique rostered players + still-held picks on the today
- * book (flatten + 40/60 KTC), sorted by today value. Same flatten constants as revalue.mjs.
+ * book (flatten + KTC + FantasyCalc + DynastyDealer), sorted by today value.
+ * Same flatten constants as revalue.mjs.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { leagueUiDir, pickTier, readJson, setLeagueId, writeUi } from "./lib.mjs";

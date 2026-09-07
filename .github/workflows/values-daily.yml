@@ -1,0 +1,69 @@
+# Daily market snapshots → reprice the today / even book.
+# Scrapes stay here, not inside every league-sync / build.mjs run.
+name: values-daily
+
+on:
+  schedule:
+    - cron: "20 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: league-sync-1315431339301806080
+  cancel-in-progress: false
+
+jobs:
+  values:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Cache Sleeper players dictionary
+        uses: actions/cache@v4
+        with:
+          path: data/players.nfl.json
+          key: players-nfl-${{ runner.os }}-v1
+          restore-keys: |
+            players-nfl-${{ runner.os }}-
+
+      - name: Ensure players.nfl.json
+        run: node ensure-players.mjs
+
+      - name: Snapshot market books
+        run: node snapshot-values.mjs
+
+      - name: Rebuild Cuckle meter from committed snaps
+        env:
+          LEAGUE_ID: "1315431339301806080"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node build.mjs "$LEAGUE_ID"
+
+      - name: Commit snaps and UI if changed
+        run: |
+          set -e
+          git config user.name "cuckle-league-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/ktc data/fc data/dd data/dp/latest \
+            data/value_curve.json data/value_snapshots.json \
+            data/leagues/1315431339301806080 data/ui \
+            generate-page.mjs index.html || true
+          if git diff --cached --quiet; then
+            echo "No value-book changes to commit"
+            exit 0
+          fi
+          git commit -m "Daily player-value snapshots and today-book reprice."
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin main && break
+            echo "push conflict, retry $i"
+            sleep $((i * 4))
+          done

@@ -3450,7 +3450,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260907191550";
+    const DATA_V = "valuesdesk20260907200000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3487,6 +3487,7 @@ const html = `<!DOCTYPE html>
     // League-home top tabs: home (digest) | teams | ledger | history.
     let homeTab = "home";
     let calcBook = null;
+    let peBook = null;
     // Stale calculator.json still shipped raw Sleeper ids as the row title + "Player".
     const CALC_ID_NAMES = {
       "13264": { name: "Dohnte Meyers", pos: "WR", team: "CIN" },
@@ -4827,7 +4828,7 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -4838,6 +4839,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("cuffs.json").catch(() => null),
         getLeagueJson("calculator.json").catch(() => null),
         getLeagueJson("cosmetics.json").catch(() => null),
+        getLeagueJson("pe.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -4862,6 +4864,9 @@ const html = `<!DOCTYPE html>
         calcApplyNameMap();
         calcRepairNames();
       } catch (err) { calcBook = null; }
+      try {
+        peBook = peRaw && peRaw.v === 1 && peRaw.players ? peRaw : null;
+      } catch (err) { peBook = null; }
       try {
         cosmeticsBook = cosRaw && cosRaw.v === 1 && Array.isArray(cosRaw.catalog) ? cosRaw : null;
       } catch (err) { cosmeticsBook = null; }
@@ -5800,7 +5805,7 @@ const html = `<!DOCTYPE html>
 
     /**
      * Top tabs: Home | Teams | Ledger | History — above the daily digest.
-     * Home is the league-home body (Your 3 + deal + news). Other tabs swap in place.
+     * Home is the league-home body (Alerts + deal + news). Other tabs swap in place.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
@@ -14732,12 +14737,12 @@ const html = `<!DOCTYPE html>
         });
       }
       if (!rows.length) {
-        return '<section class="your3 is-empty" aria-label="Your 3">'
-          + '<div class="your3-h">Your 3</div>'
+        return '<section class="your3 is-empty" aria-label="Alerts">'
+          + '<div class="your3-h">Alerts</div>'
           + "</section>";
       }
-      return '<section class="your3" aria-label="Your 3">'
-        + '<div class="your3-h">Your 3</div>'
+      return '<section class="your3" aria-label="Alerts">'
+        + '<div class="your3-h">Alerts</div>'
         + rows.slice(0, 3).map((r) => {
           const extra = r.kind === "vote"
             ? ' data-board-open="' + esc(r.uid) + '" data-id="' + esc(r.tx) + '" data-trade-solo="1"'
@@ -14803,6 +14808,114 @@ const html = `<!DOCTYPE html>
       return "player:" + a.id;
     }
 
+    const DESK_STUD = 5500;
+    const DESK_START = 2200;
+    const DESK_MID = 1800;
+    const DESK_SLOTS = { QB: 2, RB: 2, WR: 3, TE: 1 };
+
+    function homeDeskAssetPos(a) {
+      if (!a) return "";
+      if (a.kind === "pick" || a.pos === "PICK") return "PICK";
+      return String(a.pos || "").toUpperCase();
+    }
+
+    function homeDeskSid(a) {
+      if (!a) return "";
+      if (a.sleeper_id) return String(a.sleeper_id);
+      const m = String(a.id || a.asset_key || "").match(/player:(\\d+)/);
+      return m ? m[1] : "";
+    }
+
+    function homeDeskPe(a) {
+      if (!peBook || !peBook.players) return "";
+      const row = peBook.players[homeDeskSid(a)];
+      return (row && row.signal) || "";
+    }
+
+    function homeDeskProfile(bag) {
+      let total = 0;
+      let stud = 0;
+      let pick = 0;
+      let ageW = 0;
+      let ageV = 0;
+      const byPos = { QB: [], RB: [], WR: [], TE: [] };
+      for (let i = 0; i < (bag || []).length; i++) {
+        const a = bag[i];
+        const v = calcValueNum(a);
+        if (v < 0) continue;
+        total += v;
+        const pos = homeDeskAssetPos(a);
+        if (pos === "PICK") pick += v;
+        else {
+          if (v >= DESK_STUD) stud += v;
+          const age = Number(a && a.age);
+          if (Number.isFinite(age)) {
+            ageW += age * v;
+            ageV += v;
+          }
+          if (byPos[pos]) byPos[pos].push(v);
+        }
+      }
+      const holes = [];
+      const surplus = [];
+      const deep = [];
+      const thin = [];
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const vs = (byPos[pos] || []).filter(function (x) { return x >= DESK_START; });
+        const mid = (byPos[pos] || []).filter(function (x) { return x >= DESK_MID; });
+        const slots = DESK_SLOTS[pos];
+        const extras = Math.max(0, mid.length - slots);
+        if (vs.length < slots) holes.push(pos);
+        if (extras >= 1) surplus.push(pos);
+        if (extras >= 2) deep.push(pos);
+        if (vs.length <= Math.max(0, slots - 1)) thin.push(pos);
+      });
+      const studShare = total ? stud / total : 0;
+      const pickShare = total ? pick / total : 0;
+      const age = ageV ? ageW / ageV : 26;
+      let route = "Reload";
+      if (studShare >= 0.45 && pickShare <= 0.22 && age >= 25.5) route = "Win-now";
+      else if (pickShare >= 0.28 || (studShare <= 0.28 && age <= 24.8)) route = "Rebuild";
+      return { route: route, holes: holes, surplus: surplus, deep: deep, thin: thin };
+    }
+
+    function homeDeskComplement(a, b) {
+      if (!a || !b) return false;
+      const pair = a.route + "/" + b.route;
+      return pair === "Rebuild/Win-now" || pair === "Win-now/Rebuild"
+        || pair === "Rebuild/Reload" || pair === "Reload/Rebuild"
+        || pair === "Reload/Win-now" || pair === "Win-now/Reload";
+    }
+
+    function homeDeskDepthStud(legsFew, legsMany, profFew, profMany) {
+      if (!legsFew || legsFew.length !== 1 || !legsMany || legsMany.length !== 2) return "";
+      const stud = legsFew[0];
+      const pos = homeDeskAssetPos(stud);
+      if (!pos || pos === "PICK" || calcValueNum(stud) < DESK_STUD) return "";
+      const same = legsMany.filter(function (x) { return homeDeskAssetPos(x) === pos; }).length;
+      if (same < 2) return "";
+      if ((profMany.deep || []).indexOf(pos) < 0) return "";
+      if ((profFew.holes || []).indexOf(pos) < 0 && (profFew.thin || []).indexOf(pos) < 0) return "";
+      return pos;
+    }
+
+    function homeDeskMeta(talk) {
+      if (!talk) return "Pick the sides";
+      const pe = talk.pe ? (" · " + talk.pe) : "";
+      if (talk.why === "depth-stud" && talk.pos) {
+        return talk.routeA + " → " + talk.routeB + " · " + talk.pos + " depth for a stud" + pe;
+      }
+      if (talk.why === "complement") {
+        return talk.routeA + " → " + talk.routeB + " · fill " + (talk.pos || "a hole") + pe;
+      }
+      if (talk.rel < 0.06) {
+        return (talk.routeA && talk.routeB && talk.routeA === talk.routeB
+          ? "Even-up · same window"
+          : "Even-up · " + (talk.routeA || "Reload") + " / " + (talk.routeB || "Reload")) + pe;
+      }
+      return (talk.routeA || "Reload") + " → " + (talk.routeB || "Reload") + " · a piece to even it" + pe;
+    }
+
     function homeDeskBags() {
       const book = calcBook || { players: [], picks: [] };
       const by = new Map();
@@ -14821,6 +14934,8 @@ const html = `<!DOCTYPE html>
     }
 
     function homeDeskTalk(bagA, bagB) {
+      const profA = homeDeskProfile(bagA);
+      const profB = homeDeskProfile(bagB);
       let best = null;
       const consider = function (legsA, legsB, kind) {
         const va = legsA.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
@@ -14832,16 +14947,37 @@ const html = `<!DOCTYPE html>
         const rel = mx ? gap / mx : 1;
         if (rel > 0.16 && gap > 700) return;
         if (kind === "1for1" && homeDeskPickKey(legsA[0]) === homeDeskPickKey(legsB[0])) return;
+        const depthA = homeDeskDepthStud(legsB, legsA, profB, profA);
+        const depthB = homeDeskDepthStud(legsA, legsB, profA, profB);
+        const depthPos = depthA || depthB;
+        const complement = homeDeskComplement(profA, profB);
+        let fillPos = "";
+        if (kind === "1for1") {
+          const p = homeDeskAssetPos(legsA[0]);
+          if (p && p !== "PICK" && p === homeDeskAssetPos(legsB[0])) {
+            if ((profA.holes || []).indexOf(p) >= 0 || (profB.holes || []).indexOf(p) >= 0) fillPos = p;
+            else fillPos = p;
+          }
+        }
+        if (depthPos) fillPos = depthPos;
         let score = gap;
-        if (kind === "2for1") score += 50;
+        if (kind === "2for1" && !depthPos) score += 50;
         const playerN = legsA.concat(legsB).filter(function (x) {
           return x.kind === "player" || (x.pos && x.pos !== "PICK");
         }).length;
         if (!playerN) score += 400;
-        if (kind === "1for1" && legsA[0].pos && legsB[0].pos
-          && legsA[0].pos === legsB[0].pos && legsA[0].pos !== "PICK") score += 60;
+        if (complement) score -= 220;
+        if (depthPos) score -= 260;
+        if (fillPos && !depthPos) score -= 80;
+        const key = (calcValueNum(legsA[0]) >= calcValueNum(legsB[0])) ? legsA[0] : legsB[0];
+        const why = depthPos ? "depth-stud" : (complement ? "complement" : "even");
         if (!best || score < best.score) {
-          best = { legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel, score: score };
+          best = {
+            legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel, score: score,
+            why: why, pos: fillPos || depthPos || "",
+            routeA: profA.route, routeB: profB.route,
+            pe: homeDeskPe(key),
+          };
         }
       };
       const topA = bagA.slice(0, 10);
@@ -14920,6 +15056,9 @@ const html = `<!DOCTYPE html>
             talk: row.talk && {
               legsA: row.talk.legsB, legsB: row.talk.legsA,
               kind: row.talk.kind, gap: row.talk.gap, rel: row.talk.rel, score: row.talk.score,
+              why: row.talk.why, pos: row.talk.pos,
+              routeA: row.talk.routeB, routeB: row.talk.routeA,
+              pe: row.talk.pe,
             },
           };
         }
@@ -14941,10 +15080,7 @@ const html = `<!DOCTYPE html>
               + " for "
               + row.talk.legsB.map(homeDeskShortName).join(" + "))
             : "Open the calculator";
-          const even = row.talk && row.talk.rel < 0.06;
-          const meta = row.talk
-            ? (even ? "Even-up starter" : "A piece to even it")
-            : "Pick the sides";
+          const meta = homeDeskMeta(row.talk);
           return '<button type="button" class="home-desk-row" data-desk-a="' + esc(row.a) + '"'
             + ' data-desk-b="' + esc(row.b) + '"'
             + (sendA ? ' data-desk-send-a="' + esc(sendA) + '"' : "")
@@ -15413,13 +15549,17 @@ const html = `<!DOCTYPE html>
         + "We add the piles, then we may add a Value Adjustment when one side is a star "
         + "for extras. League votes never change this number.</p>"
         + "<h3>1. Price each piece</h3>"
-        + "<p>Two market books feed every number on the roster list:</p>"
-        + "<p><b>Flatten</b> is DynastyProcess Superflex &mdash; our long-run book.</p>"
-        + "<p><b>KeepTradeCut (KTC)</b> is the latest Superflex snapshot we have on file.</p>"
-        + '<p class="calc-info-eq">today = 0.40 &times; flatten + 0.60 &times; KTC</p>'
-        + "<p>If a piece has no KTC quote, today is just flatten. "
+        + "<p>Four market books feed every number on the roster list. We refresh them daily "
+        + "into committed files &mdash; the phone does not scrape.</p>"
+        + "<p><b>Flatten</b> is DynastyProcess Superflex &mdash; our long-run book (0.25).</p>"
+        + "<p><b>KeepTradeCut (KTC)</b> is crowd keep / trade / cut (0.30).</p>"
+        + "<p><b>FantasyCalc</b> is trade-implied Superflex dynasty (0.25).</p>"
+        + "<p><b>DynastyDealer</b> is what Sleeper leagues actually paid (0.20).</p>"
+        + '<p class="calc-info-eq">today = (0.25&times;flatten + 0.30&times;KTC + 0.25&times;FC + 0.20&times;DD) / weights that hit</p>'
+        + "<p>A missing source drops its weight. If every market quote misses, today is just flatten. "
         + "If the player is retired (off the KTC board and off an NFL roster, or on our "
-        + "retired list), today is 0. We round the blend to a whole number.</p>"
+        + "retired list), today is 0. Missing FantasyCalc or DynastyDealer does not retire anyone. "
+        + "Production / P/E never changes this number. We round the blend to a whole number.</p>"
         + "<h3>2. Add the piles</h3>"
         + "<p>Each card is what that team <b>sends</b>. The compare bar flips those piles: "
         + "you receive what the other team sends.</p>"
@@ -15440,19 +15580,19 @@ const html = `<!DOCTYPE html>
         + "If the extras include a bigger name, the bump shrinks.</p>"
         + "<h3>Worked example</h3>"
         + "<p>Team 1 sends one star. Team 2 sends three pieces.</p>"
-        + '<div class="calc-info-ex"><b>Star</b> &mdash; flatten 8,000, KTC 9,000<br>'
-        + "today = 0.40 &times; 8,000 + 0.60 &times; 9,000 = 3,200 + 5,400 = <b>8,600</b></div>"
-        + '<div class="calc-info-ex"><b>2027 1st</b> &mdash; flatten 5,500, KTC 6,000<br>'
-        + "today = 2,200 + 3,600 = <b>5,800</b><br>"
-        + "<b>WR</b> &mdash; flatten 2,000, KTC 2,500 &rarr; <b>2,300</b><br>"
-        + "<b>2028 2nd</b> &mdash; flatten 1,800, no KTC &rarr; <b>1,800</b><br>"
-        + "pile = 5,800 + 2,300 + 1,800 = <b>9,900</b></div>"
-        + '<div class="calc-info-ex">The bar reads Team 2 receives 8,600 and Team 1 receives 9,900. '
-        + "Gap is 1,300 toward Team 1 before the adjustment.</div>"
+        + '<div class="calc-info-ex"><b>Star</b> &mdash; flatten 8,000, KTC 9,000, FC 8,500, DD 8,800<br>'
+        + "today = 0.25&times;8,000 + 0.30&times;9,000 + 0.25&times;8,500 + 0.20&times;8,800 = <b>8,585</b></div>"
+        + '<div class="calc-info-ex"><b>2027 1st</b> &mdash; flatten 5,500, KTC 6,000, no FC/DD<br>'
+        + "weights 0.25 + 0.30 = 0.55 &rarr; (1,375 + 1,800) / 0.55 = <b>5,773</b><br>"
+        + "<b>WR</b> &mdash; flatten 2,000, KTC 2,500, FC 2,200, DD 2,100 &rarr; <b>2,215</b><br>"
+        + "<b>2028 2nd</b> &mdash; flatten 1,800, no market quotes &rarr; <b>1,800</b><br>"
+        + "pile = 5,773 + 2,215 + 1,800 = <b>9,788</b></div>"
+        + '<div class="calc-info-ex">The bar reads Team 2 receives 8,585 and Team 1 receives 9,788. '
+        + "Gap is 1,203 toward Team 1 before the adjustment.</div>"
         + '<div class="calc-info-ex">Team 2 sent 3 pieces for 1 star, so extras = min(3, 2) = <b>2</b>. '
-        + "damp = 8,600 &divide; 8,600 = 1.<br>"
-        + "VA = 0.15 &times; 2 &times; 8,600 &times; 1 = <b>2,580</b><br>"
-        + "Star after adjustment = 8,600 + 2,580 = <b>11,180</b>. The pile stays 9,900.</div>"
+        + "damp = 8,585 &divide; 8,585 = 1.<br>"
+        + "VA = 0.15 &times; 2 &times; 8,585 &times; 1 = <b>2,576</b><br>"
+        + "Star after adjustment = 8,585 + 2,576 = <b>11,161</b>. The pile stays 9,788.</div>"
         + "<p>That bump is the adjustment tool: paying quantity for a star makes the star "
         + "count for more than its sticker. The piece numbers on this screen are the "
         + "today blend. Recorded league trades store the same blend plus this VA.</p>"
@@ -15665,7 +15805,7 @@ const html = `<!DOCTYPE html>
     }
 
     function leagueInProgress() {
-      // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
+      // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="Cuckle calculator">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
@@ -18916,11 +19056,11 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("lh-latest-trade") || prog.includes("latestTradeCardHtml(")
     || prog.includes("ensureLatestTradeBags(") || prog.includes("caught up")
     || prog.includes("data-board-open")) {
-    throw new Error("leagueInProgress must not mount the Recent Trade chip; Your 3 owns the vote");
+    throw new Error("leagueInProgress must not mount the Recent Trade chip; Alerts owns the vote");
   }
   if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
     || !prog.includes("homeDeskHtml()")) {
-    throw new Error("Home digest is Your 3 + Cuckle trade calculator + Trade Desk");
+    throw new Error("Home digest is Alerts + Cuckle trade calculator + Trade Desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -18928,7 +19068,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !inline.includes("function latestTradeAbsolute(")
     || !inline.includes("function voteConfirmHtml(") || !inline.includes("voteConfirmTx")
     || !inline.includes("voteSheetSeat") || !inline.includes("voteConfirmSeat")) {
-    throw new Error("trade vote confirm must stay available from Your 3");
+    throw new Error("trade vote confirm must stay available from Alerts");
   }
   if (!html.includes("button.lh-trade-vote-cta") || !html.includes(".lh-trade-chip-wrap")
     || !html.includes(".vote-confirm-tally")
@@ -20971,7 +21111,7 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeDe
   || !inline.includes("data-open-cosmetics") || !inline.includes('data-desk-a="')
   || !inline.includes("Trade Desk") || !inline.includes("Who won this trade?")
   || !html.includes("align-items: flex-end") || html.includes(".vote-sheet {\n      position: fixed; inset: 0; z-index: 300;\n      display: grid; place-items: center")) {
-  throw new Error("Home digest must ship Your 3, Trade Desk, Cuckle trade calculator, calc, and barracks");
+  throw new Error("Home digest must ship Alerts, Trade Desk, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || !inline.includes("three_peat_mark") || !inline.includes("COS_CROWN_TITLES")
@@ -21034,6 +21174,10 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("const peekItem = items[0] || null")
   || !inline.includes('class="your3 is-empty"')
+  || !inline.includes('aria-label="Alerts"')
+  || !inline.includes('class="your3-h">Alerts<')
+  || inline.includes('aria-label="Your 3"')
+  || inline.includes('class="your3-h">Your 3<')
   || !inline.includes('aria-label="Trade Desk"')
   || inline.includes("On your roster")) {
   throw new Error("Home in-flow slot is Trade Desk; peek stays the latest league item");
@@ -21041,7 +21185,7 @@ if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function n
 if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "calc", lab: "Price a deal"')
   || inline.includes('kind: "news"')) {
-  throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Your 3");
+  throw new Error("Do not duplicate the News Feed on Home or filler Price a deal into Alerts");
 }
 if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price a deal</h2>")) {
   throw new Error("calc door and title must say Cuckle trade calculator");
@@ -21052,7 +21196,7 @@ if (!html.includes("lh-calc-banner") || !html.includes("data/ui/calc-door.png")
 }
 if (!inline.includes('data-trade-solo="1"') || !inline.includes("function openTrade(tx, uid, opts)")
   || !inline.includes("Who won this trade?")) {
-  throw new Error("Your 3 vote must open a solo trade review with Who won this trade?");
+  throw new Error("Alerts vote must open a solo trade review with Who won this trade?");
 }
 if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !inline.includes("Team 1 sends") || !inline.includes("Team 2 sends")
@@ -21136,12 +21280,21 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   throw new Error("calc must applyVa as a 2-team bag (other side is sent)");
 }
 if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-info="1"')
-  || !inline.includes("today = 0.40") || !inline.includes("VA = 0.15")
+  || !inline.includes("today = (0.25") || !inline.includes("VA = 0.15")
+  || !inline.includes("FantasyCalc") || !inline.includes("DynastyDealer")
   || !inline.includes("Worked example") || !inline.includes("calcInfoOpen")
   || fnSrc("renderCalc").includes("Today book")
   || fnSrc("calcCompareHtml").includes("Our book: flatten")
   || fnSrc("calcCompareHtml").includes("Not raw KTC")) {
   throw new Error("calc footnotes must be one Info control with blend + VA formulas");
+}
+if (!inline.includes("function homeDeskProfile(") || !inline.includes("function homeDeskMeta(")
+  || !inline.includes("Win-now") || !inline.includes("Reload") || !inline.includes("Rebuild")
+  || !inline.includes("depth for a stud") || !inline.includes("Even-up · same window")
+  || inline.includes("Even-up starter")
+  || fnSrc("homeDeskHtml").includes("calcFmt(")
+  || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
+  throw new Error("Trade Desk must classify routes and stay free of bag numbers");
 }
 if (!inline.includes("async function openLeagueDashboard(")
   || !inline.includes("Keep a deep-linked sub-screen")) {

@@ -14,14 +14,14 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
-the digest — signed-in **Your 3** (notifications only), **Cuckle trade calculator**, signed-in **On your
-roster** news, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
+the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**, signed-in
+**Trade Desk**, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
 it; the clock lives in the brand header on screens it applies to (§2a).
 
-**Your 3** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
+**Alerts** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
 and nothing is waiting, keep the heading and leave the slot blank — do not fill it. That is an
 *action*, not a personal bag number. Lineup recaps, waivers, and bag totals stay off Home. The
-calculator door is its own row — it is not a Your 3 filler. Home does not remount the Recent
+calculator door is its own row — it is not an Alerts filler. Home does not remount the Recent
 Trade chip; the vote notification is the door into that deal.
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
@@ -159,7 +159,7 @@ an open panel paints over the chip box it drops across — verified by hit-testi
 not by reading the sheet. Opening it closes every other popup and opening any of them closes it, so
 two menus can never be open over each other.
 
-All five are flatten-only. **The 40/60 KTC blend is not on this menu.** Trade rows still read
+All five are flatten-only. **The today multi-source blend is not on this menu.** Trade rows still read
 `windows[lens]`. The calculator (`?view=calc`) is the first screen that **renders** the today /
 `even` blend. Whether the blend also earns a sixth Score-as entry is an open user decision
 (`DASHBOARD_AUDIT.md` §8c).
@@ -179,20 +179,26 @@ sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 
 ## 3. Home
 
-**Your 3** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
+**Alerts** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
 or a blank reserved slot when nothing is waiting. Tap a wager → Ledger. Tap a vote → that
 deal’s review screen (H2H chip + **Who won this trade?**). Do not fill with the calculator
 or a news teaser.
 
-**No Recent Trade chip on Home.** The vote row in Your 3 opens the deal. The H2H chip still
+**No Recent Trade chip on Home.** The vote row in Alerts opens the deal. The H2H chip still
 renders on the open-trade screen and on Teams / History feed cards.
 
 **Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
 plate). Opens `?view=calc`.
 
-**Trade Desk** — three league conversation cards (two seats + one even-up starter from the
-today / `even` book). Tap opens the calculator with those sides prefilled. Signed-in: your
-seat is card one when a clean match exists; the other two stay league-wide. No bag numbers.
+**Trade Desk** — three league conversation cards from the today / `even` book. Each seat is
+classified from the **current bag** (Win-now / Reload / Rebuild) using stud share, pick
+capital, and value-weighted age. Historic Win-now / Investor tape labels do not set the route
+and do not move any number. Talks prefer complementary routes and 2-for-1 **depth for a stud**
+when one seat is deep at a position and the other is thin there; even-up is the floor.
+Startable floors: QB 2 / RB 2 / WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras
+above 1800. Meta may add a buy / fair / sell chip from `pe.json` — signal only. Tap opens
+the calculator with those sides prefilled. Signed-in: your seat is card one when a clean
+match exists; the other two stay league-wide. No bag numbers.
 The News Feed pull-up stays the league-wide preview.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.
@@ -217,10 +223,11 @@ assets are rows (name, pos/team, value, remove). Compare bar is **receive** amou
 each side would get), and gold fills toward the manager the value is going to — not send
 package size. **Favors** names the manager who would **receive** the larger pile.
 Even-up copy and leftover chips stay on the short **send** pile. Price book is today
-/ `even` (flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do
+/ `even` (0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20 DynastyDealer, renormalized)
+plus Value Adjustment via the existing `applyVa`. Votes do
 not appear on a hypothetical and do not change the number. How-it-works copy does not
-sit on the screen: one **Info** control at the bottom opens the blend formula
-(`0.40` flatten + `0.60` KTC), the VA formula (`0.15 × extras × star × damp`), and a
+sit on the screen: one **Info** control at the bottom opens the blend formula,
+the VA formula (`0.15 × extras × star × damp`), and a
 worked example.
 
 ### 3c. Titles and Emblems

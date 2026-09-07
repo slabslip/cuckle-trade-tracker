@@ -6,7 +6,7 @@
 
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
-**Values:** DynastyProcess Superflex (`value_2qb`) from GitHub `dynastyprocess/data`. GPL-3. Official Sleeper GETs for tape and drafts. No other price book.
+**Values:** DynastyProcess Superflex (`value_2qb`) from GitHub `dynastyprocess/data` is the history book (five Score-as windows). Today / `even` is a daily multi-source blend (flatten + KTC + FantasyCalc + DynastyDealer). Official Sleeper GETs for tape and drafts. The phone never scrapes price APIs.
 
 ---
 
@@ -23,7 +23,7 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. **Home** is the daily paper (News Feed peek + **Cuckle trade calculator**; signed-in **Your 3**
+4. **Home** is the daily paper (News Feed peek + **Cuckle trade calculator**; signed-in **Alerts**
    notifications and **Trade Desk** — no bag hero, no Recent Trade chip). **Teams** is
    first-person after a seat. Price a hypothetical on **`?view=calc`**. League tape stays the
    water cooler.
@@ -44,15 +44,16 @@ Five windows ship, chosen in one **Score as** dropdown. `Since trade` is the def
 | **First 1 / 2 / 3 years** (`y1` `y2` `y3`) | Mean of year-end (became-player) values in `[accept, accept+Ny]`, with the activity floor | Flatten only |
 | **Aged** | `all` Δ − `t0` Δ, how the deal moved after accept | Derived — both terms from the **same** book, never by subtracting two |
 
-**All five windows are flatten-only.** Do not backfill KTC onto a clock that predates the
-snapshot, and never average two clocks into one figure.
+**All five windows are flatten-only.** Do not backfill KTC, FantasyCalc, or DynastyDealer onto a
+clock that predates that source, and never average two clocks into one figure.
 
 **The today blend is a sixth price, and it is not one of the five windows.** A trade's `even` bag
-prices each leg as a **40/60 blend** of its flatten value and its KeepTradeCut Superflex value as
-of `ktc_as_of`, and an asset that is **off the KTC Superflex board and off an NFL roster** prices
-at **0**. That rule is the whole retirement test: a cheap rostered QB2 is not retired, and an
-expensive stale row with no team and no KTC line is. The explicit `RETIRED_SLEEPER_IDS` set still
-wins outright.
+prices each leg as a **renormalized blend** of flatten (0.25), KeepTradeCut Superflex (0.30),
+FantasyCalc Superflex dynasty (0.25), and DynastyDealer `base_value` (0.20). A missing source
+drops its weight. Flatten-only if every market source misses. Do not invent a DP row from
+FC/DD alone. An asset that is **off the KTC Superflex board and off an NFL roster** prices
+at **0**. Missing FantasyCalc or DynastyDealer does not retire anyone. The explicit
+`RETIRED_SLEEPER_IDS` set still wins outright. Production / P/E is a Desk signal only.
 
 `even` is what the pipeline's own aggregates are built on. Trade rows still read `windows[lens]`,
 so `sideOf()`’s `even` fallback never fires there. **The calculator is the first reachable screen

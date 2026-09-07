@@ -51,7 +51,9 @@ jobs:
         run: node build.mjs --skip-snapshot "$LEAGUE_ID"
 
       - name: Audit today book
-        run: node audit-values.mjs
+        run: |
+          node audit-values.mjs
+          node audit-pass2.mjs
 
       - name: Commit snaps and UI if changed
         run: |

@@ -270,10 +270,15 @@ for (const r of rosters) {
     const p = playersNfl[String(pid)] || {};
     let name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ")
       || ktcNameBySid[String(pid)] || String(pid);
-    let extra = {};
+    let extra = {
+      pos: p.position || "",
+      team: p.team || "",
+      age: p.age == null || p.age === "" ? null : Number(p.age),
+    };
     if (looksLikeId(name)) {
-      extra = (await sleeperPlayer(pid)) || {};
-      if (extra.name) name = extra.name;
+      const live = (await sleeperPlayer(pid)) || {};
+      if (live.name) name = live.name;
+      extra = { ...extra, ...live };
     }
     const row = pricePlayer(pid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice, extra);
     row.roster_ord = i++;

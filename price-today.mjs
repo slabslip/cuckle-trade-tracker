@@ -216,7 +216,8 @@ export function priceTodayValue(flattenValue, leg, ctx) {
 
 export function repriceTodayLegs(legs, ctx) {
   return (legs || []).map((l) => {
-    const flat = l.value_flat != null ? l.value_flat : l.value;
+    // Require value_flat. Falling back to value re-blended an already-today number.
+    const flat = l.value_flat;
     if (flat == null || !Number.isFinite(flat)) return l;
     const priced = { ...l, value: flat };
     return { ...l, value_flat: flat, value: priceTodayValue(flat, priced, ctx) };

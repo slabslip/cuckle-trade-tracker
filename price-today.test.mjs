@@ -9,6 +9,7 @@ import {
   marketQuote,
   marketValue,
   priceTodayValue,
+  repriceTodayLegs,
 } from "./price-today.mjs";
 import { marketPickKey } from "./market-snap.mjs";
 
@@ -72,6 +73,11 @@ check("rostered off-ktc is live", !isRetired(
 ));
 
 check("fc early pick key", marketPickKey("2027 1st (Early)") === "pickval:2027:1:Early");
+check("reprice without value_flat leaves the row", repriceTodayLegs(
+  [{ kind: "player", asset_key: "player:1", label: "Unit", value: 1666 }],
+  ctx,
+)[0].value === 1666);
+
 check("dd round key", marketPickKey("2027 Round 1 Mid") === "pickval:2027:1:Mid");
 check("dd slot key", marketPickKey("2026 Pick 1.01") === "pickval:2026:1:Early");
 

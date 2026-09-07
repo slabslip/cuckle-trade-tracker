@@ -61,7 +61,9 @@ jobs:
         run: node build.mjs "$LEAGUE_ID"
 
       - name: Audit today book
-        run: node audit-values.mjs
+        run: |
+          node audit-values.mjs
+          node audit-pass2.mjs
 
       - name: Commit scoped UI if changed
         env:

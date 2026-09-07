@@ -218,7 +218,10 @@ each side would get), and gold fills toward the manager the value is going to �
 package size. **Favors** names the manager who would **receive** the larger pile.
 Even-up copy and leftover chips stay on the short **send** pile. Price book is today
 / `even` (flatten + 40/60 KTC) plus Value Adjustment via the existing `applyVa`. Votes do
-not appear on a hypothetical and do not change the number.
+not appear on a hypothetical and do not change the number. How-it-works copy does not
+sit on the screen: one **Info** control at the bottom opens the blend formula
+(`0.40` flatten + `0.60` KTC), the VA formula (`0.15 × extras × star × damp`), and a
+worked example.
 
 ### 3c. Titles and Emblems
 

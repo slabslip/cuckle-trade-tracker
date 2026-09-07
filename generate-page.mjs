@@ -1519,7 +1519,10 @@ const html = `<!DOCTYPE html>
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
     /* Titles & Emblems — calling cards are 1024×180 (~30% shorter than 4:1 256h),
-       full-bleed art, CSS aspect-ratio 1024/180. Emblems in a 4-col grid. */
+       full-bleed art, CSS aspect-ratio 1024/180. Equipped plate + detail sheet
+       stay that size. The barracks title *list* is a 15-col grid of the same
+       full crop scaled down (two rows of 15 in view, no art squeeze).
+       Emblems in a 4-col grid. */
     .cos-plate {
       margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
@@ -1551,12 +1554,13 @@ const html = `<!DOCTYPE html>
       object-fit: contain; object-position: center; display: block;
     }
     .cos-titles {
-      display: flex; flex-direction: column; gap: 12px; margin: 0 0 16px;
+      display: grid; grid-template-columns: repeat(15, minmax(0, 1fr));
+      gap: 2px; margin: 0 0 16px;
     }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
-      border: 1px solid var(--line); border-radius: 12px; padding: 8px;
-      background: #0a0c10; overflow: hidden; height: auto; min-height: 0;
+      border: 1px solid var(--line); border-radius: 3px; padding: 1px;
+      background: #0a0c10; overflow: hidden; height: auto; min-height: 0; min-width: 0;
       position: relative; text-align: left; line-height: 0;
     }
     button.cos-title.is-locked { opacity: 0.45; }
@@ -1565,14 +1569,15 @@ const html = `<!DOCTYPE html>
     .cos-title-banner {
       display: block; width: 100%; aspect-ratio: 1024 / 180; height: auto;
       object-fit: cover; object-position: center;
-      background: #0a0c10; border-radius: 8px;
+      background: #0a0c10; border-radius: 2px;
     }
     .cos-title-fallback {
       display: flex; align-items: center; justify-content: center;
       width: 100%; aspect-ratio: 1024 / 180; min-height: 0; height: auto;
-      box-sizing: border-box; line-height: 1.2;
-      padding: 8px 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.05em;
-      text-transform: uppercase; color: #f0e6cc; border-radius: 8px;
+      box-sizing: border-box; line-height: 1;
+      padding: 0; font-size: 0; font-weight: 750; letter-spacing: 0;
+      text-transform: uppercase; color: #f0e6cc; border-radius: 2px;
+      overflow: hidden;
       background: linear-gradient(90deg, #1c2230, #3a4558 50%, #1c2230);
     }
     .cos-title-fallback.is-gold {
@@ -3321,7 +3326,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260907121133";
+    const DATA_V = "costitles20260907124000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -20571,6 +20576,18 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   || !html.includes("aspect-ratio: 1024 / 180")
   || !html.includes("cos-title-banner")) {
   throw new Error("Titles and Emblems must use compact COD banners, custom emblem marks, and tap-to-read details");
+}
+{
+  const titlesAt = html.indexOf(".cos-titles {");
+  const titlesCss = titlesAt < 0 ? "" : html.slice(titlesAt, titlesAt + 280);
+  const plateAt = html.indexOf(".cos-plate-banner {");
+  const plateCss = plateAt < 0 ? "" : html.slice(plateAt, plateAt + 220);
+  if (!titlesCss.includes("repeat(15, minmax(0, 1fr))") || titlesCss.includes("flex-direction: column")) {
+    throw new Error("barracks title list must be a 15-col mini-crop grid, not a full-width stack");
+  }
+  if (!plateCss.includes("aspect-ratio: 1024 / 180") || plateCss.includes("repeat(15")) {
+    throw new Error("equipped title plate must stay the full 1024×180 crop");
+  }
 }
 {
   // Every catalog title/emblem must have a live PNG — missing art falls back to empty marks.

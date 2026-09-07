@@ -221,7 +221,9 @@ not appear on a hypothetical and do not change the number.
 ### 3c. Titles and Emblems
 
 Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 88 (44 matched title↔emblem pairs).
-Equip one title and one emblem.
+Equip one title and one emblem. The title **list** is a 15-across grid of the same
+1024×180 crop scaled down (two rows of 15 sit in view; art is not squeezed). The equipped
+calling card and the detail sheet stay full-bleed.
 Championship titles outrank every other award in sort and prestige. Locked shows the
 requirement; unlocked shows the receipt. Visual only. The equipped pair paints as a calling
 card on **that manager's team home** (under the seat name, above the four tabs). Your equipped

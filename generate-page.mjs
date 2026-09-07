@@ -3463,7 +3463,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "deskbooks20260907234800";
+    const DATA_V = "cosmeticsThumbsLive-20260908001500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4913,11 +4913,14 @@ const html = `<!DOCTYPE html>
         openId = params.get("t") || null;
       } else if (startView === "trades") {
         view = "trades";
+      } else if (startView === "cosmetics" || startView === "calc") {
+        // Barracks / calc are league-wide like Champions Path — honour before ?me lookup.
+        view = startView;
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
       const seat = startMe
-        ? members.find((m) => m.user_id === startMe || m.name === startMe)
+        ? (members || []).find((m) => m.user_id === startMe || m.name === startMe)
         : null;
       if (seat) {
         view = VIEWS.indexOf(startView) >= 0 ? startView : "home";
@@ -5206,7 +5209,7 @@ const html = `<!DOCTYPE html>
             me = null;
             data = null;
           } else {
-            const seat = members.find((m) => m.user_id === wantMe);
+            const seat = (members || []).find((m) => m.user_id === wantMe);
             try {
               if (!seat) throw new Error("unknown seat " + wantMe);
               data = seatCache[wantMe] || await getLeagueJson("me/" + wantMe + ".json");
@@ -5216,7 +5219,8 @@ const html = `<!DOCTYPE html>
               console.error(err);
               me = null;
               data = null;
-              if (view !== "titles" && view !== "trade" && view !== "trades") view = "home";
+              if (view !== "titles" && view !== "trade" && view !== "trades"
+                && view !== "cosmetics" && view !== "calc") view = "home";
             }
           }
         }
@@ -10425,7 +10429,7 @@ const html = `<!DOCTYPE html>
         console.error(err);
         saveActiveLeague(leagueInfo);
         appScreen = "dash";
-        members = null;
+        members = [];
         league = null;
         render();
       });
@@ -10823,16 +10827,16 @@ const html = `<!DOCTYPE html>
     }
 
     function cosmeticsEquipNames() {
-      const book = cosmeticsBook || { catalog: [] };
-      const title = book.catalog.find((c) => c.id === cosmeticsEquip.title);
-      const emblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
+      const catalog = cosmeticsCatalog();
+      const title = catalog.find((c) => c.id === cosmeticsEquip.title);
+      const emblem = catalog.find((c) => c.id === cosmeticsEquip.emblem);
       return [title && title.name, emblem && emblem.name].filter(Boolean);
     }
 
     function cosmeticsPlateHtml(cls) {
-      const book = cosmeticsBook || { catalog: [] };
-      const eqTitle = book.catalog.find((c) => c.id === cosmeticsEquip.title);
-      const eqEmblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
+      const catalog = cosmeticsCatalog();
+      const eqTitle = catalog.find((c) => c.id === cosmeticsEquip.title);
+      const eqEmblem = catalog.find((c) => c.id === cosmeticsEquip.emblem);
       const plateBanner = eqTitle
         ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
         : '<span class="cos-plate-banner is-text">No title equipped</span>';
@@ -10931,8 +10935,9 @@ const html = `<!DOCTYPE html>
           },
         );
         if (!res.ok) return;
-        const rows = await res.json();
-        for (const r of rows || []) {
+        const rawRows = await res.json();
+        const rows = Array.isArray(rawRows) ? rawRows : [];
+        for (const r of rows) {
           const data = safeAvatarData(r && r.avatar_data);
           if (!data) continue;
           const uid = String(r.sleeper_user_id);
@@ -15695,13 +15700,20 @@ const html = `<!DOCTYPE html>
       "aging_mark", "farm_sold_mark", "inaugural_mark", "perfect_chip_mark",
     ]);
     function cosmeticsPairMate(c) {
-      const book = cosmeticsBook || { catalog: [] };
       if (!c || !c.pair) return null;
-      return book.catalog.find((x) => x.pair === c.pair && x.kind !== c.kind) || null;
+      return cosmeticsCatalog().find((x) => x.pair === c.pair && x.kind !== c.kind) || null;
     }
 
-    function cosmeticsArtPath(kind, id) {
-      if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
+    function cosmeticsCatalog() {
+      return (cosmeticsBook && Array.isArray(cosmeticsBook.catalog)) ? cosmeticsBook.catalog : [];
+    }
+
+    function cosmeticsArtPath(kind, id, variant) {
+      if (kind === "title" && COS_TITLE_ART.has(id)) {
+        // Barracks grid uses compressed thumbs (~20KB); plate/sheet keep full 1024×180 masters.
+        if (variant === "thumb") return "data/ui/cosmetics/title-" + id + "-thumb.webp";
+        return "data/ui/cosmetics/title-" + id + ".png";
+      }
       if (kind === "emblem" && COS_EMBLEM_ART.has(id)) return "data/ui/cosmetics/emblem-" + id + ".png";
       return "";
     }
@@ -15719,12 +15731,15 @@ const html = `<!DOCTYPE html>
         + "</span>";
     }
 
-    function cosmeticsTitleBanner(c, cls) {
-      const path = cosmeticsArtPath("title", c.id);
+    function cosmeticsTitleBanner(c, cls, variant) {
+      const thumb = variant === "thumb";
+      const path = cosmeticsArtPath("title", c.id, thumb ? "thumb" : "");
       const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
-      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="1024" height="180" loading="lazy" decoding="async" />';
+        return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+          + '" alt="' + esc(c.name) + '"'
+          + (thumb ? ' width="512" height="90"' : ' width="1024" height="180"')
+          + ' loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";
@@ -15732,12 +15747,12 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsCallingCardHtml(pair, opts) {
       const emptyOk = !!(opts && opts.empty);
-      const book = cosmeticsBook || { catalog: [] };
+      const catalog = cosmeticsCatalog();
       const eqTitle = pair && pair.title
-        ? book.catalog.find((c) => c.id === pair.title && c.kind === "title")
+        ? catalog.find((c) => c.id === pair.title && c.kind === "title")
         : null;
       const eqEmblem = pair && pair.emblem
-        ? book.catalog.find((c) => c.id === pair.emblem && c.kind === "emblem")
+        ? catalog.find((c) => c.id === pair.emblem && c.kind === "emblem")
         : null;
       if (!eqTitle && !eqEmblem && !emptyOk) return "";
       const plateBanner = eqTitle
@@ -15773,8 +15788,7 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsDetailSheetHtml() {
       if (!cosmeticsDetailId) return "";
-      const book = cosmeticsBook || { catalog: [] };
-      const c = book.catalog.find((x) => x.id === cosmeticsDetailId);
+      const c = cosmeticsCatalog().find((x) => x.id === cosmeticsDetailId);
       if (!c) return "";
       const got = cosmeticsUnlocked(c.id);
       const on = cosmeticsEquip[c.kind] === c.id;
@@ -15810,9 +15824,9 @@ const html = `<!DOCTYPE html>
     }
 
     function renderCosmetics() {
-      const book = cosmeticsBook || { catalog: [] };
-      const titles = book.catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
-      const emblems = book.catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
+      const catalog = cosmeticsCatalog();
+      const titles = catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
+      const emblems = catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
       const plate = cosmeticsCallingCardHtml(cosmeticsEquip, { empty: true });
       const titleRow = (c) => {
         const got = cosmeticsUnlocked(c.id);
@@ -15823,7 +15837,7 @@ const html = `<!DOCTYPE html>
           + (on ? " is-on" : "") + (ladder ? " is-ladder" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="title"'
           + ' aria-label="' + esc(c.name + (on ? ", equipped" : "") + (locked ? ", locked" : "")) + '">'
-          + cosmeticsTitleBanner(c, "cos-title-banner")
+          + cosmeticsTitleBanner(c, "cos-title-banner", "thumb")
           + "</button>";
       };
       const emblemCell = (c) => {
@@ -16873,7 +16887,8 @@ const html = `<!DOCTYPE html>
       // that leave, so the next one added cannot forget. Same condition as the renderer below.
       if (!(view === "home" && !(me && data))) dsOpen = false;
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
-      const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" && view !== "ledger" ? ["home", "trades", "partners", "drafts"] : [];
+      const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" && view !== "ledger"
+        && view !== "cosmetics" && view !== "calc" ? ["home", "trades", "partners", "drafts"] : [];
       // The four tabs are sections of one manager's page and none of them names that manager,
       // so this does -- once, above the row, on every one of them. It doubles as the screen
       // heading those four screens never had: focusNext = ".screen-h" now lands on the name of
@@ -18431,8 +18446,7 @@ const html = `<!DOCTYPE html>
       if (cosEquip) {
         const id = cosEquip.getAttribute("data-cos-equip");
         const kind = cosEquip.getAttribute("data-cos-kind");
-        const book = cosmeticsBook || { catalog: [] };
-        const row = book.catalog.find((c) => c.id === id);
+        const row = cosmeticsCatalog().find((c) => c.id === id);
         if (id && kind && row && row.kind === kind && cosmeticsUnlocked(id)) {
           cosmeticsEquip[kind] = cosmeticsEquip[kind] === id ? null : id;
           cosmeticsSaveEquip();
@@ -21205,15 +21219,26 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   const cosBook = JSON.parse(fs.readFileSync(path.join(ROOT, "data/ui/cosmetics.json"), "utf8"));
   const missingArt = [];
   for (const c of cosBook.catalog || []) {
-    const file = c.kind === "title"
-      ? path.join(ROOT, "data/ui/cosmetics", `title-${c.id}.png`)
-      : path.join(ROOT, "data/ui/cosmetics", `emblem-${c.id}.png`);
-    if (!fs.existsSync(file)) missingArt.push(`${c.kind}:${c.id}`);
-    if (c.kind === "title" && !inline.includes(`"${c.id}"`)) missingArt.push(`COS_TITLE_ART:${c.id}`);
-    if (c.kind === "emblem" && !inline.includes(`"${c.id}"`)) missingArt.push(`COS_EMBLEM_ART:${c.id}`);
+    if (c.kind === "title") {
+      const full = path.join(ROOT, "data/ui/cosmetics", `title-${c.id}.png`);
+      const thumb = path.join(ROOT, "data/ui/cosmetics", `title-${c.id}-thumb.webp`);
+      if (!fs.existsSync(full)) missingArt.push(`title:${c.id}`);
+      if (!fs.existsSync(thumb)) missingArt.push(`title-thumb:${c.id}`);
+      if (!inline.includes(`"${c.id}"`)) missingArt.push(`COS_TITLE_ART:${c.id}`);
+    } else if (c.kind === "emblem") {
+      const file = path.join(ROOT, "data/ui/cosmetics", `emblem-${c.id}.png`);
+      if (!fs.existsSync(file)) missingArt.push(`emblem:${c.id}`);
+      if (!inline.includes(`"${c.id}"`)) missingArt.push(`COS_EMBLEM_ART:${c.id}`);
+    }
   }
   if (missingArt.length) {
     throw new Error(`cosmetics art/wiring gaps: ${missingArt.slice(0, 12).join(", ")}${missingArt.length > 12 ? "…" : ""}`);
+  }
+  if (!inline.includes("function cosmeticsCatalog(")
+    || !inline.includes('variant === "thumb"')
+    || !inline.includes("-thumb.webp")
+    || !inline.includes('cosmeticsTitleBanner(c, "cos-title-banner", "thumb")')) {
+    throw new Error("barracks title grid must load compressed title thumbs, not full 1024×180 masters");
   }
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")

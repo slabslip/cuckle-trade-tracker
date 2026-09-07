@@ -1518,8 +1518,8 @@ const html = `<!DOCTYPE html>
       background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
-    /* Titles & Emblems — title banners keep their natural art ratio (fill width,
-       never crop). Emblem marks sit in a readable 4-col grid. */
+    /* Titles & Emblems — crown titles share a fixed 5:1 banner frame (840×168 art).
+       Emblem marks sit in a readable 4-col grid. */
     .cos-plate {
       margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
@@ -1529,13 +1529,13 @@ const html = `<!DOCTYPE html>
     .cos-seat-plate .cos-plate { margin: 0; }
     .cos-plate-banner {
       flex: 1 1 auto; min-width: 0; width: 100%;
-      height: auto; max-height: none;
+      aspect-ratio: 5 / 1; height: auto; max-height: none;
       object-fit: contain; object-position: center;
-      display: block; background: #1a1d26;
+      display: block; background: #0a0c10;
     }
     .cos-plate-banner.is-text {
       display: flex; align-items: center; justify-content: center;
-      min-height: 72px; height: auto;
+      aspect-ratio: 5 / 1; min-height: 0; height: auto; box-sizing: border-box;
       padding: 0 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.04em;
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
@@ -1563,14 +1563,15 @@ const html = `<!DOCTYPE html>
     button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
-      display: block; width: 100%; height: auto;
+      display: block; width: 100%; aspect-ratio: 5 / 1; height: auto;
       object-fit: contain; object-position: center;
       background: #0a0c10; border-radius: 8px;
     }
     .cos-title-fallback {
       display: flex; align-items: center; justify-content: center;
-      width: 100%; min-height: 72px; height: auto; line-height: 1.2;
-      padding: 16px 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.05em;
+      width: 100%; aspect-ratio: 5 / 1; min-height: 0; height: auto;
+      box-sizing: border-box; line-height: 1.2;
+      padding: 8px 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.05em;
       text-transform: uppercase; color: #f0e6cc; border-radius: 8px;
       background: linear-gradient(90deg, #1c2230, #3a4558 50%, #1c2230);
     }
@@ -1633,7 +1634,7 @@ const html = `<!DOCTYPE html>
     }
     .cos-profile-plate .cos-plate-banner,
     .cos-profile-plate .cos-plate-banner.is-text {
-      height: auto; min-height: 56px;
+      aspect-ratio: 5 / 1; height: auto; min-height: 0;
     }
     .cos-profile-plate .cos-plate-emblem {
       width: clamp(44px, 16%, 60px); padding: 4px;
@@ -1662,10 +1663,10 @@ const html = `<!DOCTYPE html>
       width: 44px; height: 44px;
     }
     .cos-sheet-banner {
-      width: 100%; height: auto;
+      width: 100%; aspect-ratio: 5 / 1; height: auto;
       object-fit: contain; object-position: center;
       border-radius: 8px; margin: 0 0 10px;
-      display: block; background: #12151c;
+      display: block; background: #0a0c10;
     }
     .cos-sheet-panel h3 { margin: 0; font-size: 1.05rem; }
     .cos-sheet-panel .cos-sheet-how { margin: 6px 0 0; font-size: 0.88rem; color: var(--text); }
@@ -3320,7 +3321,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmeticsPairs20260907010500";
+    const DATA_V = "titleBanner5x1-20260907011500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15144,7 +15145,7 @@ const html = `<!DOCTYPE html>
       const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
       return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="840" loading="lazy" decoding="async" />';
+        + '" alt="' + esc(c.name) + '" width="840" height="168" loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";
@@ -20552,6 +20553,7 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   || !inline.includes("function cosmeticsPlateHtml(")
   || !inline.includes("cos-plate")
   || !html.includes("object-fit: contain")
+  || !html.includes("aspect-ratio: 5 / 1")
   || !html.includes("cos-title-banner")) {
   throw new Error("Titles and Emblems must use compact COD banners, custom emblem marks, and tap-to-read details");
 }

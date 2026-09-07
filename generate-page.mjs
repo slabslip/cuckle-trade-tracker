@@ -3321,7 +3321,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "benchCrimeComic-20260907035000";
+    const DATA_V = "crownLadderEmblemsComic-20260907030000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15120,10 +15120,15 @@ const html = `<!DOCTYPE html>
       "inaugural", "perfect_chip",
     ]);
     const COS_EMBLEM_ART = new Set([
-      "points_champ", "bracket_thief", "finalist", "two_time_finalist", "three_time_finalist",
-      "last_place", "iron_core", "volume", "whale", "extractor", "firsts_merchant",
-      "playoff_trader", "quiet_year", "manners", "draft_hit", "sit_right", "bench_crime",
-      "waiver_touch", "opening_day",
+      "five_time_mark", "four_time_mark", "three_peat_mark", "three_time_mark", "repeat_mark",
+      "two_time_mark", "champion_mark", "points_champ", "bracket_thief", "three_time_finalist",
+      "two_time_finalist", "finalist", "last_place", "iron_core", "opening_day",
+      "sit_right", "bench_crime", "volume", "whale", "extractor",
+      "win_now_mark", "investor_mark", "firsts_merchant", "playoff_trader", "quiet_year",
+      "manners", "draft_hit", "waiver_touch", "founding_draft_mark", "blowout_mark",
+      "nailbiter_mark", "climber_mark", "loyalty_mark", "scorched_mark", "pick_hoard_mark",
+      "rookie_king_mark", "cartel_mark", "wire_throne_mark", "pick_path_mark", "player_path_mark",
+      "aging_mark", "farm_sold_mark", "inaugural_mark", "perfect_chip_mark",
     ]);
     function cosmeticsPairMate(c) {
       const book = cosmeticsBook || { catalog: [] };
@@ -20566,6 +20571,22 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   || !html.includes("aspect-ratio: 1024 / 180")
   || !html.includes("cos-title-banner")) {
   throw new Error("Titles and Emblems must use compact COD banners, custom emblem marks, and tap-to-read details");
+}
+{
+  // Every catalog title/emblem must have a live PNG — missing art falls back to empty marks.
+  const cosBook = JSON.parse(fs.readFileSync(path.join(ROOT, "data/ui/cosmetics.json"), "utf8"));
+  const missingArt = [];
+  for (const c of cosBook.catalog || []) {
+    const file = c.kind === "title"
+      ? path.join(ROOT, "data/ui/cosmetics", `title-${c.id}.png`)
+      : path.join(ROOT, "data/ui/cosmetics", `emblem-${c.id}.png`);
+    if (!fs.existsSync(file)) missingArt.push(`${c.kind}:${c.id}`);
+    if (c.kind === "title" && !inline.includes(`"${c.id}"`)) missingArt.push(`COS_TITLE_ART:${c.id}`);
+    if (c.kind === "emblem" && !inline.includes(`"${c.id}"`)) missingArt.push(`COS_EMBLEM_ART:${c.id}`);
+  }
+  if (missingArt.length) {
+    throw new Error(`cosmetics art/wiring gaps: ${missingArt.slice(0, 12).join(", ")}${missingArt.length > 12 ? "…" : ""}`);
+  }
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
   || !inline.includes("On your roster") || !inline.includes("const peekItem = items[0] || null")

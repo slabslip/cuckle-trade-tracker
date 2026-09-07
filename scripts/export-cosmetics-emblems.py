@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
-"""Re-export cosmetics emblem PNGs from the design sheet.
+"""Export cosmetics emblem PNGs.
 
-Source: docs/design/cosmetics/ff-emblem-emoji-style-sheet-v2.png
-Output: data/ui/cosmetics/emblem-<id>.png (128×128, circular, transparent corners)
+Comic masters (preferred): docs/design/cosmetics/emblems-comic-v1/<id>-master.png
+  → data/ui/cosmetics/emblem-<id>.png (128×128 circular, transparent corners)
 
-Earlier crops were off-center opaque squares; CSS border-radius:50% then clipped
-the badge unevenly. This script finds each circular badge on the sheet and writes
-a centered transparent mark.
+Legacy sheet fallback (only for ids without a comic master):
+  docs/design/cosmetics/ff-emblem-emoji-style-sheet-v2.png
+
+Re-running this script will NOT overwrite comic masters with sheet crops.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 SHEET = ROOT / "docs/design/cosmetics/ff-emblem-emoji-style-sheet-v2.png"
+COMIC_DIR = ROOT / "docs/design/cosmetics/emblems-comic-v1"
+COS = ROOT / "data/ui/cosmetics.json"
 OUT = ROOT / "data/ui/cosmetics"
 SIZE = 128
 
-# 4×5 grid on the sheet (r4c3 is blank).
+# 4×5 grid on the legacy sheet (r4c3 is blank).
 MAP = {
     (0, 0): "points_champ",
     (0, 1): "bracket_thief",
@@ -132,25 +136,61 @@ def export_emblem(sheet_img: Image.Image, cx: float, cy: float, r: float, path: 
     )
 
 
+def export_comic_master(master: Path, dest: Path) -> None:
+    """Center-square crop → 128 circular badge with comic ring."""
+    im = Image.open(master).convert("RGBA")
+    w, h = im.size
+    side = min(w, h)
+    left = (w - side) // 2
+    top = (h - side) // 2
+    sq = im.crop((left, top, left + side, top + side)).resize((SIZE, SIZE), Image.Resampling.LANCZOS)
+    mask = Image.new("L", (SIZE, SIZE), 0)
+    ImageDraw.Draw(mask).ellipse((1, 1, SIZE - 2, SIZE - 2), fill=255)
+    out = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    out.paste(sq, (0, 0))
+    out.putalpha(mask)
+    ring = ImageDraw.Draw(out)
+    ring.ellipse((2, 2, SIZE - 3, SIZE - 3), outline=(20, 12, 8, 220), width=3)
+    ring.ellipse((6, 6, SIZE - 7, SIZE - 7), outline=(255, 230, 90, 160), width=2)
+    out.save(dest, optimize=True)
+
+
 def main() -> None:
-    sheet_img = Image.open(SHEET).convert("RGBA")
-    sheet = np.array(sheet_img)
-    bg = sheet[2, 2, :3].astype(np.float32)
-    diff = np.linalg.norm(sheet[:, :, :3].astype(np.float32) - bg, axis=2)
+    book = json.loads(COS.read_text())
+    emblem_ids = [c["id"] for c in (book.get("catalog") or []) if c.get("kind") == "emblem"]
+    if not emblem_ids:
+        raise SystemExit("no emblems in cosmetics.json")
+
     OUT.mkdir(parents=True, exist_ok=True)
-    for (ri, ci), eid in MAP.items():
-        hit = find_circle(diff, XS[ci], YS[ri])
-        if hit is None:
-            raise SystemExit(f"no circle for {eid}")
-        _, cx, cy, r = hit
-        path = OUT / f"emblem-{eid}.png"
-        export_emblem(sheet_img, cx, cy, r, path)
-        a = np.array(Image.open(path))
-        ys, xs = np.where(a[:, :, 3] > 128)
-        print(
-            f"{eid:22s} sheet=({cx:6.1f},{cy:6.1f}) r={r:5.1f} "
-            f"alpha_c=({xs.mean():.1f},{ys.mean():.1f})"
-        )
+    comic_done: set[str] = set()
+
+    for eid in emblem_ids:
+        master = COMIC_DIR / f"{eid}-master.png"
+        if master.exists():
+            export_comic_master(master, OUT / f"emblem-{eid}.png")
+            comic_done.add(eid)
+            print(f"{eid:28s} comic-master")
+
+    # Legacy sheet only for ids still missing a comic master
+    need_sheet = [eid for eid in emblem_ids if eid not in comic_done and eid in MAP.values()]
+    if need_sheet:
+        sheet_img = Image.open(SHEET).convert("RGBA")
+        sheet = np.array(sheet_img)
+        bg = sheet[2, 2, :3].astype(np.float32)
+        diff = np.linalg.norm(sheet[:, :, :3].astype(np.float32) - bg, axis=2)
+        id_to_cell = {eid: cell for cell, eid in MAP.items()}
+        for eid in need_sheet:
+            ri, ci = id_to_cell[eid]
+            hit = find_circle(diff, XS[ci], YS[ri])
+            if hit is None:
+                raise SystemExit(f"no circle for {eid}")
+            _, cx, cy, r = hit
+            export_emblem(sheet_img, cx, cy, r, OUT / f"emblem-{eid}.png")
+            print(f"{eid:28s} sheet-fallback")
+
+    missing = [eid for eid in emblem_ids if not (OUT / f"emblem-{eid}.png").exists()]
+    if missing:
+        raise SystemExit(f"missing emblem art after export: {missing}")
 
 
 if __name__ == "__main__":

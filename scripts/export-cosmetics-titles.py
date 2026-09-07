@@ -35,6 +35,7 @@ CUSTOM_TITLE_MASTERS = {
     "climber": DESIGN / "ff-title-climber-comic-v1.png",
     "pick_hoard": DESIGN / "ff-title-pick_hoard-comic-v1.png",
     "wire_throne": DESIGN / "ff-title-wire_throne-comic-v1.png",
+    "rookie_king": DESIGN / "ff-title-rookie_king-comic-v1.png",
 }
 
 CROWN_ORDER = [
@@ -150,7 +151,7 @@ def export_custom_title(tid: str, name: str) -> Image.Image:
         raise SystemExit(f"missing custom title master: {master_path}")
     master = Image.open(master_path).convert("RGBA")
     # Blowout comic: bias crop up so dryer faces stay in the short strip
-    bias = {"blowout": -40, "nailbiter": -40, "bracket_thief_title": -40, "scorched": -40, "climber": -90, "pick_hoard": -70, "wire_throne": -60}.get(tid, 0)
+    bias = {"blowout": -40, "nailbiter": -40, "bracket_thief_title": -40, "scorched": -40, "climber": -90, "pick_hoard": -70, "wire_throne": -60, "rookie_king": -75}.get(tid, 0)
     banner = cover_fit(master, top_bias=bias)
 
     # Soft left vignette so title text stays readable on busy comic art

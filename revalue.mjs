@@ -680,10 +680,10 @@ async function main() {
           got: bagFor(legs, uid, today, lens, ctx, "in"),
           sent: bagFor(legs, uid, today, lens, ctx, "out"),
           got0: lens === "realized" && t0Lookback
-            ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true, ktcAugment: true })
+            ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true })
             : bagFor(legs, uid, t0, lens, ctx, "in"),
           sent0: lens === "realized" && t0Lookback
-            ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true, ktcAugment: true })
+            ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true })
             : bagFor(legs, uid, t0, lens, ctx, "out"),
         };
       }
@@ -751,9 +751,12 @@ async function main() {
     for (const uid of uids) {
       const s = entry.lenses.realized.sides[uid];
       const todayEvenLegs = (legs) => (legs || []).map((l) => {
-        const flat = flatten(l.value, topToday);
-        const priced = { ...l, raw: l.value, value: flat };
-        return { ...l, value: priceTodayValue(flat, priced, todayPrice) };
+        // realized legs are raw DP. Flatten once, store value_flat, then blend.
+        const raw = l.raw != null ? l.raw : l.value;
+        const flat = flatten(raw, topToday);
+        if (flat == null || !Number.isFinite(flat)) return { ...l, value: flat, value_flat: flat };
+        const priced = { ...l, raw, value: flat, value_flat: flat };
+        return { ...l, value_flat: flat, value: priceTodayValue(flat, priced, todayPrice) };
       });
       const gotLegs = todayEvenLegs(s.legs);
       const sentLegs = todayEvenLegs(s.sent);
@@ -765,8 +768,8 @@ async function main() {
       let t0Got;
       let t0Sent;
       if (t0Lookback) {
-        const got0Bag = bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true, ktcAugment: true });
-        const sent0Bag = bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true, ktcAugment: true });
+        const got0Bag = bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true });
+        const sent0Bag = bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true });
         got0Legs = got0Bag.legs;
         sent0Legs = sent0Bag.legs;
         t0Got = got0Bag.points;
@@ -831,10 +834,10 @@ async function main() {
       const sides = {};
       for (const uid of uids) {
         const got = key === "t0"
-          ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: t0Lookback, ktcAugment: true })
+          ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: t0Lookback })
           : bagY3(legs, uid, dates, today, ctx, "in");
         const sent = key === "t0"
-          ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: t0Lookback, ktcAugment: true })
+          ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: t0Lookback })
           : bagY3(legs, uid, dates, today, ctx, "out");
         const incomplete = got.unpriced + sent.unpriced > 0 || (key !== "t0" && !dates.length);
         sides[uid] = applyToSide({
@@ -1304,8 +1307,9 @@ async function main() {
       const r = t.lenses.realized.sides[uid];
       const e = t.lenses.even.sides[uid];
       const gotToday = (r.legs || []).reduce((a, l) => {
-        const flat = flatten(l.value, topToday);
-        return a + (priceTodayValue(flat, { ...l, raw: l.value, value: flat }, todayPrice) || 0);
+        const raw = l.raw != null ? l.raw : l.value;
+        const flat = flatten(raw, topToday);
+        return a + (priceTodayValue(flat, { ...l, raw, value: flat, value_flat: flat }, todayPrice) || 0);
       }, 0);
       if (Math.abs((e.today || 0) - (e.value_adjust || 0) - gotToday) >= 1) todayDrift += 1;
     }
@@ -1319,7 +1323,8 @@ async function main() {
   const zekeEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
   const hillEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
   check("zeke today retired 0", zekeEvenToday != null && zekeEvenToday.value === 0);
-  check("hill today blended", hillEvenToday != null && hillEvenToday.value >= 1200 && hillEvenToday.value <= 2200);
+  check("hill flatten is DP not the blend", hillEvenToday != null && hillEvenToday.value_flat >= 2500 && hillEvenToday.value_flat <= 3200);
+  check("hill today blended 1.4-1.9k", hillEvenToday != null && hillEvenToday.value >= 1400 && hillEvenToday.value <= 1900);
   const bakerHits = meters.flatMap((t) => t.user_ids.flatMap((uid) => {
     const s = t.lenses.even.sides[uid];
     return [...(s?.legs || []), ...(s?.sent || [])].filter((l) => (l.label || "") === "Baker Mayfield");

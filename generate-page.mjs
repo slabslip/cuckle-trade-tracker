@@ -3463,7 +3463,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260907213243";
+    const DATA_V = "valuesfix20260907214000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15569,7 +15569,7 @@ const html = `<!DOCTYPE html>
         + "<p><b>FantasyCalc</b> is trade-implied Superflex dynasty (0.25).</p>"
         + "<p><b>DynastyDealer</b> is what Sleeper leagues actually paid (0.20).</p>"
         + '<p class="calc-info-eq">today = (0.25&times;flatten + 0.30&times;KTC + 0.25&times;FC + 0.20&times;DD) / weights that hit</p>'
-        + "<p>A missing source drops its weight. If every market quote misses, today is just flatten. "
+        + "<p>A missing source drops its weight. A zero quote is treated as missing. If every market quote misses, today is just flatten. "
         + "If the player is retired (off the KTC board and off an NFL roster, or on our "
         + "retired list), today is 0. Missing FantasyCalc or DynastyDealer does not retire anyone. "
         + "Production / P/E never changes this number. We round the blend to a whole number.</p>"
@@ -21301,6 +21301,7 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
 }
 if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-info="1"')
   || !inline.includes("today = (0.25") || !inline.includes("VA = 0.15")
+  || !inline.includes("zero quote is treated as missing")
   || !inline.includes("FantasyCalc") || !inline.includes("DynastyDealer")
   || !inline.includes("Worked example") || !inline.includes("calcInfoOpen")
   || fnSrc("renderCalc").includes("Today book")

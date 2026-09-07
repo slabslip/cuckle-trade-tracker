@@ -11,16 +11,16 @@ import { CUCKLE_LEAGUE_ID, setLeagueId } from "./lib.mjs";
  * Shared DynastyProcess curve/KTC stay under data/; league tape + UI go to
  * data/leagues/<id>/{raw,ui}/. Cuckle UI is dual-written to data/ui.
  */
-const leagueArg = process.argv[2] && /^\d{6,64}$/.test(process.argv[2])
-  ? process.argv[2]
-  : CUCKLE_LEAGUE_ID;
+const argv = process.argv.slice(2);
+const skipSnapshot = argv.includes("--skip-snapshot");
+const leagueArg = argv.find((a) => /^\d{6,64}$/.test(a));
 const leagueId = setLeagueId(leagueArg);
 const isCuckle = leagueId === CUCKLE_LEAGUE_ID;
 
 const steps = [
   ["sleeper-sync.mjs", leagueId],
   ["draft-resolve.mjs", leagueId],
-  ["value-snapshot.mjs"],
+  ...(skipSnapshot ? [] : [["value-snapshot.mjs"]]),
   ["revalue.mjs", leagueId],
   ["title-path.mjs", leagueId],
   ["apply-value-adjust.mjs", leagueId],

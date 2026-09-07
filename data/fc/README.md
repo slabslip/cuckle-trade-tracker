@@ -9,4 +9,5 @@ node fantasycalc-snapshot.mjs
 ```
 
 One of four today-book sources. Do not backfill onto flatten windows.
-The phone never fetches this API.
+The today book reads `latest.json` even when the DP curve date is older.
+Quotes `<= 0` are dropped. The phone never fetches this API.

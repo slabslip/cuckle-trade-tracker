@@ -50,10 +50,12 @@ clock that predates that source, and never average two clocks into one figure.
 **The today blend is a sixth price, and it is not one of the five windows.** A trade's `even` bag
 prices each leg as a **renormalized blend** of flatten (0.25), KeepTradeCut Superflex (0.30),
 FantasyCalc Superflex dynasty (0.25), and DynastyDealer `base_value` (0.20). A missing source
-drops its weight. Flatten-only if every market source misses. Do not invent a DP row from
-FC/DD alone. An asset that is **off the KTC Superflex board and off an NFL roster** prices
+drops its weight. A quote of 0 is a miss. Flatten-only if every market source misses. Do not invent a DP row from
+FC/DD alone. Today reads each market’s latest committed snap — it does not wait for the DP
+curve date to catch up. An asset that is **off the KTC Superflex board and off an NFL roster** prices
 at **0**. Missing FantasyCalc or DynastyDealer does not retire anyone. The explicit
-`RETIRED_SLEEPER_IDS` set still wins outright. Production / P/E is a Desk signal only.
+`RETIRED_SLEEPER_IDS` set still wins outright. Production / P/E is a Desk signal only, and only
+when FFPG is at least 4.
 
 `even` is what the pipeline's own aggregates are built on. Trade rows still read `windows[lens]`,
 so `sideOf()`’s `even` fallback never fires there. **The calculator is the first reachable screen

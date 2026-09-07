@@ -60,6 +60,9 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node build.mjs "$LEAGUE_ID"
 
+      - name: Audit today book
+        run: node audit-values.mjs
+
       - name: Commit scoped UI if changed
         env:
           LEAGUE_ID: ${{ steps.league.outputs.id }}

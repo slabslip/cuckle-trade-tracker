@@ -6,6 +6,8 @@ import { DATA, CUCKLE_LEAGUE_ID, setLeagueId, sleeperGet, writeUi } from "./lib.
 import { loadSnapAsOf } from "./market-snap.mjs";
 
 const SKILL = new Set(["QB", "RB", "WR", "TE"]);
+/** Below this, FFPG is noise — a 0.1 PPR / 11-game "sell" chip is not a signal. */
+const MIN_FFPG = 4;
 
 function loadPlayers() {
   const path = `${DATA}/players.nfl.json`;
@@ -52,7 +54,7 @@ async function main() {
   }
   const peByPos = {};
   for (const pos of SKILL) {
-    const here = rows.filter((r) => r.pos === pos && r.price != null && r.ffpg > 0);
+    const here = rows.filter((r) => r.pos === pos && r.price != null && r.ffpg >= MIN_FFPG);
     const medP = median(here.map((r) => r.price));
     const medE = median(here.map((r) => r.ffpg));
     peByPos[pos] = { med_price: medP, med_ffpg: medE };

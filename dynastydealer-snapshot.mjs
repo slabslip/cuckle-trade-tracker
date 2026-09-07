@@ -12,7 +12,7 @@ export function parseDynastyDealer(body) {
   const players = [];
   for (const row of rows) {
     const base = Number(row?.base_value);
-    if (!Number.isFinite(base)) continue;
+    if (!Number.isFinite(base) || base <= 0) continue;
     const name = String(row.name || "").trim();
     const pos = String(row.position || "").toUpperCase();
     const pickKey = pos === "PICK" || /^(\d{4})\s/.test(name)

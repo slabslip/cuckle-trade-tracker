@@ -41,11 +41,17 @@ jobs:
       - name: Snapshot market books
         run: node snapshot-values.mjs
 
+      - name: Formula unit checks
+        run: node price-today.test.mjs
+
       - name: Rebuild Cuckle meter from committed snaps
         env:
           LEAGUE_ID: "1315431339301806080"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node build.mjs "$LEAGUE_ID"
+        run: node build.mjs --skip-snapshot "$LEAGUE_ID"
+
+      - name: Audit today book
+        run: node audit-values.mjs
 
       - name: Commit snaps and UI if changed
         run: |

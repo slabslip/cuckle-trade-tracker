@@ -90,3 +90,10 @@ export function loadSnapAsOf(dir, day) {
   if (latest?.as_of && latest.as_of <= day) return latest;
   return null;
 }
+
+/** Today book: freshest committed snap. Do not filter by the DP curve date. */
+export function loadLatestSnap(dir) {
+  const latest = readJson(`${dir}/latest.json`, null);
+  if (Array.isArray(latest?.players) && latest.players.length) return latest;
+  return null;
+}

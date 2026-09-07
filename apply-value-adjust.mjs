@@ -349,7 +349,9 @@ function main() {
   check("chief-arae found", !!chief);
   check("zeke today retired 0", zeke != null && zeke.value === 0);
   // DP/KTC blend moves with the book; keep a band that rejects raw DP (~2.8k) and retiree 0.
-  check("hill today blended 1.2-2.0k", hill != null && hill.value >= 1200 && hill.value <= 2000);
+  check("today book loaded fc+dd latest", ctx.hasFc && ctx.hasDd);
+  check("hill flatten is DP not the blend", hill != null && hill.value_flat >= 2500 && hill.value_flat <= 3200);
+  check("hill today blended 1.4-1.9k", hill != null && hill.value >= 1400 && hill.value <= 1900);
   check("hill not raw DP and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
 
   const baker = seats.flatMap((m) => m.trades || []).flatMap((t) =>

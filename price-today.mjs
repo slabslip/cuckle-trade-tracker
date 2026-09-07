@@ -1,6 +1,6 @@
 /** Today-only pricing: retired=0, else a renormalized multi-source blend. */
 import { pickTier, readJson } from "./lib.mjs";
-import { listSnapDates, loadSnapAsOf } from "./market-snap.mjs";
+import { listSnapDates, loadLatestSnap, loadSnapAsOf } from "./market-snap.mjs";
 
 export const TODAY_FLAT_W = 0.25;
 export const TODAY_KTC_W = 0.30;
@@ -49,9 +49,14 @@ export function buildMarketIndexes(snap) {
     if (p.sleeper_id) bySleeper.set(String(p.sleeper_id), p);
     const n = normName(p.name);
     if (n && !byName.has(n)) byName.set(n, p);
-    if (Number.isFinite(p.value)) values.push(p.value);
+    if (Number.isFinite(p.value) && p.value > 0) values.push(p.value);
   }
   return { bySleeper, byPick, byName, as_of: snap?.as_of || null, vmax: vmaxOf(values) };
+}
+
+/** A 0 quote is a miss, not a price. DynastyDealer ships hundreds of placeholder zeros. */
+export function marketQuote(v) {
+  return Number.isFinite(v) && v > 0 ? v : null;
 }
 
 function vmaxOf(values) {
@@ -149,26 +154,32 @@ export function isRetired(leg, ctx) {
   const sid = sleeperIdFromLeg(leg, ctx.nameToId);
   if (sid && RETIRED_SLEEPER_IDS.has(sid)) return true;
   if (onKtcBoard(leg, ctx.ktc, sid)) return false;
-  return !hasNflTeam(sid ? ctx.players[sid] : null);
+  const players = ctx.players || {};
+  // Empty NFL dict (gitignore / cache miss) must not retire the off-KTC board.
+  if (!Object.keys(players).length) return false;
+  return !hasNflTeam(sid ? players[sid] : null);
 }
 
 export function marketValue(leg, idx, nameToId) {
   if (!leg || !idx) return null;
   if (leg.kind === "pick" && !leg.became) {
     const key = pickvalKey(leg);
-    if (!key || !idx.byPick.has(key)) return null;
-    const v = idx.byPick.get(key).value;
-    return Number.isFinite(v) ? v : null;
+    if (!key) return null;
+    let row = idx.byPick.get(key);
+    if (!row) {
+      const mid = key.replace(/:(Early|Late)$/, ":Mid");
+      if (mid !== key) row = idx.byPick.get(mid);
+    }
+    return marketQuote(row?.value);
   }
   const sid = sleeperIdFromLeg(leg, nameToId);
-  if (sid && idx.bySleeper.has(sid)) {
-    const v = idx.bySleeper.get(sid).value;
-    if (Number.isFinite(v)) return v;
+  if (sid) {
+    if (!idx.bySleeper.has(sid)) return null;
+    return marketQuote(idx.bySleeper.get(sid).value);
   }
   const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
   const row = name ? idx.byName.get(name) : null;
-  if (row && Number.isFinite(row.value)) return row.value;
-  return null;
+  return marketQuote(row?.value);
 }
 
 export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
@@ -213,9 +224,9 @@ export function repriceTodayLegs(legs, ctx) {
 }
 
 export function makeTodayPrice(asOf) {
-  const ktcSnap = loadSnapAsOf("ktc", asOf);
-  const fcSnap = loadSnapAsOf("fc", asOf);
-  const ddSnap = loadSnapAsOf("dd", asOf);
+  const ktcSnap = loadLatestSnap("ktc") || loadSnapAsOf("ktc", asOf);
+  const fcSnap = loadLatestSnap("fc") || loadSnapAsOf("fc", asOf);
+  const ddSnap = loadLatestSnap("dd") || loadSnapAsOf("dd", asOf);
   const players = loadNflPlayers();
   return {
     as_of: asOf,

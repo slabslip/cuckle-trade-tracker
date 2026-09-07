@@ -12,4 +12,7 @@ One of four daily today sources (with DynastyProcess flatten, FantasyCalc, and D
 
 ToS posture: personal daily snapshot for this league’s offline formula. **Not** a live scrape from the phone page.
 
-`latest.json` is a copy of the newest dated file. `price-today.mjs` uses last `YYYY-MM-DD.json` with `as_of <=` the query date. Missing source → that weight drops and the rest renormalize.
+`latest.json` is a copy of the newest dated file. The today book (`makeTodayPrice`) reads
+`latest.json` so a newer FantasyCalc / DynastyDealer file is not dropped when the DP curve
+date is older. Historical `loadSnapAsOf` still uses last `YYYY-MM-DD.json` with `as_of <=` the
+query date. A quote `<= 0` is a miss. Missing source → that weight drops and the rest renormalize.

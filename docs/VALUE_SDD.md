@@ -281,11 +281,15 @@ w_dd   = 0.20   // DynastyDealer base_value
 ```
 
 - Missing source → drop that weight and renormalize.
+- A quote `<= 0` is a miss (DynastyDealer ships placeholder zeros).
 - Every market source misses → flatten-only.
 - Do not invent a DP row from FC/DD alone.
-- Pick → blend only on a clean `pickval` join; else that source drops.
-- Retirement is still “off KTC **and** off an NFL roster,” plus `RETIRED_SLEEPER_IDS`. Missing FC/DD does not retire anyone.
-- Production / P/E never moves the needle.
+- Pick → blend on a clean `pickval` join; if Early/Late misses, try that year/round’s Mid.
+- Retirement is still “off KTC **and** off an NFL roster,” plus `RETIRED_SLEEPER_IDS`. Missing FC/DD does not retire anyone. An empty `players.nfl.json` does not infer retirement.
+- The today book uses each market’s **latest committed** snap. Do not drop FC/DD because the DP curve `as_of` is older than those files.
+- `revalue` flattens raw DP once, writes `value_flat`, then blends. apply reprices from `value_flat` only. t0 lookback stays flatten-only (no KTC/FC/DD on windows).
+- Production / P/E never moves the needle. P/E needs FFPG `>= 4` before Desk may chip buy/fair/sell.
+- `values-daily` rebuilds with `build.mjs --skip-snapshot` so it does not re-clone DP history after the latest-only pull.
 
 `build.mjs` / `league-sync` use the latest **committed** snaps. They do not scrape.
 

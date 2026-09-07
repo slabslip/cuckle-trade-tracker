@@ -13,7 +13,7 @@ export function parseFantasyCalc(rows) {
   for (const row of rows || []) {
     const p = row?.player || {};
     const value = Number(row?.value);
-    if (!Number.isFinite(value)) continue;
+    if (!Number.isFinite(value) || value <= 0) continue;
     const name = String(p.name || "").trim();
     const pos = String(p.position || "").toUpperCase();
     const pickKey = pos === "PICK" || /^(\d{4})\s/.test(name)

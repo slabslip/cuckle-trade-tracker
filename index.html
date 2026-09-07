@@ -1510,8 +1510,8 @@
       background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
-    /* Titles & Emblems — crown titles use CoD calling-card 4:1 (1024×256 masters).
-       Emblem marks sit in a readable 4-col grid. */
+    /* Titles & Emblems — calling cards are 1024×180 (~30% shorter than 4:1 256h),
+       full-bleed art, CSS aspect-ratio 1024/180. Emblems in a 4-col grid. */
     .cos-plate {
       margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
@@ -1521,13 +1521,13 @@
     .cos-seat-plate .cos-plate { margin: 0; }
     .cos-plate-banner {
       flex: 1 1 auto; min-width: 0; width: 100%;
-      aspect-ratio: 4 / 1; height: auto; max-height: none;
-      object-fit: contain; object-position: center;
+      aspect-ratio: 1024 / 180; height: auto; max-height: none;
+      object-fit: cover; object-position: center;
       display: block; background: #0a0c10;
     }
     .cos-plate-banner.is-text {
       display: flex; align-items: center; justify-content: center;
-      aspect-ratio: 4 / 1; min-height: 0; height: auto; box-sizing: border-box;
+      aspect-ratio: 1024 / 180; min-height: 0; height: auto; box-sizing: border-box;
       padding: 0 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.04em;
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
@@ -1555,13 +1555,13 @@
     button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
-      display: block; width: 100%; aspect-ratio: 4 / 1; height: auto;
-      object-fit: contain; object-position: center;
+      display: block; width: 100%; aspect-ratio: 1024 / 180; height: auto;
+      object-fit: cover; object-position: center;
       background: #0a0c10; border-radius: 8px;
     }
     .cos-title-fallback {
       display: flex; align-items: center; justify-content: center;
-      width: 100%; aspect-ratio: 4 / 1; min-height: 0; height: auto;
+      width: 100%; aspect-ratio: 1024 / 180; min-height: 0; height: auto;
       box-sizing: border-box; line-height: 1.2;
       padding: 8px 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.05em;
       text-transform: uppercase; color: #f0e6cc; border-radius: 8px;
@@ -1626,7 +1626,7 @@
     }
     .cos-profile-plate .cos-plate-banner,
     .cos-profile-plate .cos-plate-banner.is-text {
-      aspect-ratio: 4 / 1; height: auto; min-height: 0;
+      aspect-ratio: 1024 / 180; height: auto; min-height: 0;
     }
     .cos-profile-plate .cos-plate-emblem {
       width: clamp(44px, 16%, 60px); padding: 4px;
@@ -1655,8 +1655,8 @@
       width: 44px; height: 44px;
     }
     .cos-sheet-banner {
-      width: 100%; aspect-ratio: 4 / 1; height: auto;
-      object-fit: contain; object-position: center;
+      width: 100%; aspect-ratio: 1024 / 180; height: auto;
+      object-fit: cover; object-position: center;
       border-radius: 8px; margin: 0 0 10px;
       display: block; background: #0a0c10;
     }
@@ -3313,7 +3313,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "titleBanner4x1-20260907013000";
+    const DATA_V = "titleBannerFullBleed180-20260907014500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15099,7 +15099,17 @@
     ]);
     const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
     const COS_TITLE_ART = new Set([
+      // Every title ships a 1024×180 full-bleed card (scripts/export-cosmetics-titles.py).
       "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+      "points_champ_title", "bracket_thief_title",
+      "three_time_finalist_title", "two_time_finalist_title", "finalist_title", "last_place_title",
+      "iron_core_title", "opening_day_title", "sit_right_title", "bench_crime_title",
+      "volume_title", "whale_title", "extractor_title", "win_now", "investor",
+      "firsts_merchant_title", "playoff_trader_title", "quiet_year_title", "manners_title",
+      "draft_hit_title", "waiver_touch_title", "founding_draft",
+      "blowout", "nailbiter", "climber", "loyalty", "scorched", "pick_hoard", "rookie_king",
+      "cartel", "wire_throne", "pick_path", "player_path", "aging", "farm_sold",
+      "inaugural", "perfect_chip",
     ]);
     const COS_EMBLEM_ART = new Set([
       "points_champ", "bracket_thief", "finalist", "two_time_finalist", "three_time_finalist",
@@ -15137,7 +15147,7 @@
       const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
       return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="1024" height="256" loading="lazy" decoding="async" />';
+        + '" alt="' + esc(c.name) + '" width="1024" height="180" loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";

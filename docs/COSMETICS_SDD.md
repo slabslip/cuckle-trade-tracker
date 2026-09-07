@@ -22,11 +22,13 @@ title and a matching emblem (shared `pair` key, same gate). Equip remains **one 
 ```
 
 Emblems with art ship as centered circular PNGs in `data/ui/cosmetics/` (see
-`scripts/export-cosmetics-emblems.py`). Championship titles ship as CoD-style **4:1 calling-card** banners (`1024×256` masters
-from `docs/design/cosmetics/ff-title-banners-spaced-v1.png` via
-`scripts/export-cosmetics-titles.py`; UI locks `aspect-ratio: 4 / 1` + `object-fit: contain`).
-Text / empty-circle fallbacks cover ids without art yet (new pairs, twin marks, `win_now`,
-`investor`, `founding_draft`, …).
+`scripts/export-cosmetics-emblems.py`). Championship titles and every other wearable title ship as full-bleed calling-card PNGs at
+**1024×180** (~30% shorter than the prior 1024×256 masters) via
+`scripts/export-cosmetics-titles.py`. Crown ladder art is cover-fit from
+`docs/design/cosmetics/ff-title-banners-spaced-v1.png`; remaining titles get generated cards
+(rarity palette + matching emblem when art exists). UI locks `aspect-ratio: 1024 / 180` with
+`object-fit: cover`. Emblem marks remain circular PNGs from
+`scripts/export-cosmetics-emblems.py`.
 
 Catalog + unlocks: `data/ui/cosmetics.json` from `build-cosmetics.mjs` (after `title-path.mjs`).
 Inputs: `titles.json`, `league.json` (`traders`, `drafters_rookie`), `marks.json`,

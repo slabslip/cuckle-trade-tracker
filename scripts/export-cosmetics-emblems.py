@@ -192,6 +192,16 @@ def main() -> None:
     if missing:
         raise SystemExit(f"missing emblem art after export: {missing}")
 
+    # Barracks / mark thumbs — full 128 PNG stays for plate crispness when needed.
+    for eid in emblem_ids:
+        src = OUT / f"emblem-{eid}.png"
+        dest = OUT / f"emblem-{eid}-thumb.webp"
+        im = Image.open(src).convert("RGBA")
+        im.resize((64, 64), Image.Resampling.LANCZOS).save(
+            dest, "WEBP", quality=82, method=6
+        )
+        print(f"{eid:28s} thumb 64x64")
+
 
 if __name__ == "__main__":
     main()

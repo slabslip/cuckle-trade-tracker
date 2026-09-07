@@ -1639,9 +1639,9 @@
     .calc-info-ex b { font-weight: 700; color: #e0b44c; }
     /* Titles & Emblems — calling cards are 1024×180 (~30% shorter than 4:1 256h),
        full-bleed art, CSS aspect-ratio 1024/180. Equipped plate + detail sheet
-       stay that size. The barracks title *list* is a 3-col grid of the same
-       full crop scaled down (15 rows, then more if the book grows).
-       Emblems in a 4-col grid. */
+       use the full PNG. The barracks title *list* is a 3-col grid of 320×56
+       WebP thumbs (not the ~450KB full files). Emblems in a 4/5-col grid use
+       64×64 WebP thumbs. */
     .cos-plate {
       margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
@@ -1705,6 +1705,7 @@
     .cos-emblems {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
       margin: 0 0 16px;
+      content-visibility: auto; contain-intrinsic-size: auto 480px;
     }
     @media (min-width: 420px) {
       .cos-emblems { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -3455,7 +3456,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "valuesfix20260907214500";
+    const DATA_V = "valuesfix20260907223000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15661,31 +15662,51 @@
       return book.catalog.find((x) => x.pair === c.pair && x.kind !== c.kind) || null;
     }
 
-    function cosmeticsArtPath(kind, id) {
-      if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
-      if (kind === "emblem" && COS_EMBLEM_ART.has(id)) return "data/ui/cosmetics/emblem-" + id + ".png";
+    function cosmeticsArtPath(kind, id, variant) {
+      // Barracks grids use WebP thumbs (~10KB title / ~3KB emblem). Plate +
+      // detail sheet keep the full PNG so the calling card stays crisp.
+      const thumb = variant === "thumb";
+      if (kind === "title" && COS_TITLE_ART.has(id)) {
+        return thumb
+          ? "data/ui/cosmetics/title-" + id + "-thumb.webp"
+          : "data/ui/cosmetics/title-" + id + ".png";
+      }
+      if (kind === "emblem" && COS_EMBLEM_ART.has(id)) {
+        return thumb
+          ? "data/ui/cosmetics/emblem-" + id + "-thumb.webp"
+          : "data/ui/cosmetics/emblem-" + id + ".png";
+      }
       return "";
     }
 
-    function cosmeticsEmblemMark(id, cls) {
+    function cosmeticsEmblemMark(id, cls, variant) {
       // Custom flat marks, emoji-sized — never Unicode emoji.
-      const path = cosmeticsArtPath("emblem", id);
+      const path = cosmeticsArtPath("emblem", id, variant || "thumb");
       const wrap = cls || "cos-emoji";
+      const px = variant === "full" ? 128 : 64;
       if (!path) {
         return '<span class="' + wrap + ' cos-emoji-missing" aria-hidden="true"></span>';
       }
       return '<span class="' + wrap + '" aria-hidden="true">'
-        + '<img src="' + esc(path) + "?" + DATA_V + '" alt="" width="28" height="28"'
+        + '<img src="' + esc(path) + "?" + DATA_V + '" alt="" width="' + px + '" height="' + px + '"'
         + ' loading="lazy" decoding="async" />'
         + "</span>";
     }
 
-    function cosmeticsTitleBanner(c, cls) {
-      const path = cosmeticsArtPath("title", c.id);
+    function cosmeticsTitleBanner(c, cls, variant) {
+      const use = variant || (cls === "cos-title-banner" ? "thumb" : "full");
+      const path = cosmeticsArtPath("title", c.id, use);
       const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
-      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="1024" height="180" loading="lazy" decoding="async" />';
+        const wh = use === "thumb"
+          ? ' width="320" height="56"'
+          : ' width="1024" height="180"';
+        // List thumbs are small; plate/sheet want the full card eagerly.
+        const load = use === "thumb"
+          ? ' loading="lazy" decoding="async"'
+          : ' decoding="async" fetchpriority="high"';
+        return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+          + '" alt="' + esc(c.name) + '"' + wh + load + " />";
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";
@@ -15743,8 +15764,8 @@
       const mate = cosmeticsPairMate(c);
       const mateGot = mate ? cosmeticsUnlocked(mate.id) : null;
       const head = c.kind === "emblem"
-        ? cosmeticsEmblemMark(c.id)
-        : cosmeticsTitleBanner(c, "cos-sheet-banner");
+        ? cosmeticsEmblemMark(c.id, null, "full")
+        : cosmeticsTitleBanner(c, "cos-sheet-banner", "full");
       const mateLine = mate
         ? ('<p class="cos-sheet-got">Matching ' + esc(mate.kind) + ": " + esc(mate.name)
           + (mateGot ? " (unlocked)" : " (same gate — unlocks together)") + "</p>")
@@ -15770,6 +15791,15 @@
         + "</div></div></div>";
     }
 
+    /** Patch the detail sheet without remounting the 88-image barracks grid. */
+    function paintCosmeticsSheet() {
+      if (view !== "cosmetics") return false;
+      const host = document.getElementById("cosSheetHost");
+      if (!host) return false;
+      host.innerHTML = cosmeticsDetailSheetHtml();
+      return true;
+    }
+
     function renderCosmetics() {
       const book = cosmeticsBook || { catalog: [] };
       const titles = book.catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
@@ -15784,7 +15814,7 @@
           + (on ? " is-on" : "") + (ladder ? " is-ladder" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="title"'
           + ' aria-label="' + esc(c.name + (on ? ", equipped" : "") + (locked ? ", locked" : "")) + '">'
-          + cosmeticsTitleBanner(c, "cos-title-banner")
+          + cosmeticsTitleBanner(c, "cos-title-banner", "thumb")
           + "</button>";
       };
       const emblemCell = (c) => {
@@ -15795,7 +15825,7 @@
           + (on ? " is-on" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="emblem"'
           + ' aria-label="' + esc(c.name + (on ? ", equipped" : "") + (locked ? ", locked" : "")) + '">'
-          + cosmeticsEmblemMark(c.id)
+          + cosmeticsEmblemMark(c.id, null, "thumb")
           + '<span class="cos-emblem-lab">' + esc(c.name) + "</span></button>";
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
@@ -15806,7 +15836,7 @@
         + '<div class="cos-titles">' + titles.map(titleRow).join("") + "</div>"
         + "<h3>Emblems</h3>"
         + '<div class="cos-emblems">' + emblems.map(emblemCell).join("") + "</div>"
-        + cosmeticsDetailSheetHtml();
+        + '<div id="cosSheetHost">' + cosmeticsDetailSheetHtml() + "</div>";
     }
 
     function leagueInProgress() {
@@ -17201,7 +17231,7 @@
     function closeTopmost() {
       if (cosmeticsDetailId) {
         cosmeticsDetailId = null;
-        render();
+        if (!paintCosmeticsSheet()) render();
         return true;
       }
       if (lensOpen) {
@@ -18385,7 +18415,7 @@
       const cosClose = e.target.closest("[data-cos-detail-close]");
       if (cosClose) {
         cosmeticsDetailId = null;
-        render();
+        if (!paintCosmeticsSheet()) render();
         return;
       }
       const cosEquip = e.target.closest("[data-cos-equip]");
@@ -18407,7 +18437,7 @@
         const id = cosBtn.getAttribute("data-cos-id");
         if (id) {
           cosmeticsDetailId = id;
-          render();
+          if (!paintCosmeticsSheet()) render();
         }
         return;
       }
@@ -18915,7 +18945,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v209-home-desk";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v210-cos-thumbs";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

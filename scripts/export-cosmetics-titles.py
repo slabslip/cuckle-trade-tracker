@@ -437,6 +437,19 @@ def main() -> None:
         img.convert("RGBA").save(path, optimize=True)
         print(f"{tid:28s} {img.size[0]}x{img.size[1]}")
 
+    # Barracks list thumbs (WebP) — keep full PNG for plate / detail.
+    for t in titles:
+        tid = t["id"]
+        src = OUT / f"title-{tid}.png"
+        dest = OUT / f"title-{tid}-thumb.webp"
+        im = Image.open(src).convert("RGBA")
+        tw = 320
+        th = max(1, round(im.size[1] * tw / im.size[0]))
+        im.resize((tw, th), Image.Resampling.LANCZOS).save(
+            dest, "WEBP", quality=82, method=6
+        )
+        print(f"{tid:28s} thumb {tw}x{th}")
+
 
 if __name__ == "__main__":
     main()

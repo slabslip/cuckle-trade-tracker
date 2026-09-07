@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Re-export crown title banners into a fixed 5:1 frame (840×168).
+"""Re-export crown title banners into a Call of Duty 4:1 calling-card frame.
 
 Source: docs/design/cosmetics/ff-title-banners-spaced-v1.png
-Output: data/ui/cosmetics/title-<id>.png
+Output: data/ui/cosmetics/title-<id>.png at 1024×256 (4:1 master).
 
-Design sheet bands vary in height; this script letterboxes each design into
-the same canvas so barracks / calling cards share one banner shape.
+CoD calling cards are traditionally 4:1. Masters stay at 1024×256 so mobile
+can display at 512×128 / fluid CSS aspect-ratio: 4 / 1 without upscaling.
 """
 from __future__ import annotations
 
@@ -17,11 +17,11 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 SHEET = ROOT / "docs/design/cosmetics/ff-title-banners-spaced-v1.png"
 OUT = ROOT / "data/ui/cosmetics"
-W, H = 840, 168
-PAD = 6
+# CoD calling-card master (4:1). Mobile UI uses the same ratio via CSS.
+W, H = 1024, 256
+PAD = 10
 BG = (10, 12, 16, 255)
 
-# Sheet order top → bottom (prestige high → low).
 ORDER = [
     "five_time",
     "four_time",
@@ -62,6 +62,7 @@ def tight_crop(im: Image.Image, content: np.ndarray, y0: int, y1: int) -> Image.
 
 
 def fit_banner(art: Image.Image) -> Image.Image:
+    """Contain art in the 4:1 frame — no stretch, letterbox on #0a0c10."""
     canvas = Image.new("RGBA", (W, H), BG)
     max_w, max_h = W - 2 * PAD, H - 2 * PAD
     scale = min(max_w / art.size[0], max_h / art.size[1])
@@ -90,7 +91,7 @@ def main() -> None:
         out = fit_banner(art)
         path = OUT / f"title-{eid}.png"
         out.save(path, optimize=True)
-        print(f"{eid:12s} art={art.size[0]}x{art.size[1]} → {W}x{H}")
+        print(f"{eid:12s} art={art.size[0]}x{art.size[1]} → {W}x{H} (4:1)")
 
 
 if __name__ == "__main__":

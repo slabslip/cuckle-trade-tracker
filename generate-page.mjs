@@ -1470,6 +1470,18 @@ const html = `<!DOCTYPE html>
       aspect-ratio: 1024 / 180; object-fit: cover; object-position: center;
       background: #1c1c1e;
     }
+    .lh-calc-click {
+      position: absolute; right: 8px; bottom: 6px; z-index: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 22px; padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 159, 10, 0.72);
+      background: rgba(28, 28, 30, 0.22);
+      color: #ff9f0a;
+      font-size: 0.625rem; font-weight: 750; letter-spacing: 0.04em;
+      line-height: 1.2; white-space: nowrap;
+      pointer-events: none;
+    }
     .lh-calc-door-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
     .calc-stack { display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px; }
     .calc-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; min-width: 0; overflow: hidden; }
@@ -15667,9 +15679,10 @@ const html = `<!DOCTYPE html>
     function leagueInProgress() {
       // Vote lives in Your 3. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
-        + ' aria-label="Cuckle calculator">'
+        + ' aria-label="Cuckle calculator, click here">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
         + ' width="1024" height="180" alt="Cuckle calculator">'
+        + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
@@ -21049,6 +21062,10 @@ if (inline.includes('data-view="calc">Price a deal<') || inline.includes(">Price
 if (!html.includes("lh-calc-banner") || !html.includes("data/ui/calc-door.png")
   || !fs.existsSync(path.join(ROOT, "data/ui/calc-door.png"))) {
   throw new Error("Home calc door must be the title-style calc-door banner");
+}
+if (!html.includes(".lh-calc-click") || !inline.includes('class="lh-calc-click"')
+  || !inline.includes(">click here<")) {
+  throw new Error("calc door must overlay a transparent click here cue on the locked art");
 }
 if (!inline.includes('data-trade-solo="1"') || !inline.includes("function openTrade(tx, uid, opts)")
   || !inline.includes("Who won this trade?")) {

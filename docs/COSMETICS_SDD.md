@@ -91,8 +91,10 @@ from missing weekly snapshots.
 
 `?view=cosmetics` from **Settings → Profile** and Account → **Titles and Emblems**.
 Two grids: titles are a **3-column** picker of scaled-down full 1024×180 crops (15 rows
-for the current 44-title book; more titles keep wrapping). Tap opens the full card.
-Emblems stay a 4–5 column mark grid. Equipped plate and detail sheet keep the large crop.
+for the current 44-title book; more titles keep wrapping). The **list** paints
+`title-<id>-sm.jpg` (384×68, ~14KB) and those thumbs warm after league home loads.
+Tap / equipped plate / detail sheet still use the 1024×180 PNG. Emblems stay a 4–5
+column mark grid. Equipped plate and detail sheet keep the large crop.
 Detail sheet names the matching mate. Equip one title + one emblem.
 Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seatId>`
 (legacy `cuckle.cosmetics.equip.v1` migrates on load), plus a per-league map

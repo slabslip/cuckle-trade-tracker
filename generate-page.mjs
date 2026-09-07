@@ -3326,7 +3326,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "costitles20260907124800";
+    const DATA_V = "coswarm20260907130500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4798,6 +4798,7 @@ const html = `<!DOCTYPE html>
       }
       document.getElementById("app").hidden = false;
       ledgerMaybeRender();
+      cosmeticsWarmArt();
     }
 
     /**
@@ -10704,6 +10705,7 @@ const html = `<!DOCTYPE html>
       view = "cosmetics";
       appScreen = "dash";
       focusNext = ".screen-h";
+      cosmeticsWarmArt();
       render();
     }
 
@@ -15141,31 +15143,62 @@ const html = `<!DOCTYPE html>
       return book.catalog.find((x) => x.pair === c.pair && x.kind !== c.kind) || null;
     }
 
-    function cosmeticsArtPath(kind, id) {
-      if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
+    function cosmeticsArtPath(kind, id, opts) {
+      if (kind === "title" && COS_TITLE_ART.has(id)) {
+        return (opts && opts.thumb)
+          ? "data/ui/cosmetics/title-" + id + "-sm.jpg"
+          : "data/ui/cosmetics/title-" + id + ".png";
+      }
       if (kind === "emblem" && COS_EMBLEM_ART.has(id)) return "data/ui/cosmetics/emblem-" + id + ".png";
       return "";
     }
 
-    function cosmeticsEmblemMark(id, cls) {
+    let cosmeticsArtWarmed = false;
+    /** After Home is up, fetch list thumbs + emblems so barracks does not wait on 20MB of 1024×180 PNGs. */
+    function cosmeticsWarmArt() {
+      if (cosmeticsArtWarmed) return;
+      const book = cosmeticsBook;
+      if (!book || !Array.isArray(book.catalog) || !book.catalog.length) return;
+      cosmeticsArtWarmed = true;
+      const run = () => {
+        for (const c of book.catalog) {
+          if (!c || !c.id) continue;
+          const path = c.kind === "title"
+            ? cosmeticsArtPath("title", c.id, { thumb: true })
+            : cosmeticsArtPath(c.kind, c.id);
+          if (!path) continue;
+          const img = new Image();
+          img.decoding = "async";
+          img.src = path + "?" + DATA_V;
+        }
+      };
+      if (typeof requestIdleCallback === "function") requestIdleCallback(run, { timeout: 800 });
+      else setTimeout(run, 0);
+    }
+
+    function cosmeticsEmblemMark(id, cls, opts) {
       // Custom flat marks, emoji-sized — never Unicode emoji.
       const path = cosmeticsArtPath("emblem", id);
       const wrap = cls || "cos-emoji";
       if (!path) {
         return '<span class="' + wrap + ' cos-emoji-missing" aria-hidden="true"></span>';
       }
+      const load = (opts && opts.eager) ? "eager" : "lazy";
       return '<span class="' + wrap + '" aria-hidden="true">'
         + '<img src="' + esc(path) + "?" + DATA_V + '" alt="" width="28" height="28"'
-        + ' loading="lazy" decoding="async" />'
+        + ' loading="' + load + '" decoding="async" />'
         + "</span>";
     }
 
     function cosmeticsTitleBanner(c, cls) {
-      const path = cosmeticsArtPath("title", c.id);
+      const thumb = cls === "cos-title-banner";
+      const path = cosmeticsArtPath("title", c.id, { thumb: thumb });
       const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
-      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-        + '" alt="' + esc(c.name) + '" width="1024" height="180" loading="lazy" decoding="async" />';
+        const dims = thumb ? ' width="384" height="68"' : ' width="1024" height="180"';
+        return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+          + '" alt="' + esc(c.name) + '"' + dims
+          + ' loading="eager" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";
@@ -15275,7 +15308,7 @@ const html = `<!DOCTYPE html>
           + (on ? " is-on" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="emblem"'
           + ' aria-label="' + esc(c.name + (on ? ", equipped" : "") + (locked ? ", locked" : "")) + '">'
-          + cosmeticsEmblemMark(c.id)
+          + cosmeticsEmblemMark(c.id, null, { eager: true })
           + '<span class="cos-emblem-lab">' + esc(c.name) + "</span></button>";
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
@@ -18347,7 +18380,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v207-calc-roster";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v208-cos-thumbs";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -18428,13 +18461,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v207-calc-roster")) {
+  || !html.includes("chuckle-shell-v208-cos-thumbs")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v207-calc-roster")
+  || !swSrc.includes("chuckle-shell-v208-cos-thumbs")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -20599,11 +20632,20 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
       ? path.join(ROOT, "data/ui/cosmetics", `title-${c.id}.png`)
       : path.join(ROOT, "data/ui/cosmetics", `emblem-${c.id}.png`);
     if (!fs.existsSync(file)) missingArt.push(`${c.kind}:${c.id}`);
+    if (c.kind === "title") {
+      const thumb = path.join(ROOT, "data/ui/cosmetics", `title-${c.id}-sm.jpg`);
+      if (!fs.existsSync(thumb)) missingArt.push(`thumb:${c.id}`);
+    }
     if (c.kind === "title" && !inline.includes(`"${c.id}"`)) missingArt.push(`COS_TITLE_ART:${c.id}`);
     if (c.kind === "emblem" && !inline.includes(`"${c.id}"`)) missingArt.push(`COS_EMBLEM_ART:${c.id}`);
   }
   if (missingArt.length) {
     throw new Error(`cosmetics art/wiring gaps: ${missingArt.slice(0, 12).join(", ")}${missingArt.length > 12 ? "…" : ""}`);
+  }
+  if (!inline.includes("function cosmeticsWarmArt(")
+    || !inline.includes('title-" + id + "-sm.jpg')
+    || !inline.includes("{ thumb: true }")) {
+    throw new Error("barracks must preload list thumbs and not paint the grid from 1024×180 PNGs");
   }
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")

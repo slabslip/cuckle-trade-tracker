@@ -437,6 +437,11 @@ def main() -> None:
         img.convert("RGBA").save(path, optimize=True)
         print(f"{tid:28s} {img.size[0]}x{img.size[1]}")
 
+    # List thumbs — barracks grid must not download every 1024×180 PNG.
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, str(Path(__file__).with_name("export-cosmetics-thumbs.py"))])
+
 
 if __name__ == "__main__":
     main()

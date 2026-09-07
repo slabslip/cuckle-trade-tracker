@@ -33,9 +33,12 @@ const idx = {
 };
 check("dd 0 sleeper is miss", marketValue({ kind: "player", asset_key: "player:2", label: "Zero" }, idx, null) == null);
 check("positive sleeper hits", marketValue({ kind: "player", asset_key: "player:3", label: "Hit" }, idx, null) === 1800);
-check("no name fallback when sid misses", marketValue({
+check("no name fallback onto a different sleeper", marketValue({
   kind: "player", asset_key: "player:4018", label: "Joe Mixon",
-}, idx, null) == null);
+}, {
+  ...idx,
+  byName: new Map([["joe mixon", { value: 2464, sleeper_id: "999" }]]),
+}, null) == null);
 check("early pick falls back to mid", marketValue({
   kind: "pick", asset_key: "pick:2029:1:1", label: "2029 1st",
 }, idx, null) === 4200);
@@ -58,6 +61,26 @@ const zeroDd = priceTodayValue(8000, { kind: "player", asset_key: "player:2", la
   fc: { vmax: 10346, bySleeper: new Map(), byPick: new Map(), byName: new Map() },
 });
 check("dd 0 does not enter blend", zeroDd === 8000);
+const camp = priceTodayValue(null, { kind: "player", asset_key: "player:13726", label: "Camden Brown" }, {
+  ...ctx,
+  ktc: { vmax: 9998, bySleeper: new Map(), byPick: new Map(), byName: new Map() },
+  fc: { vmax: 10346, bySleeper: new Map([["13726", { value: 206 }]]), byPick: new Map(), byName: new Map() },
+  dd: { vmax: 10000, bySleeper: new Map([["13726", { value: 2118 }]]), byPick: new Map(), byName: new Map() },
+  players: { 13726: { position: "WR", team: "DAL", active: true } },
+});
+check("no DP still blends FC+DD", camp === Math.round((0.25 * 206 + 0.20 * 2118) / 0.45));
+check("no DP and no market stays null", priceTodayValue(null, { kind: "player", asset_key: "player:9", label: "Ghost" }, {
+  ...ctx,
+  ktc: { vmax: 9998, bySleeper: new Map(), byPick: new Map(), byName: new Map() },
+  fc: { vmax: 10346, bySleeper: new Map(), byPick: new Map(), byName: new Map() },
+  dd: { vmax: 10000, bySleeper: new Map(), byPick: new Map(), byName: new Map() },
+  players: { 9: { position: "WR", team: "SEA", active: true } },
+}) == null);
+check("ktc name-only row hits", marketValue(
+  { kind: "player", asset_key: "player:13602", label: "Jack Strand" },
+  { bySleeper: new Map(), byPick: new Map(), byName: new Map([["jack strand", { name: "Jack Strand", value: 1341 }]]) },
+  null,
+) === 1341);
 
 check("hardcoded retiree", isRetired(
   { kind: "player", asset_key: "player:3164", label: "Ezekiel Elliott" },

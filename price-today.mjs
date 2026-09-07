@@ -173,13 +173,17 @@ export function marketValue(leg, idx, nameToId) {
     return marketQuote(row?.value);
   }
   const sid = sleeperIdFromLeg(leg, nameToId);
-  if (sid) {
-    if (!idx.bySleeper.has(sid)) return null;
-    return marketQuote(idx.bySleeper.get(sid).value);
-  }
   const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
-  const row = name ? idx.byName.get(name) : null;
-  return marketQuote(row?.value);
+  if (sid && idx.bySleeper.has(sid)) return marketQuote(idx.bySleeper.get(sid).value);
+  // KTC sometimes lists a camp QB with no sleeper_id (Jack Strand). Use the name
+  // only when that row is unmapped — never to override a different id.
+  if (name && idx.byName.has(name)) {
+    const row = idx.byName.get(name);
+    if (!sid || !row.sleeper_id || String(row.sleeper_id) === sid) {
+      return marketQuote(row.value);
+    }
+  }
+  return null;
 }
 
 export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
@@ -197,20 +201,21 @@ function scaledMarket(leg, idx, nameToId) {
 /**
  * retired → 0
  * else today = sum(w_i * scale_i(source_i)) / sum(w_i of sources that hit)
- * Flatten-only when every market source misses. Do not invent a DP row from FC/DD.
+ * Missing flatten drops its weight — camp UDFAs often have FC/DD before DP lists them.
+ * Every source misses → flatten (or null if there is no flatten). Do not invent a DP flatten.
  */
 export function priceTodayValue(flattenValue, leg, ctx) {
-  if (flattenValue == null || !Number.isFinite(flattenValue)) return flattenValue;
   if (isRetired(leg, ctx)) return 0;
+  if (flattenValue != null && !Number.isFinite(flattenValue)) return flattenValue;
   const parts = [
-    { w: TODAY_FLAT_W, v: flattenValue },
+    { w: TODAY_FLAT_W, v: Number.isFinite(flattenValue) ? flattenValue : null },
     { w: TODAY_KTC_W, v: scaledMarket(leg, ctx.ktc, ctx.nameToId) },
     { w: TODAY_FC_W, v: scaledMarket(leg, ctx.fc, ctx.nameToId) },
     { w: TODAY_DD_W, v: scaledMarket(leg, ctx.dd, ctx.nameToId) },
   ].filter((p) => p.v != null && Number.isFinite(p.v));
-  if (parts.length <= 1) return flattenValue;
+  if (!parts.length) return Number.isFinite(flattenValue) ? flattenValue : null;
   const wsum = parts.reduce((s, p) => s + p.w, 0);
-  if (!wsum) return flattenValue;
+  if (!wsum) return Number.isFinite(flattenValue) ? flattenValue : null;
   return Math.round(parts.reduce((s, p) => s + p.w * p.v, 0) / wsum);
 }
 

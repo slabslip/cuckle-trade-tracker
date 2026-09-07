@@ -164,8 +164,10 @@ All five are flatten-only. **The 40/60 KTC blend is not on this menu.** Trade ro
 `even` blend. Whether the blend also earns a sixth Score-as entry is an open user decision
 (`DASHBOARD_AUDIT.md` §8c).
 
-URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>&tab=<homeTab>`.
-`tab` is `teams` / `ledger` / `history` when those top tabs are open; omitted on Home.
+URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>`.
+`?tab=` is accepted on a cold share link (`teams` / `ledger` / `history`) and then dropped. Reloads,
+PWA pulls, Settings Back, seat Back, calculator Close, and opening a league from the drawer always
+land on the **Home** digest — last tab is not persisted in the URL or `sessionStorage`.
 Stored `homeTab=league` is an alias for Home. Boot reads every param; an unknown value falls back
 to Home rather than throwing. `history.replaceState` fires only when the URL string actually changes.
 
@@ -173,7 +175,9 @@ to Home rather than throwing. `history.replaceState` fires only when the URL str
 
 Four chips, one row, no wrap: **Home | Teams | Ledger | History**. First tab label is **Home**.
 `homeTab` stores `home`. Ledger may badge. No fifth tab. Calculator and Titles and Emblems are
-sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
+sub-screens (`?view=calc`, `?view=cosmetics`), not tabs. Returning to the dashboard — league name,
+brand Back from Settings or a seat, calculator Close, drawer open, soft reload — always reopens
+the Home digest. The centered league name is that Home control; there is no `#goHome` icon.
 
 ---
 

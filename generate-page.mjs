@@ -3280,6 +3280,8 @@ const html = `<!DOCTYPE html>
     // One threshold for "even", used by every screen that grades a partner.
     const GRADE_EVEN = 100;
     let members = [];
+    let dashLoadError = "";
+    let loadMembersInflight = null;
     let me = null;
     let data = null;
     let league = null;
@@ -3321,7 +3323,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260907121133";
+    const DATA_V = "dashhome20260907140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3546,17 +3548,14 @@ const html = `<!DOCTYPE html>
     const startLens = params.get("lens");
     if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
     {
+      // Share links may still pass ?tab=. Soft reload / PWA pull / session restore always
+      // land on the digest — returning to the dashboard is Home, not the last tab.
       const startTab = String(params.get("tab") || "").toLowerCase();
       if (startTab === "ledger" || startTab === "teams" || startTab === "history") {
         homeTab = startTab;
       } else {
-        // Soft reload / PWA pull used to wipe the URL; session keeps the open league-home tab.
-        // Stored "league" is the retired first-tab name — treat as Home.
-        try {
-          const saved = String(sessionStorage.getItem("cuckle.homeTab") || "").toLowerCase();
-          if (saved === "ledger" || saved === "teams" || saved === "history") homeTab = saved;
-          else homeTab = "home";
-        } catch (_) { homeTab = "home"; }
+        homeTab = "home";
+        try { sessionStorage.removeItem("cuckle.homeTab"); } catch (_) {}
       }
     }
 
@@ -4678,10 +4677,19 @@ const html = `<!DOCTYPE html>
     }
 
     // GitHub Pages answers a missing file with an HTML 404, so res.json() would throw a parse error.
+    // A hung fetch used to leave #app empty for the whole boot — 15s is enough for Pages.
     async function getJson(path) {
-      const res = await fetch(path + "?" + DATA_V);
-      if (!res.ok) throw new Error(path + " " + res.status);
-      return res.json();
+      const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      const t = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (_) {} }, 15000) : 0;
+      try {
+        const res = await fetch(path + "?" + DATA_V, ctrl
+          ? { signal: ctrl.signal, cache: "no-store" }
+          : { cache: "no-store" });
+        if (!res.ok) throw new Error(path + " " + res.status);
+        return res.json();
+      } finally {
+        if (t) clearTimeout(t);
+      }
     }
 
     function say(msg) {
@@ -4694,11 +4702,12 @@ const html = `<!DOCTYPE html>
     const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics"];
     const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics"];
 
-    async function loadMembers() {
+    async function loadMembersWork() {
+      dashLoadError = "";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
       const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw] = await Promise.all([
-        getLeagueJson("members.json"),
-        getLeagueJson("league.json"),
+        getLeagueJson("members.json").catch((err) => { console.error(err); dashLoadError = "members"; return []; }),
+        getLeagueJson("league.json").catch((err) => { console.error(err); if (!dashLoadError) dashLoadError = "league"; return null; }),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
         getLeagueJson("marks.json").catch(() => ({ seats: {} })),
         getLeagueJson("news.json").catch(() => null),
@@ -4708,12 +4717,13 @@ const html = `<!DOCTYPE html>
         getLeagueJson("calculator.json").catch(() => null),
         getLeagueJson("cosmetics.json").catch(() => null),
       ]);
-      members = membersRaw;
+      members = Array.isArray(membersRaw) ? membersRaw : [];
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
       // and a build with no places sorts to a no-op and keeps the file's own order.
       members.sort((a, b) => (a.place || 99) - (b.place || 99));
-      league = leagueRaw;
+      if (members.length) dashLoadError = "";
+      league = leagueRaw || null;
       titles = titlesRaw || { titles: [] };
       marks = marksRaw || { seats: {} };
       // News is additive and third-party. A missing, stale or malformed file must cost the news
@@ -4745,11 +4755,10 @@ const html = `<!DOCTYPE html>
       try {
         cuffs = cuffsRaw && cuffsRaw.v === 1 && Array.isArray(cuffsRaw.rows) ? cuffsRaw : null;
       } catch (err) { cuffs = null; }
-      // Warm Latest trade bags before the first home paint when we can — seat bags are
-      // not in league.json, so painting the chip from headlines alone looked half-empty.
+      // Warm Latest trade bags after the first home paint. Awaiting here blocked the digest
+      // on seat files (and a hung bag fetch blanked the whole dashboard).
       try {
-        if (!me && view === "home") await ensureLatestTradeBags();
-        else ensureLatestTradeBags().catch((err) => console.error(err));
+        ensureLatestTradeBags().catch((err) => console.error(err));
       } catch (err) { console.error(err); }
       const startTitle = params.get("title");
       const startView = params.get("view");
@@ -4793,6 +4802,12 @@ const html = `<!DOCTYPE html>
       }
       document.getElementById("app").hidden = false;
       ledgerMaybeRender();
+    }
+
+    async function loadMembers() {
+      if (loadMembersInflight) return loadMembersInflight;
+      loadMembersInflight = loadMembersWork().finally(() => { loadMembersInflight = null; });
+      return loadMembersInflight;
     }
 
     /**
@@ -4923,8 +4938,7 @@ const html = `<!DOCTYPE html>
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
-      // Persist league-home tab so a document reload (browser PTR / SW) does not dump to League.
-      if (!me && view === "home" && homeTab && homeTab !== "home" && homeTabCanon(homeTab) !== "home") q.set("tab", homeTab);
+      // Do not persist Teams / Ledger / History — a reload must reopen the digest.
       // Omit lens when it matches the age default so cold links re-age on load.
       if (lens && !lensIsAgeDefault()) q.set("lens", lens);
       // Keep Design Mode discoverable after syncUrl replaceState (soft-delete skip + boot).
@@ -4933,11 +4947,9 @@ const html = `<!DOCTYPE html>
     }
 
     function rememberHomeTab() {
-      try {
-        if (appScreen === "dash" && !me && view === "home") {
-          sessionStorage.setItem("cuckle.homeTab", homeTabCanon(homeTab));
-        }
-      } catch (_) {}
+      // Returning to the dashboard is always Home. Drop any leftover last-tab key so a
+      // later boot cannot restore Teams / Ledger / History.
+      try { sessionStorage.removeItem("cuckle.homeTab"); } catch (_) {}
     }
 
     /**
@@ -5052,10 +5064,13 @@ const html = `<!DOCTYPE html>
         draftFilterOpen = false;
         voteToast = null;
         const wantMe = want.me || null;
+        const leavingSeat = !!(me && !wantMe);
         if (((me && me.user_id) || null) !== wantMe) {
           if (!wantMe) {
             me = null;
             data = null;
+            // Leaving a seat is "return to the dashboard" — always the digest, not Teams.
+            if (leavingSeat && view === "home") homeTab = "home";
           } else {
             const seat = members.find((m) => m.user_id === wantMe);
             try {
@@ -5578,7 +5593,6 @@ const html = `<!DOCTYPE html>
 
     function homeTabAction(tab, lab, path) {
       const on = homeTabCanon(homeTab) === homeTabCanon(tab);
-      if (tab === "ledger") ledgerEnsureLoaded();
       const n = tab === "ledger" ? ledgerBadgeCount() : 0;
       const badge = n ? '<span class="lh-badge">' + n + "</span>" : "";
       const aria = n ? lab + ", " + n + " waiting" : lab;
@@ -6322,6 +6336,9 @@ const html = `<!DOCTYPE html>
     function ledgerEnsureLoaded() {
       if (ledgerLoadState === "loading") return;
       if (ledgerLoadState === "ok" && ledgerBets) return;
+      // Failed fetch is terminal until Retry / pull-to-refresh. Painting Ledger used to
+      // refetch on every render and loop fail → paint → fetch.
+      if (ledgerLoadState === "err") return;
       ledgerFetch().then(() => {
         if (homeTab === "ledger" || (me && data)) ledgerMaybeRender();
       }).catch(() => {
@@ -9286,6 +9303,10 @@ const html = `<!DOCTYPE html>
       if (!chips) {
         try { chips = homeChips(); } catch (err2) { console.error(err2); }
       }
+      const loadErr = dashLoadError
+        ? '<p class="caption" role="alert">Could not load league data. Check your connection and try again.</p>'
+          + '<button type="button" class="chip" data-dash-reload="1">Retry</button>'
+        : "";
       if (homeTab === "teams") {
         try { tabBody = renderTeamsPage(); } catch (err) { console.error(err); tabBody = ""; }
       } else if (homeTab === "ledger") {
@@ -9322,7 +9343,7 @@ const html = `<!DOCTYPE html>
           + "</div></div></aside>";
       }
       // Tabs → tab body (or Latest trade) → News Feed pull-up.
-      return chips + (tabBody || progress) + hero;
+      return chips + loadErr + (tabBody || progress) + hero;
     }
 
     function renderNews() {
@@ -10267,8 +10288,9 @@ const html = `<!DOCTYPE html>
         console.error(err);
         saveActiveLeague(leagueInfo);
         appScreen = "dash";
-        members = null;
+        members = [];
         league = null;
+        dashLoadError = "members";
         render();
       });
       return true;
@@ -10326,11 +10348,12 @@ const html = `<!DOCTYPE html>
       setTimeout(onEnd, 400);
     }
 
-    /** True only on the league dash homepage (Latest trade / chips), not seat or nested screens. */
+    /** True only on the league dash homepage (Home digest), not Teams / Ledger / History / seat. */
     function isLeagueHomeSurface() {
       return appScreen === "dash"
         && !me
         && view === "home"
+        && homeTabCanon(homeTab) === "home"
         && !openId
         && !tradeSeat
         && !partnerName
@@ -10367,9 +10390,10 @@ const html = `<!DOCTYPE html>
      * - Past Champions year → champions list → History tab
      * - Draft Data / Cuffs (from History) → History tab
      * - History data-set drill → History list
-     * - Teams / Ledger / History tabs → League (Latest trade)
+     * - Teams / Ledger / History tabs → League Home digest
      * - league homepage → Your leagues drawer
-     * - Team settings → team home
+     * - Settings / profile → league Home digest
+     * - seat home → league Home digest
      * - other nested screens → league homepage
      */
     function onBrandBack() {
@@ -10422,14 +10446,11 @@ const html = `<!DOCTYPE html>
         openLeaguesDrawer();
         return;
       }
-      if ((appScreen === "settings" || appScreen === "profile")
-          && activeLeague && authSeatId()) {
-        closeLeaguesDrawer(true);
-        appScreen = "dash";
-        openMyTeamHome();
+      if ((appScreen === "settings" || appScreen === "profile") && activeLeague) {
+        returnToLeagueHome();
         return;
       }
-      // Seat meter: section tabs / trade → seat home; seat home → prior screen (Teams if cold).
+      // Seat meter: section tabs / trade → seat home; seat home → league Home digest.
       if (appScreen === "dash" && me) {
         if (view !== "home") {
           goBack(() => {
@@ -10445,18 +10466,14 @@ const html = `<!DOCTYPE html>
           });
           return;
         }
-        goBack(() => {
-          me = null;
-          data = null;
-          setHomeTab("teams", { force: true });
-        });
+        returnToLeagueHome();
         return;
       }
       returnToLeagueHome();
     }
 
     /**
-     * Centered league name — always land on the active league homepage (League tab).
+     * Centered league name — always land on the active league homepage (Home digest).
      */
     function goLeagueHome() {
       if (leaguesDrawerOpen) closeLeaguesDrawer(true);
@@ -11842,7 +11859,7 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    async function openLeagueDashboard(leagueInfo) {
+    async function openLeagueDashboard(leagueInfo, opts) {
       saveActiveLeague(leagueInfo);
       joinBusy = false;
       joinError = "";
@@ -11852,12 +11869,20 @@ const html = `<!DOCTYPE html>
       // Deep-link ?me= is still honored inside loadMembers(); membership seat is not auto-picked.
       me = null;
       data = null;
-      // Keep a deep-linked sub-screen (calc, cosmetics, account). Drawer opens omit ?view= → Home.
+      dashLoadError = "";
+      homeTab = "home";
+      ledgerBets = null;
+      ledgerLoadState = "idle";
+      ledgerToast = null;
+      // Keep a deep-linked sub-screen (calc, cosmetics) on cold boot via keepView.
+      // Drawer / return always reopen the Home digest.
       let wantView = "home";
-      try {
-        const v = new URLSearchParams(location.search).get("view");
-        if (v && VIEWS.indexOf(v) >= 0) wantView = v;
-      } catch (err) { /* ignore */ }
+      if (opts && opts.keepView) {
+        try {
+          const v = new URLSearchParams(location.search).get("view");
+          if (v && VIEWS.indexOf(v) >= 0) wantView = v;
+        } catch (err) { /* ignore */ }
+      }
       view = wantView;
       openId = null;
       tradeSeat = null;
@@ -16691,6 +16716,7 @@ const html = `<!DOCTYPE html>
         return true;
       }
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
+      if (view === "calc") { returnToLeagueHome(); return true; }
       if (view === "home" && homeTab && homeTabCanon(homeTab) !== "home") { setHomeTab("home", { force: true }); return true; }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
       if (view === "datasets") { setHomeTab("history", { force: true }); return true; }
@@ -16901,15 +16927,16 @@ const html = `<!DOCTYPE html>
           closeCosmeticsToProfile();
           return;
         }
+        if (view === "calc") {
+          returnToLeagueHome();
+          return;
+        }
         // Only ever reached on a cold deep link, where there is no entry behind us to pop.
         goBack(() => {
           if (view === "trade") openTradesList();
           else if (view === "titles" && titleYear) openTitles();
           else if (view === "titles" || view === "draftdata" || view === "cuffs") {
             setHomeTab("history", { force: true });
-          } else if (view === "calc") {
-            view = "home";
-            setHomeTab("home", { force: true });
           } else if (view === "cosmetics") {
             view = "account";
             render();
@@ -16924,6 +16951,15 @@ const html = `<!DOCTYPE html>
       const homeTabBtn = e.target.closest("[data-home-tab]");
       if (homeTabBtn) {
         setHomeTab(homeTabBtn.getAttribute("data-home-tab"));
+        return;
+      }
+      const dashReload = e.target.closest("[data-dash-reload]");
+      if (dashReload) {
+        loadMembers().then(() => render()).catch((err) => {
+          console.error(err);
+          dashLoadError = dashLoadError || "members";
+          render();
+        });
         return;
       }
       const ledgerFilterBtn = e.target.closest("[data-ledger-filter]");
@@ -18295,7 +18331,7 @@ const html = `<!DOCTYPE html>
           }
           if (m || designLeagueHome) {
             try {
-              await openLeagueDashboard(activeLeague);
+              await openLeagueDashboard(activeLeague, { keepView: true });
               return;
             } catch (err) {
               console.error(err);
@@ -19654,8 +19690,11 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ['data-ledger-ptr="1"', true],
     ["Release to refresh", true],
     ["overscroll-behavior-y: contain", true],
-    ['q.set("tab", homeTab)', true],
-    ['sessionStorage.setItem("cuckle.homeTab"', true],
+    ['q.set("tab", homeTab)', false],
+    ['sessionStorage.setItem("cuckle.homeTab"', false],
+    ['sessionStorage.removeItem("cuckle.homeTab"', true],
+    ["if (ledgerLoadState === \"err\") return;", true],
+    ['homeTabCanon(homeTab) === "home"', true],
     ['data-ledger-accept="', true],
     ["Sent to you, you have not accepted this version", true],
     ["function ledgerCompleteSave(", true],
@@ -20471,8 +20510,11 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
 {
   const backFn = fnSrc("onBrandBack");
   if (!backFn.includes("isLeagueHomeSurface()") || !backFn.includes("returnToLeagueHome()")
-    || !backFn.includes("openLeaguesDrawer()") || !backFn.includes("openMyTeamHome()")) {
-    throw new Error("onBrandBack must open leagues drawer on league home and return to team home from settings");
+    || !backFn.includes("openLeaguesDrawer()")) {
+    throw new Error("onBrandBack must open leagues drawer on league home and returnToLeagueHome from settings / seat");
+  }
+  if (backFn.includes("openMyTeamHome()")) {
+    throw new Error("onBrandBack must return settings to league Home, not team home");
   }
   if (/appScreen !== "dash"[\s\S]{0,80}goAppHome\(\)/.test(backFn)) {
     throw new Error("onBrandBack must not send non-dash screens to goAppHome — return to league home");
@@ -20484,9 +20526,9 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
     || !backFn.includes("titleYear")) {
     throw new Error("onBrandBack must return titles/draftdata/cuffs to History (year detail → list first)");
   }
-  // Teams → seat → Back should restore Teams (not clearLeague / League tab).
-  if (!backFn.includes('setHomeTab("teams"') || !backFn.includes("&& me")) {
-    throw new Error("onBrandBack must return seat home to Teams tab (history pop when possible)");
+  // Seat home → league Home digest (not Teams tab).
+  if (backFn.includes('setHomeTab("teams"') || !backFn.includes("&& me")) {
+    throw new Error("onBrandBack must return seat home to league Home, not Teams");
   }
 }
 {
@@ -20683,8 +20725,11 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   throw new Error("calc must applyVa as a 2-team bag (other side is sent)");
 }
 if (!inline.includes("async function openLeagueDashboard(")
-  || !inline.includes("Keep a deep-linked sub-screen")) {
-  throw new Error("openLeagueDashboard must honor ?view= for calc and cosmetics");
+  || !inline.includes("Keep a deep-linked sub-screen")
+  || !inline.includes('homeTab = "home"')
+  || !inline.includes("opts && opts.keepView")
+  || !fnSrc("isLeagueHomeSurface").includes('homeTabCanon(homeTab) === "home"')) {
+  throw new Error("openLeagueDashboard must reset to Home; keepView honors ?view= for calc/cosmetics");
 }
 if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
   throw new Error("brand-end must include goTeamHome for league-home team flair");

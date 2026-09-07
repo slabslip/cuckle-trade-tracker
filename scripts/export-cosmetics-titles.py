@@ -29,6 +29,7 @@ W, H = 1024, 180
 # overwriting with the generic rarity card generator.
 CUSTOM_TITLE_MASTERS = {
     "blowout": DESIGN / "ff-title-blowout-comic-v1.png",
+    "nailbiter": DESIGN / "ff-title-nailbiter-comic-v1.png",
 }
 
 CROWN_ORDER = [

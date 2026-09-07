@@ -37,6 +37,33 @@ CUSTOM_TITLE_MASTERS = {
     "wire_throne": DESIGN / "ff-title-wire_throne-comic-v1.png",
     "rookie_king": DESIGN / "ff-title-rookie_king-comic-v1.png",
     "loyalty": DESIGN / "ff-title-loyalty-comic-v1.png",
+    "points_champ_title": DESIGN / "ff-title-points_champ_title-comic-v1.png",
+    "three_time_finalist_title": DESIGN / "ff-title-three_time_finalist_title-comic-v1.png",
+    "two_time_finalist_title": DESIGN / "ff-title-two_time_finalist_title-comic-v1.png",
+    "finalist_title": DESIGN / "ff-title-finalist_title-comic-v1.png",
+    "last_place_title": DESIGN / "ff-title-last_place_title-comic-v1.png",
+    "iron_core_title": DESIGN / "ff-title-iron_core_title-comic-v1.png",
+    "opening_day_title": DESIGN / "ff-title-opening_day_title-comic-v1.png",
+    "sit_right_title": DESIGN / "ff-title-sit_right_title-comic-v1.png",
+    "volume_title": DESIGN / "ff-title-volume_title-comic-v1.png",
+    "whale_title": DESIGN / "ff-title-whale_title-comic-v1.png",
+    "extractor_title": DESIGN / "ff-title-extractor_title-comic-v1.png",
+    "win_now": DESIGN / "ff-title-win_now-comic-v1.png",
+    "investor": DESIGN / "ff-title-investor-comic-v1.png",
+    "firsts_merchant_title": DESIGN / "ff-title-firsts_merchant_title-comic-v1.png",
+    "playoff_trader_title": DESIGN / "ff-title-playoff_trader_title-comic-v1.png",
+    "quiet_year_title": DESIGN / "ff-title-quiet_year_title-comic-v1.png",
+    "manners_title": DESIGN / "ff-title-manners_title-comic-v1.png",
+    "draft_hit_title": DESIGN / "ff-title-draft_hit_title-comic-v1.png",
+    "waiver_touch_title": DESIGN / "ff-title-waiver_touch_title-comic-v1.png",
+    "founding_draft": DESIGN / "ff-title-founding_draft-comic-v1.png",
+    "cartel": DESIGN / "ff-title-cartel-comic-v1.png",
+    "pick_path": DESIGN / "ff-title-pick_path-comic-v1.png",
+    "player_path": DESIGN / "ff-title-player_path-comic-v1.png",
+    "aging": DESIGN / "ff-title-aging-comic-v1.png",
+    "farm_sold": DESIGN / "ff-title-farm_sold-comic-v1.png",
+    "inaugural": DESIGN / "ff-title-inaugural-comic-v1.png",
+    "perfect_chip": DESIGN / "ff-title-perfect_chip-comic-v1.png",
 }
 
 CROWN_ORDER = [
@@ -152,7 +179,7 @@ def export_custom_title(tid: str, name: str) -> Image.Image:
         raise SystemExit(f"missing custom title master: {master_path}")
     master = Image.open(master_path).convert("RGBA")
     # Blowout comic: bias crop up so dryer faces stay in the short strip
-    bias = {"blowout": -40, "nailbiter": -40, "bracket_thief_title": -40, "scorched": -40, "climber": -90, "pick_hoard": -70, "wire_throne": -60, "rookie_king": -75, "loyalty": -70}.get(tid, 0)
+    bias = -90 if tid == "climber" else (-70 if tid in CUSTOM_TITLE_MASTERS else 0)
     banner = cover_fit(master, top_bias=bias)
 
     # Soft left vignette so title text stays readable on busy comic art

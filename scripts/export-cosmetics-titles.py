@@ -64,6 +64,7 @@ CUSTOM_TITLE_MASTERS = {
     "farm_sold": DESIGN / "ff-title-farm_sold-comic-v1.png",
     "inaugural": DESIGN / "ff-title-inaugural-comic-v1.png",
     "perfect_chip": DESIGN / "ff-title-perfect_chip-comic-v1.png",
+    "bench_crime_title": DESIGN / "ff-title-bench_crime_title-comic-v1.png",
 }
 
 CROWN_ORDER = [

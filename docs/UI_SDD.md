@@ -220,13 +220,14 @@ not appear on a hypothetical and do not change the number.
 
 ### 3c. Titles and Emblems
 
-Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 29.
+Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 88 (44 matched title↔emblem pairs).
 Equip one title and one emblem.
 Championship titles outrank every other award in sort and prestige. Locked shows the
 requirement; unlocked shows the receipt. Visual only. The equipped pair paints as a calling
-card on **that manager's team home** (under the seat name, above the four tabs) so anyone
-opening the seat sees it. Header names, news, trades, and ledger stay later. See
-[`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
+card on **that manager's team home** (under the seat name, above the four tabs). Your equipped
+emblem also paints next to your seat name; the title shows on the barracks / Profile plate.
+Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
+
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door

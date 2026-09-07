@@ -1518,88 +1518,129 @@ const html = `<!DOCTYPE html>
       background: var(--lh-gold, #e0b44c); border: 0; border-radius: 999px;
       min-width: 28px; min-height: 28px; line-height: 1; cursor: pointer; flex: 0 0 auto;
     }
-    /* Titles & Emblems — COD calling-card density: thin banners + emoji-size marks. */
+    /* Titles & Emblems — title banners keep their natural art ratio (fill width,
+       never crop). Emblem marks sit in a readable 4-col grid. */
     .cos-plate {
-      margin: 0 0 12px; border: 1px solid var(--line); border-radius: 10px;
+      margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
-      display: flex; align-items: stretch; min-height: 40px;
+      display: flex; align-items: stretch;
     }
     .cos-seat-plate { margin: 8px 0 0; }
     .cos-seat-plate .cos-plate { margin: 0; }
     .cos-plate-banner {
-      flex: 1 1 auto; min-width: 0; height: 40px; object-fit: cover; object-position: center;
+      flex: 1 1 auto; min-width: 0; width: 100%;
+      height: auto; max-height: none;
+      object-fit: contain; object-position: center;
       display: block; background: #1a1d26;
     }
     .cos-plate-banner.is-text {
       display: flex; align-items: center; justify-content: center;
-      padding: 0 10px; font-size: 0.78rem; font-weight: 750; letter-spacing: 0.04em;
+      min-height: 72px; height: auto;
+      padding: 0 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.04em;
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
     }
     .cos-plate-emblem {
-      flex: 0 0 40px; width: 40px; height: 40px; display: grid; place-items: center;
+      flex: 0 0 auto; width: clamp(52px, 18%, 72px); align-self: stretch;
+      display: grid; place-items: center;
       border-left: 1px solid var(--line); background: #0e1016;
+      padding: 6px;
     }
     .cos-plate-emblem img {
-      width: 28px; height: 28px; object-fit: contain; display: block; border-radius: 50%;
+      width: min(44px, 100%); height: min(44px, 100%);
+      object-fit: contain; object-position: center; display: block;
     }
     .cos-titles {
-      display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px;
+      display: flex; flex-direction: column; gap: 12px; margin: 0 0 16px;
     }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
-      border: 1px solid var(--line); border-radius: 8px; padding: 0;
-      background: #12151c; overflow: hidden; min-height: 34px; height: 34px;
-      position: relative; text-align: left;
+      border: 1px solid var(--line); border-radius: 12px; padding: 8px;
+      background: #0a0c10; overflow: hidden; height: auto; min-height: 0;
+      position: relative; text-align: left; line-height: 0;
     }
     button.cos-title.is-locked { opacity: 0.45; }
-    button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
+    button.cos-title.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
-      display: block; width: 100%; height: 34px; object-fit: cover; object-position: center;
+      display: block; width: 100%; height: auto;
+      object-fit: contain; object-position: center;
+      background: #0a0c10; border-radius: 8px;
     }
     .cos-title-fallback {
-      display: flex; align-items: center; justify-content: center; height: 34px;
-      padding: 0 10px; font-size: 0.72rem; font-weight: 750; letter-spacing: 0.05em;
-      text-transform: uppercase; color: #f0e6cc;
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 72px; height: auto; line-height: 1.2;
+      padding: 16px 12px; font-size: 0.82rem; font-weight: 750; letter-spacing: 0.05em;
+      text-transform: uppercase; color: #f0e6cc; border-radius: 8px;
       background: linear-gradient(90deg, #1c2230, #3a4558 50%, #1c2230);
     }
     .cos-title-fallback.is-gold {
       background: linear-gradient(90deg, #2a2418, #5a4518 50%, #2a2418); color: #ffe6a0;
     }
     .cos-emblems {
-      display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
       margin: 0 0 16px;
+    }
+    @media (min-width: 420px) {
+      .cos-emblems { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     }
     button.cos-emblem {
       appearance: none; font: inherit; cursor: pointer; color: var(--text);
-      border: 1px solid var(--line); border-radius: 10px; background: var(--card);
-      min-height: 44px; min-width: 0; padding: 4px 2px 6px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+      min-height: 72px; min-width: 0; padding: 8px 4px 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     }
     button.cos-emblem.is-locked { opacity: 0.4; }
-    button.cos-emblem.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.4); }
+    button.cos-emblem.is-on { border-color: #e0b44c; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.45); }
     .cos-emoji {
-      width: 28px; height: 28px; line-height: 1;
+      width: 40px; height: 40px; line-height: 1;
       display: grid; place-items: center; flex: 0 0 auto;
     }
+    /* Emblem PNGs are already centered circular marks with transparent corners
+       (see scripts/export-cosmetics-emblems.py). Contain + no extra circle crop. */
     .cos-emoji img {
-      width: 28px; height: 28px; object-fit: contain; display: block;
-      border-radius: 50%;
+      width: 40px; height: 40px; object-fit: contain; object-position: center;
+      display: block;
     }
     .cos-emoji-missing {
-      width: 28px; height: 28px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: #2a2d36; border: 1px solid var(--line);
     }
     .cos-emblem-lab {
-      font-size: 0.55rem; line-height: 1.1; color: var(--dim); text-align: center;
-      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 0.62rem; line-height: 1.15; color: var(--dim); text-align: center;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+      white-space: normal; word-break: break-word;
     }
     .cos-plate-emblem .cos-emoji,
     .cos-plate-emblem .cos-emoji img,
     .cos-plate-emblem .cos-emoji-missing {
-      width: 28px; height: 28px;
+      width: min(44px, 100%); height: min(44px, 100%);
     }
+    /* Equipped emblem on your seat name — same density as the champ crown. */
+    .seat-cos-mark {
+      display: inline-grid; place-items: center; vertical-align: -0.15em;
+      width: 1.15em; height: 1.15em; margin-left: 0.15em;
+    }
+    .seat-cos-mark img {
+      width: 1.15em; height: 1.15em; object-fit: contain; object-position: center;
+      display: block;
+    }
+    .cos-profile-plate {
+      margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px;
+      overflow: hidden; background: #12151c;
+      display: flex; align-items: stretch;
+    }
+    .cos-profile-plate .cos-plate-banner,
+    .cos-profile-plate .cos-plate-banner.is-text {
+      height: auto; min-height: 56px;
+    }
+    .cos-profile-plate .cos-plate-emblem {
+      width: clamp(44px, 16%, 60px); padding: 4px;
+    }
+    .cos-profile-plate .cos-plate-emblem img,
+    .cos-profile-plate .cos-emoji,
+    .cos-profile-plate .cos-emoji-missing { width: min(36px, 100%); height: min(36px, 100%); }
     .cos-sheet {
       position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
       justify-content: center; padding: 12px;
@@ -1618,10 +1659,12 @@ const html = `<!DOCTYPE html>
     }
     .cos-sheet-head .cos-emoji,
     .cos-sheet-head .cos-emoji img {
-      width: 40px; height: 40px;
+      width: 44px; height: 44px;
     }
     .cos-sheet-banner {
-      width: 100%; height: 40px; object-fit: cover; border-radius: 8px; margin: 0 0 10px;
+      width: 100%; height: auto;
+      object-fit: contain; object-position: center;
+      border-radius: 8px; margin: 0 0 10px;
       display: block; background: #12151c;
     }
     .cos-sheet-panel h3 { margin: 0; font-size: 1.05rem; }
@@ -3213,7 +3256,8 @@ const html = `<!DOCTYPE html>
         return n.split(" · ").map((part) => seatLabel(part, opts)).join(" · ");
       }
       const crown = reigningChampName() === n ? " " + CROWN : "";
-      const inner = esc(n) + crown;
+      const cosMark = seatEquippedEmblemHtml(n);
+      const inner = esc(n) + crown + cosMark;
       if (!link || !n) return inner;
       return '<span class="seat-link" role="link" tabindex="0" data-who="' + esc(n) + '"'
         + ' aria-label="' + esc(n) + '">' + inner + "</span>";
@@ -3276,7 +3320,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "seatAwardsPlate20260907001500";
+    const DATA_V = "cosmeticsPairs20260907010500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9311,7 +9355,7 @@ const html = `<!DOCTYPE html>
           ? '<p class="caption">Your seat <b>' + seatLabel(team) + "</b></p>"
           : '<p class="caption">No seat claimed in this league yet.</p>')
         + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-view="cosmetics">Titles and Emblems</button>'
+        + '<button type="button" class="chip" data-open-cosmetics="account">Titles and Emblems</button>'
         + '<button type="button" class="chip" data-app-settings="1">Open Settings</button>'
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
         + "</div></div>";
@@ -10065,6 +10109,8 @@ const html = `<!DOCTYPE html>
       activeLeague = null;
       memberships = [];
       ownedLeagues = [];
+      cosmeticsEquip = { title: null, emblem: null };
+      cosmeticsDetailId = null;
       try {
         localStorage.removeItem(LEAGUE_KEY);
         localStorage.removeItem(MEMBERSHIPS_KEY);
@@ -10624,6 +10670,29 @@ const html = `<!DOCTYPE html>
       return [title && title.name, emblem && emblem.name].filter(Boolean);
     }
 
+    function cosmeticsPlateHtml(cls) {
+      const book = cosmeticsBook || { catalog: [] };
+      const eqTitle = book.catalog.find((c) => c.id === cosmeticsEquip.title);
+      const eqEmblem = book.catalog.find((c) => c.id === cosmeticsEquip.emblem);
+      const plateBanner = eqTitle
+        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
+        : '<span class="cos-plate-banner is-text">No title equipped</span>';
+      const plateEmblem = eqEmblem
+        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
+        : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
+      return '<div class="' + (cls || "cos-plate") + '" aria-label="Equipped calling card">'
+        + plateBanner + plateEmblem + "</div>";
+    }
+
+    /** Emblem mark after your own seat name only — Wave 1 show-off; others stay bare. */
+    function seatEquippedEmblemHtml(name) {
+      const mine = authSeatCanonName();
+      if (!mine || String(name) !== String(mine)) return "";
+      const id = cosmeticsEquip && cosmeticsEquip.emblem;
+      if (!id || !cosmeticsUnlocked(id)) return "";
+      return cosmeticsEmblemMark(id, "seat-cos-mark");
+    }
+
     function openCosmetics(from) {
       cosmeticsFrom = from === "settings" || from === "profile" ? "settings" : "account";
       view = "cosmetics";
@@ -10964,6 +11033,8 @@ const html = `<!DOCTYPE html>
         if (league) localStorage.setItem(LEAGUE_KEY, JSON.stringify(league));
         else localStorage.removeItem(LEAGUE_KEY);
       } catch (err) { /* ignore */ }
+      // Per-seat equip key depends on league + seat — reload when the active league changes.
+      cosmeticsLoadEquip();
     }
 
     function saveMemberships(list) {
@@ -14286,14 +14357,66 @@ const html = `<!DOCTYPE html>
       return cosmeticsNormPair(cosmeticsBySeat[id]);
     }
 
+    function cosmeticsEquipKey() {
+      const league = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID || "";
+      const seat = authSeatId() || "";
+      if (league && seat) return "cuckle.cosmetics.equip.v1." + league + "." + seat;
+      if (seat) return "cuckle.cosmetics.equip.v1." + seat;
+      return "cuckle.cosmetics.equip.v1";
+    }
+
+    function cosmeticsNormalizeEquip(raw) {
+      const book = cosmeticsBook;
+      let title = cosmeticsNormId(raw && raw.title);
+      let emblem = cosmeticsNormId(raw && raw.emblem);
+      // Signed-out / no seat: keep nothing equipped so a stale plate cannot leak.
+      if (!authSeatId()) return { title: null, emblem: null };
+      // Catalog not loaded yet — keep the stored ids; re-validate once the book arrives.
+      if (!book || !Array.isArray(book.catalog)) {
+        return { title: title || null, emblem: emblem || null };
+      }
+      const byId = {};
+      for (const c of book.catalog) byId[c.id] = c;
+      if (title) {
+        const c = byId[title];
+        if (!c || c.kind !== "title" || !cosmeticsUnlocked(title)) title = null;
+      }
+      if (emblem) {
+        const c = byId[emblem];
+        if (!c || c.kind !== "emblem" || !cosmeticsUnlocked(emblem)) emblem = null;
+      }
+      return { title: title || null, emblem: emblem || null };
+    }
+
     function cosmeticsLoadEquip() {
       try {
-        const raw = localStorage.getItem("cuckle.cosmetics.equip.v1");
-        const found = raw ? JSON.parse(raw) : null;
-        if (found && typeof found === "object") {
-          cosmeticsEquip = cosmeticsNormPair(found);
+        const key = cosmeticsEquipKey();
+        const legacy = "cuckle.cosmetics.equip.v1";
+        let raw = localStorage.getItem(key);
+        let fromLegacy = false;
+        if (!raw && key !== legacy) {
+          raw = localStorage.getItem(legacy);
+          fromLegacy = !!raw;
         }
-      } catch (err) { /* private mode */ }
+        const found = raw ? JSON.parse(raw) : null;
+        const prev = found && typeof found === "object"
+          ? { title: found.title || null, emblem: found.emblem || null }
+          : { title: null, emblem: null };
+        const next = cosmeticsNormalizeEquip(found && typeof found === "object" ? found : null);
+        cosmeticsEquip = next;
+        // Persist only when migrating the legacy key, or when a loaded catalog strips
+        // an id that is no longer valid — never while signed out / seat unknown.
+        const seatReady = !!authSeatId();
+        const bookReady = !!(cosmeticsBook && Array.isArray(cosmeticsBook.catalog));
+        const changed = prev.title !== next.title || prev.emblem !== next.emblem;
+        if (fromLegacy && seatReady) {
+          localStorage.setItem(key, JSON.stringify(next));
+        } else if (seatReady && bookReady && changed && raw) {
+          localStorage.setItem(key, JSON.stringify(next));
+        }
+      } catch (err) {
+        cosmeticsEquip = { title: null, emblem: null };
+      }
       const lid = avatarLeagueId();
       cosmeticsApplyLocalForLeague(lid);
       const mine = authSeatId();
@@ -14302,14 +14425,14 @@ const html = `<!DOCTYPE html>
           cosmeticsBySeat[String(mine)] = cosmeticsNormPair(cosmeticsEquip);
           cosmeticsPersistLocalSeat(lid, mine, cosmeticsEquip);
         } else if (cosmeticsBySeat[String(mine)]) {
-          cosmeticsEquip = cosmeticsNormPair(cosmeticsBySeat[String(mine)]);
+          cosmeticsEquip = cosmeticsNormalizeEquip(cosmeticsBySeat[String(mine)]);
         }
       }
     }
 
     function cosmeticsSaveEquip() {
       try {
-        localStorage.setItem("cuckle.cosmetics.equip.v1", JSON.stringify(cosmeticsEquip));
+        localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
       } catch (err) { /* private mode */ }
       const uid = authSeatId();
       const lid = avatarLeagueId();
@@ -14359,9 +14482,9 @@ const html = `<!DOCTYPE html>
           cosmeticsBySeat[uid] = pair;
         }
         if (mine && !(cosmeticsEquip.title || cosmeticsEquip.emblem) && cosmeticsBySeat[String(mine)]) {
-          cosmeticsEquip = cosmeticsNormPair(cosmeticsBySeat[String(mine)]);
+          cosmeticsEquip = cosmeticsNormalizeEquip(cosmeticsBySeat[String(mine)]);
           try {
-            localStorage.setItem("cuckle.cosmetics.equip.v1", JSON.stringify(cosmeticsEquip));
+            localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
           } catch (err) { /* private mode */ }
         }
       } catch (err) {
@@ -14969,10 +15092,18 @@ const html = `<!DOCTYPE html>
       return mine[id] || null;
     }
 
+    /* Prestige sort weight — titles and their matching emblems stay near each other. */
     const COS_TITLE_LADDER = [
-      "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
-      "three_time_finalist", "two_time_finalist", "finalist",
+      "five_time", "five_time_mark", "four_time", "four_time_mark",
+      "three_peat", "three_peat_mark", "three_time", "three_time_mark",
+      "repeat", "repeat_mark", "two_time", "two_time_mark", "champion", "champion_mark",
+      "three_time_finalist_title", "three_time_finalist",
+      "two_time_finalist_title", "two_time_finalist",
+      "finalist_title", "finalist",
     ];
+    const COS_CROWN_TITLES = new Set([
+      "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+    ]);
     const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
     const COS_TITLE_ART = new Set([
       "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
@@ -14983,6 +15114,11 @@ const html = `<!DOCTYPE html>
       "playoff_trader", "quiet_year", "manners", "draft_hit", "sit_right", "bench_crime",
       "waiver_touch", "opening_day",
     ]);
+    function cosmeticsPairMate(c) {
+      const book = cosmeticsBook || { catalog: [] };
+      if (!c || !c.pair) return null;
+      return book.catalog.find((x) => x.pair === c.pair && x.kind !== c.kind) || null;
+    }
 
     function cosmeticsArtPath(kind, id) {
       if (kind === "title" && COS_TITLE_ART.has(id)) return "data/ui/cosmetics/title-" + id + ".png";
@@ -15005,10 +15141,10 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsTitleBanner(c, cls) {
       const path = cosmeticsArtPath("title", c.id);
-      const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0 && COS_TITLE_ART.has(c.id);
+      const ladder = COS_CROWN_TITLES.has(c.id);
       if (path) {
-        return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
-          + '" alt="' + esc(c.name) + '" width="768" height="34" loading="lazy" decoding="async" />';
+      return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
+        + '" alt="' + esc(c.name) + '" width="840" loading="lazy" decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";
@@ -15063,9 +15199,15 @@ const html = `<!DOCTYPE html>
       const got = cosmeticsUnlocked(c.id);
       const on = cosmeticsEquip[c.kind] === c.id;
       const locked = !got;
+      const mate = cosmeticsPairMate(c);
+      const mateGot = mate ? cosmeticsUnlocked(mate.id) : null;
       const head = c.kind === "emblem"
         ? cosmeticsEmblemMark(c.id)
         : cosmeticsTitleBanner(c, "cos-sheet-banner");
+      const mateLine = mate
+        ? ('<p class="cos-sheet-got">Matching ' + esc(mate.kind) + ": " + esc(mate.name)
+          + (mateGot ? " (unlocked)" : " (same gate — unlocks together)") + "</p>")
+        : "";
       return '<div class="cos-sheet" role="dialog" aria-modal="true" aria-label="' + esc(c.name) + '">'
         + '<button type="button" class="cos-sheet-scrim" data-cos-detail-close="1" aria-label="Close"></button>'
         + '<div class="cos-sheet-panel">'
@@ -15076,6 +15218,7 @@ const html = `<!DOCTYPE html>
         + '<p class="cos-sheet-got">'
         + esc(locked ? ("Locked — " + (c.how || "Not unlocked yet.")) : ("Unlocked — " + got))
         + "</p>"
+        + mateLine
         + '<div class="cos-sheet-actions">'
         + (locked
           ? ""
@@ -15095,7 +15238,7 @@ const html = `<!DOCTYPE html>
         const got = cosmeticsUnlocked(c.id);
         const on = cosmeticsEquip.title === c.id;
         const locked = !got;
-        const ladder = COS_TITLE_LADDER.indexOf(c.id) >= 0;
+        const ladder = COS_CROWN_TITLES.has(c.id);
         return '<button type="button" class="cos-title' + (locked ? " is-locked" : "")
           + (on ? " is-on" : "") + (ladder ? " is-ladder" : "") + '"'
           + ' data-cos-id="' + esc(c.id) + '" data-cos-kind="title"'
@@ -15116,7 +15259,7 @@ const html = `<!DOCTYPE html>
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Championship titles sit at the top. Tap a banner or mark for its description. Equip one title and one emblem.</p>'
+        + '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Championship ladder first; your emblem shows next to your name.</p>'
         + plate
         + "<h3>Titles</h3>"
         + '<div class="cos-titles">' + titles.map(titleRow).join("") + "</div>"
@@ -15914,8 +16057,10 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + '<div class="app-card"><h3>Titles and Emblems</h3>'
         + (equipped.length
-          ? '<p class="caption" style="margin:0">Equipped <b>' + equipped.map(esc).join("</b> · <b>") + "</b></p>"
-          : '<p class="caption" style="margin:0">Nothing equipped yet.</p>')
+          ? (cosmeticsPlateHtml("cos-profile-plate")
+            + '<p class="caption" style="margin:8px 0 0">Equipped <b>' + equipped.map(esc).join("</b> · <b>") + "</b>"
+            + " — emblem shows next to your name.</p>")
+          : '<p class="caption" style="margin:0">Nothing equipped yet. Open the barracks to pick a title and an emblem.</p>')
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-open-cosmetics="settings">Open Titles and Emblems</button>'
         + "</div></div>"
@@ -17658,7 +17803,9 @@ const html = `<!DOCTYPE html>
       if (cosEquip) {
         const id = cosEquip.getAttribute("data-cos-equip");
         const kind = cosEquip.getAttribute("data-cos-kind");
-        if (id && kind && cosmeticsUnlocked(id)) {
+        const book = cosmeticsBook || { catalog: [] };
+        const row = book.catalog.find((c) => c.id === id);
+        if (id && kind && row && row.kind === kind && cosmeticsUnlocked(id)) {
           cosmeticsEquip[kind] = cosmeticsEquip[kind] === id ? null : id;
           cosmeticsSaveEquip();
           cosmeticsDetailId = null;
@@ -20275,6 +20422,12 @@ if (!html.includes('class="go-settings"') || !html.includes("settings-gear")
 if (!inline.includes("function openCosmetics(")
   || !inline.includes("function closeCosmeticsToProfile(")
   || !inline.includes('data-open-cosmetics="settings"')
+  || !inline.includes('data-open-cosmetics="account"')
+  || !inline.includes("function cosmeticsNormalizeEquip(")
+  || !inline.includes("function cosmeticsEquipKey(")
+  || !inline.includes("function seatEquippedEmblemHtml(")
+  || !inline.includes("function cosmeticsPlateHtml(")
+  || !inline.includes("seat-cos-mark")
   || !fnSrc("renderSettingsProfileTab").includes("Titles and Emblems")
   || !fnSrc("renderSettingsProfileTab").includes("Nothing equipped yet")) {
   throw new Error("Settings Profile must door into Titles and Emblems");
@@ -20370,21 +20523,24 @@ if (!inline.includes("function homeTabCanon(")) {
 }
 if (!inline.includes("function your3Html(") || !inline.includes("function homeNewsStoryHtml(")
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
-  || !inline.includes("function renderCosmetics(") || !inline.includes("data-view=\"cosmetics\"")) {
+  || !inline.includes("function renderCosmetics(") || !inline.includes('"cosmetics"')
+  || !inline.includes("data-open-cosmetics")) {
   throw new Error("Home digest must ship Your 3, one news story, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
+  || !inline.includes("three_peat_mark") || !inline.includes("COS_CROWN_TITLES")
   || !inline.includes("three_time_finalist") || !inline.includes("two_time_finalist")
-  || !inline.includes("Championship titles sit at the top")
+  || !inline.includes("function cosmeticsPairMate(")
+  || !inline.includes("Every award unlocks a matching title and emblem")
   || inline.includes("Everyone chases the same 25")) {
-  throw new Error("barracks must sort the championship ladder first and include finalist rungs");
+  throw new Error("barracks must sort the championship ladder first and include matched title/emblem pairs");
 }
 if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function cosmeticsEmblemMark(")
   || !inline.includes("COS_TITLE_ART") || !inline.includes("COS_EMBLEM_ART")
   || !inline.includes("cos-title-banner") || !inline.includes("cos-emblems")
   || !inline.includes("function cosmeticsDetailSheetHtml(")
   || !inline.includes("data-cos-detail-close")
-  || !inline.includes("Tap a banner or mark for its description")
+  || !inline.includes("Matching ")
   || !inline.includes("data/ui/cosmetics/emblem-")
   || !inline.includes("never Unicode emoji")
   || inline.includes("COS_EMBLEM_EMOJI")
@@ -20392,7 +20548,11 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   || !inline.includes("function cosmeticsCallingCardHtml(")
   || !inline.includes("function loadSeatCosmetics(")
   || !inline.includes("seat_cosmetics")
-  || !inline.includes("cos-seat-plate")) {
+  || !inline.includes("cos-seat-plate")
+  || !inline.includes("function cosmeticsPlateHtml(")
+  || !inline.includes("cos-plate")
+  || !html.includes("object-fit: contain")
+  || !html.includes("cos-title-banner")) {
   throw new Error("Titles and Emblems must use compact COD banners, custom emblem marks, and tap-to-read details");
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")

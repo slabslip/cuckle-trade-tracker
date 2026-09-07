@@ -26,8 +26,9 @@ plans stay as history; do not paste them here.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /
   `even` (flatten + 40/60 KTC) + `applyVa`. Votes never enter the number.
 - Residual + reserved vote-nudge are specified in VALUE / VOTES / PRODUCT — not built.
-- Barracks `?view=cosmetics`: 27 shared titles/emblems, unlock from history, equip 1 + 1.
-  Championship ladder is the top of the catalog (see awards plan). Flex across the app is later.
+- Barracks `?view=cosmetics`: 29 shared titles/emblems, unlock from history, equip 1 + 1.
+  Championship ladder is the top of the catalog (see awards plan). Your emblem paints on your
+  seat name; title flex across every byline is later.
 - Existing CSS tokens only. Votes stay opinion-only.
 
 ## Parked (own later pass)

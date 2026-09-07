@@ -116,8 +116,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - PWA install prompt + web push.
 - Native App Store / Play wrappers.
 - League residual on the calc book; accept-odds / suggested counter; public/private marketplace.
-- Equipped title/emblem painted on names (header, news, trade cards, ledger, smack).
-  Team home calling card is shipped.
+- Equipped **title** painted on names across the app (header, news, trade cards, ledger,
+  smack). Wave 1 already paints the calling card on each manager's team home and your
+  equipped **emblem** next to your own seat name.
 - League Oracle, waiver hot sheet, lineup-vs-optimal, playoff-odds engine, push “3 actions today”.
 - Expanded award grind (weekly scores, legal lineups, waiver throne, streaks). Championship
   ladder stays the top of [`COSMETICS_SDD.md`](COSMETICS_SDD.md); the rest is

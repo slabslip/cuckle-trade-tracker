@@ -3,6 +3,7 @@
 
 Frame: 1024×180 (~30% shorter than the prior 1024×256 CoD 4:1 masters).
 Crown ladder art comes from ff-title-banners-spaced-v1.png (cover / edge-to-edge).
+Custom masters (e.g. Blowout comic dryers) come from docs/design/cosmetics/.
 All other titles get generated full-bleed cards (rarity palette + optional emblem).
 
 Output: data/ui/cosmetics/title-<id>.png
@@ -20,8 +21,15 @@ ROOT = Path(__file__).resolve().parents[1]
 SHEET = ROOT / "docs/design/cosmetics/ff-title-banners-spaced-v1.png"
 OUT = ROOT / "data/ui/cosmetics"
 COS = ROOT / "data/ui/cosmetics.json"
+DESIGN = ROOT / "docs/design/cosmetics"
 # 30% shorter than 256 → 180. Aspect ≈ 5.69:1.
 W, H = 1024, 180
+
+# Hand-illustrated / custom masters — re-export from design art instead of
+# overwriting with the generic rarity card generator.
+CUSTOM_TITLE_MASTERS = {
+    "blowout": DESIGN / "ff-title-blowout-comic-v1.png",
+}
 
 CROWN_ORDER = [
     "five_time",
@@ -114,7 +122,7 @@ def tight_crop(im: Image.Image, content: np.ndarray, y0: int, y1: int) -> Image.
     return im.crop((x0, yy0, x1 + 1, yy1 + 1))
 
 
-def cover_fit(art: Image.Image, size=(W, H)) -> Image.Image:
+def cover_fit(art: Image.Image, size=(W, H), top_bias: int = 0) -> Image.Image:
     """Scale art to fill the entire banner (edge-to-edge), center-crop overflow."""
     tw, th = size
     scale = max(tw / art.size[0], th / art.size[1])
@@ -125,8 +133,58 @@ def cover_fit(art: Image.Image, size=(W, H)) -> Image.Image:
     arr[:, :, 3] = 255
     scaled = Image.fromarray(arr, "RGBA")
     left = max(0, (nw - tw) // 2)
-    top = max(0, (nh - th) // 2)
+    top = max(0, min(nh - th, (nh - th) // 2 + top_bias))
     return scaled.crop((left, top, left + tw, top + th))
+
+
+def export_custom_title(tid: str, name: str) -> Image.Image:
+    """Build a full-bleed banner from a hand-drawn master (+ comic title type)."""
+    master_path = CUSTOM_TITLE_MASTERS[tid]
+    if not master_path.exists():
+        raise SystemExit(f"missing custom title master: {master_path}")
+    master = Image.open(master_path).convert("RGBA")
+    # Blowout comic: bias crop up so dryer faces stay in the short strip
+    bias = -40 if tid == "blowout" else 0
+    banner = cover_fit(master, top_bias=bias)
+
+    # Soft left vignette so title text stays readable on busy comic art
+    wash = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    wd = ImageDraw.Draw(wash)
+    for x in range(0, 420):
+        a = int(150 * (1 - x / 420) ** 1.4)
+        wd.line([(x, 0), (x, H)], fill=(8, 6, 14, a))
+    banner = Image.alpha_composite(banner, wash)
+
+    draw = ImageDraw.Draw(banner)
+    words = [w.upper() for w in name.split()]
+    lines = words if len(words) <= 2 else [" ".join(words[:-1]), words[-1]]
+    f = font(52)
+    for size in range(56, 28, -1):
+        f = font(size)
+        widths = [draw.textbbox((0, 0), ln, font=f)[2] for ln in lines]
+        if max(widths) <= 380:
+            break
+    bboxes = [draw.textbbox((0, 0), ln, font=f) for ln in lines]
+    heights = [b[3] - b[1] for b in bboxes]
+    gap = 2
+    total_h = sum(heights) + gap
+    y = (H - total_h) // 2 - 2
+    x = 22
+    fill = (255, 236, 90, 255)
+    stroke = (12, 8, 20, 255)
+    for ln, bh in zip(lines, heights):
+        for dx, dy in (
+            (-3, 0), (3, 0), (0, -3), (0, 3),
+            (-2, -2), (2, -2), (-2, 2), (2, 2),
+            (-3, -2), (3, -2), (-3, 2), (3, 2),
+        ):
+            draw.text((x + dx, y + dy), ln, font=f, fill=stroke)
+        draw.text((x, y), ln, font=f, fill=fill)
+        y += bh + gap
+    draw.rectangle([22, H - 14, 220, H - 11], fill=(255, 220, 80, 210))
+    draw.rectangle([0, 0, W - 1, H - 1], outline=(255, 240, 120, 160))
+    draw.rectangle([2, 2, W - 3, H - 3], outline=(20, 12, 30, 120))
+    return banner
 
 
 def lerp(a, b, t):
@@ -325,7 +383,9 @@ def main() -> None:
 
     for t in titles:
         tid = t["id"]
-        if tid in crown:
+        if tid in CUSTOM_TITLE_MASTERS:
+            img = export_custom_title(tid, t["name"])
+        elif tid in crown:
             img = crown[tid]
         else:
             emb = emblem_file_for_pair(t.get("pair") or tid, catalog)

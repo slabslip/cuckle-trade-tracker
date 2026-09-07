@@ -190,15 +190,16 @@ renders on the open-trade screen and on Teams / History feed cards.
 **Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
 plate). Opens `?view=calc`.
 
-**Trade Desk** — three league conversation cards from the today / `even` book. Each seat is
-classified from the **current bag** (Win-now / Reload / Rebuild) using stud share, pick
-capital, and value-weighted age. Historic Win-now / Investor tape labels do not set the route
-and do not move any number. Talks prefer complementary routes and 2-for-1 **depth for a stud**
-when one seat is deep at a position and the other is thin there; even-up is the floor.
-Startable floors: QB 2 / RB 2 / WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras
-above 1800. Meta may add a buy / fair / sell chip from `pe.json` — signal only. Tap opens
-the calculator with those sides prefilled. Signed-in: your seat is card one when a clean
-match exists; the other two stay league-wide. No bag numbers.
+**Trade Desk** — three league conversation cards from the today / `even` book (all ten seats;
+signed-in: your seat is card one). Each seat is classified from the **current bag**
+(Win-now / Reload / Rebuild) using stud share, pick capital, and value-weighted age.
+Historic Win-now / Investor tape labels do not set the route and do not move any number.
+Talks prefer complementary routes and 2-for-1 **depth for a stud** when one seat is deep
+at a position and the other is thin there; even-up is the floor. Meta may name a
+flatten-vs-today split (`markets bid up` / `markets cooler on` / `new on the market books`)
+and a buy / fair / sell chip from `pe.json` — signal only. Startable floors: QB 2 / RB 2 /
+WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
+calculator with those sides prefilled. No bag numbers.
 The News Feed pull-up stays the league-wide preview.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.

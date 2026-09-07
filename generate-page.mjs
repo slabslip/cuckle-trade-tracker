@@ -3463,7 +3463,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260907232045";
+    const DATA_V = "deskbooks20260907234800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14845,6 +14845,31 @@ const html = `<!DOCTYPE html>
       return (row && row.signal) || "";
     }
 
+    /** Signal only. Never prints a bag total. */
+    function homeDeskBookNote(assets) {
+      let best = null;
+      let fresh = "";
+      for (let i = 0; i < (assets || []).length; i++) {
+        const a = assets[i];
+        const today = calcValueNum(a);
+        if (today < 0) continue;
+        const flat = Number(a && a.value_flat);
+        const name = homeDeskShortName(a);
+        if (!Number.isFinite(flat)) {
+          if (today >= 800 && !fresh) fresh = name;
+          continue;
+        }
+        const mx = Math.max(today, flat);
+        const rel = mx ? Math.abs(today - flat) / mx : 0;
+        if (rel >= 0.22 && (!best || rel > best.rel)) {
+          best = { rel: rel, name: name, up: today > flat };
+        }
+      }
+      if (best) return best.up ? ("markets bid up " + best.name) : ("markets cooler on " + best.name);
+      if (fresh) return "new on the market books";
+      return "";
+    }
+
     function homeDeskProfile(bag) {
       let total = 0;
       let stud = 0;
@@ -14914,19 +14939,22 @@ const html = `<!DOCTYPE html>
 
     function homeDeskMeta(talk) {
       if (!talk) return "Pick the sides";
-      const pe = talk.pe ? (" · " + talk.pe) : "";
+      const extra = [];
+      if (talk.book) extra.push(talk.book);
+      if (talk.pe) extra.push(talk.pe);
+      const tail = extra.length ? (" · " + extra.join(" · ")) : "";
       if (talk.why === "depth-stud" && talk.pos) {
-        return talk.routeA + " → " + talk.routeB + " · " + talk.pos + " depth for a stud" + pe;
+        return talk.routeA + " → " + talk.routeB + " · " + talk.pos + " depth for a stud" + tail;
       }
       if (talk.why === "complement") {
-        return talk.routeA + " → " + talk.routeB + " · fill " + (talk.pos || "a hole") + pe;
+        return talk.routeA + " → " + talk.routeB + " · fill " + (talk.pos || "a hole") + tail;
       }
       if (talk.rel < 0.06) {
         return (talk.routeA && talk.routeB && talk.routeA === talk.routeB
           ? "Even-up · same window"
-          : "Even-up · " + (talk.routeA || "Reload") + " / " + (talk.routeB || "Reload")) + pe;
+          : "Even-up · " + (talk.routeA || "Reload") + " / " + (talk.routeB || "Reload")) + tail;
       }
-      return (talk.routeA || "Reload") + " → " + (talk.routeB || "Reload") + " · a piece to even it" + pe;
+      return (talk.routeA || "Reload") + " → " + (talk.routeB || "Reload") + " · a piece to even it" + tail;
     }
 
     function homeDeskBags() {
@@ -14982,6 +15010,8 @@ const html = `<!DOCTYPE html>
         if (complement) score -= 220;
         if (depthPos) score -= 260;
         if (fillPos && !depthPos) score -= 80;
+        const book = homeDeskBookNote(legsA.concat(legsB));
+        if (book) score -= 30;
         const key = (calcValueNum(legsA[0]) >= calcValueNum(legsB[0])) ? legsA[0] : legsB[0];
         const why = depthPos ? "depth-stud" : (complement ? "complement" : "even");
         if (!best || score < best.score) {
@@ -14990,6 +15020,7 @@ const html = `<!DOCTYPE html>
             why: why, pos: fillPos || depthPos || "",
             routeA: profA.route, routeB: profB.route,
             pe: homeDeskPe(key),
+            book: book,
           };
         }
       };
@@ -15071,7 +15102,7 @@ const html = `<!DOCTYPE html>
               kind: row.talk.kind, gap: row.talk.gap, rel: row.talk.rel, score: row.talk.score,
               why: row.talk.why, pos: row.talk.pos,
               routeA: row.talk.routeB, routeB: row.talk.routeA,
-              pe: row.talk.pe,
+              pe: row.talk.pe, book: row.talk.book,
             },
           };
         }
@@ -15084,7 +15115,7 @@ const html = `<!DOCTYPE html>
       if (!cards.length) return "";
       return '<section class="home-desk" aria-label="Trade Desk">'
         + '<div class="home-desk-h">Trade Desk</div>'
-        + '<p class="home-desk-sub">Three talks the board is asking for. Tap to price it.</p>'
+        + '<p class="home-desk-sub">Four-source today book. Three talks for the league. Tap to price it.</p>'
         + cards.map(function (row) {
           const sendA = (row.talk && row.talk.legsA || []).map(function (a) { return a.id; }).join(",");
           const sendB = (row.talk && row.talk.legsB || []).map(function (a) { return a.id; }).join(",");
@@ -21311,8 +21342,10 @@ if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-in
   throw new Error("calc footnotes must be one Info control with blend + VA formulas");
 }
 if (!inline.includes("function homeDeskProfile(") || !inline.includes("function homeDeskMeta(")
+  || !inline.includes("function homeDeskBookNote(")
   || !inline.includes("Win-now") || !inline.includes("Reload") || !inline.includes("Rebuild")
   || !inline.includes("depth for a stud") || !inline.includes("Even-up · same window")
+  || !inline.includes("markets bid up") || !inline.includes("Four-source today book")
   || inline.includes("Even-up starter")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")) {

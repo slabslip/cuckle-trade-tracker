@@ -140,14 +140,14 @@ writes only a vote.
 
 ## 14. Where do equipped titles and emblems paint?
 
-**Assumed (this pass):** Barracks + persist only. Header, news byline, trade cards, ledger, and
-smack do not read the equipped pair yet. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
+**Assumed (this pass):** Team home calling card (banner + emblem under the seat name, all four
+tabs). Shared via `seat_cosmetics`. Header names, news byline, trade cards, ledger, and smack
+do not read the equipped pair yet. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
 
-**Why it matters:** Painting on every name before the catalog is trusted will lock a chrome
-decision we have not looked at on 390.
+**Why it matters:** Painting on every inline name will lock a chrome decision we have not
+looked at on 390.
 
-**Recommended:** Show the pair on names after the barracks has been used in-season. No new
-tokens when we do.
+**Recommended:** Keep the plate on the seat page. Do not add tokens to every `seatLabel` yet.
 
 ---
 

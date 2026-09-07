@@ -223,8 +223,10 @@ not appear on a hypothetical and do not change the number.
 Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 29.
 Equip one title and one emblem.
 Championship titles outrank every other award in sort and prestige. Locked shows the
-requirement; unlocked shows the receipt. Visual only. Where equipped cosmetics paint across
-the app is later — not this file yet. See [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
+requirement; unlocked shows the receipt. Visual only. The equipped pair paints as a calling
+card on **that manager's team home** (under the seat name, above the four tabs) so anyone
+opening the seat sees it. Header names, news, trades, and ledger stay later. See
+[`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door
@@ -285,6 +287,10 @@ asserted at generate time along with the `tabs.length` gate that keeps it off Ch
 the full-screen trade. It is also where `focusNext` lands after a seat is taken. `overflow-wrap:
 anywhere`, because a heading has no ellipsis to fall back on and `DarkWingDucks2023` is 17
 characters with no break opportunity.
+
+**Equipped title + emblem** sit directly under that heading as the same calling card used in
+barracks (thin banner + 40px mark). Omitted when that seat has not equipped either. Anyone
+opening the seat sees that pair — not the viewer's.
 
 **Six style tiles**, all read from `data/ui/marks.json` (§7). Tapping one opens a ten-row league
 chart for that metric, sorted, with your seat highlighted. The chart draws from the rows already

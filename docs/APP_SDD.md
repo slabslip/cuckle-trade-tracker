@@ -183,6 +183,7 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 7. [`db/wave5-invite-plain.sql`](../db/wave5-invite-plain.sql) — `code_plain` for invite console
 8. [`db/wave6-one-seat-redeem.sql`](../db/wave6-one-seat-redeem.sql) — refuse seat-switch overwrite on redeem
 9. [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql) — `seat_avatars` for Settings → Profile photo crops
+10. [`db/wave18-seat-cosmetics.sql`](../db/wave18-seat-cosmetics.sql) — `seat_cosmetics` for equipped title + emblem on team home
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 

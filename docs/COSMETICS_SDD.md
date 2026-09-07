@@ -1,8 +1,9 @@
 # CuckleChunckle — Titles and Emblems SDD
 
 Shared barracks. Visual only. Unlocks are computed from tape we already have. Equip is a
-profile write. **Where an equipped title or emblem paints** (header, news byline, trade cards,
-ledger, smack) is a later pass — this file does not unlock new chrome.
+profile write. **Where an equipped title or emblem paints:** the manager's team home (banner +
+emblem under the seat name, all four tabs). Header names, news bylines, trade
+cards, ledger, and smack are a later pass.
 
 Want → [`PRODUCT.md`](./PRODUCT.md). Display chrome → [`UI_SDD.md`](./UI_SDD.md) §3c.
 Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
@@ -67,8 +68,9 @@ Two grids. Championship titles first (see ladder above), then the rest by rarity
 at a time. Back from barracks returns to Profile when opened from Settings, Account otherwise.
 
 Persist the equipped pair on the signed-in profile. This pass: `localStorage` key
-`cuckle.cosmetics.equip.v1`. Same pattern as votes: page reads, profile writes. Supabase columns
-on the account row are the later shared store.
+`cuckle.cosmetics.equip.v1` plus a per-league map `cuckle.cosmetics.equip.by_seat.v1`.
+Shared store: `public.seat_cosmetics` (`db/wave18-seat-cosmetics.sql`), same RLS shape as
+`seat_avatars` — anyone can read a seat's pair; only the claimed seat can write it.
 
 No themes, no FAAB perk, no calc boost. Visual only.
 
@@ -76,8 +78,8 @@ No themes, no FAAB perk, no calc boost. Visual only.
 
 ## 4. Not this file
 
-- Painting equipped cosmetics on names across the app (beyond the signed-in seat, if that
-  Home pass has landed)
+- Painting equipped cosmetics on names in the header, news, trade cards, ledger, and smack
+  (team home calling card is shipped)
 - Art pack, rarity themes, competitive perks
 - Oracle / DNA / weekly / waiver / lineup engines as new unlock sources
 - Minting the parked Tier 1–4 and “fresh 15” awards without a weekly snapshot

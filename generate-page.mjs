@@ -1449,6 +1449,11 @@ const html = `<!DOCTYPE html>
       font-size: 0.8125rem; font-weight: 650; color: var(--lh-gold, #e0b44c);
       line-height: 1.25; margin: 0 0 4px;
     }
+    .home-desk-job {
+      display: inline-block; margin-right: 6px;
+      font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--dim);
+    }
     .home-desk-line {
       font-size: 0.9375rem; font-weight: 650; color: var(--text); line-height: 1.3;
       margin: 0;
@@ -3471,7 +3476,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmeticsBannerRestore-20260908010000";
+    const DATA_V = "deskme20260908011500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14950,9 +14955,39 @@ const html = `<!DOCTYPE html>
       return pos;
     }
 
-    function homeDeskMeta(talk) {
+    function homeDeskJob(talk, profA, profB) {
+      if (!talk) return "even";
+      if (talk.why === "depth-stud") return (talk.legsA && talk.legsA.length >= 2) ? "fill" : "move";
+      const has = function (arr, p) { return (arr || []).indexOf(p) >= 0; };
+      const thinA = function (p) { return has(profA && profA.holes, p) || has(profA && profA.thin, p); };
+      const deepA = function (p) { return has(profA && profA.surplus, p) || has(profA && profA.deep, p); };
+      const thinB = function (p) { return has(profB && profB.holes, p) || has(profB && profB.thin, p); };
+      const deepB = function (p) { return has(profB && profB.surplus, p) || has(profB && profB.deep, p); };
+      const recv = (talk.legsB || []).map(homeDeskAssetPos).filter(function (p) { return p && p !== "PICK"; });
+      const send = (talk.legsA || []).map(homeDeskAssetPos).filter(function (p) { return p && p !== "PICK"; });
+      for (let i = 0; i < recv.length; i++) {
+        if (thinA(recv[i]) && deepB(recv[i])) return "fill";
+      }
+      for (let i = 0; i < send.length; i++) {
+        if (deepA(send[i]) && thinB(send[i])) return "move";
+      }
+      const pos = String(talk.pos || "");
+      if (pos && thinA(pos) && deepB(pos)) return "fill";
+      if (pos && deepA(pos) && thinB(pos)) return "move";
+      return "even";
+    }
+
+    function homeDeskJobLabel(job) {
+      if (job === "fill") return "Fill";
+      if (job === "move") return "Move";
+      return "Even";
+    }
+
+    function homeDeskMeta(talk, job) {
       if (!talk) return "Pick the sides";
       const extra = [];
+      if (job === "fill" && talk.why !== "depth-stud" && talk.pos) extra.push("you need " + talk.pos);
+      if (job === "move" && talk.why !== "depth-stud" && talk.pos) extra.push("you are deep " + talk.pos);
       if (talk.book) extra.push(talk.book);
       if (talk.pe) extra.push(talk.pe);
       const tail = extra.length ? (" · " + extra.join(" · ")) : "";
@@ -14960,7 +14995,10 @@ const html = `<!DOCTYPE html>
         return talk.routeA + " → " + talk.routeB + " · " + talk.pos + " depth for a stud" + tail;
       }
       if (talk.why === "complement") {
-        return talk.routeA + " → " + talk.routeB + " · fill " + (talk.pos || "a hole") + tail;
+        const lane = (job === "move" && talk.pos)
+          ? ("move " + talk.pos)
+          : ("fill " + (talk.pos || "a hole"));
+        return talk.routeA + " → " + talk.routeB + " · " + lane + tail;
       }
       if (talk.rel < 0.06) {
         return (talk.routeA && talk.routeB && talk.routeA === talk.routeB
@@ -14987,7 +15025,7 @@ const html = `<!DOCTYPE html>
       return by;
     }
 
-    function homeDeskTalk(bagA, bagB) {
+    function homeDeskTalk(bagA, bagB, want) {
       const profA = homeDeskProfile(bagA);
       const profB = homeDeskProfile(bagB);
       let best = null;
@@ -15027,10 +15065,28 @@ const html = `<!DOCTYPE html>
         if (book) score -= 30;
         const key = (calcValueNum(legsA[0]) >= calcValueNum(legsB[0])) ? legsA[0] : legsB[0];
         const why = depthPos ? "depth-stud" : (complement ? "complement" : "even");
+        const job = homeDeskJob({
+          legsA: legsA, legsB: legsB, kind: kind, why: why, pos: fillPos || depthPos || "", rel: rel
+        }, profA, profB);
+        if (want && job !== want) return;
+        let jobPos = fillPos || depthPos || "";
+        if (!jobPos && (job === "fill" || job === "move")) {
+          const side = job === "fill" ? legsB : legsA;
+          for (let i = 0; i < side.length; i++) {
+            const p = homeDeskAssetPos(side[i]);
+            if (!p || p === "PICK") continue;
+            const mineThin = (profA.holes || []).indexOf(p) >= 0 || (profA.thin || []).indexOf(p) >= 0;
+            const mineDeep = (profA.surplus || []).indexOf(p) >= 0 || (profA.deep || []).indexOf(p) >= 0;
+            const themThin = (profB.holes || []).indexOf(p) >= 0 || (profB.thin || []).indexOf(p) >= 0;
+            const themDeep = (profB.surplus || []).indexOf(p) >= 0 || (profB.deep || []).indexOf(p) >= 0;
+            if (job === "fill" && mineThin && themDeep) { jobPos = p; break; }
+            if (job === "move" && mineDeep && themThin) { jobPos = p; break; }
+          }
+        }
         if (!best || score < best.score) {
           best = {
             legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel, score: score,
-            why: why, pos: fillPos || depthPos || "",
+            why: why, pos: jobPos,
             routeA: profA.route, routeB: profB.route,
             pe: homeDeskPe(key),
             book: book,
@@ -15060,90 +15116,88 @@ const html = `<!DOCTYPE html>
     }
 
     function homeDeskCards() {
+      if (!authSeatId() || !authSession) return [];
+      const mine = String(authSeatId());
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
       if (seats.length < 2) return [];
       const bags = homeDeskBags();
+      const myBag = bags.get(mine) || [];
+      if (!myBag.length) return [];
       const nameOf = function (uid) {
         const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
         return (hit && hit.name) || uid;
       };
-      const cands = [];
+      const scored = [];
       for (let i = 0; i < seats.length; i++) {
-        for (let j = i + 1; j < seats.length; j++) {
-          const a = String(seats[i].user_id);
-          const b = String(seats[j].user_id);
-          const bagA = bags.get(a) || [];
-          const bagB = bags.get(b) || [];
-          const talk = (bagA.length && bagB.length) ? homeDeskTalk(bagA, bagB) : null;
-          cands.push({
-            a: a,
-            b: b,
-            nameA: seats[i].name || nameOf(a),
-            nameB: seats[j].name || nameOf(b),
+        const uid = String(seats[i].user_id);
+        if (uid === mine) continue;
+        const theirBag = bags.get(uid) || [];
+        if (!theirBag.length) continue;
+        const profA = homeDeskProfile(myBag);
+        const profB = homeDeskProfile(theirBag);
+        const wants = ["fill", "move", "even"];
+        for (let w = 0; w < wants.length; w++) {
+          const want = wants[w];
+          const talk = homeDeskTalk(myBag, theirBag, want);
+          if (!talk) continue;
+          const job = homeDeskJob(talk, profA, profB);
+          if (job !== want) continue;
+          scored.push({
+            a: mine,
+            b: uid,
+            nameA: "You",
+            nameB: seats[i].name || nameOf(uid) || "them",
             talk: talk,
-            score: talk ? talk.score : 20000,
+            job: job,
+            score: talk.score,
           });
         }
       }
-      cands.sort(function (x, y) { return x.score - y.score; });
-      const mine = authSeatId() ? String(authSeatId()) : "";
+      scored.sort(function (x, y) { return x.score - y.score; });
+      const usedB = {};
       const picks = [];
-      const used = new Set();
-      const take = function (row) {
-        if (!row || used.has(row.a) || used.has(row.b)) return;
-        picks.push(row);
-        used.add(row.a);
-        used.add(row.b);
-      };
-      if (mine) {
-        take(cands.find(function (row) { return (row.a === mine || row.b === mine) && row.talk; }));
-      }
-      for (let i = 0; i < cands.length && picks.length < 3; i++) take(cands[i]);
-      if (picks.length < 3) {
-        for (let i = 0; i < cands.length && picks.length < 3; i++) {
-          const row = cands[i];
-          if (picks.some(function (p) { return p.a === row.a && p.b === row.b; })) continue;
+      const takeJob = function (want) {
+        for (let i = 0; i < scored.length; i++) {
+          const row = scored[i];
+          if (row.job !== want || usedB[row.b]) continue;
+          usedB[row.b] = 1;
           picks.push(row);
+          return;
         }
+      };
+      takeJob("fill");
+      takeJob("move");
+      takeJob("even");
+      for (let i = 0; i < scored.length && picks.length < 3; i++) {
+        if (usedB[scored[i].b]) continue;
+        usedB[scored[i].b] = 1;
+        picks.push(scored[i]);
       }
-      return picks.slice(0, 3).map(function (row) {
-        if (mine && row.b === mine && row.a !== mine) {
-          return {
-            a: row.b, b: row.a, nameA: row.nameB, nameB: row.nameA,
-            talk: row.talk && {
-              legsA: row.talk.legsB, legsB: row.talk.legsA,
-              kind: row.talk.kind, gap: row.talk.gap, rel: row.talk.rel, score: row.talk.score,
-              why: row.talk.why, pos: row.talk.pos,
-              routeA: row.talk.routeB, routeB: row.talk.routeA,
-              pe: row.talk.pe, book: row.talk.book,
-            },
-          };
-        }
-        return row;
-      });
+      return picks.slice(0, 3);
     }
 
     function homeDeskHtml() {
+      if (!authSeatId() || !authSession) return "";
       const cards = homeDeskCards();
       if (!cards.length) return "";
       return '<section class="home-desk" aria-label="Trade Desk">'
         + '<div class="home-desk-h">Trade Desk</div>'
-        + '<p class="home-desk-sub">Four-source today book. Three talks for the league. Tap to price it.</p>'
+        + '<p class="home-desk-sub">Talks for your bag. Tap to price it.</p>'
         + cards.map(function (row) {
           const sendA = (row.talk && row.talk.legsA || []).map(function (a) { return a.id; }).join(",");
           const sendB = (row.talk && row.talk.legsB || []).map(function (a) { return a.id; }).join(",");
-          const line = row.talk
-            ? (row.talk.legsA.map(homeDeskShortName).join(" + ")
-              + " for "
-              + row.talk.legsB.map(homeDeskShortName).join(" + "))
-            : "Open the calculator";
-          const meta = homeDeskMeta(row.talk);
+          const line = row.talk.legsA.map(homeDeskShortName).join(" + ")
+            + " for "
+            + row.talk.legsB.map(homeDeskShortName).join(" + ");
+          const job = homeDeskJobLabel(row.job);
+          const them = row.nameB || "them";
+          const meta = homeDeskMeta(row.talk, row.job);
           return '<button type="button" class="home-desk-row" data-desk-a="' + esc(row.a) + '"'
             + ' data-desk-b="' + esc(row.b) + '"'
             + (sendA ? ' data-desk-send-a="' + esc(sendA) + '"' : "")
             + (sendB ? ' data-desk-send-b="' + esc(sendB) + '"' : "")
-            + ' aria-label="' + esc(row.nameA + " and " + row.nameB + " — " + line) + '">'
-            + '<div class="home-desk-pair">' + esc(row.nameA) + " · " + esc(row.nameB) + "</div>"
+            + ' aria-label="' + esc(job + ". You and " + them + " — " + line) + '">'
+            + '<div class="home-desk-pair"><span class="home-desk-job">' + esc(job) + "</span> You · " + esc(them) + "</div>"
             + '<p class="home-desk-line">' + esc(line) + "</p>"
             + '<p class="home-desk-meta">' + esc(meta) + "</p>"
             + "</button>";
@@ -21376,13 +21430,22 @@ if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-in
 }
 if (!inline.includes("function homeDeskProfile(") || !inline.includes("function homeDeskMeta(")
   || !inline.includes("function homeDeskBookNote(")
+  || !inline.includes("function homeDeskJob(")
   || !inline.includes("Win-now") || !inline.includes("Reload") || !inline.includes("Rebuild")
   || !inline.includes("depth for a stud") || !inline.includes("Even-up · same window")
-  || !inline.includes("markets bid up") || !inline.includes("Four-source today book")
+  || !inline.includes("markets bid up") || !inline.includes("Talks for your bag")
+  || !inline.includes("You · ")
+  || inline.includes("Four-source today book")
+  || inline.includes("Three talks for the league")
   || inline.includes("Even-up starter")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
-  || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
-  throw new Error("Trade Desk must classify routes and stay free of bag numbers");
+  || fnSrc("homeDeskHtml").includes("calcValueNum(")
+  || fnSrc("homeDeskHtml").includes("Open the calculator")
+  || !fnSrc("homeDeskHtml").includes("authSession")
+  || !fnSrc("homeDeskCards").includes("authSession")
+  || !fnSrc("homeDeskCards").includes("homeDeskTalk(myBag, theirBag, want")
+  || fnSrc("homeDeskCards").includes("for (let j = i + 1")) {
+  throw new Error("Trade Desk must be first-person, omit when signed out, and stay free of bag numbers");
 }
 if (!inline.includes("async function openLeagueDashboard(")
   || !inline.includes("Keep a deep-linked sub-screen")) {

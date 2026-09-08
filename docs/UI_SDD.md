@@ -190,8 +190,11 @@ renders on the open-trade screen and on Teams / History feed cards.
 **Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
 plate). Opens `?view=calc`.
 
-**Trade Desk** — three league conversation cards from the today / `even` book (all ten seats;
-signed-in: your seat is card one). Each seat is classified from the **current bag**
+**Trade Desk** — omit if signed out (same rule as Alerts). Signed-in: one to three talks,
+and **every card includes you**. Never a pair of two other managers. Prefer three different
+counterparties and one of each job: **Fill** (you are thin — receive a startable), **Move**
+(you are deep — send extras / 2-for-1), **Even** (closest even-up). Pair label is
+`You ·` the other seat. Each seat is classified from the **current bag**
 (Win-now / Reload / Rebuild) using stud share, pick capital, and value-weighted age.
 Historic Win-now / Investor tape labels do not set the route and do not move any number.
 Talks prefer complementary routes and 2-for-1 **depth for a stud** when one seat is deep
@@ -199,7 +202,8 @@ at a position and the other is thin there; even-up is the floor. Meta may name a
 flatten-vs-today split (`markets bid up` / `markets cooler on` / `new on the market books`)
 and a buy / fair / sell chip from `pe.json` — signal only. Startable floors: QB 2 / RB 2 /
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
-calculator with those sides prefilled. No bag numbers.
+calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
+fourth card or “Open the calculator” filler.
 The News Feed pull-up stays the league-wide preview.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.

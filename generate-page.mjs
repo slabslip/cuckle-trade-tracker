@@ -1660,7 +1660,8 @@ const html = `<!DOCTYPE html>
     .cos-plate-banner {
       flex: 1 1 auto; min-width: 0; width: 100%;
       aspect-ratio: 1024 / 180; height: auto; max-height: none;
-      object-fit: cover; object-position: center;
+      /* Assets are already 1024×180 — contain avoids extra CSS cropping if the box flexes. */
+      object-fit: contain; object-position: center;
       display: block; background: #0a0c10;
     }
     .cos-plate-banner.is-text {
@@ -1670,17 +1671,17 @@ const html = `<!DOCTYPE html>
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
     }
-    /* Square slot matching banner height so the equipped circle fills the plate end. */
+    /* Fixed-width emblem column — do NOT steal banner width (keeps title art uncropped).
+       Circle fills the column; plate height still comes from the 1024×180 banner. */
     .cos-plate-emblem {
-      flex: 0 0 auto; align-self: stretch; aspect-ratio: 1 / 1;
-      width: auto; height: auto; min-width: 56px; max-width: 112px;
+      flex: 0 0 auto; width: clamp(52px, 18%, 72px); align-self: stretch;
       display: grid; place-items: center; box-sizing: border-box;
       border-left: 1px solid var(--line); background: #0e1016;
-      padding: 5px;
+      padding: 4px;
     }
     .cos-plate-emblem img {
-      width: 92%; height: 92%; max-width: none; max-height: none;
-      object-fit: contain; object-position: center; display: block;
+      width: 100%; height: auto; max-width: 100%; max-height: 100%;
+      aspect-ratio: 1 / 1; object-fit: contain; object-position: center; display: block;
     }
     .cos-titles {
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1697,7 +1698,7 @@ const html = `<!DOCTYPE html>
     button.cos-title.is-ladder { border-color: rgba(224, 180, 76, 0.35); }
     .cos-title-banner {
       display: block; width: 100%; aspect-ratio: 1024 / 180; height: auto;
-      object-fit: cover; object-position: center;
+      object-fit: contain; object-position: center;
       background: #0a0c10; border-radius: 4px;
     }
     .cos-title-fallback {
@@ -1750,7 +1751,8 @@ const html = `<!DOCTYPE html>
     .cos-plate-emblem .cos-emoji,
     .cos-plate-emblem .cos-emoji img,
     .cos-plate-emblem .cos-emoji-missing {
-      width: 92%; height: 92%; max-width: none; max-height: none;
+      width: 100%; height: auto; max-width: 100%; max-height: 100%;
+      aspect-ratio: 1 / 1;
     }
     .cos-plate-emblem .cos-emoji-missing { border-radius: 50%; }
     /* Equipped emblem on your seat name — same density as the champ crown. */
@@ -1772,12 +1774,13 @@ const html = `<!DOCTYPE html>
       aspect-ratio: 1024 / 180; height: auto; min-height: 0;
     }
     .cos-profile-plate .cos-plate-emblem {
-      min-width: 48px; max-width: 96px; padding: 4px;
+      width: clamp(44px, 16%, 60px); padding: 3px;
     }
     .cos-profile-plate .cos-plate-emblem img,
     .cos-profile-plate .cos-emoji,
     .cos-profile-plate .cos-emoji-missing {
-      width: 92%; height: 92%; max-width: none; max-height: none;
+      width: 100%; height: auto; max-width: 100%; max-height: 100%;
+      aspect-ratio: 1 / 1;
     }
     .cos-sheet {
       position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
@@ -1801,7 +1804,7 @@ const html = `<!DOCTYPE html>
     }
     .cos-sheet-banner {
       width: 100%; aspect-ratio: 1024 / 180; height: auto;
-      object-fit: cover; object-position: center;
+      object-fit: contain; object-position: center;
       border-radius: 8px; margin: 0 0 10px;
       display: block; background: #0a0c10;
     }
@@ -3468,7 +3471,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmeticsPlateEmblem-20260908004700";
+    const DATA_V = "cosmeticsBannerRestore-20260908010000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

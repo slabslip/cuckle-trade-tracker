@@ -12,6 +12,7 @@ Re-running this script will NOT overwrite comic masters with sheet crops.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -137,21 +138,75 @@ def export_emblem(sheet_img: Image.Image, cx: float, cy: float, r: float, path: 
 
 
 def export_comic_master(master: Path, dest: Path) -> None:
-    """Center-square crop → 128 circular badge with comic ring."""
+    """Tight-crop the comic circle → 128 circular badge that fills the canvas.
+
+    Masters are already circular badges on a dark field. We find the outer badge
+    radius from corner-background contrast, crop a snug square, and mask — without
+    stacking extra inset rings that shrink the art.
+    """
     im = Image.open(master).convert("RGBA")
-    w, h = im.size
-    side = min(w, h)
-    left = (w - side) // 2
-    top = (h - side) // 2
-    sq = im.crop((left, top, left + side, top + side)).resize((SIZE, SIZE), Image.Resampling.LANCZOS)
+    rgb = np.asarray(im.convert("RGB"), dtype=np.float32)
+    h, w = rgb.shape[:2]
+    # Sample corner patches as background (outside the circle).
+    patches = [
+        rgb[0:12, 0:12],
+        rgb[0:12, w - 12 : w],
+        rgb[h - 12 : h, 0:12],
+        rgb[h - 12 : h, w - 12 : w],
+    ]
+    bg = np.mean([p.reshape(-1, 3).mean(axis=0) for p in patches], axis=0)
+    diff = np.linalg.norm(rgb - bg, axis=2)
+    content = diff > 18.0
+    ys, xs = np.where(content)
+    if len(xs) < 200:
+        # Fallback: full center square
+        side = min(w, h)
+        left = (w - side) // 2
+        top = (h - side) // 2
+        sq = im.crop((left, top, left + side, top + side))
+    else:
+        cx = float(np.median(xs))
+        cy = float(np.median(ys))
+        # Prefer geometric center when content is a centered badge.
+        gcx, gcy = (w - 1) / 2.0, (h - 1) / 2.0
+        if abs(cx - gcx) < w * 0.04 and abs(cy - gcy) < h * 0.04:
+            cx, cy = gcx, gcy
+        rr = np.sqrt((xs.astype(np.float64) - cx) ** 2 + (ys.astype(np.float64) - cy) ** 2)
+        # Outer edge of badge (include ring); tiny pad so antialias isn't clipped.
+        radius = float(np.percentile(rr, 99.2)) * 1.01
+        radius = min(radius, cx, cy, w - 1 - cx, h - 1 - cy)
+        left = int(max(0, math.floor(cx - radius)))
+        top = int(max(0, math.floor(cy - radius)))
+        right = int(min(w, math.ceil(cx + radius)))
+        bottom = int(min(h, math.ceil(cy + radius)))
+        # Force square crop centered on the badge.
+        side = max(right - left, bottom - top)
+        cx_i, cy_i = (left + right) / 2.0, (top + bottom) / 2.0
+        left = int(round(cx_i - side / 2.0))
+        top = int(round(cy_i - side / 2.0))
+        right = left + side
+        bottom = top + side
+        if left < 0:
+            right -= left
+            left = 0
+        if top < 0:
+            bottom -= top
+            top = 0
+        if right > w:
+            left -= right - w
+            right = w
+        if bottom > h:
+            top -= bottom - h
+            bottom = h
+        sq = im.crop((left, top, right, bottom))
+
+    sq = sq.resize((SIZE, SIZE), Image.Resampling.LANCZOS)
     mask = Image.new("L", (SIZE, SIZE), 0)
-    ImageDraw.Draw(mask).ellipse((1, 1, SIZE - 2, SIZE - 2), fill=255)
+    # Full-bleed circle — 0.5px inset only for soft edges.
+    ImageDraw.Draw(mask).ellipse((0, 0, SIZE - 1, SIZE - 1), fill=255)
     out = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     out.paste(sq, (0, 0))
     out.putalpha(mask)
-    ring = ImageDraw.Draw(out)
-    ring.ellipse((2, 2, SIZE - 3, SIZE - 3), outline=(20, 12, 8, 220), width=3)
-    ring.ellipse((6, 6, SIZE - 7, SIZE - 7), outline=(255, 230, 90, 160), width=2)
     out.save(dest, optimize=True)
 
 

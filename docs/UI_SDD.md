@@ -241,7 +241,7 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 
 **Data** is the league deal-research terminal (visible tab label; internal `homeTab` stays
 `history`). Cold load is the **seat board**: 6–12 exchangeable report tiles from a 27-report
-library. The default 12 are the **Deal** hunts (fill holes, move extras, poach cuffs, available
+library. The default 12 are the **Deal** hunts (who has what you need, move extras, poach cuffs, available
 cuffs, uninsured, stash young, draft, held picks, top book, lopsided, run, cuffs). Edit offers
 **Deal** and **Research** presets that write the same `tiles[]`. The library groups
 Deal · Cuffs · Book · Tape · Seats · Lists so matcher tiles are not buried. The six desk chips

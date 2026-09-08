@@ -185,6 +185,7 @@ Cuckle is seeded / forced `ready` so the existing book works before a second-lea
 9. [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql) — `seat_avatars` for Settings → Profile photo crops
 10. [`db/wave18-seat-cosmetics.sql`](../db/wave18-seat-cosmetics.sql) — `seat_cosmetics` for equipped title + emblem on team home
 11. [`db/wave19-seat-data-dash.sql`](../db/wave19-seat-data-dash.sql) — `seat_data_dash` for the claimed seat's Data tile board
+12. [`db/wave20-seat-trade-block.sql`](../db/wave20-seat-trade-block.sql) — `seat_trade_block` listings (league members read; owner writes)
 
 Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 

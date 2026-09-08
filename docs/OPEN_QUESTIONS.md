@@ -167,6 +167,9 @@ a show-off plate. Anon-read would leak which reports a manager watches.
 
 **Recommended:** Keep the table private. Do not paint another seat's board on Data.
 
+The **trade block** is the opposite: `seat_trade_block` is league-readable so managers can see
+what is actually for sale. Only the owner writes their row. That is a listing, not a workspace.
+
 ---
 
 ## 16. Do we mint the expanded award list now?

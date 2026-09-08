@@ -239,18 +239,28 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
-**Data** is the league research homebase (visible tab label; internal `homeTab` stays
-`history`). Cold load is the **seat board**: 6–12 exchangeable report tiles from a 24-report
-library (12 default, 12 more in the inventory). The six desk chips under search never customize:
-Book · Tape · Seats · Lists · Draft · Cuffs. Overview is the board, not a seventh chip. Search
-with a query still fans into Book / Tape / Seats hits. Empty query paints the board. Edit
-(claimed seat only) swaps, adds, removes, and reorders tiles; layout persists on
-`public.seat_data_dash` (private to that seat) plus `cuckle.data.dash.v1.<league>.<seat>`.
-Book is the extractable catalog (position / seat / value-name-age). Tape is widest-on-clock by
-default, then year + search over every deal. Seats are the six mark charts. Lists keeps the five
-saved sets plus Past Champions. A saved set still drills to one list; back returns to Lists.
+**Data** is the league deal-research terminal (visible tab label; internal `homeTab` stays
+`history`). Cold load is the **seat board**: 6–12 exchangeable report tiles from a 27-report
+library. The default 12 are the **Deal** hunts (who has what you need, move extras, poach cuffs, available
+cuffs, uninsured, stash young, draft, held picks, top book, lopsided, run, cuffs). Edit offers
+**Deal** and **Research** presets that write the same `tiles[]`. The library groups
+Deal · Cuffs · Book · Tape · Seats · Lists so matcher tiles are not buried. The six desk chips
+under search never customize: Book · Tape · Seats · Lists · Draft · Cuffs. Overview is the
+board, not a seventh chip. Hunt tiles peek three rows (player · their team · why) with no bag
+totals. Tap opens that hunt full-screen; a row opens the calculator first-person (A = you,
+B = them, legs prefilled when the piece is known). Search with a query still fans into
+Book / Tape / Seats hits. Empty query paints the board. Edit (claimed seat only) swaps, adds,
+removes, and reorders tiles; layout persists on `public.seat_data_dash` (private to that seat)
+plus `cuckle.data.dash.v1.<league>.<seat>`. The **trade block** is league-readable and
+owner-write on `public.seat_trade_block` (cap 8). Tiles: My block, League block, Block fits.
+Book is the extractable catalog (position / seat / value-name-age; as-of lives in the book
+hint). Tape is widest-on-clock by default, then year + search over every deal. Seats are the
+six mark charts. Lists keeps the five saved sets plus Past Champions. A saved set still drills
+to one list; back returns to Lists. Snapshot facts (tape count, book date, volume) stay on
+desks, not as catalog tiles.
 **Teams** is the door into a seat (header picker stays gone — §2). Do not put bag totals on Home.
-Do not restore Best 10 / Worst 10. Votes never enter these numbers.
+Do not restore Best 10 / Worst 10. Style labels (Win-now / Rebuild) may caption a row; they
+must not move a clock or a delta. Votes never enter these numbers.
 
 **League Data Sets** (Data → Lists) — one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold

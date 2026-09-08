@@ -156,7 +156,20 @@ tokens to every `seatLabel` yet.
 
 ---
 
-## 15. Do we mint the expanded award list now?
+## 15. Whose Data tile layout is this?
+
+**Assumed:** The Data board is a **private per-seat workspace**. It follows the claimed seat
+across devices via `seat_data_dash` (authenticated read/write for that membership only). Other
+managers do not see your tiles. Unsigned / no seat sees the starting 12 and cannot Edit.
+
+**Why it matters:** Cosmetics are public so team home can paint. A dashboard is a workspace, not
+a show-off plate. Anon-read would leak which reports a manager watches.
+
+**Recommended:** Keep the table private. Do not paint another seat's board on Data.
+
+---
+
+## 16. Do we mint the expanded award list now?
 
 **Assumed:** 88-id catalog (44 matched pairs, including locked `four_time` / `five_time` and two- and
 three-time finalist emblems). Championship rungs stay the highest prestige. Tier 1–4 grind

@@ -3047,14 +3047,74 @@ const html = `<!DOCTYPE html>
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px;
     }
     .data-tile {
+      appearance: none; font: inherit; color: inherit; text-align: left;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 10px;
-      padding: 10px 12px; min-height: 64px;
+      padding: 10px 12px; min-height: 64px; width: 100%; box-sizing: border-box;
+      cursor: pointer; display: block;
     }
     .data-tile span {
       display: block; font-size: 0.62rem; font-weight: 750; letter-spacing: 0.05em;
       text-transform: uppercase; color: var(--dim); margin: 0 0 4px;
     }
     .data-tile b { display: block; font-size: 1.05rem; font-weight: 750; color: var(--text); }
+    .data-board {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px;
+    }
+    .data-tile.is-full { grid-column: 1 / -1; }
+    .data-tile-sub {
+      display: block; font-size: 0.72rem; font-weight: 500; letter-spacing: 0;
+      text-transform: none; color: var(--dim); margin: 4px 0 0;
+    }
+    .data-tile-peek { margin: 8px 0 0; }
+    .data-tile-peek .data-xrow { margin: 0 0 6px; }
+    .data-tile-peek .data-xrow:last-child { margin: 0; }
+    .data-tile-peek .row { margin: 0 0 6px; }
+    .data-tile-edit {
+      display: flex; gap: 6px; justify-content: flex-end; margin: 0 0 6px;
+    }
+    button.data-tile-ico {
+      appearance: none; font: inherit; font-size: 0.78rem; font-weight: 750;
+      color: var(--text); background: #141418; border: 1px solid var(--line);
+      border-radius: 8px; min-height: 32px; min-width: 32px; padding: 0 8px; cursor: pointer;
+    }
+    button.data-tile-swap {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; padding: 0; margin: 0; width: 100%; cursor: pointer;
+    }
+    button.data-tile-add {
+      min-height: 64px; display: grid; place-items: center; color: var(--muted);
+      font-weight: 650; letter-spacing: 0; text-transform: none;
+    }
+    .data-lib {
+      position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
+      justify-content: center; padding: 12px;
+    }
+    button.data-lib-scrim {
+      appearance: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+      position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55);
+    }
+    .data-lib-panel {
+      position: relative; z-index: 1; width: min(420px, 100%);
+      max-height: min(76dvh, 640px); overflow: hidden;
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px 16px 12px 12px;
+      padding: 14px 14px 16px; box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.45);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .data-lib-panel h3 { margin: 0; font-size: 1.05rem; }
+    .data-lib-list {
+      overflow: auto; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto;
+    }
+    button.data-lib-row {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 8px;
+      min-height: 44px; padding: 8px 10px; cursor: pointer; width: 100%;
+      margin: 0 0 6px; display: block; box-sizing: border-box;
+    }
+    button.data-lib-row b { display: block; font-weight: 650; }
+    button.data-lib-row span {
+      display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; text-wrap: pretty;
+    }
+    button.data-lib-row.on { opacity: 0.55; cursor: default; }
     .data-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 750; letter-spacing: 0.05em;
       text-transform: uppercase; color: var(--dim);
@@ -3583,7 +3643,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "teamcos20260908023000";
+    const DATA_V = "datadash20260908030000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3615,6 +3675,43 @@ const html = `<!DOCTYPE html>
     let dataSort = "value";
     let dataYear = "";
     let dataMark = "volume";
+    let dataDashTiles = null;
+    let dataDashEdit = false;
+    let dataDashLibOpen = false;
+    let dataDashSwapId = "";
+    const DATA_DASH_MIN = 6;
+    const DATA_DASH_MAX = 12;
+    const DATA_DASH_DEFAULT = [
+      "tape_count", "book_asof", "firsts_held", "uninsured",
+      "seat_volume", "widest_clock", "passed_around", "homesteaders",
+      "draft_board", "cuffs_board", "lopsided", "seat_run",
+    ];
+    const DATA_REPORTS = [
+      { id: "tape_count", lab: "Tape", desk: "tape", size: "half", why: "How many complete deals are on the tape." },
+      { id: "book_asof", lab: "Book as of", desk: "book", size: "half", why: "When the today book was scored." },
+      { id: "firsts_held", lab: "Firsts held", desk: "draft", size: "half", why: "First-round picks still held." },
+      { id: "uninsured", lab: "Uninsured", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
+      { id: "seat_volume", lab: "Volume", desk: "seats", size: "full", why: "How much each seat trades." },
+      { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
+      { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players traded the most times." },
+      { id: "homesteaders", lab: "Homesteaders", desk: "lists", size: "full", why: "Longest stays, forever players aside." },
+      { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
+      { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
+      { id: "lopsided", lab: "Most lopsided", desk: "lists", size: "full", why: "The ten widest margins." },
+      { id: "seat_run", lab: "Run", desk: "seats", size: "full", why: "Ahead or behind on the Score as clock." },
+      { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
+      { id: "forever", lab: "Forever", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
+      { id: "past_champions", lab: "Past Champions", desk: "lists", size: "half", why: "Every title path in this league." },
+      { id: "seat_posture", lab: "Posture", desk: "seats", size: "full", why: "Picks sold for players vs the other way." },
+      { id: "seat_manners", lab: "Manners", desk: "seats", size: "full", why: "Who extracts vs who gets extracted." },
+      { id: "seat_aging", lab: "Aging", desk: "seats", size: "full", why: "How 2-team trades moved after accept." },
+      { id: "seat_draft", lab: "Draft marks", desk: "seats", size: "full", why: "Rookie surplus vs the pick." },
+      { id: "book_top", lab: "Top book", desk: "book", size: "full", why: "Highest-value assets in the book." },
+      { id: "tape_year", lab: "Latest year", desk: "tape", size: "half", why: "Deals from the latest year on the tape." },
+      { id: "held_picks", lab: "Held picks", desk: "draft", size: "full", why: "Future picks this seat still holds." },
+      { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
+      { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Starters whose cuff is a free agent." },
+    ];
     let dsOpen = false;
     const WINDOWS = [
       ["t0", "Date of Trade", "Value on the day the trade was accepted."],
@@ -5013,7 +5110,11 @@ const html = `<!DOCTYPE html>
         cosmeticsBook = cosRaw && cosRaw.v === 1 && Array.isArray(cosRaw.catalog) ? cosRaw : null;
       } catch (err) { cosmeticsBook = null; }
       cosmeticsLoadEquip();
+      dataDashTiles = dataDashReadLocal();
       loadSeatCosmetics().then(() => {
+        if (appScreen === "dash") ledgerMaybeRender();
+      }).catch((err) => console.error(err));
+      loadSeatDataDash().then(() => {
         if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
       try {
@@ -6046,6 +6147,9 @@ const html = `<!DOCTYPE html>
       dataSort = "value";
       dataYear = "";
       dataMark = "volume";
+      dataDashEdit = false;
+      dataDashLibOpen = false;
+      dataDashSwapId = "";
     }
 
     function dataDashFocusSearch(range) {
@@ -6158,6 +6262,390 @@ const html = `<!DOCTYPE html>
       return Object.keys(years).sort().reverse();
     }
 
+    function dataDashById(id) {
+      for (let i = 0; i < DATA_REPORTS.length; i++) {
+        if (DATA_REPORTS[i].id === id) return DATA_REPORTS[i];
+      }
+      return null;
+    }
+
+    function dataDashCanon(tiles) {
+      const seen = {};
+      const out = [];
+      const src = Array.isArray(tiles) ? tiles : [];
+      for (let i = 0; i < src.length; i++) {
+        const id = String(src[i] || "");
+        if (!id || seen[id] || !dataDashById(id)) continue;
+        seen[id] = true;
+        out.push(id);
+        if (out.length >= DATA_DASH_MAX) break;
+      }
+      if (out.length < DATA_DASH_MIN) {
+        for (let j = 0; j < DATA_DASH_DEFAULT.length; j++) {
+          const id = DATA_DASH_DEFAULT[j];
+          if (seen[id]) continue;
+          seen[id] = true;
+          out.push(id);
+          if (out.length >= DATA_DASH_MIN) break;
+        }
+      }
+      return out;
+    }
+
+    function dataDashBoardTiles() {
+      return dataDashCanon(dataDashTiles);
+    }
+
+    function dataDashHas(id) {
+      return dataDashBoardTiles().indexOf(id) >= 0;
+    }
+
+    function dataDashCanEdit() {
+      return !!authSeatId();
+    }
+
+    function dataDashKey() {
+      const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId()) || "";
+      const seat = authSeatId() || "";
+      if (leagueId && seat) return "cuckle.data.dash.v1." + leagueId + "." + seat;
+      if (seat) return "cuckle.data.dash.v1." + seat;
+      return "cuckle.data.dash.v1";
+    }
+
+    function dataDashReadLocal() {
+      try {
+        const raw = localStorage.getItem(dataDashKey());
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(parsed)) return dataDashCanon(parsed);
+      } catch (err) { /* private mode */ }
+      return dataDashCanon(DATA_DASH_DEFAULT);
+    }
+
+    function dataDashWriteLocal(tiles) {
+      try { localStorage.setItem(dataDashKey(), JSON.stringify(dataDashCanon(tiles))); }
+      catch (err) { /* private mode */ }
+    }
+
+    function dataDashCommit(next) {
+      dataDashTiles = dataDashCanon(next);
+      dataDashWriteLocal(dataDashTiles);
+      saveSeatDataDash(dataDashTiles);
+    }
+
+    function dataDashMarkRows(metric, limit) {
+      const keys = ["volume", "run", "posture", "manners", "aging", "draft"];
+      const m = keys.indexOf(metric) >= 0 ? metric : "volume";
+      const seats = (marks && marks.seats) || {};
+      const rows = (members || [])
+        .filter(function (mem) { return seats[mem.user_id]; })
+        .map(function (mem) {
+          return { name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[m] };
+        });
+      rows.sort(function (a, b) { return b.sort - a.sort; });
+      const cap = limit || 10;
+      return { metric: m, rows: rows.slice(0, cap) };
+    }
+
+    function dataDashMarkPeekHtml(metric, limit) {
+      const pack = dataDashMarkRows(metric, limit || 5);
+      if (!pack.rows.length) return '<p class="caption">No league marks in this build.</p>';
+      const maxAbs = Math.max.apply(null, pack.rows.map(function (r) { return Math.abs(r.sort); }).concat([1]));
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      return pack.rows.map(function (r, i) {
+        const you = mine && String(r.uid) === mine;
+        const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
+        return '<button type="button" class="mark-bar' + (you ? " you" : "") + '" data-data-seat="' + esc(r.uid) + '">'
+          + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + seatLabel(r.name) + "</span>"
+          + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
+          + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div></button>';
+      }).join("");
+    }
+
+    function dataDashListPeek(key, n) {
+      const p = (league && league.player_lists) || {};
+      return (p[key] || []).slice(0, n || 3);
+    }
+
+    function dataDashHeldPicksCount() {
+      const seat = authSeatCanonName() || authSeatId();
+      if (!seat || typeof stillPickEntries !== "function") return null;
+      const rows = stillPickEntries();
+      let n = 0;
+      for (let i = 0; i < rows.length; i++) {
+        if (pickOwnerName(rows[i].entry) === seat) n += 1;
+      }
+      return n;
+    }
+
+    function dataDashMyCuffsCount() {
+      const sid = authSeatId();
+      const seat = authSeatCanonName();
+      const rows = (cuffs && cuffs.rows) || [];
+      let n = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (sid && r.owner_id != null && String(r.owner_id) !== "") {
+          if (String(r.owner_id) === String(sid)) n += 1;
+        } else if (seat && r.owner === seat) n += 1;
+      }
+      return n;
+    }
+
+    function dataDashHead(spec, fig, sub) {
+      return "<span>" + esc(spec.lab) + "</span><b>" + fig + "</b>"
+        + (sub ? '<span class="data-tile-sub">' + esc(sub) + "</span>" : "");
+    }
+
+    function dataDashTileInner(id) {
+      const spec = dataDashById(id);
+      if (!spec) return "";
+      if (id === "tape_count") {
+        return dataDashHead(spec, dataDashTapeCount() + " deals", "Complete two-way tape");
+      }
+      if (id === "book_asof") {
+        return dataDashHead(spec, esc(dataDashAsOf()), "Today book");
+      }
+      if (id === "firsts_held") {
+        return dataDashHead(spec, String(dataDashFirstsHeld()), "Firsts still in the book");
+      }
+      if (id === "uninsured") {
+        return dataDashHead(spec, dataDashUninsured() + " starters", "Cuff not rostered");
+      }
+      if (id === "tape_year") {
+        const years = dataDashYears();
+        const y = years[0] || "";
+        const n = y ? dataDashTapeHits("", y, 400).n : 0;
+        return dataDashHead(spec, y ? (n + " in " + y) : "—", "Latest year on the tape");
+      }
+      if (id === "past_champions") {
+        const n = (titles && titles.titles && titles.titles.length) || 0;
+        return dataDashHead(spec, n ? (n + " titles") : "Open", "Every title path");
+      }
+      if (id === "seat_volume" || id === "seat_run" || id === "seat_posture"
+        || id === "seat_manners" || id === "seat_aging" || id === "seat_draft") {
+        const mark = ({
+          seat_volume: "volume", seat_run: "run", seat_posture: "posture",
+          seat_manners: "manners", seat_aging: "aging", seat_draft: "draft",
+        })[id];
+        return "<span>" + esc(spec.lab) + "</span>"
+          + '<div class="data-tile-peek">' + dataDashMarkPeekHtml(mark, 5) + "</div>";
+      }
+      if (id === "widest_clock" || (id === "lopsided" && !dataDashHas("widest_clock"))) {
+        const wide = rankWide().slice(0, 3).map(function (r) { return { r: r, score: windowScore(r) }; });
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (wide.length
+            ? '<div class="data-tile-peek">' + wide.map(dataDashTapeRow).join("") + "</div>"
+            : '<span class="data-tile-sub">No sides on this clock yet</span>');
+      }
+      if (id === "lopsided") {
+        return dataDashHead(spec, "Ten widest", "Open the saved list");
+      }
+      if (id === "passed_around") {
+        const rows = dataDashListPeek("most_traded", 3);
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (rows.length
+            ? '<div class="data-tile-peek">' + rows.map(function (r) {
+              return listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"));
+            }).join("") + "</div>"
+            : '<span class="data-tile-sub">No liquidity rows yet</span>');
+      }
+      if (id === "homesteaders") {
+        const rows = dataDashListPeek("homesteaders", 3);
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (rows.length
+            ? '<div class="data-tile-peek">' + rows.map(function (r) {
+              return listRow(r, yearsOn(r.days));
+            }).join("") + "</div>"
+            : '<span class="data-tile-sub">No homestead rows yet</span>');
+      }
+      if (id === "least_traded") {
+        const rows = dataDashListPeek("least_traded", 3);
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (rows.length
+            ? '<div class="data-tile-peek">' + rows.map(function (r) {
+              return listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades"));
+            }).join("") + "</div>"
+            : '<span class="data-tile-sub">No least-traded rows yet</span>');
+      }
+      if (id === "forever") {
+        const rows = dataDashListPeek("forever", 3);
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (rows.length
+            ? '<div class="data-tile-peek">' + rows.map(function (r) {
+              return listRow(r, yearsOn(r.days));
+            }).join("") + "</div>"
+            : '<span class="data-tile-sub">No forever rows yet</span>');
+      }
+      if (id === "book_top") {
+        const hits = dataDashBookHits("", "", "", "value", 5);
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (hits.rows.length
+            ? '<div class="data-tile-peek">' + hits.rows.map(dataDashBookRow).join("") + "</div>"
+            : '<span class="data-tile-sub">Book is not loaded yet</span>');
+      }
+      if (id === "draft_board") {
+        if (typeof ensurePicks === "function") ensurePicks();
+        const leaders = (typeof pickLeaders === "function")
+          ? pickLeaders([1], 3, PICK_INTEL_BOARD_YEAR) : [];
+        return "<span>" + esc(spec.lab) + "</span>"
+          + (leaders.length
+            ? '<div class="data-tile-peek">' + pickLeadersStack(leaders) + "</div>"
+            : '<span class="data-tile-sub">No still-available firsts yet</span>');
+      }
+      if (id === "cuffs_board") {
+        if (typeof ensureCuffs === "function") ensureCuffs();
+        const leaders = (typeof cuffLeaders === "function") ? cuffLeaders("bare", 3) : [];
+        return "<span>" + esc(spec.lab) + "</span>"
+          + '<span class="data-tile-sub">' + dataDashUninsured() + " uninsured starters</span>"
+          + (leaders.length
+            ? '<div class="data-tile-peek">' + pickLeadersStack(leaders) + "</div>"
+            : "");
+      }
+      if (id === "held_picks") {
+        if (typeof ensurePicks === "function") ensurePicks();
+        if (!authSeatId()) return dataDashHead(spec, "—", "Claim your seat to use this");
+        const n = dataDashHeldPicksCount();
+        return dataDashHead(spec, n == null ? "—" : String(n), "Still on your seat");
+      }
+      if (id === "my_cuffs") {
+        if (typeof ensureCuffs === "function") ensureCuffs();
+        if (!authSeatId()) return dataDashHead(spec, "—", "Claim your seat to use this");
+        return dataDashHead(spec, String(dataDashMyCuffsCount()), "Cuffs on your starters");
+      }
+      if (id === "available_cuffs") {
+        if (typeof ensureCuffs === "function") ensureCuffs();
+        return dataDashHead(spec, dataDashUninsured() + " open", "Cuff is a free agent");
+      }
+      return dataDashHead(spec, "Open", spec.why);
+    }
+
+    function dataDashTileHtml(id) {
+      const spec = dataDashById(id);
+      if (!spec) return "";
+      const size = spec.size === "full" ? " is-full" : "";
+      const inner = dataDashTileInner(id);
+      if (dataDashEdit) {
+        const tiles = dataDashBoardTiles();
+        const canCut = tiles.length > DATA_DASH_MIN;
+        return '<div class="data-tile' + size + '" data-dash-id="' + esc(id) + '">'
+          + '<div class="data-tile-edit">'
+          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="-1" aria-label="Move up">↑</button>'
+          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="1" aria-label="Move down">↓</button>'
+          + (canCut
+            ? '<button type="button" class="data-tile-ico" data-dash-remove="' + esc(id) + '" aria-label="Remove">−</button>'
+            : "")
+          + "</div>"
+          + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + inner + "</button>"
+          + "</div>";
+      }
+      if (spec.size === "full") {
+        return '<div class="data-tile' + size + '">'
+          + '<button type="button" class="data-tile-swap" data-dash-open="' + esc(id) + '">'
+          + "<span>" + esc(spec.lab) + "</span></button>"
+          + inner.replace("<span>" + esc(spec.lab) + "</span>", "")
+          + "</div>";
+      }
+      return '<button type="button" class="data-tile' + size + '" data-dash-open="' + esc(id) + '">'
+        + inner + "</button>";
+    }
+
+    function dataDashBoardHtml() {
+      const tiles = dataDashBoardTiles();
+      if (typeof ensurePicks === "function") ensurePicks();
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      let html = '<div class="data-board" aria-label="Data board">';
+      html += tiles.map(dataDashTileHtml).join("");
+      if (dataDashEdit && tiles.length < DATA_DASH_MAX) {
+        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add report</button>';
+      }
+      return html + "</div>";
+    }
+
+    function dataDashLibraryHtml() {
+      if (!dataDashLibOpen) return "";
+      const pinned = {};
+      dataDashBoardTiles().forEach(function (id) { pinned[id] = true; });
+      const desks = [
+        ["book", "Book"], ["tape", "Tape"], ["seats", "Seats"],
+        ["lists", "Lists"], ["draft", "Draft"], ["cuffs", "Cuffs"],
+      ];
+      const head = dataDashSwapId ? "Replace tile" : "Add a report";
+      let body = "";
+      for (let d = 0; d < desks.length; d++) {
+        const rows = DATA_REPORTS.filter(function (r) { return r.desk === desks[d][0]; });
+        if (!rows.length) continue;
+        body += '<div class="data-h">' + desks[d][1] + "</div>";
+        body += rows.map(function (r) {
+          const on = !!pinned[r.id];
+          return '<button type="button" class="data-lib-row' + (on ? " on" : "") + '"'
+            + (on ? " disabled" : "") + ' data-dash-use="' + esc(r.id) + '">'
+            + "<b>" + esc(r.lab) + "</b><span>" + esc(r.why) + (on ? " · On board" : "") + "</span></button>";
+        }).join("");
+      }
+      return '<div class="data-lib" role="dialog" aria-modal="true" aria-label="' + head + '">'
+        + '<button type="button" class="data-lib-scrim" data-dash-lib-close="1" aria-label="Close"></button>'
+        + '<div class="data-lib-panel"><h3>' + head + "</h3>"
+        + '<div class="data-lib-list">' + body + "</div>"
+        + '<button type="button" class="chip" data-dash-lib-close="1">Close</button>'
+        + "</div></div>";
+    }
+
+    function dataDashOpenReport(id) {
+      const spec = dataDashById(id);
+      if (!spec) return;
+      dataDashEdit = false;
+      dataDashLibOpen = false;
+      dataDashSwapId = "";
+      dataSet = null;
+      if (id === "held_picks") {
+        if (!authSeatId()) return;
+        openDraftDataPage("held");
+        return;
+      }
+      if (id === "my_cuffs") {
+        if (!authSeatId()) return;
+        openCuffsPage("mine");
+        return;
+      }
+      if (id === "available_cuffs") {
+        openCuffsPage("fa");
+        return;
+      }
+      if (id === "past_champions") {
+        view = "titles";
+        focusNext = ".screen-h";
+        syncUrl();
+        render();
+        return;
+      }
+      if (id === "passed_around") { dataRoom = "lists"; selectDataSet("passed"); return; }
+      if (id === "homesteaders") { dataRoom = "lists"; selectDataSet("home"); return; }
+      if (id === "least_traded") { dataRoom = "lists"; selectDataSet("least"); return; }
+      if (id === "forever") { dataRoom = "lists"; selectDataSet("forever"); return; }
+      if (id === "lopsided") { dataRoom = "lists"; selectDataSet("wide"); return; }
+      if (id === "tape_count" || id === "widest_clock" || id === "tape_year") {
+        dataRoom = "tape";
+        dataYear = (id === "tape_year" && dataDashYears()[0]) ? dataDashYears()[0] : "";
+      } else if (id === "book_asof" || id === "book_top") {
+        dataRoom = "book";
+        dataSort = "value";
+      } else if (id === "firsts_held" || id === "draft_board") {
+        dataRoom = "draft";
+      } else if (id === "uninsured" || id === "cuffs_board") {
+        dataRoom = "cuffs";
+      } else if (id.indexOf("seat_") === 0) {
+        dataRoom = "seats";
+        dataMark = ({
+          seat_volume: "volume", seat_run: "run", seat_posture: "posture",
+          seat_manners: "manners", seat_aging: "aging", seat_draft: "draft",
+        })[id] || "volume";
+      } else {
+        dataRoom = spec.desk;
+      }
+      focusNext = ".screen-h";
+      render();
+    }
+
     function dataDashSearchHtml() {
       const ph = dataRoom === "tape"
         ? "Search trades, seats, headlines"
@@ -6172,7 +6660,6 @@ const html = `<!DOCTYPE html>
 
     function dataDashRoomsHtml() {
       const rooms = [
-        ["overview", "Overview"],
         ["book", "Book"],
         ["tape", "Tape"],
         ["seats", "Seats"],
@@ -6180,13 +6667,17 @@ const html = `<!DOCTYPE html>
         ["draft", "Draft"],
         ["cuffs", "Cuffs"],
       ];
-      return '<div class="data-rooms" role="tablist" aria-label="Data rooms">'
+      const editDis = !dataDashCanEdit();
+      return '<div class="data-rooms" role="tablist" aria-label="Data desks">'
         + rooms.map(function (r) {
           const on = dataDashRoomCanon(dataRoom) === r[0];
           return '<button type="button" class="data-room' + (on ? " on" : "") + '"'
             + ' data-data-room="' + r[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
             + r[1] + "</button>";
         }).join("")
+        + '<button type="button" class="data-room' + (dataDashEdit ? " on" : "") + '" data-dash-edit="1"'
+        + (editDis ? ' disabled aria-disabled="true" title="Claim your seat to use this"' : "")
+        + ">" + (dataDashEdit ? "Done" : "Edit") + "</button>"
         + "</div>";
     }
 
@@ -6364,26 +6855,7 @@ const html = `<!DOCTYPE html>
             ? '<p class="data-hint">Nothing matches that search.</p>'
             : "");
       }
-      const wide = rankWide().slice(0, 3).map(function (r) { return { r: r, score: windowScore(r) }; });
-      const lists = (league && league.player_lists) || {};
-      const passed = (lists.most_traded || []).slice(0, 3);
-      const home = (lists.homesteaders || []).slice(0, 3);
-      return dataDashSnapHtml()
-        + '<div class="data-h">Seat tape</div>'
-        + dataDashChartHtml()
-        + (wide.length
-          ? ('<div class="data-h">Widest on this clock</div><div class="data-peek">'
-            + wide.map(dataDashTapeRow).join("")
-            + '<p class="caption"><button type="button" class="chip" data-data-room="tape">Open tape</button></p></div>')
-          : "")
-        + ((passed.length || home.length)
-          ? ('<div class="data-h">Liquidity</div><div class="data-peek">'
-            + passed.map(function (r) { return listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades")); }).join("")
-            + home.map(function (r) { return listRow(r, yearsOn(r.days)); }).join("")
-            + '<p class="caption"><button type="button" class="chip" data-data-room="lists">League lists</button></p></div>')
-          : "")
-        + '<div class="data-h">Draft capital</div>' + pickIntelHome()
-        + '<div class="data-h">Depth cuffs</div>' + cuffsHome();
+      return dataDashBoardHtml();
     }
 
     function dataDashHtml() {
@@ -6396,12 +6868,17 @@ const html = `<!DOCTYPE html>
       else if (room === "draft") body = pickIntelHome();
       else if (room === "cuffs") body = cuffsHome();
       else body = dataDashOverviewHtml();
+      const back = room === "overview"
+        ? ""
+        : '<p class="caption"><button type="button" class="chip back" data-data-room="overview">← Data</button></p>';
       return '<section class="data-dash" aria-label="League data">'
         + '<h2 class="screen-h" tabindex="-1">Data</h2>'
         + '<p class="data-dash-sub">League research. Search the book, scan the tape, compare seats. Votes never enter these numbers.</p>'
         + dataDashSearchHtml()
         + dataDashRoomsHtml()
+        + back
         + body
+        + dataDashLibraryHtml()
         + "</section>";
     }
 
@@ -12564,6 +13041,10 @@ const html = `<!DOCTYPE html>
       loadSeatCosmetics().then(() => {
         if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
+      dataDashTiles = dataDashReadLocal();
+      loadSeatDataDash().then(() => {
+        if (appScreen === "dash") ledgerMaybeRender();
+      }).catch((err) => console.error(err));
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
       if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
@@ -15174,6 +15655,76 @@ const html = `<!DOCTYPE html>
           try {
             localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
           } catch (err) { /* private mode */ }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function loadSeatDataDash() {
+      const lid = (typeof avatarLeagueId === "function" && avatarLeagueId()) || "";
+      const uid = authSeatId();
+      dataDashTiles = dataDashReadLocal();
+      if (!lid || !uid) return;
+      if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) return;
+      if (!authSession || !authSession.access_token) return;
+      try {
+        if (typeof authRefreshIfNeeded === "function") await authRefreshIfNeeded();
+        const res = await fetch(
+          VOTE_API + "/seat_data_dash?select=tiles&sleeper_league_id=eq."
+            + encodeURIComponent(lid) + "&sleeper_user_id=eq." + encodeURIComponent(String(uid)),
+          {
+            headers: {
+              apikey: VOTE_ANON,
+              Authorization: "Bearer " + authSession.access_token,
+            },
+            signal: voteAbort(),
+          },
+        );
+        if (!res.ok) return;
+        const rows = await res.json();
+        const remote = rows && rows[0] && rows[0].tiles;
+        if (Array.isArray(remote) && remote.length) {
+          dataDashTiles = dataDashCanon(remote);
+          dataDashWriteLocal(dataDashTiles);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function saveSeatDataDash(tiles) {
+      const lid = (typeof avatarLeagueId === "function" && avatarLeagueId()) || "";
+      const uid = authSeatId();
+      if (!lid || !uid) return;
+      if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) return;
+      if (!authSession || !authSession.access_token) return;
+      try {
+        if (typeof authRefreshIfNeeded === "function") await authRefreshIfNeeded();
+        const res = await fetch(
+          VOTE_API + "/seat_data_dash?on_conflict=sleeper_league_id,sleeper_user_id",
+          {
+            method: "POST",
+            headers: {
+              apikey: VOTE_ANON,
+              Authorization: "Bearer " + authSession.access_token,
+              "Content-Type": "application/json",
+              Prefer: "resolution=merge-duplicates,return=minimal",
+            },
+            body: JSON.stringify({
+              sleeper_league_id: lid,
+              sleeper_user_id: String(uid),
+              tiles: dataDashCanon(tiles),
+              updated_at: new Date().toISOString(),
+            }),
+            signal: voteAbort(),
+          },
+        );
+        if (!res.ok) {
+          const t = await res.text();
+          if (res.status !== 404 && !/relation .* does not exist/i.test(t)) {
+            console.error("seat_data_dash save", res.status, t.slice(0, 160));
+          }
         }
       } catch (err) {
         console.error(err);
@@ -18392,10 +18943,96 @@ const html = `<!DOCTYPE html>
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
+      const dashEditBtn = e.target.closest("[data-dash-edit]");
+      if (dashEditBtn) {
+        if (!dataDashCanEdit()) return;
+        dataRoom = "overview";
+        dataSet = null;
+        dataDashEdit = !dataDashEdit;
+        dataDashLibOpen = false;
+        dataDashSwapId = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const dashRemoveBtn = e.target.closest("[data-dash-remove]");
+      if (dashRemoveBtn) {
+        const id = dashRemoveBtn.getAttribute("data-dash-remove") || "";
+        const next = dataDashBoardTiles().filter(function (x) { return x !== id; });
+        if (next.length >= DATA_DASH_MIN) dataDashCommit(next);
+        render();
+        return;
+      }
+      const dashMoveBtn = e.target.closest("[data-dash-move]");
+      if (dashMoveBtn) {
+        const id = dashMoveBtn.getAttribute("data-dash-move") || "";
+        const dir = Number(dashMoveBtn.getAttribute("data-dash-dir") || 0);
+        const next = dataDashBoardTiles().slice();
+        const at = next.indexOf(id);
+        const to = at + dir;
+        if (at >= 0 && to >= 0 && to < next.length) {
+          const swap = next[to];
+          next[to] = next[at];
+          next[at] = swap;
+          dataDashCommit(next);
+        }
+        render();
+        return;
+      }
+      const dashAddBtn = e.target.closest("[data-dash-add]");
+      if (dashAddBtn) {
+        if (dataDashBoardTiles().length >= DATA_DASH_MAX) return;
+        dataDashSwapId = "";
+        dataDashLibOpen = true;
+        render();
+        return;
+      }
+      const dashSwapBtn = e.target.closest("[data-dash-swap]");
+      if (dashSwapBtn) {
+        dataDashSwapId = dashSwapBtn.getAttribute("data-dash-swap") || "";
+        dataDashLibOpen = true;
+        render();
+        return;
+      }
+      const dashUseBtn = e.target.closest("[data-dash-use]");
+      if (dashUseBtn) {
+        const id = dashUseBtn.getAttribute("data-dash-use") || "";
+        if (!dataDashById(id) || dataDashHas(id)) return;
+        const next = dataDashBoardTiles().slice();
+        if (dataDashSwapId) {
+          const at = next.indexOf(dataDashSwapId);
+          if (at >= 0) next[at] = id;
+          else if (next.length < DATA_DASH_MAX) next.push(id);
+        } else if (next.length < DATA_DASH_MAX) {
+          next.push(id);
+        }
+        dataDashCommit(next);
+        dataDashLibOpen = false;
+        dataDashSwapId = "";
+        render();
+        return;
+      }
+      const dashLibClose = e.target.closest("[data-dash-lib-close]");
+      if (dashLibClose) {
+        dataDashLibOpen = false;
+        dataDashSwapId = "";
+        render();
+        return;
+      }
+      const dashOpenBtn = e.target.closest("[data-dash-open]");
+      if (dashOpenBtn) {
+        dataDashOpenReport(dashOpenBtn.getAttribute("data-dash-open") || "");
+        return;
+      }
       const dataRoomBtn = e.target.closest("[data-data-room]");
       if (dataRoomBtn) {
-        dataRoom = dataDashRoomCanon(dataRoomBtn.getAttribute("data-data-room"));
+        const want = dataDashRoomCanon(dataRoomBtn.getAttribute("data-data-room"));
+        const cur = dataDashRoomCanon(dataRoom);
+        dataRoom = (want && want === cur) ? "overview" : want;
         dataSet = null;
+        dataDashEdit = false;
+        dataDashLibOpen = false;
+        dataDashSwapId = "";
         if (dataRoom !== "book" && dataRoom !== "tape") dataQ = "";
         focusNext = ".screen-h";
         render();
@@ -21071,12 +21708,18 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
   throw new Error("renderLeagueHome must not mount Draft Data / Cuffs except via the History tab body");
 }
 {
-  const dataPage = fnSrc("dataDashHtml") + fnSrc("dataDashOverviewHtml") + fnSrc("renderDataSetsPage");
-  if (!dataPage.includes("pickIntelHome()") || !dataPage.includes("cuffsHome()")
+  const dataPage = fnSrc("dataDashHtml") + fnSrc("dataDashOverviewHtml") + fnSrc("renderDataSetsPage")
+    + fnSrc("dataDashBoardHtml") + fnSrc("dataDashTileHtml");
+  if (!dataPage.includes("dataDashBoardHtml()")
     || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
     || !dataPage.includes(">Data</h2>")
-    || !dataPage.includes("function dataDashHtml(") && !inline.includes("function dataDashHtml(")) {
-    throw new Error("Data tab must mount the research homebase plus Draft + Cuffs + lists");
+    || !inline.includes("function dataDashHtml(")
+    || !inline.includes("function dataDashTileHtml(")
+    || !inline.includes("function dataDashCanon(")) {
+    throw new Error("Data tab must mount the tile board plus lists");
+  }
+  if (fnSrc("dataDashRoomsHtml").includes('["overview", "Overview"]')) {
+    throw new Error("Data desks must be six rooms — Overview is the board, not a chip");
   }
 }
 if (!inline.includes("function dataDashHtml(")
@@ -21087,8 +21730,35 @@ if (!inline.includes("function dataDashHtml(")
   || !inline.includes("data-data-room")
   || !inline.includes("League research")
   || fnSrc("dataDashHtml").includes("calcFmt(")
-  || fnSrc("homeDeskHtml").includes("calcFmt(")) {
-  throw new Error("Data homebase must ship search, rooms, book/tape/seats — no bag totals on Home");
+  || fnSrc("homeDeskHtml").includes("calcFmt(")
+  || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
+  throw new Error("Data homebase must ship search, desks, book/tape/seats — no bag totals on Home");
+}
+{
+  const reportStart = inline.indexOf("    const DATA_REPORTS = [");
+  const reportEnd = inline.indexOf("];", reportStart);
+  const reportBlock = inline.slice(reportStart, reportEnd);
+  const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
+  const uniq = new Set(reportIds);
+  if (reportIds.length !== 24 || uniq.size !== 24) {
+    throw new Error("DATA_REPORTS must hold exactly 24 unique reports, found " + reportIds.length);
+  }
+  const defBlock = inline.slice(inline.indexOf("    const DATA_DASH_DEFAULT = ["),
+    inline.indexOf("    const DATA_REPORTS = ["));
+  const defIds = [...defBlock.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  if (defIds.length !== 12 || defIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_DEFAULT must be 12 catalog ids");
+  }
+  const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
+  if (reportIds.some((id) => banned.includes(id))) {
+    throw new Error("Data library must not include bag totals or Best/Worst 10");
+  }
+  if (!inline.includes("function loadSeatDataDash(")
+    || !inline.includes("function saveSeatDataDash(")
+    || !inline.includes("seat_data_dash")
+    || !inline.includes("cuckle.data.dash.v1")) {
+    throw new Error("Data board must persist per seat via seat_data_dash");
+  }
 }
 if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('data-view="titles"')) {
   throw new Error("History league lists must lead with Past Champions");
@@ -21428,11 +22098,10 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
   if (homeCuffsReturn.includes("cuffsHome()") || homeCuffsReturn.includes("cuffsHtml")) {
     throw new Error("renderLeagueHome must not mount cuffsHome under Draft Data");
   }
-  if (!fnSrc("dataDashOverviewHtml").includes("cuffsHome()")
-    || !fnSrc("dataDashOverviewHtml").includes("pickIntelHome()")
-    || !fnSrc("dataDashHtml").includes("cuffsHome()")
-    || !fnSrc("dataDashHtml").includes("pickIntelHome()")) {
-    throw new Error("Data tab must mount cuffsHome + pickIntelHome");
+  if (!fnSrc("dataDashHtml").includes("cuffsHome()")
+    || !fnSrc("dataDashHtml").includes("pickIntelHome()")
+    || !fnSrc("dataDashOverviewHtml").includes("dataDashBoardHtml()")) {
+    throw new Error("Data desks must mount cuffsHome + pickIntelHome; Overview is the tile board");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
     || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {

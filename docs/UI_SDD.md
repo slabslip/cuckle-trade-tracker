@@ -240,19 +240,21 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **Data** is the league research homebase (visible tab label; internal `homeTab` stays
-`history`). Cold load is an **Overview**: snapshot tiles (tape count, book as-of, firsts still
-held, uninsured starters), a seat-comparison chart from `marks.json`, a widest-tape peek, a
-liquidity peek, plus Draft Data and Cuffs teasers. Rooms under the search bar: Overview · Book ·
-Tape · Seats · Lists · Draft · Cuffs. Search hits the today book (`calculator.json`), the tape
-(`trade_boards.sides`), and seat names. Book is the extractable catalog (position / seat /
-value-name-age). Tape is widest-on-clock by default, then year + search over every deal. Seats
-are the six mark charts. Lists keeps the five saved sets plus Past Champions. A saved set still
-drills to one list; back returns to Lists. **Teams** is the door into a seat (header picker
-stays gone — §2). Do not put bag totals on Home. Do not restore Best 10 / Worst 10.
+`history`). Cold load is the **seat board**: 6–12 exchangeable report tiles from a 24-report
+library (12 default, 12 more in the inventory). The six desk chips under search never customize:
+Book · Tape · Seats · Lists · Draft · Cuffs. Overview is the board, not a seventh chip. Search
+with a query still fans into Book / Tape / Seats hits. Empty query paints the board. Edit
+(claimed seat only) swaps, adds, removes, and reorders tiles; layout persists on
+`public.seat_data_dash` (private to that seat) plus `cuckle.data.dash.v1.<league>.<seat>`.
+Book is the extractable catalog (position / seat / value-name-age). Tape is widest-on-clock by
+default, then year + search over every deal. Seats are the six mark charts. Lists keeps the five
+saved sets plus Past Champions. A saved set still drills to one list; back returns to Lists.
+**Teams** is the door into a seat (header picker stays gone — §2). Do not put bag totals on Home.
+Do not restore Best 10 / Worst 10. Votes never enter these numbers.
 
 **League Data Sets** (Data → Lists) — one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold
-load.** The Home tab and a Data back chip both return to Overview / Lists.
+load.** The Home tab and a Data back chip both return to the board / Lists.
 
 The old popup dropdown is gone. Rooms and search are in-flow.
 

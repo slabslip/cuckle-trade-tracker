@@ -1670,14 +1670,16 @@ const html = `<!DOCTYPE html>
       text-transform: uppercase; color: #f2e6c4;
       background: linear-gradient(90deg, #2a2418, #4a3b1c 45%, #2a2418);
     }
+    /* Square slot matching banner height so the equipped circle fills the plate end. */
     .cos-plate-emblem {
-      flex: 0 0 auto; width: clamp(52px, 18%, 72px); align-self: stretch;
-      display: grid; place-items: center;
+      flex: 0 0 auto; align-self: stretch; aspect-ratio: 1 / 1;
+      width: auto; height: auto; min-width: 56px; max-width: 112px;
+      display: grid; place-items: center; box-sizing: border-box;
       border-left: 1px solid var(--line); background: #0e1016;
-      padding: 6px;
+      padding: 5px;
     }
     .cos-plate-emblem img {
-      width: min(44px, 100%); height: min(44px, 100%);
+      width: 92%; height: 92%; max-width: none; max-height: none;
       object-fit: contain; object-position: center; display: block;
     }
     .cos-titles {
@@ -1748,8 +1750,9 @@ const html = `<!DOCTYPE html>
     .cos-plate-emblem .cos-emoji,
     .cos-plate-emblem .cos-emoji img,
     .cos-plate-emblem .cos-emoji-missing {
-      width: min(44px, 100%); height: min(44px, 100%);
+      width: 92%; height: 92%; max-width: none; max-height: none;
     }
+    .cos-plate-emblem .cos-emoji-missing { border-radius: 50%; }
     /* Equipped emblem on your seat name — same density as the champ crown. */
     .seat-cos-mark {
       display: inline-grid; place-items: center; vertical-align: -0.15em;
@@ -1769,11 +1772,13 @@ const html = `<!DOCTYPE html>
       aspect-ratio: 1024 / 180; height: auto; min-height: 0;
     }
     .cos-profile-plate .cos-plate-emblem {
-      width: clamp(44px, 16%, 60px); padding: 4px;
+      min-width: 48px; max-width: 96px; padding: 4px;
     }
     .cos-profile-plate .cos-plate-emblem img,
     .cos-profile-plate .cos-emoji,
-    .cos-profile-plate .cos-emoji-missing { width: min(36px, 100%); height: min(36px, 100%); }
+    .cos-profile-plate .cos-emoji-missing {
+      width: 92%; height: 92%; max-width: none; max-height: none;
+    }
     .cos-sheet {
       position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end;
       justify-content: center; padding: 12px;
@@ -3463,7 +3468,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosmeticsThumbsLive-20260908001500";
+    const DATA_V = "cosmeticsPlateEmblem-20260908004700";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

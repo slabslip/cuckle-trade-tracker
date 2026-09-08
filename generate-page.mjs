@@ -341,7 +341,22 @@ const html = `<!DOCTYPE html>
       min-height: 44px; display: flex; flex-direction: column; align-items: stretch;
       padding: 10px 12px 12px; gap: 8px;
     }
-    .teams-list > button.row > .row-top { width: 100%; }
+    .teams-list > button.row > .row-top { width: 100%; align-items: center; }
+    .teams-list .team-meta {
+      display: flex; align-items: baseline; gap: 8px; flex: 0 0 auto; min-width: 0;
+    }
+    /* Finishing ordinal top-right of each Teams chip. Medal ink for the podium; muted after. */
+    .teams-list .team-place {
+      font-size: 0.875rem; font-weight: 750; font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em; color: var(--muted); white-space: nowrap;
+    }
+    .teams-list .team-place.is-1 { color: #e0b44c; } /* gold */
+    .teams-list .team-place.is-2 { color: #c0c7d1; } /* silver */
+    .teams-list .team-place.is-3 { color: #cd7f32; } /* bronze */
+    .teams-list .team-dookie {
+      display: inline-block; font-size: 1.05em; line-height: 1;
+      vertical-align: -0.05em;
+    }
     .teams-list .cos-plate { margin: 0; }
     .cos-plate-banner.is-blank {
       display: block; aspect-ratio: 1024 / 180; min-height: 0; height: auto;
@@ -3583,7 +3598,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "teamcos20260908023000";
+    const DATA_V = "teamplace20260908024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5091,15 +5106,32 @@ const html = `<!DOCTYPE html>
       return !!(await seatData(tradeSeat));
     }
 
+    /** "1st" / "2nd" / "3rd" / "4th"… for the Teams chip place badge. */
+    function placeOrdinal(n) {
+      const p = Number(n);
+      if (!Number.isFinite(p) || p < 1) return "";
+      const v = p % 100;
+      const suf = (v > 10 && v < 14) ? "th"
+        : (p % 10 === 1) ? "st"
+        : (p % 10 === 2) ? "nd"
+        : (p % 10 === 3) ? "rd"
+        : "th";
+      return p + suf;
+    }
     /**
      * Every roster in the league as rows the bottom-nav Teams page mounts. One emitter, one
      * mount: the Teams chip dropdown used to be the other door into a seat and is gone. A second
      * list that typed its own crown or finishing order is how those disagree between surfaces.
-     * Crown rides seatLabel for the reigning champ — not a second paint here.
+     * Crown rides seatLabel for the reigning champ — not a second paint here. Place is an
+     * ordinal badge top-right (gold / silver / bronze for the podium); last place gets 💩.
      * Each row also paints that seat's title banner + emblem (blank slots until they equip).
      */
     function whoOptions() {
       const mySeat = authSeatId() || (me && me.user_id) || null;
+      const lastPlace = members.reduce((max, m) => {
+        const p = Number(m && m.place);
+        return Number.isFinite(p) && p > max ? p : max;
+      }, 0);
       return members
         .slice()
         .sort((a, b) => (a.place || 99) - (b.place || 99))
@@ -5107,17 +5139,27 @@ const html = `<!DOCTYPE html>
           const id = m.user_id;
           const on = !!(me && me.user_id === id);
           const mine = mySeat && id === mySeat;
+          const place = Number(m.place);
+          const ord = placeOrdinal(place);
+          const placeClass = place === 1 ? " is-1" : place === 2 ? " is-2" : place === 3 ? " is-3" : "";
+          const dookie = (place > 1 && place === lastPlace)
+            ? ' <span class="team-dookie" aria-hidden="true">💩</span>'
+            : "";
+          const placeHtml = ord
+            ? '<span class="team-place' + placeClass + '">' + esc(ord) + "</span>"
+            : "";
           return '<button type="button" class="row' + (on ? " you" : "") + '" data-who="' + esc(id) + '"'
             + ' aria-current="' + (on ? "true" : "false") + '">'
             + '<div class="row-top"><div><div class="names">'
             + (mine ? '<span class="sr-only">Your team: </span>' : "")
             + seatLabel(m.name, { link: false })
+            + dookie
             + (mine ? ' <span class="caption">(you)</span>' : "")
             + "</div>"
-            + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
-            + (on ? " · viewing" : "")
-            + "</div></div>"
-            + '<span class="chev" aria-hidden="true">›</span></div>'
+            + (on ? '<div class="date">viewing</div>' : "")
+            + "</div>"
+            + '<span class="team-meta">' + placeHtml
+            + '<span class="chev" aria-hidden="true">›</span></span></div>'
             + cosmeticsCallingCardHtml(cosmeticsPairForSeat(id), { empty: true, blank: true })
             + "</button>";
         })
@@ -20597,6 +20639,19 @@ if (!fnSrc("whoOptions").includes("cosmeticsCallingCardHtml(")
   || !fnSrc("cosmeticsCallingCardHtml").includes("is-blank")
   || !html.includes(".cos-plate-banner.is-blank")) {
   throw new Error("Teams list must show each seat title banner and emblem, blank when unequipped");
+}
+{
+  const whoFn = fnSrc("whoOptions");
+  if (whoFn.includes('"Place "') || whoFn.includes("'Place '") || whoFn.includes("Place \" +")) {
+    throw new Error("Teams list must not use Place N copy — paint 1st/2nd/3rd ordinals");
+  }
+  if (!whoFn.includes("placeOrdinal(") || !whoFn.includes("team-place") || !whoFn.includes("team-dookie")) {
+    throw new Error("Teams list must show ordinal place badges and last-place dookie");
+  }
+  if (!html.includes(".teams-list .team-place.is-1") || !html.includes(".teams-list .team-place.is-2")
+    || !html.includes(".teams-list .team-place.is-3")) {
+    throw new Error("Teams place badges need gold / silver / bronze podium colors");
+  }
 }
 const seats = JSON.parse(fs.readFileSync(`${ROOT}data/ui/members.json`, "utf8"));
 const seatPlaces = seats.map((m) => m.place);

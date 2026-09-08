@@ -3032,9 +3032,12 @@ const html = `<!DOCTYPE html>
       position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
       color: var(--dim); pointer-events: none; font-size: 0.95rem;
     }
+    .data-rooms-row {
+      display: flex; align-items: center; gap: 6px; margin: 0 0 12px;
+    }
     .data-rooms {
       display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      margin: 0 0 12px; padding: 0 0 2px;
+      margin: 0; padding: 0 0 2px; flex: 1 1 auto; min-width: 0;
     }
     button.data-room {
       appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
@@ -6396,9 +6399,10 @@ const html = `<!DOCTYPE html>
         + (sub ? '<span class="data-tile-sub">' + esc(sub) + "</span>" : "");
     }
 
-    function dataDashTileInner(id) {
+    function dataDashTileInner(id, mode) {
       const spec = dataDashById(id);
       if (!spec) return "";
+      if (mode === "edit") return dataDashHead(spec, "On board", spec.why);
       if (id === "tape_count") {
         return dataDashHead(spec, dataDashTapeCount() + " deals", "Complete two-way tape");
       }
@@ -6523,7 +6527,7 @@ const html = `<!DOCTYPE html>
       const spec = dataDashById(id);
       if (!spec) return "";
       const size = spec.size === "full" ? " is-full" : "";
-      const inner = dataDashTileInner(id);
+      const inner = dataDashTileInner(id, dataDashEdit ? "edit" : "live");
       if (dataDashEdit) {
         const tiles = dataDashBoardTiles();
         const canCut = tiles.length > DATA_DASH_MIN;
@@ -6668,13 +6672,15 @@ const html = `<!DOCTYPE html>
         ["cuffs", "Cuffs"],
       ];
       const editDis = !dataDashCanEdit();
-      return '<div class="data-rooms" role="tablist" aria-label="Data desks">'
+      return '<div class="data-rooms-row">'
+        + '<div class="data-rooms" role="tablist" aria-label="Data desks">'
         + rooms.map(function (r) {
           const on = dataDashRoomCanon(dataRoom) === r[0];
           return '<button type="button" class="data-room' + (on ? " on" : "") + '"'
             + ' data-data-room="' + r[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
             + r[1] + "</button>";
         }).join("")
+        + "</div>"
         + '<button type="button" class="data-room' + (dataDashEdit ? " on" : "") + '" data-dash-edit="1"'
         + (editDis ? ' disabled aria-disabled="true" title="Claim your seat to use this"' : "")
         + ">" + (dataDashEdit ? "Done" : "Edit") + "</button>"

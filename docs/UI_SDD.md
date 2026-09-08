@@ -179,7 +179,11 @@ Historic Win-now / Investor tape labels do not set the route and do not move any
 Talks prefer complementary routes and 2-for-1 **depth for a stud** when one seat is deep
 at a position and the other is thin there; even-up is the floor. Meta may name a
 flatten-vs-today split (`markets bid up` / `markets cooler on` / `new on the market books`)
-and a buy / fair / sell chip from `pe.json` — signal only. Startable floors: QB 2 / RB 2 /
+and a buy / fair / sell chip from `pe.json` — signal only. Partner memory (from
+`trade_boards.sides` + `windows.all`, threshold `GRADE_EVEN`) may add `you extract vs X` /
+`they extract vs you` / `even tape vs X` — words only, no numbers. A caption under the
+lede may count still-held firsts (`You still hold N 2027 1sts…`) from `calculator.json`
+picks. Startable floors: QB 2 / RB 2 /
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
 calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
 fourth card or “Open the calculator” filler.
@@ -206,9 +210,16 @@ the highlighted set to that side and closes the list. **Close** dismisses withou
 assets are rows (name, pos/team, value, remove). Compare bar is **receive** amounts (what
 each side would get), and gold fills toward the manager the value is going to — not send
 package size. **Favors** names the manager who would **receive** the larger pile.
-Even-up copy and leftover chips stay on the short **send** pile. Price book is today
+Even-up copy and leftover chips stay on the short **send** pile. After both sides are
+priced, **League leftover** is percents of league capital (from → to), not bag totals.
+A **Vote** nudge may open the last tape deal between those two names when the room has
+no choice yet. Roster meta and selected player rows may chip buy / fair / sell from
+`pe.json`. Pick rows show a collapsed became / still-a-pick line and a **tape** toggle
+for hop values. Price book is today
 / `even` (0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20 DynastyDealer, renormalized)
-plus Value Adjustment via the existing `applyVa`. Votes do
+plus Value Adjustment via the existing `applyVa` on the hypothetical. Team home has a
+**Price a deal** door (wipe first; if you are not that seat, A = you and B = them).
+Votes do
 not appear on a hypothetical and do not change the number. How-it-works copy does not
 sit on the screen: one **Info** control at the bottom opens the blend formula,
 the VA formula (`0.15 × extras × star × damp`), and a

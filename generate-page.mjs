@@ -1568,6 +1568,30 @@ const html = `<!DOCTYPE html>
     .calc-asset-name { font-weight: 650; color: var(--text); }
     .calc-asset-meta { display: block; font-size: 0.72rem; color: var(--dim); }
     .calc-asset-val { font-variant-numeric: tabular-nums; font-weight: 750; color: var(--lh-gold, #e0b44c); flex: 0 0 auto; }
+    .calc-pe {
+      display: inline-block; margin-left: 6px; font-size: 0.62rem; font-weight: 750;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    button.calc-hop-btn {
+      appearance: none; font: inherit; font-size: 0.68rem; font-weight: 650;
+      color: var(--muted); background: transparent; border: 1px solid var(--line);
+      border-radius: 8px; min-height: 32px; padding: 0 8px; cursor: pointer;
+    }
+    .calc-hop-line { font-size: 0.72rem; color: var(--muted); padding: 0 12px 8px; }
+    .calc-residual, .calc-nudge {
+      margin: 10px 0 0; padding: 10px 12px; border-top: 1px solid var(--line);
+    }
+    .calc-residual-h, .calc-nudge-h {
+      margin: 0 0 4px; font-size: 0.68rem; font-weight: 750; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .calc-residual p, .calc-nudge p { margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    button.calc-nudge {
+      appearance: none; font: inherit; display: block; width: 100%; text-align: left;
+      color: var(--text); background: #1a1a1e; border: 1px solid var(--line);
+      border-radius: 10px; padding: 12px; margin: 10px 0 0; min-height: 44px; cursor: pointer;
+    }
+    .home-desk-held { margin: 0 0 8px; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
     .calc-asset button {
       appearance: none; font: inherit; color: var(--dim); background: none; border: 0;
       cursor: pointer; min-height: 44px; min-width: 44px; flex: 0 0 auto;
@@ -3477,7 +3501,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "reviewfix20260908013000";
+    const DATA_V = "nextbuild20260908014500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3546,6 +3570,7 @@ const html = `<!DOCTYPE html>
     let calcSeatMenu = "";
     let calcSeatIgnoreOpenUntil = 0;
     let calcInfoOpen = false;
+    let calcHopOpen = "";
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
@@ -3888,6 +3913,7 @@ const html = `<!DOCTYPE html>
         applyPicksBook(book);
         picksLoading = false;
         if (view === "home" && !me) ledgerMaybeRender();
+        if (view === "calc") render();
       }).catch((err) => {
         console.error(err);
         picksLoading = false;
@@ -5339,7 +5365,10 @@ const html = `<!DOCTYPE html>
     }
 
     function sideOf(t) {
-      return applyVa(sideWindow(t), isMulti(t));
+      const s = sideWindow(t);
+      if (!s) return s;
+      if (s.today != null && s.sent_today != null) return s;
+      return applyVa(s, isMulti(t));
     }
 
     // Mirrors value-adjust.mjs exactly: no VA on N-way trades, totals refresh when either bag is priced.
@@ -14984,11 +15013,56 @@ const html = `<!DOCTYPE html>
       return "Even";
     }
 
-    function homeDeskMeta(talk, job) {
+    function homeDeskPartnerNote(themName) {
+      const mine = String(authSeatId() || "");
+      if (!mine || !themName) return "";
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let n = 0;
+      let sum = 0;
+      for (let i = 0; i < sides.length; i++) {
+        const r = sides[i];
+        if (String(r.user_id) !== mine) continue;
+        if (String(r.other) !== String(themName)) continue;
+        const w = r.windows && r.windows.all;
+        if (!w || w.incomplete || w.got == null || w.sent == null) continue;
+        n += 1;
+        sum += Math.round(w.got) - Math.round(w.sent);
+      }
+      if (n < 1) return "";
+      const per = sum / n;
+      if (per >= GRADE_EVEN) return "you extract vs " + themName;
+      if (per <= -GRADE_EVEN) return "they extract vs you";
+      return n >= 2 ? ("even tape vs " + themName) : "";
+    }
+
+    function homeDeskHeldLine() {
+      const mine = String(authSeatId() || "");
+      if (!mine) return "";
+      const picks = (calcBook && calcBook.picks) || [];
+      const years = {};
+      for (let i = 0; i < picks.length; i++) {
+        const p = picks[i];
+        if (String(p.owner_id) !== mine) continue;
+        const m = String(p.id || "").match(/^pick:(\\d{4}):1:/);
+        if (!m) continue;
+        years[m[1]] = (years[m[1]] || 0) + 1;
+      }
+      const keys = Object.keys(years).sort();
+      if (!keys.length) return "";
+      const bits = keys.map(function (y) {
+        const n = years[y];
+        return n + " " + y + (n === 1 ? " 1st" : " 1sts");
+      });
+      return "You still hold " + bits.join(", ") + ".";
+    }
+
+    function homeDeskMeta(talk, job, themName) {
       if (!talk) return "Pick the sides";
       const extra = [];
       if (job === "fill" && talk.why !== "depth-stud" && talk.pos) extra.push("you need " + talk.pos);
       if (job === "move" && talk.why !== "depth-stud" && talk.pos) extra.push("you are deep " + talk.pos);
+      const partner = homeDeskPartnerNote(themName);
+      if (partner) extra.push(partner);
       if (talk.book) extra.push(talk.book);
       if (talk.pe) extra.push(talk.pe);
       const tail = extra.length ? (" · " + extra.join(" · ")) : "";
@@ -15184,6 +15258,10 @@ const html = `<!DOCTYPE html>
       return '<section class="home-desk" aria-label="Trade Desk">'
         + '<div class="home-desk-h">Trade Desk</div>'
         + '<p class="home-desk-sub">Talks for your bag. Tap to price it.</p>'
+        + (function () {
+          const held = homeDeskHeldLine();
+          return held ? '<p class="home-desk-held">' + esc(held) + "</p>" : "";
+        }())
         + cards.map(function (row) {
           const sendA = (row.talk && row.talk.legsA || []).map(function (a) { return a.id; }).join(",");
           const sendB = (row.talk && row.talk.legsB || []).map(function (a) { return a.id; }).join(",");
@@ -15192,7 +15270,7 @@ const html = `<!DOCTYPE html>
             + row.talk.legsB.map(homeDeskShortName).join(" + ");
           const job = homeDeskJobLabel(row.job);
           const them = row.nameB || "them";
-          const meta = homeDeskMeta(row.talk, row.job);
+          const meta = homeDeskMeta(row.talk, row.job, them);
           return '<button type="button" class="home-desk-row" data-desk-a="' + esc(row.a) + '"'
             + ' data-desk-b="' + esc(row.b) + '"'
             + (sendA ? ' data-desk-send-a="' + esc(sendA) + '"' : "")
@@ -15220,6 +15298,7 @@ const html = `<!DOCTYPE html>
       calcPickB = [];
       calcHitsScrollA = 0;
       calcHitsScrollB = 0;
+      calcHopOpen = "";
     }
 
     function calcArmQuiet(ms) {
@@ -15328,10 +15407,13 @@ const html = `<!DOCTYPE html>
         pos: a.pos || (a.kind === "pick" ? "PICK" : ""),
         team: a.team || "",
         age: a.age,
+        sleeper_id: a.sleeper_id || "",
+        owner: a.owner || "",
+        owner_id: a.owner_id || "",
       };
     }
 
-    function calcMeta(a, showOwner) {
+    function calcMeta(a, showOwner, skipPe) {
       if (!a) return "";
       if (a.kind === "pick" || a.pos === "PICK") {
         const bits = [];
@@ -15345,6 +15427,10 @@ const html = `<!DOCTYPE html>
       if (a.team) bits.push(a.team);
       if (a.age != null && Number.isFinite(Number(a.age))) bits.push(Number(a.age).toFixed(1) + " y.o.");
       if (showOwner && a.owner) bits.push(a.owner);
+      if (!skipPe) {
+        const pe = homeDeskPe(a);
+        if (pe) bits.push(pe);
+      }
       return bits.join(" · ");
     }
 
@@ -15486,7 +15572,75 @@ const html = `<!DOCTYPE html>
         + (even ? "" : '<p class="caption">' + esc(favors) + " would receive " + calcFmt(need) + " more on our book.</p>")
         + (even ? "" : '<p class="caption">' + esc(shortName) + " can send " + calcFmt(need) + " more to even it.</p>")
         + (even ? "" : calcEvenHtml(need, short))
+        + calcResidualHtml()
+        + calcVoteNudgeHtml()
         + "</div>";
+    }
+
+    function calcSeatBagTotal(uid) {
+      if (!uid || !calcBook) return 0;
+      let t = 0;
+      const all = (calcBook.players || []).concat(calcBook.picks || []);
+      for (let i = 0; i < all.length; i++) {
+        if (String(all[i].owner_id) !== String(uid)) continue;
+        const v = calcValueNum(all[i]);
+        if (v < 0) continue;
+        t += v;
+      }
+      return t;
+    }
+
+    function calcResidualHtml() {
+      if (!calcSeatA || !calcSeatB) return "";
+      if (!calcLegsA.length || !calcLegsB.length) return "";
+      const sendA = calcRawSum(calcLegsA);
+      const sendB = calcRawSum(calcLegsB);
+      if (!(sendA > 0 && sendB > 0)) return "";
+      let leagueNow = 0;
+      const seats = members || [];
+      for (let i = 0; i < seats.length; i++) leagueNow += calcSeatBagTotal(seats[i].user_id);
+      if (!leagueNow) return "";
+      const nowA = calcSeatBagTotal(calcSeatA);
+      const nowB = calcSeatBagTotal(calcSeatB);
+      const nextA = nowA - sendA + sendB;
+      const nextB = nowB - sendB + sendA;
+      const pct = function (n) { return Math.round((n / leagueNow) * 100); };
+      const rest = Math.max(0, 100 - pct(nextA) - pct(nextB));
+      const nameA = calcSeatName(calcSeatA, "Team 1");
+      const nameB = calcSeatName(calcSeatB, "Team 2");
+      return '<div class="calc-residual">'
+        + '<div class="calc-residual-h">League leftover</div>'
+        + "<p>" + esc(nameA) + " would hold " + pct(nextA) + "% of league capital (from " + pct(nowA) + "%). "
+        + esc(nameB) + " would hold " + pct(nextB) + "% (from " + pct(nowB) + "%). "
+        + "The other seats stay at " + rest + "%.</p>"
+        + "</div>";
+    }
+
+    function calcVoteNudgeHtml() {
+      if (!authSeatId() || !authSession) return "";
+      if (!calcSeatA || !calcSeatB) return "";
+      if (!calcLegsA.length || !calcLegsB.length) return "";
+      const nameA = calcSeatName(calcSeatA, "");
+      const nameB = calcSeatName(calcSeatB, "");
+      if (!nameA || !nameB) return "";
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      let latest = null;
+      for (let i = 0; i < sides.length; i++) {
+        const r = sides[i];
+        const pair = (r.name === nameA && r.other === nameB) || (r.name === nameB && r.other === nameA);
+        if (!pair) continue;
+        if (!latest || String(r.date) > String(latest.date)) latest = r;
+      }
+      if (!latest || !latest.transaction_id) return "";
+      const v = typeof readVotes === "function" ? readVotes(latest.transaction_id) : null;
+      if (v && v.choice) return "";
+      const them = latest.name === nameA ? nameB : nameA;
+      return '<button type="button" class="calc-nudge" data-board-open="' + esc(latest.user_id) + '"'
+        + ' data-id="' + esc(latest.transaction_id) + '" data-trade-solo="1">'
+        + '<div class="calc-nudge-h">Vote</div>'
+        + "<p>The room has not voted on the last tape deal with " + esc(them)
+        + ". Opinion only. Votes never enter the book.</p>"
+        + "</button>";
     }
 
     function calcSeatSelect(side) {
@@ -15637,13 +15791,31 @@ const html = `<!DOCTYPE html>
       const legs = side === "a" ? calcLegsA : calcLegsB;
       const q = side === "a" ? calcFilterA : calcFilterB;
       const open = side === "a" ? calcOpenA : calcOpenB;
-      const assets = legs.map((l) =>
-        '<div class="calc-asset">'
-        + '<div class="calc-asset-main"><span class="calc-asset-name">' + esc(l.label) + "</span>"
-        + '<span class="calc-asset-meta">' + esc(calcMeta(l)) + "</span></div>"
-        + '<span class="calc-asset-val">' + (l.value == null ? "—" : calcFmt(l.value)) + "</span>"
-        + '<button type="button" data-calc-drop="' + esc(l.id) + '" data-calc-from="' + side + '" aria-label="Remove">×</button></div>'
-      ).join("");
+      const assets = legs.map((l) => {
+        const pe = homeDeskPe(l);
+        const hopKey = (l.kind === "pick" || l.pos === "PICK") ? String(l.asset_key || l.id || "") : "";
+        const hopOn = hopKey && calcHopOpen === hopKey;
+        const tape = hopKey && picks && picks[hopKey] ? picks[hopKey] : null;
+        const hopLine = tape
+          ? (tape.became
+            ? (tape.became + (tape.used_by ? " · used by " + tape.used_by : ""))
+            : (tape.still_pick ? "still a pick" : "hop tape"))
+          : "";
+        return '<div class="calc-asset">'
+          + '<div class="calc-asset-main"><span class="calc-asset-name">' + esc(l.label)
+          + (pe ? '<span class="calc-pe">' + esc(pe) + "</span>" : "") + "</span>"
+          + '<span class="calc-asset-meta">' + esc(calcMeta(l, false, true)) + "</span></div>"
+          + '<span class="calc-asset-val">' + (l.value == null ? "—" : calcFmt(l.value)) + "</span>"
+          + (hopKey && tape
+            ? '<button type="button" class="calc-hop-btn" data-calc-hop="' + esc(hopKey) + '">'
+              + (hopOn ? "hide" : "tape") + "</button>"
+            : "")
+          + '<button type="button" data-calc-drop="' + esc(l.id) + '" data-calc-from="' + side + '" aria-label="Remove">×</button></div>'
+          + (!hopOn && hopLine
+            ? '<div class="calc-hop-line">' + esc(hopLine) + "</div>"
+            : "")
+          + (hopOn ? hopHtml(hopKey) : "");
+      }).join("");
       return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
         + calcSeatSelect(side)
         + (uid
@@ -15728,6 +15900,7 @@ const html = `<!DOCTYPE html>
     }
 
     function renderCalc() {
+      if (typeof ensurePicks === "function") ensurePicks();
       return backChip("Home")
         + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml()
@@ -15974,6 +16147,7 @@ const html = `<!DOCTYPE html>
       return (lensApplies()
           ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
           : "")
+        + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button></p>'
         + teamMarks()
         + markChart()
         + empty
@@ -18370,6 +18544,29 @@ const html = `<!DOCTYPE html>
         lensOpen = false;
         voteToast = null;
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const fromTeam = e.target.closest("[data-calc-from-team]");
+      if (fromTeam) {
+        if (typeof calcWipe === "function") calcWipe();
+        const uid = fromTeam.getAttribute("data-calc-from-team") || "";
+        const mine = authSeatId() ? String(authSeatId()) : "";
+        if (mine && uid && mine !== String(uid)) {
+          calcSeatA = mine;
+          calcSeatB = String(uid);
+        } else {
+          calcSeatA = String(uid || mine || "");
+        }
+        view = "calc";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const hopBtn = e.target.closest("[data-calc-hop]");
+      if (hopBtn) {
+        const key = hopBtn.getAttribute("data-calc-hop") || "";
+        calcHopOpen = (calcHopOpen === key) ? "" : key;
         render();
         return;
       }
@@ -21481,8 +21678,31 @@ if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
 if (!inline.includes("function calcWipe(")
   || !inline.includes('if (nextView === "calc"')
   || !fnSrc("calcWipe").includes("calcLegsA = []")
-  || !fnSrc("calcWipe").includes("calcSeatA = \"\"")) {
+  || !fnSrc("calcWipe").includes("calcSeatA = \"\"")
+  || !fnSrc("calcWipe").includes("calcHopOpen")) {
   throw new Error("calc door must wipe a leftover Trade Desk prefill");
+}
+if (!inline.includes("function calcResidualHtml(")
+  || !inline.includes("League leftover")
+  || !inline.includes("function calcVoteNudgeHtml(")
+  || !inline.includes("The room has not voted")
+  || !inline.includes("Votes never enter the book")
+  || !inline.includes("function homeDeskPartnerNote(")
+  || !inline.includes("you extract vs")
+  || !inline.includes("function homeDeskHeldLine(")
+  || !inline.includes("You still hold")
+  || !inline.includes("data-calc-hop")
+  || !inline.includes("data-calc-from-team")
+  || !inline.includes("Price a deal")
+  || !fnSrc("calcSideHtml").includes("still a pick")
+  || !fnSrc("calcSideHtml").includes("calcMeta(l, false, true)")
+  || fnSrc("homeDeskHtml").includes("calcFmt(")
+  || fnSrc("homeDeskHeldLine").includes("calcFmt(")) {
+  throw new Error("next-build: residual, vote-nudge, desk partner/held, calc hop, and team door");
+}
+if (!fnSrc("sideOf").includes("s.today != null")
+  || !fnSrc("sideOf").includes("s.sent_today != null")) {
+  throw new Error("tape sideOf must prefer pipeline today/sent_today over a live applyVa clone");
 }
 if (!html.includes("button.pick-intel-chip:disabled")
   || !inline.includes('disabled aria-disabled="true" tabindex="-1"')) {

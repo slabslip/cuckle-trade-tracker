@@ -28,7 +28,8 @@ plans stay as history; do not paste them here.
   calculator or a news teaser.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /
   `even` (flatten + KTC + FantasyCalc + DynastyDealer) + `applyVa`. Votes never enter the number.
-- Residual + reserved vote-nudge are specified in VALUE / VOTES / PRODUCT — not built.
+- League leftover (percent of league capital) and a vote-nudge (opens the existing vote
+  sheet; opinion only) ship on the calculator after a priced 2-team deal.
 - Barracks `?view=cosmetics`: 29 shared titles/emblems, unlock from history, equip 1 + 1.
   Championship ladder is the top of the catalog (see awards plan). Your emblem paints on your
   seat name; title flex across every byline is later.

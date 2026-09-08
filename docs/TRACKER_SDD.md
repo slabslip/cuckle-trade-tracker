@@ -49,7 +49,7 @@ value-snapshot.mjs   → DP Superflex curve (latest + monthly git history)
 ktc-snapshot.mjs     → weekly KTC Superflex file (not in build.mjs; cron/local)
 revalue.mjs          → meters, hops, flatten windows, me/*.json
 title-path.mjs       → titles.json (Champions Path)
-apply-value-adjust.mjs → today blend (40/60 KTC, retired 0), Value Adjustment,
+apply-value-adjust.mjs → today blend (0.25/0.30/0.25/0.20, retired 0), Value Adjustment,
                          trade_boards, partner grades, partner_headlines
 generate-page.mjs    → index.html (inline CSS + JS, fetches data/ui)
 ```

@@ -39,11 +39,12 @@ generate-page.mjs
 
 `build.mjs` runs those steps in order. `value-snapshot.mjs --latest-only` skips git history.
 
-**`apply-value-adjust.mjs` is not optional.** It owns the today blend (40% flatten / 60% KTC
-Superflex, retired → 0), the Value Adjustment, `trade_boards` and `marks.json`. A build without it
-ships the flatten-only book. It reprices from the committed UI JSON, so it is idempotent and runs
-in a checkout that has no `value_curve.json` — which is why it, and not `revalue.mjs`, is the
-canonical builder of the today numbers. `revalue.mjs` no longer builds `trade_boards` at all.
+**`apply-value-adjust.mjs` is not optional.** It owns the today blend (0.25 flatten / 0.30 KTC
+Superflex / 0.25 FantasyCalc / 0.20 DynastyDealer, retired → 0), the Value Adjustment,
+`trade_boards` and `marks.json`. A build without it ships the flatten-only book. It reprices
+from the committed UI JSON, so it is idempotent and runs in a checkout that has no
+`value_curve.json` — which is why it, and not `revalue.mjs`, is the canonical builder of the
+today numbers. `revalue.mjs` no longer builds `trade_boards` at all.
 
 `ktc-snapshot.mjs` writes the weekly KTC Superflex file and is **not** in `build.mjs`.
 
@@ -328,11 +329,14 @@ Still open:
     the later of the two dates; the pricing clock is unhandled.
 14. **`league.drafters_rookie` has no reader** (~2.5 KB). It lost its last one when
     `renderLeague()` was deleted. `revalue.mjs` still emits it.
-15. **The browser still recomputes VA.** `applyVa` is a hand-kept clone of `value-adjust.mjs`,
-    because the payload ships five near-duplicate leg lists per trade instead of one list with
-    five values. The plan to collapse it is `DASHBOARD_AUDIT.md` §8b / D3a; ~1.2 MB and the
-    deletion of `applyVa` are on the other side of it.
-16. **The 40/60 today blend has no reader** (§5, `DASHBOARD_AUDIT.md` §8c). Open user decision.
+15. **Tape prefers stored VA; calc still clones.** `sideOf` returns the pipeline window when
+    `today` and `sent_today` are both present (me/*.json already stores them). `applyVa` stays
+    as a hand-kept clone of `value-adjust.mjs` for calculator hypotheticals (`calcSideBag`).
+    Deleting the clone still waits on `DASHBOARD_AUDIT.md` §8b / D3a (one leg list, five values).
+16. **The four-source today blend has readers.** Calculator prices `even` on
+    0.25 / 0.30 / 0.25 / 0.20. Recorded tape uses the stored four-source `today` / `sent_today`
+    when present. Score-as year windows stay flatten-only. `DASHBOARD_AUDIT.md` §8c D5 is closed
+    as a “no reader” gap; the measured window-vs-blend gap is product law, not a missing screen.
 
 ---
 

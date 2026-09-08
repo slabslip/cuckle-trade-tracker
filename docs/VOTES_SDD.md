@@ -13,8 +13,8 @@ verification walkthrough live in [`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md); 
 Adjustment, the lens windows, `today_delta`, partner grades, `aged`, any board ranking, or the
 **calculator**. One identity per number. Votes live in their own table, their own file, behind
 their own two functions, in their own UI block. Nothing in the value spine may read them, now or
-later. A reserved later **vote-nudge** (prompt to opine on a priced deal) still writes only a
-vote — never a delta.
+later. The calculator **vote-nudge** (prompt to opine on the last tape deal between the two
+priced seats) still writes only a vote — never a delta. It opens the existing vote sheet.
 
 ---
 

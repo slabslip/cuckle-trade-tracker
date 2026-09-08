@@ -132,15 +132,11 @@ invent a DP flatten for a window when the today blend already has a market quote
 
 ## 13. Calc residual and a vote-nudge — when?
 
-**Assumed (this pass):** Calculator prices a 2-team hypothetical on `even` + VA only. League
-residual (how the rest of the bags move) and a later prompt to vote on a priced deal stay
-specified, not built. See [`VALUE_SDD.md`](VALUE_SDD.md) §12 and [`VOTES_SDD.md`](VOTES_SDD.md).
-
-**Why it matters:** Residual is a second identity if it shares a hero with the even delta. A
-nudge that wrote a vote into the book would break the hard rule.
-
-**Recommended:** Next VALUE pass after Home digest. Residual is its own figure. Vote-nudge
-writes only a vote.
+**Shipped.** League leftover is its own figure under the compare bar: each seat’s percent of
+league capital after the swap, plus the remainder for everyone else. No bag totals on Home.
+Vote-nudge opens the existing vote sheet on the last tape deal between those two names when
+the room has no `choice` yet. Opinion only. Votes never enter the book. See
+[`VALUE_SDD.md`](VALUE_SDD.md) §12 and [`VOTES_SDD.md`](VOTES_SDD.md).
 
 ---
 

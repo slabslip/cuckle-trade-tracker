@@ -66,8 +66,9 @@ hypothetical; it does **not** add a sixth Score-as clock. See `DASHBOARD_AUDIT.m
 the measured window-vs-blend gap. Until that is answered, **do not describe "Since trade" to a
 user as a today price.**
 
-**Reserved, not this pass:** league residual after a priced even deal, and a later vote-nudge
-that may prompt an opinion on that deal. Votes still never enter the book.
+**Shipped on the calculator:** league leftover (percent of league capital after a priced
+2-team deal) and a vote-nudge that opens the existing vote sheet. Votes still never enter
+the book.
 
 Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the needle. One-ways and FAAB-only never enter the meter.
 
@@ -120,7 +121,7 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Auto-publish / scheduled rebuild for every newly joined league (manual/Action sync first).
 - PWA install prompt + web push.
 - Native App Store / Play wrappers.
-- League residual on the calc book; accept-odds / suggested counter; public/private marketplace.
+- Accept-odds / suggested counter; public/private marketplace.
 - Equipped **title** painted on names across the app (header, news, trade cards, ledger,
   smack). Wave 1 already paints the calling card on each manager's team home and your
   equipped **emblem** next to your own seat name.

@@ -1616,12 +1616,17 @@ browser. `dayAlert` and everything else read one clock. `marks.json` replaced th
 download. `tradeDelta` is memoised. Those are the wins that do not require the browser and the
 pipeline to renegotiate what a trade looks like.
 
-**Not shipped.** The browser still recomputes VA from legs in `applyVa`, because the payload
-still ships five near-duplicate leg lists per trade — one per window — rather than one leg list
-plus five values. Collapsing that is worth roughly another 1.2 MB and would let `applyVa` be
-deleted outright, but it changes the shape every render path reads, and Slices B, D, E and F were
-already all editing `generate-page.mjs` in sequence. Landing a contract change on top of them
-would have meant re-verifying every screen against a payload no invariant script yet understood.
+**Tape now prefers stored windows.** `sideOf` returns the pipeline side when `today` and
+`sent_today` are both present. `applyVa` remains for calculator hypotheticals
+(`calcSideBag`) and as a fallback when a stored window is incomplete. Deleting the clone
+still waits on the one-leg-list contract below.
+
+**Not shipped.** The payload still ships five near-duplicate leg lists per trade — one per
+window — rather than one leg list plus five values. Collapsing that is worth roughly another
+1.2 MB and would let `applyVa` be deleted outright, but it changes the shape every render
+path reads, and Slices B, D, E and F were already all editing `generate-page.mjs` in
+sequence. Landing a contract change on top of them would have meant re-verifying every
+screen against a payload no invariant script yet understood.
 
 **The concrete proposal, for a later pass.** A trade ships:
 
@@ -1696,10 +1701,12 @@ shipped `league.json` in `64f55b0`.
 
 ---
 
-## 8c. D5 — the 40/60 KTC blend has no reader left. New, and a user decision.
+## 8c. D5 — the four-source today blend now has readers. Closed as a “no reader” gap.
 
-Found while writing §7, not during the audit. It is the one thing in this pass that I do not
-think should be resolved by a worker, so it ships unresolved and flagged.
+The 40/60 wording below is the 2026-08-30 audit note. Today is four-source
+(0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20 DynastyDealer). The calculator
+renders that book. Tape `sideOf` prefers stored `today` / `sent_today` when both exist.
+Score-as year windows stay flatten-only — that gap is product law, not a missing screen.
 
 **The blend lives in `even`. The UI renders `windows[lens]`.** `sideOf(t)` is
 `applyVa((t.windows && t.windows[lens]) || t.even || t.realized)`. Every one of the 586 trades

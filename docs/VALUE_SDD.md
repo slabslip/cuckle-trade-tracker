@@ -295,18 +295,26 @@ w_dd   = 0.20   // DynastyDealer base_value
 
 ---
 
-## 12. Calculator book (HAVE) and reserved leftover (WANT)
+## 12. Calculator book (HAVE)
 
 **HAVE.** `?view=calc` prices a hypothetical 2-side swap on the **today / `even` book**
-(flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via the same `applyVa` the trade rows use. The catalog
+(flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via `applyVa` on the
+hypothetical bags. Recorded tape rows prefer the pipeline’s stored `today` / `sent_today`
+when both are present (`sideOf`); `applyVa` stays in the browser for calc clones. The catalog
 is `data/ui/calculator.json` from `build-calculator.mjs`: rostered players and still-held picks
 only, each with `roster_ord` in Sleeper team-page order (starters, bench, IR, taxi; picks after).
 A team on a side is optional: the same book can price a research bag (type any player or pick)
-or a seat bag (that roster plus its remaining draft capital). Votes do not appear on a
-hypothetical and do not change the number. This is the first reachable screen that **renders**
-`even`. The five Score-as windows stay flatten-only.
+or a seat bag (that roster plus its remaining draft capital). Roster meta and selected player
+rows may chip buy / fair / sell from `pe.json` (signal only). Pick rows expose a **tape**
+toggle: collapsed copy is became / still a pick; hop values stay inside the open tape.
+Votes do not appear on a hypothetical and do not change the number. This is the first reachable
+screen that **renders** `even`. The five Score-as windows stay flatten-only.
 
-**Reserved — do not paint over.** League **residual** (what the rest of the league’s bags look
-like after this even deal) and a **vote-nudge** (a later, optional prompt that a priced deal is
-worth an opinion) stay specified, not built. Residual is a later VALUE pass. Vote-nudge is a later
-VOTES / PRODUCT pass. Neither may write a vote into the book.
+**League leftover (HAVE).** After both sides hold priced legs, the compare block shows each
+seat’s **percent of league capital** after the swap (from → to) and that the other seats stay
+at the remainder. Percents only — no bag totals on Home, no 10-row leftover table.
+
+**Vote-nudge (HAVE).** When both calc seats are set, a tape deal exists between those display
+names, and `readVotes` has no `choice`, a button opens that trade’s existing vote sheet
+(`data-board-open` + `data-id` + `data-trade-solo="1"`). Copy: the room has not voted; opinion
+only; votes never enter the book. The nudge never writes a vote by itself.

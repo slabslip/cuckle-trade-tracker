@@ -957,6 +957,10 @@
     }
     .mark-chart-h span { display: block; color: var(--dim); font-weight: 500; font-size: 0.75rem; margin-top: 2px; }
     .mark-bar { margin: 0 0 12px; }
+    button.mark-bar {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      display: block; width: 100%; background: transparent; border: 0; padding: 0; cursor: pointer;
+    }
     .mark-bar:last-child { margin-bottom: 0; }
     .mark-bar.you .names { color: var(--text); font-weight: 650; }
     .mark-bar-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
@@ -1327,7 +1331,7 @@
     }
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
-    /* League-home top tabs — Home | Teams | Ledger | History (in-place toggle). */
+    /* League-home top tabs — Home | Teams | Ledger | Data (in-place toggle). */
     :root { --lh-nav-h: 44px; --lh-gold: #e0b44c; }
     .lh-actions {
       position: relative; z-index: 5;
@@ -2998,6 +3002,76 @@
       margin: 18px 0 8px; font-size: 0.8125rem; font-weight: 650;
       color: var(--muted); letter-spacing: -0.01em;
     }
+    .data-dash { margin: 0 0 16px; }
+    .data-dash-sub { margin: 0 0 12px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .data-search {
+      position: relative; margin: 0 0 12px;
+    }
+    .data-search input[type="search"] {
+      appearance: none; font: inherit; width: 100%; box-sizing: border-box;
+      color: var(--text); background: #16161a; border: 1px solid var(--line);
+      border-radius: 10px; min-height: 44px; padding: 10px 12px 10px 36px;
+    }
+    .data-search-ico {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--dim); pointer-events: none; font-size: 0.95rem;
+    }
+    .data-rooms {
+      display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      margin: 0 0 12px; padding: 0 0 2px;
+    }
+    button.data-room {
+      appearance: none; font: inherit; font-size: 0.75rem; font-weight: 650;
+      color: var(--muted); background: #1c1c22; border: 1px solid var(--line);
+      border-radius: 999px; min-height: 36px; padding: 0 12px; cursor: pointer;
+      flex: 0 0 auto;
+    }
+    button.data-room.on { color: var(--text); border-color: #6b5a2e; background: #221e14; }
+    .data-snap {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px;
+    }
+    .data-tile {
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; min-height: 64px;
+    }
+    .data-tile span {
+      display: block; font-size: 0.62rem; font-weight: 750; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--dim); margin: 0 0 4px;
+    }
+    .data-tile b { display: block; font-size: 1.05rem; font-weight: 750; color: var(--text); }
+    .data-h {
+      margin: 16px 0 8px; font-size: 0.75rem; font-weight: 750; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .data-filters {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px;
+    }
+    button.data-chip {
+      appearance: none; font: inherit; font-size: 0.72rem; font-weight: 650;
+      color: var(--muted); background: transparent; border: 1px solid var(--line);
+      border-radius: 8px; min-height: 32px; padding: 0 10px; cursor: pointer;
+    }
+    button.data-chip.on { color: var(--text); border-color: #6b5a2e; }
+    .data-xrow {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; margin: 0 0 6px; min-height: 44px; cursor: pointer;
+      box-sizing: border-box;
+    }
+    .data-xrow-main { flex: 1; min-width: 0; }
+    .data-xrow-name { font-weight: 650; color: var(--text); }
+    .data-xrow-meta { display: block; font-size: 0.72rem; color: var(--dim); }
+    .data-xrow-val {
+      font-variant-numeric: tabular-nums; font-weight: 750;
+      color: var(--lh-gold, #e0b44c); flex: 0 0 auto;
+    }
+    .data-xrow-pe {
+      display: inline-block; margin-left: 6px; font-size: 0.62rem; font-weight: 750;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    .data-hint { margin: 0 0 8px; font-size: 0.75rem; color: var(--muted); }
+    .data-peek { margin: 0 0 8px; }
     #dsBody .caption { margin: 0 0 8px; }
     /* News and Alerts. The user asked for "scrolling", and this scrolls because a finger or a
        wheel moves it -- there is no animation here at all.
@@ -3493,7 +3567,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nextbuild20260908014500";
+    const DATA_V = "datahome20260908021500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3518,6 +3592,13 @@
     // would not read as a lone control over empty space; the user asked for the empty space.
     // clearLeague / the home icon return to null; there is no "None" menu option.
     let dataSet = null;
+    let dataRoom = "overview";
+    let dataQ = "";
+    let dataPos = "";
+    let dataOwner = "";
+    let dataSort = "value";
+    let dataYear = "";
+    let dataMark = "volume";
     let dsOpen = false;
     const WINDOWS = [
       ["t0", "Date of Trade", "Value on the day the trade was accepted."],
@@ -5082,6 +5163,7 @@
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
       dataSet = null;
+      if (typeof dataDashReset === "function") dataDashReset();
       homeTab = "home";
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -5192,7 +5274,8 @@
         tradeSeat: q.get("seat") || null,
         // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
-        homeTab: (tab === "ledger" || tab === "teams" || tab === "history") ? tab : "home",
+        homeTab: (tab === "ledger" || tab === "teams" || tab === "history" || tab === "data")
+          ? (tab === "data" ? "history" : tab) : "home",
         d: 0,
       };
     }
@@ -5212,8 +5295,8 @@
         tradeSeat = want.tradeSeat || null;
         {
           const tab = String(want.homeTab || "").toLowerCase();
-          if (tab === "ledger" || tab === "teams" || tab === "history") {
-            homeTab = tab;
+          if (tab === "ledger" || tab === "teams" || tab === "history" || tab === "data") {
+            homeTab = tab === "data" ? "history" : tab;
           } else {
             homeTab = "home";
           }
@@ -5724,21 +5807,21 @@
     }
 
     /**
-     * History tab in the top league-home tab bar (Draft Data, Cuffs, league lists).
-     * Visible label is always "History"; accessible name carries any selected set.
+     * Data tab in the top league-home tab bar (research homebase).
+     * Visible label is always "Data"; accessible name carries any selected set.
      */
     function dataSetRow() {
       const cur = dataSet ? dataSetDef(dataSet) : null;
       const named = cur
-        ? ' aria-label="History, ' + esc(cur[1]) + ' selected"'
-        : ' aria-label="History, none selected"';
+        ? ' aria-label="Data, ' + esc(cur[1]) + ' selected"'
+        : ' aria-label="Data, none selected"';
       const on = homeTab === "history";
       return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="history"'
         + ' aria-selected="' + (on ? "true" : "false") + '"'
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
-        + '<span class="lh-lab">History</span></button>';
+        + '<span class="lh-lab">Data</span></button>';
     }
 
     function chipSlot() {
@@ -5757,6 +5840,7 @@
     /** One top tab cell for in-place league-home toggling. */
     function homeTabCanon(tab) {
       const t = String(tab || "").toLowerCase();
+      if (t === "data") return "history";
       if (t === "teams" || t === "ledger" || t === "history") return t;
       return "home";
     }
@@ -5885,7 +5969,10 @@
       let next = "home";
       if (want === "home") next = "home";
       else if (want) next = (!force && homeTabCanon(homeTab) === want) ? "home" : want;
-      if (next !== "history") dataSet = null;
+      if (next !== "history") {
+        dataSet = null;
+        dataDashReset();
+      }
       homeTab = next || "home";
       me = null;
       data = null;
@@ -5932,20 +6019,382 @@
         + "</div></div>";
     }
 
+    function dataDashReset() {
+      dataRoom = "overview";
+      dataQ = "";
+      dataPos = "";
+      dataOwner = "";
+      dataSort = "value";
+      dataYear = "";
+      dataMark = "volume";
+    }
+
+    function dataDashFocusSearch(range) {
+      const back = document.querySelector("#app [data-data-q]");
+      if (!back) return;
+      back.focus({ preventScroll: true });
+      if (range) {
+        try { back.setSelectionRange(range.start, range.end); } catch (err) { /* ignore */ }
+      } else {
+        const n = back.value.length;
+        try { back.setSelectionRange(n, n); } catch (err) { /* ignore */ }
+      }
+    }
+
+    function dataDashRoomCanon(id) {
+      const t = String(id || "").toLowerCase();
+      if (t === "tape" || t === "book" || t === "seats" || t === "lists"
+        || t === "draft" || t === "cuffs") return t;
+      return "overview";
+    }
+
+    function dataDashTapeCount() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const seen = new Set();
+      for (let i = 0; i < sides.length; i++) {
+        if (sides[i] && sides[i].transaction_id) seen.add(String(sides[i].transaction_id));
+      }
+      return seen.size;
+    }
+
+    function dataDashFirstsHeld() {
+      const picks = (calcBook && calcBook.picks) || [];
+      let n = 0;
+      for (let i = 0; i < picks.length; i++) {
+        if (Number(picks[i].round) === 1) n += 1;
+      }
+      return n;
+    }
+
+    function dataDashUninsured() {
+      const rows = (cuffs && cuffs.rows) || [];
+      let n = 0;
+      for (let i = 0; i < rows.length; i++) {
+        if (!rows[i].cuff_owned) n += 1;
+      }
+      return n;
+    }
+
+    function dataDashAsOf() {
+      const raw = String((league && league.today) || "");
+      return raw || "—";
+    }
+
+    function dataDashBookHits(q, pos, owner, sort, limit) {
+      const book = calcBook || { players: [], picks: [] };
+      const needle = String(q || "").trim().toLowerCase();
+      const pool = (book.players || []).concat(book.picks || []).filter(function (a) {
+        if (!a || !a.id) return false;
+        if (pos === "PICK" && !(a.kind === "pick" || a.pos === "PICK")) return false;
+        if (pos && pos !== "PICK" && String(a.pos || "").toUpperCase() !== pos) return false;
+        if (owner && String(a.owner_id) !== String(owner)) return false;
+        if (needle && typeof calcAssetNeedle === "function" && !calcAssetNeedle(a, needle)) return false;
+        return true;
+      });
+      pool.sort(function (a, b) {
+        if (sort === "name") {
+          return String(calcDisplayName(a) || a.name || "").localeCompare(String(calcDisplayName(b) || b.name || ""));
+        }
+        if (sort === "age") return (Number(b.age) || 0) - (Number(a.age) || 0);
+        return calcValueNum(b) - calcValueNum(a);
+      });
+      const cap = limit || 40;
+      return { rows: pool.slice(0, cap), n: pool.length };
+    }
+
+    function dataDashTapeHits(q, year, limit) {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const needle = String(q || "").trim().toLowerCase();
+      const by = new Map();
+      for (let i = 0; i < sides.length; i++) {
+        const r = sides[i];
+        if (!r) continue;
+        if (year && String(r.date || "").slice(0, 4) !== year) continue;
+        if (needle) {
+          const blob = [r.name, r.other, r.headline, r.date].join(" ").toLowerCase();
+          if (blob.indexOf(needle) < 0) continue;
+        }
+        const s = windowScore(r);
+        const prev = by.get(r.transaction_id);
+        if (!prev || (s != null && (prev.score == null || Math.abs(s) > Math.abs(prev.score)))) {
+          by.set(r.transaction_id, { r: r, score: s });
+        }
+      }
+      const rows = Array.from(by.values()).sort(function (a, b) {
+        const aa = a.score == null ? -1 : Math.abs(a.score);
+        const bb = b.score == null ? -1 : Math.abs(b.score);
+        return bb - aa || String(b.r.date || "").localeCompare(String(a.r.date || ""));
+      });
+      const cap = limit || 40;
+      return { rows: rows.slice(0, cap), n: rows.length };
+    }
+
+    function dataDashYears() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const years = {};
+      for (let i = 0; i < sides.length; i++) {
+        const y = String(sides[i].date || "").slice(0, 4);
+        if (y) years[y] = true;
+      }
+      return Object.keys(years).sort().reverse();
+    }
+
+    function dataDashSearchHtml() {
+      const ph = dataRoom === "tape"
+        ? "Search trades, seats, headlines"
+        : dataRoom === "book"
+          ? "Search players and picks"
+          : "Search the league book";
+      return '<div class="data-search">'
+        + '<span class="data-search-ico" aria-hidden="true">⌕</span>'
+        + '<input type="search" value="' + esc(dataQ) + '" data-data-q="1"'
+        + ' placeholder="' + esc(ph) + '" aria-label="Search league data" /></div>';
+    }
+
+    function dataDashRoomsHtml() {
+      const rooms = [
+        ["overview", "Overview"],
+        ["book", "Book"],
+        ["tape", "Tape"],
+        ["seats", "Seats"],
+        ["lists", "Lists"],
+        ["draft", "Draft"],
+        ["cuffs", "Cuffs"],
+      ];
+      return '<div class="data-rooms" role="tablist" aria-label="Data rooms">'
+        + rooms.map(function (r) {
+          const on = dataDashRoomCanon(dataRoom) === r[0];
+          return '<button type="button" class="data-room' + (on ? " on" : "") + '"'
+            + ' data-data-room="' + r[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
+            + r[1] + "</button>";
+        }).join("")
+        + "</div>";
+    }
+
+    function dataDashSnapHtml() {
+      return '<div class="data-snap" aria-label="League snapshots">'
+        + '<div class="data-tile"><span>Tape</span><b>' + dataDashTapeCount() + " deals</b></div>"
+        + '<div class="data-tile"><span>Book as of</span><b>' + esc(dataDashAsOf()) + "</b></div>"
+        + '<div class="data-tile"><span>Firsts held</span><b>' + dataDashFirstsHeld() + "</b></div>"
+        + '<div class="data-tile"><span>Uninsured</span><b>' + dataDashUninsured() + " starters</b></div>"
+        + "</div>";
+    }
+
+    function dataDashBookRow(a) {
+      const name = calcDisplayName(a) || a.name || "—";
+      const pe = (typeof homeDeskPe === "function") ? homeDeskPe(a) : "";
+      const bits = [];
+      if (a.pos) bits.push(a.pos);
+      if (a.team) bits.push(a.team);
+      if (a.owner) bits.push(a.owner);
+      if (a.age != null && Number.isFinite(Number(a.age))) bits.push(Number(a.age).toFixed(1));
+      const v = calcValueNum(a);
+      return '<button type="button" class="data-xrow" data-data-price="' + esc(a.id) + '">'
+        + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name)
+        + (pe ? '<span class="data-xrow-pe">' + esc(pe) + "</span>" : "") + "</span>"
+        + '<span class="data-xrow-meta">' + esc(bits.join(" · ") || (a.kind === "pick" ? "Pick" : "Player")) + "</span></div>"
+        + '<span class="data-xrow-val">' + (v < 0 ? "—" : calcFmt(v)) + "</span></button>";
+    }
+
+    function dataDashTapeRow(item) {
+      const r = item.r;
+      const lab = (r.name || "?") + " · " + (r.other || "?");
+      const meta = [r.date, r.headline].filter(Boolean).join(" · ");
+      const right = item.score == null ? "—" : tapeMargin(item.score);
+      return '<button type="button" class="data-xrow" data-board-open="' + esc(r.user_id) + '"'
+        + ' data-id="' + esc(r.transaction_id) + '">'
+        + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(lab) + "</span>"
+        + '<span class="data-xrow-meta">' + esc(meta) + "</span></div>"
+        + '<span class="data-xrow-val">' + right + "</span></button>";
+    }
+
+    function dataDashHint(n, shown, noun) {
+      if (!n) return '<p class="data-hint">Nothing matches.</p>';
+      if (n > shown) {
+        return '<p class="data-hint">Showing ' + shown + " of " + n + " " + noun + ". Type to narrow.</p>";
+      }
+      return '<p class="data-hint">' + n + " " + noun + ".</p>";
+    }
+
+    function dataDashBookHtml() {
+      const pos = ["", "QB", "RB", "WR", "TE", "PICK"];
+      const hits = dataDashBookHits(dataQ, dataPos, dataOwner, dataSort, 40);
+      return '<div class="data-filters">'
+        + pos.map(function (p) {
+          const lab = p || "All";
+          const on = dataPos === p;
+          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-pos="' + p + '">'
+            + lab + "</button>";
+        }).join("")
+        + "</div>"
+        + '<div class="data-filters">'
+        + '<button type="button" class="data-chip' + (dataOwner ? "" : " on") + '" data-data-owner="">Any seat</button>'
+        + (members || []).map(function (m) {
+          const on = String(dataOwner) === String(m.user_id);
+          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-owner="'
+            + esc(m.user_id) + '">' + esc(m.name) + "</button>";
+        }).join("")
+        + "</div>"
+        + '<div class="data-filters">'
+        + [["value", "Value"], ["name", "Name"], ["age", "Age"]].map(function (s) {
+          const on = dataSort === s[0];
+          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-sort="' + s[0] + '">'
+            + s[1] + "</button>";
+        }).join("")
+        + "</div>"
+        + dataDashHint(hits.n, hits.rows.length, hits.n === 1 ? "asset" : "assets")
+        + hits.rows.map(dataDashBookRow).join("");
+    }
+
+    function dataDashTapeHtml() {
+      const years = dataDashYears();
+      const filtered = !!(dataQ || dataYear);
+      const hits = filtered
+        ? dataDashTapeHits(dataQ, dataYear, 40)
+        : { rows: rankWide().map(function (r) { return { r: r, score: windowScore(r) }; }), n: rankWide().length };
+      return '<div class="data-filters">'
+        + '<button type="button" class="data-chip' + (dataYear ? "" : " on") + '" data-data-year="">All years</button>'
+        + years.map(function (y) {
+          const on = dataYear === y;
+          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-year="' + y + '">'
+            + y + "</button>";
+        }).join("")
+        + "</div>"
+        + (filtered ? "" : '<p class="data-hint">Widest margins on the Score as clock. Search or pick a year to scan the whole tape.</p>')
+        + (filtered ? "" : chipLensHtml({ inline: true }))
+        + dataDashHint(hits.n, hits.rows.length, hits.n === 1 ? "deal" : "deals")
+        + hits.rows.map(dataDashTapeRow).join("")
+        + '<p class="caption"><button type="button" class="chip" data-trades-list="1">All league trades</button></p>';
+    }
+
+    function dataDashChartHtml() {
+      const keys = [
+        ["volume", "Volume"],
+        ["run", "Run"],
+        ["posture", "Posture"],
+        ["manners", "Manners"],
+        ["aging", "Aging"],
+        ["draft", "Draft"],
+      ];
+      const heads = {
+        run: ["Ahead or behind", "Net on the selected Score as clock."],
+        volume: ["How much they trade", "Two-way count."],
+        posture: ["Players vs picks", "Picks sold for players vs the other way."],
+        manners: ["Who extracts", "Partners they beat vs partners who beat them."],
+        aging: ["Aged after accept", "How 2-team trades moved after accept."],
+        draft: ["Rookie hits", "Mean surplus vs the pick."],
+      };
+      const metric = keys.some(function (k) { return k[0] === dataMark; }) ? dataMark : "volume";
+      const head = heads[metric] || ["League", ""];
+      const seats = (marks && marks.seats) || {};
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const rows = (members || [])
+        .filter(function (mem) { return seats[mem.user_id]; })
+        .map(function (mem) {
+          return { name: mem.name, uid: mem.user_id, ...marksOf(seats[mem.user_id])[metric] };
+        });
+      rows.sort(function (a, b) { return b.sort - a.sort; });
+      const maxAbs = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.sort); }).concat([1]));
+      const chips = '<div class="data-filters">'
+        + keys.map(function (k) {
+          const on = metric === k[0];
+          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-mark="' + k[0] + '">'
+            + k[1] + "</button>";
+        }).join("")
+        + "</div>";
+      if (!rows.length) {
+        return chips + '<p class="caption">No league marks in this build.</p>';
+      }
+      return chips
+        + '<div class="mark-chart">'
+        + '<div class="mark-chart-h">' + esc(head[0]) + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>"
+        + rows.map(function (r, i) {
+          const you = mine && String(r.uid) === mine;
+          const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
+          return '<button type="button" class="mark-bar' + (you ? " you" : "") + '" data-data-seat="' + esc(r.uid) + '">'
+            + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + seatLabel(r.name) + "</span>"
+            + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
+            + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
+            + '<div class="date">' + r.statHtml + "</div></button>";
+        }).join("")
+        + "</div>";
+    }
+
+    function dataDashOverviewHtml() {
+      const q = String(dataQ || "").trim();
+      if (q) {
+        const book = dataDashBookHits(q, "", "", "value", 8);
+        const tape = dataDashTapeHits(q, "", 6);
+        const seats = (members || []).filter(function (m) {
+          return String(m.name || "").toLowerCase().indexOf(q.toLowerCase()) >= 0;
+        }).slice(0, 4);
+        return (book.n
+          ? ('<div class="data-h">Book</div>' + book.rows.map(dataDashBookRow).join(""))
+          : "")
+          + (tape.n
+            ? ('<div class="data-h">Tape</div>' + tape.rows.map(dataDashTapeRow).join(""))
+            : "")
+          + (seats.length
+            ? ('<div class="data-h">Seats</div>' + seats.map(function (m) {
+              return '<button type="button" class="data-xrow" data-data-seat="' + esc(m.user_id) + '">'
+                + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(m.name) + "</span>"
+                + '<span class="data-xrow-meta">Open team home</span></div></button>';
+            }).join(""))
+            : "")
+          + (!book.n && !tape.n && !seats.length
+            ? '<p class="data-hint">Nothing matches that search.</p>'
+            : "");
+      }
+      const wide = rankWide().slice(0, 3).map(function (r) { return { r: r, score: windowScore(r) }; });
+      const lists = (league && league.player_lists) || {};
+      const passed = (lists.most_traded || []).slice(0, 3);
+      const home = (lists.homesteaders || []).slice(0, 3);
+      return dataDashSnapHtml()
+        + '<div class="data-h">Seat tape</div>'
+        + dataDashChartHtml()
+        + (wide.length
+          ? ('<div class="data-h">Widest on this clock</div><div class="data-peek">'
+            + wide.map(dataDashTapeRow).join("")
+            + '<p class="caption"><button type="button" class="chip" data-data-room="tape">Open tape</button></p></div>')
+          : "")
+        + ((passed.length || home.length)
+          ? ('<div class="data-h">Liquidity</div><div class="data-peek">'
+            + passed.map(function (r) { return listRow(r, r.trades + (r.trades === 1 ? " trade" : " trades")); }).join("")
+            + home.map(function (r) { return listRow(r, yearsOn(r.days)); }).join("")
+            + '<p class="caption"><button type="button" class="chip" data-data-room="lists">League lists</button></p></div>')
+          : "")
+        + '<div class="data-h">Draft capital</div>' + pickIntelHome()
+        + '<div class="data-h">Depth cuffs</div>' + cuffsHome();
+    }
+
+    function dataDashHtml() {
+      const room = dataDashRoomCanon(dataRoom);
+      let body = "";
+      if (room === "book") body = dataDashBookHtml();
+      else if (room === "tape") body = dataDashTapeHtml();
+      else if (room === "seats") body = dataDashChartHtml();
+      else if (room === "lists") body = '<h3 class="ds-lists-h">League lists</h3>' + dsMenu();
+      else if (room === "draft") body = pickIntelHome();
+      else if (room === "cuffs") body = cuffsHome();
+      else body = dataDashOverviewHtml();
+      return '<section class="data-dash" aria-label="League data">'
+        + '<h2 class="screen-h" tabindex="-1">Data</h2>'
+        + '<p class="data-dash-sub">League research. Search the book, scan the tape, compare seats. Votes never enter these numbers.</p>'
+        + dataDashSearchHtml()
+        + dataDashRoomsHtml()
+        + body
+        + "</section>";
+    }
+
     /**
-     * History tab body: Draft Data + Cuffs first, then Past Champions + league list sets.
-     * Choosing a set shows that list; back returns here, then top-bar back to Latest trade.
+     * Data tab body: research homebase. A saved league list still drills in as its own panel.
      */
     function renderDataSetsPage() {
       if (dataSet) {
-        return '<button type="button" class="chip back" data-dset-list="1">← History</button>'
+        return '<button type="button" class="chip back" data-dset-list="1">← Data</button>'
           + dataSetPanel();
       }
-      return '<h2 class="screen-h" tabindex="-1">History</h2>'
-        + pickIntelHome()
-        + cuffsHome()
-        + '<h3 class="ds-lists-h">League lists</h3>'
-        + dsMenu();
+      return dataDashHtml();
     }
 
     function nth(n) {
@@ -17587,6 +18036,7 @@
 
     function showDataSetList() {
       dataSet = null;
+      dataRoom = "lists";
       homeTab = "history";
       me = null;
       data = null;
@@ -17918,6 +18368,64 @@
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
+        return;
+      }
+      const dataRoomBtn = e.target.closest("[data-data-room]");
+      if (dataRoomBtn) {
+        dataRoom = dataDashRoomCanon(dataRoomBtn.getAttribute("data-data-room"));
+        dataSet = null;
+        if (dataRoom !== "book" && dataRoom !== "tape") dataQ = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const dataPosBtn = e.target.closest("[data-data-pos]");
+      if (dataPosBtn) {
+        dataPos = dataPosBtn.getAttribute("data-data-pos") || "";
+        render();
+        return;
+      }
+      const dataOwnerBtn = e.target.closest("[data-data-owner]");
+      if (dataOwnerBtn) {
+        dataOwner = dataOwnerBtn.getAttribute("data-data-owner") || "";
+        render();
+        return;
+      }
+      const dataSortBtn = e.target.closest("[data-data-sort]");
+      if (dataSortBtn) {
+        dataSort = dataSortBtn.getAttribute("data-data-sort") || "value";
+        render();
+        return;
+      }
+      const dataYearBtn = e.target.closest("[data-data-year]");
+      if (dataYearBtn) {
+        dataYear = dataYearBtn.getAttribute("data-data-year") || "";
+        render();
+        return;
+      }
+      const dataMarkBtn = e.target.closest("[data-data-mark]");
+      if (dataMarkBtn) {
+        dataMark = dataMarkBtn.getAttribute("data-data-mark") || "volume";
+        render();
+        return;
+      }
+      const dataSeatBtn = e.target.closest("[data-data-seat]");
+      if (dataSeatBtn) {
+        const uid = dataSeatBtn.getAttribute("data-data-seat") || "";
+        if (uid) selectMe(uid);
+        return;
+      }
+      const dataPriceBtn = e.target.closest("[data-data-price]");
+      if (dataPriceBtn) {
+        const id = dataPriceBtn.getAttribute("data-data-price") || "";
+        if (typeof calcWipe === "function") calcWipe();
+        const asset = typeof calcLegFromAsset === "function"
+          ? calcLegFromAsset(calcAssetById(id))
+          : null;
+        if (asset) calcLegsA = [asset];
+        view = "calc";
+        focusNext = ".screen-h";
+        render();
         return;
       }
       const dsetBtn = e.target.closest("[data-dset]");
@@ -19064,6 +19572,15 @@
         if (!profileCrop) return;
         profileCrop.zoom = Math.max(1, Math.min(3, Number(e.target.value) || 1));
         paintProfileCrop();
+        return;
+      }
+      const dataQBox = e.target.closest("[data-data-q]");
+      if (dataQBox) {
+        dataQ = dataQBox.value || "";
+        const start = dataQBox.selectionStart;
+        const end = dataQBox.selectionEnd;
+        render();
+        dataDashFocusSearch({ start: start, end: end });
         return;
       }
       const calcFilterBox = e.target.closest("[data-calc-filter]");

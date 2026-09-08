@@ -13,7 +13,7 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 
 ## 1. Two rooms
 
-**Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | History**, then
+**Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | Data**, then
 the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**, signed-in
 **Trade Desk**, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
 it; the clock lives in the brand header on screens it applies to (§2a).
@@ -150,8 +150,9 @@ to Home rather than throwing. `history.replaceState` fires only when the URL str
 
 ### 2b. Top tabs
 
-Four chips, one row, no wrap: **Home | Teams | Ledger | History**. First tab label is **Home**.
-`homeTab` stores `home`. Ledger may badge. No fifth tab. Calculator and Titles and Emblems are
+Four chips, one row, no wrap: **Home | Teams | Ledger | Data**. First tab label is **Home**.
+`homeTab` stores `home`. The Data tab keeps the internal id `history` (`?tab=history`;
+`?tab=data` also opens it). Ledger may badge. No fifth tab. Calculator and Titles and Emblems are
 sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
 
 ---
@@ -189,7 +190,7 @@ calculator with **your** outgoing pieces on side A. No bag numbers. Do not inven
 fourth card or “Open the calculator” filler.
 The News Feed pull-up stays the league-wide preview.
 
-Draft Data, Cuffs, Champions Path, and League Data Sets live on **History**, not stacked on Home.
+Draft Data, Cuffs, Champions Path, and League Data Sets live on **Data**, not stacked on Home.
 
 ### 3b. Calculator
 
@@ -239,20 +240,22 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
-**History** holds Draft Data, Cuffs, Past Champions, and the league lists. **Teams** is the door
-into a seat (header picker stays gone — §2).
+**Data** is the league research homebase (visible tab label; internal `homeTab` stays
+`history`). Cold load is an **Overview**: snapshot tiles (tape count, book as-of, firsts still
+held, uninsured starters), a seat-comparison chart from `marks.json`, a widest-tape peek, a
+liquidity peek, plus Draft Data and Cuffs teasers. Rooms under the search bar: Overview · Book ·
+Tape · Seats · Lists · Draft · Cuffs. Search hits the today book (`calculator.json`), the tape
+(`trade_boards.sides`), and seat names. Book is the extractable catalog (position / seat /
+value-name-age). Tape is widest-on-clock by default, then year + search over every deal. Seats
+are the six mark charts. Lists keeps the five saved sets plus Past Champions. A saved set still
+drills to one list; back returns to Lists. **Teams** is the door into a seat (header picker
+stays gone — §2). Do not put bag totals on Home. Do not restore Best 10 / Worst 10.
 
-**League Data Sets** (History) — one list on screen. Five sets: Most lopsided trades · Most
-passed around · Least traded · Forever players · Homesteaders. It replaced five collapsible packs
-stacked down the screen, any number of which could be open at once. The trigger's label is the
-constant `League Data Sets`, never the selection — the same convention the seat picker settled on —
-and the selected set is named by the `h2` directly below the box, which is the only thing on
-screen that says which set you are looking at. **Nothing is selected on a cold load**, and the
-Home tab and a History back chip both return to that.
+**League Data Sets** (Data → Lists) — one list on screen. Five sets: Most lopsided trades · Most
+passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold
+load.** The Home tab and a Data back chip both return to Overview / Lists.
 
-It is a popup listbox with the seat menu's keyboard: arrows, `Home`, `End`, `Escape` back to the
-trigger. The panel takes the box's full width; capped narrower, it left half of each trade row
-visible beside it.
+The old popup dropdown is gone. Rooms and search are in-flow.
 
 **Its height is capped to its own list, not to a slice of the viewport.** The old cap,
 `min(100dvh - 96px, 480px)`, was a number six options never reach, so it never bit: the panel

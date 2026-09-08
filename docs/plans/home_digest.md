@@ -15,7 +15,8 @@ plans stay as history; do not paste them here.
 
 ## Locked for this pass
 
-- Four top tabs, one row: **Home | Teams | Ledger | History**. No fifth tab. No `#goHome` icon.
+- Four top tabs, one row: **Home | Teams | Ledger | Data**. No fifth tab. No `#goHome` icon.
+  Data is the research homebase (internal tab id `history`).
 - First tab label **Home**. `homeTab` stores `"home"`; `"league"` is an alias.
 - Hybrid Home: league water cooler on top (**Cuckle trade calculator** + existing News Feed peek).
   Signed-in **Alerts** (wager / vote only) and **Trade Desk** (talks for your bag from

@@ -55,6 +55,28 @@ jobs:
           node audit-values.mjs
           node audit-pass2.mjs
 
+      - name: Bust DATA_V when the priced book changed
+        run: |
+          set -e
+          if git diff --quiet -- data/ui/calculator.json data/ui/pe.json data/ui/marks.json; then
+            echo "No priced UI book change; leave DATA_V"
+            exit 0
+          fi
+          stamp="daily$(date -u +%Y%m%d%H%M%S)"
+          python3 - "$stamp" <<'PY'
+          import re, sys
+          from pathlib import Path
+          stamp = sys.argv[1]
+          p = Path("generate-page.mjs")
+          text = p.read_text()
+          text2, n = re.subn(r'const DATA_V = "[^"]+"', f'const DATA_V = "{stamp}"', text, count=1)
+          if n != 1:
+              raise SystemExit(f"expected 1 DATA_V, got {n}")
+          p.write_text(text2)
+          print("DATA_V", stamp)
+          PY
+          node generate-page.mjs
+
       - name: Commit snaps and UI if changed
         run: |
           set -e

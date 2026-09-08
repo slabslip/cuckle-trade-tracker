@@ -2194,7 +2194,8 @@ const html = `<!DOCTYPE html>
     button.pick-intel-chip[aria-pressed="true"] {
       border-color: #6b5a2e;
     }
-    button.pick-intel-chip[aria-disabled="true"] {
+    button.pick-intel-chip[aria-disabled="true"],
+    button.pick-intel-chip:disabled {
       opacity: 0.45; cursor: not-allowed;
     }
     button.pick-intel-chip:focus-visible {
@@ -3476,7 +3477,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "deskme20260908011500";
+    const DATA_V = "reviewfix20260908013000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4288,11 +4289,11 @@ const html = `<!DOCTYPE html>
         + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Search")
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
-        + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + (mineHeldDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
         + ' aria-label="Held picks">Held</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
-        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + (mineOutDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
         + ' aria-label="Original picks">Original</button>'
         + "</div></div>"
@@ -4413,10 +4414,10 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
         + ' aria-label="Search picks">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this"' : "")
         + ' aria-label="Held picks">Held</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this"' : "")
         + ' aria-label="Original picks">Original</button>'
         + "</div></div>"
         + body
@@ -4711,7 +4712,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
         + ' aria-label="Search cuffs">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this"' : "")
         + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
         + ' aria-label="Available cuffs">Available</button>'
@@ -4779,7 +4780,7 @@ const html = `<!DOCTYPE html>
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (mineOn ? " on" : "") + '"'
         + ' data-cuff-mine="1"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (mineOn ? "true" : "false") + '"'
         + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
@@ -15205,6 +15206,22 @@ const html = `<!DOCTYPE html>
         + "</section>";
     }
 
+    function calcWipe() {
+      calcSeatA = "";
+      calcSeatB = "";
+      calcLegsA = [];
+      calcLegsB = [];
+      calcOpenA = false;
+      calcOpenB = false;
+      calcSeatMenu = "";
+      calcFilterA = "";
+      calcFilterB = "";
+      calcPickA = [];
+      calcPickB = [];
+      calcHitsScrollA = 0;
+      calcHitsScrollB = 0;
+    }
+
     function calcArmQuiet(ms) {
       calcQuietUntil = Date.now() + (ms || 500);
     }
@@ -18530,6 +18547,7 @@ const html = `<!DOCTYPE html>
       if (viewBtn) {
         if (viewBtn.tagName === "A") e.preventDefault();
         const nextView = viewBtn.dataset.view;
+        if (nextView === "calc" && typeof calcWipe === "function") calcWipe();
         if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
         if (view === "cuffs" && nextView !== "cuffs") clearCuffFilters();
         view = nextView;
@@ -21459,6 +21477,16 @@ if (!html.includes('class="go-team"') || !html.includes('id="goTeamHome"')) {
   if (homeFn.includes("openMyTeamHome()") || homeFn.includes('appScreen === "settings"')) {
     throw new Error("goLeagueHome must not special-case Team settings — always league home");
   }
+}
+if (!inline.includes("function calcWipe(")
+  || !inline.includes('if (nextView === "calc"')
+  || !fnSrc("calcWipe").includes("calcLegsA = []")
+  || !fnSrc("calcWipe").includes("calcSeatA = \"\"")) {
+  throw new Error("calc door must wipe a leftover Trade Desk prefill");
+}
+if (!html.includes("button.pick-intel-chip:disabled")
+  || !inline.includes('disabled aria-disabled="true" tabindex="-1"')) {
+  throw new Error("unclaimed Held / Original / Mine chips must be disabled, not only aria-disabled");
 }
 if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "Team settings"')) {
   throw new Error("Settings screen must render as Team settings from the team-home gear");

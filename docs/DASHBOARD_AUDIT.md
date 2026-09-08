@@ -1,6 +1,12 @@
 # CuckleChunckle — Dashboard Audit & Strategy Review
 
-Audit date **2026-08-29**. Live build `DATA_V = 20260829j`, `main` at the today-blend commit.
+**Status 2026-09-08.** This file is the Aug 29 audit archive. Several HAVE lines below are
+stale: today is the **four-source** blend (0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20
+DynastyDealer), not 40/60; Home is Alerts + calc door + first-person Trade Desk + News (no
+ticker, no bag hero, no `#goHome`); Score as is a content chip, not a header control. Law lives
+in [`PRODUCT.md`](./PRODUCT.md), [`UI_SDD.md`](./UI_SDD.md), [`VALUE_SDD.md`](./VALUE_SDD.md).
+
+Audit date **2026-08-29**. Live build then `DATA_V = 20260829j`, `main` at the today-blend commit.
 Method: four passes — UI code read (`generate-page.mjs`), data integrity scripts over `data/ui/**`,
 live click-through on iPhone and desktop, and docs-vs-shipped drift.
 

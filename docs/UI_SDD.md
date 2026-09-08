@@ -35,45 +35,28 @@ recap.
 
 ## 2. Chrome
 
-Header: home button · `CuckleChunckle`. That is all of it. **There is no seat picker in the
-header** — league home's **Teams** chip (§3) is the only way into a seat, on the ruling that the
-chips are the access points. Both items in the row go home: the icon and the brand link share one
-handler, and either clears the seat from any screen.
+**HAVE (2026-09-08).** Brand row: back chevron (`#goBack`) · wordmark · centered league name
+(`#leagueSub`). `#leagueSub` always returns to **League Home** (`goLeagueHome()`). There is
+**no `#goHome` icon** and no `class="go-home"` — a generate-time guard forbids both. Do not
+invent a house icon. From a seat, `#goBack` steps Teams (seat home) then Home tab; the league
+name skips the stack and lands on the digest.
 
-**The flow is two taps, deliberately.** Home icon to leave the seat you are in, Teams chip to enter
-another, where the header picker did it in one. That cost was stated and accepted. What makes it
-safe is that the home icon leaves a seat from *every* screen — a seat's four tabs, the full-screen
-trade, a deep-linked seat — which was verified on the shipped build before the picker was removed,
-not assumed. `clearLeague()` is the only exit now, so a generate-time assertion covers both the
-listener and that the function still drops `me`, `data` and the view rather than only repainting.
+**There is no seat picker in the header** and **no Teams-chip dropdown.** The **Teams** top tab
+is the only door into a seat: a ten-row list in last season's finishing order. Selecting a name
+is not "view as": it swaps the whole app to that seat.
 
-`h1.brand` keeps `overflow: visible` and keeps its assertion, even though no menu opens from the
-header any more. The row still holds two focusable targets with outline rings, a clip here turns it
-into a scroll box, and it has been re-clipped twice already (7f97711, then f9fdb39). The invariant
-is cheaper to keep than to rediscover.
+`h1.brand` keeps `overflow: visible` and keeps its assertion. The row still holds focusable
+targets with outline rings; a clip here turns it into a scroll box, and it has been re-clipped
+twice already (7f97711, then f9fdb39). The invariant is cheaper to keep than to rediscover.
 
-**The seat menu**, mounted on the Teams chip, is a `listbox` — `role="option"` children, arrow
-keys, `Home`/`End`, `Escape` returns focus to the chip. Selecting a name is not "view as": it swaps
-the whole app to that seat.
-
-**The trigger always reads "Teams"**, whether or not a seat is taken. It used to swap to the
-selected manager's name, which made the one door to the other nine seats read as the current
-seat's own button. The seat is not lost to a screen reader by that: the accessible name is
-`Teams, TrumanCooper selected` with a seat and `Teams` without one, and the chosen option in the
-list still carries `aria-selected="true"`. A generate-time assertion pins the visible label to the
-constant. Note "Teams" on the trigger is a different string from the removed "Team" option below,
-and the assertion for that option matches its whole call so the two cannot be confused.
-
-**The menu lists managers and nothing else**, in **last season's finishing order**, and the
+**The Teams tab lists managers and nothing else**, in **last season's finishing order**, and the
 champion carries a gold crown. Three rules hold it together:
 
-- **No "Team" option.** It used to head the list and clearing the seat was all it did. The home
-  button does that, so the option was a second control saying what the home icon already says —
-  and dropping it is what takes the list from 11 rows to 10. The home icon is the *only* way out
-  of a seat, so a generate-time assertion keeps it wired.
+- **No "Team" / "None" row that only clears the seat.** `#leagueSub` and the **Home** tab do
+  that. The list is ten seats, not eleven.
 - **The order is derived, never written down.** `title-path.mjs` is the only script that walks
   `previous_league_id`, so it derives the standings there and writes `place` onto
-  `data/ui/members.json`, which is the file the menu reads. The rule: **the winners bracket's
+  `data/ui/members.json`, which is the file the Teams list reads. The rule: **the winners bracket's
   placement games (`p`) settle every team they place, then regular-season record — standings
   points, then points for, then `roster_id` — orders the rest.** The losers bracket is not read;
   its `p` is a place inside the consolation round, not a league place. When 2026 completes it
@@ -104,42 +87,38 @@ and 2 of 6 data sets visible at 375px. `showMenu()` scrolls by the least amount 
 panel inside the viewport, and both openers call it. It is asserted, along with the
 `focus({ preventScroll: true })` that has to come first.
 
-Under the header, a ticker of league bubbles (champion, most lopsided, most active …).
+**The league ticker is deleted.** Most lopsided lives on History → League lists. Most active /
+Least active are not pressable destinations.
 
-**Tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They are a
-`tablist` with roving `tabindex` and arrow keys. There is **no `league` tab** — see §8.
+**Seat tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They
+are a `tablist` with roving `tabindex` and arrow keys. There is **no `league` tab** — see §8.
 
-**Score as** is a dropdown, not a row of chips, and it is the only clock control. It lives in the
-brand header, top right (§2a). Five windows:
+**Score as** is a dropdown, not a row of chips, and it is the only clock control. It is a
+content chip (`chip-lens-btn`) with a fixed `#scoreAs` portal — **not** inside `h1.brand` (§2a).
+Five windows:
 
-| Key | Label | What it scores |
+| Key | Label (shipped) | What it scores |
 | --- | --- | --- |
-| `t0` | At trade | Accept day. Picks are still picks. Unfiltered. |
-| `y1` | First 1 year | Year-end mean over the first year. Hides deals younger than that. |
-| `y2` | First 2 years | Same, two years. |
-| `y3` | First 3 years | Same, three years. |
-| `all` | Since trade | **Default.** Mean of year-ends from accept through today, became-player. Unfiltered. |
+| `t0` | Date of Trade | Accept day. Picks are still picks. Unfiltered. |
+| `y1` | 1 season | Year-end mean over the first year. Hides deals younger than that. |
+| `y2` | 2 seasons | Same, two years. |
+| `y3` | 3 seasons | Same, three years. |
+| `all` | as of today | **Default.** Mean of year-ends from accept through today, became-player. Unfiltered. |
 
 `t0` and `all` are unfiltered; `y1`/`y2`/`y3` hide a deal that has not lived the clock and say so
 above the list (`livedHint`). The dropdown button carries a dot when the clock is not `all`.
 
 ### 2a. Where the clock lives, and where it does not
 
-It is **persistent chrome in the brand header, top right**, in the space the seat picker held until
-`11e5401`. Six screens each rendered their own copy of it before; a global setting rendered six
-times is one control with six chances to disagree with itself, and the user asked for it in the
-header. The trigger is static markup inside `h1.brand` and is **painted, not rendered** —
-`render()` replaces `#app` wholesale, and a control that has to survive every navigation cannot
-live inside it. `paintLens()` runs after the body is built, because `renderDrafts()` pins the clock
-for its own render and restores it on the way out.
+It is **not** in the brand header. A generate-time guard forbids a clock control inside
+`h1.brand` (the 288px row cannot hold wordmark + `#leagueSub` + a window name). The trigger is
+a `chip-lens-btn` on the screens that use a clock; the menu portals to fixed `#scoreAs` so
+`render()` replacing `#app` cannot destroy the open panel. `paintLens()` runs after the body is
+built, because `renderDrafts()` pins the clock for its own render and restores it on the way out.
 
-The visible label is **the window alone** — `Since trade ▾`, not `Score as Since trade ▾`. The
-prefix measures 54px, and the 288px brand row at 320px does not have it: with the prefix the app's
-own name ellipsises at 320, 375 *and* 390. Without it the widest window name (`First 2 years`)
-takes 107.7px of the 109.1px the row leaves, and the wordmark stays whole. `Score as` moved into
-the accessible name, where it costs nothing. If that 1.4px ever goes, **the title gives way, not
-the control**: `h1.brand a` carries the ellipsis and the trigger does not, because a control never
-truncates before a wordmark does.
+The visible label is **the window alone** (`as of today`, `Date of Trade`, `2 seasons`) — not
+`Score as …`. `Score as` lives in the accessible name. The brand row must not grow a second
+copy of this control.
 
 It **hides on Champions Path and on Drafts**, which are the two screens the clock cannot move.
 `renderTitles()` reads no clock at all — no `lens`, no `chipLived()`, no `clockName()` — and the
@@ -258,7 +237,7 @@ stacked down the screen, any number of which could be open at once. The trigger'
 constant `League Data Sets`, never the selection — the same convention the seat picker settled on —
 and the selected set is named by the `h2` directly below the box, which is the only thing on
 screen that says which set you are looking at. **Nothing is selected on a cold load**, and the
-home icon and the menu's `None` option both return to that.
+Home tab and a History back chip both return to that.
 
 It is a popup listbox with the seat menu's keyboard: arrows, `Home`, `End`, `Escape` back to the
 trigger. The panel takes the box's full width; capped narrower, it left half of each trade row

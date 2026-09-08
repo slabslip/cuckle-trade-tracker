@@ -116,11 +116,17 @@ Truman answers these. Each item: what we assumed, why it matters, recommended de
 
 ## 12. Off-board Today: last-known (Zeke = 3) or 0?
 
-**Assumed (HAVE):** Last-known carry-forward. `off_board` code never fires.
+**Assumed (HAVE, 2026-09):** Today is **0** when the player is off the KTC Superflex board
+**and** off an NFL roster, plus the explicit `RETIRED_SLEEPER_IDS` set (Zeke, Mixon, Chubb).
+Hill stays live (rostered). A missing FantasyCalc or DynastyDealer quote does not retire anyone.
+Empty NFL dict does not infer retirement.
 
-**Why it matters:** Today −1940 is partly “Saquon still 2226, Zeke stuck at 3.” Forcing 0 on first missed monthly file would also zero a one-month scrape miss.
+**Why it matters:** Last-known carry-forward left Zeke at 3 against Saquon at 2226 and lied
+about dead capital. Zeroing on a one-month scrape miss would also be a lie — that is why the
+rule is “off KTC Superflex **and** off an NFL roster,” not “one source missed.”
 
-**Recommended:** Leave Today as last-known. Use the 3y floor for dead years. If we later zero Today, require N consecutive missing months, not one gap.
+**Recommended:** Keep the shipped retire-to-0 rule. Do not go back to last-known. Do not
+invent a DP flatten for a window when the today blend already has a market quote.
 
 ---
 

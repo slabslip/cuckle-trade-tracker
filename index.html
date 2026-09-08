@@ -2186,7 +2186,8 @@
     button.pick-intel-chip[aria-pressed="true"] {
       border-color: #6b5a2e;
     }
-    button.pick-intel-chip[aria-disabled="true"] {
+    button.pick-intel-chip[aria-disabled="true"],
+    button.pick-intel-chip:disabled {
       opacity: 0.45; cursor: not-allowed;
     }
     button.pick-intel-chip:focus-visible {
@@ -3468,7 +3469,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "deskme20260908011500";
+    const DATA_V = "reviewfix20260908013000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4280,11 +4281,11 @@
         + (pickFilterOpen && pickFilterStep ? "Filtering…" : "Search")
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineHeld ? " on" : "") + '" data-pick-mine-held="1"'
-        + (mineHeldDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + (mineHeldDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineHeld ? "true" : "false") + '"'
         + ' aria-label="Held picks">Held</button>'
         + '<button type="button" class="pick-intel-chip' + (pickFilterMineOut ? " on" : "") + '" data-pick-mine="1"'
-        + (mineOutDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + (mineOutDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (pickFilterMineOut ? "true" : "false") + '"'
         + ' aria-label="Original picks">Original</button>'
         + "</div></div>"
@@ -4405,10 +4406,10 @@
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="search"'
         + ' aria-label="Search picks">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="held"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this"' : "")
         + ' aria-label="Held picks">Held</button>'
         + '<button type="button" class="pick-intel-chip" data-draft-data-open="mine"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this"' : "")
         + ' aria-label="Original picks">Original</button>'
         + "</div></div>"
         + body
@@ -4703,7 +4704,7 @@
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="search"'
         + ' aria-label="Search cuffs">Search</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="mine"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this"' : "")
         + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip" data-cuffs-open="fa"'
         + ' aria-label="Available cuffs">Available</button>'
@@ -4771,7 +4772,7 @@
         + "</button>"
         + '<button type="button" class="pick-intel-chip' + (mineOn ? " on" : "") + '"'
         + ' data-cuff-mine="1"'
-        + (mineDis ? ' aria-disabled="true" title="Claim your seat to use this filter"' : "")
+        + (mineDis ? ' disabled aria-disabled="true" tabindex="-1" title="Claim your seat to use this filter"' : "")
         + ' aria-pressed="' + (mineOn ? "true" : "false") + '"'
         + ' aria-label="My cuffs">Mine</button>'
         + '<button type="button" class="pick-intel-chip' + (cuffFilterFa ? " on" : "") + '"'
@@ -15197,6 +15198,22 @@
         + "</section>";
     }
 
+    function calcWipe() {
+      calcSeatA = "";
+      calcSeatB = "";
+      calcLegsA = [];
+      calcLegsB = [];
+      calcOpenA = false;
+      calcOpenB = false;
+      calcSeatMenu = "";
+      calcFilterA = "";
+      calcFilterB = "";
+      calcPickA = [];
+      calcPickB = [];
+      calcHitsScrollA = 0;
+      calcHitsScrollB = 0;
+    }
+
     function calcArmQuiet(ms) {
       calcQuietUntil = Date.now() + (ms || 500);
     }
@@ -18522,6 +18539,7 @@
       if (viewBtn) {
         if (viewBtn.tagName === "A") e.preventDefault();
         const nextView = viewBtn.dataset.view;
+        if (nextView === "calc" && typeof calcWipe === "function") calcWipe();
         if (view === "draftdata" && nextView !== "draftdata") clearPickFilters();
         if (view === "cuffs" && nextView !== "cuffs") clearCuffFilters();
         view = nextView;

@@ -3692,7 +3692,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "datachart20260908130000";
+    const DATA_V = "datawords20260908134500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3736,30 +3736,30 @@ const html = `<!DOCTYPE html>
       "draft_board", "cuffs_board", "lopsided", "seat_run",
     ];
     const DATA_REPORTS = [
-      { id: "tape_count", lab: "Tape", desk: "tape", size: "half", why: "How many complete deals are on the tape." },
-      { id: "book_asof", lab: "Book as of", desk: "book", size: "half", why: "When the today book was scored." },
-      { id: "firsts_held", lab: "Firsts held", desk: "draft", size: "half", why: "First-round picks still held." },
-      { id: "uninsured", lab: "Uninsured", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
-      { id: "seat_volume", lab: "Volume", desk: "seats", size: "full", why: "How much each seat trades." },
-      { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
-      { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players traded the most times." },
+      { id: "tape_count", lab: "Tape", desk: "tape", size: "half", why: "How many finished deals are on the tape." },
+      { id: "book_asof", lab: "Book as of", desk: "book", size: "half", why: "When we last priced the book." },
+      { id: "firsts_held", lab: "Firsts held", desk: "draft", size: "half", why: "First-round picks still out there." },
+      { id: "uninsured", lab: "Uninsured", desk: "cuffs", size: "half", why: "Starters with no backup on a roster." },
+      { id: "seat_volume", lab: "Volume", desk: "seats", size: "full", why: "Who trades the most." },
+      { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "The most lopsided deals on the clock you pick." },
+      { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who have been flipped the most." },
       { id: "homesteaders", lab: "Homesteaders", desk: "lists", size: "full", why: "Longest stays, forever players aside." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
-      { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
-      { id: "lopsided", lab: "Most lopsided", desk: "lists", size: "full", why: "The ten widest margins." },
-      { id: "seat_run", lab: "Run", desk: "seats", size: "full", why: "Ahead or behind on the Score as clock." },
-      { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
+      { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who has a backup, and who does not." },
+      { id: "lopsided", lab: "Most lopsided", desk: "lists", size: "full", why: "The ten most lopsided deals." },
+      { id: "seat_run", lab: "Run", desk: "seats", size: "full", why: "Who is ahead after all their deals." },
+      { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have barely moved." },
       { id: "forever", lab: "Forever", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
       { id: "past_champions", lab: "Past Champions", desk: "lists", size: "half", why: "Every title path in this league." },
-      { id: "seat_posture", lab: "Posture", desk: "seats", size: "full", why: "Picks sold for players vs the other way." },
-      { id: "seat_manners", lab: "Manners", desk: "seats", size: "full", why: "Who extracts vs who gets extracted." },
-      { id: "seat_aging", lab: "Aging", desk: "seats", size: "full", why: "How 2-team trades moved after accept." },
-      { id: "seat_draft", lab: "Draft marks", desk: "seats", size: "full", why: "Rookie surplus vs the pick." },
-      { id: "book_top", lab: "Top book", desk: "book", size: "full", why: "Highest-value assets in the book." },
-      { id: "tape_year", lab: "Latest year", desk: "tape", size: "half", why: "Deals from the latest year on the tape." },
-      { id: "held_picks", lab: "Held picks", desk: "draft", size: "full", why: "Future picks this seat still holds." },
-      { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
-      { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Starters whose cuff is a free agent." },
+      { id: "seat_posture", lab: "Posture", desk: "seats", size: "full", why: "Who buys players, who buys picks." },
+      { id: "seat_manners", lab: "Manners", desk: "seats", size: "full", why: "Who usually gets the better end." },
+      { id: "seat_aging", lab: "Aging", desk: "seats", size: "full", why: "Whose deals got better or worse after they closed." },
+      { id: "seat_draft", lab: "Draft marks", desk: "seats", size: "full", why: "Whose rookies beat the pick." },
+      { id: "book_top", lab: "Top book", desk: "book", size: "full", why: "The highest-priced pieces in the book." },
+      { id: "tape_year", lab: "Latest year", desk: "tape", size: "half", why: "Deals from the newest year on the tape." },
+      { id: "held_picks", lab: "Held picks", desk: "draft", size: "full", why: "Future picks you still hold." },
+      { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Backups on your starters." },
+      { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Starters whose backup is a free agent." },
     ];
     let dsOpen = false;
     const WINDOWS = [
@@ -6421,14 +6421,16 @@ const html = `<!DOCTYPE html>
       });
       const svg = spark(series, "is-desk");
       if (!svg) return "";
-      const title = metric === "run" ? "Run across clocks" : "Manners across clocks";
+      const title = metric === "run"
+        ? (mine ? "Your run over time" : "The league run over time")
+        : (mine ? "Your manners over time" : "League manners over time");
       const sub = mine
-        ? "Your seat vs the pack median on the five Score as windows."
-        : "Pack median on the five Score as windows.";
-      const axis = ["Date", "1s", "2s", "3s", "today"];
+        ? "Green is you. Blue is a typical team. Left is the day the deal closed. Right is today."
+        : "The middle of the league, from the day deals closed out to today.";
+      const axis = ["Day", "1 season", "2 seasons", "3 seasons", "Today"];
       const leg = mine
-        ? '<div class="data-spark-leg"><span><i></i>Your seat</span><span><i class="pack"></i>Pack median</span></div>'
-        : '<div class="data-spark-leg"><span><i></i>Pack median</span></div>';
+        ? '<div class="data-spark-leg"><span><i></i>You</span><span><i class="pack"></i>A typical team</span></div>'
+        : '<div class="data-spark-leg"><span><i></i>A typical team</span></div>';
       return '<div class="data-spark">'
         + '<div class="data-spark-h">' + esc(title) + "<span>" + esc(sub) + "</span></div>"
         + svg
@@ -6443,7 +6445,7 @@ const html = `<!DOCTYPE html>
       const svg = spark(rows.map(function (r) { return { n: r.n }; }), "is-desk");
       if (!svg) return "";
       return '<div class="data-spark">'
-        + '<div class="data-spark-h">Tape by year<span>Complete deals on the two-way tape.</span></div>'
+        + '<div class="data-spark-h">Deals per year<span>How many finished trades closed that year.</span></div>'
         + svg
         + '<div class="data-spark-axis">' + rows.map(function (r) {
           return "<span>" + esc(r.year) + "</span>";
@@ -6537,7 +6539,7 @@ const html = `<!DOCTYPE html>
 
     function dataDashMarkPeekHtml(metric, limit) {
       const pack = dataDashMarkRows(metric, limit || 5);
-      if (!pack.rows.length) return '<p class="caption">No league marks in this build.</p>';
+      if (!pack.rows.length) return '<p class="caption">No team marks in this build yet.</p>';
       const maxAbs = Math.max.apply(null, pack.rows.map(function (r) { return Math.abs(r.sort); }).concat([1]));
       const mine = authSeatId() ? String(authSeatId()) : "";
       const signed = dataDashMetricSigned(pack.metric);
@@ -6591,22 +6593,22 @@ const html = `<!DOCTYPE html>
       if (!spec) return "";
       if (mode === "edit") return dataDashHead(spec, "On board", spec.why);
       if (id === "tape_count") {
-        return dataDashHead(spec, dataDashTapeCount() + " deals", "Complete two-way tape");
+        return dataDashHead(spec, dataDashTapeCount() + " deals", "Finished deals on the tape");
       }
       if (id === "book_asof") {
-        return dataDashHead(spec, esc(dataDashAsOf()), "Today book");
+        return dataDashHead(spec, esc(dataDashAsOf()), "When we last priced the book");
       }
       if (id === "firsts_held") {
-        return dataDashHead(spec, String(dataDashFirstsHeld()), "Firsts still in the book");
+        return dataDashHead(spec, String(dataDashFirstsHeld()), "First-round picks still out there");
       }
       if (id === "uninsured") {
-        return dataDashHead(spec, dataDashUninsured() + " starters", "Cuff not rostered");
+        return dataDashHead(spec, dataDashUninsured() + " starters", "No backup on a roster");
       }
       if (id === "tape_year") {
         const years = dataDashYears();
         const y = years[0] || "";
         const n = y ? dataDashTapeHits("", y, 400).n : 0;
-        return dataDashHead(spec, y ? (n + " in " + y) : "—", "Latest year on the tape");
+        return dataDashHead(spec, y ? (n + " in " + y) : "—", "Newest year on the tape");
       }
       if (id === "past_champions") {
         const n = (titles && titles.titles && titles.titles.length) || 0;
@@ -6626,10 +6628,10 @@ const html = `<!DOCTYPE html>
         return "<span>" + esc(spec.lab) + "</span>"
           + (wide.length
             ? '<div class="data-tile-peek">' + wide.map(dataDashTapeRow).join("") + "</div>"
-            : '<span class="data-tile-sub">No sides on this clock yet</span>');
+            : '<span class="data-tile-sub">No deals on this clock yet</span>');
       }
       if (id === "lopsided") {
-        return dataDashHead(spec, "Ten widest", "Open the saved list");
+        return dataDashHead(spec, "Ten widest", "The most lopsided deals");
       }
       if (id === "passed_around") {
         const rows = dataDashListPeek("most_traded", 3);
@@ -6687,25 +6689,25 @@ const html = `<!DOCTYPE html>
         if (typeof ensureCuffs === "function") ensureCuffs();
         const leaders = (typeof cuffLeaders === "function") ? cuffLeaders("bare", 3) : [];
         return "<span>" + esc(spec.lab) + "</span>"
-          + '<span class="data-tile-sub">' + dataDashUninsured() + " uninsured starters</span>"
+          + '<span class="data-tile-sub">' + dataDashUninsured() + " starters with no backup</span>"
           + (leaders.length
             ? '<div class="data-tile-peek">' + pickLeadersStack(leaders) + "</div>"
             : "");
       }
       if (id === "held_picks") {
         if (typeof ensurePicks === "function") ensurePicks();
-        if (!authSeatId()) return dataDashHead(spec, "—", "Claim your seat to use this");
+        if (!authSeatId()) return dataDashHead(spec, "—", "Claim your team to see this");
         const n = dataDashHeldPicksCount();
-        return dataDashHead(spec, n == null ? "—" : String(n), "Still on your seat");
+        return dataDashHead(spec, n == null ? "—" : String(n), "Still on your roster");
       }
       if (id === "my_cuffs") {
         if (typeof ensureCuffs === "function") ensureCuffs();
-        if (!authSeatId()) return dataDashHead(spec, "—", "Claim your seat to use this");
-        return dataDashHead(spec, String(dataDashMyCuffsCount()), "Cuffs on your starters");
+        if (!authSeatId()) return dataDashHead(spec, "—", "Claim your team to see this");
+        return dataDashHead(spec, String(dataDashMyCuffsCount()), "Backups on your starters");
       }
       if (id === "available_cuffs") {
         if (typeof ensureCuffs === "function") ensureCuffs();
-        return dataDashHead(spec, dataDashUninsured() + " open", "Cuff is a free agent");
+        return dataDashHead(spec, dataDashUninsured() + " open", "Backup is a free agent");
       }
       return dataDashHead(spec, "Open", spec.why);
     }
@@ -6839,10 +6841,10 @@ const html = `<!DOCTYPE html>
 
     function dataDashSearchHtml() {
       const ph = dataRoom === "tape"
-        ? "Search trades, seats, headlines"
+        ? "Find a deal, a team, or a headline"
         : dataRoom === "book"
           ? "Search players and picks"
-          : "Search the league book";
+          : "Find a player or a pick";
       return '<div class="data-search">'
         + '<span class="data-search-ico" aria-hidden="true">⌕</span>'
         + '<input type="search" value="' + esc(dataQ) + '" data-data-q="1"'
@@ -6964,7 +6966,7 @@ const html = `<!DOCTYPE html>
             + y + "</button>";
         }).join("")
         + "</div>"
-        + (filtered ? "" : '<p class="data-hint">Widest margins on the Score as clock. Search or pick a year to scan the whole tape.</p>')
+        + (filtered ? "" : '<p class="data-hint">The most lopsided deals on the clock you pick. Search or tap a year to walk the whole tape.</p>')
         + (filtered ? "" : chipLensHtml({ inline: true }))
         + dataDashHint(hits.n, hits.rows.length, hits.n === 1 ? "deal" : "deals")
         + hits.rows.map(dataDashTapeRow).join("")
@@ -6981,12 +6983,12 @@ const html = `<!DOCTYPE html>
         ["draft", "Draft"],
       ];
       const heads = {
-        run: ["Ahead or behind", "Net on the selected Score as clock."],
-        volume: ["How much they trade", "Two-way count."],
-        posture: ["Players vs picks", "Picks sold for players vs the other way."],
-        manners: ["Who extracts", "Partners they beat vs partners who beat them."],
-        aging: ["Aged after accept", "How 2-team trades moved after accept."],
-        draft: ["Rookie hits", "Mean surplus vs the pick."],
+        run: ["Who is ahead", "Every deal added up. The clock picks how far out we score them."],
+        volume: ["Who trades the most", "Finished two-way deals on the tape."],
+        posture: ["Players or picks", "Did they sell picks to get players, or the other way."],
+        manners: ["Who got the better end", "How many partners they beat, and how many beat them."],
+        aging: ["Did the deals age well", "After they closed, did the value go up or down."],
+        draft: ["Rookie hits", "What those picks became, versus what the pick was worth."],
       };
       const metric = keys.some(function (k) { return k[0] === dataMark; }) ? dataMark : "volume";
       const head = heads[metric] || ["League", ""];
@@ -7015,7 +7017,7 @@ const html = `<!DOCTYPE html>
           + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + clock + "</div>"
         : '<div class="mark-chart-h">' + esc(head[0]) + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>";
       if (!rows.length) {
-        return chips + dataDashClockSparkHtml(metric) + '<p class="caption">No league marks in this build.</p>';
+        return chips + dataDashClockSparkHtml(metric) + '<p class="caption">No team marks in this build yet.</p>';
       }
       return chips
         + dataDashClockSparkHtml(metric)
@@ -7050,11 +7052,11 @@ const html = `<!DOCTYPE html>
             ? ('<div class="data-h">Seats</div>' + seats.map(function (m) {
               return '<button type="button" class="data-xrow" data-data-seat="' + esc(m.user_id) + '">'
                 + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(m.name) + "</span>"
-                + '<span class="data-xrow-meta">Open team home</span></div></button>';
+                + '<span class="data-xrow-meta">Open their team</span></div></button>';
             }).join(""))
             : "")
           + (!book.n && !tape.n && !seats.length
-            ? '<p class="data-hint">Nothing matches that search.</p>'
+            ? '<p class="data-hint">Nothing matches that search. Try a player, a pick, or a team.</p>'
             : "");
       }
       return dataDashBoardHtml();
@@ -7075,7 +7077,7 @@ const html = `<!DOCTYPE html>
         : '<p class="caption"><button type="button" class="chip back" data-data-room="overview">← Data</button></p>';
       return '<section class="data-dash" aria-label="League data">'
         + '<h2 class="screen-h" tabindex="-1">Data</h2>'
-        + '<p class="data-dash-sub">League research. Search the book, scan the tape, compare seats. Votes never enter these numbers.</p>'
+        + '<p class="data-dash-sub">Look up players, walk old deals, see how each team trades. Votes never enter these numbers.</p>'
         + dataDashSearchHtml()
         + dataDashRoomsHtml()
         + back
@@ -11160,9 +11162,9 @@ const html = `<!DOCTYPE html>
 
     function runLensCaption() {
       const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
-      if (runLens === "t0") return "Average value at accept across every deal.";
-      if (runLens === "all") return "Weekly average from accept through today across every deal.";
-      return "Average at " + name.toLowerCase() + " where lived; younger deals use their best window.";
+      if (runLens === "t0") return "What every deal was worth the day it closed.";
+      if (runLens === "all") return "What every deal has been worth from that day through today.";
+      return "Scored through " + name.toLowerCase() + ". Newer deals use the farthest clock they have lived.";
     }
 
     function runLensHtml() {
@@ -11177,12 +11179,12 @@ const html = `<!DOCTYPE html>
     function markChart() {
       if (!markOpen) return "";
       const heads = {
-        run: ["Ahead or behind", runLensCaption()],
-        volume: ["How much they trade", "Two-way count. 80+ Hyper, 40–79 Active, under 40 Quiet."],
-        posture: ["Players vs picks", "Picks sold for players vs players sold for picks."],
-        manners: ["Who extracts", "Partners they beat vs partners who beat them."],
-        aging: ["Aged after accept", "How 2-team trades moved after the day they accepted."],
-        draft: ["Rookie hits", "Mean surplus vs the pick."],
+        run: ["Who is ahead", runLensCaption()],
+        volume: ["Who trades the most", "Finished two-way deals. 80+ Hyper, 40-79 Active, under 40 Quiet."],
+        posture: ["Players or picks", "Did they sell picks to get players, or the other way."],
+        manners: ["Who got the better end", "How many partners they beat, and how many beat them."],
+        aging: ["Did the deals age well", "After they closed, did the value go up or down."],
+        draft: ["Rookie hits", "What those picks became, versus what the pick was worth."],
       };
       const head = heads[markOpen] || ["League", ""];
       const seats = (marks && marks.seats) || {};
@@ -11195,7 +11197,7 @@ const html = `<!DOCTYPE html>
             + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
           : '<div class="mark-chart-h">' + esc(head[0]) + "</div>";
         return '<div class="mark-chart">' + emptyHead
-          + '<p class="caption">No league marks in this build.</p></div>';
+          + '<p class="caption">No team marks in this build yet.</p></div>';
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
@@ -21947,6 +21949,13 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
     || /echarts|plotly|lightweight-charts|recharts|highcharts|chart\.js/i.test(inline)) {
     throw new Error("Data desks must use spark() + signed CSS bars — no chart library");
   }
+  if (fnSrc("dataDashClockSparkHtml").includes("pack median")
+    || fnSrc("dataDashClockSparkHtml").includes("Score as windows")
+    || fnSrc("dataDashClockSparkHtml").includes("across clocks")
+    || !fnSrc("dataDashClockSparkHtml").includes("Green is you")
+    || !fnSrc("dataDashClockSparkHtml").includes("A typical team")) {
+    throw new Error("Data spark copy must say you vs a typical team, day of close to today");
+  }
 }
 if (!inline.includes("function dataDashHtml(")
   || !inline.includes("function dataDashBookHtml(")
@@ -21954,7 +21963,8 @@ if (!inline.includes("function dataDashHtml(")
   || !inline.includes("function dataDashChartHtml(")
   || !inline.includes("data-data-q")
   || !inline.includes("data-data-room")
-  || !inline.includes("League research")
+  || !inline.includes("Votes never enter these numbers")
+  || !inline.includes("Look up players")
   || fnSrc("dataDashHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")) {

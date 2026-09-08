@@ -434,7 +434,14 @@ def main() -> None:
             emb = emblem_file_for_pair(t.get("pair") or tid, catalog)
             img = generate_card(t, emb)
         path = OUT / f"title-{tid}.png"
-        img.convert("RGBA").save(path, optimize=True)
+        rgba = img.convert("RGBA")
+        rgba.save(path, optimize=True)
+        # Barracks 3-col grid loads these thumbs (~20KB) instead of the full master.
+        thumb = rgba.convert("RGB").resize((512, 90), Image.LANCZOS)
+        try:
+            thumb.save(OUT / f"title-{tid}-thumb.webp", "WEBP", quality=72, method=6)
+        except Exception:
+            thumb.save(OUT / f"title-{tid}-thumb.jpg", "JPEG", quality=72, optimize=True)
         print(f"{tid:28s} {img.size[0]}x{img.size[1]}")
 
 

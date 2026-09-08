@@ -247,7 +247,12 @@ with a query still fans into Book / Tape / Seats hits. Empty query paints the bo
 (claimed seat only) swaps, adds, removes, and reorders tiles; layout persists on
 `public.seat_data_dash` (private to that seat) plus `cuckle.data.dash.v1.<league>.<seat>`.
 Book is the extractable catalog (position / seat / value-name-age). Tape is widest-on-clock by
-default, then year + search over every deal. Seats are the six mark charts. Lists keeps the five
+default, then year + search over every deal, with a year-count spark above the year chips. Seats
+are the six mark charts. Run and Manners stamp the Score as clock on the desk (Plotly-style range
+selector) and draw a clock spark of your seat vs the pack median across `t0 / y1 / y2 / y3 / all`.
+Signed marks (Run, Manners, Aging, Draft, Posture) use a zero-centered bar; Volume stays a left
+fill. Charts stay on the existing `spark()` SVG and CSS tracks — no ECharts, Plotly, Recharts,
+Lightweight Charts, Highcharts, or Chart.js. Lists keeps the five
 saved sets plus Past Champions. A saved set still drills to one list; back returns to Lists.
 **Teams** is the door into a seat (header picker stays gone — §2). Do not put bag totals on Home.
 Do not restore Best 10 / Worst 10. Votes never enter these numbers.

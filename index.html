@@ -628,6 +628,7 @@
     .warn { color: #e0b44c; font-size: 0.8125rem; }
     .badge { font-size: 0.8125rem; color: #e0b44c; }
     svg.spark { width: 100%; height: 72px; margin-top: 8px; }
+    svg.spark.is-desk { height: 64px; margin-top: 6px; }
     /* The league ticker stood here: a feed div, a masked track, its pills and a 48-second loop.
        It is gone, and with it the last animation in this stylesheet -- there are now no
        keyframes and no animation property anywhere on the page, which the generator asserts as
@@ -993,6 +994,15 @@
     .mark-bar-track i { display: block; height: 100%; width: 0; background: #6b6b78; border-radius: 99px; }
     .mark-bar-track i.pos { background: var(--green); }
     .mark-bar-track i.neg { background: var(--red); }
+    .mark-bar-track.is-signed { position: relative; }
+    .mark-bar-track.is-signed::after {
+      content: ""; position: absolute; left: 50%; top: 1px; bottom: 1px; width: 1px;
+      background: #3a3a44; z-index: 1;
+    }
+    .mark-bar-track.is-signed i { position: absolute; top: 0; height: 100%; }
+    .mark-bar-track.is-signed i.pos { left: 50%; }
+    .mark-bar-track.is-signed i.neg { right: 50%; }
+    .mark-bar-track.is-signed i:not(.pos):not(.neg) { left: 50%; opacity: 0.4; }
     .pack { margin: 0 0 8px; }
     .pack-body { margin-top: 8px; }
     /* The anchor both of league home's menus hang from. Its own stacking context, at a lower
@@ -3027,6 +3037,27 @@
     }
     .data-dash { margin: 0 0 16px; }
     .data-dash-sub { margin: 0 0 12px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .data-spark {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 12px 8px; margin: 0 0 12px;
+    }
+    .data-spark-h { font-weight: 650; font-size: 0.8rem; margin: 0 0 2px; }
+    .data-spark-h span {
+      display: block; color: var(--dim); font-weight: 500; font-size: 0.72rem; margin-top: 2px;
+    }
+    .data-spark-axis {
+      display: flex; justify-content: space-between; gap: 4px;
+      color: var(--dim); font-size: 0.62rem; margin-top: 2px;
+    }
+    .data-spark-leg {
+      display: flex; flex-wrap: wrap; gap: 10px 14px;
+      color: var(--dim); font-size: 0.68rem; margin-top: 6px;
+    }
+    .data-spark-leg i {
+      display: inline-block; width: 12px; height: 2px; margin: 0 5px 2px 0;
+      vertical-align: middle; background: #3ddc97;
+    }
+    .data-spark-leg i.pack { background: #7aa2ff; }
     .data-search {
       position: relative; margin: 0 0 12px;
     }
@@ -3653,7 +3684,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "teamplace20260908121800";
+    const DATA_V = "datachart20260908130000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3941,7 +3972,7 @@
     }
 
     // A missing year-end is a gap in the tape, not a value of zero: break the path there.
-    function spark(series) {
+    function spark(series, extraClass) {
       const keys = Object.keys(series[0] || {}).filter((k) => k !== "as_of");
       if (series.length < 2 || !keys.length) return "";
       const vals = keys.map((k) => series.map((p) => {
@@ -3970,7 +4001,8 @@
         return '<path d="' + d.trim() + '" fill="none" stroke="' + colors[i % 3] + '" stroke-width="1.6"/>' + dots.join("");
       }).join("");
       if (!paths) return "";
-      return '<svg class="spark" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none">' + paths + "</svg>";
+      const cls = extraClass ? "spark " + extraClass : "spark";
+      return '<svg class="' + cls + '" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none">' + paths + "</svg>";
     }
 
     function hopHtml(key) {
@@ -6299,6 +6331,118 @@
       return Object.keys(years).sort().reverse();
     }
 
+    function dataDashYearCounts() {
+      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
+      const seen = {};
+      const counts = {};
+      for (let i = 0; i < sides.length; i++) {
+        const row = sides[i];
+        const tx = row && row.transaction_id;
+        if (!tx || seen[tx]) continue;
+        seen[tx] = true;
+        const y = String(row.date || "").slice(0, 4);
+        if (!y) continue;
+        counts[y] = (counts[y] || 0) + 1;
+      }
+      return Object.keys(counts).sort().map(function (y) {
+        return { year: y, n: counts[y] };
+      });
+    }
+
+    function dataDashMetricSigned(metric) {
+      return metric === "run" || metric === "manners" || metric === "aging"
+        || metric === "draft" || metric === "posture";
+    }
+
+    function dataDashBarTrackHtml(opts) {
+      const sort = opts && opts.sort;
+      const maxAbs = (opts && opts.maxAbs) || 1;
+      const signed = !!(opts && opts.signed);
+      const pct = Math.round(Math.abs(sort || 0) / maxAbs * 100);
+      let tone = (opts && opts.tone) || "";
+      if (signed && !tone) {
+        if (sort < 0) tone = "neg";
+        else if (sort > 0) tone = "pos";
+      }
+      const fill = signed ? Math.max(0, Math.round(pct / 2)) : pct;
+      const cls = "mark-bar-track" + (signed ? " is-signed" : "");
+      return '<div class="' + cls + '"><i class="' + tone + '" style="width:' + fill + '%"></i></div>';
+    }
+
+    function dataDashClockValue(row, metric, windowId) {
+      if (!row) return null;
+      if (metric === "run") {
+        const w = row.lens && row.lens[windowId];
+        return w && w.total != null ? w.total : null;
+      }
+      if (metric === "manners") {
+        const w = row.lens && row.lens[windowId];
+        if (!w) return null;
+        return (w.extract || 0) - (w.farmed || 0);
+      }
+      return null;
+    }
+
+    function dataDashMedian(nums) {
+      const a = [];
+      for (let i = 0; i < nums.length; i++) {
+        if (nums[i] != null && !Number.isNaN(nums[i])) a.push(nums[i]);
+      }
+      a.sort(function (x, y) { return x - y; });
+      if (!a.length) return null;
+      const mid = Math.floor(a.length / 2);
+      return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+    }
+
+    function dataDashClockSparkHtml(metric) {
+      if (metric !== "run" && metric !== "manners") return "";
+      const seats = (marks && marks.seats) || {};
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const series = WINDOWS.map(function (w) {
+        const packVals = [];
+        let you = null;
+        for (let i = 0; i < (members || []).length; i++) {
+          const uid = String(members[i].user_id);
+          const v = dataDashClockValue(seats[uid], metric, w[0]);
+          if (mine && uid === mine) you = v;
+          else if (v != null) packVals.push(v);
+        }
+        const pack = dataDashMedian(packVals);
+        if (mine) return { you: you, pack: pack };
+        return { pack: pack };
+      });
+      const svg = spark(series, "is-desk");
+      if (!svg) return "";
+      const title = metric === "run" ? "Run across clocks" : "Manners across clocks";
+      const sub = mine
+        ? "Your seat vs the pack median on the five Score as windows."
+        : "Pack median on the five Score as windows.";
+      const axis = ["Date", "1s", "2s", "3s", "today"];
+      const leg = mine
+        ? '<div class="data-spark-leg"><span><i></i>Your seat</span><span><i class="pack"></i>Pack median</span></div>'
+        : '<div class="data-spark-leg"><span><i></i>Pack median</span></div>';
+      return '<div class="data-spark">'
+        + '<div class="data-spark-h">' + esc(title) + "<span>" + esc(sub) + "</span></div>"
+        + svg
+        + '<div class="data-spark-axis">' + axis.map(function (a) { return "<span>" + a + "</span>"; }).join("") + "</div>"
+        + leg
+        + "</div>";
+    }
+
+    function dataDashYearSparkHtml() {
+      const rows = dataDashYearCounts();
+      if (rows.length < 2) return "";
+      const svg = spark(rows.map(function (r) { return { n: r.n }; }), "is-desk");
+      if (!svg) return "";
+      return '<div class="data-spark">'
+        + '<div class="data-spark-h">Tape by year<span>Complete deals on the two-way tape.</span></div>'
+        + svg
+        + '<div class="data-spark-axis">' + rows.map(function (r) {
+          return "<span>" + esc(r.year) + "</span>";
+        }).join("") + "</div>"
+        + "</div>";
+    }
+
     function dataDashById(id) {
       for (let i = 0; i < DATA_REPORTS.length; i++) {
         if (DATA_REPORTS[i].id === id) return DATA_REPORTS[i];
@@ -6388,13 +6532,14 @@
       if (!pack.rows.length) return '<p class="caption">No league marks in this build.</p>';
       const maxAbs = Math.max.apply(null, pack.rows.map(function (r) { return Math.abs(r.sort); }).concat([1]));
       const mine = authSeatId() ? String(authSeatId()) : "";
+      const signed = dataDashMetricSigned(pack.metric);
       return pack.rows.map(function (r, i) {
         const you = mine && String(r.uid) === mine;
-        const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
         return '<button type="button" class="mark-bar' + (you ? " you" : "") + '" data-data-seat="' + esc(r.uid) + '">'
           + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + seatLabel(r.name) + "</span>"
           + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
-          + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div></button>';
+          + dataDashBarTrackHtml({ tone: r.tone, sort: r.sort, maxAbs: maxAbs, signed: signed })
+          + "</button>";
       }).join("");
     }
 
@@ -6802,7 +6947,8 @@
       const hits = filtered
         ? dataDashTapeHits(dataQ, dataYear, 40)
         : { rows: rankWide().map(function (r) { return { r: r, score: windowScore(r) }; }), n: rankWide().length };
-      return '<div class="data-filters">'
+      return dataDashYearSparkHtml()
+        + '<div class="data-filters">'
         + '<button type="button" class="data-chip' + (dataYear ? "" : " on") + '" data-data-year="">All years</button>'
         + years.map(function (y) {
           const on = dataYear === y;
@@ -6845,6 +6991,10 @@
         });
       rows.sort(function (a, b) { return b.sort - a.sort; });
       const maxAbs = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.sort); }).concat([1]));
+      const signed = dataDashMetricSigned(metric);
+      const clock = metric === "run"
+        ? runLensHtml()
+        : (metric === "manners" ? chipLensHtml({ inline: true }) : "");
       const chips = '<div class="data-filters">'
         + keys.map(function (k) {
           const on = metric === k[0];
@@ -6852,19 +7002,23 @@
             + k[1] + "</button>";
         }).join("")
         + "</div>";
+      const chartHead = clock
+        ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
+          + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + clock + "</div>"
+        : '<div class="mark-chart-h">' + esc(head[0]) + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>";
       if (!rows.length) {
-        return chips + '<p class="caption">No league marks in this build.</p>';
+        return chips + dataDashClockSparkHtml(metric) + '<p class="caption">No league marks in this build.</p>';
       }
       return chips
+        + dataDashClockSparkHtml(metric)
         + '<div class="mark-chart">'
-        + '<div class="mark-chart-h">' + esc(head[0]) + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>"
+        + chartHead
         + rows.map(function (r, i) {
           const you = mine && String(r.uid) === mine;
-          const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
           return '<button type="button" class="mark-bar' + (you ? " you" : "") + '" data-data-seat="' + esc(r.uid) + '">'
             + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + seatLabel(r.name) + "</span>"
             + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
-            + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
+            + dataDashBarTrackHtml({ tone: r.tone, sort: r.sort, maxAbs: maxAbs, signed: signed })
             + '<div class="date">' + r.statHtml + "</div></button>";
         }).join("")
         + "</div>";
@@ -11037,6 +11191,7 @@
       }
       rows.sort((a, b) => b.sort - a.sort);
       const maxAbs = Math.max.apply(null, rows.map((r) => Math.abs(r.sort)).concat([1]));
+      const signed = dataDashMetricSigned(markOpen);
       const chartHead = markOpen === "run"
         ? '<div class="mark-chart-h-row"><div class="mark-chart-h-copy">' + esc(head[0])
           + (head[1] ? "<span>" + esc(head[1]) + "</span>" : "") + "</div>" + runLensHtml() + "</div>"
@@ -11045,11 +11200,10 @@
         + chartHead
         + rows.map((r, i) => {
           const you = me && me.user_id === r.uid;
-          const pct = Math.round(Math.abs(r.sort) / maxAbs * 100);
           return '<div class="mark-bar' + (you ? " you" : "") + '">'
             + '<div class="mark-bar-top"><span class="names">' + (i + 1) + ". " + seatLabel(r.name) + "</span>"
             + '<span class="lab' + (r.tone ? " " + r.tone : "") + '">' + esc(r.title) + "</span></div>"
-            + '<div class="mark-bar-track"><i class="' + (r.tone || "") + '" style="width:' + pct + '%"></i></div>'
+            + dataDashBarTrackHtml({ tone: r.tone, sort: r.sort, maxAbs: maxAbs, signed: signed })
             + '<div class="date">' + r.statHtml + "</div></div>";
         }).join("")
         + "</div>";

@@ -49,8 +49,9 @@ is not "view as": it swaps the whole app to that seat.
 targets with outline rings; a clip here turns it into a scroll box, and it has been re-clipped
 twice already (7f97711, then f9fdb39). The invariant is cheaper to keep than to rediscover.
 
-**The Teams tab lists managers and nothing else**, in **last season's finishing order**, and the
-champion carries a gold crown. Three rules hold it together:
+**The Teams tab lists every seat** in **last season's finishing order**, with that seat's
+equipped **title banner + emblem** under the name (blank slots until they equip). The
+champion still carries a gold crown. Three rules hold it together:
 
 - **No "Team" / "None" row that only clears the seat.** `#leagueSub` and the **Home** tab do
   that. The list is ten seats, not eleven.
@@ -62,11 +63,9 @@ champion carries a gold crown. Three rules hold it together:
   its `p` is a place inside the consolation round, not a league place. When 2026 completes it
   becomes the order with no code change. 2025 reads SF69erss, TipsUp, TedCumberbatch,
   KingHenryXXVI, TrumanCooper, DarkWingDucks2023, bigjberg, ChiefGumby, ARae, BubbaCuckShremp.
-- **All ten show without scrolling.** Ten options at the 44px minimum plus the menu's padding and
-  border is 450px, and the menu is capped just above that rather than at a fraction of the
-  screen — `min(56dvh, …)` was 373px on a 667px phone, so the list scrolled. **Do not lower the
-  44px to fit a longer list**; raise the cap and re-measure `scrollHeight == clientHeight` at
-  568px, the shortest height that has to work. An eleventh seat fails the build.
+- **Rows stay at least 44px.** Calling cards make the list taller than one screen — that scroll
+  is intended. Do not drop the 44px floor to squeeze ten banners into the first viewport.
+  An eleventh seat still fails the build.
 
 The crown is an inline SVG in the `#e0b44c` the gold cards already use, `aria-hidden`, so an
 option's accessible name stays exactly the manager's name.
@@ -302,8 +301,10 @@ anywhere`, because a heading has no ellipsis to fall back on and `DarkWingDucks2
 characters with no break opportunity.
 
 **Equipped title + emblem** sit directly under that heading as the same calling card used in
-barracks (thin banner + 40px mark). Omitted when that seat has not equipped either. Anyone
-opening the seat sees that pair — not the viewer's.
+barracks (thin banner + 40px mark). Omitted on team home when that seat has not equipped
+either. The **Teams list** always paints the card: selected art when they have equipped,
+blank banner + blank emblem when they have not. Anyone opening the seat sees that pair —
+not the viewer's.
 
 **Six style tiles**, all read from `data/ui/marks.json` (§7). Tapping one opens a ten-row league
 chart for that metric, sorted, with your seat highlighted. The chart draws from the rows already

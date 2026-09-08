@@ -143,7 +143,8 @@ the room has no `choice` yet. Opinion only. Votes never enter the book. See
 ## 14. Where do equipped titles and emblems paint?
 
 **Assumed (this pass):** Team home calling card (banner + emblem under the seat name, all four
-tabs) for every manager via `seat_cosmetics`. Barracks + Profile plate. Equipped **emblem**
+tabs) for every manager via `seat_cosmetics`. **Teams list** shows the same card for every
+seat, blank until they equip. Barracks + Profile plate. Equipped **emblem**
 also paints next to your own seat name via `seatLabel`. Header / news / trade / ledger / smack
 do not yet show equipped **titles**. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
 

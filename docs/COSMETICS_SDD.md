@@ -2,7 +2,8 @@
 
 Shared barracks. Visual only. Unlocks are computed from tape we already have. Equip is a
 profile write. **Where cosmetics paint (Wave 1):** calling card (banner + emblem) on **each
-manager's team home** (all four tabs); equipped **emblem** next to your own seat name;
+manager's team home** (all four tabs) **and on the Teams list** (blank banner + blank emblem
+until that seat equips); equipped **emblem** next to your own seat name;
 barracks / Profile plate. Header names, news bylines, trade cards, ledger, and smack stay a
 later pass.
 
@@ -100,7 +101,8 @@ Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seat
 Shared store: `public.seat_cosmetics` (`db/wave18-seat-cosmetics.sql`), same RLS shape as
 `seat_avatars` — anyone can read a seat's pair; only the claimed seat can write it.
 
-**Show-off (Wave 1):** calling card on every manager's team home; emblem next to **your**
+**Show-off (Wave 1):** calling card on every manager's team home and on the **Teams list**
+(blank banner + blank emblem until that seat equips); emblem next to **your**
 seat name; title on barracks / Profile plate.
 
 No themes, no FAAB perk, no calc boost. Visual only.

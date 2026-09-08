@@ -330,8 +330,16 @@
     }
     .teams-list > button.row {
       width: 100%; appearance: none; font: inherit; text-align: left; cursor: pointer;
-      min-height: 44px;
+      min-height: 44px; display: flex; flex-direction: column; align-items: stretch;
+      padding: 10px 12px 12px; gap: 8px;
     }
+    .teams-list > button.row > .row-top { width: 100%; }
+    .teams-list .cos-plate { margin: 0; }
+    .cos-plate-banner.is-blank {
+      display: block; aspect-ratio: 1024 / 180; min-height: 0; height: auto;
+      background: #0a0c10; box-sizing: border-box;
+    }
+    .cos-plate-emblem.is-blank { background: #0e1016; }
     /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
     img.seat-flair, svg.crown {
       display: inline-block; width: 1.15em; height: 1.15em;
@@ -3567,7 +3575,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "datahome20260908021500";
+    const DATA_V = "teamcos20260908023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5100,7 +5108,9 @@
             + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
             + (on ? " · viewing" : "")
             + "</div></div>"
-            + '<span class="chev" aria-hidden="true">›</span></div></button>';
+            + '<span class="chev" aria-hidden="true">›</span></div>'
+            + cosmeticsCallingCardHtml(cosmeticsPairForSeat(id), { empty: true, blank: true })
+            + "</button>";
         })
         .join("");
     }
@@ -16440,6 +16450,7 @@
 
     function cosmeticsCallingCardHtml(pair, opts) {
       const emptyOk = !!(opts && opts.empty);
+      const blank = !!(opts && opts.blank);
       const catalog = cosmeticsCatalog();
       const eqTitle = pair && pair.title
         ? catalog.find((c) => c.id === pair.title && c.kind === "title")
@@ -16450,12 +16461,14 @@
       if (!eqTitle && !eqEmblem && !emptyOk) return "";
       const plateBanner = eqTitle
         ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
-        : '<span class="cos-plate-banner is-text">' + (emptyOk ? "No title equipped" : "") + "</span>";
+        : (blank
+          ? '<span class="cos-plate-banner is-blank" aria-hidden="true"></span>'
+          : '<span class="cos-plate-banner is-text">' + (emptyOk ? "No title equipped" : "") + "</span>");
       const plateEmblem = eqEmblem
         ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
-        : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
+        : '<div class="cos-plate-emblem' + (blank ? " is-blank" : "") + '"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
       const lab = [eqTitle && eqTitle.name, eqEmblem && eqEmblem.name].filter(Boolean).join(" · ")
-        || "Equipped calling card";
+        || (blank ? "No title or emblem yet" : "Equipped calling card");
       return '<div class="cos-plate" aria-label="' + esc(lab) + '">'
         + plateBanner + plateEmblem + "</div>";
     }

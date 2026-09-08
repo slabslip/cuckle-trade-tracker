@@ -338,8 +338,16 @@ const html = `<!DOCTYPE html>
     }
     .teams-list > button.row {
       width: 100%; appearance: none; font: inherit; text-align: left; cursor: pointer;
-      min-height: 44px;
+      min-height: 44px; display: flex; flex-direction: column; align-items: stretch;
+      padding: 10px 12px 12px; gap: 8px;
     }
+    .teams-list > button.row > .row-top { width: 100%; }
+    .teams-list .cos-plate { margin: 0; }
+    .cos-plate-banner.is-blank {
+      display: block; aspect-ratio: 1024 / 180; min-height: 0; height: auto;
+      background: #0a0c10; box-sizing: border-box;
+    }
+    .cos-plate-emblem.is-blank { background: #0e1016; }
     /* Same box as a text emoji (🤢): 1.15em, nudged to the baseline so it sits with the name. */
     img.seat-flair, svg.crown {
       display: inline-block; width: 1.15em; height: 1.15em;
@@ -3575,7 +3583,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "datahome20260908021500";
+    const DATA_V = "teamcos20260908023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5088,6 +5096,7 @@ const html = `<!DOCTYPE html>
      * mount: the Teams chip dropdown used to be the other door into a seat and is gone. A second
      * list that typed its own crown or finishing order is how those disagree between surfaces.
      * Crown rides seatLabel for the reigning champ — not a second paint here.
+     * Each row also paints that seat's title banner + emblem (blank slots until they equip).
      */
     function whoOptions() {
       const mySeat = authSeatId() || (me && me.user_id) || null;
@@ -5108,7 +5117,9 @@ const html = `<!DOCTYPE html>
             + '<div class="date">' + (m.place ? ("Place " + m.place) : "Team")
             + (on ? " · viewing" : "")
             + "</div></div>"
-            + '<span class="chev" aria-hidden="true">›</span></div></button>';
+            + '<span class="chev" aria-hidden="true">›</span></div>'
+            + cosmeticsCallingCardHtml(cosmeticsPairForSeat(id), { empty: true, blank: true })
+            + "</button>";
         })
         .join("");
     }
@@ -16448,6 +16459,7 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsCallingCardHtml(pair, opts) {
       const emptyOk = !!(opts && opts.empty);
+      const blank = !!(opts && opts.blank);
       const catalog = cosmeticsCatalog();
       const eqTitle = pair && pair.title
         ? catalog.find((c) => c.id === pair.title && c.kind === "title")
@@ -16458,12 +16470,14 @@ const html = `<!DOCTYPE html>
       if (!eqTitle && !eqEmblem && !emptyOk) return "";
       const plateBanner = eqTitle
         ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
-        : '<span class="cos-plate-banner is-text">' + (emptyOk ? "No title equipped" : "") + "</span>";
+        : (blank
+          ? '<span class="cos-plate-banner is-blank" aria-hidden="true"></span>'
+          : '<span class="cos-plate-banner is-text">' + (emptyOk ? "No title equipped" : "") + "</span>");
       const plateEmblem = eqEmblem
         ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
-        : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
+        : '<div class="cos-plate-emblem' + (blank ? " is-blank" : "") + '"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
       const lab = [eqTitle && eqTitle.name, eqEmblem && eqEmblem.name].filter(Boolean).join(" · ")
-        || "Equipped calling card";
+        || (blank ? "No title or emblem yet" : "Equipped calling card");
       return '<div class="cos-plate" aria-label="' + esc(lab) + '">'
         + plateBanner + plateEmblem + "</div>";
     }
@@ -20577,6 +20591,12 @@ if (inline.includes('document.querySelector("h1.brand a").addEventListener')) {
 const SEAT_MIN_H = 44;
 if (!html.includes(`.teams-list > button.row`) || !html.includes(`min-height: ${SEAT_MIN_H}px;`)) {
   throw new Error(`a Teams row must stay ${SEAT_MIN_H}px`);
+}
+if (!fnSrc("whoOptions").includes("cosmeticsCallingCardHtml(")
+  || !fnSrc("whoOptions").includes("blank: true")
+  || !fnSrc("cosmeticsCallingCardHtml").includes("is-blank")
+  || !html.includes(".cos-plate-banner.is-blank")) {
+  throw new Error("Teams list must show each seat title banner and emblem, blank when unequipped");
 }
 const seats = JSON.parse(fs.readFileSync(`${ROOT}data/ui/members.json`, "utf8"));
 const seatPlaces = seats.map((m) => m.place);

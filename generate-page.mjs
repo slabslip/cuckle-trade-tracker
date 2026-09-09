@@ -3217,6 +3217,20 @@ const html = `<!DOCTYPE html>
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 750; letter-spacing: 0.05em;
       text-transform: uppercase; color: var(--dim);
     }
+    .data-dd-row {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+      margin: 0 0 12px;
+    }
+    .data-dd-row label {
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .data-dd-row select {
+      appearance: none; font: inherit; font-size: 0.82rem; font-weight: 650;
+      color: var(--text); background: #1c1c22; border: 1px solid var(--line);
+      border-radius: 10px; min-height: 40px; padding: 0 10px; width: 100%;
+    }
     .data-filters {
       display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px;
     }
@@ -3742,7 +3756,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "rebuild20260909022000";
+    const DATA_V = "moves20260909014500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3774,6 +3788,8 @@ const html = `<!DOCTYPE html>
     let dataOwner = "";
     let dataSort = "value";
     let dataYear = "";
+    let dataDraftYear = "2027";
+    let dataCuffPos = "";
     let dataMark = "volume";
     let dataDashTiles = null;
     let dataDashEdit = false;
@@ -6296,6 +6312,8 @@ const html = `<!DOCTYPE html>
       dataOwner = "";
       dataSort = "value";
       dataYear = "";
+      dataDraftYear = "2027";
+      dataCuffPos = "";
       dataMark = "volume";
       dataDashEdit = false;
       dataDashLibOpen = false;
@@ -6578,16 +6596,105 @@ const html = `<!DOCTYPE html>
       return dataDashHasToken(dir.sell, pos) || dataDashHasToken(dir.sell, pos + " leftover");
     }
 
+    function dataDashIsYoung(a) {
+      const age = Number(a && a.age);
+      return Number.isFinite(age) && age < 24.5;
+    }
+
+    function dataDashIsAging(a) {
+      const pos = homeDeskAssetPos(a);
+      const age = Number(a && a.age);
+      if (!Number.isFinite(age)) return false;
+      if (pos === "RB") return age >= 27;
+      if (pos === "WR") return age >= 28;
+      if (pos === "QB") return age >= 32;
+      if (pos === "TE") return age >= 29;
+      return false;
+    }
+
+    function dataDashIsStarterPiece(bag, a) {
+      return calcValueNum(a) >= DESK_STUD || dataDashIsQb1Rb1(bag, a);
+    }
+
+    function dataDashIntentTakes(dir, a, fromBag) {
+      if (!a) return false;
+      const pos = homeDeskAssetPos(a);
+      if (pos === "PICK") return !dir || dataDashHasToken(dir.buy, "picks");
+      if (!dir) return true;
+      const starter = dataDashIsStarterPiece(fromBag, a);
+      if (starter && dataDashHasToken(dir.refuse, pos + " starter")) return false;
+      if (dataDashHasToken(dir.buy, pos)) return true;
+      if (dataDashHasToken(dir.buy, "young") && dataDashIsYoung(a) && !starter) return true;
+      return false;
+    }
+
+    function dataDashSendPlayers(myBag, myProf) {
+      const out = [];
+      const seen = {};
+      const give = dataDashGivePos(myProf);
+      for (let i = 0; i < give.length; i++) {
+        const extra = dataDashBagExtras(myBag, give[i])[0];
+        if (extra && extra.id && !seen[extra.id]) {
+          seen[extra.id] = 1;
+          out.push(extra);
+        }
+      }
+      for (let i = 0; i < (myBag || []).length; i++) {
+        const a = myBag[i];
+        if (!a || !a.id || seen[a.id]) continue;
+        const pos = homeDeskAssetPos(a);
+        if (!pos || pos === "PICK") continue;
+        if (!dataDashIsAging(a) || calcValueNum(a) < DESK_MID) continue;
+        if (dataDashIsQb1Rb1(myBag, a) && calcValueNum(a) >= DESK_STUD) continue;
+        seen[a.id] = 1;
+        out.push(a);
+      }
+      return out;
+    }
+
+    function dataDashImproveJobs(myBag, myProf) {
+      const jobs = [];
+      const seen = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const at = (myBag || []).filter(function (a) {
+          return homeDeskAssetPos(a) === pos && calcValueNum(a) >= DESK_MID;
+        }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        const aging = at.filter(dataDashIsAging)[0];
+        if (aging) {
+          jobs.push({
+            pos: pos, kind: "age", score: 5,
+            why: aging.name + " is aging",
+          });
+          seen[pos] = 1;
+        }
+        const top = at[0];
+        if (top && calcValueNum(top) >= DESK_START && calcValueNum(top) < DESK_STUD && !seen[pos]) {
+          jobs.push({ pos: pos, kind: "upgrade", score: 3, why: "upgrade " + pos });
+          seen[pos] = 1;
+        }
+        if (!seen[pos] && (myProf.deep || []).indexOf(pos) < 0) {
+          jobs.push({ pos: pos, kind: "depth", score: 1, why: "add " + pos + " depth" });
+        }
+      });
+      jobs.sort(function (a, b) { return b.score - a.score; });
+      return jobs;
+    }
+
     function dataDashTheyNeedWhy(dir, pos, needW) {
       if (!needW || !dataDashIntentBuys(dir, pos)) return "";
       return "they " + (needW === "need" ? "need" : "are thin") + " " + pos;
     }
 
     function dataDashMoveWhy(theirDir, theirProf, pos, giveW) {
-      const bits = [pos === "PICK" ? "you can send a pick" : ("you have extra " + pos)];
+      const bits = [pos === "PICK" ? "you can send a pick"
+        : (giveW === "aging" ? ("move aging " + pos) : ("you have extra " + pos))];
       const sold = theirDir && theirDir.by_pos && theirDir.by_pos[pos] && theirDir.by_pos[pos].out;
       if (sold && sold[0]) bits.push("they sold " + sold[0]);
       if (pos === "PICK") return dataDashPickMoveWhy(theirDir);
+      if (theirDir && dataDashHasToken(theirDir.buy, "young")) {
+        bits.push("they buy young");
+        return bits.join(" · ");
+      }
       if (theirDir && dataDashHasToken(theirDir.buy, "picks") && !dataDashIntentBuys(theirDir, pos)) {
         bits.push("they want 2027 picks");
         return bits.join(" · ");
@@ -6713,8 +6820,8 @@ const html = `<!DOCTYPE html>
         || id === "my_block" || id === "block_fits")) {
         return "Claim your team to see this";
       }
-      if (id === "fill_holes") return "You have no holes at starter value";
-      if (id === "move_extras") return "No seat will take a leftover or a pick";
+      if (id === "fill_holes") return "No Get that both sides will take";
+      if (id === "move_extras") return "No Send that both sides will take";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
       if (id === "stash_young") return "No young mid-value stashes on other seats";
       if (id === "available_cuffs") return "Nobody listed a backup you need";
@@ -6768,13 +6875,23 @@ const html = `<!DOCTYPE html>
       const rows = [];
       if (id === "fill_holes") {
         if (!mine) return [];
-        const need = dataDashNeedPos(myProf);
+        let jobs = dataDashNeedPos(myProf).map(function (pos) {
+          const needW = dataDashPosNeedWord(myProf, pos);
+          return {
+            pos: pos,
+            kind: "hole",
+            score: needW === "need" ? 8 : 6,
+            why: "you " + (needW === "need" ? "need" : "are thin") + " " + pos,
+          };
+        });
+        if (!jobs.length) jobs = dataDashImproveJobs(myBag, myProf);
         bags.forEach(function (bag, uid) {
           if (String(uid) === mine) return;
           const theirDir = seatDirOf(uid);
           const prof = homeDeskProfile(bag);
-          for (let i = 0; i < need.length; i++) {
-            const pos = need[i];
+          for (let i = 0; i < jobs.length; i++) {
+            const job = jobs[i];
+            const pos = job.pos;
             if (!dataDashIntentSells(theirDir, pos)) continue;
             const give = dataDashPosGiveWord(prof, pos);
             let extras = dataDashBagExtras(bag, pos);
@@ -6787,11 +6904,11 @@ const html = `<!DOCTYPE html>
             if (!extras.length) continue;
             for (let j = 0; j < extras.length; j++) {
               const a = extras[j];
-              const needW = dataDashPosNeedWord(myProf, pos);
-              let score = (needW === "need" ? 4 : 2) + (give === "deep" ? 3 : 1);
+              let score = job.score + (give === "deep" ? 3 : 1);
               if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
               const v = calcValueNum(a);
               if (v >= DESK_MID && v < DESK_STUD + 800) score += 1;
+              if (job.kind === "age" && dataDashIsYoung(a)) score += 2;
               if (theirDir && (theirDir.label === "Hard rebuild" || theirDir.label === "Rebuild")) score += 1;
               dataDashHuntPush(rows, {
                 id: a.id,
@@ -6799,9 +6916,8 @@ const html = `<!DOCTYPE html>
                 themId: String(uid),
                 themName: a.owner || dataDashSeatName(uid),
                 pos: pos,
-                why: "you " + (needW === "need" ? "need" : "are thin") + " " + pos
-                  + " · they sell " + pos + " leftover",
-                why2: theirDir && theirDir.label ? (theirDir.label + " · fill " + pos) : "",
+                why: job.why + " · they sell " + pos,
+                why2: "",
                 sendA: "",
                 sendB: a.id,
                 score: score,
@@ -6809,24 +6925,49 @@ const html = `<!DOCTYPE html>
             }
           }
         });
+        if (!rows.length) {
+          bags.forEach(function (bag, uid) {
+            if (String(uid) === mine) return;
+            const theirDir = seatDirOf(uid);
+            for (let i = 0; i < (bag || []).length; i++) {
+              const a = bag[i];
+              const pos = homeDeskAssetPos(a);
+              if (!pos || pos === "PICK" || !dataDashIsYoung(a)) continue;
+              if (calcValueNum(a) < DESK_MID || calcValueNum(a) >= DESK_STUD) continue;
+              if (dataDashIsQb1Rb1(bag, a)) continue;
+              if (!dataDashIntentSells(theirDir, pos)) continue;
+              dataDashHuntPush(rows, {
+                id: a.id,
+                name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
+                themId: String(uid),
+                themName: a.owner || dataDashSeatName(uid),
+                pos: pos,
+                why: "stash youth · they sell " + pos,
+                why2: "",
+                sendA: "",
+                sendB: a.id,
+                score: 4,
+              });
+            }
+          });
+        }
       } else if (id === "move_extras") {
         if (!mine) return [];
-        const give = dataDashGivePos(myProf);
+        const sendPlayers = dataDashSendPlayers(myBag, myProf);
         const pickSeats = [];
         bags.forEach(function (bag, uid) {
           if (String(uid) === mine) return;
           const theirDir = seatDirOf(uid);
           const prof = homeDeskProfile(bag);
           let playerHits = 0;
-          for (let i = 0; i < give.length; i++) {
-            const pos = give[i];
-            if (!dataDashIntentBuys(theirDir, pos)) continue;
-            const extras = dataDashBagExtras(myBag, pos);
-            const a = extras[0];
-            if (!a) continue;
-            const giveW = dataDashPosGiveWord(myProf, pos);
+          for (let i = 0; i < sendPlayers.length; i++) {
+            const a = sendPlayers[i];
+            if (!dataDashIntentTakes(theirDir, a, myBag)) continue;
+            const pos = homeDeskAssetPos(a);
+            const giveW = dataDashPosGiveWord(myProf, pos) || (dataDashIsAging(a) ? "aging" : "extra");
             const needW = dataDashPosNeedWord(prof, pos);
             let score = 8 + (needW === "need" ? 3 : 1) + (giveW === "deep" ? 2 : 0);
+            if (dataDashIsYoung(a) && dataDashHasToken((theirDir && theirDir.buy) || [], "young")) score += 2;
             if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
             playerHits += 1;
             dataDashHuntPush(rows, {
@@ -6836,14 +6977,14 @@ const html = `<!DOCTYPE html>
               themName: dataDashSeatName(uid) || "them",
               pos: pos,
               why: dataDashMoveWhy(theirDir, prof, pos, giveW),
-              why2: theirDir && theirDir.label ? theirDir.label : "",
+              why2: "",
               sendA: a.id,
               sendB: "",
               score: score,
             });
           }
-          if (!playerHits && dataDashIntentBuys(theirDir, "PICK")) {
-            pickSeats.push({ uid: String(uid), dir: theirDir });
+          if (dataDashIntentBuys(theirDir, "PICK")) {
+            pickSeats.push({ uid: String(uid), dir: theirDir, playerHits: playerHits });
           }
         });
         pickSeats.sort(function (a, b) {
@@ -7056,12 +7197,17 @@ const html = `<!DOCTYPE html>
       if (id !== "move_extras" && id !== "fill_holes") return all.slice(0, 3);
       const out = [];
       const seen = {};
-      for (let i = 0; i < all.length && out.length < 3; i++) {
-        const k = String(all[i].themId || "");
-        if (k && seen[k]) continue;
-        if (k) seen[k] = 1;
-        out.push(all[i]);
-      }
+      const take = function (pred) {
+        for (let i = 0; i < all.length && out.length < 3; i++) {
+          if (pred && !pred(all[i])) continue;
+          const k = String(all[i].themId || "");
+          if (k && seen[k]) continue;
+          if (k) seen[k] = 1;
+          out.push(all[i]);
+        }
+      };
+      take(function (r) { return r.pos && r.pos !== "PICK"; });
+      take(null);
       return out;
     }
 
@@ -7139,7 +7285,7 @@ const html = `<!DOCTYPE html>
         ? "Who will take extras."
         : (id === "fill_holes" ? "Who will sell what you need." : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
-        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Ping</button></p>'
+        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Moves</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(huntTitle) + "</h2>"
         + '<p class="data-dash-sub">' + esc(huntSub) + "</p>"
         + chips
@@ -7473,7 +7619,7 @@ const html = `<!DOCTYPE html>
     function dataDashPanesHtml() {
       const pane = dataDashPaneCanon(dataPane);
       return '<div class="data-panes" role="tablist" aria-label="Data views">'
-        + [["ping", "Ping"], ["league", "League"], ["more", "More"]].map(function (p) {
+        + [["ping", "Moves"], ["league", "League"], ["more", "More"]].map(function (p) {
           const on = pane === p[0];
           return '<button type="button" class="data-pane' + (on ? " on" : "") + '"'
             + ' data-data-pane="' + p[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
@@ -7545,12 +7691,15 @@ const html = `<!DOCTYPE html>
       const mine = authSeatId() ? String(authSeatId()) : "";
       const moves = mine ? dataDashSmartMovesVs(uid) : [];
       const moveHtml = !mine
-        ? '<p class="data-hint">Claim your seat to see who to ping.</p>'
+        ? '<p class="data-hint">Claim your seat to see ideas.</p>'
         : (moves.length
           ? moves.map(dataDashHuntRowHtml).join("")
-          : '<p class="data-hint">No feasible ping with this seat.</p>');
+          : '<p class="data-hint">No feasible move with this seat.</p>');
       const you = mine && String(uid) === mine;
-      const facts = dataDashFact("Buy", buy)
+      const held27 = d && d.picks && d.picks.held_2027 != null ? String(d.picks.held_2027) + " held" : "";
+      const facts = dataDashFact("2027s", held27)
+        + dataDashFact("Pace", d && d.pace)
+        + dataDashFact("Buy", buy)
         + dataDashFact("Sell", sell)
         + dataDashFact("Refuse", refuse)
         + dataDashFact("Bag", holeBits.join(" · "));
@@ -7560,8 +7709,8 @@ const html = `<!DOCTYPE html>
         + '<em class="data-cycle ' + slug + '">' + esc(label) + "</em></div>"
         + '<p class="data-dash-sub">' + esc(why) + "</p>"
         + (facts ? '<div class="data-facts">' + facts + "</div>" : "")
-        + '<div class="data-sec-h">Ping</div>'
-        + '<p class="data-sec-sub">' + (you ? "Feasible deals for you." : "Feasible deals vs " + esc(name) + ".") + "</p>"
+        + '<div class="data-sec-h">Moves</div>'
+        + '<p class="data-sec-sub">' + (you ? "Ideas for you." : "Ideas vs " + esc(name) + ".") + "</p>"
         + moveHtml
         + '<p class="caption"><button type="button" class="chip" data-dir-price="' + esc(uid) + '">Price a deal</button>'
         + (you ? "" : ' <button type="button" class="chip" data-dir-home="' + esc(uid) + '">Open team home</button>')
@@ -7638,32 +7787,88 @@ const html = `<!DOCTYPE html>
       return '<p class="data-hint">' + n + " " + noun + ".</p>";
     }
 
+    function dataDashDraftHtml() {
+      const picks = ((calcBook && calcBook.picks) || []).slice();
+      const years = [];
+      const seenY = {};
+      for (let i = 0; i < picks.length; i++) {
+        const y = String(picks[i].year || "");
+        if (y && !seenY[y]) { seenY[y] = 1; years.push(y); }
+      }
+      years.sort();
+      const year = years.indexOf(String(dataDraftYear)) >= 0 ? String(dataDraftYear) : (years[0] || "2027");
+      const rows = picks.filter(function (p) { return String(p.year) === year; })
+        .sort(function (a, b) {
+          return (Number(a.round) || 99) - (Number(b.round) || 99)
+            || String(a.owner || "").localeCompare(String(b.owner || ""));
+        });
+      return '<div class="data-dd-row">'
+        + '<label>Year<select data-data-draft-year="1">'
+        + years.map(function (y) {
+          return '<option value="' + esc(y) + '"' + (year === y ? " selected" : "") + ">" + esc(y) + "</option>";
+        }).join("")
+        + "</select></label></div>"
+        + '<p class="data-sec-sub">' + rows.length + " picks in " + esc(year) + ".</p>"
+        + rows.map(function (p) {
+          const name = p.name || ((p.year || "") + " R" + (p.round || "?"));
+          const meta = [p.owner, p.round ? ("R" + p.round) : ""].filter(Boolean).join(" · ");
+          const v = calcValueNum(p);
+          return '<button type="button" class="data-xrow" data-data-price="' + esc(p.id) + '">'
+            + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
+            + '<span class="data-xrow-meta">' + esc(meta) + "</span></div>"
+            + '<span class="data-xrow-val">' + (v < 0 ? "—" : calcFmt(v)) + "</span></button>";
+        }).join("");
+    }
+
+    function dataDashCuffsHtml() {
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const all = (cuffs && cuffs.rows) || [];
+      const pos = String(dataCuffPos || "");
+      const rows = all.filter(function (r) { return !pos || r.pos === pos; });
+      if (!cuffs && cuffsLoading) return '<p class="data-hint">Loading cuffs.</p>';
+      if (!all.length) return '<p class="data-hint">Cuff board is not in this build.</p>';
+      return '<div class="data-dd-row">'
+        + '<label>Pos<select data-data-cuff-pos="1">'
+        + [["", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]].map(function (p) {
+          return '<option value="' + p[0] + '"' + (pos === p[0] ? " selected" : "") + ">" + p[1] + "</option>";
+        }).join("")
+        + "</select></label></div>"
+        + '<p class="data-sec-sub">' + rows.length + " starters.</p>"
+        + rows.map(function (r) {
+          const cuff = r.cuff_owned
+            ? ((r.cuff || "cuff") + " · " + (r.cuff_owner || "held"))
+            : ((r.cuff || "no cuff") + " · FA");
+          return '<div class="data-xrow">'
+            + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.starter || "—")
+            + (r.pos ? '<span class="data-xrow-pe">' + esc(r.pos) + "</span>" : "") + "</span>"
+            + '<span class="data-xrow-meta">' + esc((r.owner || "") + " · if out → " + cuff) + "</span></div></div>";
+        }).join("");
+    }
+
     function dataDashBookHtml() {
       const pos = ["", "QB", "RB", "WR", "TE", "PICK"];
       const hits = dataDashBookHits(dataQ, dataPos, dataOwner, dataSort, 40);
-      return '<div class="data-filters">'
+      return '<div class="data-dd-row">'
+        + '<label>Pos<select data-data-pos="1">'
         + pos.map(function (p) {
-          const lab = p || "All";
-          const on = dataPos === p;
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-pos="' + p + '">'
-            + lab + "</button>";
+          return '<option value="' + p + '"' + (dataPos === p ? " selected" : "") + ">"
+            + (p || "All") + "</option>";
         }).join("")
-        + "</div>"
-        + '<div class="data-filters">'
-        + '<button type="button" class="data-chip' + (dataOwner ? "" : " on") + '" data-data-owner="">Any seat</button>'
+        + "</select></label>"
+        + '<label>Seat<select data-data-owner="1">'
+        + '<option value=""' + (dataOwner ? "" : " selected") + ">Any seat</option>"
         + (members || []).map(function (m) {
-          const on = String(dataOwner) === String(m.user_id);
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-owner="'
-            + esc(m.user_id) + '">' + esc(m.name) + "</button>";
+          return '<option value="' + esc(m.user_id) + '"'
+            + (String(dataOwner) === String(m.user_id) ? " selected" : "") + ">"
+            + esc(m.name) + "</option>";
         }).join("")
-        + "</div>"
-        + '<div class="data-filters">'
+        + "</select></label>"
+        + '<label>Sort<select data-data-sort="1">'
         + [["value", "Value"], ["name", "Name"], ["age", "Age"]].map(function (s) {
-          const on = dataSort === s[0];
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-sort="' + s[0] + '">'
-            + s[1] + "</button>";
+          return '<option value="' + s[0] + '"' + (dataSort === s[0] ? " selected" : "") + ">"
+            + s[1] + "</option>";
         }).join("")
-        + "</div>"
+        + "</select></label></div>"
         + dataDashHint(hits.n, hits.rows.length, hits.n === 1 ? "asset" : "assets")
         + (dataDashAsOf() !== "—" ? '<p class="data-hint">Book as of ' + esc(dataDashAsOf()) + ".</p>" : "")
         + hits.rows.map(dataDashBookRow).join("");
@@ -7748,7 +7953,7 @@ const html = `<!DOCTYPE html>
       const all = dataDashHuntRows(id);
       let body = "";
       if (!authSeatId()) {
-        body = '<p class="data-hint">Claim your seat to see who to ping.</p>';
+        body = '<p class="data-hint">Claim your seat to see ideas.</p>';
       } else if (!peek.length) {
         body = '<p class="data-hint">' + esc(dataDashHuntEmpty(id)) + "</p>";
       } else {
@@ -7767,14 +7972,14 @@ const html = `<!DOCTYPE html>
       if (!authSeatId()) {
         return '<div class="data-ping">'
           + '<div class="data-sec"><div class="data-sec-h">Send</div>'
-          + '<p class="data-sec-sub">Who will take extras.</p></div>'
+          + '<p class="data-sec-sub">Players and picks they will take.</p></div>'
           + '<div class="data-sec"><div class="data-sec-h">Get</div>'
-          + '<p class="data-sec-sub">Who will sell what you need.</p></div>'
-          + '<p class="data-hint">Claim your seat to see who to ping.</p></div>';
+          + '<p class="data-sec-sub">Players they will sell you.</p></div>'
+          + '<p class="data-hint">Claim your seat to see ideas.</p></div>';
       }
       return '<div class="data-ping">'
-        + dataDashPingList("move_extras", "Send", "Who will take extras.")
-        + dataDashPingList("fill_holes", "Get", "Who will sell what you need.")
+        + dataDashPingList("move_extras", "Send", "Players and picks they will take.")
+        + dataDashPingList("fill_holes", "Get", "Players they will sell you.")
         + "</div>";
     }
 
@@ -7814,8 +8019,8 @@ const html = `<!DOCTYPE html>
         else if (room === "tape") body = dataDashTapeHtml();
         else if (room === "seats") body = dataDashChartHtml();
         else if (room === "lists") body = '<h3 class="ds-lists-h">League lists</h3>' + dsMenu();
-        else if (room === "draft") body = pickIntelHome();
-        else body = cuffsHome();
+        else if (room === "draft") body = dataDashDraftHtml();
+        else body = dataDashCuffsHtml();
         return '<section class="data-dash" aria-label="' + titles[room] + '">'
           + '<p class="caption"><button type="button" class="chip back" data-data-room="overview">← Data</button></p>'
           + '<h2 class="screen-h" tabindex="-1">' + titles[room] + "</h2>"
@@ -20262,19 +20467,19 @@ const html = `<!DOCTYPE html>
         return;
       }
       const dataPosBtn = e.target.closest("[data-data-pos]");
-      if (dataPosBtn) {
+      if (dataPosBtn && dataPosBtn.tagName !== "SELECT") {
         dataPos = dataPosBtn.getAttribute("data-data-pos") || "";
         render();
         return;
       }
       const dataOwnerBtn = e.target.closest("[data-data-owner]");
-      if (dataOwnerBtn) {
+      if (dataOwnerBtn && dataOwnerBtn.tagName !== "SELECT") {
         dataOwner = dataOwnerBtn.getAttribute("data-data-owner") || "";
         render();
         return;
       }
       const dataSortBtn = e.target.closest("[data-data-sort]");
-      if (dataSortBtn) {
+      if (dataSortBtn && dataSortBtn.tagName !== "SELECT") {
         dataSort = dataSortBtn.getAttribute("data-data-sort") || "value";
         render();
         return;
@@ -21422,6 +21627,36 @@ const html = `<!DOCTYPE html>
       const ledgerFeedSel = e.target.closest("select[data-ledger-feed]");
       if (ledgerFeedSel) {
         ledgerFeed = ledgerFeedSel.value || "live";
+        render();
+        return;
+      }
+      const dataPosSel = e.target.closest("select[data-data-pos]");
+      if (dataPosSel) {
+        dataPos = dataPosSel.value || "";
+        render();
+        return;
+      }
+      const dataOwnerSel = e.target.closest("select[data-data-owner]");
+      if (dataOwnerSel) {
+        dataOwner = dataOwnerSel.value || "";
+        render();
+        return;
+      }
+      const dataSortSel = e.target.closest("select[data-data-sort]");
+      if (dataSortSel) {
+        dataSort = dataSortSel.value || "value";
+        render();
+        return;
+      }
+      const dataDraftYearSel = e.target.closest("select[data-data-draft-year]");
+      if (dataDraftYearSel) {
+        dataDraftYear = dataDraftYearSel.value || "2027";
+        render();
+        return;
+      }
+      const dataCuffPosSel = e.target.closest("select[data-data-cuff-pos]");
+      if (dataCuffPosSel) {
+        dataCuffPos = dataCuffPosSel.value || "";
         render();
         return;
       }
@@ -22943,7 +23178,7 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
     || !dataPage.includes("dataDashMoreHtml()")
     || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
     || !dataPage.includes(">Data</h2>")
-    || !dataPage.includes('["ping", "Ping"]')
+    || !dataPage.includes('["ping", "Moves"]')
     || !dataPage.includes('["league", "League"]')
     || !inline.includes("function dataDashHtml(")
     || !inline.includes("function dataDashTileHtml(")
@@ -23051,7 +23286,11 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("homeDeskTalk").includes("dataDashIntentBuys(")
     || !inline.includes("function dataDashBestMovePick(")
     || !inline.includes("function dataDashHuntPeekRows(")
+    || !inline.includes("function dataDashIntentTakes(")
+    || !inline.includes("function dataDashImproveJobs(")
     || !fnSrc("dataDashHuntRows").includes("pickSeats")
+    || !fnSrc("dataDashHuntRows").includes("dataDashIntentTakes(")
+    || !fnSrc("dataDashHuntRows").includes("dataDashImproveJobs(")
     || fnSrc("dataDashHuntRows").includes("they need RB")) {
     throw new Error("Deal hunts and Home Move must gate on direction buy/sell/refuse");
   }
@@ -23072,6 +23311,12 @@ if (!inline.includes("function dataDashHtml(")
     }
     if (sf && sf.label === "Hard rebuild") {
       throw new Error("SF69erss must not be labeled Hard rebuild");
+    }
+    if (dirSeats.some((s) => s.picks == null || s.picks.held_2027 == null || !s.pace)) {
+      throw new Error("seat-direction must list held 2027s and a pace on every seat");
+    }
+    if (dirSeats.some((s) => !String(s.why || "").includes("2027s"))) {
+      throw new Error("every seat why must list 2027s");
     }
   }
 }
@@ -23413,12 +23658,14 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
   if (homeCuffsReturn.includes("cuffsHome()") || homeCuffsReturn.includes("cuffsHtml")) {
     throw new Error("renderLeagueHome must not mount cuffsHome under Draft Data");
   }
-  if (!fnSrc("dataDashHtml").includes("cuffsHome()")
-    || !fnSrc("dataDashHtml").includes("pickIntelHome()")
+  if (!fnSrc("dataDashHtml").includes("dataDashCuffsHtml()")
+    || !fnSrc("dataDashHtml").includes("dataDashDraftHtml()")
     || !fnSrc("dataDashOverviewHtml").includes("dataDashPingHtml()")
     || !fnSrc("dataDashPingHtml").includes("Send")
-    || !fnSrc("dataDashPingHtml").includes("Get")) {
-    throw new Error("Data desks must mount cuffsHome + pickIntelHome; Overview is Ping");
+    || !fnSrc("dataDashPingHtml").includes("Get")
+    || !fnSrc("dataDashCuffsHtml").includes("data-xrow")
+    || !fnSrc("dataDashDraftHtml").includes("data-xrow")) {
+    throw new Error("Data desks must mount Cuffs + Draft rows; Overview is Moves");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
     || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {

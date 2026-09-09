@@ -51,10 +51,11 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`generate-page.mjs`](../generate-page.mjs):
 
-- **Moves** (internal pane id `ping`) — Send (`move_extras`) and Get (`fill_holes`).
-  Player deals and picks. Get always tries a deeper idea if there is no hole
-  (upgrade / aging / depth / youth). Peek three unique counterparties. Tap a row
-  to price.
+- **Moves** (internal pane id `ping`) — Give (`move_extras`) and Get (`fill_holes`).
+  Five bands, Hold → Blow, like a portfolio: dart, leftover, even swap, window
+  push, blow-up. Each row is a different asset and a different counterparty.
+  Band describes how much the move changes your window. It does not move a
+  clock or VA. Tap a row to price.
 - **League** — ten full-width cycle rows in place order. Name + badge + one-line why. Tap
   opens the team view. Does **not** call `selectMe`.
 - **More** — Book · Tape · Lists · Draft · Cuffs · Seats. Research overflow, not the product.
@@ -202,12 +203,20 @@ call `selectMe` (that is Teams).
 
 **Hunt gates:**
 
-- `move_extras`: ping them only if their **buy** list includes that position. A tank does not
-  buy RB. They may appear as **takes your picks** — **one leftover per position** they will
-  buy, or **one pick per seat** (unique picks assigned, hungriest tanks first). Why is that
-  seat’s direction line, not the same “they want 2027 picks” on every row. Peek prefers three
-  different counterparties.
-- `fill_holes`: they appear as a source only if their **sell** list includes that position.
+- `move_extras` (Give) and `fill_holes` (Get) are a **five-band book**, not one
+  leftover copied to three tanks.
+  - **Hold** — late pick / cheap leftover / cuff-tier dart
+  - **Trim** — clear leftover (Golden-class)
+  - **Swap** — even mid-starter
+  - **Push** — aging starter or a 1st (changes the window)
+  - **Blow** — a stud (changes identity)
+- Peek is one row per band (Hold → Blow). Unique asset and unique counterparty.
+- Hold / Trim Give → tanks who buy young or picks.
+- Swap → Reload / anyone who buys that pos and does not refuse the starter.
+- Push / Blow Give of a starter or stud → Win-now / Reload who do not **refuse**
+  that starter. Never ARae RB starter. A Win-now with an empty `buy[]` may still
+  see a stud as a discussion idea. Refuse still vetoes.
+- Get from a tank is leftover they **sell**, never `they need RB`.
 - `block_fits`: same veto on “they need POS.” “On their block · you need POS” stays.
 - `stash_young` / picks: prefer Hard rebuild / Rebuild as counterparties.
 - `poach_cuffs`: unchanged (insurance, not tank intent).
@@ -226,13 +235,13 @@ Keep `data-calc-filter` and `data-cuff-q`.
 1. `h2` Data
 2. Quiet law: `Votes never enter these numbers.`
 3. Three panes: **Moves · League · More**
-4. Moves body (Send + Get) or League cycle list or More doors. League why always
-   lists held 2027s plus a pace caption (short / long / aging core / …). Pace
-   describes. It does not move a clock.
+4. Moves body (Give + Get, five bands each) or League cycle list or More doors.
+   League why always lists held 2027s plus a pace caption (short / long / aging
+   core / …). Pace describes. It does not move a clock.
 5. Hunt page / team view / desk replace the panes when open
 
 No new CSS system. Catalog stays 27. `DATA_SETS` stays 5. Titles are the definition:
-Send, Get, Hard rebuild. Keep explanations to one short line.
+Give, Get, Hold, Blow, Hard rebuild. Keep explanations to one short line.
 
 ---
 

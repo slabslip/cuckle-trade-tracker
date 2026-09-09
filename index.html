@@ -3252,6 +3252,22 @@
     }
     .data-hint { margin: 0 0 8px; font-size: 0.75rem; color: var(--muted); }
     .data-hunt-why { display: block; font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .data-xrow.data-band { align-items: flex-start; }
+    em.data-band-lab {
+      flex: 0 0 2.7rem; margin: 2px 0 0; font-size: 0.58rem; font-weight: 800;
+      font-style: normal; letter-spacing: 0.04em; text-transform: uppercase;
+      text-align: center; line-height: 1.15; color: #9ca3af;
+    }
+    .data-band-hold { box-shadow: inset 3px 0 0 #6b7280; }
+    .data-band-trim { box-shadow: inset 3px 0 0 #60a5fa; }
+    .data-band-swap { box-shadow: inset 3px 0 0 #e0b44c; }
+    .data-band-push { box-shadow: inset 3px 0 0 #fb923c; }
+    .data-band-blow { box-shadow: inset 3px 0 0 #f87171; }
+    .data-band-hold .data-band-lab { color: #9ca3af; }
+    .data-band-trim .data-band-lab { color: #93c5fd; }
+    .data-band-swap .data-band-lab { color: #e0b44c; }
+    .data-band-push .data-band-lab { color: #fb923c; }
+    .data-band-blow .data-band-lab { color: #f87171; }
     .data-peek { margin: 0 0 8px; }
     #dsBody .caption { margin: 0 0 8px; }
     /* News and Alerts. The user asked for "scrolling", and this scrolls because a finger or a
@@ -3748,7 +3764,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "moves20260909014500";
+    const DATA_V = "bands20260909020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3796,6 +3812,13 @@
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 12;
     const DATA_BLOCK_MAX = 8;
+    const DATA_BANDS = [
+      { id: "hold", lab: "Hold", rank: 0 },
+      { id: "trim", lab: "Trim", rank: 1 },
+      { id: "swap", lab: "Swap", rank: 2 },
+      { id: "push", lab: "Push", rank: 3 },
+      { id: "blow", lab: "Blow", rank: 4 },
+    ];
     const DATA_DASH_DEFAULT = [
       "fill_holes", "move_extras", "poach_cuffs", "available_cuffs",
       "uninsured", "stash_young", "draft_board", "held_picks",
@@ -3807,8 +3830,8 @@
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_REPORTS = [
-      { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Who has extras at spots you need." },
-      { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "One leftover or pick per seat who will take it." },
+      { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Five sizes of Get, Hold to Blow." },
+      { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Five sizes of Give, Hold to Blow." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
       { id: "stash_young", lab: "Stash young", desk: "book", group: "deal", size: "full", why: "Young mid-value pieces on other seats." },
       { id: "my_block", lab: "My block", desk: "book", group: "deal", size: "full", why: "Pieces you will actually deal." },
@@ -6672,6 +6695,265 @@
       return jobs;
     }
 
+    function dataDashBandSpec(id) {
+      for (let i = 0; i < DATA_BANDS.length; i++) {
+        if (DATA_BANDS[i].id === id) return DATA_BANDS[i];
+      }
+      return DATA_BANDS[0];
+    }
+
+    function dataDashIsLeftover(bag, a) {
+      const pos = homeDeskAssetPos(a);
+      if (!pos || pos === "PICK") return false;
+      const extras = dataDashBagExtras(bag, pos);
+      for (let i = 0; i < extras.length; i++) {
+        if (extras[i] && extras[i].id === a.id) return true;
+      }
+      return false;
+    }
+
+    function dataDashIsTank(dir) {
+      const lab = (dir && dir.label) || "";
+      return lab === "Hard rebuild" || lab === "Rebuild";
+    }
+
+    function dataDashPieceBand(a, bag) {
+      const pos = homeDeskAssetPos(a);
+      const v = calcValueNum(a);
+      if (pos === "PICK") {
+        const rnd = dataDashPickRound(a);
+        if (rnd === 1) return "push";
+        if (rnd === 2) return "trim";
+        return "hold";
+      }
+      if (v >= DESK_STUD) return "blow";
+      if (dataDashIsAging(a) && v >= DESK_MID) return "push";
+      if (dataDashIsLeftover(bag, a)) return v >= DESK_MID ? "trim" : "hold";
+      if (v >= DESK_START) return "swap";
+      if (v >= DESK_MID) return "trim";
+      return "hold";
+    }
+
+    function dataDashIntentTakesBand(dir, a, fromBag, band) {
+      if (!a) return false;
+      const pos = homeDeskAssetPos(a);
+      const starter = dataDashIsStarterPiece(fromBag, a);
+      if (starter && dir && dataDashHasToken(dir.refuse, pos + " starter")) return false;
+      if (band === "hold" || band === "trim") return dataDashIntentTakes(dir, a, fromBag);
+      if (dataDashIsTank(dir) && (band === "swap" || band === "push" || band === "blow") && pos !== "PICK") {
+        return false;
+      }
+      if (band === "push" && pos === "PICK") {
+        return !dir || dataDashHasToken(dir.buy, "picks");
+      }
+      if (dataDashIntentTakes(dir, a, fromBag)) return true;
+      if (!dir) return true;
+      if (dir.label === "Win-now" || dir.label === "Reload") return true;
+      return false;
+    }
+
+    function dataDashIntentSellsBand(dir, a, theirBag, band) {
+      if (!a) return false;
+      const pos = homeDeskAssetPos(a);
+      const starter = dataDashIsStarterPiece(theirBag, a);
+      if (pos === "PICK") return !dir || dataDashHasToken(dir.sell, "picks");
+      if (dataDashIsTank(dir) && (starter || calcValueNum(a) >= DESK_STUD)) return false;
+      if (band === "hold" || band === "trim") return dataDashIntentSells(dir, pos);
+      if (dataDashIsTank(dir)) return false;
+      return dataDashIntentSells(dir, pos);
+    }
+
+    function dataDashBandGiveWhy(band, theirDir, pos, a) {
+      if (band === "hold") {
+        return pos === "PICK" ? "late dart · they buy picks" : "cheap leftover · they buy young";
+      }
+      if (band === "trim") return "cut leftover " + pos + " · they buy young";
+      if (band === "swap") return "even " + pos + " · window stays";
+      if (band === "push") {
+        return pos === "PICK" ? "send a 1st · shift the window" : "move aging " + pos + " · they can use him now";
+      }
+      const lab = (theirDir && theirDir.label) || "Reload";
+      return "trade a stud · " + lab + " can compete now";
+    }
+
+    function dataDashBandGetWhy(band, pos, a) {
+      if (band === "hold") return "cheap dart · they sell leftover";
+      if (band === "trim") return "their leftover " + pos + " · wait and see";
+      if (band === "swap") return "even " + pos + " · change the flavor";
+      if (band === "push") {
+        return pos === "PICK" ? "buy a 1st · they sell picks" : "young " + pos + " · they will sell";
+      }
+      return "their best " + pos + " · blow it up if you want";
+    }
+
+    function dataDashBandSeatScore(side, band, theirDir, theirProf, a, fromBag) {
+      const pos = homeDeskAssetPos(a);
+      const tank = dataDashIsTank(theirDir);
+      const win = theirDir && theirDir.label === "Win-now";
+      const reload = !theirDir || theirDir.label === "Reload";
+      if (side === "give") {
+        if (!dataDashIntentTakesBand(theirDir, a, fromBag, band)) return -1;
+        if (band === "hold" || band === "trim") return tank ? 8 : 3;
+        if (band === "swap") return tank ? -1 : (reload ? 6 : 4);
+        if (band === "push" && pos === "PICK") return tank ? 8 : 3;
+        if (band === "push" || band === "blow") return tank ? -1 : (win ? 8 : 5);
+        return 1;
+      }
+      if (!dataDashIntentSellsBand(theirDir, a, fromBag, band)) return -1;
+      if (band === "hold" || band === "trim") return tank ? 7 : 3;
+      if (band === "swap") return tank ? -1 : (reload ? 6 : 4);
+      if (band === "push" && pos === "PICK") return win ? 8 : (tank ? 2 : 5);
+      if (band === "push" || band === "blow") return tank ? -1 : (win ? 6 : 7);
+      return 1;
+    }
+
+    function dataDashBandHits(side) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!mine) return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = bags.get(mine) || [];
+      const myProf = (typeof homeDeskProfile === "function")
+        ? homeDeskProfile(myBag)
+        : { holes: [], thin: [], surplus: [], deep: [], route: "Reload" };
+      const jobs = side === "get" ? dataDashImproveJobs(myBag, myProf) : [];
+      const agingPos = {};
+      for (let i = 0; i < myBag.length; i++) {
+        const p = homeDeskAssetPos(myBag[i]);
+        if (p && dataDashIsAging(myBag[i])) agingPos[p] = 1;
+      }
+      const rows = [];
+      const pushHit = function (a, uid, bag, band, score, why) {
+        const spec = dataDashBandSpec(band);
+        dataDashHuntPush(rows, {
+          id: a.id,
+          name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
+          themId: String(uid),
+          themName: dataDashSeatName(uid) || "them",
+          pos: homeDeskAssetPos(a),
+          why: why,
+          why2: "",
+          sendA: side === "give" ? a.id : "",
+          sendB: side === "get" ? a.id : "",
+          score: score,
+          band: spec.id,
+          bandLab: spec.lab,
+          bandRank: spec.rank,
+        });
+      };
+      if (side === "give") {
+        const pickSeats = [];
+        (members || []).forEach(function (m) {
+          const uid = String(m.user_id);
+          if (uid === mine) return;
+          pickSeats.push(uid);
+        });
+        for (let i = 0; i < myBag.length; i++) {
+          const a = myBag[i];
+          if (!a || !a.id) continue;
+          const pos = homeDeskAssetPos(a);
+          if (!pos) continue;
+          const v = calcValueNum(a);
+          if (v < 400) continue;
+          const band = dataDashPieceBand(a, myBag);
+          pickSeats.forEach(function (uid) {
+            const theirDir = seatDirOf(uid);
+            const theirBag = bags.get(uid) || [];
+            const theirProf = homeDeskProfile(theirBag);
+            let seat = dataDashBandSeatScore("give", band, theirDir, theirProf, a, myBag);
+            if (seat < 0) return;
+            if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, theirProf)) seat += 1;
+            if ((theirProf.deep || []).indexOf(pos) >= 0) seat -= 2;
+            if ((theirProf.holes || []).indexOf(pos) >= 0 && dataDashIntentBuys(theirDir, pos)) seat += 2;
+            if (band === "swap" && v >= (DESK_STUD - 400)) seat -= 3;
+            if (band === "push" && pos === "PICK") seat -= 2;
+            pushHit(a, uid, myBag, band, seat * 10 + Math.round(v / 400), dataDashBandGiveWhy(band, theirDir, pos, a));
+          });
+        }
+      } else {
+        bags.forEach(function (bag, uid) {
+          if (String(uid) === mine) return;
+          const theirDir = seatDirOf(uid);
+          const theirProf = homeDeskProfile(bag);
+          for (let i = 0; i < (bag || []).length; i++) {
+            const a = bag[i];
+            if (!a || !a.id) continue;
+            const pos = homeDeskAssetPos(a);
+            if (!pos) continue;
+            const v = calcValueNum(a);
+            if (v < 400) continue;
+            const band = dataDashPieceBand(a, bag);
+            let seat = dataDashBandSeatScore("get", band, theirDir, theirProf, a, bag);
+            if (seat < 0) continue;
+            if (band === "push" && pos !== "PICK" && !dataDashIsYoung(a)) continue;
+            if (band === "hold" && v >= DESK_START) continue;
+            if (band === "blow" && v < DESK_STUD) continue;
+            for (let j = 0; j < jobs.length; j++) {
+              if (jobs[j].pos === pos) {
+                seat += jobs[j].score;
+                if (jobs[j].kind === "age" && dataDashIsYoung(a)) seat += 3;
+              }
+            }
+            if (agingPos[pos] && dataDashIsYoung(a)) seat += 2;
+            if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, theirProf)) seat += 1;
+            pushHit(a, uid, bag, band, seat * 10 + Math.round(v / 400), dataDashBandGetWhy(band, pos, a));
+          }
+        });
+      }
+      rows.sort(function (a, b) {
+        return (a.bandRank - b.bandRank) || ((b.score || 0) - (a.score || 0));
+      });
+      return rows;
+    }
+
+    function dataDashBandPick(side) {
+      const hits = dataDashBandHits(side);
+      const out = [];
+      const usedAsset = {};
+      const usedSeat = {};
+      const take = function (relaxSeat) {
+        for (let b = 0; b < DATA_BANDS.length; b++) {
+          const id = DATA_BANDS[b].id;
+          if (out.some(function (r) { return r.band === id; })) continue;
+          let best = null;
+          for (let i = 0; i < hits.length; i++) {
+            const r = hits[i];
+            if (r.band !== id) continue;
+            if (usedAsset[r.id]) continue;
+            if (!relaxSeat && r.themId && usedSeat[r.themId]) continue;
+            if (!best || (r.score || 0) > (best.score || 0)) best = r;
+          }
+          if (!best) continue;
+          usedAsset[best.id] = 1;
+          if (best.themId) usedSeat[best.themId] = 1;
+          out.push(best);
+        }
+      };
+      take(false);
+      take(true);
+      out.sort(function (a, b) { return (a.bandRank - b.bandRank); });
+      return out;
+    }
+
+    function dataDashBandRows(side) {
+      const primary = dataDashBandPick(side);
+      const usedAsset = {};
+      const usedSeat = {};
+      primary.forEach(function (r) {
+        usedAsset[r.id] = 1;
+        if (r.themId) usedSeat[r.themId] = 1;
+      });
+      const extra = [];
+      const hits = dataDashBandHits(side);
+      for (let i = 0; i < hits.length && extra.length < 10; i++) {
+        const r = hits[i];
+        if (usedAsset[r.id] || (r.themId && usedSeat[r.themId])) continue;
+        usedAsset[r.id] = 1;
+        if (r.themId) usedSeat[r.themId] = 1;
+        extra.push(r);
+      }
+      return primary.concat(extra);
+    }
+
     function dataDashTheyNeedWhy(dir, pos, needW) {
       if (!needW || !dataDashIntentBuys(dir, pos)) return "";
       return "they " + (needW === "need" ? "need" : "are thin") + " " + pos;
@@ -6813,7 +7095,7 @@
         return "Claim your team to see this";
       }
       if (id === "fill_holes") return "No Get that both sides will take";
-      if (id === "move_extras") return "No Send that both sides will take";
+      if (id === "move_extras") return "No Give that both sides will take";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
       if (id === "stash_young") return "No young mid-value stashes on other seats";
       if (id === "available_cuffs") return "Nobody listed a backup you need";
@@ -6866,148 +7148,9 @@
         : { holes: [], thin: [], surplus: [], deep: [], route: "Reload" };
       const rows = [];
       if (id === "fill_holes") {
-        if (!mine) return [];
-        let jobs = dataDashNeedPos(myProf).map(function (pos) {
-          const needW = dataDashPosNeedWord(myProf, pos);
-          return {
-            pos: pos,
-            kind: "hole",
-            score: needW === "need" ? 8 : 6,
-            why: "you " + (needW === "need" ? "need" : "are thin") + " " + pos,
-          };
-        });
-        if (!jobs.length) jobs = dataDashImproveJobs(myBag, myProf);
-        bags.forEach(function (bag, uid) {
-          if (String(uid) === mine) return;
-          const theirDir = seatDirOf(uid);
-          const prof = homeDeskProfile(bag);
-          for (let i = 0; i < jobs.length; i++) {
-            const job = jobs[i];
-            const pos = job.pos;
-            if (!dataDashIntentSells(theirDir, pos)) continue;
-            const give = dataDashPosGiveWord(prof, pos);
-            let extras = dataDashBagExtras(bag, pos);
-            if (!extras.length) {
-              extras = (bag || []).filter(function (a) {
-                return homeDeskAssetPos(a) === pos && calcValueNum(a) >= DESK_MID
-                  && !dataDashIsQb1Rb1(bag, a);
-              }).sort(function (a, b) { return calcValueNum(a) - calcValueNum(b); }).slice(0, 2);
-            }
-            if (!extras.length) continue;
-            for (let j = 0; j < extras.length; j++) {
-              const a = extras[j];
-              let score = job.score + (give === "deep" ? 3 : 1);
-              if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
-              const v = calcValueNum(a);
-              if (v >= DESK_MID && v < DESK_STUD + 800) score += 1;
-              if (job.kind === "age" && dataDashIsYoung(a)) score += 2;
-              if (theirDir && (theirDir.label === "Hard rebuild" || theirDir.label === "Rebuild")) score += 1;
-              dataDashHuntPush(rows, {
-                id: a.id,
-                name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
-                themId: String(uid),
-                themName: a.owner || dataDashSeatName(uid),
-                pos: pos,
-                why: job.why + " · they sell " + pos,
-                why2: "",
-                sendA: "",
-                sendB: a.id,
-                score: score,
-              });
-            }
-          }
-        });
-        if (!rows.length) {
-          bags.forEach(function (bag, uid) {
-            if (String(uid) === mine) return;
-            const theirDir = seatDirOf(uid);
-            for (let i = 0; i < (bag || []).length; i++) {
-              const a = bag[i];
-              const pos = homeDeskAssetPos(a);
-              if (!pos || pos === "PICK" || !dataDashIsYoung(a)) continue;
-              if (calcValueNum(a) < DESK_MID || calcValueNum(a) >= DESK_STUD) continue;
-              if (dataDashIsQb1Rb1(bag, a)) continue;
-              if (!dataDashIntentSells(theirDir, pos)) continue;
-              dataDashHuntPush(rows, {
-                id: a.id,
-                name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
-                themId: String(uid),
-                themName: a.owner || dataDashSeatName(uid),
-                pos: pos,
-                why: "stash youth · they sell " + pos,
-                why2: "",
-                sendA: "",
-                sendB: a.id,
-                score: 4,
-              });
-            }
-          });
-        }
+        return dataDashBandRows("get");
       } else if (id === "move_extras") {
-        if (!mine) return [];
-        const sendPlayers = dataDashSendPlayers(myBag, myProf);
-        const pickSeats = [];
-        bags.forEach(function (bag, uid) {
-          if (String(uid) === mine) return;
-          const theirDir = seatDirOf(uid);
-          const prof = homeDeskProfile(bag);
-          let playerHits = 0;
-          for (let i = 0; i < sendPlayers.length; i++) {
-            const a = sendPlayers[i];
-            if (!dataDashIntentTakes(theirDir, a, myBag)) continue;
-            const pos = homeDeskAssetPos(a);
-            const giveW = dataDashPosGiveWord(myProf, pos) || (dataDashIsAging(a) ? "aging" : "extra");
-            const needW = dataDashPosNeedWord(prof, pos);
-            let score = 8 + (needW === "need" ? 3 : 1) + (giveW === "deep" ? 2 : 0);
-            if (dataDashIsYoung(a) && dataDashHasToken((theirDir && theirDir.buy) || [], "young")) score += 2;
-            if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
-            playerHits += 1;
-            dataDashHuntPush(rows, {
-              id: a.id,
-              name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
-              themId: String(uid),
-              themName: dataDashSeatName(uid) || "them",
-              pos: pos,
-              why: dataDashMoveWhy(theirDir, prof, pos, giveW),
-              why2: "",
-              sendA: a.id,
-              sendB: "",
-              score: score,
-            });
-          }
-          if (dataDashIntentBuys(theirDir, "PICK")) {
-            pickSeats.push({ uid: String(uid), dir: theirDir, playerHits: playerHits });
-          }
-        });
-        pickSeats.sort(function (a, b) {
-          const na = a.dir && a.dir.picks ? Number(a.dir.picks.net_2027_plus) || 0 : 0;
-          const nb = b.dir && b.dir.picks ? Number(b.dir.picks.net_2027_plus) || 0 : 0;
-          return nb - na;
-        });
-        const usedPick = {};
-        for (let i = 0; i < pickSeats.length; i++) {
-          const seat = pickSeats[i];
-          const pool = (myBag || []).filter(function (a) {
-            return homeDeskAssetPos(a) === "PICK" && calcValueNum(a) >= DESK_MID && !usedPick[a.id];
-          });
-          const pick = dataDashBestMovePick(pool.length ? pool : myBag, seat.dir);
-          if (!pick) continue;
-          usedPick[pick.id] = 1;
-          const tank = seat.dir && (seat.dir.label === "Hard rebuild" || seat.dir.label === "Rebuild");
-          const net = seat.dir && seat.dir.picks ? Number(seat.dir.picks.net_2027_plus) || 0 : 0;
-          dataDashHuntPush(rows, {
-            id: pick.id,
-            name: (typeof calcDisplayName === "function" ? calcDisplayName(pick) : pick.name) || pick.name,
-            themId: seat.uid,
-            themName: dataDashSeatName(seat.uid) || "them",
-            pos: "PICK",
-            why: dataDashPickMoveWhy(seat.dir),
-            why2: "",
-            sendA: pick.id,
-            sendB: "",
-            score: 5 + (tank ? 2 : 0) + Math.min(3, Math.max(0, net)),
-          });
-        }
+        return dataDashBandRows("give");
       } else if (id === "poach_cuffs") {
         if (!mine) return [];
         if (typeof ensureCuffs === "function") ensureCuffs();
@@ -7185,22 +7328,9 @@
     }
 
     function dataDashHuntPeekRows(id) {
-      const all = dataDashHuntRows(id);
-      if (id !== "move_extras" && id !== "fill_holes") return all.slice(0, 3);
-      const out = [];
-      const seen = {};
-      const take = function (pred) {
-        for (let i = 0; i < all.length && out.length < 3; i++) {
-          if (pred && !pred(all[i])) continue;
-          const k = String(all[i].themId || "");
-          if (k && seen[k]) continue;
-          if (k) seen[k] = 1;
-          out.push(all[i]);
-        }
-      };
-      take(function (r) { return r.pos && r.pos !== "PICK"; });
-      take(null);
-      return out;
+      if (id === "move_extras") return dataDashBandPick("give");
+      if (id === "fill_holes") return dataDashBandPick("get");
+      return dataDashHuntRows(id).slice(0, 3);
     }
 
     function dataDashHuntPeekHtml(id) {
@@ -7217,11 +7347,13 @@
     function dataDashHuntRowHtml(r) {
       const meta = [r.themName, r.pos].filter(Boolean).join(" · ");
       const why = [r.why, r.why2].filter(Boolean).join(" · ");
-      let html = '<button type="button" class="data-xrow" data-dash-fit="1"'
+      const band = r.band ? String(r.band) : "";
+      let html = '<button type="button" class="data-xrow' + (band ? (" data-band data-band-" + band) : "") + '" data-dash-fit="1"'
         + ' data-fit-them="' + esc(r.themId || "") + '"'
         + ' data-fit-a="' + esc(r.sendA || "") + '"'
-        + ' data-fit-b="' + esc(r.sendB || "") + '">'
-        + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.name) + "</span>"
+        + ' data-fit-b="' + esc(r.sendB || "") + '">';
+      if (r.bandLab) html += '<em class="data-band-lab">' + esc(r.bandLab) + "</em>";
+      html += '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.name) + "</span>"
         + '<span class="data-xrow-meta">' + esc(meta) + "</span>"
         + (why ? '<span class="data-hunt-why">' + esc(why) + "</span>" : "")
         + "</div>";
@@ -7272,10 +7404,12 @@
             + lab + "</button>";
         }).join("")
         + "</div>";
-      const huntTitle = id === "move_extras" ? "Send" : (id === "fill_holes" ? "Get" : spec.lab);
+      const huntTitle = id === "move_extras" ? "Give" : (id === "fill_holes" ? "Get" : spec.lab);
       const huntSub = id === "move_extras"
-        ? "Who will take extras."
-        : (id === "fill_holes" ? "Who will sell what you need." : spec.why);
+        ? "Hold a dart. Trim a leftover. Swap even. Push the window. Blow it up."
+        : (id === "fill_holes"
+          ? "Same five sizes, from their bag."
+          : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
         + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Moves</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(huntTitle) + "</h2>"
@@ -7650,16 +7784,23 @@
 
     function dataDashSmartMovesVs(uid) {
       const mine = authSeatId() ? String(authSeatId()) : "";
-      const fill = dataDashHuntRows("fill_holes");
-      const move = dataDashHuntRows("move_extras");
-      let rows = fill.concat(move);
-      if (mine && String(uid) === mine) {
-        rows.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-        return rows.slice(0, 3);
+      if (mine && String(uid) === mine) return dataDashBandPick("give").slice(0, 3);
+      const hits = dataDashBandHits("give").concat(dataDashBandHits("get"))
+        .filter(function (r) { return String(r.themId) === String(uid); });
+      hits.sort(function (a, b) {
+        return (a.bandRank - b.bandRank) || ((b.score || 0) - (a.score || 0));
+      });
+      const out = [];
+      const usedAsset = {};
+      const usedBand = {};
+      for (let i = 0; i < hits.length && out.length < 3; i++) {
+        const r = hits[i];
+        if (usedAsset[r.id] || (r.band && usedBand[r.band])) continue;
+        usedAsset[r.id] = 1;
+        if (r.band) usedBand[r.band] = 1;
+        out.push(r);
       }
-      rows = rows.filter(function (r) { return String(r.themId) === String(uid); });
-      rows.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
-      return rows.slice(0, 3);
+      return out;
     }
 
     function dataDashSeatPageHtml(uid) {
@@ -7963,15 +8104,15 @@
     function dataDashPingHtml() {
       if (!authSeatId()) {
         return '<div class="data-ping">'
-          + '<div class="data-sec"><div class="data-sec-h">Send</div>'
-          + '<p class="data-sec-sub">Players and picks they will take.</p></div>'
+          + '<div class="data-sec"><div class="data-sec-h">Give</div>'
+          + '<p class="data-sec-sub">Hold a dart. Trim a leftover. Swap even. Push the window. Blow it up.</p></div>'
           + '<div class="data-sec"><div class="data-sec-h">Get</div>'
-          + '<p class="data-sec-sub">Players they will sell you.</p></div>'
+          + '<p class="data-sec-sub">Same five sizes, from their bag.</p></div>'
           + '<p class="data-hint">Claim your seat to see ideas.</p></div>';
       }
       return '<div class="data-ping">'
-        + dataDashPingList("move_extras", "Send", "Players and picks they will take.")
-        + dataDashPingList("fill_holes", "Get", "Players they will sell you.")
+        + dataDashPingList("move_extras", "Give", "Hold a dart. Trim a leftover. Swap even. Push the window. Blow it up.")
+        + dataDashPingList("fill_holes", "Get", "Same five sizes, from their bag.")
         + "</div>";
     }
 

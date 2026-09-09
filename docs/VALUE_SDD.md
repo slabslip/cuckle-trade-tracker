@@ -319,7 +319,9 @@ A team on a side is optional: the same book can price a research bag (type any p
 or a seat bag (that roster plus its remaining draft capital). Roster meta and selected player
 rows may chip buy / fair / sell from `pe.json` (signal only). Pick rows expose a **tape**
 toggle: collapsed copy is became / still a pick; hop values stay inside the open tape.
-Votes do not appear on a hypothetical and do not change the number. This is the first reachable
+**Share.** A priced 2-side deal can be exported as one PNG (`calcShareDraw`) for the
+phone share sheet / Messages. Numbers on the card are the same receive totals and
+pile VA as the calculator. Votes do not appear on a hypothetical and do not change the number. This is the first reachable
 screen that **renders** `even`. The five Score-as windows stay flatten-only.
 
 **League leftover (HAVE).** After both sides hold priced legs, the compare block shows each

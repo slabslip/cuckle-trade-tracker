@@ -1774,6 +1774,14 @@
     }
     .calc-favor { font-weight: 750; margin: 0 0 4px; }
     .calc-favor.is-ahead { color: var(--lh-gold, #e0b44c); }
+    button.calc-share {
+      appearance: none; font: inherit; font-weight: 750; color: #e0b44c;
+      width: 100%; min-height: 44px; margin: 10px 0 0; padding: 10px 14px;
+      border-radius: 12px; border: 1px solid #6b5a2e; background: #1a1810;
+      cursor: pointer; box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.22);
+    }
+    button.calc-share:focus-visible { outline: 2px solid #e0b44c; outline-offset: 2px; }
+    .calc-share-note { margin: 6px 0 0; }
     .calc-even { margin: 0; }
     .calc-even-h {
       font-size: 0.75rem; font-weight: 650; letter-spacing: 0.03em; text-transform: uppercase;
@@ -3898,7 +3906,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcMeterCenter20260909162500";
+    const DATA_V = "calcShareCard20260909164000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4037,6 +4045,7 @@
     let calcSeatMenu = "";
     let calcSeatIgnoreOpenUntil = 0;
     let calcInfoOpen = false;
+    let calcShareNote = "";
     let calcHopOpen = "";
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
@@ -18183,6 +18192,7 @@
       calcHitsScrollA = 0;
       calcHitsScrollB = 0;
       calcHopOpen = "";
+      calcShareNote = "";
     }
 
     function calcArmQuiet(ms) {
@@ -18351,6 +18361,298 @@
       return Math.max(3, Math.min(50, Math.round((g / 3000) * 50)));
     }
 
+    function calcShareReady() {
+      if (!calcLegsA.length || !calcLegsB.length) return false;
+      const pricedA = calcLegsA.some((l) => l.value != null);
+      const pricedB = calcLegsB.some((l) => l.value != null);
+      return !!(pricedA && pricedB);
+    }
+
+    function calcShareText(spec) {
+      const s = spec || calcShareSpec();
+      if (!s) return "Cuckle trade";
+      if (s.even) return s.nameA + " / " + s.nameB + " · Even on our book";
+      return s.nameA + " / " + s.nameB + " · Favors " + s.favors + " by " + calcFmt(s.need);
+    }
+
+    function calcShareSpec() {
+      if (!calcShareReady()) return null;
+      const rec = calcReceiveTotals(calcLegsA, calcLegsB);
+      const receiveA = rec.receiveA;
+      const receiveB = rec.receiveB;
+      const d = displayDelta(receiveA, receiveB);
+      const nameA = calcSeatName(calcSeatA, "Team 1");
+      const nameB = calcSeatName(calcSeatB, "Team 2");
+      const even = Math.abs(d) < 25;
+      const favors = even ? "Even" : (d > 0 ? nameA : nameB);
+      return {
+        nameA: nameA,
+        nameB: nameB,
+        linesA: calcLegsA,
+        linesB: calcLegsB,
+        vaA: rec.vaB || 0,
+        vaB: rec.vaA || 0,
+        totA: calcCardTotal(calcLegsA, rec.vaB),
+        totB: calcCardTotal(calcLegsB, rec.vaA),
+        receiveA: receiveA,
+        receiveB: receiveB,
+        d: d,
+        even: even,
+        favors: favors,
+        need: Math.abs(d),
+        pct: calcBarFill(d),
+        fillRight: receiveB > receiveA,
+      };
+    }
+
+    function calcShareFit(ctx, text, maxW) {
+      const raw = String(text || "");
+      if (ctx.measureText(raw).width <= maxW) return raw;
+      let s = raw;
+      while (s.length && ctx.measureText(s + "...").width > maxW) s = s.slice(0, -1);
+      return s + "...";
+    }
+
+    function calcShareRound(ctx, x, y, w, h, r) {
+      const rad = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, w, h, rad);
+      } else {
+        ctx.moveTo(x + rad, y);
+        ctx.lineTo(x + w - rad, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+        ctx.lineTo(x + w, y + h - rad);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+        ctx.lineTo(x + rad, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+        ctx.lineTo(x, y + rad);
+        ctx.quadraticCurveTo(x, y, x + rad, y);
+      }
+      ctx.closePath();
+    }
+
+    function calcShareCol(ctx, x, y, w, title, legs, va, tot) {
+      const lineH = 52;
+      const cap = 8;
+      ctx.fillStyle = "#9a9aa3";
+      ctx.font = "600 22px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(calcShareFit(ctx, title, w), x, y);
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 14);
+      ctx.lineTo(x + w, y + 14);
+      ctx.stroke();
+      let cy = y + 52;
+      const show = (legs || []).slice(0, cap);
+      for (let i = 0; i < show.length; i++) {
+        const l = show[i];
+        const name = calcDisplayName(l) || l.label || l.name || "Piece";
+        const meta = calcMeta(l, false, true);
+        ctx.fillStyle = "#f0f0f0";
+        ctx.font = "650 26px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(calcShareFit(ctx, name, w - 150), x, cy);
+        ctx.textAlign = "right";
+        ctx.font = "700 26px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.fillText(l.value == null ? "—" : calcFmt(l.value), x + w, cy);
+        if (meta) {
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#8a8a93";
+          ctx.font = "500 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+          ctx.fillText(calcShareFit(ctx, meta, w - 160), x, cy + 22);
+        }
+        cy += lineH;
+      }
+      if ((legs || []).length > cap) {
+        ctx.fillStyle = "#8a8a93";
+        ctx.font = "600 20px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("+" + ((legs || []).length - cap) + " more", x, cy);
+        cy += 36;
+      }
+      if (va && Math.round(va)) {
+        ctx.fillStyle = "#d4c07a";
+        ctx.font = "650 22px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Value Adjustment", x, cy);
+        ctx.textAlign = "right";
+        ctx.fillText(signedNum(va), x + w, cy);
+        cy += 40;
+      }
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, cy - 12);
+      ctx.lineTo(x + w, cy - 12);
+      ctx.stroke();
+      ctx.fillStyle = "#f0f0f0";
+      ctx.font = "800 36px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(calcFmt(tot), x + w, cy + 28);
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#8a8a93";
+      ctx.font = "600 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText(calcPieces(legs), x, cy + 28);
+      return cy + 36;
+    }
+
+    function calcShareDraw() {
+      const spec = calcShareSpec();
+      if (!spec) return null;
+      const W = 1080;
+      const PAD = 56;
+      const GUT = 40;
+      const colW = (W - PAD * 2 - GUT) / 2;
+      const cap = 8;
+      const nA = Math.min((spec.linesA || []).length, cap) + ((spec.linesA || []).length > cap ? 1 : 0);
+      const nB = Math.min((spec.linesB || []).length, cap) + ((spec.linesB || []).length > cap ? 1 : 0);
+      const extraA = (spec.vaA && Math.round(spec.vaA)) ? 1 : 0;
+      const extraB = (spec.vaB && Math.round(spec.vaB)) ? 1 : 0;
+      const colH = 80 + Math.max(nA + extraA, nB + extraB) * 52 + 56;
+      const H = 200 + colH + 280;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.fillStyle = "#0b0b0d";
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 2;
+      calcShareRound(ctx, 24, 24, W - 48, H - 48, 28);
+      ctx.stroke();
+      ctx.fillStyle = "#e0b44c";
+      ctx.font = "750 20px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("CUCKLE", PAD, 78);
+      ctx.fillStyle = "#f0f0f0";
+      ctx.font = "800 44px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText("Trade", PAD, 128);
+      const y0 = 168;
+      const bottomA = calcShareCol(ctx, PAD, y0, colW, spec.nameA + " sends", spec.linesA, spec.vaA, spec.totA);
+      const bottomB = calcShareCol(ctx, PAD + colW + GUT, y0, colW, spec.nameB + " sends", spec.linesB, spec.vaB, spec.totB);
+      let fy = Math.max(bottomA, bottomB) + 28;
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(PAD, fy);
+      ctx.lineTo(W - PAD, fy);
+      ctx.stroke();
+      fy += 48;
+      ctx.fillStyle = "#9a9aa3";
+      ctx.font = "600 20px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(spec.nameA + " receives", PAD, fy);
+      ctx.textAlign = "right";
+      ctx.fillText(spec.nameB + " receives", W - PAD, fy);
+      fy += 36;
+      ctx.fillStyle = "#f0f0f0";
+      ctx.font = "800 34px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(calcFmt(spec.receiveA), PAD, fy);
+      ctx.textAlign = "right";
+      ctx.fillText(calcFmt(spec.receiveB), W - PAD, fy);
+      fy += 36;
+      const trackX = PAD;
+      const trackW = W - PAD * 2;
+      const trackY = fy;
+      const trackH = 18;
+      ctx.fillStyle = "#2a2a30";
+      calcShareRound(ctx, trackX, trackY, trackW, trackH, 999);
+      ctx.fill();
+      if (spec.pct) {
+        const mid = trackX + trackW / 2;
+        const fillW = (spec.pct / 100) * trackW;
+        ctx.fillStyle = "#e0b44c";
+        if (spec.fillRight) {
+          calcShareRound(ctx, mid, trackY, fillW, trackH, 999);
+        } else {
+          calcShareRound(ctx, mid - fillW, trackY, fillW, trackH, 999);
+        }
+        ctx.fill();
+      }
+      ctx.fillStyle = "#0b0b0d";
+      ctx.fillRect(trackX + trackW / 2 - 2, trackY, 4, trackH);
+      fy += 56;
+      ctx.textAlign = "left";
+      ctx.font = "750 28px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      if (spec.even) {
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillText("Even on our book", PAD, fy);
+      } else {
+        ctx.fillStyle = "#e0b44c";
+        ctx.fillText("Favors " + spec.favors + "  ·  " + calcFmt(spec.need), PAD, fy);
+      }
+      ctx.fillStyle = "#8a8a93";
+      ctx.font = "500 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillText("Chuckle Fantasy", PAD, H - 48);
+      return canvas;
+    }
+
+    function calcShareBlob(canvas) {
+      const dataUrl = canvas.toDataURL("image/png");
+      const parts = dataUrl.split(",");
+      const bin = atob(parts[1] || "");
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: "image/png" });
+    }
+
+    function calcShareSave(blob, note) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cuckle-trade.png";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
+      calcShareNote = note || "Saved image";
+      render();
+    }
+
+    function calcShareNow() {
+      if (!calcShareReady()) {
+        calcShareNote = "Add priced assets on both sides.";
+        render();
+        return;
+      }
+      const canvas = calcShareDraw();
+      if (!canvas) {
+        calcShareNote = "Could not build that image.";
+        render();
+        return;
+      }
+      const blob = calcShareBlob(canvas);
+      const file = new File([blob], "cuckle-trade.png", { type: "image/png" });
+      const text = calcShareText();
+      const payload = { files: [file], title: "Cuckle trade", text: text };
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share(payload).then(function () {
+          calcShareNote = "Sent";
+          render();
+        }).catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          calcShareSave(blob, "Saved image");
+        });
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () {
+          calcShareNote = "Copied image";
+          render();
+        }).catch(function () {
+          calcShareSave(blob, "Saved image");
+        });
+        return;
+      }
+      calcShareSave(blob, "Saved image");
+    }
+
     function calcSideBag(legs, otherLegs) {
       const mine = legs || [];
       const theirs = otherLegs || [];
@@ -18506,6 +18808,8 @@
           : "")
         + '<div class="calc-bar-mid"></div></div>'
         + '<div class="calc-favor' + (even ? "" : " is-ahead") + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
+        + '<button type="button" class="calc-share" data-calc-share="1">Share trade</button>'
+        + '<p class="caption calc-share-note">' + (calcShareNote ? esc(calcShareNote) : "One image. Opens Messages or your share sheet.") + "</p>"
         + (even ? "" : '<p class="caption">' + esc(favors) + " would receive " + calcFmt(need) + " more on our book.</p>")
         + (even ? "" : '<p class="caption">' + esc(shortName) + " can send " + calcFmt(need) + " more to even it.</p>")
         + (even ? "" : calcEvenHtml(need, short))
@@ -18848,6 +19152,9 @@
         + "count for more than its sticker. The gold line sits on the star send card and "
         + "the card total includes it. Compare receives and Favors use the same add. "
         + "Recorded league trades store the same.</p>"
+        + "<p><b>Share trade</b> paints that deal as one image and opens your share sheet "
+        + "so you can text it. The picture is the two send piles, the gold line, the "
+        + "receive totals, and the meter.</p>"
         + "</div></div>";
     }
 
@@ -21886,6 +22193,11 @@
           return;
         }
         // vote uses data-board-open on the same button; fall through
+      }
+      const calcShareBtn = e.target.closest("[data-calc-share]");
+      if (calcShareBtn) {
+        calcShareNow();
+        return;
       }
       const calcInfoBtn = e.target.closest("[data-calc-info]");
       if (calcInfoBtn) {

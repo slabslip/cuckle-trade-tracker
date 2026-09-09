@@ -245,6 +245,10 @@ not appear on a hypothetical and do not change the number. How-it-works copy doe
 sit on the screen: one **Info** control at the bottom opens the blend formula,
 the VA formula (`0.15 × extras × star × damp`), and a
 worked example.
+After both sides are priced, **Share trade** paints one dark card image (send piles,
+VA, receive totals, center-out meter) and opens the OS share sheet so it can be
+texted as a single picture. File share when the browser allows it; otherwise copy
+or download `cuckle-trade.png`.
 
 ### 3c. Titles and Emblems
 

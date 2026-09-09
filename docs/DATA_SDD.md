@@ -51,11 +51,11 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`generate-page.mjs`](../generate-page.mjs):
 
-- **Moves** (internal pane id `ping`) — Give (`move_extras`) and Get (`fill_holes`).
-  Five bands, Hold → Blow, like a portfolio: dart, leftover, even swap, window
-  push, blow-up. Each row is a different asset and a different counterparty.
-  Band describes how much the move changes your window. It does not move a
-  clock or VA. Tap a row to price.
+- **Moves** (internal pane id `ping`) — **Plan** first, then Give (`move_extras`)
+  and Get (`fill_holes`) as a color book. Sizes are Dart / Cut / Even / Shift /
+  Star (`micro` → `mega`). Color is the category. Plan picks the 3–5 most
+  impactful ideas and may cluster in one size. The book is not one-per-band.
+  Size describes the piece. It does not move a clock or VA. Tap a row to price.
 - **League** — ten full-width cycle rows in place order. Name + badge + one-line why. Tap
   opens the team view. Does **not** call `selectMe`.
 - **More** — Book · Tape · Lists · Draft · Cuffs · Seats. Research overflow, not the product.
@@ -203,17 +203,21 @@ call `selectMe` (that is Teams).
 
 **Hunt gates:**
 
-- `move_extras` (Give) and `fill_holes` (Get) are a **five-band book**, not one
-  leftover copied to three tanks.
-  - **Hold** — late pick / cheap leftover / cuff-tier dart
-  - **Trim** — clear leftover (Golden-class)
-  - **Swap** — even mid-starter
-  - **Push** — aging starter or a 1st (changes the window)
-  - **Blow** — a stud (changes identity)
-- Peek is one row per band (Hold → Blow). Unique asset and unique counterparty.
-- Hold / Trim Give → tanks who buy young or picks.
-- Swap → Reload / anyone who buys that pos and does not refuse the starter.
-- Push / Blow Give of a starter or stud → Win-now / Reload who do not **refuse**
+- `move_extras` (Give) and `fill_holes` (Get) are a **color book**, not one
+  leftover copied to three tanks, and not a forced one-per-size sampler.
+  - **Dart** (`micro`, gray) — late pick / cheap leftover
+  - **Cut** (`small`, blue) — clear leftover
+  - **Even** (`mid`, gold) — mid-starter, window stays
+  - **Shift** (`large`, orange) — aging starter or a 1st
+  - **Star** (`mega`, red) — stud / identity piece
+- **Plan** (Moves, above Give/Get): 3–5 impact picks, Give and Get mixed. May
+  be three Shifts. Skip Dart/Cut when they are noise. Thesis names the tilt.
+  Schema is in-page only (`dataDashPlanBuild`). No new fetch. Votes never enter.
+- Book peek: up to 8 unique assets, grouped gray → red. Unique seat preferred,
+  not required.
+- Dart / Cut Give → tanks who buy young or picks.
+- Even → Reload / anyone who buys that pos and does not refuse the starter.
+- Shift / Star Give of a starter or stud → Win-now / Reload who do not **refuse**
   that starter. Never ARae RB starter. A Win-now with an empty `buy[]` may still
   see a stud as a discussion idea. Refuse still vetoes.
 - Get from a tank is leftover they **sell**, never `they need RB`.
@@ -222,6 +226,25 @@ call `selectMe` (that is Teams).
 - `poach_cuffs`: unchanged (insurance, not tank intent).
 - Why line never writes `they need RB` on a refuse position.
 - Home Move talks: same veto. Still 1–3 cards. Do not change gap / VA / calc numbers.
+
+**Plan schema** (client only, not persisted):
+
+```text
+plan: {
+  v: 1,
+  seat, thesis, tilt,          // tilt = micro|small|mid|large|mega
+  items: [{
+    id, side,                  // give | get
+    size, color,               // micro..mega + gray..red
+    asset_id, name, pos,
+    them_id, them_name,
+    why, sendA, sendB,
+    impact                     // rank only; not VA / not a clock
+  }]
+}
+```
+
+Impact ranks intent fit and window change. It does not pad the slate with a dart.
 
 ---
 
@@ -235,13 +258,14 @@ Keep `data-calc-filter` and `data-cuff-q`.
 1. `h2` Data
 2. Quiet law: `Votes never enter these numbers.`
 3. Three panes: **Moves · League · More**
-4. Moves body (Give + Get, five bands each) or League cycle list or More doors.
+4. Moves body (Plan + Give book + Get book) or League cycle list or More doors.
    League why always lists held 2027s plus a pace caption (short / long / aging
    core / …). Pace describes. It does not move a clock.
 5. Hunt page / team view / desk replace the panes when open
 
 No new CSS system. Catalog stays 27. `DATA_SETS` stays 5. Titles are the definition:
-Give, Get, Hold, Blow, Hard rebuild. Keep explanations to one short line.
+Plan, Give, Get, Dart, Star, Hard rebuild. Keep explanations to one short line.
+Do not write Blow.
 
 ---
 

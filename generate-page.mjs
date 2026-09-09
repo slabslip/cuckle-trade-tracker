@@ -3914,7 +3914,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcCuffNfl20260909183000";
+    const DATA_V = "calcCuffLead20260909184000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18372,6 +18372,32 @@ const html = `<!DOCTYPE html>
     const CUFF_LIFT_PRICED = 0.5;
     const CUFF_MOVE_CAP = 650;
     const CUFF_INSURANCE_CAP = 350;
+    const CUFF_MAX_RATIO = 0.5;
+    const CUFF_TEAM_ALIAS = {
+      GB: "GBP", GNB: "GBP", JAX: "JAC", TB: "TBB", TAM: "TBB",
+      LV: "LVR", OAK: "LVR", NE: "NEP", NO: "NOS", KC: "KCC",
+      SF: "SFO", WSH: "WAS", LA: "LAR",
+    };
+
+    function cuffNormTeam(team) {
+      const t = String(team || "").toUpperCase();
+      return CUFF_TEAM_ALIAS[t] || t;
+    }
+
+    function cuffLeagueLead(meta) {
+      const lead = {};
+      const ids = Object.keys(meta || {});
+      for (let i = 0; i < ids.length; i++) {
+        const o = meta[ids[i]] || {};
+        const pos = String(o.pos || "").toUpperCase();
+        const team = cuffNormTeam(o.team);
+        const v = Number(o.value);
+        if (!pos || !team || !(v > 0)) continue;
+        const key = team + "|" + pos;
+        if (!lead[key] || v > lead[key].value) lead[key] = { id: ids[i], value: v };
+      }
+      return lead;
+    }
 
     function cuffSeasonTiming(week) {
       return Number(week) <= 8 ? "early" : "late";
@@ -18470,37 +18496,26 @@ const html = `<!DOCTYPE html>
       const meta = (opts && opts.meta) || {};
       const injury = (opts && opts.injury) || {};
       const week = Number(opts && opts.week) || 1;
+      const lead = cuffLeagueLead(meta);
       let total = 0;
       const ids = Object.keys(recv);
       for (let i = 0; i < ids.length; i++) {
         const cuffId = ids[i];
         const m = meta[cuffId] || {};
         const pos = String(m.pos || "").toUpperCase();
-        const team = String(m.team || "").toUpperCase();
+        const team = cuffNormTeam(m.team);
         const cuffVal = Number(recv[cuffId]);
         if (!pos || !team || !(cuffVal > 0)) continue;
-        let starterId = "";
-        let starterVal = 0;
-        const held = Object.keys(have);
-        for (let j = 0; j < held.length; j++) {
-          const id = held[j];
-          if (id === cuffId) continue;
-          const o = meta[id] || {};
-          if (String(o.team || "").toUpperCase() !== team) continue;
-          if (String(o.pos || "").toUpperCase() !== pos) continue;
-          const v = Number(o.value);
-          if (v > starterVal) {
-            starterVal = v;
-            starterId = id;
-          }
-        }
-        if (!starterId || !(starterVal > 0) || cuffVal >= starterVal) continue;
-        const holdW = had[starterId] ? 1 : 0.5;
-        const inj = cuffIsInjured(injury[starterId]);
+        const top = lead[team + "|" + pos];
+        if (!top || cuffId === top.id || !have[top.id]) continue;
+        if (!(top.value > 0) || cuffVal >= top.value) continue;
+        if (cuffVal / top.value >= CUFF_MAX_RATIO) continue;
+        const holdW = had[top.id] ? 1 : 0.5;
+        const inj = cuffIsInjured(injury[top.id]);
         total += cuffInsurance({
           pos: pos,
           cuff: cuffVal,
-          starter: starterVal,
+          starter: top.value,
           holdW: holdW,
           injured: inj.injured,
           week: week,
@@ -19392,10 +19407,10 @@ const html = `<!DOCTYPE html>
         + "If the extras include a bigger name, the bump shrinks.</p>"
         + "<h3>4. Handcuff</h3>"
         + "<p>A second gold line, not extras VA. It fires on a 2-team deal when a seat "
-        + "<b>receives an NFL backup</b> (same team and position) and <b>still holds "
-        + "that starter</b> after the swap. Not limited to a seat&rsquo;s fantasy RB1 "
-        + "&mdash; Javonte / Malik counts even when Javonte is not Bubba&rsquo;s KTC RB1. "
-        + "WR is off. Equal-count 1-for-1 can fire. N-way stays 0.</p>"
+        + "<b>receives an NFL backup</b> and <b>still holds that team&rsquo;s lead</b> "
+        + "at the same position (highest today in our book). Two backups do not pair. "
+        + "A 1B at half or more of the lead is a committee, not a cuff. Team codes are "
+        + "normalized (GB / GBP). WR is off. Equal-count 1-for-1 can fire. N-way stays 0.</p>"
         + "<p>Already held the starter: full insurance. Got both in this deal: half. "
         + "Starter Out / IR: use the injury move (early vs late, how long they are out). "
         + "Questionable stays insurance.</p>"
@@ -25772,8 +25787,13 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("function cuffInsurance(opts)")
   || !inline.includes("function cuffPairAdds(opts)")
   || !inline.includes("function cuffTeammateAdds(opts)")
+  || !inline.includes("function cuffLeagueLead(meta)")
+  || !inline.includes("function cuffNormTeam(team)")
+  || !inline.includes("CUFF_MAX_RATIO")
   || !inline.includes("function calcCuffBump(uid, sendLegs, recvLegs)")
   || !fnSrc("calcCuffBump").includes("cuffTeammateAdds")
+  || !fnSrc("cuffTeammateAdds").includes("cuffLeagueLead")
+  || !fnSrc("cuffTeammateAdds").includes("CUFF_MAX_RATIO")
   || !inline.includes('span>Handcuff</span>')
   || !fnSrc("calcReceiveTotals").includes("calcCuffBump(uidA, sendA, sendB)")
   || !fnSrc("calcBarFill").includes("g / 3000")

@@ -113,6 +113,40 @@ const malikOpts = {
 };
 if (pageCuff.cuffTeammateAdds(malikOpts) !== cuffTeammateAdds(malikOpts)) fail("inline cuffTeammateAdds != cuff-formula.mjs");
 if (pageCuff.cuffTeammateAdds(malikOpts) !== 42) fail("Javonte / Malik Handcuff must be +42, got " + pageCuff.cuffTeammateAdds(malikOpts));
+const twoBackup = {
+  recv: { "11589": 1526 },
+  haveAfter: { "8132": true, "11589": true },
+  hadStarter: { "8132": true },
+  meta: {
+    "13287": { value: 7035, pos: "RB", team: "ARI" },
+    "8132": { value: 2420, pos: "RB", team: "ARI" },
+    "11589": { value: 1526, pos: "RB", team: "ARI" },
+  },
+  week: 1,
+};
+if (pageCuff.cuffTeammateAdds(twoBackup) !== 0) fail("two backups must not pair, got " + pageCuff.cuffTeammateAdds(twoBackup));
+const committee = {
+  recv: { "7594": 2786 },
+  haveAfter: { "11583": true, "7594": true },
+  hadStarter: { "11583": true },
+  meta: {
+    "11583": { value: 3168, pos: "RB", team: "CAR" },
+    "7594": { value: 2786, pos: "RB", team: "CAR" },
+  },
+  week: 1,
+};
+if (pageCuff.cuffTeammateAdds(committee) !== 0) fail("committee 1B must not pair, got " + pageCuff.cuffTeammateAdds(committee));
+const aliasTe = {
+  recv: { "4144": 764 },
+  haveAfter: { "9484": true, "4144": true },
+  hadStarter: { "9484": true },
+  meta: {
+    "4144": { value: 764, pos: "TE", team: "GB" },
+    "9484": { value: 4589, pos: "TE", team: "GBP" },
+  },
+  week: 1,
+};
+if (pageCuff.cuffTeammateAdds(aliasTe) !== 5) fail("GB/GBP Kraft / Jonnu must be +5, got " + pageCuff.cuffTeammateAdds(aliasTe));
 if (!src.includes("function calcCuffBump(uid, sendLegs, recvLegs)")
   || !src.includes("function cuffTeammateAdds(opts)")
   || !src.includes("span>Handcuff</span>")) {

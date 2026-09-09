@@ -21,6 +21,44 @@ export const CUFF_MOVE_CAP = 650;
 export const CUFF_INSURANCE_CAP = 350;
 export const CUFF_HOLD_HAD_STARTER = 1;
 export const CUFF_HOLD_GOT_BOTH = 0.5;
+/** At or above this share of the lead, it is a committee / 1B, not a cuff. */
+export const CUFF_MAX_RATIO = 0.5;
+export const CUFF_TEAM_ALIAS = {
+  GB: "GBP",
+  GNB: "GBP",
+  JAX: "JAC",
+  TB: "TBB",
+  TAM: "TBB",
+  LV: "LVR",
+  OAK: "LVR",
+  NE: "NEP",
+  NO: "NOS",
+  KC: "KCC",
+  SF: "SFO",
+  WSH: "WAS",
+  LA: "LAR",
+};
+
+export function cuffNormTeam(team) {
+  const t = String(team || "").toUpperCase();
+  return CUFF_TEAM_ALIAS[t] || t;
+}
+
+/** Highest today at that NFL team + position across the whole catalog. */
+export function cuffLeagueLead(meta) {
+  const lead = {};
+  const ids = Object.keys(meta || {});
+  for (let i = 0; i < ids.length; i++) {
+    const o = meta[ids[i]] || {};
+    const pos = String(o.pos || "").toUpperCase();
+    const team = cuffNormTeam(o.team);
+    const v = Number(o.value);
+    if (!pos || !team || !(v > 0)) continue;
+    const key = team + "|" + pos;
+    if (!lead[key] || v > lead[key].value) lead[key] = { id: ids[i], value: v };
+  }
+  return lead;
+}
 
 export function cuffSeasonTiming(week) {
   return Number(week) <= 8 ? "early" : "late";
@@ -117,9 +155,10 @@ export function cuffPairAdds(opts) {
 
 /**
  * Same add, but pair from the receiving roster: a received player is the cuff
- * when that seat still holds a same NFL team + position teammate who is priced
- * higher. Does not use fantasy slot-1 rows — Javonte / Malik fires even when
- * Javonte is not that seat's KTC RB1.
+ * when that seat still holds the league-lead same NFL team + position teammate
+ * (highest today in the catalog), and the received player is under half that
+ * lead. Two backups do not pair. Committees (1B at 50%+) do not pair.
+ * Team codes are normalized (GB/GBP, TB/TBB, JAX/JAC).
  * meta[id] = { value, pos, team }. injury[id] = starter status.
  */
 export function cuffTeammateAdds(opts) {
@@ -129,37 +168,26 @@ export function cuffTeammateAdds(opts) {
   const meta = (opts && opts.meta) || {};
   const injury = (opts && opts.injury) || {};
   const week = Number(opts && opts.week) || 1;
+  const lead = cuffLeagueLead(meta);
   let total = 0;
   const ids = Object.keys(recv);
   for (let i = 0; i < ids.length; i++) {
     const cuffId = ids[i];
     const m = meta[cuffId] || {};
     const pos = String(m.pos || "").toUpperCase();
-    const team = String(m.team || "").toUpperCase();
+    const team = cuffNormTeam(m.team);
     const cuffVal = Number(recv[cuffId]);
     if (!pos || !team || !(cuffVal > 0)) continue;
-    let starterId = "";
-    let starterVal = 0;
-    const held = Object.keys(have);
-    for (let j = 0; j < held.length; j++) {
-      const id = held[j];
-      if (id === cuffId) continue;
-      const o = meta[id] || {};
-      if (String(o.team || "").toUpperCase() !== team) continue;
-      if (String(o.pos || "").toUpperCase() !== pos) continue;
-      const v = Number(o.value);
-      if (v > starterVal) {
-        starterVal = v;
-        starterId = id;
-      }
-    }
-    if (!starterId || !(starterVal > 0) || cuffVal >= starterVal) continue;
-    const holdW = had[starterId] ? CUFF_HOLD_HAD_STARTER : CUFF_HOLD_GOT_BOTH;
-    const inj = cuffIsInjured(injury[starterId]);
+    const top = lead[team + "|" + pos];
+    if (!top || cuffId === top.id || !have[top.id]) continue;
+    if (!(top.value > 0) || cuffVal >= top.value) continue;
+    if (cuffVal / top.value >= CUFF_MAX_RATIO) continue;
+    const holdW = had[top.id] ? CUFF_HOLD_HAD_STARTER : CUFF_HOLD_GOT_BOTH;
+    const inj = cuffIsInjured(injury[top.id]);
     total += cuffInsurance({
       pos,
       cuff: cuffVal,
-      starter: starterVal,
+      starter: top.value,
       holdW,
       injured: inj.injured,
       week,
@@ -269,6 +297,47 @@ if (String(process.argv[1] || "").endsWith("cuff-formula.mjs")) {
     recv: { "8800": 1517 },
     haveAfter: { "8800": true },
     hadStarter: {},
+    meta: {
+      "8800": { value: 1517, pos: "RB", team: "DAL" },
+      "7588": { value: 4405, pos: "RB", team: "DAL" },
+    },
+    week: 1,
+  }), 0);
+  check("two-backup", cuffTeammateAdds({
+    recv: { "11589": 1526 },
+    haveAfter: { "8132": true, "11589": true },
+    hadStarter: { "8132": true },
+    meta: {
+      "13287": { value: 7035, pos: "RB", team: "ARI" },
+      "8132": { value: 2420, pos: "RB", team: "ARI" },
+      "11589": { value: 1526, pos: "RB", team: "ARI" },
+    },
+    week: 1,
+  }), 0);
+  check("committee", cuffTeammateAdds({
+    recv: { "7594": 2786 },
+    haveAfter: { "11583": true, "7594": true },
+    hadStarter: { "11583": true },
+    meta: {
+      "11583": { value: 3168, pos: "RB", team: "CAR" },
+      "7594": { value: 2786, pos: "RB", team: "CAR" },
+    },
+    week: 1,
+  }), 0);
+  check("team-alias-te", cuffTeammateAdds({
+    recv: { "4144": 764 },
+    haveAfter: { "9484": true, "4144": true },
+    hadStarter: { "9484": true },
+    meta: {
+      "4144": { value: 764, pos: "TE", team: "GB" },
+      "9484": { value: 4589, pos: "TE", team: "GBP" },
+    },
+    week: 1,
+  }), 5);
+  check("recv-lead", cuffTeammateAdds({
+    recv: { "7588": 4405 },
+    haveAfter: { "7588": true, "8800": true },
+    hadStarter: { "8800": true },
     meta: {
       "8800": { value: 1517, pos: "RB", team: "DAL" },
       "7588": { value: 4405, pos: "RB", team: "DAL" },

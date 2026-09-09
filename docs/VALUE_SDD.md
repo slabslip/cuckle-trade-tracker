@@ -372,9 +372,13 @@ are real and are **not** fantasy handcuffs — `cuffs.json` WR rows are WR2s.
 
 **Locked formula** (`cuff-formula.mjs`). Not extras VA. **HAVE on calc** as a gold
 **Handcuff** line (`calcCuffBump` → `calcReceiveTotals`). Pairing is **same NFL
-team + position** on the receiving roster (`cuffTeammateAdds`), not fantasy
-slot-1 rows in `cuffs.json`. Javonte / Malik fires when Bubba already has
-Javonte and takes Malik, even though Bubba’s KTC RB1 is Love. Not written to tape.
+team + position** (`cuffTeammateAdds`): the seat must still hold the **league-lead**
+at that team/pos (highest today in the catalog), and the received player must be
+under half that lead. Two backups do not pair. Committees (Chuba / Brooks) stay 0.
+Team codes are normalized (`GB`/`GBP`, `TB`/`TBB`, `JAX`/`JAC`) so Kraft / Jonnu
+and Jacobs / Strong still match. Not fantasy slot-1 rows in `cuffs.json`.
+Javonte / Malik fires when Bubba already has Javonte and takes Malik. Not written
+to tape.
 
 ```text
 pos_w:    RB 1.00 · QB 0.50 · TE 0.25 · WR 0

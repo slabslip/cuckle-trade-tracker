@@ -241,14 +241,14 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **Data** is the league deal-research terminal (visible tab label; internal `homeTab` stays
-`history`). Law: [`DATA_SDD.md`](./DATA_SDD.md). Cold load is three panes: **Ping** (Send /
+`history`). Law: [`DATA_SDD.md`](./DATA_SDD.md). Cold load is three panes: **Moves** (Send /
 Get — who to transact with), **League** (ten full-width cycle rows: Hard rebuild / Rebuild /
 Reload / Win-now), and **More** (Book · Tape · Lists · Draft · Cuffs · Seats). The 12-tile
 encyclopedia is not the cold load. Hunts and Home Move are gated on each seat’s buy / sell /
 refuse from `seat-direction.json`. A hole is a fact; intent decides who to ping. Tap a
 League row for that seat’s cycle, intent, and 1–3 pings. Do **not** call `selectMe` from
 League (that is Teams). There is **no Data top search**. Book has pos / seat / sort chips;
-Tape has year chips. Ping peeks three unique counterparties (player · their team · why) with
+Tape has year chips. Moves peeks three unique counterparties (player · their team · why) with
 no bag totals. A row opens the calculator first-person (A = you, B = them). The **trade
 block** is league-readable and owner-write on `public.seat_trade_block` (cap 8). Snapshot
 facts stay on desks.
@@ -258,7 +258,7 @@ must not move a clock or a delta. Votes never enter these numbers.
 
 **League Data Sets** (Data → Lists) — one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold
-load.** The Home tab and a Data back chip both return to Data (Ping) / Lists.
+load.** The Home tab and a Data back chip both return to Data (Moves) / Lists.
 
 The old popup dropdown is gone. Rooms are in-flow. Data has no top search.
 

@@ -94,6 +94,83 @@ function nameOf(assetKey, label, book, nfl) {
   return label || String(assetKey);
 }
 
+function pickYearOf(a) {
+  if (a && a.year != null && a.year !== "") return Number(a.year);
+  const m = String((a && a.id) || "").match(/^pick:(\d{4})/);
+  return m ? Number(m[1]) : 0;
+}
+
+function heldPicks(bag) {
+  let y2026 = 0;
+  let y2027 = 0;
+  let later = 0;
+  let firsts2027 = 0;
+  for (const a of bag || []) {
+    if (!(a && (a.kind === "pick" || a.pos === "PICK"))) continue;
+    const y = pickYearOf(a);
+    if (y === 2026) y2026 += 1;
+    else if (y === 2027) {
+      y2027 += 1;
+      if (Number(a.round) === 1) firsts2027 += 1;
+    } else if (y >= 2028) later += 1;
+  }
+  return { y2026, y2027, later, firsts_2027: firsts2027 };
+}
+
+function bagAging(bag) {
+  let agingRb = 0;
+  let agingWr = 0;
+  let young = 0;
+  let rbVal = 0;
+  let playerVal = 0;
+  for (const a of bag || []) {
+    if (!a || a.kind === "pick" || a.pos === "PICK") continue;
+    const v = Number(a.value);
+    if (!Number.isFinite(v) || v < 0) continue;
+    playerVal += v;
+    if (a.pos === "RB") rbVal += v;
+    const age = Number(a.age);
+    if (!Number.isFinite(age)) continue;
+    if (age < 24.5 && v >= DESK_MID) young += 1;
+    if (a.pos === "RB" && age >= 27 && v >= DESK_MID) agingRb += 1;
+    if (a.pos === "WR" && age >= 28 && v >= DESK_MID) agingWr += 1;
+  }
+  return { agingRb, agingWr, young, rbShare: playerVal ? rbVal / playerVal : 0 };
+}
+
+function paceOf(label, held, aging, pickShare) {
+  const later = held.later;
+  const n27 = held.y2027;
+  const agingN = aging.agingRb + aging.agingWr;
+  if (label === "Win-now") {
+    if (aging.agingRb >= 2 || agingN >= 3) {
+      return { pace: "aging core", pace_why: `${aging.agingRb} aging RB` };
+    }
+    if (n27 <= 1 && later <= 1) {
+      return { pace: "thin later", pace_why: `${n27} 2027s` };
+    }
+    return { pace: "window now", pace_why: `${n27} 2027s` };
+  }
+  if (label === "Hard rebuild" || label === "Rebuild") {
+    if (n27 >= 6 || (n27 >= 4 && pickShare >= 0.30)) {
+      return { pace: "short", pace_why: `${n27} 2027s` };
+    }
+    if (n27 <= 2 && pickShare < 0.25) {
+      return { pace: "starved", pace_why: `${n27} 2027s` };
+    }
+    if (pickShare >= 0.35) return { pace: "pick-rich", pace_why: `${n27} 2027s` };
+    if (n27 <= 2 && later >= 3) return { pace: "long", pace_why: `${later} later picks` };
+    return { pace: "long", pace_why: `${n27} 2027s` };
+  }
+  if (n27 <= 1 && pickShare <= 0.20) return { pace: "pick-poor", pace_why: `${n27} 2027s` };
+  if (agingN >= 3 || aging.agingRb >= 2) {
+    return { pace: "aging core", pace_why: `${aging.agingRb} aging RB` };
+  }
+  if (n27 >= 4 && agingN <= 1) return { pace: "quick", pace_why: `${n27} 2027s` };
+  if (n27 <= 2 && later >= 4) return { pace: "long", pace_why: `${later} later picks` };
+  return { pace: "steady", pace_why: `${n27} 2027s` };
+}
+
 function bagProfile(bag) {
   let total = 0;
   let stud = 0;
@@ -291,10 +368,15 @@ function build() {
     };
     const intent = intentFor(label, soldPos, prof.holes, prof.thin, prof.surplus, prof.deep, flow);
 
+    const held = heldPicks(bags.get(uid) || []);
+    const aging = bagAging(bags.get(uid) || []);
+    const pace = paceOf(label, held, aging, prof.pickShare);
+
     const whyBits = [];
     if (m.place && m.place_season) whyBits.push(`${nth(m.place)} in ${m.place_season}`);
     if (studsOut[0]) whyBits.push(`sold ${studsOut[0]}`);
-    if (net2027) whyBits.push(`${net2027 > 0 ? "+" : ""}${net2027} 2027 picks`);
+    whyBits.push(`${held.y2027} 2027s`);
+    if (pace.pace) whyBits.push(pace.pace);
 
     const byPosOut = {};
     for (const pos of POSITIONS) {
@@ -323,6 +405,18 @@ function build() {
         firsts_in: firstsIn,
         firsts_out: firstsOut,
         net_2027_plus: net2027,
+        held_2026: held.y2026,
+        held_2027: held.y2027,
+        held_later: held.later,
+        firsts_2027: held.firsts_2027,
+      },
+      pace: pace.pace,
+      pace_why: pace.pace_why,
+      aging: {
+        rb: aging.agingRb,
+        wr: aging.agingWr,
+        young: aging.young,
+        rb_share: Math.round(aging.rbShare * 1000) / 1000,
       },
       by_pos: byPosOut,
       studs: { in: studsIn, out: studsOut },

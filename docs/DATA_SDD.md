@@ -38,7 +38,7 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 - No bag totals on Home. `homeDeskHtml` must not contain `calcFmt(` or `calcValueNum(`.
 - No Best 10 / Worst 10. Most lopsided stays on Data.
 - `DATA_SETS` stays exactly five. Six Data desks live under **More**: Book · Tape · Seats ·
-  Lists · Draft · Cuffs. No seventh desk. Cold load is **Ping** and **League**, not a tile board.
+  Lists · Draft · Cuffs. No seventh desk. Cold load is **Moves** and **League**, not a tile board.
 - Phone-first (390). Existing CSS. No npm / chart libraries.
 - Do not fetch cosmetics / dash / block / direction from `render()`.
 - This is **this league’s** rosters. Multi-league is the app path, not a new warehouse.
@@ -51,8 +51,10 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`generate-page.mjs`](../generate-page.mjs):
 
-- **Ping** — Send (`move_extras`) and Get (`fill_holes`). Peek three unique counterparties.
-  Tap a row to price. All send / All get opens the hunt page.
+- **Moves** (internal pane id `ping`) — Send (`move_extras`) and Get (`fill_holes`).
+  Player deals and picks. Get always tries a deeper idea if there is no hole
+  (upgrade / aging / depth / youth). Peek three unique counterparties. Tap a row
+  to price.
 - **League** — ten full-width cycle rows in place order. Name + badge + one-line why. Tap
   opens the team view. Does **not** call `selectMe`.
 - **More** — Book · Tape · Lists · Draft · Cuffs · Seats. Research overflow, not the product.
@@ -63,7 +65,7 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 - Catalog is **27** unique report ids. Persist `seat_data_dash` +
   `cuckle.data.dash.v1.<league>.<seat>` still exists for hunt/desk routing.
-- The 6–12 tile encyclopedia is **not** the Data cold load. Do not put it back on Ping.
+- The 6–12 tile encyclopedia is **not** the Data cold load. Do not put it back on Moves.
 
 **Banned ids:** `best10`, `worst10`, `bag_total`, `realized`, `win_now`, `investor`.
 
@@ -195,7 +197,7 @@ call `selectMe` (that is Teams).
 2. Name + cycle badge + one-line why
 3. Buy / sell / refuse (omit empty). Do not dump last-window sold/got — that duplicates intent.
 4. Bag facts vs intent (`thin RB — not shopping RB`)
-5. Ping — 1–3 rows that pass both sides’ intent. Empty: `No feasible ping with this seat.`
+5. Moves — 1–3 rows that pass both sides’ intent. Empty: `No feasible move with this seat.`
 6. Price a deal (A = you, B = them). Optional Open team home via `selectMe`.
 
 **Hunt gates:**
@@ -216,15 +218,17 @@ call `selectMe` (that is Teams).
 
 ## 6. Layout (search gone)
 
-No Data top search. Book already has pos / seat / sort chips. Tape already has year chips.
+No Data top search. Book uses pos / seat / sort dropdowns. Tape already has year chips.
 Keep `data-calc-filter` and `data-cuff-q`.
 
 **Data cold load, 390px, top to bottom:**
 
 1. `h2` Data
 2. Quiet law: `Votes never enter these numbers.`
-3. Three panes: **Ping · League · More**
-4. Ping body (Send + Get) or League cycle list or More doors
+3. Three panes: **Moves · League · More**
+4. Moves body (Send + Get) or League cycle list or More doors. League why always
+   lists held 2027s plus a pace caption (short / long / aging core / …). Pace
+   describes. It does not move a clock.
 5. Hunt page / team view / desk replace the panes when open
 
 No new CSS system. Catalog stays 27. `DATA_SETS` stays 5. Titles are the definition:

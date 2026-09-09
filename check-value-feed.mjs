@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { ROOT, leagueUiDir } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
-import { cuffMove, cuffInsurance, cuffPairAdds } from "./cuff-formula.mjs";
+import { cuffMove, cuffInsurance, cuffPairAdds, cuffTeammateAdds } from "./cuff-formula.mjs";
 
 const hard = [];
 function fail(msg) { hard.push(msg); }
@@ -65,7 +65,7 @@ try {
 }
 
 const cuffBlockAt = src.indexOf("const CUFF_POS_W = { QB: 0.5");
-const pairAt = src.indexOf("function cuffPairAdds(opts)");
+const pairAt = src.indexOf("function cuffTeammateAdds(opts)");
 if (cuffBlockAt < 0 || pairAt < 0) throw new Error("generated page lost cuff formula block");
 let pairEnd = src.indexOf("{", pairAt) + 1;
 let pd = 1;
@@ -76,7 +76,7 @@ while (pairEnd < src.length && pd) {
 }
 let pageCuff;
 try {
-  pageCuff = new Function(src.slice(cuffBlockAt, pairEnd) + "; return { cuffMove, cuffInsurance, cuffPairAdds };")();
+  pageCuff = new Function(src.slice(cuffBlockAt, pairEnd) + "; return { cuffMove, cuffInsurance, cuffPairAdds, cuffTeammateAdds };")();
 } catch (err) {
   throw new Error("could not eval generated cuff formula: " + (err && err.message));
 }
@@ -101,7 +101,20 @@ const pairOpts = {
 };
 if (pageCuff.cuffPairAdds(pairOpts) !== cuffPairAdds(pairOpts)) fail("inline cuffPairAdds != cuff-formula.mjs");
 if (pageCuff.cuffPairAdds(pairOpts) !== 91) fail("Bijan / B-Rob Handcuff must be +91, got " + pageCuff.cuffPairAdds(pairOpts));
+const malikOpts = {
+  recv: { "8800": 1517 },
+  haveAfter: { "7588": true, "8800": true },
+  hadStarter: { "7588": true },
+  meta: {
+    "8800": { value: 1517, pos: "RB", team: "DAL" },
+    "7588": { value: 4405, pos: "RB", team: "DAL" },
+  },
+  week: 1,
+};
+if (pageCuff.cuffTeammateAdds(malikOpts) !== cuffTeammateAdds(malikOpts)) fail("inline cuffTeammateAdds != cuff-formula.mjs");
+if (pageCuff.cuffTeammateAdds(malikOpts) !== 42) fail("Javonte / Malik Handcuff must be +42, got " + pageCuff.cuffTeammateAdds(malikOpts));
 if (!src.includes("function calcCuffBump(uid, sendLegs, recvLegs)")
+  || !src.includes("function cuffTeammateAdds(opts)")
   || !src.includes("span>Handcuff</span>")) {
   fail("calc lost Handcuff line");
 }

@@ -3914,7 +3914,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcHandcuff20260909181500";
+    const DATA_V = "calcCuffNfl20260909183000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18463,6 +18463,53 @@ const html = `<!DOCTYPE html>
       return total;
     }
 
+    function cuffTeammateAdds(opts) {
+      const recv = (opts && opts.recv) || {};
+      const have = (opts && opts.haveAfter) || {};
+      const had = (opts && opts.hadStarter) || {};
+      const meta = (opts && opts.meta) || {};
+      const injury = (opts && opts.injury) || {};
+      const week = Number(opts && opts.week) || 1;
+      let total = 0;
+      const ids = Object.keys(recv);
+      for (let i = 0; i < ids.length; i++) {
+        const cuffId = ids[i];
+        const m = meta[cuffId] || {};
+        const pos = String(m.pos || "").toUpperCase();
+        const team = String(m.team || "").toUpperCase();
+        const cuffVal = Number(recv[cuffId]);
+        if (!pos || !team || !(cuffVal > 0)) continue;
+        let starterId = "";
+        let starterVal = 0;
+        const held = Object.keys(have);
+        for (let j = 0; j < held.length; j++) {
+          const id = held[j];
+          if (id === cuffId) continue;
+          const o = meta[id] || {};
+          if (String(o.team || "").toUpperCase() !== team) continue;
+          if (String(o.pos || "").toUpperCase() !== pos) continue;
+          const v = Number(o.value);
+          if (v > starterVal) {
+            starterVal = v;
+            starterId = id;
+          }
+        }
+        if (!starterId || !(starterVal > 0) || cuffVal >= starterVal) continue;
+        const holdW = had[starterId] ? 1 : 0.5;
+        const inj = cuffIsInjured(injury[starterId]);
+        total += cuffInsurance({
+          pos: pos,
+          cuff: cuffVal,
+          starter: starterVal,
+          holdW: holdW,
+          injured: inj.injured,
+          week: week,
+          weeksOut: inj.weeksOut,
+        });
+      }
+      return total;
+    }
+
     function calcNflWeek() {
       const start = Date.UTC(2026, 8, 10);
       const now = Date.now();
@@ -18479,8 +18526,6 @@ const html = `<!DOCTYPE html>
     }
 
     function calcCuffBump(uid, sendLegs, recvLegs) {
-      const rows = (cuffs && cuffs.rows) || [];
-      if (!rows.length) return 0;
       const recv = {};
       (recvLegs || []).forEach(function (l) {
         const id = calcPlayerSid(l);
@@ -18488,6 +18533,7 @@ const html = `<!DOCTYPE html>
         const n = Number(l.value);
         if (Number.isFinite(n) && n > 0) recv[id] = n;
       });
+      if (!Object.keys(recv).length) return 0;
       const sent = {};
       (sendLegs || []).forEach(function (l) {
         const id = calcPlayerSid(l);
@@ -18495,23 +18541,41 @@ const html = `<!DOCTYPE html>
       });
       const haveAfter = {};
       const hadStarter = {};
-      const catalog = {};
+      const meta = {};
       const book = calcBook || { players: [] };
       (book.players || []).forEach(function (p) {
-        if (p.sleeper_id && p.value != null) catalog[String(p.sleeper_id)] = Number(p.value);
-        if (!uid || String(p.owner_id) !== String(uid)) return;
         const id = String(p.sleeper_id || "");
         if (!id) return;
+        meta[id] = {
+          value: p.value != null ? Number(p.value) : 0,
+          pos: p.pos || "",
+          team: p.team || "",
+        };
+        if (!uid || String(p.owner_id) !== String(uid)) return;
         hadStarter[id] = true;
         if (!sent[id]) haveAfter[id] = true;
       });
+      (recvLegs || []).forEach(function (l) {
+        const id = calcPlayerSid(l);
+        if (!id) return;
+        if (!meta[id]) {
+          meta[id] = { value: Number(l.value) || 0, pos: l.pos || "", team: l.team || "" };
+        } else {
+          if (!meta[id].team && l.team) meta[id].team = l.team;
+          if (!meta[id].pos && l.pos) meta[id].pos = l.pos;
+        }
+      });
       Object.keys(recv).forEach(function (id) { haveAfter[id] = true; });
-      return cuffPairAdds({
-        rows: rows,
+      const injury = {};
+      ((cuffs && cuffs.rows) || []).forEach(function (r) {
+        if (r && r.starter_id && r.starter_injury) injury[String(r.starter_id)] = r.starter_injury;
+      });
+      return cuffTeammateAdds({
         recv: recv,
         haveAfter: haveAfter,
         hadStarter: hadStarter,
-        catalog: catalog,
+        meta: meta,
+        injury: injury,
         week: calcNflWeek(),
       });
     }
@@ -19328,9 +19392,10 @@ const html = `<!DOCTYPE html>
         + "If the extras include a bigger name, the bump shrinks.</p>"
         + "<h3>4. Handcuff</h3>"
         + "<p>A second gold line, not extras VA. It fires on a 2-team deal when a seat "
-        + "<b>receives the listed NFL cuff</b> and <b>still holds that starter</b> after "
-        + "the swap. WR is off: those rows are WR2s, not fantasy handcuffs. Equal-count "
-        + "1-for-1 can fire. N-way stays 0.</p>"
+        + "<b>receives an NFL backup</b> (same team and position) and <b>still holds "
+        + "that starter</b> after the swap. Not limited to a seat&rsquo;s fantasy RB1 "
+        + "&mdash; Javonte / Malik counts even when Javonte is not Bubba&rsquo;s KTC RB1. "
+        + "WR is off. Equal-count 1-for-1 can fire. N-way stays 0.</p>"
         + "<p>Already held the starter: full insurance. Got both in this deal: half. "
         + "Starter Out / IR: use the injury move (early vs late, how long they are out). "
         + "Questionable stays insurance.</p>"
@@ -19341,6 +19406,8 @@ const html = `<!DOCTYPE html>
         + "healthy pairing = that early/long move &times; chance they miss 2+ (RB 0.32), cap 350</p>"
         + '<div class="calc-info-ex"><b>Handcuff worked</b> &mdash; already hold Bijan (9,505) and take Brian Robinson (2,029).<br>'
         + "priced path: min(0.03&times;9,505, 0.50&times;2,029) = 285. Insurance = 285&times;0.32 = <b>+91</b>.</div>"
+        + '<div class="calc-info-ex"><b>Same-team backup</b> &mdash; already hold Javonte (4,405) and take Malik Davis (1,517).<br>'
+        + "priced path: min(0.03&times;4,405, 0.50&times;1,517) = 132. Insurance = 132&times;0.32 = <b>+42</b>.</div>"
         + "<p>The gold Handcuff line sits on the send card that carries the cuff. "
         + "Compare receives and the card total include it.</p>"
         + "<h3>Worked example</h3>"
@@ -25704,7 +25771,9 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("function cuffMove(opts)")
   || !inline.includes("function cuffInsurance(opts)")
   || !inline.includes("function cuffPairAdds(opts)")
+  || !inline.includes("function cuffTeammateAdds(opts)")
   || !inline.includes("function calcCuffBump(uid, sendLegs, recvLegs)")
+  || !fnSrc("calcCuffBump").includes("cuffTeammateAdds")
   || !inline.includes('span>Handcuff</span>')
   || !fnSrc("calcReceiveTotals").includes("calcCuffBump(uidA, sendA, sendB)")
   || !fnSrc("calcBarFill").includes("g / 3000")
@@ -25741,6 +25810,8 @@ if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-in
   || !fnSrc("calcInfoHtml").includes("send pile + VA on that bag")
   || !fnSrc("calcInfoHtml").includes("4. Handcuff")
   || !fnSrc("calcInfoHtml").includes("Handcuff worked")
+  || !fnSrc("calcInfoHtml").includes("Same-team backup")
+  || !fnSrc("calcInfoHtml").includes("Malik Davis")
   || !fnSrc("calcInfoHtml").includes("Team 2 receives <b>11,161</b>")
   || fnSrc("renderCalc").includes("Today book")
   || fnSrc("calcCompareHtml").includes("Our book: flatten")

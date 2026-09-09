@@ -115,6 +115,60 @@ export function cuffPairAdds(opts) {
   return total;
 }
 
+/**
+ * Same add, but pair from the receiving roster: a received player is the cuff
+ * when that seat still holds a same NFL team + position teammate who is priced
+ * higher. Does not use fantasy slot-1 rows — Javonte / Malik fires even when
+ * Javonte is not that seat's KTC RB1.
+ * meta[id] = { value, pos, team }. injury[id] = starter status.
+ */
+export function cuffTeammateAdds(opts) {
+  const recv = (opts && opts.recv) || {};
+  const have = (opts && opts.haveAfter) || {};
+  const had = (opts && opts.hadStarter) || {};
+  const meta = (opts && opts.meta) || {};
+  const injury = (opts && opts.injury) || {};
+  const week = Number(opts && opts.week) || 1;
+  let total = 0;
+  const ids = Object.keys(recv);
+  for (let i = 0; i < ids.length; i++) {
+    const cuffId = ids[i];
+    const m = meta[cuffId] || {};
+    const pos = String(m.pos || "").toUpperCase();
+    const team = String(m.team || "").toUpperCase();
+    const cuffVal = Number(recv[cuffId]);
+    if (!pos || !team || !(cuffVal > 0)) continue;
+    let starterId = "";
+    let starterVal = 0;
+    const held = Object.keys(have);
+    for (let j = 0; j < held.length; j++) {
+      const id = held[j];
+      if (id === cuffId) continue;
+      const o = meta[id] || {};
+      if (String(o.team || "").toUpperCase() !== team) continue;
+      if (String(o.pos || "").toUpperCase() !== pos) continue;
+      const v = Number(o.value);
+      if (v > starterVal) {
+        starterVal = v;
+        starterId = id;
+      }
+    }
+    if (!starterId || !(starterVal > 0) || cuffVal >= starterVal) continue;
+    const holdW = had[starterId] ? CUFF_HOLD_HAD_STARTER : CUFF_HOLD_GOT_BOTH;
+    const inj = cuffIsInjured(injury[starterId]);
+    total += cuffInsurance({
+      pos,
+      cuff: cuffVal,
+      starter: starterVal,
+      holdW,
+      injured: inj.injured,
+      week,
+      weeksOut: inj.weeksOut,
+    });
+  }
+  return total;
+}
+
 export function cuffInsurance(opts) {
   const pos = String((opts && opts.pos) || "").toUpperCase();
   if (opts && opts.injured) {
@@ -189,6 +243,36 @@ if (String(process.argv[1] || "").endsWith("cuff-formula.mjs")) {
     haveAfter: { "2": true },
     hadStarter: { "2": true },
     catalog: { "2": 8000 },
+    week: 1,
+  }), 0);
+  check("team-brob", cuffTeammateAdds({
+    recv: { "8154": 2029 },
+    haveAfter: { "9509": true, "8154": true },
+    hadStarter: { "9509": true },
+    meta: {
+      "8154": { value: 2029, pos: "RB", team: "ATL" },
+      "9509": { value: 9505, pos: "RB", team: "ATL" },
+    },
+    week: 1,
+  }), 91);
+  check("team-malik", cuffTeammateAdds({
+    recv: { "8800": 1517 },
+    haveAfter: { "7588": true, "8800": true },
+    hadStarter: { "7588": true },
+    meta: {
+      "8800": { value: 1517, pos: "RB", team: "DAL" },
+      "7588": { value: 4405, pos: "RB", team: "DAL" },
+    },
+    week: 1,
+  }), 42);
+  check("team-send-starter", cuffTeammateAdds({
+    recv: { "8800": 1517 },
+    haveAfter: { "8800": true },
+    hadStarter: {},
+    meta: {
+      "8800": { value: 1517, pos: "RB", team: "DAL" },
+      "7588": { value: 4405, pos: "RB", team: "DAL" },
+    },
     week: 1,
   }), 0);
   console.log("cuff-formula checks ok");

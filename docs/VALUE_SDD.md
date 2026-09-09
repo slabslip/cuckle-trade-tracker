@@ -371,7 +371,10 @@ on the DP board; TE cuffs did not reprice. WR2 pops (Shaheed, Dotson, Deebo)
 are real and are **not** fantasy handcuffs — `cuffs.json` WR rows are WR2s.
 
 **Locked formula** (`cuff-formula.mjs`). Not extras VA. **HAVE on calc** as a gold
-**Handcuff** line (`calcCuffBump` → `calcReceiveTotals`). Not written to tape.
+**Handcuff** line (`calcCuffBump` → `calcReceiveTotals`). Pairing is **same NFL
+team + position** on the receiving roster (`cuffTeammateAdds`), not fantasy
+slot-1 rows in `cuffs.json`. Javonte / Malik fires when Bubba already has
+Javonte and takes Malik, even though Bubba’s KTC RB1 is Love. Not written to tape.
 
 ```text
 pos_w:    RB 1.00 · QB 0.50 · TE 0.25 · WR 0
@@ -391,7 +394,8 @@ healthy pairing (insurance):
 
 Worked: Mason 49 / CMC 6002 → +300 (actual +629). White 142 / Bucky 4340 → +217
 (actual +216). Charbonnet 458 / Walker 2987, 2 weeks → +36 (actual +25).
-Bijan 9505 / B-Rob 2029 healthy → insurance +91. Hampton out 8+ early →
-Vidal-class cheap add +5% of Hampton.
+Bijan 9505 / B-Rob 2029 healthy → insurance +91. Javonte 4405 / Malik 1517
+healthy → insurance +42. Hampton out 8+ early → Vidal-class cheap add +5% of
+Hampton.
 
 Re-run: `python3 scripts/cuff-history.py --write` then `node cuff-formula.mjs`.

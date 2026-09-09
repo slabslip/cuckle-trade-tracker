@@ -26,6 +26,7 @@ const steps = [
   ["apply-value-adjust.mjs", leagueId],
   ["build-cuffs.mjs", leagueId],
   ["build-calculator.mjs", leagueId],
+  ["build-seat-direction.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];
 

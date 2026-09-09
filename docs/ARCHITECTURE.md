@@ -1,6 +1,6 @@
 # CuckleChunckle — Architecture (HAVE)
 
-**Role:** What is actually built on **2026-08-30**. Never invent want from this file. Want → [`PRODUCT.md`](./PRODUCT.md). What the screens must do → [`UI_SDD.md`](./UI_SDD.md).
+**Role:** What is actually built on **2026-08-30**. Never invent want from this file. Want → [`PRODUCT.md`](./PRODUCT.md). What the screens must do → [`UI_SDD.md`](./UI_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md).
 
 **Repo:** `github.com/slabslip/cuckle-trade-tracker`, public, GitHub Pages deploys from `main`.
 (Earlier revisions of this file said "not a git repo" — stale since 2026-08-28.)
@@ -31,6 +31,8 @@ build-cuffs.mjs
   → data/ui/cuffs.json
 build-calculator.mjs
   → data/ui/calculator.json          (rostered players + still-held picks, Sleeper roster_ord, today / even)
+build-seat-direction.mjs
+  → data/ui/seat-direction.json      (last-window tape review per seat; captions only)
 build-cosmetics.mjs
   → data/ui/cosmetics.json           (88 catalog (44 pairs) + computed unlocks; award ladder → docs/plans/awards_titles_emblems.md)
 generate-page.mjs

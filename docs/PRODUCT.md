@@ -2,7 +2,7 @@
 
 **Role:** The single **want** source for this tracker. Spine, who “you” are, clocks, in/out, build order, CUT/PARKED.
 
-**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Titles/emblems → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md). Award ladder + parked grind → [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
+**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md). Titles/emblems → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md). Award ladder + parked grind → [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
 
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
@@ -29,7 +29,7 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
    water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
 
-That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle.
+That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle. Recent-window direction (Hard rebuild / Rebuild / Reload / Win-now) may filter who to ping; it does not move a clock or a delta.
 
 ---
 

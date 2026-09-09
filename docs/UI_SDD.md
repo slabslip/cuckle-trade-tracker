@@ -6,7 +6,8 @@ that file only. No chart library, no npm, no new tokens, no SlabSlip chrome.
 **This file describes what ships.** If it and the generator disagree, the generator wins and this
 file is wrong — fix it in the same pass. What we *want* → [`PRODUCT.md`](./PRODUCT.md). What the
 scripts emit → [`ARCHITECTURE.md`](./ARCHITECTURE.md). Pricing → [`VALUE_SDD.md`](./VALUE_SDD.md).
-Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md).
+Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
 Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 
 ---
@@ -240,23 +241,22 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **Data** is the league deal-research terminal (visible tab label; internal `homeTab` stays
-`history`). Cold load is the **seat board**: 6–12 exchangeable report tiles from a 27-report
-library. The default 12 are the **Deal** hunts (who has what you need, move extras, poach cuffs, available
-cuffs, uninsured, stash young, draft, held picks, top book, lopsided, run, cuffs). Edit offers
-**Deal** and **Research** presets that write the same `tiles[]`. The library groups
-Deal · Cuffs · Book · Tape · Seats · Lists so matcher tiles are not buried. The six desk chips
-under search never customize: Book · Tape · Seats · Lists · Draft · Cuffs. Overview is the
-board, not a seventh chip. Hunt tiles peek three rows (player · their team · why) with no bag
-totals. Tap opens that hunt full-screen; a row opens the calculator first-person (A = you,
-B = them, legs prefilled when the piece is known). Search with a query still fans into
-Book / Tape / Seats hits. Empty query paints the board. Edit (claimed seat only) swaps, adds,
-removes, and reorders tiles; layout persists on `public.seat_data_dash` (private to that seat)
-plus `cuckle.data.dash.v1.<league>.<seat>`. The **trade block** is league-readable and
-owner-write on `public.seat_trade_block` (cap 8). Tiles: My block, League block, Block fits.
-Book is the extractable catalog (position / seat / value-name-age; as-of lives in the book
-hint). Tape is widest-on-clock by default, then year + search over every deal. Seats are the
-six mark charts. Lists keeps the five saved sets plus Past Champions. A saved set still drills
-to one list; back returns to Lists. Snapshot facts (tape count, book date, volume) stay on
+`history`). Law: [`DATA_SDD.md`](./DATA_SDD.md). Cold load is the **direction strip** (ten
+seats, place order, Hard rebuild / Rebuild / Reload / Win-now) then the **seat board**: 6–12
+exchangeable report tiles from a 27-report library. The default 12 are the **Deal** hunts
+(who has what you need, move extras, poach cuffs, available cuffs, uninsured, stash young,
+draft, held picks, top book, lopsided, run, cuffs). Hunts and Home Move are gated on each
+seat’s buy / sell / refuse from `seat-direction.json`. A hole is a fact; intent decides who
+to ping. Tap a direction chip for that seat’s last-window tape, proposed direction, and 1–3
+smart moves. Do **not** call `selectMe` from the strip (that is Teams). Edit offers **Deal**
+and **Research** presets that write the same `tiles[]`. The library groups Deal · Cuffs ·
+Book · Tape · Seats · Lists. The six desk chips never customize: Book · Tape · Seats · Lists ·
+Draft · Cuffs. Overview is the board, not a seventh chip. There is **no Data top search**.
+Book has pos / seat / sort chips; Tape has year chips. Hunt tiles peek three rows
+(player · their team · why) with no bag totals. Tap opens that hunt full-screen; a row opens
+the calculator first-person (A = you, B = them). Edit (claimed seat only) persists on
+`public.seat_data_dash` plus `cuckle.data.dash.v1.<league>.<seat>`. The **trade block** is
+league-readable and owner-write on `public.seat_trade_block` (cap 8). Snapshot facts stay on
 desks, not as catalog tiles.
 **Teams** is the door into a seat (header picker stays gone — §2). Do not put bag totals on Home.
 Do not restore Best 10 / Worst 10. Style labels (Win-now / Rebuild) may caption a row; they
@@ -266,7 +266,7 @@ must not move a clock or a delta. Votes never enter these numbers.
 passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold
 load.** The Home tab and a Data back chip both return to the board / Lists.
 
-The old popup dropdown is gone. Rooms and search are in-flow.
+The old popup dropdown is gone. Rooms are in-flow. Data has no top search.
 
 **Its height is capped to its own list, not to a slice of the viewport.** The old cap,
 `min(100dvh - 96px, 480px)`, was a number six options never reach, so it never bit: the panel

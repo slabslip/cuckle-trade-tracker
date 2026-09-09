@@ -3061,6 +3061,16 @@ const html = `<!DOCTYPE html>
       flex: 0 0 auto;
     }
     button.data-room.on { color: var(--text); border-color: #6b5a2e; background: #221e14; }
+    .data-dir { margin: 0 0 12px; }
+    button.data-dir-seat {
+      display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+      gap: 1px; padding: 6px 12px; min-height: 44px;
+    }
+    button.data-dir-seat b { font-size: 0.78rem; font-weight: 750; color: var(--text); line-height: 1.15; }
+    button.data-dir-seat span { font-size: 0.62rem; font-weight: 650; color: var(--muted); letter-spacing: 0.02em; }
+    button.data-dir-seat.you { color: var(--text); border-color: #6b5a2e; background: #221e14; }
+    .data-dir-facts { margin: 0 0 12px; }
+    .data-dir-facts .stat { margin: 0 0 6px; }
     .data-snap {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px;
     }
@@ -3662,7 +3672,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260908224217";
+    const DATA_V = "direction20260909001500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3700,7 +3710,9 @@ const html = `<!DOCTYPE html>
     let dataDashSwapId = "";
     let dataHunt = "";
     let dataHuntPos = "";
+    let dataSeat = "";
     let dataBlockAddOpen = false;
+    let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 12;
@@ -5099,7 +5111,7 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -5111,6 +5123,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("calculator.json").catch(() => null),
         getLeagueJson("cosmetics.json").catch(() => null),
         getLeagueJson("pe.json").catch(() => null),
+        getLeagueJson("seat-direction.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -5159,6 +5172,9 @@ const html = `<!DOCTYPE html>
       try {
         cuffs = cuffsRaw && cuffsRaw.v === 1 && Array.isArray(cuffsRaw.rows) ? cuffsRaw : null;
       } catch (err) { cuffs = null; }
+      try {
+        seatDirection = dirRaw && dirRaw.v === 1 && Array.isArray(dirRaw.seats) ? dirRaw : null;
+      } catch (err) { seatDirection = null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
@@ -6214,19 +6230,8 @@ const html = `<!DOCTYPE html>
       dataDashSwapId = "";
       dataHunt = "";
       dataHuntPos = "";
+      dataSeat = "";
       dataBlockAddOpen = false;
-    }
-
-    function dataDashFocusSearch(range) {
-      const back = document.querySelector("#app [data-data-q]");
-      if (!back) return;
-      back.focus({ preventScroll: true });
-      if (range) {
-        try { back.setSelectionRange(range.start, range.end); } catch (err) { /* ignore */ }
-      } else {
-        const n = back.value.length;
-        try { back.setSelectionRange(n, n); } catch (err) { /* ignore */ }
-      }
     }
 
     function dataDashRoomCanon(id) {
@@ -6467,6 +6472,79 @@ const html = `<!DOCTYPE html>
       return (m && m.name) || "";
     }
 
+    function seatDirOf(uid) {
+      const seats = (seatDirection && seatDirection.seats) || [];
+      for (let i = 0; i < seats.length; i++) {
+        if (String(seats[i].seat_user_id) === String(uid)) return seats[i];
+      }
+      return null;
+    }
+
+    function seatDirLabel(uid) {
+      const d = seatDirOf(uid);
+      return (d && d.label) || "Reload";
+    }
+
+    function dataDashHasToken(list, token) {
+      return (list || []).indexOf(token) >= 0;
+    }
+
+    function dataDashIntentBuys(dir, pos) {
+      if (!dir) return true;
+      if (!pos) return false;
+      if (pos === "PICK") return dataDashHasToken(dir.buy, "picks");
+      if (dataDashHasToken(dir.refuse, pos + " starter")) return false;
+      if ((dir.label === "Hard rebuild" || dir.label === "Rebuild")
+        && dataDashHasToken(dir.sold_pos, pos)) return false;
+      return dataDashHasToken(dir.buy, pos);
+    }
+
+    function dataDashIntentSells(dir, pos) {
+      if (!dir) return true;
+      if (!pos) return false;
+      if (pos === "PICK") return dataDashHasToken(dir.sell, "picks");
+      return dataDashHasToken(dir.sell, pos) || dataDashHasToken(dir.sell, pos + " leftover");
+    }
+
+    function dataDashTheyNeedWhy(dir, pos, needW) {
+      if (!needW || !dataDashIntentBuys(dir, pos)) return "";
+      return "they " + (needW === "need" ? "need" : "are thin") + " " + pos;
+    }
+
+    function dataDashMoveWhy(theirDir, theirProf, pos, giveW) {
+      const bits = ["you are " + (giveW || "deep") + " " + pos];
+      const sold = theirDir && theirDir.by_pos && theirDir.by_pos[pos] && theirDir.by_pos[pos].out;
+      if (sold && sold[0]) bits.push("they sold " + sold[0]);
+      if (pos === "PICK" || (theirDir && dataDashHasToken(theirDir.buy, "picks") && !dataDashIntentBuys(theirDir, pos))) {
+        bits.push("they want 2027 picks");
+        return bits.join(" · ");
+      }
+      const needW = dataDashPosNeedWord(theirProf, pos);
+      const extra = dataDashTheyNeedWhy(theirDir, pos, needW);
+      if (extra) bits.push(extra);
+      else if (theirDir && dataDashHasToken(theirDir.buy, pos)) bits.push("they buy " + pos);
+      return bits.join(" · ");
+    }
+
+    function dataDashBagOwnerId(bag) {
+      for (let i = 0; i < (bag || []).length; i++) {
+        if (bag[i] && bag[i].owner_id) return String(bag[i].owner_id);
+      }
+      return "";
+    }
+
+    function dataDashOpenSeat(uid) {
+      dataSeat = String(uid || "");
+      dataHunt = "";
+      dataHuntPos = "";
+      dataBlockAddOpen = false;
+      dataRoom = "overview";
+      dataDashEdit = false;
+      dataDashLibOpen = false;
+      focusNext = ".screen-h";
+      render();
+    }
+
     function dataDashAssetByPid(pid) {
       if (!pid) return null;
       const raw = String(pid);
@@ -6583,12 +6661,20 @@ const html = `<!DOCTYPE html>
         const need = dataDashNeedPos(myProf);
         bags.forEach(function (bag, uid) {
           if (String(uid) === mine) return;
+          const theirDir = seatDirOf(uid);
           const prof = homeDeskProfile(bag);
           for (let i = 0; i < need.length; i++) {
             const pos = need[i];
+            if (!dataDashIntentSells(theirDir, pos)) continue;
             const give = dataDashPosGiveWord(prof, pos);
-            if (!give) continue;
-            const extras = dataDashBagExtras(bag, pos);
+            let extras = dataDashBagExtras(bag, pos);
+            if (!extras.length) {
+              extras = (bag || []).filter(function (a) {
+                return homeDeskAssetPos(a) === pos && calcValueNum(a) >= DESK_MID
+                  && !dataDashIsQb1Rb1(bag, a);
+              }).sort(function (a, b) { return calcValueNum(a) - calcValueNum(b); }).slice(0, 2);
+            }
+            if (!extras.length) continue;
             for (let j = 0; j < extras.length; j++) {
               const a = extras[j];
               const needW = dataDashPosNeedWord(myProf, pos);
@@ -6596,15 +6682,16 @@ const html = `<!DOCTYPE html>
               if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
               const v = calcValueNum(a);
               if (v >= DESK_MID && v < DESK_STUD + 800) score += 1;
+              if (theirDir && (theirDir.label === "Hard rebuild" || theirDir.label === "Rebuild")) score += 1;
               dataDashHuntPush(rows, {
                 id: a.id,
                 name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
                 themId: String(uid),
                 themName: a.owner || dataDashSeatName(uid),
                 pos: pos,
-                why: "you " + (needW === "need" ? "need" : "are thin") + " " + pos + " · they are " + give + " " + pos,
-                why2: (myProf.route && prof.route && myProf.route !== prof.route)
-                  ? (prof.route + " · fill " + pos) : "",
+                why: "you " + (needW === "need" ? "need" : "are thin") + " " + pos
+                  + " · they sell " + pos + " leftover",
+                why2: theirDir && theirDir.label ? (theirDir.label + " · fill " + pos) : "",
                 sendA: "",
                 sendB: a.id,
                 score: score,
@@ -6617,15 +6704,16 @@ const html = `<!DOCTYPE html>
         const give = dataDashGivePos(myProf);
         bags.forEach(function (bag, uid) {
           if (String(uid) === mine) return;
+          const theirDir = seatDirOf(uid);
           const prof = homeDeskProfile(bag);
           for (let i = 0; i < give.length; i++) {
             const pos = give[i];
-            const needW = dataDashPosNeedWord(prof, pos);
-            if (!needW) continue;
+            if (!dataDashIntentBuys(theirDir, pos)) continue;
             const extras = dataDashBagExtras(myBag, pos);
             for (let j = 0; j < extras.length; j++) {
               const a = extras[j];
               const giveW = dataDashPosGiveWord(myProf, pos);
+              const needW = dataDashPosNeedWord(prof, pos);
               let score = (needW === "need" ? 4 : 2) + (giveW === "deep" ? 3 : 1);
               if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
               dataDashHuntPush(rows, {
@@ -6634,12 +6722,31 @@ const html = `<!DOCTYPE html>
                 themId: String(uid),
                 themName: dataDashSeatName(uid) || "them",
                 pos: pos,
-                why: "you are " + (giveW || "deep") + " " + pos + " · they " + (needW === "need" ? "need" : "are thin") + " " + pos,
-                why2: (myProf.route && prof.route && myProf.route !== prof.route)
-                  ? (prof.route + " · move " + pos) : "",
+                why: dataDashMoveWhy(theirDir, prof, pos, giveW),
+                why2: theirDir && theirDir.label ? (theirDir.label + " · move " + pos) : "",
                 sendA: a.id,
                 sendB: "",
                 score: score,
+              });
+            }
+          }
+          if (dataDashIntentBuys(theirDir, "PICK")) {
+            const picks = (myBag || []).filter(function (a) {
+              return homeDeskAssetPos(a) === "PICK" && calcValueNum(a) >= DESK_MID;
+            }).slice(0, 3);
+            for (let j = 0; j < picks.length; j++) {
+              const a = picks[j];
+              dataDashHuntPush(rows, {
+                id: a.id,
+                name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
+                themId: String(uid),
+                themName: dataDashSeatName(uid) || "them",
+                pos: "PICK",
+                why: dataDashMoveWhy(theirDir, prof, "PICK", "deep"),
+                why2: theirDir && theirDir.label ? (theirDir.label + " · they want youth") : "",
+                sendA: a.id,
+                sendB: "",
+                score: 5 + (theirDir && (theirDir.label === "Hard rebuild" || theirDir.label === "Rebuild") ? 3 : 0),
               });
             }
           }
@@ -6671,6 +6778,8 @@ const html = `<!DOCTYPE html>
       } else if (id === "stash_young") {
         bags.forEach(function (bag, uid) {
           if (mine && String(uid) === mine) return;
+          const theirDir = seatDirOf(uid);
+          const tank = theirDir && (theirDir.label === "Hard rebuild" || theirDir.label === "Rebuild");
           for (let i = 0; i < (bag || []).length; i++) {
             const a = bag[i];
             const pos = homeDeskAssetPos(a);
@@ -6686,11 +6795,13 @@ const html = `<!DOCTYPE html>
               themId: String(uid),
               themName: a.owner || dataDashSeatName(uid),
               pos: pos,
-              why: "age " + age.toFixed(1) + " · not their " + pos + "1",
-              why2: "",
+              why: tank
+                ? ((theirDir.label || "Rebuild") + " · they want youth")
+                : ("age " + age.toFixed(1) + " · not their " + pos + "1"),
+              why2: tank ? ("age " + age.toFixed(1)) : "",
               sendA: "",
               sendB: a.id,
-              score: Math.round(v / 200) + (24 - age),
+              score: Math.round(v / 200) + (24 - age) + (tank ? 4 : 0),
             });
           }
         });
@@ -6770,6 +6881,7 @@ const html = `<!DOCTYPE html>
           if (uid === mine) return;
           const theirBag = bags.get(uid) || [];
           const theirProf = homeDeskProfile(theirBag);
+          const theirDir = seatDirOf(uid);
           const theirNeed = dataDashNeedPos(theirProf);
           dataDashBlockAssets(uid).forEach(function (aid) {
             const a = dataDashAssetByPid(aid);
@@ -6783,7 +6895,7 @@ const html = `<!DOCTYPE html>
               themName: a.owner || m.name,
               pos: pos,
               why: "on their block · you need " + pos,
-              why2: theirProf.route ? (theirProf.route + " · fill " + pos) : "",
+              why2: theirDir && theirDir.label ? (theirDir.label + " · fill " + pos) : "",
               sendA: "",
               sendB: a.id,
               score: 7,
@@ -6793,15 +6905,17 @@ const html = `<!DOCTYPE html>
             const a = dataDashAssetByPid(aid);
             if (!a) return;
             const pos = homeDeskAssetPos(a);
-            if (theirNeed.indexOf(pos) < 0) return;
+            if (!dataDashIntentBuys(theirDir, pos)) return;
+            if (theirNeed.indexOf(pos) < 0 && !dataDashHasToken((theirDir && theirDir.buy) || [], pos)) return;
+            const needWhy = dataDashTheyNeedWhy(theirDir, pos, dataDashPosNeedWord(theirProf, pos));
             dataDashHuntPush(rows, {
               id: a.id,
               name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
               themId: uid,
               themName: m.name,
               pos: pos,
-              why: "on your block · they need " + pos,
-              why2: theirProf.route ? (theirProf.route + " · move " + pos) : "",
+              why: needWhy ? ("on your block · " + needWhy) : ("on your block · they buy " + pos),
+              why2: theirDir && theirDir.label ? (theirDir.label + " · move " + pos) : "",
               sendA: a.id,
               sendB: "",
               score: 6,
@@ -7142,6 +7256,7 @@ const html = `<!DOCTYPE html>
       dataSet = null;
       dataHunt = "";
       dataHuntPos = "";
+      dataSeat = "";
       dataBlockAddOpen = false;
       if (dataDashIsHunt(id)) {
         dataHunt = id;
@@ -7199,16 +7314,88 @@ const html = `<!DOCTYPE html>
       render();
     }
 
-    function dataDashSearchHtml() {
-      const ph = dataRoom === "tape"
-        ? "Search trades, seats, headlines"
-        : dataRoom === "book"
-          ? "Search players and picks"
-          : "Search the league book";
-      return '<div class="data-search">'
-        + '<span class="data-search-ico" aria-hidden="true">⌕</span>'
-        + '<input type="search" value="' + esc(dataQ) + '" data-data-q="1"'
-        + ' placeholder="' + esc(ph) + '" aria-label="Search league data" /></div>';
+    function dataDashDirStripHtml() {
+      const seats = ((seatDirection && seatDirection.seats) || (members || []).map(function (m) {
+        return { seat_user_id: m.user_id, name: m.name, place: m.place, label: "Reload" };
+      })).slice().sort(function (a, b) { return (a.place || 99) - (b.place || 99); });
+      if (!seats.length) return "";
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      return '<div class="data-rooms data-dir" role="list" aria-label="Team direction">'
+        + seats.map(function (s) {
+          const uid = String(s.seat_user_id || "");
+          const you = mine && uid === mine;
+          return '<button type="button" class="data-room data-dir-seat' + (you ? " you" : "") + '"'
+            + ' data-dir-seat="' + esc(uid) + '" role="listitem">'
+            + "<b>" + esc(s.name || uid) + "</b>"
+            + "<span>" + esc(s.label || "Reload") + "</span></button>";
+        }).join("")
+        + "</div>";
+    }
+
+    function dataDashSmartMovesVs(uid) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const fill = dataDashHuntRows("fill_holes");
+      const move = dataDashHuntRows("move_extras");
+      let rows = fill.concat(move);
+      if (mine && String(uid) === mine) {
+        rows.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+        return rows.slice(0, 3);
+      }
+      rows = rows.filter(function (r) { return String(r.themId) === String(uid); });
+      rows.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+      return rows.slice(0, 3);
+    }
+
+    function dataDashSeatPageHtml(uid) {
+      const d = seatDirOf(uid);
+      const name = (d && d.name) || dataDashSeatName(uid) || uid;
+      const label = (d && d.label) || "Reload";
+      const why = (d && d.why) || "Recent-window tape is still loading.";
+      const buy = ((d && d.buy) || []).join(" · ") || "—";
+      const sell = ((d && d.sell) || []).join(" · ") || "—";
+      const refuse = ((d && d.refuse) || []).join(" · ") || "—";
+      const holes = ((d && d.holes) || []).concat((d && d.thin) || []);
+      const holeBits = [];
+      const seen = {};
+      holes.forEach(function (p) {
+        if (!p || seen[p]) return;
+        seen[p] = true;
+        const shop = d && dataDashIntentBuys(d, p);
+        holeBits.push(p + (shop ? "" : " — not shopping " + p));
+      });
+      const posOrder = ["QB", "RB", "WR", "TE"];
+      const soldGot = posOrder.map(function (pos) {
+        const block = d && d.by_pos && d.by_pos[pos];
+        if (!block || (!(block.out || []).length && !(block.in || []).length)) return "";
+        return '<div class="leg list"><span>' + esc(pos) + "</span><b>"
+          + esc("sold " + ((block.out || []).slice(0, 3).join(", ") || "—")
+            + " · got " + ((block.in || []).slice(0, 3).join(", ") || "—"))
+          + "</b></div>";
+      }).join("");
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const moves = mine ? dataDashSmartMovesVs(uid) : [];
+      const moveHtml = !mine
+        ? '<p class="data-hint">Claim your seat to see feasible pings.</p>'
+        : (moves.length
+          ? moves.map(dataDashHuntRowHtml).join("")
+          : '<p class="data-hint">No feasible ping with this seat.</p>');
+      const you = mine && String(uid) === mine;
+      return '<section class="data-dash" aria-label="' + esc(name) + ' direction">'
+        + '<p class="caption"><button type="button" class="chip back" data-dir-back="1">← Data</button></p>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(name) + "</h2>"
+        + '<p class="data-dash-sub">' + esc(label) + " · " + esc(why) + "</p>"
+        + '<div class="data-dir-facts">'
+        + statBox("Buy", buy)
+        + statBox("Sell", sell)
+        + statBox("Refuse", refuse)
+        + (holeBits.length ? statBox("Bag facts", holeBits.join(" · ")) : "")
+        + "</div>"
+        + (soldGot ? '<div class="data-h">Last window</div>' + soldGot : "")
+        + '<div class="data-h">' + (you ? "Smart moves for you" : "Smart moves vs " + esc(name)) + "</div>"
+        + moveHtml
+        + '<p class="caption"><button type="button" class="chip" data-dir-price="' + esc(uid) + '">Price a deal</button>'
+        + (you ? "" : ' <button type="button" class="chip" data-dir-home="' + esc(uid) + '">Open team home</button>')
+        + "</p></section>";
     }
 
     function dataDashRoomsHtml() {
@@ -7387,35 +7574,12 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashOverviewHtml() {
-      const q = String(dataQ || "").trim();
-      if (q) {
-        const book = dataDashBookHits(q, "", "", "value", 8);
-        const tape = dataDashTapeHits(q, "", 6);
-        const seats = (members || []).filter(function (m) {
-          return String(m.name || "").toLowerCase().indexOf(q.toLowerCase()) >= 0;
-        }).slice(0, 4);
-        return (book.n
-          ? ('<div class="data-h">Book</div>' + book.rows.map(dataDashBookRow).join(""))
-          : "")
-          + (tape.n
-            ? ('<div class="data-h">Tape</div>' + tape.rows.map(dataDashTapeRow).join(""))
-            : "")
-          + (seats.length
-            ? ('<div class="data-h">Seats</div>' + seats.map(function (m) {
-              return '<button type="button" class="data-xrow" data-data-seat="' + esc(m.user_id) + '">'
-                + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(m.name) + "</span>"
-                + '<span class="data-xrow-meta">Open team home</span></div></button>';
-            }).join(""))
-            : "")
-          + (!book.n && !tape.n && !seats.length
-            ? '<p class="data-hint">Nothing matches that search.</p>'
-            : "");
-      }
       return dataDashBoardHtml();
     }
 
     function dataDashHtml() {
       if (dataHunt && dataDashById(dataHunt)) return dataDashHuntPageHtml(dataHunt);
+      if (dataSeat) return dataDashSeatPageHtml(dataSeat);
       const room = dataDashRoomCanon(dataRoom);
       let body = "";
       if (room === "book") body = dataDashBookHtml();
@@ -7428,10 +7592,11 @@ const html = `<!DOCTYPE html>
       const back = room === "overview"
         ? ""
         : '<p class="caption"><button type="button" class="chip back" data-data-room="overview">← Data</button></p>';
+      const strip = room === "overview" ? dataDashDirStripHtml() : "";
       return '<section class="data-dash" aria-label="League data">'
         + '<h2 class="screen-h" tabindex="-1">Data</h2>'
-        + '<p class="data-dash-sub">League research. Who has what you need, who wants what you will deal. Votes never enter these numbers.</p>'
-        + dataDashSearchHtml()
+        + '<p class="data-dash-sub">Votes never enter these numbers.</p>'
+        + strip
         + dataDashRoomsHtml()
         + back
         + body
@@ -16853,6 +17018,8 @@ const html = `<!DOCTYPE html>
           legsA: legsA, legsB: legsB, kind: kind, why: why, pos: fillPos || depthPos || "", rel: rel
         }, profA, profB);
         if (want && job !== want) return;
+        const themId = dataDashBagOwnerId(bagB);
+        const theirDir = themId ? seatDirOf(themId) : null;
         let jobPos = fillPos || depthPos || "";
         if (!jobPos && (job === "fill" || job === "move")) {
           const side = job === "fill" ? legsB : legsA;
@@ -16867,6 +17034,8 @@ const html = `<!DOCTYPE html>
             if (job === "move" && mineDeep && themThin) { jobPos = p; break; }
           }
         }
+        if (job === "move" && jobPos && !dataDashIntentBuys(theirDir, jobPos)) return;
+        if (job === "fill" && jobPos && !dataDashIntentSells(theirDir, jobPos)) return;
         if (!best || score < best.score) {
           best = {
             legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel, score: score,
@@ -19648,6 +19817,7 @@ const html = `<!DOCTYPE html>
         dataSet = null;
         dataHunt = "";
         dataHuntPos = "";
+        dataSeat = "";
         dataBlockAddOpen = false;
         dataDashEdit = !dataDashEdit;
         dataDashLibOpen = false;
@@ -19738,10 +19908,38 @@ const html = `<!DOCTYPE html>
       if (huntBack) {
         dataHunt = "";
         dataHuntPos = "";
+        dataSeat = "";
         dataBlockAddOpen = false;
         dataRoom = "overview";
         focusNext = ".screen-h";
         render();
+        return;
+      }
+      const dirBack = e.target.closest("[data-dir-back]");
+      if (dirBack) {
+        dataSeat = "";
+        dataHunt = "";
+        dataHuntPos = "";
+        dataRoom = "overview";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const dirSeatBtn = e.target.closest("[data-dir-seat]");
+      if (dirSeatBtn) {
+        const uid = dirSeatBtn.getAttribute("data-dir-seat") || "";
+        if (uid) dataDashOpenSeat(uid);
+        return;
+      }
+      const dirPrice = e.target.closest("[data-dir-price]");
+      if (dirPrice) {
+        dataDashOpenCalc(dirPrice.getAttribute("data-dir-price") || "", "", "");
+        return;
+      }
+      const dirHome = e.target.closest("[data-dir-home]");
+      if (dirHome) {
+        const uid = dirHome.getAttribute("data-dir-home") || "";
+        if (uid) selectMe(uid);
         return;
       }
       const huntPosBtn = e.target.closest("[data-hunt-pos]");
@@ -19796,6 +19994,7 @@ const html = `<!DOCTYPE html>
         dataSet = null;
         dataHunt = "";
         dataHuntPos = "";
+        dataSeat = "";
         dataBlockAddOpen = false;
         dataDashEdit = false;
         dataDashLibOpen = false;
@@ -20998,15 +21197,6 @@ const html = `<!DOCTYPE html>
         if (!profileCrop) return;
         profileCrop.zoom = Math.max(1, Math.min(3, Number(e.target.value) || 1));
         paintProfileCrop();
-        return;
-      }
-      const dataQBox = e.target.closest("[data-data-q]");
-      if (dataQBox) {
-        dataQ = dataQBox.value || "";
-        const start = dataQBox.selectionStart;
-        const end = dataQBox.selectionEnd;
-        render();
-        dataDashFocusSearch({ start: start, end: end });
         return;
       }
       const calcFilterBox = e.target.closest("[data-calc-filter]");
@@ -22506,13 +22696,19 @@ if (!inline.includes("function dataDashHtml(")
   || !inline.includes("function dataDashBookHtml(")
   || !inline.includes("function dataDashTapeHtml(")
   || !inline.includes("function dataDashChartHtml(")
-  || !inline.includes("data-data-q")
+  || inline.includes("data-data-q")
+  || inline.includes("function dataDashSearchHtml(")
+  || !inline.includes("function dataDashDirStripHtml(")
+  || !inline.includes("function dataDashSeatPageHtml(")
+  || !inline.includes("data-dir-seat")
+  || !inline.includes("Votes never enter these numbers.")
   || !inline.includes("data-data-room")
-  || !inline.includes("League research")
+  || !inline.includes("data-calc-filter")
+  || !inline.includes("data-cuff-q")
   || fnSrc("dataDashHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
-  throw new Error("Data homebase must ship search, desks, book/tape/seats — no bag totals on Home");
+  throw new Error("Data homebase must ship direction strip and desks — no top search, no bag totals on Home");
 }
 {
   const reportStart = inline.indexOf("    const DATA_REPORTS = [");
@@ -22575,8 +22771,39 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("seat_trade_block")
     || !inline.includes("cuckle.trade.block.v1")
     || fnSrc("render").includes("loadSeatTradeBlock(")
-    || fnSrc("render").includes("loadSeatDataDash(")) {
+    || fnSrc("render").includes("loadSeatDataDash(")
+    || fnSrc("render").includes("seat-direction.json")
+    || fnSrc("render").includes("getLeagueJson(\"seat-direction")) {
     throw new Error("Trade block must persist via seat_trade_block and must not fetch from render()");
+  }
+  if (!inline.includes("function seatDirOf(")
+    || !inline.includes("function dataDashIntentBuys(")
+    || !inline.includes("function dataDashIntentSells(")
+    || !inline.includes("function dataDashTheyNeedWhy(")
+    || !fnSrc("dataDashHuntRows").includes("dataDashIntentBuys(")
+    || !fnSrc("dataDashHuntRows").includes("dataDashIntentSells(")
+    || !fnSrc("homeDeskTalk").includes("dataDashIntentBuys(")
+    || fnSrc("dataDashHuntRows").includes("they need RB")) {
+    throw new Error("Deal hunts and Home Move must gate on direction buy/sell/refuse");
+  }
+  {
+    const dirPath = path.join(ROOT, "data/ui/seat-direction.json");
+    if (!fs.existsSync(dirPath)) {
+      throw new Error("seat-direction.json missing — run build-seat-direction.mjs");
+    }
+    const dirBook = JSON.parse(fs.readFileSync(dirPath, "utf8"));
+    const dirSeats = (dirBook && dirBook.seats) || [];
+    if (dirBook.v !== 1 || dirSeats.length !== 10) {
+      throw new Error("seat-direction.json must hold v:1 and exactly 10 seats");
+    }
+    const arae = dirSeats.find((s) => String(s.seat_user_id) === "458004578168729600");
+    const sf = dirSeats.find((s) => String(s.name) === "SF69erss");
+    if (!arae || arae.label !== "Hard rebuild" || !(arae.refuse || []).includes("RB starter")) {
+      throw new Error("ARae must be Hard rebuild and refuse RB starters");
+    }
+    if (sf && sf.label === "Hard rebuild") {
+      throw new Error("SF69erss must not be labeled Hard rebuild");
+    }
   }
 }
 if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('data-view="titles"')) {

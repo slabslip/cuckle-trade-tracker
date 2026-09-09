@@ -6686,10 +6686,15 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashMoveWhy(theirDir, theirProf, pos, giveW) {
-      const bits = [pos === "PICK" ? "you can send a pick" : ("you have extra " + pos)];
+      const bits = [pos === "PICK" ? "you can send a pick"
+        : (giveW === "aging" ? ("move aging " + pos) : ("you have extra " + pos))];
       const sold = theirDir && theirDir.by_pos && theirDir.by_pos[pos] && theirDir.by_pos[pos].out;
       if (sold && sold[0]) bits.push("they sold " + sold[0]);
       if (pos === "PICK") return dataDashPickMoveWhy(theirDir);
+      if (theirDir && dataDashHasToken(theirDir.buy, "young")) {
+        bits.push("they buy young");
+        return bits.join(" · ");
+      }
       if (theirDir && dataDashHasToken(theirDir.buy, "picks") && !dataDashIntentBuys(theirDir, pos)) {
         bits.push("they want 2027 picks");
         return bits.join(" · ");

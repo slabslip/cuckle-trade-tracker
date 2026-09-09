@@ -6515,7 +6515,10 @@ const html = `<!DOCTYPE html>
       const bits = ["you are " + (giveW || "deep") + " " + pos];
       const sold = theirDir && theirDir.by_pos && theirDir.by_pos[pos] && theirDir.by_pos[pos].out;
       if (sold && sold[0]) bits.push("they sold " + sold[0]);
-      if (pos === "PICK" || (theirDir && dataDashHasToken(theirDir.buy, "picks") && !dataDashIntentBuys(theirDir, pos))) {
+      if (pos === "PICK") {
+        return "you can move a pick · they want 2027 picks";
+      }
+      if (theirDir && dataDashHasToken(theirDir.buy, "picks") && !dataDashIntentBuys(theirDir, pos)) {
         bits.push("they want 2027 picks");
         return bits.join(" · ");
       }

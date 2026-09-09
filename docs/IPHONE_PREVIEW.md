@@ -13,8 +13,8 @@ http://127.0.0.1:8799/iphone-preview.html
 
 Same page: `design-league-home-frame.html`.
 
-You should see the Linear bottom pill (Home | Teams | Ledger | Data) and the Home digest
-inside an iPhone shell (Dynamic Island + home bar). News is a digest door, not a bottom peek.
+You should see the Linear bottom pill (Home | Teams | News | Ledger | Data) and the Home digest
+inside an iPhone shell (Dynamic Island + home bar). News is a peer tab, not a Home door.
 
 ## Design Mode (clickable DOM)
 

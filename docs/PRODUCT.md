@@ -23,11 +23,10 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. **Home** is the daily paper (Linear bottom pill + **Cuckle trade calculator** + a News
-   door into `?view=news`; signed-in **Alerts**
-   notifications and **Trade Desk** — no bag hero, no Recent Trade chip). **Teams** is
-   first-person after a seat. Price a hypothetical on **`?view=calc`**. League tape stays the
-   water cooler.
+4. **Home** is the daily paper (Linear bottom pill + **Cuckle trade calculator** + signed-in
+   **Trade Desk** — no bag hero, no Recent Trade chip, no News door). **News** is a peer tab
+   (Alerts + the league feed, with a missed-count bubble). **Teams** is first-person after a
+   seat. Price a hypothetical on **`?view=calc`**. League tape stays the water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
 
 That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle. Recent-window direction (Hard rebuild / Rebuild / Reload / Win-now) may filter who to ping; it does not move a clock or a delta.

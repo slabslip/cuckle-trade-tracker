@@ -148,14 +148,14 @@ const html = `<!DOCTYPE html>
     }
     /* Fixed chrome shares the stage box. No transform on these — Design picker uses rects. */
     html.design-iphone .lh-actions {
-      left: calc(var(--design-left) + (var(--design-width) - min(300px, calc(var(--design-width) - 40px))) / 2) !important;
+      left: calc(var(--design-left) + (var(--design-width) - min(372px, calc(var(--design-width) - 16px))) / 2) !important;
       right: auto !important;
-      width: min(300px, calc(var(--design-width) - 40px)) !important;
+      width: min(372px, calc(var(--design-width) - 16px)) !important;
       max-width: none !important;
       margin: 0 !important;
       transform: none !important;
       bottom: auto !important;
-      top: calc(var(--design-top) + var(--design-height) - 70px) !important;
+      top: calc(var(--design-top) + var(--design-height) - 90px) !important;
     }
     html.design-iphone .news-pullup,
     html.design-iphone .vote-sheet,
@@ -1374,14 +1374,14 @@ const html = `<!DOCTYPE html>
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
     /* League-home tabs — Linear-style floating pill at the true bottom.
-       Home | Teams | Ledger | Data. Four only. Not a fifth tab. Owns the slot
-       the News Feed peek used to occupy. */
-    :root { --lh-nav-h: 56px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
+       Home | Teams | News | Ledger | Data. Five labeled peers. News holds
+       Alerts + the feed. Owns the slot the News Feed peek used to occupy. */
+    :root { --lh-nav-h: 72px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
     body.has-lh-bar #app {
-      padding-bottom: calc(var(--lh-nav-h) + 52px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--lh-nav-h) + 36px + env(safe-area-inset-bottom, 0px));
     }
     html.design-iphone body.has-lh-bar #app {
-      padding-bottom: 112px;
+      padding-bottom: 128px;
     }
     body.has-news-pullup-open .lh-actions,
     body.has-news-pullup-closing .lh-actions {
@@ -1391,7 +1391,7 @@ const html = `<!DOCTYPE html>
       position: fixed; z-index: 45;
       left: 50%; transform: translateX(-50%);
       bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-      width: min(300px, calc(100vw - 40px));
+      width: min(372px, calc(100vw - 16px));
       margin: 0; box-sizing: border-box;
       background: rgba(16, 14, 12, 0.72);
       border: 1px solid rgba(224, 180, 76, 0.42);
@@ -1409,18 +1409,19 @@ const html = `<!DOCTYPE html>
       }
     }
     .lh-action-row {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 2px; align-items: stretch; min-height: var(--lh-nav-h);
-      padding: 5px 7px;
+      padding: 8px 8px;
     }
     button.lh-action {
       appearance: none; font: inherit; color: rgba(224, 180, 76, 0.5);
       background: transparent; border: 0; border-radius: 999px;
-      padding: 6px 4px 5px; margin: 0;
+      padding: 8px 2px 6px; margin: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 3px;
+      gap: 4px;
       cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
       min-height: var(--hig-tap);
+      min-height: 56px;
       box-shadow: none;
       position: relative;
     }
@@ -1435,7 +1436,7 @@ const html = `<!DOCTYPE html>
       overflow: visible;
     }
     button.lh-action .lh-ico svg {
-      display: block; width: 20px; height: 20px;
+      display: block; width: 24px; height: 24px;
     }
     button.lh-action .lh-ico.lh-ico-flair {
       padding: 0; border: 0;
@@ -1464,11 +1465,21 @@ const html = `<!DOCTYPE html>
       overflow-wrap: anywhere; letter-spacing: 0.01em;
     }
     button.lh-action .lh-badge {
-      position: absolute; top: 4px; right: 6px;
+      position: absolute; top: 6px; right: 8px;
       display: inline-block; margin-left: 0; min-width: 0.55em; min-height: 0.55em;
       padding: 0; border-radius: 999px; background: var(--lh-gold, #e0b44c);
       color: transparent; font-size: 0; font-weight: 800; line-height: 0;
       font-variant-numeric: tabular-nums; vertical-align: 0;
+    }
+    button.lh-action .lh-count {
+      position: absolute; top: 4px; left: 50%;
+      margin-left: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+      border-radius: 999px; background: var(--lh-gold, #e0b44c);
+      color: #1a1408; font-size: 0.625rem; font-weight: 800; line-height: 1;
+      font-variant-numeric: tabular-nums; letter-spacing: 0;
+      box-shadow: 0 0 0 2px rgba(16, 14, 12, 0.85);
     }
     .lh-section { margin: 0 0 18px; }
     .your3 { margin: 0 0 16px; }
@@ -1486,44 +1497,6 @@ const html = `<!DOCTYPE html>
     }
     button.your3-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.your3-row:last-child { margin-bottom: 0; }
-    .home-news { margin: 0 0 16px; }
-    .home-news-h {
-      margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
-      text-transform: uppercase; color: var(--dim);
-    }
-    .home-news .news-pullup-card { margin: 0 0 10px; }
-    .home-news .news-pullup-card:last-child { margin-bottom: 0; }
-    button.home-news-door {
-      appearance: none; font: inherit; color: var(--text);
-      display: block; width: 100%; text-align: left; cursor: pointer;
-      background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-      padding: 10px 48px 10px 14px; margin: 0; min-height: 52px;
-      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
-      position: relative;
-    }
-    button.home-news-door:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .home-news-door-kicker {
-      display: inline-block; margin: 0 8px 2px 0;
-      font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--lh-gold, #e0b44c);
-    }
-    .home-news-door-who {
-      display: inline; margin: 0;
-      font-size: 0.75rem; font-weight: 650; color: var(--muted); line-height: 1.3;
-    }
-    .home-news-door-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
-    .home-news-door-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
-    .home-news-door-line {
-      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
-      overflow: hidden;
-      font-size: 0.8125rem; font-weight: 650; line-height: 1.3; color: var(--text);
-    }
-    .home-news-door-count {
-      position: absolute; top: 12px; right: 14px;
-      min-width: 1.4em; text-align: right;
-      font-size: 0.6875rem; font-weight: 750; color: var(--dim);
-      font-variant-numeric: tabular-nums;
-    }
     .home-desk { margin: 0 0 16px; }
     .home-desk-h {
       margin: 0 0 4px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
@@ -3841,7 +3814,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "higGlassNews20260909101200";
+    const DATA_V = "barNewsTab20260909104000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6197,7 +6170,7 @@ const html = `<!DOCTYPE html>
         + ' aria-selected="' + (on ? "true" : "false") + '"'
         + ' tabindex="' + (on ? "0" : "-1") + '"'
         + named + '>'
-        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
         + '<span class="lh-lab">Data</span></button>';
     }
@@ -6219,7 +6192,8 @@ const html = `<!DOCTYPE html>
     function homeTabCanon(tab) {
       const t = String(tab || "").toLowerCase();
       if (t === "data") return "history";
-      if (t === "teams" || t === "ledger" || t === "history") return t;
+      if (t === "alerts") return "news";
+      if (t === "teams" || t === "ledger" || t === "history" || t === "news") return t;
       return "home";
     }
     function isHomeDigest() {
@@ -6229,16 +6203,30 @@ const html = `<!DOCTYPE html>
     function homeTabAction(tab, lab, path) {
       const on = homeTabCanon(homeTab) === homeTabCanon(tab);
       if (tab === "ledger") ledgerEnsureLoaded();
-      const n = tab === "ledger" ? ledgerBadgeCount() : 0;
-      const badge = n ? '<span class="lh-badge">' + n + "</span>" : "";
-      const aria = n ? lab + ", " + n + " waiting" : lab;
+      let badge = "";
+      let aria = lab;
+      if (tab === "ledger") {
+        const n = ledgerBadgeCount();
+        if (n) {
+          badge = '<span class="lh-badge" aria-hidden="true"></span>';
+          aria = lab + ", " + n + " waiting";
+        }
+      } else if (tab === "news") {
+        const n = newsMissedCount();
+        if (n) {
+          const shown = n > 9 ? "9+" : String(n);
+          badge = '<span class="lh-count" aria-hidden="true">' + shown + "</span>";
+          aria = lab + ", " + n + " missed";
+        }
+      }
       return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="' + esc(tab) + '"'
         + ' aria-selected="' + (on ? "true" : "false") + '"'
         + ' tabindex="' + (on ? "0" : "-1") + '"'
         + ' aria-label="' + esc(aria) + '">'
-        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" focusable="false">'
         + '<path fill="currentColor" d="' + path + '"/></svg></span>'
-        + '<span class="lh-lab">' + esc(lab) + badge + "</span></button>";
+        + badge
+        + '<span class="lh-lab">' + esc(lab) + "</span></button>";
     }
 
     /**
@@ -6319,7 +6307,7 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Linear-style floating pill: Home | Teams | Ledger | History.
+     * Linear-style floating pill: Home | Teams | News | Ledger | History.
      * Owns the bottom slot. Home is the digest. Other tabs swap in place.
      */
     function homeChips() {
@@ -6329,6 +6317,8 @@ const html = `<!DOCTYPE html>
           "M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z")
         + homeTabAction("teams", "Teams",
           "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
+        + homeTabAction("news", "News",
+          "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
         + homeTabAction("ledger", "Ledger",
           "M6 3.5h9.2L18 6.8V20.5H6zm3.2 5.2h5.6v1.6H9.2zm0 3.4h5.6v1.6H9.2zm0 3.4h4.2v1.6H9.2z")
         + dataSetRow()
@@ -6371,6 +6361,7 @@ const html = `<!DOCTYPE html>
       voteToast = null;
       if (homeTab === "ledger") ledgerEnsureLoaded();
       if (homeTab === "history") dataDashEnsureTape();
+      if (homeTab === "news") newsMarkSeen();
       focusNext = '[data-home-tab="' + homeTab + '"]';
       render();
     }
@@ -11955,8 +11946,9 @@ const html = `<!DOCTYPE html>
      * set that reads it.
      */
     function renderLeagueHome() {
-      // Linear pill owns the bottom. News is a Home digest door into view=news.
+      // Linear pill owns the bottom. News is a peer tab (Alerts + feed).
       // Each block is isolated so a throw in one tab cannot blank the rest.
+      if (homeTab === "news") newsMarkSeen();
       let chips = "";
       let progress = "";
       let tabBody = "";
@@ -11970,10 +11962,17 @@ const html = `<!DOCTYPE html>
         try { tabBody = renderLedger(); } catch (err) { console.error(err); tabBody = ""; }
       } else if (homeTab === "history") {
         try { tabBody = renderDataSetsPage(); } catch (err) { console.error(err); tabBody = ""; }
+      } else if (homeTab === "news") {
+        try { tabBody = renderNewsTab(); } catch (err) { console.error(err); tabBody = ""; }
       } else {
         try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       }
       return chips + (tabBody || progress);
+    }
+
+    function renderNewsTab() {
+      newsMarkSeen();
+      return your3Html() + renderNewsBody();
     }
 
     function renderNews() {
@@ -17431,8 +17430,44 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    function your3Html() {
-      if (!authSeatId() || !authSession) return "";
+    function newsSeenAt() {
+      try {
+        const n = Number(localStorage.getItem("cuckle.newsSeenAt") || 0);
+        return n > 0 ? n : 0;
+      } catch (err) {
+        return 0;
+      }
+    }
+
+    function newsMarkSeen() {
+      try { localStorage.setItem("cuckle.newsSeenAt", String(Date.now())); } catch (err) { /* ignore */ }
+    }
+
+    function newsUnreadCount() {
+      if (homeTabCanon(homeTab) === "news") return 0;
+      const at = newsSeenAt();
+      const items = newsItemsLive();
+      const week = 7 * 86400000;
+      const now = Date.now();
+      let n = 0;
+      for (let i = 0; i < items.length; i++) {
+        const pub = Number(items[i] && items[i].published) || 0;
+        if (!pub) continue;
+        if (at) {
+          if (pub > at) n++;
+        } else if ((now - pub) <= week) {
+          n++;
+        }
+      }
+      return n;
+    }
+
+    function newsMissedCount() {
+      return your3Rows().length + newsUnreadCount();
+    }
+
+    function your3Rows() {
+      if (!authSeatId() || !authSession) return [];
       const seat = String(authSeatId());
       const rows = [];
       const bets = ledgerExpireLocal ? ledgerExpireLocal(ledgerBets || []) : (ledgerBets || []);
@@ -17469,6 +17504,12 @@ const html = `<!DOCTYPE html>
           tx: latest.transaction_id,
         });
       }
+      return rows;
+    }
+
+    function your3Html() {
+      if (!authSeatId() || !authSession) return "";
+      const rows = your3Rows();
       if (!rows.length) {
         return '<section class="your3 is-empty" aria-label="Alerts">'
           + '<div class="your3-h">Alerts</div>'
@@ -18795,41 +18836,6 @@ const html = `<!DOCTYPE html>
         + cosmeticsDetailSheetHtml();
     }
 
-    function homeNewsDoorHtml() {
-      try {
-        const book = news && news.v === 1 ? news : null;
-        const raw = (book && book.items) || [];
-        const items = newsItemsLive();
-        let emptyLine = "";
-        if (!items.length) {
-          emptyLine = !book
-            ? "The feed could not be loaded."
-            : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
-        }
-        const peekItem = items[0] || null;
-        const bit = peekItem
-          ? newsHeroLine(peekItem)
-          : { line: emptyLine || "Open the News Feed", who: "" };
-        const line = String((bit && bit.line) || emptyLine || "Open the News Feed");
-        const who = (bit && bit.who) || "";
-        const n = items.length;
-        return '<button type="button" class="home-news-door" data-view="news"'
-          + ' aria-label="News Feed">'
-          + '<span class="home-news-door-kicker">News Feed</span> '
-          + (who ? '<span class="home-news-door-who">' + who + "</span>" : "")
-          + '<span class="home-news-door-line">' + esc(line) + "</span>"
-          + (n ? '<span class="home-news-door-count">' + n + "</span>" : "")
-          + "</button>";
-      } catch (err) {
-        console.error(err);
-        return '<button type="button" class="home-news-door" data-view="news"'
-          + ' aria-label="News Feed">'
-          + '<span class="home-news-door-kicker">News Feed</span>'
-          + '<span class="home-news-door-line">The feed could not be shown. Open for details.</span>'
-          + "</button>";
-      }
-    }
-
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
@@ -18838,10 +18844,8 @@ const html = `<!DOCTYPE html>
         + ' width="1024" height="180" alt="Cuckle calculator">'
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
-      return your3Html()
-        + '<section class="lh-section">' + door + "</section>"
-        + homeDeskHtml()
-        + '<section class="lh-section">' + homeNewsDoorHtml() + "</section>";
+      return '<section class="lh-section">' + door + "</section>"
+        + homeDeskHtml();
     }
 
 
@@ -19848,7 +19852,7 @@ const html = `<!DOCTYPE html>
       if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
       if (!me && SEATLESS.indexOf(view) < 0) view = "home";
       // Legacy full-screen doors → in-place league-home tabs.
-      if (!me && (view === "teams" || view === "ledger" || view === "datasets")) {
+      if (!me && (view === "teams" || view === "ledger" || view === "datasets" || view === "news")) {
         homeTab = view === "datasets" ? "history" : view;
         view = "home";
       }
@@ -20267,7 +20271,7 @@ const html = `<!DOCTYPE html>
         if (closeTopmost()) e.preventDefault();
         return;
       }
-      // Roving tabs: one stop in the tab order, arrows move between the four sections.
+      // Roving tabs: one stop in the tab order, arrows move between the league sections.
       const tab = e.target.closest && e.target.closest('[role="tab"]');
       if (tab) {
         const list = tab.closest('[role="tablist"]');
@@ -22411,9 +22415,11 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || prog.includes("data-board-open")) {
     throw new Error("leagueInProgress must not mount the Recent Trade chip; Alerts owns the vote");
   }
-  if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
-    || !prog.includes("homeDeskHtml()") || !prog.includes("homeNewsDoorHtml()")) {
-    throw new Error("Home digest is Alerts + Cuckle trade calculator + Trade Desk + News door");
+  if (prog.includes("your3Html()") || prog.includes("homeNewsDoorHtml()")) {
+    throw new Error("Home digest must not mount Alerts or the News door — the News tab owns them");
+  }
+  if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")) {
+    throw new Error("Home digest is Cuckle trade calculator + Trade Desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -23501,20 +23507,21 @@ if (!homeReturn.includes("homeChips()")
   || homeReturn.includes("id=\"newsPullup\"")) {
   throw new Error("renderLeagueHome must compose homeChips() and must not mount the News Feed pull-up");
 }
-if (!inline.includes("function homeNewsDoorHtml(")
-  || !inline.includes('class="home-news-door"')
-  || !inline.includes('data-view="news"')
-  || !html.includes("button.home-news-door")
-  || !inline.includes('"cosmetics", "news"')) {
-  throw new Error("Home must keep a News Feed door that opens view=news");
+if (inline.includes('class="home-news-door"')
+  || html.includes("button.home-news-door")) {
+  throw new Error("News Feed door must not ship on Home — the News tab is the door");
+}
+if (!inline.includes('"cosmetics", "news"')) {
+  throw new Error("news must stay a known view so ?view=news remaps onto the News tab");
 }
 {
   const lhCss = html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {"));
   if (!lhCss.includes("position: fixed") || !lhCss.includes("var(--lh-gold")
-    || !lhCss.includes("border-radius: 999px") || !lhCss.includes("repeat(4, minmax(0, 1fr))")
+    || !lhCss.includes("border-radius: 999px") || !lhCss.includes("repeat(5, minmax(0, 1fr))")
+    || lhCss.includes("repeat(4, minmax(0, 1fr))")
     || lhCss.includes("inset 0 -2px 0")
     || lhCss.includes("var(--news-pullup-peek)")) {
-    throw new Error("league home tabs must sit as a 4-up Linear pill at the bottom");
+    throw new Error("league home tabs must sit as a 5-up Linear pill at the bottom");
   }
   if (!inline.includes('aria-label="League home tabs"')) {
     throw new Error("homeChips must expose a League home tabs landmark");
@@ -23529,9 +23536,10 @@ if (!inline.includes("function homeNewsDoorHtml(")
     throw new Error("homeChips must not mount team stats — brand-end goTeamHome owns that door");
   }
   if (!fn.includes('homeTabAction("home"') || !fn.includes('homeTabAction("teams"')
+    || !fn.includes('homeTabAction("news"')
     || !fn.includes("dataSetRow(") || !fn.includes('homeTabAction("ledger"')
     || fn.includes(">Champions<") || fn.includes('data-view="titles"')) {
-    throw new Error("homeChips must keep Home, Teams, Ledger, and Data");
+    throw new Error("homeChips must keep Home, Teams, News, Ledger, and Data");
   }
   if (!fnSrc("dataSetRow").includes(">Data<") || !fnSrc("dataSetRow").includes('data-home-tab="history"')) {
     throw new Error("Data tab label must ship on dataSetRow");
@@ -24183,8 +24191,8 @@ if (!inline.includes('esc("who has their pick(s)")')
   || !inline.includes('"who has " + pickFilterOwner + "\'s picks"')) {
   throw new Error("Draft Data team out-mode must use who-has-their-picks copy");
 }
-if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
-  throw new Error("renderLeagueHome must not embed the news list -- the News door opens the news page");
+if (!homeReturn.includes("renderNewsTab()") || homeReturn.includes("homeNewsDoorHtml()")) {
+  throw new Error("renderLeagueHome must open the News tab in place, not a Home door");
 }
 if (!inline.includes("function renderNewsPage()") || !inline.includes('view === "news"')) {
   throw new Error("the full News and Alerts page (view=news) must ship");
@@ -24501,8 +24509,9 @@ if (!inline.includes("function isDesignLeagueHome(") || !inline.includes('access
 if (inline.includes('sessionStorage.removeItem("cuckle.design.league_home")')) {
   throw new Error("boot must not clear cuckle.design.league_home — sticky flag keeps Design Mode home alive");
 }
-if (!inline.includes("The feed could not be shown. Open for details.")) {
-  throw new Error("homeNewsDoorHtml must keep a News Feed fallback when the live book throws");
+if (inline.includes("function homeNewsDoorHtml(")
+  || inline.includes("The feed could not be shown. Open for details.")) {
+  throw new Error("Home News door is gone — the News tab is the only feed entrance");
 }
 if (!inline.includes("newsPullupCleanup") || !inline.includes("clearNewsPullup")) {
   throw new Error("news pull-up must track and clear gesture listeners across remounts");
@@ -24742,7 +24751,8 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   }
 }
 if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function newsTeamImportance(")
-  || !inline.includes("const peekItem = items[0] || null")
+  || !inline.includes("function newsMissedCount(")
+  || !inline.includes("function renderNewsTab(")
   || !inline.includes('class="your3 is-empty"')
   || !inline.includes('aria-label="Alerts"')
   || !inline.includes('class="your3-h">Alerts<')
@@ -24947,14 +24957,17 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && lhCssHas("bottom: calc(12px + env(safe-area-inset-bottom")],
     ["HIG-03", inline.includes('homeTabAction("home"')
       && inline.includes('homeTabAction("teams"')
+      && inline.includes('homeTabAction("news"')
       && inline.includes('homeTabAction("ledger"')
       && inline.includes(">Data<")
-      && html.includes("repeat(4, minmax(0, 1fr))")
-      && !inline.includes('homeTabAction("news"')],
+      && lhCssHas("repeat(5, minmax(0, 1fr))")
+      && !lhCssHas("repeat(4, minmax(0, 1fr))")],
     ["HIG-04", html.includes("button.lh-action.on")
       && html.includes("border-radius: 999px")
       && !html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {")).includes("inset 0 -2px 0")
-      && inline.includes(" waiting")],
+      && inline.includes(" waiting")
+      && inline.includes(" missed")
+      && html.includes("button.lh-action .lh-count")],
     ["HIG-05", html.includes("--hig-caption: 0.6875rem")
       && html.includes("font-size: var(--hig-caption)")
       && !html.slice(html.indexOf("button.lh-action .lh-lab {"), html.indexOf("button.lh-action .lh-badge {")).includes("0.5625rem")
@@ -24970,7 +24983,8 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && html.includes(":focus-visible")],
     ["HIG-08", inline.includes("has-lh-bar")
       && inline.includes('view === "home"')
-      && inline.includes('view === "news"')],
+      && inline.includes('homeTab === "news"')
+      && inline.includes("renderNewsTab(")],
     ["HIG-09", html.includes("@media (prefers-reduced-motion: reduce)")],
     ["HIG-10", html.includes("position: fixed") && html.includes(".lh-actions {")],
     ["HIG-11", html.includes("--hig-space: 8px")],
@@ -24980,9 +24994,10 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && html.includes("function armIosNoFocusZoom(")],
     ["HIG-14", html.includes('id="goBack"') && html.includes('id="leagueSub"')
       && !html.includes('id="goHome"')],
-    ["HIG-15", !inline.includes('homeTabAction("news"')
-      && inline.includes("function homeNewsDoorHtml(")
-      && inline.includes('data-view="calc"')],
+    ["HIG-15", inline.includes('homeTabAction("news"')
+      && inline.includes("function renderNewsTab(")
+      && inline.includes('data-view="calc"')
+      && !inline.includes('class="home-news-door"')],
     ["HIG-16", !html.includes("expo-glass-effect")
       && !inline.includes("exactly like")
       && higMd.includes("pattern, not pixels")],

@@ -15,16 +15,16 @@ plans stay as history; do not paste them here.
 
 ## Locked for this pass
 
-- Four top tabs, one row: **Home | Teams | Ledger | Data**. No fifth tab. No `#goHome` icon.
-  Data is the research homebase (internal tab id `history`).
+- Five bottom tabs, one row: **Home | Teams | News | Ledger | Data**. No sixth tab. No `#goHome` icon.
+  Data is the research homebase (internal tab id `history`). News is Alerts + the feed.
 - First tab label **Home**. `homeTab` stores `"home"`; `"league"` is an alias.
-- Hybrid Home: league water cooler on top (**Cuckle trade calculator** + News Feed door).
-  Signed-in **Alerts** (wager / vote only) and **Trade Desk** (talks for your bag from
+- Hybrid Home: league water cooler on top (**Cuckle trade calculator**).
+  Signed-in **Trade Desk** (talks for your bag from
   the four-source today book into the calculator — not a second copy of the league peek;
   omit when signed out; never other-other pairs).
   No bag hero. No Recent Trade chip on
-  Home — the vote notification is the door.
-- Alerts (omit when signed out; blank reserved slot when signed in with nothing waiting):
+  Home — the vote notification lives on the News tab.
+- Alerts live on News (omit when signed out; blank reserved slot when signed in with nothing waiting):
   Ledger involving you; an uncast vote on the deal on this page. Do not fill with the
   calculator or a news teaser.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /

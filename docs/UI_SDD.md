@@ -16,17 +16,18 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
-**Home | Teams | Ledger | Data** at the true bottom (the slot the News Feed peek used to
-occupy), then the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**,
-signed-in **Trade Desk**, and a **News Feed** door into `?view=news`. It is the water cooler.
+**Home | Teams | News | Ledger | Data** at the true bottom (the slot the News Feed peek used to
+occupy), then the digest — **Cuckle trade calculator** and signed-in **Trade Desk**.
+**News** is a peer tab (signed-in **Alerts** + the league feed). It is the water cooler.
 The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
 (§2a).
 
-**Alerts** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
-and nothing is waiting, keep the heading and leave the slot blank — do not fill it. That is an
-*action*, not a personal bag number. Lineup recaps, waivers, and bag totals stay off Home. The
-calculator door is its own row — it is not an Alerts filler. Home does not remount the Recent
-Trade chip; the vote notification is the door into that deal.
+**Alerts** live on the **News** tab. They may name a wager or an uncast vote. Omit the strip
+when signed out. When signed in and nothing is waiting, keep the heading and leave the slot
+blank — do not fill it. That is an *action*, not a personal bag number. Lineup recaps, waivers,
+and bag totals stay off Home. The calculator door is its own row on Home — it is not an Alerts
+filler. Home does not remount the Recent Trade chip; the vote notification on News is the door
+into that deal. The News tab may badge a gold count of missed alerts + unseen posts (`9+` cap).
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
 Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
@@ -147,26 +148,28 @@ All five are flatten-only. **The today multi-source blend is not on this menu.**
 (`DASHBOARD_AUDIT.md` §8c).
 
 URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>&tab=<homeTab>`.
-`tab` is `teams` / `ledger` / `history` when those tabs are open; omitted on Home.
+`tab` is `teams` / `news` / `ledger` / `history` when those tabs are open; omitted on Home.
 Stored `homeTab=league` is an alias for Home. Boot reads every param; an unknown value falls back
 to Home rather than throwing. `history.replaceState` fires only when the URL string actually changes.
 
-### 2b. Four tabs (Linear pill)
+### 2b. Five tabs (Linear pill)
 
-Four chips in a floating pill at the bottom of league home: **Home | Teams | Ledger | Data**.
-Not a top underline bar. First tab label is **Home**. `homeTab` stores `home`. The Data
-tab keeps the internal id `history` (`?tab=history`; `?tab=data` also opens it). Ledger
-may badge as a gold dot. No fifth tab. No + FAB. Calculator, Titles and Emblems, and the
-News Feed are sub-screens (`?view=calc`, `?view=cosmetics`, `?view=news`), not tabs.
+Five chips in a floating pill at the bottom of league home:
+**Home | Teams | News | Ledger | Data**. Not a top underline bar. First tab label is
+**Home**. `homeTab` stores `home`. The Data tab keeps the internal id `history`
+(`?tab=history`; `?tab=data` also opens it). News is `?tab=news` (`?view=news` remaps
+onto it). Ledger may badge as a gold dot. News may badge a missed count. No sixth tab.
+No + FAB. Calculator and Titles and Emblems stay sub-screens (`?view=calc`,
+`?view=cosmetics`).
 
 ---
 
 ## 3. Home
 
-**Alerts** — omit if signed out. Signed-in: at most three notification rows (wager / uncast vote),
-or a blank reserved slot when nothing is waiting. Tap a wager → Ledger. Tap a vote → that
-deal’s review screen (H2H chip + **Who won this trade?**). Do not fill with the calculator
-or a news teaser.
+**Alerts** — on the **News** tab, not Home. Omit if signed out. Signed-in: at most three
+notification rows (wager / uncast vote), or a blank reserved slot when nothing is waiting.
+Tap a wager → Ledger. Tap a vote → that deal’s review screen (H2H chip + **Who won this
+trade?**). Do not fill with the calculator or a news teaser.
 
 **No Recent Trade chip on Home.** The vote row in Alerts opens the deal. The H2H chip still
 renders on the open-trade screen and on Teams / History feed cards.
@@ -192,8 +195,8 @@ picks. Startable floors: QB 2 / RB 2 /
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
 calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
 fourth card or “Open the calculator” filler.
-The News Feed is a Home digest door into the full `?view=news` page. It is not a
-bottom peek and not a fifth tab.
+The News Feed is the **News** tab (Alerts on top, then the league list). It is not a
+Home door and not a bottom peek.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **Data**, not stacked on Home.
 
@@ -453,7 +456,7 @@ known-dead payload still on the wire.
 
 - 375px is the target, not 390px: a 390px device with a scrollbar leaves 375px usable.
 - Every grid track that holds text gets `min-width: 0`. Names ellipsize; **figures never truncate**.
-- The four tabs share one row and never wrap.
+- The five league tabs share one row and never wrap.
 - 44px minimum on every tap target (`HIG-01` in [`HIG_SDD.md`](./HIG_SDD.md)), including the team
   menu, the year filter rows, the chips and the Score as trigger and all five of its options.
   When a list of them stops fitting, the list's cap gives way, not the 44px.

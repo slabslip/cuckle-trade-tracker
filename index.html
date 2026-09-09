@@ -23149,7 +23149,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v211-handcuff";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v212-cuff-lead";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

@@ -196,7 +196,10 @@ per-team view. Does **not** call `selectMe` (that is Teams).
 **Hunt gates:**
 
 - `move_extras`: ping them only if their **buy** list includes that position. A tank does not
-  buy RB. They may appear as **takes your picks**.
+  buy RB. They may appear as **takes your picks** — **one leftover per position** they will
+  buy, or **one pick per seat** (unique picks assigned, hungriest tanks first). Why is that
+  seat’s direction line, not the same “they want 2027 picks” on every row. Peek prefers three
+  different counterparties.
 - `fill_holes`: they appear as a source only if their **sell** list includes that position.
 - `block_fits`: same veto on “they need POS.” “On their block · you need POS” stays.
 - `stash_young` / picks: prefer Hard rebuild / Rebuild as counterparties.

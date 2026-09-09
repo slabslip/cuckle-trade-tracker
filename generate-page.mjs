@@ -3672,7 +3672,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "direction20260909001500";
+    const DATA_V = "direction20260909004000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3729,7 +3729,7 @@ const html = `<!DOCTYPE html>
     ];
     const DATA_REPORTS = [
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Who has extras at spots you need." },
-      { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Teams thin where you are deep." },
+      { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "One leftover or pick per seat who will take it." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
       { id: "stash_young", lab: "Stash young", desk: "book", group: "deal", size: "full", why: "Young mid-value pieces on other seats." },
       { id: "my_block", lab: "My block", desk: "book", group: "deal", size: "full", why: "Pieces you will actually deal." },
@@ -6515,9 +6515,7 @@ const html = `<!DOCTYPE html>
       const bits = ["you are " + (giveW || "deep") + " " + pos];
       const sold = theirDir && theirDir.by_pos && theirDir.by_pos[pos] && theirDir.by_pos[pos].out;
       if (sold && sold[0]) bits.push("they sold " + sold[0]);
-      if (pos === "PICK") {
-        return "you can move a pick · they want 2027 picks";
-      }
+      if (pos === "PICK") return dataDashPickMoveWhy(theirDir);
       if (theirDir && dataDashHasToken(theirDir.buy, "picks") && !dataDashIntentBuys(theirDir, pos)) {
         bits.push("they want 2027 picks");
         return bits.join(" · ");
@@ -6527,6 +6525,40 @@ const html = `<!DOCTYPE html>
       if (extra) bits.push(extra);
       else if (theirDir && dataDashHasToken(theirDir.buy, pos)) bits.push("they buy " + pos);
       return bits.join(" · ");
+    }
+
+    function dataDashPickMoveWhy(theirDir) {
+      if (theirDir && theirDir.why) return theirDir.why;
+      if (theirDir && theirDir.label) return theirDir.label + " · they want 2027 picks";
+      return "they want 2027 picks";
+    }
+
+    function dataDashPickRound(a) {
+      if (a && a.round != null) return Number(a.round);
+      const m = String((a && a.id) || "").match(/^pick:\\d{4}:(\\d+)/);
+      return m ? Number(m[1]) : 99;
+    }
+
+    function dataDashBestMovePick(bag, theirDir) {
+      const picks = (bag || []).filter(function (a) {
+        return homeDeskAssetPos(a) === "PICK" && calcValueNum(a) >= DESK_MID;
+      });
+      if (!picks.length) return null;
+      const hungry = theirDir && theirDir.picks && Number(theirDir.picks.net_2027_plus) >= 2;
+      let best = null;
+      let bestS = -1;
+      for (let i = 0; i < picks.length; i++) {
+        const a = picks[i];
+        const year = Number(a.year) || Number(String(a.id || "").split(":")[1]) || 0;
+        const rnd = dataDashPickRound(a);
+        let s = calcValueNum(a);
+        if (hungry && year === 2027 && rnd === 1) s += 5000;
+        else if (hungry && year === 2027) s += 2000;
+        else if (hungry && year >= 2027 && rnd === 1) s += 1500;
+        if (rnd === 1) s += 500;
+        if (s > bestS) { bestS = s; best = a; }
+      }
+      return best;
     }
 
     function dataDashBagOwnerId(bag) {
@@ -6607,7 +6639,7 @@ const html = `<!DOCTYPE html>
         return "Claim your team to see this";
       }
       if (id === "fill_holes") return "You have no holes at starter value";
-      if (id === "move_extras") return "You have no extras teams need";
+      if (id === "move_extras") return "No seat will take a leftover or a pick";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
       if (id === "stash_young") return "No young mid-value stashes on other seats";
       if (id === "available_cuffs") return "Nobody listed a backup you need";
@@ -6705,55 +6737,69 @@ const html = `<!DOCTYPE html>
       } else if (id === "move_extras") {
         if (!mine) return [];
         const give = dataDashGivePos(myProf);
+        const pickSeats = [];
         bags.forEach(function (bag, uid) {
           if (String(uid) === mine) return;
           const theirDir = seatDirOf(uid);
           const prof = homeDeskProfile(bag);
+          let playerHits = 0;
           for (let i = 0; i < give.length; i++) {
             const pos = give[i];
             if (!dataDashIntentBuys(theirDir, pos)) continue;
             const extras = dataDashBagExtras(myBag, pos);
-            for (let j = 0; j < extras.length; j++) {
-              const a = extras[j];
-              const giveW = dataDashPosGiveWord(myProf, pos);
-              const needW = dataDashPosNeedWord(prof, pos);
-              let score = (needW === "need" ? 4 : 2) + (giveW === "deep" ? 3 : 1);
-              if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
-              dataDashHuntPush(rows, {
-                id: a.id,
-                name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
-                themId: String(uid),
-                themName: dataDashSeatName(uid) || "them",
-                pos: pos,
-                why: dataDashMoveWhy(theirDir, prof, pos, giveW),
-                why2: theirDir && theirDir.label ? (theirDir.label + " · move " + pos) : "",
-                sendA: a.id,
-                sendB: "",
-                score: score,
-              });
-            }
+            const a = extras[0];
+            if (!a) continue;
+            const giveW = dataDashPosGiveWord(myProf, pos);
+            const needW = dataDashPosNeedWord(prof, pos);
+            let score = 8 + (needW === "need" ? 3 : 1) + (giveW === "deep" ? 2 : 0);
+            if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, prof)) score += 1;
+            playerHits += 1;
+            dataDashHuntPush(rows, {
+              id: a.id,
+              name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
+              themId: String(uid),
+              themName: dataDashSeatName(uid) || "them",
+              pos: pos,
+              why: dataDashMoveWhy(theirDir, prof, pos, giveW),
+              why2: theirDir && theirDir.label ? theirDir.label : "",
+              sendA: a.id,
+              sendB: "",
+              score: score,
+            });
           }
-          if (dataDashIntentBuys(theirDir, "PICK")) {
-            const picks = (myBag || []).filter(function (a) {
-              return homeDeskAssetPos(a) === "PICK" && calcValueNum(a) >= DESK_MID;
-            }).slice(0, 3);
-            for (let j = 0; j < picks.length; j++) {
-              const a = picks[j];
-              dataDashHuntPush(rows, {
-                id: a.id,
-                name: (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name,
-                themId: String(uid),
-                themName: dataDashSeatName(uid) || "them",
-                pos: "PICK",
-                why: dataDashMoveWhy(theirDir, prof, "PICK", "deep"),
-                why2: theirDir && theirDir.label ? (theirDir.label + " · they want youth") : "",
-                sendA: a.id,
-                sendB: "",
-                score: 5 + (theirDir && (theirDir.label === "Hard rebuild" || theirDir.label === "Rebuild") ? 3 : 0),
-              });
-            }
+          if (!playerHits && dataDashIntentBuys(theirDir, "PICK")) {
+            pickSeats.push({ uid: String(uid), dir: theirDir });
           }
         });
+        pickSeats.sort(function (a, b) {
+          const na = a.dir && a.dir.picks ? Number(a.dir.picks.net_2027_plus) || 0 : 0;
+          const nb = b.dir && b.dir.picks ? Number(b.dir.picks.net_2027_plus) || 0 : 0;
+          return nb - na;
+        });
+        const usedPick = {};
+        for (let i = 0; i < pickSeats.length; i++) {
+          const seat = pickSeats[i];
+          const pool = (myBag || []).filter(function (a) {
+            return homeDeskAssetPos(a) === "PICK" && calcValueNum(a) >= DESK_MID && !usedPick[a.id];
+          });
+          const pick = dataDashBestMovePick(pool.length ? pool : myBag, seat.dir);
+          if (!pick) continue;
+          usedPick[pick.id] = 1;
+          const tank = seat.dir && (seat.dir.label === "Hard rebuild" || seat.dir.label === "Rebuild");
+          const net = seat.dir && seat.dir.picks ? Number(seat.dir.picks.net_2027_plus) || 0 : 0;
+          dataDashHuntPush(rows, {
+            id: pick.id,
+            name: (typeof calcDisplayName === "function" ? calcDisplayName(pick) : pick.name) || pick.name,
+            themId: seat.uid,
+            themName: dataDashSeatName(seat.uid) || "them",
+            pos: "PICK",
+            why: dataDashPickMoveWhy(seat.dir),
+            why2: seat.dir && seat.dir.label ? seat.dir.label : "",
+            sendA: pick.id,
+            sendB: "",
+            score: 5 + (tank ? 2 : 0) + Math.min(3, Math.max(0, net)),
+          });
+        }
       } else if (id === "poach_cuffs") {
         if (!mine) return [];
         if (typeof ensureCuffs === "function") ensureCuffs();
@@ -6930,8 +6976,22 @@ const html = `<!DOCTYPE html>
       return rows.slice(0, 40);
     }
 
+    function dataDashHuntPeekRows(id) {
+      const all = dataDashHuntRows(id);
+      if (id !== "move_extras") return all.slice(0, 3);
+      const out = [];
+      const seen = {};
+      for (let i = 0; i < all.length && out.length < 3; i++) {
+        const k = String(all[i].themId || "");
+        if (k && seen[k]) continue;
+        if (k) seen[k] = 1;
+        out.push(all[i]);
+      }
+      return out;
+    }
+
     function dataDashHuntPeekHtml(id) {
-      const rows = dataDashHuntRows(id).slice(0, 3);
+      const rows = dataDashHuntPeekRows(id);
       if (!rows.length) return '<span class="data-tile-sub">' + esc(dataDashHuntEmpty(id)) + "</span>";
       return '<div class="data-tile-peek">' + rows.map(function (r) {
         return '<div class="data-xrow"><div class="data-xrow-main">'
@@ -22786,6 +22846,9 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashHuntRows").includes("dataDashIntentBuys(")
     || !fnSrc("dataDashHuntRows").includes("dataDashIntentSells(")
     || !fnSrc("homeDeskTalk").includes("dataDashIntentBuys(")
+    || !inline.includes("function dataDashBestMovePick(")
+    || !inline.includes("function dataDashHuntPeekRows(")
+    || !fnSrc("dataDashHuntRows").includes("pickSeats")
     || fnSrc("dataDashHuntRows").includes("they need RB")) {
     throw new Error("Deal hunts and Home Move must gate on direction buy/sell/refuse");
   }

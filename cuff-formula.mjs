@@ -59,6 +59,62 @@ export function cuffMove(opts) {
  * Healthy pairing add: injury move at early / season-long * p(out) * hold.
  * holdW = 1 if they already had the starter; 0.5 if both arrive in this deal.
  */
+export function cuffIsInjured(status) {
+  const s = String(status || "").toUpperCase();
+  if (!s) return { injured: false, weeksOut: 8 };
+  if (
+    s === "IR"
+    || s === "OUT"
+    || s === "PUP"
+    || s === "NFI"
+    || s.indexOf("INJURED") >= 0
+  ) {
+    return { injured: true, weeksOut: 8 };
+  }
+  if (s === "DOUBTFUL") return { injured: true, weeksOut: 3 };
+  return { injured: false, weeksOut: 8 };
+}
+
+/**
+ * Sum Handcuff adds for one receive pile. Each listed NFL cuff in `recv`
+ * (id → today) that the seat still holds the starter for after the swap.
+ * hadStarter[id] true → hold_w 1; else they got both in this deal (0.5).
+ */
+export function cuffPairAdds(opts) {
+  const rows = (opts && opts.rows) || [];
+  const recv = (opts && opts.recv) || {};
+  const have = (opts && opts.haveAfter) || {};
+  const had = (opts && opts.hadStarter) || {};
+  const catalog = (opts && opts.catalog) || {};
+  const week = Number(opts && opts.week) || 1;
+  let total = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i] || {};
+    const pos = String(r.pos || "").toUpperCase();
+    const cuffId = String(r.cuff_id || "");
+    const starterId = String(r.starter_id || "");
+    if (!cuffId || !starterId || recv[cuffId] == null) continue;
+    if (!have[starterId]) continue;
+    const cuffVal = Number(recv[cuffId]);
+    const starterVal = Number(
+      catalog[starterId] != null ? catalog[starterId] : r.starter_value,
+    );
+    if (!(cuffVal > 0) || !(starterVal > 0)) continue;
+    const holdW = had[starterId] ? CUFF_HOLD_HAD_STARTER : CUFF_HOLD_GOT_BOTH;
+    const inj = cuffIsInjured(r.starter_injury);
+    total += cuffInsurance({
+      pos,
+      cuff: cuffVal,
+      starter: starterVal,
+      holdW,
+      injured: inj.injured,
+      week,
+      weeksOut: inj.weeksOut,
+    });
+  }
+  return total;
+}
+
 export function cuffInsurance(opts) {
   const pos = String((opts && opts.pos) || "").toUpperCase();
   if (opts && opts.injured) {
@@ -111,5 +167,29 @@ if (String(process.argv[1] || "").endsWith("cuff-formula.mjs")) {
   check("wr-off", cuffMove({ pos: "WR", cuff: 250, starter: 4000, week: 2, weeksOut: 8 }), 0);
   // Insurance on a healthy priced RB cuff (~today Bijan / B-Rob class).
   check("insure-brob", cuffInsurance({ pos: "RB", cuff: 2029, starter: 9505, holdW: 1 }), 91);
+  check("pair-brob", cuffPairAdds({
+    rows: [{ pos: "RB", cuff_id: "8154", starter_id: "9509", starter_value: 9505 }],
+    recv: { "8154": 2029 },
+    haveAfter: { "9509": true, "8154": true },
+    hadStarter: { "9509": true },
+    catalog: { "9509": 9505 },
+    week: 1,
+  }), 91);
+  check("pair-both", cuffPairAdds({
+    rows: [{ pos: "RB", cuff_id: "8154", starter_id: "9509", starter_value: 9505 }],
+    recv: { "8154": 2029, "9509": 9505 },
+    haveAfter: { "9509": true, "8154": true },
+    hadStarter: {},
+    catalog: { "9509": 9505 },
+    week: 1,
+  }), 46);
+  check("pair-wr-off", cuffPairAdds({
+    rows: [{ pos: "WR", cuff_id: "1", starter_id: "2", starter_value: 8000 }],
+    recv: { "1": 2000 },
+    haveAfter: { "2": true },
+    hadStarter: { "2": true },
+    catalog: { "2": 8000 },
+    week: 1,
+  }), 0);
   console.log("cuff-formula checks ok");
 }

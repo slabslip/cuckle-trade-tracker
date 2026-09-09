@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { ROOT, leagueUiDir } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
+import { cuffMove, cuffInsurance, cuffPairAdds } from "./cuff-formula.mjs";
 
 const hard = [];
 function fail(msg) { hard.push(msg); }
@@ -61,6 +62,48 @@ try {
   pageBarFill = new Function("return (" + src.slice(barAt, bj) + ")")();
 } catch (err) {
   throw new Error("could not eval generated calcBarFill: " + (err && err.message));
+}
+
+const cuffBlockAt = src.indexOf("const CUFF_POS_W = { QB: 0.5");
+const pairAt = src.indexOf("function cuffPairAdds(opts)");
+if (cuffBlockAt < 0 || pairAt < 0) throw new Error("generated page lost cuff formula block");
+let pairEnd = src.indexOf("{", pairAt) + 1;
+let pd = 1;
+while (pairEnd < src.length && pd) {
+  const ch = src[pairEnd++];
+  if (ch === "{") pd += 1;
+  else if (ch === "}") pd -= 1;
+}
+let pageCuff;
+try {
+  pageCuff = new Function(src.slice(cuffBlockAt, pairEnd) + "; return { cuffMove, cuffInsurance, cuffPairAdds };")();
+} catch (err) {
+  throw new Error("could not eval generated cuff formula: " + (err && err.message));
+}
+const cuffCases = [
+  { pos: "RB", cuff: 49, starter: 6002, week: 1, weeksOut: 8 },
+  { pos: "RB", cuff: 2029, starter: 9505, week: 1, weeksOut: 8 },
+  { pos: "QB", cuff: 199, starter: 8762, week: 3, weeksOut: 10 },
+  { pos: "WR", cuff: 250, starter: 4000, week: 2, weeksOut: 8 },
+];
+for (const c of cuffCases) {
+  if (pageCuff.cuffMove(c) !== cuffMove(c)) fail("inline cuffMove != cuff-formula.mjs " + JSON.stringify(c));
+  const ins = { pos: c.pos, cuff: c.cuff, starter: c.starter, holdW: 1 };
+  if (pageCuff.cuffInsurance(ins) !== cuffInsurance(ins)) fail("inline cuffInsurance != module " + c.pos);
+}
+const pairOpts = {
+  rows: [{ pos: "RB", cuff_id: "8154", starter_id: "9509", starter_value: 9505 }],
+  recv: { "8154": 2029 },
+  haveAfter: { "9509": true, "8154": true },
+  hadStarter: { "9509": true },
+  catalog: { "9509": 9505 },
+  week: 1,
+};
+if (pageCuff.cuffPairAdds(pairOpts) !== cuffPairAdds(pairOpts)) fail("inline cuffPairAdds != cuff-formula.mjs");
+if (pageCuff.cuffPairAdds(pairOpts) !== 91) fail("Bijan / B-Rob Handcuff must be +91, got " + pageCuff.cuffPairAdds(pairOpts));
+if (!src.includes("function calcCuffBump(uid, sendLegs, recvLegs)")
+  || !src.includes("span>Handcuff</span>")) {
+  fail("calc lost Handcuff line");
 }
 
 const ui = leagueUiDir();

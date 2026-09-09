@@ -299,12 +299,15 @@ w_dd   = 0.20   // DynastyDealer base_value
 
 **HAVE.** `?view=calc` prices a hypothetical 2-side swap on the **today / `even` book**
 (flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via `applyVa` on the
-hypothetical bags. Card footers are pile + the VA painted on that card (one add, one
-round). The compare bar and Favors use `calcReceiveTotals` (flipped receive bags + VA), so
+hypothetical bags. Card footers are pile + the VA painted on that card + Handcuff when it fires (one add, one
+round). The compare bar and Favors use `calcReceiveTotals` (flipped receive bags + VA +
+Handcuff), so
 a stud-for-quantity package bumps the side that receives the star. Cards are send piles,
 so that bump is a gold **Value Adjustment** line on the **star package** (the send card
 with fewer pieces) and under the compare receive that includes it — not on the extras
-send card. The gold meter starts at the center tick and grows left or right toward the
+send card. A second gold **Handcuff** line fires when that seat receives the listed NFL
+cuff and still holds the starter after the swap (`cuff-formula.mjs`; WR off). It is not
+extras VA and does not write tape. The gold meter starts at the center tick and grows left or right toward the
 side that is ahead by the receive **gap** (`gap / 3000` of that half; empty under 25;
 full at 3,000 reaches that end), not by pile share. Tape bags already do this via
 `value_adjust` (got star) and `value_adjust_sent` (sent star). Even-up chips re-run that helper after
@@ -367,7 +370,8 @@ damp is remaining games (~9/17), not a smaller % pop. QB backups barely live
 on the DP board; TE cuffs did not reprice. WR2 pops (Shaheed, Dotson, Deebo)
 are real and are **not** fantasy handcuffs — `cuffs.json` WR rows are WR2s.
 
-**Locked formula** (`cuff-formula.mjs`). Not extras VA. Not on the needle yet.
+**Locked formula** (`cuff-formula.mjs`). Not extras VA. **HAVE on calc** as a gold
+**Handcuff** line (`calcCuffBump` → `calcReceiveTotals`). Not written to tape.
 
 ```text
 pos_w:    RB 1.00 · QB 0.50 · TE 0.25 · WR 0

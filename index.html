@@ -17994,7 +17994,7 @@
         const sendB = legsB.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
         const mn = Math.min(sendA, sendB);
         if (mn < 1800) return;
-        const rec = calcReceiveTotals(legsA, legsB);
+        const rec = calcReceiveTotals(legsA, legsB, dataDashBagOwnerId(bagA), dataDashBagOwnerId(bagB));
         const rawGap = Math.abs(sendA - sendB);
         const rawMx = Math.max(sendA, sendB);
         const rawRel = rawMx ? rawGap / rawMx : 1;
@@ -18349,9 +18349,163 @@
       }, 0);
     }
 
-    /** One add, one round: pile + the VA painted on that card. */
-    function calcCardTotal(legs, va) {
-      return calcRawSum(legs) + (Number(va) || 0);
+    /** One add, one round: pile + VA + Handcuff painted on that card. */
+    function calcCardTotal(legs, va, cuff) {
+      return calcRawSum(legs) + (Number(va) || 0) + (Number(cuff) || 0);
+    }
+
+    // Locked 2024-2025 cuff formula. Not extras VA. See cuff-formula.mjs.
+    const CUFF_POS_W = { QB: 0.5, RB: 1, TE: 0.25, WR: 0 };
+    const CUFF_SEASON_W = { early: 1, late: 0.6 };
+    const CUFF_P_OUT = { QB: 0.18, RB: 0.32, TE: 0.16, WR: 0 };
+    const CUFF_CHEAP_RATIO = 0.05;
+    const CUFF_SHARE_CHEAP = 0.05;
+    const CUFF_SHARE_PRICED = 0.03;
+    const CUFF_LIFT_PRICED = 0.5;
+    const CUFF_MOVE_CAP = 650;
+    const CUFF_INSURANCE_CAP = 350;
+
+    function cuffSeasonTiming(week) {
+      return Number(week) <= 8 ? "early" : "late";
+    }
+
+    function cuffWeeksWeight(weeksOut) {
+      const n = Number(weeksOut) || 0;
+      if (n <= 3) return 0.4;
+      if (n <= 7) return 0.75;
+      return 1;
+    }
+
+    function cuffMove(opts) {
+      const pos = CUFF_POS_W[String((opts && opts.pos) || "").toUpperCase()] || 0;
+      const cuff = Number(opts && opts.cuff);
+      const starter = Number(opts && opts.starter);
+      if (!pos || !(cuff > 0) || !(starter > 0)) return 0;
+      const cheap = cuff / starter < CUFF_CHEAP_RATIO;
+      const raw = cheap
+        ? starter * CUFF_SHARE_CHEAP
+        : Math.min(starter * CUFF_SHARE_PRICED, cuff * CUFF_LIFT_PRICED);
+      const season = CUFF_SEASON_W[cuffSeasonTiming(opts.week)] || 1;
+      const weeks = cuffWeeksWeight(opts.weeksOut);
+      return Math.min(CUFF_MOVE_CAP, Math.round(raw * pos * season * weeks));
+    }
+
+    function cuffInsurance(opts) {
+      const pos = String((opts && opts.pos) || "").toUpperCase();
+      if (opts && opts.injured) {
+        return Math.min(CUFF_MOVE_CAP, cuffMove({
+          pos: pos,
+          cuff: opts.cuff,
+          starter: opts.starter,
+          week: opts.week || 1,
+          weeksOut: opts.weeksOut || 8,
+        }));
+      }
+      const full = cuffMove({
+        pos: pos,
+        cuff: opts && opts.cuff,
+        starter: opts && opts.starter,
+        week: 1,
+        weeksOut: 8,
+      });
+      const hold = opts && opts.holdW != null ? Number(opts.holdW) : 1;
+      return Math.min(CUFF_INSURANCE_CAP, Math.round(full * (CUFF_P_OUT[pos] || 0) * hold));
+    }
+
+    function cuffIsInjured(status) {
+      const s = String(status || "").toUpperCase();
+      if (!s) return { injured: false, weeksOut: 8 };
+      if (s === "IR" || s === "OUT" || s === "PUP" || s === "NFI" || s.indexOf("INJURED") >= 0) {
+        return { injured: true, weeksOut: 8 };
+      }
+      if (s === "DOUBTFUL") return { injured: true, weeksOut: 3 };
+      return { injured: false, weeksOut: 8 };
+    }
+
+    function cuffPairAdds(opts) {
+      const rows = (opts && opts.rows) || [];
+      const recv = (opts && opts.recv) || {};
+      const have = (opts && opts.haveAfter) || {};
+      const had = (opts && opts.hadStarter) || {};
+      const catalog = (opts && opts.catalog) || {};
+      const week = Number(opts && opts.week) || 1;
+      let total = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i] || {};
+        const pos = String(r.pos || "").toUpperCase();
+        const cuffId = String(r.cuff_id || "");
+        const starterId = String(r.starter_id || "");
+        if (!cuffId || !starterId || recv[cuffId] == null) continue;
+        if (!have[starterId]) continue;
+        const cuffVal = Number(recv[cuffId]);
+        const starterVal = Number(catalog[starterId] != null ? catalog[starterId] : r.starter_value);
+        if (!(cuffVal > 0) || !(starterVal > 0)) continue;
+        const holdW = had[starterId] ? 1 : 0.5;
+        const inj = cuffIsInjured(r.starter_injury);
+        total += cuffInsurance({
+          pos: pos,
+          cuff: cuffVal,
+          starter: starterVal,
+          holdW: holdW,
+          injured: inj.injured,
+          week: week,
+          weeksOut: inj.weeksOut,
+        });
+      }
+      return total;
+    }
+
+    function calcNflWeek() {
+      const start = Date.UTC(2026, 8, 10);
+      const now = Date.now();
+      if (now < start) return 1;
+      return Math.max(1, Math.min(18, 1 + Math.floor((now - start) / 604800000)));
+    }
+
+    function calcPlayerSid(a) {
+      if (!a) return "";
+      const sid = String(a.sleeper_id || "");
+      if (sid) return sid;
+      const k = String(a.id || a.asset_key || "");
+      return k.indexOf("player:") === 0 ? k.slice(7) : "";
+    }
+
+    function calcCuffBump(uid, sendLegs, recvLegs) {
+      const rows = (cuffs && cuffs.rows) || [];
+      if (!rows.length) return 0;
+      const recv = {};
+      (recvLegs || []).forEach(function (l) {
+        const id = calcPlayerSid(l);
+        if (!id || l.value == null) return;
+        const n = Number(l.value);
+        if (Number.isFinite(n) && n > 0) recv[id] = n;
+      });
+      const sent = {};
+      (sendLegs || []).forEach(function (l) {
+        const id = calcPlayerSid(l);
+        if (id) sent[id] = true;
+      });
+      const haveAfter = {};
+      const hadStarter = {};
+      const catalog = {};
+      const book = calcBook || { players: [] };
+      (book.players || []).forEach(function (p) {
+        if (p.sleeper_id && p.value != null) catalog[String(p.sleeper_id)] = Number(p.value);
+        if (!uid || String(p.owner_id) !== String(uid)) return;
+        const id = String(p.sleeper_id || "");
+        if (!id) return;
+        hadStarter[id] = true;
+        if (!sent[id]) haveAfter[id] = true;
+      });
+      Object.keys(recv).forEach(function (id) { haveAfter[id] = true; });
+      return cuffPairAdds({
+        rows: rows,
+        recv: recv,
+        haveAfter: haveAfter,
+        hadStarter: hadStarter,
+        catalog: catalog,
+        week: calcNflWeek(),
+      });
     }
 
     /** Gold grows from center toward the winner. 0-50 of the track. Even < 25. Full at 3,000. */
@@ -18392,8 +18546,10 @@
         linesB: calcLegsB,
         vaA: rec.vaB || 0,
         vaB: rec.vaA || 0,
-        totA: calcCardTotal(calcLegsA, rec.vaB),
-        totB: calcCardTotal(calcLegsB, rec.vaA),
+        cuffA: rec.cuffB || 0,
+        cuffB: rec.cuffA || 0,
+        totA: calcCardTotal(calcLegsA, rec.vaB, rec.cuffB),
+        totB: calcCardTotal(calcLegsB, rec.vaA, rec.cuffA),
         receiveA: receiveA,
         receiveB: receiveB,
         d: d,
@@ -18432,7 +18588,7 @@
       ctx.closePath();
     }
 
-    function calcShareCol(ctx, x, y, w, title, legs, va, tot) {
+    function calcShareCol(ctx, x, y, w, title, legs, va, tot, cuff) {
       const lineH = 52;
       const cap = 8;
       ctx.fillStyle = "#9a9aa3";
@@ -18482,6 +18638,15 @@
         ctx.fillText(signedNum(va), x + w, cy);
         cy += 40;
       }
+      if (cuff && Math.round(cuff)) {
+        ctx.fillStyle = "#d4c07a";
+        ctx.font = "650 22px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Handcuff", x, cy);
+        ctx.textAlign = "right";
+        ctx.fillText(signedNum(cuff), x + w, cy);
+        cy += 40;
+      }
       ctx.strokeStyle = "#2a2a30";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -18509,8 +18674,10 @@
       const cap = 8;
       const nA = Math.min((spec.linesA || []).length, cap) + ((spec.linesA || []).length > cap ? 1 : 0);
       const nB = Math.min((spec.linesB || []).length, cap) + ((spec.linesB || []).length > cap ? 1 : 0);
-      const extraA = (spec.vaA && Math.round(spec.vaA)) ? 1 : 0;
-      const extraB = (spec.vaB && Math.round(spec.vaB)) ? 1 : 0;
+      const extraA = ((spec.vaA && Math.round(spec.vaA)) ? 1 : 0)
+        + ((spec.cuffA && Math.round(spec.cuffA)) ? 1 : 0);
+      const extraB = ((spec.vaB && Math.round(spec.vaB)) ? 1 : 0)
+        + ((spec.cuffB && Math.round(spec.cuffB)) ? 1 : 0);
       const colH = 80 + Math.max(nA + extraA, nB + extraB) * 52 + 56;
       const H = 200 + colH + 280;
       const canvas = document.createElement("canvas");
@@ -18532,8 +18699,8 @@
       ctx.font = "800 44px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
       ctx.fillText("Trade", PAD, 128);
       const y0 = 168;
-      const bottomA = calcShareCol(ctx, PAD, y0, colW, spec.nameA + " sends", spec.linesA, spec.vaA, spec.totA);
-      const bottomB = calcShareCol(ctx, PAD + colW + GUT, y0, colW, spec.nameB + " sends", spec.linesB, spec.vaB, spec.totB);
+      const bottomA = calcShareCol(ctx, PAD, y0, colW, spec.nameA + " sends", spec.linesA, spec.vaA, spec.totA, spec.cuffA);
+      const bottomB = calcShareCol(ctx, PAD + colW + GUT, y0, colW, spec.nameB + " sends", spec.linesB, spec.vaB, spec.totB, spec.cuffB);
       let fy = Math.max(bottomA, bottomB) + 28;
       ctx.strokeStyle = "#2a2a30";
       ctx.lineWidth = 2;
@@ -18664,18 +18831,24 @@
       });
     }
 
-    /** Same receive framing as the compare bar: A receives B, B receives A, VA included. */
-    function calcReceiveTotals(sendA, sendB) {
+    /** Same receive framing as the compare bar: A receives B, B receives A, VA + Handcuff included. */
+    function calcReceiveTotals(sendA, sendB, seatA, seatB) {
       const a = calcSideBag(sendB, sendA);
       const b = calcSideBag(sendA, sendB);
-      const receiveA = a && a.today != null ? a.today : 0;
-      const receiveB = b && b.today != null ? b.today : 0;
+      const uidA = seatA != null ? seatA : calcSeatA;
+      const uidB = seatB != null ? seatB : calcSeatB;
+      const cuffA = calcCuffBump(uidA, sendA, sendB);
+      const cuffB = calcCuffBump(uidB, sendB, sendA);
+      const receiveA = (a && a.today != null ? a.today : 0) + cuffA;
+      const receiveB = (b && b.today != null ? b.today : 0) + cuffB;
       const mx = Math.max(Math.abs(receiveA), Math.abs(receiveB));
       return {
         receiveA: receiveA,
         receiveB: receiveB,
         vaA: (a && a.value_adjust) || 0,
         vaB: (b && b.value_adjust) || 0,
+        cuffA: cuffA,
+        cuffB: cuffB,
         rawA: calcRawSum(sendB),
         rawB: calcRawSum(sendA),
         gap: Math.abs(receiveA - receiveB),
@@ -18686,6 +18859,11 @@
     function calcVaHtml(va) {
       if (!va || !Math.round(va)) return "";
       return '<div class="calc-va"><span>Value Adjustment</span><b>' + signedNum(va) + "</b></div>";
+    }
+
+    function calcCuffHtml(n) {
+      if (!n || !Math.round(n)) return "";
+      return '<div class="calc-va calc-cuff"><span>Handcuff</span><b>' + signedNum(n) + "</b></div>";
     }
 
     function calcSeatName(uid, fallback) {
@@ -18798,10 +18976,14 @@
       const vaBreak = (Math.round(rec.vaA) || Math.round(rec.vaB))
         ? '<div class="calc-va-break"><div>' + calcVaHtml(rec.vaA) + "</div><div>" + calcVaHtml(rec.vaB) + "</div></div>"
         : "";
+      const cuffBreak = (Math.round(rec.cuffA) || Math.round(rec.cuffB))
+        ? '<div class="calc-va-break"><div>' + calcCuffHtml(rec.cuffA) + "</div><div>" + calcCuffHtml(rec.cuffB) + "</div></div>"
+        : "";
       return '<div class="calc-compare">'
         + '<div class="calc-compare-labs"><div>' + esc(nameA) + " receives<b>" + calcFmt(receiveA) + "</b></div>"
         + "<div>" + esc(nameB) + " receives<b>" + calcFmt(receiveB) + "</b></div></div>"
         + vaBreak
+        + cuffBreak
         + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " receives " + calcFmt(receiveA) + ", " + esc(nameB) + " receives " + calcFmt(receiveB) + (even ? ", even" : (", favors " + esc(favors) + " by " + calcFmt(need))) + '">'
         + (pct
           ? '<div class="calc-bar-a' + (fillRight ? " is-end" : " is-start") + '" style="width:' + pct + '%"></div>'
@@ -19062,6 +19244,7 @@
       // package), not the VA the seat banks on receive. Card A sent pile A, so
       // show vaB. Card B shows vaA. Compare receive totals stay flipped.
       const va = rec ? (side === "a" ? rec.vaB : rec.vaA) : 0;
+      const cuff = rec ? (side === "a" ? rec.cuffB : rec.cuffA) : 0;
       return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
         + calcSeatSelect(side)
         + (uid
@@ -19073,8 +19256,9 @@
         + calcHitsHtml(uid, q, open, side)
         + assets
         + calcVaHtml(va)
+        + calcCuffHtml(cuff)
         + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
-        + '<div class="calc-tot">' + (legs.length ? calcFmt(calcCardTotal(legs, va)) : "0") + "</div></div>"
+        + '<div class="calc-tot">' + (legs.length ? calcFmt(calcCardTotal(legs, va, cuff)) : "0") + "</div></div>"
         + "</section>";
     }
 
@@ -19094,7 +19278,8 @@
         + "<h3>What this is</h3>"
         + "<p>Cuckle Calc is a two-sided scale. Each player or pick gets a today price. "
         + "We add the piles, then we may add a Value Adjustment when one side is a star "
-        + "for extras. League votes never change this number.</p>"
+        + "for extras, and a Handcuff line when a seat takes a listed NFL backup and still "
+        + "holds that starter. League votes never change this number.</p>"
         + "<h3>1. Price each piece</h3>"
         + "<p>Four market books feed every number on the roster list. We refresh them daily "
         + "into committed files &mdash; the phone does not scrape.</p>"
@@ -19113,7 +19298,7 @@
         + "gold line on the <b>star package</b> (the send card with fewer pieces) and the "
         + "card total is pile + that line. The extras card stays pile-only. Compare "
         + "<b>receives</b> add that line to the seat who <b>takes</b> the star.</p>"
-        + '<p class="calc-info-eq">card total = send pile + VA on that bag<br>'
+        + '<p class="calc-info-eq">card total = send pile + VA on that bag + Handcuff on that bag<br>'
         + "Team 1 receives = Team 2 card total<br>"
         + "Team 2 receives = Team 1 card total<br>"
         + "gap = larger receive total &minus; smaller receive total<br>"
@@ -19133,6 +19318,23 @@
         + "VA = 0.15 &times; extras &times; star &times; damp</p>"
         + "<p>damp is 1 when the star is the biggest piece in the deal. "
         + "If the extras include a bigger name, the bump shrinks.</p>"
+        + "<h3>4. Handcuff</h3>"
+        + "<p>A second gold line, not extras VA. It fires on a 2-team deal when a seat "
+        + "<b>receives the listed NFL cuff</b> and <b>still holds that starter</b> after "
+        + "the swap. WR is off: those rows are WR2s, not fantasy handcuffs. Equal-count "
+        + "1-for-1 can fire. N-way stays 0.</p>"
+        + "<p>Already held the starter: full insurance. Got both in this deal: half. "
+        + "Starter Out / IR: use the injury move (early vs late, how long they are out). "
+        + "Questionable stays insurance.</p>"
+        + '<p class="calc-info-eq">cheap cuff (under 5% of starter): 5% of starter<br>'
+        + "priced cuff: min(3% of starter, 50% of cuff)<br>"
+        + "then &times; pos (RB 1.00, QB 0.50, TE 0.25) &times; early 1.00 / late 0.60<br>"
+        + "&times; weeks out (1-3: 0.40, 4-7: 0.75, 8+: 1.00), cap 650<br>"
+        + "healthy pairing = that early/long move &times; chance they miss 2+ (RB 0.32), cap 350</p>"
+        + '<div class="calc-info-ex"><b>Handcuff worked</b> &mdash; already hold Bijan (9,505) and take Brian Robinson (2,029).<br>'
+        + "priced path: min(0.03&times;9,505, 0.50&times;2,029) = 285. Insurance = 285&times;0.32 = <b>+91</b>.</div>"
+        + "<p>The gold Handcuff line sits on the send card that carries the cuff. "
+        + "Compare receives and the card total include it.</p>"
         + "<h3>Worked example</h3>"
         + "<p>Team 1 sends one star. Team 2 sends three pieces.</p>"
         + '<div class="calc-info-ex"><b>Star</b> &mdash; flatten 8,000, KTC 9,000, FC 8,500, DD 8,800<br>'
@@ -19153,7 +19355,7 @@
         + "the card total includes it. Compare receives and Favors use the same add. "
         + "Recorded league trades store the same.</p>"
         + "<p><b>Share trade</b> paints that deal as one image and opens your share sheet "
-        + "so you can text it. The picture is the two send piles, the gold line, the "
+        + "so you can text it. The picture is the two send piles, the gold lines, the "
         + "receive totals, and the meter.</p>"
         + "</div></div>";
     }

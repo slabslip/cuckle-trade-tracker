@@ -1393,13 +1393,20 @@ const html = `<!DOCTYPE html>
       bottom: calc(12px + env(safe-area-inset-bottom, 0px));
       width: min(300px, calc(100vw - 40px));
       margin: 0; box-sizing: border-box;
-      background: rgba(16, 14, 12, 0.94);
-      border: 1px solid rgba(224, 180, 76, 0.38);
+      background: rgba(16, 14, 12, 0.72);
+      border: 1px solid rgba(224, 180, 76, 0.42);
       border-radius: 999px;
-      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(224, 180, 76, 0.1);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 190, 0.18);
+      backdrop-filter: blur(22px) saturate(1.35);
+      -webkit-backdrop-filter: blur(22px) saturate(1.35);
       overflow: visible;
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .lh-actions {
+        background: #161410;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3834,7 +3841,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "higRules20260909033000";
+    const DATA_V = "higGlass20260909033500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -24976,12 +24983,21 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
     ["HIG-15", !inline.includes('homeTabAction("news"')
       && inline.includes("function homeNewsDoorHtml(")
       && inline.includes('data-view="calc"')],
+    ["HIG-16", !html.includes("expo-glass-effect")
+      && !inline.includes("exactly like")
+      && higMd.includes("pattern, not pixels")],
+    ["HIG-17", lhCssHas("backdrop-filter: blur(22px) saturate(1.35)")
+      && !html.includes("expo-glass-effect")
+      && !html.includes("GlassView")],
+    ["HIG-18", html.includes("@media (prefers-reduced-transparency: reduce)")
+      && html.includes("backdrop-filter: none")],
   ];
   for (const [id, ok] of higRules) {
     if (!ok) throw new Error(id + " Apple HIG law failed — see docs/HIG_SDD.md");
   }
   for (const id of ["HIG-01", "HIG-02", "HIG-03", "HIG-04", "HIG-05", "HIG-06", "HIG-07",
-    "HIG-08", "HIG-09", "HIG-10", "HIG-11", "HIG-12", "HIG-13", "HIG-14", "HIG-15"]) {
+    "HIG-08", "HIG-09", "HIG-10", "HIG-11", "HIG-12", "HIG-13", "HIG-14", "HIG-15",
+    "HIG-16", "HIG-17", "HIG-18"]) {
     if (!higMd.includes("**" + id + "**")) {
       throw new Error(id + " must stay documented in docs/HIG_SDD.md");
     }

@@ -4,8 +4,9 @@ Phone-first dashboard. Source: [Apple Human Interface Guidelines](https://develo
 This file is what we **adopt**. The generator enforces it. If this file and `generate-page.mjs`
 disagree, the generator wins and this file is wrong.
 
-Cuckle is not a UIKit app. We do **not** import SF Pro, SF Symbols, system blue, or Liquid Glass
-as a material. We take Apple's *behavior* laws and keep our dark/gold chrome.
+Cuckle is not a UIKit app and not an Expo app. We do **not** import SF Pro, SF Symbols,
+system blue, `expo-glass-effect`, or a full-screen Liquid Glass skin. We take Apple's
+*behavior* laws and keep our dark/gold chrome.
 
 Display chrome → [`UI_SDD.md`](./UI_SDD.md). Product needle → [`PRODUCT.md`](./PRODUCT.md).
 
@@ -21,6 +22,10 @@ Display chrome → [`UI_SDD.md`](./UI_SDD.md). Product needle → [`PRODUCT.md`]
 - Self-animating chrome without a pause control (WCAG 2.2.2). The one permitted motion
   region is user-driven (sheet drag). `prefers-reduced-motion` kills transitions.
 - Dropping the 44px floor to fit more rows.
+- Redesigning Cuckle to be **exactly like** an Appllama example app (WhatsApp, Reddit,
+  Slack, GitHub, or any paywall/onboarding from [appllama.io](https://appllama.io)).
+  Study the **pattern** (floating labeled tabs, safe area, one accent). Do not ship
+  their pixels, their indigo, or their glass-on-every-card.
 
 ---
 
@@ -46,6 +51,9 @@ superseded in the same pass.
 | **HIG-13** | Pinch-zoom / Dynamic Type | Apple wants pinch-zoom. Cuckle **locks scale** (`user-scalable=no`, `maximum-scale=1`) so iOS does not zoom the page when a field focuses. The compensating control is **16px** on `input, select, textarea`. Do not drop that 16px floor. Design Mode stays width-locked at 390. |
 | **HIG-14** | Back is a system expectation | Top-left `#goBack` is the drill-in back. Do not steal the left-edge swipe for a custom gesture. `#leagueSub` is the skip-to-Home control, not a second back chevron. |
 | **HIG-15** | Content over chrome | The pill is a floating layer, not a full-width iOS 14 tab bar. It does not grow a sixth cell. News, calc, and Titles are doors / sub-screens. |
+| **HIG-16** | Study before you draw | Apple + peer apps are research. Extract layout skeleton and hierarchy. Never clone another app 1:1 ([Appllama skill](https://github.com/Appllama/appllama-skills): pattern, not pixels). Cuckle voice stays. |
+| **HIG-17** | Glass is a control, not a wallpaper | iOS 26 Liquid Glass / `expo-glass-effect` is native-only. On this static page the Linear pill is the **one** glass surface: `backdrop-filter` + gold hairline. No glass on cards, banners, or the page shell. Apple: use glass sparingly on functional chrome. |
+| **HIG-18** | Reduce Transparency | `prefers-reduced-transparency: reduce` turns the pill opaque and kills blur. Clarity beats decoration. Same family as HIG-09. |
 
 ---
 
@@ -59,6 +67,8 @@ Apple's current tab bar floats over content. Ours already does. Laws on that chr
 - Badge is a dot, not a second label competing with the word.
 - Pill clears the home indicator (`HIG-02`).
 - Roving tabindex: selected tab is `tabindex="0"`, the others `-1`.
+- Glass (`HIG-17`): frosted fill, blur, saturate, inset highlight. Opaque under
+  `prefers-reduced-transparency` (`HIG-18`).
 
 ---
 
@@ -90,8 +100,13 @@ These are floors, not a new palette. Existing color variables stay the only hues
 
 ## 5. Source
 
-<https://developer.apple.com/design/human-interface-guidelines>
+- Apple: <https://developer.apple.com/design/human-interface-guidelines>
+- Pattern research (not a clone target): <https://appllama.io> ·
+  [Appllama skills](https://github.com/Appllama/appllama-skills)
+- Tweet that triggered HIG-16…18:
+  [jaimintf / copy Apple + liquid glass prompt](https://x.com/jaimintf/status/2097329559838556236)
 
 Adopted chapters: Layout (44pt, safe area, thumb zone), Navigation / Tab bars,
 Typography (11pt floor), Color (not alone; contrast), Accessibility (labels, keyboard,
-reduced motion), Inputs (16px / no-focus-zoom).
+reduced motion, reduced transparency), Inputs (16px / no-focus-zoom).
+Glass: functional chrome only — CSS fallback, not Expo.

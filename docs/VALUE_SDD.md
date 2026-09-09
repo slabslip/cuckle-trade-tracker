@@ -304,8 +304,9 @@ round). The compare bar and Favors use `calcReceiveTotals` (flipped receive bags
 a stud-for-quantity package bumps the side that receives the star. Cards are send piles,
 so that bump is a gold **Value Adjustment** line on the **star package** (the send card
 with fewer pieces) and under the compare receive that includes it — not on the extras
-send card. The gold meter fills from the winner’s end by the receive **gap** (`gap / 3000`,
-empty under 25, full at 3,000), not by pile share. Tape bags already do this via
+send card. The gold meter starts at the center tick and grows left or right toward the
+side that is ahead by the receive **gap** (`gap / 3000` of that half; empty under 25;
+full at 3,000 reaches that end), not by pile share. Tape bags already do this via
 `value_adjust` (got star) and `value_adjust_sent` (sent star). Even-up chips re-run that helper after
 adding a candidate. Trade Desk even talks use the same totals so a Home card cannot
 flip Favors when it opens the calculator. Fill / Move 2-for-1 talks still score

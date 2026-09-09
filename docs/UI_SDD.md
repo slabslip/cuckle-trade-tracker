@@ -225,8 +225,9 @@ assets are rows (name, pos/team, value, remove). Card footers are the send pile 
 any Value Adjustment on that card (one add, one round). Compare bar is **receive**
 amounts with Value Adjustment folded in via `applyVa` on the flipped bags
 (stud-for-quantity bump lands on the side that receives the star). Gold fill length is
-the receive **gap** (`gap / 3000`; empty when |gap| < 25; full at a few thousand) toward
-the manager who is ahead — not pile share. **Favors** names the manager who would
+the receive **gap** (`gap / 3000` of that half; empty when |gap| < 25; full at a few
+thousand reaches that end) growing from the **center tick** toward the manager who is
+ahead — not from the edge, and not pile share. **Favors** names the manager who would
 **receive** the larger VA-adjusted pile. Even-up copy and leftover chips stay on the short **send** pile;
 league leftover stays raw capital percents. After both sides are priced, **League
 leftover** is percents of league capital (from → to), not bag totals.

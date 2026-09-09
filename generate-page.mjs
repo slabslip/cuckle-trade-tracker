@@ -1768,13 +1768,16 @@ const html = `<!DOCTYPE html>
     .calc-compare-labs > :last-child { text-align: right; }
     .calc-compare-labs b { display: block; font-size: 0.95rem; font-variant-numeric: tabular-nums; color: var(--text); }
     .calc-bar {
-      position: relative; display: flex; height: 14px; border-radius: 999px; background: #2a2a30;
+      position: relative; display: block; height: 14px; border-radius: 999px; background: #2a2a30;
       overflow: hidden; margin: 0 0 10px;
     }
-    .calc-bar-a { height: 100%; background: var(--lh-gold, #e0b44c); }
-    .calc-bar-a.is-end { margin-left: auto; }
+    .calc-bar-a {
+      position: absolute; top: 0; bottom: 0; height: 100%; background: var(--lh-gold, #e0b44c);
+    }
+    .calc-bar-a.is-start { right: 50%; }
+    .calc-bar-a.is-end { left: 50%; }
     .calc-bar-mid {
-      position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px;
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; z-index: 1;
       background: repeating-linear-gradient(-45deg, var(--bg), var(--bg) 2px, var(--line) 2px, var(--line) 4px);
     }
     .calc-favor { font-weight: 750; margin: 0 0 4px; }
@@ -3903,7 +3906,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcMeterGain20260909161000";
+    const DATA_V = "calcMeterCenter20260909162500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18349,11 +18352,11 @@ const html = `<!DOCTYPE html>
       return calcRawSum(legs) + (Number(va) || 0);
     }
 
-    /** Gold fill is the receive gap, not pile share. Even < 25. Full at 3,000. */
+    /** Gold grows from center toward the winner. 0-50 of the track. Even < 25. Full at 3,000. */
     function calcBarFill(gap) {
       const g = Math.abs(Number(gap) || 0);
       if (g < 25) return 0;
-      return Math.max(4, Math.min(100, Math.round((g / 3000) * 100)));
+      return Math.max(3, Math.min(50, Math.round((g / 3000) * 50)));
     }
 
     function calcSideBag(legs, otherLegs) {
@@ -18487,8 +18490,8 @@ const html = `<!DOCTYPE html>
       if (d == null || !calcLegsA.length || !calcLegsB.length) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p></div>';
       }
-      // Gold grows from the winner's end by how much they are ahead, not pile share.
-      // A few hundred is a short chip; a few thousand fills the track.
+      // Gold grows from the center tick toward the side that is ahead.
+      // Width is 0-50 of the track. A few hundred is a short chip; 3,000 reaches that end.
       const fillRight = receiveB > receiveA;
       const pct = calcBarFill(d);
       const nameA = calcSeatName(calcSeatA, "Team 1");
@@ -18507,7 +18510,7 @@ const html = `<!DOCTYPE html>
         + vaBreak
         + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " receives " + calcFmt(receiveA) + ", " + esc(nameB) + " receives " + calcFmt(receiveB) + (even ? ", even" : (", favors " + esc(favors) + " by " + calcFmt(need))) + '">'
         + (pct
-          ? '<div class="calc-bar-a' + (fillRight ? " is-end" : "") + '" style="width:' + pct + '%"></div>'
+          ? '<div class="calc-bar-a' + (fillRight ? " is-end" : " is-start") + '" style="width:' + pct + '%"></div>'
           : "")
         + '<div class="calc-bar-mid"></div></div>'
         + '<div class="calc-favor' + (even ? "" : " is-ahead") + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
@@ -18818,10 +18821,11 @@ const html = `<!DOCTYPE html>
         + "Team 1 receives = Team 2 card total<br>"
         + "Team 2 receives = Team 1 card total<br>"
         + "gap = larger receive total &minus; smaller receive total<br>"
-        + "meter fill = gap &divide; 3,000 (even under 25 stays empty; 3,000 fills the track)</p>"
-        + "<p>Even on our book means that gap is under 25. The gold meter grows from the "
-        + "winner&rsquo;s end by that gap &mdash; a few hundred is a short chip, a few "
-        + "thousand fills it.</p>"
+        + "meter fill = gap &divide; 3,000 from center toward the side ahead "
+        + "(even under 25 stays empty; 3,000 reaches that end)</p>"
+        + "<p>Even on our book means that gap is under 25. The gold meter starts at the "
+        + "center tick and grows left or right toward the side that is ahead &mdash; "
+        + "a few hundred is a short chip, a few thousand fills that half.</p>"
         + "<h3>3. Value Adjustment</h3>"
         + "<p>A star for three smaller pieces is not the same as three-for-three. "
         + "The side that <b>receives the star</b> (and sent the extras) gets a bump "
@@ -25098,6 +25102,7 @@ if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || fnSrc("calcCompareHtml").includes("calcRawSum(calcLegs")
   || !fnSrc("calcCompareHtml").includes("fillRight")
   || !fnSrc("calcCompareHtml").includes("calcBarFill(d)")
+  || !fnSrc("calcCompareHtml").includes("is-start")
   || fnSrc("calcCompareHtml").includes("fillShare")
   || fnSrc("calcCompareHtml").includes("is-up") || fnSrc("calcCompareHtml").includes("is-down")) {
   throw new Error("calc cards are send piles; bar and Favors use VA-adjusted receive totals");
@@ -25180,9 +25185,14 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("function calcBarFill(gap)")
   || !inline.includes("function calcCardTotal(legs, va)")
   || !fnSrc("calcBarFill").includes("g / 3000")
+  || !fnSrc("calcBarFill").includes("min(50")
+  || !html.includes(".calc-bar-a.is-start { right: 50%; }")
+  || !html.includes(".calc-bar-a.is-end { left: 50%; }")
+  || html.includes(".calc-bar-a.is-end { margin-left: auto; }")
   || !fnSrc("calcInfoHtml").includes("star package")
   || !fnSrc("calcInfoHtml").includes("card total = send pile")
   || !fnSrc("calcInfoHtml").includes("meter fill")
+  || !fnSrc("calcInfoHtml").includes("from center toward")
   || !html.includes(".calc-va {")
   || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB)")
   || !fnSrc("calcEvenHtml").includes("calcReceiveTotals(nextA, nextB)")

@@ -152,7 +152,7 @@ function calcCardPair(sendA, sendB, noVa) {
 function calcBarFill(gap) {
   const g = Math.abs(Number(gap) || 0);
   if (g < 25) return 0;
-  return Math.max(4, Math.min(100, Math.round((g / 3000) * 100)));
+  return Math.max(3, Math.min(50, Math.round((g / 3000) * 50)));
 }
 
 function expectAdd(row, label) {
@@ -203,7 +203,7 @@ function expectCard(label, got, want) {
   expectCard("worked star card total", ex.totA, 11161);
   expectCard("worked extras card total", ex.totB, 9788);
   expectAdd(ex, "worked");
-  expectCard("worked meter", calcBarFill(ex.receiveB - ex.receiveA), 46);
+  expectCard("worked meter", calcBarFill(ex.receiveB - ex.receiveA), 23);
 }
 
 {
@@ -227,7 +227,7 @@ function expectCard(label, got, want) {
   if (shot.cardA === shot.vaReceiveA && shot.vaReceiveA) {
     fail("golden shot painted receive-VA on the extras send card");
   }
-  expectCard("golden meter (gap 986)", calcBarFill(5164 - 4178), 33);
+  expectCard("golden meter (gap 986)", calcBarFill(5164 - 4178), 16);
 }
 
 {
@@ -340,15 +340,15 @@ function expectCard(label, got, want) {
 {
   expectCard("meter even 0", calcBarFill(0), 0);
   expectCard("meter even 24", calcBarFill(24), 0);
-  expectCard("meter sliver 25", calcBarFill(25), 4);
-  expectCard("meter few-hundred", calcBarFill(300), 10);
-  expectCard("meter 1000", calcBarFill(1000), 33);
-  expectCard("meter golden 986", calcBarFill(986), 33);
-  expectCard("meter few-thousand", calcBarFill(3000), 100);
-  expectCard("meter blowout", calcBarFill(8000), 100);
-  expectCard("meter negative", calcBarFill(-986), 33);
+  expectCard("meter sliver 25", calcBarFill(25), 3);
+  expectCard("meter few-hundred", calcBarFill(300), 5);
+  expectCard("meter 1000", calcBarFill(1000), 17);
+  expectCard("meter golden 986", calcBarFill(986), 16);
+  expectCard("meter few-thousand", calcBarFill(3000), 50);
+  expectCard("meter blowout", calcBarFill(8000), 50);
+  expectCard("meter negative", calcBarFill(-986), 16);
   if (pageBarFill(986) !== calcBarFill(986)) fail("generated calcBarFill drifted from check");
-  if (pageBarFill(24) !== 0 || pageBarFill(3000) !== 100) fail("generated meter edges drifted");
+  if (pageBarFill(24) !== 0 || pageBarFill(3000) !== 50) fail("generated meter edges drifted");
 }
 
 {
@@ -399,9 +399,9 @@ function expectCard(label, got, want) {
       {
         const gap = Math.abs(cards.receiveA - cards.receiveB);
         const fill = calcBarFill(gap);
-        if (fill < 0 || fill > 100) fail("meter out of range on " + (t.transaction_id || "?"));
+        if (fill < 0 || fill > 50) fail("meter out of range on " + (t.transaction_id || "?"));
         if (gap < 25 && fill) fail("even tape filled the meter on " + (t.transaction_id || "?"));
-        if (gap >= 3000 && fill !== 100) fail("blowout tape meter not full on " + (t.transaction_id || "?"));
+        if (gap >= 3000 && fill !== 50) fail("blowout tape meter not full on " + (t.transaction_id || "?"));
       }
       if (cards.cardA !== vaS) {
         sentMismatch += 1;

@@ -1377,7 +1377,10 @@ const html = `<!DOCTYPE html>
        the News Feed peek used to occupy. */
     :root { --lh-nav-h: 56px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
     body.has-lh-bar #app {
-      padding-bottom: calc(var(--lh-nav-h) + 28px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(var(--lh-nav-h) + 52px + env(safe-area-inset-bottom, 0px));
+    }
+    html.design-iphone body.has-lh-bar #app {
+      padding-bottom: 112px;
     }
     body.has-news-pullup-open .lh-actions,
     body.has-news-pullup-closing .lh-actions {
@@ -1485,26 +1488,26 @@ const html = `<!DOCTYPE html>
       appearance: none; font: inherit; color: var(--text);
       display: block; width: 100%; text-align: left; cursor: pointer;
       background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-      padding: 12px 52px 12px 14px; margin: 0; min-height: 64px;
+      padding: 10px 48px 10px 14px; margin: 0; min-height: 52px;
       box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
       position: relative;
     }
     button.home-news-door:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .home-news-door-kicker {
-      display: block; margin: 0 0 4px;
+      display: inline-block; margin: 0 8px 2px 0;
       font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em;
       text-transform: uppercase; color: var(--lh-gold, #e0b44c);
     }
     .home-news-door-who {
-      display: block; margin: 0 0 3px;
+      display: inline; margin: 0;
       font-size: 0.75rem; font-weight: 650; color: var(--muted); line-height: 1.3;
     }
     .home-news-door-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
     .home-news-door-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
     .home-news-door-line {
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
       overflow: hidden;
-      font-size: 0.875rem; font-weight: 650; line-height: 1.3; color: var(--text);
+      font-size: 0.8125rem; font-weight: 650; line-height: 1.3; color: var(--text);
     }
     .home-news-door-count {
       position: absolute; top: 12px; right: 14px;
@@ -3829,7 +3832,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "linearBarNews20260909030000";
+    const DATA_V = "linearBarNews20260909031500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5273,8 +5276,8 @@ const html = `<!DOCTYPE html>
     // "trades" carries two meanings by design: the selected seat's Trades tab when a seat is
     // set, and the league-wide list of every trade when none is. "trade" is one trade as its
     // own screen and is always league-wide — it takes ?t= plus ?seat= for the side that frames it.
-    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics"];
-    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics"];
+    const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics", "news"];
+    const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics", "news"];
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
@@ -18801,7 +18804,7 @@ const html = `<!DOCTYPE html>
         const n = items.length;
         return '<button type="button" class="home-news-door" data-view="news"'
           + ' aria-label="News Feed">'
-          + '<span class="home-news-door-kicker">News Feed</span>'
+          + '<span class="home-news-door-kicker">News Feed</span> '
           + (who ? '<span class="home-news-door-who">' + who + "</span>" : "")
           + '<span class="home-news-door-line">' + esc(line) + "</span>"
           + (n ? '<span class="home-news-door-count">' + n + "</span>" : "")
@@ -23489,7 +23492,8 @@ if (!homeReturn.includes("homeChips()")
 if (!inline.includes("function homeNewsDoorHtml(")
   || !inline.includes('class="home-news-door"')
   || !inline.includes('data-view="news"')
-  || !html.includes("button.home-news-door")) {
+  || !html.includes("button.home-news-door")
+  || !inline.includes('"cosmetics", "news"')) {
   throw new Error("Home must keep a News Feed door that opens view=news");
 }
 {

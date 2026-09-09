@@ -146,6 +146,16 @@ const html = `<!DOCTYPE html>
       overflow: hidden;
     }
     /* Fixed chrome shares the stage box. No transform on these — Design picker uses rects. */
+    html.design-iphone .lh-actions {
+      left: var(--design-left) !important;
+      right: auto !important;
+      width: min(280px, calc(var(--design-width) - 48px)) !important;
+      max-width: none !important;
+      margin: 0 auto !important;
+      transform: none !important;
+      bottom: auto !important;
+      top: calc(var(--design-top) + var(--design-height) - var(--news-pullup-peek, 100px) - 62px) !important;
+    }
     html.design-iphone .news-pullup,
     html.design-iphone .vote-sheet,
     html.design-iphone .news-pullup-click-guard {
@@ -1362,36 +1372,50 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
-    /* League-home top tabs — Home | Teams | Ledger | Data (in-place toggle). */
-    :root { --lh-nav-h: 44px; --lh-gold: #e0b44c; }
+    /* League-home tabs — Linear-style floating pill above the News Feed peek.
+       Home | Teams | Ledger | Data. Four only. Not a fifth tab. */
+    :root { --lh-nav-h: 52px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
+    body.has-lh-bar #app {
+      padding-bottom: calc(var(--news-pullup-peek) + var(--lh-nav-h) + 28px);
+    }
+    body.has-news-pullup-open .lh-actions,
+    body.has-news-pullup-closing .lh-actions {
+      opacity: 0; pointer-events: none;
+    }
     .lh-actions {
-      position: relative; z-index: 5;
-      width: 100%;
-      margin: 0 0 14px; box-sizing: border-box;
-      background: transparent;
-      border: 0;
-      border-bottom: 1px solid rgba(224, 180, 76, 0.35);
-      border-radius: 0;
+      position: fixed; z-index: 45;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(var(--news-pullup-peek) + 10px + env(safe-area-inset-bottom, 0px));
+      width: min(280px, calc(100vw - 48px));
+      margin: 0; box-sizing: border-box;
+      background: rgba(22, 20, 16, 0.92);
+      border: 1px solid rgba(224, 180, 76, 0.28);
+      border-radius: 999px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       overflow: visible;
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0; align-items: stretch; min-height: var(--lh-nav-h);
+      gap: 2px; align-items: stretch; min-height: var(--lh-nav-h);
+      padding: 4px 6px;
     }
     button.lh-action {
-      appearance: none; font: inherit; color: rgba(224, 180, 76, 0.72);
-      background: transparent; border: 0; border-radius: 0;
-      padding: 10px 8px 12px; margin: 0;
-      display: flex; flex-direction: row; align-items: center; justify-content: center;
-      gap: 8px;
+      appearance: none; font: inherit; color: rgba(224, 180, 76, 0.55);
+      background: transparent; border: 0; border-radius: 999px;
+      padding: 6px 4px 5px; margin: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px;
       cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
-      min-height: var(--lh-nav-h);
-      box-shadow: inset 0 -2px 0 transparent;
+      min-height: 44px;
+      box-shadow: none;
+      position: relative;
     }
     button.lh-action + button.lh-action {
       border-left: 0;
     }
-    button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
+    button.lh-action:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.lh-action .lh-ico {
       width: auto; height: auto; border-radius: 0;
       background: transparent; border: 0; padding: 0;
@@ -1417,20 +1441,21 @@ const html = `<!DOCTYPE html>
     }
     button.lh-action.on {
       color: var(--lh-gold);
-      background: transparent;
-      box-shadow: inset 0 -2px 0 var(--lh-gold);
+      background: rgba(224, 180, 76, 0.16);
+      box-shadow: none;
     }
     button.lh-action.on .lh-ico { border: 0; color: var(--lh-gold); }
     button.lh-action .lh-lab {
-      font-size: 0.8125rem; font-weight: 650; line-height: 1.2;
+      font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
       text-align: center; color: inherit; max-width: 100%;
       overflow-wrap: anywhere; letter-spacing: -0.01em;
     }
     button.lh-action .lh-badge {
-      display: inline-block; margin-left: 4px; min-width: 1.15em;
-      padding: 0 5px; border-radius: 999px; background: var(--lh-gold, #e0b44c);
-      color: #0b0b0d; font-size: 0.65rem; font-weight: 800; line-height: 1.35;
-      font-variant-numeric: tabular-nums; vertical-align: 1px;
+      position: absolute; top: 4px; right: 6px;
+      display: inline-block; margin-left: 0; min-width: 0.55em; min-height: 0.55em;
+      padding: 0; border-radius: 999px; background: var(--lh-gold, #e0b44c);
+      color: transparent; font-size: 0; font-weight: 800; line-height: 0;
+      font-variant-numeric: tabular-nums; vertical-align: 0;
     }
     .lh-section { margin: 0 0 18px; }
     .your3 { margin: 0 0 16px; }
@@ -3772,7 +3797,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "movesFilter20260909023600";
+    const DATA_V = "linearBar20260909025200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6248,8 +6273,8 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Top tabs: Home | Teams | Ledger | History — above the daily digest.
-     * Home is the league-home body (Alerts + deal + news). Other tabs swap in place.
+     * Linear-style floating pill: Home | Teams | Ledger | History.
+     * Sits above the News Feed peek. Home is the digest. Other tabs swap in place.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
@@ -6266,7 +6291,7 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Toggle a league-home top tab in place.
+     * Toggle a league-home tab in place.
      * Home always lands on the digest (no toggle-off to empty).
      * Other tabs: same tab again returns to Home. Pass { force: true } to open without toggle-off.
      * Stored/clicked "league" is an alias for Home.
@@ -11887,7 +11912,7 @@ const html = `<!DOCTYPE html>
       // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
       // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
       // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
-      // Top tabs (Home | Teams | Ledger | History) swap body in place.
+      // Pill tabs (Home | Teams | Ledger | History) swap body in place.
       let hero = "";
       let chips = "";
       let progress = "";
@@ -13112,6 +13137,8 @@ const html = `<!DOCTYPE html>
       // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
       nav.hidden = true;
       document.body.classList.remove("has-bottom-nav");
+      const on = appScreen === "dash" && view === "home" && !(me && data);
+      try { document.body.classList.toggle("has-lh-bar", on); } catch (err) { /* ignore */ }
     }
 
     function goBottomNav(which) {
@@ -23420,10 +23447,10 @@ if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
 }
 {
   const lhCss = html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {"));
-  if (!lhCss.includes("position: relative") || !lhCss.includes("var(--lh-gold")
-    || !lhCss.includes("inset 0 -2px 0") || lhCss.includes("position: fixed")
-    || !lhCss.includes("repeat(4, minmax(0, 1fr))")) {
-    throw new Error("league home tabs must sit at the top as a 4-up bar with gold underline");
+  if (!lhCss.includes("position: fixed") || !lhCss.includes("var(--lh-gold")
+    || !lhCss.includes("border-radius: 999px") || !lhCss.includes("repeat(4, minmax(0, 1fr))")
+    || lhCss.includes("inset 0 -2px 0")) {
+    throw new Error("league home tabs must sit as a 4-up Linear pill above the News Feed");
   }
   if (!inline.includes('aria-label="League home tabs"')) {
     throw new Error("homeChips must expose a League home tabs landmark");

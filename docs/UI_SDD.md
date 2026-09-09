@@ -14,7 +14,8 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 
 ## 1. Two rooms
 
-**Home** (no seat picked) is the daily paper: top tabs **Home | Teams | Ledger | Data**, then
+**Home** (no seat picked) is the daily paper: a Linear-style floating pill
+**Home | Teams | Ledger | Data** above the News Feed peek, then
 the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**, signed-in
 **Trade Desk**, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
 it; the clock lives in the brand header on screens it applies to (§2a).
@@ -144,16 +145,18 @@ All five are flatten-only. **The today multi-source blend is not on this menu.**
 (`DASHBOARD_AUDIT.md` §8c).
 
 URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>&tab=<homeTab>`.
-`tab` is `teams` / `ledger` / `history` when those top tabs are open; omitted on Home.
+`tab` is `teams` / `ledger` / `history` when those tabs are open; omitted on Home.
 Stored `homeTab=league` is an alias for Home. Boot reads every param; an unknown value falls back
 to Home rather than throwing. `history.replaceState` fires only when the URL string actually changes.
 
-### 2b. Top tabs
+### 2b. Four tabs (Linear pill)
 
-Four chips, one row, no wrap: **Home | Teams | Ledger | Data**. First tab label is **Home**.
-`homeTab` stores `home`. The Data tab keeps the internal id `history` (`?tab=history`;
-`?tab=data` also opens it). Ledger may badge. No fifth tab. Calculator and Titles and Emblems are
-sub-screens (`?view=calc`, `?view=cosmetics`), not tabs.
+Four chips in a floating pill above the News Feed peek: **Home | Teams | Ledger | Data**.
+Not a top underline bar. First tab label is **Home**. `homeTab` stores `home`. The Data
+tab keeps the internal id `history` (`?tab=history`; `?tab=data` also opens it). Ledger
+may badge as a gold dot. No fifth tab. No + FAB. Calculator and Titles and Emblems are
+sub-screens (`?view=calc`, `?view=cosmetics`), not tabs. The pill hides while the News
+Feed sheet is open.
 
 ---
 

@@ -18,7 +18,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 | Surface | Job | Limit |
 | --- | --- | --- |
 | **Home Trade Desk** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
-| **Data** | Who to ping + each team's cycle + research overflow | Four top tabs only. No fifth tab. |
+| **Data** | Who to ping + each team's cycle + research overflow | Four tabs only. No fifth tab. |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
 
 Data is not standings, luck, H2H, a chart product, or a personal bag-total page.

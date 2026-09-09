@@ -14,7 +14,8 @@ http://127.0.0.1:8799/iphone-preview.html
 Same page: `design-league-home-frame.html`.
 
 You should see the Linear bottom pill (Home | Teams | News | Ledger | Menu) and the Home digest
-inside an iPhone shell (Dynamic Island + home bar). News is a peer tab. Menu is the hamburger.
+inside an iPhone shell (Dynamic Island + home bar). News is a peer tab. Menu is the hamburger;
+it opens a glass popover above the pill (not a stretched sheet).
 
 ## Design Mode (clickable DOM)
 

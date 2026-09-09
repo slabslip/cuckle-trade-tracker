@@ -25,8 +25,8 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 3. Needle = **you received − you gave up** on that clock.
 4. **Home** is the daily paper (Linear bottom pill + **Cuckle trade calculator** + signed-in
    **Trade Desk** — no bag hero, no Recent Trade chip, no News door). **News** is a peer tab
-   (Alerts + the league feed, with a missed-count bubble). **Menu** (hamburger) morphs the
-   pill up to Calculator / League Data / Settings. **Teams** is first-person after a
+   (Alerts + the league feed, with a missed-count bubble). **Menu** (hamburger) opens a
+   glass popover above the pill: Calculator / League Data / Settings. **Teams** is first-person after a
    seat. Price a hypothetical on **`?view=calc`**. League tape stays the water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
 

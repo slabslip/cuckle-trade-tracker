@@ -1375,8 +1375,8 @@ const html = `<!DOCTYPE html>
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
     /* League-home tabs — Linear-style floating pill at the true bottom.
-       Home | Teams | News | Ledger | Menu. Menu is the hamburger: it morphs
-       the pill up into Calculator / League Data / Settings (+ 3 reserved). */
+       Home | Teams | News | Ledger | Menu. Menu opens a separate glass
+       popover (rizz_abh / Linear video): icon + label rows, no dividers. */
     :root { --lh-nav-h: 72px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
     body.has-lh-bar #app {
       padding-bottom: calc(var(--lh-nav-h) + 36px + env(safe-area-inset-bottom, 0px));
@@ -1391,7 +1391,7 @@ const html = `<!DOCTYPE html>
     .lh-menu-scrim {
       display: none;
       position: fixed; inset: 0; z-index: 44;
-      background: rgba(0, 0, 0, 0.38);
+      background: transparent;
     }
     body.has-lh-menu .lh-menu-scrim { display: block; }
     .lh-actions {
@@ -1400,18 +1400,13 @@ const html = `<!DOCTYPE html>
       bottom: calc(12px + env(safe-area-inset-bottom, 0px));
       width: min(372px, calc(100vw - 16px));
       margin: 0; box-sizing: border-box;
-      display: flex; flex-direction: column; justify-content: flex-end;
       background: rgba(16, 14, 12, 0.72);
       border: 1px solid rgba(224, 180, 76, 0.42);
       border-radius: 999px;
       box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 190, 0.18);
       backdrop-filter: blur(22px) saturate(1.35);
       -webkit-backdrop-filter: blur(22px) saturate(1.35);
-      overflow: hidden;
-      transition: border-radius 0.22s ease;
-    }
-    .lh-actions.is-menu-open {
-      border-radius: 28px;
+      overflow: visible;
     }
     @media (prefers-reduced-transparency: reduce) {
       .lh-actions {
@@ -1495,56 +1490,73 @@ const html = `<!DOCTYPE html>
     }
     button.lh-action-menu .lh-lab { display: none; }
     .lh-menu {
-      display: grid; grid-template-columns: 1fr;
-      padding: 0 10px;
-      max-height: 0; opacity: 0;
-      pointer-events: none;
-      transition: max-height 0.28s ease, opacity 0.18s ease, padding 0.22s ease;
+      position: absolute; left: 0; right: 0;
+      bottom: calc(100% + 10px);
+      width: 100%; box-sizing: border-box;
+      padding: 10px 8px 8px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: rgba(16, 14, 12, 0.78);
+      border: 1px solid rgba(224, 180, 76, 0.42);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 190, 0.18);
+      backdrop-filter: blur(22px) saturate(1.35);
+      -webkit-backdrop-filter: blur(22px) saturate(1.35);
+      opacity: 0; pointer-events: none;
+      transform: translateY(8px) scale(0.96);
+      transform-origin: bottom center;
+      transition: opacity 0.2s ease, transform 0.22s ease;
     }
     .lh-actions.is-menu-open .lh-menu {
-      max-height: 320px; opacity: 1; pointer-events: auto;
-      padding: 12px 10px 4px;
+      opacity: 1; pointer-events: auto; transform: none;
+    }
+    .lh-menu-head {
+      display: flex; align-items: center; gap: 8px;
+      min-height: 36px; padding: 4px 12px 8px;
+    }
+    .lh-menu-mark {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--lh-gold, #e0b44c); flex: 0 0 auto;
+    }
+    .lh-menu-title {
+      font-size: 0.9375rem; font-weight: 700; color: var(--text);
     }
     button.lh-menu-item {
       appearance: none; font: inherit; color: var(--text);
       background: transparent; border: 0;
-      border-bottom: 1px solid rgba(224, 180, 76, 0.16);
+      display: flex; align-items: center; gap: 12px;
       width: 100%; min-height: var(--hig-tap);
-      padding: 10px 12px; margin: 0;
+      padding: 8px 12px; margin: 0;
       text-align: left; font-size: 0.9375rem; font-weight: 650;
-      cursor: pointer; border-radius: 10px;
+      cursor: pointer; border-radius: 999px;
+    }
+    button.lh-menu-item:hover,
+    button.lh-menu-item:focus-visible,
+    button.lh-menu-item.is-on {
+      background: rgba(224, 180, 76, 0.18);
+      color: var(--lh-gold, #e0b44c);
+    }
+    button.lh-menu-item:active {
+      background: rgba(224, 180, 76, 0.28);
+      color: var(--lh-gold, #e0b44c);
     }
     button.lh-menu-item:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.lh-menu-item:last-of-type { border-bottom-color: rgba(224, 180, 76, 0.28); }
-    .lh-menu-slot {
-      min-height: var(--hig-tap);
-      border-bottom: 1px solid rgba(224, 180, 76, 0.08);
+    .lh-menu-ico {
+      display: grid; place-items: center; width: 22px; height: 22px;
+      color: inherit; flex: 0 0 auto;
     }
-    .lh-menu-item, .lh-menu-slot {
-      opacity: 0; transform: translateY(6px);
-      transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-    .lh-actions.is-menu-open .lh-menu-item,
-    .lh-actions.is-menu-open .lh-menu-slot {
-      opacity: 1; transform: none;
-    }
-    .lh-actions.is-menu-open .lh-menu-item:nth-child(1),
-    .lh-actions.is-menu-open .lh-menu-slot:nth-child(1) { transition-delay: 0.04s; }
-    .lh-actions.is-menu-open .lh-menu-item:nth-child(2),
-    .lh-actions.is-menu-open .lh-menu-slot:nth-child(2) { transition-delay: 0.08s; }
-    .lh-actions.is-menu-open .lh-menu-item:nth-child(3),
-    .lh-actions.is-menu-open .lh-menu-slot:nth-child(3) { transition-delay: 0.12s; }
-    .lh-actions.is-menu-open .lh-menu-item:nth-child(4),
-    .lh-actions.is-menu-open .lh-menu-slot:nth-child(4) { transition-delay: 0.16s; }
-    .lh-actions.is-menu-open .lh-menu-item:nth-child(5),
-    .lh-actions.is-menu-open .lh-menu-slot:nth-child(5) { transition-delay: 0.2s; }
-    .lh-actions.is-menu-open .lh-menu-item:nth-child(6),
-    .lh-actions.is-menu-open .lh-menu-slot:nth-child(6) { transition-delay: 0.24s; }
-    @media (prefers-reduced-motion: reduce) {
-      .lh-actions, .lh-menu, .lh-menu-item, .lh-menu-slot {
-        transition: none;
+    .lh-menu-ico svg { display: block; width: 20px; height: 20px; }
+    .lh-menu-lab { min-width: 0; }
+    .lh-menu-slot:empty { min-height: 0; height: 0; padding: 0; overflow: hidden; }
+    .lh-menu-slot:not(:empty) { min-height: var(--hig-tap); }
+    @media (prefers-reduced-transparency: reduce) {
+      .lh-menu {
+        background: #161410;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
-      .lh-menu-item, .lh-menu-slot { opacity: 1; transform: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lh-menu { transition: none; transform: none; }
     }
     .lh-section { margin: 0 0 18px; }
     .your3 { margin: 0 0 16px; }
@@ -3879,7 +3891,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "barMenuSheet20260909111000";
+    const DATA_V = "menuPopoverHig20260909124000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6374,17 +6386,29 @@ const html = `<!DOCTYPE html>
 
     /**
      * Linear-style floating pill: Home | Teams | News | Ledger | Menu.
-     * Menu is the hamburger. It morphs the pill up; it is not a sixth destination.
+     * Menu is the hamburger. It opens a glass popover above the pill.
      */
     function lhMenuPanelHtml() {
-      const item = (id, lab) =>
-        '<button type="button" class="lh-menu-item" role="menuitem" data-lh-menu-go="' + id + '">'
-        + esc(lab) + "</button>";
+      const ico = (d) =>
+        '<span class="lh-menu-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false">'
+        + '<path fill="currentColor" d="' + d + '"/></svg></span>';
+      const item = (id, lab, path) => {
+        const on = id === "data" && homeTab === "history";
+        return '<button type="button" class="lh-menu-item' + (on ? " is-on" : "") + '" role="menuitem" data-lh-menu-go="' + id + '">'
+          + ico(path) + '<span class="lh-menu-lab">' + esc(lab) + "</span></button>";
+      };
       const slot = '<div class="lh-menu-slot" aria-hidden="true"></div>';
-      return '<div class="lh-menu" id="lhMenuPanel" role="menu" aria-label="More">'
-        + item("calc", "Calculator")
-        + item("data", "League Data")
-        + item("settings", "Settings")
+      return '<div class="lh-menu" id="lhMenuPanel" role="menu" aria-label="More"'
+        + (lhMenuOpen ? "" : " inert") + ">"
+        + '<div class="lh-menu-head">'
+        + '<span class="lh-menu-mark" aria-hidden="true"></span>'
+        + '<span class="lh-menu-title">More</span></div>'
+        + item("calc", "Calculator",
+          "M6 3.5h12v17H6zm2.4 3h7.2v2H8.4zm0 4h7.2v2H8.4zm0 4h4.4v2H8.4z")
+        + item("data", "League Data",
+          "M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z")
+        + item("settings", "Settings",
+          "M4 7h10v2H4zm12 0h4v2h-4zM10 5.5h2v5h-2zM4 15h4v2H4zm8 0h8v2h-8zM6 13.5h2v5H6z")
         + slot + slot + slot
         + "</div>";
     }
@@ -6404,10 +6428,12 @@ const html = `<!DOCTYPE html>
     }
 
     function setLhMenuOpen(on) {
+      const was = lhMenuOpen;
       lhMenuOpen = !!on;
       try { document.body.classList.toggle("has-lh-menu", lhMenuOpen); } catch (err) { /* ignore */ }
       const nav = document.querySelector(".lh-actions");
       const scrim = document.querySelector(".lh-menu-scrim");
+      const panel = document.getElementById("lhMenuPanel");
       if (nav) {
         nav.classList.toggle("is-menu-open", lhMenuOpen);
         const btn = nav.querySelector("[data-lh-menu]");
@@ -6419,6 +6445,14 @@ const html = `<!DOCTYPE html>
         }
       }
       if (scrim) scrim.hidden = !lhMenuOpen;
+      if (panel) panel.inert = !lhMenuOpen;
+      if (lhMenuOpen) {
+        const first = document.querySelector("#lhMenuPanel .lh-menu-item");
+        if (first && first.focus) first.focus({ preventScroll: true });
+      } else if (was) {
+        const btn = document.querySelector(".lh-actions [data-lh-menu]");
+        if (btn && btn.focus) btn.focus({ preventScroll: true });
+      }
     }
 
     function homeChips() {
@@ -20395,6 +20429,25 @@ const html = `<!DOCTYPE html>
         if (closeTopmost()) e.preventDefault();
         return;
       }
+      if (lhMenuOpen && e.key === "Tab") {
+        setLhMenuOpen(false);
+        e.preventDefault();
+        return;
+      }
+      if (lhMenuOpen && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End")) {
+        const items = [...document.querySelectorAll("#lhMenuPanel [role=\\"menuitem\\"]")];
+        if (items.length) {
+          const cur = items.indexOf(e.target);
+          let n = 0;
+          if (e.key === "ArrowDown") n = cur < 0 ? 0 : (cur + 1) % items.length;
+          else if (e.key === "ArrowUp") n = cur < 0 ? items.length - 1 : (cur - 1 + items.length) % items.length;
+          else if (e.key === "Home") n = 0;
+          else n = items.length - 1;
+          e.preventDefault();
+          items[n].focus();
+          return;
+        }
+      }
       // Roving tabs: one stop in the tab order, arrows move between the league sections.
       const tab = e.target.closest && e.target.closest('[role="tab"]');
       if (tab) {
@@ -23699,8 +23752,13 @@ if (!inline.includes('"cosmetics", "news"')) {
   if (!inline.includes('data-lh-menu="1"') || !inline.includes('"Calculator"')
     || !inline.includes('"League Data"') || !inline.includes('"Settings"')
     || !inline.includes("lh-menu-slot")
-    || !inline.includes("slot + slot + slot")) {
-    throw new Error("Menu must morph open with Calculator, League Data, Settings, and 3 reserved slots");
+    || !inline.includes("slot + slot + slot")
+    || !inline.includes("lh-menu-head")
+    || !inline.includes("lh-menu-ico")
+    || !lhCssHas("position: absolute")
+    || !lhCssHas("bottom: calc(100% + 10px)")
+    || lhCssHas("border-bottom")) {
+    throw new Error("Menu popover must keep Calculator, League Data, Settings, and 3 reserved slots");
   }
 }
 if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
@@ -25164,17 +25222,43 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && !inline.includes("exactly like")
       && higMd.includes("pattern, not pixels")],
     ["HIG-17", lhCssHas("backdrop-filter: blur(22px) saturate(1.35)")
+      && lhCssHas(".lh-menu {")
       && !html.includes("expo-glass-effect")
       && !html.includes("GlassView")],
     ["HIG-18", html.includes("@media (prefers-reduced-transparency: reduce)")
       && html.includes("backdrop-filter: none")],
+    ["HIG-19", inline.includes("lh-menu-head")
+      && inline.includes("lh-menu-ico")
+      && inline.includes("lh-menu-slot")
+      && lhCssHas("position: absolute")
+      && lhCssHas("bottom: calc(100% + 10px)")
+      && lhCssHas("border-radius: 28px")
+      && !lhCssHas("border-bottom")
+      && !lhCssHas("max-height: 420px")],
+    ["HIG-20", lhCssHas("button.lh-menu-item.is-on")
+      && lhCssHas("button.lh-menu-item:active")
+      && lhCssHas("background: rgba(224, 180, 76, 0.18)")
+      && !html.includes("systemBlue")
+      && !html.includes("#007AFF")
+      && !html.includes("#0A84FF")],
+    ["HIG-21", inline.includes("lh-menu-title")
+      && inline.includes(">More<")
+      && !inline.includes("lh-fab")
+      && !inline.includes("lh-menu-toolbar")
+      && !inline.includes("range-slider")],
+    ["HIG-22", inline.includes("lhMenuOpen && (e.key ===")
+      && inline.includes("ArrowDown")
+      && inline.includes("ArrowUp")
+      && inline.includes("panel.inert")
+      && inline.includes(".lh-actions [data-lh-menu]")
+      && inline.includes("#lhMenuPanel .lh-menu-item")],
   ];
   for (const [id, ok] of higRules) {
     if (!ok) throw new Error(id + " Apple HIG law failed — see docs/HIG_SDD.md");
   }
   for (const id of ["HIG-01", "HIG-02", "HIG-03", "HIG-04", "HIG-05", "HIG-06", "HIG-07",
     "HIG-08", "HIG-09", "HIG-10", "HIG-11", "HIG-12", "HIG-13", "HIG-14", "HIG-15",
-    "HIG-16", "HIG-17", "HIG-18"]) {
+    "HIG-16", "HIG-17", "HIG-18", "HIG-19", "HIG-20", "HIG-21", "HIG-22"]) {
     if (!higMd.includes("**" + id + "**")) {
       throw new Error(id + " must stay documented in docs/HIG_SDD.md");
     }

@@ -51,10 +51,14 @@ superseded in the same pass.
 | **HIG-12** | Contrast + one accent | Text on `--bg` / `--card` uses `--text` / `--muted` / `--dim`. Interactive gold is the same gold everywhere. Do not encode meaning in hue alone (Needles stay words + numbers). |
 | **HIG-13** | Pinch-zoom / Dynamic Type | Apple wants pinch-zoom. Cuckle **locks scale** (`user-scalable=no`, `maximum-scale=1`) so iOS does not zoom the page when a field focuses. The compensating control is **16px** on `input, select, textarea`. Do not drop that 16px floor. Design Mode stays width-locked at 390. |
 | **HIG-14** | Back is a system expectation | Top-left `#goBack` is the drill-in back. Do not steal the left-edge swipe for a custom gesture. `#leagueSub` is the skip-to-Home control, not a second back chevron. |
-| **HIG-15** | Content over chrome | The pill is a floating layer, not a full-width iOS 14 tab bar. It does not grow a sixth cell. Menu morphs the same pill up (Linear pattern). Calculator, League Data, and Settings live in that list. Three empty rows stay reserved. |
+| **HIG-15** | Content over chrome | The pill is a floating layer, not a full-width iOS 14 tab bar. It does not grow a sixth cell. Menu is a **separate** glass popover above the unchanged pill (video hamburger pattern). Calculator, League Data, and Settings live in that list. Three reserved slot nodes stay in the card; empty slots collapse. |
 | **HIG-16** | Study before you draw | Apple + peer apps are research. Extract layout skeleton and hierarchy. Never clone another app 1:1 ([Appllama skill](https://github.com/Appllama/appllama-skills): pattern, not pixels). Cuckle voice stays. |
-| **HIG-17** | Glass is a control, not a wallpaper | iOS 26 Liquid Glass / `expo-glass-effect` is native-only. On this static page the Linear pill is the **one** glass surface: `backdrop-filter` + gold hairline. No glass on cards, banners, or the page shell. Apple: use glass sparingly on functional chrome. |
-| **HIG-18** | Reduce Transparency | `prefers-reduced-transparency: reduce` turns the pill opaque and kills blur. Clarity beats decoration. Same family as HIG-09. |
+| **HIG-17** | Glass is a control, not a wallpaper | iOS 26 Liquid Glass / `expo-glass-effect` is native-only. On this static page the **two** glass surfaces are the Linear pill and the Menu popover: same `backdrop-filter` + gold hairline. No glass on cards, banners, or the page shell. Apple: use glass sparingly on functional chrome. |
+| **HIG-18** | Reduce Transparency | `prefers-reduced-transparency: reduce` turns the pill **and** the Menu popover opaque and kills blur. Clarity beats decoration. Same family as HIG-09. |
+| **HIG-19** | Menu is a popover, not a morph | Far-right hamburger opens a floating glass card (`position: absolute`, `bottom: calc(100% + 10px)`, `border-radius: 28px`) above the pill. The pill stays a pill. Icon + label rows. No hairline dividers. No `max-height` sheet stretch. Pattern source: the Linear-style bar video (rizz_abh). Do not morph the pill upward (that reading of HIG-15 is superseded). |
+| **HIG-20** | Menu selection is a capsule | Hover / focus / selected / pressed menu rows use a gold **capsule** plus gold type. Pressed is `:active` (Apple: immediate feedback). No system blue (`#007AFF` / `#0A84FF`). |
+| **HIG-21** | One header row | Header is gold mark + **More**. No second toolbar. No filter sliders (the video's sliders are their product, not ours — a dead control fails HIG). No + FAB. |
+| **HIG-22** | Menu keyboard | Open: focus the first menuitem; ArrowUp / ArrowDown / Home / End move menuitems before tab roving. Tab and Escape close. Closed panel is `inert` (not in the tab order). Close restores focus to the hamburger. |
 
 ---
 
@@ -68,8 +72,11 @@ Apple's current tab bar floats over content. Ours already does. Laws on that chr
 - Ledger badge is a dot. News missed is a small count bubble, not a second label.
 - Pill clears the home indicator (`HIG-02`).
 - Roving tabindex: selected tab is `tabindex="0"`, the others `-1`.
-- Glass (`HIG-17`): frosted fill, blur, saturate, inset highlight. Opaque under
-  `prefers-reduced-transparency` (`HIG-18`).
+- Glass (`HIG-17`): frosted fill, blur, saturate, inset highlight on the pill **and**
+  the Menu popover. Opaque under `prefers-reduced-transparency` (`HIG-18`).
+- Menu (`HIG-19`…`HIG-22`): separate card above the pill, not a morph. Header is
+  mark + More. Rows are icon + label with a gold capsule, no dividers. Closed
+  panel is `inert`. Escape / Tab / scrim / Back close and restore the hamburger.
 
 ---
 
@@ -106,6 +113,8 @@ These are floors, not a new palette. Existing color variables stay the only hues
   [Appllama skills](https://github.com/Appllama/appllama-skills)
 - Tweet that triggered HIG-16…18:
   [jaimintf / copy Apple + liquid glass prompt](https://x.com/jaimintf/status/2097329559838556236)
+- Menu popover pattern (HIG-19…22), not a pixel clone:
+  [rizz_abh / Linear-style bottom bar](https://x.com/rizz_abh/status/2097348732618735787)
 
 Adopted chapters: Layout (44pt, safe area, thumb zone), Navigation / Tab bars,
 Typography (11pt floor), Color (not alone; contrast), Accessibility (labels, keyboard,

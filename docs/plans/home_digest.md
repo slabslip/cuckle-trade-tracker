@@ -16,7 +16,7 @@ plans stay as history; do not paste them here.
 ## Locked for this pass
 
 - Five bottom cells, one row: **Home | Teams | News | Ledger | Menu**. No sixth tab. No `#goHome` icon.
-  Menu morphs into Calculator / League Data / Settings. League Data is the research
+  Menu opens a glass popover (Calculator / League Data / Settings). League Data is the research
   homebase (internal tab id `history`). News is Alerts + the feed.
 - First tab label **Home**. `homeTab` stores `"home"`; `"league"` is an alias.
 - Hybrid Home: league water cooler on top (**Cuckle trade calculator**).

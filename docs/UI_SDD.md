@@ -19,7 +19,7 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 **Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
 occupy), then the digest — **Cuckle trade calculator** and signed-in **Trade Desk**.
 **News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
-it morphs the pill up. It is the water cooler.
+it opens a glass popover above the unchanged pill. It is the water cooler.
 The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
 (§2a).
 
@@ -158,8 +158,11 @@ to Home rather than throwing. `history.replaceState` fires only when the URL str
 Four labeled destinations plus Menu in a floating pill:
 **Home | Teams | News | Ledger | Menu**. Not a top underline bar. First tab label is
 **Home**. `homeTab` stores `home`. Menu is three stacked lines only (`aria-label="Menu"`).
-Tapping it morphs the same pill up into **Calculator**, **League Data**, **Settings**,
-and three reserved empty rows (Linear hamburger pattern). League Data keeps the
+Tapping it opens a **separate** glass popover above the pill: header (gold mark +
+**More**), then **Calculator**, **League Data**, **Settings** as icon + label rows
+with a gold capsule on hover / selected. Three reserved slot nodes stay in the
+card; empty slots collapse (Linear hamburger pattern from the rizz_abh video).
+The pill stays a pill. No dim overlay. No + FAB. League Data keeps the
 internal id `history` (`?tab=history`; `?tab=data` also opens it). News is `?tab=news`
 (`?view=news` remaps onto it). Ledger may badge as a gold dot. News may badge a missed
 count. No sixth cell. No + FAB. Calculator, Settings, and Titles stay sub-screens.

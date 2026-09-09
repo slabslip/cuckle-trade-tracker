@@ -3672,7 +3672,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "direction20260909004000";
+    const DATA_V = "direction20260909004500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6512,7 +6512,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashMoveWhy(theirDir, theirProf, pos, giveW) {
-      const bits = ["you are " + (giveW || "deep") + " " + pos];
+      const bits = [pos === "PICK" ? "you can send a pick" : ("you have extra " + pos)];
       const sold = theirDir && theirDir.by_pos && theirDir.by_pos[pos] && theirDir.by_pos[pos].out;
       if (sold && sold[0]) bits.push("they sold " + sold[0]);
       if (pos === "PICK") return dataDashPickMoveWhy(theirDir);
@@ -6528,9 +6528,10 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashPickMoveWhy(theirDir) {
-      if (theirDir && theirDir.why) return theirDir.why;
-      if (theirDir && theirDir.label) return theirDir.label + " · they want 2027 picks";
-      return "they want 2027 picks";
+      const them = (theirDir && theirDir.why)
+        ? theirDir.why
+        : (theirDir && theirDir.label ? theirDir.label + " · they want 2027 picks" : "they want 2027 picks");
+      return "you can send a pick · " + them;
     }
 
     function dataDashPickRound(a) {
@@ -16997,7 +16998,9 @@ const html = `<!DOCTYPE html>
       if (!talk) return "Pick the sides";
       const extra = [];
       if (job === "fill" && talk.why !== "depth-stud" && talk.pos) extra.push("you need " + talk.pos);
-      if (job === "move" && talk.why !== "depth-stud" && talk.pos) extra.push("you are deep " + talk.pos);
+      if (job === "move" && talk.why !== "depth-stud" && talk.pos) {
+        extra.push(talk.pos === "PICK" ? "you can send a pick" : ("you have extra " + talk.pos));
+      }
       const partner = homeDeskPartnerNote(themName);
       if (partner) extra.push(partner);
       if (talk.book) extra.push(talk.book);

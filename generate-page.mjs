@@ -3891,7 +3891,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260909140551";
+    const DATA_V = "calcVaReceive20260909143700";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18411,20 +18411,20 @@ const html = `<!DOCTYPE html>
     }
 
     function calcCompareHtml() {
-      const a = calcSideBag(calcLegsA, calcLegsB);
-      const b = calcSideBag(calcLegsB, calcLegsA);
-      const sendA = calcRawSum(calcLegsA);
-      const sendB = calcRawSum(calcLegsB);
+      // Cards stay raw send piles. Compare bags flip framing: legs = what that side receives
+      // (the other pile), so applyVa puts the stud-for-quantity bump on the receiver of the star.
+      const a = calcSideBag(calcLegsB, calcLegsA);
+      const b = calcSideBag(calcLegsA, calcLegsB);
       const pricedA = (calcLegsA || []).some((l) => l.value != null);
       const pricedB = (calcLegsB || []).some((l) => l.value != null);
-      // Each card is a send pile. A receives what B sends. Positive = A comes out ahead.
-      const d = (pricedA && pricedB) ? displayDelta(sendB, sendA) : null;
+      // Positive = A comes out ahead (receives more on our book, VA included).
+      const receiveA = a.today || 0;
+      const receiveB = b.today || 0;
+      const d = (pricedA && pricedB) ? displayDelta(receiveA, receiveB) : null;
       if (d == null || !calcLegsA.length || !calcLegsB.length) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p></div>';
       }
-      // Bar shows what each side would receive (the other pile). Gold fills toward the receiver.
-      const receiveA = sendB;
-      const receiveB = sendA;
+      // Bar shows VA-adjusted receive amounts. Gold fills toward the receiver.
       const tot = Math.abs(receiveA) + Math.abs(receiveB);
       const fillRight = receiveB > receiveA;
       const fillShare = fillRight ? receiveB : receiveA;
@@ -18734,11 +18734,13 @@ const html = `<!DOCTYPE html>
         + "retired list), today is 0. Missing FantasyCalc or DynastyDealer does not retire anyone. "
         + "Production / P/E never changes this number. We round the blend to a whole number.</p>"
         + "<h3>2. Add the piles</h3>"
-        + "<p>Each card is what that team <b>sends</b>. The compare bar flips those piles: "
-        + "you receive what the other team sends.</p>"
-        + '<p class="calc-info-eq">Team 1 receives = Team 2 send pile<br>'
-        + "Team 2 receives = Team 1 send pile<br>"
-        + "gap = larger receive pile &minus; smaller receive pile</p>"
+        + "<p>Each card is what that team <b>sends</b> &mdash; card footers stay the raw "
+        + "today blend so they match the listed pieces. The compare bar flips those piles "
+        + "and folds in Value Adjustment: you receive what the other team sends, plus any "
+        + "stud-for-quantity bump on that bag.</p>"
+        + '<p class="calc-info-eq">Team 1 receives = Team 2 send pile + VA on that bag<br>'
+        + "Team 2 receives = Team 1 send pile + VA on that bag<br>"
+        + "gap = larger receive total &minus; smaller receive total</p>"
         + "<p>Even on our book means that gap is under 25.</p>"
         + "<h3>3. Value Adjustment</h3>"
         + "<p>A star for three smaller pieces is not the same as three-for-three. "
@@ -18760,15 +18762,15 @@ const html = `<!DOCTYPE html>
         + "<b>WR</b> &mdash; flatten 2,000, KTC 2,500, FC 2,200, DD 2,100 &rarr; <b>2,215</b><br>"
         + "<b>2028 2nd</b> &mdash; flatten 1,800, no market quotes &rarr; <b>1,800</b><br>"
         + "pile = 5,773 + 2,215 + 1,800 = <b>9,788</b></div>"
-        + '<div class="calc-info-ex">The bar reads Team 2 receives 8,585 and Team 1 receives 9,788. '
-        + "Gap is 1,203 toward Team 1 before the adjustment.</div>"
         + '<div class="calc-info-ex">Team 2 sent 3 pieces for 1 star, so extras = min(3, 2) = <b>2</b>. '
         + "damp = 8,585 &divide; 8,585 = 1.<br>"
         + "VA = 0.15 &times; 2 &times; 8,585 &times; 1 = <b>2,576</b><br>"
         + "Star after adjustment = 8,585 + 2,576 = <b>11,161</b>. The pile stays 9,788.</div>"
+        + '<div class="calc-info-ex">The bar reads Team 2 receives <b>11,161</b> and Team 1 receives <b>9,788</b>. '
+        + "Gap is 1,373 toward Team 2 &mdash; Favors the side that took the star.</div>"
         + "<p>That bump is the adjustment tool: paying quantity for a star makes the star "
-        + "count for more than its sticker. The piece numbers on this screen are the "
-        + "today blend. Recorded league trades store the same blend plus this VA.</p>"
+        + "count for more than its sticker. Card footers stay the today blend; the compare "
+        + "bar and Favors use the blend plus this VA. Recorded league trades store the same.</p>"
         + "</div></div>";
     }
 
@@ -25006,13 +25008,16 @@ if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !inline.includes("function calcCompareHtml(") || !inline.includes("Closest to even")
   || !fnSrc("calcCompareHtml").includes("would receive")
   || !fnSrc("calcCompareHtml").includes("can send")
-  || !fnSrc("calcCompareHtml").includes("displayDelta(sendB, sendA)")
+  || !fnSrc("calcCompareHtml").includes("displayDelta(receiveA, receiveB)")
+  || !fnSrc("calcCompareHtml").includes("calcSideBag(calcLegsB, calcLegsA)")
+  || !fnSrc("calcCompareHtml").includes("a.today")
   || !fnSrc("calcCompareHtml").includes("receiveA")
   || !fnSrc("calcCompareHtml").includes("receives<b>")
   || fnSrc("calcCompareHtml").includes("sends<b>")
+  || fnSrc("calcCompareHtml").includes("calcRawSum(calcLegs")
   || !fnSrc("calcCompareHtml").includes("fillRight")
   || fnSrc("calcCompareHtml").includes("is-up") || fnSrc("calcCompareHtml").includes("is-down")) {
-  throw new Error("calc cards are send piles; bar and Favors follow who receives more");
+  throw new Error("calc cards are send piles; bar and Favors use VA-adjusted receive totals");
 }
 if (!fnSrc("calcSideHtml").includes("(uid")
   || !fnSrc("calcSideHtml").includes("calc-search")
@@ -25087,6 +25092,8 @@ if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-in
   || !inline.includes("If flatten is missing")
   || !inline.includes("FantasyCalc") || !inline.includes("DynastyDealer")
   || !inline.includes("Worked example") || !inline.includes("calcInfoOpen")
+  || !fnSrc("calcInfoHtml").includes("send pile + VA on that bag")
+  || !fnSrc("calcInfoHtml").includes("Team 2 receives <b>11,161</b>")
   || fnSrc("renderCalc").includes("Today book")
   || fnSrc("calcCompareHtml").includes("Our book: flatten")
   || fnSrc("calcCompareHtml").includes("Not raw KTC")) {

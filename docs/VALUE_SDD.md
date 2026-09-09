@@ -299,10 +299,13 @@ w_dd   = 0.20   // DynastyDealer base_value
 
 **HAVE.** `?view=calc` prices a hypothetical 2-side swap on the **today / `even` book**
 (flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via `applyVa` on the
-hypothetical bags. Recorded tape rows prefer the pipeline’s stored `today` / `sent_today`
-when both are present (`sideOf`); `applyVa` stays in the browser for calc clones. The catalog
-is `data/ui/calculator.json` from `build-calculator.mjs`: rostered players and still-held picks
-only, each with `roster_ord` in Sleeper team-page order (starters, bench, IR, taxi; picks after).
+hypothetical bags. Card footers stay the raw today blend (listed pieces). The compare bar
+and Favors use the flipped receive bags with VA included, so a stud-for-quantity package
+bumps the side that receives the star. Recorded tape rows prefer the pipeline’s stored
+`today` / `sent_today` when both are present (`sideOf`); `applyVa` stays in the browser for
+calc clones. The catalog is `data/ui/calculator.json` from `build-calculator.mjs`: rostered
+players and still-held picks only, each with `roster_ord` in Sleeper team-page order
+(starters, bench, IR, taxi; picks after).
 A team on a side is optional: the same book can price a research bag (type any player or pick)
 or a seat bag (that roster plus its remaining draft capital). Roster meta and selected player
 rows may chip buy / fair / sell from `pe.json` (signal only). Pick rows expose a **tape**

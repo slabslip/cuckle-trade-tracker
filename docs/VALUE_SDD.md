@@ -332,3 +332,62 @@ at the remainder. Percents only — no bag totals on Home, no 10-row leftover ta
 names, and `readVotes` has no `choice`, a button opens that trade’s existing vote sheet
 (`data-board-open` + `data-id` + `data-trade-solo="1"`). Copy: the room has not voted; opinion
 only; votes never enter the book. The nudge never writes a vote by itself.
+
+---
+
+## 13. Handcuff moves (2024–2025 study)
+
+**HAVE (research).** `scripts/cuff-history.py` walks nflverse Out/Doubtful + snap counts
+for 2024 and 2025, finds the snap-lead starter who missed 2+ games, prices the backup
+who inherited the snaps on the **DynastyProcess Superflex monthly** curve, and writes
+`data/research/cuff-history.json`. Clock is flatten-only history. Do not paste 2026
+KTC/FC/DD onto those dates. Do not use today’s `cuffs.json` as 2024 identity.
+
+**What moved.** Priced backups only (cuff ≥ 20 on the board). Early = first missed
+week 1–8. Late = 9–18. Peak = highest monthly snap during the absence.
+
+| Cell | n | Peak Δ median | % of cuff (med) | % of starter (med) |
+| --- | --- | --- | --- | --- |
+| RB early | 6 | +95 | 152% | **2.4%** |
+| RB late | 2 | +106 | 46% | 2.5% |
+| RB all | 8 | +98 | 110% | **2.4%** |
+| QB | 1 (Flacco) | +107 | 54% | 1.2% |
+| TE | 2 | −5 | — | ~0 |
+| WR | off | — | — | — |
+
+Poster cases: Mason +629 when CMC went down week 1 (10% of CMC); Hunt +75 on
+Pacheco (2%); White +216 on Bucky (5%); Vidal +115 on Hampton (3%); Charbonnet
++25 on a 2-week Walker sit, +130 on a late 2-week sit. Sermon −24 on a 3-week
+Taylor sit (not every cuff pops). Mayer / Strange / Musgrave did not reprice.
+
+**% of cuff is the wrong average** for cheap darts (Mason 1284%, Hunt 341%).
+**% of starter is the stable move** (~2.4% RB median; Mason’s season-ending IR
+is the high outlier at 10%). Late-season **share of starter is similar**; the
+damp is remaining games (~9/17), not a smaller % pop. QB backups barely live
+on the DP board; TE cuffs did not reprice. WR2 pops (Shaheed, Dotson, Deebo)
+are real and are **not** fantasy handcuffs — `cuffs.json` WR rows are WR2s.
+
+**Locked formula** (`cuff-formula.mjs`). Not extras VA. Not on the needle yet.
+
+```text
+pos_w:    RB 1.00 · QB 0.50 · TE 0.25 · WR 0
+season_w: early 1.00 · late 0.60
+weeks_w:  1–3w 0.40 · 4–7w 0.75 · 8+w 1.00
+
+cheap  = cuff / starter < 0.05
+raw    = cheap ? 0.05 * starter
+         : min(0.03 * starter, 0.50 * cuff)
+move   = min(650, round(raw * pos_w * season_w * weeks_w))
+
+healthy pairing (insurance):
+  cuff_va = min(350, round(move_early_long * p_out[pos] * hold_w))
+  p_out: RB 0.32 · QB 0.18 · TE 0.16 · WR 0
+  hold_w: already had starter 1.00 · got both in the deal 0.50
+```
+
+Worked: Mason 49 / CMC 6002 → +300 (actual +629). White 142 / Bucky 4340 → +217
+(actual +216). Charbonnet 458 / Walker 2987, 2 weeks → +36 (actual +25).
+Bijan 9505 / B-Rob 2029 healthy → insurance +91. Hampton out 8+ early →
+Vidal-class cheap add +5% of Hampton.
+
+Re-run: `python3 scripts/cuff-history.py --write` then `node cuff-formula.mjs`.

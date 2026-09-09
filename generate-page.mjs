@@ -3035,6 +3035,82 @@ const html = `<!DOCTYPE html>
     }
     .data-dash { margin: 0 0 16px; }
     .data-dash-sub { margin: 0 0 12px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .data-panes {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+      margin: 0 0 14px;
+    }
+    button.data-pane {
+      appearance: none; font: inherit; font-size: 0.82rem; font-weight: 750;
+      color: var(--muted); background: #16161a; border: 1px solid var(--line);
+      border-radius: 10px; min-height: 40px; cursor: pointer;
+    }
+    button.data-pane.on { color: var(--text); border-color: #6b5a2e; background: #221e14; }
+    button.data-pane:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .data-sec { margin: 0 0 18px; }
+    .data-sec-h {
+      margin: 0 0 2px; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .data-sec-sub { margin: 0 0 10px; font-size: 0.75rem; color: var(--muted); line-height: 1.3; }
+    .data-league { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+    button.data-team {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; background: #1c1c22; border: 1px solid var(--line);
+      border-radius: 12px; padding: 10px 12px 10px 10px; min-height: 56px;
+      cursor: pointer; box-sizing: border-box;
+    }
+    button.data-team.you { border-color: #6b5a2e; background: #221e14; }
+    button.data-team:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .data-team-bar {
+      flex: 0 0 4px; align-self: stretch; min-height: 36px;
+      border-radius: 99px; background: #e0b44c;
+    }
+    .data-team-bar.hard { background: #a78bfa; }
+    .data-team-bar.rebuild { background: #60a5fa; }
+    .data-team-bar.win { background: #4ade80; }
+    .data-team-bar.reload { background: #e0b44c; }
+    .data-team-main { flex: 1; min-width: 0; }
+    .data-team-main b {
+      display: block; font-size: 0.95rem; font-weight: 750; color: var(--text); line-height: 1.2;
+    }
+    .data-team-main span {
+      display: block; font-size: 0.72rem; color: var(--muted); margin-top: 2px; line-height: 1.3;
+    }
+    .data-cycle {
+      flex: 0 0 auto; font-size: 0.62rem; font-weight: 800; font-style: normal;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      border-radius: 999px; padding: 5px 8px; line-height: 1.2;
+    }
+    .data-cycle.hard { color: #ddd6fe; background: #3b2a5c; }
+    .data-cycle.rebuild { color: #dbeafe; background: #1e3a5f; }
+    .data-cycle.win { color: #dcfce7; background: #14532d; }
+    .data-cycle.reload { color: #f5e6b8; background: #3a3014; }
+    .data-dir-hero {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 8px;
+    }
+    .data-facts { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; }
+    .data-facts > div {
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .data-facts b {
+      display: block; font-size: 0.62rem; font-weight: 800;
+      letter-spacing: 0.05em; text-transform: uppercase; color: var(--dim);
+    }
+    .data-facts span { display: block; font-size: 0.88rem; font-weight: 650; margin-top: 2px; }
+    .data-more { display: flex; flex-direction: column; gap: 8px; }
+    button.data-more-door {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      display: block; width: 100%; background: #1c1c22; border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px 14px; min-height: 52px; cursor: pointer;
+      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
+    }
+    button.data-more-door b { display: block; font-size: 0.95rem; font-weight: 750; color: var(--text); }
+    button.data-more-door span {
+      display: block; font-size: 0.72rem; color: var(--muted); margin-top: 2px;
+    }
+    button.data-more-door:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .data-search {
       position: relative; margin: 0 0 12px;
     }
@@ -3672,7 +3748,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "direction20260909013000";
+    const DATA_V = "rebuild20260909020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3698,6 +3774,7 @@ const html = `<!DOCTYPE html>
     // clearLeague / the home icon return to null; there is no "None" menu option.
     let dataSet = null;
     let dataRoom = "overview";
+    let dataPane = "ping";
     let dataQ = "";
     let dataPos = "";
     let dataOwner = "";
@@ -6219,6 +6296,7 @@ const html = `<!DOCTYPE html>
 
     function dataDashReset() {
       dataRoom = "overview";
+      dataPane = "ping";
       dataQ = "";
       dataPos = "";
       dataOwner = "";
@@ -6575,6 +6653,7 @@ const html = `<!DOCTYPE html>
       dataHuntPos = "";
       dataBlockAddOpen = false;
       dataRoom = "overview";
+      dataPane = "league";
       dataDashEdit = false;
       dataDashLibOpen = false;
       focusNext = ".screen-h";
@@ -6979,7 +7058,7 @@ const html = `<!DOCTYPE html>
 
     function dataDashHuntPeekRows(id) {
       const all = dataDashHuntRows(id);
-      if (id !== "move_extras") return all.slice(0, 3);
+      if (id !== "move_extras" && id !== "fill_holes") return all.slice(0, 3);
       const out = [];
       const seen = {};
       for (let i = 0; i < all.length && out.length < 3; i++) {
@@ -7060,10 +7139,14 @@ const html = `<!DOCTYPE html>
             + lab + "</button>";
         }).join("")
         + "</div>";
-      return '<section class="data-dash" aria-label="' + esc(spec.lab) + '">'
-        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Data</button></p>'
-        + '<h2 class="screen-h" tabindex="-1">' + esc(spec.lab) + "</h2>"
-        + '<p class="data-dash-sub">' + esc(spec.why) + "</p>"
+      const huntTitle = id === "move_extras" ? "Send" : (id === "fill_holes" ? "Get" : spec.lab);
+      const huntSub = id === "move_extras"
+        ? "Who will take extras."
+        : (id === "fill_holes" ? "Who will sell what you need." : spec.why);
+      return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
+        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Ping</button></p>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(huntTitle) + "</h2>"
+        + '<p class="data-dash-sub">' + esc(huntSub) + "</p>"
         + chips
         + (id === "my_block" ? dataDashMyBlockAddHtml() : "")
         + (rows.length
@@ -7378,20 +7461,56 @@ const html = `<!DOCTYPE html>
       render();
     }
 
+    function dataDashCycleSlug(label) {
+      const t = String(label || "").toLowerCase();
+      if (t === "hard rebuild") return "hard";
+      if (t === "rebuild") return "rebuild";
+      if (t === "win-now") return "win";
+      return "reload";
+    }
+
+    function dataDashPaneCanon(id) {
+      const t = String(id || "").toLowerCase();
+      if (t === "league" || t === "more") return t;
+      return "ping";
+    }
+
+    function dataDashPanesHtml() {
+      const pane = dataDashPaneCanon(dataPane);
+      return '<div class="data-panes" role="tablist" aria-label="Data views">'
+        + [["ping", "Ping"], ["league", "League"], ["more", "More"]].map(function (p) {
+          const on = pane === p[0];
+          return '<button type="button" class="data-pane' + (on ? " on" : "") + '"'
+            + ' data-data-pane="' + p[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
+            + p[1] + "</button>";
+        }).join("")
+        + "</div>";
+    }
+
+    function dataDashFact(lab, val) {
+      if (!val || val === "—") return "";
+      return "<div><b>" + esc(lab) + "</b><span>" + esc(val) + "</span></div>";
+    }
+
     function dataDashDirStripHtml() {
       const seats = ((seatDirection && seatDirection.seats) || (members || []).map(function (m) {
-        return { seat_user_id: m.user_id, name: m.name, place: m.place, label: "Reload" };
+        return { seat_user_id: m.user_id, name: m.name, place: m.place, label: "Reload", why: "" };
       })).slice().sort(function (a, b) { return (a.place || 99) - (b.place || 99); });
       if (!seats.length) return "";
       const mine = authSeatId() ? String(authSeatId()) : "";
-      return '<div class="data-rooms data-dir" role="list" aria-label="Team direction">'
+      return '<div class="data-league" role="list" aria-label="Team cycle">'
         + seats.map(function (s) {
           const uid = String(s.seat_user_id || "");
           const you = mine && uid === mine;
-          return '<button type="button" class="data-room data-dir-seat' + (you ? " you" : "") + '"'
+          const label = s.label || "Reload";
+          const slug = dataDashCycleSlug(label);
+          const why = s.why || (s.place ? nth(s.place) + " last season" : "Reload");
+          return '<button type="button" class="data-team data-dir-seat' + (you ? " you" : "") + '"'
             + ' data-dir-seat="' + esc(uid) + '" role="listitem">'
-            + "<b>" + esc(s.name || uid) + "</b>"
-            + "<span>" + esc(s.label || "Reload") + "</span></button>";
+            + '<i class="data-team-bar ' + slug + '" aria-hidden="true"></i>'
+            + '<div class="data-team-main"><b>' + esc(s.name || uid) + (you ? " · you" : "") + "</b>"
+            + "<span>" + esc(why) + "</span></div>"
+            + '<em class="data-cycle ' + slug + '">' + esc(label) + "</em></button>";
         }).join("")
         + "</div>";
     }
@@ -7414,10 +7533,11 @@ const html = `<!DOCTYPE html>
       const d = seatDirOf(uid);
       const name = (d && d.name) || dataDashSeatName(uid) || uid;
       const label = (d && d.label) || "Reload";
+      const slug = dataDashCycleSlug(label);
       const why = (d && d.why) || "Recent-window tape is still loading.";
-      const buy = ((d && d.buy) || []).join(" · ") || "—";
-      const sell = ((d && d.sell) || []).join(" · ") || "—";
-      const refuse = ((d && d.refuse) || []).join(" · ") || "—";
+      const buy = ((d && d.buy) || []).join(" · ");
+      const sell = ((d && d.sell) || []).join(" · ");
+      const refuse = ((d && d.refuse) || []).join(" · ");
       const holes = ((d && d.holes) || []).concat((d && d.thin) || []);
       const holeBits = [];
       const seen = {};
@@ -7427,35 +7547,26 @@ const html = `<!DOCTYPE html>
         const shop = d && dataDashIntentBuys(d, p);
         holeBits.push(p + (shop ? "" : " — not shopping " + p));
       });
-      const posOrder = ["QB", "RB", "WR", "TE"];
-      const soldGot = posOrder.map(function (pos) {
-        const block = d && d.by_pos && d.by_pos[pos];
-        if (!block || (!(block.out || []).length && !(block.in || []).length)) return "";
-        return '<div class="leg list"><span>' + esc(pos) + "</span><b>"
-          + esc("sold " + ((block.out || []).slice(0, 3).join(", ") || "—")
-            + " · got " + ((block.in || []).slice(0, 3).join(", ") || "—"))
-          + "</b></div>";
-      }).join("");
       const mine = authSeatId() ? String(authSeatId()) : "";
       const moves = mine ? dataDashSmartMovesVs(uid) : [];
       const moveHtml = !mine
-        ? '<p class="data-hint">Claim your seat to see feasible pings.</p>'
+        ? '<p class="data-hint">Claim your seat to see who to ping.</p>'
         : (moves.length
           ? moves.map(dataDashHuntRowHtml).join("")
           : '<p class="data-hint">No feasible ping with this seat.</p>');
       const you = mine && String(uid) === mine;
-      return '<section class="data-dash" aria-label="' + esc(name) + ' direction">'
-        + '<p class="caption"><button type="button" class="chip back" data-dir-back="1">← Data</button></p>'
-        + '<h2 class="screen-h" tabindex="-1">' + esc(name) + "</h2>"
-        + '<p class="data-dash-sub">' + esc(label) + " · " + esc(why) + "</p>"
-        + '<div class="data-dir-facts">'
-        + statBox("Buy", buy)
-        + statBox("Sell", sell)
-        + statBox("Refuse", refuse)
-        + (holeBits.length ? statBox("Bag facts", holeBits.join(" · ")) : "")
-        + "</div>"
-        + (soldGot ? '<div class="data-h">Last window</div>' + soldGot : "")
-        + '<div class="data-h">' + (you ? "Smart moves for you" : "Smart moves vs " + esc(name)) + "</div>"
+      const facts = dataDashFact("Buy", buy)
+        + dataDashFact("Sell", sell)
+        + dataDashFact("Refuse", refuse)
+        + dataDashFact("Bag", holeBits.join(" · "));
+      return '<section class="data-dash" aria-label="' + esc(name) + ' cycle">'
+        + '<p class="caption"><button type="button" class="chip back" data-dir-back="1">← League</button></p>'
+        + '<div class="data-dir-hero"><h2 class="screen-h" tabindex="-1">' + esc(name) + "</h2>"
+        + '<em class="data-cycle ' + slug + '">' + esc(label) + "</em></div>"
+        + '<p class="data-dash-sub">' + esc(why) + "</p>"
+        + (facts ? '<div class="data-facts">' + facts + "</div>" : "")
+        + '<div class="data-sec-h">Ping</div>'
+        + '<p class="data-sec-sub">' + (you ? "Feasible deals for you." : "Feasible deals vs " + esc(name) + ".") + "</p>"
         + moveHtml
         + '<p class="caption"><button type="button" class="chip" data-dir-price="' + esc(uid) + '">Price a deal</button>'
         + (you ? "" : ' <button type="button" class="chip" data-dir-home="' + esc(uid) + '">Open team home</button>')
@@ -7637,34 +7748,94 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    function dataDashPingList(id, title, sub) {
+      const peek = dataDashHuntPeekRows(id);
+      const all = dataDashHuntRows(id);
+      let body = "";
+      if (!authSeatId()) {
+        body = '<p class="data-hint">Claim your seat to see who to ping.</p>';
+      } else if (!peek.length) {
+        body = '<p class="data-hint">' + esc(dataDashHuntEmpty(id)) + "</p>";
+      } else {
+        body = peek.map(dataDashHuntRowHtml).join("");
+        if (all.length > peek.length) {
+          body += '<p class="caption"><button type="button" class="chip" data-dash-open="'
+            + esc(id) + '">All ' + esc(title.toLowerCase()) + "</button></p>";
+        }
+      }
+      return '<div class="data-sec"><div class="data-sec-h">' + esc(title) + "</div>"
+        + '<p class="data-sec-sub">' + esc(sub) + "</p>"
+        + body + "</div>";
+    }
+
+    function dataDashPingHtml() {
+      if (!authSeatId()) {
+        return '<div class="data-ping">'
+          + '<div class="data-sec"><div class="data-sec-h">Send</div>'
+          + '<p class="data-sec-sub">Who will take extras.</p></div>'
+          + '<div class="data-sec"><div class="data-sec-h">Get</div>'
+          + '<p class="data-sec-sub">Who will sell what you need.</p></div>'
+          + '<p class="data-hint">Claim your seat to see who to ping.</p></div>';
+      }
+      return '<div class="data-ping">'
+        + dataDashPingList("move_extras", "Send", "Who will take extras.")
+        + dataDashPingList("fill_holes", "Get", "Who will sell what you need.")
+        + "</div>";
+    }
+
+    function dataDashMoreHtml() {
+      const doors = [
+        ["book", "Book", "Values"],
+        ["tape", "Tape", "Deals"],
+        ["lists", "Lists", "Lopsided · forever"],
+        ["draft", "Draft", "Held firsts"],
+        ["cuffs", "Cuffs", "Insurance"],
+        ["seats", "Seats", "Marks"],
+      ];
+      return '<div class="data-more">'
+        + doors.map(function (d) {
+          return '<button type="button" class="data-more-door" data-data-room="' + d[0] + '">'
+            + "<b>" + d[1] + "</b><span>" + d[2] + "</span></button>";
+        }).join("")
+        + "</div>";
+    }
+
     function dataDashOverviewHtml() {
-      return dataDashBoardHtml();
+      return dataDashPingHtml();
     }
 
     function dataDashHtml() {
       if (dataHunt && dataDashById(dataHunt)) return dataDashHuntPageHtml(dataHunt);
       if (dataSeat) return dataDashSeatPageHtml(dataSeat);
       const room = dataDashRoomCanon(dataRoom);
-      let body = "";
-      if (room === "book") body = dataDashBookHtml();
-      else if (room === "tape") body = dataDashTapeHtml();
-      else if (room === "seats") body = dataDashChartHtml();
-      else if (room === "lists") body = '<h3 class="ds-lists-h">League lists</h3>' + dsMenu();
-      else if (room === "draft") body = pickIntelHome();
-      else if (room === "cuffs") body = cuffsHome();
-      else body = dataDashOverviewHtml();
-      const back = room === "overview"
-        ? ""
-        : '<p class="caption"><button type="button" class="chip back" data-data-room="overview">← Data</button></p>';
-      const strip = room === "overview" ? dataDashDirStripHtml() : "";
+      if (room === "book" || room === "tape" || room === "seats"
+        || room === "lists" || room === "draft" || room === "cuffs") {
+        const titles = {
+          book: "Book", tape: "Tape", seats: "Seats",
+          lists: "Lists", draft: "Draft", cuffs: "Cuffs",
+        };
+        let body = "";
+        if (room === "book") body = dataDashBookHtml();
+        else if (room === "tape") body = dataDashTapeHtml();
+        else if (room === "seats") body = dataDashChartHtml();
+        else if (room === "lists") body = '<h3 class="ds-lists-h">League lists</h3>' + dsMenu();
+        else if (room === "draft") body = pickIntelHome();
+        else body = cuffsHome();
+        return '<section class="data-dash" aria-label="' + titles[room] + '">'
+          + '<p class="caption"><button type="button" class="chip back" data-data-room="overview">← Data</button></p>'
+          + '<h2 class="screen-h" tabindex="-1">' + titles[room] + "</h2>"
+          + body
+          + "</section>";
+      }
+      const pane = dataDashPaneCanon(dataPane);
+      const body = pane === "league"
+        ? dataDashDirStripHtml()
+        : (pane === "more" ? dataDashMoreHtml() : dataDashOverviewHtml());
       return '<section class="data-dash" aria-label="League data">'
         + '<h2 class="screen-h" tabindex="-1">Data</h2>'
         + '<p class="data-dash-sub">Votes never enter these numbers.</p>'
-        + strip
-        + dataDashRoomsHtml()
-        + back
+        + dataDashPanesHtml()
         + body
-        + dataDashLibraryHtml()
         + "</section>";
     }
 
@@ -19977,6 +20148,7 @@ const html = `<!DOCTYPE html>
         dataSeat = "";
         dataBlockAddOpen = false;
         dataRoom = "overview";
+        dataPane = "ping";
         focusNext = ".screen-h";
         render();
         return;
@@ -19987,6 +20159,22 @@ const html = `<!DOCTYPE html>
         dataHunt = "";
         dataHuntPos = "";
         dataRoom = "overview";
+        dataPane = "league";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const paneBtn = e.target.closest("[data-data-pane]");
+      if (paneBtn) {
+        dataPane = dataDashPaneCanon(paneBtn.getAttribute("data-data-pane"));
+        dataRoom = "overview";
+        dataSet = null;
+        dataHunt = "";
+        dataHuntPos = "";
+        dataSeat = "";
+        dataBlockAddOpen = false;
+        dataDashEdit = false;
+        dataDashLibOpen = false;
         focusNext = ".screen-h";
         render();
         return;
@@ -20054,9 +20242,17 @@ const html = `<!DOCTYPE html>
       }
       const dataRoomBtn = e.target.closest("[data-data-room]");
       if (dataRoomBtn) {
-        const want = dataDashRoomCanon(dataRoomBtn.getAttribute("data-data-room"));
+        const wantRaw = dataRoomBtn.getAttribute("data-data-room") || "";
+        const want = dataDashRoomCanon(wantRaw);
         const cur = dataDashRoomCanon(dataRoom);
-        dataRoom = (want && want === cur) ? "overview" : want;
+        if (wantRaw === "overview" || want === "overview") {
+          dataRoom = "overview";
+          dataPane = "more";
+        } else {
+          dataRoom = (want && want === cur) ? "overview" : want;
+          if (dataRoom !== "overview") dataPane = "more";
+          else dataPane = "more";
+        }
         dataSet = null;
         dataHunt = "";
         dataHuntPos = "";
@@ -22745,17 +22941,25 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
 }
 {
   const dataPage = fnSrc("dataDashHtml") + fnSrc("dataDashOverviewHtml") + fnSrc("renderDataSetsPage")
-    + fnSrc("dataDashBoardHtml") + fnSrc("dataDashTileHtml");
-  if (!dataPage.includes("dataDashBoardHtml()")
+    + fnSrc("dataDashPingHtml") + fnSrc("dataDashMoreHtml") + fnSrc("dataDashPanesHtml")
+    + fnSrc("dataDashTileHtml");
+  if (!dataPage.includes("dataDashPingHtml()")
+    || !dataPage.includes("dataDashDirStripHtml()")
+    || !dataPage.includes("dataDashMoreHtml()")
     || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
     || !dataPage.includes(">Data</h2>")
+    || !dataPage.includes('["ping", "Ping"]')
+    || !dataPage.includes('["league", "League"]')
     || !inline.includes("function dataDashHtml(")
     || !inline.includes("function dataDashTileHtml(")
-    || !inline.includes("function dataDashCanon(")) {
-    throw new Error("Data tab must mount the tile board plus lists");
+    || !inline.includes("function dataDashCanon(")
+    || !inline.includes("function dataDashPanesHtml(")) {
+    throw new Error("Data tab must mount Ping, League, and More");
   }
-  if (fnSrc("dataDashRoomsHtml").includes('["overview", "Overview"]')) {
-    throw new Error("Data desks must be six rooms — Overview is the board, not a chip");
+  if (fnSrc("dataDashHtml").includes("dataDashBoardHtml()")
+    || fnSrc("dataDashOverviewHtml").includes("dataDashBoardHtml()")
+    || fnSrc("dataDashRoomsHtml").includes('["overview", "Overview"]')) {
+    throw new Error("Data cold load is Ping + League, not the tile board");
   }
 }
 if (!inline.includes("function dataDashHtml(")
@@ -22767,6 +22971,7 @@ if (!inline.includes("function dataDashHtml(")
   || !inline.includes("function dataDashDirStripHtml(")
   || !inline.includes("function dataDashSeatPageHtml(")
   || !inline.includes("data-dir-seat")
+  || !inline.includes("data-data-pane")
   || !inline.includes("Votes never enter these numbers.")
   || !inline.includes("data-data-room")
   || !inline.includes("data-calc-filter")
@@ -22774,7 +22979,7 @@ if (!inline.includes("function dataDashHtml(")
   || fnSrc("dataDashHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
-  throw new Error("Data homebase must ship direction strip and desks — no top search, no bag totals on Home");
+  throw new Error("Data homebase must ship Ping + League cycle — no top search, no bag totals on Home");
 }
 {
   const reportStart = inline.indexOf("    const DATA_REPORTS = [");
@@ -23215,8 +23420,10 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
   }
   if (!fnSrc("dataDashHtml").includes("cuffsHome()")
     || !fnSrc("dataDashHtml").includes("pickIntelHome()")
-    || !fnSrc("dataDashOverviewHtml").includes("dataDashBoardHtml()")) {
-    throw new Error("Data desks must mount cuffsHome + pickIntelHome; Overview is the tile board");
+    || !fnSrc("dataDashOverviewHtml").includes("dataDashPingHtml()")
+    || !fnSrc("dataDashPingHtml").includes("Send")
+    || !fnSrc("dataDashPingHtml").includes("Get")) {
+    throw new Error("Data desks must mount cuffsHome + pickIntelHome; Overview is Ping");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
     || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {

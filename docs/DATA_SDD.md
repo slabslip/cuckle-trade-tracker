@@ -18,7 +18,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 | Surface | Job | Limit |
 | --- | --- | --- |
 | **Home Trade Desk** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
-| **Data** | League scan + direction + block + research desks | Four top tabs only. No fifth tab. |
+| **Data** | Who to ping + each team's cycle + research overflow | Four top tabs only. No fifth tab. |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
 
 Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
@@ -37,26 +37,33 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 - Votes never enter the book.
 - No bag totals on Home. `homeDeskHtml` must not contain `calcFmt(` or `calcValueNum(`.
 - No Best 10 / Worst 10. Most lopsided stays on Data.
-- `DATA_SETS` stays exactly five. Six Data desks only: Book · Tape · Seats · Lists · Draft ·
-  Cuffs. No seventh chip. Overview is the board, not a chip.
+- `DATA_SETS` stays exactly five. Six Data desks live under **More**: Book · Tape · Seats ·
+  Lists · Draft · Cuffs. No seventh desk. Cold load is **Ping** and **League**, not a tile board.
 - Phone-first (390). Existing CSS. No npm / chart libraries.
 - Do not fetch cosmetics / dash / block / direction from `render()`.
 - This is **this league’s** rosters. Multi-league is the app path, not a new warehouse.
 
 ---
 
-## 3. HAVE — desks, board, hunts, block
+## 3. HAVE — panes, hunts, desks, block
 
-### Desks and board
+### Cold-load panes
 
-[`generate-page.mjs`](../generate-page.mjs), [`db/wave19-seat-data-dash.sql`](../db/wave19-seat-data-dash.sql):
+[`generate-page.mjs`](../generate-page.mjs):
 
-- Six desk chips, always on: Book · Tape · Seats · Lists · Draft · Cuffs.
-- 6–12 private tiles. Persist `seat_data_dash` + `cuckle.data.dash.v1.<league>.<seat>`.
-  Signed-out / no seat: default 12, Edit disabled.
-- Catalog is **27** unique report ids. A report may appear on the board once.
-- Edit: swap / add / remove / reorder. Presets **Deal** (default) and **Research** write the
-  same `tiles[]`. Library groups: Deal · Cuffs · Book · Tape · Seats · Lists.
+- **Ping** — Send (`move_extras`) and Get (`fill_holes`). Peek three unique counterparties.
+  Tap a row to price. All send / All get opens the hunt page.
+- **League** — ten full-width cycle rows in place order. Name + badge + one-line why. Tap
+  opens the team view. Does **not** call `selectMe`.
+- **More** — Book · Tape · Lists · Draft · Cuffs · Seats. Research overflow, not the product.
+
+### Catalog (kept, not the cold load)
+
+[`db/wave19-seat-data-dash.sql`](../db/wave19-seat-data-dash.sql):
+
+- Catalog is **27** unique report ids. Persist `seat_data_dash` +
+  `cuckle.data.dash.v1.<league>.<seat>` still exists for hunt/desk routing.
+- The 6–12 tile encyclopedia is **not** the Data cold load. Do not put it back on Ping.
 
 **Banned ids:** `best10`, `worst10`, `bag_total`, `realized`, `win_now`, `investor`.
 
@@ -178,20 +185,18 @@ Generate asserts: exactly 10 seats; ARae is Hard rebuild; ARae `refuse` includes
 
 One JSON feeds three surfaces.
 
-**Direction strip** on Data cold load (not a seventh desk). Ten chips in place order,
-horizontal scroll like `.data-rooms`. Name + label. Claimed seat marked. Tap opens the
-per-team view. Does **not** call `selectMe` (that is Teams).
+**League pane** on Data (not a seventh desk). Ten full-width rows in place order. Name,
+cycle badge, one-line why. Claimed seat marked. Tap opens the per-team view. Does **not**
+call `selectMe` (that is Teams).
 
 **Per-team view** (`dataSeat`):
 
-1. Back to Data
-2. Name, label, one-line why
-3. Last-window sold / got by position
-4. Buy / sell / refuse
-5. Bag facts vs intent (`thin RB — not shopping RB`)
-6. Smart moves for you vs them — 1–3 rows that pass both sides’ intent. Empty:
-   `No feasible ping with this seat.`
-7. Price a deal (A = you, B = them). Optional Open team home via `selectMe`.
+1. Back to League
+2. Name + cycle badge + one-line why
+3. Buy / sell / refuse (omit empty). Do not dump last-window sold/got — that duplicates intent.
+4. Bag facts vs intent (`thin RB — not shopping RB`)
+5. Ping — 1–3 rows that pass both sides’ intent. Empty: `No feasible ping with this seat.`
+6. Price a deal (A = you, B = them). Optional Open team home via `selectMe`.
 
 **Hunt gates:**
 
@@ -217,13 +222,13 @@ Keep `data-calc-filter` and `data-cuff-q`.
 **Data cold load, 390px, top to bottom:**
 
 1. `h2` Data
-2. Short sub: `Votes never enter these numbers.`
-3. Direction strip (ten seats)
-4. Six desk chips + Edit
-5. Deal hunt board (6–12 tiles, gated)
-6. Hunt page / team view / list drill replace the board when open
+2. Quiet law: `Votes never enter these numbers.`
+3. Three panes: **Ping · League · More**
+4. Ping body (Send + Get) or League cycle list or More doors
+5. Hunt page / team view / desk replace the panes when open
 
-No new CSS system. Catalog stays 27. `DATA_SETS` stays 5.
+No new CSS system. Catalog stays 27. `DATA_SETS` stays 5. Titles are the definition:
+Send, Get, Hard rebuild. Keep explanations to one short line.
 
 ---
 
@@ -231,8 +236,8 @@ No new CSS system. Catalog stays 27. `DATA_SETS` stays 5.
 
 | Store | Job |
 | --- | --- |
-| `seat_data_dash` | Private board `tiles[]` (6–12) |
-| `cuckle.data.dash.v1.<league>.<seat>` | Local cache of the board |
+| `seat_data_dash` | Private hunt/desk `tiles[]` (kept; not the cold-load UI) |
+| `cuckle.data.dash.v1.<league>.<seat>` | Local cache of that list |
 | `seat_trade_block` | League-readable listings, owner-write, cap 8 |
 | `data/ui/seat-direction.json` | Build artifact; all seats; loaded in `loadMembers`, not `render()` |
 

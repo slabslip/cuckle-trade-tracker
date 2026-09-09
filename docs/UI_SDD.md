@@ -241,30 +241,24 @@ Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSME
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 **Data** is the league deal-research terminal (visible tab label; internal `homeTab` stays
-`history`). Law: [`DATA_SDD.md`](./DATA_SDD.md). Cold load is the **direction strip** (ten
-seats, place order, Hard rebuild / Rebuild / Reload / Win-now) then the **seat board**: 6–12
-exchangeable report tiles from a 27-report library. The default 12 are the **Deal** hunts
-(who has what you need, move extras, poach cuffs, available cuffs, uninsured, stash young,
-draft, held picks, top book, lopsided, run, cuffs). Hunts and Home Move are gated on each
-seat’s buy / sell / refuse from `seat-direction.json`. A hole is a fact; intent decides who
-to ping. Tap a direction chip for that seat’s last-window tape, proposed direction, and 1–3
-smart moves. Do **not** call `selectMe` from the strip (that is Teams). Edit offers **Deal**
-and **Research** presets that write the same `tiles[]`. The library groups Deal · Cuffs ·
-Book · Tape · Seats · Lists. The six desk chips never customize: Book · Tape · Seats · Lists ·
-Draft · Cuffs. Overview is the board, not a seventh chip. There is **no Data top search**.
-Book has pos / seat / sort chips; Tape has year chips. Hunt tiles peek three rows
-(player · their team · why) with no bag totals. Tap opens that hunt full-screen; a row opens
-the calculator first-person (A = you, B = them). Edit (claimed seat only) persists on
-`public.seat_data_dash` plus `cuckle.data.dash.v1.<league>.<seat>`. The **trade block** is
-league-readable and owner-write on `public.seat_trade_block` (cap 8). Snapshot facts stay on
-desks, not as catalog tiles.
+`history`). Law: [`DATA_SDD.md`](./DATA_SDD.md). Cold load is three panes: **Ping** (Send /
+Get — who to transact with), **League** (ten full-width cycle rows: Hard rebuild / Rebuild /
+Reload / Win-now), and **More** (Book · Tape · Lists · Draft · Cuffs · Seats). The 12-tile
+encyclopedia is not the cold load. Hunts and Home Move are gated on each seat’s buy / sell /
+refuse from `seat-direction.json`. A hole is a fact; intent decides who to ping. Tap a
+League row for that seat’s cycle, intent, and 1–3 pings. Do **not** call `selectMe` from
+League (that is Teams). There is **no Data top search**. Book has pos / seat / sort chips;
+Tape has year chips. Ping peeks three unique counterparties (player · their team · why) with
+no bag totals. A row opens the calculator first-person (A = you, B = them). The **trade
+block** is league-readable and owner-write on `public.seat_trade_block` (cap 8). Snapshot
+facts stay on desks.
 **Teams** is the door into a seat (header picker stays gone — §2). Do not put bag totals on Home.
 Do not restore Best 10 / Worst 10. Style labels (Win-now / Rebuild) may caption a row; they
 must not move a clock or a delta. Votes never enter these numbers.
 
 **League Data Sets** (Data → Lists) — one list on screen. Five sets: Most lopsided trades · Most
 passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold
-load.** The Home tab and a Data back chip both return to the board / Lists.
+load.** The Home tab and a Data back chip both return to Data (Ping) / Lists.
 
 The old popup dropdown is gone. Rooms are in-flow. Data has no top search.
 

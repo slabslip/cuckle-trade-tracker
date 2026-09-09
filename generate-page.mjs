@@ -3772,7 +3772,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "plan20260909023000";
+    const DATA_V = "movesFilter20260909023600";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6299,6 +6299,7 @@ const html = `<!DOCTYPE html>
       tapeFilterOpen = false;
       voteToast = null;
       if (homeTab === "ledger") ledgerEnsureLoaded();
+      if (homeTab === "history") dataDashEnsureTape();
       focusNext = '[data-home-tab="' + homeTab + '"]';
       render();
     }
@@ -6755,8 +6756,14 @@ const html = `<!DOCTYPE html>
         return !dir || dataDashHasToken(dir.buy, "picks");
       }
       if (dataDashIntentTakes(dir, a, fromBag)) return true;
+      if (band === "mid") {
+        const lab = (dir && dir.label) || "";
+        if (lab === "Win-now" || lab === "Reload") return true;
+      }
+      if ((band === "large" || band === "mega") && pos !== "PICK") {
+        return dataDashIntentBuys(dir, pos);
+      }
       if (!dir) return true;
-      if (dir.label === "Win-now" || dir.label === "Reload") return true;
       return false;
     }
 
@@ -6817,6 +6824,115 @@ const html = `<!DOCTYPE html>
       return 1;
     }
 
+    const DATA_FRESH_DAYS = 60;
+
+    function dataDashSeatUidByName(name) {
+      const want = String(name || "");
+      for (let i = 0; i < (members || []).length; i++) {
+        if (String(members[i].name) === want) return String(members[i].user_id);
+      }
+      return "";
+    }
+
+    function dataDashDaysSince(ymd) {
+      if (!ymd) return 9999;
+      const t = Date.parse(String(ymd).slice(0, 10) + "T12:00:00Z");
+      if (!Number.isFinite(t)) return 9999;
+      return Math.round((Date.now() - t) / 86400000);
+    }
+
+    /**
+     * Claimed-seat tape: who you got each asset from, and who you sent it to.
+     * Reads seatCache only. dataDashEnsureTape warms the file from the Data tab, not render().
+     */
+    function dataDashTapeMemory() {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const received = {};
+      const sent = {};
+      if (!mine) return { received: received, sent: sent };
+      const trades = ((seatCache[mine] || {}).trades) || [];
+      for (let i = 0; i < trades.length; i++) {
+        const t = trades[i];
+        const uids = [];
+        const others = t.others || [];
+        for (let j = 0; j < others.length; j++) {
+          const uid = dataDashSeatUidByName(others[j]);
+          if (uid) uids.push(uid);
+        }
+        if (!uids.length) continue;
+        const days = dataDashDaysSince(t.date);
+        const add = function (legs, map) {
+          for (let k = 0; k < (legs || []).length; k++) {
+            const key = legs[k] && (legs[k].asset_key || legs[k].id);
+            if (!key) continue;
+            const cur = map[key];
+            if (!cur || days < cur.days) map[key] = { uids: uids, days: days };
+          }
+        };
+        add((t.even && t.even.legs) || [], received);
+        add((t.even && t.even.sent) || [], sent);
+      }
+      return { received: received, sent: sent };
+    }
+
+    function dataDashTapeHit(map, a) {
+      if (!a || !map) return null;
+      if (a.id && map[a.id]) return map[a.id];
+      if (a.sleeper_id && map["player:" + a.sleeper_id]) return map["player:" + a.sleeper_id];
+      return null;
+    }
+
+    function dataDashFlowHas(dir, a, side) {
+      if (!dir || !a || !a.name) return false;
+      const names = ((dir.studs && dir.studs[side]) || []).slice();
+      const pos = homeDeskAssetPos(a);
+      const bucket = dir.by_pos && pos && dir.by_pos[pos];
+      if (bucket && bucket[side]) {
+        for (let i = 0; i < bucket[side].length; i++) names.push(bucket[side][i]);
+      }
+      return names.indexOf(a.name) >= 0;
+    }
+
+    /**
+     * Overlay tape + direction on the band book before a row is born.
+     * Give: never send a piece back to the seat you just got it from. A player
+     * received in the last 60 days is not for sale. A stud received in the last
+     * 120 days stays off Give. Direction studs.in + their studs.out is the same
+     * reverse when the seat file is still cold.
+     * Get: never buy back a piece you just sent them.
+     */
+    function dataDashMoveOk(side, a, themId, band, tape) {
+      if (!a || !themId) return false;
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const uid = String(themId);
+      const mem = tape || dataDashTapeMemory();
+      const got = dataDashTapeHit(mem.received, a);
+      const gave = dataDashTapeHit(mem.sent, a);
+      if (side === "give") {
+        if (got && (got.uids || []).indexOf(uid) >= 0) return false;
+        if (got && got.days <= DATA_FRESH_DAYS) return false;
+        if (band === "mega" && got && got.days <= 120) return false;
+        if (mine && dataDashFlowHas(seatDirOf(mine), a, "in") && dataDashFlowHas(seatDirOf(uid), a, "out")) {
+          return false;
+        }
+      } else {
+        if (gave && (gave.uids || []).indexOf(uid) >= 0) return false;
+        if (gave && gave.days <= DATA_FRESH_DAYS) return false;
+        if (mine && dataDashFlowHas(seatDirOf(mine), a, "out") && dataDashFlowHas(seatDirOf(uid), a, "in")) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function dataDashEnsureTape() {
+      const mine = authSeatId();
+      if (!mine || seatCache[mine]) return;
+      seatData(mine).then(function () {
+        if (homeTabCanon(homeTab) === "history") render();
+      }).catch(function (err) { console.error(err); });
+    }
+
     function dataDashBandHits(side) {
       const mine = authSeatId() ? String(authSeatId()) : "";
       if (!mine) return [];
@@ -6832,6 +6948,7 @@ const html = `<!DOCTYPE html>
         if (p && dataDashIsAging(myBag[i])) agingPos[p] = 1;
       }
       const rows = [];
+      const tape = dataDashTapeMemory();
       const pushHit = function (a, uid, bag, band, score, why) {
         const spec = dataDashBandSpec(band);
         dataDashHuntPush(rows, {
@@ -6874,9 +6991,12 @@ const html = `<!DOCTYPE html>
             const theirProf = homeDeskProfile(theirBag);
             let seat = dataDashBandSeatScore("give", band, theirDir, theirProf, a, myBag);
             if (seat < 0) return;
+            if (!dataDashMoveOk("give", a, uid, band, tape)) return;
             if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, theirProf)) seat += 1;
-            if ((band === "micro" || band === "small" || band === "mid")
-              && (theirProf.deep || []).indexOf(pos) >= 0) seat -= 2;
+            if ((theirProf.deep || []).indexOf(pos) >= 0 && !dataDashIntentBuys(theirDir, pos)) {
+              if (band === "large" || band === "mega") return;
+              seat -= 2;
+            }
             if ((theirProf.holes || []).indexOf(pos) >= 0 && dataDashIntentBuys(theirDir, pos)) seat += 2;
             if (band === "mid" && v >= (DESK_STUD - 400)) seat -= 3;
             if (band === "large" && pos === "PICK") seat -= 2;
@@ -6899,6 +7019,7 @@ const html = `<!DOCTYPE html>
             const band = dataDashPieceBand(a, bag);
             let seat = dataDashBandSeatScore("get", band, theirDir, theirProf, a, bag);
             if (seat < 0) continue;
+            if (!dataDashMoveOk("get", a, uid, band, tape)) continue;
             if (band === "large" && pos !== "PICK" && !dataDashIsYoung(a)) continue;
             if (band === "micro" && v >= DESK_START) continue;
             if (band === "mega" && v < DESK_STUD) continue;
@@ -7852,9 +7973,11 @@ const html = `<!DOCTYPE html>
 
     function dataDashSmartMovesVs(uid) {
       const mine = authSeatId() ? String(authSeatId()) : "";
-      if (mine && String(uid) === mine) return (dataDashPlanBuild().items || []).slice(0, 3);
       const hits = dataDashBandHits("give").concat(dataDashBandHits("get"))
-        .filter(function (r) { return String(r.themId) === String(uid); });
+        .filter(function (r) {
+          if (mine && String(uid) === mine) return true;
+          return String(r.themId) === String(uid);
+        });
       hits.forEach(function (r) { r.impact = dataDashPlanImpact(r); });
       hits.sort(function (a, b) { return (b.impact || 0) - (a.impact || 0); });
       const out = [];
@@ -8169,16 +8292,14 @@ const html = `<!DOCTYPE html>
     function dataDashPingHtml() {
       if (!authSeatId()) {
         return '<div class="data-ping">'
-          + dataDashPlanHtml()
           + '<div class="data-sec"><div class="data-sec-h">Give</div>'
-          + '<p class="data-sec-sub">Dart to Star, by color.</p></div>'
+          + '<p class="data-sec-sub">Pieces you can move, by color.</p></div>'
           + '<div class="data-sec"><div class="data-sec-h">Get</div>'
-          + '<p class="data-sec-sub">Dart to Star, from their bag.</p></div></div>';
+          + '<p class="data-sec-sub">Pieces they will sell, by color.</p></div></div>';
       }
       return '<div class="data-ping">'
-        + dataDashPlanHtml()
-        + dataDashPingList("move_extras", "Give", "Dart to Star, by color.")
-        + dataDashPingList("fill_holes", "Get", "Dart to Star, from their bag.")
+        + dataDashPingList("move_extras", "Give", "Pieces you can move, by color.")
+        + dataDashPingList("fill_holes", "Get", "Pieces they will sell, by color.")
         + "</div>";
     }
 
@@ -23503,13 +23624,19 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashIntentTakesBand").includes("dataDashIntentTakes(")
     || !fnSrc("dataDashBandHits").includes("dataDashImproveJobs(")
     || !fnSrc("dataDashBandHits").includes("pickSeats")
+    || !fnSrc("dataDashBandHits").includes("dataDashMoveOk(")
     || !fnSrc("dataDashHuntRows").includes("dataDashBandRows(")
-    || !fnSrc("dataDashPingHtml").includes("dataDashPlanHtml(")
+    || fnSrc("dataDashPingHtml").includes("dataDashPlanHtml(")
+    || !fnSrc("dataDashPingHtml").includes('dataDashPingList("move_extras"')
+    || !fnSrc("dataDashPingHtml").includes('dataDashPingList("fill_holes"')
+    || !inline.includes("function dataDashMoveOk(")
+    || !inline.includes("function dataDashTapeMemory(")
+    || fnSrc("dataDashIntentTakesBand").includes('dir.label === "Win-now" || dir.label === "Reload"')
     || fnSrc("dataDashHuntRows").includes("they need RB")
     || fnSrc("dataDashBandGiveWhy").includes("they need RB")
     || fnSrc("dataDashBandGetWhy").includes("they need RB")
     || fnSrc("dataDashPlanThesis").includes("they need RB")) {
-    throw new Error("Deal hunts and Home Move must gate on direction buy/sell/refuse");
+    throw new Error("Deal hunts and Home Move must gate on direction, tape, and refuse");
   }
   {
     const dirPath = path.join(ROOT, "data/ui/seat-direction.json");
@@ -23880,7 +24007,8 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
     || !fnSrc("dataDashOverviewHtml").includes("dataDashPingHtml()")
     || !fnSrc("dataDashPingHtml").includes("Give")
     || !fnSrc("dataDashPingHtml").includes("Get")
-    || !fnSrc("dataDashPingHtml").includes("Plan")
+    || fnSrc("dataDashPingHtml").includes("dataDashPlanHtml(")
+    || fnSrc("dataDashPingHtml").includes(">Plan<")
     || fnSrc("dataDashPingHtml").includes(">Send<")
     || fnSrc("dataDashPingHtml").includes("Blow")
     || !fnSrc("dataDashCuffsHtml").includes("data-xrow")

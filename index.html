@@ -146,12 +146,13 @@
       max-width: none !important;
       margin: 0 !important;
       transform: none !important;
-      bottom: auto !important;
-      top: calc(var(--design-top) + var(--design-height) - 90px) !important;
+      top: auto !important;
+      bottom: calc(100vh - var(--design-top) - var(--design-height) + 12px) !important;
     }
     html.design-iphone .news-pullup,
     html.design-iphone .vote-sheet,
-    html.design-iphone .news-pullup-click-guard {
+    html.design-iphone .news-pullup-click-guard,
+    html.design-iphone .lh-menu-scrim {
       left: var(--design-left) !important;
       top: var(--design-top) !important;
       width: var(--design-width) !important;
@@ -1366,8 +1367,8 @@
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
     /* League-home tabs — Linear-style floating pill at the true bottom.
-       Home | Teams | News | Ledger | Data. Five labeled peers. News holds
-       Alerts + the feed. Owns the slot the News Feed peek used to occupy. */
+       Home | Teams | News | Ledger | Menu. Menu is the hamburger: it morphs
+       the pill up into Calculator / League Data / Settings (+ 3 reserved). */
     :root { --lh-nav-h: 72px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
     body.has-lh-bar #app {
       padding-bottom: calc(var(--lh-nav-h) + 36px + env(safe-area-inset-bottom, 0px));
@@ -1379,19 +1380,30 @@
     body.has-news-pullup-closing .lh-actions {
       opacity: 0; pointer-events: none;
     }
+    .lh-menu-scrim {
+      display: none;
+      position: fixed; inset: 0; z-index: 44;
+      background: rgba(0, 0, 0, 0.38);
+    }
+    body.has-lh-menu .lh-menu-scrim { display: block; }
     .lh-actions {
       position: fixed; z-index: 45;
       left: 50%; transform: translateX(-50%);
       bottom: calc(12px + env(safe-area-inset-bottom, 0px));
       width: min(372px, calc(100vw - 16px));
       margin: 0; box-sizing: border-box;
+      display: flex; flex-direction: column; justify-content: flex-end;
       background: rgba(16, 14, 12, 0.72);
       border: 1px solid rgba(224, 180, 76, 0.42);
       border-radius: 999px;
       box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 236, 190, 0.18);
       backdrop-filter: blur(22px) saturate(1.35);
       -webkit-backdrop-filter: blur(22px) saturate(1.35);
-      overflow: visible;
+      overflow: hidden;
+      transition: border-radius 0.22s ease;
+    }
+    .lh-actions.is-menu-open {
+      border-radius: 28px;
     }
     @media (prefers-reduced-transparency: reduce) {
       .lh-actions {
@@ -1472,6 +1484,59 @@
       color: #1a1408; font-size: 0.625rem; font-weight: 800; line-height: 1;
       font-variant-numeric: tabular-nums; letter-spacing: 0;
       box-shadow: 0 0 0 2px rgba(16, 14, 12, 0.85);
+    }
+    button.lh-action-menu .lh-lab { display: none; }
+    .lh-menu {
+      display: grid; grid-template-columns: 1fr;
+      padding: 0 10px;
+      max-height: 0; opacity: 0;
+      pointer-events: none;
+      transition: max-height 0.28s ease, opacity 0.18s ease, padding 0.22s ease;
+    }
+    .lh-actions.is-menu-open .lh-menu {
+      max-height: 320px; opacity: 1; pointer-events: auto;
+      padding: 12px 10px 4px;
+    }
+    button.lh-menu-item {
+      appearance: none; font: inherit; color: var(--text);
+      background: transparent; border: 0;
+      border-bottom: 1px solid rgba(224, 180, 76, 0.16);
+      width: 100%; min-height: var(--hig-tap);
+      padding: 10px 12px; margin: 0;
+      text-align: left; font-size: 0.9375rem; font-weight: 650;
+      cursor: pointer; border-radius: 10px;
+    }
+    button.lh-menu-item:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.lh-menu-item:last-of-type { border-bottom-color: rgba(224, 180, 76, 0.28); }
+    .lh-menu-slot {
+      min-height: var(--hig-tap);
+      border-bottom: 1px solid rgba(224, 180, 76, 0.08);
+    }
+    .lh-menu-item, .lh-menu-slot {
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .lh-actions.is-menu-open .lh-menu-item,
+    .lh-actions.is-menu-open .lh-menu-slot {
+      opacity: 1; transform: none;
+    }
+    .lh-actions.is-menu-open .lh-menu-item:nth-child(1),
+    .lh-actions.is-menu-open .lh-menu-slot:nth-child(1) { transition-delay: 0.04s; }
+    .lh-actions.is-menu-open .lh-menu-item:nth-child(2),
+    .lh-actions.is-menu-open .lh-menu-slot:nth-child(2) { transition-delay: 0.08s; }
+    .lh-actions.is-menu-open .lh-menu-item:nth-child(3),
+    .lh-actions.is-menu-open .lh-menu-slot:nth-child(3) { transition-delay: 0.12s; }
+    .lh-actions.is-menu-open .lh-menu-item:nth-child(4),
+    .lh-actions.is-menu-open .lh-menu-slot:nth-child(4) { transition-delay: 0.16s; }
+    .lh-actions.is-menu-open .lh-menu-item:nth-child(5),
+    .lh-actions.is-menu-open .lh-menu-slot:nth-child(5) { transition-delay: 0.2s; }
+    .lh-actions.is-menu-open .lh-menu-item:nth-child(6),
+    .lh-actions.is-menu-open .lh-menu-slot:nth-child(6) { transition-delay: 0.24s; }
+    @media (prefers-reduced-motion: reduce) {
+      .lh-actions, .lh-menu, .lh-menu-item, .lh-menu-slot {
+        transition: none;
+      }
+      .lh-menu-item, .lh-menu-slot { opacity: 1; transform: none; }
     }
     .lh-section { margin: 0 0 18px; }
     .your3 { margin: 0 0 16px; }
@@ -3806,7 +3871,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "barNewsTab20260909104000";
+    const DATA_V = "barMenuSheet20260909111000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -3911,6 +3976,7 @@
     let view = "home";
     // League-home top tabs: home (digest) | teams | ledger | history.
     let homeTab = "home";
+    let lhMenuOpen = false;
     let calcBook = null;
     let peBook = null;
     // Stale calculator.json still shipped raw Sleeper ids as the row title + "Player".
@@ -6299,11 +6365,58 @@
     }
 
     /**
-     * Linear-style floating pill: Home | Teams | News | Ledger | History.
-     * Owns the bottom slot. Home is the digest. Other tabs swap in place.
+     * Linear-style floating pill: Home | Teams | News | Ledger | Menu.
+     * Menu is the hamburger. It morphs the pill up; it is not a sixth destination.
      */
+    function lhMenuPanelHtml() {
+      const item = (id, lab) =>
+        '<button type="button" class="lh-menu-item" role="menuitem" data-lh-menu-go="' + id + '">'
+        + esc(lab) + "</button>";
+      const slot = '<div class="lh-menu-slot" aria-hidden="true"></div>';
+      return '<div class="lh-menu" id="lhMenuPanel" role="menu" aria-label="More">'
+        + item("calc", "Calculator")
+        + item("data", "League Data")
+        + item("settings", "Settings")
+        + slot + slot + slot
+        + "</div>";
+    }
+
+    function lhMenuAction() {
+      const on = !!lhMenuOpen || homeTab === "history";
+      return '<button type="button" role="tab" class="lh-action lh-action-menu' + (on ? " on" : "") + '" data-lh-menu="1"'
+        + ' aria-label="Menu"'
+        + ' aria-haspopup="menu"'
+        + ' aria-expanded="' + (lhMenuOpen ? "true" : "false") + '"'
+        + ' aria-controls="lhMenuPanel"'
+        + ' aria-selected="' + (on ? "true" : "false") + '"'
+        + ' tabindex="' + (on ? "0" : "-1") + '">'
+        + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" focusable="false">'
+        + '<path fill="currentColor" d="M5 7h14v2.2H5zm0 3.9h14v2.2H5zm0 3.9h14v2.2H5z"/></svg></span>'
+        + "</button>";
+    }
+
+    function setLhMenuOpen(on) {
+      lhMenuOpen = !!on;
+      try { document.body.classList.toggle("has-lh-menu", lhMenuOpen); } catch (err) { /* ignore */ }
+      const nav = document.querySelector(".lh-actions");
+      const scrim = document.querySelector(".lh-menu-scrim");
+      if (nav) {
+        nav.classList.toggle("is-menu-open", lhMenuOpen);
+        const btn = nav.querySelector("[data-lh-menu]");
+        if (btn) {
+          btn.setAttribute("aria-expanded", lhMenuOpen ? "true" : "false");
+          const lit = lhMenuOpen || homeTab === "history";
+          btn.classList.toggle("on", lit);
+          btn.setAttribute("aria-selected", lit ? "true" : "false");
+        }
+      }
+      if (scrim) scrim.hidden = !lhMenuOpen;
+    }
+
     function homeChips() {
-      return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
+      return '<div class="lh-menu-scrim" data-lh-menu-scrim="1"' + (lhMenuOpen ? "" : " hidden") + "></div>"
+        + '<nav class="lh-actions ds-wrap' + (lhMenuOpen ? " is-menu-open" : "") + '" role="tablist" aria-label="League home tabs">'
+        + lhMenuPanelHtml()
         + '<div class="lh-action-row">'
         + homeTabAction("home", "Home",
           "M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5z")
@@ -6313,7 +6426,7 @@
           "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
         + homeTabAction("ledger", "Ledger",
           "M6 3.5h9.2L18 6.8V20.5H6zm3.2 5.2h5.6v1.6H9.2zm0 3.4h5.6v1.6H9.2zm0 3.4h4.2v1.6H9.2z")
-        + dataSetRow()
+        + lhMenuAction()
         + "</div>"
         + "</nav>";
     }
@@ -6325,6 +6438,7 @@
      * Stored/clicked "league" is an alias for Home.
      */
     function setHomeTab(tab, opts) {
+      lhMenuOpen = false;
       const force = !!(opts && opts.force);
       const want = homeTabCanon(tab);
       let next = "home";
@@ -13024,6 +13138,10 @@
      * - other nested screens → league homepage
      */
     function onBrandBack() {
+      if (lhMenuOpen) {
+        setLhMenuOpen(false);
+        return;
+      }
       if (leaguesDrawerOpen) {
         closeLeaguesDrawer();
         return;
@@ -13146,6 +13264,8 @@
       document.body.classList.remove("has-bottom-nav");
       const on = appScreen === "dash" && view === "home" && !(me && data);
       try { document.body.classList.toggle("has-lh-bar", on); } catch (err) { /* ignore */ }
+      if (!on) lhMenuOpen = false;
+      try { document.body.classList.toggle("has-lh-menu", on && lhMenuOpen); } catch (err2) { /* ignore */ }
     }
 
     function goBottomNav(which) {
@@ -20219,6 +20339,10 @@
 
     /** Everything the app pops open, closed by Escape in the order a user expects. */
     function closeTopmost() {
+      if (lhMenuOpen) {
+        setLhMenuOpen(false);
+        return true;
+      }
       if (cosmeticsDetailId) {
         cosmeticsDetailId = null;
         render();
@@ -20475,7 +20599,38 @@
       const listBtn = e.target.closest("[data-trades-list]");
       if (listBtn) { openTradesList(); return; }
 
-      // League-home top tabs: bounce in place (League / Teams / Ledger / History).
+      const menuScrim = e.target.closest("[data-lh-menu-scrim]");
+      if (menuScrim) {
+        setLhMenuOpen(false);
+        return;
+      }
+      const menuGo = e.target.closest("[data-lh-menu-go]");
+      if (menuGo) {
+        const go = menuGo.getAttribute("data-lh-menu-go");
+        setLhMenuOpen(false);
+        if (go === "calc") {
+          if (typeof calcWipe === "function") calcWipe();
+          view = "calc";
+          focusNext = ".screen-h";
+          render();
+          return;
+        }
+        if (go === "data") {
+          setHomeTab("history", { force: true });
+          return;
+        }
+        if (go === "settings") {
+          openSettings();
+          return;
+        }
+        return;
+      }
+      const menuBtn = e.target.closest("[data-lh-menu]");
+      if (menuBtn) {
+        setLhMenuOpen(!lhMenuOpen);
+        return;
+      }
+      // League-home top tabs: bounce in place (Home / Teams / News / Ledger).
       const homeTabBtn = e.target.closest("[data-home-tab]");
       if (homeTabBtn) {
         setHomeTab(homeTabBtn.getAttribute("data-home-tab"));

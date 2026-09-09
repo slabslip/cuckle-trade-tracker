@@ -16,9 +16,10 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
-**Home | Teams | News | Ledger | Data** at the true bottom (the slot the News Feed peek used to
+**Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
 occupy), then the digest — **Cuckle trade calculator** and signed-in **Trade Desk**.
-**News** is a peer tab (signed-in **Alerts** + the league feed). It is the water cooler.
+**News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
+it morphs the pill up. It is the water cooler.
 The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
 (§2a).
 
@@ -152,15 +153,16 @@ URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<ke
 Stored `homeTab=league` is an alias for Home. Boot reads every param; an unknown value falls back
 to Home rather than throwing. `history.replaceState` fires only when the URL string actually changes.
 
-### 2b. Five tabs (Linear pill)
+### 2b. Five cells (Linear pill)
 
-Five chips in a floating pill at the bottom of league home:
-**Home | Teams | News | Ledger | Data**. Not a top underline bar. First tab label is
-**Home**. `homeTab` stores `home`. The Data tab keeps the internal id `history`
-(`?tab=history`; `?tab=data` also opens it). News is `?tab=news` (`?view=news` remaps
-onto it). Ledger may badge as a gold dot. News may badge a missed count. No sixth tab.
-No + FAB. Calculator and Titles and Emblems stay sub-screens (`?view=calc`,
-`?view=cosmetics`).
+Four labeled destinations plus Menu in a floating pill:
+**Home | Teams | News | Ledger | Menu**. Not a top underline bar. First tab label is
+**Home**. `homeTab` stores `home`. Menu is three stacked lines only (`aria-label="Menu"`).
+Tapping it morphs the same pill up into **Calculator**, **League Data**, **Settings**,
+and three reserved empty rows (Linear hamburger pattern). League Data keeps the
+internal id `history` (`?tab=history`; `?tab=data` also opens it). News is `?tab=news`
+(`?view=news` remaps onto it). Ledger may badge as a gold dot. News may badge a missed
+count. No sixth cell. No + FAB. Calculator, Settings, and Titles stay sub-screens.
 
 ---
 

@@ -3903,7 +3903,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcVaLine20260909154000";
+    const DATA_V = "calcVaStarCard20260909154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18463,8 +18463,9 @@ const html = `<!DOCTYPE html>
     }
 
     function calcCompareHtml() {
-      // Cards stay raw send piles. Compare bags flip framing: legs = what that side receives
-      // (the other pile), so applyVa puts the stud-for-quantity bump on the receiver of the star.
+      // Cards stay raw send piles and paint pile-VA (star package). Compare bags flip
+      // framing: legs = what that side receives (the other pile), so applyVa puts the
+      // stud-for-quantity bump on the receiver of the star. vaBreak stays receive-mapped.
       const rec = calcReceiveTotals(calcLegsA, calcLegsB);
       const pricedA = (calcLegsA || []).some((l) => l.value != null);
       const pricedB = (calcLegsB || []).some((l) => l.value != null);
@@ -18745,7 +18746,10 @@ const html = `<!DOCTYPE html>
           + (hopOn ? hopHtml(hopKey) : "");
       }).join("");
       const rec = (calcLegsA.length && calcLegsB.length) ? calcReceiveTotals(calcLegsA, calcLegsB) : null;
-      const va = rec ? (side === "a" ? rec.vaA : rec.vaB) : 0;
+      // Cards are send piles. Paint the VA that lives on THIS pile (the star
+      // package), not the VA the seat banks on receive. Card A sent pile A, so
+      // show vaB. Card B shows vaA. Compare receive totals stay flipped.
+      const va = rec ? (side === "a" ? rec.vaB : rec.vaA) : 0;
       return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
         + calcSeatSelect(side)
         + (uid
@@ -18794,8 +18798,10 @@ const html = `<!DOCTYPE html>
         + "<h3>2. Add the piles</h3>"
         + "<p>Each card is what that team <b>sends</b> &mdash; card footers stay the raw "
         + "today blend so they match the listed pieces. When a deal earns a stud-for-quantity "
-        + "bump, <b>Value Adjustment</b> is its own gold line on the card that receives the "
-        + "star and under the compare totals. The bar uses pile + that line.</p>"
+        + "bump, <b>Value Adjustment</b> is its own gold line on the <b>star package</b> "
+        + "(the send card with fewer pieces) and under the compare receive that banks it. "
+        + "The extras card stays raw. The bar uses pile + that line on the seat who "
+        + "<b>takes</b> the star.</p>"
         + '<p class="calc-info-eq">Team 1 receives = Team 2 send pile + VA on that bag<br>'
         + "Team 2 receives = Team 1 send pile + VA on that bag<br>"
         + "gap = larger receive total &minus; smaller receive total</p>"
@@ -18827,8 +18833,9 @@ const html = `<!DOCTYPE html>
         + '<div class="calc-info-ex">The bar reads Team 2 receives <b>11,161</b> and Team 1 receives <b>9,788</b>. '
         + "Gap is 1,373 toward Team 2 &mdash; Favors the side that took the star.</div>"
         + "<p>That bump is the adjustment tool: paying quantity for a star makes the star "
-        + "count for more than its sticker. Card footers stay the today blend; the compare "
-        + "bar and Favors use the blend plus this VA. Recorded league trades store the same.</p>"
+        + "count for more than its sticker. The gold line sits on the star send card. "
+        + "Card footers stay the today blend; the compare bar and Favors use the blend "
+        + "plus this VA on the seat who took the star. Recorded league trades store the same.</p>"
         + "</div></div>";
     }
 
@@ -25148,7 +25155,10 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !fnSrc("calcVaHtml").includes("Value Adjustment")
   || !fnSrc("calcVaHtml").includes("signedNum(va)")
   || !fnSrc("calcSideHtml").includes("calcVaHtml(va)")
+  || !fnSrc("calcSideHtml").includes("side === \"a\" ? rec.vaB : rec.vaA")
+  || fnSrc("calcSideHtml").includes("side === \"a\" ? rec.vaA : rec.vaB")
   || !fnSrc("calcCompareHtml").includes("calcVaHtml(rec.vaA)")
+  || !fnSrc("calcInfoHtml").includes("star package")
   || !html.includes(".calc-va {")
   || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB)")
   || !fnSrc("calcEvenHtml").includes("calcReceiveTotals(nextA, nextB)")

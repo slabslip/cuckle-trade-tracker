@@ -6767,7 +6767,9 @@
       if (band === "hold") {
         return pos === "PICK" ? "late dart · they buy picks" : "cheap leftover · they buy young";
       }
-      if (band === "trim") return "cut leftover " + pos + " · they buy young";
+      if (band === "trim") {
+        return pos === "PICK" ? "move a 2nd · they buy picks" : "cut leftover " + pos + " · they buy young";
+      }
       if (band === "swap") return "even " + pos + " · window stays";
       if (band === "push") {
         return pos === "PICK" ? "send a 1st · shift the window" : "move aging " + pos + " · they can use him now";
@@ -6862,10 +6864,12 @@
             let seat = dataDashBandSeatScore("give", band, theirDir, theirProf, a, myBag);
             if (seat < 0) return;
             if (typeof homeDeskComplement === "function" && homeDeskComplement(myProf, theirProf)) seat += 1;
-            if ((theirProf.deep || []).indexOf(pos) >= 0) seat -= 2;
+            if ((band === "hold" || band === "trim" || band === "swap")
+              && (theirProf.deep || []).indexOf(pos) >= 0) seat -= 2;
             if ((theirProf.holes || []).indexOf(pos) >= 0 && dataDashIntentBuys(theirDir, pos)) seat += 2;
             if (band === "swap" && v >= (DESK_STUD - 400)) seat -= 3;
             if (band === "push" && pos === "PICK") seat -= 2;
+            if ((band === "trim" || band === "push") && pos !== "PICK") seat += 3;
             pushHit(a, uid, myBag, band, seat * 10 + Math.round(v / 400), dataDashBandGiveWhy(band, theirDir, pos, a));
           });
         }

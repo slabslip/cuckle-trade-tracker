@@ -299,12 +299,14 @@ w_dd   = 0.20   // DynastyDealer base_value
 
 **HAVE.** `?view=calc` prices a hypothetical 2-side swap on the **today / `even` book**
 (flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via `applyVa` on the
-hypothetical bags. Card footers stay the raw today blend (listed pieces). The compare bar
-and Favors use `calcReceiveTotals` (flipped receive bags + VA), so a stud-for-quantity
-package bumps the side that receives the star. Cards are send piles, so that bump is a
-gold **Value Adjustment** line on the **star package** (the send card with fewer pieces)
-and under the compare receive that includes it — not on the extras send card. Tape bags
-already do this via `value_adjust` (got star) and `value_adjust_sent` (sent star). Even-up chips re-run that helper after
+hypothetical bags. Card footers are pile + the VA painted on that card (one add, one
+round). The compare bar and Favors use `calcReceiveTotals` (flipped receive bags + VA), so
+a stud-for-quantity package bumps the side that receives the star. Cards are send piles,
+so that bump is a gold **Value Adjustment** line on the **star package** (the send card
+with fewer pieces) and under the compare receive that includes it — not on the extras
+send card. The gold meter fills from the winner’s end by the receive **gap** (`gap / 3000`,
+empty under 25, full at 3,000), not by pile share. Tape bags already do this via
+`value_adjust` (got star) and `value_adjust_sent` (sent star). Even-up chips re-run that helper after
 adding a candidate. Trade Desk even talks use the same totals so a Home card cannot
 flip Favors when it opens the calculator. Fill / Move 2-for-1 talks still score
 closeness on raw send piles. Recorded tape rows prefer the pipeline’s stored

@@ -221,12 +221,13 @@ duplicate rows, no raw Sleeper ids labeled “Player”. The pane keeps its scro
 re-renders; a team change starts at the top. Every row shows the today value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
 the highlighted set to that side and closes the list. **Close** dismisses without adding.
 **Add from roster** reopens it. It does not wipe pieces already on that side. Selected
-assets are rows (name, pos/team, value, remove). Card footers stay the raw today blend
-(sum of listed pieces). Compare bar is **receive** amounts with Value Adjustment folded
-in via `applyVa` on the flipped bags (stud-for-quantity bump lands on the side that
-receives the star). Gold fills toward the manager the value is going to — not send
-package size. **Favors** names the manager who would **receive** the larger
-VA-adjusted pile. Even-up copy and leftover chips stay on the short **send** pile;
+assets are rows (name, pos/team, value, remove). Card footers are the send pile **plus**
+any Value Adjustment on that card (one add, one round). Compare bar is **receive**
+amounts with Value Adjustment folded in via `applyVa` on the flipped bags
+(stud-for-quantity bump lands on the side that receives the star). Gold fill length is
+the receive **gap** (`gap / 3000`; empty when |gap| < 25; full at a few thousand) toward
+the manager who is ahead — not pile share. **Favors** names the manager who would
+**receive** the larger VA-adjusted pile. Even-up copy and leftover chips stay on the short **send** pile;
 league leftover stays raw capital percents. After both sides are priced, **League
 leftover** is percents of league capital (from → to), not bag totals.
 A **Vote** nudge may open the last tape deal between those two names when the room has

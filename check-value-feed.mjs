@@ -47,6 +47,22 @@ try {
   throw new Error("could not eval generated applyVa: " + (err && err.message));
 }
 
+const barAt = src.indexOf("function calcBarFill(gap) {");
+if (barAt < 0) throw new Error("generated page lost calcBarFill");
+let bj = barAt + "function calcBarFill(gap) {".length;
+let bd = 1;
+while (bj < src.length && bd) {
+  const ch = src[bj++];
+  if (ch === "{") bd += 1;
+  else if (ch === "}") bd -= 1;
+}
+let pageBarFill;
+try {
+  pageBarFill = new Function("return (" + src.slice(barAt, bj) + ")")();
+} catch (err) {
+  throw new Error("could not eval generated calcBarFill: " + (err && err.message));
+}
+
 const ui = leagueUiDir();
 const meDir = path.join(ui, "me");
 const files = fs.existsSync(meDir)
@@ -84,6 +100,14 @@ for (const f of files) {
           || !close(stored.value_adjust || 0, live.value_adjust || 0)) {
           storeMismatch += 1;
         }
+        const sumGot = (stored.legs || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+        const sumSent = (stored.sent || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+        if (!close(stored.today, sumGot + (stored.value_adjust || 0))) {
+          storeMismatch += 1;
+        }
+        if (!close(stored.sent_today, sumSent + (stored.value_adjust_sent || 0))) {
+          storeMismatch += 1;
+        }
       }
     }
     if (t.even && t.even.today_delta != null && (t.others || []).length === 1 && !t.incomplete) {
@@ -107,16 +131,39 @@ function pricedN(legs) {
 function calcCardPair(sendA, sendB, noVa) {
   const a = applyToSide({ legs: sendB, sent: sendA }, { noVa: !!noVa });
   const b = applyToSide({ legs: sendA, sent: sendB }, { noVa: !!noVa });
+  const rawA = (sendA || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+  const rawB = (sendB || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+  const vaPileA = (b && b.value_adjust) || 0;
+  const vaPileB = (a && a.value_adjust) || 0;
   return {
-    cardA: Math.round(b.value_adjust || 0),
-    cardB: Math.round(a.value_adjust || 0),
+    cardA: Math.round(vaPileA),
+    cardB: Math.round(vaPileB),
     receiveA: Math.round(a.today || 0),
     receiveB: Math.round(b.today || 0),
     vaReceiveA: Math.round(a.value_adjust || 0),
     vaReceiveB: Math.round(b.value_adjust || 0),
-    rawA: Math.round((sendA || []).reduce((s, l) => s + (Number(l.value) || 0), 0)),
-    rawB: Math.round((sendB || []).reduce((s, l) => s + (Number(l.value) || 0), 0)),
+    rawA: Math.round(rawA),
+    rawB: Math.round(rawB),
+    totA: Math.round(rawA + vaPileA),
+    totB: Math.round(rawB + vaPileB),
   };
+}
+
+function calcBarFill(gap) {
+  const g = Math.abs(Number(gap) || 0);
+  if (g < 25) return 0;
+  return Math.max(4, Math.min(100, Math.round((g / 3000) * 100)));
+}
+
+function expectAdd(row, label) {
+  if (row.totA !== row.receiveB) fail(label + " card A total must equal B receive");
+  if (row.totB !== row.receiveA) fail(label + " card B total must equal A receive");
+  if (row.totA !== row.rawA + row.cardA && Math.abs(row.totA - (row.rawA + row.cardA)) > 1) {
+    fail(label + " card A tot != raw + VA");
+  }
+  if (row.totB !== row.rawB + row.cardB && Math.abs(row.totB - (row.rawB + row.cardB)) > 1) {
+    fail(label + " card B tot != raw + VA");
+  }
 }
 
 function expectCard(label, got, want) {
@@ -153,6 +200,10 @@ function expectCard(label, got, want) {
   expectCard("worked card extras", ex.cardB, 0);
   expectCard("worked receive extras-side", ex.receiveB, 11161);
   expectCard("worked receive star-side", ex.receiveA, 9788);
+  expectCard("worked star card total", ex.totA, 11161);
+  expectCard("worked extras card total", ex.totB, 9788);
+  expectAdd(ex, "worked");
+  expectCard("worked meter", calcBarFill(ex.receiveB - ex.receiveA), 46);
 }
 
 {
@@ -168,9 +219,15 @@ function expectCard(label, got, want) {
   expectCard("golden shot star card", shot.cardB, 964);
   expectCard("golden shot TipsUp receive", shot.receiveA, 4178);
   expectCard("golden shot Truman receive", shot.receiveB, 5164);
+  expectCard("golden extras card total", shot.totA, 5164);
+  expectCard("golden star card total", shot.totB, 4178);
+  expectAdd(shot, "golden shot");
+  if (2397 + 1517 + 1250 !== 5164) fail("golden extras pieces do not add to 5164");
+  if (3214 + 964 !== 4178) fail("golden star + VA do not add to 4178");
   if (shot.cardA === shot.vaReceiveA && shot.vaReceiveA) {
     fail("golden shot painted receive-VA on the extras send card");
   }
+  expectCard("golden meter (gap 986)", calcBarFill(5164 - 4178), 33);
 }
 
 {
@@ -188,6 +245,7 @@ function expectCard(label, got, want) {
   if (mid.cardA) fail("3-for-2 extras send card must stay raw, got " + mid.cardA);
   if (mid.vaReceiveA !== mid.cardB) fail("3-for-2 receive-VA must bank on the 3-piece seat");
   if (mid.vaReceiveB) fail("3-for-2 2-piece seat must not bank receive-VA");
+  expectAdd(mid, "3-for-2");
 }
 
 {
@@ -276,6 +334,32 @@ function expectCard(label, got, want) {
   if (damp.cardA) fail("damp 3-pack send must stay raw");
   if (!damp.cardB) fail("damp 2-pack send is the count-star and must show VA");
   if (damp.vaReceiveB) fail("rich 3-pack receive must not bank VA");
+  expectAdd(damp, "damp");
+}
+
+{
+  expectCard("meter even 0", calcBarFill(0), 0);
+  expectCard("meter even 24", calcBarFill(24), 0);
+  expectCard("meter sliver 25", calcBarFill(25), 4);
+  expectCard("meter few-hundred", calcBarFill(300), 10);
+  expectCard("meter 1000", calcBarFill(1000), 33);
+  expectCard("meter golden 986", calcBarFill(986), 33);
+  expectCard("meter few-thousand", calcBarFill(3000), 100);
+  expectCard("meter blowout", calcBarFill(8000), 100);
+  expectCard("meter negative", calcBarFill(-986), 33);
+  if (pageBarFill(986) !== calcBarFill(986)) fail("generated calcBarFill drifted from check");
+  if (pageBarFill(24) !== 0 || pageBarFill(3000) !== 100) fail("generated meter edges drifted");
+}
+
+{
+  const frac = calcCardPair(
+    [{ value: 100.4, became: true }, { value: 100.4, became: true }, { value: 100.4, became: true }],
+    [{ value: 200.6, became: true }],
+  );
+  expectAdd(frac, "frac");
+  if (Math.round(frac.rawA + frac.cardA) !== frac.totA && Math.abs(Math.round(frac.rawA + frac.cardA) - frac.totA) > 1) {
+    fail("frac card A rounded twice");
+  }
 }
 
 {
@@ -306,6 +390,19 @@ function expectCard(label, got, want) {
       const sentN = pricedN(side.sent);
       if (!gotN || !sentN) continue;
       const cards = calcCardPair(side.sent || [], side.legs || []);
+      if (cards.totA !== cards.receiveB || cards.totB !== cards.receiveA) {
+        sentMismatch += 1;
+        if (sentMismatch <= 3) {
+          fail("tape card total != crossed receive on " + (t.transaction_id || "?"));
+        }
+      }
+      {
+        const gap = Math.abs(cards.receiveA - cards.receiveB);
+        const fill = calcBarFill(gap);
+        if (fill < 0 || fill > 100) fail("meter out of range on " + (t.transaction_id || "?"));
+        if (gap < 25 && fill) fail("even tape filled the meter on " + (t.transaction_id || "?"));
+        if (gap >= 3000 && fill !== 100) fail("blowout tape meter not full on " + (t.transaction_id || "?"));
+      }
       if (cards.cardA !== vaS) {
         sentMismatch += 1;
         if (sentMismatch <= 3) {

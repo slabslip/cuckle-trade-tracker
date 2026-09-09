@@ -3903,7 +3903,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcVaStarCard20260909154500";
+    const DATA_V = "calcMeterGain20260909161000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18344,6 +18344,18 @@ const html = `<!DOCTYPE html>
       }, 0);
     }
 
+    /** One add, one round: pile + the VA painted on that card. */
+    function calcCardTotal(legs, va) {
+      return calcRawSum(legs) + (Number(va) || 0);
+    }
+
+    /** Gold fill is the receive gap, not pile share. Even < 25. Full at 3,000. */
+    function calcBarFill(gap) {
+      const g = Math.abs(Number(gap) || 0);
+      if (g < 25) return 0;
+      return Math.max(4, Math.min(100, Math.round((g / 3000) * 100)));
+    }
+
     function calcSideBag(legs, otherLegs) {
       const mine = legs || [];
       const theirs = otherLegs || [];
@@ -18463,9 +18475,8 @@ const html = `<!DOCTYPE html>
     }
 
     function calcCompareHtml() {
-      // Cards stay raw send piles and paint pile-VA (star package). Compare bags flip
-      // framing: legs = what that side receives (the other pile), so applyVa puts the
-      // stud-for-quantity bump on the receiver of the star. vaBreak stays receive-mapped.
+      // Cards paint pile-VA and footer = pile + that line. Compare bags flip framing:
+      // legs = what that side receives (the other pile). Meter fill is the receive gap.
       const rec = calcReceiveTotals(calcLegsA, calcLegsB);
       const pricedA = (calcLegsA || []).some((l) => l.value != null);
       const pricedB = (calcLegsB || []).some((l) => l.value != null);
@@ -18476,11 +18487,10 @@ const html = `<!DOCTYPE html>
       if (d == null || !calcLegsA.length || !calcLegsB.length) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p></div>';
       }
-      // Bar shows VA-adjusted receive amounts. Gold fills toward the receiver.
-      const tot = Math.abs(receiveA) + Math.abs(receiveB);
+      // Gold grows from the winner's end by how much they are ahead, not pile share.
+      // A few hundred is a short chip; a few thousand fills the track.
       const fillRight = receiveB > receiveA;
-      const fillShare = fillRight ? receiveB : receiveA;
-      const pct = tot ? Math.max(4, Math.min(96, Math.round((fillShare / tot) * 100))) : 50;
+      const pct = calcBarFill(d);
       const nameA = calcSeatName(calcSeatA, "Team 1");
       const nameB = calcSeatName(calcSeatB, "Team 2");
       const even = Math.abs(d) < 25;
@@ -18495,8 +18505,11 @@ const html = `<!DOCTYPE html>
         + '<div class="calc-compare-labs"><div>' + esc(nameA) + " receives<b>" + calcFmt(receiveA) + "</b></div>"
         + "<div>" + esc(nameB) + " receives<b>" + calcFmt(receiveB) + "</b></div></div>"
         + vaBreak
-        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " receives " + calcFmt(receiveA) + ", " + esc(nameB) + " receives " + calcFmt(receiveB) + '">'
-        + '<div class="calc-bar-a' + (fillRight ? " is-end" : "") + '" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
+        + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " receives " + calcFmt(receiveA) + ", " + esc(nameB) + " receives " + calcFmt(receiveB) + (even ? ", even" : (", favors " + esc(favors) + " by " + calcFmt(need))) + '">'
+        + (pct
+          ? '<div class="calc-bar-a' + (fillRight ? " is-end" : "") + '" style="width:' + pct + '%"></div>'
+          : "")
+        + '<div class="calc-bar-mid"></div></div>'
         + '<div class="calc-favor' + (even ? "" : " is-ahead") + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
         + (even ? "" : '<p class="caption">' + esc(favors) + " would receive " + calcFmt(need) + " more on our book.</p>")
         + (even ? "" : '<p class="caption">' + esc(shortName) + " can send " + calcFmt(need) + " more to even it.</p>")
@@ -18762,7 +18775,7 @@ const html = `<!DOCTYPE html>
         + assets
         + calcVaHtml(va)
         + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
-        + '<div class="calc-tot">' + (legs.length ? calcFmt(calcRawSum(legs)) : "0") + "</div></div>"
+        + '<div class="calc-tot">' + (legs.length ? calcFmt(calcCardTotal(legs, va)) : "0") + "</div></div>"
         + "</section>";
     }
 
@@ -18796,16 +18809,19 @@ const html = `<!DOCTYPE html>
         + "retired list), today is 0. Missing FantasyCalc or DynastyDealer does not retire anyone. "
         + "Production / P/E never changes this number. We round the blend to a whole number.</p>"
         + "<h3>2. Add the piles</h3>"
-        + "<p>Each card is what that team <b>sends</b> &mdash; card footers stay the raw "
-        + "today blend so they match the listed pieces. When a deal earns a stud-for-quantity "
-        + "bump, <b>Value Adjustment</b> is its own gold line on the <b>star package</b> "
-        + "(the send card with fewer pieces) and under the compare receive that banks it. "
-        + "The extras card stays raw. The bar uses pile + that line on the seat who "
-        + "<b>takes</b> the star.</p>"
-        + '<p class="calc-info-eq">Team 1 receives = Team 2 send pile + VA on that bag<br>'
-        + "Team 2 receives = Team 1 send pile + VA on that bag<br>"
-        + "gap = larger receive total &minus; smaller receive total</p>"
-        + "<p>Even on our book means that gap is under 25.</p>"
+        + "<p>Each card is what that team <b>sends</b>. Listed pieces stay the today blend. "
+        + "When a deal earns a stud-for-quantity bump, <b>Value Adjustment</b> is its own "
+        + "gold line on the <b>star package</b> (the send card with fewer pieces) and the "
+        + "card total is pile + that line. The extras card stays pile-only. Compare "
+        + "<b>receives</b> add that line to the seat who <b>takes</b> the star.</p>"
+        + '<p class="calc-info-eq">card total = send pile + VA on that bag<br>'
+        + "Team 1 receives = Team 2 card total<br>"
+        + "Team 2 receives = Team 1 card total<br>"
+        + "gap = larger receive total &minus; smaller receive total<br>"
+        + "meter fill = gap &divide; 3,000 (even under 25 stays empty; 3,000 fills the track)</p>"
+        + "<p>Even on our book means that gap is under 25. The gold meter grows from the "
+        + "winner&rsquo;s end by that gap &mdash; a few hundred is a short chip, a few "
+        + "thousand fills it.</p>"
         + "<h3>3. Value Adjustment</h3>"
         + "<p>A star for three smaller pieces is not the same as three-for-three. "
         + "The side that <b>receives the star</b> (and sent the extras) gets a bump "
@@ -18833,9 +18849,9 @@ const html = `<!DOCTYPE html>
         + '<div class="calc-info-ex">The bar reads Team 2 receives <b>11,161</b> and Team 1 receives <b>9,788</b>. '
         + "Gap is 1,373 toward Team 2 &mdash; Favors the side that took the star.</div>"
         + "<p>That bump is the adjustment tool: paying quantity for a star makes the star "
-        + "count for more than its sticker. The gold line sits on the star send card. "
-        + "Card footers stay the today blend; the compare bar and Favors use the blend "
-        + "plus this VA on the seat who took the star. Recorded league trades store the same.</p>"
+        + "count for more than its sticker. The gold line sits on the star send card and "
+        + "the card total includes it. Compare receives and Favors use the same add. "
+        + "Recorded league trades store the same.</p>"
         + "</div></div>";
     }
 
@@ -25081,6 +25097,8 @@ if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || fnSrc("calcCompareHtml").includes("sends<b>")
   || fnSrc("calcCompareHtml").includes("calcRawSum(calcLegs")
   || !fnSrc("calcCompareHtml").includes("fillRight")
+  || !fnSrc("calcCompareHtml").includes("calcBarFill(d)")
+  || fnSrc("calcCompareHtml").includes("fillShare")
   || fnSrc("calcCompareHtml").includes("is-up") || fnSrc("calcCompareHtml").includes("is-down")) {
   throw new Error("calc cards are send piles; bar and Favors use VA-adjusted receive totals");
 }
@@ -25155,10 +25173,16 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !fnSrc("calcVaHtml").includes("Value Adjustment")
   || !fnSrc("calcVaHtml").includes("signedNum(va)")
   || !fnSrc("calcSideHtml").includes("calcVaHtml(va)")
+  || !fnSrc("calcSideHtml").includes("calcCardTotal(legs, va)")
   || !fnSrc("calcSideHtml").includes("side === \"a\" ? rec.vaB : rec.vaA")
   || fnSrc("calcSideHtml").includes("side === \"a\" ? rec.vaA : rec.vaB")
   || !fnSrc("calcCompareHtml").includes("calcVaHtml(rec.vaA)")
+  || !inline.includes("function calcBarFill(gap)")
+  || !inline.includes("function calcCardTotal(legs, va)")
+  || !fnSrc("calcBarFill").includes("g / 3000")
   || !fnSrc("calcInfoHtml").includes("star package")
+  || !fnSrc("calcInfoHtml").includes("card total = send pile")
+  || !fnSrc("calcInfoHtml").includes("meter fill")
   || !html.includes(".calc-va {")
   || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB)")
   || !fnSrc("calcEvenHtml").includes("calcReceiveTotals(nextA, nextB)")

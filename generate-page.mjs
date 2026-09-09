@@ -76,6 +76,7 @@ const html = `<!DOCTYPE html>
       --bg: #0b0b0d; --card: #141416; --line: #2a2a30;
       --text: #f0f0f0; --muted: #9a9aa3; --dim: #8a8a93;
       --green: #3ddc97; --red: #e05555;
+      --hig-tap: 44px; --hig-space: 8px; --hig-caption: 0.6875rem;
       /* Skill-position colours — same hues as trade-card pos · team labels, tuned for dark bg. */
       --pos-qb: #5eb3ff; --pos-rb: #3ddc97; --pos-wr: #ffb347; --pos-te: #c77dff;
       --pos-k: #9a9aa3; --pos-def: #e05555; --pos-oth: #c8c8d0;
@@ -234,7 +235,7 @@ const html = `<!DOCTYPE html>
     button.go-back, button.go-settings, button.go-team {
       flex: 0 0 auto; appearance: none; font: inherit; color: var(--text);
       background: transparent; border: 0; border-radius: 10px;
-      width: 44px; height: 44px; padding: 0;
+      width: var(--hig-tap); height: var(--hig-tap); padding: 0;
       display: grid; place-items: center; cursor: pointer;
     }
     button.go-back svg, button.go-settings svg {
@@ -1412,7 +1413,7 @@ const html = `<!DOCTYPE html>
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 3px;
       cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
-      min-height: 46px;
+      min-height: var(--hig-tap);
       box-shadow: none;
       position: relative;
     }
@@ -1450,7 +1451,8 @@ const html = `<!DOCTYPE html>
     }
     button.lh-action.on .lh-ico { border: 0; color: var(--lh-gold); }
     button.lh-action .lh-lab {
-      font-size: 0.625rem; font-weight: 650; line-height: 1.15;
+      display: block;
+      font-size: var(--hig-caption); font-weight: 650; line-height: 1.15;
       text-align: center; color: inherit; max-width: 100%;
       overflow-wrap: anywhere; letter-spacing: 0.01em;
     }
@@ -3532,7 +3534,7 @@ const html = `<!DOCTYPE html>
     button.filter-btn {
       flex: 0 0 auto; appearance: none; font: inherit; color: var(--muted);
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-      width: 44px; height: 44px; padding: 0; display: grid; place-items: center;
+      width: var(--hig-tap); height: var(--hig-tap); padding: 0; display: grid; place-items: center;
       position: relative; cursor: pointer;
     }
     button.filter-btn.on { color: var(--text); border-color: #6b5a2e; }
@@ -3832,7 +3834,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "linearBarNews20260909031500";
+    const DATA_V = "higRules20260909033000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6186,6 +6188,7 @@ const html = `<!DOCTYPE html>
       const on = homeTab === "history";
       return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="history"'
         + ' aria-selected="' + (on ? "true" : "false") + '"'
+        + ' tabindex="' + (on ? "0" : "-1") + '"'
         + named + '>'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="M4 5.5h16v2.2H4zm0 5.4h16v2.2H4zm0 5.4h10.5V18.5H4z"/></svg></span>'
@@ -6224,6 +6227,7 @@ const html = `<!DOCTYPE html>
       const aria = n ? lab + ", " + n + " waiting" : lab;
       return '<button type="button" role="tab" class="lh-action' + (on ? " on" : "") + '" data-home-tab="' + esc(tab) + '"'
         + ' aria-selected="' + (on ? "true" : "false") + '"'
+        + ' tabindex="' + (on ? "0" : "-1") + '"'
         + ' aria-label="' + esc(aria) + '">'
         + '<span class="lh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false">'
         + '<path fill="currentColor" d="' + path + '"/></svg></span>'
@@ -20259,14 +20263,15 @@ const html = `<!DOCTYPE html>
       // Roving tabs: one stop in the tab order, arrows move between the four sections.
       const tab = e.target.closest && e.target.closest('[role="tab"]');
       if (tab) {
-        const tabs = [...document.querySelectorAll('.nav [role="tab"]')];
+        const list = tab.closest('[role="tablist"]');
+        const tabs = list ? [...list.querySelectorAll('[role="tab"]')] : [];
         const i = tabs.indexOf(tab);
         let next = -1;
         if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
         else if (e.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
         else if (e.key === "Home") next = 0;
         else if (e.key === "End") next = tabs.length - 1;
-        if (next >= 0) { e.preventDefault(); tabs[next].focus(); tabs[next].click(); }
+        if (next >= 0 && tabs[next]) { e.preventDefault(); tabs[next].focus(); tabs[next].click(); }
       }
     });
     /**
@@ -24921,6 +24926,71 @@ if (!html.includes("button.pick-intel-chip:disabled")
 }
 if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "Team settings"')) {
   throw new Error("Settings screen must render as Team settings from the team-home gear");
+}
+
+{
+  const higDoc = path.join(ROOT, "docs/HIG_SDD.md");
+  if (!fs.existsSync(higDoc)) throw new Error("HIG-00 docs/HIG_SDD.md must ship");
+  const higMd = fs.readFileSync(higDoc, "utf8");
+  const higRules = [
+    ["HIG-01", html.includes("--hig-tap: 44px")
+      && html.includes("min-height: var(--hig-tap)")
+      && html.includes("width: var(--hig-tap); height: var(--hig-tap)")],
+    ["HIG-02", html.includes("env(safe-area-inset-bottom")
+      && lhCssHas("bottom: calc(12px + env(safe-area-inset-bottom")],
+    ["HIG-03", inline.includes('homeTabAction("home"')
+      && inline.includes('homeTabAction("teams"')
+      && inline.includes('homeTabAction("ledger"')
+      && inline.includes(">Data<")
+      && html.includes("repeat(4, minmax(0, 1fr))")
+      && !inline.includes('homeTabAction("news"')],
+    ["HIG-04", html.includes("button.lh-action.on")
+      && html.includes("border-radius: 999px")
+      && !html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {")).includes("inset 0 -2px 0")
+      && inline.includes(" waiting")],
+    ["HIG-05", html.includes("--hig-caption: 0.6875rem")
+      && html.includes("font-size: var(--hig-caption)")
+      && !html.slice(html.indexOf("button.lh-action .lh-lab {"), html.indexOf("button.lh-action .lh-badge {")).includes("0.5625rem")
+      && !html.slice(html.indexOf("button.lh-action .lh-lab {"), html.indexOf("button.lh-action .lh-badge {")).includes("0.625rem")],
+    ["HIG-06", inline.includes('aria-label="Back"')
+      && inline.includes('role="tab"')
+      && inline.includes("aria-selected")
+      && inline.includes('aria-hidden="true"')],
+    ["HIG-07", inline.includes("tab.closest('[role=\"tablist\"]')")
+      && inline.includes("ArrowRight")
+      && inline.includes("ArrowLeft")
+      && inline.includes('(on ? "0" : "-1")')
+      && html.includes(":focus-visible")],
+    ["HIG-08", inline.includes("has-lh-bar")
+      && inline.includes('view === "home"')
+      && inline.includes('view === "news"')],
+    ["HIG-09", html.includes("@media (prefers-reduced-motion: reduce)")],
+    ["HIG-10", html.includes("position: fixed") && html.includes(".lh-actions {")],
+    ["HIG-11", html.includes("--hig-space: 8px")],
+    ["HIG-12", html.includes("--lh-gold") && html.includes("--text:") && html.includes("--muted:")],
+    ["HIG-13", html.includes("user-scalable=no")
+      && html.includes("font-size: 16px !important")
+      && html.includes("function armIosNoFocusZoom(")],
+    ["HIG-14", html.includes('id="goBack"') && html.includes('id="leagueSub"')
+      && !html.includes('id="goHome"')],
+    ["HIG-15", !inline.includes('homeTabAction("news"')
+      && inline.includes("function homeNewsDoorHtml(")
+      && inline.includes('data-view="calc"')],
+  ];
+  for (const [id, ok] of higRules) {
+    if (!ok) throw new Error(id + " Apple HIG law failed — see docs/HIG_SDD.md");
+  }
+  for (const id of ["HIG-01", "HIG-02", "HIG-03", "HIG-04", "HIG-05", "HIG-06", "HIG-07",
+    "HIG-08", "HIG-09", "HIG-10", "HIG-11", "HIG-12", "HIG-13", "HIG-14", "HIG-15"]) {
+    if (!higMd.includes("**" + id + "**")) {
+      throw new Error(id + " must stay documented in docs/HIG_SDD.md");
+    }
+  }
+}
+
+function lhCssHas(needle) {
+  const block = html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {"));
+  return block.includes(needle);
 }
 
 // ---------------------------------------------------------------------------------------------

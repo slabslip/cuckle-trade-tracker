@@ -8,6 +8,7 @@ file is wrong — fix it in the same pass. What we *want* → [`PRODUCT.md`](./P
 scripts emit → [`ARCHITECTURE.md`](./ARCHITECTURE.md). Pricing → [`VALUE_SDD.md`](./VALUE_SDD.md).
 Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md).
 Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+Phone behavior (Apple HIG adopted as Cuckle law) → [`HIG_SDD.md`](./HIG_SDD.md).
 Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 
 ---
@@ -453,9 +454,9 @@ known-dead payload still on the wire.
 - 375px is the target, not 390px: a 390px device with a scrollbar leaves 375px usable.
 - Every grid track that holds text gets `min-width: 0`. Names ellipsize; **figures never truncate**.
 - The four tabs share one row and never wrap.
-- 44px minimum on every tap target, including the team menu, the year filter rows, the chips and
-  the Score as trigger and all five of its options. When a list of them stops fitting, the list's
-  cap gives way, not the 44px.
+- 44px minimum on every tap target (`HIG-01` in [`HIG_SDD.md`](./HIG_SDD.md)), including the team
+  menu, the year filter rows, the chips and the Score as trigger and all five of its options.
+  When a list of them stops fitting, the list's cap gives way, not the 44px.
   The chips' own floor is 56px, because the longest label needs two lines in a 127px cell.
 - One column of bags on a phone, two at `min-width: 640px`.
 - `aria-expanded` on every expandable row. `Escape` closes whatever is topmost: the seat menu,

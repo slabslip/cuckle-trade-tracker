@@ -3,7 +3,9 @@
 import fs from "node:fs";
 import { DATA, NFL_KICKOFF, readJson, setLeagueId, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
 
-const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const ARGV = process.argv.slice(2);
+const FINISHES_ONLY = ARGV.includes("--finishes-only");
+const LEAGUE_ID = setLeagueId(ARGV.find((a) => !a.startsWith("--")) || process.env.LEAGUE_ID);
 const KICKOFF = NFL_KICKOFF;
 
 async function walkLeagues(startId) {
@@ -276,6 +278,151 @@ function postureLabel(p) {
 function pct(n) {
   if (n == null || Number.isNaN(n)) return null;
   return Math.round(n * 100);
+}
+
+/**
+ * Standings inputs only: users, rosters, winners bracket. title-path is still the only
+ * walker of previous_league_id; this path skips txs / drafts / week matchups so
+ * `node title-path.mjs --finishes-only` can refresh finishes.json without a full title rebuild.
+ */
+async function loadSeasonLite(league) {
+  const season = String(league.season);
+  const users = (await sleeperGet(`/league/${league.league_id}/users`)) || [];
+  const rosters = (await sleeperGet(`/league/${league.league_id}/rosters`)) || [];
+  const names = Object.fromEntries(users.map((u) => [u.user_id, u.display_name || u.user_id]));
+  const owner = Object.fromEntries(rosters.map((r) => [r.roster_id, r.owner_id]));
+  const wb = (await sleeperGet(`/league/${league.league_id}/winners_bracket`)) || [];
+  return {
+    league,
+    season,
+    names,
+    owner,
+    rosters,
+    wb,
+    places: placesFromBracket(wb),
+  };
+}
+
+function finishAvg(places) {
+  if (!places.length) return null;
+  return Math.round((places.reduce((a, b) => a + b, 0) / places.length) * 10) / 10;
+}
+
+function finishExtreme(rows, prefer) {
+  return rows.slice().sort((a, b) => {
+    const d = prefer(a, b);
+    if (d) return d;
+    return String(b.season).localeCompare(String(a.season));
+  })[0] || null;
+}
+
+/**
+ * Career place book for the current ten seats. One row per completed season, same
+ * standingsFor rule the Teams list uses for last season. Best = lowest place number;
+ * worst = highest; ties take the more recent season. Avg is the mean of those places
+ * to one decimal. Seats with no completed season still ship, with n = 0.
+ */
+function finishesBookOf(seasons, nameByUser, members) {
+  const completed = Object.values(seasons)
+    .filter((s) => s.league && s.league.status === "complete")
+    .sort((a, b) => String(a.season).localeCompare(String(b.season)));
+  const byUser = {};
+  for (const s of completed) {
+    for (const row of standingsFor(s, nameByUser)) {
+      if (!row.user_id) continue;
+      const uid = String(row.user_id);
+      if (!byUser[uid]) {
+        byUser[uid] = {
+          seat_user_id: uid,
+          name: nameByUser[uid] || row.name,
+          finishes: [],
+        };
+      }
+      byUser[uid].finishes.push({
+        season: String(s.season),
+        place: row.place,
+        from: row.from,
+      });
+    }
+  }
+  const seats = (members || []).map((m) => {
+    const uid = String(m.user_id);
+    const raw = byUser[uid] || { seat_user_id: uid, name: m.name, finishes: [] };
+    const finishes = raw.finishes.slice().sort((a, b) => String(a.season).localeCompare(String(b.season)));
+    const best = finishExtreme(finishes, (a, b) => a.place - b.place);
+    const worst = finishExtreme(finishes, (a, b) => b.place - a.place);
+    return {
+      seat_user_id: uid,
+      name: m.name || raw.name,
+      finishes,
+      best: best ? { season: best.season, place: best.place } : null,
+      worst: worst ? { season: worst.season, place: worst.place } : null,
+      avg: finishAvg(finishes.map((f) => f.place)),
+      n: finishes.length,
+    };
+  });
+  return {
+    v: 1,
+    as_of: ymd(Date.now()),
+    league_id: String(LEAGUE_ID),
+    seasons: completed.map((s) => String(s.season)),
+    rule: "winners-bracket placement games, then wins*2+ties, then points for, then roster_id",
+    seats,
+  };
+}
+
+function assertFinishes(book) {
+  if (!book || book.v !== 1) throw new Error("finishes: missing v1 book");
+  if (!Array.isArray(book.seasons) || book.seasons.length !== 7) {
+    throw new Error(`finishes: expected 7 completed seasons, got ${JSON.stringify(book.seasons)}`);
+  }
+  const champs = {
+    2019: "ARae",
+    2020: "ARae",
+    2021: "ARae",
+    2022: "ChiefGumby",
+    2023: "TedCumberbatch",
+    2024: "SF69erss",
+    2025: "SF69erss",
+  };
+  for (const [year, name] of Object.entries(champs)) {
+    const seat = book.seats.find((s) => s.name === name);
+    const hit = seat && seat.finishes.find((f) => f.season === String(year));
+    if (!hit || hit.place !== 1) {
+      throw new Error(`finishes: ${name} is not 1st in ${year}`);
+    }
+  }
+  const order2025 = [
+    "SF69erss", "TipsUp", "TedCumberbatch", "KingHenryXXVI", "TrumanCooper",
+    "DarkWingDucks2023", "bigjberg", "ChiefGumby", "ARae", "BubbaCuckShremp",
+  ];
+  order2025.forEach((name, i) => {
+    const seat = book.seats.find((s) => s.name === name);
+    const hit = seat && seat.finishes.find((f) => f.season === "2025");
+    if (!hit || hit.place !== i + 1) {
+      throw new Error(`finishes: 2025 ${name} is ${hit && hit.place}, expected ${i + 1}`);
+    }
+  });
+  const arae = book.seats.find((s) => s.name === "ARae");
+  const arae25 = arae && arae.finishes.find((f) => f.season === "2025");
+  if (!arae || arae.best.place !== 1 || !arae25 || arae25.place !== 9) {
+    throw new Error(`finishes: ARae best/2025 ${JSON.stringify(arae && { best: arae.best, y2025: arae25 })}`);
+  }
+  if (book.seats.length !== 10) throw new Error(`finishes: expected 10 seats, got ${book.seats.length}`);
+  for (const s of book.seats) {
+    if (s.n !== s.finishes.length) throw new Error(`finishes: n mismatch ${s.name}`);
+    if (s.n && (s.avg == null || !s.best || !s.worst)) throw new Error(`finishes: missing summary ${s.name}`);
+    if (s.best && s.worst && s.best.place > s.worst.place) {
+      throw new Error(`finishes: best worse than worst ${s.name}`);
+    }
+  }
+}
+
+function writeFinishes(seasons, nameByUser, members) {
+  const book = finishesBookOf(seasons, nameByUser, members);
+  assertFinishes(book);
+  writeUi("finishes.json", book);
+  return book;
 }
 
 async function loadSeason(league, players) {
@@ -591,7 +738,49 @@ function thesisOf(row) {
   return bits.join(" ");
 }
 
+function nameByUserOf(seasons) {
+  const overrides = readJson("aliases.overrides.json", {}) || {};
+  const nameByUser = {};
+  for (const s of Object.values(seasons)) {
+    for (const [uid, raw] of Object.entries(s.names)) {
+      nameByUser[uid] = overrides[uid] || raw;
+    }
+  }
+  return nameByUser;
+}
+
+async function mainFinishesOnly() {
+  const leagues = await walkLeagues(LEAGUE_ID);
+  const seasons = {};
+  for (const league of leagues) {
+    seasons[String(league.season)] = await loadSeasonLite(league);
+  }
+  const nameByUser = nameByUserOf(seasons);
+  const members = readJson("ui/members.json", null);
+  if (!Array.isArray(members) || !members.length) {
+    throw new Error("members.json is missing or empty -- run revalue.mjs before title-path.mjs");
+  }
+  const book = writeFinishes(seasons, nameByUser, members);
+  console.log(JSON.stringify({
+    finishes: {
+      seasons: book.seasons,
+      seats: book.seats.map((s) => ({
+        name: s.name,
+        n: s.n,
+        best: s.best,
+        worst: s.worst,
+        avg: s.avg,
+      })),
+      out: "data/ui/finishes.json",
+    },
+  }, null, 2));
+}
+
 async function main() {
+  if (FINISHES_ONLY) {
+    await mainFinishesOnly();
+    return;
+  }
   const overrides = readJson("aliases.overrides.json", {}) || {};
   const players = await loadPlayers();
   const leagues = await walkLeagues(LEAGUE_ID);
@@ -894,6 +1083,7 @@ async function main() {
     titles,
   };
   writeUi("titles.json", payload);
+  const finishes = writeFinishes(seasons, nameByUser, seated);
   console.log(JSON.stringify({
     standings: {
       season: lastSeason,
@@ -916,6 +1106,11 @@ async function main() {
       thesis: t.thesis,
     })),
     out: "data/ui/titles.json",
+    finishes: {
+      seasons: finishes.seasons,
+      seats: finishes.seats.map((s) => `${s.name} best ${s.best && s.best.place} worst ${s.worst && s.worst.place} avg ${s.avg} n ${s.n}`),
+      out: "data/ui/finishes.json",
+    },
   }, null, 2));
 }
 

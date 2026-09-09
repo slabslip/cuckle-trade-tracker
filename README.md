@@ -27,7 +27,8 @@ node draft-resolve.mjs [league_id]
 node value-snapshot.mjs          # latest + monthly git history (shared)
 node ktc-snapshot.mjs            # weekly Superflex snap → data/ktc/ (not in build.mjs)
 node revalue.mjs [league_id]
-node title-path.mjs [league_id]  # titles.json for Champions Path
+node title-path.mjs [league_id]  # titles.json + finishes.json
+node title-path.mjs --finishes-only  # finishes.json only (standings walk)
 node apply-value-adjust.mjs [league_id]
 node generate-page.mjs           # site shell (Cuckle)
 node mark-league-ready.mjs [league_id]  # needs SUPABASE_SERVICE_ROLE_KEY

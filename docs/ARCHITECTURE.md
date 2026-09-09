@@ -23,6 +23,7 @@ revalue.mjs
   → data/ui/members.json, league.json, picks.json, me/<user_id>.json
 title-path.mjs
   → data/ui/titles.json                       (Champions Path)
+  → data/ui/finishes.json                     (each seat's place per completed season)
   → adds `place` to data/ui/members.json      (last season's finish, for the seat picker)
 apply-value-adjust.mjs
   → rewrites data/ui/league.json + me/<user_id>.json in place
@@ -130,6 +131,28 @@ seat picker lists the array in that order and crowns `place === 1`. The rule is 
 bracket's placement games first, then regular-season record (standings points, points for,
 `roster_id`) for the teams the bracket does not place; see `UI_SDD.md` §2. This is presentation
 only and never reaches the value book.
+
+### `data/ui/finishes.json`
+
+Career place book for team home. Same standings rule as `members.place`, applied to every
+completed season on the `previous_league_id` walk. `title-path.mjs` is the only writer
+(`--finishes-only` skips the Champions Path rebuild). Shape:
+
+```text
+{
+  v: 1, as_of, league_id, seasons: ["2019", …, "2025"],
+  rule,
+  seats: [{
+    seat_user_id, name,
+    finishes: [{ season, place, from }],
+    best: { season, place },
+    worst: { season, place },
+    avg, n
+  }]
+}
+```
+
+Team home reads `best` / `worst` / `avg`. The Teams list does **not** read this file.
 
 ### `data/ui/league.json`
 

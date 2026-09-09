@@ -26,8 +26,9 @@ calculator door is its own row — it is not an Alerts filler. Home does not rem
 Trade chip; the vote notification is the door into that deal.
 
 **Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
-Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
-best and worst rookie pick. Every number is first-person for that `user_id`.
+Career finishes (best / worst / average place), six style tiles, an optional league chart, your
+best and worst deal, your two edge partners, your best and worst rookie pick. Every number is
+first-person for that `user_id`.
 
 Do not merge them. Home must not grow a personal number, and team home must not become a league
 recap.
@@ -313,6 +314,14 @@ either. The **Teams list** always paints the card: selected art when they have e
 blank banner + blank emblem when they have not. Anyone opening the seat sees that pair —
 not the viewer's.
 
+**Finishes** sit under Price a deal and above the six style tiles: best place in a completed
+season, worst place, and the mean place across every completed season. The numbers come from
+`data/ui/finishes.json`, which `title-path.mjs` writes with the same standings rule the Teams
+list uses for last season (winners-bracket `p`, then regular-season record). Best is the lowest
+place number (ties take the more recent year); worst is the highest; avg is the mean to one
+decimal. This strip does not reorder the Teams list — that list stays last season only. A
+missing book is one caption, not a guessed 1st. Places are not bag values.
+
 **Six style tiles**, all read from `data/ui/marks.json` (§7). Tapping one opens a ten-row league
 chart for that metric, sorted, with your seat highlighted. The chart draws from the rows already
 loaded at boot; it must never fetch a seat file.
@@ -327,7 +336,8 @@ loaded at boot; it must never fetch a seat file.
 | Draft | mean rookie surplus | Hit factory >200 / Miss factory <−500 / Mixed |
 
 Then: **Best deal**, **Worst deal**, two **Partners** (your best and worst per-deal), and your
-rookie **hit** and **miss**.
+rookie **hit** and **miss**. Finishes stay above those deal rows so a career place is not
+confused with a best/worst *trade*.
 
 Every one of those partner numbers comes from `partnerPer()`, the single per-partner helper. The
 tile and the Partners tab cannot disagree, because the tile is a tally of exactly the grades the
@@ -398,6 +408,7 @@ The pipeline owns all arithmetic. The browser formats.
 | `me/<user_id>.json` | 156–602 KB | that seat's trades, partners, drafts |
 | `picks.json` | 111 KB | hop tape per asset key |
 | `titles.json` | 4 KB | Champions Path |
+| `finishes.json` | <2 KB | each seat's place per completed season, plus best / worst / avg |
 | `votes.json` | <1 KB | fallback vote tallies when Supabase is unreachable (opinion only — never value) |
 
 Votes are the one number that does **not** come from the pipeline. The live league tally is read

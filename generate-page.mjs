@@ -960,6 +960,15 @@ const html = `<!DOCTYPE html>
       padding: 10px 12px; margin: 0 0 12px;
     }
     .vote-note b { font-weight: 650; }
+    .team-finishes { display: flex; gap: 8px; margin: 0 0 12px; }
+    .team-finish {
+      flex: 1 1 0; min-width: 0;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 8px; text-align: center;
+    }
+    .team-finish b { display: block; font-size: 1.25rem; font-weight: 700; line-height: 1.2; }
+    .team-finish span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.35; }
+    .team-finish.is-1 b { color: #e0b44c; }
     .marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
     button.mark {
       flex: 1 1 calc(50% - 8px); min-width: 140px;
@@ -3763,6 +3772,7 @@ const html = `<!DOCTYPE html>
     let cuffFilterSelf = false; // starter owner also owns the cuff (insurer)
     let cuffFilterOther = false; // cuff owned by someone other than the starter's manager (poach)
     let titles = null;
+    let finishes = null;
     let marks = null;
     let news = null;
     // Soft-deleted shared tweets, by item id (tweet:22). Filled from Supabase on load and on
@@ -3772,7 +3782,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "plan20260909023000";
+    const DATA_V = "finish20260909024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5221,7 +5231,7 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, finishesRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -5234,6 +5244,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("cosmetics.json").catch(() => null),
         getLeagueJson("pe.json").catch(() => null),
         getLeagueJson("seat-direction.json").catch(() => null),
+        getLeagueJson("finishes.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -5285,6 +5296,9 @@ const html = `<!DOCTYPE html>
       try {
         seatDirection = dirRaw && dirRaw.v === 1 && Array.isArray(dirRaw.seats) ? dirRaw : null;
       } catch (err) { seatDirection = null; }
+      try {
+        finishes = finishesRaw && finishesRaw.v === 1 && Array.isArray(finishesRaw.seats) ? finishesRaw : null;
+      } catch (err) { finishes = null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
@@ -12300,6 +12314,36 @@ const html = `<!DOCTYPE html>
       };
     }
 
+    function seatFinishRow(uid) {
+      if (!finishes || finishes.v !== 1 || !Array.isArray(finishes.seats)) return null;
+      return finishes.seats.find((s) => String(s.seat_user_id) === String(uid)) || null;
+    }
+
+    /**
+     * Career place facts for this seat: best finish, worst finish, mean place.
+     * Places come from finishes.json (title-path.mjs). Not a bag number. Missing book
+     * is one caption, not a guessed 1st.
+     */
+    function teamFinishesHtml() {
+      if (!me) return "";
+      const row = seatFinishRow(me.user_id);
+      if (!row || !row.n || !row.best || !row.worst) {
+        return '<p class="caption">Season finishes are not in this build.</p>';
+      }
+      const bestOrd = placeOrdinal(row.best.place);
+      const worstOrd = placeOrdinal(row.worst.place);
+      const avg = Number.isFinite(Number(row.avg)) ? Number(row.avg).toFixed(1) : "";
+      const bestCls = row.best.place === 1 ? " is-1" : "";
+      return '<div class="team-finishes" aria-label="Season finishes">'
+        + '<div class="team-finish' + bestCls + '"><b>' + esc(bestOrd) + "</b><span>"
+        + esc(row.best.season ? "Best · " + row.best.season : "Best") + "</span></div>"
+        + '<div class="team-finish"><b>' + esc(worstOrd) + "</b><span>"
+        + esc(row.worst.season ? "Worst · " + row.worst.season : "Worst") + "</span></div>"
+        + '<div class="team-finish"><b>' + esc(avg) + "</b><span>"
+        + esc("Avg · " + row.n + (row.n === 1 ? " season" : " seasons")) + "</span></div>"
+        + "</div>";
+    }
+
     function teamMarks() {
       const m = marksOf(marks && marks.seats && marks.seats[me.user_id]);
       return '<div class="marks">'
@@ -18665,6 +18709,7 @@ const html = `<!DOCTYPE html>
           ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
           : "")
         + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button></p>'
+        + teamFinishesHtml()
         + teamMarks()
         + markChart()
         + empty
@@ -23224,6 +23269,44 @@ if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("fun
   const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
   if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(best)") || fn.includes("tradeRow(worst)")) {
     throw new Error("team home best/worst deals must use seatTradeFeedCardHtml");
+  }
+  if (!fn.includes("teamFinishesHtml(")) {
+    throw new Error("team home must paint career finishes (best / worst / avg)");
+  }
+  if (fn.includes("getLeagueJson(")) {
+    throw new Error("team home must not fetch JSON in render()");
+  }
+}
+{
+  const fn = fnSrc("teamFinishesHtml");
+  if (!fn.includes("Best") || !fn.includes("Worst") || !fn.includes("Avg")) {
+    throw new Error("team finishes strip must label Best, Worst, and Avg");
+  }
+  if (fn.includes("calcFmt(") || fn.includes("calcValueNum(")) {
+    throw new Error("team finishes must not paint bag values");
+  }
+}
+if (!html.includes(".team-finishes") || !html.includes(".team-finish")) {
+  throw new Error("stylesheet must style the team-home finishes strip");
+}
+if (!inline.includes('getLeagueJson("finishes.json")')) {
+  throw new Error("loadMembers must load finishes.json at boot");
+}
+{
+  const book = JSON.parse(fs.readFileSync(`${ROOT}data/ui/finishes.json`, "utf8"));
+  if (book.v !== 1 || !Array.isArray(book.seats) || book.seats.length !== 10) {
+    throw new Error("finishes.json must be v1 with ten seats -- run title-path.mjs");
+  }
+  if (!Array.isArray(book.seasons) || book.seasons.length !== 7) {
+    throw new Error("finishes.json must cover the seven completed seasons");
+  }
+  const arae = book.seats.find((s) => s.name === "ARae");
+  if (!arae || !arae.best || arae.best.place !== 1) {
+    throw new Error("finishes.json: ARae best must be 1st");
+  }
+  const sf = book.seats.find((s) => s.name === "SF69erss");
+  if (!sf || !sf.best || sf.best.place !== 1) {
+    throw new Error("finishes.json: SF69erss best must be 1st");
   }
 }
 {

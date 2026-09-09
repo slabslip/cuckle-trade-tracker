@@ -546,10 +546,11 @@ caught in review before it reaches the page.
    in your own register and they go straight into `news-voice.mjs` — or into the LLM prompt.
 2. **Cadence.** Twice a day is the recommendation. In-season Sunday evening could be a third run.
 3. **The LLM path.** Worth cents a month, and it needs a key you own and a provider you choose.
-4. **Whether news should ever be per-seat.** **Settled for Home.** The News Feed pull-up stays
-   league-wide. Home no longer paints a second **On your roster** strip — that slot is
+4. **Whether news should ever be per-seat.** **Settled for Home.** The News Feed stays
+   league-wide. Home shows a digest door into `?view=news` (not a bottom peek, not a fifth
+   tab). Home no longer paints a second **On your roster** strip — that slot is
    **Trade Desk** (signed-in only). Injury tagging still ranks items inside the News Feed. Signed-out Home
-   does not duplicate the peek and omits Alerts and Trade Desk.
+   omits Alerts and Trade Desk.
 5. **Whether "Ruled out" should supersede "Questionable"** rather than sit beside it. That is the
    thread model in §7, and a `v: 2`.
 

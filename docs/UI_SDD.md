@@ -15,10 +15,11 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 ## 1. Two rooms
 
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
-**Home | Teams | Ledger | Data** above the News Feed peek, then
-the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**, signed-in
-**Trade Desk**, and the News Feed pull-up. It is the water cooler. The `Score as` clock is not on
-it; the clock lives in the brand header on screens it applies to (§2a).
+**Home | Teams | Ledger | Data** at the true bottom (the slot the News Feed peek used to
+occupy), then the digest — signed-in **Alerts** (notifications only), **Cuckle trade calculator**,
+signed-in **Trade Desk**, and a **News Feed** door into `?view=news`. It is the water cooler.
+The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
+(§2a).
 
 **Alerts** may name a wager or an uncast vote. Omit the strip when signed out. When signed in
 and nothing is waiting, keep the heading and leave the slot blank — do not fill it. That is an
@@ -151,12 +152,11 @@ to Home rather than throwing. `history.replaceState` fires only when the URL str
 
 ### 2b. Four tabs (Linear pill)
 
-Four chips in a floating pill above the News Feed peek: **Home | Teams | Ledger | Data**.
+Four chips in a floating pill at the bottom of league home: **Home | Teams | Ledger | Data**.
 Not a top underline bar. First tab label is **Home**. `homeTab` stores `home`. The Data
 tab keeps the internal id `history` (`?tab=history`; `?tab=data` also opens it). Ledger
-may badge as a gold dot. No fifth tab. No + FAB. Calculator and Titles and Emblems are
-sub-screens (`?view=calc`, `?view=cosmetics`), not tabs. The pill hides while the News
-Feed sheet is open.
+may badge as a gold dot. No fifth tab. No + FAB. Calculator, Titles and Emblems, and the
+News Feed are sub-screens (`?view=calc`, `?view=cosmetics`, `?view=news`), not tabs.
 
 ---
 
@@ -191,7 +191,8 @@ picks. Startable floors: QB 2 / RB 2 /
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
 calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
 fourth card or “Open the calculator” filler.
-The News Feed pull-up stays the league-wide preview.
+The News Feed is a Home digest door into the full `?view=news` page. It is not a
+bottom peek and not a fifth tab.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **Data**, not stacked on Home.
 

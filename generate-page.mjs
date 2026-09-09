@@ -147,14 +147,14 @@ const html = `<!DOCTYPE html>
     }
     /* Fixed chrome shares the stage box. No transform on these — Design picker uses rects. */
     html.design-iphone .lh-actions {
-      left: calc(var(--design-left) + (var(--design-width) - min(280px, calc(var(--design-width) - 48px))) / 2) !important;
+      left: calc(var(--design-left) + (var(--design-width) - min(300px, calc(var(--design-width) - 40px))) / 2) !important;
       right: auto !important;
-      width: min(280px, calc(var(--design-width) - 48px)) !important;
+      width: min(300px, calc(var(--design-width) - 40px)) !important;
       max-width: none !important;
       margin: 0 !important;
       transform: none !important;
       bottom: auto !important;
-      top: calc(var(--design-top) + var(--design-height) - var(--news-pullup-peek, 100px) - 62px) !important;
+      top: calc(var(--design-top) + var(--design-height) - 70px) !important;
     }
     html.design-iphone .news-pullup,
     html.design-iphone .vote-sheet,
@@ -1372,11 +1372,12 @@ const html = `<!DOCTYPE html>
     }
     .news-hero-foot .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-hero-foot .news-del[disabled] { opacity: 0.5; cursor: wait; }
-    /* League-home tabs — Linear-style floating pill above the News Feed peek.
-       Home | Teams | Ledger | Data. Four only. Not a fifth tab. */
-    :root { --lh-nav-h: 52px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
+    /* League-home tabs — Linear-style floating pill at the true bottom.
+       Home | Teams | Ledger | Data. Four only. Not a fifth tab. Owns the slot
+       the News Feed peek used to occupy. */
+    :root { --lh-nav-h: 56px; --lh-gold: #e0b44c; --news-pullup-peek: 100px; }
     body.has-lh-bar #app {
-      padding-bottom: calc(var(--news-pullup-peek) + var(--lh-nav-h) + 28px);
+      padding-bottom: calc(var(--lh-nav-h) + 28px + env(safe-area-inset-bottom, 0px));
     }
     body.has-news-pullup-open .lh-actions,
     body.has-news-pullup-closing .lh-actions {
@@ -1385,30 +1386,30 @@ const html = `<!DOCTYPE html>
     .lh-actions {
       position: fixed; z-index: 45;
       left: 50%; transform: translateX(-50%);
-      bottom: calc(var(--news-pullup-peek) + 10px + env(safe-area-inset-bottom, 0px));
-      width: min(280px, calc(100vw - 48px));
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      width: min(300px, calc(100vw - 40px));
       margin: 0; box-sizing: border-box;
-      background: rgba(22, 20, 16, 0.92);
-      border: 1px solid rgba(224, 180, 76, 0.28);
+      background: rgba(16, 14, 12, 0.94);
+      border: 1px solid rgba(224, 180, 76, 0.38);
       border-radius: 999px;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(224, 180, 76, 0.1);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       overflow: visible;
     }
     .lh-action-row {
       display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 2px; align-items: stretch; min-height: var(--lh-nav-h);
-      padding: 4px 6px;
+      padding: 5px 7px;
     }
     button.lh-action {
-      appearance: none; font: inherit; color: rgba(224, 180, 76, 0.55);
+      appearance: none; font: inherit; color: rgba(224, 180, 76, 0.5);
       background: transparent; border: 0; border-radius: 999px;
       padding: 6px 4px 5px; margin: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px;
+      gap: 3px;
       cursor: pointer; touch-action: manipulation; min-width: 0; width: 100%;
-      min-height: 44px;
+      min-height: 46px;
       box-shadow: none;
       position: relative;
     }
@@ -1423,7 +1424,7 @@ const html = `<!DOCTYPE html>
       overflow: visible;
     }
     button.lh-action .lh-ico svg {
-      display: block; width: 18px; height: 18px;
+      display: block; width: 20px; height: 20px;
     }
     button.lh-action .lh-ico.lh-ico-flair {
       padding: 0; border: 0;
@@ -1441,14 +1442,14 @@ const html = `<!DOCTYPE html>
     }
     button.lh-action.on {
       color: var(--lh-gold);
-      background: rgba(224, 180, 76, 0.16);
-      box-shadow: none;
+      background: rgba(224, 180, 76, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(224, 180, 76, 0.22);
     }
     button.lh-action.on .lh-ico { border: 0; color: var(--lh-gold); }
     button.lh-action .lh-lab {
-      font-size: 0.5625rem; font-weight: 650; line-height: 1.15;
+      font-size: 0.625rem; font-weight: 650; line-height: 1.15;
       text-align: center; color: inherit; max-width: 100%;
-      overflow-wrap: anywhere; letter-spacing: -0.01em;
+      overflow-wrap: anywhere; letter-spacing: 0.01em;
     }
     button.lh-action .lh-badge {
       position: absolute; top: 4px; right: 6px;
@@ -1480,6 +1481,37 @@ const html = `<!DOCTYPE html>
     }
     .home-news .news-pullup-card { margin: 0 0 10px; }
     .home-news .news-pullup-card:last-child { margin-bottom: 0; }
+    button.home-news-door {
+      appearance: none; font: inherit; color: var(--text);
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 12px 52px 12px 14px; margin: 0; min-height: 64px;
+      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
+      position: relative;
+    }
+    button.home-news-door:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .home-news-door-kicker {
+      display: block; margin: 0 0 4px;
+      font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--lh-gold, #e0b44c);
+    }
+    .home-news-door-who {
+      display: block; margin: 0 0 3px;
+      font-size: 0.75rem; font-weight: 650; color: var(--muted); line-height: 1.3;
+    }
+    .home-news-door-who .seat-flair { width: 12px; height: 12px; vertical-align: -1px; }
+    .home-news-door-who .crown { width: 12px; height: 12px; vertical-align: -1px; }
+    .home-news-door-line {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-size: 0.875rem; font-weight: 650; line-height: 1.3; color: var(--text);
+    }
+    .home-news-door-count {
+      position: absolute; top: 12px; right: 14px;
+      min-width: 1.4em; text-align: right;
+      font-size: 0.6875rem; font-weight: 750; color: var(--dim);
+      font-variant-numeric: tabular-nums;
+    }
     .home-desk { margin: 0 0 16px; }
     .home-desk-h {
       margin: 0 0 4px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
@@ -3797,7 +3829,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "linearBar20260909025200";
+    const DATA_V = "linearBarNews20260909030000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6274,7 +6306,7 @@ const html = `<!DOCTYPE html>
 
     /**
      * Linear-style floating pill: Home | Teams | Ledger | History.
-     * Sits above the News Feed peek. Home is the digest. Other tabs swap in place.
+     * Owns the bottom slot. Home is the digest. Other tabs swap in place.
      */
     function homeChips() {
       return '<nav class="lh-actions ds-wrap" role="tablist" aria-label="League home tabs">'
@@ -11909,11 +11941,8 @@ const html = `<!DOCTYPE html>
      * set that reads it.
      */
     function renderLeagueHome() {
-      // News Feed peeks at the bottom as a pull-up sheet; the dedicated news screen remains
-      // view=news. Each block is isolated so a throw in Latest trade cannot blank the feed
-      // (and the reverse) — concurrent Design Mode edits previously could take down the whole home.
-      // Pill tabs (Home | Teams | Ledger | History) swap body in place.
-      let hero = "";
+      // Linear pill owns the bottom. News is a Home digest door into view=news.
+      // Each block is isolated so a throw in one tab cannot blank the rest.
       let chips = "";
       let progress = "";
       let tabBody = "";
@@ -11928,36 +11957,9 @@ const html = `<!DOCTYPE html>
       } else if (homeTab === "history") {
         try { tabBody = renderDataSetsPage(); } catch (err) { console.error(err); tabBody = ""; }
       } else {
-        // home (default) — digest
         try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
       }
-      try { hero = dayAlert(); } catch (err) { console.error(err); hero = ""; }
-      // Never paint a home with a missing News Feed shell — dayAlert should always return one,
-      // but a thrown path above used to leave a blank first viewport in Design Mode.
-      if (!hero) {
-        hero = '<aside class="news-pullup" id="newsPullup" aria-label="News Feed"'
-          + ' data-news-pullup="1" aria-expanded="false">'
-          + '<div class="news-pullup-scrim" data-news-pullup-scrim hidden></div>'
-          + '<div class="news-pullup-sheet" data-news-pullup-sheet role="dialog"'
-          + ' aria-modal="false" aria-labelledby="newsPullupTitle">'
-          + '<div class="news-pullup-top" data-news-pullup-top role="button" tabindex="0"'
-          + ' aria-label="News Feed — drag up to open, tap or drag down to minimize when open">'
-          + '<div class="news-pullup-title-row" data-news-pullup-title-row>'
-          + '<div class="day-alert-h" id="newsPullupTitle">News Feed</div>'
-          + '<div class="news-pullup-grab" data-news-pullup-grab aria-hidden="true"><span class="news-pullup-knob"></span></div>'
-          + '</div></div>'
-          + '<div class="news-pullup-peek-block" data-news-pullup-peek-block>'
-          + '<div class="news-pullup-peek" data-news-pullup-peek role="button" tabindex="0"'
-          + ' aria-label="Open the News Feed">'
-          + '<div class="news-pullup-peek-inner">'
-          + '<div class="news-pullup-peek-line">The feed could not be shown. Open for details.</div>'
-          + "</div></div></div>"
-          + '<div class="news-pullup-panel" data-news-pullup-panel hidden>'
-          + '<div class="news-pullup-empty">The feed could not be shown. Open for details.</div>'
-          + "</div></div></aside>";
-      }
-      // Tabs → tab body (or Latest trade) → News Feed pull-up.
-      return chips + (tabBody || progress) + hero;
+      return chips + (tabBody || progress);
     }
 
     function renderNews() {
@@ -18779,6 +18781,41 @@ const html = `<!DOCTYPE html>
         + cosmeticsDetailSheetHtml();
     }
 
+    function homeNewsDoorHtml() {
+      try {
+        const book = news && news.v === 1 ? news : null;
+        const raw = (book && book.items) || [];
+        const items = newsItemsLive();
+        let emptyLine = "";
+        if (!items.length) {
+          emptyLine = !book
+            ? "The feed could not be loaded."
+            : (raw.length ? "No posts in the feed right now." : "Nothing shared yet.");
+        }
+        const peekItem = items[0] || null;
+        const bit = peekItem
+          ? newsHeroLine(peekItem)
+          : { line: emptyLine || "Open the News Feed", who: "" };
+        const line = String((bit && bit.line) || emptyLine || "Open the News Feed");
+        const who = (bit && bit.who) || "";
+        const n = items.length;
+        return '<button type="button" class="home-news-door" data-view="news"'
+          + ' aria-label="News Feed">'
+          + '<span class="home-news-door-kicker">News Feed</span>'
+          + (who ? '<span class="home-news-door-who">' + who + "</span>" : "")
+          + '<span class="home-news-door-line">' + esc(line) + "</span>"
+          + (n ? '<span class="home-news-door-count">' + n + "</span>" : "")
+          + "</button>";
+      } catch (err) {
+        console.error(err);
+        return '<button type="button" class="home-news-door" data-view="news"'
+          + ' aria-label="News Feed">'
+          + '<span class="home-news-door-kicker">News Feed</span>'
+          + '<span class="home-news-door-line">The feed could not be shown. Open for details.</span>'
+          + "</button>";
+      }
+    }
+
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
@@ -18789,7 +18826,8 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
       return your3Html()
         + '<section class="lh-section">' + door + "</section>"
-        + homeDeskHtml();
+        + homeDeskHtml()
+        + '<section class="lh-section">' + homeNewsDoorHtml() + "</section>";
     }
 
 
@@ -22359,8 +22397,8 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("leagueInProgress must not mount the Recent Trade chip; Alerts owns the vote");
   }
   if (!prog.includes("your3Html()") || !prog.includes("lh-calc-door")
-    || !prog.includes("homeDeskHtml()")) {
-    throw new Error("Home digest is Alerts + Cuckle trade calculator + Trade Desk");
+    || !prog.includes("homeDeskHtml()") || !prog.includes("homeNewsDoorHtml()")) {
+    throw new Error("Home digest is Alerts + Cuckle trade calculator + Trade Desk + News door");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -23442,15 +23480,25 @@ if (!newsBody || newsBody.length < 400) throw new Error("renderNewsBody() did no
 // it. Assert the composition, not just the function's existence.
 const homeCompose = inline.slice(inline.indexOf("    function renderLeagueHome() {"));
 const homeReturn = homeCompose.slice(0, homeCompose.indexOf("\n    }"));
-if (!homeReturn.includes("dayAlert()") || !homeReturn.includes("homeChips()")) {
-  throw new Error("renderLeagueHome must still compose dayAlert() + homeChips()");
+if (!homeReturn.includes("homeChips()")
+  || homeReturn.includes("dayAlert()")
+  || homeReturn.includes("newsPullup")
+  || homeReturn.includes("id=\"newsPullup\"")) {
+  throw new Error("renderLeagueHome must compose homeChips() and must not mount the News Feed pull-up");
+}
+if (!inline.includes("function homeNewsDoorHtml(")
+  || !inline.includes('class="home-news-door"')
+  || !inline.includes('data-view="news"')
+  || !html.includes("button.home-news-door")) {
+  throw new Error("Home must keep a News Feed door that opens view=news");
 }
 {
   const lhCss = html.slice(html.indexOf("    .lh-actions {"), html.indexOf("    .lh-section {"));
   if (!lhCss.includes("position: fixed") || !lhCss.includes("var(--lh-gold")
     || !lhCss.includes("border-radius: 999px") || !lhCss.includes("repeat(4, minmax(0, 1fr))")
-    || lhCss.includes("inset 0 -2px 0")) {
-    throw new Error("league home tabs must sit as a 4-up Linear pill above the News Feed");
+    || lhCss.includes("inset 0 -2px 0")
+    || lhCss.includes("var(--news-pullup-peek)")) {
+    throw new Error("league home tabs must sit as a 4-up Linear pill at the bottom");
   }
   if (!inline.includes('aria-label="League home tabs"')) {
     throw new Error("homeChips must expose a League home tabs landmark");
@@ -24120,7 +24168,7 @@ if (!inline.includes('esc("who has their pick(s)")')
   throw new Error("Draft Data team out-mode must use who-has-their-picks copy");
 }
 if (homeReturn.includes("renderNews()") || homeReturn.includes("renderNewsBody()")) {
-  throw new Error("renderLeagueHome must not embed the news list -- the hero opens the news page");
+  throw new Error("renderLeagueHome must not embed the news list -- the News door opens the news page");
 }
 if (!inline.includes("function renderNewsPage()") || !inline.includes('view === "news"')) {
   throw new Error("the full News and Alerts page (view=news) must ship");
@@ -24438,7 +24486,7 @@ if (inline.includes('sessionStorage.removeItem("cuckle.design.league_home")')) {
   throw new Error("boot must not clear cuckle.design.league_home — sticky flag keeps Design Mode home alive");
 }
 if (!inline.includes("The feed could not be shown. Open for details.")) {
-  throw new Error("renderLeagueHome must keep a News Feed fallback shell when dayAlert throws");
+  throw new Error("homeNewsDoorHtml must keep a News Feed fallback when the live book throws");
 }
 if (!inline.includes("newsPullupCleanup") || !inline.includes("clearNewsPullup")) {
   throw new Error("news pull-up must track and clear gesture listeners across remounts");

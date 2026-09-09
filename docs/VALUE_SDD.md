@@ -300,8 +300,11 @@ w_dd   = 0.20   // DynastyDealer base_value
 **HAVE.** `?view=calc` prices a hypothetical 2-side swap on the **today / `even` book**
 (flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via `applyVa` on the
 hypothetical bags. Card footers stay the raw today blend (listed pieces). The compare bar
-and Favors use the flipped receive bags with VA included, so a stud-for-quantity package
-bumps the side that receives the star. Recorded tape rows prefer the pipeline’s stored
+and Favors use `calcReceiveTotals` (flipped receive bags + VA), so a stud-for-quantity
+package bumps the side that receives the star. Even-up chips re-run that helper after
+adding a candidate. Trade Desk even talks use the same totals so a Home card cannot
+flip Favors when it opens the calculator. Fill / Move 2-for-1 talks still score
+closeness on raw send piles. Recorded tape rows prefer the pipeline’s stored
 `today` / `sent_today` when both are present (`sideOf`); `applyVa` stays in the browser for
 calc clones. The catalog is `data/ui/calculator.json` from `build-calculator.mjs`: rostered
 players and still-held picks only, each with `roster_ord` in Sleeper team-page order

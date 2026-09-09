@@ -3891,7 +3891,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "calcVaReceive20260909143700";
+    const DATA_V = "valueRefineFeed20260909153000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -17974,14 +17974,14 @@ const html = `<!DOCTYPE html>
       const profB = homeDeskProfile(bagB);
       let best = null;
       const consider = function (legsA, legsB, kind) {
-        const va = legsA.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
-        const vb = legsB.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
-        const gap = Math.abs(va - vb);
-        const mx = Math.max(va, vb);
-        const mn = Math.min(va, vb);
+        const sendA = legsA.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
+        const sendB = legsB.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
+        const mn = Math.min(sendA, sendB);
         if (mn < 1800) return;
-        const rel = mx ? gap / mx : 1;
-        if (rel > 0.16 && gap > 700) return;
+        const rec = calcReceiveTotals(legsA, legsB);
+        const rawGap = Math.abs(sendA - sendB);
+        const rawMx = Math.max(sendA, sendB);
+        const rawRel = rawMx ? rawGap / rawMx : 1;
         if (kind === "1for1" && homeDeskPickKey(legsA[0]) === homeDeskPickKey(legsB[0])) return;
         const depthA = homeDeskDepthStud(legsB, legsA, profB, profA);
         const depthB = homeDeskDepthStud(legsA, legsB, profA, profB);
@@ -17996,6 +17996,15 @@ const html = `<!DOCTYPE html>
           }
         }
         if (depthPos) fillPos = depthPos;
+        const why = depthPos ? "depth-stud" : (complement ? "complement" : "even");
+        const job = homeDeskJob({
+          legsA: legsA, legsB: legsB, kind: kind, why: why, pos: fillPos || depthPos || ""
+        }, profA, profB);
+        if (want && job !== want) return;
+        const evenish = job === "even" || kind === "1for1";
+        const gap = evenish ? rec.gap : rawGap;
+        const rel = evenish ? rec.rel : rawRel;
+        if (rel > 0.16 && gap > 700) return;
         let score = gap;
         if (kind === "2for1" && !depthPos) score += 50;
         const playerN = legsA.concat(legsB).filter(function (x) {
@@ -18008,11 +18017,6 @@ const html = `<!DOCTYPE html>
         const book = homeDeskBookNote(legsA.concat(legsB));
         if (book) score -= 30;
         const key = (calcValueNum(legsA[0]) >= calcValueNum(legsB[0])) ? legsA[0] : legsB[0];
-        const why = depthPos ? "depth-stud" : (complement ? "complement" : "even");
-        const job = homeDeskJob({
-          legsA: legsA, legsB: legsB, kind: kind, why: why, pos: fillPos || depthPos || "", rel: rel
-        }, profA, profB);
-        if (want && job !== want) return;
         const themId = dataDashBagOwnerId(bagB);
         const theirDir = themId ? seatDirOf(themId) : null;
         let jobPos = fillPos || depthPos || "";
@@ -18321,7 +18325,11 @@ const html = `<!DOCTYPE html>
     }
 
     function calcRawSum(legs) {
-      return (legs || []).reduce((s, l) => s + (Number(l.value) || 0), 0);
+      return (legs || []).reduce((s, l) => {
+        if (!l || l.value == null) return s;
+        const n = Number(l.value);
+        return s + (Number.isFinite(n) ? n : 0);
+      }, 0);
     }
 
     function calcSideBag(legs, otherLegs) {
@@ -18330,8 +18338,24 @@ const html = `<!DOCTYPE html>
       return applyVa({
         legs: mine,
         sent: theirs,
-        incomplete: mine.some((l) => l.value == null) || theirs.some((l) => l.value == null),
+        incomplete: mine.some((l) => l.value == null || !Number.isFinite(Number(l.value)))
+          || theirs.some((l) => l.value == null || !Number.isFinite(Number(l.value))),
       });
+    }
+
+    /** Same receive framing as the compare bar: A receives B, B receives A, VA included. */
+    function calcReceiveTotals(sendA, sendB) {
+      const a = calcSideBag(sendB, sendA);
+      const b = calcSideBag(sendA, sendB);
+      const receiveA = a && a.today != null ? a.today : 0;
+      const receiveB = b && b.today != null ? b.today : 0;
+      const mx = Math.max(Math.abs(receiveA), Math.abs(receiveB));
+      return {
+        receiveA: receiveA,
+        receiveB: receiveB,
+        gap: Math.abs(receiveA - receiveB),
+        rel: mx ? Math.abs(receiveA - receiveB) / mx : 1,
+      };
     }
 
     function calcSeatName(uid, fallback) {
@@ -18395,8 +18419,15 @@ const html = `<!DOCTYPE html>
       if (need == null || need <= 0) return "";
       const hits = calcEvenPool(uid)
         .slice()
-        .sort((x, y) => Math.abs(x.value - need) - Math.abs(y.value - need) || y.value - x.value)
-        .slice(0, 6);
+        .map((a) => {
+          const nextA = shortSide === "a" ? calcLegsA.concat([calcLegFromAsset(a)]) : calcLegsA;
+          const nextB = shortSide === "b" ? calcLegsB.concat([calcLegFromAsset(a)]) : calcLegsB;
+          const rec = calcReceiveTotals(nextA, nextB);
+          return { a: a, gap: rec.gap };
+        })
+        .sort((x, y) => x.gap - y.gap || y.a.value - x.a.value)
+        .slice(0, 6)
+        .map((row) => row.a);
       if (!hits.length) return "";
       return '<div class="calc-even">'
         + '<div class="calc-even-h">Closest to even</div>'
@@ -18413,13 +18444,12 @@ const html = `<!DOCTYPE html>
     function calcCompareHtml() {
       // Cards stay raw send piles. Compare bags flip framing: legs = what that side receives
       // (the other pile), so applyVa puts the stud-for-quantity bump on the receiver of the star.
-      const a = calcSideBag(calcLegsB, calcLegsA);
-      const b = calcSideBag(calcLegsA, calcLegsB);
+      const rec = calcReceiveTotals(calcLegsA, calcLegsB);
       const pricedA = (calcLegsA || []).some((l) => l.value != null);
       const pricedB = (calcLegsB || []).some((l) => l.value != null);
       // Positive = A comes out ahead (receives more on our book, VA included).
-      const receiveA = a.today || 0;
-      const receiveB = b.today || 0;
+      const receiveA = rec.receiveA;
+      const receiveB = rec.receiveB;
       const d = (pricedA && pricedB) ? displayDelta(receiveA, receiveB) : null;
       if (d == null || !calcLegsA.length || !calcLegsB.length) {
         return '<div class="calc-compare"><p class="caption" style="margin:0">Add priced assets on both sides.</p></div>';
@@ -25009,8 +25039,8 @@ if (inline.includes("Team 1 gets") || inline.includes("Team 2 gets")
   || !fnSrc("calcCompareHtml").includes("would receive")
   || !fnSrc("calcCompareHtml").includes("can send")
   || !fnSrc("calcCompareHtml").includes("displayDelta(receiveA, receiveB)")
-  || !fnSrc("calcCompareHtml").includes("calcSideBag(calcLegsB, calcLegsA)")
-  || !fnSrc("calcCompareHtml").includes("a.today")
+  || !fnSrc("calcCompareHtml").includes("calcReceiveTotals(calcLegsA, calcLegsB)")
+  || !fnSrc("calcCompareHtml").includes("rec.receiveA")
   || !fnSrc("calcCompareHtml").includes("receiveA")
   || !fnSrc("calcCompareHtml").includes("receives<b>")
   || fnSrc("calcCompareHtml").includes("sends<b>")
@@ -25083,7 +25113,12 @@ if (!inline.includes("function calcArmQuiet(") || !inline.includes("calcIsQuiet(
   }
 }
 if (!inline.includes("function calcSideBag(legs, otherLegs)")
-  || !inline.includes("sent: theirs")) {
+  || !inline.includes("sent: theirs")
+  || !inline.includes("function calcReceiveTotals(sendA, sendB)")
+  || !fnSrc("calcReceiveTotals").includes("calcSideBag(sendB, sendA)")
+  || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB)")
+  || !fnSrc("calcEvenHtml").includes("calcReceiveTotals(nextA, nextB)")
+  || !fs.existsSync(path.join(ROOT, "check-value-feed.mjs"))) {
   throw new Error("calc must applyVa as a 2-team bag (other side is sent)");
 }
 if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-info="1"')
@@ -25293,4 +25328,13 @@ function lhCssHas(needle) {
 }
 
 fs.writeFileSync(`${ROOT}index.html`, html);
+{
+  const feed = spawnSync(process.execPath, [path.join(ROOT, "check-value-feed.mjs")], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  if (feed.status !== 0) {
+    throw new Error("check-value-feed failed:\n" + (feed.stdout || "") + (feed.stderr || ""));
+  }
+}
 console.log(JSON.stringify({ page: `${ROOT}index.html` }, null, 2));

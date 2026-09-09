@@ -371,8 +371,8 @@ And, as a standing script over all ten seats after any change to the book:
 - Stored Value Adjustment matches a fresh `value-adjust.mjs` recompute (0 on N-way, 0 on
   incomplete); stored today values match a fresh `price-today.mjs` recompute.
 - Zero-sum on the 288 complete two-team trades **and** on the 2 N-way trades.
-- The inline `applyVa` **read out of `index.html`** agrees with `value-adjust.mjs` on all 3,528
-  sides, to 0.
+- The inline `applyVa` **read out of `index.html`** agrees with `value-adjust.mjs` on every
+  shipped side, to 0. `check-value-feed.mjs` is that check; generate runs it after writing the page.
 - No NaN, no Infinity in any shipped UI JSON.
 
 Do not add a check that forces a year window onto the today clock, and do not weaken a check into

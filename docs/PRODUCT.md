@@ -156,10 +156,10 @@ Standing checks after any change to the book, over all ten seats:
 2. Stored Value Adjustment matches a fresh `value-adjust.mjs` recompute; stored today values match
    a fresh `price-today.mjs` recompute.
 3. Zero-sum on the 288 complete two-team trades **and** on the 2 N-way trades.
-4. The generator's inline `applyVa` agrees numerically with `value-adjust.mjs` on every side —
-   read it out of `index.html`, not out of `generate-page.mjs`, or a template literal that swallows
-   a regex backslash will pass a check it should fail.
-5. No NaN, no Infinity, and the self-checks in `apply-value-adjust.mjs` pass.
+4. The generator's inline `applyVa` agrees numerically with `value-adjust.mjs` on every shipped side —
+   read it out of `index.html` via `check-value-feed.mjs`, not out of `generate-page.mjs`.
+5. Trade Desk even talks and calc Favors share `calcReceiveTotals` (receive bags + VA).
+6. No NaN, no Infinity, and the self-checks in `apply-value-adjust.mjs` pass.
 
 ---
 

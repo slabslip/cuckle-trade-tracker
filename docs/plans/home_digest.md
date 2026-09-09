@@ -29,7 +29,8 @@ plans stay as history; do not paste them here.
   Ledger involving you; an uncast vote on the deal on this page. Do not fill with the
   calculator or a news teaser.
 - Calculator is `?view=calc`, not a tab. 2-team, rostered players + still-held picks, today /
-  `even` (flatten + KTC + FantasyCalc + DynastyDealer) + `applyVa`. Votes never enter the number.
+  `even` (flatten + KTC + FantasyCalc + DynastyDealer) + `calcReceiveTotals` / `applyVa`.
+  Trade Desk even talks use the same receive+VA totals. Votes never enter the number.
 - League leftover (percent of league capital) and a vote-nudge (opens the existing vote
   sheet; opinion only) ship on the calculator after a priced 2-team deal.
 - Barracks `?view=cosmetics`: 29 shared titles/emblems, unlock from history, equip 1 + 1.

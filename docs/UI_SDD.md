@@ -234,7 +234,8 @@ no choice yet. Roster meta and selected player rows may chip buy / fair / sell f
 `pe.json`. Pick rows show a collapsed became / still-a-pick line and a **tape** toggle
 for hop values. Price book is today
 / `even` (0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20 DynastyDealer, renormalized)
-plus Value Adjustment via the existing `applyVa` on the hypothetical. Team home has a
+plus Value Adjustment via `calcReceiveTotals` / `applyVa` on the hypothetical receive
+bags. Trade Desk even talks reuse that helper. Team home has a
 **Price a deal** door (wipe first; if you are not that seat, A = you and B = them).
 Votes do
 not appear on a hypothetical and do not change the number. How-it-works copy does not

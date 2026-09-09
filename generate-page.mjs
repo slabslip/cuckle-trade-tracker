@@ -1748,6 +1748,18 @@ const html = `<!DOCTYPE html>
     }
     .calc-pieces { font-size: 0.75rem; color: var(--muted); }
     .calc-tot { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 1.25rem; color: var(--text); }
+    .calc-va {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin: 0 12px; padding: 8px 0 2px;
+      border-top: 1px solid var(--line);
+      font-size: 0.8125rem; font-weight: 650; color: #d4c07a;
+    }
+    .calc-va b { font-variant-numeric: tabular-nums; color: #d4c07a; }
+    .calc-va-break {
+      display: flex; justify-content: space-between; gap: 10px; margin: 0 0 8px;
+    }
+    .calc-va-break > :last-child { text-align: right; }
+    .calc-va-break .calc-va { margin: 0; padding: 4px 0 0; border-top: 0; }
     .calc-compare { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
     .calc-compare-labs {
       display: flex; justify-content: space-between; gap: 10px; margin: 0 0 8px;
@@ -3891,7 +3903,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "valueRefineFeed20260909153000";
+    const DATA_V = "calcVaLine20260909154000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18353,9 +18365,18 @@ const html = `<!DOCTYPE html>
       return {
         receiveA: receiveA,
         receiveB: receiveB,
+        vaA: (a && a.value_adjust) || 0,
+        vaB: (b && b.value_adjust) || 0,
+        rawA: calcRawSum(sendB),
+        rawB: calcRawSum(sendA),
         gap: Math.abs(receiveA - receiveB),
         rel: mx ? Math.abs(receiveA - receiveB) / mx : 1,
       };
+    }
+
+    function calcVaHtml(va) {
+      if (!va || !Math.round(va)) return "";
+      return '<div class="calc-va"><span>Value Adjustment</span><b>' + signedNum(va) + "</b></div>";
     }
 
     function calcSeatName(uid, fallback) {
@@ -18466,9 +18487,13 @@ const html = `<!DOCTYPE html>
       const short = d > 0 ? "a" : "b";
       const shortName = short === "b" ? nameB : nameA;
       const need = Math.abs(d);
+      const vaBreak = (Math.round(rec.vaA) || Math.round(rec.vaB))
+        ? '<div class="calc-va-break"><div>' + calcVaHtml(rec.vaA) + "</div><div>" + calcVaHtml(rec.vaB) + "</div></div>"
+        : "";
       return '<div class="calc-compare">'
         + '<div class="calc-compare-labs"><div>' + esc(nameA) + " receives<b>" + calcFmt(receiveA) + "</b></div>"
         + "<div>" + esc(nameB) + " receives<b>" + calcFmt(receiveB) + "</b></div></div>"
+        + vaBreak
         + '<div class="calc-bar" role="img" aria-label="' + esc(nameA) + " receives " + calcFmt(receiveA) + ", " + esc(nameB) + " receives " + calcFmt(receiveB) + '">'
         + '<div class="calc-bar-a' + (fillRight ? " is-end" : "") + '" style="width:' + pct + '%"></div><div class="calc-bar-mid"></div></div>'
         + '<div class="calc-favor' + (even ? "" : " is-ahead") + '">' + (even ? "Even on our book" : ("Favors " + esc(favors))) + "</div>"
@@ -18719,6 +18744,8 @@ const html = `<!DOCTYPE html>
             : "")
           + (hopOn ? hopHtml(hopKey) : "");
       }).join("");
+      const rec = (calcLegsA.length && calcLegsB.length) ? calcReceiveTotals(calcLegsA, calcLegsB) : null;
+      const va = rec ? (side === "a" ? rec.vaA : rec.vaB) : 0;
       return '<section class="calc-block" aria-label="' + (side === "a" ? "Team 1" : "Team 2") + '">'
         + calcSeatSelect(side)
         + (uid
@@ -18729,6 +18756,7 @@ const html = `<!DOCTYPE html>
             + '<span class="calc-search-ico" aria-hidden="true">⌕</span></div>')
         + calcHitsHtml(uid, q, open, side)
         + assets
+        + calcVaHtml(va)
         + '<div class="calc-foot"><div class="calc-pieces">' + esc(calcPieces(legs)) + "</div>"
         + '<div class="calc-tot">' + (legs.length ? calcFmt(calcRawSum(legs)) : "0") + "</div></div>"
         + "</section>";
@@ -18765,9 +18793,9 @@ const html = `<!DOCTYPE html>
         + "Production / P/E never changes this number. We round the blend to a whole number.</p>"
         + "<h3>2. Add the piles</h3>"
         + "<p>Each card is what that team <b>sends</b> &mdash; card footers stay the raw "
-        + "today blend so they match the listed pieces. The compare bar flips those piles "
-        + "and folds in Value Adjustment: you receive what the other team sends, plus any "
-        + "stud-for-quantity bump on that bag.</p>"
+        + "today blend so they match the listed pieces. When a deal earns a stud-for-quantity "
+        + "bump, <b>Value Adjustment</b> is its own gold line on the card that receives the "
+        + "star and under the compare totals. The bar uses pile + that line.</p>"
         + '<p class="calc-info-eq">Team 1 receives = Team 2 send pile + VA on that bag<br>'
         + "Team 2 receives = Team 1 send pile + VA on that bag<br>"
         + "gap = larger receive total &minus; smaller receive total</p>"
@@ -25115,7 +25143,13 @@ if (!inline.includes("function calcArmQuiet(") || !inline.includes("calcIsQuiet(
 if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !inline.includes("sent: theirs")
   || !inline.includes("function calcReceiveTotals(sendA, sendB)")
+  || !inline.includes("function calcVaHtml(va)")
   || !fnSrc("calcReceiveTotals").includes("calcSideBag(sendB, sendA)")
+  || !fnSrc("calcVaHtml").includes("Value Adjustment")
+  || !fnSrc("calcVaHtml").includes("signedNum(va)")
+  || !fnSrc("calcSideHtml").includes("calcVaHtml(va)")
+  || !fnSrc("calcCompareHtml").includes("calcVaHtml(rec.vaA)")
+  || !html.includes(".calc-va {")
   || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB)")
   || !fnSrc("calcEvenHtml").includes("calcReceiveTotals(nextA, nextB)")
   || !fs.existsSync(path.join(ROOT, "check-value-feed.mjs"))) {

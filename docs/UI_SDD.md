@@ -252,7 +252,7 @@ or download `cuckle-trade.png`.
 
 ### 3c. Titles and Emblems
 
-Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 96 (48 matched title↔emblem pairs).
+Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 124 (62 matched title↔emblem pairs).
 Equip one title and one emblem. The title **list** is a 3-column grid of the same
 1024×180 crop scaled down (about 15 rows for the current book; extra titles wrap to
 more rows). The equipped calling card and the detail sheet stay full-bleed.

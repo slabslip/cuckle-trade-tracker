@@ -14,7 +14,7 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 ## 1. Matched catalog
 
-Everyone chases the same **96 ids** (**48 pairs**). Each award unlocks **both** a wearable
+Everyone chases the same **124 ids** (**62 pairs**). Each award unlocks **both** a wearable
 title and a matching emblem (shared `pair` key, same gate). Equip remains **one title** and
 **one emblem** at a time — you can mix pairs (Three-Peat title + Blowout emblem).
 
@@ -75,15 +75,30 @@ Trader, Quiet Year, Manners, Draft Hit, Waiver Touch, Founding Draft — each pa
 | Inaugural Champion | Win 2019 | locked to history |
 | Perfect Chip | 1st in points + margin ≥ 25 | hard |
 
-**Week score bands (first four locked)** — one week, team points. Comic plate matches
-Sacko / Champion. Remaining bands stay in design until approved.
+**Week score bands** — one completed team-week on the written Sleeper tape
+(`weekly-scores.mjs` → `weekly_scores.json`). Comic plate matches Sacko / Champion.
+A seat unlocks a band when they have actually scored in that range.
 
-| Pair | Gate | Note |
-| --- | --- | --- |
-| League Average (`week_100`) | Score 100–109 | Vanilla. Unlocked for every seat. |
-| Slightly Above (`week_110`) | Score 110–119 | Locked until weekly tape. |
-| Competent (`week_120`) | Score 120–129 | Locked until weekly tape. |
-| Getting Warm (`week_130`) | Score 130–139 | Locked until weekly tape. |
+| Pair | Gate |
+| --- | --- |
+| Planetary Disgrace (`week_under40`) | Under 40 |
+| Biohazard (`week_40`) | 40–49 |
+| Dumpster Fire (`week_50`) | 50–59 |
+| Wet Cardboard (`week_60`) | 60–69 |
+| Pine Time (`week_70`) | 70–79 |
+| Replacement Level (`week_80`) | 80–89 |
+| Almost Average (`week_90`) | 90–99 |
+| League Average (`week_100`) | 100–109 |
+| Slightly Above (`week_110`) | 110–119 |
+| Competent (`week_120`) | 120–129 |
+| Getting Warm (`week_130`) | 130–139 |
+| Heater (`week_140`) | 140–149 |
+| Problem (`week_150`) | 150–159 |
+| Inferno (`week_160`) | 160–169 |
+| Unfair (`week_170`) | 170–179 |
+| Demigod (`week_180`) | 180–189 |
+| Near Myth (`week_190`) | 190–199 |
+| World Breaker (`week_200`) | 200+ |
 
 Higher career-count crown titles **replace** lower ones (`two_time` does not also unlock
 `champion`). Repeat / Three-Peat can sit beside the career-count title. Finalist rungs **stack**.
@@ -93,8 +108,9 @@ Three-Peat → Three-Time → Repeat → Two-Time → Champion (title and mark t
 finalists, then the rest by rarity. `four_time` / `five_time` stay locked catalog rows until earned.
 
 Weekly/waiver/lineup grind still parked in
-[`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md) — do not invent unlocks
-from missing weekly snapshots.
+[`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md) — week-score bands
+unlock from the written Sleeper tape only. Do not invent other weekly grind from
+missing waiver / lineup snapshots.
 
 ---
 
@@ -102,7 +118,7 @@ from missing weekly snapshots.
 
 `?view=cosmetics` from **Settings → Profile** and Account → **Titles and Emblems**.
 Two grids: titles are a **3-column** picker of scaled-down full 1024×180 crops (15 rows
-for the current 48-title book; more titles keep wrapping). Tap opens the full card.
+for the current 62-title book; more titles keep wrapping). Tap opens the full card.
 Emblems stay a 4–5 column mark grid. Equipped plate and detail sheet keep the large crop.
 Detail sheet names the matching mate. Equip one title + one emblem.
 Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seatId>`

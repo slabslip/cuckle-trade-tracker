@@ -72,10 +72,24 @@ CUSTOM_TITLE_MASTERS = {
     "whale_title": DESIGN / "ff-title-whale_title-comic-v1.png",
     "win_now": DESIGN / "ff-title-win_now-comic-v1.png",
     "wire_throne": DESIGN / "ff-title-wire_throne-comic-v1.png",
+    "week_under40": DESIGN / "ff-title-week_under40-comic-v1.png",
+    "week_40": DESIGN / "ff-title-week_40-comic-v1.png",
+    "week_50": DESIGN / "ff-title-week_50-comic-v1.png",
+    "week_60": DESIGN / "ff-title-week_60-comic-v1.png",
+    "week_70": DESIGN / "ff-title-week_70-comic-v1.png",
+    "week_80": DESIGN / "ff-title-week_80-comic-v1.png",
+    "week_90": DESIGN / "ff-title-week_90-comic-v1.png",
     "week_100": DESIGN / "ff-title-week_100-comic-v1.png",
     "week_110": DESIGN / "ff-title-week_110-comic-v1.png",
     "week_120": DESIGN / "ff-title-week_120-comic-v1.png",
     "week_130": DESIGN / "ff-title-week_130-comic-v1.png",
+    "week_140": DESIGN / "ff-title-week_140-comic-v1.png",
+    "week_150": DESIGN / "ff-title-week_150-comic-v1.png",
+    "week_160": DESIGN / "ff-title-week_160-comic-v1.png",
+    "week_170": DESIGN / "ff-title-week_170-comic-v1.png",
+    "week_180": DESIGN / "ff-title-week_180-comic-v1.png",
+    "week_190": DESIGN / "ff-title-week_190-comic-v1.png",
+    "week_200": DESIGN / "ff-title-week_200-comic-v1.png",
 }
 
 # Already-lettered 1024×180 plates — cover-fit only, do not stamp a second title.
@@ -83,17 +97,45 @@ CUSTOM_TITLE_MASTERS = {
 # export_custom_title so the live strip matches SACKO / CHAMPION.
 LETTERED_TITLE_MASTERS = set()
 WEEK_TITLE_BIAS = {
+    "week_under40": -30,
+    "week_40": -10,
+    "week_50": -20,
+    "week_60": 0,
+    "week_70": 10,
+    "week_80": -50,
+    "week_90": -40,
     "week_100": -70,
     "week_110": -90,
     "week_120": -80,
     "week_130": -35,
+    "week_140": 0,
+    "week_150": -40,
+    "week_160": -10,
+    "week_170": -40,
+    "week_180": -40,
+    "week_190": -20,
+    "week_200": -30,
 }
 # Fraction of the 16:9 lookbook to drop from the left so baked type is gone.
 WEEK_SCENE_CUT = {
+    "week_under40": 0.40,
+    "week_40": 0.42,
+    "week_50": 0.40,
+    "week_60": 0.36,
+    "week_70": 0.30,
+    "week_80": 0.46,
+    "week_90": 0.38,
     "week_100": 0.34,
     "week_110": 0.46,
     "week_120": 0.42,
     "week_130": 0.40,
+    "week_140": 0.38,
+    "week_150": 0.34,
+    "week_160": 0.40,
+    "week_170": 0.38,
+    "week_180": 0.30,
+    "week_190": 0.34,
+    "week_200": 0.36,
 }
 
 CROWN_ORDER = [

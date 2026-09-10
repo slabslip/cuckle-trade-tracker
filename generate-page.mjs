@@ -3917,7 +3917,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "scoreBands20260910020000";
+    const DATA_V = "scoreBands20260910023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -19530,7 +19530,9 @@ const html = `<!DOCTYPE html>
       "blowout", "nailbiter", "climber", "loyalty", "scorched", "pick_hoard", "rookie_king",
       "cartel", "wire_throne", "pick_path", "player_path", "aging", "farm_sold",
       "inaugural", "perfect_chip",
+      "week_under40", "week_40", "week_50", "week_60", "week_70", "week_80", "week_90",
       "week_100", "week_110", "week_120", "week_130",
+      "week_140", "week_150", "week_160", "week_170", "week_180", "week_190", "week_200",
     ]);
     const COS_EMBLEM_ART = new Set([
       "five_time_mark", "four_time_mark", "three_peat_mark", "three_time_mark", "repeat_mark",
@@ -19542,7 +19544,11 @@ const html = `<!DOCTYPE html>
       "nailbiter_mark", "climber_mark", "loyalty_mark", "scorched_mark", "pick_hoard_mark",
       "rookie_king_mark", "cartel_mark", "wire_throne_mark", "pick_path_mark", "player_path_mark",
       "aging_mark", "farm_sold_mark", "inaugural_mark", "perfect_chip_mark",
+      "week_under40_mark", "week_40_mark", "week_50_mark", "week_60_mark",
+      "week_70_mark", "week_80_mark", "week_90_mark",
       "week_100_mark", "week_110_mark", "week_120_mark", "week_130_mark",
+      "week_140_mark", "week_150_mark", "week_160_mark", "week_170_mark",
+      "week_180_mark", "week_190_mark", "week_200_mark",
     ]);
     function cosmeticsPairMate(c) {
       if (!c || !c.pair) return null;
@@ -23230,7 +23236,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v214-score-bands";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v215-week-bands";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23311,13 +23317,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v214-score-bands")) {
+  || !html.includes("chuckle-shell-v215-week-bands")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v214-score-bands")
+  || !swSrc.includes("chuckle-shell-v215-week-bands")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");

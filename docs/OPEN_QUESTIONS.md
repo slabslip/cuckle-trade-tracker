@@ -174,9 +174,9 @@ what is actually for sale. Only the owner writes their row. That is a listing, n
 
 ## 16. Do we mint the expanded award list now?
 
-**Assumed:** 96-id catalog (48 matched pairs, including locked `four_time` / `five_time`, two- and
-three-time finalist emblems, and the first four week-score bands). Championship rungs stay the highest prestige. Tier 1–4 grind
-and the remaining week bands wait on weekly / waiver / lineup tape. See
+**Assumed:** 124-id catalog (62 matched pairs, including locked `four_time` / `five_time`, two- and
+three-time finalist emblems, and the week-score ladder). Championship rungs stay the highest prestige. Tier 1–4 grind
+still waits on weekly / waiver / lineup tape beyond scored team-weeks. See
 [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
 
 **Why it matters:** Unlocking “set lineup 4 straight weeks” or “reject 10 trades” from

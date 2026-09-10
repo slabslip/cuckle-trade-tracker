@@ -5,7 +5,7 @@
  * Equip remains one title + one emblem at a time.
  */
 import { readFileSync, existsSync } from "node:fs";
-import { leagueUiDir, setLeagueId, writeUi } from "./lib.mjs";
+import { leagueRawDir, leagueUiDir, setLeagueId, writeUi } from "./lib.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -20,6 +20,12 @@ const league = loadUi("league.json", { traders: [] });
 const marks = loadUi("marks.json", { seats: {} });
 const members = loadUi("members.json", []);
 const picksBook = loadUi("picks.json", {});
+function loadRaw(name, fallback) {
+  const p = `${leagueRawDir()}/${name}`;
+  if (!existsSync(p)) return fallback;
+  return JSON.parse(readFileSync(p, "utf8"));
+}
+const weekTape = loadRaw("weekly_scores.json", { scores: [] });
 
 const titles = titlesBook.titles || [];
 const traders = league.traders || [];
@@ -263,11 +269,46 @@ const PAIRS = [
     emblem: { id: "perfect_chip_mark", name: "Clean Sweep", how: "Win the title 1st in points and by 25+ in the final." },
   },
 
-  // —— Week score bands (locked 100–139; other bands still in design) ——
+  // —— Week score bands (one scored team-week on the written tape) ——
+  {
+    pair: "week_under40", rarity: "iron",
+    title: { id: "week_under40", name: "Planetary Disgrace", how: "Score under 40 in a single week." },
+    emblem: { id: "week_under40_mark", name: "Dead Earth", how: "Score under 40 in a single week." },
+  },
+  {
+    pair: "week_40", rarity: "iron",
+    title: { id: "week_40", name: "Biohazard", how: "Score 40–49 in a single week." },
+    emblem: { id: "week_40_mark", name: "Quarantine", how: "Score 40–49 in a single week." },
+  },
+  {
+    pair: "week_50", rarity: "iron",
+    title: { id: "week_50", name: "Dumpster Fire", how: "Score 50–59 in a single week." },
+    emblem: { id: "week_50_mark", name: "Bin Lid", how: "Score 50–59 in a single week." },
+  },
+  {
+    pair: "week_60", rarity: "iron",
+    title: { id: "week_60", name: "Wet Cardboard", how: "Score 60–69 in a single week." },
+    emblem: { id: "week_60_mark", name: "Soggy", how: "Score 60–69 in a single week." },
+  },
+  {
+    pair: "week_70", rarity: "bronze",
+    title: { id: "week_70", name: "Pine Time", how: "Score 70–79 in a single week." },
+    emblem: { id: "week_70_mark", name: "The Bench", how: "Score 70–79 in a single week." },
+  },
+  {
+    pair: "week_80", rarity: "bronze",
+    title: { id: "week_80", name: "Replacement Level", how: "Score 80–89 in a single week." },
+    emblem: { id: "week_80_mark", name: "Waiver Chip", how: "Score 80–89 in a single week." },
+  },
+  {
+    pair: "week_90", rarity: "bronze",
+    title: { id: "week_90", name: "Almost Average", how: "Score 90–99 in a single week." },
+    emblem: { id: "week_90_mark", name: "Dash", how: "Score 90–99 in a single week." },
+  },
   {
     pair: "week_100", rarity: "bronze",
-    title: { id: "week_100", name: "League Average", how: "Score 100–109 in a single week. Everyone has." },
-    emblem: { id: "week_100_mark", name: "Beige", how: "Score 100–109 in a single week. Everyone has." },
+    title: { id: "week_100", name: "League Average", how: "Score 100–109 in a single week." },
+    emblem: { id: "week_100_mark", name: "Beige", how: "Score 100–109 in a single week." },
   },
   {
     pair: "week_110", rarity: "bronze",
@@ -284,7 +325,73 @@ const PAIRS = [
     title: { id: "week_130", name: "Getting Warm", how: "Score 130–139 in a single week." },
     emblem: { id: "week_130_mark", name: "Ember", how: "Score 130–139 in a single week." },
   },
+  {
+    pair: "week_140", rarity: "silver",
+    title: { id: "week_140", name: "Heater", how: "Score 140–149 in a single week." },
+    emblem: { id: "week_140_mark", name: "Coil", how: "Score 140–149 in a single week." },
+  },
+  {
+    pair: "week_150", rarity: "silver",
+    title: { id: "week_150", name: "Problem", how: "Score 150–159 in a single week." },
+    emblem: { id: "week_150_mark", name: "Siren", how: "Score 150–159 in a single week." },
+  },
+  {
+    pair: "week_160", rarity: "gold",
+    title: { id: "week_160", name: "Inferno", how: "Score 160–169 in a single week." },
+    emblem: { id: "week_160_mark", name: "Blaze", how: "Score 160–169 in a single week." },
+  },
+  {
+    pair: "week_170", rarity: "gold",
+    title: { id: "week_170", name: "Unfair", how: "Score 170–179 in a single week." },
+    emblem: { id: "week_170_mark", name: "Tilt", how: "Score 170–179 in a single week." },
+  },
+  {
+    pair: "week_180", rarity: "gold",
+    title: { id: "week_180", name: "Demigod", how: "Score 180–189 in a single week." },
+    emblem: { id: "week_180_mark", name: "Bolt", how: "Score 180–189 in a single week." },
+  },
+  {
+    pair: "week_190", rarity: "gold",
+    title: { id: "week_190", name: "Near Myth", how: "Score 190–199 in a single week." },
+    emblem: { id: "week_190_mark", name: "Horizon", how: "Score 190–199 in a single week." },
+  },
+  {
+    pair: "week_200", rarity: "gold",
+    title: { id: "week_200", name: "World Breaker", how: "Score 200 or more in a single week." },
+    emblem: { id: "week_200_mark", name: "Gamma", how: "Score 200 or more in a single week." },
+  },
 ];
+
+/** Inclusive lo, exclusive hi. Last band is 200+. */
+export const WEEK_SCORE_BANDS = [
+  { pair: "week_under40", lo: 0, hi: 40 },
+  { pair: "week_40", lo: 40, hi: 50 },
+  { pair: "week_50", lo: 50, hi: 60 },
+  { pair: "week_60", lo: 60, hi: 70 },
+  { pair: "week_70", lo: 70, hi: 80 },
+  { pair: "week_80", lo: 80, hi: 90 },
+  { pair: "week_90", lo: 90, hi: 100 },
+  { pair: "week_100", lo: 100, hi: 110 },
+  { pair: "week_110", lo: 110, hi: 120 },
+  { pair: "week_120", lo: 120, hi: 130 },
+  { pair: "week_130", lo: 130, hi: 140 },
+  { pair: "week_140", lo: 140, hi: 150 },
+  { pair: "week_150", lo: 150, hi: 160 },
+  { pair: "week_160", lo: 160, hi: 170 },
+  { pair: "week_170", lo: 170, hi: 180 },
+  { pair: "week_180", lo: 180, hi: 190 },
+  { pair: "week_190", lo: 190, hi: 200 },
+  { pair: "week_200", lo: 200, hi: Infinity },
+];
+
+export function weekScoreBand(points) {
+  const p = Number(points);
+  if (!Number.isFinite(p)) return null;
+  for (const b of WEEK_SCORE_BANDS) {
+    if (p >= b.lo && p < b.hi) return b.pair;
+  }
+  return null;
+}
 
 const CATALOG = [];
 const pairIds = {}; // pair -> { title, emblem }
@@ -551,9 +658,24 @@ for (const [uid, n] of Object.entries(futureFirsts)) {
   if (n >= 4) unlockPair(uid, "pick_hoard", receipt([`${n} future firsts`]));
 }
 
-// League Average is the vanilla week. The room already said everyone has had one.
-for (const m of members) {
-  if (m && m.user_id) unlockPair(String(m.user_id), "week_100", "everyone has had this week");
+// Week-score bands from the written Sleeper tape (completed weeks only).
+{
+  const best = {}; // uid -> pair -> { points, season, week }
+  for (const row of weekTape.scores || []) {
+    const uid = row && row.user_id != null ? String(row.user_id) : "";
+    const pair = weekScoreBand(row && row.points);
+    if (!uid || !pair) continue;
+    const prev = best[uid] && best[uid][pair];
+    if (!prev || Number(row.points) > prev.points) {
+      if (!best[uid]) best[uid] = {};
+      best[uid][pair] = { points: Number(row.points), season: row.season, week: row.week };
+    }
+  }
+  for (const [uid, pairs] of Object.entries(best)) {
+    for (const [pair, hit] of Object.entries(pairs)) {
+      unlockPair(uid, pair, receipt([`${hit.season} W${hit.week}`, String(hit.points)]));
+    }
+  }
 }
 
 const ladderIds = CATALOG.filter((c) => c.kind === "title").map((c) => c.id).slice(0, TITLE_LADDER.length);

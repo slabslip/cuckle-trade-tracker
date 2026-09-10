@@ -3919,7 +3919,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260910151016";
+    const DATA_V = "equipShare20260910151200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4063,6 +4063,7 @@
     let cosmeticsBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
+    let cosmeticsReloadAt = 0;
     let cosmeticsFrom = "account";
     let cosmeticsDetailId = null;
     const COS_EQUIP_STORE_KEY = "cuckle.cosmetics.equip.by_seat.v1";
@@ -6536,6 +6537,7 @@
       if (homeTab === "ledger") ledgerEnsureLoaded();
       if (homeTab === "history") dataDashEnsureTape();
       if (homeTab === "news") newsMarkSeen();
+      if (homeTab === "teams") cosmeticsReloadIfStale(0);
       focusNext = '[data-home-tab="' + homeTab + '"]';
       render();
     }
@@ -12741,6 +12743,9 @@
     // header. A newer sb_publishable_... key is not a JWT and is rejected on Bearer with
     // "Invalid JWT" — if this key is ever replaced with one of those, send apikey alone.
     const VOTE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0cXl2bmtramlrc21tdG16dWJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwMjk2MzMsImV4cCI6MjEwMzYwNTYzM30.cyEU9bWTkRWTJxlwwPKEgXNT9WJukSluNcsj56WZib8";
+    // Live Equip share until public.seat_cosmetics exists. Rows are stamped
+    // deleted so the news feed query never returns them.
+    const COS_SHARE_BY = "cuckle-cos";
     // Clearing a vote cannot delete the row: anon has no DELETE privilege, deliberately, because
     // a delete verb would let any league member erase everybody else's votes. A cleared vote is
     // this sentinel, which trade_vote_tallies filters out — see db/schema.sql section 3.
@@ -13371,6 +13376,7 @@
         data = null;
         view = "teams";
         focusNext = ".screen-h";
+        cosmeticsReloadIfStale(0);
         if (members && members.length) render();
         else {
           loadMembers().then(() => render()).catch((err) => {
@@ -14001,7 +14007,7 @@
         const ac = new AbortController();
         const timer = setTimeout(() => ac.abort(), VOTE_TIMEOUT);
         const res = await fetch(
-          VOTE_API + "/news_submissions?select=id&deleted_at=not.is.null&order=id.desc&limit=200",
+          VOTE_API + "/news_submissions?select=id,submitted_by&deleted_at=not.is.null&order=id.desc&limit=200",
           {
             headers: { apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON },
             signal: ac.signal,
@@ -14013,6 +14019,7 @@
         if (!Array.isArray(rows)) return;
         let changed = false;
         for (const row of rows) {
+          if (String(row && row.submitted_by || "") === COS_SHARE_BY) continue;
           const id = "tweet:" + row.id;
           if (!newsGone.has(id)) { newsGone.add(id); changed = true; }
         }
@@ -17381,10 +17388,117 @@
       cosmeticsPushRemote();
     }
 
+    function cosmeticsPackShareNote(lid, uid, pair) {
+      const p = cosmeticsNormPair(pair);
+      return "COS|" + String(lid || "") + "|" + String(uid || "") + "|"
+        + String(p.title || "") + "|" + String(p.emblem || "");
+    }
+
+    function cosmeticsParseShareNote(note) {
+      const p = String(note || "").split("|");
+      if (p[0] !== "COS" || p.length < 5) return null;
+      return {
+        leagueId: p[1] || "",
+        seatId: p[2] || "",
+        title: cosmeticsNormId(p[3]),
+        emblem: cosmeticsNormId(p[4]),
+      };
+    }
+
+    function cosmeticsApplyShareRows(rows, lid, mine) {
+      if (!Array.isArray(rows)) return;
+      const seen = {};
+      for (const r of rows) {
+        const parsed = cosmeticsParseShareNote(r && r.note);
+        if (!parsed || !parsed.seatId) continue;
+        if (parsed.leagueId && parsed.leagueId !== String(lid || "")) continue;
+        if (seen[parsed.seatId]) continue;
+        seen[parsed.seatId] = true;
+        const pair = { title: parsed.title, emblem: parsed.emblem };
+        if (mine && parsed.seatId === String(mine) && (cosmeticsEquip.title || cosmeticsEquip.emblem)) {
+          cosmeticsBySeat[parsed.seatId] = cosmeticsNormPair(cosmeticsEquip);
+          cosmeticsPersistLocalSeat(lid, mine, cosmeticsEquip);
+          continue;
+        }
+        cosmeticsBySeat[parsed.seatId] = pair;
+        cosmeticsPersistLocalSeat(lid, parsed.seatId, pair);
+      }
+    }
+
+    async function cosmeticsPullShare(lid, mine) {
+      try {
+        const res = await fetch(
+          VOTE_API + "/news_submissions?select=note,created_at&submitted_by=eq."
+            + encodeURIComponent(COS_SHARE_BY)
+            + "&order=created_at.desc&limit=80",
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON },
+            signal: voteAbort(),
+          },
+        );
+        if (!res.ok) return;
+        cosmeticsApplyShareRows(await res.json(), lid, mine);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function cosmeticsPushShare() {
+      const lid = avatarLeagueId();
+      const uid = authSeatId();
+      if (!lid || !uid) return;
+      if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) return;
+      const pair = cosmeticsNormPair(cosmeticsEquip);
+      const tick = String(Date.now());
+      let extra = String(Math.floor(Math.random() * 10000));
+      while (extra.length < 4) extra = "0" + extra;
+      const now = new Date().toISOString();
+      try {
+        const res = await fetch(VOTE_API + "/news_submissions", {
+          method: "POST",
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + VOTE_ANON,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({
+            url: "https://x.com/cucklecos/status/" + tick + extra,
+            submitted_by: COS_SHARE_BY,
+            note: cosmeticsPackShareNote(lid, uid, pair),
+            processed_at: now,
+            deleted_at: now,
+            deleted_by: COS_SHARE_BY,
+          }),
+          signal: voteAbort(),
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          console.error("cosmetics share", res.status, t.slice(0, 160));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function cosmeticsReloadIfStale(minMs) {
+      if (document.visibilityState && document.visibilityState !== "visible") return;
+      if (appScreen !== "dash" || !activeLeague) return;
+      const gap = minMs == null ? 4000 : minMs;
+      if (Date.now() - cosmeticsReloadAt < gap) return;
+      cosmeticsReloadAt = Date.now();
+      loadSeatCosmetics().then(function () {
+        if (homeTab === "teams" || view === "teams" || view === "cosmetics" || (me && data)) {
+          ledgerMaybeRender();
+        }
+      }).catch(function (err) { console.error(err); });
+    }
+
     /**
      * Pull equipped title/emblem pairs for the active league. Anon-readable so
-     * every client (including Design Mode) can paint another manager's card.
-     * Falls back to the cosmetics book + localStorage when the table is down.
+     * every client (including Design Mode) can paint another manager card.
+     * Prefers public.seat_cosmetics when that table exists; otherwise reads the
+     * live Equip share channel. Book + localStorage still fill gaps.
      */
     async function loadSeatCosmetics() {
       const lid = avatarLeagueId();
@@ -17404,32 +17518,35 @@
             signal: voteAbort(),
           },
         );
-        if (!res.ok) return;
-        const rows = await res.json();
-        if (!Array.isArray(rows)) return;
-        for (const r of rows) {
-          const uid = String(r && r.sleeper_user_id || "");
-          if (!uid) continue;
-          const pair = {
-            title: cosmeticsNormId(r.title_id),
-            emblem: cosmeticsNormId(r.emblem_id),
-          };
-          if (mine && uid === String(mine) && (cosmeticsEquip.title || cosmeticsEquip.emblem)) {
-            cosmeticsBySeat[uid] = cosmeticsNormPair(cosmeticsEquip);
-            cosmeticsPersistLocalSeat(lid, uid, cosmeticsEquip);
-            continue;
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows)) {
+            for (const r of rows) {
+              const uid = String(r && r.sleeper_user_id || "");
+              if (!uid) continue;
+              const pair = {
+                title: cosmeticsNormId(r.title_id),
+                emblem: cosmeticsNormId(r.emblem_id),
+              };
+              if (mine && uid === String(mine) && (cosmeticsEquip.title || cosmeticsEquip.emblem)) {
+                cosmeticsBySeat[uid] = cosmeticsNormPair(cosmeticsEquip);
+                cosmeticsPersistLocalSeat(lid, uid, cosmeticsEquip);
+                continue;
+              }
+              cosmeticsBySeat[uid] = pair;
+              cosmeticsPersistLocalSeat(lid, uid, pair);
+            }
           }
-          cosmeticsBySeat[uid] = pair;
-          cosmeticsPersistLocalSeat(lid, uid, pair);
-        }
-        if (mine && !(cosmeticsEquip.title || cosmeticsEquip.emblem) && cosmeticsBySeat[String(mine)]) {
-          cosmeticsEquip = cosmeticsNormalizeEquip(cosmeticsBySeat[String(mine)]);
-          try {
-            localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
-          } catch (err) { /* private mode */ }
         }
       } catch (err) {
         console.error(err);
+      }
+      await cosmeticsPullShare(lid, mine);
+      if (mine && !(cosmeticsEquip.title || cosmeticsEquip.emblem) && cosmeticsBySeat[String(mine)]) {
+        cosmeticsEquip = cosmeticsNormalizeEquip(cosmeticsBySeat[String(mine)]);
+        try {
+          localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
+        } catch (err) { /* private mode */ }
       }
     }
 
@@ -17646,7 +17763,10 @@
       const uid = authSeatId();
       if (!lid || !uid) return;
       if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) return;
-      if (!authSession || !authSession.access_token) return;
+      if (!authSession || !authSession.access_token) {
+        await cosmeticsPushShare();
+        return;
+      }
       try {
         if (typeof authRefreshIfNeeded === "function") await authRefreshIfNeeded();
         const res = await fetch(
@@ -17669,14 +17789,15 @@
             signal: voteAbort(),
           },
         );
-        if (!res.ok) {
-          const t = await res.text();
-          if (res.status !== 404 && !/relation .* does not exist/i.test(t)) {
-            console.error("seat_cosmetics save", res.status, t.slice(0, 160));
-          }
+        if (res.ok || res.status === 409) return;
+        const t = await res.text();
+        if (res.status !== 404 && !/relation .* does not exist/i.test(t)) {
+          console.error("seat_cosmetics save", res.status, t.slice(0, 160));
         }
+        await cosmeticsPushShare();
       } catch (err) {
         console.error(err);
+        await cosmeticsPushShare();
       }
     }
 
@@ -22944,10 +23065,10 @@
       if (row) { openId = openId === row.dataset.id ? null : row.dataset.id; render(); }
       else if (closedFilter) render();
     });
-    document.addEventListener("visibilitychange", () => { voteReloadIfStale(); });
-    window.addEventListener("focus", () => { voteReloadIfStale(); });
-    // Soft poll on the dashboard so peer ballots land without requiring a tab switch.
-    setInterval(() => { voteReloadIfStale(10000); }, 12000);
+    document.addEventListener("visibilitychange", () => { voteReloadIfStale(); cosmeticsReloadIfStale(); });
+    window.addEventListener("focus", () => { voteReloadIfStale(); cosmeticsReloadIfStale(); });
+    // Soft poll on the dashboard so peer ballots and Equip picks land without a tab switch.
+    setInterval(() => { voteReloadIfStale(10000); cosmeticsReloadIfStale(10000); }, 12000);
     armLedgerPullToRefresh();
     document.addEventListener("change", (e) => {
       const tapeYearLab = e.target.closest("[data-tape-year]");
@@ -23389,7 +23510,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v222-name-mark";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v223-equip-share";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

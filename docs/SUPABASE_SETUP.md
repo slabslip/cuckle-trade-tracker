@@ -824,10 +824,16 @@ Equipped calling cards are **not** local-only. Every seat's pick must paint on
 1. Run [`db/wave18-seat-cosmetics.sql`](../db/wave18-seat-cosmetics.sql) in the
    SQL Editor (`public.seat_cosmetics`). SELECT is open to anon; only the claimed
    seat can write its row.
-2. After it lands, each manager opens **Menu → Settings → Titles and Emblems**
-   and taps Equip once more so the pair upserts. Picks made before this table
-   existed lived only on that phone. Until then, Teams shows each seat's
-   highest unlock from `cosmetics.json` so other managers are not blank.
+2. Until that table exists, Equip still leaves the phone: the page inserts a
+   `news_submissions` row (`submitted_by=cuckle-cos`, note `COS|{league}|{seat}|{title}|{emblem}`,
+   URL under `x.com/cucklecos/status/…`) with `processed_at` and `deleted_at`
+   set so `news-sync` never publishes it. Clients SELECT that submitter on
+   boot / focus / Teams. After wave18 lands, the page prefers `seat_cosmetics`
+   and only uses the share channel when the upsert fails.
+3. After wave18 lands, each manager can tap Equip once more so the pair
+   upserts onto the real table. Picks made before any share channel existed
+   lived only on that phone. Teams still falls back to each seat's highest
+   unlock from `cosmetics.json` when no equip has been shared.
 3. Optional: [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql)
    for shared Profile photos (`seat_avatars`) — same shape, also not live until
    pasted.

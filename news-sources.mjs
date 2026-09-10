@@ -361,6 +361,21 @@ const OEMBED = "https://publish.twitter.com/oembed";
  * bad row being stored; this stops a bad row being fetched or rendered if one ever is — the
  * table is write-open to anyone holding the anon key, so neither check may be the only one.
  */
+/** Reserved submitter for live Equip shares. Never a news story. */
+export const COSMETICS_SHARE_BY = "cuckle-cos";
+
+export function isCosmeticsShareRow(row) {
+  if (!row) return false;
+  if (String(row.submitted_by || "") === COSMETICS_SHARE_BY) return true;
+  if (String(row.note || "").indexOf("COS|") === 0) return true;
+  return /(?:x|twitter)\.com\/cucklecos\//i.test(String(row.url || ""));
+}
+
+function keepNewsSubmissionRows(rows) {
+  if (!Array.isArray(rows)) return [];
+  return rows.filter((row) => !isCosmeticsShareRow(row));
+}
+
 export function parseTweetUrl(raw) {
   const s = String(raw == null ? "" : raw).trim();
   if (s.length > 500) return null;
@@ -542,7 +557,7 @@ export async function fetchSubmissions({
         const rows = await res.json();
         return {
           ok: true,
-          rows: Array.isArray(rows) ? rows : [],
+          rows: keepNewsSubmissionRows(rows),
           error: null,
           agent_tip_column: false,
         };
@@ -552,7 +567,7 @@ export async function fetchSubmissions({
     const rows = await res.json();
     return {
       ok: true,
-      rows: Array.isArray(rows) ? rows : [],
+      rows: keepNewsSubmissionRows(rows),
       error: null,
       agent_tip_column: true,
     };

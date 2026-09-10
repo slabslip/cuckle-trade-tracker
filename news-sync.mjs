@@ -58,6 +58,7 @@ import {
   fetchSubmissions,
   fetchTrending,
   fetchTweet,
+  isCosmeticsShareRow,
   markSubmissionProcessed,
   parseTweetUrl,
 } from "./news-sources.mjs";
@@ -464,6 +465,10 @@ function collapseShares(subs) {
   const rejected = [];
   const duplicates = [];
   for (const sub of subs) {
+    // Equip share rows reuse this table until seat_cosmetics exists. They are
+    // stamped deleted on write; skip them here too so a leaked row cannot
+    // become a fake tweet.
+    if (isCosmeticsShareRow(sub)) continue;
     // Re-validated here even though the table constrains it, because the table is write-open to
     // anyone holding the anon key and a check that runs in only one place is a check that can be
     // walked around. This is also the gate the XSS probes in rows 1, 5 and 6 hit: `evil.com`,

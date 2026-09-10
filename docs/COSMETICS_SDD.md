@@ -137,8 +137,11 @@ Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seat
 `cuckle.cosmetics.equip.by_seat.v1` so other managers' homes can paint offline.
 Shared store: `public.seat_cosmetics` (`db/wave18-seat-cosmetics.sql`), same RLS shape as
 `seat_avatars` — anyone can read a seat's pair (including Design Mode); only the
-claimed seat can write it. **Paste wave18 in the SQL Editor** — the table is not
-in production yet (`PGRST205`). Until it exists, Equip stays on that phone.
+claimed seat can write it. **Paste wave18 in the SQL Editor** when you can — the
+table is not in production yet (`PGRST205`). Until it exists, Equip publishes a
+live share row on `news_submissions` (`submitted_by=cuckle-cos`, note `COS|…`,
+stamped `deleted_at` so the news feed never lists it). Other phones pull that
+channel on boot, league switch, focus, and opening Teams (plus a soft poll).
 Teams and team home still paint: equipped pair when we have one, otherwise that
 seat's highest unlock from the cosmetics book (crown first, then best week band).
 

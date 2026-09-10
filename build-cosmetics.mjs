@@ -262,6 +262,28 @@ const PAIRS = [
     title: { id: "perfect_chip", name: "Perfect Chip", how: "Win the title 1st in points and by 25+ in the final." },
     emblem: { id: "perfect_chip_mark", name: "Clean Sweep", how: "Win the title 1st in points and by 25+ in the final." },
   },
+
+  // —— Week score bands (locked 100–139; other bands still in design) ——
+  {
+    pair: "week_100", rarity: "bronze",
+    title: { id: "week_100", name: "League Average", how: "Score 100–109 in a single week. Everyone has." },
+    emblem: { id: "week_100_mark", name: "Beige", how: "Score 100–109 in a single week. Everyone has." },
+  },
+  {
+    pair: "week_110", rarity: "bronze",
+    title: { id: "week_110", name: "Slightly Above", how: "Score 110–119 in a single week." },
+    emblem: { id: "week_110_mark", name: "Plus One", how: "Score 110–119 in a single week." },
+  },
+  {
+    pair: "week_120", rarity: "silver",
+    title: { id: "week_120", name: "Competent", how: "Score 120–129 in a single week." },
+    emblem: { id: "week_120_mark", name: "Clipboard", how: "Score 120–129 in a single week." },
+  },
+  {
+    pair: "week_130", rarity: "silver",
+    title: { id: "week_130", name: "Getting Warm", how: "Score 130–139 in a single week." },
+    emblem: { id: "week_130_mark", name: "Ember", how: "Score 130–139 in a single week." },
+  },
 ];
 
 const CATALOG = [];
@@ -527,6 +549,11 @@ for (const [key, row] of Object.entries(picksBook || {})) {
 }
 for (const [uid, n] of Object.entries(futureFirsts)) {
   if (n >= 4) unlockPair(uid, "pick_hoard", receipt([`${n} future firsts`]));
+}
+
+// League Average is the vanilla week. The room already said everyone has had one.
+for (const m of members) {
+  if (m && m.user_id) unlockPair(String(m.user_id), "week_100", "everyone has had this week");
 }
 
 const ladderIds = CATALOG.filter((c) => c.kind === "title").map((c) => c.id).slice(0, TITLE_LADDER.length);

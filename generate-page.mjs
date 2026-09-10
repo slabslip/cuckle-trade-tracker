@@ -3917,7 +3917,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashReview20260910004100";
+    const DATA_V = "scoreBands20260910020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -19530,6 +19530,7 @@ const html = `<!DOCTYPE html>
       "blowout", "nailbiter", "climber", "loyalty", "scorched", "pick_hoard", "rookie_king",
       "cartel", "wire_throne", "pick_path", "player_path", "aging", "farm_sold",
       "inaugural", "perfect_chip",
+      "week_100", "week_110", "week_120", "week_130",
     ]);
     const COS_EMBLEM_ART = new Set([
       "five_time_mark", "four_time_mark", "three_peat_mark", "three_time_mark", "repeat_mark",
@@ -19541,6 +19542,7 @@ const html = `<!DOCTYPE html>
       "nailbiter_mark", "climber_mark", "loyalty_mark", "scorched_mark", "pick_hoard_mark",
       "rookie_king_mark", "cartel_mark", "wire_throne_mark", "pick_path_mark", "player_path_mark",
       "aging_mark", "farm_sold_mark", "inaugural_mark", "perfect_chip_mark",
+      "week_100_mark", "week_110_mark", "week_120_mark", "week_130_mark",
     ]);
     function cosmeticsPairMate(c) {
       if (!c || !c.pair) return null;
@@ -23228,7 +23230,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v213-dash-review";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v214-score-bands";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23309,13 +23311,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v213-dash-review")) {
+  || !html.includes("chuckle-shell-v214-score-bands")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v213-dash-review")
+  || !swSrc.includes("chuckle-shell-v214-score-bands")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");

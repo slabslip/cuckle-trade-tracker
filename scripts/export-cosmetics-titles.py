@@ -72,6 +72,28 @@ CUSTOM_TITLE_MASTERS = {
     "whale_title": DESIGN / "ff-title-whale_title-comic-v1.png",
     "win_now": DESIGN / "ff-title-win_now-comic-v1.png",
     "wire_throne": DESIGN / "ff-title-wire_throne-comic-v1.png",
+    "week_100": DESIGN / "ff-title-week_100-comic-v1.png",
+    "week_110": DESIGN / "ff-title-week_110-comic-v1.png",
+    "week_120": DESIGN / "ff-title-week_120-comic-v1.png",
+    "week_130": DESIGN / "ff-title-week_130-comic-v1.png",
+}
+
+# Already-lettered 1024×180 plates — cover-fit only, do not stamp a second title.
+# Week-band lookbook masters are 16:9 with baked type; they go through
+# export_custom_title so the live strip matches SACKO / CHAMPION.
+LETTERED_TITLE_MASTERS = set()
+WEEK_TITLE_BIAS = {
+    "week_100": -70,
+    "week_110": -90,
+    "week_120": -80,
+    "week_130": -35,
+}
+# Fraction of the 16:9 lookbook to drop from the left so baked type is gone.
+WEEK_SCENE_CUT = {
+    "week_100": 0.34,
+    "week_110": 0.46,
+    "week_120": 0.42,
+    "week_130": 0.40,
 }
 
 CROWN_ORDER = [
@@ -180,21 +202,34 @@ def cover_fit(art: Image.Image, size=(W, H), top_bias: int = 0) -> Image.Image:
     return scaled.crop((left, top, left + tw, top + th))
 
 
+def week_scene_art(master: Image.Image, cut: float) -> Image.Image:
+    """Drop the left lookbook type column; keep the character / object."""
+    w, h = master.size
+    return master.crop((int(w * cut), 0, w, h))
+
+
 def export_custom_title(tid: str, name: str) -> Image.Image:
     """Build a full-bleed banner from a hand-drawn master (+ comic title type)."""
     master_path = CUSTOM_TITLE_MASTERS[tid]
     if not master_path.exists():
         raise SystemExit(f"missing custom title master: {master_path}")
     master = Image.open(master_path).convert("RGBA")
+    if tid in WEEK_TITLE_BIAS:
+        master = week_scene_art(master, WEEK_SCENE_CUT.get(tid, 0.40))
     # Blowout comic: bias crop up so dryer faces stay in the short strip
-    bias = -90 if tid == "climber" else (-70 if tid in CUSTOM_TITLE_MASTERS else 0)
+    if tid in WEEK_TITLE_BIAS:
+        bias = WEEK_TITLE_BIAS[tid]
+    else:
+        bias = -90 if tid == "climber" else (-70 if tid in CUSTOM_TITLE_MASTERS else 0)
     banner = cover_fit(master, top_bias=bias)
 
     # Soft left vignette so title text stays readable on busy comic art
     wash = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     wd = ImageDraw.Draw(wash)
-    for x in range(0, 420):
-        a = int(150 * (1 - x / 420) ** 1.4)
+    wash_w = 460 if tid in WEEK_TITLE_BIAS else 420
+    wash_peak = 200 if tid in WEEK_TITLE_BIAS else 150
+    for x in range(0, wash_w):
+        a = int(wash_peak * (1 - x / wash_w) ** 1.4)
         wd.line([(x, 0), (x, H)], fill=(8, 6, 14, a))
     banner = Image.alpha_composite(banner, wash)
 
@@ -427,7 +462,11 @@ def main() -> None:
     for t in titles:
         tid = t["id"]
         if tid in CUSTOM_TITLE_MASTERS:
-            img = export_custom_title(tid, t["name"])
+            if tid in LETTERED_TITLE_MASTERS:
+                master = Image.open(CUSTOM_TITLE_MASTERS[tid]).convert("RGBA")
+                img = cover_fit(master)
+            else:
+                img = export_custom_title(tid, t["name"])
         elif tid in crown:
             img = crown[tid]
         else:

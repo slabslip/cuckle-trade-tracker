@@ -14,7 +14,7 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 ## 1. Matched catalog
 
-Everyone chases the same **88 ids** (**44 pairs**). Each award unlocks **both** a wearable
+Everyone chases the same **96 ids** (**48 pairs**). Each award unlocks **both** a wearable
 title and a matching emblem (shared `pair` key, same gate). Equip remains **one title** and
 **one emblem** at a time — you can mix pairs (Three-Peat title + Blowout emblem).
 
@@ -75,6 +75,16 @@ Trader, Quiet Year, Manners, Draft Hit, Waiver Touch, Founding Draft — each pa
 | Inaugural Champion | Win 2019 | locked to history |
 | Perfect Chip | 1st in points + margin ≥ 25 | hard |
 
+**Week score bands (first four locked)** — one week, team points. Comic plate matches
+Sacko / Champion. Remaining bands stay in design until approved.
+
+| Pair | Gate | Note |
+| --- | --- | --- |
+| League Average (`week_100`) | Score 100–109 | Vanilla. Unlocked for every seat. |
+| Slightly Above (`week_110`) | Score 110–119 | Locked until weekly tape. |
+| Competent (`week_120`) | Score 120–129 | Locked until weekly tape. |
+| Getting Warm (`week_130`) | Score 130–139 | Locked until weekly tape. |
+
 Higher career-count crown titles **replace** lower ones (`two_time` does not also unlock
 `champion`). Repeat / Three-Peat can sit beside the career-count title. Finalist rungs **stack**.
 
@@ -92,7 +102,7 @@ from missing weekly snapshots.
 
 `?view=cosmetics` from **Settings → Profile** and Account → **Titles and Emblems**.
 Two grids: titles are a **3-column** picker of scaled-down full 1024×180 crops (15 rows
-for the current 44-title book; more titles keep wrapping). Tap opens the full card.
+for the current 48-title book; more titles keep wrapping). Tap opens the full card.
 Emblems stay a 4–5 column mark grid. Equipped plate and detail sheet keep the large crop.
 Detail sheet names the matching mate. Equip one title + one emblem.
 Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seatId>`

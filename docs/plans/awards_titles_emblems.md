@@ -2,7 +2,7 @@
 
 **Status:** Wave 1 shipping — matched title↔emblem pairs + creative 15.
 **Owner:** product + `build-cosmetics.mjs`
-**Shipped now:** **88-id catalog (44 pairs)**. Barracks `?view=cosmetics` from Settings → Profile and Account.
+**Shipped now:** **96-id catalog (48 pairs)**. Barracks `?view=cosmetics` from Settings → Profile and Account.
 Equip one title + one emblem. Every award unlocks **both** kinds (shared `pair` key). Paint the
 equipped pair on **every** seat's team home; your emblem also paints on **your** seat name;
 title shows on the barracks / Profile plate.
@@ -100,10 +100,11 @@ a written weekly snapshot.
 ## Implementation order
 
 1. **Wave 1** — barracks, crown copy, locked 4/5, finalist emblems.
-2. **Matched pairs + creative 15** — this pass (88 ids).
-3. Art for twin marks / new emblems and remaining title banners.
-4. Comeback Dynasty when multi-year last-place years exist.
-5. Weekly Tier 1–4 after weekly snapshot engines.
+2. **Matched pairs + creative 15** — shipped (88 ids).
+3. **Week score bands 100–139** — locked (League Average / Slightly Above / Competent / Getting Warm). Remaining bands still in design.
+4. Art for twin marks / new emblems and remaining title banners.
+5. Comeback Dynasty when multi-year last-place years exist.
+6. Weekly Tier 1–4 after weekly snapshot engines.
 
 ## What we will not do
 

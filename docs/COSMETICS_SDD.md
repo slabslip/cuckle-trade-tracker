@@ -75,9 +75,12 @@ Trader, Quiet Year, Manners, Draft Hit, Waiver Touch, Founding Draft — each pa
 | Inaugural Champion | Win 2019 | locked to history |
 | Perfect Chip | 1st in points + margin ≥ 25 | hard |
 
-**Week score bands** — one completed team-week on the written Sleeper tape
-(`weekly-scores.mjs` → `weekly_scores.json`). Comic plate matches Sacko / Champion.
-A seat unlocks a band when they have actually scored in that range.
+**Week score bands** — one completed **regular-season** team-week on the written
+Sleeper tape (`weekly-scores.mjs` → `weekly_scores.json`). Regular = `week <
+playoff_week_start` from Sleeper league settings. Playoff weeks stay on the tape
+(`phase: "playoff"`) for a later title/emblem batch and do **not** unlock these
+pairs. Comic plate matches Sacko / Champion. A seat unlocks a band when they have
+actually scored in that range in the regular season.
 
 | Pair | Gate |
 | --- | --- |
@@ -109,8 +112,8 @@ finalists, then the rest by rarity. `four_time` / `five_time` stay locked catalo
 
 Weekly/waiver/lineup grind still parked in
 [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md) — week-score bands
-unlock from the written Sleeper tape only. Do not invent other weekly grind from
-missing waiver / lineup snapshots.
+unlock from regular-season tape only. Do not invent other weekly grind from
+missing waiver / lineup snapshots. Do not mint playoff point-band titles here.
 
 ---
 

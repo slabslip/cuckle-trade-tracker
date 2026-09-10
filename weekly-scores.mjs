@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Written weekly tape from Sleeper matchups. One row per scored team-week.
- * Used by build-cosmetics.mjs to unlock week-score title/emblem bands.
+ * Point-band titles unlock from regular-season weeks only. Playoff weeks stay
+ * on the tape (`phase: "playoff"`) for a later batch.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { leagueRawDir, setLeagueId, sleeperGet, writeJson } from "./lib.mjs";
@@ -38,9 +39,15 @@ async function matchupsFor(leagueId, week) {
 }
 
 const scores = [];
+const seasons = [];
 for (const lg of leagues) {
   const leagueId = String(lg.league_id);
   const season = String(lg.season);
+  const meta = await sleeperGet(`/league/${leagueId}`);
+  const pws = Number(meta && meta.settings && meta.settings.playoff_week_start);
+  if (!Number.isFinite(pws) || pws < 2) {
+    throw new Error(`league ${leagueId} (${season}) missing playoff_week_start`);
+  }
   const state = await sleeperGet(`/state/nfl`);
   const liveSeason = state && String(state.season);
   const liveWeek = Number(state && state.week);
@@ -49,9 +56,11 @@ for (const lg of leagues) {
   if (liveSeason && season === liveSeason && Number.isFinite(liveWeek)) {
     last = Math.max(0, liveWeek - 1);
   }
+  seasons.push({ season, league_id: leagueId, playoff_week_start: pws });
   for (let week = 1; week <= last; week++) {
     const rows = await matchupsFor(leagueId, week);
     const kept = [];
+    const phase = week < pws ? "regular" : "playoff";
     for (const m of rows) {
       const pts = Number(m && m.points);
       if (!Number.isFinite(pts) || pts <= 0) continue;
@@ -65,6 +74,8 @@ for (const lg of leagues) {
         roster_id: rid,
         user_id: uid,
         points: Math.round(pts * 100) / 100,
+        phase,
+        playoff_week_start: pws,
       });
     }
     // Partial / in-progress slates (4 teams at 4–16 pts) are not a week.
@@ -79,10 +90,15 @@ scores.sort((a, b) => {
   return String(a.user_id).localeCompare(String(b.user_id));
 });
 
+const regular = scores.filter((s) => s.phase === "regular");
+const playoff = scores.filter((s) => s.phase === "playoff");
 const book = {
-  v: 1,
+  v: 2,
   as_of: new Date().toISOString().slice(0, 10),
   n: scores.length,
+  n_regular: regular.length,
+  n_playoff: playoff.length,
+  seasons,
   scores,
 };
 
@@ -91,9 +107,12 @@ writeJson("weekly_scores.json", book);
 const byUid = {};
 let min = Infinity;
 let max = -Infinity;
-for (const s of scores) {
+for (const s of regular) {
   min = Math.min(min, s.points);
   max = Math.max(max, s.points);
   (byUid[s.user_id] || (byUid[s.user_id] = [])).push(s.points);
 }
-console.log(`weekly_scores.json ${scores.length} team-weeks, min ${min} max ${max}, seats ${Object.keys(byUid).length}`);
+console.log(
+  `weekly_scores.json ${scores.length} team-weeks (${regular.length} regular / ${playoff.length} playoff), `
+  + `regular min ${min} max ${max}, seats ${Object.keys(byUid).length}`,
+);

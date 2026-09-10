@@ -90,6 +90,12 @@ CUSTOM_TITLE_MASTERS = {
     "week_180": DESIGN / "ff-title-week_180-comic-v1.png",
     "week_190": DESIGN / "ff-title-week_190-comic-v1.png",
     "week_200": DESIGN / "ff-title-week_200-comic-v1.png",
+    "week_210": DESIGN / "ff-title-week_210-comic-v1.png",
+    "week_220": DESIGN / "ff-title-week_220-comic-v1.png",
+    "week_230": DESIGN / "ff-title-week_230-comic-v1.png",
+    "week_240": DESIGN / "ff-title-week_240-comic-v1.png",
+    "week_250": DESIGN / "ff-title-week_250-comic-v1.png",
+    "week_260": DESIGN / "ff-title-week_260-comic-v1.png",
 }
 
 # Already-lettered 1024×180 plates — cover-fit only, do not stamp a second title.
@@ -114,7 +120,13 @@ WEEK_TITLE_BIAS = {
     "week_170": -40,
     "week_180": -40,
     "week_190": -20,
-    "week_200": -30,
+    "week_200": -20,
+    "week_210": -10,
+    "week_220": -10,
+    "week_230": 0,
+    "week_240": -10,
+    "week_250": -10,
+    "week_260": -10,
 }
 # Fraction of the 16:9 lookbook to drop from the left so baked type is gone.
 WEEK_SCENE_CUT = {
@@ -135,7 +147,13 @@ WEEK_SCENE_CUT = {
     "week_170": 0.38,
     "week_180": 0.30,
     "week_190": 0.34,
-    "week_200": 0.36,
+    "week_200": 0.38,
+    "week_210": 0.38,
+    "week_220": 0.38,
+    "week_230": 0.38,
+    "week_240": 0.38,
+    "week_250": 0.38,
+    "week_260": 0.38,
 }
 
 CROWN_ORDER = [

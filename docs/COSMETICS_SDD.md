@@ -14,7 +14,7 @@ Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`]
 
 ## 1. Matched catalog
 
-Everyone chases the same **124 ids** (**62 pairs**). Each award unlocks **both** a wearable
+Everyone chases the same **136 ids** (**68 pairs**). Each award unlocks **both** a wearable
 title and a matching emblem (shared `pair` key, same gate). Equip remains **one title** and
 **one emblem** at a time — you can mix pairs (Three-Peat title + Blowout emblem).
 
@@ -101,7 +101,13 @@ actually scored in that range in the regular season.
 | Unfair (`week_170`) | 170–179 |
 | Demigod (`week_180`) | 180–189 |
 | Near Myth (`week_190`) | 190–199 |
-| World Breaker (`week_200`) | 200+ |
+| Orbit Breaker (`week_200`) | 200–209 |
+| World Breaker (`week_210`) | 210–219 |
+| Physics Optional (`week_220`) | 220–229 |
+| Sun Eater (`week_230`) | 230–239 |
+| Canon Breaker (`week_240`) | 240–249 |
+| Statistical Impossibility (`week_250`) | 250–259 |
+| Script Error (`week_260`) | 260+ |
 
 Higher career-count crown titles **replace** lower ones (`two_time` does not also unlock
 `champion`). Repeat / Three-Peat can sit beside the career-count title. Finalist rungs **stack**.

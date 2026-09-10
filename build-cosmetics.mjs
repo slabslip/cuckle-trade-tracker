@@ -357,12 +357,42 @@ const PAIRS = [
   },
   {
     pair: "week_200", rarity: "gold",
-    title: { id: "week_200", name: "World Breaker", how: "Score 200 or more in a single regular-season week." },
-    emblem: { id: "week_200_mark", name: "Gamma", how: "Score 200 or more in a single regular-season week." },
+    title: { id: "week_200", name: "Orbit Breaker", how: "Score 200–209 in a single regular-season week." },
+    emblem: { id: "week_200_mark", name: "Apogee", how: "Score 200–209 in a single regular-season week." },
+  },
+  {
+    pair: "week_210", rarity: "gold",
+    title: { id: "week_210", name: "World Breaker", how: "Score 210–219 in a single regular-season week." },
+    emblem: { id: "week_210_mark", name: "Gamma", how: "Score 210–219 in a single regular-season week." },
+  },
+  {
+    pair: "week_220", rarity: "gold",
+    title: { id: "week_220", name: "Physics Optional", how: "Score 220–229 in a single regular-season week." },
+    emblem: { id: "week_220_mark", name: "Warp", how: "Score 220–229 in a single regular-season week." },
+  },
+  {
+    pair: "week_230", rarity: "gold",
+    title: { id: "week_230", name: "Sun Eater", how: "Score 230–239 in a single regular-season week." },
+    emblem: { id: "week_230_mark", name: "Corona", how: "Score 230–239 in a single regular-season week." },
+  },
+  {
+    pair: "week_240", rarity: "gold",
+    title: { id: "week_240", name: "Canon Breaker", how: "Score 240–249 in a single regular-season week." },
+    emblem: { id: "week_240_mark", name: "Tear", how: "Score 240–249 in a single regular-season week." },
+  },
+  {
+    pair: "week_250", rarity: "gold",
+    title: { id: "week_250", name: "Statistical Impossibility", how: "Score 250–259 in a single regular-season week." },
+    emblem: { id: "week_250_mark", name: "Asterisk", how: "Score 250–259 in a single regular-season week." },
+  },
+  {
+    pair: "week_260", rarity: "gold",
+    title: { id: "week_260", name: "Script Error", how: "Score 260 or more in a single regular-season week." },
+    emblem: { id: "week_260_mark", name: "Cursor", how: "Score 260 or more in a single regular-season week." },
   },
 ];
 
-/** Inclusive lo, exclusive hi. Last band is 200+. */
+/** Inclusive lo, exclusive hi. Last band is 260+. */
 export const WEEK_SCORE_BANDS = [
   { pair: "week_under40", lo: 0, hi: 40 },
   { pair: "week_40", lo: 40, hi: 50 },
@@ -381,7 +411,13 @@ export const WEEK_SCORE_BANDS = [
   { pair: "week_170", lo: 170, hi: 180 },
   { pair: "week_180", lo: 180, hi: 190 },
   { pair: "week_190", lo: 190, hi: 200 },
-  { pair: "week_200", lo: 200, hi: Infinity },
+  { pair: "week_200", lo: 200, hi: 210 },
+  { pair: "week_210", lo: 210, hi: 220 },
+  { pair: "week_220", lo: 220, hi: 230 },
+  { pair: "week_230", lo: 230, hi: 240 },
+  { pair: "week_240", lo: 240, hi: 250 },
+  { pair: "week_250", lo: 250, hi: 260 },
+  { pair: "week_260", lo: 260, hi: Infinity },
 ];
 
 export function weekScoreBand(points) {

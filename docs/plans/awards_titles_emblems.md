@@ -2,7 +2,7 @@
 
 **Status:** Wave 1 shipping — matched title↔emblem pairs + creative 15.
 **Owner:** product + `build-cosmetics.mjs`
-**Shipped now:** **124-id catalog (62 pairs)**. Barracks `?view=cosmetics` from Settings → Profile and Account.
+**Shipped now:** **136-id catalog (68 pairs)**. Barracks `?view=cosmetics` from Settings → Profile and Account.
 Equip one title + one emblem. Every award unlocks **both** kinds (shared `pair` key). Paint the
 equipped pair on **every** seat's team home; your emblem also paints on **your** seat name;
 title shows on the barracks / Profile plate.
@@ -101,7 +101,7 @@ a written weekly snapshot.
 
 1. **Wave 1** — barracks, crown copy, locked 4/5, finalist emblems.
 2. **Matched pairs + creative 15** — shipped (88 ids).
-3. **Week score bands** — full ladder from Planetary Disgrace to World Breaker. Unlocks from **regular-season** tape only (`week < playoff_week_start`). Playoff weeks stay on the tape for a later batch.
+3. **Week score bands** — full ladder from Planetary Disgrace to Script Error (200–209 is Orbit Breaker; World Breaker is 210–219; 250–259 is Statistical Impossibility). Unlocks from **regular-season** tape only (`week < playoff_week_start`). Playoff weeks stay on the tape for a later batch.
 4. Art for twin marks / new emblems and remaining title banners.
 5. Comeback Dynasty when multi-year last-place years exist.
 6. Weekly Tier 1–4 after weekly snapshot engines.

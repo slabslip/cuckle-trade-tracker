@@ -23,7 +23,9 @@ const BANDS = [
   ["week_70", 70, 80], ["week_80", 80, 90], ["week_90", 90, 100], ["week_100", 100, 110],
   ["week_110", 110, 120], ["week_120", 120, 130], ["week_130", 130, 140], ["week_140", 140, 150],
   ["week_150", 150, 160], ["week_160", 160, 170], ["week_170", 170, 180], ["week_180", 180, 190],
-  ["week_190", 190, 200], ["week_200", 200, Infinity],
+  ["week_190", 190, 200], ["week_200", 200, 210], ["week_210", 210, 220],
+  ["week_220", 220, 230], ["week_230", 230, 240], ["week_240", 240, 250],
+  ["week_250", 250, 260], ["week_260", 260, Infinity],
 ];
 function bandOf(p) {
   for (const [id, lo, hi] of BANDS) if (p >= lo && p < hi) return id;
@@ -92,7 +94,7 @@ for (const c of cos.catalog.filter((x) => /^week_/.test(x.id))) {
 
 const titles = cos.catalog.filter((c) => c.kind === "title");
 const emblems = cos.catalog.filter((c) => c.kind === "emblem");
-if (titles.length !== 62 || emblems.length !== 62) fail(`catalog ${titles.length}/${emblems.length} not 62/62`);
+if (titles.length !== 68 || emblems.length !== 68) fail(`catalog ${titles.length}/${emblems.length} not 68/68`);
 for (const c of titles) {
   if (!existsSync(`data/ui/cosmetics/title-${c.id}.png`)) fail(`missing title ${c.id}`);
 }

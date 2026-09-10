@@ -3927,7 +3927,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosBarracksCats20260910124500";
+    const DATA_V = "weekHighBands20260910131000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -19593,12 +19593,15 @@ const html = `<!DOCTYPE html>
           "week_under40", "week_40", "week_50", "week_60", "week_70", "week_80", "week_90",
           "week_100", "week_110", "week_120", "week_130", "week_140", "week_150",
           "week_160", "week_170", "week_180", "week_190", "week_200",
+          "week_210", "week_220", "week_230", "week_240", "week_250", "week_260",
         ],
         emblems: [
           "week_under40_mark", "week_40_mark", "week_50_mark", "week_60_mark", "week_70_mark",
           "week_80_mark", "week_90_mark", "week_100_mark", "week_110_mark", "week_120_mark",
           "week_130_mark", "week_140_mark", "week_150_mark", "week_160_mark", "week_170_mark",
           "week_180_mark", "week_190_mark", "week_200_mark",
+          "week_210_mark", "week_220_mark", "week_230_mark", "week_240_mark",
+          "week_250_mark", "week_260_mark",
         ],
       },
     ];
@@ -19618,6 +19621,7 @@ const html = `<!DOCTYPE html>
       "week_under40", "week_40", "week_50", "week_60", "week_70", "week_80", "week_90",
       "week_100", "week_110", "week_120", "week_130",
       "week_140", "week_150", "week_160", "week_170", "week_180", "week_190", "week_200",
+      "week_210", "week_220", "week_230", "week_240", "week_250", "week_260",
     ]);
     const COS_EMBLEM_ART = new Set([
       "five_time_mark", "four_time_mark", "three_peat_mark", "three_time_mark", "repeat_mark",
@@ -19634,6 +19638,8 @@ const html = `<!DOCTYPE html>
       "week_100_mark", "week_110_mark", "week_120_mark", "week_130_mark",
       "week_140_mark", "week_150_mark", "week_160_mark", "week_170_mark",
       "week_180_mark", "week_190_mark", "week_200_mark",
+      "week_210_mark", "week_220_mark", "week_230_mark", "week_240_mark",
+      "week_250_mark", "week_260_mark",
     ]);
     function cosmeticsPairMate(c) {
       if (!c || !c.pair) return null;
@@ -23351,7 +23357,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v219-cos-cats";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v220-week-high";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23432,13 +23438,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v219-cos-cats")) {
+  || !html.includes("chuckle-shell-v220-week-high")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v219-cos-cats")
+  || !swSrc.includes("chuckle-shell-v220-week-high")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -25872,7 +25878,7 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
       }
     }
     const week = secs.find((s) => s.lab === "Week score");
-    if (!week || week.titles[0] !== "week_under40" || week.titles[week.titles.length - 1] !== "week_200") {
+    if (!week || week.titles[0] !== "week_under40" || week.titles[week.titles.length - 1] !== "week_260") {
       throw new Error("Week score section must be the regular-season ladder in order");
     }
     for (const id of wantT) if (!gotT.has(id)) throw new Error("barracks missing title " + id);

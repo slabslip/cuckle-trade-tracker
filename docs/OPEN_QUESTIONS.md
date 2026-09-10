@@ -144,9 +144,10 @@ the room has no `choice` yet. Opinion only. Votes never enter the book. See
 
 **Assumed (this pass):** Team home calling card (banner + emblem under the seat name, all four
 tabs) for every manager via `seat_cosmetics`. **Teams list** shows the same card for every
-seat, blank until they equip. Barracks + Profile plate. Equipped **emblem**
-also paints next to your own seat name via `seatLabel`. Header / news / trade / ledger / smack
-do not yet show equipped **titles**. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
+seat, plus the equipped title/emblem names, blank until they equip. Barracks + Profile plate.
+Equipped **emblem** also paints next to your own seat name via `seatLabel`, and on that
+seat's Teams row after a shared load. Header / news / trade / ledger / smack bylines still
+do not paint other seats' titles. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
 
 **Why it matters:** Painting titles on every inline name will lock a chrome decision we have
 not looked at on 390.

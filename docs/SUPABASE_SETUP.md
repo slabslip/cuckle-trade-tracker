@@ -813,3 +813,22 @@ build: [`LEDGER_JOIN_SDD.md`](LEDGER_JOIN_SDD.md));
 
 The Ledger tab in the app reads `ledger_bets` with the signed-in member JWT (same
 pattern as `trade_votes`). Design Mode seeds sample slips without Supabase.
+
+---
+
+## 11. Titles and emblems (league-wide equip)
+
+Equipped calling cards are **not** local-only. Every seat's pick must paint on
+**Teams** and on that manager's team home for the rest of the league.
+
+1. Run [`db/wave18-seat-cosmetics.sql`](../db/wave18-seat-cosmetics.sql) in the
+   SQL Editor (`public.seat_cosmetics`). SELECT is open to anon; only the claimed
+   seat can write its row.
+2. After it lands, each manager opens **Menu → Settings → Titles and Emblems**
+   and taps Equip once more so the pair upserts. Picks made before this table
+   existed lived only on that phone.
+3. Optional: [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql)
+   for shared Profile photos (`seat_avatars`) — same shape, also not live until
+   pasted.
+
+Product: [`COSMETICS_SDD.md`](COSMETICS_SDD.md).

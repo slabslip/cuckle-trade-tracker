@@ -128,11 +128,16 @@ Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seat
 (legacy `cuckle.cosmetics.equip.v1` migrates on load), plus a per-league map
 `cuckle.cosmetics.equip.by_seat.v1` so other managers' homes can paint offline.
 Shared store: `public.seat_cosmetics` (`db/wave18-seat-cosmetics.sql`), same RLS shape as
-`seat_avatars` — anyone can read a seat's pair; only the claimed seat can write it.
+`seat_avatars` — anyone can read a seat's pair (including Design Mode); only the
+claimed seat can write it. **Paste wave18 in the SQL Editor** — the table is not
+in the first `schema.sql` paste. Until it exists, Equip stays on that phone and
+the rest of the league sees blank Teams cards.
 
 **Show-off (Wave 1):** calling card on every manager's team home and on the **Teams list**
-(blank banner + blank emblem until that seat equips); emblem next to **your**
-seat name; title on barracks / Profile plate.
+(blank banner + blank emblem until that seat equips), plus the equipped **names**
+on the Teams row so the pick is readable without opening the seat; emblem next to
+**your** seat name; title on barracks / Profile plate. After a shared load, that
+seat's emblem also sits on their Teams row.
 
 No themes, no FAAB perk, no calc boost. Visual only.
 

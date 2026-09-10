@@ -370,6 +370,10 @@ const html = `<!DOCTYPE html>
       vertical-align: -0.05em;
     }
     .teams-list .cos-plate { margin: 0; }
+    .teams-list .team-cos-lab {
+      font-size: 0.75rem; line-height: 1.3; color: var(--muted);
+      margin: 0; min-width: 0;
+    }
     .cos-plate-banner.is-blank {
       display: block; aspect-ratio: 1024 / 180; min-height: 0; height: auto;
       background: #0a0c10; box-sizing: border-box;
@@ -3917,7 +3921,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "scoreBandsRs20260910122400";
+    const DATA_V = "teamsCosShare20260910123300";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5542,19 +5546,26 @@ const html = `<!DOCTYPE html>
           const placeHtml = ord
             ? '<span class="team-place' + placeClass + '">' + esc(ord) + "</span>"
             : "";
+          const pair = cosmeticsPairForSeat(id);
+          const pairLab = cosmeticsPairLabel(pair);
+          const pairMark = pair.emblem
+            ? cosmeticsEmblemMark(pair.emblem, "seat-cos-mark")
+            : "";
           return '<button type="button" class="row' + (on ? " you" : "") + '" data-who="' + esc(id) + '"'
             + ' aria-current="' + (on ? "true" : "false") + '">'
             + '<div class="row-top"><div><div class="names">'
             + (mine ? '<span class="sr-only">Your team: </span>' : "")
             + seatLabel(m.name, { link: false })
+            + pairMark
             + dookie
             + (mine ? ' <span class="caption">(you)</span>' : "")
             + "</div>"
+            + (pairLab ? '<div class="team-cos-lab">' + esc(pairLab) + "</div>" : "")
             + (on ? '<div class="date">viewing</div>' : "")
             + "</div>"
             + '<span class="team-meta">' + placeHtml
             + '<span class="chev" aria-hidden="true">›</span></span></div>'
-            + cosmeticsCallingCardHtml(cosmeticsPairForSeat(id), { empty: true, blank: true })
+            + cosmeticsCallingCardHtml(pair, { empty: true, blank: true })
             + "</button>";
         })
         .join("");
@@ -17224,6 +17235,27 @@ const html = `<!DOCTYPE html>
       return cosmeticsNormPair(cosmeticsBySeat[id]);
     }
 
+    function cosmeticsPairLabel(pair) {
+      const catalog = cosmeticsCatalog();
+      const title = pair && pair.title
+        ? catalog.find((c) => c.id === pair.title && c.kind === "title")
+        : null;
+      const emblem = pair && pair.emblem
+        ? catalog.find((c) => c.id === pair.emblem && c.kind === "emblem")
+        : null;
+      return [title && title.name, emblem && emblem.name].filter(Boolean).join(" · ");
+    }
+
+    function cosmeticsApplyBookEquip() {
+      const pack = cosmeticsBook && cosmeticsBook.equipped;
+      if (!pack || typeof pack !== "object") return;
+      for (const uid of Object.keys(pack)) {
+        const have = cosmeticsBySeat[String(uid)];
+        if (have && (have.title || have.emblem)) continue;
+        cosmeticsBySeat[String(uid)] = cosmeticsNormPair(pack[uid]);
+      }
+    }
+
     function cosmeticsEquipKey() {
       const league = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID || "";
       const seat = authSeatId() || "";
@@ -17312,18 +17344,18 @@ const html = `<!DOCTYPE html>
 
     /**
      * Pull equipped title/emblem pairs for the active league. Anon-readable so
-     * opening another manager's home shows their calling card. Falls back to
-     * localStorage when the table is not installed yet or Design Mode has no JWT.
+     * every client (including Design Mode) can paint another manager's card.
+     * Falls back to the cosmetics book + localStorage when the table is down.
      */
     async function loadSeatCosmetics() {
       const lid = avatarLeagueId();
       if (!lid) return;
       cosmeticsApplyLocalForLeague(lid);
+      cosmeticsApplyBookEquip();
       const mine = authSeatId();
       if (mine && (cosmeticsEquip.title || cosmeticsEquip.emblem)) {
         cosmeticsBySeat[String(mine)] = cosmeticsNormPair(cosmeticsEquip);
       }
-      if (isDesignLeagueHome()) return;
       try {
         const res = await fetch(
           VOTE_API + "/seat_cosmetics?select=sleeper_user_id,title_id,emblem_id&sleeper_league_id=eq."
@@ -17344,9 +17376,11 @@ const html = `<!DOCTYPE html>
           };
           if (mine && uid === String(mine) && (cosmeticsEquip.title || cosmeticsEquip.emblem)) {
             cosmeticsBySeat[uid] = cosmeticsNormPair(cosmeticsEquip);
+            cosmeticsPersistLocalSeat(lid, uid, cosmeticsEquip);
             continue;
           }
           cosmeticsBySeat[uid] = pair;
+          cosmeticsPersistLocalSeat(lid, uid, pair);
         }
         if (mine && !(cosmeticsEquip.title || cosmeticsEquip.emblem) && cosmeticsBySeat[String(mine)]) {
           cosmeticsEquip = cosmeticsNormalizeEquip(cosmeticsBySeat[String(mine)]);
@@ -23236,7 +23270,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v216-week-rs";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v217-teams-cos";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23317,13 +23351,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v216-week-rs")) {
+  || !html.includes("chuckle-shell-v217-teams-cos")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v216-week-rs")
+  || !swSrc.includes("chuckle-shell-v217-teams-cos")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -24056,9 +24090,24 @@ if (!html.includes(`.teams-list > button.row`) || !html.includes(`min-height: ${
 }
 if (!fnSrc("whoOptions").includes("cosmeticsCallingCardHtml(")
   || !fnSrc("whoOptions").includes("blank: true")
+  || !fnSrc("whoOptions").includes("team-cos-lab")
+  || !fnSrc("whoOptions").includes("cosmeticsPairLabel")
   || !fnSrc("cosmeticsCallingCardHtml").includes("is-blank")
-  || !html.includes(".cos-plate-banner.is-blank")) {
+  || !html.includes(".cos-plate-banner.is-blank")
+  || !html.includes(".team-cos-lab")) {
   throw new Error("Teams list must show each seat title banner and emblem, blank when unequipped");
+}
+{
+  const loadAt = inline.indexOf("async function loadSeatCosmetics(");
+  const rest = loadAt < 0 ? "" : inline.slice(loadAt + 8);
+  const nxt = rest.indexOf("\n    async function ");
+  const loadFn = loadAt < 0 ? "" : inline.slice(loadAt, loadAt + 8 + (nxt < 0 ? 0 : nxt));
+  if (loadAt < 0 || nxt < 0 || loadFn.includes("isDesignLeagueHome()")) {
+    throw new Error("loadSeatCosmetics must read seat_cosmetics in Design Mode");
+  }
+  if (!loadFn.includes("cosmeticsApplyBookEquip") || !loadFn.includes("cosmeticsPersistLocalSeat")) {
+    throw new Error("loadSeatCosmetics must keep a league-wide pair map");
+  }
 }
 {
   const whoFn = fnSrc("whoOptions");

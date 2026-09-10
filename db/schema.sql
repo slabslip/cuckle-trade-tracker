@@ -929,3 +929,7 @@ grant select on table public.trade_vote_tallies to authenticated;
 
 revoke insert, update, delete, truncate on table public.trade_votes from anon;
 revoke delete, truncate on table public.trade_votes from authenticated;
+
+-- Wave 18 — equipped title + emblem per seat. Needs public.leagues from
+-- multi-league-app.sql, so it lives in db/wave18-seat-cosmetics.sql. Run that
+-- file in the SQL Editor or the Teams tab cannot show another manager's pick.

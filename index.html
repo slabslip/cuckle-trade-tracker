@@ -21101,6 +21101,11 @@
         setLhMenuOpen(false);
         return true;
       }
+      if (calcSeatMenu) {
+        calcSeatMenu = "";
+        render();
+        return true;
+      }
       if (cosmeticsDetailId) {
         cosmeticsDetailId = null;
         render();

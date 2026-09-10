@@ -21109,6 +21109,11 @@ const html = `<!DOCTYPE html>
         setLhMenuOpen(false);
         return true;
       }
+      if (calcSeatMenu) {
+        calcSeatMenu = "";
+        render();
+        return true;
+      }
       if (cosmeticsDetailId) {
         cosmeticsDetailId = null;
         render();
@@ -25593,8 +25598,9 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
   const escFn = fnSrc("closeTopmost");
   if (!escFn.includes('view === "titles"') || !escFn.includes('view === "draftdata"')
     || !escFn.includes('view === "cuffs"')
-    || !escFn.includes('setHomeTab("history"')) {
-    throw new Error("closeTopmost Escape must return History children to History tab");
+    || !escFn.includes('setHomeTab("history"')
+    || !escFn.includes("calcSeatMenu")) {
+    throw new Error("closeTopmost Escape must return History children to History tab and shut the calc team list");
   }
 }
 {

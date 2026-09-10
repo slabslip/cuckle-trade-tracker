@@ -30,7 +30,14 @@ function bandOf(p) {
   return null;
 }
 
+if (Number(tape.v) < 2) fail("weekly_scores must be v2 with phase");
 if (tape.n !== (tape.scores || []).length) fail("weekly_scores n != scores.length");
+if ((tape.n_regular || 0) + (tape.n_playoff || 0) !== tape.n) {
+  fail("n_regular + n_playoff != n");
+}
+if (tape.scores.some((s) => s.phase !== "regular" && s.phase !== "playoff")) {
+  fail("tape row missing regular|playoff phase");
+}
 if (tape.scores.some((s) => s.season === "2026" && s.week === 1 && s.points < 20)) {
   fail("2026 W1 partial slate leaked into tape");
 }
@@ -43,8 +50,15 @@ for (const [k, n] of Object.entries(byWeek)) {
   if (n < 8) fail(`thin week ${k} has ${n} scored seats`);
 }
 
+const pwsBySeason = {};
+for (const row of tape.seasons || []) {
+  pwsBySeason[String(row.season)] = Number(row.playoff_week_start);
+}
+if (!Object.keys(pwsBySeason).length) fail("tape seasons missing playoff_week_start");
+
 const expect = {};
 for (const s of tape.scores) {
+  if (s.phase !== "regular") continue;
   const b = bandOf(s.points);
   if (!b) { fail(`unbanded score ${s.points}`); continue; }
   (expect[s.user_id] || (expect[s.user_id] = new Set())).add(b);
@@ -58,6 +72,22 @@ for (const m of members) {
     if (!cos.unlocks[uid][id + "_mark"]) fail(`${m.name} missing ${id} mark`);
   }
   for (const id of got) if (!exp.includes(id)) fail(`${m.name} extra ${id}`);
+  for (const id of got) {
+    const rec = String((cos.unlocks[uid][id] || ""));
+    const hit = rec.match(/^(\d{4}) W(\d+)/);
+    if (!hit) { fail(`${m.name} ${id} receipt not a week: ${rec}`); continue; }
+    const season = hit[1];
+    const week = Number(hit[2]);
+    const pws = pwsBySeason[season];
+    if (!Number.isFinite(pws) || week >= pws) {
+      fail(`${m.name} ${id} receipt is playoff ${rec}`);
+    }
+  }
+}
+for (const c of cos.catalog.filter((x) => /^week_/.test(x.id))) {
+  if (!/regular-season/.test(String(c.how || ""))) {
+    fail(`catalog ${c.id} how must say regular-season`);
+  }
 }
 
 const titles = cos.catalog.filter((c) => c.kind === "title");

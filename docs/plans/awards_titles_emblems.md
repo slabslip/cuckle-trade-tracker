@@ -101,7 +101,7 @@ a written weekly snapshot.
 
 1. **Wave 1** — barracks, crown copy, locked 4/5, finalist emblems.
 2. **Matched pairs + creative 15** — shipped (88 ids).
-3. **Week score bands** — full ladder from Planetary Disgrace to World Breaker. Unlocks from written weekly tape.
+3. **Week score bands** — full ladder from Planetary Disgrace to World Breaker. Unlocks from **regular-season** tape only (`week < playoff_week_start`). Playoff weeks stay on the tape for a later batch.
 4. Art for twin marks / new emblems and remaining title banners.
 5. Comeback Dynasty when multi-year last-place years exist.
 6. Weekly Tier 1–4 after weekly snapshot engines.

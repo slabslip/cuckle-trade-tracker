@@ -272,93 +272,93 @@ const PAIRS = [
   // —— Week score bands (one scored team-week on the written tape) ——
   {
     pair: "week_under40", rarity: "iron",
-    title: { id: "week_under40", name: "Planetary Disgrace", how: "Score under 40 in a single week." },
-    emblem: { id: "week_under40_mark", name: "Dead Earth", how: "Score under 40 in a single week." },
+    title: { id: "week_under40", name: "Planetary Disgrace", how: "Score under 40 in a single regular-season week." },
+    emblem: { id: "week_under40_mark", name: "Dead Earth", how: "Score under 40 in a single regular-season week." },
   },
   {
     pair: "week_40", rarity: "iron",
-    title: { id: "week_40", name: "Biohazard", how: "Score 40–49 in a single week." },
-    emblem: { id: "week_40_mark", name: "Quarantine", how: "Score 40–49 in a single week." },
+    title: { id: "week_40", name: "Biohazard", how: "Score 40–49 in a single regular-season week." },
+    emblem: { id: "week_40_mark", name: "Quarantine", how: "Score 40–49 in a single regular-season week." },
   },
   {
     pair: "week_50", rarity: "iron",
-    title: { id: "week_50", name: "Dumpster Fire", how: "Score 50–59 in a single week." },
-    emblem: { id: "week_50_mark", name: "Bin Lid", how: "Score 50–59 in a single week." },
+    title: { id: "week_50", name: "Dumpster Fire", how: "Score 50–59 in a single regular-season week." },
+    emblem: { id: "week_50_mark", name: "Bin Lid", how: "Score 50–59 in a single regular-season week." },
   },
   {
     pair: "week_60", rarity: "iron",
-    title: { id: "week_60", name: "Wet Cardboard", how: "Score 60–69 in a single week." },
-    emblem: { id: "week_60_mark", name: "Soggy", how: "Score 60–69 in a single week." },
+    title: { id: "week_60", name: "Wet Cardboard", how: "Score 60–69 in a single regular-season week." },
+    emblem: { id: "week_60_mark", name: "Soggy", how: "Score 60–69 in a single regular-season week." },
   },
   {
     pair: "week_70", rarity: "bronze",
-    title: { id: "week_70", name: "Pine Time", how: "Score 70–79 in a single week." },
-    emblem: { id: "week_70_mark", name: "The Bench", how: "Score 70–79 in a single week." },
+    title: { id: "week_70", name: "Pine Time", how: "Score 70–79 in a single regular-season week." },
+    emblem: { id: "week_70_mark", name: "The Bench", how: "Score 70–79 in a single regular-season week." },
   },
   {
     pair: "week_80", rarity: "bronze",
-    title: { id: "week_80", name: "Replacement Level", how: "Score 80–89 in a single week." },
-    emblem: { id: "week_80_mark", name: "Waiver Chip", how: "Score 80–89 in a single week." },
+    title: { id: "week_80", name: "Replacement Level", how: "Score 80–89 in a single regular-season week." },
+    emblem: { id: "week_80_mark", name: "Waiver Chip", how: "Score 80–89 in a single regular-season week." },
   },
   {
     pair: "week_90", rarity: "bronze",
-    title: { id: "week_90", name: "Almost Average", how: "Score 90–99 in a single week." },
-    emblem: { id: "week_90_mark", name: "Dash", how: "Score 90–99 in a single week." },
+    title: { id: "week_90", name: "Almost Average", how: "Score 90–99 in a single regular-season week." },
+    emblem: { id: "week_90_mark", name: "Dash", how: "Score 90–99 in a single regular-season week." },
   },
   {
     pair: "week_100", rarity: "bronze",
-    title: { id: "week_100", name: "League Average", how: "Score 100–109 in a single week." },
-    emblem: { id: "week_100_mark", name: "Beige", how: "Score 100–109 in a single week." },
+    title: { id: "week_100", name: "League Average", how: "Score 100–109 in a single regular-season week." },
+    emblem: { id: "week_100_mark", name: "Beige", how: "Score 100–109 in a single regular-season week." },
   },
   {
     pair: "week_110", rarity: "bronze",
-    title: { id: "week_110", name: "Slightly Above", how: "Score 110–119 in a single week." },
-    emblem: { id: "week_110_mark", name: "Plus One", how: "Score 110–119 in a single week." },
+    title: { id: "week_110", name: "Slightly Above", how: "Score 110–119 in a single regular-season week." },
+    emblem: { id: "week_110_mark", name: "Plus One", how: "Score 110–119 in a single regular-season week." },
   },
   {
     pair: "week_120", rarity: "silver",
-    title: { id: "week_120", name: "Competent", how: "Score 120–129 in a single week." },
-    emblem: { id: "week_120_mark", name: "Clipboard", how: "Score 120–129 in a single week." },
+    title: { id: "week_120", name: "Competent", how: "Score 120–129 in a single regular-season week." },
+    emblem: { id: "week_120_mark", name: "Clipboard", how: "Score 120–129 in a single regular-season week." },
   },
   {
     pair: "week_130", rarity: "silver",
-    title: { id: "week_130", name: "Getting Warm", how: "Score 130–139 in a single week." },
-    emblem: { id: "week_130_mark", name: "Ember", how: "Score 130–139 in a single week." },
+    title: { id: "week_130", name: "Getting Warm", how: "Score 130–139 in a single regular-season week." },
+    emblem: { id: "week_130_mark", name: "Ember", how: "Score 130–139 in a single regular-season week." },
   },
   {
     pair: "week_140", rarity: "silver",
-    title: { id: "week_140", name: "Heater", how: "Score 140–149 in a single week." },
-    emblem: { id: "week_140_mark", name: "Coil", how: "Score 140–149 in a single week." },
+    title: { id: "week_140", name: "Heater", how: "Score 140–149 in a single regular-season week." },
+    emblem: { id: "week_140_mark", name: "Coil", how: "Score 140–149 in a single regular-season week." },
   },
   {
     pair: "week_150", rarity: "silver",
-    title: { id: "week_150", name: "Problem", how: "Score 150–159 in a single week." },
-    emblem: { id: "week_150_mark", name: "Siren", how: "Score 150–159 in a single week." },
+    title: { id: "week_150", name: "Problem", how: "Score 150–159 in a single regular-season week." },
+    emblem: { id: "week_150_mark", name: "Siren", how: "Score 150–159 in a single regular-season week." },
   },
   {
     pair: "week_160", rarity: "gold",
-    title: { id: "week_160", name: "Inferno", how: "Score 160–169 in a single week." },
-    emblem: { id: "week_160_mark", name: "Blaze", how: "Score 160–169 in a single week." },
+    title: { id: "week_160", name: "Inferno", how: "Score 160–169 in a single regular-season week." },
+    emblem: { id: "week_160_mark", name: "Blaze", how: "Score 160–169 in a single regular-season week." },
   },
   {
     pair: "week_170", rarity: "gold",
-    title: { id: "week_170", name: "Unfair", how: "Score 170–179 in a single week." },
-    emblem: { id: "week_170_mark", name: "Tilt", how: "Score 170–179 in a single week." },
+    title: { id: "week_170", name: "Unfair", how: "Score 170–179 in a single regular-season week." },
+    emblem: { id: "week_170_mark", name: "Tilt", how: "Score 170–179 in a single regular-season week." },
   },
   {
     pair: "week_180", rarity: "gold",
-    title: { id: "week_180", name: "Demigod", how: "Score 180–189 in a single week." },
-    emblem: { id: "week_180_mark", name: "Bolt", how: "Score 180–189 in a single week." },
+    title: { id: "week_180", name: "Demigod", how: "Score 180–189 in a single regular-season week." },
+    emblem: { id: "week_180_mark", name: "Bolt", how: "Score 180–189 in a single regular-season week." },
   },
   {
     pair: "week_190", rarity: "gold",
-    title: { id: "week_190", name: "Near Myth", how: "Score 190–199 in a single week." },
-    emblem: { id: "week_190_mark", name: "Horizon", how: "Score 190–199 in a single week." },
+    title: { id: "week_190", name: "Near Myth", how: "Score 190–199 in a single regular-season week." },
+    emblem: { id: "week_190_mark", name: "Horizon", how: "Score 190–199 in a single regular-season week." },
   },
   {
     pair: "week_200", rarity: "gold",
-    title: { id: "week_200", name: "World Breaker", how: "Score 200 or more in a single week." },
-    emblem: { id: "week_200_mark", name: "Gamma", how: "Score 200 or more in a single week." },
+    title: { id: "week_200", name: "World Breaker", how: "Score 200 or more in a single regular-season week." },
+    emblem: { id: "week_200_mark", name: "Gamma", how: "Score 200 or more in a single regular-season week." },
   },
 ];
 
@@ -658,10 +658,12 @@ for (const [uid, n] of Object.entries(futureFirsts)) {
   if (n >= 4) unlockPair(uid, "pick_hoard", receipt([`${n} future firsts`]));
 }
 
-// Week-score bands from the written Sleeper tape (completed weeks only).
+// Week-score bands from regular-season tape only. Playoff weeks stay on
+// the book for a later playoff title/emblem batch.
 {
   const best = {}; // uid -> pair -> { points, season, week }
   for (const row of weekTape.scores || []) {
+    if (row && row.phase !== "regular") continue;
     const uid = row && row.user_id != null ? String(row.user_id) : "";
     const pair = weekScoreBand(row && row.points);
     if (!uid || !pair) continue;

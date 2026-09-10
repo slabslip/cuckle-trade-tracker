@@ -3927,7 +3927,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260910135127";
+    const DATA_V = "teamsCosVisible20260910140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13539,13 +13539,15 @@ const html = `<!DOCTYPE html>
         + plateBanner + plateEmblem + "</div>";
     }
 
-    /** Emblem mark after your own seat name only — Wave 1 show-off; others stay bare. */
+    /** Emblem after a seat name — equipped pair, else that seat's highest unlock. */
     function seatEquippedEmblemHtml(name) {
-      const mine = authSeatCanonName();
-      if (!mine || String(name) !== String(mine)) return "";
-      const id = cosmeticsEquip && cosmeticsEquip.emblem;
-      if (!id || !cosmeticsUnlocked(id)) return "";
-      return cosmeticsEmblemMark(id, "seat-cos-mark");
+      const row = (members || []).find(function (m) { return m && String(m.name) === String(name); });
+      const uid = row && row.user_id
+        ? row.user_id
+        : (authSeatCanonName() && String(name) === String(authSeatCanonName()) ? authSeatId() : null);
+      const pair = cosmeticsPairForSeat(uid);
+      if (!pair || !pair.emblem) return "";
+      return cosmeticsEmblemMark(pair.emblem, "seat-cos-mark");
     }
 
     function openCosmetics(from) {
@@ -17232,13 +17234,55 @@ const html = `<!DOCTYPE html>
       cosmeticsWriteLocalSeatStore(store);
     }
 
+    function cosmeticsUnlocksForSeat(uid) {
+      const map = (cosmeticsBook && cosmeticsBook.unlocks) || {};
+      return (uid && map[String(uid)]) || {};
+    }
+
+    function cosmeticsWeekRank(id) {
+      const s = String(id || "");
+      if (s === "week_under40") return 0;
+      if (s.indexOf("week_") !== 0) return -1;
+      const n = Number(s.slice(5));
+      return Number.isFinite(n) ? n : -1;
+    }
+
+    /** Highest-prestige unlocked title + matching emblem when no shared equip exists. */
+    function cosmeticsShowcaseForSeat(uid) {
+      const got = cosmeticsUnlocksForSeat(uid);
+      const catalog = cosmeticsCatalog();
+      const titles = catalog.filter(function (c) { return c && c.kind === "title" && got[c.id]; });
+      if (!titles.length) return { title: null, emblem: null };
+      const crown = ["five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion"];
+      let pick = null;
+      for (let i = 0; i < crown.length; i++) {
+        for (let j = 0; j < titles.length; j++) {
+          if (titles[j].id === crown[i]) { pick = titles[j]; break; }
+        }
+        if (pick) break;
+      }
+      if (!pick) {
+        const weeks = titles.filter(function (c) { return cosmeticsWeekRank(c.id) >= 0; })
+          .sort(function (a, b) { return cosmeticsWeekRank(b.id) - cosmeticsWeekRank(a.id); });
+        pick = weeks[0] || titles.slice().sort(cosmeticsSort)[0];
+      }
+      const mate = catalog.find(function (c) { return c && c.kind === "emblem" && c.pair === pick.pair; });
+      return {
+        title: pick.id,
+        emblem: mate ? mate.id : null,
+      };
+    }
+
     function cosmeticsPairForSeat(uid) {
       const id = String(uid || "");
       if (!id) return { title: null, emblem: null };
       if (authSeatId() && String(authSeatId()) === id) {
-        return cosmeticsNormPair(cosmeticsEquip);
+        const mine = cosmeticsNormPair(cosmeticsEquip);
+        if (mine.title || mine.emblem) return mine;
       }
-      return cosmeticsNormPair(cosmeticsBySeat[id]);
+      const stored = cosmeticsNormPair(cosmeticsBySeat[id]);
+      if (stored.title || stored.emblem) return stored;
+      return cosmeticsShowcaseForSeat(id);
     }
 
     function cosmeticsPairLabel(pair) {
@@ -23357,7 +23401,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v220-week-high";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v221-teams-cos";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23438,13 +23482,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v220-week-high")) {
+  || !html.includes("chuckle-shell-v221-teams-cos")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v220-week-high")
+  || !swSrc.includes("chuckle-shell-v221-teams-cos")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -24181,8 +24225,12 @@ if (!fnSrc("whoOptions").includes("cosmeticsCallingCardHtml(")
   || !fnSrc("whoOptions").includes("cosmeticsPairLabel")
   || !fnSrc("cosmeticsCallingCardHtml").includes("is-blank")
   || !html.includes(".cos-plate-banner.is-blank")
-  || !html.includes(".team-cos-lab")) {
-  throw new Error("Teams list must show each seat title banner and emblem, blank when unequipped");
+  || !html.includes(".team-cos-lab")
+  || !inline.includes("function cosmeticsShowcaseForSeat(")
+  || !fnSrc("cosmeticsPairForSeat").includes("cosmeticsShowcaseForSeat(")
+  || !fnSrc("cosmeticsWeekRank").includes("s.slice(5)")
+  || fnSrc("cosmeticsWeekRank").includes("week_(d+)")) {
+  throw new Error("Teams list must show each seat title banner and emblem from equip or unlocks");
 }
 {
   const loadAt = inline.indexOf("async function loadSeatCosmetics(");
@@ -25691,6 +25739,7 @@ if (!inline.includes("function openCosmetics(")
   || !inline.includes("function cosmeticsNormalizeEquip(")
   || !inline.includes("function cosmeticsEquipKey(")
   || !inline.includes("function seatEquippedEmblemHtml(")
+  || !fnSrc("seatEquippedEmblemHtml").includes("cosmeticsPairForSeat(")
   || !inline.includes("function cosmeticsPlateHtml(")
   || !inline.includes("seat-cos-mark")
   || !fnSrc("renderSettingsProfileTab").includes("Titles and Emblems")

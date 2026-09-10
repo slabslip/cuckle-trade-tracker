@@ -826,7 +826,8 @@ Equipped calling cards are **not** local-only. Every seat's pick must paint on
    seat can write its row.
 2. After it lands, each manager opens **Menu → Settings → Titles and Emblems**
    and taps Equip once more so the pair upserts. Picks made before this table
-   existed lived only on that phone.
+   existed lived only on that phone. Until then, Teams shows each seat's
+   highest unlock from `cosmetics.json` so other managers are not blank.
 3. Optional: [`db/wave11-profile-avatar.sql`](../db/wave11-profile-avatar.sql)
    for shared Profile photos (`seat_avatars`) — same shape, also not live until
    pasted.

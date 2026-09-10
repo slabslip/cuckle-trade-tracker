@@ -56,7 +56,8 @@ targets with outline rings; a clip here turns it into a scroll box, and it has b
 twice already (7f97711, then f9fdb39). The invariant is cheaper to keep than to rediscover.
 
 **The Teams tab lists every seat** in **last season's finishing order**, with that seat's
-equipped **title banner + emblem** under the name (blank slots until they equip). The
+equipped **title banner + emblem** under the name (or that seat's highest unlock when
+no shared equip is on file). The
 champion still carries a gold crown. Three rules hold it together:
 
 - **No "Team" / "None" row that only clears the seat.** `#leagueSub` and the **Home** tab do

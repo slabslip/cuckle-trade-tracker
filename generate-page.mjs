@@ -1659,6 +1659,9 @@ const html = `<!DOCTYPE html>
     }
     button.calc-seat-opt:last-child { border-bottom: 0; }
     button.calc-seat-opt.is-on { color: var(--lh-gold, #e0b44c); font-weight: 650; }
+    button.calc-seat-opt:disabled, button.calc-seat-opt.is-taken {
+      color: var(--muted, #8a8a90); cursor: not-allowed; opacity: 0.45;
+    }
     .calc-search { position: relative; padding: 10px 12px 8px; }
     .calc-search input {
       width: 100%; min-height: 44px; font: inherit; font-size: 16px; color: var(--text);
@@ -3914,7 +3917,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260909222956";
+    const DATA_V = "dashReview20260910003000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4214,16 +4217,16 @@ const html = `<!DOCTYPE html>
     const startLens = params.get("lens");
     if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
     {
-      const startTab = String(params.get("tab") || "").toLowerCase();
-      if (startTab === "ledger" || startTab === "teams" || startTab === "history") {
+      // homeTabCanon is declared later and hoisted. News used to fall through to Home
+      // on a cold ?tab=news and on a PWA reload that only had sessionStorage.
+      const startTab = homeTabCanon(params.get("tab"));
+      if (startTab !== "home") {
         homeTab = startTab;
       } else {
         // Soft reload / PWA pull used to wipe the URL; session keeps the open league-home tab.
         // Stored "league" is the retired first-tab name — treat as Home.
         try {
-          const saved = String(sessionStorage.getItem("cuckle.homeTab") || "").toLowerCase();
-          if (saved === "ledger" || saved === "teams" || saved === "history") homeTab = saved;
-          else homeTab = "home";
+          homeTab = homeTabCanon(sessionStorage.getItem("cuckle.homeTab"));
         } catch (_) { homeTab = "home"; }
       }
     }
@@ -5690,7 +5693,7 @@ const html = `<!DOCTYPE html>
         openId: openId,
         tradeSeat: tradeSeat,
         lens: lens,
-        homeTab: homeTab || "league",
+        homeTab: homeTabCanon(homeTab),
         d: depth,
       };
     }
@@ -5726,8 +5729,7 @@ const html = `<!DOCTYPE html>
         tradeSeat: q.get("seat") || null,
         // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
-        homeTab: (tab === "ledger" || tab === "teams" || tab === "history" || tab === "data")
-          ? (tab === "data" ? "history" : tab) : "home",
+        homeTab: homeTabCanon(tab),
         d: 0,
       };
     }
@@ -5745,14 +5747,7 @@ const html = `<!DOCTYPE html>
         titleYear = want.titleYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
-        {
-          const tab = String(want.homeTab || "").toLowerCase();
-          if (tab === "ledger" || tab === "teams" || tab === "history" || tab === "data") {
-            homeTab = tab === "data" ? "history" : tab;
-          } else {
-            homeTab = "home";
-          }
-        }
+        homeTab = homeTabCanon(want.homeTab);
         if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
           lens = want.lens;
         } else if (view === "trade" && openId) {
@@ -5792,6 +5787,8 @@ const html = `<!DOCTYPE html>
           }
         }
         if (view === "trade" && tradeSeat) await seatData(tradeSeat);
+        // Calc seats and legs are not in the URL. Leave the screen and the leftover deal dies.
+        if (view !== "calc" && typeof calcWipe === "function") calcWipe();
         say("");
         focusNext = ".screen-h";
         render();
@@ -7873,6 +7870,7 @@ const html = `<!DOCTYPE html>
       };
       calcSeatA = mine;
       calcSeatB = String(themId || "");
+      if (calcSeatA && calcSeatB && calcSeatA === calcSeatB) calcSeatB = "";
       calcLegsA = toLegs(sendA);
       calcLegsB = toLegs(sendB);
       view = "calc";
@@ -17976,8 +17974,17 @@ const html = `<!DOCTYPE html>
       return (talk.routeA || "Reload") + " → " + (talk.routeB || "Reload") + " · a piece to even it" + tail;
     }
 
+    let homeDeskBagMemo = null;
+    let homeDeskBagKey = "";
+    let homeDeskCardMemo = null;
+    let homeDeskCardKey = "";
+
     function homeDeskBags() {
       const book = calcBook || { players: [], picks: [] };
+      const key = String((book && book.as_of) || "") + "\t"
+        + ((book.players && book.players.length) || 0) + "\t"
+        + ((book.picks && book.picks.length) || 0);
+      if (homeDeskBagMemo && homeDeskBagKey === key) return homeDeskBagMemo;
       const by = new Map();
       const all = (book.players || []).concat(book.picks || []);
       for (let i = 0; i < all.length; i++) {
@@ -17990,6 +17997,8 @@ const html = `<!DOCTYPE html>
       by.forEach(function (bag) {
         bag.sort(function (x, y) { return calcValueNum(y) - calcValueNum(x); });
       });
+      homeDeskBagMemo = by;
+      homeDeskBagKey = key;
       return by;
     }
 
@@ -18094,11 +18103,24 @@ const html = `<!DOCTYPE html>
     function homeDeskCards() {
       if (!authSeatId() || !authSession) return [];
       const mine = String(authSeatId());
+      const key = mine + "\t" + ((calcBook && calcBook.as_of) || "") + "\t"
+        + ((members && members.length) || 0) + "\t"
+        + ((seatDirection && seatDirection.as_of) || "") + "\t"
+        + ((peBook && peBook.as_of) || "");
+      if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
-      if (seats.length < 2) return [];
+      if (seats.length < 2) {
+        homeDeskCardMemo = [];
+        homeDeskCardKey = key;
+        return homeDeskCardMemo;
+      }
       const bags = homeDeskBags();
       const myBag = bags.get(mine) || [];
-      if (!myBag.length) return [];
+      if (!myBag.length) {
+        homeDeskCardMemo = [];
+        homeDeskCardKey = key;
+        return homeDeskCardMemo;
+      }
       const nameOf = function (uid) {
         const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
         return (hit && hit.name) || uid;
@@ -18149,7 +18171,9 @@ const html = `<!DOCTYPE html>
         usedB[scored[i].b] = 1;
         picks.push(scored[i]);
       }
-      return picks.slice(0, 3);
+      homeDeskCardMemo = picks.slice(0, 3);
+      homeDeskCardKey = key;
+      return homeDeskCardMemo;
     }
 
     function homeDeskHtml() {
@@ -18201,6 +18225,14 @@ const html = `<!DOCTYPE html>
       calcHitsScrollB = 0;
       calcHopOpen = "";
       calcShareNote = "";
+    }
+
+    /** Keep pieces that still belong on this seat. Other-seat leftovers drop. */
+    function calcKeepSeatLegs(legs, uid) {
+      if (!uid) return legs || [];
+      return (legs || []).filter(function (l) {
+        return !l.owner_id || String(l.owner_id) === String(uid);
+      });
     }
 
     function calcArmQuiet(ms) {
@@ -18276,17 +18308,20 @@ const html = `<!DOCTYPE html>
       const need = book.players.filter((p) => calcLooksLikeId(p.name) && p.sleeper_id);
       if (!need.length) return;
       let changed = false;
-      for (let i = 0; i < need.length; i++) {
-        const p = need[i];
-        try {
-          const res = await fetch("https://api.sleeper.app/v1/players/nfl/" + encodeURIComponent(p.sleeper_id));
-          if (!res.ok) continue;
-          const row = await res.json();
-          const name = row && (row.full_name || [row.first_name, row.last_name].filter(Boolean).join(" "));
-          if (name) { p.name = name; changed = true; }
-          if (row && !p.pos) p.pos = row.position || (row.fantasy_positions && row.fantasy_positions[0]) || p.pos;
-          if (row && !p.team && row.team) p.team = row.team;
-        } catch (err) { /* leave the row; map already tried */ }
+      const chunk = 8;
+      for (let i = 0; i < need.length; i += chunk) {
+        const part = need.slice(i, i + chunk);
+        await Promise.all(part.map(async function (p) {
+          try {
+            const res = await fetch("https://api.sleeper.app/v1/players/nfl/" + encodeURIComponent(p.sleeper_id));
+            if (!res.ok) return;
+            const row = await res.json();
+            const name = row && (row.full_name || [row.first_name, row.last_name].filter(Boolean).join(" "));
+            if (name) { p.name = name; changed = true; }
+            if (row && !p.pos) p.pos = row.position || (row.fantasy_positions && row.fantasy_positions[0]) || p.pos;
+            if (row && !p.team && row.team) p.team = row.team;
+          } catch (err) { /* leave the row; map already tried */ }
+        }));
       }
       if (changed && view === "calc") render();
     }
@@ -19155,17 +19190,22 @@ const html = `<!DOCTYPE html>
 
     function calcSeatSelect(side) {
       const cur = side === "a" ? calcSeatA : calcSeatB;
+      const other = side === "a" ? calcSeatB : calcSeatA;
       const open = calcSeatMenu === side;
       const lab = cur ? calcSeatName(cur, "Select team") : "Select team";
       const aria = side === "a" ? "Team 1" : "Team 2";
       const opts = ['<button type="button" class="calc-seat-opt' + (!cur ? " is-on" : "")
         + '" data-calc-seat-pick="' + side + '" data-uid="">Select team</button>']
-        .concat((members || []).map((m) =>
-          '<button type="button" class="calc-seat-opt'
-          + (String(cur) === String(m.user_id) ? " is-on" : "")
-          + '" data-calc-seat-pick="' + side + '" data-uid="' + esc(m.user_id) + '">'
-          + esc(m.name) + "</button>"
-        ));
+        .concat((members || []).map((m) => {
+          const uid = String(m.user_id);
+          const taken = !!(other && uid === String(other));
+          return '<button type="button" class="calc-seat-opt'
+            + (String(cur) === uid ? " is-on" : "")
+            + (taken ? " is-taken" : "")
+            + '" data-calc-seat-pick="' + side + '" data-uid="' + esc(m.user_id) + '"'
+            + (taken ? ' disabled aria-disabled="true"' : "") + ">"
+            + esc(m.name) + (taken ? " · other side" : "") + "</button>";
+        }));
       return '<div class="calc-seat' + (open ? " is-open" : "") + '">'
         + '<div class="calc-block-h"><span>' + esc(cur ? (calcSeatName(cur, aria) + " sends") : (side === "a" ? "Team 1 sends" : "Team 2 sends")) + "</span>"
         + '<button type="button" class="calc-seat-btn" data-calc-seat-open="' + side + '"'
@@ -20678,23 +20718,29 @@ const html = `<!DOCTYPE html>
           return;
         }
       }
+      // Normalize before chrome so brand / tabs match the body. Legacy full-screen
+      // doors (teams / news / ledger / datasets) always become league-home tabs —
+      // even when a seat is selected, otherwise News paints under team section tabs.
+      if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
+      if (view === "teams" || view === "ledger" || view === "datasets" || view === "news") {
+        homeTab = view === "datasets" ? "history" : view;
+        view = "home";
+        me = null;
+        data = null;
+      }
+      if (!me && SEATLESS.indexOf(view) < 0) view = "home";
+      if (view !== "calc" && typeof calcWipe === "function") calcWipe();
       paintSettingsBtn();
       paintBrandHome();
       paintLeagueSub();
-      if (view !== "home" && VIEWS.indexOf(view) < 0) view = "home";
-      if (!me && SEATLESS.indexOf(view) < 0) view = "home";
-      // Legacy full-screen doors → in-place league-home tabs.
-      if (!me && (view === "teams" || view === "ledger" || view === "datasets" || view === "news")) {
-        homeTab = view === "datasets" ? "history" : view;
-        view = "home";
-      }
       // The League Data Sets dropdown exists on league home and nowhere else, so an open one
       // cannot survive a navigation off it. Done here rather than in each of the six functions
       // that leave, so the next one added cannot forget. Same condition as the renderer below.
       if (!(view === "home" && !(me && data))) dsOpen = false;
       // A full-screen trade is not a section of a seat, so the four tabs do not frame it.
       const tabs = me && view !== "titles" && view !== "trade" && view !== "datasets" && view !== "ledger"
-        && view !== "cosmetics" && view !== "calc" ? ["home", "trades", "partners", "drafts"] : [];
+        && view !== "cosmetics" && view !== "calc" && view !== "news" && view !== "teams"
+        ? ["home", "trades", "partners", "drafts"] : [];
       // The four tabs are sections of one manager's page and none of them names that manager,
       // so this does -- once, above the row, on every one of them. It doubles as the screen
       // heading those four screens never had: focusNext = ".screen-h" now lands on the name of
@@ -21796,10 +21842,14 @@ const html = `<!DOCTYPE html>
       if (dataPriceBtn) {
         const id = dataPriceBtn.getAttribute("data-data-price") || "";
         if (typeof calcWipe === "function") calcWipe();
-        const asset = typeof calcLegFromAsset === "function"
-          ? calcLegFromAsset(calcAssetById(id))
-          : null;
-        if (asset) calcLegsA = [asset];
+        const raw = (typeof calcAssetById === "function" && calcAssetById(id))
+          || (typeof dataDashAssetByPid === "function" && dataDashAssetByPid(id))
+          || null;
+        const asset = typeof calcLegFromAsset === "function" ? calcLegFromAsset(raw) : null;
+        if (asset) {
+          calcLegsA = [asset];
+          calcSeatA = String(asset.owner_id || "");
+        }
         view = "calc";
         focusNext = ".screen-h";
         render();
@@ -22515,10 +22565,26 @@ const html = `<!DOCTYPE html>
       }
       const calcSeatPick = e.target.closest("[data-calc-seat-pick]");
       if (calcSeatPick) {
+        if (calcSeatPick.disabled || calcSeatPick.getAttribute("aria-disabled") === "true") return;
         const side = calcSeatPick.getAttribute("data-calc-seat-pick");
         const uid = calcSeatPick.getAttribute("data-uid") || "";
-        if (side === "b") { calcSeatB = uid; calcFilterB = ""; calcOpenB = !!uid; calcPickB = []; calcHitsScrollB = 0; }
-        else { calcSeatA = uid; calcFilterA = ""; calcOpenA = !!uid; calcPickA = []; calcHitsScrollA = 0; }
+        const other = side === "b" ? calcSeatA : calcSeatB;
+        if (uid && other && String(uid) === String(other)) return;
+        if (side === "b") {
+          calcSeatB = uid;
+          calcFilterB = "";
+          calcOpenB = !!uid;
+          calcPickB = [];
+          calcHitsScrollB = 0;
+          calcLegsB = calcKeepSeatLegs(calcLegsB, uid);
+        } else {
+          calcSeatA = uid;
+          calcFilterA = "";
+          calcOpenA = !!uid;
+          calcPickA = [];
+          calcHitsScrollA = 0;
+          calcLegsA = calcKeepSeatLegs(calcLegsA, uid);
+        }
         calcSide = side === "b" ? "b" : "a";
         calcSeatMenu = "";
         calcSeatIgnoreOpenUntil = Date.now() + 450;
@@ -23157,7 +23223,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v212-cuff-lead";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v213-dash-review";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23238,13 +23304,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v212-cuff-lead")) {
+  || !html.includes("chuckle-shell-v213-dash-review")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v212-cuff-lead")
+  || !swSrc.includes("chuckle-shell-v213-dash-review")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -25571,6 +25637,19 @@ if (!inline.includes('homeTabAction("home"') || !inline.includes('homeTab = "hom
 if (!inline.includes("function homeTabCanon(")) {
   throw new Error("homeTabCanon must exist");
 }
+if (!fnSrc("stateFromUrl").includes("homeTabCanon(")
+  || !fnSrc("stateNow").includes("homeTabCanon(")
+  || !inline.includes("homeTab = homeTabCanon(want.homeTab)")
+  || !inline.includes("const startTab = homeTabCanon(params.get(\"tab\"))")
+  || !inline.includes("homeTab = homeTabCanon(sessionStorage.getItem(\"cuckle.homeTab\"))")) {
+  throw new Error("News and other league-home tabs must survive ?tab= and history / session restore");
+}
+if (!fnSrc("render").includes('view === "teams" || view === "ledger" || view === "datasets" || view === "news"')
+  || fnSrc("render").includes("!me && (view === \"teams\"")
+  || !fnSrc("render").includes("me = null")
+  || !fnSrc("render").includes("if (view !== \"calc\" && typeof calcWipe === \"function\") calcWipe()")) {
+  throw new Error("legacy view=news/teams/ledger/datasets must always remap to league-home tabs and wipe a leftover calc");
+}
 if (!inline.includes("function your3Html(") || !inline.includes("function homeDeskHtml(")
   || !inline.includes("function homeDeskCards(") || !inline.includes("function voteCardHtml(")
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
@@ -25745,8 +25824,25 @@ if (!inline.includes("calcOpenA")
   }
 }
 if (!inline.includes("function calcArmQuiet(") || !inline.includes("calcIsQuiet()")
-  || !inline.includes("calcBlurSearch(") || inline.includes("calcLegsB = []; calcFilterB")) {
-  throw new Error("calc team select must not reopen the roster list or wipe the bag");
+  || !inline.includes("calcBlurSearch(") || inline.includes("calcLegsB = []; calcFilterB")
+  || !inline.includes("function calcKeepSeatLegs(")
+  || !fnSrc("calcKeepSeatLegs").includes("!l.owner_id || String(l.owner_id) === String(uid)")
+  || !inline.includes("calcLegsB = calcKeepSeatLegs(calcLegsB, uid)")
+  || !inline.includes("calcLegsA = calcKeepSeatLegs(calcLegsA, uid)")) {
+  throw new Error("calc team select must drop other-seat leftovers and keep matching pieces");
+}
+if (!fnSrc("calcSeatSelect").includes("other side")
+  || !fnSrc("calcSeatSelect").includes("aria-disabled")
+  || !fnSrc("calcSeatSelect").includes("is-taken")
+  || !inline.includes("if (uid && other && String(uid) === String(other)) return")) {
+  throw new Error("calc must block the same seat on both sides");
+}
+if (!inline.includes("calcSeatA = String(asset.owner_id || \"\")")
+  || !inline.includes("data-data-price")) {
+  throw new Error("data-data-price must open calc on the asset owner seat");
+}
+if (!inline.includes("if (view !== \"calc\" && typeof calcWipe === \"function\") calcWipe()")) {
+  throw new Error("history hops off calc must wipe the leftover deal");
 }
 {
   const seatAt = inline.indexOf("function calcSeatSelect(");

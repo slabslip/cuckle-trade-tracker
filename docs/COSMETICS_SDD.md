@@ -120,9 +120,11 @@ missing waiver / lineup snapshots. Do not mint playoff point-band titles here.
 ## 3. Barracks
 
 `?view=cosmetics` from **Settings → Profile** and Account → **Titles and Emblems**.
-Two grids: titles are a **3-column** picker of scaled-down full 1024×180 crops (15 rows
-for the current 62-title book; more titles keep wrapping). Tap opens the full card.
-Emblems stay a 4–5 column mark grid. Equipped plate and detail sheet keep the large crop.
+Two grids, grouped on one page by unlock neighborhood (Championship, Finish, Title
+roster, Trade tape, Draft and wire, Week score). Titles stay a **3-column** picker of
+scaled-down full 1024×180 crops — week-score bands wrap together in that grid so the
+ladder reads left to right. Tap opens the full card. Emblems stay a 4–5 column mark
+grid with the same groups. Equipped plate and detail sheet keep the large crop.
 Detail sheet names the matching mate. Equip one title + one emblem.
 Persist the signed-in seat's pair at `cuckle.cosmetics.equip.v1.<leagueId>.<seatId>`
 (legacy `cuckle.cosmetics.equip.v1` migrates on load), plus a per-league map

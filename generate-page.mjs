@@ -1853,8 +1853,8 @@ const html = `<!DOCTYPE html>
     /* Titles & Emblems — calling cards are 1024×180 (~30% shorter than 4:1 256h),
        full-bleed art, CSS aspect-ratio 1024/180. Equipped plate + detail sheet
        stay that size. The barracks title *list* is a 3-col grid of the same
-       full crop scaled down (15 rows, then more if the book grows).
-       Emblems in a 4-col grid. */
+       full crop scaled down, grouped by unlock (week score is one wrapping
+       block). Emblems in a 4-col grid. */
     .cos-plate {
       margin: 0 0 14px; border: 1px solid var(--line); border-radius: 10px;
       overflow: hidden; background: #12151c;
@@ -1892,6 +1892,12 @@ const html = `<!DOCTYPE html>
       display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px; margin: 0 0 16px;
     }
+    .cos-sec { margin: 0 0 12px; }
+    .cos-sec-lab {
+      margin: 0 0 6px; font-size: 0.68rem; font-weight: 750;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .cos-sec .cos-titles, .cos-sec .cos-emblems { margin: 0; }
     button.cos-title {
       appearance: none; font: inherit; color: var(--text); cursor: pointer;
       border: 1px solid var(--line); border-radius: 6px; padding: 3px;
@@ -3921,7 +3927,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "teamsCosShare20260910123300";
+    const DATA_V = "cosBarracksCats20260910124000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -19551,6 +19557,49 @@ const html = `<!DOCTYPE html>
     const COS_CROWN_TITLES = new Set([
       "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
     ]);
+    /* Barracks groups — same unlock neighborhood stays together. Week score
+       is one wrapping 3-col block so the ladder reads left to right. */
+    const COS_BARRACKS_SECS = [
+      {
+        lab: "Championship",
+        titles: ["five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion", "inaugural"],
+        emblems: ["five_time_mark", "four_time_mark", "three_peat_mark", "three_time_mark", "repeat_mark", "two_time_mark", "champion_mark", "inaugural_mark"],
+      },
+      {
+        lab: "Finish",
+        titles: ["points_champ_title", "bracket_thief_title", "perfect_chip", "blowout", "nailbiter", "climber", "three_time_finalist_title", "two_time_finalist_title", "finalist_title", "last_place_title"],
+        emblems: ["points_champ", "bracket_thief", "perfect_chip_mark", "blowout_mark", "nailbiter_mark", "climber_mark", "three_time_finalist", "two_time_finalist", "finalist", "last_place"],
+      },
+      {
+        lab: "Title roster",
+        titles: ["iron_core_title", "opening_day_title", "sit_right_title", "bench_crime_title", "loyalty", "scorched", "player_path"],
+        emblems: ["iron_core", "opening_day", "sit_right", "bench_crime", "loyalty_mark", "scorched_mark", "player_path_mark"],
+      },
+      {
+        lab: "Trade tape",
+        titles: ["volume_title", "whale_title", "extractor_title", "win_now", "investor", "firsts_merchant_title", "playoff_trader_title", "quiet_year_title", "manners_title", "cartel", "pick_path", "farm_sold"],
+        emblems: ["volume", "whale", "extractor", "win_now_mark", "investor_mark", "firsts_merchant", "playoff_trader", "quiet_year", "manners", "cartel_mark", "pick_path_mark", "farm_sold_mark"],
+      },
+      {
+        lab: "Draft and wire",
+        titles: ["draft_hit_title", "waiver_touch_title", "founding_draft", "pick_hoard", "rookie_king", "wire_throne", "aging"],
+        emblems: ["draft_hit", "waiver_touch", "founding_draft_mark", "pick_hoard_mark", "rookie_king_mark", "wire_throne_mark", "aging_mark"],
+      },
+      {
+        lab: "Week score",
+        titles: [
+          "week_under40", "week_40", "week_50", "week_60", "week_70", "week_80", "week_90",
+          "week_100", "week_110", "week_120", "week_130", "week_140", "week_150",
+          "week_160", "week_170", "week_180", "week_190", "week_200",
+        ],
+        emblems: [
+          "week_under40_mark", "week_40_mark", "week_50_mark", "week_60_mark", "week_70_mark",
+          "week_80_mark", "week_90_mark", "week_100_mark", "week_110_mark", "week_120_mark",
+          "week_130_mark", "week_140_mark", "week_150_mark", "week_160_mark", "week_170_mark",
+          "week_180_mark", "week_190_mark", "week_200_mark",
+        ],
+      },
+    ];
     const COS_RARITY = { gold: 0, silver: 1, bronze: 2, iron: 3 };
     const COS_TITLE_ART = new Set([
       // Every title ships a 1024×180 full-bleed card (scripts/export-cosmetics-titles.py).
@@ -19674,6 +19723,39 @@ const html = `<!DOCTYPE html>
       return String(a.name || "").localeCompare(String(b.name || ""));
     }
 
+    function cosmeticsBarracksBlock(kind, cellFn) {
+      const catalog = cosmeticsCatalog().filter((c) => c.kind === kind);
+      const byId = {};
+      for (const c of catalog) byId[c.id] = c;
+      const seen = {};
+      const cls = kind === "title" ? "cos-titles" : "cos-emblems";
+      let html = "";
+      for (let i = 0; i < COS_BARRACKS_SECS.length; i++) {
+        const sec = COS_BARRACKS_SECS[i];
+        const ids = kind === "title" ? sec.titles : sec.emblems;
+        const items = [];
+        for (let j = 0; j < ids.length; j++) {
+          const row = byId[ids[j]];
+          if (!row) continue;
+          items.push(row);
+          seen[row.id] = true;
+        }
+        if (!items.length) continue;
+        html += '<section class="cos-sec" aria-label="' + esc(sec.lab) + '">'
+          + '<h4 class="cos-sec-lab">' + esc(sec.lab) + "</h4>"
+          + '<div class="' + cls + '">' + items.map(cellFn).join("") + "</div>"
+          + "</section>";
+      }
+      const rest = catalog.filter((c) => !seen[c.id]).slice().sort(cosmeticsSort);
+      if (rest.length) {
+        html += '<section class="cos-sec" aria-label="More">'
+          + '<h4 class="cos-sec-lab">More</h4>'
+          + '<div class="' + cls + '">' + rest.map(cellFn).join("") + "</div>"
+          + "</section>";
+      }
+      return html;
+    }
+
     function cosmeticsDetailSheetHtml() {
       if (!cosmeticsDetailId) return "";
       const c = cosmeticsCatalog().find((x) => x.id === cosmeticsDetailId);
@@ -19712,9 +19794,6 @@ const html = `<!DOCTYPE html>
     }
 
     function renderCosmetics() {
-      const catalog = cosmeticsCatalog();
-      const titles = catalog.filter((c) => c.kind === "title").slice().sort(cosmeticsSort);
-      const emblems = catalog.filter((c) => c.kind === "emblem").slice().sort(cosmeticsSort);
       const plate = cosmeticsCallingCardHtml(cosmeticsEquip, { empty: true });
       const titleRow = (c) => {
         const got = cosmeticsUnlocked(c.id);
@@ -19741,12 +19820,12 @@ const html = `<!DOCTYPE html>
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Championship ladder first; your emblem shows next to your name.</p>'
+        + '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Grouped by how you unlock them. Tap a tile for the full card.</p>'
         + plate
         + "<h3>Titles</h3>"
-        + '<div class="cos-titles">' + titles.map(titleRow).join("") + "</div>"
+        + cosmeticsBarracksBlock("title", titleRow)
         + "<h3>Emblems</h3>"
-        + '<div class="cos-emblems">' + emblems.map(emblemCell).join("") + "</div>"
+        + cosmeticsBarracksBlock("emblem", emblemCell)
         + cosmeticsDetailSheetHtml();
     }
 
@@ -23270,7 +23349,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v217-teams-cos";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v218-cos-cats";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23351,13 +23430,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v217-teams-cos")) {
+  || !html.includes("chuckle-shell-v218-cos-cats")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v217-teams-cos")
+  || !swSrc.includes("chuckle-shell-v218-cos-cats")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -25759,6 +25838,13 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   if (!titlesCss.includes("repeat(3, minmax(0, 1fr))") || titlesCss.includes("flex-direction: column")
     || titlesCss.includes("repeat(15")) {
     throw new Error("barracks title list must be a 3-col crop grid (rows wrap past 15)");
+  }
+  if (!inline.includes("COS_BARRACKS_SECS") || !inline.includes("function cosmeticsBarracksBlock(")
+    || !fnSrc("renderCosmetics").includes("cosmeticsBarracksBlock")
+    || !fnSrc("renderCosmetics").includes("data-cos-id")
+    || !fnSrc("renderCosmetics").includes("cosmeticsDetailSheetHtml")
+    || !html.includes("Week score") || !html.includes("cos-sec-lab")) {
+    throw new Error("barracks must group titles by unlock and keep tap-to-read tiles");
   }
   if (!plateCss.includes("aspect-ratio: 1024 / 180") || /repeat\(\d+/.test(plateCss)) {
     throw new Error("equipped title plate must stay the full 1024×180 crop");

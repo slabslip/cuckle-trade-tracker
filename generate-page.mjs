@@ -3927,7 +3927,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cosBarracksCats20260910124000";
+    const DATA_V = "cosBarracksCats20260910124500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -17254,8 +17254,9 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsApplyBookEquip() {
       const pack = cosmeticsBook && cosmeticsBook.equipped;
-      if (!pack || typeof pack !== "object") return;
+      if (!pack || typeof pack !== "object" || Array.isArray(pack)) return;
       for (const uid of Object.keys(pack)) {
+        if (!uid) continue;
         const have = cosmeticsBySeat[String(uid)];
         if (have && (have.title || have.emblem)) continue;
         cosmeticsBySeat[String(uid)] = cosmeticsNormPair(pack[uid]);
@@ -17373,7 +17374,8 @@ const html = `<!DOCTYPE html>
         );
         if (!res.ok) return;
         const rows = await res.json();
-        for (const r of rows || []) {
+        if (!Array.isArray(rows)) return;
+        for (const r of rows) {
           const uid = String(r && r.sleeper_user_id || "");
           if (!uid) continue;
           const pair = {
@@ -19736,12 +19738,12 @@ const html = `<!DOCTYPE html>
         const items = [];
         for (let j = 0; j < ids.length; j++) {
           const row = byId[ids[j]];
-          if (!row) continue;
+          if (!row || seen[row.id]) continue;
           items.push(row);
           seen[row.id] = true;
         }
         if (!items.length) continue;
-        html += '<section class="cos-sec" aria-label="' + esc(sec.lab) + '">'
+        html += '<section class="cos-sec" aria-label="' + esc(sec.lab) + " " + (kind === "title" ? "titles" : "emblems") + '">'
           + '<h4 class="cos-sec-lab">' + esc(sec.lab) + "</h4>"
           + '<div class="' + cls + '">' + items.map(cellFn).join("") + "</div>"
           + "</section>";
@@ -23349,7 +23351,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v218-cos-cats";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v219-cos-cats";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23430,13 +23432,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v218-cos-cats")) {
+  || !html.includes("chuckle-shell-v219-cos-cats")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v218-cos-cats")
+  || !swSrc.includes("chuckle-shell-v219-cos-cats")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -25843,8 +25845,40 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
     || !fnSrc("renderCosmetics").includes("cosmeticsBarracksBlock")
     || !fnSrc("renderCosmetics").includes("data-cos-id")
     || !fnSrc("renderCosmetics").includes("cosmeticsDetailSheetHtml")
-    || !html.includes("Week score") || !html.includes("cos-sec-lab")) {
+    || !html.includes("Week score") || !html.includes("cos-sec-lab")
+    || !inline.includes("if (!row || seen[row.id]) continue")) {
     throw new Error("barracks must group titles by unlock and keep tap-to-read tiles");
+  }
+  {
+    const secHit = inline.match(/const COS_BARRACKS_SECS = (\[[\s\S]*?\n    \];)/);
+    if (!secHit) throw new Error("COS_BARRACKS_SECS missing from generated page");
+    const secs = Function("return " + secHit[1])();
+    const book = JSON.parse(fs.readFileSync(path.join(ROOT, "data/ui/cosmetics.json"), "utf8"));
+    const wantT = new Set(book.catalog.filter((c) => c.kind === "title").map((c) => c.id));
+    const wantE = new Set(book.catalog.filter((c) => c.kind === "emblem").map((c) => c.id));
+    const gotT = new Set();
+    const gotE = new Set();
+    for (const sec of secs) {
+      if (!sec.titles || !sec.emblems || sec.titles.length !== sec.emblems.length) {
+        throw new Error("barracks section " + sec.lab + " title/emblem counts must match");
+      }
+      for (const id of sec.titles) {
+        if (gotT.has(id)) throw new Error("barracks title listed twice: " + id);
+        gotT.add(id);
+      }
+      for (const id of sec.emblems) {
+        if (gotE.has(id)) throw new Error("barracks emblem listed twice: " + id);
+        gotE.add(id);
+      }
+    }
+    const week = secs.find((s) => s.lab === "Week score");
+    if (!week || week.titles[0] !== "week_under40" || week.titles[week.titles.length - 1] !== "week_200") {
+      throw new Error("Week score section must be the regular-season ladder in order");
+    }
+    for (const id of wantT) if (!gotT.has(id)) throw new Error("barracks missing title " + id);
+    for (const id of wantE) if (!gotE.has(id)) throw new Error("barracks missing emblem " + id);
+    for (const id of gotT) if (!wantT.has(id)) throw new Error("barracks extra title " + id);
+    for (const id of gotE) if (!wantE.has(id)) throw new Error("barracks extra emblem " + id);
   }
   if (!plateCss.includes("aspect-ratio: 1024 / 180") || /repeat\(\d+/.test(plateCss)) {
     throw new Error("equipped title plate must stay the full 1024×180 crop");

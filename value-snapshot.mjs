@@ -43,10 +43,11 @@ function sleeperId(row, ids) {
   return ids.byName.get(name) || null;
 }
 
-function curveFromValues(asOf, valuesText, ids) {
+function curveFromValues(asOf, valuesText, ids, formatKey = "2qb") {
+  const col = formatKey === "1qb" ? "value_1qb" : "value_2qb";
   const rows = [];
   for (const r of parseCsv(valuesText)) {
-    const value = num(r.value_2qb);
+    const value = num(r[col] != null && r[col] !== "" ? r[col] : r.value_2qb);
     if (value == null) continue;
     const pos = String(r.pos || "").toUpperCase();
     const name = String(r.player || "").trim();
@@ -55,7 +56,7 @@ function curveFromValues(asOf, valuesText, ids) {
       if (!parsed) continue;
       rows.push({
         provider: "dynastyprocess",
-        format_key: "2qb",
+        format_key: formatKey,
         as_of: asOf,
         asset_key: parsed.key,
         value,
@@ -67,7 +68,7 @@ function curveFromValues(asOf, valuesText, ids) {
     if (!sid) continue;
     rows.push({
       provider: "dynastyprocess",
-      format_key: "2qb",
+      format_key: formatKey,
       as_of: asOf,
       asset_key: `player:${sid}`,
       value,
@@ -191,6 +192,7 @@ async function main() {
   }
 
   writeJson("value_curve.json", curve);
+  writeJson("value_curve_1qb.json", curveFromValues(asOf, valuesText, ids, "1qb"));
   writeJson("value_snapshots.json", snapshots);
   console.log(
     JSON.stringify(

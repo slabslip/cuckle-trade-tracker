@@ -26,7 +26,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const SLEEPER = "https://api.sleeper.app/v1";
-const CUCKLE = "1315431339301806080";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -38,6 +37,30 @@ function json(status: number, body: unknown) {
     status,
     headers: { ...CORS, "Content-Type": "application/json" },
   });
+}
+
+async function dispatchLeagueSync(leagueId: string) {
+  const pat = Deno.env.get("GITHUB_PAT");
+  if (!pat || !leagueId) return { ok: false, skipped: true };
+  try {
+    const res = await fetch("https://api.github.com/repos/slabslip/cuckle-trade-tracker/dispatches", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${pat}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+        "User-Agent": "cuckle-join-league",
+      },
+      body: JSON.stringify({
+        event_type: "league-sync",
+        client_payload: { league_id: String(leagueId) },
+      }),
+    });
+    return { ok: res.status === 204, github_status: res.status };
+  } catch {
+    return { ok: false };
+  }
 }
 
 async function sleeperGet(path: string) {
@@ -403,6 +426,9 @@ Deno.serve(async (req) => {
       } catch (err) {
         return json(500, { ok: false, error: String((err as Error).message || err) });
       }
+      if ((prior.status || "pending_sync") !== "ready") {
+        await dispatchLeagueSync(preview.sleeper_league_id);
+      }
       return json(200, {
         ok: true,
         already_exists: true,
@@ -422,14 +448,13 @@ Deno.serve(async (req) => {
     }
 
     const status = prior && prior.status === "ready" ? "ready" : "pending_sync";
-    const cuckle = preview.sleeper_league_id === CUCKLE;
     const { error: leagueErr } = await admin.from("leagues").upsert({
       sleeper_league_id: preview.sleeper_league_id,
       name: preview.name,
       season: preview.season,
       sport: preview.sport,
       total_rosters: preview.total_rosters,
-      status: cuckle ? "ready" : status,
+      status,
       espn_league_id: espnId,
       created_by: user.id,
     }, { onConflict: "sleeper_league_id" });
@@ -444,16 +469,18 @@ Deno.serve(async (req) => {
       return json(500, { ok: false, error: String((err as Error).message || err) });
     }
 
+    const sync = await dispatchLeagueSync(preview.sleeper_league_id);
     return json(200, {
       ok: true,
       already_exists: false,
       league: {
         ...preview,
-        status: cuckle ? "ready" : status,
+        status,
         espn_league_id: espnId,
       },
       invites: invitesOut,
-      note: "DM each manager their code. Unclaimed codes stay visible in the invite console until redeemed.",
+      sync_dispatched: !!sync.ok,
+      note: "DM each manager their code. Unclaimed codes stay visible in the invite console until redeemed. Meter sync starts automatically when GitHub PAT is set on this function.",
     });
   }
 

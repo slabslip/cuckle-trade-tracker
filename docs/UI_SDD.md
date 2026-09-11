@@ -88,7 +88,8 @@ the 44px rows and the no-scroll cap.
 
 **A menu that opens from the middle of the page is not on screen just because it is in the DOM.**
 The header picker never needed to care — it sat in the brand row at the top. Both chip menus do:
-focusing an option scrolls *that option* into view and nothing else, which left 1 of 10 managers
+focusing an option scrolls *that option* into view and nothing else, which left 1 of N managers
+(Cuckle happens to be 10; Teams lists every roster, not a ten-seat cap)
 and 2 of 6 data sets visible at 375px. `showMenu()` scrolls by the least amount that puts the whole
 panel inside the viewport, and both openers call it. It is asserted, along with the
 `focus({ preventScroll: true })` that has to come first.
@@ -418,9 +419,9 @@ The pipeline owns all arithmetic. The browser formats.
 
 | File | Size | Holds |
 | --- | --- | --- |
-| `members.json` | <1 KB | the ten seats |
-| `league.json` | 266 KB | `today`, `traders`, `player_lists`, `trade_boards.sides` (plus `drafters_rookie`, now unread) |
-| `marks.json` | 6 KB | 10 seats × 6 metrics × 5 clocks — everything the tiles and the chart need |
+| `members.json` | <1 KB | every seat (Cuckle is 10; N-team leagues list all rosters) |
+| `league.json` | 266 KB | `today`, `traders`, `player_lists`, `trade_boards.sides`, `format` (plus `drafters_rookie`, now unread) |
+| `marks.json` | 6 KB | N seats × 6 metrics × clocks — everything the tiles and the chart need |
 | `me/<user_id>.json` | 156–602 KB | that seat's trades, partners, drafts |
 | `picks.json` | 111 KB | hop tape per asset key |
 | `titles.json` | 4 KB | Champions Path |

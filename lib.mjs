@@ -10,6 +10,7 @@ export let LEAGUE_ID = process.env.LEAGUE_ID || CUCKLE_LEAGUE_ID;
 
 const SHARED_JSON = new Set([
   "value_curve.json",
+  "value_curve_1qb.json",
   "value_snapshots.json",
   "players.nfl.json",
 ]);
@@ -209,4 +210,43 @@ export function seasonAsOfs(t0, today, seasonCount) {
 export function seasonLived(date, seasonCount, today) {
   if (!date || !today) return false;
   return today >= seasonWindowEnd(date, seasonCount);
+}
+
+/**
+ * Book + clock shape from a Sleeper league (or the newest row in leagues.json).
+ * DynastyProcess: value_2qb vs value_1qb. TEP is a scoring flag on top of that.
+ * type: 0 redraft, 1 keeper, 2 dynasty (Sleeper settings.type).
+ */
+export function detectLeagueFormat(raw) {
+  const row = Array.isArray(raw) ? raw[raw.length - 1] : raw;
+  const settings = (row && row.settings) || {};
+  const positions = (row && (row.roster_positions || row.rosterPositions)) || [];
+  const scoring = (row && (row.scoring_settings || row.scoringSettings || settings.scoring_settings)) || {};
+  const qbSlots = positions.filter((p) => p === "QB" || p === "SUPER_FLEX").length;
+  const superflex = row && row.superflex != null
+    ? !!row.superflex
+    : qbSlots >= 2 || positions.includes("SUPER_FLEX");
+  const rec = Number(scoring.rec);
+  const recTe = Number(scoring.rec_te != null ? scoring.rec_te : scoring.bonus_rec_te);
+  const tep = Number.isFinite(recTe) && Number.isFinite(rec) ? recTe > rec : !!row?.tep;
+  const typeN = Number(settings.type != null ? settings.type : row && row.league_type);
+  let kind = "dynasty";
+  if (typeN === 0) kind = "redraft";
+  else if (typeN === 1) kind = "keeper";
+  else if (typeN === 2) kind = "dynasty";
+  else if (row && row.kind) kind = String(row.kind);
+  const teamN = Number(settings.num_teams || row && (row.num_teams || row.total_rosters) || 0) || null;
+  const format_key = superflex ? "2qb" : "1qb";
+  const windows = kind === "redraft"
+    ? ["t0", "all"]
+    : ["t0", "y1", "y2", "y3", "all"];
+  return {
+    kind,
+    superflex,
+    tep: !!tep,
+    format_key,
+    book: format_key,
+    team_n: teamN,
+    windows,
+  };
 }

@@ -916,6 +916,7 @@ async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
     tweet_handle: tweet.author_handle,
     submitted_by: String(sub.submitted_by == null ? "" : sub.submitted_by),
     tweet_topic: classify(tweet.text).category,
+    sleeper_league_id: String(sub.sleeper_league_id || "").trim() || null,
   };
 }
 
@@ -1294,14 +1295,34 @@ function bookOf(items, rssResults, sleeper) {
   };
 }
 
+function itemLeagueId(it) {
+  return String((it && it.sleeper_league_id) || "").trim();
+}
+
+function bookForLeague(book, leagueId) {
+  const items = (book.items || []).filter((it) => {
+    const lid = itemLeagueId(it);
+    if (lid) return lid === leagueId;
+    return leagueId === CUCKLE_LEAGUE_ID;
+  });
+  return { ...book, items };
+}
+
 function writeBook(book) {
-  const body = JSON.stringify(book) + "\n";
+  const leaguesRoot = `${DATA}/leagues`;
+  const ids = fs.existsSync(leaguesRoot)
+    ? fs.readdirSync(leaguesRoot).filter((id) => /^\d{6,64}$/.test(id))
+    : [CUCKLE_LEAGUE_ID];
+  if (!ids.includes(CUCKLE_LEAGUE_ID)) ids.push(CUCKLE_LEAGUE_ID);
+  const cuckleBook = bookForLeague(book, CUCKLE_LEAGUE_ID);
   const path = `${DATA}/ui/news.json`;
   fs.mkdirSync(`${DATA}/ui`, { recursive: true });
-  fs.writeFileSync(path, body);
-  const scoped = `${leagueUiDir(CUCKLE_LEAGUE_ID)}/news.json`;
-  fs.mkdirSync(scoped.slice(0, scoped.lastIndexOf("/")), { recursive: true });
-  fs.writeFileSync(scoped, body);
+  fs.writeFileSync(path, JSON.stringify(cuckleBook) + "\n");
+  for (const id of ids) {
+    const dest = `${leagueUiDir(id)}/news.json`;
+    fs.mkdirSync(dest.slice(0, dest.lastIndexOf("/")), { recursive: true });
+    fs.writeFileSync(dest, JSON.stringify(bookForLeague(book, id)) + "\n");
+  }
   return path;
 }
 

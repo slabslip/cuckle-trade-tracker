@@ -4,8 +4,10 @@
 Companion to the meter canon [`PRODUCT.md`](PRODUCT.md). Votes wire: [`VOTES_SDD.md`](VOTES_SDD.md).
 News / smack: [`NEWS_SDD.md`](NEWS_SDD.md) / [`SMACK_AGENT.md`](SMACK_AGENT.md). Domain: [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).
 **Build today:** [`START_HERE.md`](START_HERE.md) · [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
+Store: [`STORE_LAW.md`](STORE_LAW.md) · [`STORE_OPS.md`](STORE_OPS.md) · [`STORE_GATE.md`](STORE_GATE.md).
+Formats: [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
 
-**Status:** On **`main`**, live at https://slabslip.github.io/cuckle-trade-tracker/. Requires Supabase SQL + `join-league` deploy + Auth settings (see START_HERE).
+**Status:** On **`main`**, live at https://slabslip.github.io/cuckle-trade-tracker/. Requires Supabase SQL + `join-league` deploy + Auth settings (see START_HERE). TestFlight wrapper lives in [`ios/`](../ios/) and loads that origin with `?store=1`.
 
 **App name:** Chuckle Fantasy (brand in shell). Hosted league one: **CuckleChunckle** (`1315431339301806080`).
 
@@ -228,8 +230,8 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | --- | --- |
 | Sleeper chat / comments scrape | **No** — no public API; privacy/ToS |
 | ESPN meter import | PARKED (`espn_league_id` reserved) |
-| Web push / App Store | PARKED — PWA install shell ships; push + store later |
-| Auto-sync every league on create | Manual / Action `league-sync` for now |
+| Web push / Play Store | PARKED — PWA install shell ships; iOS TestFlight is the store door |
+| Auto-sync every league on create | `join-league` dispatches GitHub `league-sync` when `GITHUB_PAT` is set |
 | Smack agent seat-voice bank | Future opt-in inside Chuckle — not Sleeper scrape |
 
 ---
@@ -242,7 +244,7 @@ Operator applies SQL + deploys Edge (this Cloud Agent cannot hold your Supabase 
 - [ ] Commissioner creates Cuckle once; revisit opens console without remint
 - [ ] Ten invite links DMed; commissioner claims own seat; member redeems
 - [ ] Both open **league home** (news feed); pick a team from bottom-nav Teams; cast a vote as their seat
-- [ ] Second league can be registered; meter appears only after `node build.mjs <id>` → `ready`
+- [ ] Second league can be registered; `join-league` dispatches `league-sync`; meter flips `ready` after the Action (or `node build.mjs <id>` on a laptop)
 
 **In-repo (this branch):** invite console, idempotent create, claim seat, atomic redeem, Wave 2
 vote identity + Wave 2b uniqueness, scoped `data/leagues/<id>/ui` pipeline, `league-sync` Action,
@@ -265,4 +267,7 @@ PWA manifest + service worker. Live dogfood remains the checkboxes above.
 | [`build.mjs`](../build.mjs) / [`lib.mjs`](../lib.mjs) | Scoped pipeline |
 | [`mark-league-ready.mjs`](../mark-league-ready.mjs) | Status flip |
 | [`manifest.webmanifest`](../manifest.webmanifest) / [`sw.js`](../sw.js) | PWA install shell |
+| [`ios/`](../ios/) | WKWebView TestFlight shell (`?store=1`) |
+| [`STORE_LAW.md`](STORE_LAW.md) / [`STORE_OPS.md`](STORE_OPS.md) / [`STORE_GATE.md`](STORE_GATE.md) | Store rules, human ops, device gate |
+| [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) | 1QB / Superflex / TEP / redraft / N-team |
 | [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md) | Same-day operator path |

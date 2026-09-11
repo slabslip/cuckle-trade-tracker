@@ -267,7 +267,14 @@ async function main() {
       previous_league_id: l.previous_league_id,
       num_teams: l.settings?.num_teams,
       playoff_teams: l.settings?.playoff_teams,
-      superflex: (l.roster_positions || []).filter((p) => p === "QB").length >= 2,
+      superflex: (l.roster_positions || []).filter((p) => p === "QB" || p === "SUPER_FLEX").length >= 2,
+      roster_positions: l.roster_positions || [],
+      settings: { type: l.settings?.type, num_teams: l.settings?.num_teams },
+      scoring_settings: {
+        rec: l.scoring_settings?.rec,
+        rec_te: l.scoring_settings?.rec_te,
+        bonus_rec_te: l.scoring_settings?.bonus_rec_te,
+      },
     })),
   );
   writeJson("members.json", memberList);

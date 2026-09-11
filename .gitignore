@@ -5,3 +5,5 @@ data/tx_cache/
 data/seat-invites.local.txt
 node_modules/
 supabase/.temp/
+ios/build/
+ios/DerivedData/

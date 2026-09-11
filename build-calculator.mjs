@@ -5,7 +5,7 @@
  * Same flatten constants as revalue.mjs.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { leagueUiDir, pickTier, readJson, setLeagueId, writeUi } from "./lib.mjs";
+import { detectLeagueFormat, leagueUiDir, pickTier, readJson, setLeagueId, writeUi } from "./lib.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
@@ -235,7 +235,9 @@ async function sleeperPlayer(pid) {
   };
 }
 
-const curve = readJson("value_curve.json", []);
+const leagueFormat = detectLeagueFormat(readJson("leagues.json", []));
+const curve = readJson(leagueFormat.format_key === "1qb" ? "value_curve_1qb.json" : "value_curve.json", null)
+  || readJson("value_curve.json", []);
 const members = readJson("members.json", []) || [];
 const rosters = readJson("rosters_now.json", []) || [];
 const playersNfl = readJson("players.nfl.json", {}) || {};

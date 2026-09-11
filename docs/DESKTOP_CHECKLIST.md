@@ -287,6 +287,10 @@ seat ticket — they still choose their own username and password. Stop for toda
 
 ---
 
-## Not today
+## Store / second league (not the same-day click path)
 
-Second-league `node build.mjs`, custom domain, ESPN import, chat scrape.
+Apple Developer, DNS, and TestFlight upload: [`STORE_OPS.md`](STORE_OPS.md).
+Device gate: [`STORE_GATE.md`](STORE_GATE.md). Format books: [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
+
+A second Sleeper ID now dispatches `league-sync` from `join-league` when `GITHUB_PAT` is set
+on that function. Custom domain and ESPN import stay human / parked.

@@ -54,6 +54,8 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 13. `db/wave15-ledger-notes.sql` — leftover Shortcut drafts (`side_b` nullable, filer-only).
 14. `db/wave16-ledger-wager.sql` — **New wager** handshake: `house_odds`, `offer_rev`, `ledger_settle_votes`. Run after merging the wager PR.
 15. `db/wave17-ledger-clock.sql` — NFL clocks (`clock_kind` / `clock_meta`), win hints, seat style. Run after wave16.
+16. `db/wave18-seat-cosmetics.sql` — equipped titles / emblems (if not already applied)
+17. `db/wave21-news-league.sql` — optional `sleeper_league_id` on news shares
 
 **Ledger:** after wave12 + wave13 + wave16 + wave17, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
 Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  
@@ -123,6 +125,8 @@ Full meter pipeline: see [`README.md`](../README.md).
 | [`PRODUCT.md`](PRODUCT.md) | Meter canon |
 | [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) | Own domain later |
 | [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 Note → Finish → Send + push to Pages |
+| [`STORE_LAW.md`](STORE_LAW.md) / [`STORE_OPS.md`](STORE_OPS.md) | App Store / TestFlight wrapper + human Apple / DNS / SQL |
+| [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) | 1QB / Superflex / TEP / redraft / first-year empty states |
 
 ---
 

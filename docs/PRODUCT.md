@@ -6,7 +6,7 @@
 
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
-**Values:** DynastyProcess Superflex (`value_2qb`) from GitHub `dynastyprocess/data` is the history book (five Score-as windows). Today / `even` is a daily multi-source blend (flatten + KTC + FantasyCalc + DynastyDealer). Official Sleeper GETs for tape and drafts. The phone never scrapes price APIs.
+**Values:** DynastyProcess from GitHub `dynastyprocess/data` is the history book. Cuckle (and any Superflex / 2QB roster) uses `value_2qb` and five Score-as windows. A 1QB league uses `value_1qb`. Redraft keeps Date of Trade + as of today only. TEP is a scoring flag, not a second needle. Today / `even` is a daily multi-source blend (flatten + KTC + FantasyCalc + DynastyDealer). Official Sleeper GETs for tape and drafts. The phone never scrapes price APIs. Format detection: [`FORMAT_BOOKS.md`](./FORMAT_BOOKS.md).
 
 ---
 
@@ -99,7 +99,8 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - One-way deals (one seat gets players/picks; the other gets nothing or only FAAB).
 - Browser-side Sleeper calls for the **meter** (join/preview via Edge Function is in).
 - Live refresh of DynastyProcess from the phone.
-- App Store / Play binaries and push notifications (PARKED — PWA / custom domain first).
+- Play binaries and web push (PARKED). App Store / TestFlight is the Cuckle-first
+  WebView shell — law in [`STORE_LAW.md`](./STORE_LAW.md), ops in [`STORE_OPS.md`](./STORE_OPS.md).
 - A third hero number that pretends to be “today.”
 - Chart libraries, npm, Tailwind, new CSS systems.
 - Applying the 300 activity floor to the **today** clock (Hill is 285 — still a real player).
@@ -119,9 +120,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Weekly/monthly spark (full git density) instead of year-end + today.
 - Peak-in-window, AUC, or “years above 300” as the **headline** over-time number.
 - Flip P&L as the default over-time identity (hop tape already exists; do not merge it into the trade needle).
-- Auto-publish / scheduled rebuild for every newly joined league (manual/Action sync first).
+- Auto-publish polish (join-league already dispatches `league-sync` when `GITHUB_PAT` is set).
 - PWA install prompt + web push.
-- Native App Store / Play wrappers.
+- Play Store wrapper. iOS TestFlight shell is in [`ios/`](../ios/) — do not rewrite the meter in SwiftUI.
 - Accept-odds / suggested counter; public/private marketplace.
 - Equipped **title** painted on names across the app (header, news, trade cards, ledger,
   smack). Wave 1 already paints the calling card on each manager's team home and your

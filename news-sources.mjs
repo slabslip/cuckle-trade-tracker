@@ -508,9 +508,11 @@ function supabaseHeaders(extra) {
  * markSubmissionProcessed). The option stays because the predicate is still the right one for
  * anything that wants the delta rather than the state, and because the index is still there.
  */
-/** Columns the feed needs. `agent_tip` is optional until the schema alter lands on Supabase. */
-const SUBMISSION_SELECT = "id,url,note,agent_tip,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by";
-const SUBMISSION_SELECT_NO_TIP = "id,url,note,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by";
+/** Columns the feed needs. `agent_tip` and `sleeper_league_id` are optional until those alters land. */
+const SUBMISSION_SELECT = "id,url,note,agent_tip,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by,sleeper_league_id";
+const SUBMISSION_SELECT_NO_TIP = "id,url,note,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by,sleeper_league_id";
+const SUBMISSION_SELECT_NO_LEAGUE = "id,url,note,agent_tip,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by";
+const SUBMISSION_SELECT_NO_TIP_NO_LEAGUE = "id,url,note,target_name,submitted_by,created_at,processed_at,deleted_at,deleted_by";
 
 function submissionListUrl(select, { limit, unprocessedOnly, newestFirst }) {
   // Soft-deleted rows stay in the table for audit but never re-enter the feed. The filter is
@@ -529,10 +531,18 @@ function submissionListUrl(select, { limit, unprocessedOnly, newestFirst }) {
  * That is the expected state until `db/schema.sql`'s alter runs (docs/SUPABASE_SETUP.md §3b);
  * it must not look like an empty queue — that is how #38 blanked the public feed.
  */
-function isMissingAgentTipColumn(status, body) {
+function isMissingColumn(status, body, name) {
   if (status !== 400 || !body || typeof body !== "object") return false;
   const msg = String(body.message || body.error || "");
-  return /agent_tip/i.test(msg) && /does not exist/i.test(msg);
+  return new RegExp(name, "i").test(msg) && /does not exist/i.test(msg);
+}
+
+function isMissingAgentTipColumn(status, body) {
+  return isMissingColumn(status, body, "agent_tip");
+}
+
+function isMissingLeagueColumn(status, body) {
+  return isMissingColumn(status, body, "sleeper_league_id");
 }
 
 export async function fetchSubmissions({
@@ -547,19 +557,37 @@ export async function fetchSubmissions({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      // Schema alter not applied yet: retry without agent_tip so the feed still builds.
-      // Tips stay null until the column exists; smack-tips.json simply does not grow.
-      if (isMissingAgentTipColumn(res.status, body)) {
-        res = await fetch(submissionListUrl(SUBMISSION_SELECT_NO_TIP, opts), {
+      // Schema alters not applied yet: retry without optional columns so the feed still builds.
+      let fallback = null;
+      if (isMissingAgentTipColumn(res.status, body) && isMissingLeagueColumn(res.status, body)) {
+        fallback = SUBMISSION_SELECT_NO_TIP_NO_LEAGUE;
+      } else if (isMissingAgentTipColumn(res.status, body)) {
+        fallback = SUBMISSION_SELECT_NO_TIP;
+      } else if (isMissingLeagueColumn(res.status, body)) {
+        fallback = SUBMISSION_SELECT_NO_LEAGUE;
+      }
+      if (fallback) {
+        res = await fetch(submissionListUrl(fallback, opts), {
           headers: supabaseHeaders(), signal: ac.signal,
         });
+        if (!res.ok) {
+          const body2 = await res.json().catch(() => null);
+          const again = isMissingAgentTipColumn(res.status, body2) || isMissingLeagueColumn(res.status, body2)
+            ? SUBMISSION_SELECT_NO_TIP_NO_LEAGUE
+            : null;
+          if (again && again !== fallback) {
+            res = await fetch(submissionListUrl(again, opts), {
+              headers: supabaseHeaders(), signal: ac.signal,
+            });
+          }
+        }
         if (!res.ok) return { ok: false, rows: [], error: `HTTP ${res.status}` };
         const rows = await res.json();
         return {
           ok: true,
           rows: keepNewsSubmissionRows(rows),
           error: null,
-          agent_tip_column: false,
+          agent_tip_column: fallback === SUBMISSION_SELECT_NO_LEAGUE,
         };
       }
       return { ok: false, rows: [], error: `HTTP ${res.status}` };

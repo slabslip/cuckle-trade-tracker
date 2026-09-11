@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { CUCKLE_LEAGUE_ID, setLeagueId } from "./lib.mjs";
+import { setLeagueId } from "./lib.mjs";
 
 /**
  * Rebuild one league's meter book.
@@ -15,8 +15,6 @@ const argv = process.argv.slice(2);
 const skipSnapshot = argv.includes("--skip-snapshot");
 const leagueArg = argv.find((a) => /^\d{6,64}$/.test(a));
 const leagueId = setLeagueId(leagueArg);
-const isCuckle = leagueId === CUCKLE_LEAGUE_ID;
-
 const steps = [
   ["sleeper-sync.mjs", leagueId],
   ["draft-resolve.mjs", leagueId],
@@ -31,8 +29,8 @@ const steps = [
   ["build-cosmetics.mjs", leagueId],
 ];
 
-// Site shell is Cuckle-hosted; only regenerate index.html for the default league.
-if (isCuckle) steps.push(["generate-page.mjs"]);
+// Shared shell — regenerate after any league book so Pages stays current.
+steps.push(["generate-page.mjs"]);
 
 for (const [script, ...args] of steps) {
   console.log(`\n== ${script} (${leagueId}) ==`);

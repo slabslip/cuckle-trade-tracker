@@ -61,6 +61,7 @@ jobs:
         run: node build.mjs "$LEAGUE_ID"
 
       - name: Audit today book
+        if: steps.league.outputs.id == '1315431339301806080'
         run: |
           node audit-values.mjs
           node audit-pass2.mjs

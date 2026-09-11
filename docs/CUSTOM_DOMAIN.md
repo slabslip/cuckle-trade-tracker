@@ -18,7 +18,9 @@ Relative paths (`data/ui/members.json`, `data/leagues/<id>/ui/…`) keep working
 **PWA / “Add to Home Screen”:** `manifest.webmanifest` + `sw.js` ship on this branch so Safari
 and Chrome can install Chuckle as a standalone shell (browser and phone). After a custom domain is
 live, set Supabase Auth Site URL to that origin, then install from the browser share sheet.
-**Web push** and native App Store shells stay parked — install does not depend on them.
+**Web push** stays parked. The iOS TestFlight / App Store shell is a WKWebView onto this
+same origin (`?store=1`) — see [`STORE_LAW.md`](STORE_LAW.md) and [`STORE_OPS.md`](STORE_OPS.md).
+Changing the origin wipes `localStorage`; set the shell `ChuckleOrigin` when DNS goes live.
 
 **ESPN history import** is also parked; optional `espn_league_id` on create is storage only.
 
@@ -138,7 +140,8 @@ Also confirm (**Authentication → Providers → Email**):
 
 - No change to the anon key or project URL in `generate-page.mjs` for a domain alone.
 - No GoDaddy “forwarding / masking” — use real DNS to GitHub, not a framed redirect.
-- No App Store build for this cutover (PWA home-screen is enough for now).
+- PWA home-screen is enough for this DNS cutover. The App Store binary is a separate
+  signed window onto the same origin ([`STORE_OPS.md`](STORE_OPS.md) §3–4).
 - No IP allowlisting — identity is Auth + invite membership, not the network.
 
 ---

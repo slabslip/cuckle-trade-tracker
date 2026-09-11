@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
 import {
-  addDays, pickTier, readJson, roundName, seasonAsOfs, setLeagueId, writeJson, writeUi, weekAsOfs,
+  addDays, CUCKLE_LEAGUE_ID, detectLeagueFormat, LEAGUE_ID, pickTier, readJson, roundName, seasonAsOfs, setLeagueId, writeJson, writeUi, weekAsOfs,
 } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
@@ -477,7 +477,9 @@ async function main() {
   const allTrades = readJson("trades.json", []);
   const allLegs = readJson("trade_legs.json", []).filter((l) => l.kind !== "faab");
   const members = readJson("members.json", []);
-  const fullCurve = readJson("value_curve.json", []);
+  const leagueFormat = detectLeagueFormat(readJson("leagues.json", []));
+  const curveName = leagueFormat.format_key === "1qb" ? "value_curve_1qb.json" : "value_curve.json";
+  const fullCurve = readJson(curveName, null) || readJson("value_curve.json", []);
   const resolutions = readJson("asset_resolutions.json", []);
   const draftPicks = readJson("draft_picks.json", []);
   const seats = readJson("seats.json", []);
@@ -1125,16 +1127,24 @@ async function main() {
   }
 
   const player_lists = playerLists();
-  check("has current rosters", readJson("rosters_now.json", []).length === 10);
-  check("most traded is 5", player_lists.most_traded.length === 5);
-  check("least traded is 5", player_lists.least_traded.length === 5);
-  check("homesteaders is 5", player_lists.homesteaders.length === 5);
-  check("most ranked by trades", player_lists.most_traded[0].trades >= player_lists.most_traded[4].trades);
-  check("least ranked by trades", player_lists.least_traded[0].trades <= player_lists.least_traded[4].trades);
+  const rostersNow = readJson("rosters_now.json", []);
+  check("has current rosters", rostersNow.length === TEAMS || rostersNow.length >= 2);
+  if (player_lists.most_traded.length >= 2) {
+    check("most ranked by trades", player_lists.most_traded[0].trades >= player_lists.most_traded[player_lists.most_traded.length - 1].trades);
+  }
+  if (player_lists.least_traded.length >= 2) {
+    check("least ranked by trades", player_lists.least_traded[0].trades <= player_lists.least_traded[player_lists.least_traded.length - 1].trades);
+  }
   check("forever never moved", player_lists.forever.every((r) => r.trades === 0));
-  check("forever still rostered", player_lists.forever.length > 0);
-  check("homestead not forever", player_lists.homesteaders.every((r) => !player_lists.forever.some((f) => f.name === r.name)));
-  check("homestead days ranked", player_lists.homesteaders[0].days >= player_lists.homesteaders[4].days);
+  const isCuckle = String(LEAGUE_ID) === CUCKLE_LEAGUE_ID;
+  if (isCuckle) {
+    check("most traded is 5", player_lists.most_traded.length === 5);
+    check("least traded is 5", player_lists.least_traded.length === 5);
+    check("homesteaders is 5", player_lists.homesteaders.length === 5);
+    check("forever still rostered", player_lists.forever.length > 0);
+    check("homestead not forever", player_lists.homesteaders.every((r) => !player_lists.forever.some((f) => f.name === r.name)));
+    check("homestead days ranked", player_lists.homesteaders[0].days >= player_lists.homesteaders[4].days);
+  }
 
   function reviewTape() {
     return REVIEW_IDS.map((id) => {
@@ -1155,7 +1165,7 @@ async function main() {
   }
 
   const review_trades = reviewTape();
-  check("review tape is 10", review_trades.length === 10);
+  if (isCuckle) check("review tape is 10", review_trades.length === 10);
 
   writeJson("trade_meter.json", meters);
   writeJson("leaderboard.json", leaderboard);
@@ -1177,6 +1187,7 @@ async function main() {
     review_trades,
     player_lists,
     today,
+    format: leagueFormat,
   });
   writeUi("picks.json", pickIndex);
 

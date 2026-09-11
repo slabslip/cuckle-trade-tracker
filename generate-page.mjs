@@ -3927,7 +3927,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260911215920";
+    const DATA_V = "storeShell20260911234500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4029,6 +4029,25 @@ const html = `<!DOCTYPE html>
       ["y3", "3 seasons", "Through three seasons from the trade."],
       ["all", "as of today", "Weekly average value from accept through today."],
     ];
+    function leagueFormat() {
+      const f = league && league.format;
+      if (f && typeof f === "object") return f;
+      return {
+        kind: "dynasty", superflex: true, tep: false, format_key: "2qb", book: "2qb",
+        team_n: null, windows: ["t0", "y1", "y2", "y3", "all"],
+      };
+    }
+    function scoreWindows() {
+      const keys = leagueFormat().windows;
+      if (Array.isArray(keys) && keys.length) {
+        const keep = WINDOWS.filter(function (w) { return keys.indexOf(w[0]) >= 0; });
+        if (keep.length) return keep;
+      }
+      if (leagueFormat().kind === "redraft") {
+        return WINDOWS.filter(function (w) { return w[0] === "t0" || w[0] === "all"; });
+      }
+      return WINDOWS;
+    }
     let view = "home";
     // League-home top tabs: home (digest) | teams | ledger | history.
     let homeTab = "home";
@@ -4225,8 +4244,21 @@ const html = `<!DOCTYPE html>
     let voteBook = null;
 
     const params = new URLSearchParams(location.search);
+    if (params.get("store") === "1") {
+      try { sessionStorage.setItem("cuckle.storeShell", "1"); } catch (err) { /* private */ }
+    }
+    function isStoreShell() {
+      try {
+        if (params.get("store") === "1") return true;
+        if (sessionStorage.getItem("cuckle.storeShell") === "1") return true;
+      } catch (err) { /* private */ }
+      return String(navigator.userAgent || "").indexOf("ChuckleStore/") >= 0;
+    }
+    function ledgerStoreNoun() {
+      return isStoreShell() ? "side bet" : "wager";
+    }
     const startLens = params.get("lens");
-    if (startLens && WINDOWS.some((w) => w[0] === startLens)) lens = startLens;
+    if (startLens && scoreWindows().some((w) => w[0] === startLens)) lens = startLens;
     {
       // homeTabCanon is declared later and hoisted. News used to fall through to Home
       // on a cold ?tab=news and on a PWA reload that only had sessionStorage.
@@ -11221,7 +11253,7 @@ const html = `<!DOCTYPE html>
       ledgerEnsureLoaded();
       const dueN = ledgerDueCount();
       if (homeTab === "ledger" && dueN && !ledgerDueToastShown && !ledgerToast) {
-        ledgerToast = "Clock\u2019s up on " + dueN + " wager" + (dueN === 1 ? "" : "s") + ". Pick a winner.";
+        ledgerToast = "Clock\u2019s up on " + dueN + " " + ledgerStoreNoun() + (dueN === 1 ? "" : "s") + ". Pick a winner.";
         ledgerDueToastShown = true;
       }
       const list = ledgerFiltered();
@@ -11243,7 +11275,9 @@ const html = `<!DOCTYPE html>
           ? '<p class="caption">No settled slips yet.</p>'
           : (ledgerFeed === "closed"
             ? '<p class="caption">No trashed or expired offers.</p>'
-            : '<p class="caption">No slips yet. Tap Propose a NEW Wager, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>');
+            : (isStoreShell()
+              ? '<p class="caption">No slips yet. Side bets are honor system among league members — no money moves in the app. Tap Propose a side bet, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>'
+              : '<p class="caption">No slips yet. Tap Propose a NEW Wager, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>'));
       } else {
         body = list.map((b) => ledgerCardHtml(b)).join("");
       }
@@ -11253,12 +11287,15 @@ const html = `<!DOCTYPE html>
         ? '<button type="button" class="ledger-propose" data-ledger-wager="1">'
           + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">'
           + '<path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>'
-          + "<span>Propose a NEW Wager</span></button>"
+          + "<span>" + (isStoreShell() ? "Propose a side bet" : "Propose a NEW Wager") + "</span></button>"
         : "";
       const feed = ledgerFeed === "settled" || ledgerFeed === "closed" ? ledgerFeed : "live";
       const ptr = '<div class="ledger-ptr" data-ledger-ptr="1" aria-hidden="true"></div>';
       return ptr
         + '<h2 class="screen-h" tabindex="-1">Ledger</h2>'
+        + (isStoreShell()
+          ? '<p class="caption">Honor-system side bets with league mates. Chuckle never moves money.</p>'
+          : "")
         + toast
         + propose
         + ledgerSummaryHtml(list)
@@ -11925,7 +11962,11 @@ const html = `<!DOCTYPE html>
 
     function renderTitles() {
       const list = (titles && titles.titles) || [];
-      if (!list.length) return '<p class="caption">No championship path yet. Run <code>node title-path.mjs</code>.</p>';
+      if (!list.length) {
+        return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
+          + '<p class="caption">No championship seasons on this Sleeper history yet. '
+          + "A first-year or redraft league without a prior season stays empty here until a title is played.</p>";
+      }
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
       return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
@@ -17477,6 +17518,7 @@ const html = `<!DOCTYPE html>
             processed_at: now,
             deleted_at: now,
             deleted_by: COS_SHARE_BY,
+            sleeper_league_id: lid,
           }),
           signal: voteAbort(),
         });
@@ -19989,7 +20031,9 @@ const html = `<!DOCTYPE html>
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Grouped by how you unlock them. Tap a tile for the full card.</p>'
+        + ((leagueFormat().kind === "redraft" || !((titles && titles.titles) || []).length)
+          ? '<p class="caption">Titles unlock from this league tape. A first-year or redraft league starts empty — no Cuckle crowns are copied over.</p>'
+          : '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Grouped by how you unlock them. Tap a tile for the full card.</p>')
         + plate
         + "<h3>Titles</h3>"
         + cosmeticsBarracksBlock("title", titleRow)
@@ -20428,7 +20472,7 @@ const html = `<!DOCTYPE html>
           + (runLens !== "all" ? '<span class="dot" aria-hidden="true"></span>' : "");
       }
       panel.hidden = !lensOpen;
-      panel.innerHTML = lensOpen ? WINDOWS.map(scoreOpt).join("") : "";
+      panel.innerHTML = lensOpen ? scoreWindows().map(scoreOpt).join("") : "";
       if (lensOpen) {
         const anchor = (lensAnchorId && document.querySelector('[data-lens-anchor="' + lensAnchorId + '"]'))
           || (lensPicker === "run" ? runBtns[0] : btns[0]);
@@ -20616,6 +20660,9 @@ const html = `<!DOCTYPE html>
     function renderCreateLeague() {
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
+        + (isStoreShell()
+          ? '<p class="caption">This TestFlight build features Cuckle. Another Sleeper ID still registers and league-sync builds the meter. A first-year league stays thin — no fake crowns.</p>'
+          : "")
         + '<div class="app-card"><h3>League IDs</h3>'
         + '<div class="app-form">'
         + '<label>Sleeper league ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
@@ -20947,7 +20994,8 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(L.name || "League") + "</h2>"
         + '<div class="sync-banner">You are in as <b>' + esc(L.team_name || "your team") + "</b>. "
-        + "This league is registered. The full trade meter syncs next — Cuckle-ready leagues open the dashboard immediately; new leagues show here until their data is built.</div>"
+        + "This league is registered. The trade meter builds from Sleeper automatically "
+        + "(GitHub league-sync). This screen stays until that book is ready.</div>"
         + '<p class="caption">League ID <code>' + esc(L.sleeper_league_id || "") + "</code></p>"
         + "</div>";
     }
@@ -20995,9 +21043,8 @@ const html = `<!DOCTYPE html>
         paintBottomNav();
         return;
       }
-      if (appScreen === "dash" && activeLeague && activeLeague.status && activeLeague.status !== "ready"
-          && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID) {
-        // Non-Cuckle leagues without a ready sync get the pending screen, not a broken meter.
+      if (appScreen === "dash" && activeLeague && activeLeague.status && activeLeague.status !== "ready") {
+        // Any league without a ready sync gets the pending screen, not a broken meter.
         const hasBook = !!(league && members);
         if (!hasBook) {
           paintSettingsBtn();
@@ -21043,8 +21090,7 @@ const html = `<!DOCTYPE html>
           + seatLabel(me.name) + "</h2>"
         : "";
       const seatPlate = tabs.length ? cosmeticsSeatPlateHtml() : "";
-      const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready"
-        && activeLeague.sleeper_league_id !== CUCKLE_LEAGUE_ID)
+      const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready")
         ? '<div class="sync-banner">Meter sync still pending for this league. Showing what is available.</div>'
         : "";
       const nav = (tabs.length
@@ -23518,7 +23564,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v223-equip-share";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v225-store-any-league";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -23568,6 +23614,16 @@ if (!html.includes('property="og:image"')
   || !html.includes('property="og:title"')) {
   throw new Error("index head must ship Open Graph + Twitter card tags for link previews");
 }
+if (!html.includes("function isStoreShell(")
+  || !html.includes("function ledgerStoreNoun(")
+  || !html.includes("function scoreWindows(")
+  || !html.includes("Honor-system side bets")
+  || !html.includes("no money moves in the app")
+  || !html.includes("This TestFlight build features Cuckle")
+  || !html.includes("no Cuckle crowns are copied over")
+  || !html.includes("GitHub league-sync")) {
+  throw new Error("store shell must relabel Ledger and expose format-aware clocks");
+}
 if (html.includes('img class="brand-mark"') || html.includes('data/ui/brand-mark.png')
   || html.includes('data-brand-mark')) {
   throw new Error("Chuckle brand-mark must stay out of the brand row — Home sits beside the league name");
@@ -23599,13 +23655,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v223-equip-share")) {
+  || !html.includes("chuckle-shell-v225-store-any-league")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v223-equip-share")
+  || !swSrc.includes("chuckle-shell-v225-store-any-league")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");

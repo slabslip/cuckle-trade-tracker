@@ -4052,7 +4052,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912113200";
+    const DATA_V = "door20260912114000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4103,7 +4103,7 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 12;
     const DATA_DOORS = [
-      "trade_mark", "lopsided", "pick_print", "past_champions",
+      "lopsided", "trade_mark", "pick_print", "past_champions",
       "season_place", "vs_you", "firsts_held", "forever",
       "passed_around", "seat_draft", "uninsured", "book_top",
     ];
@@ -4116,7 +4116,7 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "trade_mark", "lopsided", "pick_print", "past_champions",
+      "lopsided", "trade_mark", "pick_print", "past_champions",
       "season_place", "vs_you", "firsts_held", "forever",
       "passed_around", "seat_draft", "uninsured", "book_top",
     ];
@@ -4140,7 +4140,7 @@ const html = `<!DOCTYPE html>
       { id: "homesteaders", lab: "Homesteaders", desk: "lists", size: "full", why: "Longest stays, forever players aside." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
-      { id: "lopsided", lab: "That trade that day", desk: "lists", size: "full", why: "How deals looked the day they accepted." },
+      { id: "lopsided", lab: "Trade THEN", desk: "lists", size: "full", why: "How deals looked the day they accepted." },
       { id: "seat_run", lab: "Run", desk: "seats", size: "full", why: "Ahead or behind on the Score as clock." },
       { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
       { id: "forever", lab: "Never left", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
@@ -4153,7 +4153,7 @@ const html = `<!DOCTYPE html>
       { id: "held_picks", lab: "Held picks", desk: "draft", size: "full", why: "Future picks this seat still holds." },
       { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
       { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Free-agent cuffs, your starters first." },
-      { id: "trade_mark", lab: "That trade now", desk: "lists", group: "memory", size: "full", why: "How a deal looks from then to now." },
+      { id: "trade_mark", lab: "Trade NOW", desk: "lists", group: "memory", size: "full", why: "How a deal looks from then to now." },
       { id: "pick_print", lab: "What my pick became", desk: "lists", group: "memory", size: "full", why: "Every pick this seat ever owned, and what it became." },
       { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
@@ -5713,8 +5713,8 @@ const html = `<!DOCTYPE html>
       const rows = receiptPortalRows(id, receiptQ);
       const pickSeat = id === "pick_print" ? receiptPickPortalSeat(receiptQ) : "";
       let caption = "Search and filter this list. Tap a row for the receipt.";
-      if (id === "trade_mark") caption = "How deals look from then to now. Search a team or a year.";
-      else if (id === "lopsided") caption = "How deals looked the day they clicked accept.";
+      if (id === "trade_mark") caption = "Trade NOW — how deals look from then to now. Search a team or a year.";
+      else if (id === "lopsided") caption = "Trade THEN — how deals looked the day they clicked accept.";
       else if (id === "pick_print") {
         caption = pickSeat
           ? ("Every pick " + pickSeat + " ever owned. Tap one for the hop tape.")
@@ -25464,7 +25464,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v229-door-drag";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v230-trade-then-now";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25555,13 +25555,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v229-door-drag")) {
+  || !html.includes("chuckle-shell-v230-trade-then-now")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v229-door-drag")
+  || !swSrc.includes("chuckle-shell-v230-trade-then-now")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26897,7 +26897,7 @@ if (!inline.includes("function dataDashHtml(")
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   if (defIds.length !== 12 || defIds.some((id) => !uniq.has(id))
-    || defIds[0] !== "trade_mark" || defIds[1] !== "lopsided"
+    || defIds[0] !== "lopsided" || defIds[1] !== "trade_mark"
     || defIds[2] !== "pick_print") {
     throw new Error("DATA_DASH_DEFAULT must be the 12 door tiles");
   }
@@ -26958,8 +26958,8 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptTermCurveHtml(")
     || !inline.includes("params.get(\"tx\")")
     || !inline.includes('lab: "What my pick became"')
-    || !inline.includes('lab: "That trade now"')
-    || !inline.includes('lab: "That trade that day"')
+    || !inline.includes('lab: "Trade NOW"')
+    || !inline.includes('lab: "Trade THEN"')
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")

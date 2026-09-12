@@ -71,7 +71,7 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
   `season_place`, `vs_you`). Persist `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>` still exists for Your board + hunt routing.
 - The 6–12 tile encyclopedia is **not** the Data cold load. Do not put it back on Moves.
-  **Your board** (twelve doors: that trade now, that trade that day, what my pick
+  **Your board** (twelve doors: Trade THEN, Trade NOW, what my pick
   became, who won the year, how I finished, me vs them, who has firsts, never
   left, passed around, draft hits, no backup, biggest names) sits on History
   above Moves/League. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)),

@@ -32,8 +32,8 @@ const need = [
   "function receiptPickEverOwned(",
   "function receiptPickBecameLine(",
   "What my pick became",
-  "That trade now",
-  "That trade that day",
+  "Trade NOW",
+  "Trade THEN",
   "function receiptDoorIco(",
   "function receiptDoorFilterHtml(",
   "data-receipt-door-filter",
@@ -50,7 +50,7 @@ if (missing.length) {
 }
 
 if (!page.includes('DATA_DOORS = [')
-  || !page.includes('"trade_mark", "lopsided", "pick_print", "past_champions"')) {
+  || !page.includes('"lopsided", "trade_mark", "pick_print", "past_champions"')) {
   throw new Error("default board must be the 12 door tiles");
 }
 if (!page.includes('class="door"') || page.includes("The number is one example")) {

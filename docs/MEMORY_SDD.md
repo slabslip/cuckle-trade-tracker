@@ -47,7 +47,7 @@ the same paint. Do not invent a 17th kind for each argument.
 
 | Id | Door label |
 |----|----------|
-| `trade_mark` | That trade now |
+| `trade_mark` | Trade NOW |
 | `pick_print` | What my pick became |
 | `season_place` / `season_title` | How I finished |
 
@@ -55,7 +55,7 @@ the same paint. Do not invent a 17th kind for each argument.
 
 | Id | Door label |
 |----|----------|
-| `lopsided` | That trade that day |
+| `lopsided` | Trade THEN |
 | `passed_around` | Passed around |
 | `least_traded` | Least traded (catalog only) |
 | `forever` | Never left |
@@ -137,8 +137,8 @@ scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 
 **Default twelve doors** (first visit, and after the v2 board bump):
 
-1. That trade now (`trade_mark`)
-2. That trade that day (`lopsided`)
+1. Trade THEN (`lopsided`)
+2. Trade NOW (`trade_mark`)
 3. What my pick became (`pick_print`) — every pick this seat ever owned
 4. Who won the year (`past_champions`)
 5. How I finished (`season_place`)
@@ -161,7 +161,7 @@ one public ticket, not someone’s private layout.
 - Label in the table above
 - Nothing else
 
-**Trade portal** (`trade_mark` / `lopsided`)
+**Trade portal** (Trade THEN / Trade NOW)
 
 Search + filters (Grew / Faded / Even, or Smash / Robbery). Rows are
 simple list lines, one deal each, not example chips. Tap → L1 ticket.
@@ -359,7 +359,7 @@ than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md)
 A member can: find a door by icon + label → tap **What my pick became** →
 search / filter → see every pick they ever owned → tap one →
 “You sold this 1st. They used it. It is X.” → share icon on the ticket →
-reopen on the same layer. Tap **That trade now**, filter Grew / Faded, open
+reopen on the same layer. Tap **Trade NOW**, filter Grew / Faded, open
 a deal, see two questions first (day they traded / from then to now).
 A nerd can Edit the board, reorder, reload on another phone, same layout.
 

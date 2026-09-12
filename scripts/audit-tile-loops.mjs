@@ -20,9 +20,9 @@ const direction = read("seat-direction.json");
 const calc = read("calculator.json");
 
 const DOORS = [
-  "my_trades", "league_trades", "my_draft", "league_draft", "past_champions",
-  "season_place", "vs_you", "firsts_held", "forever",
-  "passed_around", "seat_draft", "uninsured", "book_top",
+  "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
+  "past_champions", "season_place", "vs_you", "firsts_held", "forever",
+  "passed_around", "seat_draft", "uninsured",
 ];
 const PARKED_DEAL = [
   "fill_holes", "move_extras", "poach_cuffs", "stash_young",

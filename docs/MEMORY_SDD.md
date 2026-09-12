@@ -51,6 +51,7 @@ the same paint. Do not invent a 17th kind for each argument.
 | `league_trades` | League Trade History |
 | `my_draft` | My Draft Picks |
 | `league_draft` | League Draft Picks |
+| `profit_loss` | Profit / Loss |
 | `season_place` / `season_title` | How I finished |
 
 Share chips (same tape, not board tiles): `trade_mark` (Trade ticket),
@@ -147,15 +148,15 @@ scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 2. League Trade History (`league_trades`) — every pairing, most deals first, searchable
 3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
-5. Who won the year (`past_champions`)
-6. How I finished (`season_place`)
-7. Me vs them (`vs_you`)
-8. Who has firsts (`firsts_held`)
-9. Never left (`forever`)
-10. Passed around (`passed_around`)
-11. Draft hits (`seat_draft`)
-12. No backup (`uninsured`)
-13. Biggest names (`book_top`)
+5. Profit / Loss (`profit_loss`) — every player you traded, held vs sold
+6. Who won the year (`past_champions`)
+7. How I finished (`season_place`)
+8. Me vs them (`vs_you`)
+9. Who has firsts (`firsts_held`)
+10. Never left (`forever`)
+11. Passed around (`passed_around`)
+12. Draft hits (`seat_draft`)
+13. No backup (`uninsured`)
 
 **Hold, then drag** is how they reorder. Mouse can drag without a long
 press. The first four doors wear a gold ring — that is the top 4, and
@@ -206,6 +207,32 @@ says so.
 First screen is **every seat**, most used + away + in first, searchable.
 Tap a seat → the same three chips + grades as your own door. Back:
 `← Seats` then `← Your board`.
+
+**Profit / Loss**
+
+Tap the tile. One row per player this seat has traded (named player
+legs only — picks stay on My Draft Picks). Sorted by the biggest
+absolute number.
+
+- **Held** — still on this roster. Number is today minus the day they
+  got them (unrealized).
+- **Sold** — last move was a send. Number is the day they sold minus
+  the day they got them (realized). No inbound trade: **Sold vs now**
+  (today minus the sale). Drafted then sold uses the slot as cost.
+- **Left** — they received the player, then the player left without a
+  sale. Number is today minus acquire. The Sold chip includes Left.
+
+Filters (this is the set that earns its height on a 100-name list):
+
+1. **Held / Sold / All** — unrealized vs realized. The question.
+2. **Ahead / Behind / All** — who printed and who died.
+3. **QB / RB / WR / TE** — position. Search covers a name.
+4. **League year** — year of the last move.
+5. Sort is locked to **biggest |number| first**. Newest-first hides the
+   fight on a seven-year tape.
+
+No net bag total on the door. The count line is `held · sold · left`.
+Tap a row → the last trade ticket. No claimed seat: the door says so.
 
 **Season / finish portal**
 

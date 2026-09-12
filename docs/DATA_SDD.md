@@ -62,12 +62,12 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`db/wave19-seat-data-dash.sql`](../db/wave19-seat-data-dash.sql):
 
-- Catalog is **32** unique report ids (27 desks + `my_trades`, `league_trades`,
-  `my_draft`, `league_draft`, `season_place`, `vs_you` after the history-door swap). Persist `seat_data_dash` +
+- Catalog is **32** unique report ids (`profit_loss` replaces parked
+  `seat_posture`; Biggest names stays in the encyclopedia). Persist `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>` still exists for Your board + hunt routing.
 - **Your board** (thirteen doors: My Trade History, League Trade History, My Draft
-  Picks, League Draft Picks, who won the year, how I finished, me vs them, who has firsts, never
-  left, passed around, draft hits, no backup, biggest names) **is** the Data
+  Picks, League Draft Picks, Profit / Loss, who won the year, how I finished, me vs them, who has firsts, never
+  left, passed around, draft hits, no backup) **is** the Data
   cold load. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)).
   Edit persist still uses `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>`.

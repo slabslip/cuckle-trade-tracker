@@ -28,6 +28,12 @@ const need = [
   "season_place",
   'params.get("tx")',
   "function receiptTermCurveHtml(",
+  "function receiptOwnedPicksForSeat(",
+  "function receiptPickEverOwned(",
+  "function receiptPickBecameLine(",
+  "What did my pick become",
+  "Every pick ",
+  "A year, a player, a seat",
 ];
 const missing = need.filter((s) => !page.includes(s));
 if (missing.length) {
@@ -54,7 +60,7 @@ if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/M
 }
 
 const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
-for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow"]) {
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What did my pick become", "every draft pick that seat ever owned"]) {
   if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
 }
 

@@ -4025,7 +4025,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "receiptPortals20260912023000";
+    const DATA_V = "pickBecome20260912013000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4118,7 +4118,7 @@ const html = `<!DOCTYPE html>
       { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
       { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Free-agent cuffs, your starters first." },
       { id: "trade_mark", lab: "This deal", desk: "lists", group: "memory", size: "full", why: "How the latest smash or bust aged." },
-      { id: "pick_print", lab: "This pick", desk: "lists", group: "memory", size: "full", why: "A pick that was sold, then used." },
+      { id: "pick_print", lab: "What did my pick become", desk: "lists", group: "memory", size: "full", why: "Every pick this seat ever owned, and what it became." },
       { id: "season_place", lab: "Last season", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
       { id: "vs_you", lab: "Vs you", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
@@ -4411,7 +4411,8 @@ const html = `<!DOCTYPE html>
     function hopHtml(key) {
       const p = picks && picks[key];
       if (!p) return '<div class="hops caption">No hop tape.</div>';
-      const meName = (me && me.name) || "";
+      const meName = (typeof authSeatCanonName === "function" && authSeatCanonName())
+        || (me && me.name) || "";
       const hops = ((p.hops || []).slice()).reverse();
       const head = p.became
         ? ("This pick last stop is " + p.became + ".")
@@ -4550,19 +4551,6 @@ const html = `<!DOCTYPE html>
       return best;
     }
 
-    function receiptLeadPick() {
-      if (!picks) return null;
-      const keys = Object.keys(picks);
-      let fallback = null;
-      for (let i = 0; i < keys.length; i++) {
-        const p = picks[keys[i]];
-        if (!p || !(p.hops || []).length) continue;
-        if (!fallback) fallback = { key: keys[i], p: p };
-        if (p.became) return { key: keys[i], p: p };
-      }
-      return fallback;
-    }
-
     function receiptPickPrint(p) {
       if (!p) return "HELD";
       if (p.became) return "USED";
@@ -4572,6 +4560,147 @@ const html = `<!DOCTYPE html>
         if (hops[i].exit === "flip") return "SOLD";
       }
       return "HELD";
+    }
+
+    function receiptPickRoundWord(p, key) {
+      const lab = (p && p.label) || "";
+      const m = /(\\d{4})\\s+(\\d+(?:st|nd|rd|th))/i.exec(lab);
+      if (m) return m[2].toLowerCase();
+      const parts = typeof pickKeyParts === "function" ? pickKeyParts(key) : null;
+      if (parts && typeof pickRoundOrdinal === "function") return pickRoundOrdinal(parts.round);
+      return "pick";
+    }
+
+    function receiptPickYear(p, key) {
+      const lab = (p && p.label) || "";
+      const m = /^(\\d{4})/.exec(lab);
+      if (m) return m[1];
+      const parts = typeof pickKeyParts === "function" ? pickKeyParts(key) : null;
+      return parts ? parts.season : "";
+    }
+
+    function receiptPickSeatSold(p, seat) {
+      if (!p || !seat) return false;
+      const hops = p.hops || [];
+      for (let i = 0; i < hops.length; i++) {
+        if (hops[i].from === seat && (hops[i].exit === "flip" || hops[i].exit === "drafted")) return true;
+      }
+      return false;
+    }
+
+    function receiptPickEverOwned(p, seat) {
+      if (!p || !seat) return false;
+      if (p.used_by === seat) return true;
+      if (typeof pickOriginName === "function" && pickOriginName(p) === seat) return true;
+      const hops = p.hops || [];
+      for (let i = 0; i < hops.length; i++) {
+        if (hops[i].from === seat || hops[i].to === seat) return true;
+      }
+      return false;
+    }
+
+    function receiptOwnedPicksForSeat(seat) {
+      if (!picks || !seat) return [];
+      const keys = Object.keys(picks);
+      const out = [];
+      for (let i = 0; i < keys.length; i++) {
+        const p = picks[keys[i]];
+        if (!p || !receiptPickEverOwned(p, seat)) continue;
+        out.push({ key: keys[i], p: p });
+      }
+      out.sort(function (a, b) {
+        const pa = receiptPickPrint(a.p);
+        const pb = receiptPickPrint(b.p);
+        const ra = pa === "USED" ? 0 : pa === "SOLD" ? 1 : 2;
+        const rb = pb === "USED" ? 0 : pb === "SOLD" ? 1 : 2;
+        if (ra !== rb) return ra - rb;
+        const ya = Number(receiptPickYear(a.p, a.key) || 0);
+        const yb = Number(receiptPickYear(b.p, b.key) || 0);
+        if (yb !== ya) return yb - ya;
+        const pa2 = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
+        const pb2 = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
+        return ((pa2 && pa2.round) || 9) - ((pb2 && pb2.round) || 9);
+      });
+      return out;
+    }
+
+    function receiptPickPortalSeat(q) {
+      const claimed = typeof authSeatCanonName === "function" ? authSeatCanonName() : null;
+      const raw = String(q || "").trim();
+      const names = (members || []).map(function (m) { return m.name; }).filter(Boolean);
+      if (!raw) return claimed || "";
+      const low = raw.toLowerCase();
+      for (let i = 0; i < names.length; i++) {
+        if (String(names[i]).toLowerCase() === low) return names[i];
+      }
+      const tokens = low.split(/\\s+/);
+      if (tokens.length === 1 && tokens[0].length >= 3) {
+        for (let i = 0; i < names.length; i++) {
+          const n = String(names[i]).toLowerCase();
+          if (n.indexOf(tokens[0]) >= 0 || tokens[0].indexOf(n) >= 0) return names[i];
+        }
+      }
+      return claimed || "";
+    }
+
+    function receiptPickBecameLine(p, key, seat, you) {
+      const print = receiptPickPrint(p);
+      const name = (p && p.became) || "";
+      const rd = receiptPickRoundWord(p, key);
+      const sold = receiptPickSeatSold(p, seat);
+      const usedHere = p && p.used_by === seat;
+      const owner = typeof pickOwnerName === "function" ? pickOwnerName(p) : "";
+      const who = you ? "You" : (seat || "They");
+      if (print === "USED" && name) {
+        if (usedHere) return who + " used this " + rd + ". It is " + name + " now.";
+        if (sold) return who + " sold this " + rd + ". They used it. It is " + name + " now.";
+        return "This " + rd + " was used. It is " + name + " now.";
+      }
+      if (sold && owner && owner !== seat) {
+        return who + " sold this " + rd + "."
+          + (p.still_pick ? (" It is still a pick on " + owner + ".") : "");
+      }
+      if (owner === seat && p && p.still_pick) {
+        return who + (you ? " still hold this " : " still holds this ") + rd + ".";
+      }
+      return "This " + rd + " is still a pick.";
+    }
+
+    function receiptPickStoryScore(p, key, seat) {
+      const print = receiptPickPrint(p);
+      const rd = receiptPickRoundWord(p, key);
+      const first = rd === "1st" ? 100 : rd === "2nd" ? 40 : 10;
+      const hops = ((p && p.hops) || []).length;
+      let n = 0;
+      if (print === "USED" && p && p.became) n += 200 + first + hops * 5;
+      if (seat && receiptPickSeatSold(p, seat) && print === "USED" && p.used_by !== seat) n += 80;
+      if (seat && p && p.used_by === seat) n += 30;
+      if (print === "SOLD") n += 20;
+      return n;
+    }
+
+    function receiptLeadPick() {
+      if (!picks) return null;
+      const seat = receiptPickPortalSeat("");
+      if (seat) {
+        const mine = receiptOwnedPicksForSeat(seat);
+        let best = null;
+        let bestN = -1;
+        for (let i = 0; i < mine.length; i++) {
+          const n = receiptPickStoryScore(mine[i].p, mine[i].key, seat);
+          if (n > bestN) { best = mine[i]; bestN = n; }
+        }
+        if (best) return best;
+      }
+      const keys = Object.keys(picks);
+      let fallback = null;
+      for (let i = 0; i < keys.length; i++) {
+        const p = picks[keys[i]];
+        if (!p || !(p.hops || []).length) continue;
+        if (!fallback) fallback = { key: keys[i], p: p };
+        if (p.became) return { key: keys[i], p: p };
+      }
+      return fallback;
     }
 
     function receiptLastSeason() {
@@ -4642,18 +4771,26 @@ const html = `<!DOCTYPE html>
       if (!row || !row.p) return null;
       const p = row.p;
       const print = receiptPickPrint(p);
+      const seat = receiptPickPortalSeat("");
+      const you = !!(seat && receiptPickEverOwned(p, seat) && seat === (typeof authSeatCanonName === "function" ? authSeatCanonName() : ""));
+      const viewSeat = (seat && receiptPickEverOwned(p, seat)) ? seat : "";
       const name = p.became || p.label || row.key;
-      let verdict = "This future draft pick is still a pick.";
-      if (print === "USED") verdict = "This 1st was sold, then used. It is " + name + " now.";
-      else if (print === "SOLD") verdict = "This pick was sold. It is not home anymore.";
+      let verdict = receiptPickBecameLine(p, row.key, viewSeat, you);
+      if (!viewSeat && print === "USED" && name) {
+        verdict = "This pick was sold, then used. It is " + name + " now.";
+      } else if (!viewSeat && print === "SOLD") {
+        verdict = "This pick was sold. It is not home anymore.";
+      } else if (!viewSeat && (!p.became)) {
+        verdict = "This future draft pick is still a pick.";
+      }
       const hops = (p.hops || []).slice();
-      const sold = hops.filter(function (h) { return h.exit === "flip"; })[0];
-      const because = sold
-        ? ("Sold in " + String(sold.date || "").slice(0, 4) + ".")
-        : (p.still_pick ? "Still held." : "Hop tape is thin.");
+      const soldHop = hops.filter(function (h) { return h.exit === "flip"; })[0];
+      let because = p.still_pick ? "Still held." : "Hop tape is thin.";
+      if (soldHop) because = (you ? "You sold it in " : "Sold in ") + String(soldHop.date || "").slice(0, 4) + ".";
+      else if (you && p.used_by === seat) because = "You used it.";
       return {
         id: "pick_print",
-        kind: "Pick",
+        kind: "What did my pick become",
         verdict: verdict,
         who: name,
         print: print,
@@ -4891,8 +5028,12 @@ const html = `<!DOCTYPE html>
         const p = picks && id ? picks[id] : (receiptLeadPick() && receiptLeadPick().p);
         const key = id || (receiptLeadPick() && receiptLeadPick().key) || "";
         const name = (p && p.became) || key || "this pick";
-        return "This pick last stop is " + name + ".\\n"
-          + receiptShareUrl("pick", key);
+        const seat = receiptPickPortalSeat("");
+        const you = !!(seat && p && receiptPickEverOwned(p, seat) && seat === (typeof authSeatCanonName === "function" ? authSeatCanonName() : ""));
+        const line = p
+          ? receiptPickBecameLine(p, key, seat && receiptPickEverOwned(p, seat) ? seat : "", you)
+          : ("This pick last stop is " + name + ".");
+        return line + "\\n" + receiptShareUrl("pick", key);
       }
       if (kind === "title") {
         const c = receiptSeasonClaim();
@@ -4930,7 +5071,8 @@ const html = `<!DOCTYPE html>
 
     function receiptPortalSearchHint(id) {
       if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") return "A team, a trade, a year";
-      if (id === "pick_print" || id === "forever" || id === "passed_around" || id === "least_traded") {
+      if (id === "pick_print") return "A year, a player, a seat";
+      if (id === "forever" || id === "passed_around" || id === "least_traded") {
         return "A player, a pick, a seat";
       }
       if (id === "season_place" || id === "past_champions") return "A year, a seat, a place";
@@ -5055,13 +5197,22 @@ const html = `<!DOCTYPE html>
       }
       const print = receiptPickPrint(p);
       const name = p.became || key;
-      let verdict = "This pick last stop is " + name + ".";
-      if (print === "SOLD") verdict = "You sold this pick. It is not home anymore.";
-      if (print === "USED") verdict = "You sold this 1st. They used it. The player is " + name + ".";
-      if (print === "HELD" && p.still_pick) verdict = "This future draft pick is still a pick.";
-      const because = "The trade number follows " + (p.became || "the last stop") + ". Your hold ended at the sale.";
+      const seat = receiptPickPortalSeat("");
+      const you = !!(seat && receiptPickEverOwned(p, seat));
+      const viewSeat = you ? seat : "";
+      let verdict = receiptPickBecameLine(p, key, viewSeat, you);
+      if (!viewSeat) {
+        verdict = "This pick last stop is " + name + ".";
+        if (print === "SOLD") verdict = "This pick was sold. It is not home anymore.";
+        if (print === "USED") verdict = "This pick was sold, then used. The player is " + name + ".";
+        if (print === "HELD" && p.still_pick) verdict = "This future draft pick is still a pick.";
+      }
+      const because = p.became
+        ? ("The trade number follows " + p.became + ". The hold ended at the sale.")
+        : (p.still_pick ? "Still a pick on the hop tape." : "Hop tape is thin.");
       const hops = ((p.hops || []).slice()).reverse();
-      const meName = (me && me.name) || "";
+      const meName = (typeof authSeatCanonName === "function" && authSeatCanonName())
+        || (me && me.name) || "";
       const lines = hops.map(function (h) {
         const tx = h.transaction_id || h.tx || "";
         return '<button type="button" class="receipt-hop"'
@@ -5199,16 +5350,63 @@ const html = `<!DOCTYPE html>
       }
       if (id === "pick_print") {
         if (!picks && typeof ensurePicks === "function") ensurePicks();
-        const keys = picks ? Object.keys(picks) : [];
-        const out = [];
-        for (let i = 0; i < keys.length && out.length < 20; i++) {
-          const p = picks[keys[i]];
-          if (!p || !(p.hops || []).length) continue;
-          if (!hit([keys[i], p.became, p.label, p.used_by])) continue;
-          const claim = receiptPickClaim({ key: keys[i], p: p });
-          if (claim) out.push(receiptChipHtml(claim, { row: true }));
+        if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
+        const seat = receiptPickPortalSeat(needle);
+        const you = !!(seat && seat === (typeof authSeatCanonName === "function" ? authSeatCanonName() : ""));
+        let rows = seat ? receiptOwnedPicksForSeat(seat) : [];
+        if (!seat && needle) {
+          const keys = picks ? Object.keys(picks) : [];
+          for (let i = 0; i < keys.length; i++) {
+            const p = picks[keys[i]];
+            if (!p) continue;
+            if (hit([keys[i], p.became, p.label, p.used_by])) rows.push({ key: keys[i], p: p });
+          }
+        } else if (seat && needle) {
+          const seatLow = String(seat).toLowerCase();
+          if (needle !== seatLow) {
+            rows = rows.filter(function (row) {
+              const p = row.p;
+              return hit([row.key, p.became, p.label, p.used_by, p.still_pick ? "held" : ""]);
+            });
+          }
         }
-        return out.join("");
+        if (!rows.length) {
+          if (!seat && !needle) {
+            return '<p class="caption">Claim your seat, or search a name, to see every pick they owned.</p>';
+          }
+          return '<p class="caption">Nothing on this tape matches.</p>';
+        }
+        let usedN = 0, soldN = 0, heldN = 0;
+        const groups = { USED: [], SOLD: [], HELD: [] };
+        for (let i = 0; i < rows.length; i++) {
+          const print = receiptPickPrint(rows[i].p);
+          if (print === "USED") usedN += 1;
+          else if (print === "SOLD") soldN += 1;
+          else heldN += 1;
+          groups[print].push(rows[i]);
+        }
+        const head = seat
+          ? (rows.length + " pick" + (rows.length === 1 ? "" : "s")
+            + " · " + usedN + " used · " + soldN + " sold · " + heldN + " held")
+          : (rows.length + " match" + (rows.length === 1 ? "" : "es") + " on the league tape");
+        const order = ["USED", "SOLD", "HELD"];
+        let html = '<p class="caption">' + esc(head) + "</p>";
+        for (let g = 0; g < order.length; g++) {
+          const list = groups[order[g]];
+          if (!list.length) continue;
+          html += '<div class="data-sec-h">' + order[g] + "</div>";
+          html += list.map(function (row) {
+            const p = row.p;
+            const print = receiptPickPrint(p);
+            const line = receiptPickBecameLine(p, row.key, seat, you);
+            const lab = p.label || row.key;
+            return '<button type="button" class="row" data-receipt-pick="' + esc(row.key) + '">'
+              + '<div class="row-top"><div><div class="names">' + esc(lab) + "</div>"
+              + '<div class="date">' + esc(line) + "</div></div>"
+              + '<div class="margin">' + esc(print) + "</div></div></button>";
+          }).join("");
+        }
+        return html;
       }
       if (id === "season_place" || id === "past_champions") {
         return ((titles && titles.titles) || []).filter(function (t) {
@@ -5236,11 +5434,19 @@ const html = `<!DOCTYPE html>
       const head = (spec && spec.lab) || "Portal";
       const lead = receiptClaimFor(id);
       const rows = receiptPortalRows(id, receiptQ);
+      const pickSeat = id === "pick_print" ? receiptPickPortalSeat(receiptQ) : "";
+      let caption = "The tile was one example. Search this tape.";
+      if (id === "pick_print") {
+        caption = pickSeat
+          ? ("Every pick " + pickSeat + " ever owned. Tap one for the hop tape.")
+          : "Claim your seat, or search a name, to see every pick they owned.";
+      }
+      const showLead = !!(lead && !receiptQ && !(id === "pick_print" && pickSeat));
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
         + '<p class="caption"><button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
-        + '<p class="caption">The tile was one example. Search this tape.</p>'
-        + (lead && !receiptQ ? receiptChipHtml(Object.assign({}, lead, {
+        + '<p class="caption">' + esc(caption) + "</p>"
+        + (showLead ? receiptChipHtml(Object.assign({}, lead, {
           openTrade: lead.shareKind === "trade" ? lead.shareId : "",
           pickKey: lead.pickKey || "",
         }), { row: true }) : "")
@@ -24804,7 +25010,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v226-receipt-tiles";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v227-pick-become";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -24895,13 +25101,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v226-receipt-tiles")) {
+  || !html.includes("chuckle-shell-v227-pick-become")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v226-receipt-tiles")
+  || !swSrc.includes("chuckle-shell-v227-pick-become")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26290,6 +26496,11 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-import")
     || !inline.includes("function receiptTermCurveHtml(")
     || !inline.includes("params.get(\"tx\")")
+    || !inline.includes('lab: "What did my pick become"')
+    || !inline.includes("function receiptOwnedPicksForSeat(")
+    || !inline.includes("function receiptPickEverOwned(")
+    || !inline.includes("function receiptPickBecameLine(")
+    || !inline.includes("Every pick ")
     || inline.includes("exactly like")) {
     throw new Error("Receipt tiles must ship shareProofNow, public boot, clock English, and L1/L2 tickets");
   }

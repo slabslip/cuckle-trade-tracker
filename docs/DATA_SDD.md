@@ -71,8 +71,8 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
   `season_place`, `vs_you`). Persist `seat_data_dash` +
   `cuckle.data.dash.v1.<league>.<seat>` still exists for Your board + hunt routing.
 - The 6–12 tile encyclopedia is **not** the Data cold load. Do not put it back on Moves.
-  **Your board** (default six: faded trade, pick journey, last season, lopsided,
-  forever, past champions) sits on History above Moves/League. That is memory
+  **Your board** (default six: faded trade, what did my pick become, last season,
+  lopsided, forever, past champions) sits on History above Moves/League. That is memory
   law ([`MEMORY_SDD.md`](MEMORY_SDD.md)), not the 27-id catalog. Edit persist still
   uses `seat_data_dash` + `cuckle.data.dash.v1.<league>.<seat>`.
 

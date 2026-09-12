@@ -46,7 +46,7 @@ the same paint. Do not invent a 17th kind for each argument.
 | Id | Question |
 |----|----------|
 | `trade_mark` | This deal, this clock, how it aged |
-| `pick_print` | This pick’s last stop |
+| `pick_print` | What did my pick become |
 | `season_place` / `season_title` | This year, this seat |
 
 **Who (a list, still one verdict on the chip)**
@@ -130,7 +130,7 @@ year, or seat.
 **Default six chips** (first visit, casual / novice):
 
 1. Latest faded / grew trade (`trade_mark`)
-2. One pick journey (`pick_print`)
+2. What did my pick become (`pick_print`) — every pick this seat ever owned
 3. Last season place (`season_place`)
 4. Most lopsided
 5. Forever
@@ -151,13 +151,30 @@ one public ticket, not someone’s private layout.
 - Tiny two-dot spark (accept → today). No axis labels.
 - Small share icon, top-right. No gold **Text this** banner.
 
-**Pick chip**
+**Pick chip** (`pick_print` — locked scenario)
 
-- Kind: `Pick`
-- Verdict: `This 1st was sold, then used. It is Bijan now.`
-- Number / print: `USED` (or `SOLD` / `HELD` / still a pick)
-- Because: `You sold it in 2023.`
+Door label: **What did my pick become**. Not a random hop dump. The face is
+one live example from **this seat’s** tape so you know the room.
+
+- Kind: `What did my pick become`
+- Verdict (claimed seat): `You sold this 1st. They used it. It is Bijan now.`
+  (or `You used this 3rd. It is Shedeur now.` / `You still hold this 2027 1st.`)
+- Unsigned / no seat: third-person league example, same door. Do not pretend “my.”
+- Number / print: `USED` (or `SOLD` / `HELD`)
+- Because: `You sold it in 2022.`
 - Small share icon.
+
+**Pick portal (tap the tile)**
+
+Search lives here. Default list is **every draft pick that seat ever owned**
+(hop `from` / `to`, `used_by`, origin, or still held) — not the first 20 hops
+in the book. Grouped USED / SOLD / HELD. Each row: pick label, became line,
+print. Tap → L2 hop tape.
+
+No claimed seat: `Claim your seat, or search a name, to see every pick they
+owned.` Search a canonical seat (`Truman`, `ARae`) to open that seat’s list.
+Search a year or player to filter. Seat names come from `members.json`, not
+live Sleeper `team_name`.
 
 **Season chip**
 
@@ -203,9 +220,10 @@ Then, in this order only:
 `Remember it differently?` on a normal open-trade row jumps to this **same**
 trade ticket.
 
-**If they tapped a pick chip**
+**If they tapped a pick chip / pick row**
 
-- Verdict: `This pick’s last stop is Bijan.`
+- Verdict (you owned it): `You sold this 1st. They used it. It is Bijan now.`
+- Else: `This pick was sold, then used. The player is Bijan.`
 - Then the hop list (L2). No trade bags unless they tap a hop that names a trade.
 
 **If they tapped a season chip**
@@ -340,12 +358,13 @@ than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md)
 
 A member can: read the default six chips in two seconds each → tap a trade →
 see two questions first (day they traded / from then to now) → More clocks →
-tap a pick → “sold, then used, it is X” → share icon → reopen on the same
+tap **What did my pick become** → see every pick they ever owned → tap one →
+“You sold this 1st. They used it. It is X.” → share icon → reopen on the same
 layer. A nerd can Edit the board, add `vs_you` and `draft_marks`, reorder,
 reload on another phone, same layout.
 
 Two-second test (novice): they can say “so it looked better when they traded,
-and now it’s worse” and “this pick turned into that player.” They never have
+and now it’s worse” and “that 1st I sold is Bijan now.” They never have
 to say aged, t0, or Superflex.
 
 An outsider can: open the same link unsigned → **read the real numbers** →

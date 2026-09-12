@@ -4088,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260912154254";
+    const DATA_V = "ploff20260912170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5070,6 +5070,8 @@ const html = `<!DOCTYPE html>
         } else {
           continue;
         }
+        // Off the current book (retired / dropped from DP): last quote is 0.
+        if ((how === "left" || how === "sold_now") && mark == null && acquire != null) mark = 0;
         row.state = state;
         row.how = how;
         row.acquire = acquire;
@@ -26606,7 +26608,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v245-pl-sort";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v246-pl-off";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26697,13 +26699,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v245-pl-sort")) {
+  || !html.includes("chuckle-shell-v246-pl-off")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v245-pl-sort")
+  || !swSrc.includes("chuckle-shell-v246-pl-off")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28109,6 +28111,7 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function histPartnerRows(")
     || !inline.includes("function receiptDraftRowsForSeat(")
     || !inline.includes("function receiptPlRowsForSeat(")
+    || !fnSrc("receiptPlRowsForSeat").includes("last quote is 0")
     || !inline.includes("function receiptPlRoomsHtml(")
     || !inline.includes("data-receipt-pl-room")
     || !inline.includes('data-receipt-pl-room="held">Held<')

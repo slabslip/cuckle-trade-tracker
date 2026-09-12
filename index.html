@@ -4080,7 +4080,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260912154254";
+    const DATA_V = "ploff20260912170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5062,6 +5062,8 @@
         } else {
           continue;
         }
+        // Off the current book (retired / dropped from DP): last quote is 0.
+        if ((how === "left" || how === "sold_now") && mark == null && acquire != null) mark = 0;
         row.state = state;
         row.how = how;
         row.acquire = acquire;
@@ -26598,7 +26600,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v245-pl-sort";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v246-pl-off";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

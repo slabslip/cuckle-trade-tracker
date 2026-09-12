@@ -223,6 +223,8 @@ other doors, A to Z. Two-point mark (T0 / today), not the 3y mean.
   - **Sold** — sale T0 minus paid. Row prints `paid` and `sold`.
   - **Sold vs now** — sent with no inbound cost. Exit T0 vs today.
   - **Left** — received, then gone without a sale. Last quote minus paid.
+    Off the current book (retired / dropped from DP) last quote is 0,
+    not a dash.
   Drafted then sold uses the slot as cost.
 
 Filters are **dropdowns**, never pill chips (HIG-23):

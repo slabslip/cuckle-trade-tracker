@@ -165,9 +165,11 @@ one public ticket, not someone’s private layout.
 
 **Trade portal** (Trade THEN / Trade NOW)
 
-Search a **player you have owned** (A–Z dropdown, list refines as you
-type). Then a look menu: Smash / Robbery on THEN, Grew / Faded / Even
-on NOW. Rows are simple list lines. Tap → L1 ticket.
+Search a **player you rostered** (A–Z dropdown, list refines as you
+type). Only players this seat traded for or sent as a player — not a
+pick that later became someone. A **League year** menu filters that
+list and the deals. Then a look menu: Smash / Robbery on THEN, Grew /
+Faded / Even on NOW. Rows are simple list lines. Tap → L1 ticket.
 
 **Pick portal (tap the tile)**
 

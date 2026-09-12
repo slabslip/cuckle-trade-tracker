@@ -4081,7 +4081,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912122000";
+    const DATA_V = "door20260912123000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5518,6 +5518,47 @@ const html = `<!DOCTYPE html>
       receiptPlayerQ = "";
       receiptPlayerPick = "";
       receiptPlayerOpen = false;
+      receiptDoorYear = "all";
+    }
+
+    function receiptTradeSeasonOf(row) {
+      if (row && row.season) return String(row.season).slice(0, 4);
+      const tid = row && row.transaction_id;
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
+      if (tid && trades.length) {
+        for (let i = 0; i < trades.length; i++) {
+          if (String(trades[i].transaction_id) === String(tid)) {
+            if (trades[i].season) return String(trades[i].season).slice(0, 4);
+            break;
+          }
+        }
+      }
+      const d = String((row && row.date) || "");
+      return /^\\d{4}/.test(d) ? d.slice(0, 4) : "";
+    }
+
+    function receiptTradeYearWant() {
+      return (receiptDoorYear && receiptDoorYear !== "all") ? String(receiptDoorYear) : "";
+    }
+
+    function receiptTradeYears() {
+      const seen = {};
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
+      if (trades.length) {
+        for (let i = 0; i < trades.length; i++) {
+          const y = receiptTradeSeasonOf(trades[i]);
+          if (y) seen[y] = true;
+        }
+      } else {
+        const sides = ((league && league.trade_boards && league.trade_boards.sides) || []);
+        for (let i = 0; i < sides.length; i++) {
+          const y = receiptTradeSeasonOf(sides[i]);
+          if (y) seen[y] = true;
+        }
+      }
+      return Object.keys(seen).sort().reverse();
     }
 
     function receiptAddOwnedPlayer(seen, out, label) {
@@ -5532,22 +5573,24 @@ const html = `<!DOCTYPE html>
     function receiptTradePlayerNames() {
       const seen = {};
       const out = [];
+      const yearWant = receiptTradeYearWant();
       const mine = typeof authSeatId === "function" ? authSeatId() : "";
       const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
       if (trades.length) {
         for (let i = 0; i < trades.length; i++) {
+          if (yearWant && receiptTradeSeasonOf(trades[i]) !== yearWant) continue;
           const ev = trades[i].even || {};
           const bags = [].concat(ev.legs || [], ev.sent || []);
           for (let j = 0; j < bags.length; j++) {
             const leg = bags[j];
-            if (!leg) continue;
-            if (leg.kind === "player") receiptAddOwnedPlayer(seen, out, leg.label);
-            if (leg.became) receiptAddOwnedPlayer(seen, out, leg.became);
+            if (!leg || leg.kind !== "player") continue;
+            receiptAddOwnedPlayer(seen, out, leg.label);
           }
         }
       } else {
         const sides = ((league && league.trade_boards && league.trade_boards.sides) || []);
         for (let i = 0; i < sides.length; i++) {
+          if (yearWant && receiptTradeSeasonOf(sides[i]) !== yearWant) continue;
           const g = guessLegFromHeadline(sides[i].headline);
           if (g && g.kind === "player") receiptAddOwnedPlayer(seen, out, g.label);
         }
@@ -5559,22 +5602,24 @@ const html = `<!DOCTYPE html>
     function receiptTradeHitsPlayer(s, player) {
       const want = String(player || "").trim().toLowerCase();
       if (!want) return true;
-      if (String(s.headline || "").toLowerCase().indexOf(want) >= 0) return true;
       const mine = typeof authSeatId === "function" ? authSeatId() : "";
       const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
-      for (let i = 0; i < trades.length; i++) {
-        if (String(trades[i].transaction_id) !== String(s.transaction_id)) continue;
-        const ev = trades[i].even || {};
-        const bags = [].concat(ev.legs || [], ev.sent || []);
-        for (let j = 0; j < bags.length; j++) {
-          const leg = bags[j];
-          if (!leg) continue;
-          const lab = String(leg.label || "").toLowerCase();
-          const became = String(leg.became || "").toLowerCase();
-          if (lab.indexOf(want) >= 0 || became.indexOf(want) >= 0) return true;
+      if (trades.length) {
+        for (let i = 0; i < trades.length; i++) {
+          if (String(trades[i].transaction_id) !== String(s.transaction_id)) continue;
+          const ev = trades[i].even || {};
+          const bags = [].concat(ev.legs || [], ev.sent || []);
+          for (let j = 0; j < bags.length; j++) {
+            const leg = bags[j];
+            if (!leg || leg.kind !== "player") continue;
+            const lab = String(leg.label || "").toLowerCase();
+            if (lab.indexOf(want) >= 0) return true;
+          }
         }
+        return false;
       }
-      return false;
+      const g = typeof guessLegFromHeadline === "function" ? guessLegFromHeadline(s.headline) : null;
+      return !!(g && g.kind === "player" && String(g.label || "").toLowerCase().indexOf(want) >= 0);
     }
 
     function receiptPlayerNeedle() {
@@ -5587,7 +5632,7 @@ const html = `<!DOCTYPE html>
       const mine = typeof authSeatId === "function" ? authSeatId() : "";
       if (mine && !(seatCache[mine] && seatCache[mine].trades) && typeof seatData === "function") {
         return '<div class="receipt-player-dd"><span>Player</span>'
-          + '<p class="caption">Loading players you have owned…</p></div>';
+          + '<p class="caption">Loading players you rostered…</p></div>';
       }
       const needle = String(receiptPlayerQ || "").trim().toLowerCase();
       const names = receiptTradePlayerNames().filter(function (n) {
@@ -5609,10 +5654,10 @@ const html = `<!DOCTYPE html>
       }
       const shown = receiptPlayerPick || receiptPlayerQ;
       return '<div class="receipt-player-dd" data-receipt-player-dd="1">'
-        + "<span>Player you have owned</span>"
+        + "<span>Player you rostered</span>"
         + '<input class="receipt-search" data-receipt-player-q="1" type="search"'
         + ' placeholder="Type a player name" value="' + esc(shown) + '"'
-        + ' autocomplete="off" spellcheck="false" aria-label="Search players you have owned" />'
+        + ' autocomplete="off" spellcheck="false" aria-label="Search players you rostered" />'
         + list
         + "</div>";
     }
@@ -5631,10 +5676,24 @@ const html = `<!DOCTYPE html>
         + "</select></label>";
     }
 
+    function receiptTradeYearHtml() {
+      const years = receiptTradeYears();
+      if (!years.length) return "";
+      return '<label class="receipt-look"><span>League year</span>'
+        + '<select data-receipt-door-year="1" aria-label="Filter by league year">'
+        + '<option value="all"' + (!receiptDoorYear || receiptDoorYear === "all" ? " selected" : "") + ">All years</option>"
+        + years.map(function (y) {
+          return '<option value="' + esc(y) + '"' + (receiptDoorYear === y ? " selected" : "") + ">"
+            + esc(y) + "</option>";
+        }).join("")
+        + "</select></label>";
+    }
+
     function receiptDoorFilterHtml(id) {
       if (id === "trade_mark" || id === "lopsided") {
         return '<div class="receipt-trade-menus">'
           + receiptTradePlayerMenuHtml()
+          + receiptTradeYearHtml()
           + receiptTradeLookHtml(id)
           + "</div>";
       }
@@ -5673,6 +5732,10 @@ const html = `<!DOCTYPE html>
           ? function (s) { return windowScoreAt(s, "t0"); }
           : function (s) { return receiptTradeAged(s); };
         let sides = receiptTradeUniq(raw, scoreFn);
+        const yearWant = receiptTradeYearWant();
+        if (yearWant) {
+          sides = sides.filter(function (s) { return receiptTradeSeasonOf(s) === yearWant; });
+        }
         const f = receiptDoorFilter;
         if (id === "trade_mark" && f && f !== "all") {
           sides = sides.filter(function (s) {
@@ -5966,8 +6029,8 @@ const html = `<!DOCTYPE html>
         ? receiptPickPortalSeat(receiptQ)
         : (id === "my_picks" && typeof authSeatCanonName === "function" ? authSeatCanonName() : "");
       let caption = "Search and filter this list. Tap a row for the receipt.";
-      if (id === "trade_mark") caption = "Search a player you have owned. See how that deal looks from then to now.";
-      else if (id === "lopsided") caption = "Search a player you have owned. See how that deal looked the day they accepted.";
+      if (id === "trade_mark") caption = "Search a player you rostered. Filter by league year. See how that deal looks from then to now.";
+      else if (id === "lopsided") caption = "Search a player you rostered. Filter by league year. See how that deal looked the day they accepted.";
       else if (id === "pick_print") {
         caption = pickSeat
           ? ("Every pick " + pickSeat + " ever owned. Tap one for the hop tape.")
@@ -14785,6 +14848,7 @@ const html = `<!DOCTYPE html>
     let receiptPlayerQ = "";
     let receiptPlayerPick = "";
     let receiptPlayerOpen = false;
+    let receiptDoorYear = "all";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -25495,6 +25559,20 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const yearSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-year]");
+      if (yearSel) {
+        receiptDoorYear = yearSel.value || "all";
+        if (receiptPlayerPick) {
+          const names = receiptTradePlayerNames();
+          if (names.indexOf(receiptPlayerPick) < 0) {
+            receiptPlayerPick = "";
+            receiptPlayerQ = "";
+            receiptPlayerOpen = false;
+          }
+        }
+        render();
+        return;
+      }
       const sendSel = e.target && e.target.closest && e.target.closest("[data-ledger-send-select]");
       if (sendSel) {
         const form = sendSel.closest("form");
@@ -25784,7 +25862,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v232-my-picks";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v233-trade-year";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25875,13 +25953,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v232-my-picks")) {
+  || !html.includes("chuckle-shell-v233-trade-year")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v232-my-picks")
+  || !swSrc.includes("chuckle-shell-v233-trade-year")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -27292,9 +27370,14 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-door-filter")
     || !inline.includes("function receiptTradePlayerNames(")
     || !inline.includes("function receiptTradePlayerMenuHtml(")
+    || !inline.includes("function receiptTradeYearHtml(")
     || !inline.includes("data-receipt-player-q")
     || !inline.includes("data-receipt-player-pick")
+    || !inline.includes("data-receipt-door-year")
+    || !inline.includes("League year")
+    || !inline.includes("Player you rostered")
     || !inline.includes("Type a player name")
+    || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")
     || !inline.includes("function dataDashCommitFromBoard(")
     || !inline.includes("data-dash-board")

@@ -41,7 +41,11 @@ const need = [
   "function receiptDoorFilterHtml(",
   "data-receipt-door-filter",
   "function receiptTradePlayerNames(",
+  "function receiptTradeYearHtml(",
   "data-receipt-player-q",
+  "data-receipt-door-year",
+  "League year",
+  "Player you rostered",
   "Type a player name",
   "function dataDashLiftDoor(",
   "function dataDashCommitFromBoard(",
@@ -66,6 +70,9 @@ if (!page.includes('class="door"') || page.includes("The number is one example")
 if (page.includes("exactly like")) {
   throw new Error("generated JS must not contain exactly like");
 }
+if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
+  throw new Error("Trade THEN/NOW player list must not include pick-became names");
+}
 
 const bootAt = page.indexOf("const receiptQboot = receiptQueryFrom(params);");
 const gateAt = page.indexOf('appScreen = "gate"', bootAt);
@@ -78,7 +85,7 @@ if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/M
 }
 
 const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
-for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned", "My Picks", "Picks that started on this seat"]) {
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned", "My Picks", "Picks that started on this seat", "player you rostered", "League year"]) {
   if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
 }
 

@@ -5636,9 +5636,15 @@ const html = `<!DOCTYPE html>
           return hit([name, bag[name].join(" "), bag[name].length]);
         }).sort(function (a, b) { return bag[b].length - bag[a].length || a.localeCompare(b); })
           .map(function (name) {
-            const n = bag[name].length;
+            const years = bag[name].slice().sort();
+            const counts = {};
+            for (let i = 0; i < years.length; i++) counts[years[i]] = (counts[years[i]] || 0) + 1;
+            const line = Object.keys(counts).sort().map(function (y) {
+              return counts[y] > 1 ? (y + " x" + counts[y]) : y;
+            }).join(" · ");
+            const n = years.length;
             return '<div class="row"><div class="row-top"><div><div class="names">' + esc(name) + "</div>"
-              + '<div class="date">' + esc(bag[name].slice().sort().join(" · ")) + "</div></div>"
+              + '<div class="date">' + esc(line) + "</div></div>"
               + '<div class="margin">' + esc(String(n)) + "</div></div></div>";
           }).join("");
       }

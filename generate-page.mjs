@@ -3189,7 +3189,10 @@ const html = `<!DOCTYPE html>
       color: var(--muted); letter-spacing: -0.01em;
     }
     .data-dash { margin: 0 0 16px; }
-    .data-dash-sub { margin: 0 0 12px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .data-dash-sub { margin: 0 0 8px; font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .data-dash-drag-hint {
+      margin: 0 0 12px; font-size: 0.72rem; font-weight: 650; color: var(--dim); line-height: 1.35;
+    }
     .data-panes {
       display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
       margin: 0 0 14px;
@@ -3340,16 +3343,23 @@ const html = `<!DOCTYPE html>
     }
     .receipt-board {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 16px;
+      touch-action: pan-y;
     }
     button.door, .door {
       appearance: none; font: inherit; color: inherit; text-align: center;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
       padding: 12px 10px 10px; width: 100%; box-sizing: border-box;
-      min-height: 96px; cursor: pointer;
+      min-height: 96px; cursor: grab;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 8px;
+      gap: 8px; touch-action: pan-y;
+      user-select: none; -webkit-user-select: none;
     }
     .door.is-edit { position: relative; padding-top: 36px; min-height: 112px; }
+    .door.is-lift {
+      opacity: 0.62; transform: scale(1.04); border-color: #e0b44c; cursor: grabbing;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45); z-index: 2; touch-action: none;
+    }
+    .door.is-drop { border-color: #6b5a2e; background: #221e14; }
     .door-ico {
       width: 28px; height: 28px; color: #e0b44c; flex: 0 0 auto;
       display: block;
@@ -4042,7 +4052,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912120000";
+    const DATA_V = "door20260912113200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4081,6 +4091,9 @@ const html = `<!DOCTYPE html>
     let dataDashEdit = false;
     let dataDashLibOpen = false;
     let dataDashSwapId = "";
+    let dataDashDrag = null;
+    let dataDashDragTimer = 0;
+    let dataDashDragDid = false;
     let dataHunt = "";
     let dataHuntPos = "";
     let dataSeat = "";
@@ -5751,6 +5764,7 @@ const html = `<!DOCTYPE html>
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
           + '<p class="caption">Tap a door. Search and filter inside.</p>'
+          + '<p class="data-dash-drag-hint">Hold a tile, then drag to move it.</p>'
           + dataDashBoardHtml();
       }
       return '<div class="receipt-shell">' + body + receiptCtaHtml() + "</div>";
@@ -8292,6 +8306,140 @@ const html = `<!DOCTYPE html>
       saveSeatDataDash(dataDashTiles);
     }
 
+    function dataDashDoorNode(el) {
+      if (!el || !el.closest) return null;
+      if (!el.closest("[data-dash-board]")) return null;
+      if (el.closest("[data-dash-move], [data-dash-remove], [data-dash-add], [data-dash-edit], [data-dash-use], [data-dash-lib-close]")) return null;
+      return el.closest("[data-dash-id]");
+    }
+
+    function dataDashDoorUnder(x, y, skipId) {
+      const stack = document.elementsFromPoint(x, y) || [];
+      for (let i = 0; i < stack.length; i++) {
+        const door = stack[i].closest && stack[i].closest("[data-dash-board] [data-dash-id]");
+        if (!door) continue;
+        const id = door.getAttribute("data-dash-id") || "";
+        if (id && id !== skipId) return door;
+      }
+      return null;
+    }
+
+    function dataDashClearDragClasses() {
+      const board = document.querySelector("[data-dash-board]");
+      if (!board) return;
+      const nodes = board.querySelectorAll(".is-lift, .is-drop");
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i].classList.remove("is-lift");
+        nodes[i].classList.remove("is-drop");
+      }
+    }
+
+    function dataDashStopDragTimer() {
+      if (dataDashDragTimer) {
+        clearTimeout(dataDashDragTimer);
+        dataDashDragTimer = 0;
+      }
+    }
+
+    function dataDashLiftDoor() {
+      if (!dataDashDrag || dataDashDrag.lifted) return;
+      dataDashDrag.lifted = true;
+      if (dataDashDrag.el) {
+        dataDashDrag.el.classList.add("is-lift");
+        try { dataDashDrag.el.setPointerCapture(dataDashDrag.pointerId); } catch (err) { /* ignore */ }
+      }
+      try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) { /* ignore */ }
+    }
+
+    function dataDashMoveLifted(overEl) {
+      if (!dataDashDrag || !dataDashDrag.el || !overEl || overEl === dataDashDrag.el) return;
+      const board = document.querySelector("[data-dash-board]");
+      if (!board) return;
+      const tiles = board.querySelectorAll("[data-dash-id]");
+      let from = -1;
+      let to = -1;
+      for (let i = 0; i < tiles.length; i++) {
+        if (tiles[i] === dataDashDrag.el) from = i;
+        if (tiles[i] === overEl) to = i;
+      }
+      if (from < 0 || to < 0 || from === to) return;
+      if (from < to) overEl.after(dataDashDrag.el);
+      else overEl.before(dataDashDrag.el);
+      dataDashClearDragClasses();
+      dataDashDrag.el.classList.add("is-lift");
+      overEl.classList.add("is-drop");
+    }
+
+    function dataDashCommitFromBoard() {
+      const board = document.querySelector("[data-dash-board]");
+      if (!board) return false;
+      const ids = [];
+      const nodes = board.querySelectorAll("[data-dash-id]");
+      for (let i = 0; i < nodes.length; i++) {
+        const id = nodes[i].getAttribute("data-dash-id") || "";
+        if (id && ids.indexOf(id) < 0) ids.push(id);
+      }
+      if (ids.length < DATA_DASH_MIN) return false;
+      const was = dataDashBoardTiles().join(",");
+      if (ids.join(",") === was) return false;
+      dataDashCommit(ids);
+      return true;
+    }
+
+    function dataDashEndDrag(commit) {
+      dataDashStopDragTimer();
+      const drag = dataDashDrag;
+      dataDashDrag = null;
+      if (!drag) return;
+      if (drag.el) {
+        try { drag.el.releasePointerCapture(drag.pointerId); } catch (err) { /* ignore */ }
+      }
+      const lifted = !!drag.lifted;
+      if (commit && lifted) dataDashCommitFromBoard();
+      dataDashClearDragClasses();
+      if (commit && lifted) dataDashDragDid = true;
+    }
+
+    document.addEventListener("pointerdown", function (e) {
+      if (e.button != null && e.button !== 0) return;
+      if (dataDashLibOpen) return;
+      const door = dataDashDoorNode(e.target);
+      if (!door) return;
+      const id = door.getAttribute("data-dash-id") || "";
+      if (!id) return;
+      dataDashStopDragTimer();
+      dataDashDragDid = false;
+      dataDashDrag = {
+        id: id,
+        el: door,
+        pointerId: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        lifted: false,
+      };
+      dataDashDragTimer = setTimeout(function () { dataDashLiftDoor(); }, 280);
+    });
+    document.addEventListener("pointermove", function (e) {
+      if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
+      const dx = e.clientX - dataDashDrag.x;
+      const dy = e.clientY - dataDashDrag.y;
+      if (!dataDashDrag.lifted) {
+        if ((dx * dx + dy * dy) > 64) dataDashEndDrag(false);
+        return;
+      }
+      e.preventDefault();
+      const over = dataDashDoorUnder(e.clientX, e.clientY, dataDashDrag.id);
+      if (over) dataDashMoveLifted(over);
+    }, { passive: false });
+    document.addEventListener("pointerup", function (e) {
+      if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
+      dataDashEndDrag(true);
+    });
+    document.addEventListener("pointercancel", function (e) {
+      if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
+      dataDashEndDrag(false);
+    });
+
     function dataDashMarkRows(metric, limit) {
       const keys = ["volume", "run", "posture", "manners", "aging", "draft"];
       const m = keys.indexOf(metric) >= 0 ? metric : "volume";
@@ -9560,8 +9708,6 @@ const html = `<!DOCTYPE html>
         const canCut = tiles.length > DATA_DASH_MIN;
         return '<div class="door is-edit" data-dash-id="' + esc(id) + '">'
           + '<div class="data-tile-edit">'
-          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="-1" aria-label="Move up">↑</button>'
-          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="1" aria-label="Move down">↓</button>'
           + (canCut
             ? '<button type="button" class="data-tile-ico" data-dash-remove="' + esc(id) + '" aria-label="Remove">−</button>'
             : "")
@@ -9569,7 +9715,7 @@ const html = `<!DOCTYPE html>
           + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
           + "</div>";
       }
-      return '<button type="button" class="door" data-dash-open="' + esc(id) + '">'
+      return '<button type="button" class="door" data-dash-id="' + esc(id) + '" data-dash-open="' + esc(id) + '">'
         + face + "</button>";
     }
 
@@ -9578,7 +9724,7 @@ const html = `<!DOCTYPE html>
       if (typeof ensurePicks === "function") ensurePicks();
       if (typeof ensureCuffs === "function") ensureCuffs();
       let html = dataDashPresetHtml();
-      html += '<div class="receipt-board" aria-label="Your board">';
+      html += '<div class="receipt-board" data-dash-board="1" aria-label="Your board">';
       html += tiles.map(dataDashTileHtml).join("");
       if (dataDashEdit && dataDashBoardTiles().length < DATA_DASH_MAX) {
         html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a door</button>';
@@ -10157,6 +10303,7 @@ const html = `<!DOCTYPE html>
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
         + '<p class="data-dash-sub">Tap a door. Search and filter inside. Votes never enter these numbers. '
         + editBtn + "</p>"
+        + '<p class="data-dash-drag-hint">Hold a tile, then drag to move it.</p>'
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
         + dataDashPanesHtml()
@@ -23707,6 +23854,7 @@ const html = `<!DOCTYPE html>
       }
       const dashSwapBtn = e.target.closest("[data-dash-swap]");
       if (dashSwapBtn) {
+        if (dataDashDragDid) { dataDashDragDid = false; return; }
         dataDashSwapId = dashSwapBtn.getAttribute("data-dash-swap") || "";
         dataDashLibOpen = true;
         render();
@@ -23739,6 +23887,7 @@ const html = `<!DOCTYPE html>
       }
       const dashOpenBtn = e.target.closest("[data-dash-open]");
       if (dashOpenBtn) {
+        if (dataDashDragDid) { dataDashDragDid = false; return; }
         dataDashOpenReport(dashOpenBtn.getAttribute("data-dash-open") || "");
         return;
       }
@@ -25315,7 +25464,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v228-door-tiles";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v229-door-drag";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25406,13 +25555,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v228-door-tiles")) {
+  || !html.includes("chuckle-shell-v229-door-drag")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v228-door-tiles")
+  || !swSrc.includes("chuckle-shell-v229-door-drag")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26818,6 +26967,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptDoorFilterHtml(")
     || !inline.includes("function receiptIsDoor(")
     || !inline.includes("data-receipt-door-filter")
+    || !inline.includes("function dataDashLiftDoor(")
+    || !inline.includes("function dataDashCommitFromBoard(")
+    || !inline.includes("data-dash-board")
+    || !inline.includes("Hold a tile, then drag to move it.")
     || !inline.includes("Every pick ")
     || !inline.includes("class=\"door\"")
     || !fnSrc("dataDashHtml").includes("receiptPickKey")

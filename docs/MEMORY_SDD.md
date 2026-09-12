@@ -123,7 +123,8 @@ It does not live on the door.
 
 ### L0 — Your board (History / Data)
 
-Heading: **Your board**. Two-column doors, movable in Edit. Face is
+Heading: **Your board**. Two-column doors. Hold a tile, then drag to
+move it. Face is
 **house icon + label only**. No verdict sentence, no gold example number,
 no who-line, no share icon on the door. Icons exist so a thumb can find
 the room at a glance.
@@ -149,8 +150,10 @@ scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 11. No backup (`uninsured`)
 12. Biggest names (`book_top`)
 
-**Edit** is how they reorder or swap. Unsigned / outsider: default twelve,
-no edit. A shared link opens one public ticket, not someone’s private layout.
+**Hold, then drag** is how they reorder. Hint on the board:
+`Hold a tile, then drag to move it.` **Edit** still adds or removes a door
+from the catalog. Unsigned / outsider: default twelve. A shared link opens
+one public ticket, not someone’s private layout.
 
 **Door face (every tile)**
 
@@ -332,7 +335,8 @@ No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
 
 ## 8. Edit board
 
-Drag to reorder, hide, add from the catalog. Persist per seat per league
+Hold a tile, then drag to reorder. Edit still hides or adds from the catalog.
+Persist per seat per league
 (`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
 default twelve, no edit. Shared link still opens one ticket, not the
 editor’s private layout. The v1 key is retired so old example-chip boards

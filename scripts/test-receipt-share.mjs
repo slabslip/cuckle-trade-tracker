@@ -37,6 +37,10 @@ const need = [
   "function receiptDoorIco(",
   "function receiptDoorFilterHtml(",
   "data-receipt-door-filter",
+  "function dataDashLiftDoor(",
+  "function dataDashCommitFromBoard(",
+  "data-dash-board",
+  "Hold a tile, then drag to move it.",
   "Every pick ",
   "A year, a player, a seat",
 ];

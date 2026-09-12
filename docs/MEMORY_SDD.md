@@ -213,8 +213,9 @@ Tap a seat → the same three chips + grades as your own door. Back:
 
 Tap the tile. Two rooms at the top (not filter chips): **Held** and
 **Sold**. Toggle between them. One row per player this seat has traded
-(named player legs only — picks stay on My Draft Picks). Sorted by the
-biggest absolute number. Two-point mark (T0 / today), not the 3y mean.
+(named player legs only — picks stay on My Draft Picks). Sort is most
+or least profitable. Player filter is the same search-plus-list as the
+other doors, A to Z. Two-point mark (T0 / today), not the 3y mean.
 
 - **Held** — still on this roster. Number is today minus paid
   (last inbound T0). Row prints `paid` and `now`.
@@ -226,9 +227,9 @@ biggest absolute number. Two-point mark (T0 / today), not the 3y mean.
 
 Filters are **dropdowns**, never pill chips (HIG-23):
 
-1. **Ahead or behind** — who printed and who died.
-2. **Position** — QB / RB / WR / TE. Search covers a name.
-3. **League year** — acquire year on Held, close year on Sold.
+1. **Sort** — most profitable or least profitable.
+2. **Player** — search, then an A–Z list of every player this seat
+   traded. Same control as the other player menus. No year filter.
 
 No net bag total on the door. Count is `held` or `sold · left` for the
 open room. Tap a row → the last trade ticket. No claimed seat: the door

@@ -4088,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "plheld20260912170000";
+    const DATA_V = "plsort20260912180000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5125,6 +5125,7 @@ const html = `<!DOCTYPE html>
       receiptPlSign = "all";
       receiptPlPos = "all";
       receiptPlRoom = "held";
+      receiptPlSort = "most";
     }
 
     function receiptDraftTeamCounts(seat) {
@@ -6058,14 +6059,26 @@ const html = `<!DOCTYPE html>
       return typed.length >= 2 ? typed : "";
     }
 
-    function receiptTradePlayerMenuHtml() {
+    function receiptPlPlayerNames() {
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      const seat = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
+      if (!mine || !seat || !(seatCache[mine] && seatCache[mine].trades)) return [];
+      const rows = receiptPlRowsForSeat(mine, seat);
+      const seen = {};
+      const out = [];
+      for (let i = 0; i < rows.length; i++) receiptAddOwnedPlayer(seen, out, rows[i].label);
+      out.sort(function (a, b) { return a.localeCompare(b); });
+      return out;
+    }
+
+    function receiptTradePlayerMenuHtml(pool) {
       const mine = typeof authSeatId === "function" ? authSeatId() : "";
       if (mine && !(seatCache[mine] && seatCache[mine].trades) && typeof seatData === "function") {
         return '<div class="receipt-player-dd"><span>Player</span>'
           + '<p class="caption">Loading players you rostered…</p></div>';
       }
       const needle = String(receiptPlayerQ || "").trim().toLowerCase();
-      const names = receiptTradePlayerNames().filter(function (n) {
+      const names = (pool || receiptTradePlayerNames()).filter(function (n) {
         return !needle || n.toLowerCase().indexOf(needle) >= 0;
       });
       const open = receiptPlayerOpen;
@@ -6110,11 +6123,9 @@ const html = `<!DOCTYPE html>
     function receiptDoorFilterHtml(id) {
       if (id === "profit_loss") {
         return '<div class="receipt-trade-menus">'
-          + receiptTradeYearHtml()
-          + receiptLookSelect("Ahead or behind", "data-receipt-pl-sign",
-            [["all", "All"], ["ahead", "Ahead"], ["behind", "Behind"]], receiptPlSign)
-          + receiptLookSelect("Position", "data-receipt-pl-pos",
-            [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]], receiptPlPos)
+          + receiptLookSelect("Sort", "data-receipt-pl-sort",
+            [["most", "Most profitable"], ["least", "Least profitable"]], receiptPlSort)
+          + receiptTradePlayerMenuHtml(receiptPlPlayerNames())
           + "</div>";
       }
       if (id === "my_trades" || id === "league_trades") {
@@ -6179,19 +6190,21 @@ const html = `<!DOCTYPE html>
           else if (rows[i].state === "left") leftN += 1;
           else soldN += 1;
         }
-        const yearWant = receiptTradeYearWant();
         const room = receiptPlRoom === "closed" ? "closed" : "held";
-        const signWant = receiptPlSign;
-        const posWant = receiptPlPos;
+        const player = receiptPlayerNeedle();
+        const want = String(player || "").toLowerCase();
         rows = rows.filter(function (row) {
           if (room === "held" && row.state !== "held") return false;
           if (room === "closed" && row.state === "held") return false;
-          if (signWant === "ahead" && !(row.pl > 0)) return false;
-          if (signWant === "behind" && !(row.pl < 0)) return false;
-          if (posWant && posWant !== "all" && row.pos !== posWant) return false;
-          if (yearWant && row.year !== yearWant) return false;
-          if (needle && String(row.label || "").toLowerCase().indexOf(needle) < 0) return false;
+          if (want && String(row.label || "").toLowerCase().indexOf(want) < 0) return false;
           return true;
+        });
+        rows.sort(function (a, b) {
+          if (a.pl == null && b.pl == null) return String(a.label || "").localeCompare(String(b.label || ""));
+          if (a.pl == null) return 1;
+          if (b.pl == null) return -1;
+          if (receiptPlSort === "least") return a.pl - b.pl;
+          return b.pl - a.pl;
         });
         const line = room === "held"
           ? (heldN + " held")
@@ -6598,8 +6611,8 @@ const html = `<!DOCTYPE html>
       else if (id === "league_draft" && receiptDraftSeat) caption = "Same three buckets for " + receiptDraftSeat + ".";
       else if (id === "league_draft") caption = "Pick a seat to read their used, traded away, and traded in tape.";
       else if (id === "profit_loss") caption = receiptPlRoom === "closed"
-        ? "Gone from this roster. Sold is sale minus paid. Left is last quote minus paid. Sold vs now has no inbound cost. Biggest number first."
-        : "Still on this roster. Today minus what you paid the day you got them. Biggest number first.";
+        ? "Gone from this roster. Sold is sale minus paid. Left is last quote minus paid. Sold vs now has no inbound cost."
+        : "Still on this roster. Today minus what you paid the day you got them.";
       else if (id === "trade_mark") caption = "Search a player you rostered. Filter by league year. See how that deal looks from then to now.";
       else if (id === "lopsided") caption = "Search a player you rostered. Filter by league year. See how that deal looked the day they accepted.";
       else if (id === "pick_print") {
@@ -6635,7 +6648,7 @@ const html = `<!DOCTYPE html>
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + '<p class="caption">' + esc(caption) + "</p>"
-        + ((id === "trade_mark" || id === "lopsided")
+        + ((id === "trade_mark" || id === "lopsided" || id === "profit_loss")
           ? ""
           : ('<input class="receipt-search" data-receipt-q="1" type="search"'
             + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />'))
@@ -15464,6 +15477,7 @@ const html = `<!DOCTYPE html>
     let receiptPlSign = "all";
     let receiptPlPos = "all";
     let receiptPlRoom = "held";
+    let receiptPlSort = "most";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -26277,6 +26291,12 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const plSortSel = e.target && e.target.closest && e.target.closest("[data-receipt-pl-sort]");
+      if (plSortSel) {
+        receiptPlSort = plSortSel.value === "least" ? "least" : "most";
+        render();
+        return;
+      }
       const portalFilterSel = e.target && e.target.closest && e.target.closest("[data-receipt-filter]");
       if (portalFilterSel) {
         receiptFilter = portalFilterSel.value || "all";
@@ -26586,7 +26606,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v244-pl-held";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v245-pl-sort";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26677,13 +26697,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v244-pl-held")) {
+  || !html.includes("chuckle-shell-v245-pl-sort")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v244-pl-held")
+  || !swSrc.includes("chuckle-shell-v245-pl-sort")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28094,6 +28114,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes('data-receipt-pl-room="held">Held<')
     || !inline.includes('data-receipt-pl-room="closed">Sold<')
     || fnSrc("receiptDoorFilterHtml").includes("Held or sold")
+    || !inline.includes("function receiptPlPlayerNames(")
+    || !inline.includes("Most profitable")
+    || !inline.includes("Least profitable")
+    || !inline.includes("data-receipt-pl-sort")
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptOriginPicksForSeat(")
     || !inline.includes("function receiptPickEverOwned(")
@@ -28136,6 +28160,19 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("dataDashTileHtml").includes("receiptChipHtml(")
     || inline.includes("exactly like")) {
     throw new Error("Receipt tiles must ship shareProofNow, public boot, clock English, and L1/L2 tickets");
+  }
+  {
+    const doorFn = fnSrc("receiptDoorFilterHtml");
+    const a = doorFn.indexOf('if (id === "profit_loss")');
+    const b = doorFn.indexOf('if (id === "my_trades"');
+    const pl = (a >= 0 && b > a) ? doorFn.slice(a, b) : "";
+    if (!pl.includes("receiptTradePlayerMenuHtml")
+      || !pl.includes("Most profitable")
+      || pl.includes("receiptTradeYearHtml")
+      || pl.includes("Ahead or behind")
+      || pl.includes("data-receipt-pl-pos")) {
+      throw new Error("Profit / Loss filters are sort plus player, not year or chips");
+    }
   }
   if (!inline.includes("function loadSeatTradeBlock(")
     || !inline.includes("function saveSeatTradeBlock(")

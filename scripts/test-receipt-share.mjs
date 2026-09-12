@@ -40,6 +40,10 @@ const need = [
   "Profit / Loss",
   "function receiptPlRowsForSeat(",
   "function receiptPlRoomsHtml(",
+  "function receiptPlPlayerNames(",
+  "data-receipt-pl-sort",
+  "Most profitable",
+  "Least profitable",
   "data-receipt-pl-room",
   'data-receipt-pl-room="held">Held<',
   'data-receipt-pl-room="closed">Sold<',
@@ -95,6 +99,9 @@ if (page.includes("All years</button>") || page.includes('data-hunt-pos="QB"')) 
 }
 if (page.includes("Held or sold")) {
   throw new Error("Profit / Loss rooms replace the Held or sold dropdown");
+}
+if (!page.includes("Most profitable") || !page.includes("function receiptPlPlayerNames(")) {
+  throw new Error("Profit / Loss must sort and filter by player");
 }
 if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
   throw new Error("Trade THEN/NOW player list must not include pick-became names");

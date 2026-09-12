@@ -23,20 +23,24 @@ const need = [
   "Remember it differently?",
   "Get this for your league",
   "Your board",
-  "trade_mark",
-  "pick_print",
+  "my_trades",
+  "league_trades",
+  "my_draft",
+  "league_draft",
   "season_place",
   'params.get("tx")',
   "function receiptTermCurveHtml(",
   "function receiptOwnedPicksForSeat(",
   "function receiptPickEverOwned(",
   "function receiptPickBecameLine(",
-  "What my pick became",
-  "My Picks",
-  "Trade NOW",
-  "Trade THEN",
+  "My Trade History",
+  "League Trade History",
+  "My Draft Picks",
+  "League Draft Picks",
+  "function histPartnerRows(",
+  "function receiptDraftRowsForSeat(",
   "function receiptOriginPicksForSeat(",
-  "Picks that started",
+  "Hit rate ",
   "function receiptDoorIco(",
   "function receiptDoorFilterHtml(",
   "data-receipt-door-filter",
@@ -66,7 +70,7 @@ if (missing.length) {
 }
 
 if (!page.includes('DATA_DOORS = [')
-  || !page.includes('"lopsided", "trade_mark", "pick_print", "my_picks", "past_champions"')) {
+  || !page.includes('"my_trades", "league_trades", "my_draft", "league_draft", "past_champions"')) {
   throw new Error("default board must be the 13 door tiles");
 }
 if (!page.includes('class="door') || page.includes("The number is one example")) {
@@ -91,7 +95,7 @@ if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/M
 }
 
 const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
-for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned", "My Picks", "Picks that started on this seat", "player you rostered", "League year", "top 4"]) {
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "My Trade History", "League Trade History", "My Draft Picks", "League Draft Picks", "Traded away", "Traded in", "Hit rate", "What my pick became", "League year", "top 4"]) {
   if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
 }
 

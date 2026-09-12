@@ -47,16 +47,21 @@ the same paint. Do not invent a 17th kind for each argument.
 
 | Id | Door label |
 |----|----------|
-| `trade_mark` | Trade NOW |
-| `pick_print` | What my pick became |
-| `my_picks` | My Picks |
+| `my_trades` | My Trade History |
+| `league_trades` | League Trade History |
+| `my_draft` | My Draft Picks |
+| `league_draft` | League Draft Picks |
 | `season_place` / `season_title` | How I finished |
+
+Share chips (same tape, not board tiles): `trade_mark` (Trade ticket),
+`pick_print` (What my pick became). Saved boards that still store
+`lopsided` / `trade_mark` / `pick_print` / `my_picks` remap onto the
+four history doors.
 
 **Who (a list behind the door)**
 
 | Id | Door label |
 |----|----------|
-| `lopsided` | Trade THEN |
 | `passed_around` | Passed around |
 | `least_traded` | Least traded (catalog only) |
 | `forever` | Never left |
@@ -136,12 +141,12 @@ portal after you tap. No All / Memory / Who / Research chips on the board.
 Each tile is a **door into a scenario**, not a finished receipt. Tap = that
 scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 
-**Default thirteen doors** (first visit; v2 boards that still have room gain My Picks after What my pick became):
+**Default thirteen doors** (first visit; saved boards remap Trade THEN/NOW and the old pick doors onto these four):
 
-1. Trade THEN (`lopsided`)
-2. Trade NOW (`trade_mark`)
-3. What my pick became (`pick_print`) — every pick this seat ever owned
-4. My Picks (`my_picks`) — picks that started on this seat, then the journey after a sale
+1. My Trade History (`my_trades`) — your partners, most deals first, then that pair newest-first
+2. League Trade History (`league_trades`) — every pairing, most deals first, searchable
+3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded
+4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
 5. Who won the year (`past_champions`)
 6. How I finished (`season_place`)
 7. Me vs them (`vs_you`)
@@ -165,33 +170,42 @@ one public ticket, not someone’s private layout.
 - Label in the table above
 - Nothing else
 
-**Trade portal** (Trade THEN / Trade NOW)
+**My Trade History**
 
-Search a **player you rostered** (A–Z dropdown, list refines as you
-type). Only players this seat traded for or sent as a player — not a
-pick that later became someone. A **League year** menu filters that
-list and the deals. Then a look menu: Smash / Robbery on THEN, Grew /
-Faded / Even on NOW. Rows are simple list lines. Tap → L1 ticket.
+Tap the tile. First screen is **your partners**, most deals first, count
+on the row. Tap a partner. That pair’s tickets, newest first. Filters on
+the deal list: **League year** plus All / Smash / Robbery / Grew / Faded /
+Even. Smash and Robbery score the accept-day mark (`t0` — **Day they
+traded**). Grew, Faded, and Even score how it aged (`all − t0` —
+**From then to now**). Tap a deal → L1 ticket. No claimed seat:
+`Claim your seat to see your partners.`
 
-**Pick portal (tap the tile)**
+**League Trade History**
 
-Search lives here. Default list is **every draft pick that seat ever owned**
-(hop `from` / `to`, `used_by`, origin, or still held) — not the first 20 hops
-in the book. Grouped USED / SOLD / HELD. Each row: pick label, became line,
-print. Tap → L2 hop tape.
+Same two steps. First screen is **every pairing** (`NameA vs NameB`),
+most deals first, searchable by either seat. Tap a pairing → those
+tickets, newest first, same year + look chips.
 
-No claimed seat: `Claim your seat, or search a name, to see every pick they
-owned.` Search a canonical seat (`Truman`, `ARae`) to open that seat’s list.
-Search a year or player to filter. Seat names come from `members.json`, not
-live Sleeper `team_name`.
+**My Draft Picks**
 
-**My Picks portal**
+Three chips: **Used / Traded away / Traded in** (default Used).
 
-Picks that started on this seat. Follow them after a sale. Origin only
-(`pickOriginName` matches the claimed seat). Grouped by season, then
-USED / SOLD / HELD on each row. A sold origin pick stays on the list
-and follows what it became. Tap → the same L2 hop tape. No claimed seat:
-`Claim your seat to see the picks that started here.`
+- **Used** — this seat drafted a player on that pick (`became` and
+  `used_by` match).
+- **Traded away** — an original pick of this seat that they sold.
+- **Traded in** — a pick they took from another seat. A pick can be
+  Used and Traded in (trade for a 1st, then draft it).
+
+Each row grades the player vs the slot (Star / Hit / Even / Miss /
+Bust). The section prints a **Hit rate**. Held unused origin picks stay
+off these three (Who has firsts covers that). No claimed seat: the door
+says so.
+
+**League Draft Picks**
+
+First screen is **every seat**, most used + away + in first, searchable.
+Tap a seat → the same three chips + grades as your own door. Back:
+`← Seats` then `← Your board`.
 
 **Season / finish portal**
 
@@ -355,8 +369,8 @@ Persist per seat per league
 (`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
 default thirteen, no edit. Shared link still opens one ticket, not the
 editor’s private layout. The v1 key is retired so old example-chip boards
-reload as the thirteen doors. Saved v2 boards that still have a free slot
-gain My Picks after What my pick became.
+reload as the thirteen doors. Saved boards that still store Trade THEN /
+Trade NOW / What my pick became / My Picks land on the four history doors.
 
 ---
 
@@ -372,13 +386,16 @@ than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md)
 
 ## 10. Acceptance
 
-A member can: find a door by icon + label → tap **What my pick became** →
-search / filter → see every pick they ever owned → tap one →
+A member can: find a door by icon + label → tap **My Trade History** →
+see partners, most deals first → tap a name → newest tickets → filter
+League year or Grew / Faded → open a deal, see two questions first
+(Day they traded / From then to now). Tap **League Trade History** →
+search a pairing → same tickets. Tap **My Draft Picks** → Used /
+Traded away / Traded in → read the Hit rate → tap a pick →
 “You sold this 1st. They used it. It is X.” → share icon on the ticket →
-reopen on the same layer. Tap **My Picks** → see only origin picks that
-started on this seat → follow a sold pick to what it became. Tap **Trade NOW**, filter Grew / Faded, open
-a deal, see two questions first (day they traded / from then to now).
-A nerd can Edit the board, reorder, reload on another phone, same layout.
+reopen on the same layer. Tap **League Draft Picks** → pick a seat →
+the same three buckets. A nerd can Edit the board, reorder, reload on
+another phone, same layout.
 
 Two-second test (novice): they can say “so it looked better when they traded,
 and now it’s worse” and “that 1st I sold is Bijan now.” They never have

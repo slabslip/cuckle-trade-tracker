@@ -62,11 +62,11 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`db/wave19-seat-data-dash.sql`](../db/wave19-seat-data-dash.sql):
 
-- Catalog is **32** unique report ids (27 desks + `trade_mark`, `pick_print`,
-  `my_picks`, `season_place`, `vs_you`). Persist `seat_data_dash` +
+- Catalog is **32** unique report ids (27 desks + `my_trades`, `league_trades`,
+  `my_draft`, `league_draft`, `season_place`, `vs_you` after the history-door swap). Persist `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>` still exists for Your board + hunt routing.
-- **Your board** (thirteen doors: Trade THEN, Trade NOW, what my pick
-  became, My Picks, who won the year, how I finished, me vs them, who has firsts, never
+- **Your board** (thirteen doors: My Trade History, League Trade History, My Draft
+  Picks, League Draft Picks, who won the year, how I finished, me vs them, who has firsts, never
   left, passed around, draft hits, no backup, biggest names) **is** the Data
   cold load. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)).
   Edit persist still uses `seat_data_dash` +
@@ -79,10 +79,10 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 **Deal default 12:** `fill_holes` (label: **Who has what you need**), `move_extras`,
 `poach_cuffs`, `available_cuffs`, `uninsured`, `stash_young`, `draft_board`, `held_picks`,
-`book_top`, `lopsided`, `seat_run`, `cuffs_board`.
+`book_top`, `my_trades`, `seat_run`, `cuffs_board`.
 
 **Research preset 12:** `firsts_held`, `uninsured`, `widest_clock`, `passed_around`,
-`homesteaders`, `draft_board`, `cuffs_board`, `lopsided`, `seat_run`, `least_traded`,
+`homesteaders`, `draft_board`, `cuffs_board`, `my_trades`, `seat_run`, `least_traded`,
 `forever`, `past_champions`.
 
 ### Hunts

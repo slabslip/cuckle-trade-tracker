@@ -3377,8 +3377,8 @@ const html = `<!DOCTYPE html>
       display: block;
     }
     .door-lab {
-      font-size: 0.86rem; font-weight: 750; line-height: 1.2; color: var(--text);
-      letter-spacing: 0; text-transform: none;
+      font-size: 0.78rem; font-weight: 750; line-height: 1.2; color: var(--text);
+      letter-spacing: 0; text-transform: none; max-width: 100%;
     }
     .receipt-chip {
       position: relative;
@@ -4093,7 +4093,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912133000";
+    const DATA_V = "door20260912140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4144,7 +4144,7 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
-      "lopsided", "trade_mark", "pick_print", "my_picks", "past_champions",
+      "my_trades", "league_trades", "my_draft", "league_draft", "past_champions",
       "season_place", "vs_you", "firsts_held", "forever",
       "passed_around", "seat_draft", "uninsured", "book_top",
     ];
@@ -4157,13 +4157,13 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "lopsided", "trade_mark", "pick_print", "my_picks", "past_champions",
+      "my_trades", "league_trades", "my_draft", "league_draft", "past_champions",
       "season_place", "vs_you", "firsts_held", "forever",
       "passed_around", "seat_draft", "uninsured", "book_top",
     ];
     const DATA_DASH_RESEARCH = [
       "firsts_held", "uninsured", "widest_clock", "passed_around",
-      "homesteaders", "draft_board", "cuffs_board", "lopsided",
+      "homesteaders", "draft_board", "cuffs_board", "my_trades",
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_REPORTS = [
@@ -4181,7 +4181,7 @@ const html = `<!DOCTYPE html>
       { id: "homesteaders", lab: "Homesteaders", desk: "lists", size: "full", why: "Longest stays, forever players aside." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
-      { id: "lopsided", lab: "Trade THEN", desk: "lists", size: "full", why: "How deals looked the day they accepted." },
+      { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
       { id: "seat_run", lab: "Run", desk: "seats", size: "full", why: "Ahead or behind on the Score as clock." },
       { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
       { id: "forever", lab: "Never left", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
@@ -4194,9 +4194,9 @@ const html = `<!DOCTYPE html>
       { id: "held_picks", lab: "Held picks", desk: "draft", size: "full", why: "Future picks this seat still holds." },
       { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
       { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Free-agent cuffs, your starters first." },
-      { id: "trade_mark", lab: "Trade NOW", desk: "lists", group: "memory", size: "full", why: "How a deal looks from then to now." },
-      { id: "pick_print", lab: "What my pick became", desk: "lists", group: "memory", size: "full", why: "Every pick this seat ever owned, and what it became." },
-      { id: "my_picks", lab: "My Picks", desk: "lists", group: "memory", size: "full", why: "Picks that started on this seat, and the journey after a sale." },
+      { id: "league_trades", lab: "League Trade History", desk: "lists", group: "memory", size: "full", why: "Every pairing, most deals first." },
+      { id: "my_draft", lab: "My Draft Picks", desk: "lists", group: "memory", size: "full", why: "Used, traded away, and traded in — with a grade." },
+      { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
@@ -4737,10 +4737,229 @@ const html = `<!DOCTYPE html>
       const print = receiptPickPrint(p, seat);
       const line = receiptPickBecameLine(p, row.key, seat, you);
       const lab = (p && p.label) || row.key;
+      const grade = receiptDraftGradeFor(row);
       return '<button type="button" class="row" data-receipt-pick="' + esc(row.key) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(lab) + "</div>"
         + '<div class="date">' + esc(line) + "</div></div>"
-        + '<div class="margin">' + esc(print) + "</div></div></button>";
+        + '<div class="margin">' + esc(grade.lab || print) + "</div></div></button>";
+    }
+
+    function histSidesAll() {
+      return ((league && league.trade_boards && league.trade_boards.sides) || []).slice();
+    }
+
+    function histPairKey(a, b) {
+      const x = String(a || "");
+      const y = String(b || "");
+      return x < y ? (x + "||" + y) : (y + "||" + x);
+    }
+
+    function histPairParts(key) {
+      const bits = String(key || "").split("||");
+      return { a: bits[0] || "", b: bits[1] || "" };
+    }
+
+    function histCountMap(mineName) {
+      const raw = histSidesAll();
+      const seenTx = {};
+      const bag = {};
+      for (let i = 0; i < raw.length; i++) {
+        const s = raw[i];
+        const tid = String((s && s.transaction_id) || "");
+        const left = s && s.name;
+        const right = s && s.other;
+        if (!tid || !left || !right || left === right) continue;
+        if (mineName && left !== mineName && right !== mineName) continue;
+        if (seenTx[tid]) continue;
+        seenTx[tid] = true;
+        const key = mineName
+          ? (left === mineName ? right : left)
+          : histPairKey(left, right);
+        if (!bag[key]) bag[key] = { key: key, n: 0, last: s.date || "" };
+        bag[key].n += 1;
+        if ((s.date || "") > bag[key].last) bag[key].last = s.date || "";
+      }
+      return Object.keys(bag).map(function (k) { return bag[k]; })
+        .sort(function (a, b) {
+          if (b.n !== a.n) return b.n - a.n;
+          return String(b.last).localeCompare(String(a.last));
+        });
+    }
+
+    function histPartnerRows(mineName, q) {
+      const needle = String(q || "").trim().toLowerCase();
+      return histCountMap(mineName).filter(function (row) {
+        if (!needle) return true;
+        if (mineName) return row.key.toLowerCase().indexOf(needle) >= 0;
+        const parts = histPairParts(row.key);
+        return (parts.a + " " + parts.b).toLowerCase().indexOf(needle) >= 0;
+      });
+    }
+
+    function histDealsForPair(pair, mineName) {
+      const raw = histSidesAll();
+      let sides = [];
+      if (mineName) {
+        sides = raw.filter(function (s) { return s && s.name === mineName && s.other === pair; });
+        if (!sides.length) {
+          sides = raw.filter(function (s) {
+            return s && ((s.name === mineName && s.other === pair) || (s.other === mineName && s.name === pair));
+          });
+        }
+      } else {
+        const parts = histPairParts(pair);
+        sides = raw.filter(function (s) {
+          if (!s) return false;
+          return (s.name === parts.a && s.other === parts.b) || (s.name === parts.b && s.other === parts.a);
+        });
+      }
+      sides = receiptTradeUniq(sides, function (s) { return windowScoreAt(s, "all"); });
+      sides.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+      return sides;
+    }
+
+    function histLookKeep(s, f) {
+      if (!f || f === "all") return true;
+      const t0 = windowScoreAt(s, "t0");
+      const aged = receiptTradeAged(s);
+      if (f === "smash") return t0 != null && t0 > 0;
+      if (f === "robbery") return t0 != null && t0 < 0;
+      if (f === "grew") return aged != null && aged > 20;
+      if (f === "faded") return aged != null && aged < -20;
+      if (f === "even") return aged != null && Math.abs(aged) <= 20;
+      return true;
+    }
+
+    function histPartnerRowHtml(row, leagueWide) {
+      const parts = histPairParts(row.key);
+      const lab = leagueWide
+        ? ((parts.a || row.key) + " vs " + (parts.b || ""))
+        : row.key;
+      const n = row.n;
+      return '<button type="button" class="row" data-hist-pair="' + esc(row.key) + '">'
+        + '<div class="row-top"><div><div class="names">' + esc(lab) + "</div>"
+        + '<div class="date">' + esc(n + (n === 1 ? " deal" : " deals")) + "</div></div>"
+        + '<div class="margin">' + esc(String(n)) + "</div></div></button>";
+    }
+
+    function receiptPickSlotCost(key, p) {
+      const parts = typeof pickKeyParts === "function" ? pickKeyParts(key) : null;
+      const r = parts ? parts.round : 4;
+      if (r === 1) return 4800;
+      if (r === 2) return 2200;
+      if (r === 3) return 1100;
+      if (r === 4) return 500;
+      return 400;
+    }
+
+    function receiptPickPlayerValue(name) {
+      const want = String(name || "").trim().toLowerCase();
+      if (!want) return null;
+      const book = calcBook || {};
+      const pool = (book.players || []).concat(book.picks || []);
+      for (let i = 0; i < pool.length; i++) {
+        const a = pool[i];
+        if (!a) continue;
+        const lab = String((typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name || "").toLowerCase();
+        if (lab === want) {
+          const v = typeof calcValueNum === "function" ? calcValueNum(a) : null;
+          return v != null && v >= 0 ? v : null;
+        }
+      }
+      return null;
+    }
+
+    function receiptDraftGradeFromSurplus(surplus) {
+      if (surplus == null) return { id: "held", lab: "Held" };
+      if (surplus >= 2500) return { id: "star", lab: "Star" };
+      if (surplus >= 500) return { id: "hit", lab: "Hit" };
+      if (surplus > -500) return { id: "even", lab: "Even" };
+      if (surplus > -2000) return { id: "miss", lab: "Miss" };
+      return { id: "bust", lab: "Bust" };
+    }
+
+    function receiptDraftGradeFor(row) {
+      const p = row && row.p;
+      if (!p) return { id: "held", lab: "Held" };
+      if (!p.became) return { id: "held", lab: p.still_pick ? "Held" : "Open" };
+      const val = receiptPickPlayerValue(p.became);
+      if (val == null) return { id: "even", lab: "Even" };
+      return receiptDraftGradeFromSurplus(val - receiptPickSlotCost(row.key, p));
+    }
+
+    function receiptDraftGotIn(p, seat) {
+      if (!p || !seat) return false;
+      const hops = p.hops || [];
+      for (let i = 0; i < hops.length; i++) {
+        if (hops[i].to === seat && hops[i].from && hops[i].from !== seat) return true;
+      }
+      return false;
+    }
+
+    function receiptDraftInBucket(p, seat, bucket) {
+      if (!p || !seat) return false;
+      const origin = typeof pickOriginName === "function" ? pickOriginName(p) : "";
+      if (bucket === "used") return !!(p.became && p.used_by === seat);
+      if (bucket === "away") return origin === seat && receiptPickSeatSold(p, seat);
+      if (bucket === "in") return receiptDraftGotIn(p, seat) && origin !== seat;
+      return false;
+    }
+
+    function receiptDraftRowsForSeat(seat, bucket, q) {
+      if (!picks || !seat) return [];
+      const keys = Object.keys(picks);
+      const needle = String(q || "").trim().toLowerCase();
+      const out = [];
+      for (let i = 0; i < keys.length; i++) {
+        const p = picks[keys[i]];
+        if (!p || !receiptDraftInBucket(p, seat, bucket)) continue;
+        if (needle) {
+          const bits = [keys[i], p.became, p.label, p.used_by, pickOriginName(p)];
+          if (bits.join(" ").toLowerCase().indexOf(needle) < 0) continue;
+        }
+        out.push({ key: keys[i], p: p });
+      }
+      out.sort(function (a, b) {
+        const ya = Number(receiptPickYear(a.p, a.key) || 0);
+        const yb = Number(receiptPickYear(b.p, b.key) || 0);
+        if (yb !== ya) return yb - ya;
+        const pa = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
+        const pb = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
+        return ((pa && pa.round) || 9) - ((pb && pb.round) || 9);
+      });
+      return out;
+    }
+
+    function receiptDraftRateLine(rows) {
+      let star = 0, hit = 0, even = 0, miss = 0, bust = 0, held = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const g = receiptDraftGradeFor(rows[i]).id;
+        if (g === "star") star += 1;
+        else if (g === "hit") hit += 1;
+        else if (g === "even") even += 1;
+        else if (g === "miss") miss += 1;
+        else if (g === "bust") bust += 1;
+        else held += 1;
+      }
+      const graded = rows.length - held;
+      const good = star + hit;
+      if (!rows.length) return "No picks in this bucket.";
+      if (!graded) return rows.length + " held · no grade yet";
+      const pct = Math.round((good / graded) * 100);
+      return "Hit rate " + good + " of " + graded + " (" + pct + "%) · Star " + star + " · Hit " + hit
+        + " · Even " + even + " · Miss " + miss + " · Bust " + bust;
+    }
+
+    function receiptDraftTeamCounts(seat) {
+      const keys = picks ? Object.keys(picks) : [];
+      let used = 0, away = 0, inn = 0;
+      for (let i = 0; i < keys.length; i++) {
+        const p = picks[keys[i]];
+        if (receiptDraftInBucket(p, seat, "used")) used += 1;
+        if (receiptDraftInBucket(p, seat, "away")) away += 1;
+        if (receiptDraftInBucket(p, seat, "in")) inn += 1;
+      }
+      return { used: used, away: away, inn: inn };
     }
 
     function receiptPickHopSearchBits(p, key) {
@@ -5179,7 +5398,8 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptFilterGroup(id) {
-      if (id === "trade_mark" || id === "pick_print" || id === "my_picks"
+      if (id === "my_trades" || id === "league_trades" || id === "my_draft" || id === "league_draft"
+        || id === "trade_mark" || id === "pick_print" || id === "my_picks"
         || id === "season_place" || id === "season_title") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -5199,6 +5419,9 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptPortalSearchHint(id) {
+      if (id === "my_trades") return "A partner name";
+      if (id === "league_trades") return "A seat, a pairing";
+      if (id === "my_draft" || id === "league_draft") return "A year, a player, a pick";
       if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") return "A team, a trade, a year";
       if (id === "pick_print") return "A year, a player, a seat";
       if (id === "my_picks") return "A year, a player";
@@ -5216,12 +5439,17 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptIsDoor(id) {
-      if (id === "season_title") return true;
+      const canon = receiptDoorCanon(id);
+      if (id === "season_title" || canon === "season_place") return true;
       if (id === "draft_marks" || id === "held_firsts") return true;
-      return DATA_DOORS.indexOf(id) >= 0;
+      return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
 
     function receiptDoorCanon(id) {
+      if (id === "lopsided") return "my_trades";
+      if (id === "trade_mark") return "league_trades";
+      if (id === "pick_print" || id === "what_became") return "my_draft";
+      if (id === "my_picks") return "league_draft";
       if (id === "season_title") return "season_place";
       if (id === "draft_marks") return "seat_draft";
       if (id === "held_firsts") return "firsts_held";
@@ -5230,6 +5458,10 @@ const html = `<!DOCTYPE html>
 
     function receiptDoorIco(id) {
       const inner = ({
+        my_trades: '<path d="M4 8h10l-3-3M14 8l-3 3"/><path d="M20 16H10l3 3M10 16l3-3"/>',
+        league_trades: '<circle cx="7" cy="8" r="2.2"/><circle cx="17" cy="8" r="2.2"/><circle cx="12" cy="16" r="2.2"/><path d="M9 9.2l2.2 5M15 9.2l-2.2 5"/>',
+        my_draft: '<path d="M7 21V4h9l-2.2 4L16 12H7"/>',
+        league_draft: '<rect x="5" y="7" width="12" height="13" rx="1.5"/><path d="M8 4h11v4H8z"/>',
         trade_mark: '<polyline points="4 15 9 9 14 13 20 6"/><circle cx="20" cy="6" r="1.4"/>',
         lopsided: '<path d="M4 19h16M6 19V11h4v8M14 19V6h4v13"/>',
         pick_print: '<path d="M7 21V4h9l-2.2 4L16 12H7"/>',
@@ -5702,6 +5934,33 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptDoorFilterHtml(id) {
+      if (id === "my_trades" || id === "league_trades") {
+        if (!receiptHistPair) return "";
+        const opts = [
+          ["all", "All"], ["smash", "Smash"], ["robbery", "Robbery"],
+          ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"],
+        ];
+        const chips = '<div class="receipt-filters" role="tablist" aria-label="Filter these deals">'
+          + opts.map(function (c) {
+            const on = receiptDoorFilter === c[0];
+            return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
+              + ' data-receipt-door-filter="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
+              + c[1] + "</button>";
+          }).join("")
+          + "</div>";
+        return '<div class="receipt-trade-menus">' + receiptTradeYearHtml() + chips + "</div>";
+      }
+      if (id === "my_draft" || (id === "league_draft" && receiptDraftSeat)) {
+        const chips = [["used", "Used"], ["away", "Traded away"], ["in", "Traded in"]];
+        return '<div class="receipt-filters" role="tablist" aria-label="Draft bucket">'
+          + chips.map(function (c) {
+            const on = receiptDoorFilter === c[0];
+            return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
+              + ' data-receipt-door-filter="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
+              + c[1] + "</button>";
+          }).join("")
+          + "</div>";
+      }
       if (id === "trade_mark" || id === "lopsided") {
         return '<div class="receipt-trade-menus">'
           + receiptTradePlayerMenuHtml()
@@ -5738,6 +5997,74 @@ const html = `<!DOCTYPE html>
         if (!needle) return true;
         return parts.join(" ").toLowerCase().indexOf(needle) >= 0;
       };
+      if (id === "my_trades" || id === "league_trades") {
+        const mine = id === "my_trades"
+          ? (typeof authSeatCanonName === "function" ? authSeatCanonName() : "")
+          : "";
+        if (id === "my_trades" && !mine) {
+          return '<p class="caption">Claim your seat to see your partners.</p>';
+        }
+        if (!receiptHistPair) {
+          const rows = histPartnerRows(mine, q);
+          if (!rows.length) return '<p class="caption">No completed pairings on this tape.</p>';
+          return rows.map(function (row) { return histPartnerRowHtml(row, !mine); }).join("");
+        }
+        let sides = histDealsForPair(receiptHistPair, mine);
+        const yearWant = receiptTradeYearWant();
+        if (yearWant) {
+          sides = sides.filter(function (s) { return receiptTradeSeasonOf(s) === yearWant; });
+        }
+        sides = sides.filter(function (s) { return histLookKeep(s, receiptDoorFilter); });
+        if (needle) {
+          sides = sides.filter(function (s) {
+            return hit([s.name, s.other, s.headline, s.date]);
+          });
+        }
+        if (!sides.length) return '<p class="caption">Nothing on this tape matches.</p>';
+        return sides.map(function (s) {
+          const num = windowScoreAt(s, "all");
+          return receiptDoorTradeRow(s, num);
+        }).join("");
+      }
+      if (id === "my_draft" || id === "league_draft") {
+        if (!picks && typeof ensurePicks === "function") ensurePicks();
+        if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
+        const seat = id === "my_draft"
+          ? (typeof authSeatCanonName === "function" ? authSeatCanonName() : "")
+          : receiptDraftSeat;
+        if (id === "league_draft" && !seat) {
+          const names = (members || []).map(function (m) { return m.name; }).filter(Boolean);
+          const you = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
+          const ranked = names.map(function (name) {
+            const c = receiptDraftTeamCounts(name);
+            return { name: name, c: c, n: c.used + c.away + c.inn };
+          }).filter(function (row) {
+            return !needle || row.name.toLowerCase().indexOf(needle) >= 0;
+          }).sort(function (a, b) {
+            if (b.n !== a.n) return b.n - a.n;
+            return String(a.name).localeCompare(String(b.name));
+          });
+          const rows = ranked.map(function (row) {
+            const c = row.c;
+            return '<button type="button" class="row' + (you && row.name === you ? " you" : "") + '" data-draft-seat="' + esc(row.name) + '">'
+              + '<div class="row-top"><div><div class="names">' + esc(row.name) + "</div>"
+              + '<div class="date">' + esc(c.used + " used · " + c.away + " away · " + c.inn + " in") + "</div></div>"
+              + '<div class="margin">' + esc(String(row.n)) + "</div></div></button>";
+          });
+          return rows.length ? rows.join("") : '<p class="caption">No seats match.</p>';
+        }
+        if (!seat) {
+          return '<p class="caption">Claim your seat to see used, traded away, and traded in.</p>';
+        }
+        const bucket = (receiptDoorFilter === "away" || receiptDoorFilter === "in") ? receiptDoorFilter : "used";
+        const rows = receiptDraftRowsForSeat(seat, bucket, q);
+        const rate = receiptDraftRateLine(rows);
+        if (!rows.length) return '<p class="caption">' + esc(rate) + "</p>";
+        return '<p class="caption">' + esc(rate) + "</p>"
+          + rows.map(function (row) {
+            return receiptPickListRowHtml(row, seat, seat === (typeof authSeatCanonName === "function" ? authSeatCanonName() : ""));
+          }).join("");
+      }
       if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") {
         const raw = ((league && league.trade_boards && league.trade_boards.sides) || []).slice();
         const scoreFn = id === "lopsided"
@@ -6056,7 +6383,16 @@ const html = `<!DOCTYPE html>
         ? receiptPickPortalSeat(receiptQ)
         : (id === "my_picks" && typeof authSeatCanonName === "function" ? authSeatCanonName() : "");
       let caption = "Search and filter this list. Tap a row for the receipt.";
-      if (id === "trade_mark") caption = "Search a player you rostered. Filter by league year. See how that deal looks from then to now.";
+      if (id === "my_trades" && receiptHistPair) caption = "Deals with " + receiptHistPair + ", newest first. Smash / Robbery is the day they clicked. Grew / Faded is from then to now.";
+      else if (id === "my_trades") caption = "Your trade partners, most deals first. Tap a name.";
+      else if (id === "league_trades" && receiptHistPair) {
+        const pair = histPairParts(receiptHistPair);
+        caption = "Deals between " + (pair.a || "them") + " and " + (pair.b || "them") + ", newest first.";
+      } else if (id === "league_trades") caption = "Every pairing in the league, most deals first. Search a seat.";
+      else if (id === "my_draft") caption = "Used is a player this seat drafted. Traded away started here and left. Traded in came from another seat. Grade is Star / Hit / Even / Miss / Bust vs the slot.";
+      else if (id === "league_draft" && receiptDraftSeat) caption = "Same three buckets for " + receiptDraftSeat + ".";
+      else if (id === "league_draft") caption = "Pick a seat to read their used, traded away, and traded in tape.";
+      else if (id === "trade_mark") caption = "Search a player you rostered. Filter by league year. See how that deal looks from then to now.";
       else if (id === "lopsided") caption = "Search a player you rostered. Filter by league year. See how that deal looked the day they accepted.";
       else if (id === "pick_print") {
         caption = pickSeat
@@ -6079,8 +6415,14 @@ const html = `<!DOCTYPE html>
       const vsBack = (id === "vs_you" && receiptVsWho)
         ? '<button type="button" class="chip" data-receipt-vs-back="1">← Names</button> '
         : "";
+      const histBack = ((id === "my_trades" || id === "league_trades") && receiptHistPair)
+        ? '<button type="button" class="chip" data-hist-back="1">← Partners</button> '
+        : "";
+      const draftBack = (id === "league_draft" && receiptDraftSeat)
+        ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
+        : "";
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
-        + '<p class="caption">' + vsBack
+        + '<p class="caption">' + vsBack + histBack + draftBack
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + '<p class="caption">' + esc(caption) + "</p>"
@@ -8572,10 +8914,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashById(id) {
-      const alias = id === "draft_marks" ? "seat_draft"
-        : id === "held_firsts" ? "firsts_held"
-        : id === "season_title" ? "season_place"
-        : id;
+      const alias = (typeof receiptDoorCanon === "function") ? receiptDoorCanon(id) : id;
       for (let i = 0; i < DATA_REPORTS.length; i++) {
         if (DATA_REPORTS[i].id === alias || DATA_REPORTS[i].id === id) return DATA_REPORTS[i];
       }
@@ -8587,7 +8926,9 @@ const html = `<!DOCTYPE html>
       const out = [];
       const src = Array.isArray(tiles) ? tiles : [];
       for (let i = 0; i < src.length; i++) {
-        const id = String(src[i] || "");
+        const id = (typeof receiptDoorCanon === "function")
+          ? receiptDoorCanon(String(src[i] || ""))
+          : String(src[i] || "");
         if (!id || seen[id] || !dataDashById(id)) continue;
         seen[id] = true;
         out.push(id);
@@ -8606,14 +8947,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashMigrateMyPicks(tiles) {
-      const out = Array.isArray(tiles) ? tiles.slice() : [];
-      if (out.indexOf("my_picks") >= 0 || out.length >= DATA_DASH_MAX || !dataDashById("my_picks")) {
-        return dataDashCanon(out);
-      }
-      const at = out.indexOf("pick_print");
-      if (at >= 0) out.splice(at + 1, 0, "my_picks");
-      else out.splice(Math.min(3, out.length), 0, "my_picks");
-      return dataDashCanon(out);
+      return dataDashCanon(tiles);
     }
 
     function dataDashBoardTiles() {
@@ -8629,7 +8963,8 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashIsLegacyBoard(tiles) {
-      const old = ["trade_mark", "pick_print", "season_place", "lopsided", "forever", "past_champions"];
+      const old = ["trade_mark", "pick_print", "season_place", "lopsided", "forever", "past_champions",
+        "my_picks"];
       if (!tiles || !tiles.length) return true;
       if (tiles.length >= DATA_DASH_MAX) return false;
       for (let i = 0; i < tiles.length; i++) {
@@ -10173,18 +10508,23 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptVsWho = "";
+        receiptHistPair = "";
+        receiptDraftSeat = "";
         receiptResetPlayerFilter();
+        if (receiptWhoList === "my_draft") receiptDoorFilter = "used";
         receiptTicket = false;
         receiptPickKey = "";
         dataDashEdit = false;
         dataDashLibOpen = false;
         dataRoom = "overview";
-        if ((receiptWhoList === "pick_print" || receiptWhoList === "my_picks"
+        if ((receiptWhoList === "my_draft" || receiptWhoList === "league_draft"
+          || receiptWhoList === "pick_print" || receiptWhoList === "my_picks"
           || receiptWhoList === "firsts_held")
           && typeof ensurePicks === "function") ensurePicks();
         if (receiptWhoList === "uninsured" && typeof ensureCuffs === "function") ensureCuffs();
         const mine = typeof authSeatId === "function" ? authSeatId() : "";
-        if ((receiptWhoList === "vs_you" || receiptWhoList === "trade_mark" || receiptWhoList === "lopsided")
+        if ((receiptWhoList === "vs_you" || receiptWhoList === "my_trades" || receiptWhoList === "league_trades"
+          || receiptWhoList === "trade_mark" || receiptWhoList === "lopsided")
           && mine && typeof seatData === "function") {
           seatData(mine).then(function () { render(); }).catch(function () {});
         }
@@ -14910,6 +15250,8 @@ const html = `<!DOCTYPE html>
     let receiptFilter = "all";
     let receiptDoorFilter = "all";
     let receiptVsWho = "";
+    let receiptHistPair = "";
+    let receiptDraftSeat = "";
     let receiptPlayerQ = "";
     let receiptPlayerPick = "";
     let receiptPlayerOpen = false;
@@ -15374,6 +15716,21 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (receiptWhoList) {
+        if (receiptHistPair) {
+          receiptHistPair = "";
+          receiptQ = "";
+          receiptDoorFilter = "all";
+          receiptResetPlayerFilter();
+          render();
+          return;
+        }
+        if (receiptDraftSeat) {
+          receiptDraftSeat = "";
+          receiptQ = "";
+          receiptDoorFilter = "all";
+          render();
+          return;
+        }
         if (receiptVsWho) {
           receiptVsWho = "";
           render();
@@ -15382,6 +15739,8 @@ const html = `<!DOCTYPE html>
         receiptWhoList = "";
         receiptQ = "";
         receiptDoorFilter = "all";
+        receiptHistPair = "";
+        receiptDraftSeat = "";
         receiptResetPlayerFilter();
         homeTab = "history";
         view = "home";
@@ -24164,9 +24523,44 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptVsWho = "";
+        receiptHistPair = "";
+        receiptDraftSeat = "";
         receiptResetPlayerFilter();
         dataRoom = "overview";
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const histBackBtn = e.target.closest("[data-hist-back]");
+      if (histBackBtn) {
+        receiptHistPair = "";
+        receiptQ = "";
+        receiptDoorFilter = "all";
+        receiptResetPlayerFilter();
+        render();
+        return;
+      }
+      const histPairBtn = e.target.closest("[data-hist-pair]");
+      if (histPairBtn) {
+        receiptHistPair = histPairBtn.getAttribute("data-hist-pair") || "";
+        receiptQ = "";
+        receiptDoorFilter = "all";
+        render();
+        return;
+      }
+      const draftBackBtn = e.target.closest("[data-draft-back]");
+      if (draftBackBtn) {
+        receiptDraftSeat = "";
+        receiptQ = "";
+        receiptDoorFilter = "all";
+        render();
+        return;
+      }
+      const draftSeatBtn = e.target.closest("[data-draft-seat]");
+      if (draftSeatBtn) {
+        receiptDraftSeat = draftSeatBtn.getAttribute("data-draft-seat") || "";
+        receiptQ = "";
+        receiptDoorFilter = "used";
         render();
         return;
       }
@@ -25952,7 +26346,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v238-calc-wide";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v239-hist-doors";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26043,13 +26437,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v238-calc-wide")) {
+  || !html.includes("chuckle-shell-v239-hist-doors")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v238-calc-wide")
+  || !swSrc.includes("chuckle-shell-v239-hist-doors")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -27386,8 +27780,8 @@ if (!inline.includes("function dataDashHtml(")
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   if (defIds.length !== 13 || defIds.some((id) => !uniq.has(id))
-    || defIds[0] !== "lopsided" || defIds[1] !== "trade_mark"
-    || defIds[2] !== "pick_print" || defIds[3] !== "my_picks") {
+    || defIds[0] !== "my_trades" || defIds[1] !== "league_trades"
+    || defIds[2] !== "my_draft" || defIds[3] !== "league_draft") {
     throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
@@ -27446,15 +27840,17 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-import")
     || !inline.includes("function receiptTermCurveHtml(")
     || !inline.includes("params.get(\"tx\")")
-    || !inline.includes('lab: "What my pick became"')
-    || !inline.includes('lab: "My Picks"')
-    || !inline.includes('lab: "Trade NOW"')
-    || !inline.includes('lab: "Trade THEN"')
+    || !inline.includes('lab: "My Trade History"')
+    || !inline.includes('lab: "League Trade History"')
+    || !inline.includes('lab: "My Draft Picks"')
+    || !inline.includes('lab: "League Draft Picks"')
+    || !inline.includes("function histPartnerRows(")
+    || !inline.includes("function receiptDraftRowsForSeat(")
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptOriginPicksForSeat(")
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")
-    || !inline.includes("Picks that started")
+    || !inline.includes("Hit rate ")
     || !inline.includes("function receiptDoorIco(")
     || !inline.includes("function receiptDoorFilterHtml(")
     || !inline.includes("function receiptIsDoor(")

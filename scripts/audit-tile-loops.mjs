@@ -20,7 +20,7 @@ const direction = read("seat-direction.json");
 const calc = read("calculator.json");
 
 const DOORS = [
-  "lopsided", "trade_mark", "pick_print", "my_picks", "past_champions",
+  "my_trades", "league_trades", "my_draft", "league_draft", "past_champions",
   "season_place", "vs_you", "firsts_held", "forever",
   "passed_around", "seat_draft", "uninsured", "book_top",
 ];
@@ -78,44 +78,66 @@ function score(ok, note, door) {
   return { status: ok ? "hit" : "miss", note, door };
 }
 
-function jobSmash(seat) {
-  const hit = sides.find((s) => (s.name === seat || s.other === seat) && windowDelta(s, "t0") != null);
-  const d = hit ? Math.round(windowDelta(hit, "t0")) : null;
-  return score(!!hit, hit ? (hit.name + " vs " + hit.other + " t0 " + d) : "no accept-day row", "lopsided");
-}
-function jobAged(seat) {
-  const hit = sides.find((s) => {
-    if (s.name !== seat && s.other !== seat) return false;
-    return windowDelta(s, "all") != null && windowDelta(s, "t0") != null;
-  });
-  const aged = hit ? Math.round(windowDelta(hit, "all") - windowDelta(hit, "t0")) : null;
-  return score(!!hit, hit ? "aged " + aged : "no aged row", "trade_mark");
-}
-function jobOwnedPicks(seat) {
-  const keys = Object.keys(picks);
+function jobMyTrades(seat) {
+  const seen = {};
   let n = 0;
+  let sample = "";
+  for (let i = 0; i < sides.length; i++) {
+    const s = sides[i];
+    const tid = String((s && s.transaction_id) || "");
+    if (!tid || seen[tid]) continue;
+    if (s.name !== seat && s.other !== seat) continue;
+    seen[tid] = true;
+    n += 1;
+    if (!sample) sample = (s.name === seat ? s.other : s.name) || "";
+  }
+  return score(n > 0, n + " deals" + (sample ? " · vs " + sample : ""), "my_trades");
+}
+function jobLeagueTrades() {
+  const seen = {};
+  let n = 0;
+  for (let i = 0; i < sides.length; i++) {
+    const s = sides[i];
+    const tid = String((s && s.transaction_id) || "");
+    if (!tid || !s.name || !s.other || s.name === s.other || seen[tid]) continue;
+    seen[tid] = true;
+    n += 1;
+  }
+  return score(n > 0, n + " pairings on tape", "league_trades");
+}
+function soldBy(p, seat) {
+  const hops = (p && p.hops) || [];
+  for (let i = 0; i < hops.length; i++) {
+    if (hops[i].from === seat && hops[i].to && hops[i].to !== seat) return true;
+  }
+  return false;
+}
+function gotIn(p, seat) {
+  const hops = (p && p.hops) || [];
+  for (let i = 0; i < hops.length; i++) {
+    if (hops[i].to === seat && hops[i].from && hops[i].from !== seat) return true;
+  }
+  return false;
+}
+function jobMyDraft(seat) {
+  const keys = Object.keys(picks);
+  let used = 0, away = 0, inn = 0;
   let sample = "";
   for (let i = 0; i < keys.length; i++) {
     const p = picks[keys[i]];
-    if (everOwned(p, seat)) {
-      n += 1;
-      if (!sample && p.became) sample = keys[i] + " → " + p.became;
+    if (p && p.became && p.used_by === seat) {
+      used += 1;
+      if (!sample) sample = keys[i] + " → " + p.became;
     }
+    if (originOf(p) === seat && soldBy(p, seat)) away += 1;
+    if (gotIn(p, seat) && originOf(p) !== seat) inn += 1;
   }
-  return score(n > 0, n + " owned" + (sample ? " · " + sample : ""), "pick_print");
+  const n = used + away + inn;
+  return score(n > 0, used + " used · " + away + " away · " + inn + " in" + (sample ? " · " + sample : ""), "my_draft");
 }
-function jobOriginPicks(seat) {
-  const keys = Object.keys(picks);
-  let n = 0;
-  let sample = "";
-  for (let i = 0; i < keys.length; i++) {
-    const p = picks[keys[i]];
-    if (originOf(p) === seat) {
-      n += 1;
-      if (!sample) sample = keys[i] + (p.became ? " → " + p.became : "");
-    }
-  }
-  return score(n > 0, n + " origin" + (sample ? " · " + sample : ""), "my_picks");
+function jobLeagueDraft(seat) {
+  const r = jobMyDraft(seat);
+  return score(r.status === "hit", r.note, "league_draft");
 }
 function jobTitles(seat) {
   const won = titleRows.filter((t) => t.name === seat);
@@ -174,10 +196,10 @@ function jobDepthFlow(mem) {
 }
 
 const JOBS = [
-  ["smash_day", (m) => jobSmash(m.name)],
-  ["aged_deal", (m) => jobAged(m.name)],
-  ["pick_became", (m) => jobOwnedPicks(m.name)],
-  ["origin_picks", (m) => jobOriginPicks(m.name)],
+  ["my_partners", (m) => jobMyTrades(m.name)],
+  ["league_pairings", () => jobLeagueTrades()],
+  ["my_draft_buckets", (m) => jobMyDraft(m.name)],
+  ["league_draft_seat", (m) => jobLeagueDraft(m.name)],
   ["who_won", (m) => jobTitles(m.name)],
   ["last_finish", (m) => jobFinish(m)],
   ["vs_them", (m) => jobVs(m)],

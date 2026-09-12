@@ -39,6 +39,10 @@ const need = [
   "League Draft Picks",
   "Profit / Loss",
   "function receiptPlRowsForSeat(",
+  "function receiptPlRoomsHtml(",
+  "data-receipt-pl-room",
+  "Unrealized",
+  "Realized",
   "function histPartnerRows(",
   "function receiptDraftRowsForSeat(",
   "function receiptOriginPicksForSeat(",
@@ -88,6 +92,9 @@ if (page.includes('class="receipt-filter"') || page.includes('class="receipt-fil
 }
 if (page.includes("All years</button>") || page.includes('data-hunt-pos="QB"')) {
   throw new Error("hunt and tape year filters must be dropdowns, not chips");
+}
+if (page.includes("Held or sold")) {
+  throw new Error("Profit / Loss rooms replace the Held or sold dropdown");
 }
 if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
   throw new Error("Trade THEN/NOW player list must not include pick-became names");

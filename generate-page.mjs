@@ -3437,6 +3437,7 @@ const html = `<!DOCTYPE html>
       background: #141418; color: var(--text); font: inherit; font-size: 16px;
     }
     .receipt-trade-menus { margin: 0 0 14px; }
+    .receipt-pl-rooms { margin: 0 0 14px; }
     .receipt-look {
       display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px;
     }
@@ -4087,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260912150123";
+    const DATA_V = "plbooks20260912161000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4180,7 +4181,7 @@ const html = `<!DOCTYPE html>
       { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
       { id: "forever", lab: "Never left", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
       { id: "past_champions", lab: "Who won the year", desk: "lists", size: "half", why: "Every title path in this league." },
-      { id: "profit_loss", lab: "Profit / Loss", desk: "lists", group: "memory", size: "full", why: "Every player you traded. Held is live. Sold is closed." },
+      { id: "profit_loss", lab: "Profit / Loss", desk: "lists", group: "memory", size: "full", why: "Unrealized is still on this roster. Realized is gone." },
       { id: "seat_manners", lab: "Manners", desk: "seats", size: "full", why: "Who extracts vs who gets extracted." },
       { id: "seat_aging", lab: "Aging", desk: "seats", size: "full", why: "How 2-team trades moved after accept." },
       { id: "seat_draft", lab: "Draft hits", desk: "seats", size: "full", why: "Rookie surplus vs the pick." },
@@ -5094,12 +5095,12 @@ const html = `<!DOCTYPE html>
         : (row.state === "sold"
           ? (row.how === "sold_now" ? "Sold vs now" : "Sold")
           : "Left");
-      const got = row.ins.length ? String(row.ins[row.ins.length - 1].date || "").slice(0, 7) : "";
-      const sold = row.outs.length ? String(row.outs[row.outs.length - 1].date || "").slice(0, 7) : "";
+      const paidLab = row.how === "sold_now" ? "exit" : "paid";
+      const markLab = (row.state === "sold" && row.how !== "sold_now") ? "sold" : "now";
       const bits = [print];
       if (row.pos) bits.push(row.pos);
-      if (got) bits.push("got " + got);
-      if (sold && row.state !== "held") bits.push("sold " + sold);
+      bits.push(paidLab + " " + fmt(row.acquire));
+      bits.push(markLab + " " + fmt(row.mark));
       const tx = row.last && row.last.tx ? String(row.last.tx) : "";
       return '<button type="button" class="row"'
         + (tx ? ' data-receipt-open-trade="' + esc(tx) + '"' : "") + ">"
@@ -5108,9 +5109,22 @@ const html = `<!DOCTYPE html>
         + '<div class="margin">' + (row.pl == null ? "—" : tapeMargin(row.pl)) + "</div></div></button>";
     }
 
+    function receiptPlRoomsHtml() {
+      const room = receiptPlRoom === "closed" ? "closed" : "held";
+      return '<div class="nav receipt-pl-rooms" role="tablist" aria-label="Profit or loss book">'
+        + '<button type="button" role="tab" class="tab' + (room === "held" ? " on" : "") + '"'
+        + ' aria-selected="' + (room === "held" ? "true" : "false") + '"'
+        + ' data-receipt-pl-room="held">Unrealized</button>'
+        + '<button type="button" role="tab" class="tab' + (room === "closed" ? " on" : "") + '"'
+        + ' aria-selected="' + (room === "closed" ? "true" : "false") + '"'
+        + ' data-receipt-pl-room="closed">Realized</button>'
+        + "</div>";
+    }
+
     function receiptPlReset() {
       receiptPlSign = "all";
       receiptPlPos = "all";
+      receiptPlRoom = "held";
     }
 
     function receiptDraftTeamCounts(seat) {
@@ -6097,8 +6111,6 @@ const html = `<!DOCTYPE html>
       if (id === "profit_loss") {
         return '<div class="receipt-trade-menus">'
           + receiptTradeYearHtml()
-          + receiptLookSelect("Held or sold", "data-receipt-door-filter",
-            [["all", "All"], ["held", "Held"], ["sold", "Sold"]], receiptDoorFilter)
           + receiptLookSelect("Ahead or behind", "data-receipt-pl-sign",
             [["all", "All"], ["ahead", "Ahead"], ["behind", "Behind"]], receiptPlSign)
           + receiptLookSelect("Position", "data-receipt-pl-pos",
@@ -6168,12 +6180,12 @@ const html = `<!DOCTYPE html>
           else soldN += 1;
         }
         const yearWant = receiptTradeYearWant();
-        const stateWant = receiptDoorFilter;
+        const room = receiptPlRoom === "closed" ? "closed" : "held";
         const signWant = receiptPlSign;
         const posWant = receiptPlPos;
         rows = rows.filter(function (row) {
-          if (stateWant === "held" && row.state !== "held") return false;
-          if (stateWant === "sold" && row.state === "held") return false;
+          if (room === "held" && row.state !== "held") return false;
+          if (room === "closed" && row.state === "held") return false;
           if (signWant === "ahead" && !(row.pl > 0)) return false;
           if (signWant === "behind" && !(row.pl < 0)) return false;
           if (posWant && posWant !== "all" && row.pos !== posWant) return false;
@@ -6181,7 +6193,9 @@ const html = `<!DOCTYPE html>
           if (needle && String(row.label || "").toLowerCase().indexOf(needle) < 0) return false;
           return true;
         });
-        const line = heldN + " held · " + soldN + " sold · " + leftN + " left";
+        const line = room === "held"
+          ? (heldN + " held")
+          : (soldN + " sold · " + leftN + " left");
         if (!rows.length) {
           return '<p class="caption">' + esc(line) + '</p><p class="caption">Nothing on this tape matches.</p>';
         }
@@ -6583,7 +6597,9 @@ const html = `<!DOCTYPE html>
       else if (id === "my_draft") caption = "Used is a player this seat drafted. Traded away started here and left. Traded in came from another seat. Grade is Star / Hit / Even / Miss / Bust vs the slot.";
       else if (id === "league_draft" && receiptDraftSeat) caption = "Same three buckets for " + receiptDraftSeat + ".";
       else if (id === "league_draft") caption = "Pick a seat to read their used, traded away, and traded in tape.";
-      else if (id === "profit_loss") caption = "Held is still on this roster (today minus the day you got them). Sold is closed (the day you sold minus the day you got them). Sold vs now is a player you sent with no inbound trade. Left dropped without a sale. Sorted by the biggest number.";
+      else if (id === "profit_loss") caption = receiptPlRoom === "closed"
+        ? "Gone from this roster. Sold is sale minus paid. Left is last quote minus paid. Sold vs now has no inbound cost. Biggest number first."
+        : "Still on this roster. Today minus what you paid the day you got them. Biggest number first.";
       else if (id === "trade_mark") caption = "Search a player you rostered. Filter by league year. See how that deal looks from then to now.";
       else if (id === "lopsided") caption = "Search a player you rostered. Filter by league year. See how that deal looked the day they accepted.";
       else if (id === "pick_print") {
@@ -6617,6 +6633,7 @@ const html = `<!DOCTYPE html>
         + '<p class="caption">' + vsBack + histBack + draftBack
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
+        + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<p class="caption">' + esc(caption) + "</p>"
         + ((id === "trade_mark" || id === "lopsided")
           ? ""
@@ -15446,6 +15463,7 @@ const html = `<!DOCTYPE html>
     let receiptDoorYear = "all";
     let receiptPlSign = "all";
     let receiptPlPos = "all";
+    let receiptPlRoom = "held";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -24702,6 +24720,12 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const plRoomBtn = e.target.closest("[data-receipt-pl-room]");
+      if (plRoomBtn) {
+        receiptPlRoom = plRoomBtn.getAttribute("data-receipt-pl-room") === "closed" ? "closed" : "held";
+        render();
+        return;
+      }
       const receiptWhoBack = e.target.closest("[data-receipt-who-back]");
       if (receiptWhoBack) {
         receiptWhoList = "";
@@ -26562,7 +26586,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v242-filter-dd";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v243-pl-books";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26653,13 +26677,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v242-filter-dd")) {
+  || !html.includes("chuckle-shell-v243-pl-books")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v242-filter-dd")
+  || !swSrc.includes("chuckle-shell-v243-pl-books")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28065,6 +28089,11 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function histPartnerRows(")
     || !inline.includes("function receiptDraftRowsForSeat(")
     || !inline.includes("function receiptPlRowsForSeat(")
+    || !inline.includes("function receiptPlRoomsHtml(")
+    || !inline.includes("data-receipt-pl-room")
+    || !inline.includes(">Unrealized<")
+    || !inline.includes(">Realized<")
+    || fnSrc("receiptDoorFilterHtml").includes("Held or sold")
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptOriginPicksForSeat(")
     || !inline.includes("function receiptPickEverOwned(")

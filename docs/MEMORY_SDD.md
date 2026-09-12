@@ -149,7 +149,7 @@ scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 2. League Trade History (`league_trades`) — every pairing, most deals first, searchable
 3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
-5. Profit / Loss (`profit_loss`) — every player you traded, held vs sold
+5. Profit / Loss (`profit_loss`) — Unrealized (held) vs Realized (gone)
 6. Who won the year (`past_champions`)
 7. How I finished (`season_place`)
 8. Me vs them (`vs_you`)
@@ -211,30 +211,28 @@ Tap a seat → the same three chips + grades as your own door. Back:
 
 **Profit / Loss**
 
-Tap the tile. One row per player this seat has traded (named player
+Tap the tile. Two rooms at the top (not filter chips): **Unrealized**
+and **Realized**. One row per player this seat has traded (named player
 legs only — picks stay on My Draft Picks). Sorted by the biggest
-absolute number.
+absolute number. Two-point mark (T0 / today), not the 3y mean.
 
-- **Held** — still on this roster. Number is today minus the day they
-  got them (unrealized).
-- **Sold** — last move was a send. Number is the day they sold minus
-  the day they got them (realized). No inbound trade: **Sold vs now**
-  (today minus the sale). Drafted then sold uses the slot as cost.
-- **Left** — they received the player, then the player left without a
-  sale. Number is today minus acquire. The Sold menu includes Left.
+- **Unrealized** — still on this roster. Number is today minus paid
+  (last inbound T0). Row prints `paid` and `now`.
+- **Realized** — gone from this roster.
+  - **Sold** — sale T0 minus paid. Row prints `paid` and `sold`.
+  - **Sold vs now** — sent with no inbound cost. Exit T0 vs today.
+  - **Left** — received, then gone without a sale. Last quote minus paid.
+  Drafted then sold uses the slot as cost.
 
-Filters are **dropdowns**, never pill chips (HIG-23). Hunt position and
-tape year use the same constructor:
+Filters are **dropdowns**, never pill chips (HIG-23):
 
-1. **Held or sold** — unrealized vs realized. The question.
-2. **Ahead or behind** — who printed and who died.
-3. **Position** — QB / RB / WR / TE. Search covers a name.
-4. **League year** — year of the last move.
-5. Sort is locked to **biggest |number| first**. Newest-first hides the
-   fight on a seven-year tape.
+1. **Ahead or behind** — who printed and who died.
+2. **Position** — QB / RB / WR / TE. Search covers a name.
+3. **League year** — acquire year on Unrealized, close year on Sold.
 
-No net bag total on the door. The count line is `held · sold · left`.
-Tap a row → the last trade ticket. No claimed seat: the door says so.
+No net bag total on the door. Count is `held` or `sold · left` for the
+open room. Tap a row → the last trade ticket. No claimed seat: the door
+says so. Do not add a catalog id `realized`.
 
 **Season / finish portal**
 

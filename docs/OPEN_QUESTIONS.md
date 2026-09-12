@@ -192,13 +192,16 @@ Comeback Dynasty (last → chip within 3 years) still needs multi-year place his
 
 ## 17. How do we share a memory receipt?
 
-**Assumed:** Plain text first (named clock, Δ, aged or hop, deep link). Picture
-optional later. Calc’s hypothetical PNG stays a *proposal*, not the proof card.
-See [`MEMORY_SDD.md`](MEMORY_SDD.md).
+**Assumed:** Plain text first (English verdict + one number + URL). Picture
+optional later and must print the URL. Calc’s hypothetical PNG stays a
+*proposal*, not the proof card. See [`MEMORY_SDD.md`](MEMORY_SDD.md).
 
 **Why it matters:** The group text is where “that’s not how I remember it” dies.
-A tile nobody can send is a private notebook. A PNG that uses the today blend
-on a flatten clock is a new lie.
+A chip nobody can send is a private notebook. A PNG that uses the today blend
+on a flatten clock is a new lie. An unsigned link that hits Sign in first
+kills the outsider loop.
 
-**Recommended:** Ship text + `?tx=` / `?pick=` on the open trade and hop tape
-before any new Data desk or TestFlight week. Do not merge hop P&L into the needle.
+**Recommended:** Ship `shareProofNow` + `?r=trade&t=` (aliases `?tx=`,
+`?view=trade&t=`) on the open trade and hop tape. Public receipts skip the
+gate (`appScreen = "receipt"`), show real numbers, then Create a league.
+Do not merge hop P&L into the needle.

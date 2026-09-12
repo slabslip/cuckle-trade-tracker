@@ -388,10 +388,12 @@ Open:
 5. Pick legs expand a hop tape: date · from → to · sold | used | held.
 6. Spark of each side's received bag at year-end plus today. A missing year-end is a **gap**, not
    a zero.
-7. **Share proof** (WANT — [`MEMORY_SDD.md`](./MEMORY_SDD.md)): one control on the open
-   trade and on an expanded hop tape copies a text receipt (named clock, Δ, aged
-   or hop result) into the OS share sheet. This is not the calculator’s
-   hypothetical PNG. Deep link `?tx=` / `?pick=` must open this same row.
+7. **Share proof** ([`MEMORY_SDD.md`](./MEMORY_SDD.md)): `shareProofNow()` on the
+   open trade, hop tape, and every receipt chip copies a text receipt (English
+   verdict + one number + URL) into the OS share sheet. This is not the
+   calculator’s hypothetical PNG. Deep link `?r=trade&t=` (aliases `?tx=`,
+   `?view=trade&t=`) must open this same ticket. Unsigned share links skip the
+   gate (`appScreen = "receipt"`).
 
 Incomplete side: badge `no DP row`, totals `—` when every shown leg is unpriced, margin `—`, and
 **Value Adjustment 0**.

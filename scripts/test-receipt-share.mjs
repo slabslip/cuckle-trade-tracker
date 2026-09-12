@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+/** Smoke: receipt tiles, share URL, public boot, clock English. */
+import fs from "node:fs";
+import path from "node:path";
+import { ROOT } from "../lib.mjs";
+
+const page = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+const gen = fs.readFileSync(path.join(ROOT, "generate-page.mjs"), "utf8");
+
+const need = [
+  "function shareProofNow(",
+  "function receiptQueryFrom(",
+  "function openPublicReceipt(",
+  'appScreen = "receipt"',
+  "function renderReceiptTradeTicket(",
+  "function renderReceiptPickTicket(",
+  "Day they traded",
+  "From then to now",
+  "How it aged",
+  "A player, a pick, a name, or a question",
+  "Remember it differently?",
+  "Get this for your league",
+  "Your board",
+  "trade_mark",
+  "pick_print",
+  "season_place",
+  'params.get("tx")',
+  "function receiptTermCurveHtml(",
+];
+const missing = need.filter((s) => !page.includes(s));
+if (missing.length) {
+  throw new Error("index.html missing receipt pieces: " + missing.join(", "));
+}
+
+if (!page.includes('DATA_DASH_DEFAULT = [\n      "trade_mark"')
+  && !page.includes('"trade_mark", "pick_print", "season_place"')) {
+  throw new Error("default board must be the six receipt chips");
+}
+
+if (page.includes("exactly like")) {
+  throw new Error("generated JS must not contain exactly like");
+}
+
+const bootAt = page.indexOf("const receiptQboot = receiptQueryFrom(params);");
+const gateAt = page.indexOf('appScreen = "gate"', bootAt);
+if (bootAt < 0 || gateAt < 0 || page.indexOf("openPublicReceipt(receiptQboot)", bootAt) > gateAt) {
+  throw new Error("unsigned receipt query must skip the gate");
+}
+
+if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8").includes("Closed chip catalog")) {
+  throw new Error("MEMORY_SDD must lock the 16-kind catalog");
+}
+
+const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow"]) {
+  if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
+}
+
+console.log(JSON.stringify({ ok: true, checks: need.length }, null, 2));

@@ -19,7 +19,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 | --- | --- | --- |
 | **Home Trade Desk** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
 | **Data** | Who to ping + each team's cycle + research overflow | One cell of the five-tab pill. Do not grow a sixth. |
-| **Receipts** | “That’s not how I remember it” — trade age, pick journey, season tape | Tiles + text share inside History / Data. Not a sixth pill. Not the old encyclopedia on Moves. |
+| **Receipts** | “That’s not how I remember it” — Your board (16 chip kinds, default six) | Verdict + one number + Text this inside History / Data. Not a sixth pill. Not the old encyclopedia on Moves. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md). |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
 
 Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
@@ -40,8 +40,8 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 - No Best 10 / Worst 10. Most lopsided stays on Data.
 - `DATA_SETS` stays exactly five. Six Data desks live under **More**: Book · Tape · Seats ·
   Lists · Draft · Cuffs. No seventh desk. Cold load is **Moves** and **League**, not the
-  27-id catalog. A three-tile **Receipts** strip may sit above that cold load
-  ([`MEMORY_SDD.md`](MEMORY_SDD.md)).
+  27-id catalog. **Your board** (default six receipt chips) sits above that
+  cold load ([`MEMORY_SDD.md`](MEMORY_SDD.md)). Encyclopedia stays under More.
 - Phone-first (390). Existing CSS. No npm / chart libraries.
 - Do not fetch cosmetics / dash / block / direction from `render()`.
 - This is **this league’s** rosters. Multi-league is the app path, not a new warehouse.
@@ -67,12 +67,14 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`db/wave19-seat-data-dash.sql`](../db/wave19-seat-data-dash.sql):
 
-- Catalog is **27** unique report ids. Persist `seat_data_dash` +
-  `cuckle.data.dash.v1.<league>.<seat>` still exists for hunt/desk routing.
+- Catalog is **31** unique report ids (27 desks + `trade_mark`, `pick_print`,
+  `season_place`, `vs_you`). Persist `seat_data_dash` +
+  `cuckle.data.dash.v1.<league>.<seat>` still exists for Your board + hunt routing.
 - The 6–12 tile encyclopedia is **not** the Data cold load. Do not put it back on Moves.
-  A **Receipts** strip (three proof tiles: aged trade, pick journey, title/place) may
-  sit on History above Moves/League. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)),
-  not the catalog board.
+  **Your board** (default six: faded trade, pick journey, last season, lopsided,
+  forever, past champions) sits on History above Moves/League. That is memory
+  law ([`MEMORY_SDD.md`](MEMORY_SDD.md)), not the 27-id catalog. Edit persist still
+  uses `seat_data_dash` + `cuckle.data.dash.v1.<league>.<seat>`.
 
 **Banned ids:** `best10`, `worst10`, `bag_total`, `realized`, `win_now`, `investor`.
 

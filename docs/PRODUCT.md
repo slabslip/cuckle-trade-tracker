@@ -31,10 +31,10 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
 6. **Memory is short.** Seats remember seasons, “how good we are,” and old deals
    wrong. The dashboard is the receipt: a digest tile they can open and text
-   that says what really happened — trade age (accept vs how it moved), pick
-   journey (hops / used / held), seat and season tape (titles, place, lopsided).
-   Opinion (votes, news, Ledger) may start the argument. It does not write the
-   receipt. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md).
+   that says what really happened — one English verdict, one gold number, Text
+   this. Sixteen chip kinds on Your board (History). Opinion (votes, news,
+   Ledger) may start the argument. It does not write the receipt. Law:
+   [`MEMORY_SDD.md`](./MEMORY_SDD.md).
 
 That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle. Recent-window direction (Hard rebuild / Rebuild / Reload / Win-now) may filter who to ping; it does not move a clock or a delta.
 
@@ -93,8 +93,9 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 - Completed Sleeper trades with at least two seats, each receiving a player or pick.
 - Players and draft picks only.
 - Hop tape for a pick (who held it, flip vs used).
-- Memory proof: trade-age, pick-journey, and season-tape receipts you can tap
-  and text ([`MEMORY_SDD.md`](./MEMORY_SDD.md)). Not a sixth tab. Not Best 10.
+- Memory proof: Your board + public share tickets you can tap and text
+  ([`MEMORY_SDD.md`](./MEMORY_SDD.md)). Not a sixth tab. Not Best 10. Clock
+  names on glass are Day they traded / From then to now — never `t0` / `y1`.
 - Rookie surplus (player today − pick cost on draft day) and a separate 2019 startup tab (player today; DP has no 2019 startup pick prices).
 - Phone-first static page, existing CSS, no new packages.
 - **Chuckle Fantasy multi-league app** — commissioner creates a league (Sleeper ID +

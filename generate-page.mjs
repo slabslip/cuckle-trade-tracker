@@ -3341,6 +3341,23 @@ const html = `<!DOCTYPE html>
     .receipt-board {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 16px;
     }
+    button.door, .door {
+      appearance: none; font: inherit; color: inherit; text-align: center;
+      background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px 10px 10px; width: 100%; box-sizing: border-box;
+      min-height: 96px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px;
+    }
+    .door.is-edit { position: relative; padding-top: 36px; min-height: 112px; }
+    .door-ico {
+      width: 28px; height: 28px; color: #e0b44c; flex: 0 0 auto;
+      display: block;
+    }
+    .door-lab {
+      font-size: 0.86rem; font-weight: 750; line-height: 1.2; color: var(--text);
+      letter-spacing: 0; text-transform: none;
+    }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -4025,7 +4042,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260912084707";
+    const DATA_V = "door20260912120000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4072,6 +4089,11 @@ const html = `<!DOCTYPE html>
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 12;
+    const DATA_DOORS = [
+      "trade_mark", "lopsided", "pick_print", "past_champions",
+      "season_place", "vs_you", "firsts_held", "forever",
+      "passed_around", "seat_draft", "uninsured", "book_top",
+    ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
       { id: "micro", lab: "Dart", color: "gray", rank: 0 },
@@ -4081,8 +4103,9 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "trade_mark", "pick_print", "season_place",
-      "lopsided", "forever", "past_champions",
+      "trade_mark", "lopsided", "pick_print", "past_champions",
+      "season_place", "vs_you", "firsts_held", "forever",
+      "passed_around", "seat_draft", "uninsured", "book_top",
     ];
     const DATA_DASH_RESEARCH = [
       "firsts_held", "uninsured", "widest_clock", "passed_around",
@@ -4097,30 +4120,30 @@ const html = `<!DOCTYPE html>
       { id: "my_block", lab: "My block", desk: "book", group: "deal", size: "full", why: "Pieces you will actually deal." },
       { id: "league_block", lab: "League block", desk: "book", group: "deal", size: "full", why: "What everyone else listed for sale." },
       { id: "block_fits", lab: "Block fits", desk: "book", group: "deal", size: "full", why: "Listed pieces that fill a hole." },
-      { id: "firsts_held", lab: "Firsts held", desk: "draft", size: "half", why: "First-round picks still held." },
-      { id: "uninsured", lab: "Uninsured", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
+      { id: "firsts_held", lab: "Who has firsts", desk: "draft", size: "half", why: "First-round picks still held." },
+      { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
-      { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players traded the most times." },
+      { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
       { id: "homesteaders", lab: "Homesteaders", desk: "lists", size: "full", why: "Longest stays, forever players aside." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
-      { id: "lopsided", lab: "Most lopsided", desk: "lists", size: "full", why: "The ten widest margins." },
+      { id: "lopsided", lab: "That trade that day", desk: "lists", size: "full", why: "How deals looked the day they accepted." },
       { id: "seat_run", lab: "Run", desk: "seats", size: "full", why: "Ahead or behind on the Score as clock." },
       { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
-      { id: "forever", lab: "Forever", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
-      { id: "past_champions", lab: "Past Champions", desk: "lists", size: "half", why: "Every title path in this league." },
+      { id: "forever", lab: "Never left", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
+      { id: "past_champions", lab: "Who won the year", desk: "lists", size: "half", why: "Every title path in this league." },
       { id: "seat_posture", lab: "Posture", desk: "seats", size: "full", why: "Picks sold for players vs the other way." },
       { id: "seat_manners", lab: "Manners", desk: "seats", size: "full", why: "Who extracts vs who gets extracted." },
       { id: "seat_aging", lab: "Aging", desk: "seats", size: "full", why: "How 2-team trades moved after accept." },
-      { id: "seat_draft", lab: "Draft marks", desk: "seats", size: "full", why: "Rookie surplus vs the pick." },
-      { id: "book_top", lab: "Top book", desk: "book", size: "full", why: "Highest-value assets in the book." },
+      { id: "seat_draft", lab: "Draft hits", desk: "seats", size: "full", why: "Rookie surplus vs the pick." },
+      { id: "book_top", lab: "Biggest names", desk: "book", size: "full", why: "Highest-value assets in the book." },
       { id: "held_picks", lab: "Held picks", desk: "draft", size: "full", why: "Future picks this seat still holds." },
       { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
       { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Free-agent cuffs, your starters first." },
-      { id: "trade_mark", lab: "This deal", desk: "lists", group: "memory", size: "full", why: "How the latest smash or bust aged." },
-      { id: "pick_print", lab: "What did my pick become", desk: "lists", group: "memory", size: "full", why: "Every pick this seat ever owned, and what it became." },
-      { id: "season_place", lab: "Last season", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
-      { id: "vs_you", lab: "Vs you", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
+      { id: "trade_mark", lab: "That trade now", desk: "lists", group: "memory", size: "full", why: "How a deal looks from then to now." },
+      { id: "pick_print", lab: "What my pick became", desk: "lists", group: "memory", size: "full", why: "Every pick this seat ever owned, and what it became." },
+      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
+      { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
     const WINDOWS = [
@@ -4795,7 +4818,7 @@ const html = `<!DOCTYPE html>
       else if (you && p.used_by === seat) because = "You used it.";
       return {
         id: "pick_print",
-        kind: "What did my pick become",
+        kind: "What my pick became",
         verdict: verdict,
         who: name,
         print: print,
@@ -5080,16 +5103,58 @@ const html = `<!DOCTYPE html>
       if (id === "forever" || id === "passed_around" || id === "least_traded") {
         return "A player, a pick, a seat";
       }
-      if (id === "season_place" || id === "past_champions") return "A year, a seat, a place";
+      if (id === "season_place") return "A seat, a place";
+      if (id === "past_champions") return "A year, a seat";
+      if (id === "vs_you") return "A name";
+      if (id === "firsts_held") return "A seat, a year";
+      if (id === "seat_draft") return "A seat";
+      if (id === "uninsured") return "A starter, a seat, a position";
+      if (id === "book_top") return "A player, a position";
       return "A team, a trade, a name";
     }
 
+    function receiptIsDoor(id) {
+      if (id === "season_title") return true;
+      if (id === "draft_marks" || id === "held_firsts") return true;
+      return DATA_DOORS.indexOf(id) >= 0;
+    }
+
+    function receiptDoorCanon(id) {
+      if (id === "season_title") return "season_place";
+      if (id === "draft_marks") return "seat_draft";
+      if (id === "held_firsts") return "firsts_held";
+      return id;
+    }
+
+    function receiptDoorIco(id) {
+      const inner = ({
+        trade_mark: '<polyline points="4 15 9 9 14 13 20 6"/><circle cx="20" cy="6" r="1.4"/>',
+        lopsided: '<path d="M4 19h16M6 19V11h4v8M14 19V6h4v13"/>',
+        pick_print: '<path d="M7 21V4h9l-2.2 4L16 12H7"/>',
+        past_champions: '<path d="M4 16l3.2-8 4.8 4.5L16.8 8 20 16H4z"/><path d="M5 19h14"/>',
+        season_place: '<path d="M4 14h5v6H4zM9.5 8h5v12h-5zM15 12h5v8h-5z"/>',
+        vs_you: '<circle cx="8" cy="8" r="2.4"/><circle cx="16" cy="8" r="2.4"/><path d="M3.8 18c.8-3 2.8-4.2 4.2-4.2S12 15 12.8 18M11.2 18c.8-3 2.8-4.2 4.2-4.2S20 15 20.2 18"/>',
+        firsts_held: '<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M8.5 7v10M12 10.5h5"/>',
+        forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
+        passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
+        seat_draft: '<circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v2.2M12 18.6v2.2M3.2 12h2.2M18.6 12h2.2"/>',
+        uninsured: '<path d="M12 3.2l7.5 3.4v5.4c0 4.6-3.2 7-7.5 8.4-4.3-1.4-7.5-3.8-7.5-8.4V6.6z"/><path d="M12 9v4.2M12 16.2h.01"/>',
+        book_top: '<path d="M12 3.4l2.2 5.2 5.6.8-4.1 3.9.9 5.8L12 16.4 7.4 19.1l.9-5.8-4.1-3.9 5.6-.8z"/>',
+      })[receiptDoorCanon(id)] || '<circle cx="12" cy="12" r="6.5"/>';
+      return '<svg class="door-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        + inner + "</svg>";
+    }
+
+    function receiptDoorFace(id) {
+      const spec = dataDashById(id);
+      if (!spec) return "";
+      return receiptDoorIco(id) + '<span class="door-lab">' + esc(spec.lab) + "</span>";
+    }
+
     function receiptIsWho(id) {
-      return id === "lopsided" || id === "passed_around" || id === "least_traded"
-        || id === "forever" || id === "homesteaders" || id === "past_champions"
-        || id === "widest_clock" || id === "seat_run" || id === "draft_marks"
-        || id === "seat_draft" || id === "held_firsts" || id === "firsts_held"
-        || id === "held_picks" || id === "vs_you";
+      return receiptIsDoor(id) || id === "least_traded"
+        || id === "homesteaders" || id === "widest_clock" || id === "seat_run"
+        || id === "held_picks";
     }
 
     function receiptTermCurveHtml(side) {
@@ -5324,6 +5389,64 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
+    function receiptTradeUniq(sides, scoreFn) {
+      const map = {};
+      const src = sides || [];
+      for (let i = 0; i < src.length; i++) {
+        const s = src[i];
+        const tid = String((s && s.transaction_id) || "");
+        if (!tid) continue;
+        const mag = Math.abs(Number(scoreFn(s)) || 0);
+        if (!map[tid] || mag > map[tid]._mag) {
+          map[tid] = Object.assign({}, s, { _mag: mag });
+        }
+      }
+      return Object.keys(map).map(function (k) { return map[k]; })
+        .sort(function (a, b) { return (b._mag || 0) - (a._mag || 0); });
+    }
+
+    function receiptTradeAged(s) {
+      const all = windowScoreAt(s, "all");
+      const t0 = windowScoreAt(s, "t0");
+      if (all == null || t0 == null) return null;
+      return all - t0;
+    }
+
+    function receiptDoorTradeRow(s, num) {
+      const who = (s.name || "?") + " vs " + (s.other || "?");
+      const when = receiptMonth(s.date) || s.date || "";
+      const meta = [when, s.headline].filter(Boolean).join(" · ");
+      return '<button type="button" class="row" data-receipt-open-trade="' + esc(s.transaction_id) + '"'
+        + ' data-seat="' + esc(s.user_id || "") + '">'
+        + '<div class="row-top"><div><div class="names">' + esc(who) + "</div>"
+        + '<div class="date">' + esc(meta) + "</div></div>"
+        + '<div class="margin">' + (num == null ? "—" : tapeMargin(num)) + "</div></div></button>";
+    }
+
+    function receiptDoorFilterHtml(id) {
+      let chips = [];
+      if (id === "trade_mark") chips = [["all", "All"], ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"]];
+      else if (id === "lopsided") chips = [["all", "All"], ["smash", "Smash"], ["robbery", "Robbery"]];
+      else if (id === "pick_print") chips = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
+      else if (id === "firsts_held") {
+        chips = [["all", "All"]];
+        const years = (typeof pickSeasonsAvailable === "function") ? pickSeasonsAvailable() : [];
+        for (let i = 0; i < years.length; i++) chips.push(["y" + years[i], years[i]]);
+      } else if (id === "uninsured" || id === "book_top") {
+        chips = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
+        if (id === "book_top") chips.push(["pick", "Picks"]);
+      }
+      if (chips.length <= 1) return "";
+      return '<div class="receipt-filters" role="tablist" aria-label="Filter this list">'
+        + chips.map(function (c) {
+          const on = receiptDoorFilter === c[0];
+          return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
+            + ' data-receipt-door-filter="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
+            + c[1] + "</button>";
+        }).join("")
+        + "</div>";
+    }
+
     function receiptPortalRows(id, q) {
       const needle = String(q || "").trim().toLowerCase();
       const hit = function (parts) {
@@ -5331,27 +5454,36 @@ const html = `<!DOCTYPE html>
         return parts.join(" ").toLowerCase().indexOf(needle) >= 0;
       };
       if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") {
-        const sides = id === "trade_mark"
-          ? ((league && league.trade_boards && league.trade_boards.sides) || []).slice()
-            .sort(function (a, b) {
-              const aa = windowScoreAt(a, "all");
-              const ta = windowScoreAt(a, "t0");
-              const ba = (aa != null && ta != null) ? Math.abs(aa - ta) : -1;
-              const ab = windowScoreAt(b, "all");
-              const tb = windowScoreAt(b, "t0");
-              const bb = (ab != null && tb != null) ? Math.abs(ab - tb) : -1;
-              return bb - ba;
-            })
-          : rankWide().map(function (h) { return h.r || h; });
+        const raw = ((league && league.trade_boards && league.trade_boards.sides) || []).slice();
+        const scoreFn = id === "lopsided"
+          ? function (s) { return windowScoreAt(s, "t0"); }
+          : function (s) { return receiptTradeAged(s); };
+        let sides = receiptTradeUniq(raw, scoreFn);
+        const f = receiptDoorFilter;
+        if (id === "trade_mark" && f && f !== "all") {
+          sides = sides.filter(function (s) {
+            const aged = receiptTradeAged(s);
+            if (aged == null) return f === "even";
+            if (f === "grew") return aged > 20;
+            if (f === "faded") return aged < -20;
+            if (f === "even") return Math.abs(aged) <= 20;
+            return true;
+          });
+        }
+        if (id === "lopsided" && f && f !== "all") {
+          sides = sides.filter(function (s) {
+            const t0 = windowScoreAt(s, "t0") || 0;
+            if (f === "smash") return t0 > 0;
+            if (f === "robbery") return t0 < 0;
+            return true;
+          });
+        }
         const out = [];
-        for (let i = 0; i < sides.length && out.length < 20; i++) {
+        for (let i = 0; i < sides.length && out.length < 80; i++) {
           const r = sides[i];
           if (!hit([r.name, r.other, r.headline, r.date])) continue;
-          const claim = receiptTradeClaim(r, "all", true);
-          if (!claim) continue;
-          claim.openTrade = r.transaction_id;
-          claim.openSeat = r.user_id;
-          out.push(receiptChipHtml(claim, { row: true }));
+          const num = id === "lopsided" ? windowScoreAt(r, "t0") : receiptTradeAged(r);
+          out.push(receiptDoorTradeRow(r, num));
         }
         return out.join("");
       }
@@ -5376,6 +5508,12 @@ const html = `<!DOCTYPE html>
               return hit([row.key, p.became, p.label, p.used_by, p.still_pick ? "held" : ""]);
             });
           }
+        }
+        if (receiptDoorFilter && receiptDoorFilter !== "all") {
+          const want = String(receiptDoorFilter).toUpperCase();
+          rows = rows.filter(function (row) {
+            return receiptPickPrint(row.p, seat) === want;
+          });
         }
         if (!rows.length) {
           if (!seat && !needle) {
@@ -5415,7 +5553,16 @@ const html = `<!DOCTYPE html>
         }
         return html;
       }
-      if (id === "season_place" || id === "past_champions") {
+      if (id === "season_place") {
+        return (members || []).filter(function (m) {
+          return hit([m.name, m.place, m.place ? nth(m.place) : ""]);
+        }).map(function (m) {
+          return '<div class="row"><div class="row-top"><div><div class="names">'
+            + seatLabel(m.name, { link: false }) + "</div></div>"
+            + '<div class="margin">' + esc(m.place ? nth(m.place) : "—") + "</div></div></div>";
+        }).join("");
+      }
+      if (id === "past_champions") {
         return ((titles && titles.titles) || []).filter(function (t) {
           return hit([t.season, t.name]);
         }).map(function (t) {
@@ -5424,9 +5571,114 @@ const html = `<!DOCTYPE html>
             + '</div></div><div class="margin">1st</div></div></button>';
         }).join("");
       }
+      if (id === "vs_you") {
+        if (receiptVsWho) {
+          const mine = typeof authSeatId === "function" ? authSeatId() : "";
+          const mineName = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
+          const raw = ((league && league.trade_boards && league.trade_boards.sides) || []).filter(function (s) {
+            const vs = String(s.other || "") === receiptVsWho || String(s.name || "") === receiptVsWho;
+            if (!vs) return false;
+            if (mine && String(s.user_id) === String(mine)) return true;
+            if (mineName && (s.name === mineName || s.other === mineName)) return true;
+            if (!mine) return true;
+            return false;
+          });
+          const sides = receiptTradeUniq(raw, function (s) { return windowScoreAt(s, "all"); });
+          const out = [];
+          for (let i = 0; i < sides.length && out.length < 80; i++) {
+            const r = sides[i];
+            if (!hit([r.name, r.other, r.headline, r.date])) continue;
+            out.push(receiptDoorTradeRow(r, windowScoreAt(r, "all")));
+          }
+          return out.join("");
+        }
+        const mine = typeof authSeatId === "function" ? authSeatId() : "";
+        let partners = [];
+        if (mine && seatCache[mine] && Array.isArray(seatCache[mine].partners)) {
+          partners = seatCache[mine].partners.slice();
+        } else if (mine && marks && marks.seats && marks.seats[mine] && Array.isArray(marks.seats[mine].partners)) {
+          partners = marks.seats[mine].partners.slice();
+        } else {
+          partners = (members || []).filter(function (m) {
+            return !mine || String(m.user_id) !== String(mine);
+          }).map(function (m) {
+            return { name: m.name, trades: 0, even_per_trade: null };
+          });
+        }
+        partners.sort(function (a, b) { return (Number(b.trades) || 0) - (Number(a.trades) || 0); });
+        return partners.filter(function (p) {
+          return hit([p.name, p.trades]);
+        }).map(function (p) {
+          const n = Number(p.trades) || 0;
+          const per = p.even_per_trade != null ? p.even_per_trade : p.per;
+          return '<button type="button" class="row" data-receipt-vs="' + esc(p.name || "") + '">'
+            + '<div class="row-top"><div><div class="names">' + esc(p.name || "them") + "</div>"
+            + '<div class="date">' + esc(n + (n === 1 ? " deal" : " deals")) + "</div></div>"
+            + '<div class="margin">' + (per == null ? "—" : tapeMargin(per)) + "</div></div></button>";
+        }).join("");
+      }
+      if (id === "firsts_held") {
+        if (typeof ensurePicks === "function") ensurePicks();
+        if (!picks && picksLoading) return '<p class="caption">Loading firsts…</p>';
+        const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+        const bag = {};
+        const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
+          ? receiptDoorFilter.slice(1) : "";
+        for (let i = 0; i < rows.length; i++) {
+          const parts = pickKeyParts(rows[i].key);
+          if (!parts || parts.round !== 1) continue;
+          if (yearWant && parts.season !== yearWant) continue;
+          const owner = pickOwnerName(rows[i].entry) || "League";
+          if (!bag[owner]) bag[owner] = [];
+          bag[owner].push(parts.season);
+        }
+        return Object.keys(bag).filter(function (name) {
+          return hit([name, bag[name].join(" "), bag[name].length]);
+        }).sort(function (a, b) { return bag[b].length - bag[a].length || a.localeCompare(b); })
+          .map(function (name) {
+            const n = bag[name].length;
+            return '<div class="row"><div class="row-top"><div><div class="names">' + esc(name) + "</div>"
+              + '<div class="date">' + esc(bag[name].slice().sort().join(" · ")) + "</div></div>"
+              + '<div class="margin">' + esc(String(n)) + "</div></div></div>";
+          }).join("");
+      }
+      if (id === "seat_draft") {
+        const pack = dataDashMarkRows("draft", 40);
+        return pack.rows.filter(function (r) {
+          return hit([r.name, r.title]);
+        }).map(function (r) {
+          return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.name) + "</div>"
+            + '<div class="date">' + esc(r.title || "") + "</div></div>"
+            + '<div class="margin">' + (r.sort == null ? "—" : tapeMargin(r.sort)) + "</div></div></div>";
+        }).join("");
+      }
+      if (id === "uninsured") {
+        if (typeof ensureCuffs === "function") ensureCuffs();
+        if (!cuffs && cuffsLoading) return '<p class="caption">Loading cuffs…</p>';
+        let rows = ((cuffs && cuffs.rows) || []).filter(function (r) { return r && !r.cuff_owned; });
+        if (receiptDoorFilter && receiptDoorFilter !== "all") {
+          rows = rows.filter(function (r) {
+            return String(r.pos || "").toUpperCase() === String(receiptDoorFilter).toUpperCase();
+          });
+        }
+        return rows.filter(function (r) {
+          return hit([r.starter, r.owner, r.pos, r.cuff]);
+        }).map(function (r) {
+          return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.starter || "Starter") + "</div>"
+            + '<div class="date">' + esc([r.pos, r.owner].filter(Boolean).join(" · ")) + "</div></div>"
+            + '<div class="margin">No cuff</div></div></div>';
+        }).join("");
+      }
+      if (id === "book_top") {
+        const pos = !receiptDoorFilter || receiptDoorFilter === "all"
+          ? ""
+          : (receiptDoorFilter === "pick" ? "PICK" : String(receiptDoorFilter).toUpperCase());
+        const hits = dataDashBookHits(receiptQ, pos, "", "value", 80);
+        return hits.rows.map(dataDashBookRow).join("");
+      }
       if (id === "forever" || id === "homesteaders" || id === "least_traded" || id === "passed_around") {
         const key = id === "passed_around" ? "most_traded" : id;
-        return dataDashListPeek(key, 40).filter(function (r) {
+        return dataDashListPeek(key, 80).filter(function (r) {
           return hit([r.name, r.team]);
         }).map(function (r) {
           return listRow(r, id === "forever" || id === "homesteaders" ? yearsOn(r.days)
@@ -5439,26 +5691,36 @@ const html = `<!DOCTYPE html>
     function receiptWhoListHtml(id) {
       const spec = dataDashById(id);
       const head = (spec && spec.lab) || "Portal";
-      const lead = receiptClaimFor(id);
       const rows = receiptPortalRows(id, receiptQ);
       const pickSeat = id === "pick_print" ? receiptPickPortalSeat(receiptQ) : "";
-      let caption = "The tile was one example. Search this tape.";
-      if (id === "pick_print") {
+      let caption = "Search and filter this list. Tap a row for the receipt.";
+      if (id === "trade_mark") caption = "How deals look from then to now. Search a team or a year.";
+      else if (id === "lopsided") caption = "How deals looked the day they clicked accept.";
+      else if (id === "pick_print") {
         caption = pickSeat
           ? ("Every pick " + pickSeat + " ever owned. Tap one for the hop tape.")
           : "Claim your seat, or search a name, to see every pick they owned.";
-      }
-      const showLead = !!(lead && !receiptQ && !(id === "pick_print" && pickSeat));
+      } else if (id === "past_champions") caption = "Every year someone won. Search a year or a seat.";
+      else if (id === "season_place") caption = "Where each seat finished last season.";
+      else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
+      else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
+      else if (id === "firsts_held") caption = "Who is sitting on future firsts.";
+      else if (id === "forever") caption = "Still on the team that drafted them in 2019.";
+      else if (id === "passed_around") caption = "Players who moved the most.";
+      else if (id === "seat_draft") caption = "Rookie surplus vs the pick, by seat.";
+      else if (id === "uninsured") caption = "Starters whose backup is not rostered.";
+      else if (id === "book_top") caption = "Highest pieces in the book.";
+      const vsBack = (id === "vs_you" && receiptVsWho)
+        ? '<button type="button" class="chip" data-receipt-vs-back="1">← Names</button> '
+        : "";
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
-        + '<p class="caption"><button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
+        + '<p class="caption">' + vsBack
+        + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + '<p class="caption">' + esc(caption) + "</p>"
-        + (showLead ? receiptChipHtml(Object.assign({}, lead, {
-          openTrade: lead.shareKind === "trade" ? lead.shareId : "",
-          pickKey: lead.pickKey || "",
-        }), { row: true }) : "")
         + '<input class="receipt-search" data-receipt-q="1" type="search"'
         + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />'
+        + receiptDoorFilterHtml(id)
         + (rows || '<p class="caption">Nothing on this tape matches.</p>')
         + "</section>";
     }
@@ -5482,7 +5744,7 @@ const html = `<!DOCTYPE html>
       else if (openId) body = renderReceiptTradeTicket();
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-          + '<p class="caption">Each tile is a door. The number is one example.</p>'
+          + '<p class="caption">Tap a door. Search and filter inside.</p>'
           + dataDashBoardHtml();
       }
       return '<div class="receipt-shell">' + body + receiptCtaHtml() + "</div>";
@@ -7978,6 +8240,16 @@ const html = `<!DOCTYPE html>
       return dataDashCanon(dataDashTiles);
     }
 
+    function dataDashIsLegacyBoard(tiles) {
+      const old = ["trade_mark", "pick_print", "season_place", "lopsided", "forever", "past_champions"];
+      if (!tiles || !tiles.length) return true;
+      if (tiles.length >= DATA_DASH_MAX) return false;
+      for (let i = 0; i < tiles.length; i++) {
+        if (old.indexOf(tiles[i]) < 0) return false;
+      }
+      return true;
+    }
+
     function dataDashHas(id) {
       return dataDashBoardTiles().indexOf(id) >= 0;
     }
@@ -7989,9 +8261,9 @@ const html = `<!DOCTYPE html>
     function dataDashKey() {
       const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId()) || "";
       const seat = authSeatId() || "";
-      if (leagueId && seat) return "cuckle.data.dash.v1." + leagueId + "." + seat;
-      if (seat) return "cuckle.data.dash.v1." + seat;
-      return "cuckle.data.dash.v1";
+      if (leagueId && seat) return "cuckle.data.dash.v2." + leagueId + "." + seat;
+      if (seat) return "cuckle.data.dash.v2." + seat;
+      return "cuckle.data.dash.v2";
     }
 
     function dataDashReadLocal() {
@@ -9276,14 +9548,11 @@ const html = `<!DOCTYPE html>
     function dataDashTileHtml(id) {
       const spec = dataDashById(id);
       if (!spec) return "";
-      const claim = receiptClaimFor(id);
+      const face = receiptDoorFace(id);
       if (dataDashEdit) {
         const tiles = dataDashBoardTiles();
         const canCut = tiles.length > DATA_DASH_MIN;
-        const inner = claim
-          ? ('<span class="receipt-kind">' + esc(claim.kind) + "</span><b>" + esc(claim.verdict) + "</b>")
-          : dataDashTileInner(id, "edit");
-        return '<div class="receipt-chip" data-dash-id="' + esc(id) + '">'
+        return '<div class="door is-edit" data-dash-id="' + esc(id) + '">'
           + '<div class="data-tile-edit">'
           + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="-1" aria-label="Move up">↑</button>'
           + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="1" aria-label="Move down">↓</button>'
@@ -9291,27 +9560,22 @@ const html = `<!DOCTYPE html>
             ? '<button type="button" class="data-tile-ico" data-dash-remove="' + esc(id) + '" aria-label="Remove">−</button>'
             : "")
           + "</div>"
-          + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + inner + "</button>"
+          + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
           + "</div>";
       }
-      if (claim) return receiptChipHtml(claim);
-      const size = spec.size === "full" ? " is-full" : "";
-      const inner = dataDashTileInner(id, "live");
-      return '<button type="button" class="data-tile' + size + '" data-dash-open="' + esc(id) + '">'
-        + inner + "</button>";
+      return '<button type="button" class="door" data-dash-open="' + esc(id) + '">'
+        + face + "</button>";
     }
 
     function dataDashBoardHtml() {
-      const tiles = dataDashBoardTiles().filter(function (id) {
-        return receiptFilter === "all" || receiptFilterGroup(id) === receiptFilter;
-      });
+      const tiles = dataDashBoardTiles();
       if (typeof ensurePicks === "function") ensurePicks();
       if (typeof ensureCuffs === "function") ensureCuffs();
-      let html = receiptBoardFilterHtml() + dataDashPresetHtml();
+      let html = dataDashPresetHtml();
       html += '<div class="receipt-board" aria-label="Your board">';
       html += tiles.map(dataDashTileHtml).join("");
       if (dataDashEdit && dataDashBoardTiles().length < DATA_DASH_MAX) {
-        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a portal</button>';
+        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a door</button>';
       }
       return html + "</div>";
     }
@@ -9324,7 +9588,7 @@ const html = `<!DOCTYPE html>
         ["memory", "Memory"], ["who", "Who"], ["deal", "Deal"], ["cuffs", "Cuffs"], ["book", "Book"],
         ["tape", "Tape"], ["seats", "Seats"], ["lists", "Lists"],
       ];
-      const head = dataDashSwapId ? "Replace chip" : "Add a chip";
+      const head = dataDashSwapId ? "Replace door" : "Add a door";
       let body = "";
       for (let d = 0; d < desks.length; d++) {
         const rows = DATA_REPORTS.filter(function (r) { return dataDashLibGroup(r) === desks[d][0]; });
@@ -9353,32 +9617,23 @@ const html = `<!DOCTYPE html>
         openTrade(tx, null, { solo: true });
         return;
       }
-      if (id === "trade_mark" || id === "pick_print" || id === "season_place" || id === "season_title") {
-        receiptWhoList = id;
+      if (receiptIsDoor(id)) {
+        receiptWhoList = receiptDoorCanon(id);
         receiptQ = "";
+        receiptDoorFilter = "all";
+        receiptVsWho = "";
         receiptTicket = false;
         receiptPickKey = "";
         dataDashEdit = false;
         dataDashLibOpen = false;
         dataRoom = "overview";
-        if (id === "pick_print" && typeof ensurePicks === "function") ensurePicks();
-        focusNext = ".screen-h";
-        render();
-        return;
-      }
-      if (receiptIsWho(id) && id !== "held_picks" && id !== "firsts_held") {
-        if (id === "past_champions") {
-          view = "titles";
-          titleYear = null;
-          focusNext = ".screen-h";
-          syncUrl();
-          render();
-          return;
+        if ((receiptWhoList === "pick_print" || receiptWhoList === "firsts_held")
+          && typeof ensurePicks === "function") ensurePicks();
+        if (receiptWhoList === "uninsured" && typeof ensureCuffs === "function") ensureCuffs();
+        const mine = typeof authSeatId === "function" ? authSeatId() : "";
+        if (receiptWhoList === "vs_you" && mine && typeof seatData === "function") {
+          seatData(mine).then(function () { render(); }).catch(function () {});
         }
-        receiptWhoList = id;
-        dataDashEdit = false;
-        dataDashLibOpen = false;
-        dataRoom = "overview";
         focusNext = ".screen-h";
         render();
         return;
@@ -9894,7 +10149,7 @@ const html = `<!DOCTYPE html>
         : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-        + '<p class="data-dash-sub">Each tile is a door. The number is one example. Votes never enter these numbers. '
+        + '<p class="data-dash-sub">Tap a door. Search and filter inside. Votes never enter these numbers. '
         + editBtn + "</p>"
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
@@ -14104,6 +14359,8 @@ const html = `<!DOCTYPE html>
     let receiptShareNote = "";
     let receiptQ = "";
     let receiptFilter = "all";
+    let receiptDoorFilter = "all";
+    let receiptVsWho = "";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -14564,7 +14821,14 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (receiptWhoList) {
+        if (receiptVsWho) {
+          receiptVsWho = "";
+          render();
+          return;
+        }
         receiptWhoList = "";
+        receiptQ = "";
+        receiptDoorFilter = "all";
         homeTab = "history";
         view = "home";
         focusNext = ".screen-h";
@@ -18936,7 +19200,8 @@ const html = `<!DOCTYPE html>
         const rows = await res.json();
         const remote = rows && rows[0] && rows[0].tiles;
         if (Array.isArray(remote) && remote.length) {
-          dataDashTiles = dataDashCanon(remote);
+          const next = dataDashCanon(remote);
+          dataDashTiles = dataDashIsLegacyBoard(next) ? dataDashCanon(DATA_DASH_DEFAULT) : next;
           dataDashWriteLocal(dataDashTiles);
         }
       } catch (err) {
@@ -23326,8 +23591,30 @@ const html = `<!DOCTYPE html>
       if (receiptWhoBack) {
         receiptWhoList = "";
         receiptQ = "";
+        receiptDoorFilter = "all";
+        receiptVsWho = "";
         dataRoom = "overview";
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const receiptVsBack = e.target.closest("[data-receipt-vs-back]");
+      if (receiptVsBack) {
+        receiptVsWho = "";
+        receiptQ = "";
+        render();
+        return;
+      }
+      const receiptVsBtn = e.target.closest("[data-receipt-vs]");
+      if (receiptVsBtn) {
+        receiptVsWho = receiptVsBtn.getAttribute("data-receipt-vs") || "";
+        receiptQ = "";
+        render();
+        return;
+      }
+      const receiptDoorFilterBtn = e.target.closest("[data-receipt-door-filter]");
+      if (receiptDoorFilterBtn) {
+        receiptDoorFilter = receiptDoorFilterBtn.getAttribute("data-receipt-door-filter") || "all";
         render();
         return;
       }
@@ -25022,7 +25309,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v227-pick-become";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v228-door-tiles";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25113,13 +25400,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v227-pick-become")) {
+  || !html.includes("chuckle-shell-v228-door-tiles")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v227-pick-become")
+  || !swSrc.includes("chuckle-shell-v228-door-tiles")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26454,10 +26741,16 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 6 || defIds.some((id) => !uniq.has(id))
-    || defIds[0] !== "trade_mark" || defIds[1] !== "pick_print"
-    || defIds[2] !== "season_place") {
-    throw new Error("DATA_DASH_DEFAULT must be the 6 receipt chips");
+  if (defIds.length !== 12 || defIds.some((id) => !uniq.has(id))
+    || defIds[0] !== "trade_mark" || defIds[1] !== "lopsided"
+    || defIds[2] !== "pick_print") {
+    throw new Error("DATA_DASH_DEFAULT must be the 12 door tiles");
+  }
+  const doorStart = inline.indexOf("    const DATA_DOORS = [");
+  const doorEnd = inline.indexOf("];", doorStart);
+  const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  if (doorIds.length !== 12 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 12 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
@@ -26487,7 +26780,8 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function loadSeatDataDash(")
     || !inline.includes("function saveSeatDataDash(")
     || !inline.includes("seat_data_dash")
-    || !inline.includes("cuckle.data.dash.v1")) {
+    || !inline.includes("cuckle.data.dash.v2")
+    || !inline.includes("function dataDashIsLegacyBoard(")) {
     throw new Error("Data board must persist per seat via seat_data_dash");
   }
   if (!inline.includes("function shareProofNow(")
@@ -26508,12 +26802,21 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-import")
     || !inline.includes("function receiptTermCurveHtml(")
     || !inline.includes("params.get(\"tx\")")
-    || !inline.includes('lab: "What did my pick become"')
+    || !inline.includes('lab: "What my pick became"')
+    || !inline.includes('lab: "That trade now"')
+    || !inline.includes('lab: "That trade that day"')
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")
+    || !inline.includes("function receiptDoorIco(")
+    || !inline.includes("function receiptDoorFilterHtml(")
+    || !inline.includes("function receiptIsDoor(")
+    || !inline.includes("data-receipt-door-filter")
     || !inline.includes("Every pick ")
+    || !inline.includes("class=\"door\"")
     || !fnSrc("dataDashHtml").includes("receiptPickKey")
+    || fnSrc("dataDashBoardHtml").includes("receiptBoardFilterHtml(")
+    || fnSrc("dataDashTileHtml").includes("receiptChipHtml(")
     || inline.includes("exactly like")) {
     throw new Error("Receipt tiles must ship shareProofNow, public boot, clock English, and L1/L2 tickets");
   }

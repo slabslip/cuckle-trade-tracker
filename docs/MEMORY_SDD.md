@@ -45,35 +45,35 @@ the same paint. Do not invent a 17th kind for each argument.
 
 **Memory (a specific thing happened)**
 
-| Id | Question |
+| Id | Door label |
 |----|----------|
-| `trade_mark` | This deal, this clock, how it aged |
-| `pick_print` | What did my pick become |
-| `season_place` / `season_title` | This year, this seat |
+| `trade_mark` | That trade now |
+| `pick_print` | What my pick became |
+| `season_place` / `season_title` | How I finished |
 
-**Who (a list, still one verdict on the chip)**
+**Who (a list behind the door)**
 
-| Id | Question |
+| Id | Door label |
 |----|----------|
-| `lopsided` | Widest completed deals on this clock (not Best 10 people) |
-| `passed_around` | Players who moved the most |
-| `least_traded` | Rostered players who barely moved |
-| `forever` | Still on the team that drafted them (2019 startup) |
-| `homesteaders` | Longest stays, forever set aside |
-| `past_champions` | Who actually won years |
-| `widest_clock` | Same smash/bust if you change the question |
-| `seat_run` | Who has been on a heater / cold streak on tape |
-| `draft_marks` | Who won the rookie / startup draft on surplus (`seat_draft`) |
-| `held_firsts` | Who is sitting on future 1sts (`firsts_held` / `held_picks`) |
-| `vs_you` | Your tape vs one name (extract / even / they extract) |
+| `lopsided` | That trade that day |
+| `passed_around` | Passed around |
+| `least_traded` | Least traded (catalog only) |
+| `forever` | Never left |
+| `homesteaders` | Homesteaders (catalog only) |
+| `past_champions` | Who won the year |
+| `widest_clock` | Same smash/bust if you change the question (catalog only) |
+| `seat_run` | Who has been on a heater / cold streak on tape (catalog only) |
+| `draft_marks` | Draft hits (`seat_draft`) |
+| `held_firsts` | Who has firsts (`firsts_held` / `held_picks`) |
+| `vs_you` | Me vs them |
 
 **Today’s bag (research; opens calc or a hunt, still no bag-total hero)**
 
 | Id | Question |
 |----|----------|
 | `fill_holes` / `move_extras` | Who has what you need / who can take extras |
-| `uninsured` / `cuffs_board` | Starters without a cuff |
-| `book_top` | Highest **pieces** in the book (names + values, not a seat total) |
+| `uninsured` / `cuffs_board` | No backup |
+| `book_top` | Biggest names (highest **pieces**, not a seat total) |
 
 **Banned as chips:** `best10`, `worst10`, `bag_total`, `realized`, career
 `win_now` / `investor` as a grade, luck, H2H, vote tallies, Ledger stakes.
@@ -81,8 +81,9 @@ Direction (Hard rebuild) stays a **label on League rows**, not a “best
 rebuilder” trophy.
 
 The 27-id Data encyclopedia under **More** still exists for desks. It is not
-Your board. Your board is these 16 kinds, rearranged. Which *example*
-to put on a door is ranked in [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)
+Your board. Your board is twelve labeled doors from these 16 kinds.
+The example lives **inside** the portal list, not on the tile face.
+Which fights to rank first is in [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)
 from this league’s hop tape — not from Sleeper chat.
 
 ---
@@ -117,56 +118,50 @@ the number.
 ## 4. Click-by-click copy (lock these headlines)
 
 One stack, one Back, no new pill. Home / News / Ledger unchanged. No receipts
-on Home. Share is a **small icon** on the tile (44px hit, not a gold banner).
-It does not open the portal.
+on Home. Share is a **small icon** on the ticket (44px hit, not a gold banner).
+It does not live on the door.
 
 ### L0 — Your board (History / Data)
 
-Heading: **Your board**. Two-column **square** tiles, movable in Edit.
-Filter chips: All / Memory / Who / Research. Search does **not** live on the
-board — it lives inside the portal after you tap.
+Heading: **Your board**. Two-column doors, movable in Edit. Face is
+**house icon + label only**. No verdict sentence, no gold example number,
+no who-line, no share icon on the door. Icons exist so a thumb can find
+the room at a glance.
 
-Each tile is a **door into a scenario**, not a finished receipt. The face
-shows one live example so you know what kind of tape is inside. Tap = that
-scenario’s historical view. Search there for a specific team, trade, pick,
-year, or seat.
+Search and filter do **not** live on the board — they live inside the
+portal after you tap. No All / Memory / Who / Research chips on the board.
 
-**Default six chips** (first visit, casual / novice):
+Each tile is a **door into a scenario**, not a finished receipt. Tap = that
+scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 
-1. Latest faded / grew trade (`trade_mark`)
-2. What did my pick become (`pick_print`) — every pick this seat ever owned
-3. Last season place (`season_place`)
-4. Most lopsided
-5. Forever
-6. Past champions
+**Default twelve doors** (first visit, and after the v2 board bump):
 
-Everyone else is one tap away in **Add a chip**. **Edit** (pencil) is how they
-organize. Unsigned / outsider: default six only, no edit. A shared link opens
-one public ticket, not someone’s private layout.
+1. That trade now (`trade_mark`)
+2. That trade that day (`lopsided`)
+3. What my pick became (`pick_print`) — every pick this seat ever owned
+4. Who won the year (`past_champions`)
+5. How I finished (`season_place`)
+6. Me vs them (`vs_you`)
+7. Who has firsts (`firsts_held`)
+8. Never left (`forever`)
+9. Passed around (`passed_around`)
+10. Draft hits (`seat_draft`)
+11. No backup (`uninsured`)
+12. Biggest names (`book_top`)
 
-**Trade chip**
+**Edit** is how they reorder or swap. Unsigned / outsider: default twelve,
+no edit. A shared link opens one public ticket, not someone’s private layout.
 
-- Kind (dim): `Trade`
-- Verdict: `This deal faded after they accepted.` (or `This deal grew.` /
-  `Still about even.`)
-- Who / when: `TipsUp vs Truman · Sep 2022`
-- Number: `+184` from then to now
-- Because: `It looked better the day they clicked accept.`
-- Tiny two-dot spark (accept → today). No axis labels.
-- Small share icon, top-right. No gold **Text this** banner.
+**Door face (every tile)**
 
-**Pick chip** (`pick_print` — locked scenario)
+- House SVG icon (gold stroke, ~28px)
+- Label in the table above
+- Nothing else
 
-Door label: **What did my pick become**. Not a random hop dump. The face is
-one live example from **this seat’s** tape so you know the room.
+**Trade portal** (`trade_mark` / `lopsided`)
 
-- Kind: `What did my pick become`
-- Verdict (claimed seat): `You sold this 1st. They used it. It is Bijan now.`
-  (or `You used this 3rd. It is Shedeur now.` / `You still hold this 2027 1st.`)
-- Unsigned / no seat: third-person league example, same door. Do not pretend “my.”
-- Number / print: `USED` (or `SOLD` / `HELD`)
-- Because: `You sold it in 2022.`
-- Small share icon.
+Search + filters (Grew / Faded / Even, or Smash / Robbery). Rows are
+simple list lines, one deal each, not example chips. Tap → L1 ticket.
 
 **Pick portal (tap the tile)**
 
@@ -180,17 +175,13 @@ owned.` Search a canonical seat (`Truman`, `ARae`) to open that seat’s list.
 Search a year or player to filter. Seat names come from `members.json`, not
 live Sleeper `team_name`.
 
-**Season chip**
+**Season / finish portal**
 
-- Kind: `Season`
-- Verdict: `8th in 2023 — not a dynasty year.` (or `Won 2025 on the bracket.`)
-- Number: `8th` or `1st`
-- Empty first-year: `No title yet. New book.` No fake crown.
-- **Text this**
+- Who won the year: year · seat rows. Tap → existing Past Champions body.
+- How I finished: seat · place list.
 
-A who-chip’s number is the **lead example** (widest deal, most-moved player,
-last champion), not a league GPA. Tap a who-chip → L1 is a **list of the same
-chips**. Tap a row → that object’s ticket.
+A door’s list is the **catalog**, not one lead example. Tap a row → that
+object’s ticket. Share lives on the ticket.
 
 ### L1 — the ticket (one scroll)
 
@@ -331,7 +322,7 @@ demo. That is the point.
 |---------|-----------|
 | **Home** | No personal bag hero. Trade Desk / calc stay *today’s* deal. A proof chip does not remount News. |
 | **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
-| **History / Data** | Home of **Your board**. Cold load leads with the six chips above Moves / League — still one Data cell. Encyclopedia stays under More. |
+| **History / Data** | Home of **Your board**. Cold load leads with the twelve doors above Moves / League — still one Data cell. Encyclopedia stays under More. |
 | **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |
 | **Pick hop** | Journey. Share proof. English hops. |
 
@@ -342,9 +333,10 @@ No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
 ## 8. Edit board
 
 Drag to reorder, hide, add from the catalog. Persist per seat per league
-(`seat_data_dash` + local `cuckle.data.dash.v1.<league>.<seat>`). Outsider:
-default six, no edit. Shared link still opens one chip’s ticket, not the
-editor’s private layout.
+(`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
+default twelve, no edit. Shared link still opens one ticket, not the
+editor’s private layout. The v1 key is retired so old example-chip boards
+reload as the twelve doors.
 
 ---
 
@@ -360,12 +352,12 @@ than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md)
 
 ## 10. Acceptance
 
-A member can: read the default six chips in two seconds each → tap a trade →
-see two questions first (day they traded / from then to now) → More clocks →
-tap **What did my pick become** → see every pick they ever owned → tap one →
-“You sold this 1st. They used it. It is X.” → share icon → reopen on the same
-layer. A nerd can Edit the board, add `vs_you` and `draft_marks`, reorder,
-reload on another phone, same layout.
+A member can: find a door by icon + label → tap **What my pick became** →
+search / filter → see every pick they ever owned → tap one →
+“You sold this 1st. They used it. It is X.” → share icon on the ticket →
+reopen on the same layer. Tap **That trade now**, filter Grew / Faded, open
+a deal, see two questions first (day they traded / from then to now).
+A nerd can Edit the board, reorder, reload on another phone, same layout.
 
 Two-second test (novice): they can say “so it looked better when they traded,
 and now it’s worse” and “that 1st I sold is Bijan now.” They never have

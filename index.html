@@ -3330,43 +3330,66 @@
       min-height: 64px; display: grid; place-items: center; color: var(--muted);
       font-weight: 650; letter-spacing: 0; text-transform: none;
     }
-    .receipt-board { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0 0 16px; }
+    .receipt-board {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 16px;
+    }
     .receipt-chip {
+      position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
-      padding: 12px 12px 10px; width: 100%; box-sizing: border-box;
+      padding: 10px 10px 8px; width: 100%; box-sizing: border-box;
+      aspect-ratio: 1; min-height: 0; overflow: hidden;
+      display: flex; flex-direction: column;
     }
     .receipt-chip-main {
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: transparent; border: 0; padding: 0; margin: 0; width: 100%; cursor: pointer;
-      display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: start;
+      background: transparent; border: 0; padding: 0; margin: 0; width: 100%;
+      flex: 1; cursor: pointer; display: flex; flex-direction: column; min-height: 0;
     }
     .receipt-kind {
-      font-size: 0.62rem; font-weight: 750; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--dim);
-    }
-    .receipt-stamp {
-      font-size: 10px; font-weight: 800; letter-spacing: 0.08em; font-style: normal;
-      color: #e0b44c; justify-self: end;
+      font-size: 0.58rem; font-weight: 750; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--dim); padding-right: 36px;
     }
     .receipt-verdict {
-      grid-column: 1; font-size: 1.05rem; font-weight: 750; color: var(--text);
-      line-height: 1.25; margin: 4px 0 0;
+      font-size: 0.92rem; font-weight: 750; color: var(--text);
+      line-height: 1.2; margin: 6px 0 0;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
     .receipt-num {
-      grid-column: 2; grid-row: 2 / 4; font-size: 1.55rem; font-weight: 800;
-      color: #e0b44c; line-height: 1; align-self: center;
+      margin-top: auto; padding-top: 8px;
+      font-size: 1.35rem; font-weight: 800; color: #e0b44c; line-height: 1;
     }
     .receipt-num .delta { font-size: inherit; color: inherit; }
     .receipt-who, .receipt-because {
-      grid-column: 1; display: block; font-size: 0.78rem; font-weight: 500;
-      letter-spacing: 0; text-transform: none; color: var(--dim); margin: 2px 0 0;
+      display: block; font-size: 0.68rem; font-weight: 500;
+      letter-spacing: 0; text-transform: none; color: var(--dim); margin: 4px 0 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .receipt-chip .spark { grid-column: 1 / -1; height: 28px; margin: 8px 0 0; }
+    .receipt-chip .spark { display: none; }
+    button.receipt-share {
+      appearance: none; font: inherit; color: #e0b44c; background: transparent;
+      border: 0; border-radius: 10px; width: 44px; height: 44px; padding: 0;
+      display: inline-grid; place-items: center; cursor: pointer; vertical-align: middle;
+    }
+    .receipt-chip button.receipt-share,
+    .receipt-hero button.receipt-share {
+      position: absolute; top: 2px; right: 2px; z-index: 2;
+    }
     button.receipt-text {
       appearance: none; font: inherit; font-size: 0.92rem; font-weight: 700;
       color: #0b0b0d; background: #e0b44c; border: 0; border-radius: 10px;
       min-height: 44px; width: 100%; margin: 10px 0 0; cursor: pointer;
     }
+    .receipt-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+    button.receipt-filter {
+      appearance: none; font: inherit; font-size: 0.78rem; font-weight: 700;
+      color: var(--muted); background: #141418; border: 1px solid var(--line);
+      border-radius: 999px; min-height: 32px; padding: 0 10px; cursor: pointer;
+    }
+    button.receipt-filter.on { color: #e0b44c; border-color: #6b5a2e; background: #221e14; }
+    .receipt-portal-list .receipt-chip { aspect-ratio: auto; min-height: 88px; }
+    .receipt-portal-list .receipt-chip-main { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; }
+    .receipt-portal-list .receipt-verdict { -webkit-line-clamp: 2; }
+    .receipt-portal-list .receipt-num { margin: 0; align-self: center; }
     .receipt-search {
       width: 100%; box-sizing: border-box; min-height: 44px; margin: 0 0 14px;
       padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
@@ -3380,6 +3403,7 @@
     }
     button.receipt-clock.on { color: #e0b44c; border-color: #6b5a2e; background: #221e14; }
     button.receipt-clock.is-hollow { opacity: 0.55; }
+    .receipt-hero { position: relative; padding-right: 48px; }
     .receipt-hero .receipt-gold { font-size: 2rem; font-weight: 800; color: #e0b44c; margin: 6px 0; }
     .receipt-cta {
       position: sticky; bottom: 0; z-index: 20; margin: 18px -4px 0;
@@ -3993,7 +4017,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "receiptTiles20260912020000";
+    const DATA_V = "receiptPortals20260912023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4390,12 +4414,11 @@
             + (h.exit === "flip" ? "<b>You exited here.</b>" : "")
             + "</div>";
         }).join("")
-        + '<button type="button" class="receipt-text" data-receipt-share="pick" data-receipt-id="'
-        + esc(key) + '">Text this</button>'
+        + receiptShareBtn("pick", key)
         + "</div>";
     }
 
-    function clockName(key) {
+    function receiptClockName(key) {
       return ({
         t0: "Day they traded",
         y1: "After 1 season",
@@ -4404,6 +4427,18 @@
         all: "From then to now",
         aged: "How it aged",
       })[key] || key;
+    }
+
+    function receiptShareIco() {
+      return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
+        + '<path fill="currentColor" d="M12 3l5 5h-3v6h-4V8H7l5-5zm-8 13h3v5h10v-5h3v7H4v-7z"/>'
+        + "</svg>";
+    }
+
+    function receiptShareBtn(kind, id) {
+      return '<button type="button" class="receipt-share" data-receipt-share="' + esc(kind || "trade") + '"'
+        + ' data-receipt-id="' + esc(id || "") + '" aria-label="Share">'
+        + receiptShareIco() + "</button>";
     }
 
     function windowScoreAt(r, key) {
@@ -4570,7 +4605,7 @@
         else if (aged != null && aged > 20) verdict = "This deal grew after they accepted.";
       } else {
         const ahead = now == null ? "" : (now > 0 ? side.name : now < 0 ? side.other : "");
-        if (ahead) verdict = ahead + " came out ahead — " + clockName(key).toLowerCase() + ".";
+        if (ahead) verdict = ahead + " came out ahead — " + receiptClockName(key).toLowerCase() + ".";
       }
       let because = "The bags stayed about even.";
       if (aged != null && aged < 0) because = "It looked better the day they clicked accept.";
@@ -4821,23 +4856,25 @@
       return receiptWhoClaim(id);
     }
 
-    function receiptChipHtml(claim) {
+    function receiptChipHtml(claim, opts) {
       if (!claim) return "";
+      const asRow = !!(opts && opts.row);
       const num = claim.number != null
         ? tapeMargin(claim.number)
         : esc(claim.print || "—");
+      const openAttr = asRow && claim.openTrade
+        ? ('data-receipt-open-trade="' + esc(claim.openTrade) + '" data-seat="' + esc(claim.openSeat || "") + '"')
+        : (asRow && claim.pickKey
+          ? ('data-receipt-pick="' + esc(claim.pickKey) + '"')
+          : ('data-dash-open="' + esc(claim.id) + '"'));
       return '<div class="receipt-chip">'
-        + '<button type="button" class="receipt-chip-main" data-dash-open="' + esc(claim.id) + '">'
-        + '<span class="receipt-kind">' + esc(claim.kind || "Receipt") + "</span>"
-        + '<em class="receipt-stamp">RECEIPT</em>'
+        + receiptShareBtn(claim.shareKind || "trade", claim.shareId || "")
+        + '<button type="button" class="receipt-chip-main" ' + openAttr + ">"
+        + '<span class="receipt-kind">' + esc(claim.kind || "Portal") + "</span>"
         + '<b class="receipt-verdict">' + esc(claim.verdict) + "</b>"
         + '<span class="receipt-num">' + num + "</span>"
         + (claim.who ? '<span class="receipt-who">' + esc(claim.who) + "</span>" : "")
-        + (claim.because ? '<span class="receipt-because">' + esc(claim.because) + "</span>" : "")
-        + (claim.spark || "")
         + "</button>"
-        + '<button type="button" class="receipt-text" data-receipt-share="' + esc(claim.shareKind || "trade") + '"'
-        + ' data-receipt-id="' + esc(claim.shareId || "") + '">Text this</button>'
         + "</div>";
     }
 
@@ -4862,6 +4899,34 @@
         + " from then to now"
         + (claim.aged != null ? " · it moved " + signedNum(claim.aged) : "")
         + "\n" + receiptShareUrl("trade", claim.shareId);
+    }
+
+    function receiptFilterGroup(id) {
+      if (id === "trade_mark" || id === "pick_print" || id === "season_place" || id === "season_title") return "memory";
+      if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
+        || id === "cuffs_board" || id === "book_top") return "research";
+      return "who";
+    }
+
+    function receiptBoardFilterHtml() {
+      const opts = [["all", "All"], ["memory", "Memory"], ["who", "Who"], ["research", "Research"]];
+      return '<div class="receipt-filters" role="tablist" aria-label="Filter portals">'
+        + opts.map(function (o) {
+          const on = receiptFilter === o[0];
+          return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
+            + ' data-receipt-filter="' + o[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
+            + o[1] + "</button>";
+        }).join("")
+        + "</div>";
+    }
+
+    function receiptPortalSearchHint(id) {
+      if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") return "A team, a trade, a year";
+      if (id === "pick_print" || id === "forever" || id === "passed_around" || id === "least_traded") {
+        return "A player, a pick, a seat";
+      }
+      if (id === "season_place" || id === "past_champions") return "A year, a seat, a place";
+      return "A team, a trade, a name";
     }
 
     function receiptIsWho(id) {
@@ -4998,8 +5063,7 @@
           + (h.exit === "flip" ? "<b>You exited here.</b>" : "")
           + "</button>";
       }).join("");
-      const share = '<button type="button" class="receipt-text" data-receipt-share="pick" data-receipt-id="'
-        + esc(key) + '">Text this</button>';
+      const share = receiptShareBtn("pick", key);
       return backChip("Back")
         + '<div class="receipt-hero">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(verdict) + "</h2>"
@@ -5033,8 +5097,7 @@
         }
       } catch (err) { sparkHtml = receiptMiniSpark(selected); }
       if (!sparkHtml) sparkHtml = receiptMiniSpark(selected);
-      const share = '<button type="button" class="receipt-text" data-receipt-share="trade" data-receipt-id="'
-        + esc(selected.transaction_id) + '">Text this</button>';
+      const share = receiptShareBtn("trade", selected.transaction_id);
       return backChip("Back")
         + '<div class="receipt-hero">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(claim.verdict) + "</h2>"
@@ -5095,61 +5158,88 @@
         + "</div></div>";
     }
 
-    function receiptWhoListHtml(id) {
-      const spec = dataDashById(id);
-      const head = (spec && spec.lab) || "List";
-      let rows = "";
-      if (id === "lopsided" || id === "widest_clock") {
-        rows = rankWide().slice(0, 10).map(function (hit) {
-          const r = hit.r || hit;
-          return receiptChipHtml(receiptTradeClaim(r, "all", true));
-        }).join("");
-      } else if (id === "past_champions") {
-        rows = ((titles && titles.titles) || []).map(function (t) {
+    function receiptPortalRows(id, q) {
+      const needle = String(q || "").trim().toLowerCase();
+      const hit = function (parts) {
+        if (!needle) return true;
+        return parts.join(" ").toLowerCase().indexOf(needle) >= 0;
+      };
+      if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") {
+        const sides = id === "trade_mark"
+          ? ((league && league.trade_boards && league.trade_boards.sides) || []).slice()
+            .sort(function (a, b) {
+              const aa = windowScoreAt(a, "all");
+              const ta = windowScoreAt(a, "t0");
+              const ba = (aa != null && ta != null) ? Math.abs(aa - ta) : -1;
+              const ab = windowScoreAt(b, "all");
+              const tb = windowScoreAt(b, "t0");
+              const bb = (ab != null && tb != null) ? Math.abs(ab - tb) : -1;
+              return bb - ba;
+            })
+          : rankWide().map(function (h) { return h.r || h; });
+        const out = [];
+        for (let i = 0; i < sides.length && out.length < 20; i++) {
+          const r = sides[i];
+          if (!hit([r.name, r.other, r.headline, r.date])) continue;
+          const claim = receiptTradeClaim(r, "all", true);
+          if (!claim) continue;
+          claim.openTrade = r.transaction_id;
+          claim.openSeat = r.user_id;
+          out.push(receiptChipHtml(claim, { row: true }));
+        }
+        return out.join("");
+      }
+      if (id === "pick_print") {
+        if (!picks && typeof ensurePicks === "function") ensurePicks();
+        const keys = picks ? Object.keys(picks) : [];
+        const out = [];
+        for (let i = 0; i < keys.length && out.length < 20; i++) {
+          const p = picks[keys[i]];
+          if (!p || !(p.hops || []).length) continue;
+          if (!hit([keys[i], p.became, p.label, p.used_by])) continue;
+          const claim = receiptPickClaim({ key: keys[i], p: p });
+          if (claim) out.push(receiptChipHtml(claim, { row: true }));
+        }
+        return out.join("");
+      }
+      if (id === "season_place" || id === "past_champions") {
+        return ((titles && titles.titles) || []).filter(function (t) {
+          return hit([t.season, t.name]);
+        }).map(function (t) {
           return '<button type="button" class="row" data-title="' + esc(t.season) + '">'
             + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + seatLabel(t.name)
             + '</div></div><div class="margin">1st</div></div></button>';
         }).join("");
-      } else if (id === "forever" || id === "homesteaders" || id === "least_traded" || id === "passed_around") {
+      }
+      if (id === "forever" || id === "homesteaders" || id === "least_traded" || id === "passed_around") {
         const key = id === "passed_around" ? "most_traded" : id;
-        rows = dataDashListPeek(key, 12).map(function (r) {
+        return dataDashListPeek(key, 40).filter(function (r) {
+          return hit([r.name, r.team]);
+        }).map(function (r) {
           return listRow(r, id === "forever" || id === "homesteaders" ? yearsOn(r.days)
             : (r.trades + (r.trades === 1 ? " trade" : " trades")));
         }).join("");
-      } else {
-        return "";
       }
-      return '<section class="data-dash" aria-label="' + esc(head) + '">'
-        + '<p class="caption"><button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
-        + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
-        + '<p class="caption">Same chips. Tap a row for the ticket.</p>'
-        + rows
-        + "</section>";
+      return "";
     }
 
-    function receiptSearchHits(q) {
-      const needle = String(q || "").trim().toLowerCase();
-      if (!needle) return "";
-      const out = [];
-      const ids = ["trade_mark", "pick_print", "season_place", "lopsided", "forever", "past_champions",
-        "passed_around", "least_traded", "homesteaders", "widest_clock", "vs_you"];
-      for (let i = 0; i < ids.length; i++) {
-        const c = receiptClaimFor(ids[i]);
-        if (!c) continue;
-        const blob = (c.verdict + " " + (c.who || "") + " " + (c.kind || "")).toLowerCase();
-        if (blob.indexOf(needle) >= 0) out.push(receiptChipHtml(c));
-      }
-      const sides = (league && league.trade_boards && league.trade_boards.sides) || [];
-      for (let i = 0; i < sides.length && out.length < 12; i++) {
-        const r = sides[i];
-        const blob = ((r.name || "") + " " + (r.other || "") + " " + (r.headline || "")).toLowerCase();
-        if (blob.indexOf(needle) < 0) continue;
-        const claim = receiptTradeClaim(r, "all", true);
-        claim.id = "trade:" + r.transaction_id;
-        out.push(receiptChipHtml(claim).replace('data-dash-open="' + esc(claim.id) + '"',
-          'data-receipt-open-trade="' + esc(r.transaction_id) + '" data-seat="' + esc(r.user_id) + '"'));
-      }
-      return out.join("") || '<p class="caption">No chips match that.</p>';
+    function receiptWhoListHtml(id) {
+      const spec = dataDashById(id);
+      const head = (spec && spec.lab) || "Portal";
+      const lead = receiptClaimFor(id);
+      const rows = receiptPortalRows(id, receiptQ);
+      return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
+        + '<p class="caption"><button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
+        + '<p class="caption">The tile was one example. Search this tape.</p>'
+        + (lead && !receiptQ ? receiptChipHtml(Object.assign({}, lead, {
+          openTrade: lead.shareKind === "trade" ? lead.shareId : "",
+          pickKey: lead.pickKey || "",
+        }), { row: true }) : "")
+        + '<input class="receipt-search" data-receipt-q="1" type="search"'
+        + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />'
+        + (rows || '<p class="caption">Nothing on this tape matches.</p>')
+        + "</section>";
     }
 
     function receiptCtaHtml() {
@@ -5171,10 +5261,8 @@
       else if (openId) body = renderReceiptTradeTicket();
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-          + dataDashBoardHtml()
-          + '<input class="receipt-search" data-receipt-q="1" type="search"'
-          + ' placeholder="A player, a pick, a name, or a question" value="' + esc(receiptQ) + '" />'
-          + (receiptQ ? receiptSearchHits(receiptQ) : "");
+          + '<p class="caption">Each tile is a door. The number is one example.</p>'
+          + dataDashBoardHtml();
       }
       return '<div class="receipt-shell">' + body + receiptCtaHtml() + "</div>";
     }
@@ -8993,14 +9081,16 @@
     }
 
     function dataDashBoardHtml() {
-      const tiles = dataDashBoardTiles();
+      const tiles = dataDashBoardTiles().filter(function (id) {
+        return receiptFilter === "all" || receiptFilterGroup(id) === receiptFilter;
+      });
       if (typeof ensurePicks === "function") ensurePicks();
       if (typeof ensureCuffs === "function") ensureCuffs();
-      let html = dataDashPresetHtml();
+      let html = receiptBoardFilterHtml() + dataDashPresetHtml();
       html += '<div class="receipt-board" aria-label="Your board">';
       html += tiles.map(dataDashTileHtml).join("");
-      if (dataDashEdit && tiles.length < DATA_DASH_MAX) {
-        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a chip</button>';
+      if (dataDashEdit && dataDashBoardTiles().length < DATA_DASH_MAX) {
+        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a portal</button>';
       }
       return html + "</div>";
     }
@@ -9042,33 +9132,16 @@
         openTrade(tx, null, { solo: true });
         return;
       }
-      if (id === "trade_mark") {
-        const t = receiptLeadTrade();
-        if (!t) return;
-        receiptTicket = true;
-        receiptMoreClocks = false;
+      if (id === "trade_mark" || id === "pick_print" || id === "season_place" || id === "season_title") {
+        receiptWhoList = id;
+        receiptQ = "";
+        receiptTicket = false;
         receiptPickKey = "";
-        openTrade(t.transaction_id, t.user_id, { solo: true });
-        return;
-      }
-      if (id === "pick_print") {
-        const pk = receiptLeadPick();
-        if (!pk) return;
-        receiptPickKey = pk.key;
-        receiptTicket = true;
-        view = "trade";
-        openId = null;
+        dataDashEdit = false;
+        dataDashLibOpen = false;
+        dataRoom = "overview";
+        if (id === "pick_print" && typeof ensurePicks === "function") ensurePicks();
         focusNext = ".screen-h";
-        if (typeof ensurePicks === "function") ensurePicks();
-        render();
-        return;
-      }
-      if (id === "season_place" || id === "season_title") {
-        view = "titles";
-        const s = receiptLastSeason();
-        titleYear = s ? s.season : null;
-        focusNext = ".screen-h";
-        syncUrl();
         render();
         return;
       }
@@ -9595,12 +9668,10 @@
         : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-        + '<p class="data-dash-sub">Votes never enter these numbers. ' + editBtn + "</p>"
+        + '<p class="data-dash-sub">Each tile is a door. The number is one example. Votes never enter these numbers. '
+        + editBtn + "</p>"
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
-        + '<input class="receipt-search" data-receipt-q="1" type="search"'
-        + ' placeholder="A player, a pick, a name, or a question" value="' + esc(receiptQ) + '" />'
-        + (receiptQ ? receiptSearchHits(receiptQ) : "")
         + dataDashPanesHtml()
         + body
         + "</section>";
@@ -13504,8 +13575,7 @@
         + chip
         + voteCardHtml(r)
         + '<p class="caption"><button type="button" class="linkish" data-receipt-ticket="1">Remember it differently?</button>'
-        + ' <button type="button" class="receipt-text" data-receipt-share="trade" data-receipt-id="'
-        + esc(r.transaction_id) + '">Text this</button></p>'
+        + receiptShareBtn("trade", r.transaction_id) + "</p>"
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
@@ -13807,6 +13877,7 @@
     let receiptSeatUid = "";
     let receiptShareNote = "";
     let receiptQ = "";
+    let receiptFilter = "all";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -22958,6 +23029,12 @@
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
+      const receiptFilterBtn = e.target.closest("[data-receipt-filter]");
+      if (receiptFilterBtn) {
+        receiptFilter = receiptFilterBtn.getAttribute("data-receipt-filter") || "all";
+        render();
+        return;
+      }
       const receiptShareBtn = e.target.closest("[data-receipt-share]");
       if (receiptShareBtn) {
         e.preventDefault();
@@ -23022,6 +23099,7 @@
       const receiptWhoBack = e.target.closest("[data-receipt-who-back]");
       if (receiptWhoBack) {
         receiptWhoList = "";
+        receiptQ = "";
         dataRoom = "overview";
         focusNext = ".screen-h";
         render();

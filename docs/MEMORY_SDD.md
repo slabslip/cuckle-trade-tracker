@@ -113,13 +113,19 @@ the number.
 ## 4. Click-by-click copy (lock these headlines)
 
 One stack, one Back, no new pill. Home / News / Ledger unchanged. No receipts
-on Home. **Text this** is its own 44px control. It does not open the ticket.
-It shares **this layer**.
+on Home. Share is a **small icon** on the tile (44px hit, not a gold banner).
+It does not open the portal.
 
 ### L0 — Your board (History / Data)
 
-Heading: **Your board**. Search placeholder: `A player, a pick, a name, or a
-question`. Hits are chips. Never a raw tape dump.
+Heading: **Your board**. Two-column **square** tiles, movable in Edit.
+Filter chips: All / Memory / Who / Research. Search does **not** live on the
+board — it lives inside the portal after you tap.
+
+Each tile is a **door into a scenario**, not a finished receipt. The face
+shows one live example so you know what kind of tape is inside. Tap = that
+scenario’s historical view. Search there for a specific team, trade, pick,
+year, or seat.
 
 **Default six chips** (first visit, casual / novice):
 
@@ -143,7 +149,7 @@ one public ticket, not someone’s private layout.
 - Number: `+184` from then to now
 - Because: `It looked better the day they clicked accept.`
 - Tiny two-dot spark (accept → today). No axis labels.
-- Stamp: **RECEIPT** at 10pt. **Text this**
+- Small share icon, top-right. No gold **Text this** banner.
 
 **Pick chip**
 
@@ -151,7 +157,7 @@ one public ticket, not someone’s private layout.
 - Verdict: `This 1st was sold, then used. It is Bijan now.`
 - Number / print: `USED` (or `SOLD` / `HELD` / still a pick)
 - Because: `You sold it in 2023.`
-- **Text this**
+- Small share icon.
 
 **Season chip**
 
@@ -168,7 +174,7 @@ chips**. Tap a row → that object’s ticket.
 ### L1 — the ticket (one scroll)
 
 Same chrome as today’s open-trade / titles screens: Back, league name,
-**Text this** in the header. No new app.
+small share icon in the header. No new app.
 
 **If they tapped a trade chip**
 
@@ -334,7 +340,7 @@ than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md)
 
 A member can: read the default six chips in two seconds each → tap a trade →
 see two questions first (day they traded / from then to now) → More clocks →
-tap a pick → “sold, then used, it is X” → Text this → reopen on the same
+tap a pick → “sold, then used, it is X” → share icon → reopen on the same
 layer. A nerd can Edit the board, add `vs_you` and `draft_marks`, reorder,
 reload on another phone, same layout.
 

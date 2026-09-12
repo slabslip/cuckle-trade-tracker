@@ -5544,7 +5544,7 @@ const html = `<!DOCTYPE html>
       const names = receiptTradePlayerNames().filter(function (n) {
         return !needle || n.toLowerCase().indexOf(needle) >= 0;
       });
-      const open = receiptPlayerOpen || !!needle;
+      const open = receiptPlayerOpen;
       let list = "";
       if (open) {
         list = '<div class="receipt-player-list" role="listbox">'

@@ -18,7 +18,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 | Surface | Job | Limit |
 | --- | --- | --- |
 | **Home Trade Desk** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
-| **Data** | Who to ping + each team's cycle + research overflow | One cell of the five-tab pill. Do not grow a sixth. |
+| **Data** | Your board — the labeled doors | One cell of the five-tab pill. Do not grow a sixth. |
 | **Receipts** | “That’s not how I remember it” — Your board (16 kinds, thirteen labeled doors) | Icon + label on the door. Search / filter / list inside. Verdict + number live on the ticket. Not a sixth pill. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md). |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
 
@@ -38,10 +38,10 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 - Votes never enter the book.
 - No bag totals on Home. `homeDeskHtml` must not contain `calcFmt(` or `calcValueNum(`.
 - No Best 10 / Worst 10. Most lopsided stays on Data.
-- `DATA_SETS` stays exactly five. Six Data desks live under **More**: Book · Tape · Seats ·
-  Lists · Draft · Cuffs. No seventh desk. Cold load is **Moves** and **League**, not the
-  27-id catalog. **Your board** (thirteen labeled doors) sits above that
-  cold load ([`MEMORY_SDD.md`](MEMORY_SDD.md)). Encyclopedia stays under More.
+- `DATA_SETS` stays exactly five. Six Data desks (Book · Tape · Seats ·
+  Lists · Draft · Cuffs) stay in code, parked. No seventh desk. Cold load is
+  **Your board** only ([`MEMORY_SDD.md`](MEMORY_SDD.md)). Moves / League / More
+  and Give / Get are off this screen for now.
 - Phone-first (390). Existing CSS. No npm / chart libraries.
 - Do not fetch cosmetics / dash / block / direction from `render()`.
 - This is **this league’s** rosters. Multi-league is the app path, not a new warehouse.
@@ -50,18 +50,12 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 ## 3. HAVE — panes, hunts, desks, block
 
-### Cold-load panes
+### Cold load
 
 [`generate-page.mjs`](../generate-page.mjs):
 
-- **Moves** (internal pane id `ping`) — **Give** (`move_extras`) and **Get**
-  (`fill_holes`) only. No Plan slate and no Star section. Sizes are still Dart /
-  Cut / Even / Shift / Star (`micro` → `mega`) as a color on each row. The book
-  is not one-per-band. Size describes the piece. It does not move a clock or VA.
-  Tap a row to price. A row is born only after tape + direction filters pass.
-- **League** — ten full-width cycle rows in place order. Name + badge + one-line why. Tap
-  opens the team view. Does **not** call `selectMe`.
-- **More** — Book · Tape · Lists · Draft · Cuffs · Seats. Research overflow, not the product.
+- **Your board** only. Thirteen labeled doors. Search / filter live inside a
+  door. Give / Get, Moves, League, and More are parked — not on this screen.
 
 ### Catalog (kept, not the cold load)
 
@@ -70,12 +64,11 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 - Catalog is **32** unique report ids (27 desks + `trade_mark`, `pick_print`,
   `my_picks`, `season_place`, `vs_you`). Persist `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>` still exists for Your board + hunt routing.
-- The 6–13 tile encyclopedia is **not** the Data cold load. Do not put it back on Moves.
-  **Your board** (thirteen doors: Trade THEN, Trade NOW, what my pick
+- **Your board** (thirteen doors: Trade THEN, Trade NOW, what my pick
   became, My Picks, who won the year, how I finished, me vs them, who has firsts, never
-  left, passed around, draft hits, no backup, biggest names) sits on History
-  above Moves/League. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)),
-  not the 27-id catalog. Edit persist still uses `seat_data_dash` +
+  left, passed around, draft hits, no backup, biggest names) **is** the Data
+  cold load. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)).
+  Edit persist still uses `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>`.
 
 **Banned ids:** `best10`, `worst10`, `bag_total`, `realized`, `win_now`, `investor`.
@@ -255,13 +248,9 @@ Keep `data-calc-filter` and `data-cuff-q`.
 
 **Data cold load, 390px, top to bottom:**
 
-1. `h2` Data
+1. `h2` Your board
 2. Quiet law: `Votes never enter these numbers.`
-3. Three panes: **Moves · League · More**
-4. Moves body (Give book + Get book) or League cycle list or More doors.
-   League why always lists held 2027s plus a pace caption (short / long / aging
-   core / …). Pace describes. It does not move a clock.
-5. Hunt page / team view / desk replace the panes when open
+3. Door tiles. Hunt / ticket / desk replace the board when a door is open.
 
 No new CSS system. Catalog stays 27. `DATA_SETS` stays 5. Titles are the definition:
 Give, Get, Dart, Star, Hard rebuild. Keep explanations to one short line.

@@ -4073,7 +4073,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912123000";
+    const DATA_V = "door20260912124000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5515,6 +5515,17 @@
 
     function receiptTradeSeasonOf(row) {
       if (row && row.season) return String(row.season).slice(0, 4);
+      const tid = row && row.transaction_id;
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
+      if (tid && trades.length) {
+        for (let i = 0; i < trades.length; i++) {
+          if (String(trades[i].transaction_id) === String(tid)) {
+            if (trades[i].season) return String(trades[i].season).slice(0, 4);
+            break;
+          }
+        }
+      }
       const d = String((row && row.date) || "");
       return /^\d{4}/.test(d) ? d.slice(0, 4) : "";
     }
@@ -9833,7 +9844,7 @@
           ? "Dart to Star, from their bag."
           : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
-        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Moves</button></p>'
+        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(huntTitle) + "</h2>"
         + '<p class="data-dash-sub">' + esc(huntSub) + "</p>"
         + chips
@@ -10604,10 +10615,6 @@
           + body
           + "</section>";
       }
-      const pane = dataDashPaneCanon(dataPane);
-      const body = pane === "league"
-        ? dataDashDirStripHtml()
-        : (pane === "more" ? dataDashMoreHtml() : dataDashOverviewHtml());
       const editBtn = dataDashCanEdit()
         ? '<button type="button" class="chip" data-dash-edit="1">' + (dataDashEdit ? "Done" : "Edit") + "</button>"
         : "";
@@ -10618,8 +10625,6 @@
         + '<p class="data-dash-drag-hint">Hold a tile, then drag to move it.</p>'
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
-        + dataDashPanesHtml()
-        + body
         + "</section>";
     }
 
@@ -25843,7 +25848,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v233-trade-year";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v234-board-only";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

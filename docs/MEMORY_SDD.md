@@ -338,7 +338,7 @@ demo. That is the point.
 |---------|-----------|
 | **Home** | No personal bag hero. Trade Desk / calc stay *today’s* deal. A proof chip does not remount News. |
 | **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
-| **History / Data** | Home of **Your board**. Cold load leads with the twelve doors above Moves / League — still one Data cell. Encyclopedia stays under More. |
+| **History / Data** | Home of **Your board**. Cold load is the doors only. Still one Data cell. |
 | **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |
 | **Pick hop** | Journey. Share proof. English hops. |
 

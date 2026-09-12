@@ -4081,7 +4081,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912123000";
+    const DATA_V = "door20260912124000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9852,7 +9852,7 @@ const html = `<!DOCTYPE html>
           ? "Dart to Star, from their bag."
           : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
-        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Moves</button></p>'
+        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(huntTitle) + "</h2>"
         + '<p class="data-dash-sub">' + esc(huntSub) + "</p>"
         + chips
@@ -10623,10 +10623,6 @@ const html = `<!DOCTYPE html>
           + body
           + "</section>";
       }
-      const pane = dataDashPaneCanon(dataPane);
-      const body = pane === "league"
-        ? dataDashDirStripHtml()
-        : (pane === "more" ? dataDashMoreHtml() : dataDashOverviewHtml());
       const editBtn = dataDashCanEdit()
         ? '<button type="button" class="chip" data-dash-edit="1">' + (dataDashEdit ? "Done" : "Edit") + "</button>"
         : "";
@@ -10637,8 +10633,6 @@ const html = `<!DOCTYPE html>
         + '<p class="data-dash-drag-hint">Hold a tile, then drag to move it.</p>'
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
-        + dataDashPanesHtml()
-        + body
         + "</section>";
     }
 
@@ -25862,7 +25856,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v233-trade-year";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v234-board-only";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25953,13 +25947,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v233-trade-year")) {
+  || !html.includes("chuckle-shell-v234-board-only")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v233-trade-year")
+  || !swSrc.includes("chuckle-shell-v234-board-only")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -27232,26 +27226,19 @@ if (homeReturn.includes("pickIntelHome()") || homeReturn.includes("cuffsHome()")
   throw new Error("renderLeagueHome must not mount Draft Data / Cuffs except via the History tab body");
 }
 {
-  const dataPage = fnSrc("dataDashHtml") + fnSrc("dataDashOverviewHtml") + fnSrc("renderDataSetsPage")
-    + fnSrc("dataDashPingHtml") + fnSrc("dataDashMoreHtml") + fnSrc("dataDashPanesHtml")
-    + fnSrc("dataDashTileHtml");
-  if (!dataPage.includes("dataDashPingHtml()")
-    || !dataPage.includes("dataDashDirStripHtml()")
-    || !dataPage.includes("dataDashMoreHtml()")
-    || !dataPage.includes("dsMenu()") || !dataPage.includes("ds-lists-h")
-    || !dataPage.includes(">Your board</h2>")
-    || !dataPage.includes("dataDashBoardHtml()")
-    || !dataPage.includes('["ping", "Moves"]')
-    || !dataPage.includes('["league", "League"]')
+  const dash = fnSrc("dataDashHtml");
+  if (!dash.includes(">Your board</h2>")
+    || !dash.includes("dataDashBoardHtml()")
+    || dash.includes("dataDashPanesHtml(")
+    || dash.includes("dataDashOverviewHtml(")
+    || dash.includes("dataDashPingHtml(")
+    || dash.includes("dataDashDirStripHtml(")
+    || dash.includes("dataDashMoreHtml(")
+    || dash.includes('["ping", "Moves"]')
     || !inline.includes("function dataDashHtml(")
     || !inline.includes("function dataDashTileHtml(")
-    || !inline.includes("function dataDashCanon(")
-    || !inline.includes("function dataDashPanesHtml(")) {
-    throw new Error("Data tab must mount Your board above Ping, League, and More");
-  }
-  if (fnSrc("dataDashOverviewHtml").includes("dataDashBoardHtml()")
-    || fnSrc("dataDashRoomsHtml").includes('["overview", "Overview"]')) {
-    throw new Error("Moves pane must stay Ping, not a second tile board");
+    || !inline.includes("function dataDashCanon(")) {
+    throw new Error("League Data must be Your board only — no Moves, League, or More panes");
   }
 }
 if (!inline.includes("function dataDashHtml(")
@@ -27263,7 +27250,6 @@ if (!inline.includes("function dataDashHtml(")
   || !inline.includes("function dataDashDirStripHtml(")
   || !inline.includes("function dataDashSeatPageHtml(")
   || !inline.includes("data-dir-seat")
-  || !inline.includes("data-data-pane")
   || !inline.includes("Votes never enter these numbers.")
   || !inline.includes("data-data-room")
   || !inline.includes("data-calc-filter")
@@ -27271,7 +27257,7 @@ if (!inline.includes("function dataDashHtml(")
   || fnSrc("dataDashHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
-  throw new Error("Data homebase must ship Ping + League cycle — no top search, no bag totals on Home");
+  throw new Error("League Data is Your board — no top search, no bag totals on Home");
 }
 {
   const reportStart = inline.indexOf("    const DATA_REPORTS = [");
@@ -27807,16 +27793,13 @@ if (/button\.pick-intel-board-leader \.pil-who\s*\{[^}]*text-decoration:\s*under
   }
   if (!fnSrc("dataDashHtml").includes("dataDashCuffsHtml()")
     || !fnSrc("dataDashHtml").includes("dataDashDraftHtml()")
-    || !fnSrc("dataDashOverviewHtml").includes("dataDashPingHtml()")
-    || !fnSrc("dataDashPingHtml").includes("Give")
-    || !fnSrc("dataDashPingHtml").includes("Get")
     || fnSrc("dataDashPingHtml").includes("dataDashPlanHtml(")
     || fnSrc("dataDashPingHtml").includes(">Plan<")
     || fnSrc("dataDashPingHtml").includes(">Send<")
     || fnSrc("dataDashPingHtml").includes("Blow")
     || !fnSrc("dataDashCuffsHtml").includes("data-xrow")
     || !fnSrc("dataDashDraftHtml").includes("data-xrow")) {
-    throw new Error("Data desks must mount Cuffs + Draft rows; Overview is Moves");
+    throw new Error("Parked Data desks must keep Cuffs + Draft rows and no Plan slate");
   }
   if (!html.includes(".cuffs-intel") || !html.includes(".cuffs-row") || !html.includes(".cuffs-sub")
     || !html.includes(".cuffs-mgr") || !inline.includes("function cuffStarterMgrLabel(")) {

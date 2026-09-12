@@ -127,6 +127,7 @@ Full meter pipeline: see [`README.md`](../README.md).
 | [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 Note → Finish → Send + push to Pages |
 | [`STORE_LAW.md`](STORE_LAW.md) / [`STORE_OPS.md`](STORE_OPS.md) | App Store / TestFlight wrapper + human Apple / DNS / SQL |
 | [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) | 1QB / Superflex / TEP / redraft / first-year empty states |
+| [`MEMORY_SDD.md`](MEMORY_SDD.md) | “That’s not how I remember it” — proof tiles + text share |
 
 ---
 

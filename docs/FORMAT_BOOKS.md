@@ -33,6 +33,7 @@ A 2026 startup (or any league without a prior Sleeper season) still gets:
 - Teams for every roster
 - empty **Past Champions** (no fake crowns, no Cuckle title path)
 - empty **Titles and Emblems** until *this* tape unlocks them
+- proof tiles only for tape that exists — three trades means three receipts, not a fake seven-year path ([`MEMORY_SDD.md`](MEMORY_SDD.md))
 - News only from shares tagged with that `sleeper_league_id` (wave 21)
 
 It must look **new**, not like a broken Cuckle.

@@ -187,3 +187,18 @@ still allows only one of each slot.
 **Recommended:** Adopt the championship hierarchy as law. Sort barracks that way. Next
 matched pairs + creative 15 are live. Remaining weekly Fresh 15 still wait on weekly tape.
 Comeback Dynasty (last → chip within 3 years) still needs multi-year place history.
+
+---
+
+## 17. How do we share a memory receipt?
+
+**Assumed:** Plain text first (named clock, Δ, aged or hop, deep link). Picture
+optional later. Calc’s hypothetical PNG stays a *proposal*, not the proof card.
+See [`MEMORY_SDD.md`](MEMORY_SDD.md).
+
+**Why it matters:** The group text is where “that’s not how I remember it” dies.
+A tile nobody can send is a private notebook. A PNG that uses the today blend
+on a flatten clock is a new lie.
+
+**Recommended:** Ship text + `?tx=` / `?pick=` on the open trade and hop tape
+before any new Data desk or TestFlight week. Do not merge hop P&L into the needle.

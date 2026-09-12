@@ -6,6 +6,7 @@ News / smack: [`NEWS_SDD.md`](NEWS_SDD.md) / [`SMACK_AGENT.md`](SMACK_AGENT.md).
 **Build today:** [`START_HERE.md`](START_HERE.md) · [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 Store: [`STORE_LAW.md`](STORE_LAW.md) · [`STORE_OPS.md`](STORE_OPS.md) · [`STORE_GATE.md`](STORE_GATE.md).
 Formats: [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
+Memory: [`MEMORY_SDD.md`](MEMORY_SDD.md).
 
 **Status:** On **`main`**, live at https://slabslip.github.io/cuckle-trade-tracker/. Requires Supabase SQL + `join-league` deploy + Auth settings (see START_HERE). TestFlight wrapper lives in [`ios/`](../ios/) and loads that origin with `?store=1`.
 

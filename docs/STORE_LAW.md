@@ -87,5 +87,7 @@ Safari / PWA without `?store=1` keeps the existing Ledger words.
 ## 7. After Cuckle is in TestFlight
 
 Any Sleeper league (dynasty, keeper, redraft; 1QB / Superflex / TEP) pastes an
-ID, syncs, and uses this same dashboard on **their** tape. Format books and
-empty first-year states are the portability work — not a new app.
+ID, syncs, and uses this same dashboard on **their** tape — including proof
+tiles they can text when someone remembers a deal or a season wrong
+([`MEMORY_SDD.md`](MEMORY_SDD.md)). Format books and empty first-year states
+are the portability work — not a new app.

@@ -7,6 +7,7 @@ that file only. No chart library, no npm, no new tokens, no SlabSlip chrome.
 file is wrong — fix it in the same pass. What we *want* → [`PRODUCT.md`](./PRODUCT.md). What the
 scripts emit → [`ARCHITECTURE.md`](./ARCHITECTURE.md). Pricing → [`VALUE_SDD.md`](./VALUE_SDD.md).
 Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md).
+Memory receipts → [`MEMORY_SDD.md`](./MEMORY_SDD.md).
 Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
 Phone behavior (Apple HIG adopted as Cuckle law) → [`HIG_SDD.md`](./HIG_SDD.md).
 Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
@@ -387,6 +388,10 @@ Open:
 5. Pick legs expand a hop tape: date · from → to · sold | used | held.
 6. Spark of each side's received bag at year-end plus today. A missing year-end is a **gap**, not
    a zero.
+7. **Share proof** (WANT — [`MEMORY_SDD.md`](./MEMORY_SDD.md)): one control on the open
+   trade and on an expanded hop tape copies a text receipt (named clock, Δ, aged
+   or hop result) into the OS share sheet. This is not the calculator’s
+   hypothetical PNG. Deep link `?tx=` / `?pick=` must open this same row.
 
 Incomplete side: badge `no DP row`, totals `—` when every shown leg is unpriced, margin `—`, and
 **Value Adjustment 0**.

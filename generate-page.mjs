@@ -4088,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ideas20260912234200";
+    const DATA_V = "jobs20260912235200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -20814,9 +20814,79 @@ const html = `<!DOCTYPE html>
       return { route: route, holes: holes, surplus: surplus, deep: deep, thin: thin };
     }
 
+    function homeDeskHas(arr, p) {
+      return (arr || []).indexOf(p) >= 0;
+    }
+
+    function homeDeskIsPick(a) {
+      return homeDeskAssetPos(a) === "PICK";
+    }
+
+    function homeDeskIsStud(a) {
+      return !homeDeskIsPick(a) && calcValueNum(a) >= DESK_STUD;
+    }
+
+    function homeDeskNflTeam(a) {
+      const t = String((a && a.team) || "").toUpperCase();
+      if (t === "SFO" || t === "SF") return "SF";
+      if (t === "JAC" || t === "JAX") return "JAX";
+      if (t === "WSH" || t === "WAS") return "WAS";
+      if (t === "LA" || t === "LAR") return "LAR";
+      if (t === "GNB" || t === "GB") return "GB";
+      if (t === "KAN" || t === "KC") return "KC";
+      if (t === "NWE" || t === "NE") return "NE";
+      if (t === "NOR" || t === "NO") return "NO";
+      if (t === "TAM" || t === "TB") return "TB";
+      if (t === "OAK" || t === "LV") return "LV";
+      return t;
+    }
+
+    function homeDeskNormWindow(lab) {
+      if (lab === "Hard rebuild") return "Rebuild";
+      return lab || "Reload";
+    }
+
+    function homeDeskWindowOf(uid, prof) {
+      const dir = uid ? seatDirOf(uid) : null;
+      return (dir && dir.label) || (prof && prof.route) || "Reload";
+    }
+
+    function homeDeskPaceLine(uid, prof) {
+      const lab = homeDeskWindowOf(uid, prof);
+      if (lab === "Hard rebuild") return "Hard rebuild · 2-3 years out";
+      if (lab === "Rebuild") return "Rebuild · not this year";
+      if (lab === "Win-now") return "Win-now · a few moves can finish it";
+      const dir = uid ? seatDirOf(uid) : null;
+      const holes = (dir && dir.holes && dir.holes.length) ? dir.holes : ((prof && prof.holes) || []);
+      if (holes.length) return "Reload · this year or next if holes fill";
+      return "Reload · this year or next";
+    }
+
+    function homeDeskWants(uid, prof) {
+      const lab = homeDeskWindowOf(uid, prof);
+      if (lab === "Hard rebuild") return ["downgrade", "sell", "swap"];
+      if (lab === "Rebuild") return ["downgrade", "sell", "swap", "buy"];
+      if (lab === "Win-now") return ["upgrade", "buy", "swap", "sell"];
+      const wants = [];
+      if ((prof.holes || []).length || (prof.thin || []).length) {
+        wants.push("upgrade", "buy");
+      } else {
+        wants.push("buy", "upgrade");
+      }
+      if ((prof.surplus || []).length || (prof.deep || []).length) wants.push("sell");
+      wants.push("swap", "downgrade");
+      const out = [];
+      for (let i = 0; i < wants.length; i++) {
+        if (out.indexOf(wants[i]) < 0) out.push(wants[i]);
+      }
+      return out;
+    }
+
     function homeDeskComplement(a, b) {
       if (!a || !b) return false;
-      const pair = a.route + "/" + b.route;
+      const ra = homeDeskNormWindow(typeof a === "string" ? a : a.route);
+      const rb = homeDeskNormWindow(typeof b === "string" ? b : b.route);
+      const pair = ra + "/" + rb;
       return pair === "Rebuild/Win-now" || pair === "Win-now/Rebuild"
         || pair === "Rebuild/Reload" || pair === "Reload/Rebuild"
         || pair === "Reload/Win-now" || pair === "Win-now/Reload";
@@ -20828,38 +20898,159 @@ const html = `<!DOCTYPE html>
       const pos = homeDeskAssetPos(stud);
       if (!pos || pos === "PICK" || calcValueNum(stud) < DESK_STUD) return "";
       const same = legsMany.filter(function (x) { return homeDeskAssetPos(x) === pos; }).length;
-      if (same < 2) return "";
-      if ((profMany.deep || []).indexOf(pos) < 0) return "";
+      if (same < 1) return "";
+      if ((profMany.deep || []).indexOf(pos) < 0 && (profMany.surplus || []).indexOf(pos) < 0) return "";
       if ((profFew.holes || []).indexOf(pos) < 0 && (profFew.thin || []).indexOf(pos) < 0) return "";
       return pos;
     }
 
+    function homeDeskClimbPos(sendLegs, recvLegs) {
+      for (let i = 0; i < (recvLegs || []).length; i++) {
+        const stud = recvLegs[i];
+        if (!homeDeskIsStud(stud)) continue;
+        const p = homeDeskAssetPos(stud);
+        if (!p || p === "PICK") continue;
+        let lesser = 0;
+        let extra = 0;
+        for (let j = 0; j < (sendLegs || []).length; j++) {
+          const a = sendLegs[j];
+          if (homeDeskAssetPos(a) === p && calcValueNum(a) >= DESK_MID && calcValueNum(a) < calcValueNum(stud)) {
+            lesser += 1;
+          } else extra += 1;
+        }
+        if (lesser && extra) return p;
+      }
+      return "";
+    }
+
+    function homeDeskTheyAccept(dir, assets, fromBag) {
+      if (!dir) return true;
+      const tank = dir.label === "Hard rebuild" || dir.label === "Rebuild";
+      for (let i = 0; i < (assets || []).length; i++) {
+        const a = assets[i];
+        const pos = homeDeskAssetPos(a);
+        if (!pos || pos === "PICK") continue;
+        const starter = (typeof dataDashIsStarterPiece === "function" && dataDashIsStarterPiece(fromBag, a))
+          || homeDeskIsStud(a);
+        if (starter && homeDeskHas(dir.refuse, pos + " starter")) return false;
+        if (tank && starter && homeDeskHas(dir.sold_pos, pos)) return false;
+      }
+      return true;
+    }
+
+    function homeDeskCuffFit(legsA, legsB, myId, theirId) {
+      const rows = (cuffs && cuffs.rows) || [];
+      if (!rows.length) return "";
+      const send = {};
+      const recv = {};
+      (legsA || []).forEach(function (a) {
+        const id = homeDeskSid(a);
+        if (id) send[id] = 1;
+      });
+      (legsB || []).forEach(function (a) {
+        const id = homeDeskSid(a);
+        if (id) recv[id] = 1;
+      });
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const sid = String(r.starter_id || "");
+        const cid = String(r.cuff_id || "");
+        if (!sid || !cid) continue;
+        if ((send[sid] && recv[cid]) || (recv[sid] && send[cid])) return "reunite the cuff";
+        if (recv[cid] && String(r.owner_id || "") === String(myId || "")) {
+          return "cuff for " + (r.starter || "your starter");
+        }
+        if (send[cid] && String(r.owner_id || "") === String(theirId || "")) return "their cuff goes home";
+        if (recv[sid] && String(r.cuff_owner_id || "") === String(myId || "")) return "you already hold the cuff";
+        if (send[sid] && String(r.cuff_owner_id || "") === String(theirId || "")) return "they already hold the cuff";
+      }
+      return "";
+    }
+
+    function homeDeskQbs(bag) {
+      const out = [];
+      for (let i = 0; i < (bag || []).length; i++) {
+        const a = bag[i];
+        if (homeDeskAssetPos(a) !== "QB") continue;
+        const team = homeDeskNflTeam(a);
+        if (team) out.push({ a: a, team: team });
+      }
+      return out;
+    }
+
+    function homeDeskStackFit(legsA, legsB, bagA, bagB) {
+      const skill = function (a) {
+        const p = homeDeskAssetPos(a);
+        return p === "WR" || p === "TE" || p === "RB";
+      };
+      const myQbs = homeDeskQbs(bagA);
+      const theirQbs = homeDeskQbs(bagB);
+      for (let i = 0; i < (legsB || []).length; i++) {
+        const a = legsB[i];
+        if (!skill(a)) continue;
+        const team = homeDeskNflTeam(a);
+        if (!team) continue;
+        for (let q = 0; q < myQbs.length; q++) {
+          if (myQbs[q].team === team) return "your QB throws to " + homeDeskShortName(a);
+        }
+      }
+      for (let i = 0; i < (legsA || []).length; i++) {
+        const a = legsA[i];
+        if (!skill(a)) continue;
+        const team = homeDeskNflTeam(a);
+        if (!team) continue;
+        for (let q = 0; q < theirQbs.length; q++) {
+          if (theirQbs[q].team === team) return "their QB throws to " + homeDeskShortName(a);
+        }
+      }
+      for (let i = 0; i < (legsA || []).length; i++) {
+        if (homeDeskAssetPos(legsA[i]) !== "QB") continue;
+        const team = homeDeskNflTeam(legsA[i]);
+        if (!team) continue;
+        for (let j = 0; j < (legsB || []).length; j++) {
+          if (skill(legsB[j]) && homeDeskNflTeam(legsB[j]) === team) {
+            return "stack " + homeDeskShortName(legsA[i]) + " with " + homeDeskShortName(legsB[j]);
+          }
+        }
+      }
+      return "";
+    }
+
     function homeDeskJob(talk, profA, profB) {
-      if (!talk) return "even";
-      if (talk.why === "depth-stud") return (talk.legsA && talk.legsA.length >= 2) ? "fill" : "move";
-      const has = function (arr, p) { return (arr || []).indexOf(p) >= 0; };
-      const thinA = function (p) { return has(profA && profA.holes, p) || has(profA && profA.thin, p); };
-      const deepA = function (p) { return has(profA && profA.surplus, p) || has(profA && profA.deep, p); };
-      const thinB = function (p) { return has(profB && profB.holes, p) || has(profB && profB.thin, p); };
-      const deepB = function (p) { return has(profB && profB.surplus, p) || has(profB && profB.deep, p); };
-      const recv = (talk.legsB || []).map(homeDeskAssetPos).filter(function (p) { return p && p !== "PICK"; });
-      const send = (talk.legsA || []).map(homeDeskAssetPos).filter(function (p) { return p && p !== "PICK"; });
-      for (let i = 0; i < recv.length; i++) {
-        if (thinA(recv[i]) && deepB(recv[i])) return "fill";
+      if (!talk) return "swap";
+      if (talk.climb) return "upgrade";
+      if (talk.drop) return "downgrade";
+      const send = talk.legsA || [];
+      const recv = talk.legsB || [];
+      const sendPick = send.filter(homeDeskIsPick).length;
+      const recvPick = recv.filter(homeDeskIsPick).length;
+      const sendPlay = send.filter(function (a) { return !homeDeskIsPick(a); });
+      const recvPlay = recv.filter(function (a) { return !homeDeskIsPick(a); });
+      if (talk.kind === "1for1" && (talk.cuff || talk.stack || (talk.rel != null && talk.rel < 0.10))) {
+        return "swap";
       }
-      for (let i = 0; i < send.length; i++) {
-        if (deepA(send[i]) && thinB(send[i])) return "move";
-      }
-      const pos = String(talk.pos || "");
-      if (pos && thinA(pos) && deepB(pos)) return "fill";
-      if (pos && deepA(pos) && thinB(pos)) return "move";
-      return "even";
+      const recvNeed = recvPlay.some(function (a) {
+        const p = homeDeskAssetPos(a);
+        return homeDeskHas(profA && profA.holes, p) || homeDeskHas(profA && profA.thin, p);
+      });
+      const sendExtra = sendPlay.some(function (a) {
+        const p = homeDeskAssetPos(a);
+        return homeDeskHas(profA && profA.surplus, p) || homeDeskHas(profA && profA.deep, p);
+      });
+      if (recvNeed && (sendPick || sendExtra)) return "buy";
+      if (sendExtra && (recvPick || recvPlay.length)) return "sell";
+      if (talk.kind === "1for1") return "swap";
+      if (recvPlay.length && (sendPick || send.length >= 2)) return "buy";
+      if (sendPlay.length && (recvPick || recv.length >= 2)) return "sell";
+      return "swap";
     }
 
     function homeDeskJobLabel(job) {
-      if (job === "fill") return "Fill";
-      if (job === "move") return "Move";
-      return "Even";
+      if (job === "upgrade") return "Upgrade";
+      if (job === "downgrade") return "Downgrade";
+      if (job === "buy") return "Buy";
+      if (job === "sell") return "Sell";
+      return "Swap";
     }
 
     function homeDeskPartnerNote(themName) {
@@ -20884,33 +21075,30 @@ const html = `<!DOCTYPE html>
       return n >= 2 ? ("even tape vs " + themName) : "";
     }
 
+    function homeDeskJobWhy(talk, job) {
+      if (job === "upgrade") return talk.pos ? ("step up at " + talk.pos) : "step up a starter";
+      if (job === "downgrade") return talk.pos ? ("sell high at " + talk.pos) : "sell high a foundation";
+      if (job === "buy") return talk.pos ? ("add " + talk.pos) : "add a piece";
+      if (job === "sell") return talk.pos ? ("move extra " + talk.pos) : "move extra capital";
+      if (talk.stack) return talk.stack;
+      if (talk.cuff) return talk.cuff;
+      return "value-adjacent swap";
+    }
+
     function homeDeskMeta(talk, job, themName) {
       if (!talk) return "Pick the sides";
-      const extra = [];
-      if (job === "fill" && talk.why !== "depth-stud" && talk.pos) extra.push("you need " + talk.pos);
-      if (job === "move" && talk.why !== "depth-stud" && talk.pos) {
-        extra.push(talk.pos === "PICK" ? "you can send a pick" : ("you have extra " + talk.pos));
+      const bits = [];
+      if (talk.pace) bits.push(talk.pace);
+      bits.push(homeDeskJobWhy(talk, job));
+      if (job !== "swap") {
+        if (talk.stack) bits.push(talk.stack);
+        if (talk.cuff) bits.push(talk.cuff);
       }
       const partner = homeDeskPartnerNote(themName);
-      if (partner) extra.push(partner);
-      if (talk.book) extra.push(talk.book);
-      if (talk.pe) extra.push(talk.pe);
-      const tail = extra.length ? (" · " + extra.join(" · ")) : "";
-      if (talk.why === "depth-stud" && talk.pos) {
-        return talk.routeA + " → " + talk.routeB + " · " + talk.pos + " depth for a stud" + tail;
-      }
-      if (talk.why === "complement") {
-        const lane = (job === "move" && talk.pos)
-          ? ("move " + talk.pos)
-          : ("fill " + (talk.pos || "a hole"));
-        return talk.routeA + " → " + talk.routeB + " · " + lane + tail;
-      }
-      if (talk.rel < 0.06) {
-        return (talk.routeA && talk.routeB && talk.routeA === talk.routeB
-          ? "Even-up · same window"
-          : "Even-up · " + (talk.routeA || "Reload") + " / " + (talk.routeB || "Reload")) + tail;
-      }
-      return (talk.routeA || "Reload") + " → " + (talk.routeB || "Reload") + " · a piece to even it" + tail;
+      if (partner) bits.push(partner);
+      if (talk.book) bits.push(talk.book);
+      if (talk.pe) bits.push(talk.pe);
+      return bits.join(" · ");
     }
 
     let homeDeskBagMemo = null;
@@ -20944,74 +21132,66 @@ const html = `<!DOCTYPE html>
     function homeDeskTalk(bagA, bagB, want) {
       const profA = homeDeskProfile(bagA);
       const profB = homeDeskProfile(bagB);
+      const myId = dataDashBagOwnerId(bagA);
+      const themId = dataDashBagOwnerId(bagB);
+      const theirDir = themId ? seatDirOf(themId) : null;
+      const winA = homeDeskWindowOf(myId, profA);
+      const winB = homeDeskWindowOf(themId, profB);
       let best = null;
       const consider = function (legsA, legsB, kind) {
         const sendA = legsA.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
         const sendB = legsB.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
         const mn = Math.min(sendA, sendB);
         if (mn < 1800) return;
-        const rec = calcReceiveTotals(legsA, legsB, dataDashBagOwnerId(bagA), dataDashBagOwnerId(bagB));
-        const rawGap = Math.abs(sendA - sendB);
-        const rawMx = Math.max(sendA, sendB);
-        const rawRel = rawMx ? rawGap / rawMx : 1;
+        const rec = calcReceiveTotals(legsA, legsB, myId, themId);
         if (kind === "1for1" && homeDeskPickKey(legsA[0]) === homeDeskPickKey(legsB[0])) return;
+        if (!homeDeskTheyAccept(theirDir, legsA, bagA)) return;
+        const climb = homeDeskClimbPos(legsA, legsB);
+        const drop = homeDeskClimbPos(legsB, legsA);
         const depthA = homeDeskDepthStud(legsB, legsA, profB, profA);
         const depthB = homeDeskDepthStud(legsA, legsB, profA, profB);
-        const depthPos = depthA || depthB;
-        const complement = homeDeskComplement(profA, profB);
-        let fillPos = "";
-        if (kind === "1for1") {
-          const p = homeDeskAssetPos(legsA[0]);
-          if (p && p !== "PICK" && p === homeDeskAssetPos(legsB[0])) {
-            if ((profA.holes || []).indexOf(p) >= 0 || (profB.holes || []).indexOf(p) >= 0) fillPos = p;
-            else fillPos = p;
+        const cuff = homeDeskCuffFit(legsA, legsB, myId, themId);
+        const stack = homeDeskStackFit(legsA, legsB, bagA, bagB);
+        const complement = homeDeskComplement(winA, winB);
+        const gap = rec.gap;
+        const rel = rec.rel;
+        const loose = !!(climb || drop);
+        if (rel > (loose ? 0.20 : 0.16) && gap > (loose ? 900 : 700)) return;
+        const draft = {
+          legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel,
+          climb: climb, drop: drop, cuff: cuff, stack: stack,
+        };
+        const job = homeDeskJob(draft, profA, profB);
+        if (want && job !== want) return;
+        let jobPos = climb || drop || "";
+        if (!jobPos) {
+          const side = (job === "buy" || job === "upgrade") ? legsB : legsA;
+          for (let i = 0; i < side.length; i++) {
+            const p = homeDeskAssetPos(side[i]);
+            if (p && p !== "PICK") { jobPos = p; break; }
           }
         }
-        if (depthPos) fillPos = depthPos;
-        const why = depthPos ? "depth-stud" : (complement ? "complement" : "even");
-        const job = homeDeskJob({
-          legsA: legsA, legsB: legsB, kind: kind, why: why, pos: fillPos || depthPos || ""
-        }, profA, profB);
-        if (want && job !== want) return;
-        const evenish = job === "even" || kind === "1for1";
-        const gap = evenish ? rec.gap : rawGap;
-        const rel = evenish ? rec.rel : rawRel;
-        if (rel > 0.16 && gap > 700) return;
         let score = gap;
-        if (kind === "2for1" && !depthPos) score += 50;
+        if (kind === "2for1" && !climb && !drop) score += 40;
         const playerN = legsA.concat(legsB).filter(function (x) {
           return x.kind === "player" || (x.pos && x.pos !== "PICK");
         }).length;
         if (!playerN) score += 400;
-        if (complement) score -= 220;
-        if (depthPos) score -= 260;
-        if (fillPos && !depthPos) score -= 80;
+        if (complement) score -= 160;
+        if (climb || drop) score -= 220;
+        if (depthA || depthB) score -= 80;
+        if (cuff) score -= 80;
+        if (stack) score -= 90;
         const book = homeDeskBookNote(legsA.concat(legsB));
         if (book) score -= 30;
         const key = (calcValueNum(legsA[0]) >= calcValueNum(legsB[0])) ? legsA[0] : legsB[0];
-        const themId = dataDashBagOwnerId(bagB);
-        const theirDir = themId ? seatDirOf(themId) : null;
-        let jobPos = fillPos || depthPos || "";
-        if (!jobPos && (job === "fill" || job === "move")) {
-          const side = job === "fill" ? legsB : legsA;
-          for (let i = 0; i < side.length; i++) {
-            const p = homeDeskAssetPos(side[i]);
-            if (!p || p === "PICK") continue;
-            const mineThin = (profA.holes || []).indexOf(p) >= 0 || (profA.thin || []).indexOf(p) >= 0;
-            const mineDeep = (profA.surplus || []).indexOf(p) >= 0 || (profA.deep || []).indexOf(p) >= 0;
-            const themThin = (profB.holes || []).indexOf(p) >= 0 || (profB.thin || []).indexOf(p) >= 0;
-            const themDeep = (profB.surplus || []).indexOf(p) >= 0 || (profB.deep || []).indexOf(p) >= 0;
-            if (job === "fill" && mineThin && themDeep) { jobPos = p; break; }
-            if (job === "move" && mineDeep && themThin) { jobPos = p; break; }
-          }
-        }
-        if (job === "move" && jobPos && !dataDashIntentBuys(theirDir, jobPos)) return;
-        if (job === "fill" && jobPos && !dataDashIntentSells(theirDir, jobPos)) return;
         if (!best || score < best.score) {
           best = {
             legsA: legsA, legsB: legsB, kind: kind, gap: gap, rel: rel, score: score,
-            why: why, pos: jobPos,
-            routeA: profA.route, routeB: profB.route,
+            why: climb ? "upgrade" : (drop ? "downgrade" : (stack || cuff ? "fit" : "swap")),
+            pos: jobPos, climb: climb, drop: drop, cuff: cuff, stack: stack,
+            routeA: winA, routeB: winB,
+            pace: homeDeskPaceLine(myId, profA),
             pe: homeDeskPe(key),
             book: book,
           };
@@ -21041,11 +21221,13 @@ const html = `<!DOCTYPE html>
 
     function homeDeskCards() {
       if (!authSeatId() || !authSession) return [];
+      if (typeof ensureCuffs === "function") ensureCuffs();
       const mine = String(authSeatId());
       const key = mine + "\t" + ((calcBook && calcBook.as_of) || "") + "\t"
         + ((members && members.length) || 0) + "\t"
         + ((seatDirection && seatDirection.as_of) || "") + "\t"
-        + ((peBook && peBook.as_of) || "");
+        + ((peBook && peBook.as_of) || "") + "\t"
+        + ((cuffs && cuffs.as_of) || "");
       if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
       if (seats.length < 2) {
@@ -21064,15 +21246,15 @@ const html = `<!DOCTYPE html>
         const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
         return (hit && hit.name) || uid;
       };
+      const profA = homeDeskProfile(myBag);
+      const wants = homeDeskWants(mine, profA);
       const scored = [];
       for (let i = 0; i < seats.length; i++) {
         const uid = String(seats[i].user_id);
         if (uid === mine) continue;
         const theirBag = bags.get(uid) || [];
         if (!theirBag.length) continue;
-        const profA = homeDeskProfile(myBag);
         const profB = homeDeskProfile(theirBag);
-        const wants = ["fill", "move", "even"];
         for (let w = 0; w < wants.length; w++) {
           const want = wants[w];
           const talk = homeDeskTalk(myBag, theirBag, want);
@@ -21092,21 +21274,22 @@ const html = `<!DOCTYPE html>
       }
       scored.sort(function (x, y) { return x.score - y.score; });
       const usedB = {};
+      const usedJob = {};
       const picks = [];
       const takeJob = function (want) {
         for (let i = 0; i < scored.length; i++) {
           const row = scored[i];
           if (row.job !== want || usedB[row.b]) continue;
           usedB[row.b] = 1;
+          usedJob[row.job] = 1;
           picks.push(row);
           return;
         }
       };
-      takeJob("fill");
-      takeJob("move");
-      takeJob("even");
+      for (let w = 0; w < wants.length && picks.length < 3; w++) takeJob(wants[w]);
       for (let i = 0; i < scored.length && picks.length < 3; i++) {
         if (usedB[scored[i].b]) continue;
+        if (scored[i].job !== "swap") continue;
         usedB[scored[i].b] = 1;
         picks.push(scored[i]);
       }
@@ -21117,6 +21300,7 @@ const html = `<!DOCTYPE html>
 
     function homeDeskHtml() {
       if (!authSeatId() || !authSession) return "";
+      if (typeof ensureCuffs === "function") ensureCuffs();
       const cards = homeDeskCards();
       if (!cards.length) return "";
       return '<section class="home-desk" aria-label="Team Ideas">'
@@ -26582,7 +26766,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v247-team-ideas";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v248-desk-jobs";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26673,13 +26857,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v247-team-ideas")) {
+  || !html.includes("chuckle-shell-v248-desk-jobs")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v247-team-ideas")
+  || !swSrc.includes("chuckle-shell-v248-desk-jobs")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28168,7 +28352,7 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashHuntRows").includes("dataDashIntentBuys(")
     || !fnSrc("dataDashBandSeatScore").includes("dataDashIntentSellsBand(")
     || !fnSrc("dataDashIntentSellsBand").includes("dataDashIntentSells(")
-    || !fnSrc("homeDeskTalk").includes("dataDashIntentBuys(")
+    || !fnSrc("homeDeskTalk").includes("homeDeskTheyAccept(")
     || !inline.includes("function dataDashBestMovePick(")
     || !inline.includes("function dataDashHuntPeekRows(")
     || !inline.includes("function dataDashIntentTakes(")
@@ -29448,7 +29632,7 @@ if (!inline.includes("function calcSideBag(legs, otherLegs)")
   || !fnSrc("calcCompareHtml").includes("Share trade")
   || !html.includes("button.calc-share")
   || !html.includes(".calc-va {")
-  || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB, dataDashBagOwnerId(bagA)")
+  || !fnSrc("homeDeskTalk").includes("calcReceiveTotals(legsA, legsB, myId, themId)")
   || !fnSrc("calcShareCol").includes("Handcuff")
   || !fnSrc("calcShareSpec").includes("cuffA: rec.cuffB")
   || !fnSrc("calcEvenHtml").includes("calcReceiveTotals(nextA, nextB)")
@@ -29475,10 +29659,18 @@ if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-in
 if (!inline.includes("function homeDeskProfile(") || !inline.includes("function homeDeskMeta(")
   || !inline.includes("function homeDeskBookNote(")
   || !inline.includes("function homeDeskJob(")
+  || !inline.includes("function homeDeskWants(")
+  || !inline.includes("function homeDeskClimbPos(")
+  || !inline.includes("function homeDeskCuffFit(")
+  || !inline.includes("function homeDeskStackFit(")
   || !inline.includes("Win-now") || !inline.includes("Reload") || !inline.includes("Rebuild")
-  || !inline.includes("depth for a stud") || !inline.includes("Even-up · same window")
+  || !inline.includes("step up at ") || !inline.includes("value-adjacent swap")
+  || !inline.includes("2-3 years out") || !inline.includes("your QB throws to ")
   || !inline.includes("markets bid up")
   || inline.includes("Talks for your bag")
+  || fnSrc("homeDeskJobLabel").includes("Fill")
+  || fnSrc("homeDeskJobLabel").includes("Even")
+  || fnSrc("homeDeskCards").includes("takeJob(\"fill\")")
   || fnSrc("homeDeskHtml").includes("home-desk-sub")
   || fnSrc("homeDeskHtml").includes("You still hold")
   || fnSrc("homeDeskHtml").includes("homeDeskHeldLine")
@@ -29486,6 +29678,7 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || inline.includes("Four-source today book")
   || inline.includes("Three talks for the league")
   || inline.includes("Even-up starter")
+  || inline.includes("Even-up · same window")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")
   || fnSrc("homeTopDoorsHtml").includes("calcFmt(")
@@ -29494,6 +29687,7 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || !fnSrc("homeDeskHtml").includes("authSession")
   || !fnSrc("homeDeskCards").includes("authSession")
   || !fnSrc("homeDeskCards").includes("homeDeskTalk(myBag, theirBag, want")
+  || !fnSrc("homeDeskCards").includes("homeDeskWants(")
   || fnSrc("homeDeskCards").includes("for (let j = i + 1")) {
   throw new Error("Team Ideas must be first-person, omit when signed out, and stay free of bag numbers");
 }

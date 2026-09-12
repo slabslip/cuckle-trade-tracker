@@ -17,7 +17,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 
 | Surface | Job | Limit |
 | --- | --- | --- |
-| **Home Team Ideas** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
+| **Home Team Ideas** | 1–3 first-person talks (Upgrade / Downgrade / Swap / Buy / Sell) | Do not dump a 10-team matcher onto Home |
 | **Data** | Your board — the labeled doors | One cell of the five-tab pill. Do not grow a sixth. |
 | **Receipts** | “That’s not how I remember it” — Your board (16 kinds, thirteen labeled doors) | Icon + label on the door. Search / filter / list inside. Verdict + number live on the ticket. Not a sixth pill. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md). |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
@@ -235,7 +235,8 @@ call `selectMe` (that is Teams).
 - `stash_young` / picks: prefer Hard rebuild / Rebuild as counterparties.
 - `poach_cuffs`: unchanged (insurance, not tank intent).
 - Why line never writes `they need RB` on a refuse position.
-- Home Move talks: same veto. Still 1–3 cards. Do not change gap / VA / calc numbers.
+- Home Team Ideas: refuse still vetoes. Jobs are Upgrade / Downgrade / Swap / Buy / Sell
+  from the claimed seat’s window. Still 1–3 cards. Do not change gap / VA / calc numbers.
 
 Moves has no Plan schema on screen. `dataDashPlanImpact` is rank-only for the
 per-team 1–3 ideas. It is not a third pane.

@@ -1,7 +1,7 @@
 # Home digest — hybrid Home, calc, barracks
 
 **Status:** Shipped — first tab **Home**, signed-in Alerts (notifications only), signed-in
-**Team Ideas** (one to three first-person talks: Fill / Move / Even), 2-team calculator on
+**Team Ideas** (one to three first-person talks: Upgrade / Downgrade / Swap / Buy / Sell), 2-team calculator on
 the today / `even` book, titles/emblems + barracks.
 
 Canonical product rules: [`docs/UI_SDD.md`](../UI_SDD.md) §1–3c, [`docs/VALUE_SDD.md`](../VALUE_SDD.md) §12,

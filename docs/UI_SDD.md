@@ -194,17 +194,31 @@ plate). Opens `?view=calc`.
 **Team Ideas** — omit if signed out (same rule as Alerts). Heading only — no section
 lede and no still-held firsts caption. Signed-in: one to three talks,
 and **every card includes you**. Never a pair of two other managers. Prefer three different
-counterparties and one of each job: **Fill** (you are thin — receive a startable), **Move**
-(you are deep — send extras / 2-for-1), **Even** (closest even-up). Pair label is
-`You ·` the other seat. Each seat is classified from the **current bag**
-(Win-now / Reload / Rebuild) using stud share, pick capital, and value-weighted age.
-Historic Win-now / Investor tape labels do not set the route and do not move any number.
-Talks prefer complementary routes and 2-for-1 **depth for a stud** when one seat is deep
-at a position and the other is thin there; even-up is the floor. Meta may name a
-flatten-vs-today split (`markets bid up` / `markets cooler on` / `new on the market books`)
-and a buy / fair / sell chip from `pe.json` — signal only. Partner memory (from
-`trade_boards.sides` + `windows.all`, threshold `GRADE_EVEN`) may add `you extract vs X` /
-`they extract vs you` / `even tape vs X` — words only, no numbers. Startable floors: QB 2 / RB 2 /
+counterparties and distinct jobs from **Upgrade / Downgrade / Swap / Buy / Sell**.
+The claimed seat’s **window** (`seat-direction.json` label, else live bag route) picks
+which jobs to hunt: Win-now wants upgrade / buy / swap; Rebuild / Hard rebuild wants
+downgrade / sell / swap; Reload mixes from holes and surplus. Do not backfill three
+Swaps when a real Upgrade or Sell exists. Do not invent a fake job.
+
+- **Upgrade** — send a decent same-position piece plus picks or another player, receive a
+  foundation (stud) at that position.
+- **Downgrade** — sell high on a foundation, receive a lesser same-position piece plus
+  picks or players on top.
+- **Swap** — value-adjacent 1-for-1. Prefer a cuff fit (`cuffs.json`) or a stack (your
+  QB throws to that skill, or their QB throws to yours).
+- **Buy** — add depth or a startable, paying with surplus-position capital or picks.
+- **Sell** — move extra capital (surplus / picks) without a same-position climb or drop.
+
+Pair label is `You ·` the other seat. Card meta starts with the window pace
+(`Win-now · a few moves can finish it` / `Reload · this year or next` /
+`Rebuild · not this year` / `Hard rebuild · 2-3 years out`) then the job why.
+Historic Win-now / Investor tape labels do not move any number. Refuse still vetoes
+(never send a starter into a Hard rebuild sold-down position). Empty `buy[]` on a
+Reload / Win-now does not blank the Home slot. Meta may name a flatten-vs-today split
+(`markets bid up` / `markets cooler on` / `new on the market books`) and a buy / fair /
+sell chip from `pe.json` — signal only. Partner memory (from `trade_boards.sides` +
+`windows.all`, threshold `GRADE_EVEN`) may add `you extract vs X` / `they extract vs you`
+/ `even tape vs X` — words only, no numbers. Startable floors: QB 2 / RB 2 /
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
 calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
 fourth card or “Open the calculator” filler.

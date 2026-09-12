@@ -91,6 +91,13 @@ differently” fight.
 board already leads Breece / Bijan-class first-person). Portal = every pick
 that seat ever owned.
 
+### 3b. My Picks — `my_picks`
+
+Same hop tape as `pick_print`, origin-only. Truman’s board lists
+`pick:2023:1:7` (Bijan) and `pick:2022:1:7` (Garrett Wilson) because those
+slots started on TrumanCooper, even after a sale. A pick Truman later
+owned that started on another seat stays off this door.
+
 ### 4. Who actually won the year — `season_place` / `past_champions`
 
 | Season | Champion | How | Final | Thesis (tape) |
@@ -229,6 +236,7 @@ crossover.
 |------|--------------------------------|
 | `trade_mark` | Hilton fade or Breece grow (`700010112802177024` / `760676752560521216`) |
 | `pick_print` | This seat’s sold-then-used 1st (Breece / Bijan class) |
+| `my_picks` | Origin slots only (Truman 2023 1st → Bijan) |
 | `season_place` | Last title (SF 2025) or this seat’s place |
 | `lopsided` | Darnold t0 +10237 (`479358775203983360`) |
 | `forever` | Josh Allen · ARae · 7.1y |

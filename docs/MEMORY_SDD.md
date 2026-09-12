@@ -49,6 +49,7 @@ the same paint. Do not invent a 17th kind for each argument.
 |----|----------|
 | `trade_mark` | Trade NOW |
 | `pick_print` | What my pick became |
+| `my_picks` | My Picks |
 | `season_place` / `season_title` | How I finished |
 
 **Who (a list behind the door)**
@@ -81,7 +82,7 @@ Direction (Hard rebuild) stays a **label on League rows**, not a “best
 rebuilder” trophy.
 
 The 27-id Data encyclopedia under **More** still exists for desks. It is not
-Your board. Your board is twelve labeled doors from these 16 kinds.
+Your board. Your board is thirteen labeled doors from these 16 kinds.
 The example lives **inside** the portal list, not on the tile face.
 Which fights to rank first is in [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)
 from this league’s hop tape — not from Sleeper chat.
@@ -135,24 +136,25 @@ portal after you tap. No All / Memory / Who / Research chips on the board.
 Each tile is a **door into a scenario**, not a finished receipt. Tap = that
 scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 
-**Default twelve doors** (first visit, and after the v2 board bump):
+**Default thirteen doors** (first visit; v2 boards that still have room gain My Picks after What my pick became):
 
 1. Trade THEN (`lopsided`)
 2. Trade NOW (`trade_mark`)
 3. What my pick became (`pick_print`) — every pick this seat ever owned
-4. Who won the year (`past_champions`)
-5. How I finished (`season_place`)
-6. Me vs them (`vs_you`)
-7. Who has firsts (`firsts_held`)
-8. Never left (`forever`)
-9. Passed around (`passed_around`)
-10. Draft hits (`seat_draft`)
-11. No backup (`uninsured`)
-12. Biggest names (`book_top`)
+4. My Picks (`my_picks`) — picks that started on this seat, then the journey after a sale
+5. Who won the year (`past_champions`)
+6. How I finished (`season_place`)
+7. Me vs them (`vs_you`)
+8. Who has firsts (`firsts_held`)
+9. Never left (`forever`)
+10. Passed around (`passed_around`)
+11. Draft hits (`seat_draft`)
+12. No backup (`uninsured`)
+13. Biggest names (`book_top`)
 
 **Hold, then drag** is how they reorder. Hint on the board:
 `Hold a tile, then drag to move it.` **Edit** still adds or removes a door
-from the catalog. Unsigned / outsider: default twelve. A shared link opens
+from the catalog. Unsigned / outsider: default thirteen. A shared link opens
 one public ticket, not someone’s private layout.
 
 **Door face (every tile)**
@@ -178,6 +180,14 @@ No claimed seat: `Claim your seat, or search a name, to see every pick they
 owned.` Search a canonical seat (`Truman`, `ARae`) to open that seat’s list.
 Search a year or player to filter. Seat names come from `members.json`, not
 live Sleeper `team_name`.
+
+**My Picks portal**
+
+Picks that started on this seat. Follow them after a sale. Origin only
+(`pickOriginName` matches the claimed seat). Grouped by season, then
+USED / SOLD / HELD on each row. A sold origin pick stays on the list
+and follows what it became. Tap → the same L2 hop tape. No claimed seat:
+`Claim your seat to see the picks that started here.`
 
 **Season / finish portal**
 
@@ -339,9 +349,10 @@ No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
 Hold a tile, then drag to reorder. Edit still hides or adds from the catalog.
 Persist per seat per league
 (`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
-default twelve, no edit. Shared link still opens one ticket, not the
+default thirteen, no edit. Shared link still opens one ticket, not the
 editor’s private layout. The v1 key is retired so old example-chip boards
-reload as the twelve doors.
+reload as the thirteen doors. Saved v2 boards that still have a free slot
+gain My Picks after What my pick became.
 
 ---
 
@@ -360,7 +371,8 @@ than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md)
 A member can: find a door by icon + label → tap **What my pick became** →
 search / filter → see every pick they ever owned → tap one →
 “You sold this 1st. They used it. It is X.” → share icon on the ticket →
-reopen on the same layer. Tap **Trade NOW**, filter Grew / Faded, open
+reopen on the same layer. Tap **My Picks** → see only origin picks that
+started on this seat → follow a sold pick to what it became. Tap **Trade NOW**, filter Grew / Faded, open
 a deal, see two questions first (day they traded / from then to now).
 A nerd can Edit the board, reorder, reload on another phone, same layout.
 

@@ -32,8 +32,11 @@ const need = [
   "function receiptPickEverOwned(",
   "function receiptPickBecameLine(",
   "What my pick became",
+  "My Picks",
   "Trade NOW",
   "Trade THEN",
+  "function receiptOriginPicksForSeat(",
+  "Picks that started",
   "function receiptDoorIco(",
   "function receiptDoorFilterHtml(",
   "data-receipt-door-filter",
@@ -53,8 +56,8 @@ if (missing.length) {
 }
 
 if (!page.includes('DATA_DOORS = [')
-  || !page.includes('"lopsided", "trade_mark", "pick_print", "past_champions"')) {
-  throw new Error("default board must be the 12 door tiles");
+  || !page.includes('"lopsided", "trade_mark", "pick_print", "my_picks", "past_champions"')) {
+  throw new Error("default board must be the 13 door tiles");
 }
 if (!page.includes('class="door"') || page.includes("The number is one example")) {
   throw new Error("door tiles must be icon + label only");
@@ -75,7 +78,7 @@ if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/M
 }
 
 const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
-for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned"]) {
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned", "My Picks", "Picks that started on this seat"]) {
   if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
 }
 

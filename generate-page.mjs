@@ -4081,7 +4081,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912115600";
+    const DATA_V = "door20260912122000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4130,9 +4130,9 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 12;
+    const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
-      "lopsided", "trade_mark", "pick_print", "past_champions",
+      "lopsided", "trade_mark", "pick_print", "my_picks", "past_champions",
       "season_place", "vs_you", "firsts_held", "forever",
       "passed_around", "seat_draft", "uninsured", "book_top",
     ];
@@ -4145,7 +4145,7 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "lopsided", "trade_mark", "pick_print", "past_champions",
+      "lopsided", "trade_mark", "pick_print", "my_picks", "past_champions",
       "season_place", "vs_you", "firsts_held", "forever",
       "passed_around", "seat_draft", "uninsured", "book_top",
     ];
@@ -4184,6 +4184,7 @@ const html = `<!DOCTYPE html>
       { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Free-agent cuffs, your starters first." },
       { id: "trade_mark", lab: "Trade NOW", desk: "lists", group: "memory", size: "full", why: "How a deal looks from then to now." },
       { id: "pick_print", lab: "What my pick became", desk: "lists", group: "memory", size: "full", why: "Every pick this seat ever owned, and what it became." },
+      { id: "my_picks", lab: "My Picks", desk: "lists", group: "memory", size: "full", why: "Picks that started on this seat, and the journey after a sale." },
       { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
@@ -4694,6 +4695,51 @@ const html = `<!DOCTYPE html>
       return out;
     }
 
+    function receiptOriginPicksForSeat(seat) {
+      if (!picks || !seat) return [];
+      const keys = Object.keys(picks);
+      const out = [];
+      for (let i = 0; i < keys.length; i++) {
+        const p = picks[keys[i]];
+        if (!p || typeof pickOriginName !== "function" || pickOriginName(p) !== seat) continue;
+        out.push({ key: keys[i], p: p });
+      }
+      out.sort(function (a, b) {
+        const ya = Number(receiptPickYear(a.p, a.key) || 0);
+        const yb = Number(receiptPickYear(b.p, b.key) || 0);
+        if (yb !== ya) return yb - ya;
+        const pa = receiptPickPrint(a.p, seat);
+        const pb = receiptPickPrint(b.p, seat);
+        const ra = pa === "USED" ? 0 : pa === "SOLD" ? 1 : 2;
+        const rb = pb === "USED" ? 0 : pb === "SOLD" ? 1 : 2;
+        if (ra !== rb) return ra - rb;
+        const pa2 = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
+        const pb2 = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
+        return ((pa2 && pa2.round) || 9) - ((pb2 && pb2.round) || 9);
+      });
+      return out;
+    }
+
+    function receiptPickListRowHtml(row, seat, you) {
+      const p = row.p;
+      const print = receiptPickPrint(p, seat);
+      const line = receiptPickBecameLine(p, row.key, seat, you);
+      const lab = (p && p.label) || row.key;
+      return '<button type="button" class="row" data-receipt-pick="' + esc(row.key) + '">'
+        + '<div class="row-top"><div><div class="names">' + esc(lab) + "</div>"
+        + '<div class="date">' + esc(line) + "</div></div>"
+        + '<div class="margin">' + esc(print) + "</div></div></button>";
+    }
+
+    function receiptPickHopSearchBits(p, key) {
+      const hops = (p && p.hops) || [];
+      const bits = [key, p && p.became, p && p.label, p && p.used_by, p && p.still_pick ? "held" : ""];
+      for (let i = 0; i < hops.length; i++) {
+        bits.push(hops[i].from, hops[i].to, hops[i].exit);
+      }
+      return bits;
+    }
+
     function receiptPickPortalSeat(q) {
       const claimed = typeof authSeatCanonName === "function" ? authSeatCanonName() : null;
       const raw = String(q || "").trim();
@@ -5121,7 +5167,8 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptFilterGroup(id) {
-      if (id === "trade_mark" || id === "pick_print" || id === "season_place" || id === "season_title") return "memory";
+      if (id === "trade_mark" || id === "pick_print" || id === "my_picks"
+        || id === "season_place" || id === "season_title") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
       return "who";
@@ -5142,6 +5189,7 @@ const html = `<!DOCTYPE html>
     function receiptPortalSearchHint(id) {
       if (id === "trade_mark" || id === "lopsided" || id === "widest_clock") return "A team, a trade, a year";
       if (id === "pick_print") return "A year, a player, a seat";
+      if (id === "my_picks") return "A year, a player";
       if (id === "forever" || id === "passed_around" || id === "least_traded") {
         return "A player, a pick, a seat";
       }
@@ -5173,6 +5221,7 @@ const html = `<!DOCTYPE html>
         trade_mark: '<polyline points="4 15 9 9 14 13 20 6"/><circle cx="20" cy="6" r="1.4"/>',
         lopsided: '<path d="M4 19h16M6 19V11h4v8M14 19V6h4v13"/>',
         pick_print: '<path d="M7 21V4h9l-2.2 4L16 12H7"/>',
+        my_picks: '<path d="M6 20V5h8l3 3v12H6z"/><path d="M9 10h6M9 14h4M9 18h5"/>',
         past_champions: '<path d="M4 16l3.2-8 4.8 4.5L16.8 8 20 16H4z"/><path d="M5 19h14"/>',
         season_place: '<path d="M4 14h5v6H4zM9.5 8h5v12h-5zM15 12h5v8h-5z"/>',
         vs_you: '<circle cx="8" cy="8" r="2.4"/><circle cx="16" cy="8" r="2.4"/><path d="M3.8 18c.8-3 2.8-4.2 4.2-4.2S12 15 12.8 18M11.2 18c.8-3 2.8-4.2 4.2-4.2S20 15 20.2 18"/>',
@@ -5590,7 +5639,9 @@ const html = `<!DOCTYPE html>
           + "</div>";
       }
       let chips = [];
-      if (id === "pick_print") chips = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
+      if (id === "pick_print" || id === "my_picks") {
+        chips = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
+      }
       else if (id === "firsts_held") {
         chips = [["all", "All"]];
         const years = (typeof pickSeasonsAvailable === "function") ? pickSeasonsAvailable() : [];
@@ -5709,14 +5760,59 @@ const html = `<!DOCTYPE html>
           if (!list.length) continue;
           html += '<div class="data-sec-h">' + order[g] + "</div>";
           html += list.map(function (row) {
-            const p = row.p;
-            const print = receiptPickPrint(p, seat);
-            const line = receiptPickBecameLine(p, row.key, seat, you);
-            const lab = p.label || row.key;
-            return '<button type="button" class="row" data-receipt-pick="' + esc(row.key) + '">'
-              + '<div class="row-top"><div><div class="names">' + esc(lab) + "</div>"
-              + '<div class="date">' + esc(line) + "</div></div>"
-              + '<div class="margin">' + esc(print) + "</div></div></button>";
+            return receiptPickListRowHtml(row, seat, you);
+          }).join("");
+        }
+        return html;
+      }
+      if (id === "my_picks") {
+        if (!picks && typeof ensurePicks === "function") ensurePicks();
+        if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
+        const seat = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
+        const you = !!seat;
+        let rows = seat ? receiptOriginPicksForSeat(seat) : [];
+        if (seat && needle) {
+          rows = rows.filter(function (row) {
+            return hit(receiptPickHopSearchBits(row.p, row.key)
+              .concat([receiptPickYear(row.p, row.key), receiptPickPrint(row.p, seat)]));
+          });
+        }
+        if (receiptDoorFilter && receiptDoorFilter !== "all") {
+          const want = String(receiptDoorFilter).toUpperCase();
+          rows = rows.filter(function (row) {
+            return receiptPickPrint(row.p, seat) === want;
+          });
+        }
+        if (!rows.length) {
+          if (!seat) {
+            return '<p class="caption">Claim your seat to see the picks that started here.</p>';
+          }
+          return '<p class="caption">Nothing on this tape matches.</p>';
+        }
+        let usedN = 0, soldN = 0, heldN = 0;
+        const groups = {};
+        const years = [];
+        for (let i = 0; i < rows.length; i++) {
+          const print = receiptPickPrint(rows[i].p, seat);
+          if (print === "USED") usedN += 1;
+          else if (print === "SOLD") soldN += 1;
+          else heldN += 1;
+          const year = receiptPickYear(rows[i].p, rows[i].key) || "—";
+          if (!groups[year]) {
+            groups[year] = [];
+            years.push(year);
+          }
+          groups[year].push(rows[i]);
+        }
+        const head = rows.length + " origin pick" + (rows.length === 1 ? "" : "s")
+          + " · " + usedN + " used · " + soldN + " sold · " + heldN + " held";
+        let html = '<p class="caption">' + esc(head) + "</p>";
+        for (let g = 0; g < years.length; g++) {
+          const list = groups[years[g]];
+          if (!list.length) continue;
+          html += '<div class="data-sec-h">' + esc(years[g]) + "</div>";
+          html += list.map(function (row) {
+            return receiptPickListRowHtml(row, seat, you);
           }).join("");
         }
         return html;
@@ -5866,7 +5962,9 @@ const html = `<!DOCTYPE html>
       const spec = dataDashById(id);
       const head = (spec && spec.lab) || "Portal";
       const rows = receiptPortalRows(id, receiptQ);
-      const pickSeat = id === "pick_print" ? receiptPickPortalSeat(receiptQ) : "";
+      const pickSeat = id === "pick_print"
+        ? receiptPickPortalSeat(receiptQ)
+        : (id === "my_picks" && typeof authSeatCanonName === "function" ? authSeatCanonName() : "");
       let caption = "Search and filter this list. Tap a row for the receipt.";
       if (id === "trade_mark") caption = "Search a player you have owned. See how that deal looks from then to now.";
       else if (id === "lopsided") caption = "Search a player you have owned. See how that deal looked the day they accepted.";
@@ -5874,6 +5972,10 @@ const html = `<!DOCTYPE html>
         caption = pickSeat
           ? ("Every pick " + pickSeat + " ever owned. Tap one for the hop tape.")
           : "Claim your seat, or search a name, to see every pick they owned.";
+      } else if (id === "my_picks") {
+        caption = pickSeat
+          ? ("Picks that started on " + pickSeat + ". Follow them after a sale.")
+          : "Claim your seat to see the picks that started here.";
       } else if (id === "past_champions") caption = "Every year someone won. Search a year or a seat.";
       else if (id === "season_place") caption = "Where each seat finished last season.";
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
@@ -8401,6 +8503,12 @@ const html = `<!DOCTYPE html>
         out.push(id);
         if (out.length >= DATA_DASH_MAX) break;
       }
+      if (out.indexOf("my_picks") < 0 && out.length < DATA_DASH_MAX && dataDashById("my_picks")) {
+        const at = out.indexOf("pick_print");
+        if (at >= 0) out.splice(at + 1, 0, "my_picks");
+        else out.splice(Math.min(3, out.length), 0, "my_picks");
+        if (out.length > DATA_DASH_MAX) out.length = DATA_DASH_MAX;
+      }
       if (out.length < DATA_DASH_MIN) {
         for (let j = 0; j < DATA_DASH_DEFAULT.length; j++) {
           const id = DATA_DASH_DEFAULT[j];
@@ -9937,7 +10045,8 @@ const html = `<!DOCTYPE html>
         dataDashEdit = false;
         dataDashLibOpen = false;
         dataRoom = "overview";
-        if ((receiptWhoList === "pick_print" || receiptWhoList === "firsts_held")
+        if ((receiptWhoList === "pick_print" || receiptWhoList === "my_picks"
+          || receiptWhoList === "firsts_held")
           && typeof ensurePicks === "function") ensurePicks();
         if (receiptWhoList === "uninsured" && typeof ensureCuffs === "function") ensureCuffs();
         const mine = typeof authSeatId === "function" ? authSeatId() : "";
@@ -25675,7 +25784,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v231-trade-player";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v232-my-picks";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25766,13 +25875,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v231-trade-player")) {
+  || !html.includes("chuckle-shell-v232-my-picks")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v231-trade-player")
+  || !swSrc.includes("chuckle-shell-v232-my-picks")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -27092,8 +27201,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 31 || uniq.size !== 31) {
-    throw new Error("DATA_REPORTS must hold exactly 31 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 32 || uniq.size !== 32) {
+    throw new Error("DATA_REPORTS must hold exactly 32 unique reports, found " + reportIds.length);
   }
   const needIds = ["fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -27107,16 +27216,16 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 12 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 13 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "lopsided" || defIds[1] !== "trade_mark"
-    || defIds[2] !== "pick_print") {
-    throw new Error("DATA_DASH_DEFAULT must be the 12 door tiles");
+    || defIds[2] !== "pick_print" || defIds[3] !== "my_picks") {
+    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 12 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 12 default door tiles");
+  if (doorIds.length !== 13 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 13 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
@@ -27169,11 +27278,14 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptTermCurveHtml(")
     || !inline.includes("params.get(\"tx\")")
     || !inline.includes('lab: "What my pick became"')
+    || !inline.includes('lab: "My Picks"')
     || !inline.includes('lab: "Trade NOW"')
     || !inline.includes('lab: "Trade THEN"')
     || !inline.includes("function receiptOwnedPicksForSeat(")
+    || !inline.includes("function receiptOriginPicksForSeat(")
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")
+    || !inline.includes("Picks that started")
     || !inline.includes("function receiptDoorIco(")
     || !inline.includes("function receiptDoorFilterHtml(")
     || !inline.includes("function receiptIsDoor(")

@@ -45,6 +45,7 @@ const need = [
   "Hit rate ",
   "function receiptDoorIco(",
   "function receiptDoorFilterHtml(",
+  "function receiptLookSelect(",
   "data-receipt-door-filter",
   "function receiptTradePlayerNames(",
   "function receiptTradeYearHtml(",
@@ -81,6 +82,9 @@ if (!page.includes('class="door') || page.includes("The number is one example"))
 
 if (page.includes("exactly like")) {
   throw new Error("generated JS must not contain exactly like");
+}
+if (page.includes('class="receipt-filter"') || page.includes('class="receipt-filters"')) {
+  throw new Error("filter menus must be dropdowns, not pill chips");
 }
 if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
   throw new Error("Trade THEN/NOW player list must not include pick-became names");

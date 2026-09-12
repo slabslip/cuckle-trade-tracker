@@ -12,6 +12,10 @@ Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
 Phone behavior (Apple HIG adopted as Cuckle law) → [`HIG_SDD.md`](./HIG_SDD.md).
 Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 
+**Filter menus (HIG-23):** a labeled `<select>` (`.receipt-look`). Never a row of
+bubble / pill / chip buttons. One constructor: `receiptLookSelect`. Action chips
+(Back, Edit, Save) and the nav pill are not filters.
+
 ---
 
 ## 1. Two rooms

@@ -137,7 +137,8 @@ no who-line, no share icon on the door. Icons exist so a thumb can find
 the room at a glance.
 
 Search and filter do **not** live on the board — they live inside the
-portal after you tap. No All / Memory / Who / Research chips on the board.
+portal after you tap. Every filter is a labeled dropdown (`receiptLookSelect`).
+No bubble / pill / chip rows. No All / Memory / Who / Research chips on the board.
 
 Each tile is a **door into a scenario**, not a finished receipt. Tap = that
 scenario’s list. Search there for a specific team, trade, pick, year, or seat.
@@ -175,8 +176,8 @@ one public ticket, not someone’s private layout.
 
 Tap the tile. First screen is **your partners**, most deals first, count
 on the row. Tap a partner. That pair’s tickets, newest first. Filters on
-the deal list: **League year** plus All / Smash / Robbery / Grew / Faded /
-Even. Smash and Robbery score the accept-day mark (`t0` — **Day they
+the deal list: **League year** and **Look** dropdowns (Smash / Robbery /
+Grew / Faded / Even). Smash and Robbery score the accept-day mark (`t0` — **Day they
 traded**). Grew, Faded, and Even score how it aged (`all − t0` —
 **From then to now**). Tap a deal → L1 ticket. No claimed seat:
 `Claim your seat to see your partners.`
@@ -185,11 +186,11 @@ traded**). Grew, Faded, and Even score how it aged (`all − t0` —
 
 Same two steps. First screen is **every pairing** (`NameA vs NameB`),
 most deals first, searchable by either seat. Tap a pairing → those
-tickets, newest first, same year + look chips.
+tickets, newest first, same year + look dropdowns.
 
 **My Draft Picks**
 
-Three chips: **Used / Traded away / Traded in** (default Used).
+**Draft bucket** dropdown: Used / Traded away / Traded in (default Used).
 
 - **Used** — this seat drafted a player on that pick (`became` and
   `used_by` match).
@@ -220,13 +221,13 @@ absolute number.
   the day they got them (realized). No inbound trade: **Sold vs now**
   (today minus the sale). Drafted then sold uses the slot as cost.
 - **Left** — they received the player, then the player left without a
-  sale. Number is today minus acquire. The Sold chip includes Left.
+  sale. Number is today minus acquire. The Sold menu includes Left.
 
-Filters (this is the set that earns its height on a 100-name list):
+Filters are **dropdowns**, never pill chips (HIG-23):
 
-1. **Held / Sold / All** — unrealized vs realized. The question.
-2. **Ahead / Behind / All** — who printed and who died.
-3. **QB / RB / WR / TE** — position. Search covers a name.
+1. **Held or sold** — unrealized vs realized. The question.
+2. **Ahead or behind** — who printed and who died.
+3. **Position** — QB / RB / WR / TE. Search covers a name.
 4. **League year** — year of the last move.
 5. Sort is locked to **biggest |number| first**. Newest-first hides the
    fight on a seven-year tape.

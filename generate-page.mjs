@@ -3426,13 +3426,7 @@ const html = `<!DOCTYPE html>
       color: #0b0b0d; background: #e0b44c; border: 0; border-radius: 10px;
       min-height: 44px; width: 100%; margin: 10px 0 0; cursor: pointer;
     }
-    .receipt-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
-    button.receipt-filter {
-      appearance: none; font: inherit; font-size: 0.78rem; font-weight: 700;
-      color: var(--muted); background: #141418; border: 1px solid var(--line);
-      border-radius: 999px; min-height: 32px; padding: 0 10px; cursor: pointer;
-    }
-    button.receipt-filter.on { color: #e0b44c; border-color: #6b5a2e; background: #221e14; }
+    /* Filter menus are labeled dropdowns (.receipt-look). Never pill chips. HIG-23. */
     .receipt-portal-list .receipt-chip { aspect-ratio: auto; min-height: 88px; }
     .receipt-portal-list .receipt-chip-main { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; }
     .receipt-portal-list .receipt-verdict { -webkit-line-clamp: 2; }
@@ -4093,7 +4087,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pl20260912150000";
+    const DATA_V = "filter20260912170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5576,16 +5570,22 @@ const html = `<!DOCTYPE html>
       return "who";
     }
 
-    function receiptBoardFilterHtml() {
-      const opts = [["all", "All"], ["memory", "Memory"], ["who", "Who"], ["research", "Research"]];
-      return '<div class="receipt-filters" role="tablist" aria-label="Filter portals">'
-        + opts.map(function (o) {
-          const on = receiptFilter === o[0];
-          return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
-            + ' data-receipt-filter="' + o[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
-            + o[1] + "</button>";
+    function receiptLookSelect(lab, attr, opts, cur) {
+      const want = (cur == null || cur === "") ? "all" : String(cur);
+      return '<label class="receipt-look"><span>' + esc(lab) + "</span>"
+        + "<select " + attr + '="1" aria-label="' + esc(lab) + '">'
+        + (opts || []).map(function (o) {
+          const val = String(o[0]);
+          return '<option value="' + esc(val) + '"' + (want === val ? " selected" : "") + ">"
+            + esc(o[1]) + "</option>";
         }).join("")
-        + "</div>";
+        + "</select></label>";
+    }
+
+    function receiptBoardFilterHtml() {
+      return receiptLookSelect("Portals", "data-receipt-filter",
+        [["all", "All"], ["memory", "Memory"], ["who", "Who"], ["research", "Research"]],
+        receiptFilter);
     }
 
     function receiptPortalSearchHint(id) {
@@ -6083,76 +6083,42 @@ const html = `<!DOCTYPE html>
         ? [["all", "All deals"], ["smash", "Smash"], ["robbery", "Robbery"]]
         : [["all", "All deals"], ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"]];
       const lab = id === "lopsided" ? "On the day" : "Since then";
-      return '<label class="receipt-look"><span>' + lab + "</span>"
-        + '<select data-receipt-door-look="1">'
-        + opts.map(function (o) {
-          return '<option value="' + o[0] + '"' + (receiptDoorFilter === o[0] ? " selected" : "") + ">"
-            + o[1] + "</option>";
-        }).join("")
-        + "</select></label>";
+      return receiptLookSelect(lab, "data-receipt-door-look", opts, receiptDoorFilter);
     }
 
     function receiptTradeYearHtml() {
       const years = receiptTradeYears();
       if (!years.length) return "";
-      return '<label class="receipt-look"><span>League year</span>'
-        + '<select data-receipt-door-year="1" aria-label="Filter by league year">'
-        + '<option value="all"' + (!receiptDoorYear || receiptDoorYear === "all" ? " selected" : "") + ">All years</option>"
-        + years.map(function (y) {
-          return '<option value="' + esc(y) + '"' + (receiptDoorYear === y ? " selected" : "") + ">"
-            + esc(y) + "</option>";
-        }).join("")
-        + "</select></label>";
+      const opts = [["all", "All years"]].concat(years.map(function (y) { return [y, y]; }));
+      return receiptLookSelect("League year", "data-receipt-door-year", opts, receiptDoorYear || "all");
     }
 
     function receiptDoorFilterHtml(id) {
       if (id === "profit_loss") {
-        const state = [["all", "All"], ["held", "Held"], ["sold", "Sold"]];
-        const sign = [["all", "All"], ["ahead", "Ahead"], ["behind", "Behind"]];
-        const pos = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
-        const chips = function (opts, attr, cur, lab) {
-          return '<div class="receipt-filters" role="tablist" aria-label="' + lab + '">'
-            + opts.map(function (c) {
-              const on = cur === c[0];
-              return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
-                + " " + attr + '="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
-                + c[1] + "</button>";
-            }).join("")
-            + "</div>";
-        };
         return '<div class="receipt-trade-menus">'
           + receiptTradeYearHtml()
-          + chips(state, "data-receipt-door-filter", receiptDoorFilter, "Held or sold")
-          + chips(sign, "data-receipt-pl-sign", receiptPlSign, "Ahead or behind")
-          + chips(pos, "data-receipt-pl-pos", receiptPlPos, "Position")
+          + receiptLookSelect("Held or sold", "data-receipt-door-filter",
+            [["all", "All"], ["held", "Held"], ["sold", "Sold"]], receiptDoorFilter)
+          + receiptLookSelect("Ahead or behind", "data-receipt-pl-sign",
+            [["all", "All"], ["ahead", "Ahead"], ["behind", "Behind"]], receiptPlSign)
+          + receiptLookSelect("Position", "data-receipt-pl-pos",
+            [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]], receiptPlPos)
           + "</div>";
       }
       if (id === "my_trades" || id === "league_trades") {
         if (!receiptHistPair) return "";
-        const opts = [
-          ["all", "All"], ["smash", "Smash"], ["robbery", "Robbery"],
-          ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"],
-        ];
-        const chips = '<div class="receipt-filters" role="tablist" aria-label="Filter these deals">'
-          + opts.map(function (c) {
-            const on = receiptDoorFilter === c[0];
-            return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
-              + ' data-receipt-door-filter="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
-              + c[1] + "</button>";
-          }).join("")
+        return '<div class="receipt-trade-menus">'
+          + receiptTradeYearHtml()
+          + receiptLookSelect("Look", "data-receipt-door-filter", [
+            ["all", "All"], ["smash", "Smash"], ["robbery", "Robbery"],
+            ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"],
+          ], receiptDoorFilter)
           + "</div>";
-        return '<div class="receipt-trade-menus">' + receiptTradeYearHtml() + chips + "</div>";
       }
       if (id === "my_draft" || (id === "league_draft" && receiptDraftSeat)) {
-        const chips = [["used", "Used"], ["away", "Traded away"], ["in", "Traded in"]];
-        return '<div class="receipt-filters" role="tablist" aria-label="Draft bucket">'
-          + chips.map(function (c) {
-            const on = receiptDoorFilter === c[0];
-            return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
-              + ' data-receipt-door-filter="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
-              + c[1] + "</button>";
-          }).join("")
-          + "</div>";
+        return receiptLookSelect("Draft bucket", "data-receipt-door-filter",
+          [["used", "Used"], ["away", "Traded away"], ["in", "Traded in"]],
+          receiptDoorFilter);
       }
       if (id === "trade_mark" || id === "lopsided") {
         return '<div class="receipt-trade-menus">'
@@ -6161,27 +6127,23 @@ const html = `<!DOCTYPE html>
           + receiptTradeLookHtml(id)
           + "</div>";
       }
-      let chips = [];
+      let opts = [];
+      let lab = "Filter";
       if (id === "pick_print" || id === "my_picks") {
-        chips = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
-      }
-      else if (id === "firsts_held") {
-        chips = [["all", "All"]];
+        lab = "State";
+        opts = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
+      } else if (id === "firsts_held") {
+        lab = "Season";
+        opts = [["all", "All"]];
         const years = (typeof pickSeasonsAvailable === "function") ? pickSeasonsAvailable() : [];
-        for (let i = 0; i < years.length; i++) chips.push(["y" + years[i], years[i]]);
+        for (let i = 0; i < years.length; i++) opts.push(["y" + years[i], years[i]]);
       } else if (id === "uninsured" || id === "book_top") {
-        chips = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
-        if (id === "book_top") chips.push(["pick", "Picks"]);
+        lab = "Position";
+        opts = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
+        if (id === "book_top") opts.push(["pick", "Picks"]);
       }
-      if (chips.length <= 1) return "";
-      return '<div class="receipt-filters" role="tablist" aria-label="Filter this list">'
-        + chips.map(function (c) {
-          const on = receiptDoorFilter === c[0];
-          return '<button type="button" class="receipt-filter' + (on ? " on" : "") + '"'
-            + ' data-receipt-door-filter="' + c[0] + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">'
-            + c[1] + "</button>";
-        }).join("")
-        + "</div>";
+      if (opts.length <= 1) return "";
+      return receiptLookSelect(lab, "data-receipt-door-filter", opts, receiptDoorFilter);
     }
 
     function receiptPortalRows(id, q) {
@@ -24690,12 +24652,6 @@ const html = `<!DOCTYPE html>
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
-      const receiptFilterBtn = e.target.closest("[data-receipt-filter]");
-      if (receiptFilterBtn) {
-        receiptFilter = receiptFilterBtn.getAttribute("data-receipt-filter") || "all";
-        render();
-        return;
-      }
       const receiptShareBtn = e.target.closest("[data-receipt-share]");
       if (receiptShareBtn) {
         e.preventDefault();
@@ -24816,24 +24772,6 @@ const html = `<!DOCTYPE html>
       if (receiptVsBtn) {
         receiptVsWho = receiptVsBtn.getAttribute("data-receipt-vs") || "";
         receiptQ = "";
-        render();
-        return;
-      }
-      const receiptDoorFilterBtn = e.target.closest("[data-receipt-door-filter]");
-      if (receiptDoorFilterBtn) {
-        receiptDoorFilter = receiptDoorFilterBtn.getAttribute("data-receipt-door-filter") || "all";
-        render();
-        return;
-      }
-      const plSignBtn = e.target.closest("[data-receipt-pl-sign]");
-      if (plSignBtn) {
-        receiptPlSign = plSignBtn.getAttribute("data-receipt-pl-sign") || "all";
-        render();
-        return;
-      }
-      const plPosBtn = e.target.closest("[data-receipt-pl-pos]");
-      if (plPosBtn) {
-        receiptPlPos = plPosBtn.getAttribute("data-receipt-pl-pos") || "all";
         render();
         return;
       }
@@ -26296,6 +26234,30 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const doorFilterSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-filter]");
+      if (doorFilterSel) {
+        receiptDoorFilter = doorFilterSel.value || "all";
+        render();
+        return;
+      }
+      const plSignSel = e.target && e.target.closest && e.target.closest("[data-receipt-pl-sign]");
+      if (plSignSel) {
+        receiptPlSign = plSignSel.value || "all";
+        render();
+        return;
+      }
+      const plPosSel = e.target && e.target.closest && e.target.closest("[data-receipt-pl-pos]");
+      if (plPosSel) {
+        receiptPlPos = plPosSel.value || "all";
+        render();
+        return;
+      }
+      const portalFilterSel = e.target && e.target.closest && e.target.closest("[data-receipt-filter]");
+      if (portalFilterSel) {
+        receiptFilter = portalFilterSel.value || "all";
+        render();
+        return;
+      }
       const yearSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-year]");
       if (yearSel) {
         receiptDoorYear = yearSel.value || "all";
@@ -26599,7 +26561,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v240-profit-loss";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v241-filter-dd";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26690,13 +26652,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v240-profit-loss")) {
+  || !html.includes("chuckle-shell-v241-filter-dd")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v240-profit-loss")
+  || !swSrc.includes("chuckle-shell-v241-filter-dd")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28109,8 +28071,11 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("Hit rate ")
     || !inline.includes("function receiptDoorIco(")
     || !inline.includes("function receiptDoorFilterHtml(")
+    || !inline.includes("function receiptLookSelect(")
     || !inline.includes("function receiptIsDoor(")
     || !inline.includes("data-receipt-door-filter")
+    || inline.includes('class="receipt-filter"')
+    || inline.includes('class="receipt-filters"')
     || !inline.includes("function receiptTradePlayerNames(")
     || !inline.includes("function receiptTradePlayerMenuHtml(")
     || !inline.includes("function receiptTradeYearHtml(")
@@ -29625,13 +29590,17 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && inline.includes("panel.inert")
       && inline.includes(".lh-actions [data-lh-menu]")
       && inline.includes("#lhMenuPanel .lh-menu-item")],
+    ["HIG-23", inline.includes("function receiptLookSelect(")
+      && !inline.includes('class="receipt-filter"')
+      && !inline.includes('class="receipt-filters"')
+      && higMd.includes("labeled dropdown")],
   ];
   for (const [id, ok] of higRules) {
     if (!ok) throw new Error(id + " Apple HIG law failed — see docs/HIG_SDD.md");
   }
   for (const id of ["HIG-01", "HIG-02", "HIG-03", "HIG-04", "HIG-05", "HIG-06", "HIG-07",
     "HIG-08", "HIG-09", "HIG-10", "HIG-11", "HIG-12", "HIG-13", "HIG-14", "HIG-15",
-    "HIG-16", "HIG-17", "HIG-18", "HIG-19", "HIG-20", "HIG-21", "HIG-22"]) {
+    "HIG-16", "HIG-17", "HIG-18", "HIG-19", "HIG-20", "HIG-21", "HIG-22", "HIG-23"]) {
     if (!higMd.includes("**" + id + "**")) {
       throw new Error(id + " must stay documented in docs/HIG_SDD.md");
     }

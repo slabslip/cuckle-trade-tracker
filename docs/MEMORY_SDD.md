@@ -223,7 +223,8 @@ absolute number.
 - **Left** — they received the player, then the player left without a
   sale. Number is today minus acquire. The Sold menu includes Left.
 
-Filters are **dropdowns**, never pill chips (HIG-23):
+Filters are **dropdowns**, never pill chips (HIG-23). Hunt position and
+tape year use the same constructor:
 
 1. **Held or sold** — unrealized vs realized. The question.
 2. **Ahead or behind** — who printed and who died.

@@ -86,6 +86,9 @@ if (page.includes("exactly like")) {
 if (page.includes('class="receipt-filter"') || page.includes('class="receipt-filters"')) {
   throw new Error("filter menus must be dropdowns, not pill chips");
 }
+if (page.includes("All years</button>") || page.includes('data-hunt-pos="QB"')) {
+  throw new Error("hunt and tape year filters must be dropdowns, not chips");
+}
 if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
   throw new Error("Trade THEN/NOW player list must not include pick-became names");
 }

@@ -4087,7 +4087,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "filter20260912170000";
+    const DATA_V = "filter20260912180000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -10438,15 +10438,9 @@ const html = `<!DOCTYPE html>
       if (dataHuntPos) {
         rows = rows.filter(function (r) { return String(r.pos || "").toUpperCase() === dataHuntPos; });
       }
-      const pos = ["", "QB", "RB", "WR", "TE"];
-      const chips = '<div class="data-filters">'
-        + pos.map(function (p) {
-          const lab = p || "All";
-          const on = dataHuntPos === p;
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-hunt-pos="' + p + '">'
-            + lab + "</button>";
-        }).join("")
-        + "</div>";
+      const chips = receiptLookSelect("Position", "data-hunt-pos",
+        [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]],
+        dataHuntPos || "all");
       const huntTitle = id === "move_extras" ? "Give" : (id === "fill_holes" ? "Get" : spec.lab);
       const huntSub = id === "move_extras"
         ? "Dart to Star, by color."
@@ -11081,14 +11075,9 @@ const html = `<!DOCTYPE html>
       const hits = filtered
         ? dataDashTapeHits(dataQ, dataYear, 40)
         : { rows: rankWide().map(function (r) { return { r: r, score: windowScore(r) }; }), n: rankWide().length };
-      return '<div class="data-filters">'
-        + '<button type="button" class="data-chip' + (dataYear ? "" : " on") + '" data-data-year="">All years</button>'
-        + years.map(function (y) {
-          const on = dataYear === y;
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-year="' + y + '">'
-            + y + "</button>";
-        }).join("")
-        + "</div>"
+      return receiptLookSelect("League year", "data-data-year",
+        [["all", "All years"]].concat(years.map(function (y) { return [y, y]; })),
+        dataYear || "all")
         + (filtered ? "" : '<p class="data-hint">' + dataDashTapeCount() + " finished deals. Widest margins on the Score as clock. Search or pick a year to scan the whole tape.</p>")
         + (filtered ? "" : chipLensHtml({ inline: true }))
         + dataDashHint(hits.n, hits.rows.length, hits.n === 1 ? "deal" : "deals")
@@ -24981,7 +24970,7 @@ const html = `<!DOCTYPE html>
         return;
       }
       const huntPosBtn = e.target.closest("[data-hunt-pos]");
-      if (huntPosBtn) {
+      if (huntPosBtn && huntPosBtn.tagName !== "SELECT") {
         dataHuntPos = huntPosBtn.getAttribute("data-hunt-pos") || "";
         render();
         return;
@@ -25069,7 +25058,7 @@ const html = `<!DOCTYPE html>
         return;
       }
       const dataYearBtn = e.target.closest("[data-data-year]");
-      if (dataYearBtn) {
+      if (dataYearBtn && dataYearBtn.tagName !== "SELECT") {
         dataYear = dataYearBtn.getAttribute("data-data-year") || "";
         render();
         return;
@@ -26228,6 +26217,18 @@ const html = `<!DOCTYPE html>
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
+      const huntPosSel = e.target && e.target.closest && e.target.closest("select[data-hunt-pos]");
+      if (huntPosSel) {
+        dataHuntPos = huntPosSel.value === "all" ? "" : (huntPosSel.value || "");
+        render();
+        return;
+      }
+      const tapeYearSel = e.target && e.target.closest && e.target.closest("select[data-data-year]");
+      if (tapeYearSel) {
+        dataYear = tapeYearSel.value === "all" ? "" : (tapeYearSel.value || "");
+        render();
+        return;
+      }
       const lookSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-look]");
       if (lookSel) {
         receiptDoorFilter = lookSel.value || "all";
@@ -26561,7 +26562,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v241-filter-dd";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v242-filter-dd";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26652,13 +26653,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v241-filter-dd")) {
+  || !html.includes("chuckle-shell-v242-filter-dd")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v241-filter-dd")
+  || !swSrc.includes("chuckle-shell-v242-filter-dd")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -29593,6 +29594,10 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
     ["HIG-23", inline.includes("function receiptLookSelect(")
       && !inline.includes('class="receipt-filter"')
       && !inline.includes('class="receipt-filters"')
+      && !fnSrc("dataDashHuntPageHtml").includes("data-chip")
+      && fnSrc("dataDashHuntPageHtml").includes("receiptLookSelect")
+      && fnSrc("dataDashTapeHtml").includes("receiptLookSelect")
+      && !fnSrc("dataDashTapeHtml").includes("All years</button>")
       && higMd.includes("labeled dropdown")],
   ];
   for (const [id, ok] of higRules) {

@@ -4079,7 +4079,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "filter20260912170000";
+    const DATA_V = "filter20260912180000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -10430,15 +10430,9 @@
       if (dataHuntPos) {
         rows = rows.filter(function (r) { return String(r.pos || "").toUpperCase() === dataHuntPos; });
       }
-      const pos = ["", "QB", "RB", "WR", "TE"];
-      const chips = '<div class="data-filters">'
-        + pos.map(function (p) {
-          const lab = p || "All";
-          const on = dataHuntPos === p;
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-hunt-pos="' + p + '">'
-            + lab + "</button>";
-        }).join("")
-        + "</div>";
+      const chips = receiptLookSelect("Position", "data-hunt-pos",
+        [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]],
+        dataHuntPos || "all");
       const huntTitle = id === "move_extras" ? "Give" : (id === "fill_holes" ? "Get" : spec.lab);
       const huntSub = id === "move_extras"
         ? "Dart to Star, by color."
@@ -11073,14 +11067,9 @@
       const hits = filtered
         ? dataDashTapeHits(dataQ, dataYear, 40)
         : { rows: rankWide().map(function (r) { return { r: r, score: windowScore(r) }; }), n: rankWide().length };
-      return '<div class="data-filters">'
-        + '<button type="button" class="data-chip' + (dataYear ? "" : " on") + '" data-data-year="">All years</button>'
-        + years.map(function (y) {
-          const on = dataYear === y;
-          return '<button type="button" class="data-chip' + (on ? " on" : "") + '" data-data-year="' + y + '">'
-            + y + "</button>";
-        }).join("")
-        + "</div>"
+      return receiptLookSelect("League year", "data-data-year",
+        [["all", "All years"]].concat(years.map(function (y) { return [y, y]; })),
+        dataYear || "all")
         + (filtered ? "" : '<p class="data-hint">' + dataDashTapeCount() + " finished deals. Widest margins on the Score as clock. Search or pick a year to scan the whole tape.</p>")
         + (filtered ? "" : chipLensHtml({ inline: true }))
         + dataDashHint(hits.n, hits.rows.length, hits.n === 1 ? "deal" : "deals")
@@ -24973,7 +24962,7 @@
         return;
       }
       const huntPosBtn = e.target.closest("[data-hunt-pos]");
-      if (huntPosBtn) {
+      if (huntPosBtn && huntPosBtn.tagName !== "SELECT") {
         dataHuntPos = huntPosBtn.getAttribute("data-hunt-pos") || "";
         render();
         return;
@@ -25061,7 +25050,7 @@
         return;
       }
       const dataYearBtn = e.target.closest("[data-data-year]");
-      if (dataYearBtn) {
+      if (dataYearBtn && dataYearBtn.tagName !== "SELECT") {
         dataYear = dataYearBtn.getAttribute("data-data-year") || "";
         render();
         return;
@@ -26220,6 +26209,18 @@
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
+      const huntPosSel = e.target && e.target.closest && e.target.closest("select[data-hunt-pos]");
+      if (huntPosSel) {
+        dataHuntPos = huntPosSel.value === "all" ? "" : (huntPosSel.value || "");
+        render();
+        return;
+      }
+      const tapeYearSel = e.target && e.target.closest && e.target.closest("select[data-data-year]");
+      if (tapeYearSel) {
+        dataYear = tapeYearSel.value === "all" ? "" : (tapeYearSel.value || "");
+        render();
+        return;
+      }
       const lookSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-look]");
       if (lookSel) {
         receiptDoorFilter = lookSel.value || "all";
@@ -26553,7 +26554,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v241-filter-dd";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v242-filter-dd";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

@@ -4420,7 +4420,7 @@ const html = `<!DOCTYPE html>
       return '<div class="hops">' + (head ? '<div class="date">' + esc(head) + "</div>" : "")
         + hops.map((h) => {
           return '<div class="hop"><span>' + esc(receiptHopEnglish(h, p, meName)) + "</span>"
-            + (h.exit === "flip" ? "<b>You exited here.</b>" : "")
+            + (h.exit === "flip" && h.from === meName ? "<b>You exited here.</b>" : "")
             + "</div>";
         }).join("")
         + receiptShareBtn("pick", key)
@@ -5188,7 +5188,9 @@ const html = `<!DOCTYPE html>
         return receiptMonth(h.date) + " · used by " + (h.to || "?") + (became ? " · " + became : "");
       }
       if (h.exit === "flip") {
-        return receiptMonth(h.date) + " · " + (youFrom ? "you sold to " + (h.to || "?") : (h.from || "?") + " sold to " + (h.to || "?"));
+        if (youFrom) return receiptMonth(h.date) + " · you sold to " + (h.to || "?");
+        if (youTo) return receiptMonth(h.date) + " · you got this pick";
+        return receiptMonth(h.date) + " · " + (h.from || "?") + " sold to " + (h.to || "?");
       }
       return receiptMonth(h.date) + " · " + (youTo ? "you got this pick" : ((h.to || "?") + " received this pick"));
     }
@@ -5224,7 +5226,7 @@ const html = `<!DOCTYPE html>
           + (tx ? ' data-receipt-hop-trade="' + esc(tx) + '"' : "")
           + (h.to ? ' data-receipt-name="' + esc(h.to) + '"' : "") + ">"
           + "<span>" + esc(receiptHopEnglish(h, p, meName)) + "</span>"
-          + (h.exit === "flip" ? "<b>You exited here.</b>" : "")
+          + (h.exit === "flip" && h.from === meName ? "<b>You exited here.</b>" : "")
           + "</button>";
       }).join("");
       const share = receiptShareBtn("pick", key);

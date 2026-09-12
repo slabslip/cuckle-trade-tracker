@@ -24,7 +24,7 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
 4. **Home** is the daily paper (Linear bottom pill + **Cuckle trade calculator** + signed-in
-   **Trade Desk** — no bag hero, no Recent Trade chip, no News door). **News** is a peer tab
+   **Team Ideas** — no bag hero, no Recent Trade chip, no News door). **News** is a peer tab
    (Alerts + the league feed, with a missed-count bubble). **Menu** (hamburger) opens a
    glass popover above the pill: Calculator / League Data / Settings. **Teams** is first-person after a
    seat. Price a hypothetical on **`?view=calc`**. League tape stays the water cooler.
@@ -169,7 +169,7 @@ Standing checks after any change to the book, over all ten seats:
 3. Zero-sum on the 288 complete two-team trades **and** on the 2 N-way trades.
 4. The generator's inline `applyVa` agrees numerically with `value-adjust.mjs` on every shipped side —
    read it out of `index.html` via `check-value-feed.mjs`, not out of `generate-page.mjs`.
-5. Trade Desk even talks and calc Favors share `calcReceiveTotals` (receive bags + VA).
+5. Team Ideas even talks and calc Favors share `calcReceiveTotals` (receive bags + VA).
 6. No NaN, no Infinity, and the self-checks in `apply-value-adjust.mjs` pass.
 
 ---

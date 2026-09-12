@@ -24,7 +24,7 @@ and tape year use the same dropdown.
 
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
 **Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
-occupy), then the digest — **Cuckle trade calculator** and signed-in **Trade Desk**.
+occupy), then the digest — **Cuckle trade calculator** and signed-in **Team Ideas**.
 **News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
 it opens a glass popover above the unchanged pill. It is the water cooler.
 The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
@@ -191,7 +191,8 @@ renders on the open-trade screen and on Teams / History feed cards.
 **Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
 plate). Opens `?view=calc`.
 
-**Trade Desk** — omit if signed out (same rule as Alerts). Signed-in: one to three talks,
+**Team Ideas** — omit if signed out (same rule as Alerts). Heading only — no section
+lede and no still-held firsts caption. Signed-in: one to three talks,
 and **every card includes you**. Never a pair of two other managers. Prefer three different
 counterparties and one of each job: **Fill** (you are thin — receive a startable), **Move**
 (you are deep — send extras / 2-for-1), **Even** (closest even-up). Pair label is
@@ -203,9 +204,7 @@ at a position and the other is thin there; even-up is the floor. Meta may name a
 flatten-vs-today split (`markets bid up` / `markets cooler on` / `new on the market books`)
 and a buy / fair / sell chip from `pe.json` — signal only. Partner memory (from
 `trade_boards.sides` + `windows.all`, threshold `GRADE_EVEN`) may add `you extract vs X` /
-`they extract vs you` / `even tape vs X` — words only, no numbers. A caption under the
-lede may count still-held firsts (`You still hold N 2027 1sts…`) from `calculator.json`
-picks. Startable floors: QB 2 / RB 2 /
+`they extract vs you` / `even tape vs X` — words only, no numbers. Startable floors: QB 2 / RB 2 /
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
 calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
 fourth card or “Open the calculator” filler.
@@ -247,7 +246,7 @@ for hop values. Price book is today
 / `even` (0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20 DynastyDealer, renormalized)
 plus Value Adjustment via `calcReceiveTotals` / `applyVa` on the hypothetical receive
 bags. A non-zero bump is a gold **Value Adjustment** line on the **star send card**
-(fewer pieces) and under the compare receive that banks it. Trade Desk even talks reuse that helper. Team home has a
+(fewer pieces) and under the compare receive that banks it. Team Ideas even talks reuse that helper. Team home has a
 **Price a deal** door (wipe first; if you are not that seat, A = you and B = them).
 Votes do
 not appear on a hypothetical and do not change the number. How-it-works copy does not

@@ -1588,6 +1588,7 @@ const html = `<!DOCTYPE html>
       margin: 0 0 4px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
     }
+    .home-desk > .home-desk-h { margin-bottom: 10px; }
     .home-desk-sub {
       margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
     }
@@ -1749,7 +1750,6 @@ const html = `<!DOCTYPE html>
       color: var(--text); background: #1a1a1e; border: 1px solid var(--line);
       border-radius: 10px; padding: 12px; margin: 10px 0 0; min-height: 44px; cursor: pointer;
     }
-    .home-desk-held { margin: 0 0 8px; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
     .calc-asset button {
       appearance: none; font: inherit; color: var(--dim); background: none; border: 0;
       cursor: pointer; min-height: 44px; min-width: 44px; flex: 0 0 auto;
@@ -4088,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260912232544";
+    const DATA_V = "ideas20260912234200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -20884,27 +20884,6 @@ const html = `<!DOCTYPE html>
       return n >= 2 ? ("even tape vs " + themName) : "";
     }
 
-    function homeDeskHeldLine() {
-      const mine = String(authSeatId() || "");
-      if (!mine) return "";
-      const picks = (calcBook && calcBook.picks) || [];
-      const years = {};
-      for (let i = 0; i < picks.length; i++) {
-        const p = picks[i];
-        if (String(p.owner_id) !== mine) continue;
-        const m = String(p.id || "").match(/^pick:(\\d{4}):1:/);
-        if (!m) continue;
-        years[m[1]] = (years[m[1]] || 0) + 1;
-      }
-      const keys = Object.keys(years).sort();
-      if (!keys.length) return "";
-      const bits = keys.map(function (y) {
-        const n = years[y];
-        return n + " " + y + (n === 1 ? " 1st" : " 1sts");
-      });
-      return "You still hold " + bits.join(", ") + ".";
-    }
-
     function homeDeskMeta(talk, job, themName) {
       if (!talk) return "Pick the sides";
       const extra = [];
@@ -21140,13 +21119,8 @@ const html = `<!DOCTYPE html>
       if (!authSeatId() || !authSession) return "";
       const cards = homeDeskCards();
       if (!cards.length) return "";
-      return '<section class="home-desk" aria-label="Trade Desk">'
-        + '<div class="home-desk-h">Trade Desk</div>'
-        + '<p class="home-desk-sub">Talks for your bag. Tap to price it.</p>'
-        + (function () {
-          const held = homeDeskHeldLine();
-          return held ? '<p class="home-desk-held">' + esc(held) + "</p>" : "";
-        }())
+      return '<section class="home-desk" aria-label="Team Ideas">'
+        + '<div class="home-desk-h">Team Ideas</div>'
         + cards.map(function (row) {
           const sendA = (row.talk && row.talk.legsA || []).map(function (a) { return a.id; }).join(",");
           const sendB = (row.talk && row.talk.legsB || []).map(function (a) { return a.id; }).join(",");
@@ -26608,7 +26582,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v246-pl-off";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v247-team-ideas";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26699,13 +26673,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v246-pl-off")) {
+  || !html.includes("chuckle-shell-v247-team-ideas")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v246-pl-off")
+  || !swSrc.includes("chuckle-shell-v247-team-ideas")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26772,7 +26746,7 @@ if (inline.includes('day-alert-h">Champions Path')) {
   }
   if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")
     || !prog.includes("homeTopDoorsHtml()") || !prog.includes("lh-calc-slot")) {
-    throw new Error("Home digest is top 4 doors + centered Cuckle calculator + Trade Desk");
+    throw new Error("Home digest is top 4 doors + centered Cuckle calculator + Team Ideas");
   }
   if (prog.indexOf("homeTopDoorsHtml()") > prog.indexOf("lh-calc-slot")) {
     throw new Error("home calc must sit below top 4");
@@ -29180,9 +29154,9 @@ if (!inline.includes("function your3Html(") || !inline.includes("function homeDe
   || !inline.includes("Cuckle trade calculator") || !inline.includes("function renderCalc(")
   || !inline.includes("function renderCosmetics(") || !inline.includes('"cosmetics"')
   || !inline.includes("data-open-cosmetics") || !inline.includes('data-desk-a="')
-  || !inline.includes("Trade Desk") || !inline.includes("Who won this trade?")
+  || !inline.includes("Team Ideas") || !inline.includes("Who won this trade?")
   || !html.includes("align-items: flex-end") || html.includes(".vote-sheet {\n      position: fixed; inset: 0; z-index: 300;\n      display: grid; place-items: center")) {
-  throw new Error("Home digest must ship Alerts, Trade Desk, Cuckle trade calculator, calc, and barracks");
+  throw new Error("Home digest must ship Alerts, Team Ideas, Cuckle trade calculator, calc, and barracks");
 }
 if (!inline.includes("COS_TITLE_LADDER") || !inline.includes("five_time")
   || !inline.includes("three_peat_mark") || !inline.includes("COS_CROWN_TITLES")
@@ -29300,9 +29274,9 @@ if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function n
   || !inline.includes('class="your3-h">Alerts<')
   || inline.includes('aria-label="Your 3"')
   || inline.includes('class="your3-h">Your 3<')
-  || !inline.includes('aria-label="Trade Desk"')
+  || !inline.includes('aria-label="Team Ideas"')
   || inline.includes("On your roster")) {
-  throw new Error("Home in-flow slot is Trade Desk; peek stays the latest league item");
+  throw new Error("Home in-flow slot is Team Ideas; peek stays the latest league item");
 }
 if (inline.includes("items.length > 1 ? items[1]")
   || inline.includes('kind: "calc", lab: "Price a deal"')
@@ -29503,7 +29477,11 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || !inline.includes("function homeDeskJob(")
   || !inline.includes("Win-now") || !inline.includes("Reload") || !inline.includes("Rebuild")
   || !inline.includes("depth for a stud") || !inline.includes("Even-up · same window")
-  || !inline.includes("markets bid up") || !inline.includes("Talks for your bag")
+  || !inline.includes("markets bid up")
+  || inline.includes("Talks for your bag")
+  || fnSrc("homeDeskHtml").includes("home-desk-sub")
+  || fnSrc("homeDeskHtml").includes("You still hold")
+  || fnSrc("homeDeskHtml").includes("homeDeskHeldLine")
   || !inline.includes("You · ")
   || inline.includes("Four-source today book")
   || inline.includes("Three talks for the league")
@@ -29517,7 +29495,7 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || !fnSrc("homeDeskCards").includes("authSession")
   || !fnSrc("homeDeskCards").includes("homeDeskTalk(myBag, theirBag, want")
   || fnSrc("homeDeskCards").includes("for (let j = i + 1")) {
-  throw new Error("Trade Desk must be first-person, omit when signed out, and stay free of bag numbers");
+  throw new Error("Team Ideas must be first-person, omit when signed out, and stay free of bag numbers");
 }
 if (!inline.includes("async function openLeagueDashboard(")
   || !inline.includes("Keep a deep-linked sub-screen")) {
@@ -29546,16 +29524,15 @@ if (!inline.includes("function calcResidualHtml(")
   || !inline.includes("Votes never enter the book")
   || !inline.includes("function homeDeskPartnerNote(")
   || !inline.includes("you extract vs")
-  || !inline.includes("function homeDeskHeldLine(")
-  || !inline.includes("You still hold")
+  || inline.includes("function homeDeskHeldLine(")
+  || fnSrc("homeDeskHtml").includes("You still hold")
   || !inline.includes("data-calc-hop")
   || !inline.includes("data-calc-from-team")
   || !inline.includes("Price a deal")
   || !fnSrc("calcSideHtml").includes("still a pick")
   || !fnSrc("calcSideHtml").includes("calcMeta(l, false, true)")
-  || fnSrc("homeDeskHtml").includes("calcFmt(")
-  || fnSrc("homeDeskHeldLine").includes("calcFmt(")) {
-  throw new Error("next-build: residual, vote-nudge, desk partner/held, calc hop, and team door");
+  || fnSrc("homeDeskHtml").includes("calcFmt(")) {
+  throw new Error("next-build: residual, vote-nudge, desk partner, calc hop, and team door");
 }
 if (!fnSrc("sideOf").includes("s.today != null")
   || !fnSrc("sideOf").includes("s.sent_today != null")) {

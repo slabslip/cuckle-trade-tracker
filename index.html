@@ -1580,6 +1580,7 @@
       margin: 0 0 4px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
     }
+    .home-desk > .home-desk-h { margin-bottom: 10px; }
     .home-desk-sub {
       margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
     }
@@ -1741,7 +1742,6 @@
       color: var(--text); background: #1a1a1e; border: 1px solid var(--line);
       border-radius: 10px; padding: 12px; margin: 10px 0 0; min-height: 44px; cursor: pointer;
     }
-    .home-desk-held { margin: 0 0 8px; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
     .calc-asset button {
       appearance: none; font: inherit; color: var(--dim); background: none; border: 0;
       cursor: pointer; min-height: 44px; min-width: 44px; flex: 0 0 auto;
@@ -4080,7 +4080,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260912232544";
+    const DATA_V = "ideas20260912234200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -20876,27 +20876,6 @@
       return n >= 2 ? ("even tape vs " + themName) : "";
     }
 
-    function homeDeskHeldLine() {
-      const mine = String(authSeatId() || "");
-      if (!mine) return "";
-      const picks = (calcBook && calcBook.picks) || [];
-      const years = {};
-      for (let i = 0; i < picks.length; i++) {
-        const p = picks[i];
-        if (String(p.owner_id) !== mine) continue;
-        const m = String(p.id || "").match(/^pick:(\d{4}):1:/);
-        if (!m) continue;
-        years[m[1]] = (years[m[1]] || 0) + 1;
-      }
-      const keys = Object.keys(years).sort();
-      if (!keys.length) return "";
-      const bits = keys.map(function (y) {
-        const n = years[y];
-        return n + " " + y + (n === 1 ? " 1st" : " 1sts");
-      });
-      return "You still hold " + bits.join(", ") + ".";
-    }
-
     function homeDeskMeta(talk, job, themName) {
       if (!talk) return "Pick the sides";
       const extra = [];
@@ -21132,13 +21111,8 @@
       if (!authSeatId() || !authSession) return "";
       const cards = homeDeskCards();
       if (!cards.length) return "";
-      return '<section class="home-desk" aria-label="Trade Desk">'
-        + '<div class="home-desk-h">Trade Desk</div>'
-        + '<p class="home-desk-sub">Talks for your bag. Tap to price it.</p>'
-        + (function () {
-          const held = homeDeskHeldLine();
-          return held ? '<p class="home-desk-held">' + esc(held) + "</p>" : "";
-        }())
+      return '<section class="home-desk" aria-label="Team Ideas">'
+        + '<div class="home-desk-h">Team Ideas</div>'
         + cards.map(function (row) {
           const sendA = (row.talk && row.talk.legsA || []).map(function (a) { return a.id; }).join(",");
           const sendB = (row.talk && row.talk.legsB || []).map(function (a) { return a.id; }).join(",");
@@ -26600,7 +26574,7 @@
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v246-pl-off";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v247-team-ideas";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }

@@ -17,7 +17,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 
 | Surface | Job | Limit |
 | --- | --- | --- |
-| **Home Trade Desk** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
+| **Home Team Ideas** | 1–3 first-person talks (Fill / Move / Even) | Do not dump a 10-team matcher onto Home |
 | **Data** | Your board — the labeled doors | One cell of the five-tab pill. Do not grow a sixth. |
 | **Receipts** | “That’s not how I remember it” — Your board (16 kinds, thirteen labeled doors) | Icon + label on the door. Search / filter / list inside. Verdict + number live on the ticket. Not a sixth pill. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md). |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
@@ -92,7 +92,7 @@ calc first-person. Empty = one sentence. No bag totals on tiles.
 
 Need engine: `homeDeskProfile` holes / thin / surplus / deep from the live bag (`DESK_STUD`
 5500, `DESK_START` 2200, `DESK_MID` 1800, `DESK_SLOTS` QB2/RB2/WR3/TE1). Route from the bag
-may still caption Trade Desk. It must not override the direction veto.
+may still caption Team Ideas. It must not override the direction veto.
 
 ### Trade block
 

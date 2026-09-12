@@ -229,7 +229,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 
 | Item | Status |
 | --- | --- |
-| Sleeper chat / comments scrape | **No** — no public API; privacy/ToS |
+| Sleeper chat / comments scrape | **No** — no public API; privacy/ToS. Debate list is tape-first: [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md) |
 | ESPN meter import | PARKED (`espn_league_id` reserved) |
 | Web push / Play Store | PARKED — PWA install shell ships; iOS TestFlight is the store door |
 | Auto-sync every league on create | `join-league` dispatches GitHub `league-sync` when `GITHUB_PAT` is set |

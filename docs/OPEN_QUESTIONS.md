@@ -205,3 +205,22 @@ kills the outsider loop.
 `?view=trade&t=`) on the open trade and hop tape. Public receipts skip the
 gate (`appScreen = "receipt"`), show real numbers, then Create a league.
 Do not merge hop P&L into the needle.
+
+---
+
+## 18. Do we scrape Sleeper chat for debates?
+
+**Assumed:** No. The fight list is the hop tape
+([`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)). Sleeper REST has no messages
+route. APP_SDD §11 parks a silent scrape.
+
+**Why it matters:** Seven seasons of private banter on a public Pages repo
+is a leak. A fake “room said” line on a receipt is opinion wearing a
+number. Skipping the catalog leaves tile faces on whichever deal sorts
+first.
+
+**Recommended:** Keep scrape **No**. Rank doors from clocks, hops, titles,
+and partner volume. Later, if anyone wants a thread on a chip: member
+export or Shortcut paste into a private table (News / Ledger pattern),
+linked to an existing `transaction_id` or pick key — never a 17th kind,
+never raw quotes on `?r=` receipts.

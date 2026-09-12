@@ -7,6 +7,8 @@ Companion: needle / clocks [`PRODUCT.md`](PRODUCT.md). Trade open row + hop tape
 [`UI_SDD.md`](UI_SDD.md). Aged math [`VALUE_SDD.md`](VALUE_SDD.md). Data desks
 [`DATA_SDD.md`](DATA_SDD.md). Store five-tab law [`STORE_LAW.md`](STORE_LAW.md).
 Formats / empty first year [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
+Which Cuckle fights to put on the door
+[`DEBATE_CATALOG.md`](DEBATE_CATALOG.md) — tape-ranked, not a 17th chip.
 
 This file is **WANT**. If the generator disagrees, the generator is behind — fix
 the page in the same pass as any UI that claims to be proof.
@@ -79,7 +81,9 @@ Direction (Hard rebuild) stays a **label on League rows**, not a “best
 rebuilder” trophy.
 
 The 27-id Data encyclopedia under **More** still exists for desks. It is not
-Your board. Your board is these 16 kinds, rearranged.
+Your board. Your board is these 16 kinds, rearranged. Which *example*
+to put on a door is ranked in [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)
+from this league’s hop tape — not from Sleeper chat.
 
 ---
 

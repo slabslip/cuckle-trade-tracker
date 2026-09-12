@@ -4551,9 +4551,14 @@ const html = `<!DOCTYPE html>
       return best;
     }
 
-    function receiptPickPrint(p) {
+    function receiptPickPrint(p, seat) {
       if (!p) return "HELD";
       if (p.became) return "USED";
+      if (seat) {
+        const owner = typeof pickOwnerName === "function" ? pickOwnerName(p) : "";
+        if (receiptPickSeatSold(p, seat) && owner && owner !== seat) return "SOLD";
+        if (owner === seat && p.still_pick) return "HELD";
+      }
       if (p.still_pick) return "HELD";
       const hops = p.hops || [];
       for (let i = 0; i < hops.length; i++) {
@@ -4609,8 +4614,8 @@ const html = `<!DOCTYPE html>
         out.push({ key: keys[i], p: p });
       }
       out.sort(function (a, b) {
-        const pa = receiptPickPrint(a.p);
-        const pb = receiptPickPrint(b.p);
+        const pa = receiptPickPrint(a.p, seat);
+        const pb = receiptPickPrint(b.p, seat);
         const ra = pa === "USED" ? 0 : pa === "SOLD" ? 1 : 2;
         const rb = pb === "USED" ? 0 : pb === "SOLD" ? 1 : 2;
         if (ra !== rb) return ra - rb;
@@ -4644,7 +4649,7 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptPickBecameLine(p, key, seat, you) {
-      const print = receiptPickPrint(p);
+      const print = receiptPickPrint(p, seat);
       const name = (p && p.became) || "";
       const rd = receiptPickRoundWord(p, key);
       const sold = receiptPickSeatSold(p, seat);
@@ -4667,7 +4672,7 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptPickStoryScore(p, key, seat) {
-      const print = receiptPickPrint(p);
+      const print = receiptPickPrint(p, seat);
       const rd = receiptPickRoundWord(p, key);
       const first = rd === "1st" ? 100 : rd === "2nd" ? 40 : 10;
       const hops = ((p && p.hops) || []).length;
@@ -4770,10 +4775,10 @@ const html = `<!DOCTYPE html>
     function receiptPickClaim(row) {
       if (!row || !row.p) return null;
       const p = row.p;
-      const print = receiptPickPrint(p);
       const seat = receiptPickPortalSeat("");
       const you = !!(seat && receiptPickEverOwned(p, seat) && seat === (typeof authSeatCanonName === "function" ? authSeatCanonName() : ""));
       const viewSeat = (seat && receiptPickEverOwned(p, seat)) ? seat : "";
+      const print = receiptPickPrint(p, viewSeat);
       const name = p.became || p.label || row.key;
       let verdict = receiptPickBecameLine(p, row.key, viewSeat, you);
       if (!viewSeat && print === "USED" && name) {
@@ -5195,11 +5200,11 @@ const html = `<!DOCTYPE html>
           + '<h2 class="screen-h" tabindex="-1">Pick not found</h2>'
           + '<p class="caption">That pick is not on this league tape.</p>';
       }
-      const print = receiptPickPrint(p);
       const name = p.became || key;
       const seat = receiptPickPortalSeat("");
       const you = !!(seat && receiptPickEverOwned(p, seat));
       const viewSeat = you ? seat : "";
+      const print = receiptPickPrint(p, viewSeat);
       let verdict = receiptPickBecameLine(p, key, viewSeat, you);
       if (!viewSeat) {
         verdict = "This pick last stop is " + name + ".";
@@ -5379,7 +5384,7 @@ const html = `<!DOCTYPE html>
         let usedN = 0, soldN = 0, heldN = 0;
         const groups = { USED: [], SOLD: [], HELD: [] };
         for (let i = 0; i < rows.length; i++) {
-          const print = receiptPickPrint(rows[i].p);
+          const print = receiptPickPrint(rows[i].p, seat);
           if (print === "USED") usedN += 1;
           else if (print === "SOLD") soldN += 1;
           else heldN += 1;
@@ -5397,7 +5402,7 @@ const html = `<!DOCTYPE html>
           html += '<div class="data-sec-h">' + order[g] + "</div>";
           html += list.map(function (row) {
             const p = row.p;
-            const print = receiptPickPrint(p);
+            const print = receiptPickPrint(p, seat);
             const line = receiptPickBecameLine(p, row.key, seat, you);
             const lab = p.label || row.key;
             return '<button type="button" class="row" data-receipt-pick="' + esc(row.key) + '">'

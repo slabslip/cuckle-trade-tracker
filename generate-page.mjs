@@ -4093,7 +4093,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912131000";
+    const DATA_V = "door20260912132000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5894,10 +5894,13 @@ const html = `<!DOCTYPE html>
       }
       if (id === "season_place") {
         return (members || []).filter(function (m) {
-          return hit([m.name, m.place, m.place ? nth(m.place) : ""]);
+          return hit([m.name, m.place, m.place ? nth(m.place) : "", m.place_season]);
         }).map(function (m) {
+          const year = m.place_season ? String(m.place_season) : "";
           return '<div class="row"><div class="row-top"><div><div class="names">'
-            + seatLabel(m.name, { link: false }) + "</div></div>"
+            + seatLabel(m.name, { link: false }) + "</div>"
+            + (year ? '<div class="date">' + esc(year) + "</div>" : "")
+            + "</div>"
             + '<div class="margin">' + esc(m.place ? nth(m.place) : "—") + "</div></div></div>";
         }).join("");
       }
@@ -5971,6 +5974,15 @@ const html = `<!DOCTYPE html>
           if (!bag[owner]) bag[owner] = [];
           bag[owner].push(parts.season);
         }
+        const names = {};
+        for (let i = 0; i < (members || []).length; i++) {
+          const nm = members[i] && members[i].name;
+          if (nm) names[nm] = true;
+        }
+        const shown = Object.keys(names);
+        for (let i = 0; i < shown.length; i++) {
+          if (!bag[shown[i]]) bag[shown[i]] = [];
+        }
         return Object.keys(bag).filter(function (name) {
           return hit([name, bag[name].join(" "), bag[name].length]);
         }).sort(function (a, b) { return bag[b].length - bag[a].length || a.localeCompare(b); })
@@ -5978,9 +5990,11 @@ const html = `<!DOCTYPE html>
             const years = bag[name].slice().sort();
             const counts = {};
             for (let i = 0; i < years.length; i++) counts[years[i]] = (counts[years[i]] || 0) + 1;
-            const line = Object.keys(counts).sort().map(function (y) {
-              return counts[y] > 1 ? (y + " x" + counts[y]) : y;
-            }).join(" · ");
+            const line = years.length
+              ? Object.keys(counts).sort().map(function (y) {
+                return counts[y] > 1 ? (y + " x" + counts[y]) : y;
+              }).join(" · ")
+              : (yearWant ? ("No " + yearWant + " first") : "No future first");
             const n = years.length;
             return '<div class="row"><div class="row-top"><div><div class="names">' + esc(name) + "</div>"
               + '<div class="date">' + esc(line) + "</div></div>"
@@ -6009,8 +6023,9 @@ const html = `<!DOCTYPE html>
         return rows.filter(function (r) {
           return hit([r.starter, r.owner, r.pos, r.cuff]);
         }).map(function (r) {
+          const missing = r.cuff ? (r.cuff + " is FA") : "No cuff on the tape";
           return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.starter || "Starter") + "</div>"
-            + '<div class="date">' + esc([r.pos, r.owner].filter(Boolean).join(" · ")) + "</div></div>"
+            + '<div class="date">' + esc([r.pos, r.owner, missing].filter(Boolean).join(" · ")) + "</div></div>"
             + '<div class="margin">No cuff</div></div></div>';
         }).join("");
       }
@@ -6052,14 +6067,14 @@ const html = `<!DOCTYPE html>
           ? ("Picks that started on " + pickSeat + ". Follow them after a sale.")
           : "Claim your seat to see the picks that started here.";
       } else if (id === "past_champions") caption = "Every year someone won. Search a year or a seat.";
-      else if (id === "season_place") caption = "Where each seat finished last season.";
+      else if (id === "season_place") caption = "Where each seat finished last season. Year is on the row.";
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
       else if (id === "firsts_held") caption = "Who is sitting on future firsts.";
       else if (id === "forever") caption = "Still on the team that drafted them in 2019.";
       else if (id === "passed_around") caption = "Players who moved the most.";
       else if (id === "seat_draft") caption = "Rookie surplus vs the pick, by seat.";
-      else if (id === "uninsured") caption = "Starters whose backup is not rostered.";
+      else if (id === "uninsured") caption = "Starters whose backup is not rostered. The missing name is on the row.";
       else if (id === "book_top") caption = "Highest pieces in the book.";
       const vsBack = (id === "vs_you" && receiptVsWho)
         ? '<button type="button" class="chip" data-receipt-vs-back="1">← Names</button> '
@@ -25937,7 +25952,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v236-calc-mid";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v237-tile-want";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26028,13 +26043,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v236-calc-mid")) {
+  || !html.includes("chuckle-shell-v237-tile-want")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v236-calc-mid")
+  || !swSrc.includes("chuckle-shell-v237-tile-want")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -27452,6 +27467,9 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-door-year")
     || !inline.includes("League year")
     || !inline.includes("Player you rostered")
+    || !fnSrc("receiptPortalRows").includes("is FA")
+    || !fnSrc("receiptPortalRows").includes("No future first")
+    || !fnSrc("receiptPortalRows").includes("m.place_season")
     || !inline.includes("Type a player name")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")

@@ -1563,6 +1563,11 @@ const html = `<!DOCTYPE html>
       .lh-menu { transition: none; transform: none; }
     }
     .lh-section { margin: 0 0 18px; }
+    .lh-calc-slot {
+      display: flex;
+      justify-content: center;
+      margin: 2px 0 18px;
+    }
     .your3 { margin: 0 0 16px; }
     .your3.is-empty { min-height: 96px; }
     .your3-h {
@@ -1614,7 +1619,7 @@ const html = `<!DOCTYPE html>
     .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
       appearance: none; font: inherit; color: #ff9f0a;
-      display: block; width: 100%; text-align: left; cursor: pointer;
+      display: block; width: min(86%, 22rem); text-align: left; cursor: pointer;
       position: relative;
       background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 10px;
       padding: 0; margin: 0; min-height: 0; overflow: hidden; line-height: 0;
@@ -4088,7 +4093,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912125600";
+    const DATA_V = "door20260912131000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22161,8 +22166,8 @@ const html = `<!DOCTYPE html>
         + ' width="1024" height="180" alt="Cuckle calculator">'
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
-      return '<section class="lh-section">' + door + "</section>"
-        + homeTopDoorsHtml()
+      return homeTopDoorsHtml()
+        + '<div class="lh-calc-slot">' + door + "</div>"
         + homeDeskHtml();
     }
 
@@ -25932,7 +25937,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v235-top-four";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v236-calc-mid";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26023,13 +26028,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v235-top-four")) {
+  || !html.includes("chuckle-shell-v236-calc-mid")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v235-top-four")
+  || !swSrc.includes("chuckle-shell-v236-calc-mid")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26095,8 +26100,14 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("Home digest must not mount Alerts or the News door — the News tab owns them");
   }
   if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")
-    || !prog.includes("homeTopDoorsHtml()")) {
-    throw new Error("Home digest is Cuckle trade calculator + top 4 doors + Trade Desk");
+    || !prog.includes("homeTopDoorsHtml()") || !prog.includes("lh-calc-slot")) {
+    throw new Error("Home digest is top 4 doors + centered Cuckle calculator + Trade Desk");
+  }
+  if (prog.indexOf("homeTopDoorsHtml()") > prog.indexOf("lh-calc-slot")) {
+    throw new Error("home calc must sit below top 4");
+  }
+  if (prog.indexOf("lh-calc-slot") > prog.indexOf("homeDeskHtml()")) {
+    throw new Error("home calc must sit above trade desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")

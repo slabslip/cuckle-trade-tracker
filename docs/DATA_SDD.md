@@ -36,7 +36,8 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
   (`not shopping RB`). Copy may state a fact. Hunts and Home Move may only propose a buy/sell
   that intent allows.
 - Votes never enter the book.
-- No bag totals on Home. `homeDeskHtml` must not contain `calcFmt(` or `calcValueNum(`.
+- No bag totals on Home. `homeDeskHtml` and `homeTopDoorsHtml` must not contain `calcFmt(` or `calcValueNum(`.
+  Home may show the top 4 doors from Your board (icon + label only).
 - No Best 10 / Worst 10. Most lopsided stays on Data.
 - `DATA_SETS` stays exactly five. Six Data desks (Book · Tape · Seats ·
   Lists · Draft · Cuffs) stay in code, parked. No seventh desk. Cold load is

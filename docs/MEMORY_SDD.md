@@ -152,8 +152,10 @@ scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 12. No backup (`uninsured`)
 13. Biggest names (`book_top`)
 
-**Hold, then drag** is how they reorder. Hint on the board:
-`Hold a tile, then drag to move it.` **Edit** still adds or removes a door
+**Hold, then drag** is how they reorder. Mouse can drag without a long
+press. The first four doors wear a gold ring — that is the top 4, and
+those four also sit on Home for instant access. Hint on the board:
+`Top 4 wear gold. Hold a tile, then drag to move it.` **Edit** still adds or removes a door
 from the catalog. Unsigned / outsider: default thirteen. A shared link opens
 one public ticket, not someone’s private layout.
 
@@ -336,7 +338,7 @@ demo. That is the point.
 
 | Surface | Proof job |
 |---------|-----------|
-| **Home** | No personal bag hero. Trade Desk / calc stay *today’s* deal. A proof chip does not remount News. |
+| **Home** | No personal bag hero. Trade Desk / calc stay *today’s* deal. The top 4 doors from Your board sit here for instant access. A proof chip does not remount News. |
 | **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
 | **History / Data** | Home of **Your board**. Cold load is the doors only. Still one Data cell. |
 | **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |

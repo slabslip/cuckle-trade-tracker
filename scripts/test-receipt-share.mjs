@@ -51,6 +51,12 @@ const need = [
   "function dataDashCommitFromBoard(",
   "data-dash-board",
   "Hold a tile, then drag to move it.",
+  "Top 4 wear gold",
+  "Your top 4",
+  "data-home-door",
+  "door-top",
+  "function homeTopDoorsHtml(",
+  "function dataDashPaintTop(",
   "Every pick ",
   "A year, a player, a seat",
 ];
@@ -63,7 +69,7 @@ if (!page.includes('DATA_DOORS = [')
   || !page.includes('"lopsided", "trade_mark", "pick_print", "my_picks", "past_champions"')) {
   throw new Error("default board must be the 13 door tiles");
 }
-if (!page.includes('class="door"') || page.includes("The number is one example")) {
+if (!page.includes('class="door') || page.includes("The number is one example")) {
   throw new Error("door tiles must be icon + label only");
 }
 
@@ -85,7 +91,7 @@ if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/M
 }
 
 const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
-for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned", "My Picks", "Picks that started on this seat", "player you rostered", "League year"]) {
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "What my pick became", "every draft pick that seat ever owned", "My Picks", "Picks that started on this seat", "player you rostered", "League year", "top 4"]) {
   if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
 }
 

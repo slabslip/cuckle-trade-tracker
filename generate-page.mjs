@@ -3358,8 +3358,15 @@ const html = `<!DOCTYPE html>
     .door.is-lift {
       opacity: 0.62; transform: scale(1.04); border-color: #e0b44c; cursor: grabbing;
       box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45); z-index: 2; touch-action: none;
+      pointer-events: none;
     }
     .door.is-drop { border-color: #6b5a2e; background: #221e14; }
+    .door.door-top {
+      border-color: #e0b44c;
+      box-shadow: 0 0 0 1px #c9a227, 0 0 10px rgba(224, 180, 76, 0.28);
+    }
+    .home-top-doors { margin: 0 0 16px; }
+    .home-top-board { margin: 0; }
     .door-ico {
       width: 28px; height: 28px; color: #e0b44c; flex: 0 0 auto;
       display: block;
@@ -4081,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912124000";
+    const DATA_V = "door20260912125000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6086,7 +6093,7 @@ const html = `<!DOCTYPE html>
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
           + '<p class="caption">Tap a door. Search and filter inside.</p>'
-          + '<p class="data-dash-drag-hint">Hold a tile, then drag to move it.</p>'
+          + '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
           + dataDashBoardHtml();
       }
       return '<div class="receipt-shell">' + body + receiptCtaHtml() + "</div>";
@@ -8566,12 +8573,6 @@ const html = `<!DOCTYPE html>
         out.push(id);
         if (out.length >= DATA_DASH_MAX) break;
       }
-      if (out.indexOf("my_picks") < 0 && out.length < DATA_DASH_MAX && dataDashById("my_picks")) {
-        const at = out.indexOf("pick_print");
-        if (at >= 0) out.splice(at + 1, 0, "my_picks");
-        else out.splice(Math.min(3, out.length), 0, "my_picks");
-        if (out.length > DATA_DASH_MAX) out.length = DATA_DASH_MAX;
-      }
       if (out.length < DATA_DASH_MIN) {
         for (let j = 0; j < DATA_DASH_DEFAULT.length; j++) {
           const id = DATA_DASH_DEFAULT[j];
@@ -8584,8 +8585,27 @@ const html = `<!DOCTYPE html>
       return out;
     }
 
+    function dataDashMigrateMyPicks(tiles) {
+      const out = Array.isArray(tiles) ? tiles.slice() : [];
+      if (out.indexOf("my_picks") >= 0 || out.length >= DATA_DASH_MAX || !dataDashById("my_picks")) {
+        return dataDashCanon(out);
+      }
+      const at = out.indexOf("pick_print");
+      if (at >= 0) out.splice(at + 1, 0, "my_picks");
+      else out.splice(Math.min(3, out.length), 0, "my_picks");
+      return dataDashCanon(out);
+    }
+
     function dataDashBoardTiles() {
       return dataDashCanon(dataDashTiles);
+    }
+
+    function dataDashTopIds() {
+      return dataDashBoardTiles().slice(0, 4);
+    }
+
+    function dataDashIsTop(id) {
+      return dataDashTopIds().indexOf(id) >= 0;
     }
 
     function dataDashIsLegacyBoard(tiles) {
@@ -8618,7 +8638,7 @@ const html = `<!DOCTYPE html>
       try {
         const raw = localStorage.getItem(dataDashKey());
         const parsed = raw ? JSON.parse(raw) : null;
-        if (Array.isArray(parsed)) return dataDashCanon(parsed);
+        if (Array.isArray(parsed)) return dataDashMigrateMyPicks(parsed);
       } catch (err) { /* private mode */ }
       return dataDashCanon(DATA_DASH_DEFAULT);
     }
@@ -8672,11 +8692,23 @@ const html = `<!DOCTYPE html>
     function dataDashLiftDoor() {
       if (!dataDashDrag || dataDashDrag.lifted) return;
       dataDashDrag.lifted = true;
+      const board = document.querySelector("[data-dash-board]");
+      if (board) board.style.touchAction = "none";
       if (dataDashDrag.el) {
         dataDashDrag.el.classList.add("is-lift");
         try { dataDashDrag.el.setPointerCapture(dataDashDrag.pointerId); } catch (err) { /* ignore */ }
       }
       try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) { /* ignore */ }
+    }
+
+    function dataDashPaintTop() {
+      const board = document.querySelector("[data-dash-board]");
+      if (!board) return;
+      const nodes = board.querySelectorAll("[data-dash-id]");
+      for (let i = 0; i < nodes.length; i++) {
+        if (i < 4) nodes[i].classList.add("door-top");
+        else nodes[i].classList.remove("door-top");
+      }
     }
 
     function dataDashMoveLifted(overEl) {
@@ -8696,6 +8728,7 @@ const html = `<!DOCTYPE html>
       dataDashClearDragClasses();
       dataDashDrag.el.classList.add("is-lift");
       overEl.classList.add("is-drop");
+      dataDashPaintTop();
     }
 
     function dataDashCommitFromBoard() {
@@ -8718,14 +8751,19 @@ const html = `<!DOCTYPE html>
       dataDashStopDragTimer();
       const drag = dataDashDrag;
       dataDashDrag = null;
+      const board = document.querySelector("[data-dash-board]");
+      if (board) board.style.touchAction = "";
       if (!drag) return;
       if (drag.el) {
         try { drag.el.releasePointerCapture(drag.pointerId); } catch (err) { /* ignore */ }
       }
       const lifted = !!drag.lifted;
-      if (commit && lifted) dataDashCommitFromBoard();
+      let changed = false;
+      if (commit && lifted) changed = dataDashCommitFromBoard();
       dataDashClearDragClasses();
       if (commit && lifted) dataDashDragDid = true;
+      if (changed) render();
+      else dataDashPaintTop();
     }
 
     document.addEventListener("pointerdown", function (e) {
@@ -8744,16 +8782,28 @@ const html = `<!DOCTYPE html>
         x: e.clientX,
         y: e.clientY,
         lifted: false,
+        kind: e.pointerType || "",
       };
-      dataDashDragTimer = setTimeout(function () { dataDashLiftDoor(); }, 280);
+      dataDashDragTimer = setTimeout(function () { dataDashLiftDoor(); }, 220);
     });
     document.addEventListener("pointermove", function (e) {
       if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
       const dx = e.clientX - dataDashDrag.x;
       const dy = e.clientY - dataDashDrag.y;
       if (!dataDashDrag.lifted) {
-        if ((dx * dx + dy * dy) > 64) dataDashEndDrag(false);
-        return;
+        const dist2 = dx * dx + dy * dy;
+        const mouse = dataDashDrag.kind === "mouse";
+        if (mouse && dist2 > 36) {
+          dataDashStopDragTimer();
+          dataDashLiftDoor();
+        } else if (!mouse && dist2 > 324) {
+          if (Math.abs(dy) > Math.abs(dx) + 6) dataDashEndDrag(false);
+          else {
+            dataDashStopDragTimer();
+            dataDashLiftDoor();
+          }
+        }
+        if (!dataDashDrag || !dataDashDrag.lifted) return;
       }
       e.preventDefault();
       const over = dataDashDoorUnder(e.clientX, e.clientY, dataDashDrag.id);
@@ -10031,10 +10081,11 @@ const html = `<!DOCTYPE html>
       const spec = dataDashById(id);
       if (!spec) return "";
       const face = receiptDoorFace(id);
+      const top = dataDashIsTop(id) ? " door-top" : "";
       if (dataDashEdit) {
         const tiles = dataDashBoardTiles();
         const canCut = tiles.length > DATA_DASH_MIN;
-        return '<div class="door is-edit" data-dash-id="' + esc(id) + '">'
+        return '<div class="door is-edit' + top + '" data-dash-id="' + esc(id) + '">'
           + '<div class="data-tile-edit">'
           + (canCut
             ? '<button type="button" class="data-tile-ico" data-dash-remove="' + esc(id) + '" aria-label="Remove">−</button>'
@@ -10043,7 +10094,7 @@ const html = `<!DOCTYPE html>
           + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
           + "</div>";
       }
-      return '<button type="button" class="door" data-dash-id="' + esc(id) + '" data-dash-open="' + esc(id) + '">'
+      return '<button type="button" class="door' + top + '" data-dash-id="' + esc(id) + '" data-dash-open="' + esc(id) + '">'
         + face + "</button>";
     }
 
@@ -10630,7 +10681,7 @@ const html = `<!DOCTYPE html>
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
         + '<p class="data-dash-sub">Tap a door. Search and filter inside. Votes never enter these numbers. '
         + editBtn + "</p>"
-        + '<p class="data-dash-drag-hint">Hold a tile, then drag to move it.</p>'
+        + '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
         + "</section>";
@@ -19684,7 +19735,7 @@ const html = `<!DOCTYPE html>
         const remote = rows && rows[0] && rows[0].tiles;
         if (Array.isArray(remote) && remote.length) {
           const next = dataDashCanon(remote);
-          dataDashTiles = dataDashIsLegacyBoard(next) ? dataDashCanon(DATA_DASH_DEFAULT) : next;
+          dataDashTiles = dataDashIsLegacyBoard(next) ? dataDashCanon(DATA_DASH_DEFAULT) : dataDashMigrateMyPicks(next);
           dataDashWriteLocal(dataDashTiles);
         }
       } catch (err) {
@@ -22111,7 +22162,24 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
       return '<section class="lh-section">' + door + "</section>"
+        + homeTopDoorsHtml()
         + homeDeskHtml();
+    }
+
+    function homeTopDoorsHtml() {
+      const ids = dataDashTopIds();
+      if (!ids.length) return "";
+      return '<section class="home-top-doors" aria-label="Your top 4">'
+        + '<div class="home-desk-h">Your top 4</div>'
+        + '<p class="home-desk-sub">Open a door. Reorder them on League Data.</p>'
+        + '<div class="receipt-board home-top-board">'
+        + ids.map(function (id) {
+          const spec = dataDashById(id);
+          if (!spec) return "";
+          return '<button type="button" class="door door-top" data-home-door="' + esc(id) + '">'
+            + receiptDoorFace(id) + "</button>";
+        }).join("")
+        + "</div></section>";
     }
 
 
@@ -24229,6 +24297,14 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const homeDoorBtn = e.target.closest("[data-home-door]");
+      if (homeDoorBtn) {
+        const id = homeDoorBtn.getAttribute("data-home-door") || "";
+        if (!id || !dataDashById(id)) return;
+        setHomeTab("history", { force: true });
+        dataDashOpenReport(id);
+        return;
+      }
       const dashOpenBtn = e.target.closest("[data-dash-open]");
       if (dashOpenBtn) {
         if (dataDashDragDid) { dataDashDragDid = false; return; }
@@ -25856,7 +25932,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v234-board-only";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v235-top-four";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25947,13 +26023,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v234-board-only")) {
+  || !html.includes("chuckle-shell-v235-top-four")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v234-board-only")
+  || !swSrc.includes("chuckle-shell-v235-top-four")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26018,8 +26094,9 @@ if (inline.includes('day-alert-h">Champions Path')) {
   if (prog.includes("your3Html()") || prog.includes("homeNewsDoorHtml()")) {
     throw new Error("Home digest must not mount Alerts or the News door — the News tab owns them");
   }
-  if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")) {
-    throw new Error("Home digest is Cuckle trade calculator + Trade Desk");
+  if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")
+    || !prog.includes("homeTopDoorsHtml()")) {
+    throw new Error("Home digest is Cuckle trade calculator + top 4 doors + Trade Desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -27256,7 +27333,9 @@ if (!inline.includes("function dataDashHtml(")
   || !inline.includes("data-cuff-q")
   || fnSrc("dataDashHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
-  || fnSrc("homeDeskHtml").includes("calcValueNum(")) {
+  || fnSrc("homeDeskHtml").includes("calcValueNum(")
+  || fnSrc("homeTopDoorsHtml").includes("calcFmt(")
+  || fnSrc("homeTopDoorsHtml").includes("calcValueNum(")) {
   throw new Error("League Data is Your board — no top search, no bag totals on Home");
 }
 {
@@ -27366,10 +27445,16 @@ if (!inline.includes("function dataDashHtml(")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")
     || !inline.includes("function dataDashCommitFromBoard(")
+    || !inline.includes("function dataDashPaintTop(")
+    || !inline.includes("function homeTopDoorsHtml(")
     || !inline.includes("data-dash-board")
+    || !inline.includes("data-home-door")
+    || !inline.includes("door-top")
+    || !inline.includes("Your top 4")
+    || !inline.includes("Top 4 wear gold")
     || !inline.includes("Hold a tile, then drag to move it.")
     || !inline.includes("Every pick ")
-    || !inline.includes("class=\"door\"")
+    || !inline.includes("class=\"door")
     || !fnSrc("dataDashHtml").includes("receiptPickKey")
     || fnSrc("dataDashBoardHtml").includes("receiptBoardFilterHtml(")
     || fnSrc("dataDashTileHtml").includes("receiptChipHtml(")
@@ -28709,6 +28794,8 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || inline.includes("Even-up starter")
   || fnSrc("homeDeskHtml").includes("calcFmt(")
   || fnSrc("homeDeskHtml").includes("calcValueNum(")
+  || fnSrc("homeTopDoorsHtml").includes("calcFmt(")
+  || fnSrc("homeTopDoorsHtml").includes("calcValueNum(")
   || fnSrc("homeDeskHtml").includes("Open the calculator")
   || !fnSrc("homeDeskHtml").includes("authSession")
   || !fnSrc("homeDeskCards").includes("authSession")

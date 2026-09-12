@@ -59,7 +59,7 @@ superseded in the same pass.
 | **HIG-20** | Menu selection is a capsule | Hover / focus / selected / pressed menu rows use a gold **capsule** plus gold type. Pressed is `:active` (Apple: immediate feedback). No system blue (`#007AFF` / `#0A84FF`). |
 | **HIG-21** | One header row | Header is gold mark + **More**. No second toolbar. No filter sliders (the video's sliders are their product, not ours — a dead control fails HIG). No + FAB. |
 | **HIG-22** | Menu keyboard | Open: focus the first menuitem; ArrowUp / ArrowDown / Home / End move menuitems before tab roving. Tab and Escape close. Closed panel is `inert` (not in the tab order). Close restores focus to the hamburger. |
-| **HIG-23** | Filters are menus, not pills | Every list filter is a labeled dropdown (`<select>`, `.receipt-look`, 44px, 16px type). One control per dimension. Never a row of bubble / pill / chip buttons for All / Held / Smash / Used / QB / year. Action chips (Back, Edit, Save) stay chips. The nav pill is not a filter. Board presets (Deal / Research), chart metric pickers, and Profit / Loss rooms (Unrealized / Realized) are not filters. Future filters must call `receiptLookSelect`. |
+| **HIG-23** | Filters are menus, not pills | Every list filter is a labeled dropdown (`<select>`, `.receipt-look`, 44px, 16px type). One control per dimension. Never a row of bubble / pill / chip buttons for All / Held / Smash / Used / QB / year. Action chips (Back, Edit, Save) stay chips. The nav pill is not a filter. Board presets (Deal / Research), chart metric pickers, and Profit / Loss rooms (Held / Sold) are not filters. Future filters must call `receiptLookSelect`. |
 
 ---
 

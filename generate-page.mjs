@@ -3437,7 +3437,7 @@ const html = `<!DOCTYPE html>
       background: #141418; color: var(--text); font: inherit; font-size: 16px;
     }
     .receipt-trade-menus { margin: 0 0 14px; }
-    .receipt-pl-rooms { margin: 0 0 14px; }
+    .receipt-pl-rooms { margin: 8px 0 10px; }
     .receipt-look {
       display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px;
     }
@@ -4088,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "plbooks20260912161000";
+    const DATA_V = "plheld20260912170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4181,7 +4181,7 @@ const html = `<!DOCTYPE html>
       { id: "least_traded", lab: "Least traded", desk: "lists", size: "full", why: "Rostered players who have moved least." },
       { id: "forever", lab: "Never left", desk: "lists", size: "full", why: "Still on the team that drafted them in 2019." },
       { id: "past_champions", lab: "Who won the year", desk: "lists", size: "half", why: "Every title path in this league." },
-      { id: "profit_loss", lab: "Profit / Loss", desk: "lists", group: "memory", size: "full", why: "Unrealized is still on this roster. Realized is gone." },
+      { id: "profit_loss", lab: "Profit / Loss", desk: "lists", group: "memory", size: "full", why: "Held is still on this roster. Sold is gone." },
       { id: "seat_manners", lab: "Manners", desk: "seats", size: "full", why: "Who extracts vs who gets extracted." },
       { id: "seat_aging", lab: "Aging", desk: "seats", size: "full", why: "How 2-team trades moved after accept." },
       { id: "seat_draft", lab: "Draft hits", desk: "seats", size: "full", why: "Rookie surplus vs the pick." },
@@ -5111,13 +5111,13 @@ const html = `<!DOCTYPE html>
 
     function receiptPlRoomsHtml() {
       const room = receiptPlRoom === "closed" ? "closed" : "held";
-      return '<div class="nav receipt-pl-rooms" role="tablist" aria-label="Profit or loss book">'
+      return '<div class="nav receipt-pl-rooms" role="tablist" aria-label="Held and sold">'
         + '<button type="button" role="tab" class="tab' + (room === "held" ? " on" : "") + '"'
         + ' aria-selected="' + (room === "held" ? "true" : "false") + '"'
-        + ' data-receipt-pl-room="held">Unrealized</button>'
+        + ' data-receipt-pl-room="held">Held</button>'
         + '<button type="button" role="tab" class="tab' + (room === "closed" ? " on" : "") + '"'
         + ' aria-selected="' + (room === "closed" ? "true" : "false") + '"'
-        + ' data-receipt-pl-room="closed">Realized</button>'
+        + ' data-receipt-pl-room="closed">Sold</button>'
         + "</div>";
     }
 
@@ -6632,8 +6632,8 @@ const html = `<!DOCTYPE html>
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
         + '<p class="caption">' + vsBack + histBack + draftBack
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
-        + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
+        + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + '<p class="caption">' + esc(caption) + "</p>"
         + ((id === "trade_mark" || id === "lopsided")
           ? ""
@@ -26586,7 +26586,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v243-pl-books";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v244-pl-held";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26677,13 +26677,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v243-pl-books")) {
+  || !html.includes("chuckle-shell-v244-pl-held")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v243-pl-books")
+  || !swSrc.includes("chuckle-shell-v244-pl-held")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28091,8 +28091,8 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptPlRowsForSeat(")
     || !inline.includes("function receiptPlRoomsHtml(")
     || !inline.includes("data-receipt-pl-room")
-    || !inline.includes(">Unrealized<")
-    || !inline.includes(">Realized<")
+    || !inline.includes('data-receipt-pl-room="held">Held<')
+    || !inline.includes('data-receipt-pl-room="closed">Sold<')
     || fnSrc("receiptDoorFilterHtml").includes("Held or sold")
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptOriginPicksForSeat(")

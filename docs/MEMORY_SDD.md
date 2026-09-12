@@ -149,7 +149,7 @@ scenario’s list. Search there for a specific team, trade, pick, year, or seat.
 2. League Trade History (`league_trades`) — every pairing, most deals first, searchable
 3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
-5. Profit / Loss (`profit_loss`) — Unrealized (held) vs Realized (gone)
+5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top
 6. Who won the year (`past_champions`)
 7. How I finished (`season_place`)
 8. Me vs them (`vs_you`)
@@ -211,14 +211,14 @@ Tap a seat → the same three chips + grades as your own door. Back:
 
 **Profit / Loss**
 
-Tap the tile. Two rooms at the top (not filter chips): **Unrealized**
-and **Realized**. One row per player this seat has traded (named player
-legs only — picks stay on My Draft Picks). Sorted by the biggest
-absolute number. Two-point mark (T0 / today), not the 3y mean.
+Tap the tile. Two rooms at the top (not filter chips): **Held** and
+**Sold**. Toggle between them. One row per player this seat has traded
+(named player legs only — picks stay on My Draft Picks). Sorted by the
+biggest absolute number. Two-point mark (T0 / today), not the 3y mean.
 
-- **Unrealized** — still on this roster. Number is today minus paid
+- **Held** — still on this roster. Number is today minus paid
   (last inbound T0). Row prints `paid` and `now`.
-- **Realized** — gone from this roster.
+- **Sold** — gone from this roster.
   - **Sold** — sale T0 minus paid. Row prints `paid` and `sold`.
   - **Sold vs now** — sent with no inbound cost. Exit T0 vs today.
   - **Left** — received, then gone without a sale. Last quote minus paid.
@@ -228,7 +228,7 @@ Filters are **dropdowns**, never pill chips (HIG-23):
 
 1. **Ahead or behind** — who printed and who died.
 2. **Position** — QB / RB / WR / TE. Search covers a name.
-3. **League year** — acquire year on Unrealized, close year on Sold.
+3. **League year** — acquire year on Held, close year on Sold.
 
 No net bag total on the door. Count is `held` or `sold · left` for the
 open room. Tap a row → the last trade ticket. No claimed seat: the door

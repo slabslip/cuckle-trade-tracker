@@ -15,7 +15,7 @@ Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
 **Filter menus (HIG-23):** a labeled `<select>` (`.receipt-look`). Never a row of
 bubble / pill / chip buttons. One constructor: `receiptLookSelect`. Action chips
 (Back, Edit, Save), the nav pill, board presets, chart metric pickers, and
-Profit / Loss rooms (Unrealized / Realized) are not filters. Hunt position
+Profit / Loss rooms (Held / Sold) are not filters. Hunt position
 and tape year use the same dropdown.
 
 ---

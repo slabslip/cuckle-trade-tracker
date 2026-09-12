@@ -3430,6 +3430,35 @@ const html = `<!DOCTYPE html>
       padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
       background: #141418; color: var(--text); font: inherit; font-size: 16px;
     }
+    .receipt-trade-menus { margin: 0 0 14px; }
+    .receipt-look {
+      display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px;
+    }
+    .receipt-look span, .receipt-player-dd > span {
+      font-size: 0.68rem; font-weight: 750; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .receipt-look select {
+      appearance: none; font: inherit; font-size: 16px; font-weight: 650;
+      color: var(--text); background: #141418; border: 1px solid var(--line);
+      border-radius: 10px; min-height: 44px; padding: 0 12px; width: 100%;
+    }
+    .receipt-player-dd { position: relative; margin: 0 0 10px; }
+    .receipt-player-dd .receipt-search { margin: 4px 0 0; }
+    .receipt-player-list {
+      margin: 6px 0 0; max-height: 240px; overflow: auto;
+      background: #16161c; border: 1px solid var(--line); border-radius: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+    button.receipt-player-hit {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      background: transparent; border: 0; border-bottom: 1px solid var(--line);
+      min-height: 44px; padding: 10px 12px; width: 100%; cursor: pointer;
+      box-sizing: border-box; font-weight: 650;
+    }
+    button.receipt-player-hit:last-child { border-bottom: 0; }
+    button.receipt-player-hit.on { color: #e0b44c; background: #221e14; }
+    .receipt-player-dd .receipt-search { margin-bottom: 0; }
     .receipt-clocks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
     button.receipt-clock {
       appearance: none; font: inherit; font-size: 0.82rem; font-weight: 700;
@@ -4052,7 +4081,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "door20260912114000";
+    const DATA_V = "door20260912115600";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5436,11 +5465,132 @@ const html = `<!DOCTYPE html>
         + '<div class="margin">' + (num == null ? "—" : tapeMargin(num)) + "</div></div></button>";
     }
 
+    function receiptResetPlayerFilter() {
+      receiptPlayerQ = "";
+      receiptPlayerPick = "";
+      receiptPlayerOpen = false;
+    }
+
+    function receiptAddOwnedPlayer(seen, out, label) {
+      const name = String(label || "").trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push(name);
+    }
+
+    function receiptTradePlayerNames() {
+      const seen = {};
+      const out = [];
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
+      if (trades.length) {
+        for (let i = 0; i < trades.length; i++) {
+          const ev = trades[i].even || {};
+          const bags = [].concat(ev.legs || [], ev.sent || []);
+          for (let j = 0; j < bags.length; j++) {
+            const leg = bags[j];
+            if (!leg) continue;
+            if (leg.kind === "player") receiptAddOwnedPlayer(seen, out, leg.label);
+            if (leg.became) receiptAddOwnedPlayer(seen, out, leg.became);
+          }
+        }
+      } else {
+        const sides = ((league && league.trade_boards && league.trade_boards.sides) || []);
+        for (let i = 0; i < sides.length; i++) {
+          const g = guessLegFromHeadline(sides[i].headline);
+          if (g && g.kind === "player") receiptAddOwnedPlayer(seen, out, g.label);
+        }
+      }
+      out.sort(function (a, b) { return a.localeCompare(b); });
+      return out;
+    }
+
+    function receiptTradeHitsPlayer(s, player) {
+      const want = String(player || "").trim().toLowerCase();
+      if (!want) return true;
+      if (String(s.headline || "").toLowerCase().indexOf(want) >= 0) return true;
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      const trades = (mine && seatCache[mine] && seatCache[mine].trades) || [];
+      for (let i = 0; i < trades.length; i++) {
+        if (String(trades[i].transaction_id) !== String(s.transaction_id)) continue;
+        const ev = trades[i].even || {};
+        const bags = [].concat(ev.legs || [], ev.sent || []);
+        for (let j = 0; j < bags.length; j++) {
+          const leg = bags[j];
+          if (!leg) continue;
+          const lab = String(leg.label || "").toLowerCase();
+          const became = String(leg.became || "").toLowerCase();
+          if (lab.indexOf(want) >= 0 || became.indexOf(want) >= 0) return true;
+        }
+      }
+      return false;
+    }
+
+    function receiptPlayerNeedle() {
+      if (receiptPlayerPick) return receiptPlayerPick;
+      const typed = String(receiptPlayerQ || "").trim();
+      return typed.length >= 2 ? typed : "";
+    }
+
+    function receiptTradePlayerMenuHtml() {
+      const mine = typeof authSeatId === "function" ? authSeatId() : "";
+      if (mine && !(seatCache[mine] && seatCache[mine].trades) && typeof seatData === "function") {
+        return '<div class="receipt-player-dd"><span>Player</span>'
+          + '<p class="caption">Loading players you have owned…</p></div>';
+      }
+      const needle = String(receiptPlayerQ || "").trim().toLowerCase();
+      const names = receiptTradePlayerNames().filter(function (n) {
+        return !needle || n.toLowerCase().indexOf(needle) >= 0;
+      });
+      const open = receiptPlayerOpen || !!needle;
+      let list = "";
+      if (open) {
+        list = '<div class="receipt-player-list" role="listbox">'
+          + '<button type="button" class="receipt-player-hit' + (!receiptPlayerPick ? " on" : "") + '"'
+          + ' data-receipt-player-pick="">All players</button>';
+        for (let i = 0; i < names.length; i++) {
+          const on = receiptPlayerPick === names[i];
+          list += '<button type="button" class="receipt-player-hit' + (on ? " on" : "") + '"'
+            + ' data-receipt-player-pick="' + esc(names[i]) + '">' + esc(names[i]) + "</button>";
+        }
+        if (!names.length) list += '<p class="caption">No player matches that name.</p>';
+        list += "</div>";
+      }
+      const shown = receiptPlayerPick || receiptPlayerQ;
+      return '<div class="receipt-player-dd" data-receipt-player-dd="1">'
+        + "<span>Player you have owned</span>"
+        + '<input class="receipt-search" data-receipt-player-q="1" type="search"'
+        + ' placeholder="Type a player name" value="' + esc(shown) + '"'
+        + ' autocomplete="off" spellcheck="false" aria-label="Search players you have owned" />'
+        + list
+        + "</div>";
+    }
+
+    function receiptTradeLookHtml(id) {
+      const opts = id === "lopsided"
+        ? [["all", "All deals"], ["smash", "Smash"], ["robbery", "Robbery"]]
+        : [["all", "All deals"], ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"]];
+      const lab = id === "lopsided" ? "On the day" : "Since then";
+      return '<label class="receipt-look"><span>' + lab + "</span>"
+        + '<select data-receipt-door-look="1">'
+        + opts.map(function (o) {
+          return '<option value="' + o[0] + '"' + (receiptDoorFilter === o[0] ? " selected" : "") + ">"
+            + o[1] + "</option>";
+        }).join("")
+        + "</select></label>";
+    }
+
     function receiptDoorFilterHtml(id) {
+      if (id === "trade_mark" || id === "lopsided") {
+        return '<div class="receipt-trade-menus">'
+          + receiptTradePlayerMenuHtml()
+          + receiptTradeLookHtml(id)
+          + "</div>";
+      }
       let chips = [];
-      if (id === "trade_mark") chips = [["all", "All"], ["grew", "Grew"], ["faded", "Faded"], ["even", "Even"]];
-      else if (id === "lopsided") chips = [["all", "All"], ["smash", "Smash"], ["robbery", "Robbery"]];
-      else if (id === "pick_print") chips = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
+      if (id === "pick_print") chips = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
       else if (id === "firsts_held") {
         chips = [["all", "All"]];
         const years = (typeof pickSeasonsAvailable === "function") ? pickSeasonsAvailable() : [];
@@ -5491,10 +5641,15 @@ const html = `<!DOCTYPE html>
             return true;
           });
         }
+        const player = receiptPlayerNeedle();
+        if (player) {
+          sides = sides.filter(function (s) { return receiptTradeHitsPlayer(s, player); });
+        }
+        const cap = player ? 200 : 80;
         const out = [];
-        for (let i = 0; i < sides.length && out.length < 80; i++) {
+        for (let i = 0; i < sides.length && out.length < cap; i++) {
           const r = sides[i];
-          if (!hit([r.name, r.other, r.headline, r.date])) continue;
+          if (!player && !hit([r.name, r.other, r.headline, r.date])) continue;
           const num = id === "lopsided" ? windowScoreAt(r, "t0") : receiptTradeAged(r);
           out.push(receiptDoorTradeRow(r, num));
         }
@@ -5713,8 +5868,8 @@ const html = `<!DOCTYPE html>
       const rows = receiptPortalRows(id, receiptQ);
       const pickSeat = id === "pick_print" ? receiptPickPortalSeat(receiptQ) : "";
       let caption = "Search and filter this list. Tap a row for the receipt.";
-      if (id === "trade_mark") caption = "Trade NOW — how deals look from then to now. Search a team or a year.";
-      else if (id === "lopsided") caption = "Trade THEN — how deals looked the day they clicked accept.";
+      if (id === "trade_mark") caption = "Search a player you have owned. See how that deal looks from then to now.";
+      else if (id === "lopsided") caption = "Search a player you have owned. See how that deal looked the day they accepted.";
       else if (id === "pick_print") {
         caption = pickSeat
           ? ("Every pick " + pickSeat + " ever owned. Tap one for the hop tape.")
@@ -5737,8 +5892,10 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + '<p class="caption">' + esc(caption) + "</p>"
-        + '<input class="receipt-search" data-receipt-q="1" type="search"'
-        + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />'
+        + ((id === "trade_mark" || id === "lopsided")
+          ? ""
+          : ('<input class="receipt-search" data-receipt-q="1" type="search"'
+            + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />'))
         + receiptDoorFilterHtml(id)
         + (rows || '<p class="caption">Nothing on this tape matches.</p>')
         + "</section>";
@@ -9774,6 +9931,7 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptVsWho = "";
+        receiptResetPlayerFilter();
         receiptTicket = false;
         receiptPickKey = "";
         dataDashEdit = false;
@@ -9783,7 +9941,8 @@ const html = `<!DOCTYPE html>
           && typeof ensurePicks === "function") ensurePicks();
         if (receiptWhoList === "uninsured" && typeof ensureCuffs === "function") ensureCuffs();
         const mine = typeof authSeatId === "function" ? authSeatId() : "";
-        if (receiptWhoList === "vs_you" && mine && typeof seatData === "function") {
+        if ((receiptWhoList === "vs_you" || receiptWhoList === "trade_mark" || receiptWhoList === "lopsided")
+          && mine && typeof seatData === "function") {
           seatData(mine).then(function () { render(); }).catch(function () {});
         }
         focusNext = ".screen-h";
@@ -14514,6 +14673,9 @@ const html = `<!DOCTYPE html>
     let receiptFilter = "all";
     let receiptDoorFilter = "all";
     let receiptVsWho = "";
+    let receiptPlayerQ = "";
+    let receiptPlayerPick = "";
+    let receiptPlayerOpen = false;
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -14982,6 +15144,7 @@ const html = `<!DOCTYPE html>
         receiptWhoList = "";
         receiptQ = "";
         receiptDoorFilter = "all";
+        receiptResetPlayerFilter();
         homeTab = "history";
         view = "home";
         focusNext = ".screen-h";
@@ -23746,6 +23909,7 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptVsWho = "";
+        receiptResetPlayerFilter();
         dataRoom = "overview";
         focusNext = ".screen-h";
         render();
@@ -23768,6 +23932,19 @@ const html = `<!DOCTYPE html>
       const receiptDoorFilterBtn = e.target.closest("[data-receipt-door-filter]");
       if (receiptDoorFilterBtn) {
         receiptDoorFilter = receiptDoorFilterBtn.getAttribute("data-receipt-door-filter") || "all";
+        render();
+        return;
+      }
+      const receiptPlayerPickBtn = e.target.closest("[data-receipt-player-pick]");
+      if (receiptPlayerPickBtn) {
+        receiptPlayerPick = receiptPlayerPickBtn.getAttribute("data-receipt-player-pick") || "";
+        receiptPlayerQ = receiptPlayerPick;
+        receiptPlayerOpen = false;
+        render();
+        return;
+      }
+      if (receiptPlayerOpen && !e.target.closest("[data-receipt-player-dd]")) {
+        receiptPlayerOpen = false;
         render();
         return;
       }
@@ -25150,6 +25327,19 @@ const html = `<!DOCTYPE html>
       const hi = (ta.form || ta.closest("form") || document).querySelector("[data-ledger-desc-hi]");
       if (hi) hi.scrollTop = ta.scrollTop;
     }, true);
+    document.getElementById("app").addEventListener("focusin", (e) => {
+      const box = e.target && e.target.closest && e.target.closest("[data-receipt-player-q]");
+      if (!box || receiptPlayerOpen) return;
+      receiptPlayerOpen = true;
+      const start = box.selectionStart;
+      const end = box.selectionEnd;
+      render();
+      const back = document.querySelector("#app [data-receipt-player-q]");
+      if (back) {
+        back.focus({ preventScroll: true });
+        try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+      }
+    });
     document.getElementById("app").addEventListener("pointerdown", (e) => {
       if (view === "calc" && calcSeatMenu && !e.target.closest(".calc-seat")) {
         calcSeatMenu = "";
@@ -25190,6 +25380,12 @@ const html = `<!DOCTYPE html>
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
+      const lookSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-look]");
+      if (lookSel) {
+        receiptDoorFilter = lookSel.value || "all";
+        render();
+        return;
+      }
       const sendSel = e.target && e.target.closest && e.target.closest("[data-ledger-send-select]");
       if (sendSel) {
         const form = sendSel.closest("form");
@@ -25286,6 +25482,21 @@ const html = `<!DOCTYPE html>
         const end = calcFilterBox.selectionEnd;
         render();
         calcFocusSearch(side, { start: start, end: end });
+        return;
+      }
+      const receiptPlayerBox = e.target.closest("[data-receipt-player-q]");
+      if (receiptPlayerBox) {
+        receiptPlayerQ = receiptPlayerBox.value || "";
+        receiptPlayerPick = "";
+        receiptPlayerOpen = true;
+        const start = receiptPlayerBox.selectionStart;
+        const end = receiptPlayerBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-receipt-player-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
         return;
       }
       const receiptQBox = e.target.closest("[data-receipt-q]");
@@ -25464,7 +25675,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v230-trade-then-now";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v231-trade-player";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -25555,13 +25766,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v230-trade-then-now")) {
+  || !html.includes("chuckle-shell-v231-trade-player")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v230-trade-then-now")
+  || !swSrc.includes("chuckle-shell-v231-trade-player")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -26967,6 +27178,11 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptDoorFilterHtml(")
     || !inline.includes("function receiptIsDoor(")
     || !inline.includes("data-receipt-door-filter")
+    || !inline.includes("function receiptTradePlayerNames(")
+    || !inline.includes("function receiptTradePlayerMenuHtml(")
+    || !inline.includes("data-receipt-player-q")
+    || !inline.includes("data-receipt-player-pick")
+    || !inline.includes("Type a player name")
     || !inline.includes("function dataDashLiftDoor(")
     || !inline.includes("function dataDashCommitFromBoard(")
     || !inline.includes("data-dash-board")

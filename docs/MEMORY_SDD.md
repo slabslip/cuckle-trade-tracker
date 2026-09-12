@@ -163,8 +163,9 @@ one public ticket, not someone’s private layout.
 
 **Trade portal** (Trade THEN / Trade NOW)
 
-Search + filters (Grew / Faded / Even, or Smash / Robbery). Rows are
-simple list lines, one deal each, not example chips. Tap → L1 ticket.
+Search a **player you have owned** (A–Z dropdown, list refines as you
+type). Then a look menu: Smash / Robbery on THEN, Grew / Faded / Even
+on NOW. Rows are simple list lines. Tap → L1 ticket.
 
 **Pick portal (tap the tile)**
 

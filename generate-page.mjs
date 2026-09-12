@@ -9855,6 +9855,11 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashHtml() {
+      if (receiptPickKey) {
+        return '<section class="data-dash" aria-label="Pick journey">'
+          + renderReceiptPickTicket(receiptPickKey)
+          + "</section>";
+      }
       if (dataHunt && dataDashById(dataHunt)) return dataDashHuntPageHtml(dataHunt);
       if (dataSeat) return dataDashSeatPageHtml(dataSeat);
       if (receiptWhoList) return receiptWhoListHtml(receiptWhoList);
@@ -26506,6 +26511,7 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")
     || !inline.includes("Every pick ")
+    || !fnSrc("dataDashHtml").includes("receiptPickKey")
     || inline.includes("exactly like")) {
     throw new Error("Receipt tiles must ship shareProofNow, public boot, clock English, and L1/L2 tickets");
   }

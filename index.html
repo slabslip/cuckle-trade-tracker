@@ -9847,6 +9847,11 @@
     }
 
     function dataDashHtml() {
+      if (receiptPickKey) {
+        return '<section class="data-dash" aria-label="Pick journey">'
+          + renderReceiptPickTicket(receiptPickKey)
+          + "</section>";
+      }
       if (dataHunt && dataDashById(dataHunt)) return dataDashHuntPageHtml(dataHunt);
       if (dataSeat) return dataDashSeatPageHtml(dataSeat);
       if (receiptWhoList) return receiptWhoListHtml(receiptWhoList);

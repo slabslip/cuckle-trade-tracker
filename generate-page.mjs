@@ -1594,18 +1594,27 @@ const html = `<!DOCTYPE html>
     .home-desk-sub {
       margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
     }
-    .home-you { margin: 0 0 18px; }
-    .home-you-plate { margin: 0 0 10px; }
-    button.home-you-card {
-      appearance: none; font: inherit; color: inherit; text-align: left;
-      display: block; width: 100%; cursor: pointer;
-      background: var(--card); border: 1px solid #3a3428; border-radius: 12px;
-      padding: 12px 14px; margin: 0 0 10px;
+    .home-you { margin: 0 0 14px; }
+    .home-you-stack { display: flex; flex-direction: column; align-items: flex-start; }
+    button.home-you-plate {
+      appearance: none; font: inherit; color: inherit;
+      display: block; width: 100%; margin: 0; padding: 0; border: 0;
+      background: transparent; cursor: pointer; border-radius: 10px 10px 0 0;
     }
-    button.home-you-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    button.home-you-card b { display: block; font-size: 1.05rem; font-weight: 750; }
-    button.home-you-card > span { display: block; color: var(--dim); font-size: 0.78rem; margin-top: 2px; }
-    .home-you-tape { margin: 8px 0 0; color: #e0b44c; font-size: 0.86rem; font-weight: 650; }
+    button.home-you-plate:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.home-you-plate .cos-plate {
+      margin: 0; border-bottom-left-radius: 0;
+    }
+    button.home-you-name {
+      appearance: none; font: inherit; color: inherit; cursor: pointer;
+      display: inline-flex; align-items: baseline; gap: 6px;
+      margin: -1px 0 0; padding: 2px 10px 3px;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 0 0 10px 10px; line-height: 1.2;
+    }
+    button.home-you-name:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.home-you-name b { font-size: 0.82rem; font-weight: 750; }
+    button.home-you-name span { color: var(--dim); font-size: 0.72rem; font-weight: 650; }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
@@ -4108,7 +4117,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260913144556";
+    const DATA_V = "homeyou20260913150500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -23056,20 +23065,6 @@ const html = `<!DOCTYPE html>
         + cosmeticsDetailSheetHtml();
     }
 
-    function homeYouTapeLine() {
-      const uid = authSeatId();
-      if (!uid || !marks || !marks.seats || !marks.seats[uid]) return "";
-      const m = marksOf(marks.seats[uid]);
-      const bits = [];
-      const add = function (cell) {
-        if (cell && cell.title && (cell.tone === "pos" || cell.tone === "neg")) bits.push(cell.title);
-      };
-      add(m.run);
-      add(m.manners);
-      add(m.draft);
-      return bits.join(" · ");
-    }
-
     function homeYouHtml() {
       if (!authSession || !authSeatId()) return "";
       const name = authSeatCanonName() || authSeatName() || "Your team";
@@ -23077,22 +23072,19 @@ const html = `<!DOCTYPE html>
         return row && String(row.user_id) === String(authSeatId());
       });
       const place = mem && mem.place && typeof nth === "function" ? nth(mem.place) : "";
-      const tape = homeYouTapeLine();
       const plate = (typeof cosmeticsCallingCardHtml === "function")
-        ? cosmeticsCallingCardHtml(cosmeticsPairForSeat(authSeatId()), { empty: false })
+        ? cosmeticsCallingCardHtml(cosmeticsPairForSeat(authSeatId()), { empty: true })
         : "";
-      return '<section class="home-you" aria-label="My team">'
-        + '<div class="home-desk-h">My team</div>'
-        + (plate ? '<div class="home-you-plate">' + plate + "</div>" : "")
-        + '<button type="button" class="home-you-card" data-home-my-team="1">'
-        + "<b>" + esc(name) + "</b>"
-        + (place ? "<span>" + esc(place) + " last season</span>" : "")
-        + (tape ? '<span class="home-you-tape">' + esc(tape) + "</span>" : "")
+      return '<section class="home-you" aria-label="' + esc(name) + '">'
+        + '<div class="home-you-stack">'
+        + '<button type="button" class="home-you-plate" data-home-awards="1" aria-label="Titles and Emblems">'
+        + plate
         + "</button>"
-        + '<p class="caption">'
-        + '<button type="button" class="chip" data-home-my-team="1">Open my team</button> '
-        + '<button type="button" class="chip" data-home-awards="1">Titles and Emblems</button>'
-        + "</p></section>";
+        + '<button type="button" class="home-you-name" data-home-my-team="1" aria-label="' + esc(name) + ' team">'
+        + "<b>" + esc(name) + "</b>"
+        + (place ? "<span>" + esc(place) + "</span>" : "")
+        + "</button>"
+        + "</div></section>";
     }
 
     function leagueInProgress() {
@@ -27114,7 +27106,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v251-player-home";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v252-home-you";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27205,13 +27197,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v251-player-home")) {
+  || !html.includes("chuckle-shell-v252-home-you")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v251-player-home")
+  || !swSrc.includes("chuckle-shell-v252-home-you")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28462,6 +28454,11 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("leagueInProgress").includes("homeTopDoorsHtml()")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")
+    || !fnSrc("homeYouHtml").includes("home-you-name")
+    || !fnSrc("homeYouHtml").includes("home-you-plate")
+    || fnSrc("homeYouHtml").includes("Open my team")
+    || fnSrc("homeYouHtml").includes("home-desk-h")
+    || fnSrc("homeYouHtml").includes("homeYouTapeLine")
     || fnSrc("homeYouHtml").includes("calcFmt(")
     || fnSrc("homeYouHtml").includes("calcValueNum(")
     || !inline.includes('cuckle.team.home.layout.v1')

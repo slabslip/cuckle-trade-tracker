@@ -16187,7 +16187,8 @@ const html = `<!DOCTYPE html>
       // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
       nav.hidden = true;
       document.body.classList.remove("has-bottom-nav");
-      const on = appScreen === "dash" && view === "home" && !(me && data);
+      const on = appScreen === "dash" && !(me && data)
+        && (view === "home" || view === "calc" || view === "trade");
       try { document.body.classList.toggle("has-lh-bar", on); } catch (err) { /* ignore */ }
       if (!on) lhMenuOpen = false;
       try { document.body.classList.toggle("has-lh-menu", on && lhMenuOpen); } catch (err2) { /* ignore */ }
@@ -23071,7 +23072,8 @@ const html = `<!DOCTYPE html>
       return (lensApplies()
           ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
           : "")
-        + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button></p>'
+        + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button>'
+        + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button></p>'
         + teamMarks()
         + markChart()
         + empty
@@ -23084,8 +23086,7 @@ const html = `<!DOCTYPE html>
         + (pay && take && pay.name !== take.name ? partnerLine(pay) : "")
         + ((data.hit || data.miss) ? "<h2>Draft</h2>" : "")
         + draftLine(data.hit, "hit")
-        + draftLine(data.miss, "miss")
-        + '<p class="caption"><button type="button" class="chip" data-open-ledger="1">Open Ledger</button></p>';
+        + draftLine(data.miss, "miss");
     }
 
     function renderHome() {
@@ -24122,7 +24123,7 @@ const html = `<!DOCTYPE html>
         // ?view=trades means this seat's Trades tab when a seat is set, and the league-wide
         // list of every trade when none is.
         : view === "trades" ? (me && data ? renderTrades() : renderLeagueTrades())
-        : view === "trade" ? renderTradeScreen()
+        : view === "trade" ? ((!me && appScreen === "dash" ? homeChips() : "") + renderTradeScreen())
         : view === "partners" ? renderPartners()
         : view === "drafts" ? renderDrafts()
         : view === "titles" ? renderTitles()
@@ -24133,7 +24134,7 @@ const html = `<!DOCTYPE html>
         : view === "datasets" ? renderDataSetsPage()
         : view === "draftdata" ? renderDraftDataPage()
         : view === "cuffs" ? renderCuffsPage()
-        : view === "calc" ? renderCalc()
+        : view === "calc" ? ((!me && appScreen === "dash" ? homeChips() : "") + renderCalc())
         : view === "cosmetics" ? renderCosmetics()
         : renderLeagueHome();
       // render() replaces the whole subtree, so expanding trade #40 used to drop focus to
@@ -29921,7 +29922,9 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
     ["HIG-08", inline.includes("has-lh-bar")
       && inline.includes('view === "home"')
       && inline.includes('homeTab === "news"')
-      && inline.includes("renderNewsTab(")],
+      && inline.includes("renderNewsTab(")
+      && fnSrc("paintBottomNav").includes('view === "calc"')
+      && fnSrc("paintBottomNav").includes('view === "trade"')],
     ["HIG-09", html.includes("@media (prefers-reduced-motion: reduce)")],
     ["HIG-10", html.includes("position: fixed") && html.includes(".lh-actions {")],
     ["HIG-11", html.includes("--hig-space: 8px")],

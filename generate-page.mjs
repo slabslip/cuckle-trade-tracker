@@ -4115,7 +4115,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashfluid20260913154500";
+    const DATA_V = "dropsearch20260913160000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5657,6 +5657,7 @@ const html = `<!DOCTYPE html>
 
     function receiptPortalNeedsSearch(id) {
       const key = receiptDoorCanon(id);
+      if (id === "my_draft" || id === "league_trades") return false;
       if (key === "trade_mark" || key === "lopsided" || key === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
       if (key === "firsts_held" || key === "seat_draft") return false;
@@ -6161,16 +6162,27 @@ const html = `<!DOCTYPE html>
       return receiptLookSelect("League year", "data-receipt-door-year", opts, receiptDoorYear || "all");
     }
 
+    function receiptHistTeamName() {
+      const t = String(receiptHistTeam || "");
+      return (!t || t === "all") ? "" : t;
+    }
+
+    function receiptHistTeamSelectHtml() {
+      const names = (members || []).map(function (m) { return m.name; }).filter(Boolean)
+        .sort(function (a, b) { return String(a).localeCompare(String(b)); });
+      const opts = [["all", "All teams"]].concat(names.map(function (n) { return [n, n]; }));
+      return receiptLookSelect("Team", "data-receipt-hist-team", opts, receiptHistTeam || "all");
+    }
+
     function receiptDoorFilterHtml(id) {
       if (id === "profit_loss") {
-        return '<div class="receipt-trade-menus">'
-          + receiptLookSelect("Sort", "data-receipt-pl-sort",
-            [["most", "Most profitable"], ["least", "Least profitable"]], receiptPlSort)
-          + receiptTradePlayerMenuHtml(receiptPlPlayerNames())
-          + "</div>";
+        return receiptLookSelect("Sort", "data-receipt-pl-sort",
+          [["most", "Most profitable"], ["least", "Least profitable"]], receiptPlSort);
       }
       if (id === "my_trades" || id === "league_trades") {
-        if (!receiptHistPair) return "";
+        if (!receiptHistPair) {
+          return id === "league_trades" ? receiptHistTeamSelectHtml() : "";
+        }
         return '<div class="receipt-trade-menus">'
           + receiptTradeYearHtml()
           + receiptLookSelect("Look", "data-receipt-door-filter", [
@@ -6232,12 +6244,9 @@ const html = `<!DOCTYPE html>
           else soldN += 1;
         }
         const room = receiptPlRoom === "closed" ? "closed" : "held";
-        const player = receiptPlayerNeedle();
-        const want = String(player || "").toLowerCase();
         rows = rows.filter(function (row) {
           if (room === "held" && row.state !== "held") return false;
           if (room === "closed" && row.state === "held") return false;
-          if (want && String(row.label || "").toLowerCase().indexOf(want) < 0) return false;
           return true;
         });
         rows.sort(function (a, b) {
@@ -6259,12 +6268,12 @@ const html = `<!DOCTYPE html>
       if (id === "my_trades" || id === "league_trades") {
         const mine = id === "my_trades"
           ? (typeof authSeatCanonName === "function" ? authSeatCanonName() : "")
-          : "";
+          : receiptHistTeamName();
         if (id === "my_trades" && !mine) {
           return '<p class="caption">Claim your seat to see your partners.</p>';
         }
         if (!receiptHistPair) {
-          const rows = histPartnerRows(mine, q);
+          const rows = histPartnerRows(mine, "");
           if (!rows.length) return '<p class="caption">No completed pairings on this tape.</p>';
           return rows.map(function (row) { return histPartnerRowHtml(row, !mine); }).join("");
         }
@@ -6645,9 +6654,18 @@ const html = `<!DOCTYPE html>
       if (id === "my_trades" && receiptHistPair) caption = "Deals with " + receiptHistPair + ", newest first. Smash / Robbery is the day they clicked. Grew / Faded is from then to now.";
       else if (id === "my_trades") caption = "Your trade partners, most deals first. Tap a name.";
       else if (id === "league_trades" && receiptHistPair) {
-        const pair = histPairParts(receiptHistPair);
-        caption = "Deals between " + (pair.a || "them") + " and " + (pair.b || "them") + ", newest first.";
-      } else if (id === "league_trades") caption = "Every pairing in the league, most deals first. Search a seat.";
+        const team = receiptHistTeamName();
+        if (team) caption = "Deals between " + team + " and " + receiptHistPair + ", newest first.";
+        else {
+          const pair = histPairParts(receiptHistPair);
+          caption = "Deals between " + (pair.a || "them") + " and " + (pair.b || "them") + ", newest first.";
+        }
+      } else if (id === "league_trades") {
+        const team = receiptHistTeamName();
+        caption = team
+          ? ("Trade partners for " + team + ". Tap a name.")
+          : "Every pairing in the league. Pick a team to see their partners.";
+      }
       else if (id === "my_draft") caption = "Used is a player this seat drafted. Traded away started here and left. Traded in came from another seat. Grade is Star / Hit / Even / Miss / Bust vs the slot.";
       else if (id === "league_draft" && receiptDraftSeat) caption = "Same three buckets for " + receiptDraftSeat + ".";
       else if (id === "league_draft") caption = "Pick a seat to read their used, traded away, and traded in tape.";
@@ -10815,6 +10833,7 @@ const html = `<!DOCTYPE html>
         receiptDoorFilter = "all";
         receiptVsWho = "";
         receiptHistPair = "";
+        receiptHistTeam = "all";
         receiptDraftSeat = "";
         receiptResetPlayerFilter();
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -15565,6 +15584,7 @@ const html = `<!DOCTYPE html>
     let receiptDoorFilter = "all";
     let receiptVsWho = "";
     let receiptHistPair = "";
+    let receiptHistTeam = "all";
     let receiptDraftSeat = "";
     let receiptPlayerQ = "";
     let receiptPlayerPick = "";
@@ -16035,6 +16055,7 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptHistPair = "";
+        receiptHistTeam = "all";
         receiptDraftSeat = "";
         receiptVsWho = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -25311,6 +25332,7 @@ const html = `<!DOCTYPE html>
         receiptDoorFilter = "all";
         receiptVsWho = "";
         receiptHistPair = "";
+        receiptHistTeam = "all";
         receiptDraftSeat = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
@@ -26861,6 +26883,14 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const histTeamSel = e.target && e.target.closest && e.target.closest("[data-receipt-hist-team]");
+      if (histTeamSel) {
+        receiptHistTeam = histTeamSel.value || "all";
+        receiptHistPair = "";
+        receiptQ = "";
+        render();
+        return;
+      }
       const portalFilterSel = e.target && e.target.closest && e.target.closest("[data-receipt-filter]");
       if (portalFilterSel) {
         receiptFilter = portalFilterSel.value || "all";
@@ -27170,7 +27200,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v254-dash-fluid";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v255-drop-search";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27261,13 +27291,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v254-dash-fluid")) {
+  || !html.includes("chuckle-shell-v255-drop-search")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v254-dash-fluid")
+  || !swSrc.includes("chuckle-shell-v255-drop-search")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -28747,7 +28777,13 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptIsDoor(")
     || !inline.includes("function receiptPortalNeedsSearch(")
     || !fnSrc("receiptPortalNeedsSearch").includes('key === "vs_you"')
+    || !fnSrc("receiptPortalNeedsSearch").includes('id === "my_draft"')
+    || !fnSrc("receiptPortalNeedsSearch").includes('id === "league_trades"')
     || !fnSrc("receiptWhoListHtml").includes("receiptPortalNeedsSearch(")
+    || !inline.includes("data-receipt-hist-team")
+    || !inline.includes("function receiptHistTeamSelectHtml(")
+    || !fnSrc("receiptHistTeamSelectHtml").includes("All teams")
+    || !fnSrc("receiptWhoListHtml").includes("Pick a team to see their partners.")
     || !inline.includes("data-receipt-door-filter")
     || inline.includes('class="receipt-filter"')
     || inline.includes('class="receipt-filters"')
@@ -28788,12 +28824,12 @@ if (!inline.includes("function dataDashHtml(")
     const a = doorFn.indexOf('if (id === "profit_loss")');
     const b = doorFn.indexOf('if (id === "my_trades"');
     const pl = (a >= 0 && b > a) ? doorFn.slice(a, b) : "";
-    if (!pl.includes("receiptTradePlayerMenuHtml")
+    if (pl.includes("receiptTradePlayerMenuHtml")
       || !pl.includes("Most profitable")
       || pl.includes("receiptTradeYearHtml")
       || pl.includes("Ahead or behind")
       || pl.includes("data-receipt-pl-pos")) {
-      throw new Error("Profit / Loss filters are sort plus player, not year or chips");
+      throw new Error("Profit / Loss filters are sort only, not a player search");
     }
   }
   if (!inline.includes("function loadSeatTradeBlock(")

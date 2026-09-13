@@ -100,8 +100,10 @@ if (page.includes("All years</button>") || page.includes('data-hunt-pos="QB"')) 
 if (page.includes("Held or sold")) {
   throw new Error("Profit / Loss rooms replace the Held or sold dropdown");
 }
-if (!page.includes("Most profitable") || !page.includes("function receiptPlPlayerNames(")) {
-  throw new Error("Profit / Loss must sort and filter by player");
+if (!page.includes("Most profitable") || !page.includes("function receiptPlPlayerNames(")
+  || !page.includes("data-receipt-hist-team")
+  || !page.includes("function receiptHistTeamSelectHtml(")) {
+  throw new Error("Profit / Loss must sort; league trades must filter by Team dropdown");
 }
 if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
   throw new Error("Trade THEN/NOW player list must not include pick-became names");

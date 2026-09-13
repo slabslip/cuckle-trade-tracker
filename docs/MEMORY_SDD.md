@@ -141,16 +141,18 @@ portal after you tap. Every filter is a labeled dropdown (`receiptLookSelect`).
 No bubble / pill / chip rows. No All / Memory / Who / Research chips on the board.
 
 Each tile is a **door into a scenario**, not a finished receipt. Tap = that
-scenario’s list. Search only when that list is long (pairings, draft rows,
-forever / passed / uninsured). Short indexes drop the box.
+scenario’s list. Search only when that list is long (league draft rows after a seat,
+forever / passed / uninsured). Short indexes drop the box. My Draft
+Picks and Profit / Loss have no search box. League Trade History
+filters by a Team dropdown, not a type-in.
 
 **Default thirteen doors** (first visit; saved boards remap Trade THEN/NOW and the old pick doors onto these four):
 
 1. My Trade History (`my_trades`) — your partners, most deals first, then that pair newest-first (search after a pair)
-2. League Trade History (`league_trades`) — every pairing, most deals first, searchable
-3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded
+2. League Trade History (`league_trades`) — Team dropdown, then that seat's partners
+3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded, no search
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
-5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top
+5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top, sort only
 6. Who won the year (`past_champions`)
 7. How I finished (`season_place`)
 8. Me vs them (`vs_you`)
@@ -185,13 +187,15 @@ traded**). Grew, Faded, and Even score how it aged (`all − t0` —
 
 **League Trade History**
 
-Same two steps. First screen is **every pairing** (`NameA vs NameB`),
-most deals first, searchable by either seat. Tap a pairing → those
-tickets, newest first, same year + look dropdowns.
+First screen is a **Team** dropdown (`receiptLookSelect`). All teams
+shows every pairing (`NameA vs NameB`). Pick one seat to see **that
+team's trade partners**, most deals first. No type-in search. Tap a
+pairing → those tickets, newest first, same year + look dropdowns.
 
 **My Draft Picks**
 
 **Draft bucket** dropdown: Used / Traded away / Traded in (default Used).
+No year / player / pick search box.
 
 - **Used** — this seat drafted a player on that pick (`became` and
   `used_by` match).
@@ -215,8 +219,8 @@ on ten names. Tap a seat → the same three chips + grades as your own door. Bac
 Tap the tile. Two rooms at the top (not filter chips): **Held** and
 **Sold**. Toggle between them. One row per player this seat has traded
 (named player legs only — picks stay on My Draft Picks). Sort is most
-or least profitable. Player filter is the same search-plus-list as the
-other doors, A to Z. Two-point mark (T0 / today), not the 3y mean.
+or least profitable. No player type-in. Two-point mark (T0 / today),
+not the 3y mean.
 
 - **Held** — still on this roster. Number is today minus paid
   (last inbound T0). Row prints `paid` and `now`.
@@ -230,9 +234,8 @@ other doors, A to Z. Two-point mark (T0 / today), not the 3y mean.
 
 Filters are **dropdowns**, never pill chips (HIG-23):
 
-1. **Sort** — most profitable or least profitable.
-2. **Player** — search, then an A–Z list of every player this seat
-   traded. Same control as the other player menus. No year filter.
+1. **Sort** — most profitable or least profitable. No year filter and
+   no player type-in.
 
 No net bag total on the door. Count is `held` or `sold · left` for the
 open room. Tap a row → the last trade ticket. No claimed seat: the door
@@ -423,7 +426,8 @@ A member can: find a door by icon + label → tap **My Trade History** →
 see partners, most deals first → tap a name → newest tickets → filter
 League year or Grew / Faded → open a deal, see two questions first
 (Day they traded / From then to now). Tap **League Trade History** →
-search a pairing → same tickets. Tap **My Draft Picks** → Used /
+pick a team from the dropdown → see that seat's partners → same tickets.
+Tap **My Draft Picks** → Used /
 Traded away / Traded in → read the Hit rate → tap a pick →
 “You sold this 1st. They used it. It is X.” → share icon on the ticket →
 reopen on the same layer. Tap **League Draft Picks** → pick a seat →

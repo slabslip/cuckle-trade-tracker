@@ -1569,7 +1569,8 @@ const html = `<!DOCTYPE html>
       margin: 0 0 18px;
     }
     .your3 { margin: 0 0 16px; }
-    .your3.is-empty { min-height: 96px; }
+    .your3.is-empty { min-height: 0; }
+    .your3-empty { margin: 4px 0 0; color: var(--dim); font-size: 0.86rem; }
     .your3-h {
       margin: 0 0 8px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
@@ -4088,7 +4089,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tiles20260913002000";
+    const DATA_V = "dash20260913005500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5833,8 +5834,8 @@ const html = `<!DOCTYPE html>
         + '<div class="receipt-hero">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(verdict) + "</h2>"
         + '<div class="receipt-gold">' + esc(print) + "</div>"
-        + '<p class="caption">' + esc(because) + "</p></div>"
-        + share
+        + '<p class="caption">' + esc(because) + "</p>"
+        + share + "</div>"
         + (receiptShareNote ? '<p class="caption">' + esc(receiptShareNote) + "</p>" : "")
         + '<div class="data-sec-h">Journey</div>'
         + (lines || '<p class="caption">No hop tape.</p>');
@@ -5867,8 +5868,8 @@ const html = `<!DOCTYPE html>
         + '<div class="receipt-hero">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(claim.verdict) + "</h2>"
         + '<div class="receipt-gold">' + (claim.number != null ? tapeMargin(claim.number) : "—") + "</div>"
-        + '<p class="caption">' + esc(claim.because) + "</p></div>"
-        + share
+        + '<p class="caption">' + esc(claim.because) + "</p>"
+        + share + "</div>"
         + (receiptShareNote ? '<p class="caption">' + esc(receiptShareNote) + "</p>" : "")
         + '<div class="data-sec-h">What each side got</div>'
         + bags
@@ -6688,8 +6689,9 @@ const html = `<!DOCTYPE html>
       else if (openId) body = renderReceiptTradeTicket();
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-          + '<p class="caption">Tap a door. Filter inside when the list is long.</p>'
-          + '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
+          + (dataDashEdit
+            ? '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
+            : "")
           + dataDashBoardHtml();
       }
       return '<div class="receipt-shell">' + body + receiptCtaHtml() + "</div>";
@@ -8878,6 +8880,28 @@ const html = `<!DOCTYPE html>
      * Linear-style floating pill: Home | Teams | News | Ledger | Menu.
      * Menu is the hamburger. It opens a glass popover above the pill.
      */
+    function lhMenuShareKind() {
+      if (view === "calc" && typeof calcShareReady === "function" && calcShareReady()) return "calc";
+      if (receiptPickKey) return "pick";
+      if (openId && (receiptTicket || view === "trade" || receiptWhoList)) return "trade";
+      return "";
+    }
+
+    function lhMenuShareNow() {
+      const kind = lhMenuShareKind();
+      if (kind === "calc" && typeof calcShareNow === "function") {
+        calcShareNow();
+        return;
+      }
+      if (kind === "pick") {
+        shareProofNow(receiptShareTextFor("pick", receiptPickKey), receiptShareUrl("pick", receiptPickKey));
+        return;
+      }
+      if (kind === "trade" && openId) {
+        shareProofNow(receiptShareTextFor("trade", openId), receiptShareUrl("trade", openId));
+      }
+    }
+
     function lhMenuPanelHtml() {
       const ico = (d) =>
         '<span class="lh-menu-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false">'
@@ -8888,11 +8912,17 @@ const html = `<!DOCTYPE html>
           + ico(path) + '<span class="lh-menu-lab">' + esc(lab) + "</span></button>";
       };
       const slot = '<div class="lh-menu-slot" aria-hidden="true"></div>';
+      const shareKind = lhMenuShareKind();
+      const shareRow = shareKind
+        ? item("share", shareKind === "calc" ? "Share trade" : "Share receipt",
+          "M12 3l5 5h-3v6h-4V8H7l5-5zm-8 13h3v5h10v-5h3v7H4v-7z")
+        : "";
       return '<div class="lh-menu" id="lhMenuPanel" role="menu" aria-label="More"'
         + (lhMenuOpen ? "" : " inert") + ">"
         + '<div class="lh-menu-head">'
         + '<span class="lh-menu-mark" aria-hidden="true"></span>'
         + '<span class="lh-menu-title">More</span></div>'
+        + shareRow
         + item("calc", "Calculator",
           "M6 3.5h12v17H6zm2.4 3h7.2v2H8.4zm0 4h7.2v2H8.4zm0 4h4.4v2H8.4z")
         + item("data", "League Data",
@@ -11269,9 +11299,11 @@ const html = `<!DOCTYPE html>
         : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-        + '<p class="data-dash-sub">Tap a door. Filter inside when the list is long. Votes never enter these numbers. '
+        + '<p class="data-dash-sub">Votes never enter these numbers. '
         + editBtn + "</p>"
-        + '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
+        + (dataDashEdit
+          ? '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
+          : "")
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
         + "</section>";
@@ -13915,8 +13947,8 @@ const html = `<!DOCTYPE html>
           : (ledgerFeed === "closed"
             ? '<p class="caption">No trashed or expired offers.</p>'
             : (isStoreShell()
-              ? '<p class="caption">No slips yet. Side bets are honor system among league members — no money moves in the app. Tap Propose a side bet, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>'
-              : '<p class="caption">No slips yet. Tap Propose a NEW Wager, pick a team, set a stake and the odds meter, pick an NFL clock, then Send.</p>'));
+              ? '<p class="caption">No slips yet. Side bets are honor system among league members — no money moves in the app. Tap Propose a side bet.</p>'
+              : '<p class="caption">No slips yet. Tap Propose a NEW Wager.</p>'));
       } else {
         body = list.map((b) => ledgerCardHtml(b)).join("");
       }
@@ -13937,7 +13969,6 @@ const html = `<!DOCTYPE html>
           : "")
         + toast
         + propose
-        + ledgerSummaryHtml(list)
         + addOpen
         + '<div class="ledger-feed-bar">'
         + '<select data-ledger-feed="1" aria-label="Show slips">'
@@ -13947,7 +13978,8 @@ const html = `<!DOCTYPE html>
         + "</select>"
         + '<button type="button" class="chip" data-ledger-refresh="1">Refresh</button>'
         + "</div>"
-        + body;
+        + body
+        + (list.length ? ledgerSummaryHtml(list) : "");
     }
 
     function renderTeamLedgerSection(seatId) {
@@ -15174,8 +15206,8 @@ const html = `<!DOCTYPE html>
         + head
         + chip
         + voteCardHtml(r)
-        + '<p class="caption"><button type="button" class="linkish" data-receipt-ticket="1">Remember it differently?</button>'
-        + receiptShareBtn("trade", r.transaction_id) + "</p>"
+        + '<p class="caption">' + receiptShareBtn("trade", r.transaction_id)
+        + '<button type="button" class="linkish" data-receipt-ticket="1">Remember it differently?</button></p>'
         + (voted ? '<span class="sr-only">You voted on this trade.</span>' : "")
         + "</div>";
     }
@@ -15240,8 +15272,10 @@ const html = `<!DOCTYPE html>
 
     function mark(id, title, sub, tone) {
       const on = markOpen === id;
-      return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + esc(id) + '" aria-expanded="' + on + '">'
-        + "<b>" + esc(title) + "</b>" + (sub ? "<span>" + esc(sub) + "</span>" : "") + "</button>";
+      const spoken = title + (sub ? ". " + sub : "");
+      return '<button type="button" class="mark' + (tone ? " " + tone : "") + (on ? " on" : "") + '" data-mark="' + esc(id) + '" aria-expanded="' + on + '"'
+        + ' aria-label="' + esc(spoken) + '">'
+        + "<b>" + esc(title) + "</b></button>";
     }
 
     /**
@@ -20714,6 +20748,7 @@ const html = `<!DOCTYPE html>
       if (!rows.length) {
         return '<section class="your3 is-empty" aria-label="Alerts">'
           + '<div class="your3-h">Alerts</div>'
+          + '<p class="your3-empty">Caught up.</p>'
           + "</section>";
       }
       return '<section class="your3" aria-label="Alerts">'
@@ -23006,7 +23041,6 @@ const html = `<!DOCTYPE html>
       if (!ids.length) return "";
       return '<section class="home-top-doors" aria-label="Your top 4">'
         + '<div class="home-desk-h">Your top 4</div>'
-        + '<p class="home-desk-sub">Open a door. Reorder them on League Data.</p>'
         + '<div class="receipt-board home-top-board">'
         + ids.map(function (id) {
           const spec = dataDashById(id);
@@ -23051,7 +23085,7 @@ const html = `<!DOCTYPE html>
         + ((data.hit || data.miss) ? "<h2>Draft</h2>" : "")
         + draftLine(data.hit, "hit")
         + draftLine(data.miss, "miss")
-        + renderTeamLedgerSection(me && me.user_id);
+        + '<p class="caption"><button type="button" class="chip" data-open-ledger="1">Open Ledger</button></p>';
     }
 
     function renderHome() {
@@ -24734,6 +24768,10 @@ const html = `<!DOCTYPE html>
           openSettings();
           return;
         }
+        if (go === "share") {
+          lhMenuShareNow();
+          return;
+        }
         return;
       }
       const menuBtn = e.target.closest("[data-lh-menu]");
@@ -24745,6 +24783,11 @@ const html = `<!DOCTYPE html>
       const homeTabBtn = e.target.closest("[data-home-tab]");
       if (homeTabBtn) {
         setHomeTab(homeTabBtn.getAttribute("data-home-tab"));
+        return;
+      }
+      const openLedgerBtn = e.target.closest("[data-open-ledger]");
+      if (openLedgerBtn) {
+        setHomeTab("ledger", { force: true });
         return;
       }
       const ledgerFilterBtn = e.target.closest("[data-ledger-filter]");
@@ -26842,7 +26885,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v249-tile-search";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v250-dash-fast";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26933,13 +26976,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v249-tile-search")) {
+  || !html.includes("chuckle-shell-v250-dash-fast")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v249-tile-search")
+  || !swSrc.includes("chuckle-shell-v250-dash-fast")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28167,6 +28210,9 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes('"League Data"') || !inline.includes('"Settings"')
     || !inline.includes("lh-menu-slot")
     || !inline.includes("slot + slot + slot")
+    || !inline.includes("function lhMenuShareKind(")
+    || !inline.includes("function lhMenuShareNow(")
+    || !fnSrc("lhMenuPanelHtml").includes("shareRow")
     || !inline.includes("lh-menu-head")
     || !inline.includes("lh-menu-ico")
     || !lhCssHas("position: absolute")
@@ -28629,6 +28675,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerSetVisibility(", true],
     ['data-ledger-visibility="', true],
     ["function renderTeamLedgerSection(", true],
+    ["data-open-ledger", true],
     ["function ledgerSeatMoneySummary(", true],
     ["Taken money from", true],
     ["Lost money to", true],
@@ -29544,10 +29591,14 @@ if (!inline.includes("function newsHitsMyTeam(") || !inline.includes("function n
   || !inline.includes('class="your3 is-empty"')
   || !inline.includes('aria-label="Alerts"')
   || !inline.includes('class="your3-h">Alerts<')
+  || !inline.includes("Caught up.")
   || inline.includes('aria-label="Your 3"')
   || inline.includes('class="your3-h">Your 3<')
   || !inline.includes('aria-label="Team Ideas"')
-  || inline.includes("On your roster")) {
+  || inline.includes("On your roster")
+  || !fnSrc("renderTeamHome").includes("data-open-ledger")
+  || fnSrc("renderTeamHome").includes("renderTeamLedgerSection(")
+  || fnSrc("homeTopDoorsHtml").includes("Open a door")) {
   throw new Error("Home in-flow slot is Team Ideas; peek stays the latest league item");
 }
 if (inline.includes("items.length > 1 ? items[1]")

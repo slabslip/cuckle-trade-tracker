@@ -163,7 +163,7 @@ forever / passed / uninsured). Short indexes drop the box.
 **Hold, then drag** is how they reorder. Mouse can drag without a long
 press. The first four doors wear a gold ring — that is the top 4, and
 those four also sit on Home for instant access. Hint on the board:
-`Top 4 wear gold. Hold a tile, then drag to move it.` **Edit** still adds or removes a door
+`Top 4 wear gold. Hold a tile, then drag to move it.` shows only in **Edit**. **Edit** still adds or removes a door
 from the catalog. Unsigned / outsider: default thirteen. A shared link opens
 one public ticket, not someone’s private layout.
 
@@ -275,7 +275,9 @@ Then, in this order only:
 5. House SVG **How it aged, year by year** only after 1–4 exist. Caption:
    `Each bar is a year-end mark. We do not guess injuries.`
 
-`Remember it differently?` on a normal open-trade row jumps to this **same**
+Share sits in the ticket hero (gold number). Menu grows a **Share receipt**
+row while a ticket or priced calc is open. `Remember it differently?` on a
+normal open-trade row jumps to this **same**
 trade ticket.
 
 **If they tapped a pick chip / pick row**

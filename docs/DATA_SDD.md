@@ -257,8 +257,9 @@ to Your board — they do not jump Home.
 **Data cold load, 390px, top to bottom:**
 
 1. `h2` Your board
-2. Quiet law: `Votes never enter these numbers.`
-3. Door tiles. Hunt / ticket / desk replace the board when a door is open.
+2. Quiet law: `Votes never enter these numbers.` Edit chip sits on that line.
+3. Drag hint (`Top 4 wear gold…`) only while Edit is on.
+4. Door tiles. Hunt / ticket / desk replace the board when a door is open.
 
 No new CSS system. Catalog stays 27. `DATA_SETS` stays 5. Titles are the definition:
 Give, Get, Dart, Star, Hard rebuild. Keep explanations to one short line.

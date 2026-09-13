@@ -206,13 +206,14 @@ No year / player / pick search box.
 Each row grades the player vs the slot (Star / Hit / Even / Miss /
 Bust). The section prints a **Hit rate**. Held unused origin picks stay
 off these three (Who has firsts covers that). No claimed seat: the door
-says so.
+says so. A failed picks load says so — it is not an empty bucket.
 
 **League Draft Picks**
 
 First screen is **every seat**, most used + away + in first. No search
-on ten names. Tap a seat → the same three chips + grades as your own door. Back:
-`← Seats` then `← Your board`.
+on ten names. Tap a seat → the same three buckets + grades as your own door. Back:
+`← Seats` then `← Your board`. Leaving History (Home / Teams / News /
+Ledger) drops the open door. Coming back shows Your board.
 
 **Profit / Loss**
 

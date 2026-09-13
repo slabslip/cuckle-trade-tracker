@@ -4092,6 +4092,7 @@ const html = `<!DOCTYPE html>
     let pickFilterStep = null; // "round" | "year" | "owner" | null
     let pickIntelOpen = null;
     let picksLoading = false;
+    let picksFailed = false;
     // Cuffs: fantasy slot-1 starters → NFL handcuff + who owns them.
     let cuffs = null;
     let cuffsLoading = false;
@@ -4115,7 +4116,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260913161207";
+    const DATA_V = "edgeloop20260913164500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5157,6 +5158,8 @@ const html = `<!DOCTYPE html>
       receiptPlPos = "all";
       receiptPlRoom = "held";
       receiptPlSort = "most";
+      receiptSeatWarming = "";
+      receiptSeatFailed = "";
     }
 
     function receiptDraftTeamCounts(seat) {
@@ -5658,7 +5661,7 @@ const html = `<!DOCTYPE html>
     function receiptPortalNeedsSearch(id) {
       const key = receiptDoorCanon(id);
       if (id === "my_draft" || id === "league_trades") return false;
-      if (key === "trade_mark" || key === "lopsided" || key === "profit_loss") return false;
+      if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
       if (key === "firsts_held" || key === "seat_draft") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
@@ -6232,8 +6235,22 @@ const html = `<!DOCTYPE html>
         const mine = typeof authSeatId === "function" ? authSeatId() : "";
         const seat = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
         if (!mine || !seat) return '<p class="caption">Claim your seat to see profit and loss.</p>';
-        if (!(seatCache[mine] && seatCache[mine].trades)) {
-          if (typeof seatData === "function") seatData(mine).then(function () { render(); }).catch(function () {});
+        if (!seatCache[mine]) {
+          if (receiptSeatFailed === mine) {
+            return '<p class="caption">Could not load this tape.</p>';
+          }
+          if (!receiptSeatWarming && typeof seatData === "function") {
+            receiptSeatWarming = mine;
+            seatData(mine).then(function (bag) {
+              if (receiptSeatWarming === mine) receiptSeatWarming = "";
+              if (!bag) receiptSeatFailed = mine;
+              render();
+            }).catch(function () {
+              if (receiptSeatWarming === mine) receiptSeatWarming = "";
+              receiptSeatFailed = mine;
+              render();
+            });
+          }
           return '<p class="caption">Loading the tape…</p>';
         }
         let rows = receiptPlRowsForSeat(mine, seat);
@@ -6283,7 +6300,7 @@ const html = `<!DOCTYPE html>
           sides = sides.filter(function (s) { return receiptTradeSeasonOf(s) === yearWant; });
         }
         sides = sides.filter(function (s) { return histLookKeep(s, receiptDoorFilter); });
-        if (needle) {
+        if (needle && id === "my_trades") {
           sides = sides.filter(function (s) {
             return hit([s.name, s.other, s.headline, s.date]);
           });
@@ -6297,6 +6314,7 @@ const html = `<!DOCTYPE html>
       if (id === "my_draft" || id === "league_draft") {
         if (!picks && typeof ensurePicks === "function") ensurePicks();
         if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
+        if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
         const seat = id === "my_draft"
           ? (typeof authSeatCanonName === "function" ? authSeatCanonName() : "")
           : receiptDraftSeat;
@@ -6325,7 +6343,7 @@ const html = `<!DOCTYPE html>
           return '<p class="caption">Claim your seat to see used, traded away, and traded in.</p>';
         }
         const bucket = (receiptDoorFilter === "away" || receiptDoorFilter === "in") ? receiptDoorFilter : "used";
-        const rows = receiptDraftRowsForSeat(seat, bucket, q);
+        const rows = receiptDraftRowsForSeat(seat, bucket, id === "my_draft" ? "" : q);
         const rate = receiptDraftRateLine(rows);
         if (!rows.length) return '<p class="caption">' + esc(rate) + "</p>";
         return '<p class="caption">' + esc(rate) + "</p>"
@@ -6379,6 +6397,7 @@ const html = `<!DOCTYPE html>
       if (id === "pick_print") {
         if (!picks && typeof ensurePicks === "function") ensurePicks();
         if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
+        if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
         const seat = receiptPickPortalSeat(needle);
         const you = !!(seat && seat === (typeof authSeatCanonName === "function" ? authSeatCanonName() : ""));
         let rows = seat ? receiptOwnedPicksForSeat(seat) : [];
@@ -6438,6 +6457,7 @@ const html = `<!DOCTYPE html>
       if (id === "my_picks") {
         if (!picks && typeof ensurePicks === "function") ensurePicks();
         if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
+        if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
         const seat = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
         const you = !!seat;
         let rows = seat ? receiptOriginPicksForSeat(seat) : [];
@@ -6509,6 +6529,8 @@ const html = `<!DOCTYPE html>
         }).join("");
       }
       if (id === "vs_you") {
+        const claimed = typeof authSeatId === "function" ? authSeatId() : "";
+        if (!claimed) return '<p class="caption">Claim your seat to see your tape vs them.</p>';
         if (receiptVsWho) {
           const mine = typeof authSeatId === "function" ? authSeatId() : "";
           const mineName = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
@@ -6557,6 +6579,7 @@ const html = `<!DOCTYPE html>
       if (id === "firsts_held") {
         if (typeof ensurePicks === "function") ensurePicks();
         if (!picks && picksLoading) return '<p class="caption">Loading firsts…</p>';
+        if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
         const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
         const bag = {};
         const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
@@ -6902,15 +6925,19 @@ const html = `<!DOCTYPE html>
     function ensurePicks() {
       if (picks || picksLoading) return;
       picksLoading = true;
+      picksFailed = false;
       getLeagueJson("picks.json").then((book) => {
         applyPicksBook(book);
         picksLoading = false;
-        if (view === "home" && !me) ledgerMaybeRender();
-        if (view === "calc") render();
+        picksFailed = false;
+        if (receiptWhoList || view === "calc") render();
+        else if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
       }).catch((err) => {
         console.error(err);
         picksLoading = false;
-        if (view === "home" && !me) ledgerMaybeRender();
+        picksFailed = true;
+        if (receiptWhoList || view === "calc") render();
+        else if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
       });
     }
 
@@ -9120,7 +9147,22 @@ const html = `<!DOCTYPE html>
         + "</div></div>";
     }
 
+    function receiptPortalLeave() {
+      receiptWhoList = "";
+      receiptQ = "";
+      receiptDoorFilter = "all";
+      receiptVsWho = "";
+      receiptHistPair = "";
+      receiptHistTeam = "all";
+      receiptDraftSeat = "";
+      receiptSeatWarming = "";
+      receiptSeatFailed = "";
+      if (typeof receiptPlReset === "function") receiptPlReset();
+      if (typeof receiptResetPlayerFilter === "function") receiptResetPlayerFilter();
+    }
+
     function dataDashReset() {
+      if (typeof receiptPortalLeave === "function") receiptPortalLeave();
       dataRoom = "overview";
       dataPane = "ping";
       dataQ = "";
@@ -15594,6 +15636,8 @@ const html = `<!DOCTYPE html>
     let receiptPlPos = "all";
     let receiptPlRoom = "held";
     let receiptPlSort = "most";
+    let receiptSeatWarming = "";
+    let receiptSeatFailed = "";
     let memberships = [];
     let ownedLeagues = []; // leagues where created_by = me
     let activeLeague = null; // { sleeper_league_id, name, status, sleeper_user_id, team_name }
@@ -26865,18 +26909,6 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const plSignSel = e.target && e.target.closest && e.target.closest("[data-receipt-pl-sign]");
-      if (plSignSel) {
-        receiptPlSign = plSignSel.value || "all";
-        render();
-        return;
-      }
-      const plPosSel = e.target && e.target.closest && e.target.closest("[data-receipt-pl-pos]");
-      if (plPosSel) {
-        receiptPlPos = plPosSel.value || "all";
-        render();
-        return;
-      }
       const plSortSel = e.target && e.target.closest && e.target.closest("[data-receipt-pl-sort]");
       if (plSortSel) {
         receiptPlSort = plSortSel.value === "least" ? "least" : "most";
@@ -27200,7 +27232,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v255-drop-search";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v256-edge-loop";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27291,13 +27323,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v255-drop-search")) {
+  || !html.includes("chuckle-shell-v256-edge-loop")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v255-drop-search")
+  || !swSrc.includes("chuckle-shell-v256-edge-loop")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -28784,6 +28816,12 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptHistTeamSelectHtml(")
     || !fnSrc("receiptHistTeamSelectHtml").includes("All teams")
     || !fnSrc("receiptWhoListHtml").includes("Pick a team to see their partners.")
+    || !inline.includes("function receiptPortalLeave(")
+    || !fnSrc("dataDashReset").includes("receiptPortalLeave(")
+    || !fnSrc("ensurePicks").includes("receiptWhoList")
+    || !fnSrc("receiptPortalRows").includes("Could not load this tape.")
+    || !fnSrc("receiptPortalRows").includes("Could not load picks.")
+    || !fnSrc("receiptPortalRows").includes("Claim your seat to see your tape vs them.")
     || !inline.includes("data-receipt-door-filter")
     || inline.includes('class="receipt-filter"')
     || inline.includes('class="receipt-filters"')

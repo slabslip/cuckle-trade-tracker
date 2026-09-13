@@ -19,7 +19,7 @@ a bag fact. Intent is the review. Career Win-now must never drive a hunt.
 | --- | --- | --- |
 | **Home Team Ideas** | 1–3 first-person talks (Upgrade / Downgrade / Swap / Buy / Sell) | Do not dump a 10-team matcher onto Home |
 | **Data** | Your board — the labeled doors | One cell of the five-tab pill. Do not grow a sixth. |
-| **Receipts** | “That’s not how I remember it” — Your board (16 kinds, thirteen labeled doors) | Icon + label on the door. Search / filter / list inside. Verdict + number live on the ticket. Not a sixth pill. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md). |
+| **Receipts** | “That’s not how I remember it” — Your board (16 kinds, thirteen labeled doors) | Icon + label on the door. Filter / list inside. Search only when the list is long. Verdict + number live on the ticket. Not a sixth pill. Law: [`MEMORY_SDD.md`](./MEMORY_SDD.md). |
 | **Calculator** | The price | Hunt / block / team-view row opens calc: A = you, B = them, legs prefilled when the piece is known |
 
 Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
@@ -55,8 +55,10 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 
 [`generate-page.mjs`](../generate-page.mjs):
 
-- **Your board** only. Thirteen labeled doors. Search / filter live inside a
-  door. Give / Get, Moves, League, and More are parked — not on this screen.
+- **Your board** only. Thirteen labeled doors. Filter lives inside a door.
+  Generic search only on long lists (pairings, draft rows, forever / passed /
+  uninsured). Short indexes (partners, seats, years, finish) hide the box.
+  Give / Get, Moves, League, and More are parked — not on this screen.
 
 ### Catalog (kept, not the cold load)
 
@@ -246,7 +248,11 @@ per-team 1–3 ideas. It is not a third pane.
 ## 6. Layout (search gone)
 
 No Data top search. Book uses pos / seat / sort dropdowns. Tape already has year chips.
-Keep `data-calc-filter` and `data-cuff-q`.
+Keep `data-calc-filter` and `data-cuff-q`. Generic `data-receipt-q` is hidden on short
+index doors (`vs_you`, `season_place`, `past_champions`, `firsts_held`, `seat_draft`,
+`my_trades` before a pair, `league_draft` before a seat) and on Profit / Loss (player
+menu covers it). Brand Back / Escape unwind a Data ticket, pair, hunt, seat, or room
+to Your board — they do not jump Home.
 
 **Data cold load, 390px, top to bottom:**
 

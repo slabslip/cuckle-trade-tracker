@@ -4088,7 +4088,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "jobs20260912235200";
+    const DATA_V = "tiles20260913002000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5626,6 +5626,16 @@ const html = `<!DOCTYPE html>
       return "A team, a trade, a name";
     }
 
+    function receiptPortalNeedsSearch(id) {
+      const key = receiptDoorCanon(id);
+      if (key === "trade_mark" || key === "lopsided" || key === "profit_loss") return false;
+      if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
+      if (key === "firsts_held" || key === "seat_draft") return false;
+      if (key === "my_trades" && !receiptHistPair) return false;
+      if (key === "league_draft" && !receiptDraftSeat) return false;
+      return true;
+    }
+
     function receiptIsDoor(id) {
       const canon = receiptDoorCanon(id);
       if (id === "season_title" || canon === "season_place") return true;
@@ -6650,10 +6660,10 @@ const html = `<!DOCTYPE html>
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
         + '<p class="caption">' + esc(caption) + "</p>"
-        + ((id === "trade_mark" || id === "lopsided" || id === "profit_loss")
-          ? ""
-          : ('<input class="receipt-search" data-receipt-q="1" type="search"'
-            + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />'))
+        + (receiptPortalNeedsSearch(id)
+          ? ('<input class="receipt-search" data-receipt-q="1" type="search"'
+            + ' placeholder="' + esc(receiptPortalSearchHint(id)) + '" value="' + esc(receiptQ) + '" />')
+          : "")
         + receiptDoorFilterHtml(id)
         + (rows || '<p class="caption">Nothing on this tape matches.</p>')
         + "</section>";
@@ -6678,7 +6688,7 @@ const html = `<!DOCTYPE html>
       else if (openId) body = renderReceiptTradeTicket();
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-          + '<p class="caption">Tap a door. Search and filter inside.</p>'
+          + '<p class="caption">Tap a door. Filter inside when the list is long.</p>'
           + '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
           + dataDashBoardHtml();
       }
@@ -11259,7 +11269,7 @@ const html = `<!DOCTYPE html>
         : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-        + '<p class="data-dash-sub">Tap a door. Search and filter inside. Votes never enter these numbers. '
+        + '<p class="data-dash-sub">Tap a door. Filter inside when the list is long. Votes never enter these numbers. '
         + editBtn + "</p>"
         + '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
         + dataDashBoardHtml()
@@ -15915,6 +15925,90 @@ const html = `<!DOCTYPE html>
      * - Team settings → team home
      * - other nested screens → league homepage
      */
+    function dataDashFromDoor() {
+      return !!(receiptWhoList || dataHunt || dataSeat
+        || (dataRoom && dataDashRoomCanon(dataRoom) !== "overview"));
+    }
+
+    function dataDashLeaveTicket() {
+      view = "home";
+      openId = null;
+      tradeSeat = null;
+      tradeSolo = false;
+      partnerName = null;
+      receiptTicket = false;
+      receiptPickKey = "";
+      focusNext = ".screen-h";
+      render();
+    }
+
+    function dataDashUnwindOne() {
+      if (receiptWhoList) {
+        if (receiptHistPair) {
+          receiptHistPair = "";
+          receiptQ = "";
+          receiptDoorFilter = "all";
+          receiptResetPlayerFilter();
+          render();
+          return true;
+        }
+        if (receiptDraftSeat) {
+          receiptDraftSeat = "";
+          receiptQ = "";
+          receiptDoorFilter = "all";
+          render();
+          return true;
+        }
+        if (receiptVsWho) {
+          receiptVsWho = "";
+          receiptQ = "";
+          render();
+          return true;
+        }
+        receiptWhoList = "";
+        receiptQ = "";
+        receiptDoorFilter = "all";
+        receiptHistPair = "";
+        receiptDraftSeat = "";
+        receiptVsWho = "";
+        if (typeof receiptPlReset === "function") receiptPlReset();
+        receiptResetPlayerFilter();
+        homeTab = "history";
+        view = "home";
+        focusNext = ".screen-h";
+        render();
+        return true;
+      }
+      if (dataHunt) {
+        dataHunt = "";
+        dataHuntPos = "";
+        dataBlockAddOpen = false;
+        dataRoom = "overview";
+        focusNext = ".screen-h";
+        render();
+        return true;
+      }
+      if (dataSeat) {
+        dataSeat = "";
+        dataHunt = "";
+        dataHuntPos = "";
+        dataRoom = "overview";
+        dataPane = "league";
+        focusNext = ".screen-h";
+        render();
+        return true;
+      }
+      if (dataRoom && dataDashRoomCanon(dataRoom) !== "overview") {
+        dataRoom = "overview";
+        dataQ = "";
+        dataSet = null;
+        focusNext = ".screen-h";
+        render();
+        return true;
+      }
+      return false;
+    }
+
     function onBrandBack() {
       if (lhMenuOpen) {
         setLhMenuOpen(false);
@@ -15939,40 +16033,11 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      if (receiptWhoList) {
-        if (receiptHistPair) {
-          receiptHistPair = "";
-          receiptQ = "";
-          receiptDoorFilter = "all";
-          receiptResetPlayerFilter();
-          render();
-          return;
-        }
-        if (receiptDraftSeat) {
-          receiptDraftSeat = "";
-          receiptQ = "";
-          receiptDoorFilter = "all";
-          render();
-          return;
-        }
-        if (receiptVsWho) {
-          receiptVsWho = "";
-          render();
-          return;
-        }
-        receiptWhoList = "";
-        receiptQ = "";
-        receiptDoorFilter = "all";
-        receiptHistPair = "";
-        receiptDraftSeat = "";
-        if (typeof receiptPlReset === "function") receiptPlReset();
-        receiptResetPlayerFilter();
-        homeTab = "history";
-        view = "home";
-        focusNext = ".screen-h";
-        render();
+      if (view === "trade" && dataDashFromDoor()) {
+        dataDashLeaveTicket();
         return;
       }
+      if (dataDashUnwindOne()) return;
       if (voteSheetTx || voteConfirmTx) {
         voteSheetTx = null;
         voteSheetSeat = null;
@@ -24389,6 +24454,8 @@ const html = `<!DOCTYPE html>
         goBack(() => setHomeTab("history", { force: true }));
         return true;
       }
+      if (view === "trade" && dataDashFromDoor()) { dataDashLeaveTicket(); return true; }
+      if (dataDashUnwindOne()) return true;
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
       if (view === "home" && homeTab && homeTabCanon(homeTab) !== "home") { setHomeTab("home", { force: true }); return true; }
       if (view === "datasets" && dataSet) { showDataSetList(); return true; }
@@ -24625,7 +24692,8 @@ const html = `<!DOCTYPE html>
         }
         // Only ever reached on a cold deep link, where there is no entry behind us to pop.
         goBack(() => {
-          if (view === "trade") openTradesList();
+          if (view === "trade" && dataDashFromDoor()) dataDashLeaveTicket();
+          else if (view === "trade") openTradesList();
           else if (view === "titles" && titleYear) openTitles();
           else if (view === "titles" || view === "draftdata" || view === "cuffs") {
             setHomeTab("history", { force: true });
@@ -26774,7 +26842,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v248-desk-jobs";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v249-tile-search";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26865,13 +26933,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v248-desk-jobs")) {
+  || !html.includes("chuckle-shell-v249-tile-search")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v248-desk-jobs")
+  || !swSrc.includes("chuckle-shell-v249-tile-search")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28296,6 +28364,9 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptDoorFilterHtml(")
     || !inline.includes("function receiptLookSelect(")
     || !inline.includes("function receiptIsDoor(")
+    || !inline.includes("function receiptPortalNeedsSearch(")
+    || !fnSrc("receiptPortalNeedsSearch").includes('key === "vs_you"')
+    || !fnSrc("receiptWhoListHtml").includes("receiptPortalNeedsSearch(")
     || !inline.includes("data-receipt-door-filter")
     || inline.includes('class="receipt-filter"')
     || inline.includes('class="receipt-filters"')
@@ -29278,14 +29349,23 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
   if (!backFn.includes('setHomeTab("teams"') || !backFn.includes("&& me")) {
     throw new Error("onBrandBack must return seat home to Teams tab (history pop when possible)");
   }
+  if (!inline.includes("function dataDashFromDoor(")
+    || !inline.includes("function dataDashLeaveTicket(")
+    || !inline.includes("function dataDashUnwindOne(")
+    || !backFn.includes("dataDashFromDoor()")
+    || !backFn.includes("dataDashUnwindOne()")) {
+    throw new Error("onBrandBack must unwind Data tickets and doors before Home");
+  }
 }
 {
   const escFn = fnSrc("closeTopmost");
   if (!escFn.includes('view === "titles"') || !escFn.includes('view === "draftdata"')
     || !escFn.includes('view === "cuffs"')
     || !escFn.includes('setHomeTab("history"')
-    || !escFn.includes("calcSeatMenu")) {
-    throw new Error("closeTopmost Escape must return History children to History tab and shut the calc team list");
+    || !escFn.includes("calcSeatMenu")
+    || !escFn.includes("dataDashUnwindOne()")
+    || !escFn.includes("dataDashFromDoor()")) {
+    throw new Error("closeTopmost Escape must return History children to History tab, shut the calc team list, and unwind Data doors");
   }
 }
 {

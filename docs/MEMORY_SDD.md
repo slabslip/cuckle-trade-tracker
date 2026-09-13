@@ -141,11 +141,12 @@ portal after you tap. Every filter is a labeled dropdown (`receiptLookSelect`).
 No bubble / pill / chip rows. No All / Memory / Who / Research chips on the board.
 
 Each tile is a **door into a scenario**, not a finished receipt. Tap = that
-scenario’s list. Search there for a specific team, trade, pick, year, or seat.
+scenario’s list. Search only when that list is long (pairings, draft rows,
+forever / passed / uninsured). Short indexes drop the box.
 
 **Default thirteen doors** (first visit; saved boards remap Trade THEN/NOW and the old pick doors onto these four):
 
-1. My Trade History (`my_trades`) — your partners, most deals first, then that pair newest-first
+1. My Trade History (`my_trades`) — your partners, most deals first, then that pair newest-first (search after a pair)
 2. League Trade History (`league_trades`) — every pairing, most deals first, searchable
 3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
@@ -175,7 +176,7 @@ one public ticket, not someone’s private layout.
 **My Trade History**
 
 Tap the tile. First screen is **your partners**, most deals first, count
-on the row. Tap a partner. That pair’s tickets, newest first. Filters on
+on the row. No search on nine names. Tap a partner. That pair’s tickets, newest first. Filters on
 the deal list: **League year** and **Look** dropdowns (Smash / Robbery /
 Grew / Faded / Even). Smash and Robbery score the accept-day mark (`t0` — **Day they
 traded**). Grew, Faded, and Even score how it aged (`all − t0` —
@@ -205,8 +206,8 @@ says so.
 
 **League Draft Picks**
 
-First screen is **every seat**, most used + away + in first, searchable.
-Tap a seat → the same three chips + grades as your own door. Back:
+First screen is **every seat**, most used + away + in first. No search
+on ten names. Tap a seat → the same three chips + grades as your own door. Back:
 `← Seats` then `← Your board`.
 
 **Profit / Loss**

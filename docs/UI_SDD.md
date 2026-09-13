@@ -190,12 +190,10 @@ count. No sixth cell. No + FAB. Calculator, Settings, and Titles stay sub-screen
 
 ## 3. Home
 
-**Alerts** — on the **News** tab, not Home. Omit if signed out. Signed-in: at most three
-notification rows (wager / uncast vote), or a blank reserved slot when nothing is waiting.
-Tap a wager → Ledger. Tap a vote → that deal’s review screen (H2H chip + **Who won this
-trade?**). Do not fill with the calculator or a news teaser.
+**News** — a full-page Twitter-style feed. No Alerts / Vote strip on this tab.
+Vote lives on the open-trade ticket. Each post has Share.
 
-**No Recent Trade chip on Home.** The vote row in Alerts opens the deal. The H2H chip still
+**No Recent Trade chip on Home.** The H2H chip still
 renders on the open-trade screen and on Teams / History feed cards.
 
 **Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
@@ -232,8 +230,8 @@ sell chip from `pe.json` — signal only. Partner memory (from `trade_boards.sid
 WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
 calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
 fourth card or “Open the calculator” filler.
-The News Feed is the **News** tab (Alerts on top, then the league list). It is not a
-Home door and not a bottom peek.
+The News Feed is the **News** tab: a full-page scrollable list, no Vote chip.
+It is not a Home door and not a bottom peek.
 
 Draft Data, Cuffs, Champions Path, and League Data Sets live on **Data**, not stacked on Home.
 

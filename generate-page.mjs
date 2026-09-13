@@ -3621,18 +3621,18 @@ const html = `<!DOCTYPE html>
     .data-band-mega .data-band-lab { color: #f87171; }
     .data-peek { margin: 0 0 8px; }
     #dsBody .caption { margin: 0 0 8px; }
-    /* News and Alerts. The user asked for "scrolling", and this scrolls because a finger or a
-       wheel moves it -- there is no animation here at all.
-       This was written when league home still carried the league ticker, which the audit
-       recorded as a WCAG 2.2.2 failure: a 48s loop with no pause control. That ticker is gone,
-       and a news row is text a person needs time to read rather than a pill they glance at. So
-       this is a plain overflow box: capped height, newest at the top, and it stays where it is
-       put. Nothing here needs a prefers-reduced-motion branch because nothing here moves. */
+    /* News tab. Full-page Twitter-style list. The page itself scrolls -- no capped
+       inner box -- so a short feed still fills the screen and a long one keeps going
+       under the pill. Nothing here moves on its own. */
+    .news-tab {
+      display: flex; flex-direction: column;
+      min-height: calc(100svh - 108px - var(--lh-nav-h) - env(safe-area-inset-bottom, 0px));
+    }
     .news-box {
-      max-height: 420px; overflow-y: auto; -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-      padding: 4px 12px;
+      flex: 1 1 auto; min-height: 0;
+      overflow: visible;
+      background: transparent; border: 0; border-radius: 0;
+      padding: 0 0 8px;
     }
     /* The box is a scroll container, so it is a tab stop and it is named -- otherwise a
        keyboard cannot reach the rows below the fold and a screen reader gets an unlabelled
@@ -3700,6 +3700,11 @@ const html = `<!DOCTYPE html>
       color: var(--muted); font-size: 0.75rem; font-weight: 650; text-decoration: underline;
     }
     .news-tweet-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-src-link {
+      display: inline-flex; align-items: center; min-height: 44px;
+      color: var(--muted); font-size: 0.75rem; font-weight: 650; text-decoration: underline;
+    }
+    .news-src-link:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     /* Admin remove. Only rendered for TrumanCooper's remembered seat. Plain text control, not
        a chip or a card — it is a destructive action on a short row and must not look like a
        primary CTA. 44px so a finger finds it without hunting the word. */
@@ -3711,6 +3716,13 @@ const html = `<!DOCTYPE html>
     }
     .news-del:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .news-del[disabled] { opacity: 0.5; cursor: wait; }
+    .news-share {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 44px; min-width: 44px; margin: 0; padding: 0;
+      background: none; border: 0; color: var(--muted); cursor: pointer;
+    }
+    .news-share:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .news-share svg { display: block; }
     .news-empty { color: var(--dim); font-size: 0.8125rem; line-height: 1.45; padding: 10px 0; }
     /* What is left of this row now that the clock control moved to the brand header: the year
        filter on the Trades tab and the round filter on Drafts, each with its caption. Both are
@@ -4116,7 +4128,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "shiploop20260913170000";
+    const DATA_V = "newsfeed20260913172000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14785,6 +14797,40 @@ const html = `<!DOCTYPE html>
       tweet: "X",
     };
 
+    function newsItemById(id) {
+      const book = news && news.v === 1 ? news : null;
+      const items = (book && book.items) || [];
+      const want = String(id || "");
+      for (let i = 0; i < items.length; i++) {
+        if (String(items[i].id) === want) return items[i];
+      }
+      return null;
+    }
+
+    function newsShareBtnHtml(it) {
+      return '<button type="button" class="news-share" data-news-share="' + esc(it && it.id || "") + '"'
+        + ' aria-label="Share this post">' + receiptShareIco() + "</button>";
+    }
+
+    function shareNewsNow(it) {
+      const line = String((it && (it.league_line || it.headline || it.note)) || "League news");
+      const raw = String((it && it.source_url) || "");
+      const url = /^https?:\\/\\//i.test(raw) ? raw : "";
+      const body = line + (url ? "\\n" + url : "");
+      const payload = { title: "Chuckle news", text: body };
+      if (navigator.share) {
+        navigator.share(payload).then(function () {
+          receiptShareNote = "Sent";
+          render();
+        }).catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          receiptCopyText(body);
+        });
+        return;
+      }
+      receiptCopyText(body);
+    }
+
     /**
      * News and Alerts, below the league data sets.
      *
@@ -14926,12 +14972,13 @@ const html = `<!DOCTYPE html>
                 + '" target="_blank" rel="noopener noreferrer">See tweet</a>'
             );
           }
-          const foot = footBits.length
-            ? '<div class="news-tweet-foot">'
-              + footBits.join('<span class="news-tweet-sep" aria-hidden="true">\\u00b7</span>')
-              + del
-              + "</div>"
-            : (del ? '<div class="news-tweet-foot">' + del + "</div>" : "");
+          const foot = '<div class="news-tweet-foot">'
+            + (footBits.length
+              ? footBits.join('<span class="news-tweet-sep" aria-hidden="true">\\u00b7</span>')
+              : "")
+            + newsShareBtnHtml(it)
+            + del
+            + "</div>";
           return '<div class="news-row news-row-tweet">'
             + '<div class="news-top"><span class="news-who">' + who + "</span>"
             + '<span class="news-cat">' + esc(cat) + "</span></div>"
@@ -14940,9 +14987,11 @@ const html = `<!DOCTYPE html>
             + foot
             + "</div>";
         }
-        return safe
-          ? '<a class="news-row" href="' + esc(safe) + '" target="_blank" rel="noopener noreferrer">' + inner + "</a>"
-          : '<div class="news-row">' + inner + "</div>";
+        const srcLink = safe
+          ? '<a class="news-src-link" href="' + esc(safe) + '" target="_blank" rel="noopener noreferrer">See source</a>'
+          : "";
+        return '<div class="news-row">' + inner
+          + '<div class="news-tweet-foot">' + newsShareBtnHtml(it) + srcLink + "</div></div>";
       }).join("");
       return head
         + '<div class="news-box" tabindex="0" role="region" aria-label="News and alerts, ' + items.length + ' items">'
@@ -14984,7 +15033,7 @@ const html = `<!DOCTYPE html>
 
     function renderNewsTab() {
       newsMarkSeen();
-      return your3Html() + renderNewsBody();
+      return '<div class="news-tab">' + renderNewsBody() + "</div>";
     }
 
     function renderNews() {
@@ -14992,12 +15041,12 @@ const html = `<!DOCTYPE html>
     }
 
     function renderNewsPage() {
-      // Same feed the hero opens. Heading comes from renderNewsBody(); replace it with a
+      // Same feed the News tab opens. Heading comes from renderNewsBody(); replace it with a
       // screen heading. Top-bar back returns to league home.
-      return renderNewsBody().replace(
+      return '<div class="news-tab">' + renderNewsBody().replace(
         "<h2>News and Alerts</h2>",
         '<h2 class="screen-h" tabindex="-1">News and Alerts</h2>'
-      );
+      ) + "</div>";
     }
 
     function renderAccountPage() {
@@ -24462,7 +24511,8 @@ const html = `<!DOCTYPE html>
       // the first row -- the rebuild is invisible to them, so it reads as the page jumping for
       // no reason.
       const newsBox = app.querySelector(".news-box");
-      const newsScroll = newsBox ? newsBox.scrollTop : 0;
+      const newsOnTab = homeTab === "news" || view === "news";
+      const newsScroll = newsOnTab ? window.scrollY : (newsBox ? newsBox.scrollTop : 0);
       const calcPageY = (view === "calc" && !focusNext) ? window.scrollY : 0;
       if (view === "calc") {
         calcRememberHitsScroll("a");
@@ -24473,8 +24523,11 @@ const html = `<!DOCTYPE html>
       ledgerRememberCompose();
       document.body.classList.toggle("has-vote-sheet", !!(voteSheetTx || voteConfirmTx));
       if (newsScroll) {
-        const box = app.querySelector(".news-box");
-        if (box) box.scrollTop = newsScroll;
+        if (homeTab === "news" || view === "news") window.scrollTo(0, newsScroll);
+        else {
+          const box = app.querySelector(".news-box");
+          if (box) box.scrollTop = newsScroll;
+        }
       }
       if (view === "calc") {
         calcRestoreHitsScroll("a");
@@ -26204,6 +26257,11 @@ const html = `<!DOCTYPE html>
         deleteNewsItem(newsDelBtn.dataset.newsDel);
         return;
       }
+      const newsShareBtn = e.target.closest("[data-news-share]");
+      if (newsShareBtn) {
+        shareNewsNow(newsItemById(newsShareBtn.getAttribute("data-news-share")));
+        return;
+      }
       const voteOpenBtn = e.target.closest("[data-vote-open]");
       if (voteOpenBtn) {
         e.preventDefault();
@@ -27236,7 +27294,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v257-ship-loop";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v258-news-feed";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27327,13 +27385,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v257-ship-loop")) {
+  || !html.includes("chuckle-shell-v258-news-feed")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v257-ship-loop")
+  || !swSrc.includes("chuckle-shell-v258-news-feed")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -29544,8 +29602,19 @@ const newsCss = newsRule.slice(0, newsRule.indexOf("\n    .news-empty"));
 if (/animation|@keyframes|transition: *transform/.test(newsCss)) {
   throw new Error("the news feed grew an animation -- league home has been animation-free since the ticker was removed, and a self-moving region needs a pause control (WCAG 2.2.2)");
 }
-for (const need of ["max-height: 420px; overflow-y: auto;", "overscroll-behavior: contain;"]) {
-  if (!newsCss.includes(need)) throw new Error(`the news box lost its scroll containment: ${need}`);
+for (const need of ["overflow: visible;", "flex: 1 1 auto;"]) {
+  if (!newsCss.includes(need)) throw new Error(`the news box lost its full-page feed fill: ${need}`);
+}
+if (newsCss.includes("max-height: 420px")) {
+  throw new Error("the news box must not cap at 420px — the News tab is a full-page feed");
+}
+if (!html.includes(".news-tab {") || !html.includes("100svh")) {
+  throw new Error("the News tab must fill the viewport under the brand and pill");
+}
+if (!inline.includes("function shareNewsNow(") || !inline.includes("data-news-share")
+  || !html.includes(".news-share {") || !fnSrc("renderNewsTab").includes("news-tab")
+  || fnSrc("renderNewsTab").includes("your3Html(")) {
+  throw new Error("News tab is a full-page shareable feed with no Alerts vote strip");
 }
 // A scroll container that is not a tab stop is unreachable by keyboard below its fold, and an
 // unnamed region is an unlabelled landmark to a screen reader.

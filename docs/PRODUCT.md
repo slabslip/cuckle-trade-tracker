@@ -27,7 +27,7 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
    + **Cuckle trade calculator** + signed-in **Team Ideas** — no bag hero, no Recent Trade chip,
    no News door). The Home banner opens Titles and Emblems; the name tab and Menu **My team**
    open team home. Menu **Titles and Emblems** stays a door to awards. **News** is a peer tab
-   (Alerts + the league feed, with a missed-count bubble). **Menu** (hamburger) opens a
+   (full-page shareable feed, with a missed-count bubble). **Menu** (hamburger) opens a
    glass popover above the pill: My team / Titles and Emblems / Calculator / League Data / Settings. **Teams** is first-person after a
    seat. Price a hypothetical on **`?view=calc`**. League tape stays the water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.

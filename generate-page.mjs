@@ -4116,7 +4116,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "edgeloop20260913164500";
+    const DATA_V = "shiploop20260913170000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8214,6 +8214,7 @@ const html = `<!DOCTYPE html>
       return [
         (me && me.user_id) || "",
         view,
+        homeTabCanon(homeTab) || "home",
         view === "titles" ? (titleYear || "") : "",
         view === "trade" ? (openId || "") + "/" + (tradeSeat || "") : "",
         view === "datasets" ? (dataSet || "") : "",
@@ -8300,6 +8301,9 @@ const html = `<!DOCTYPE html>
           applyDefaultLens(null);
         }
         // Not in the URL, so a history hop cannot restore it. Closed rather than left stale.
+        if (homeTab !== "history" && typeof receiptPortalLeave === "function") {
+          receiptPortalLeave();
+        }
         partnerName = null;
         openPick = null;
         openDraft = null;
@@ -27232,7 +27236,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v256-edge-loop";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v257-ship-loop";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27323,13 +27327,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v256-edge-loop")) {
+  || !html.includes("chuckle-shell-v257-ship-loop")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v256-edge-loop")
+  || !swSrc.includes("chuckle-shell-v257-ship-loop")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -28818,6 +28822,9 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptWhoListHtml").includes("Pick a team to see their partners.")
     || !inline.includes("function receiptPortalLeave(")
     || !fnSrc("dataDashReset").includes("receiptPortalLeave(")
+    || !fnSrc("screenKey").includes("homeTabCanon(homeTab)")
+    || !inline.includes("async function applyState(")
+    || !inline.includes('if (homeTab !== "history" && typeof receiptPortalLeave === "function")')
     || !fnSrc("ensurePicks").includes("receiptWhoList")
     || !fnSrc("receiptPortalRows").includes("Could not load this tape.")
     || !fnSrc("receiptPortalRows").includes("Could not load picks.")

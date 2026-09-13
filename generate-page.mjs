@@ -20930,8 +20930,7 @@ const html = `<!DOCTYPE html>
         const a = assets[i];
         const pos = homeDeskAssetPos(a);
         if (!pos || pos === "PICK") continue;
-        const starter = (typeof dataDashIsStarterPiece === "function" && dataDashIsStarterPiece(fromBag, a))
-          || homeDeskIsStud(a);
+        const starter = calcValueNum(a) >= DESK_START;
         if (starter && homeDeskHas(dir.refuse, pos + " starter")) return false;
         if (tank && starter && homeDeskHas(dir.sold_pos, pos)) return false;
       }
@@ -20972,6 +20971,7 @@ const html = `<!DOCTYPE html>
       for (let i = 0; i < (bag || []).length; i++) {
         const a = bag[i];
         if (homeDeskAssetPos(a) !== "QB") continue;
+        if (calcValueNum(a) < DESK_START) continue;
         const team = homeDeskNflTeam(a);
         if (team) out.push({ a: a, team: team });
       }
@@ -21035,8 +21035,12 @@ const html = `<!DOCTYPE html>
       });
       const sendExtra = sendPlay.some(function (a) {
         const p = homeDeskAssetPos(a);
+        if (homeDeskIsStud(a)) return false;
         return homeDeskHas(profA && profA.surplus, p) || homeDeskHas(profA && profA.deep, p);
       });
+      const sendStud = sendPlay.some(homeDeskIsStud);
+      const recvStud = recvPlay.some(homeDeskIsStud);
+      if (sendStud && recvStud) return recvNeed ? "buy" : "swap";
       if (recvNeed && (sendPick || sendExtra)) return "buy";
       if (sendExtra && (recvPick || recvPlay.length)) return "sell";
       if (talk.kind === "1for1") return "swap";
@@ -21079,7 +21083,11 @@ const html = `<!DOCTYPE html>
       if (job === "upgrade") return talk.pos ? ("step up at " + talk.pos) : "step up a starter";
       if (job === "downgrade") return talk.pos ? ("sell high at " + talk.pos) : "sell high a foundation";
       if (job === "buy") return talk.pos ? ("add " + talk.pos) : "add a piece";
-      if (job === "sell") return talk.pos ? ("move extra " + talk.pos) : "move extra capital";
+      if (job === "sell") {
+        const star = (talk.legsA || []).some(homeDeskIsStud);
+        if (star) return talk.pos ? ("sell high at " + talk.pos) : "sell high a foundation";
+        return talk.pos ? ("move extra " + talk.pos) : "move extra capital";
+      }
       if (talk.stack) return talk.stack;
       if (talk.cuff) return talk.cuff;
       return "value-adjacent swap";

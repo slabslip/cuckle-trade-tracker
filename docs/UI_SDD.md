@@ -25,8 +25,8 @@ and tape year use the same dropdown.
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
 **Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
 occupy), then the digest — signed-in calling card (title + emblem banner taps
-Titles and Emblems; a small name + place tab under it opens team home), **Your top 4**,
-**Cuckle trade calculator**, and signed-in **Team Ideas**.
+Titles and Emblems; a small flair + name + place tab under it opens team home),
+the top board doors (no heading), **Cuckle trade calculator**, and signed-in **Team Ideas**.
 **News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
 it opens a glass popover above the unchanged pill. It is the water cooler.
 Menu also lists **My team** and **Titles and Emblems** above Calculator so awards

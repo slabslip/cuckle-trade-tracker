@@ -19,7 +19,8 @@ plans stay as history; do not paste them here.
   Menu opens a glass popover (Calculator / League Data / Settings). League Data is the research
   homebase (internal tab id `history`). News is Alerts + the feed.
 - First tab label **Home**. `homeTab` stores `"home"`; `"league"` is an alias.
-- Hybrid Home: signed-in calling card (banner → awards, name tab → team) first, then **Your top 4**, then the
+- Hybrid Home: signed-in calling card (banner → awards, name tab → team) first, then the
+  top board doors (no heading), then the
   water cooler (**Cuckle trade calculator**).
   Signed-in **Team Ideas** (heading only, no lede) from
   the four-source today book into the calculator — not a second copy of the league peek;

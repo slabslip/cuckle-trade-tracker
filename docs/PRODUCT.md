@@ -23,7 +23,7 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. **Home** is the daily paper (Linear bottom pill + signed-in calling card + **Your top 4**
+4. **Home** is the daily paper (Linear bottom pill + signed-in calling card + top board doors
    + **Cuckle trade calculator** + signed-in **Team Ideas** — no bag hero, no Recent Trade chip,
    no News door). The Home banner opens Titles and Emblems; the name tab and Menu **My team**
    open team home. Menu **Titles and Emblems** stays a door to awards. **News** is a peer tab

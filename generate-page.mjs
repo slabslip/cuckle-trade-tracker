@@ -1607,12 +1607,19 @@ const html = `<!DOCTYPE html>
     }
     button.home-you-name {
       appearance: none; font: inherit; color: inherit; cursor: pointer;
-      display: inline-flex; align-items: baseline; gap: 6px;
-      margin: -1px 0 0; padding: 2px 10px 3px;
+      display: inline-flex; align-items: center; gap: 5px;
+      margin: -1px 0 0; padding: 2px 8px 2px 4px;
       background: var(--card); border: 1px solid var(--line);
       border-radius: 0 0 10px 10px; line-height: 1.2;
     }
     button.home-you-name:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.home-you-name img.home-you-flair {
+      width: 16px; height: 16px; border-radius: 50%; object-fit: cover;
+      flex: 0 0 auto; display: block;
+    }
+    button.home-you-name .home-you-glyph {
+      font-size: 0.85rem; line-height: 1; flex: 0 0 auto;
+    }
     button.home-you-name b { font-size: 0.82rem; font-weight: 750; }
     button.home-you-name span { color: var(--dim); font-size: 0.72rem; font-weight: 650; }
     .team-story-h {
@@ -4117,7 +4124,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeyou20260913150500";
+    const DATA_V = "homeyou20260913151200";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -23065,6 +23072,19 @@ const html = `<!DOCTYPE html>
         + cosmeticsDetailSheetHtml();
     }
 
+    function homeYouFlairHtml(name) {
+      const f = name ? flairEntry(name) : null;
+      if (f && f.img) {
+        const cls = f.custom ? "home-you-flair home-you-flair-custom" : "home-you-flair";
+        return '<img class="' + cls + '" src="' + flairImgSrc(f.img)
+          + '" width="16" height="16" alt="" decoding="async" />';
+      }
+      if (f && f.glyph) {
+        return '<span class="home-you-glyph" aria-hidden="true">' + f.glyph + "</span>";
+      }
+      return "";
+    }
+
     function homeYouHtml() {
       if (!authSession || !authSeatId()) return "";
       const name = authSeatCanonName() || authSeatName() || "Your team";
@@ -23075,12 +23095,14 @@ const html = `<!DOCTYPE html>
       const plate = (typeof cosmeticsCallingCardHtml === "function")
         ? cosmeticsCallingCardHtml(cosmeticsPairForSeat(authSeatId()), { empty: true })
         : "";
+      const flair = homeYouFlairHtml(name);
       return '<section class="home-you" aria-label="' + esc(name) + '">'
         + '<div class="home-you-stack">'
         + '<button type="button" class="home-you-plate" data-home-awards="1" aria-label="Titles and Emblems">'
         + plate
         + "</button>"
         + '<button type="button" class="home-you-name" data-home-my-team="1" aria-label="' + esc(name) + ' team">'
+        + flair
         + "<b>" + esc(name) + "</b>"
         + (place ? "<span>" + esc(place) + "</span>" : "")
         + "</button>"
@@ -23104,8 +23126,7 @@ const html = `<!DOCTYPE html>
     function homeTopDoorsHtml() {
       const ids = dataDashTopIds();
       if (!ids.length) return "";
-      return '<section class="home-top-doors" aria-label="Your top 4">'
-        + '<div class="home-desk-h">Your top 4</div>'
+      return '<section class="home-top-doors" aria-label="Board doors">'
         + '<div class="receipt-board home-top-board">'
         + ids.map(function (id) {
           const spec = dataDashById(id);
@@ -28456,6 +28477,8 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeYouHtml").includes("data-home-awards")
     || !fnSrc("homeYouHtml").includes("home-you-name")
     || !fnSrc("homeYouHtml").includes("home-you-plate")
+    || !fnSrc("homeYouHtml").includes("homeYouFlairHtml(")
+    || !inline.includes("function homeYouFlairHtml(")
     || fnSrc("homeYouHtml").includes("Open my team")
     || fnSrc("homeYouHtml").includes("home-desk-h")
     || fnSrc("homeYouHtml").includes("homeYouTapeLine")
@@ -28688,7 +28711,8 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-dash-board")
     || !inline.includes("data-home-door")
     || !inline.includes("door-top")
-    || !inline.includes("Your top 4")
+    || fnSrc("homeTopDoorsHtml").includes("Your top 4")
+    || fnSrc("homeTopDoorsHtml").includes("home-desk-h")
     || !inline.includes("Top 4 wear gold")
     || !inline.includes("Hold a tile, then drag to move it.")
     || !inline.includes("Every pick ")

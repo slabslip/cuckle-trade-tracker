@@ -67,7 +67,7 @@ const need = [
   "data-dash-board",
   "Hold a tile, then drag to move it.",
   "Top 4 wear gold",
-  "Your top 4",
+  "home-top-board",
   "data-home-door",
   "door-top",
   "function homeTopDoorsHtml(",

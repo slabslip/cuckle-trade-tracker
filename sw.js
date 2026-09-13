@@ -4,7 +4,7 @@
  * Deploys: merge to main → GitHub Pages. Clients reg.update() on load/focus; skipWaiting
  * + claim then controllerchange reloads once.
  */
-const CACHE = "chuckle-shell-v253-settings-bar";
+const CACHE = "chuckle-shell-v254-dash-fluid";
 /* Icons + manifest only. brand-mark / gate-logo are loaded with ?DATA_V from the page. */
 const SHELL = [
   "./manifest.webmanifest",
@@ -62,7 +62,9 @@ self.addEventListener("fetch", (event) => {
   // Manifest / app icons: cache-first (versioned by CACHE name on activate).
   const isShell = url.pathname.endsWith("manifest.webmanifest")
     || /\/icon-\d+\.png$/.test(url.pathname);
-  if (isShell) {
+  const isDataImg = url.pathname.includes("/data/")
+    && /\.(png|webp|jpe?g|gif|svg)$/i.test(url.pathname);
+  if (isShell || isDataImg) {
     event.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {
         if (res && res.ok) {

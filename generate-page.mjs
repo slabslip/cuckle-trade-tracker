@@ -4115,7 +4115,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "settingsbar20260913152500";
+    const DATA_V = "dashfluid20260913154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7923,8 +7923,7 @@ const html = `<!DOCTYPE html>
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
-        if (!me && view === "home") await ensureLatestTradeBags();
-        else ensureLatestTradeBags().catch((err) => console.error(err));
+        ensureLatestTradeBags().catch((err) => console.error(err));
       } catch (err) { console.error(err); }
       const startTitle = params.get("title");
       const startView = params.get("view");
@@ -12327,6 +12326,7 @@ const html = `<!DOCTYPE html>
       if (ledgerComposeOpen() && !ledgerOnComposePage()) ledgerAbandonCompose();
     }
 
+    let dashPaintSoon = 0;
     function ledgerMaybeRender() {
       ledgerDropComposeIfLeft();
       if (ledgerComposeOpen()) {
@@ -12339,7 +12339,13 @@ const html = `<!DOCTYPE html>
         }
         return false;
       }
-      render();
+      if (dashPaintSoon) return true;
+      dashPaintSoon = 1;
+      requestAnimationFrame(function () {
+        dashPaintSoon = 0;
+        render();
+        if (typeof dashWarmChrome === "function") dashWarmChrome();
+      });
       return true;
     }
 
@@ -16402,10 +16408,10 @@ const html = `<!DOCTYPE html>
       const eqTitle = catalog.find((c) => c.id === cosmeticsEquip.title);
       const eqEmblem = catalog.find((c) => c.id === cosmeticsEquip.emblem);
       const plateBanner = eqTitle
-        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
+        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner", "", true)
         : '<span class="cos-plate-banner is-text">No title equipped</span>';
       const plateEmblem = eqEmblem
-        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
+        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id, "", true) + "</div>")
         : '<div class="cos-plate-emblem"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
       return '<div class="' + (cls || "cos-plate") + '" aria-label="Equipped calling card">'
         + plateBanner + plateEmblem + "</div>";
@@ -17636,16 +17642,7 @@ const html = `<!DOCTYPE html>
       loadSeatAvatars().then(() => {
         if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
-      loadSeatCosmetics().then(() => {
-        if (appScreen === "dash") ledgerMaybeRender();
-      }).catch((err) => console.error(err));
-      dataDashTiles = dataDashReadLocal();
-      loadSeatDataDash().then(() => {
-        if (appScreen === "dash") ledgerMaybeRender();
-      }).catch((err) => console.error(err));
-      loadSeatTradeBlock().then(() => {
-        if (appScreen === "dash") ledgerMaybeRender();
-      }).catch((err) => console.error(err));
+      if (typeof dashWarmChrome === "function") dashWarmChrome();
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
       if (!isDesignLeagueHome()) loadNewsDeleted().catch((err) => console.error(err));
@@ -22871,7 +22868,7 @@ const html = `<!DOCTYPE html>
       return "";
     }
 
-    function cosmeticsEmblemMark(id, cls) {
+    function cosmeticsEmblemMark(id, cls, eager) {
       // Custom flat marks, emoji-sized — never Unicode emoji.
       const path = cosmeticsArtPath("emblem", id);
       const wrap = cls || "cos-emoji";
@@ -22880,11 +22877,12 @@ const html = `<!DOCTYPE html>
       }
       return '<span class="' + wrap + '" aria-hidden="true">'
         + '<img src="' + esc(path) + "?" + DATA_V + '" alt="" width="28" height="28"'
-        + ' loading="lazy" decoding="async" />'
+        + (eager ? ' loading="eager" fetchpriority="high"' : ' loading="lazy"')
+        + ' decoding="async" />'
         + "</span>";
     }
 
-    function cosmeticsTitleBanner(c, cls, variant) {
+    function cosmeticsTitleBanner(c, cls, variant, eager) {
       const thumb = variant === "thumb";
       const path = cosmeticsArtPath("title", c.id, thumb ? "thumb" : "");
       const ladder = COS_CROWN_TITLES.has(c.id);
@@ -22892,7 +22890,8 @@ const html = `<!DOCTYPE html>
         return '<img class="' + cls + '" src="' + esc(path) + "?" + DATA_V
           + '" alt="' + esc(c.name) + '"'
           + (thumb ? ' width="512" height="90"' : ' width="1024" height="180"')
-          + ' loading="lazy" decoding="async" />';
+          + (eager ? ' loading="eager" fetchpriority="high"' : ' loading="lazy"')
+          + ' decoding="async" />';
       }
       return '<span class="cos-title-fallback' + (ladder ? " is-gold" : "") + '">'
         + esc(c.name) + "</span>";
@@ -22910,17 +22909,81 @@ const html = `<!DOCTYPE html>
         : null;
       if (!eqTitle && !eqEmblem && !emptyOk) return "";
       const plateBanner = eqTitle
-        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner")
+        ? cosmeticsTitleBanner(eqTitle, "cos-plate-banner", "", true)
         : (blank
           ? '<span class="cos-plate-banner is-blank" aria-hidden="true"></span>'
           : '<span class="cos-plate-banner is-text">' + (emptyOk ? "No title equipped" : "") + "</span>");
       const plateEmblem = eqEmblem
-        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id) + "</div>")
+        ? ('<div class="cos-plate-emblem">' + cosmeticsEmblemMark(eqEmblem.id, "", true) + "</div>")
         : '<div class="cos-plate-emblem' + (blank ? " is-blank" : "") + '"><span class="cos-emoji cos-emoji-missing" aria-hidden="true"></span></div>';
       const lab = [eqTitle && eqTitle.name, eqEmblem && eqEmblem.name].filter(Boolean).join(" · ")
         || (blank ? "No title or emblem yet" : "Equipped calling card");
       return '<div class="cos-plate" aria-label="' + esc(lab) + '">'
         + plateBanner + plateEmblem + "</div>";
+    }
+
+    function dashPreloadHref(href) {
+      if (!href || String(href).indexOf("data:") === 0) return;
+      const url = String(href).indexOf("?") >= 0 ? String(href) : (String(href) + "?" + DATA_V);
+      try {
+        if (document.querySelector('link[rel="preload"][href="' + url + '"]')) return;
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.href = url;
+        document.head.appendChild(link);
+      } catch (err) { /* ignore */ }
+    }
+
+    function dashWarmHero() {
+      try {
+        dashPreloadHref("data/ui/calc-door.png?" + DATA_V);
+        const uid = authSeatId();
+        const pair = (uid && typeof cosmeticsPairForSeat === "function")
+          ? cosmeticsPairForSeat(uid)
+          : cosmeticsEquip;
+        if (pair && pair.title) {
+          const t = cosmeticsCatalog().find(function (c) {
+            return c && c.id === pair.title && c.kind === "title";
+          });
+          if (t) dashPreloadHref(cosmeticsArtPath("title", t.id));
+        }
+        if (pair && pair.emblem) dashPreloadHref(cosmeticsArtPath("emblem", pair.emblem));
+        const name = authSeatCanonName() || authSeatName();
+        const f = name ? flairEntry(name) : null;
+        if (f && f.img) dashPreloadHref(f.img);
+      } catch (err) { /* ignore */ }
+    }
+
+    let dashBarracksWarm = false;
+    function dashWarmBarracks() {
+      if (dashBarracksWarm) return;
+      dashBarracksWarm = true;
+      const run = function () {
+        try {
+          COS_TITLE_ART.forEach(function (id) {
+            const src = cosmeticsArtPath("title", id, "thumb");
+            if (!src) return;
+            const img = new Image();
+            img.decoding = "async";
+            img.src = src + "?" + DATA_V;
+          });
+          COS_EMBLEM_ART.forEach(function (id) {
+            const src = cosmeticsArtPath("emblem", id);
+            if (!src) return;
+            const img = new Image();
+            img.decoding = "async";
+            img.src = src + "?" + DATA_V;
+          });
+        } catch (err) { /* ignore */ }
+      };
+      if (typeof requestIdleCallback === "function") requestIdleCallback(run, { timeout: 2500 });
+      else setTimeout(run, 400);
+    }
+
+    function dashWarmChrome() {
+      dashWarmHero();
+      dashWarmBarracks();
     }
 
     function cosmeticsSeatPlateHtml() {
@@ -22985,8 +23048,8 @@ const html = `<!DOCTYPE html>
       const mate = cosmeticsPairMate(c);
       const mateGot = mate ? cosmeticsUnlocked(mate.id) : null;
       const head = c.kind === "emblem"
-        ? cosmeticsEmblemMark(c.id)
-        : cosmeticsTitleBanner(c, "cos-sheet-banner");
+        ? cosmeticsEmblemMark(c.id, "", true)
+        : cosmeticsTitleBanner(c, "cos-sheet-banner", "", true);
       const mateLine = mate
         ? ('<p class="cos-sheet-got">Matching ' + esc(mate.kind) + ": " + esc(mate.name)
           + (mateGot ? " (unlocked)" : " (same gate — unlocks together)") + "</p>")
@@ -23055,7 +23118,7 @@ const html = `<!DOCTYPE html>
       if (f && f.img) {
         const cls = f.custom ? "home-you-flair home-you-flair-custom" : "home-you-flair";
         return '<img class="' + cls + '" src="' + flairImgSrc(f.img)
-          + '" width="16" height="16" alt="" decoding="async" />';
+          + '" width="32" height="32" alt="" decoding="async" fetchpriority="high" />';
       }
       if (f && f.glyph) {
         return '<span class="home-you-glyph" aria-hidden="true">' + f.glyph + "</span>";
@@ -23092,7 +23155,7 @@ const html = `<!DOCTYPE html>
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="Cuckle calculator, click here">'
         + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
-        + ' width="1024" height="180" alt="Cuckle calculator">'
+        + ' width="1024" height="180" alt="Cuckle calculator" decoding="async" fetchpriority="high">'
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
       return homeYouHtml()
@@ -27107,7 +27170,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v253-settings-bar";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v254-dash-fluid";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27198,15 +27261,17 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v253-settings-bar")) {
+  || !html.includes("chuckle-shell-v254-dash-fluid")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v253-settings-bar")
+  || !swSrc.includes("chuckle-shell-v254-dash-fluid")
   || !swSrc.includes("isAppDocument")
-  || !swSrc.includes("Chuckle Fantasy needs a network")) {
+  || !swSrc.includes("Chuckle Fantasy needs a network")
+  || !swSrc.includes("isDataImg")
+  || !swSrc.includes("/data/")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
 }
 
@@ -29778,6 +29843,25 @@ if (!inline.includes("function cosmeticsArtPath(") || !inline.includes("function
   || !html.includes("aspect-ratio: 1024 / 180")
   || !html.includes("cos-title-banner")) {
   throw new Error("Titles and Emblems must use compact COD banners, custom emblem marks, and tap-to-read details");
+}
+{
+  const loadAt = inline.indexOf("async function loadMembers(");
+  const loadFn = loadAt < 0 ? "" : inline.slice(loadAt, loadAt + 4500);
+  const openAt = inline.indexOf("async function openLeagueDashboard(");
+  const openFn = openAt < 0 ? "" : inline.slice(openAt, openAt + 2800);
+  if (!inline.includes("function dashWarmHero(")
+    || !inline.includes("function dashWarmBarracks(")
+    || !inline.includes("function dashWarmChrome(")
+    || !inline.includes('fetchpriority="high"')
+    || !fnSrc("cosmeticsTitleBanner").includes('fetchpriority="high"')
+    || !fnSrc("cosmeticsCallingCardHtml").includes("true)")
+    || loadFn.includes("await ensureLatestTradeBags(")
+    || openFn.includes("loadSeatCosmetics(")
+    || openFn.includes("loadSeatDataDash(")
+    || openFn.includes("loadSeatTradeBlock(")
+    || !fnSrc("ledgerMaybeRender").includes("requestAnimationFrame")) {
+    throw new Error("Home hero art must load eager; boot must not await trade bags or double-fetch seat stores");
+  }
 }
 {
   const titlesAt = html.indexOf(".cos-titles {");

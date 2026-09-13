@@ -297,7 +297,7 @@ const html = `<!DOCTYPE html>
     body.has-leagues-drawer { overflow: hidden; }
     /* Settings Profile | Leagues — reuse .nav / .tab; slight top gap under the screen title. */
     .settings-tabs.nav { margin: 4px 0 14px; }
-    /* Right slot is .brand-end (team flair + settings gear). */
+    /* Right slot is .brand-end — team flair and settings gear stay hidden. */
     .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; gap: 2px; }
     .brand-end:empty { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
@@ -1495,9 +1495,10 @@ const html = `<!DOCTYPE html>
     }
     button.lh-action-menu .lh-lab { display: none; }
     .lh-menu {
-      position: absolute; left: 0; right: 0;
+      position: absolute; left: auto; right: 0;
       bottom: calc(100% + 10px);
-      width: 100%; box-sizing: border-box;
+      width: max-content; min-width: 220px; max-width: 100%;
+      box-sizing: border-box;
       padding: 10px 8px 8px;
       border-radius: 28px;
       overflow: hidden;
@@ -1514,24 +1515,14 @@ const html = `<!DOCTYPE html>
     .lh-actions.is-menu-open .lh-menu {
       opacity: 1; pointer-events: auto; transform: none;
     }
-    .lh-menu-head {
-      display: flex; align-items: center; gap: 8px;
-      min-height: 36px; padding: 4px 12px 8px;
-    }
-    .lh-menu-mark {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--lh-gold, #e0b44c); flex: 0 0 auto;
-    }
-    .lh-menu-title {
-      font-size: 0.9375rem; font-weight: 700; color: var(--text);
-    }
     button.lh-menu-item {
       appearance: none; font: inherit; color: var(--text);
       background: transparent; border: 0;
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; justify-content: flex-end;
+      flex-direction: row-reverse; gap: 12px;
       width: 100%; min-height: var(--hig-tap);
       padding: 8px 12px; margin: 0;
-      text-align: left; font-size: 0.9375rem; font-weight: 650;
+      text-align: right; font-size: 0.9375rem; font-weight: 650;
       cursor: pointer; border-radius: 999px;
     }
     button.lh-menu-item:hover,
@@ -1599,29 +1590,29 @@ const html = `<!DOCTYPE html>
     button.home-you-plate {
       appearance: none; font: inherit; color: inherit;
       display: block; width: 100%; margin: 0; padding: 0; border: 0;
-      background: transparent; cursor: pointer; border-radius: 10px 10px 0 0;
+      background: transparent; cursor: pointer; border-radius: 0 0 10px 10px;
     }
     button.home-you-plate:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.home-you-plate .cos-plate {
-      margin: 0; border-bottom-left-radius: 0;
+      margin: 0; border-top-left-radius: 0;
     }
     button.home-you-name {
       appearance: none; font: inherit; color: inherit; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 5px;
-      margin: -1px 0 0; padding: 2px 8px 2px 4px;
+      display: inline-flex; align-items: center; gap: 8px;
+      margin: 0 0 -1px; padding: 4px 12px 4px 6px;
       background: var(--card); border: 1px solid var(--line);
-      border-radius: 0 0 10px 10px; line-height: 1.2;
+      border-radius: 10px 10px 0 0; line-height: 1.2;
     }
     button.home-you-name:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.home-you-name img.home-you-flair {
-      width: 16px; height: 16px; border-radius: 50%; object-fit: cover;
+      width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
       flex: 0 0 auto; display: block;
     }
     button.home-you-name .home-you-glyph {
-      font-size: 0.85rem; line-height: 1; flex: 0 0 auto;
+      font-size: 1.7rem; line-height: 1; flex: 0 0 auto;
     }
-    button.home-you-name b { font-size: 0.82rem; font-weight: 750; }
-    button.home-you-name span { color: var(--dim); font-size: 0.72rem; font-weight: 650; }
+    button.home-you-name b { font-size: 1.64rem; font-weight: 750; }
+    button.home-you-name span { color: var(--dim); font-size: 1.44rem; font-weight: 650; }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
@@ -4124,7 +4115,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeyou20260913151200";
+    const DATA_V = "settingsbar20260913152500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8947,7 +8938,8 @@ const html = `<!DOCTYPE html>
         '<span class="lh-menu-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false">'
         + '<path fill="currentColor" d="' + d + '"/></svg></span>';
       const item = (id, lab, path) => {
-        const on = id === "data" && homeTab === "history";
+        const on = (id === "data" && homeTab === "history" && appScreen === "dash")
+          || (id === "settings" && (appScreen === "settings" || appScreen === "profile"));
         return '<button type="button" class="lh-menu-item' + (on ? " is-on" : "") + '" role="menuitem" data-lh-menu-go="' + id + '">'
           + ico(path) + '<span class="lh-menu-lab">' + esc(lab) + "</span></button>";
       };
@@ -8957,11 +8949,8 @@ const html = `<!DOCTYPE html>
         ? item("share", shareKind === "calc" ? "Share trade" : "Share receipt",
           "M12 3l5 5h-3v6h-4V8H7l5-5zm-8 13h3v5h10v-5h3v7H4v-7z")
         : "";
-      return '<div class="lh-menu" id="lhMenuPanel" role="menu" aria-label="More"'
+      return '<div class="lh-menu" id="lhMenuPanel" role="menu" aria-label="Menu"'
         + (lhMenuOpen ? "" : " inert") + ">"
-        + '<div class="lh-menu-head">'
-        + '<span class="lh-menu-mark" aria-hidden="true"></span>'
-        + '<span class="lh-menu-title">More</span></div>'
         + shareRow
         + (authSeatId()
           ? item("mystats", "My team",
@@ -8982,7 +8971,8 @@ const html = `<!DOCTYPE html>
     }
 
     function lhMenuAction() {
-      const on = !!lhMenuOpen || homeTab === "history";
+      const on = !!lhMenuOpen || homeTab === "history"
+        || appScreen === "settings" || appScreen === "profile";
       return '<button type="button" role="tab" class="lh-action lh-action-menu' + (on ? " on" : "") + '" data-lh-menu="1"'
         + ' aria-label="Menu"'
         + ' aria-haspopup="menu"'
@@ -9007,7 +8997,8 @@ const html = `<!DOCTYPE html>
         const btn = nav.querySelector("[data-lh-menu]");
         if (btn) {
           btn.setAttribute("aria-expanded", lhMenuOpen ? "true" : "false");
-          const lit = lhMenuOpen || homeTab === "history";
+          const lit = lhMenuOpen || homeTab === "history"
+            || appScreen === "settings" || appScreen === "profile";
           btn.classList.toggle("on", lit);
           btn.setAttribute("aria-selected", lit ? "true" : "false");
         }
@@ -9047,7 +9038,12 @@ const html = `<!DOCTYPE html>
      * Other tabs: same tab again returns to Home. Pass { force: true } to open without toggle-off.
      * Stored/clicked "league" is an alias for Home.
      */
+    function leaveSettingsToDash() {
+      if (appScreen === "settings" || appScreen === "profile") appScreen = "dash";
+    }
+
     function setHomeTab(tab, opts) {
+      leaveSettingsToDash();
       lhMenuOpen = false;
       const force = !!(opts && opts.force);
       const want = homeTabCanon(tab);
@@ -15780,10 +15776,7 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Brand-end right slot:
-     * - League home + claimed seat → team flair (opens team home)
-     * - Team home / nested / Settings → settings gear (opens Team settings)
-     * - Authed with no seat on league home → settings gear (claim path)
+     * Brand-end right slot stays empty. Menu owns team home and Settings.
      */
     function brandTeamIcoHtml(name) {
       const f = name ? flairEntry(name) : null;
@@ -15802,23 +15795,8 @@ const html = `<!DOCTYPE html>
     function paintSettingsBtn() {
       const settingsBtn = document.getElementById("goSettings");
       const teamBtn = document.getElementById("goTeamHome");
-      const teamIco = document.getElementById("goTeamHomeIco");
-      if (!settingsBtn) return;
-      const onLeagueHome = appScreen === "dash" && !me && view === "home";
-      const seatId = authSeatId();
-      const teamSeat = authSeatCanonName() || authSeatName();
-      const showTeam = !!(authSession && onLeagueHome && seatId);
-      const showSettings = !!authSession && appScreen !== "settings";
-      settingsBtn.hidden = !showSettings;
-      if (showSettings) settingsBtn.setAttribute("aria-label", "Team settings");
-      if (teamBtn) {
-        teamBtn.hidden = !showTeam;
-        if (showTeam) {
-          const lab = (teamSeat || "Team") + " — open team home";
-          teamBtn.setAttribute("aria-label", lab);
-          if (teamIco) teamIco.innerHTML = brandTeamIcoHtml(teamSeat);
-        }
-      }
+      if (settingsBtn) settingsBtn.hidden = true;
+      if (teamBtn) teamBtn.hidden = true;
     }
 
     /** Top-left Back: hide on the login gate / multi-league home. */
@@ -16004,7 +15982,7 @@ const html = `<!DOCTYPE html>
      * - History data-set drill → History list
      * - Teams / Ledger / History tabs → League (Latest trade)
      * - league homepage → Your leagues drawer
-     * - Team settings → team home
+     * - Team settings → league home
      * - other nested screens → league homepage
      */
     function dataDashFromDoor() {
@@ -16164,11 +16142,9 @@ const html = `<!DOCTYPE html>
         openLeaguesDrawer();
         return;
       }
-      if ((appScreen === "settings" || appScreen === "profile")
-          && activeLeague && authSeatId()) {
+      if (appScreen === "settings" || appScreen === "profile") {
         closeLeaguesDrawer(true);
-        appScreen = "dash";
-        openMyTeamHome();
+        returnToLeagueHome();
         return;
       }
       // Seat meter: section tabs / trade → seat home; seat home → prior screen (Teams if cold).
@@ -16235,8 +16211,9 @@ const html = `<!DOCTYPE html>
       // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
       nav.hidden = true;
       document.body.classList.remove("has-bottom-nav");
-      const on = appScreen === "dash" && !(me && data)
-        && (view === "home" || view === "calc" || view === "trade");
+      const on = (appScreen === "dash" && !(me && data)
+          && (view === "home" || view === "calc" || view === "trade"))
+        || appScreen === "settings" || appScreen === "profile";
       try { document.body.classList.toggle("has-lh-bar", on); } catch (err) { /* ignore */ }
       if (!on) lhMenuOpen = false;
       try { document.body.classList.toggle("has-lh-menu", on && lhMenuOpen); } catch (err2) { /* ignore */ }
@@ -16244,6 +16221,7 @@ const html = `<!DOCTYPE html>
 
     function goBottomNav(which) {
       if (which !== "mystats" && newsPullupLocksHome()) return;
+      leaveSettingsToDash();
       if (appScreen !== "dash") return;
       dsOpen = false;
       lensOpen = false;
@@ -23098,13 +23076,13 @@ const html = `<!DOCTYPE html>
       const flair = homeYouFlairHtml(name);
       return '<section class="home-you" aria-label="' + esc(name) + '">'
         + '<div class="home-you-stack">'
-        + '<button type="button" class="home-you-plate" data-home-awards="1" aria-label="Titles and Emblems">'
-        + plate
-        + "</button>"
         + '<button type="button" class="home-you-name" data-home-my-team="1" aria-label="' + esc(name) + ' team">'
         + flair
         + "<b>" + esc(name) + "</b>"
         + (place ? "<span>" + esc(place) + "</span>" : "")
+        + "</button>"
+        + '<button type="button" class="home-you-plate" data-home-awards="1" aria-label="Titles and Emblems">'
+        + plate
         + "</button>"
         + "</div></section>";
     }
@@ -24110,7 +24088,8 @@ const html = `<!DOCTYPE html>
         + '<h2 class="screen-h" tabindex="-1">Team settings</h2>'
         + tabNav
         + body
-        + "</div>";
+        + "</div>"
+        + homeChips();
     }
 
     function renderProfile() {
@@ -24961,6 +24940,7 @@ const html = `<!DOCTYPE html>
         const go = menuGo.getAttribute("data-lh-menu-go");
         setLhMenuOpen(false);
         if (go === "calc") {
+          leaveSettingsToDash();
           if (typeof calcWipe === "function") calcWipe();
           view = "calc";
           focusNext = ".screen-h";
@@ -27127,7 +27107,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v252-home-you";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v253-settings-bar";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -27218,13 +27198,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v252-home-you")) {
+  || !html.includes("chuckle-shell-v253-settings-bar")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v252-home-you")
+  || !swSrc.includes("chuckle-shell-v253-settings-bar")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28440,7 +28420,7 @@ if (!inline.includes('"cosmetics", "news"')) {
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
   if (fn.includes("lhSeatStatsAction(") || fn.includes('"My Trades"') || fn.includes("mystats")) {
-    throw new Error("homeChips must not mount team stats — brand-end goTeamHome owns that door");
+    throw new Error("homeChips must not mount team stats — Menu My team owns that door");
   }
   if (!fn.includes('homeTabAction("home"') || !fn.includes('homeTabAction("teams"')
     || !fn.includes('homeTabAction("news"')
@@ -28459,7 +28439,8 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function lhMenuShareKind(")
     || !inline.includes("function lhMenuShareNow(")
     || !fnSrc("lhMenuPanelHtml").includes("shareRow")
-    || !inline.includes("lh-menu-head")
+    || fnSrc("lhMenuPanelHtml").includes("lh-menu-head")
+    || fnSrc("lhMenuPanelHtml").includes(">More<")
     || !inline.includes("lh-menu-ico")
     || !lhCssHas("position: absolute")
     || !lhCssHas("bottom: calc(100% + 10px)")
@@ -28481,6 +28462,7 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function homeYouFlairHtml(")
     || fnSrc("homeYouHtml").includes("Open my team")
     || fnSrc("homeYouHtml").includes("home-desk-h")
+    || fnSrc("homeYouHtml").indexOf("home-you-name") > fnSrc("homeYouHtml").indexOf("home-you-plate")
     || fnSrc("homeYouHtml").includes("homeYouTapeLine")
     || fnSrc("homeYouHtml").includes("calcFmt(")
     || fnSrc("homeYouHtml").includes("calcValueNum(")
@@ -28503,10 +28485,23 @@ if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
 }
 {
   const paint = fnSrc("paintSettingsBtn");
-  if (!paint.includes("showTeam") || !paint.includes("goTeamHome")
-    || !paint.includes("brandTeamIcoHtml(") || !paint.includes('view === "home"')
-    || !paint.includes('appScreen !== "settings"') || paint.includes("&& !showTeam")) {
-    throw new Error("paintSettingsBtn must show team flair on league home and keep the settings gear");
+  if (!paint.includes("goTeamHome") || !paint.includes("goSettings")
+    || !paint.includes("hidden = true") || paint.includes("showTeam")
+    || paint.includes("showSettings")) {
+    throw new Error("paintSettingsBtn must hide brand-end team flair and settings gear");
+  }
+}
+{
+  const back = fnSrc("onBrandBack");
+  const nav = fnSrc("paintBottomNav");
+  if (!fnSrc("renderSettings").includes("homeChips()")
+    || !nav.includes('appScreen === "settings"')
+    || !inline.includes("function leaveSettingsToDash(")
+    || !fnSrc("setHomeTab").includes("leaveSettingsToDash(")
+    || !fnSrc("goBottomNav").includes("leaveSettingsToDash(")
+    || back.includes("openMyTeamHome()")
+    || !back.includes("returnToLeagueHome()")) {
+    throw new Error("Settings must keep the league bar and Back must return to league home");
   }
 }
 {
@@ -29655,8 +29650,10 @@ if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel
 {
   const backFn = fnSrc("onBrandBack");
   if (!backFn.includes("isLeagueHomeSurface()") || !backFn.includes("returnToLeagueHome()")
-    || !backFn.includes("openLeaguesDrawer()") || !backFn.includes("openMyTeamHome()")) {
-    throw new Error("onBrandBack must open leagues drawer on league home and return to team home from settings");
+    || !backFn.includes("openLeaguesDrawer()")
+    || !backFn.includes('appScreen === "settings"')
+    || backFn.includes("openMyTeamHome()")) {
+    throw new Error("onBrandBack must open leagues drawer on league home and return to league home from settings");
   }
   if (/appScreen !== "dash"[\s\S]{0,80}goAppHome\(\)/.test(backFn)) {
     throw new Error("onBrandBack must not send non-dash screens to goAppHome — return to league home");
@@ -30151,8 +30148,8 @@ if (!html.includes("button.pick-intel-chip:disabled")
   || !inline.includes('disabled aria-disabled="true" tabindex="-1"')) {
   throw new Error("unclaimed Held / Original / Mine chips must be disabled, not only aria-disabled");
 }
-if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "Team settings"')) {
-  throw new Error("Settings screen must render as Team settings from the team-home gear");
+if (!inline.includes(">Team settings</h2>") || !inline.includes('item("settings", "Settings"')) {
+  throw new Error("Settings screen must render as Team settings from Menu");
 }
 
 {
@@ -30223,8 +30220,7 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && !html.includes("GlassView")],
     ["HIG-18", html.includes("@media (prefers-reduced-transparency: reduce)")
       && html.includes("backdrop-filter: none")],
-    ["HIG-19", inline.includes("lh-menu-head")
-      && inline.includes("lh-menu-ico")
+    ["HIG-19", inline.includes("lh-menu-ico")
       && inline.includes("lh-menu-slot")
       && lhCssHas("position: absolute")
       && lhCssHas("bottom: calc(100% + 10px)")
@@ -30237,8 +30233,10 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('aria-label", "T
       && !html.includes("systemBlue")
       && !html.includes("#007AFF")
       && !html.includes("#0A84FF")],
-    ["HIG-21", inline.includes("lh-menu-title")
-      && inline.includes(">More<")
+    ["HIG-21", !fnSrc("lhMenuPanelHtml").includes("lh-menu-head")
+      && !fnSrc("lhMenuPanelHtml").includes(">More<")
+      && lhCssHas("justify-content: flex-end")
+      && lhCssHas("flex-direction: row-reverse")
       && !inline.includes("lh-fab")
       && !inline.includes("lh-menu-toolbar")
       && !inline.includes("range-slider")],

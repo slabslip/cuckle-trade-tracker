@@ -24,14 +24,15 @@ and tape year use the same dropdown.
 
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
 **Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
-occupy), then the digest — signed-in calling card (title + emblem banner taps
-Titles and Emblems; a small flair + name + place tab under it opens team home),
+occupy), then the digest — signed-in calling card (flair + name + place above
+the title banner; banner taps Titles and Emblems; name tab opens team home),
 the top board doors (no heading), **Cuckle trade calculator**, and signed-in **Team Ideas**.
 **News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
 it opens a glass popover above the unchanged pill. It is the water cooler.
-Menu also lists **My team** and **Titles and Emblems** above Calculator so awards
-are one tap from any digest room. The brand-end shows both the team flair and the
-settings gear when you are seated.
+Menu also lists **My team**, **Titles and Emblems**, and **Settings** so those
+rooms are one tap from any digest room. The brand-end does not show team flair
+or a settings gear — Menu owns those doors. The bottom pill stays on Settings.
+Back from Settings returns to league Home.
 The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
 (§2a).
 

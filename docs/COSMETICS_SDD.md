@@ -125,7 +125,8 @@ missing waiver / lineup snapshots. Do not mint playoff point-band titles here.
 
 ## 3. Barracks
 
-`?view=cosmetics` from **Settings → Profile** and Account → **Titles and Emblems**.
+`?view=cosmetics` from Home **My team** / Menu **Titles and Emblems**, team home
+when it is yours, and **Settings → Profile**.
 Two grids, grouped on one page by unlock neighborhood (Championship, Finish, Title
 roster, Trade tape, Draft and wire, Week score). Titles stay a **3-column** picker of
 scaled-down full 1024×180 crops — week-score bands wrap together in that grid so the

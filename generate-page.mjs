@@ -297,8 +297,8 @@ const html = `<!DOCTYPE html>
     body.has-leagues-drawer { overflow: hidden; }
     /* Settings Profile | Leagues — reuse .nav / .tab; slight top gap under the screen title. */
     .settings-tabs.nav { margin: 4px 0 14px; }
-    /* Right slot is .brand-end (team flair on league home, settings gear on team home). */
-    .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; }
+    /* Right slot is .brand-end (team flair + settings gear). */
+    .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; gap: 2px; }
     .brand-end:empty { display: none; }
     h2 { font-size: 1.05rem; font-weight: 650; margin: 26px 0 8px; }
     p { color: var(--muted); line-height: 1.45; margin: 0 0 14px; }
@@ -421,6 +421,7 @@ const html = `<!DOCTYPE html>
     /* A screen that replaces the page instead of expanding inside it needs its own way out.
        The home icon in the header is the constant; this is the one step back. */
     button.chip.back { color: var(--text); margin: 0 0 2px; }
+    button.chip.on { color: #e0b44c; border-color: #6b5a2e; }
     h2.screen-h { margin-top: 14px; }
     h2.screen-h:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 4px; }
     /* Whose page this is. The header's picker names the control rather than the selection, so
@@ -1593,6 +1594,24 @@ const html = `<!DOCTYPE html>
     .home-desk-sub {
       margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
     }
+    .home-you { margin: 0 0 18px; }
+    .home-you-plate { margin: 0 0 10px; }
+    button.home-you-card {
+      appearance: none; font: inherit; color: inherit; text-align: left;
+      display: block; width: 100%; cursor: pointer;
+      background: var(--card); border: 1px solid #3a3428; border-radius: 12px;
+      padding: 12px 14px; margin: 0 0 10px;
+    }
+    button.home-you-card:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    button.home-you-card b { display: block; font-size: 1.05rem; font-weight: 750; }
+    button.home-you-card > span { display: block; color: var(--dim); font-size: 0.78rem; margin-top: 2px; }
+    .home-you-tape { margin: 8px 0 0; color: #e0b44c; font-size: 0.86rem; font-weight: 650; }
+    .team-story-h {
+      margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    .team-story-line { margin: 0 0 10px; font-size: 0.92rem; font-weight: 650; color: var(--text); }
+    .team-fmt { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
     button.home-desk-row {
       appearance: none; font: inherit; color: var(--text);
       display: block; width: 100%; text-align: left; cursor: pointer;
@@ -4089,7 +4108,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dash20260913005500";
+    const DATA_V = "playerhome20260913012000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4135,6 +4154,8 @@ const html = `<!DOCTYPE html>
     let dataHuntPos = "";
     let dataSeat = "";
     let dataBlockAddOpen = false;
+    let teamHomeEdit = false;
+    let teamHomeLayout = null;
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
@@ -8294,6 +8315,8 @@ const html = `<!DOCTYPE html>
         if (!m) throw new Error("unknown seat");
         id = m.user_id;
         me = m;
+        teamHomeEdit = false;
+        teamHomeLayout = null;
         data = seatCache[id] || await getLeagueJson("me/" + id + ".json");
         seatCache[id] = data;
         if (!league) league = await getLeagueJson("league.json");
@@ -8839,7 +8862,8 @@ const html = `<!DOCTYPE html>
      * Open the signed-in manager's team home (stats). Seat id from auth — not the trades tab.
      */
     function openMyTeamHome(seatIdHint) {
-      if (appScreen !== "dash") return;
+      appScreen = "dash";
+      teamHomeEdit = false;
       // Leaving league home for team stats — collapse News Feed so the destination paints clean.
       try {
         if (typeof setNewsPullupOpen === "function" && newsPullupOpen) setNewsPullupOpen(false);
@@ -8923,6 +8947,14 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-menu-mark" aria-hidden="true"></span>'
         + '<span class="lh-menu-title">More</span></div>'
         + shareRow
+        + (authSeatId()
+          ? item("mystats", "My team",
+            "M12 12a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2zm0 1.8c-3.3 0-6 1.7-6 3.8V19h12v-1.4c0-2.1-2.7-3.8-6-3.8z")
+          : "")
+        + (authSession
+          ? item("awards", "Titles and Emblems",
+            "M12 3.4l2.2 5.2 5.6.8-4.1 3.9.9 5.8L12 16.4 7.4 19.1l.9-5.8-4.1-3.9 5.6-.8z")
+          : "")
         + item("calc", "Calculator",
           "M6 3.5h12v17H6zm2.4 3h7.2v2H8.4zm0 4h7.2v2H8.4zm0 4h4.4v2H8.4z")
         + item("data", "League Data",
@@ -15760,7 +15792,7 @@ const html = `<!DOCTYPE html>
       const seatId = authSeatId();
       const teamSeat = authSeatCanonName() || authSeatName();
       const showTeam = !!(authSession && onLeagueHome && seatId);
-      const showSettings = !!(authSession && !showTeam);
+      const showSettings = !!authSession && appScreen !== "settings";
       settingsBtn.hidden = !showSettings;
       if (showSettings) settingsBtn.setAttribute("aria-label", "Team settings");
       if (teamBtn) {
@@ -23024,6 +23056,42 @@ const html = `<!DOCTYPE html>
         + cosmeticsDetailSheetHtml();
     }
 
+    function homeYouTapeLine() {
+      const uid = authSeatId();
+      if (!uid || !marks || !marks.seats || !marks.seats[uid]) return "";
+      const m = marksOf(marks.seats[uid]);
+      const bits = [];
+      if (m.run && m.run.title) bits.push(m.run.title);
+      if (m.manners && m.manners.title) bits.push(m.manners.title);
+      if (m.draft && m.draft.title) bits.push(m.draft.title);
+      return bits.join(" · ");
+    }
+
+    function homeYouHtml() {
+      if (!authSession || !authSeatId()) return "";
+      const name = authSeatCanonName() || authSeatName() || "Your team";
+      const mem = (members || []).find(function (row) {
+        return row && String(row.user_id) === String(authSeatId());
+      });
+      const place = mem && mem.place && typeof nth === "function" ? nth(mem.place) : "";
+      const tape = homeYouTapeLine();
+      const plate = (typeof cosmeticsCallingCardHtml === "function")
+        ? cosmeticsCallingCardHtml(cosmeticsPairForSeat(authSeatId()), { empty: false })
+        : "";
+      return '<section class="home-you" aria-label="My team">'
+        + '<div class="home-desk-h">My team</div>'
+        + (plate ? '<div class="home-you-plate">' + plate + "</div>" : "")
+        + '<button type="button" class="home-you-card" data-home-my-team="1">'
+        + "<b>" + esc(name) + "</b>"
+        + (place ? "<span>" + esc(place) + " last season</span>" : "")
+        + (tape ? '<span class="home-you-tape">' + esc(tape) + "</span>" : "")
+        + "</button>"
+        + '<p class="caption">'
+        + '<button type="button" class="chip" data-home-my-team="1">Open my team</button> '
+        + '<button type="button" class="chip" data-home-awards="1">Titles and Emblems</button>'
+        + "</p></section>";
+    }
+
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
@@ -23032,7 +23100,8 @@ const html = `<!DOCTYPE html>
         + ' width="1024" height="180" alt="Cuckle calculator">'
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
-      return homeTopDoorsHtml()
+      return homeYouHtml()
+        + homeTopDoorsHtml()
         + '<div class="lh-calc-slot">' + door + "</div>"
         + homeDeskHtml();
     }
@@ -23053,6 +23122,91 @@ const html = `<!DOCTYPE html>
     }
 
 
+    function teamHomeStoreKey(uid) {
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || "league";
+      return "cuckle.team.home.layout.v1." + lid + "." + String(uid || authSeatId() || "seat");
+    }
+
+    function teamHomeDefaultLay() {
+      return { marks: true, best: true, worst: true, partners: true, draft: true, story: true };
+    }
+
+    function teamHomeLoad(uid) {
+      const base = teamHomeDefaultLay();
+      if (!teamHomeIsMine()) return base;
+      try {
+        const raw = localStorage.getItem(teamHomeStoreKey(uid || authSeatId()));
+        if (!raw) return base;
+        const got = JSON.parse(raw);
+        if (!got || typeof got !== "object") return base;
+        Object.keys(base).forEach(function (k) {
+          if (typeof got[k] === "boolean") base[k] = got[k];
+        });
+      } catch (err) { /* ignore */ }
+      return base;
+    }
+
+    function teamHomeSave(next) {
+      teamHomeLayout = next;
+      try { localStorage.setItem(teamHomeStoreKey(authSeatId()), JSON.stringify(next)); } catch (err) { /* ignore */ }
+    }
+
+    function teamHomeIsMine() {
+      return !!(me && authSeatId() && String(me.user_id) === String(authSeatId()));
+    }
+
+    function teamHomeLay() {
+      if (teamHomeLayout && teamHomeIsMine()) return teamHomeLayout;
+      teamHomeLayout = teamHomeLoad(me && me.user_id);
+      return teamHomeLayout;
+    }
+
+    function teamHomeOn(id) {
+      const lay = teamHomeLay();
+      return !teamHomeIsMine() || lay[id] !== false;
+    }
+
+    function teamHomeStoryBits() {
+      const row = marks && marks.seats && me ? marks.seats[me.user_id] : null;
+      const m = marksOf(row);
+      const up = [];
+      const down = [];
+      const push = function (cell, good, bad) {
+        if (!cell || !cell.title) return;
+        if (cell.tone === "pos" || cell.title === good) up.push(cell.title);
+        else if (cell.tone === "neg" || cell.title === bad) down.push(cell.title);
+      };
+      push(m.run, "Ahead", "Behind");
+      push(m.manners, "Extracts", "Gets extracted");
+      push(m.draft, "Hit factory", "Miss factory");
+      push(m.aging, "Aged up", "Aged down");
+      return { up: up, down: down };
+    }
+
+    function teamHomeFormatHtml() {
+      if (!teamHomeIsMine()) return "";
+      const lay = teamHomeLay();
+      const fmtChip = '<button type="button" class="chip" data-team-fmt-toggle="1">'
+        + (teamHomeEdit ? "Done" : "Format page") + "</button>";
+      if (!teamHomeEdit) return '<p class="caption">' + fmtChip + "</p>";
+      const keys = [
+        ["story", "Show off + tape"],
+        ["marks", "Marks"],
+        ["best", "Best deal"],
+        ["worst", "Worst deal"],
+        ["partners", "Partners"],
+        ["draft", "Draft tape"],
+      ];
+      return '<p class="caption">' + fmtChip + "</p>"
+        + '<div class="team-fmt" aria-label="What this page shows">'
+        + keys.map(function (pair) {
+          const on = lay[pair[0]] !== false;
+          return '<button type="button" class="chip' + (on ? " on" : "") + '" data-team-fmt="' + pair[0] + '"'
+            + ' aria-pressed="' + (on ? "true" : "false") + '">' + esc(pair[1]) + "</button>";
+        }).join("")
+        + "</div>";
+    }
+
     function renderTeamHome() {
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
@@ -23069,24 +23223,59 @@ const html = `<!DOCTYPE html>
       const empty = pool.length ? "" : ((data.trades || []).length
         ? '<p class="caption">No trade here has lived ' + esc(clockName()) + " yet. Score as Since trade to see them.</p>"
         : '<p class="caption">No trades on this seat yet.</p>');
+      const mine = teamHomeIsMine();
+      const story = !mine || teamHomeOn("story");
+      const bits = teamHomeStoryBits();
+      const showMarks = teamHomeOn("marks");
+      const showBest = teamHomeOn("best") && best;
+      const showWorst = teamHomeOn("worst") && worst && (!best || worst.transaction_id !== best.transaction_id);
+      const showTake = teamHomeOn("partners") && take;
+      const showPay = teamHomeOn("partners") && pay && take && pay.name !== take.name;
+      const showHit = teamHomeOn("draft") && data.hit;
+      const showMiss = teamHomeOn("draft") && data.miss;
+      const mem = (members || []).find(function (row) {
+        return row && me && String(row.user_id) === String(me.user_id);
+      });
+      const place = mem && mem.place && typeof nth === "function" ? nth(mem.place) : "";
+      const awardsChip = mine
+        ? ' <button type="button" class="chip" data-home-awards="1">Titles and Emblems</button>'
+        : "";
+      const upBlock = (story && (bits.up.length || showBest || showTake || showHit))
+        ? ('<h2 class="team-story-h">Show off</h2>'
+          + (bits.up.length ? '<p class="team-story-line">' + esc(bits.up.join(" · ")) + "</p>" : "")
+          + (showBest ? '<h2>Best deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(best) + "</div>" : "")
+          + (showTake ? "<h2>Partners</h2>" + partnerLine(take) : "")
+          + (showHit ? "<h2>Draft</h2>" + draftLine(data.hit, "hit") : ""))
+        : (!story
+          ? ((showBest ? '<h2>Best deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(best) + "</div>" : "")
+            + (showTake ? "<h2>Partners</h2>" + partnerLine(take) : "")
+            + (showHit ? "<h2>Draft</h2>" + draftLine(data.hit, "hit") : ""))
+          : "");
+      const downBlock = (story && (bits.down.length || showWorst || showPay || showMiss))
+        ? ('<h2 class="team-story-h">The tape</h2>'
+          + (bits.down.length ? '<p class="team-story-line">' + esc(bits.down.join(" · ")) + "</p>" : "")
+          + (showWorst ? '<h2>Worst deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(worst) + "</div>" : "")
+          + (showPay ? "<h2>Partners</h2>" + partnerLine(pay) : "")
+          + (showMiss ? "<h2>Draft</h2>" + draftLine(data.miss, "miss") : ""))
+        : (!story
+          ? ((showWorst ? '<h2>Worst deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(worst) + "</div>" : "")
+            + (showPay && !showTake ? "<h2>Partners</h2>" : "")
+            + (showPay ? partnerLine(pay) : "")
+            + (showMiss && !showHit ? "<h2>Draft</h2>" : "")
+            + (showMiss ? draftLine(data.miss, "miss") : ""))
+          : "");
       return (lensApplies()
           ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
           : "")
+        + (place ? '<p class="caption">' + esc(place) + " last season.</p>" : "")
         + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button>'
-        + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button></p>'
-        + teamMarks()
-        + markChart()
+        + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
+        + awardsChip + "</p>"
+        + teamHomeFormatHtml()
+        + (showMarks ? teamMarks() + markChart() : "")
         + empty
-        + (best ? '<h2>Best deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(best) + "</div>" : "")
-        + (worst && (!best || worst.transaction_id !== best.transaction_id)
-          ? '<h2>Worst deal</h2><div class="trades-feed">' + seatTradeFeedCardHtml(worst) + "</div>"
-          : "")
-        + ((take || pay) ? "<h2>Partners</h2>" : "")
-        + (take ? partnerLine(take) : "")
-        + (pay && take && pay.name !== take.name ? partnerLine(pay) : "")
-        + ((data.hit || data.miss) ? "<h2>Draft</h2>" : "")
-        + draftLine(data.hit, "hit")
-        + draftLine(data.miss, "miss");
+        + upBlock
+        + downBlock;
     }
 
     function renderHome() {
@@ -23843,6 +24032,7 @@ const html = `<!DOCTYPE html>
           : '<p class="caption" style="margin:0">Nothing equipped yet. Open the barracks to pick a title and an emblem.</p>')
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-open-cosmetics="settings">Open Titles and Emblems</button>'
+        + (seatId ? ' <button type="button" class="chip" data-home-my-team="1">Open my team</button>' : "")
         + "</div></div>"
         + '<div class="app-card"><h3>Login & contact</h3>'
         + '<p class="caption" style="margin:0">Username <b>' + esc(uname) + "</b></p>"
@@ -24773,6 +24963,14 @@ const html = `<!DOCTYPE html>
           lhMenuShareNow();
           return;
         }
+        if (go === "mystats") {
+          openMyTeamHome();
+          return;
+        }
+        if (go === "awards") {
+          openCosmetics("settings");
+          return;
+        }
         return;
       }
       const menuBtn = e.target.closest("[data-lh-menu]");
@@ -24789,6 +24987,33 @@ const html = `<!DOCTYPE html>
       const openLedgerBtn = e.target.closest("[data-open-ledger]");
       if (openLedgerBtn) {
         setHomeTab("ledger", { force: true });
+        return;
+      }
+      const homeMyTeam = e.target.closest("[data-home-my-team]");
+      if (homeMyTeam) {
+        openMyTeamHome();
+        return;
+      }
+      const homeAwards = e.target.closest("[data-home-awards]");
+      if (homeAwards) {
+        openCosmetics("settings");
+        return;
+      }
+      const fmtToggle = e.target.closest("[data-team-fmt-toggle]");
+      if (fmtToggle) {
+        teamHomeEdit = !teamHomeEdit;
+        render();
+        return;
+      }
+      const fmtBtn = e.target.closest("[data-team-fmt]");
+      if (fmtBtn) {
+        const key = fmtBtn.getAttribute("data-team-fmt") || "";
+        const lay = Object.assign({}, teamHomeLay());
+        if (key && Object.prototype.hasOwnProperty.call(lay, key)) {
+          lay[key] = !lay[key];
+          teamHomeSave(lay);
+        }
+        render();
         return;
       }
       const ledgerFilterBtn = e.target.closest("[data-ledger-filter]");
@@ -26886,7 +27111,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v250-dash-fast";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v251-player-home";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -26977,13 +27202,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v250-dash-fast")) {
+  || !html.includes("chuckle-shell-v251-player-home")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v250-dash-fast")
+  || !swSrc.includes("chuckle-shell-v251-player-home")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")) {
   throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
@@ -28209,6 +28434,10 @@ if (!inline.includes('"cosmetics", "news"')) {
   }
   if (!inline.includes('data-lh-menu="1"') || !inline.includes('"Calculator"')
     || !inline.includes('"League Data"') || !inline.includes('"Settings"')
+    || !fnSrc("lhMenuPanelHtml").includes('item("mystats", "My team"')
+    || !fnSrc("lhMenuPanelHtml").includes('item("awards", "Titles and Emblems"')
+    || !inline.includes('go === "mystats"')
+    || !inline.includes('go === "awards"')
     || !inline.includes("lh-menu-slot")
     || !inline.includes("slot + slot + slot")
     || !inline.includes("function lhMenuShareKind(")
@@ -28222,6 +28451,26 @@ if (!inline.includes('"cosmetics", "news"')) {
     throw new Error("Menu popover must keep Calculator, League Data, Settings, and 3 reserved slots");
   }
 }
+{
+  if (typeof homeYouHtml !== "function" && !inline.includes("function homeYouHtml(")) {
+    throw new Error("league Home must lead with homeYouHtml My team card");
+  }
+  if (!fnSrc("leagueInProgress").includes("homeYouHtml()")
+    || !fnSrc("leagueInProgress").includes("homeTopDoorsHtml()")
+    || !fnSrc("homeYouHtml").includes("data-home-my-team")
+    || !fnSrc("homeYouHtml").includes("data-home-awards")
+    || fnSrc("homeYouHtml").includes("calcFmt(")
+    || fnSrc("homeYouHtml").includes("calcValueNum(")
+    || !inline.includes('cuckle.team.home.layout.v1')
+    || !inline.includes("Format page")
+    || !inline.includes("Show off")
+    || !inline.includes("The tape")
+    || !inline.includes("function teamHomeStoryBits(")
+    || !inline.includes("function teamHomeFormatHtml(")
+    || !inline.includes("function openMyTeamHome(")) {
+    throw new Error("Home My team card and team-home Format / Show off / tape must stay wired");
+  }
+}
 if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
   || !inline.includes("function brandTeamIcoHtml(")
   || !inline.includes("function paintSettingsBtn(")
@@ -28232,8 +28481,9 @@ if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
 {
   const paint = fnSrc("paintSettingsBtn");
   if (!paint.includes("showTeam") || !paint.includes("goTeamHome")
-    || !paint.includes("brandTeamIcoHtml(") || !paint.includes('view === "home"')) {
-    throw new Error("paintSettingsBtn must swap team flair on league home vs settings gear");
+    || !paint.includes("brandTeamIcoHtml(") || !paint.includes('view === "home"')
+    || !paint.includes('appScreen !== "settings"') || paint.includes("&& !showTeam")) {
+    throw new Error("paintSettingsBtn must show team flair on league home and keep the settings gear");
   }
 }
 {
@@ -28251,7 +28501,8 @@ if (!html.includes('id="goTeamHome"') || !html.includes("go-team-ico")
   const stop = inline.indexOf("\n    function ", at + 10);
   const fn = inline.slice(at, stop < 0 ? at + 1600 : stop);
   if (!fn.includes('view = "home"') || !fn.includes("selectMe(seatId, false)")
-    || !fn.includes("authSeatId(") || !fn.includes("loadMembers(")) {
+    || !fn.includes("authSeatId(") || !fn.includes("loadMembers(")
+    || !fn.includes('appScreen = "dash"')) {
     throw new Error("openMyTeamHome must force team home via selectMe(seatId, false)");
   }
 }

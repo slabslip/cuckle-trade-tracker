@@ -24,9 +24,14 @@ and tape year use the same dropdown.
 
 **Home** (no seat picked) is the daily paper: a Linear-style floating pill
 **Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
-occupy), then the digest — **Cuckle trade calculator** and signed-in **Team Ideas**.
+occupy), then the digest — signed-in **My team** card (name, last-season place, word-only
+tape, Open my team / Titles and Emblems), **Your top 4**, **Cuckle trade calculator**,
+and signed-in **Team Ideas**.
 **News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
 it opens a glass popover above the unchanged pill. It is the water cooler.
+Menu also lists **My team** and **Titles and Emblems** above Calculator so awards
+are one tap from any digest room. The brand-end shows both the team flair and the
+settings gear when you are seated.
 The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
 (§2a).
 
@@ -37,12 +42,16 @@ and bag totals stay off Home. The calculator door is its own row on Home — it 
 filler. Home does not remount the Recent Trade chip; the vote notification on News is the door
 into that deal. The News tab may badge a gold count of missed alerts + unseen posts (`9+` cap).
 
-**Team home** is what you get after picking a name in the **Teams** tab. **You are that seat.**
-Six style tiles, an optional league chart, your best and worst deal, your two edge partners, your
-best and worst rookie pick. Every number is first-person for that `user_id`.
+**Team home** is what you get after picking a name in the **Teams** tab, or from Home /
+Menu **Open my team**. **You are that seat.** Six style tiles, an optional league chart,
+your best and worst deal, your two edge partners, your best and worst rookie pick.
+Visitors always see **Show off** (where the seat is accomplished) and **The tape**
+(where it is not). The owner may **Format page** to hide blocks for themselves
+(`cuckle.team.home.layout.v1`); they cannot hide the tape from other seats.
+Every number is first-person for that `user_id`.
 
-Do not merge them. Home must not grow a personal number, and team home must not become a league
-recap.
+Do not merge them. Home must not grow a personal bag number. The My team card may
+name the seat and last-season place in words. Team home must not become a league recap.
 
 ---
 

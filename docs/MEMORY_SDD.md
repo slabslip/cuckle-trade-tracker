@@ -385,7 +385,7 @@ demo. That is the point.
 
 | Surface | Proof job |
 |---------|-----------|
-| **Home** | No personal bag hero. Team Ideas / calc stay *today’s* deal. The top 4 doors from Your board sit here for instant access. A proof chip does not remount News. |
+| **Home** | No personal bag hero. My team card may name the seat and last-season place in words. Team Ideas / calc stay *today’s* deal. The top 4 doors from Your board sit here for instant access. A proof chip does not remount News. |
 | **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
 | **History / Data** | Home of **Your board**. Cold load is the doors only. Still one Data cell. |
 | **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |

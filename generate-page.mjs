@@ -23061,9 +23061,12 @@ const html = `<!DOCTYPE html>
       if (!uid || !marks || !marks.seats || !marks.seats[uid]) return "";
       const m = marksOf(marks.seats[uid]);
       const bits = [];
-      if (m.run && m.run.title) bits.push(m.run.title);
-      if (m.manners && m.manners.title) bits.push(m.manners.title);
-      if (m.draft && m.draft.title) bits.push(m.draft.title);
+      const add = function (cell) {
+        if (cell && cell.title && (cell.tone === "pos" || cell.tone === "neg")) bits.push(cell.title);
+      };
+      add(m.run);
+      add(m.manners);
+      add(m.draft);
       return bits.join(" · ");
     }
 

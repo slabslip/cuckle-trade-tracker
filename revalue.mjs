@@ -548,7 +548,7 @@ async function main() {
   const vmaxIdx = indexVmax(curve);
   const resIdx = resIndex(resolutions);
   const today = latestAsOf(fullCurve.length ? fullCurve : curve);
-  const todayPrice = makeTodayPrice(today);
+  const todayPrice = makeTodayPrice(today, { flattenOnly: leagueFormat.format_key === "1qb" });
   const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, todayPrice, today };
   const tradeById = new Map(allTrades.map((t) => [t.transaction_id, t]));
 
@@ -1186,6 +1186,7 @@ async function main() {
   // finish, which is the order the seat picker lists them in. It derives that from the season
   // walk it already does, so do not try to compute it here.
   writeUi("members.json", members.map((m) => ({ user_id: m.user_id, name: m.canonical_name })));
+  const bridge = readJson("provider_bridge.json", {}) || {};
   writeUi("league.json", {
     traders: leaderboard,
     drafters_rookie: draftersRookie,
@@ -1194,6 +1195,14 @@ async function main() {
     player_lists,
     today,
     format: leagueFormat,
+    providers: {
+      sleeper_seasons: bridge.sleeper_seasons || [],
+      espn_seasons: bridge.espn_seasons || [],
+      espn_authorized: !!bridge.espn_authorized,
+      espn_reason: bridge.espn_reason || null,
+      espn_league_id: (readJson("providers.json", {}) || {}).espn_league_id || null,
+      mapped: bridge.mapped || 0,
+    },
   });
   writeUi("picks.json", pickIndex);
 

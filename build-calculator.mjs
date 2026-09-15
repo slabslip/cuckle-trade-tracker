@@ -260,7 +260,7 @@ const idByName = Object.fromEntries(members.map((m) => [m.name || m.canonical_na
 const today = latestAsOf(curve);
 const curveIdx = indexCurve(curve);
 const vmax = vmaxAt(indexVmax(curve), today);
-const todayPrice = makeTodayPrice(today);
+const todayPrice = makeTodayPrice(today, { flattenOnly: leagueFormat.format_key === "1qb" });
 
 const players = [];
 for (const r of rosters) {

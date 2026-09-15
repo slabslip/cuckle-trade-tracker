@@ -183,7 +183,8 @@ function buildMarks(seats, today) {
 
 function main() {
   const league0 = JSON.parse(readFileSync(`${UI}/league.json`, "utf8"));
-  const ctx = makeTodayPrice(league0.today || "2026-08-29");
+  const flattenOnly = !!(league0.format && league0.format.format_key === "1qb");
+  const ctx = makeTodayPrice(league0.today || "2026-08-29", { flattenOnly });
   const dir = `${UI}/me`;
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
   const seats = [];

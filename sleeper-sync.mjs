@@ -263,7 +263,7 @@ async function main() {
     leagues.map((l) => ({
       league_id: l.league_id,
       season: l.season,
-      name: l.name,
+      name: String(l.name || "").trim(),
       previous_league_id: l.previous_league_id,
       num_teams: l.settings?.num_teams,
       playoff_teams: l.settings?.playoff_teams,

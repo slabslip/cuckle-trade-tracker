@@ -4120,7 +4120,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260915000531";
+    const DATA_V = "gmcalc20260915025400";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14754,19 +14754,26 @@
       const list = (titles && titles.titles) || [];
       if (!list.length) {
         return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
-          + '<p class="caption">No championship seasons on this Sleeper history yet. '
-          + "A first-year or redraft league without a prior season stays empty here until a title is played.</p>";
+          + '<p class="caption">No championship seasons on this tape yet. '
+          + "Sleeper years unlock from a completed season. ESPN years unlock when the cookie import lands.</p>";
       }
       const open = titleYear && list.find((t) => t.season === titleYear);
       if (open) return renderTitleDetail(open);
+      const espnLock = isGmLeague() && league && league.providers && !league.providers.espn_authorized
+        ? '<p class="caption">Sleeper titles are on. ESPN 35763180 stays locked until ESPN_S2 and SWID are set.</p>'
+        : "";
       return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
+        + espnLock
         + list.map((t) => {
           const rec = t.record || {};
           const how = rec.fpts_rank === 1 ? "points race" : "bracket";
+          const src = t.provider === "espn" ? "ESPN" : "Sleeper";
+          const used = ((t.draft && t.draft.used) || []).length;
+          const extra = t.provider === "espn" ? src : (src + " · " + used + " pick" + (used === 1 ? "" : "s") + " used");
           return '<button type="button" class="row" data-title="' + esc(t.season) + '">'
             + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + seatLabel(t.name) + "</div>"
             + '<div class="date">' + rec.wins + "–" + rec.losses + " · " + how
-            + " · " + ((t.draft && t.draft.used) || []).length + " pick" + (((t.draft && t.draft.used) || []).length === 1 ? "" : "s") + " used</div></div>"
+            + " · " + extra + "</div></div>"
             + '<div class="margin">1st</div></div></button>';
         }).join("");
     }
@@ -15619,6 +15626,30 @@
     const AUTH_EMAIL_DOMAIN = "users.cuckle.invalid";
     // First hosted league — legacy data/ui is its ready dataset.
     const CUCKLE_LEAGUE_ID = "1315431339301806080";
+    const GM_LEAGUE_ID = "1389723418827460608";
+    function isGmLeague() {
+      return String((activeLeague && activeLeague.sleeper_league_id) || "") === GM_LEAGUE_ID;
+    }
+    function calcBrandTitle() {
+      return isGmLeague() ? "#1GM calc" : "Cuckle trade calculator";
+    }
+    function calcDoorLabel() {
+      return isGmLeague() ? "#1GM calc" : "Cuckle calculator";
+    }
+    function calcDoorSrc() {
+      return (isGmLeague() ? "data/ui/gm-calc-door.png" : "data/ui/calc-door.png") + "?" + DATA_V;
+    }
+    function leagueTapeHtml() {
+      const p = league && league.providers;
+      if (!isGmLeague() || !p) return "";
+      const sl = (p.sleeper_seasons || []).length
+        ? ("Sleeper " + (p.sleeper_seasons || []).join("/"))
+        : "Sleeper 2025/2026";
+      const espn = p.espn_authorized
+        ? ("ESPN " + ((p.espn_seasons || []).join("/") || p.espn_league_id || "history"))
+        : ("ESPN " + (p.espn_league_id || "35763180") + " locked");
+      return '<p class="caption league-tape">' + esc(sl + " · " + espn) + "</p>";
+    }
     const LEAGUE_KEY = "cuckle.active_league.v1";
     const MEMBERSHIPS_KEY = "cuckle.memberships.v1";
     // A legacy anon JWT, so Authorization: Bearer is valid alongside the always-required apikey
@@ -21086,6 +21117,12 @@
     }
 
     function homeDeskPaceLine(uid, prof) {
+      if (leagueFormat().kind === "redraft") {
+        const dir = uid ? seatDirOf(uid) : null;
+        const holes = (dir && dir.holes && dir.holes.length) ? dir.holes : ((prof && prof.holes) || []);
+        if (holes.length) return "This season · plug " + holes.join("/");
+        return "This season · raise the weekly floor";
+      }
       const lab = homeDeskWindowOf(uid, prof);
       if (lab === "Hard rebuild") return "Hard rebuild · 2-3 years out";
       if (lab === "Rebuild") return "Rebuild · not this year";
@@ -22006,7 +22043,7 @@
 
     function calcShareText(spec) {
       const s = spec || calcShareSpec();
-      if (!s) return "Cuckle trade";
+      if (!s) return isGmLeague() ? "#1GM calc" : "Cuckle trade";
       if (s.even) return s.nameA + " / " + s.nameB + " · Even on our book";
       return s.nameA + " / " + s.nameB + " · Favors " + s.favors + " by " + calcFmt(s.need);
     }
@@ -22763,22 +22800,26 @@
       return '<div class="calc-info">' + btn
         + '<div class="calc-info-panel" id="calcInfoPanel">'
         + "<h3>What this is</h3>"
-        + "<p>Cuckle Calc is a two-sided scale. Each player or pick gets a today price. "
+        + "<p>" + (isGmLeague() ? "#1GM calc" : "Cuckle Calc") + " is a two-sided scale. Each player or pick gets a today price. "
         + "We add the piles, then we may add a Value Adjustment when one side is a star "
         + "for extras, and a Handcuff line when a seat takes a listed NFL backup and still "
         + "holds that starter. League votes never change this number.</p>"
         + "<h3>1. Price each piece</h3>"
-        + "<p>Four market books feed every number on the roster list. We refresh them daily "
-        + "into committed files &mdash; the phone does not scrape.</p>"
-        + "<p><b>Flatten</b> is DynastyProcess Superflex &mdash; our long-run book (0.25).</p>"
-        + "<p><b>KeepTradeCut (KTC)</b> is crowd keep / trade / cut (0.30).</p>"
-        + "<p><b>FantasyCalc</b> is trade-implied Superflex dynasty (0.25).</p>"
-        + "<p><b>DynastyDealer</b> is what Sleeper leagues actually paid (0.20).</p>"
-        + '<p class="calc-info-eq">today = (0.25&times;flatten + 0.30&times;KTC + 0.25&times;FC + 0.20&times;DD) / weights that hit</p>'
-        + "<p>A missing source drops its weight. A zero quote is treated as missing. If flatten is missing, today is the markets that hit. If every market quote misses, today is just flatten. "
-        + "If the player is retired (off the KTC board and off an NFL roster, or on our "
-        + "retired list), today is 0. Missing FantasyCalc or DynastyDealer does not retire anyone. "
-        + "Production / P/E never changes this number. We round the blend to a whole number.</p>"
+        + (leagueFormat().format_key === "1qb"
+          ? ("<p>This is a <b>1QB redraft</b> book. Today is DynastyProcess <b>value_1qb</b> flatten. "
+            + "Superflex KTC / FantasyCalc / DynastyDealer stay off so we do not score this league on Cuckle numbers.</p>"
+            + "<p>Date of Trade and as of today are the only clocks. No 1 / 2 / 3 season windows.</p>")
+          : ("<p>Four market books feed every number on the roster list. We refresh them daily "
+            + "into committed files &mdash; the phone does not scrape.</p>"
+            + "<p><b>Flatten</b> is DynastyProcess Superflex &mdash; our long-run book (0.25).</p>"
+            + "<p><b>KeepTradeCut (KTC)</b> is crowd keep / trade / cut (0.30).</p>"
+            + "<p><b>FantasyCalc</b> is trade-implied Superflex dynasty (0.25).</p>"
+            + "<p><b>DynastyDealer</b> is what Sleeper leagues actually paid (0.20).</p>"
+            + '<p class="calc-info-eq">today = (0.25&times;flatten + 0.30&times;KTC + 0.25&times;FC + 0.20&times;DD) / weights that hit</p>'
+            + "<p>A missing source drops its weight. A zero quote is treated as missing. If flatten is missing, today is the markets that hit. If every market quote misses, today is just flatten. "
+            + "If the player is retired (off the KTC board and off an NFL roster, or on our "
+            + "retired list), today is 0. Missing FantasyCalc or DynastyDealer does not retire anyone. "
+            + "Production / P/E never changes this number. We round the blend to a whole number.</p>"))
         + "<h3>2. Add the piles</h3>"
         + "<p>Each card is what that team <b>sends</b>. Listed pieces stay the today blend. "
         + "When a deal earns a stud-for-quantity bump, <b>Value Adjustment</b> is its own "
@@ -22853,7 +22894,7 @@
     function renderCalc() {
       if (typeof ensurePicks === "function") ensurePicks();
       return backChip("Home")
-        + '<h2 class="screen-h" tabindex="-1">Cuckle trade calculator</h2>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(calcBrandTitle()) + "</h2>"
         + '<div class="calc-stack">' + calcSideHtml("a") + calcSideHtml("b") + calcCompareHtml()
         + calcInfoHtml() + "</div>";
     }
@@ -23212,7 +23253,7 @@
       };
       return backChip(cosmeticsFrom === "settings" ? "Profile" : "Account")
         + '<h2 class="screen-h" tabindex="-1">Titles and Emblems</h2>'
-        + ((leagueFormat().kind === "redraft" || !((titles && titles.titles) || []).length)
+        + (!((titles && titles.titles) || []).length
           ? '<p class="caption">Titles unlock from this league tape. A first-year or redraft league starts empty — no Cuckle crowns are copied over.</p>'
           : '<p class="caption">Every award unlocks a matching title and emblem — equip one of each. Grouped by how you unlock them. Tap a tile for the full card.</p>')
         + plate
@@ -23263,12 +23304,13 @@
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
-        + ' aria-label="Cuckle calculator, click here">'
-        + '<img class="lh-calc-banner" src="data/ui/calc-door.png?' + DATA_V + '"'
-        + ' width="1024" height="180" alt="Cuckle calculator" decoding="async" fetchpriority="high">'
+        + ' aria-label="' + esc(calcDoorLabel()) + ', click here">'
+        + '<img class="lh-calc-banner" src="' + esc(calcDoorSrc()) + '"'
+        + ' width="1024" height="180" alt="' + esc(calcDoorLabel()) + '" decoding="async" fetchpriority="high">'
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
-        + '<span class="lh-calc-door-sr">Cuckle calculator</span></button>';
+        + '<span class="lh-calc-door-sr">' + esc(calcDoorLabel()) + "</span></button>";
       return homeYouHtml()
+        + leagueTapeHtml()
         + homeTopDoorsHtml()
         + '<div class="lh-calc-slot">' + door + "</div>"
         + homeDeskHtml();

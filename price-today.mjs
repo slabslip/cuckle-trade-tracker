@@ -207,6 +207,11 @@ function scaledMarket(leg, idx, nameToId) {
 export function priceTodayValue(flattenValue, leg, ctx) {
   if (isRetired(leg, ctx)) return 0;
   if (flattenValue != null && !Number.isFinite(flattenValue)) return flattenValue;
+  // 1QB / redraft books stay on the 1QB flatten. Superflex KTC/FC/DD would
+  // silently score them on Cuckle's 2QB market.
+  if (ctx && ctx.flattenOnly) {
+    return Number.isFinite(flattenValue) ? Math.round(flattenValue) : flattenValue;
+  }
   const parts = [
     { w: TODAY_FLAT_W, v: Number.isFinite(flattenValue) ? flattenValue : null },
     { w: TODAY_KTC_W, v: scaledMarket(leg, ctx.ktc, ctx.nameToId) },
@@ -229,13 +234,15 @@ export function repriceTodayLegs(legs, ctx) {
   });
 }
 
-export function makeTodayPrice(asOf) {
-  const ktcSnap = loadLatestSnap("ktc") || loadSnapAsOf("ktc", asOf);
-  const fcSnap = loadLatestSnap("fc") || loadSnapAsOf("fc", asOf);
-  const ddSnap = loadLatestSnap("dd") || loadSnapAsOf("dd", asOf);
+export function makeTodayPrice(asOf, opts) {
+  const flattenOnly = !!(opts && opts.flattenOnly);
+  const ktcSnap = flattenOnly ? null : (loadLatestSnap("ktc") || loadSnapAsOf("ktc", asOf));
+  const fcSnap = flattenOnly ? null : (loadLatestSnap("fc") || loadSnapAsOf("fc", asOf));
+  const ddSnap = flattenOnly ? null : (loadLatestSnap("dd") || loadSnapAsOf("dd", asOf));
   const players = loadNflPlayers();
   return {
     as_of: asOf,
+    flattenOnly,
     ktc: buildMarketIndexes(ktcSnap),
     fc: buildMarketIndexes(fcSnap),
     dd: buildMarketIndexes(ddSnap),

@@ -99,11 +99,11 @@ Same path as any second Sleeper league ([`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) §3
 
 - 12 teams, 1QB / 2RB / 2WR / TE / FLEX / K / DEF / 6 BN
 - Half-PPR, not TEP, not Superflex
-- Redraft clocks only
-- 2025 is complete on Sleeper (titles unlock from that tape)
-- 2026 is in season
-- Past Champions / Titles stay empty of **Cuckle** flair. ESPN years fill in
-  when cookies are present.
+- Redraft clocks only (Date of Trade + as of today)
+- Calculator door and screen: **#1GM calc** (Menu still says Calculator)
+- Today prices are DynastyProcess **value_1qb** flatten only — no Superflex KTC/FC/DD blend
+- 2025 is complete on Sleeper (Biff34). ESPN years fill in when cookies are present
+- Home tape line states Sleeper seasons vs ESPN locked/imported
 
 ---
 

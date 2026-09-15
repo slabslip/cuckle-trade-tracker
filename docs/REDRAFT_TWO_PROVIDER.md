@@ -25,9 +25,13 @@ Open locally after `python3 -m http.server`:
 - or Create a league in the store and paste `1389723418827460608`
 
 `node scripts/review-redraft.mjs` prints format, seasons, titles, and ESPN status.
-`node scripts/loop-gm-dashboard.mjs` runs the 12 shell laws, the hunt-week
-laws, and 34 dataset loops (dual-API merge, redraft clocks, firsts, forever,
-direction, championship-hunt week scores).
+`node scripts/loop-gm-dashboard.mjs` runs the 12 shell laws, hunt-week laws,
+ESPN franchise laws, and 36 dataset loops.
+
+Week scores stay Sleeper-only until ESPN cookies unlock 2010–2024. Those
+years attach to current Sleeper seats by name, then by ESPN team slot
+(a manager who left stays on that franchise). Playoff consolation still
+does not set the low.
 
 ---
 
@@ -53,9 +57,14 @@ node build.mjs 1389723418827460608 --skip-snapshot
 
 ```json
 {
-  "espn:{SWID}": "458342725222133760"
+  "espn:{SWID}": "458342725222133760",
+  "espn-team:3": "1132355027018035200"
 }
 ```
+
+`espn:{SWID}` is a person. `espn-team:{id}` is the franchise slot when
+managers changed. Unpinned leavers follow the latest mapped owner of
+that ESPN team id.
 
 4. For GitHub Actions, add repo secrets `ESPN_S2` and `ESPN_SWID`.
    [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml)

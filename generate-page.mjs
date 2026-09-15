@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmredraft20260915054500";
+    const DATA_V = "gmredraft20260915063000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6866,7 +6866,12 @@ const html = `<!DOCTYPE html>
           ? "This season first-round draftees still on that roster."
           : "Who is sitting on future firsts.";
       }
-      else if (id === "week_scores") caption = "Highest five and lowest five team weeks. Playoff is championship hunt only — consolation and leftover weeks are out.";
+      else if (id === "week_scores") {
+        caption = "Highest five and lowest five team weeks. Playoff is championship hunt only — consolation and leftover weeks are out.";
+        if (leagueFormat().kind === "redraft" && league && league.providers && !league.providers.espn_authorized) {
+          caption += " Sleeper tape only until ESPN years unlock.";
+        }
+      }
       else if (id === "forever") {
         caption = leagueFormat().kind === "redraft"
           ? "Still on the team that drafted them this season."
@@ -29401,7 +29406,8 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
     || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")
     || !inline.includes("championship hunt only")
-    || !inline.includes("title hunt")) {
+    || !inline.includes("title hunt")
+    || !inline.includes("Sleeper tape only until ESPN years unlock.")) {
     throw new Error("Week scores door must list highest and lowest team weeks from week-scores.json");
   }
   if (!inline.includes("function formatLensOrT0(")

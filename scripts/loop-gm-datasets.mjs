@@ -187,5 +187,14 @@ loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 10
 loop(34, page.includes("championship hunt only") && page.includes("title hunt")
   && page.includes("still hunting the title"),
   "Week scores copy drops out-of-hunt playoff weeks");
+loop(35, fs.existsSync(`${raw}/espn_weekly_scores.json`)
+  && Array.isArray(load(`${raw}/espn_weekly_scores.json`, {}).scores)
+  && page.includes("function resolveEspnScoreUid(") === false
+  && fs.readFileSync(`${ROOT}weekly-scores.mjs`, "utf8").includes("resolveEspnScoreUid")
+  && fs.readFileSync(`${ROOT}merge-provider-history.mjs`, "utf8").includes("buildFranchiseMap"),
+  "ESPN weekly tape + franchise attach are wired (empty until cookies)");
+loop(36, (weekly.scores || []).filter((s) => s.provider === "espn" && ["2025", "2026"].includes(String(s.season))).length === 0
+  && page.includes("Sleeper tape only until ESPN years unlock."),
+  "ESPN weeks never overwrite Sleeper 2025-2026; door states the lock");
 
-console.log("PASS 34 Gm dataset loops");
+console.log("PASS 36 Gm dataset loops");

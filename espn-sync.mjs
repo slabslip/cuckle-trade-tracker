@@ -17,6 +17,7 @@ import {
   setLeagueId,
   writeJson,
 } from "./lib.mjs";
+import { espnPlayoffWeekStart, espnScoresFromSchedule } from "./lib/espn-weeks.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const providers = loadProviders(LEAGUE_ID);
@@ -37,6 +38,7 @@ function emptyBooks() {
     trades: [],
     trade_legs: [],
     titles: [],
+    weekly: [],
   };
 }
 
@@ -49,6 +51,12 @@ function writeBooks(books, status) {
   writeJson("espn_trades.json", books.trades);
   writeJson("espn_trade_legs.json", books.trade_legs);
   writeJson("espn_titles.json", books.titles);
+  writeJson("espn_weekly_scores.json", {
+    v: 1,
+    espn_league_id: ESPN_ID,
+    n: (books.weekly || []).length,
+    scores: books.weekly || [],
+  });
 }
 
 function loadEspnIdMap() {
@@ -112,7 +120,7 @@ function viewsQs(views) {
 }
 
 async function fetchSeason(season) {
-  const views = ["mTeam", "mSettings", "mStandings", "mRoster", "mDraftDetail"];
+  const views = ["mTeam", "mSettings", "mStandings", "mRoster", "mDraftDetail", "mMatchup", "mMatchupScore"];
   const qs = viewsQs(views);
   const urls = [
     `${ESPN_READS}/seasons/${season}/segments/0/leagues/${ESPN_ID}?${qs}`,
@@ -132,6 +140,23 @@ async function fetchSeason(season) {
     if (last.status === 401 || last.status === 403) return { season, body: null, status: last.status, url };
   }
   return { season, body: null, status: last.status, url: urls[0] };
+}
+
+async function fetchSchedule(season) {
+  const qs = viewsQs(["mMatchup", "mMatchupScore", "mTeam"]);
+  const urls = [
+    `${ESPN_READS}/seasons/${season}/segments/0/leagues/${ESPN_ID}?${qs}`,
+    `${ESPN_WEB}/seasons/${season}/segments/0/leagues/${ESPN_ID}?${qs}`,
+    `${ESPN_WEB}/leagueHistory/${ESPN_ID}?seasonId=${season}&${qs}`,
+  ];
+  for (const url of urls) {
+    const res = await espnGet(url);
+    if (res.ok && res.json) {
+      const body = Array.isArray(res.json) ? res.json[0] : res.json;
+      if (body && Array.isArray(body.schedule) && body.schedule.length) return body.schedule;
+    }
+  }
+  return [];
 }
 
 async function fetchTrades(season) {
@@ -389,6 +414,17 @@ async function main() {
     const bag = parseTrades(txs, year, parsed.seats, idMap);
     books.trades.push(...bag.trades);
     books.trade_legs.push(...bag.legs);
+    const ownerByRoster = new Map(parsed.seats.map((s) => [Number(s.roster_id), s.owner_id]));
+    const pws = espnPlayoffWeekStart(got.body.settings);
+    let schedule = Array.isArray(got.body.schedule) ? got.body.schedule : [];
+    if (!schedule.length) schedule = await fetchSchedule(year);
+    books.weekly.push(...espnScoresFromSchedule(
+      schedule,
+      year,
+      parsed.leagueRow.league_id,
+      ownerByRoster,
+      pws,
+    ));
     status.seasons.push(String(year));
   }
 
@@ -409,6 +445,7 @@ async function main() {
     seats: books.seats.length,
     trades: books.trades.length,
     titles: books.titles.length,
+    weekly: books.weekly.length,
   }, null, 2));
 }
 

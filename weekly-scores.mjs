@@ -8,6 +8,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isSleeperLeagueId, leagueRawDir, setLeagueId, sleeperGet, writeJson } from "./lib.mjs";
 import { huntByWeekFromBracket, huntByWeekJson, writeWeekScoreUi } from "./lib/week-score-lists.mjs";
+import { resolveEspnScoreUid } from "./merge-provider-history.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -103,6 +104,34 @@ for (const lg of leagues) {
   }
 }
 
+const sleeperSeasons = new Set(scores.map((s) => String(s.season)));
+const espnWeekBook = loadRaw("espn_weekly_scores.json", { scores: [] });
+const bridgeDoc = loadRaw("provider_bridge.json", {});
+const personBridge = bridgeDoc.bridge || {};
+const franchiseMap = bridgeDoc.franchise || {};
+let espnKept = 0;
+for (const row of espnWeekBook.scores || []) {
+  if (!row || sleeperSeasons.has(String(row.season))) continue;
+  const pts = Number(row.points);
+  if (!Number.isFinite(pts) || pts <= 0) continue;
+  const uid = resolveEspnScoreUid(row, personBridge, franchiseMap);
+  if (!uid) continue;
+  scores.push({
+    season: String(row.season),
+    league_id: row.league_id || `espn:${row.season}`,
+    week: Number(row.week) || 0,
+    roster_id: row.roster_id,
+    user_id: uid,
+    points: Math.round(pts * 100) / 100,
+    phase: row.phase === "playoff" ? "playoff" : "regular",
+    hunt: row.phase === "playoff" ? row.hunt === true : true,
+    playoff_week_start: row.playoff_week_start || null,
+    playoff_tier: row.playoff_tier || null,
+    provider: "espn",
+  });
+  espnKept++;
+}
+
 scores.sort((a, b) => {
   if (a.season !== b.season) return String(a.season).localeCompare(String(b.season));
   if (a.week !== b.week) return a.week - b.week;
@@ -138,7 +167,7 @@ const high0 = (lists.all && lists.all.high && lists.all.high[0]) || {};
 const low0 = (lists.all && lists.all.low && lists.all.low[0]) || {};
 console.log(
   `weekly_scores.json ${scores.length} team-weeks (${regular.length} regular / ${playoff.length} playoff / ${playoffHunt.length} title hunt), `
-  + `regular min ${min} max ${max}, seats ${Object.keys(byUid).length}`,
+  + `espn ${espnKept}, regular min ${min} max ${max}, seats ${Object.keys(byUid).length}`,
 );
 console.log(
   `week-scores.json high ${high0.name || "—"} ${high0.points ?? "—"} · `

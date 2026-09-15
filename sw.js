@@ -36,6 +36,7 @@ function isAppDocument(url) {
     || path.endsWith("/preview.html")
     || path.endsWith("/design-league-home.html")
     || path.endsWith("/design-league-home-frame.html")
+    || path.endsWith("/design-redraft-home.html")
     || path.endsWith("/iphone-preview.html");
 }
 

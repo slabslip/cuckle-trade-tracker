@@ -22,7 +22,9 @@ live, set Supabase Auth Site URL to that origin, then install from the browser s
 same origin (`?store=1`) — see [`STORE_LAW.md`](STORE_LAW.md) and [`STORE_OPS.md`](STORE_OPS.md).
 Changing the origin wipes `localStorage`; set the shell `ChuckleOrigin` when DNS goes live.
 
-**ESPN history import** is also parked; optional `espn_league_id` on create is storage only.
+**ESPN history import** runs in `espn-sync.mjs` when `ESPN_S2` + `ESPN_SWID` are
+set (see [`REDRAFT_TWO_PROVIDER.md`](REDRAFT_TWO_PROVIDER.md)). Optional
+`espn_league_id` on create is still stored on the league row.
 
 ---
 

@@ -5,7 +5,7 @@
  * on the tape (`phase: "playoff"`) for a later batch.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { leagueRawDir, setLeagueId, sleeperGet, writeJson } from "./lib.mjs";
+import { isSleeperLeagueId, leagueRawDir, setLeagueId, sleeperGet, writeJson } from "./lib.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -42,6 +42,7 @@ const scores = [];
 const seasons = [];
 for (const lg of leagues) {
   const leagueId = String(lg.league_id);
+  if (lg.provider === "espn" || !isSleeperLeagueId(leagueId)) continue;
   const season = String(lg.season);
   const meta = await sleeperGet(`/league/${leagueId}`);
   const pws = Number(meta && meta.settings && meta.settings.playoff_week_start);

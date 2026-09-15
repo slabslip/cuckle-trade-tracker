@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Reprice today even bags (retired=0 + multi-source blend), then apply VA. Windows stay flatten. */
 import { readdirSync, readFileSync } from "node:fs";
-import { leagueUiDir, seasonLived, setLeagueId, writeUi } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, leagueUiDir, seasonLived, setLeagueId, writeUi } from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, repriceTodayLegs } from "./price-today.mjs";
 
@@ -334,30 +334,38 @@ function main() {
   const marks = buildMarks(seats, league.today);
   writeUi("marks.json", marks);
 
-  const ceedee = seats.flatMap((m) => m.trades || []).find((t) =>
-    t.transaction_id === "1269369347395026944"
-    || (t.date === "2025-09-04" && (t.even?.legs || []).some((l) => (l.label || "").includes("CeeDee"))));
-  const ceedeeVa = ceedee?.even?.value_adjust;
-  check("ceedee trade found", !!ceedee);
-  check("ceedee va ~3322 (cap 3 after today blend; not 5500-6000)", ceedeeVa != null && ceedeeVa >= 3200 && ceedeeVa <= 3450);
+  const isCuckle = String(process.env.LEAGUE_ID || "") === CUCKLE_LEAGUE_ID;
+  const formatWindows = (league.format && league.format.windows) || ["t0", "y1", "y2", "y3", "all"];
+  let ceedee = null;
+  let ceedeeVa = null;
+  let zeke = null;
+  let hill = null;
+  let baker = [];
+  if (isCuckle) {
+    ceedee = seats.flatMap((m) => m.trades || []).find((t) =>
+      t.transaction_id === "1269369347395026944"
+      || (t.date === "2025-09-04" && (t.even?.legs || []).some((l) => (l.label || "").includes("CeeDee"))));
+    ceedeeVa = ceedee?.even?.value_adjust;
+    check("ceedee trade found", !!ceedee);
+    check("ceedee va ~3322 (cap 3 after today blend; not 5500-6000)", ceedeeVa != null && ceedeeVa >= 3200 && ceedeeVa <= 3450);
 
-  const chief = seats.flatMap((m) => m.trades || []).find((t) => t.transaction_id === "460470201385742336");
-  const zeke = [...(chief?.even?.legs || []), ...(chief?.even?.sent || [])]
-    .find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
-  const hill = [...(chief?.even?.legs || []), ...(chief?.even?.sent || [])]
-    .find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
-  check("chief-arae found", !!chief);
-  check("zeke today retired 0", zeke != null && zeke.value === 0);
-  // DP/KTC blend moves with the book; keep a band that rejects raw DP (~2.8k) and retiree 0.
-  check("today book loaded fc+dd latest", ctx.hasFc && ctx.hasDd);
-  check("hill flatten is DP not the blend", hill != null && hill.value_flat >= 2500 && hill.value_flat <= 3200);
-  check("hill today blended 1.4-1.9k", hill != null && hill.value >= 1400 && hill.value <= 1900);
-  check("hill not raw DP and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
+    const chief = seats.flatMap((m) => m.trades || []).find((t) => t.transaction_id === "460470201385742336");
+    zeke = [...(chief?.even?.legs || []), ...(chief?.even?.sent || [])]
+      .find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
+    hill = [...(chief?.even?.legs || []), ...(chief?.even?.sent || [])]
+      .find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
+    check("chief-arae found", !!chief);
+    check("zeke today retired 0", zeke != null && zeke.value === 0);
+    check("today book loaded fc+dd latest", ctx.hasFc && ctx.hasDd);
+    check("hill flatten is DP not the blend", hill != null && hill.value_flat >= 2500 && hill.value_flat <= 3200);
+    check("hill today blended 1.4-1.9k", hill != null && hill.value >= 1400 && hill.value <= 1900);
+    check("hill not raw DP and not 0", hill != null && hill.value !== 2892 && hill.value !== 0);
 
-  const baker = seats.flatMap((m) => m.trades || []).flatMap((t) =>
-    [...(t.even?.legs || []), ...(t.even?.sent || [])]
-      .filter((l) => (l.label || "") === "Baker Mayfield"));
-  check("baker still mid-4k", baker.length && baker.every((l) => l.value >= 4200 && l.value <= 5200));
+    baker = seats.flatMap((m) => m.trades || []).flatMap((t) =>
+      [...(t.even?.legs || []), ...(t.even?.sent || [])]
+        .filter((l) => (l.label || "") === "Baker Mayfield"));
+    check("baker still mid-4k", baker.length && baker.every((l) => l.value >= 4200 && l.value <= 5200));
+  }
 
   let zeroBreaks = 0;
   const pair = new Map();
@@ -376,8 +384,11 @@ function main() {
     && (t.even?.sent || []).filter((l) => l.value != null).length === 1);
   check("1-for-1 no va", oneForOne.every((t) => Math.round(t.even.value_adjust || 0) === 0));
 
-  const winZeke = (chief?.windows?.all?.legs || []).find((l) => (l.became || "").includes("Ezekiel"));
-  check("windows stay flatten (zeke all != 0)", !winZeke || (winZeke.value != null && winZeke.value > 0));
+  if (isCuckle) {
+    const chiefRow = seats.flatMap((m) => m.trades || []).find((t) => t.transaction_id === "460470201385742336");
+    const winZeke = (chiefRow?.windows?.all?.legs || []).find((l) => (l.became || "").includes("Ezekiel"));
+    check("windows stay flatten (zeke all != 0)", !winZeke || (winZeke.value != null && winZeke.value > 0));
+  }
 
   // This file is the only builder of trade_boards, so the board checks live here now.
   const sideCounts = {};
@@ -386,13 +397,17 @@ function main() {
   check("sides complete", sides.every((r) => r.today_delta != null && r.date && r.headline != null));
   check("sides carry got and sent", sides.every((r) => r.today_got != null && r.today_sent != null
     && Math.abs(r.today_got - r.today_sent - r.today_delta) < 0.01));
-  check("sides have all five windows", sides.every((r) =>
-    r.windows && ["t0", "y1", "y2", "y3", "all"].every((k) => r.windows[k])));
-  check("today best 10", boards.today.best.length === 10);
-  check("today best sorted", boards.today.best[0].today_delta >= boards.today.best[9].today_delta);
-  check("today worst sorted", boards.today.worst[0].today_delta <= boards.today.worst[9].today_delta);
+  check("sides have format windows", sides.every((r) =>
+    r.windows && formatWindows.every((k) => r.windows[k])));
+  if (isCuckle) {
+    check("today best 10", boards.today.best.length === 10);
+    check("today best sorted", boards.today.best[0].today_delta >= boards.today.best[9].today_delta);
+    check("today worst sorted", boards.today.worst[0].today_delta <= boards.today.worst[9].today_delta);
+    check("aged best sorted", boards.aged.best[0].aged >= boards.aged.best[9].aged);
+  } else if (boards.today.best.length >= 2) {
+    check("today best sorted", boards.today.best[0].today_delta >= boards.today.best[boards.today.best.length - 1].today_delta);
+  }
   check("aged rows have aged", boards.aged.best.every((r) => r.aged != null) && boards.aged.worst.every((r) => r.aged != null));
-  check("aged best sorted", boards.aged.best[0].aged >= boards.aged.best[9].aged);
   check("aged is one book", sides.every((r) =>
     r.aged == null
     || Math.abs(r.aged - ((r.windows.all.delta ?? 0) - (r.windows.t0.delta ?? 0))) < 1e-6));
@@ -402,7 +417,7 @@ function main() {
     && league.traders.every((t) => !("realized_per_trade" in t) && !("realized_total" in t)));
   // Its last reader went with renderLeague(). Kept only so the payload cut stays deliberate:
   // revalue.mjs still emits it, so dropping it belongs to a payload pass, not to a delete here.
-  check("drafters_rookie still present", (league.drafters_rookie || []).length > 0);
+  if (isCuckle) check("drafters_rookie still present", (league.drafters_rookie || []).length > 0);
   check("marks cover every seat and clock", Object.keys(marks.seats).length === seats.length
     && Object.values(marks.seats).every((m) => LENSES.every((k) => m.lens[k])));
   check("marks partner counts add up", Object.values(marks.seats).every((m) => {
@@ -433,8 +448,8 @@ function main() {
     unique_players: players.size,
     unpriced_legs: unpricedN,
     ktc_as_of: ctx.ktc.as_of,
-    ceedee_va: Math.round(ceedeeVa),
-    ceedee_delta: Math.round(ceedee.even.today_delta),
+    ceedee_va: ceedeeVa != null ? Math.round(ceedeeVa) : null,
+    ceedee_delta: ceedee && ceedee.even ? Math.round(ceedee.even.today_delta) : null,
     zeke_today: zeke?.value,
     hill_today: hill?.value,
     baker_today: baker[0]?.value,

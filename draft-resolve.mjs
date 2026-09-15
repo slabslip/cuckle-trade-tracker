@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Map pick:year:round:origin_roster → slot + drafted player. Official Sleeper GETs. */
-import { readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
+import { isSleeperLeagueId, readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -33,6 +33,7 @@ async function main() {
   const resolutions = [];
 
   for (const league of leagues) {
+    if (league.provider === "espn" || !isSleeperLeagueId(league.league_id)) continue;
     const list = (await sleeperGet(`/league/${league.league_id}/drafts`)) || [];
     const chosen = chooseDraft(list);
     if (!chosen) continue;

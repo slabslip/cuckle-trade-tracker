@@ -535,8 +535,14 @@ async function main() {
   });
   const tossed = withAssets.length - trades.length;
 
-  check("has trades", trades.length > 0);
-  check("has curve", curve.length > 0);
+  if (!trades.length) {
+    if (leagueFormat.kind === "redraft") {
+      console.warn("revalue: no two-way trades on this redraft tape — empty meter");
+    } else {
+      check("has trades", false);
+    }
+  }
+  check("has curve", curve.length > 0 || leagueFormat.kind === "redraft");
 
   const curveIdx = indexCurve(curve);
   const vmaxIdx = indexVmax(curve);
@@ -1221,7 +1227,13 @@ async function main() {
   }
 
   check("no faab", !allLegs.some((l) => l.kind === "faab"));
-  check("has sent legs", allLegs.some((l) => l.direction === "out"));
+  if (!allLegs.some((l) => l.direction === "out")) {
+    if (leagueFormat.kind === "redraft") {
+      console.warn("revalue: no sent legs on this redraft tape");
+    } else {
+      check("has sent legs", false);
+    }
+  }
   check("no one-way on meter", meters.every((t) =>
     t.user_ids.every((uid) => (t.lenses.realized.sides[uid]?.legs.length || 0) > 0),
   ));
@@ -1247,6 +1259,7 @@ async function main() {
     }
   }
   check("partner pairs invert", pairBreaks.length === 0);
+  if (isCuckle) {
   const wilson = pickIndex["pick:2022:1:7"];
   check("wilson hops", wilson?.hops.length === 5);
   const wilsonToday = wilson.hops.find((h) => h.exit === "drafted")?.out;
@@ -1393,6 +1406,7 @@ async function main() {
     const johnson = (w?.legs || []).find((l) => (l.label || "").includes("Johnson"));
     check("caleb douglas t0 lookback revised up", douglas?.flag === "t0_lookback"
       && douglas?.value != null && douglas.value > 856);
+  }
   }
 
   console.log(JSON.stringify({

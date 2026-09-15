@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Champions path. Official Sleeper GETs. Does not touch the trade needle. */
 import fs from "node:fs";
-import { DATA, NFL_KICKOFF, readJson, setLeagueId, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, DATA, NFL_KICKOFF, readJson, readUi, setLeagueId, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const KICKOFF = NFL_KICKOFF;
@@ -773,8 +773,18 @@ async function main() {
     titles.push(row);
   }
 
+  const espnTitles = readJson("espn_titles.json", []) || [];
+  const haveSeasons = new Set(titles.map((t) => String(t.season)));
+  for (const row of espnTitles) {
+    if (!row || haveSeasons.has(String(row.season))) continue;
+    titles.push(row);
+    haveSeasons.add(String(row.season));
+  }
+
   titles.sort((a, b) => String(b.season).localeCompare(String(a.season)));
 
+  const isCuckle = String(LEAGUE_ID) === CUCKLE_LEAGUE_ID;
+  if (isCuckle) {
   const expected = {
     2025: "SF69erss",
     2024: "SF69erss",
@@ -796,6 +806,7 @@ async function main() {
     throw new Error("self-check: from_opening overflow");
   }
   if (titles.length !== 7) throw new Error(`self-check: expected 7 titles, got ${titles.length}`);
+  }
 
   for (const t of titles) {
     const f = t.final;
@@ -817,17 +828,23 @@ async function main() {
         + ` a different number of games than the champion's ${t.record.wins}-${t.record.losses}-${t.record.ties}`);
     }
   }
+  if (isCuckle) {
   const f25 = titles.find((t) => t.season === "2025").final;
   if (!f25 || f25.opponent !== "TipsUp" || f25.champ_points !== 189.98 || f25.opponent_points !== 162.82) {
     throw new Error(`self-check: 2025 final ${JSON.stringify(f25)}`);
   }
-  // 2025's runner-up matched the champion at 11-3-0. Both cards reading 11–3 is the data,
-  // not a copy-paste, and this is what says so out loud.
   if (f25.opponent_record.wins !== 11 || f25.opponent_record.losses !== 3 || f25.opponent_record.ties !== 0) {
     throw new Error(`self-check: 2025 TipsUp record ${JSON.stringify(f25.opponent_record)}, expected 11-3-0`);
   }
   if (f25.top.player !== "Derrick Henry" || f25.top.points !== 45.6) {
     throw new Error(`self-check: 2025 top starter ${JSON.stringify(f25.top)}`);
+  }
+  }
+
+  if (!titles.length) {
+    writeUi("titles.json", { as_of: ymd(Date.now()), league_id: LEAGUE_ID, titles: [] });
+    console.log(JSON.stringify({ titles: [], note: "no completed seasons" }, null, 2));
+    return;
   }
 
   // The seat picker lists managers in last season's finishing order, so that order has to be
@@ -836,14 +853,22 @@ async function main() {
   // sorted newest first and only holds completed seasons, so titles[0] is the season to use —
   // 2026 slots in on its own the first time it completes, with no code change.
   const lastSeason = titles[0].season;
+  if (!seasons[lastSeason]) {
+    writeUi("titles.json", { as_of: ymd(Date.now()), league_id: LEAGUE_ID, titles });
+    console.log(JSON.stringify({
+      titles: titles.map((t) => ({ season: t.season, name: t.name, provider: t.provider || "sleeper" })),
+      note: "newest title is not a Sleeper season on this walk",
+    }, null, 2));
+    return;
+  }
   const standings = standingsFor(seasons[lastSeason], nameByUser);
   const places = standings.map((r) => r.place);
   if (new Set(places).size !== places.length) throw new Error(`standings ${lastSeason}: duplicate place`);
   if (places.some((p, i) => p !== i + 1)) throw new Error(`standings ${lastSeason}: places are not 1..n`);
-  if (standings[0].user_id !== titles[0].user_id) {
+  if (isCuckle && standings[0].user_id !== titles[0].user_id) {
     throw new Error(`self-check: ${lastSeason} first place ${standings[0].name} is not the champion ${titles[0].name}`);
   }
-  if (standings[0].from !== "bracket") {
+  if (isCuckle && standings[0].from !== "bracket") {
     throw new Error(`self-check: ${lastSeason} first place came from ${standings[0].from}, not the bracket`);
   }
   // The runner-up's record reaches the card through final.opponent_record. Assert it is the
@@ -868,7 +893,7 @@ async function main() {
   // array in order, so write it in order too. Only `place` and `place_season` go on the wire:
   // the record each place was derived from is printed below and documented in UI_SDD §2, not
   // shipped to a browser that has no screen for it.
-  const members = readJson("ui/members.json", null);
+  const members = readUi("members.json", null);
   if (!Array.isArray(members) || !members.length) {
     throw new Error("members.json is missing or empty -- run revalue.mjs before title-path.mjs");
   }

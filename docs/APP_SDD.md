@@ -44,7 +44,9 @@ Member
 
 **Seat identity:** Sleeper roster `user_id` + team name on create. Invite hash stores that binding. Member never enters a Sleeper ID.
 
-**ESPN:** `espn_league_id` optional on create — **stored only**. First ship syncs **Sleeper**. History import is PARKED.
+**ESPN:** `espn_league_id` optional on create. First ship still syncs **Sleeper**.
+History import is live on the build (`espn-sync.mjs` + `merge-provider-history.mjs`)
+when `ESPN_S2` / `ESPN_SWID` are set. See [`REDRAFT_TWO_PROVIDER.md`](REDRAFT_TWO_PROVIDER.md).
 
 **Out:** Sleeper chat scrape, Sleeper passwords, Phase 1 `CUCK-` seat seeding, client self-insert into `league_memberships`.
 
@@ -230,7 +232,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | Item | Status |
 | --- | --- |
 | Sleeper chat / comments scrape | **No** — no public API; privacy/ToS. Debate list is tape-first: [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md) |
-| ESPN meter import | PARKED (`espn_league_id` reserved) |
+| ESPN meter import | Live on `build.mjs` when ESPN cookies are set; stored id alone is not enough |
 | Web push / Play Store | PARKED — PWA install shell ships; iOS TestFlight is the store door |
 | Auto-sync every league on create | `join-league` dispatches GitHub `league-sync` when `GITHUB_PAT` is set |
 | Smack agent seat-voice bank | Future opt-in inside Chuckle — not Sleeper scrape |

@@ -3,7 +3,12 @@ import fs from "node:fs";
 export const ROOT = new URL(".", import.meta.url).pathname;
 export const DATA = `${ROOT}data`;
 export const SLEEPER = "https://api.sleeper.app/v1";
+export const ESPN_READS = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl";
+export const ESPN_WEB = "https://fantasy.espn.com/apis/v3/games/ffl";
 export const CUCKLE_LEAGUE_ID = "1315431339301806080";
+/** Dogfood / review redraft: Sleeper current + ESPN prior years. */
+export const REDRAFT_REVIEW_LEAGUE_ID = "1389723418827460608";
+export const REDRAFT_ESPN_LEAGUE_ID = "35763180";
 
 /** Active league for this process. Set via setLeagueId / LEAGUE_ID env / argv. */
 export let LEAGUE_ID = process.env.LEAGUE_ID || CUCKLE_LEAGUE_ID;
@@ -66,6 +71,65 @@ export function writeUi(name, value) {
     fs.mkdirSync(legacy.slice(0, legacy.lastIndexOf("/")), { recursive: true });
     fs.writeFileSync(legacy, body);
   }
+}
+
+export function readUi(name, fallback = null) {
+  const scoped = `${leagueUiDir()}/${name}`;
+  if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8"));
+  if (LEAGUE_ID === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/ui/${name}`;
+    if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8"));
+  }
+  return fallback;
+}
+
+/** Sleeper league IDs are long decimal strings. ESPN history rows use espn:<id>:<year>. */
+export function isSleeperLeagueId(id) {
+  const s = String(id || "").trim();
+  return /^\d{10,64}$/.test(s);
+}
+
+export function loadProviders(id = LEAGUE_ID) {
+  const fallback = {
+    sleeper_league_id: String(id),
+    espn_league_id: null,
+    espn_through_season: null,
+    kind: null,
+    name: null,
+  };
+  const raw = readJson("providers.json", null);
+  if (!raw || typeof raw !== "object") return fallback;
+  return { ...fallback, ...raw, sleeper_league_id: String(raw.sleeper_league_id || id) };
+}
+
+export function espnCookieHeader() {
+  const full = String(process.env.ESPN_COOKIE || "").trim();
+  if (full) return full;
+  const s2 = String(process.env.ESPN_S2 || "").trim();
+  const swid = String(process.env.ESPN_SWID || "").trim();
+  if (!s2 && !swid) return "";
+  const parts = [];
+  if (s2) parts.push(`espn_s2=${s2}`);
+  if (swid) parts.push(`SWID=${swid}`);
+  return parts.join("; ");
+}
+
+export async function espnGet(url) {
+  const headers = {
+    Accept: "application/json, text/plain, */*",
+    "User-Agent": "Mozilla/5.0 (compatible; ChuckleFantasy/1.0)",
+    "X-Fantasy-Source": "kona",
+    "X-Fantasy-Platform": "kona-web-2.0.0",
+  };
+  const cookie = espnCookieHeader();
+  if (cookie) headers.Cookie = cookie;
+  const res = await fetch(url, { headers });
+  const text = await res.text();
+  let json = null;
+  if (text) {
+    try { json = JSON.parse(text); } catch { json = null; }
+  }
+  return { ok: res.ok, status: res.status, json, text };
 }
 
 export async function sleeperGet(path) {

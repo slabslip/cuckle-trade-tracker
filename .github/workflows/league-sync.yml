@@ -58,6 +58,8 @@ jobs:
         env:
           LEAGUE_ID: ${{ steps.league.outputs.id }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ESPN_S2: ${{ secrets.ESPN_S2 }}
+          ESPN_SWID: ${{ secrets.ESPN_SWID }}
         run: node build.mjs "$LEAGUE_ID"
 
       - name: Audit today book

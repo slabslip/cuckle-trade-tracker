@@ -287,7 +287,7 @@ async function main() {
   writeJson("aliases.json", aliasesSeed);
 
   if (!legs.some((l) => l.direction === "out")) {
-    throw new Error("self-check failed: no sent legs");
+    console.warn("sleeper-sync: no sent legs on this tape (quiet redraft is allowed)");
   }
 
   console.log(

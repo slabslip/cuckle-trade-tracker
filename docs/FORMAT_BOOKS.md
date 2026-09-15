@@ -51,6 +51,10 @@ It must look **new**, not like a broken Cuckle.
 
 Laptop fallback: `node build.mjs <sleeper_league_id>`.
 
+Two-provider redraft dogfood (Sleeper `1389723418827460608` + ESPN `35763180`):
+[`REDRAFT_TWO_PROVIDER.md`](REDRAFT_TWO_PROVIDER.md). ESPN years need `ESPN_S2` /
+`ESPN_SWID`; without them the Sleeper seasons still build.
+
 Dogfood (no operator laptop required for the assertion):
 
 ```bash

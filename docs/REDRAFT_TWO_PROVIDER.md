@@ -69,9 +69,9 @@ Do not paste these into a chat, a commit, or `espn_bridge.json`.
 1. Open the repo on GitHub → **Settings** → **Secrets and variables** → **Actions**.
 2. **New repository secret** named `ESPN_S2` → paste the espn_s2 value.
 3. **New repository secret** named `ESPN_SWID` → paste the SWID value.
-4. In the app: Menu → **Settings** → **Leagues** → **Rebuild dashboard**.
-   That runs `league-sync.yml`, which already passes those two secrets into
-   `build.mjs`.
+4. In Cuckle (not ESPN): Home **Rebuild dashboard**, or Settings →
+   **Leagues**, or `?ids=gm`. That runs `league-sync.yml`, which already
+   passes those two secrets into `build.mjs`.
 
 **Laptop (optional, same book)**
 

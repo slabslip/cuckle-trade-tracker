@@ -15967,6 +15967,24 @@ const html = `<!DOCTYPE html>
       applyJoinSources(sourcesForLeague(id), id);
       openSettings("leagues");
     }
+    function consumeIdsParam() {
+      let raw = "";
+      try { raw = (params.get("ids") || "").trim().toLowerCase(); } catch (err) { raw = ""; }
+      if (!raw) return false;
+      try {
+        const u = new URL(location.href);
+        if (u.searchParams.has("ids")) {
+          u.searchParams.delete("ids");
+          const q = u.searchParams.toString();
+          history.replaceState(history.state || {}, "", u.pathname + (q ? "?" + q : "") + u.hash);
+        }
+      } catch (err) { /* ignore */ }
+      const lid = raw === "gm"
+        ? GM_LEAGUE_ID
+        : ((activeLeague && activeLeague.sleeper_league_id) || GM_LEAGUE_ID);
+      openLeagueIds(lid);
+      return true;
+    }
     const LEAGUE_KEY = "cuckle.active_league.v1";
     const MEMBERSHIPS_KEY = "cuckle.memberships.v1";
     // A legacy anon JWT, so Authorization: Bearer is valid alongside the always-required apikey
@@ -16091,21 +16109,23 @@ const html = `<!DOCTYPE html>
     function rowsFromReady(lid) {
       const b = readyAddBook(lid);
       if (!b) return null;
-      const rows = [{ kind: "sleeper", id: b.id }];
+      const rows = [];
+      if (b.espn) rows.push({ kind: "espn", id: String(b.espn) });
+      rows.push({ kind: "sleeper", id: b.id });
       (b.sleeper_extra || []).forEach(function (extra) {
         if (extra && extra !== b.id) rows.push({ kind: "sleeper", id: String(extra) });
       });
-      if (b.espn) rows.push({ kind: "espn", id: String(b.espn) });
       return rows;
     }
     function rowsFromProviders(lid, p) {
       if (!p) return null;
-      const rows = [{ kind: "sleeper", id: String(lid || "") }];
+      const rows = [];
+      if (p.espn_league_id) rows.push({ kind: "espn", id: String(p.espn_league_id) });
+      rows.push({ kind: "sleeper", id: String(lid || "") });
       (p.sleeper_extra_ids || []).forEach(function (x) {
         const id = String(x || "").trim();
         if (id && id !== String(lid)) rows.push({ kind: "sleeper", id: id });
       });
-      if (p.espn_league_id) rows.push({ kind: "espn", id: String(p.espn_league_id) });
       return rows.length > 1 || p.espn_league_id ? rows : null;
     }
     function joinRowsHaveTape(rows, lid) {
@@ -24857,7 +24877,6 @@ const html = `<!DOCTYPE html>
       const forAttr = lid && lid !== "new" ? lid : "";
       const hasEspn = rows.some(function (r) { return r.kind === "espn"; });
       return '<div class="app-form" data-join-src-box="' + esc(boxId) + '">'
-        + '<p class="caption">Sleeper: one ID per year. ESPN: one ID for every year.</p>'
         + rows.map(function (row, i) { return joinSourceRowHtml(row, i, rows); }).join("")
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-join-src-add="sleeper" data-join-src-for="'
@@ -24982,12 +25001,13 @@ const html = `<!DOCTYPE html>
         + (L.sleeper_league_id
           ? ('<div class="app-card" style="margin-top:12px"><h3>League IDs</h3>'
             + '<p class="caption">Sleeper: one ID per year. ESPN: one ID for every year.</p>'
-            + joinIdsFormHtml(L.sleeper_league_id)
             + '<div class="app-actions">'
             + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id) + '"'
             + (joinBusy ? " disabled" : "") + ">"
             + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
-            + "</div></div>")
+            + "</div>"
+            + joinIdsFormHtml(L.sleeper_league_id)
+            + "</div>")
           : "")
         + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
           ? espnUnlockStepsHtml()
@@ -25116,11 +25136,13 @@ const html = `<!DOCTYPE html>
             + "</p>"
             + "<h3>League IDs</h3>"
             + '<p class="caption">Sleeper: one ID per year. ESPN: one ID for every year.</p>'
-            + joinIdsFormHtml(o.sleeper_league_id)
             + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-rebuild-league="' + esc(o.sleeper_league_id) + '">Rebuild dashboard</button>'
             + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
               + '">Send / manage invites</button>'
-            + '<button type="button" class="chip" data-rebuild-league="' + esc(o.sleeper_league_id) + '">Rebuild dashboard</button>'
+            + "</div>"
+            + joinIdsFormHtml(o.sleeper_league_id)
+            + '<div class="app-actions">'
             + (mem
               ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
                 + '">Open dashboard</button>'
@@ -28223,6 +28245,7 @@ const html = `<!DOCTYPE html>
           if (m || designLeagueHome) {
             try {
               await openLeagueDashboard(activeLeague);
+              if (consumeIdsParam()) return;
               return;
             } catch (err) {
               console.error(err);
@@ -28232,6 +28255,7 @@ const html = `<!DOCTYPE html>
             }
           }
         }
+        if (consumeIdsParam()) return;
         appScreen = "home";
         focusNext = ".screen-h";
         render();
@@ -30870,6 +30894,8 @@ if (!inline.includes("function openAddReadyLeague(")
   || !inline.includes("function readyAddBooksHtml(")
   || !inline.includes('data-add-ready-league')
   || !inline.includes('params.get("add")')
+  || !inline.includes('params.get("ids")')
+  || !inline.includes("function consumeIdsParam(")
   || !inline.includes("Gm 2026 LLJ")
   || !inline.includes("1389723418827460608")
   || fnSrc("leaguesListHtml").indexOf("readyAddBooksHtml(") < 0) {

@@ -15913,6 +15913,10 @@ const html = `<!DOCTYPE html>
       return (isGmLeague() ? "data/ui/gm-calc-door.png" : "data/ui/calc-door.png") + "?" + DATA_V;
     }
     function isOwnedLeague(lid) {
+      if (typeof isDesignLeagueHome === "function" && isDesignLeagueHome()) {
+        const active = (activeLeague && activeLeague.sleeper_league_id) || GM_LEAGUE_ID;
+        if (String(lid || "") === String(active)) return true;
+      }
       return (ownedLeagues || []).some(function (o) {
         return String(o.sleeper_league_id) === String(lid || "");
       });
@@ -25089,7 +25093,15 @@ const html = `<!DOCTYPE html>
     }
 
     function renderSettingsLeaguesTab() {
-      const owned = ownedLeagues || [];
+      let owned = ownedLeagues || [];
+      if (typeof isDesignLeagueHome === "function" && isDesignLeagueHome()
+          && !owned.some(function (o) { return String(o.sleeper_league_id) === GM_LEAGUE_ID; })) {
+        owned = owned.concat([{
+          sleeper_league_id: GM_LEAGUE_ID,
+          name: "Gm 2026 LLJ",
+          status: "ready",
+        }]);
+      }
       const memById = {};
       for (const m of memberships || []) memById[m.sleeper_league_id] = m;
       const adminRows = owned.length
@@ -30886,6 +30898,7 @@ if (!inline.includes("function readJoinSourcesFromDom(")
   || fnSrc("renderSettingsLeaguesTab").indexOf("joinIdsFormHtml(") < 0
   || fnSrc("renderSettingsLeaguesTab").indexOf("espnUnlockStepsHtml(") < 0
   || fnSrc("leagueTapeHtml").indexOf("data-rebuild-league") < 0
+  || fnSrc("isOwnedLeague").indexOf("isDesignLeagueHome") < 0
   || fnSrc("sourcesForLeague").indexOf("rowsFromProviders(") < 0
   || fnSrc("renderInvites").indexOf("joinIdsFormHtml(") < 0) {
   throw new Error("Create a league must accept multiple Sleeper and ESPN IDs and rebuild the book");

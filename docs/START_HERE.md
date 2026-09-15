@@ -56,6 +56,7 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 15. `db/wave17-ledger-clock.sql` — NFL clocks (`clock_kind` / `clock_meta`), win hints, seat style. Run after wave16.
 16. `db/wave18-seat-cosmetics.sql` — equipped titles / emblems (if not already applied)
 17. `db/wave21-news-league.sql` — optional `sleeper_league_id` on news shares
+18. `db/wave22-seat-reset.sql` — recovery email + Reset login prior username on invites
 
 **Ledger:** after wave12 + wave13 + wave16 + wave17, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
 Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  

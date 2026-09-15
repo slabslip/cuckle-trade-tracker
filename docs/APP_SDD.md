@@ -38,7 +38,9 @@ Commissioner
 
 Member
   ├─ Create account (username + password only — no platform IDs)
+  ├─ Optional recovery email (Forgot → email a reset, if Resend is set)
   ├─ Redeem CF-XXXX-XXXX
+  ├─ Forgot: new CF- ticket from commissioner Reset login → new username/password + reclaim
   └─ Dashboard for that seat (Teams auto-selected when possible)
 ```
 
@@ -75,10 +77,10 @@ flowchart LR
 
 | Screen | Purpose | Key actions |
 | --- | --- | --- |
-| **Gate** | Account | Create account / Sign in |
+| **Gate** | Account | Create account / Sign in / Forgot (ticket reclaim or email reset) |
 | **Your leagues** | Home | Open dash, Manage invites, Create, Redeem |
 | **Create a league** | Commissioner | Sleeper league ID + optional ESPN → mint or reopen console |
-| **Invite console** | Commissioner | Codes (once), Rotate unclaimed, Claim this seat, Open dash |
+| **Invite console** | Commissioner | Codes, Reset login, Reissue, Claim this seat, Open dash |
 | **Redeem invite** | Member | Enter `CF-…` → membership → dash |
 | **Dashboard** | Meter | Existing Cuckle UI; vote as membership seat |
 

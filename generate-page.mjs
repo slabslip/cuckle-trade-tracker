@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260915182549";
+    const DATA_V = "seatreset20260915210000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -16139,7 +16139,7 @@ const html = `<!DOCTYPE html>
     let gateInviteSeatId = null;
     let gateInviteClaimed = false;
     let gateSuggestedUser = null;
-    let gateMode = "signin"; // signin | signup — returning users land on Sign in
+    let gateMode = "signin"; // signin | signup | forgot — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
     let settingsTab = "profile"; // profile | leagues — Settings screen default is Profile
@@ -17249,6 +17249,80 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    async function saveProfileLogin() {
+      if (profileBusy || !authSession || !authSession.access_token) return;
+      const mailEl = document.getElementById("profileRecoverEmail");
+      const passEl = document.getElementById("profileNewPass");
+      const recover = mailEl ? String(mailEl.value || "").trim().toLowerCase() : "";
+      const password = passEl ? String(passEl.value || "") : "";
+      if (!recover && !password) {
+        profileNote = "Enter a recovery email and/or a new password.";
+        render();
+        return;
+      }
+      if (password && password.length < 6) {
+        profileNote = "Password must be at least 6 characters.";
+        render();
+        return;
+      }
+      if (recover && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recover)) {
+        profileNote = "Enter a real recovery email.";
+        render();
+        return;
+      }
+      profileBusy = true;
+      profileNote = "";
+      joinError = "";
+      render();
+      try {
+        await authRefreshIfNeeded();
+        if (password) {
+          const res = await fetch(AUTH_API + "/user", {
+            method: "PUT",
+            headers: {
+              apikey: VOTE_ANON,
+              Authorization: "Bearer " + authSession.access_token,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password: password }),
+            signal: voteAbort(),
+          });
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error("Could not change password (" + res.status + "): " + t.slice(0, 120));
+          }
+        }
+        if (recover && authSession.user_id) {
+          const res = await fetch(
+            VOTE_API + "/app_profiles?auth_user_id=eq." + encodeURIComponent(authSession.user_id),
+            {
+              method: "PATCH",
+              headers: {
+                apikey: VOTE_ANON,
+                Authorization: "Bearer " + authSession.access_token,
+                "Content-Type": "application/json",
+                Prefer: "return=minimal",
+              },
+              body: JSON.stringify({ recover_email: recover }),
+              signal: voteAbort(),
+            },
+          );
+          if (!res.ok) {
+            const t = await res.text();
+            if (!/recover_email/i.test(t)) {
+              throw new Error("Could not save recovery email (" + res.status + ")");
+            }
+          }
+        }
+        profileNote = "Login saved. Recovery email is used by Forgot on the sign-in screen.";
+      } catch (err) {
+        joinError = (err && err.message) || "Could not save login.";
+      } finally {
+        profileBusy = false;
+        render();
+      }
+    }
+
     async function resetProfileAvatar() {
       if (profileBusy) return;
       const lid = avatarLeagueId();
@@ -17393,7 +17467,8 @@ const html = `<!DOCTYPE html>
           gateInviteLeagueId = data.sleeper_league_id || null;
           gateInviteSeatId = data.sleeper_user_id || null;
           gateInviteClaimed = !!data.claimed;
-          gateSuggestedUser = data.suggested_username || suggestUsernameFromTeam(data.team_name);
+          gateSuggestedUser = data.suggested_username || data.prior_username
+            || suggestUsernameFromTeam(data.team_name);
           if (gateSuggestedUser && !gateUsernameDraft) gateUsernameDraft = gateSuggestedUser;
           // Logged-out + already-used: send them to sign-in (they may already have an account).
           if (gateInviteClaimed && !authSession) {
@@ -17619,7 +17694,7 @@ const html = `<!DOCTYPE html>
       return data;
     }
 
-    async function authSignUp(username, password) {
+    async function authSignUp(username, password, recoverEmail) {
       const name = validateUsername(prepareUsername(username));
       if (String(password || "").length < 6) throw new Error("Password must be at least 6 characters.");
       const email = authEmailForUsername(name);
@@ -17655,16 +17730,33 @@ const html = `<!DOCTYPE html>
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=minimal",
         },
-        body: JSON.stringify({ auth_user_id: userId, username: name }),
+        body: JSON.stringify(recoverEmail
+          ? { auth_user_id: userId, username: name, recover_email: recoverEmail }
+          : { auth_user_id: userId, username: name }),
         signal: voteAbort(),
       });
       if (!prof.ok) {
         const t = await prof.text();
-        if (t.indexOf("app_profiles_username_key") >= 0) throw new Error("That username is taken.");
-        if (t.indexOf("app_profiles_platform_required") >= 0) {
+        if (recoverEmail && /recover_email/i.test(t)) {
+          const retry = await fetch(VOTE_API + "/app_profiles?on_conflict=auth_user_id", {
+            method: "POST",
+            headers: {
+              apikey: VOTE_ANON,
+              Authorization: "Bearer " + session.access_token,
+              "Content-Type": "application/json",
+              Prefer: "resolution=merge-duplicates,return=minimal",
+            },
+            body: JSON.stringify({ auth_user_id: userId, username: name }),
+            signal: voteAbort(),
+          });
+          if (!retry.ok) throw new Error("Could not save profile (" + retry.status + ")");
+        } else if (t.indexOf("app_profiles_username_key") >= 0) {
+          throw new Error("That username is taken.");
+        } else if (t.indexOf("app_profiles_platform_required") >= 0) {
           throw new Error("Profile blocked: re-run commissioner-invites.sql (platform IDs optional).");
+        } else {
+          throw new Error("Could not save profile (" + prof.status + "): " + t.slice(0, 180));
         }
-        throw new Error("Could not save profile (" + prof.status + "): " + t.slice(0, 180));
       }
       authSave({
         access_token: session.access_token,
@@ -17780,7 +17872,13 @@ const html = `<!DOCTYPE html>
       render();
       let handedOff = false;
       try {
-        if (gateMode === "signup") await authSignUp(username, password);
+        if (gateMode === "forgot") {
+          handedOff = !!(await onForgotSubmit());
+          return;
+        }
+        const emailEl = document.getElementById("gateEmail");
+        const recover = emailEl && String(emailEl.value || "").trim();
+        if (gateMode === "signup") await authSignUp(username, password, recover);
         else await authSignIn(username, password);
         await loadMemberships();
         authError = "";
@@ -17971,17 +18069,20 @@ const html = `<!DOCTYPE html>
       }
     }
 
-    async function onReissueSeat(sleeperUserId) {
+    async function onReissueSeat(sleeperUserId, asReset) {
       if (joinBusy || !joinPreview || !sleeperUserId) return;
       const inv = (createdInvites || []).find((x) => x.sleeper_user_id === sleeperUserId);
       const who = (inv && inv.claimed_username)
         ? "@" + inv.claimed_username
         : (inv && inv.team_name) || "the current manager";
-      if (!window.confirm(
-        "Reissue invite for " + ((inv && inv.team_name) || "this seat") + "? "
-        + "This removes " + who + " from the seat and creates a new code for the replacement manager. "
-        + "Their past votes stay in the tally.",
-      )) return;
+      const team = (inv && inv.team_name) || "this seat";
+      if (!window.confirm(asReset
+        ? ("Reset login for " + team + "? This mints a new seat ticket. Send it to "
+          + who + ". They open Forgot on the sign-in screen and pick a new username and password. "
+          + "Past votes stay.")
+        : ("Reissue invite for " + team + "? "
+          + "This removes " + who + " from the seat and creates a new code for the replacement manager. "
+          + "Their past votes stay in the tally."))) return;
       joinBusy = true;
       joinError = "";
       settingsCopyNote = "";
@@ -18148,6 +18249,71 @@ const html = `<!DOCTYPE html>
         joinBusy = false;
         render();
       }
+    }
+
+    async function joinPublicCall(action, fields) {
+      const body = Object.assign({ action: action }, fields || {});
+      const res = await fetch(FN_API + "/join-league", {
+        method: "POST",
+        headers: { apikey: VOTE_ANON, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || ("Request failed (" + res.status + ")"));
+      }
+      return data;
+    }
+
+    async function onForgotSubmit() {
+      const codeEl = document.getElementById("forgotCode");
+      const userEl = document.getElementById("forgotUser");
+      const passEl = document.getElementById("forgotPass");
+      const recEl = document.getElementById("forgotRecover");
+      const mailEl = document.getElementById("forgotMail");
+      const code = (codeEl && String(codeEl.value || "").trim()) || (redeemCode || "");
+      const username = userEl ? userEl.value : "";
+      const password = passEl ? passEl.value : "";
+      const recover = recEl ? String(recEl.value || "").trim() : "";
+      const mailOnly = mailEl ? String(mailEl.value || "").trim() : "";
+      if (code) {
+        const data = await joinPublicCall("reclaim_seat", {
+          code: code,
+          username: username,
+          password: password,
+          recover_email: recover,
+        });
+        await authSignIn(data.username || username, password);
+        await loadMemberships();
+        authError = "";
+        redeemCode = "";
+        const L = data.league || {};
+        if (L.sleeper_league_id) {
+          if (authSession) {
+            authSave(Object.assign({}, authSession, {
+              seat_user_id: L.sleeper_user_id,
+              seat_name: L.team_name,
+            }));
+          }
+          await openLeagueDashboard({
+            sleeper_league_id: L.sleeper_league_id,
+            name: L.name || L.sleeper_league_id,
+            status: L.status || "ready",
+            sleeper_user_id: L.sleeper_user_id,
+            team_name: L.team_name,
+          });
+          return true;
+        }
+        appScreen = "home";
+        return true;
+      }
+      if (mailOnly) {
+        const data = await joinPublicCall("request_reset", { email: mailOnly });
+        authError = data.note || "If that inbox is on the account, a reset link is on the way.";
+        return false;
+      }
+      throw new Error("Paste a seat ticket to reclaim, or a recovery email to send a reset link.");
     }
 
     async function joinLeagueCall(action, fields) {
@@ -24462,19 +24628,79 @@ const html = `<!DOCTYPE html>
 
     function renderAppGate() {
       const invited = !!(redeemCode && String(redeemCode).trim());
-      const title = invited
-        ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
-        : (gateMode === "signup" ? "Create account" : "Sign in");
-      const go = invited
-        ? (gateMode === "signup" ? "Create account & join" : "Sign in & join")
-        : (gateMode === "signup" ? "Create account" : "Sign in");
+      const forgot = gateMode === "forgot";
+      const title = forgot
+        ? "Reset login"
+        : invited
+          ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
+          : (gateMode === "signup" ? "Create account" : "Sign in");
+      const go = forgot
+        ? "Reclaim seat"
+        : invited
+          ? (gateMode === "signup" ? "Create account & join" : "Sign in & join")
+          : (gateMode === "signup" ? "Create account" : "Sign in");
+      const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
+        + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
+        + "on your seat and send you a new CF- ticket. Paste it here, pick a username and a new password, "
+        + "and reclaim the team.</p>"
+        + '<label>Seat ticket<input id="forgotCode" name="invite" autocomplete="off"'
+        + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
+        + ' value="' + esc(redeemCode || "") + '"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<label>New username<input id="forgotUser" name="username" autocomplete="username"'
+        + ' autocapitalize="off" spellcheck="false"'
+        + ' placeholder="' + esc(gateSuggestedUser || "Username") + '"'
+        + ' value="' + esc(gateUsernameDraft || gateSuggestedUser || "") + '"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<label>New password<input id="forgotPass" name="password" type="password" autocomplete="new-password"'
+        + ' minlength="6" placeholder="At least 6 characters"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<label>Recovery email (optional)<input id="forgotRecover" name="email" type="email" autocomplete="email"'
+        + ' placeholder="For the next reset"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="submit" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
+        + (authBusy ? "Working…" : go) + "</button>"
+        + "</div></form>"
+        + '<form class="app-form" data-gate-form="1" action="#" method="post" style="margin-top:16px">'
+        + '<p class="caption" style="margin:0 0 8px">Or email a reset if you already saved a recovery inbox '
+        + "on this account.</p>"
+        + '<label>Recovery email<input id="forgotMail" name="reset-email" type="email" autocomplete="email"'
+        + ' placeholder="you@email.com"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="submit" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
+        + (authBusy ? "Working…" : "Email me a reset") + "</button>"
+        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + "</div></form>";
+      const signForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
+        + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
+        + ' autocapitalize="off" spellcheck="false"'
+        + ' placeholder="' + esc(gateSuggestedUser || "Username") + '"'
+        + ' value="' + esc(gateUsernameDraft) + '"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
+        + (gateMode === "signup" ? "new-password" : "current-password") + '"'
+        + ' minlength="6" placeholder="At least 6 characters — not the invite code"'
+        + (authBusy ? " disabled" : "") + " /></label>"
+        + (gateMode === "signup"
+          ? ('<label>Recovery email (optional)<input id="gateEmail" name="email" type="email" autocomplete="email"'
+            + ' placeholder="So you can reset later"'
+            + (authBusy ? " disabled" : "") + " /></label>")
+          : "")
+        + '<div class="app-actions">'
+        + '<button type="submit" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
+        + (authBusy ? "Working…" : go) + "</button>"
+        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + (joinError && invited ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></form>";
       return '<div class="app-shell gate-shell">'
         + '<div class="gate-brand">'
         + '<img src="data/ui/gate-logo.png?' + DATA_V + '" width="128" height="128"'
         + ' alt="Chuckle Fantasy" decoding="async" />'
         + "</div>"
         + '<h2 class="screen-h sr-only" tabindex="-1">' + esc(title) + "</h2>"
-        + (invited
+        + (invited && !forgot
           ? ('<p class="caption">Seat invite <code style="user-select:all">'
             + esc(String(redeemCode).toUpperCase()) + "</code>"
             + " — this is your <b>seat ticket</b>, not your account password.</p>"
@@ -24486,33 +24712,19 @@ const html = `<!DOCTYPE html>
               : '<p class="caption">Pick a username and a <b>new password</b> to claim your seat. '
                 + "Do not paste the invite code into the password field.</p>"))
           : "")
-        + (gateSuggestedUser && invited
+        + (gateSuggestedUser && invited && !forgot
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
             + "</b> — change it if you like.</p>")
           : "")
         + '<div class="app-card"><h3>' + title + "</h3>"
-        // Real <form> so password managers / iOS Keychain treat username+password as an
-        // account, not the CF- invite in the URL or the seat-code caption above.
-        + '<form class="app-form" data-gate-form="1" action="#" method="post">'
-        + '<label>Username<input id="gateUser" name="username" autocomplete="username"'
-        + ' autocapitalize="off" spellcheck="false"'
-        + ' placeholder="' + esc(gateSuggestedUser || "Username") + '"'
-        + ' value="' + esc(gateUsernameDraft) + '"'
-        + (authBusy ? " disabled" : "") + " /></label>"
-        + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
-        + (gateMode === "signup" ? "new-password" : "current-password") + '"'
-        + ' minlength="6" placeholder="At least 6 characters — not the invite code"'
-        + (authBusy ? " disabled" : "") + " /></label>"
-        + '<div class="app-actions">'
-        + '<button type="submit" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
-        + (authBusy ? "Working…" : go) + "</button>"
-        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
-        + (joinError && invited ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
-        + "</div></form>"
+        + (forgot ? forgotForm : signForm)
         + '<p class="caption" style="margin:12px 0 0">'
-        + (gateMode === "signup"
-          ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-          : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>')
+        + (forgot
+          ? '<button type="button" class="linkish" data-gate-mode="signin">Back to sign in</button>'
+          : (gateMode === "signup"
+            ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
+            : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>'
+              + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>'))
         + "</p></div>"
         + "</div>";
     }
@@ -24623,6 +24835,8 @@ const html = `<!DOCTYPE html>
               + (claimer ? " as " + esc(claimer) : "") + "."
               + esc(orphanNote) + "</p>"
               + '<div class="app-actions">'
+              + '<button type="button" class="chip" data-reset-login="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">Reset login</button>"
               + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
               + "</div>")
@@ -24681,8 +24895,8 @@ const html = `<!DOCTYPE html>
         + tabs
         + (rows || empty)
         + (tab === "claimed"
-          ? '<p class="caption" style="margin-top:12px">If a manager leaves, <b>Reissue for new manager</b>, then copy a fresh invite link from Unclaimed. '
-            + "Stale claims (no active membership) also need Reissue before you can reclaim your own seat.</p>"
+          ? '<p class="caption" style="margin-top:12px">Forgot username or password: tap <b>Reset login</b>, copy the new ticket from Unclaimed, and send it. They open Forgot on the sign-in screen and reclaim the seat. '
+            + "If a manager leaves for good, <b>Reissue for new manager</b> instead. Stale claims also need Reset or Reissue.</p>"
           : (!myMembership
             ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
             : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
@@ -24785,9 +24999,19 @@ const html = `<!DOCTYPE html>
           ? ('<h3 style="margin-top:14px;font-size:0.95rem">Your teams</h3>'
             + memList)
           : '<p class="caption">No claimed seats yet.</p>')
-        + '<div class="app-actions" style="margin-top:12px">'
+        + '<form class="app-form" data-profile-login="1" action="#" method="post" style="margin-top:12px">'
+        + '<label>Recovery email<input id="profileRecoverEmail" name="email" type="email" autocomplete="email"'
+        + ' placeholder="Real inbox for Forgot reset"'
+        + (profileBusy ? " disabled" : "") + " /></label>"
+        + '<label>New password<input id="profileNewPass" name="password" type="password" autocomplete="new-password"'
+        + ' minlength="6" placeholder="Leave blank to keep the current password"'
+        + (profileBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="submit" class="chip" data-profile-login-save="1"'
+        + (profileBusy ? " disabled" : "") + ">"
+        + (profileBusy ? "Saving…" : "Save login") + "</button>"
         + '<button type="button" class="chip" data-auth-signout="1">Sign out</button>'
-        + "</div></div>";
+        + "</div></form></div>";
     }
 
     function renderSettingsLeaguesTab() {
@@ -25583,6 +25807,11 @@ const html = `<!DOCTYPE html>
       if (counterForm) {
         e.preventDefault();
         ledgerCounterSave(counterForm.getAttribute("data-ledger-counter-form"));
+        return;
+      }
+      if (e.target && e.target.closest && e.target.closest("[data-profile-login]")) {
+        e.preventDefault();
+        saveProfileLogin().catch((err) => console.error(err));
         return;
       }
       if (!e.target || !e.target.closest || !e.target.closest("[data-gate-form]")) return;
@@ -26677,7 +26906,8 @@ const html = `<!DOCTYPE html>
       // App shell navigation (multi-league home / join / account).
       const gateModeBtn = e.target.closest("[data-gate-mode]");
       if (gateModeBtn) {
-        gateMode = gateModeBtn.dataset.gateMode === "signup" ? "signup" : "signin";
+        const next = gateModeBtn.dataset.gateMode;
+        gateMode = next === "signup" || next === "forgot" ? next : "signin";
         authError = "";
         focusNext = ".screen-h";
         render();
@@ -26720,6 +26950,12 @@ const html = `<!DOCTYPE html>
       const openCos = e.target.closest("[data-open-cosmetics]");
       if (openCos) {
         openCosmetics(openCos.getAttribute("data-open-cosmetics"));
+        return;
+      }
+      const profileLoginSave = e.target.closest("[data-profile-login-save]");
+      if (profileLoginSave) {
+        e.preventDefault();
+        saveProfileLogin().catch((err) => console.error(err));
         return;
       }
       const profileSave = e.target.closest("[data-profile-save]");
@@ -26825,6 +27061,11 @@ const html = `<!DOCTYPE html>
       const copyInviteLink = e.target.closest("[data-copy-invite-link]");
       if (copyInviteLink) {
         onCopyInviteLink(copyInviteLink.dataset.copyInviteLink).catch((err) => console.error(err));
+        return;
+      }
+      const resetLogin = e.target.closest("[data-reset-login]");
+      if (resetLogin) {
+        onReissueSeat(resetLogin.dataset.resetLogin, true).catch((err) => console.error(err));
         return;
       }
       const reissueSeat = e.target.closest("[data-reissue-seat]");
@@ -30064,6 +30305,16 @@ if (!inline.includes('let gateMode = "signin"')
   || !inline.includes("No account yet?")
   || !inline.includes('data-gate-mode="signup">Create an account</button>')) {
   throw new Error("cold landing must default to Sign in with a Create an account prompt");
+}
+if (!inline.includes('data-gate-mode="forgot"')
+  || !inline.includes("function onForgotSubmit(")
+  || !inline.includes("reclaim_seat")
+  || !inline.includes("request_reset")
+  || !inline.includes("Reset login")
+  || !inline.includes("Forgot username or password")
+  || !inline.includes('if (gateMode === "forgot")')
+  || !inline.includes("Email me a reset")) {
+  throw new Error("gate must offer Forgot username or password and reclaim via a new seat ticket");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");

@@ -5,6 +5,9 @@
 //
 // Actions:
 //   invite_preview   { code }               → public: team_name + suggested username (no auth)
+//   request_reset   { email | username }   → public: email a reset if recover_email is on file
+//   reclaim_seat    { code, username, password, recover_email? }
+//                   → public: unused CF- ticket sets a new login and claims the seat
 //   preview         { sleeper_league_id }
 //   create          { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
 //   rebuild         { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
@@ -138,6 +141,8 @@ async function sha256Hex(text: string) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+const AUTH_EMAIL_DOMAIN = "users.cuckle.invalid";
+
 /** Sleeper team name → valid app username (matches app_profiles shape). */
 function suggestUsername(teamName: string) {
   let s = String(teamName || "").trim().replace(/\s+/g, "");
@@ -145,6 +150,56 @@ function suggestUsername(teamName: string) {
   if (!s || !/^[A-Za-z0-9_]/.test(s)) s = ("team_" + s).replace(/[^A-Za-z0-9_.-]/g, "");
   if (s.length < 3) s = (s + "seat").slice(0, 32);
   return s.slice(0, 32);
+}
+
+function authEmailForUsername(username: string) {
+  return String(username || "").trim().toLowerCase() + "@" + AUTH_EMAIL_DOMAIN;
+}
+
+function cleanUsername(raw: unknown) {
+  let name = String(raw || "").trim().replace(/\s+/g, "");
+  name = name.replace(/[^A-Za-z0-9_.-]/g, "");
+  if (name && !/^[A-Za-z0-9_]/.test(name)) name = "_" + name;
+  return name.slice(0, 32);
+}
+
+function assertUsername(name: string) {
+  if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]{2,31}$/.test(name)) {
+    throw new Error("Username must be 3-32 characters: letters, numbers, and _ . - only");
+  }
+  return name;
+}
+
+function cleanRecoverEmail(raw: unknown) {
+  const email = String(raw || "").trim().toLowerCase();
+  if (!email) return null;
+  if (!/^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i.test(email)) {
+    throw new Error("Enter a real email, or leave it blank");
+  }
+  if (email.endsWith("@" + AUTH_EMAIL_DOMAIN)) {
+    throw new Error("Use a real inbox, not the sign-in username");
+  }
+  return email;
+}
+
+async function sendResetMail(to: string, link: string) {
+  const key = Deno.env.get("RESEND_API_KEY") || "";
+  const from = Deno.env.get("RESET_FROM_EMAIL") || "Cuckle <noreply@cuckle.app>";
+  if (!key || !to || !link) return false;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + key,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject: "Reset your Cuckle login",
+      text: "Open this link to set a new password:\n\n" + link + "\n\nIf you did not ask, ignore this.",
+    }),
+  });
+  return res.ok;
 }
 
 async function mintUnclaimed(
@@ -358,7 +413,7 @@ Deno.serve(async (req) => {
     }
     const code_hash = await sha256Hex(code);
     const { data: invite, error: invErr } = await admin.from("seat_invites")
-      .select("team_name, claimed_by, sleeper_league_id, sleeper_user_id")
+      .select("*")
       .eq("code_hash", code_hash)
       .maybeSingle();
     if (invErr) return json(500, { ok: false, error: invErr.message });
@@ -367,6 +422,7 @@ Deno.serve(async (req) => {
       .select("name")
       .eq("sleeper_league_id", invite.sleeper_league_id)
       .maybeSingle();
+    const prior = invite.prior_username != null ? String(invite.prior_username) : "";
     return json(200, {
       ok: true,
       claimed: !!invite.claimed_by,
@@ -374,7 +430,166 @@ Deno.serve(async (req) => {
       league_name: leagueRow && leagueRow.name ? leagueRow.name : null,
       sleeper_league_id: invite.sleeper_league_id,
       sleeper_user_id: invite.sleeper_user_id || null,
-      suggested_username: suggestUsername(invite.team_name),
+      prior_username: prior || null,
+      suggested_username: prior || suggestUsername(invite.team_name),
+    });
+  }
+
+  // Public: email a reset link when recover_email is on file. Always ok so we do not leak.
+  if (action === "request_reset") {
+    const emailIn = String(body.email || "").trim().toLowerCase();
+    const userIn = cleanUsername(body.username);
+    let emailed = false;
+    try {
+      let profile: { auth_user_id: string; username: string; recover_email: string | null } | null = null;
+      if (emailIn) {
+        const { data } = await admin.from("app_profiles")
+          .select("auth_user_id, username, recover_email")
+          .ilike("recover_email", emailIn)
+          .maybeSingle();
+        profile = data || null;
+      } else if (userIn) {
+        const { data } = await admin.from("app_profiles")
+          .select("auth_user_id, username, recover_email")
+          .eq("username", userIn)
+          .maybeSingle();
+        profile = data || null;
+      }
+      const to = profile && profile.recover_email ? String(profile.recover_email).trim().toLowerCase() : "";
+      if (profile && to) {
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: "recovery",
+          email: authEmailForUsername(profile.username),
+        });
+        const link = !linkErr && linkData && linkData.properties
+          ? (linkData.properties.action_link || "")
+          : "";
+        if (link) emailed = await sendResetMail(to, link);
+      }
+    } catch {
+      emailed = false;
+    }
+    return json(200, {
+      ok: true,
+      emailed,
+      note: emailed
+        ? "If that inbox is on the account, a reset link is on the way."
+        : "If nothing arrives, ask your commissioner to tap Reset login and send you a new seat ticket.",
+    });
+  }
+
+  // Public: unused CF- ticket sets login and claims the seat (Forgot / reclaim).
+  if (action === "reclaim_seat") {
+    let username: string;
+    let recoverEmail: string | null;
+    try {
+      username = assertUsername(cleanUsername(body.username));
+      recoverEmail = cleanRecoverEmail(body.recover_email);
+    } catch (err) {
+      return json(400, { ok: false, error: String(err && (err as Error).message || err) });
+    }
+    const password = String(body.password || "");
+    const code = String(body.code || "").trim().toUpperCase();
+    if (!code || code.length < 8) {
+      return json(400, { ok: false, error: "Enter the seat ticket from your commissioner" });
+    }
+    if (password.length < 6) {
+      return json(400, { ok: false, error: "Password must be at least 6 characters" });
+    }
+    const code_hash = await sha256Hex(code);
+    const { data: invite, error: invErr } = await admin.from("seat_invites")
+      .select("*")
+      .eq("code_hash", code_hash)
+      .maybeSingle();
+    if (invErr) return json(500, { ok: false, error: invErr.message });
+    if (!invite) return json(404, { ok: false, error: "Unknown or expired seat ticket" });
+    if (invite.claimed_by) {
+      return json(409, {
+        ok: false,
+        error: "This ticket was already used. Ask your commissioner to tap Reset login on your seat and send you the new ticket.",
+      });
+    }
+
+    const priorId = invite.prior_auth_user_id ? String(invite.prior_auth_user_id) : "";
+    const priorName = invite.prior_username ? String(invite.prior_username) : "";
+    const { data: taken } = await admin.from("app_profiles")
+      .select("auth_user_id, username")
+      .eq("username", username)
+      .maybeSingle();
+
+    let userId = "";
+    const reusePrior = !!(priorId && (
+      (taken && taken.auth_user_id === priorId)
+      || (!taken && priorName && priorName.toLowerCase() === username.toLowerCase())
+    ));
+    if (taken && !reusePrior) {
+      return json(409, { ok: false, error: "That username is taken — pick another" });
+    }
+    try {
+      if (reusePrior) {
+        userId = priorId;
+        const { error: upErr } = await admin.auth.admin.updateUserById(userId, {
+          password,
+          email: authEmailForUsername(username),
+          email_confirm: true,
+          user_metadata: { username },
+        });
+        if (upErr) return json(500, { ok: false, error: "Could not reset that login: " + upErr.message });
+        const { error: profErr } = await admin.from("app_profiles").update({
+          username,
+          recover_email: recoverEmail,
+        }).eq("auth_user_id", userId);
+        if (profErr) {
+          return json(500, { ok: false, error: "Could not update profile: " + profErr.message });
+        }
+      } else {
+        const { data: created, error: crErr } = await admin.auth.admin.createUser({
+          email: authEmailForUsername(username),
+          password,
+          email_confirm: true,
+          user_metadata: { username },
+        });
+        if (crErr || !created || !created.user) {
+          return json(500, { ok: false, error: crErr ? crErr.message : "Could not create login" });
+        }
+        userId = created.user.id;
+        const { error: profErr } = await admin.from("app_profiles").insert({
+          auth_user_id: userId,
+          username,
+          recover_email: recoverEmail,
+        });
+        if (profErr) {
+          return json(500, { ok: false, error: "Could not save profile: " + profErr.message });
+        }
+      }
+    } catch (err) {
+      return json(500, { ok: false, error: String(err && (err as Error).message || err) });
+    }
+
+    const { data, error } = await admin.rpc("redeem_seat_invite", {
+      p_code_hash: code_hash,
+      p_auth_user_id: userId,
+    });
+    if (error) {
+      const msg = String(error.message || "");
+      if (msg.includes("already have a seat in this league")) {
+        return json(409, {
+          ok: false,
+          error: "That login already has a seat in this league. Sign in, or pick a new username.",
+        });
+      }
+      return json(500, { ok: false, error: msg || "Could not reclaim that seat" });
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    return json(200, {
+      ok: true,
+      username,
+      league: row || {
+        sleeper_league_id: invite.sleeper_league_id,
+        team_name: invite.team_name,
+        sleeper_user_id: invite.sleeper_user_id,
+      },
+      note: "Seat reclaimed. Sign in with the new username and password.",
     });
   }
 
@@ -769,16 +984,31 @@ Deno.serve(async (req) => {
       return json(500, { ok: false, error: "Could not clear membership: " + delErr.message });
     }
 
+    let priorUsername = "";
+    if (invite.claimed_by) {
+      const { data: priorProf } = await admin.from("app_profiles")
+        .select("username")
+        .eq("auth_user_id", invite.claimed_by)
+        .maybeSingle();
+      priorUsername = (priorProf && priorProf.username) || "";
+    }
     const code = makeCode();
     const code_hash = await sha256Hex(code);
-    const { error: updErr } = await admin.from("seat_invites").update({
+    const resetPatch = {
       code_hash,
       code_plain: code,
       claimed_by: null,
       claimed_at: null,
       created_by: user.id,
       team_name: invite.team_name,
-    }).eq("id", invite.id);
+      prior_auth_user_id: invite.claimed_by,
+      prior_username: priorUsername || invite.prior_username || null,
+    };
+    let { error: updErr } = await admin.from("seat_invites").update(resetPatch).eq("id", invite.id);
+    if (updErr && /prior_/i.test(updErr.message || "")) {
+      const { prior_auth_user_id: _a, prior_username: _b, ...legacy } = resetPatch;
+      ({ error: updErr } = await admin.from("seat_invites").update(legacy).eq("id", invite.id));
+    }
     if (updErr) {
       return json(500, { ok: false, error: "Could not mint new invite: " + updErr.message });
     }

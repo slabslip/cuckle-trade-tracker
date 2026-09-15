@@ -2,11 +2,12 @@
 /**
  * Written weekly tape from Sleeper matchups. One row per scored team-week.
  * Point-band titles unlock from regular-season weeks only. Playoff weeks stay
- * on the tape (`phase: "playoff"`) for a later batch.
+ * on the tape (`phase: "playoff"`). `hunt` is true only while that seat is
+ * still on the winners-bracket path to the title.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { isSleeperLeagueId, leagueRawDir, setLeagueId, sleeperGet, writeJson } from "./lib.mjs";
-import { writeWeekScoreUi } from "./lib/week-score-lists.mjs";
+import { huntByWeekFromBracket, huntByWeekJson, writeWeekScoreUi } from "./lib/week-score-lists.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -58,17 +59,32 @@ for (const lg of leagues) {
   if (liveSeason && season === liveSeason && Number.isFinite(liveWeek)) {
     last = Math.max(0, liveWeek - 1);
   }
-  seasons.push({ season, league_id: leagueId, playoff_week_start: pws });
+  let wb = [];
+  try {
+    const raw = await sleeperGet(`/league/${leagueId}/winners_bracket`);
+    if (Array.isArray(raw)) wb = raw;
+  } catch (err) {
+    console.warn(`winners_bracket ${leagueId} ${season}:`, err && err.message ? err.message : err);
+  }
+  const huntWeek = huntByWeekFromBracket(wb, pws);
+  seasons.push({
+    season,
+    league_id: leagueId,
+    playoff_week_start: pws,
+    hunt_by_week: huntByWeekJson(wb, pws),
+  });
   for (let week = 1; week <= last; week++) {
     const rows = await matchupsFor(leagueId, week);
     const kept = [];
     const phase = week < pws ? "regular" : "playoff";
+    const huntSet = huntWeek[week] || huntWeek[String(week)];
     for (const m of rows) {
       const pts = Number(m && m.points);
       if (!Number.isFinite(pts) || pts <= 0) continue;
       const rid = m.roster_id;
       const uid = ownerBy[`${leagueId}:${rid}`] || null;
       if (!uid) continue;
+      const hunt = phase === "regular" || !!(huntSet && huntSet.has(Number(rid)));
       kept.push({
         season,
         league_id: leagueId,
@@ -77,6 +93,7 @@ for (const lg of leagues) {
         user_id: uid,
         points: Math.round(pts * 100) / 100,
         phase,
+        hunt,
         playoff_week_start: pws,
       });
     }
@@ -94,12 +111,14 @@ scores.sort((a, b) => {
 
 const regular = scores.filter((s) => s.phase === "regular");
 const playoff = scores.filter((s) => s.phase === "playoff");
+const playoffHunt = playoff.filter((s) => s.hunt === true);
 const book = {
-  v: 2,
+  v: 3,
   as_of: new Date().toISOString().slice(0, 10),
   n: scores.length,
   n_regular: regular.length,
   n_playoff: playoff.length,
+  n_playoff_hunt: playoffHunt.length,
   seasons,
   scores,
 };
@@ -118,7 +137,7 @@ for (const s of regular) {
 const high0 = (lists.all && lists.all.high && lists.all.high[0]) || {};
 const low0 = (lists.all && lists.all.low && lists.all.low[0]) || {};
 console.log(
-  `weekly_scores.json ${scores.length} team-weeks (${regular.length} regular / ${playoff.length} playoff), `
+  `weekly_scores.json ${scores.length} team-weeks (${regular.length} regular / ${playoff.length} playoff / ${playoffHunt.length} title hunt), `
   + `regular min ${min} max ${max}, seats ${Object.keys(byUid).length}`,
 );
 console.log(

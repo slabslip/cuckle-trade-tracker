@@ -18,6 +18,8 @@ function line(rows) {
     `${i + 1}. ${r.name} ${r.season} W${r.week} ${r.phase} ${r.points}`
   ).join("\n");
 }
-console.log(`week-scores.json n=${book.n} regular=${book.n_regular} playoff=${book.n_playoff}`);
+console.log(
+  `week-scores.json n=${book.n} regular=${book.n_regular} playoff=${book.n_playoff} hunt=${book.n_playoff_hunt}`,
+);
 console.log("HIGHEST\n" + line(book.all.high));
 console.log("LOWEST\n" + line(book.all.low));

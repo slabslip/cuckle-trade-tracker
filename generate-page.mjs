@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmredraft20260915043000";
+    const DATA_V = "gmredraft20260915054500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4220,7 +4220,7 @@ const html = `<!DOCTYPE html>
       { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
-      { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks ever." },
+      { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks still hunting the title." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -5456,7 +5456,7 @@ const html = `<!DOCTYPE html>
 
     function weekScoreLine(r) {
       if (!r) return "";
-      const phase = r.phase === "playoff" ? "playoff" : "regular";
+      const phase = r.phase === "playoff" ? "title hunt" : "regular";
       return (r.season || "") + " · week " + (r.week || "") + " · " + phase;
     }
 
@@ -5510,7 +5510,7 @@ const html = `<!DOCTYPE html>
             : "No scored team weeks on tape yet.",
           who: spec.lab,
           print: high ? weekScorePts(high) : "—",
-          because: "Highest and lowest team weeks ever.",
+          because: "Highest and lowest team weeks still hunting the title.",
           shareKind: "title",
           shareId: "",
         };
@@ -6866,7 +6866,7 @@ const html = `<!DOCTYPE html>
           ? "This season first-round draftees still on that roster."
           : "Who is sitting on future firsts.";
       }
-      else if (id === "week_scores") caption = "Highest five and lowest five team weeks on tape. Regular, playoff, or all.";
+      else if (id === "week_scores") caption = "Highest five and lowest five team weeks. Playoff is championship hunt only — consolation and leftover weeks are out.";
       else if (id === "forever") {
         caption = leagueFormat().kind === "redraft"
           ? "Still on the team that drafted them this season."
@@ -29399,7 +29399,9 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptPortalRows").includes("Lowest weeks")
     || !fnSrc("receiptDoorFilterHtml").includes('id === "week_scores"')
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
-    || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")) {
+    || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")
+    || !inline.includes("championship hunt only")
+    || !inline.includes("title hunt")) {
     throw new Error("Week scores door must list highest and lowest team weeks from week-scores.json");
   }
   if (!inline.includes("function formatLensOrT0(")

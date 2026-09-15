@@ -66,7 +66,7 @@ four history doors.
 | `passed_around` | Passed around |
 | `least_traded` | Least traded (catalog only) |
 | `forever` | Never left (catalog only) |
-| `week_scores` | Week scores — highest / lowest five team weeks |
+| `week_scores` | Week scores — highest / lowest five team weeks (playoff = title hunt) |
 | `past_champions` | Who won the year |
 | `widest_clock` | Same smash/bust if you change the question (catalog only) |
 | `seat_run` | Who has been on a heater / cold streak on tape (catalog only) |

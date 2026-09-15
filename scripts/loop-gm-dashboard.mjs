@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Twelve dashboard revision loops for Gm 2026 LLJ.
- * Each loop is one law. Fail fast with the loop number.
+ * Twelve dashboard revision loops for Gm 2026 LLJ, then hunt-week
+ * laws and the dataset loops. Each loop is one law. Fail fast.
  */
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -83,5 +83,7 @@ loop(12, page.includes("Cuckle trade calculator") && page.includes("data/ui/calc
   "Cuckle door and title stay the default; DATA_V present");
 
 console.log("PASS 12 Gm dashboard loops");
+const hunt = spawnSync(process.execPath, [new URL("test-week-score-hunt.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (hunt.status) process.exit(hunt.status);
 const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (more.status) process.exit(more.status);

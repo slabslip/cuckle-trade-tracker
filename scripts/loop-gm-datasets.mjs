@@ -101,13 +101,17 @@ loop(14, (league.player_lists.homesteaders || []).length === 5
   && (league.player_lists.most_traded || []).length === 5
   && (league.player_lists.least_traded || []).length === 5,
   "most/least/homestead lists are five-deep");
-loop(15, weekly.n === 216 && weekly.n_regular === 168 && weekly.n_playoff === 48
-  && (weekly.scores || []).every((s) => s.season === "2025"),
-  "weekly tape is the complete 2025 season (216 team-weeks)");
-loop(16, weeks.v >= 1 && weeks.n === 216
-  && weeks.all && weeks.all.high && weeks.all.high[0] && weeks.all.high[0].name === "Biff34"
-  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].name === "JnastyGBE300",
-  "week-scores door lists Biff34 172.08 high and Jnasty 34.82 low");
+loop(15, weekly.v >= 3 && weekly.n === weekly.n_regular + weekly.n_playoff
+  && weekly.n_regular >= 180 && weekly.n_playoff === 48
+  && (weekly.scores || []).filter((s) => s.season === "2025").length === 216
+  && (weekly.scores || []).filter((s) => s.season === "2026").length >= 12
+  && (weekly.scores || []).filter((s) => s.season === "2026").every((s) => s.phase === "regular"),
+  "weekly tape has complete 2025 plus in-season 2026 regular weeks");
+loop(16, weeks.v >= 2 && weeks.n >= 228
+  && weeks.all && weeks.all.high && weeks.all.high[0] && weeks.all.high[0].points >= 177.96
+  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].name === "JnastyGBE300"
+  && weeks.all.low[0].points === 34.82 && weeks.all.low[0].phase === "regular",
+  "week-scores high is a real scored week; low is Jnasty 34.82 regular");
 loop(17, (calc.players || []).length >= 180
   && Object.keys(calcOwners).length === 12
   && Object.keys(calcOwners).every((id) => rosterOwners.has(id))
@@ -167,5 +171,21 @@ loop(31, jnastyDir && jnastyDir.label === "Parked" && (jnastyDir.holes || []).le
 const biffDir = (dir.seats || []).find((s) => s.name === "Biff34");
 loop(32, biffDir && biffDir.label === "Win-now" && !(biffDir.holes || []).includes("QB"),
   "Biff34 (champ, 1QB roster) is Win-now without a fake QB hole");
+loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 10
+  && (weekly.scores || []).filter((s) => s.phase === "playoff" && s.hunt).length === 10
+  && (weekly.scores || []).filter((s) => s.phase === "playoff" && !s.hunt).length === 38
+  && weeks.n_playoff_hunt === 10
+  && (weeks.playoff.high || []).every((r) => r.hunt)
+  && (weeks.playoff.low || []).every((r) => r.hunt)
+  && (weeks.all.low || []).every((r) => r.phase !== "playoff" || r.hunt)
+  && !(weeks.all.low || []).some((r) => r.week === 18)
+  && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16")
+  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58)
+  && weeks.playoff.high[0] && weeks.playoff.high[0].name === "Biff34" && weeks.playoff.high[0].points === 163.38
+  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "JnastyGBE300" && weeks.playoff.low[0].points === 85.28,
+  "playoff lists are championship hunt only — consolation / week 18 leftovers are out");
+loop(34, page.includes("championship hunt only") && page.includes("title hunt")
+  && page.includes("still hunting the title"),
+  "Week scores copy drops out-of-hunt playoff weeks");
 
-console.log("PASS 32 Gm dataset loops");
+console.log("PASS 34 Gm dataset loops");

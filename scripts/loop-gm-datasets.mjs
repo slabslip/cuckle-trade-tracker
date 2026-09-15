@@ -201,8 +201,11 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
   && page.includes("Unlock ESPN history")
   && page.includes("espn_s2")
   && page.includes("ESPN_SWID")
-  && page.includes("unlock in Settings"),
-  "Settings lists the ESPN cookie unlock steps");
+  && page.includes("unlock in Settings")
+  && page.includes("Do not use the ESPN app")
+  && page.includes("ESPN league ID (all years)")
+  && page.includes("data-edit-league-ids"),
+  "Settings lists the ESPN cookie unlock steps and labeled IDs");
 
 const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
 const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");

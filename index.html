@@ -907,6 +907,11 @@
       border-top: 1px solid var(--line);
     }
     .join-src:first-child { border-top: 0; padding-top: 0; }
+    .join-src-kind {
+      font-size: 0.75rem; font-weight: 650; color: var(--dim);
+      letter-spacing: 0.02em;
+    }
+    .league-tape .app-actions { margin-top: 8px; }
     .app-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
     .app-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; flex: 1 1 100%; }
     /* Settings → Profile: square crop → circular preview used as seat flair app-wide. */
@@ -15899,30 +15904,56 @@
     function calcDoorSrc() {
       return (isGmLeague() ? "data/ui/gm-calc-door.png" : "data/ui/calc-door.png") + "?" + DATA_V;
     }
+    function isOwnedLeague(lid) {
+      return (ownedLeagues || []).some(function (o) {
+        return String(o.sleeper_league_id) === String(lid || "");
+      });
+    }
+    function espnHistoryLine(p) {
+      const id = (p && p.espn_league_id) || GM_ESPN_LEAGUE_ID;
+      if (p && p.espn_authorized && (p.espn_seasons || []).length) {
+        return "ESPN " + (p.espn_seasons || []).join("/");
+      }
+      return "ESPN " + id + " not pulled · unlock in Settings";
+    }
     function leagueTapeHtml() {
       const p = league && league.providers;
       if (!isGmLeague() || !p) return "";
       const sl = (p.sleeper_seasons || []).length
         ? ("Sleeper " + (p.sleeper_seasons || []).join("/"))
         : "Sleeper 2025/2026";
-      const espn = p.espn_authorized
-        ? ("ESPN " + ((p.espn_seasons || []).join("/") || p.espn_league_id || "history"))
-        : ("ESPN " + (p.espn_league_id || "35763180") + " locked · unlock in Settings");
-      return '<p class="caption league-tape">' + esc(sl + " · " + espn) + "</p>";
+      const espn = espnHistoryLine(p);
+      const actions = isOwnedLeague(GM_LEAGUE_ID)
+        ? ('<div class="app-actions">'
+          + '<button type="button" class="chip" data-edit-league-ids="' + GM_LEAGUE_ID + '">Edit IDs</button>'
+          + '<button type="button" class="chip" data-rebuild-league="' + GM_LEAGUE_ID + '"'
+          + (joinBusy ? " disabled" : "") + ">"
+          + (joinBusy ? "Working…" : "Rebuild dashboard") + "</button>"
+          + "</div>")
+        : "";
+      return '<div class="league-tape">'
+        + '<p class="caption">' + esc(sl + " · " + espn) + "</p>"
+        + actions
+        + "</div>";
     }
     function espnUnlockStepsHtml() {
       return '<div class="app-card" aria-label="Unlock ESPN history">'
         + "<h3>Unlock ESPN history</h3>"
-        + '<p class="caption">Week scores are Sleeper 2025-2026 only until this lands. ESPN 35763180 is private. A manager who left stays on that ESPN team slot and attaches to the current Sleeper seat. Consolation weeks still do not set the low.</p>'
+        + '<p class="caption">Do not use the ESPN app. One ESPN ID pulls every year that league has (2020–2024 when cookies work). View-public on ESPN still 401s the JSON API.</p>'
         + '<ol class="caption" style="padding-left:1.2rem;margin:8px 0">'
-        + "<li>On a computer, open that ESPN league in Chrome while signed in.</li>"
+        + "<li>Cookies once: on a computer, open that ESPN league in Chrome while signed in.</li>"
         + "<li>Press F12. Open Application (Chrome) or Storage (Firefox). Cookies → fantasy.espn.com.</li>"
         + "<li>Copy the value of <b>espn_s2</b>. Copy the value of <b>SWID</b> (keep the curly braces).</li>"
-        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Add <b>ESPN_S2</b> and <b>ESPN_SWID</b>.</li>"
-        + "<li>Come back here and tap <b>Rebuild dashboard</b>. Older years merge onto current Sleeper names.</li>"
+        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Add <b>ESPN_S2</b> and <b>ESPN_SWID</b> if they are not already there.</li>"
+        + "<li>Stay in Cuckle. Tap <b>Rebuild dashboard</b> on Home or Settings → Leagues. Do not look for a rebuild on ESPN.</li>"
         + "</ol>"
         + '<p class="caption">Laptop without GitHub: export ESPN_S2 and ESPN_SWID, then run node build.mjs 1389723418827460608 --skip-snapshot.</p>'
         + "</div>";
+    }
+    function openLeagueIds(lid) {
+      const id = String(lid || GM_LEAGUE_ID).trim();
+      applyJoinSources(sourcesForLeague(id), id);
+      openSettings("leagues");
     }
     const LEAGUE_KEY = "cuckle.active_league.v1";
     const MEMBERSHIPS_KEY = "cuckle.memberships.v1";
@@ -16012,7 +16043,9 @@
       return syncJoinIdsFromSources().sleeper.slice(1);
     }
     function addJoinSource(kind) {
-      joinSources = (joinSources || []).concat([{ kind: kind === "espn" ? "espn" : "sleeper", id: "" }]);
+      const nextKind = kind === "espn" ? "espn" : "sleeper";
+      if (nextKind === "espn" && (joinSources || []).some(function (r) { return r.kind === "espn"; })) return;
+      joinSources = (joinSources || []).concat([{ kind: nextKind, id: "" }]);
     }
     function cutJoinSource(i) {
       const next = (joinSources || []).slice();
@@ -16063,11 +16096,24 @@
       if (p.espn_league_id) rows.push({ kind: "espn", id: String(p.espn_league_id) });
       return rows.length > 1 || p.espn_league_id ? rows : null;
     }
+    function joinRowsHaveTape(rows, lid) {
+      if (!rows || !rows.length) return false;
+      const extras = rows.some(function (r) {
+        return (r.kind || "sleeper") === "sleeper" && r.id && r.id !== String(lid);
+      });
+      const espn = rows.some(function (r) { return r.kind === "espn" && r.id; });
+      return extras || espn;
+    }
     function sourcesForLeague(lid) {
       const id = String(lid || "").trim();
       const saved = id ? loadJoinBook()[id] : null;
+      const ready = rowsFromReady(id);
+      const fromP = rowsFromProviders(id, league && league.providers);
+      if (joinRowsHaveTape(saved, id)) return saved.slice();
+      if (ready) return ready;
+      if (fromP) return fromP;
       if (saved && saved.length) return saved.slice();
-      return rowsFromReady(id) || [{ kind: "sleeper", id: id }];
+      return [{ kind: "sleeper", id: id }];
     }
     function applyJoinSources(rows, lid) {
       joinSources = (rows && rows.length) ? rows.slice() : [{ kind: "sleeper", id: lid || "" }];
@@ -16367,6 +16413,8 @@
           + (isComm
             ? '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
               + '">Manage invites</button>'
+              + '<button type="button" class="linkish" data-edit-league-ids="' + esc(m.sleeper_league_id)
+              + '">IDs & pull</button>'
             : "")
           + "</div>";
       }).join("");
@@ -16379,6 +16427,8 @@
           + " · claim your seat to open the meter</span></div></div>"
           + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
           + '">Invites & claim seat</button>'
+          + '<button type="button" class="chip" data-edit-league-ids="' + esc(o.sleeper_league_id)
+          + '">IDs & pull</button>'
           + "</div>";
       }).join("");
       const body = rows + ownedOnly + readyAddBooksHtml();
@@ -17907,9 +17957,16 @@
       if (!lid || joinBusy) return;
       readJoinSourcesFromDom(lid);
       let ids = syncJoinIdsFromSources();
-      if (!ids.sleeper.length) {
+      if (!ids.sleeper.length || (lid === GM_LEAGUE_ID && !joinEspnId)) {
         applyJoinSources(sourcesForLeague(lid), lid);
         ids = syncJoinIdsFromSources();
+      }
+      let extra = ids.sleeper.filter(function (id) { return id !== lid; });
+      let espn = joinEspnId || "";
+      const ready = readyAddBook(lid);
+      if (ready) {
+        if (!espn && ready.espn) espn = String(ready.espn);
+        if (!extra.length && ready.sleeper_extra) extra = ready.sleeper_extra.slice();
       }
       saveJoinSources(lid, joinSources);
       joinBusy = true;
@@ -17919,12 +17976,16 @@
       try {
         const data = await joinLeagueCall("rebuild", {
           sleeper_league_id: lid,
-          sleeper_extra_ids: ids.sleeper.filter(function (id) { return id !== lid; }),
-          espn_league_id: joinEspnId || undefined,
+          sleeper_extra_ids: extra,
+          espn_league_id: espn || undefined,
         });
-        settingsCopyNote = data && data.sync_dispatched
-          ? "Dashboard rebuild started. The meter refreshes when league-sync finishes."
-          : "Rebuild asked. If GitHub PAT is unset on join-league, run node build.mjs " + lid + " on a laptop.";
+        if (data && data.sync_dispatched) {
+          settingsCopyNote = "Pull started. Stay on Cuckle — ESPN years land when league-sync finishes.";
+        } else if (data && data.hint && String(data.hint).indexOf("GITHUB_PAT") >= 0) {
+          settingsCopyNote = "IDs saved. GitHub did not start the pull (PAT missing on join-league). Run Actions → league-sync or a laptop build.";
+        } else {
+          settingsCopyNote = "IDs saved. Pull did not start. Check GitHub Actions → league-sync.";
+        }
         if (data && data.league) joinPreview = data.league;
       } catch (err) {
         joinError = (err && err.message) || "Could not rebuild that league.";
@@ -24753,12 +24814,17 @@
     function joinSourceRowHtml(row, i, rows) {
       const n = (rows && rows.length) || (joinSources || []).length;
       const kind = (row && row.kind) === "espn" ? "espn" : "sleeper";
+      const hint = kind === "sleeper" ? sleeperYearHint((row && row.id) || "") : "";
+      const label = kind === "espn"
+        ? "ESPN league ID (all years)"
+        : (hint ? ("Sleeper " + hint + " ID") : "Sleeper season ID");
+      const ph = kind === "espn" ? "One ID · every ESPN year" : (hint ? ("Sleeper " + hint) : "Sleeper league ID");
       return '<div class="join-src" data-join-src="' + i + '">'
-        + receiptLookSelect("Source", "data-join-src-kind",
-          [["sleeper", "Sleeper"], ["espn", "ESPN"]], kind)
-        + '<label class="receipt-look"><span>League ID</span>'
+        + '<input type="hidden" data-join-src-kind="1" value="' + kind + '" />'
+        + '<span class="join-src-kind">' + esc(kind === "espn" ? "ESPN" : "Sleeper") + "</span>"
+        + '<label class="receipt-look"><span>' + esc(label) + "</span>"
         + '<input data-join-src-id="1" inputmode="numeric" autocomplete="off"'
-        + ' placeholder="' + (kind === "espn" ? "ESPN league ID" : "Sleeper league ID") + '"'
+        + ' placeholder="' + esc(ph) + '"'
         + ' value="' + esc((row && row.id) || "") + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + (n > 1
@@ -24767,17 +24833,25 @@
         + "</div>";
     }
 
+    function sleeperYearHint(id) {
+      if (String(id) === GM_LEAGUE_ID) return "2026";
+      if (String(id) === "1253382148073725952") return "2025";
+      return "";
+    }
+
     function joinIdsFormHtml(lid) {
       const boxId = lid || "new";
       const rows = lid && lid !== "new" ? sourcesForLeague(lid) : (joinSources || [{ kind: "sleeper", id: "" }]);
       const forAttr = lid && lid !== "new" ? lid : "";
+      const hasEspn = rows.some(function (r) { return r.kind === "espn"; });
       return '<div class="app-form" data-join-src-box="' + esc(boxId) + '">'
+        + '<p class="caption">Sleeper: one ID per year. ESPN: one ID for every year.</p>'
         + rows.map(function (row, i) { return joinSourceRowHtml(row, i, rows); }).join("")
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-join-src-add="sleeper" data-join-src-for="'
         + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add Sleeper ID</button>"
-        + '<button type="button" class="chip" data-join-src-add="espn" data-join-src-for="'
-        + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add ESPN ID</button>"
+        + (hasEspn ? "" : ('<button type="button" class="chip" data-join-src-add="espn" data-join-src-for="'
+          + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add ESPN ID</button>"))
         + "</div></div>";
     }
 
@@ -24785,7 +24859,7 @@
       if (!joinSources || !joinSources.length) joinSources = [{ kind: "sleeper", id: joinLeagueId || "" }];
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
-        + '<p class="caption">First Sleeper ID is the dashboard key. Add each other Sleeper season and each ESPN ID — they merge into one book and league-sync builds the dashboard.</p>'
+        + '<p class="caption">First Sleeper ID is the dashboard key. Add each other Sleeper year. ESPN is one ID for every year — do not add 2020, 2021, 2022 separately.</p>'
         + (isStoreShell()
           ? '<p class="caption">This TestFlight build features Cuckle. Another Sleeper ID still registers. A first-year league stays thin — no fake crowns.</p>'
           : "")
@@ -24894,8 +24968,8 @@
             : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
         + transferBlock
         + (L.sleeper_league_id
-          ? ('<div class="app-card" style="margin-top:12px"><h3>Merge IDs and build</h3>'
-            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
+          ? ('<div class="app-card" style="margin-top:12px"><h3>League IDs</h3>'
+            + '<p class="caption">Sleeper: one ID per year. ESPN: one ID for every year.</p>'
             + joinIdsFormHtml(L.sleeper_league_id)
             + '<div class="app-actions">'
             + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id) + '"'
@@ -25020,8 +25094,8 @@
             + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
             + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
             + "</p>"
-            + "<h3>Merge IDs and build</h3>"
-            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
+            + "<h3>League IDs</h3>"
+            + '<p class="caption">Sleeper: one ID per year. ESPN: one ID for every year.</p>'
             + joinIdsFormHtml(o.sleeper_league_id)
             + '<div class="app-actions">'
             + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
@@ -27021,6 +27095,12 @@
         cutJoinSource(joinCut.getAttribute("data-join-src-cut"));
         if (forId) saveJoinSources(forId, joinSources);
         render();
+        return;
+      }
+      const editIds = e.target.closest("[data-edit-league-ids]");
+      if (editIds) {
+        closeLeaguesDrawer(true);
+        openLeagueIds(editIds.getAttribute("data-edit-league-ids"));
         return;
       }
       const rebuildBtn = e.target.closest("[data-rebuild-league]");

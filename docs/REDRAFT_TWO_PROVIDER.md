@@ -37,10 +37,18 @@ does not set the low.
 
 ## 2. ESPN prior years — step by step
 
-ESPN league `35763180` is **private**. Without cookies the API returns 401,
-so Week scores can only use Sleeper 2025–2026. That is why every current
-low is a 2025 week. The import and franchise attach are already wired;
-they stay empty until the two cookies below are set.
+**Do not pull from the ESPN app or website.** There is no Rebuild there.
+
+One ESPN league ID (`35763180`) covers every year that league has. Do not
+add 2020, 2021, 2022 as separate IDs. Sleeper needs a new ID each year
+(2026 `1389723418827460608`, 2025 `1253382148073725952`).
+
+ESPN `35763180` is **private**. The JSON API returns 401 without cookies
+even when a season is set to view-public. The ESPN HTML office page can
+still load; that is not standings data. Week scores stay Sleeper
+2025–2026 until `league-sync` runs with `ESPN_S2` + `ESPN_SWID`. The
+import and franchise attach are already wired; they stay empty until
+that rebuild finishes.
 
 ### A. Copy the cookies (Chrome, computer)
 

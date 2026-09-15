@@ -732,8 +732,12 @@ Deno.serve(async (req) => {
   // ---- rebuild meter from listed IDs ----
   if (action === "rebuild") {
     const leagueId = String(body.sleeper_league_id || "").trim();
-    const espnId = String(body.espn_league_id || "").trim() || null;
-    const extraIds = cleanIdList(body.sleeper_extra_ids).filter((id) => id !== leagueId);
+    let espnId = String(body.espn_league_id || "").trim() || null;
+    let extraIds = cleanIdList(body.sleeper_extra_ids).filter((id) => id !== leagueId);
+    if (leagueId === "1389723418827460608") {
+      if (!espnId) espnId = "35763180";
+      if (!extraIds.length) extraIds = ["1253382148073725952"];
+    }
     if (!/^\d{6,64}$/.test(leagueId)) {
       return json(400, { ok: false, error: "Enter a valid Sleeper league ID (digits only)" });
     }
@@ -760,6 +764,8 @@ Deno.serve(async (req) => {
         espn_league_id: espnId || league.espn_league_id,
       },
       sync_dispatched: !!sync.ok,
+      github_status: sync.github_status ?? null,
+      hint: sync.ok ? null : (sync.skipped ? "join-league has no GITHUB_PAT" : "GitHub dispatch failed"),
     });
   }
 

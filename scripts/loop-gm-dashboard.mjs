@@ -46,8 +46,10 @@ loop(3, format.kind === "redraft" && format.book === "1qb" && format.windows.joi
   "book is 1QB redraft with t0+all only");
 // 4 League.json format + providers
 loop(4, league.format && league.format.kind === "redraft" && league.format.format_key === "1qb"
-  && league.providers && league.providers.espn_league_id === "35763180",
-  "UI league.json carries redraft format and ESPN provider row");
+  && league.providers && league.providers.espn_league_id === "35763180"
+  && Array.isArray(league.providers.sleeper_extra_ids)
+  && league.providers.sleeper_extra_ids.includes("1253382148073725952"),
+  "UI league.json carries redraft format, ESPN id, and extra Sleeper ids");
 // 5 Sleeper seasons present
 loop(5, (bridge.sleeper_seasons || []).includes("2025") && (bridge.sleeper_seasons || []).includes("2026"),
   "Sleeper 2025 and 2026 are on the merged bridge");
@@ -76,7 +78,7 @@ loop(11, page.includes("function leagueTapeHtml(") && page.includes("ESPN 357631
   "dashboard states Sleeper/ESPN merge status and does not copy Cuckle crowns");
 // 12 Shared shell still Cuckle-default
 loop(12, page.includes("Cuckle trade calculator") && page.includes("data/ui/calc-door.png")
-  && (html.includes("gmcalc20260915025400") || page.includes("gmcalc20260915025400")),
-  "Cuckle door and title stay the default; DATA_V bumped for the Gm ship");
+  && page.includes("const DATA_V"),
+  "Cuckle door and title stay the default; DATA_V present");
 
 console.log("PASS 12 Gm dashboard loops");

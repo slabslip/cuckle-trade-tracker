@@ -1187,6 +1187,10 @@ async function main() {
   // walk it already does, so do not try to compute it here.
   writeUi("members.json", members.map((m) => ({ user_id: m.user_id, name: m.canonical_name })));
   const bridge = readJson("provider_bridge.json", {}) || {};
+  const provFile = readJson("providers.json", {}) || {};
+  const extraIds = Array.isArray(provFile.sleeper_extra_ids)
+    ? provFile.sleeper_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : [];
   writeUi("league.json", {
     traders: leaderboard,
     drafters_rookie: draftersRookie,
@@ -1200,7 +1204,9 @@ async function main() {
       espn_seasons: bridge.espn_seasons || [],
       espn_authorized: !!bridge.espn_authorized,
       espn_reason: bridge.espn_reason || null,
-      espn_league_id: (readJson("providers.json", {}) || {}).espn_league_id || null,
+      sleeper_league_id: String(provFile.sleeper_league_id || LEAGUE_ID || ""),
+      sleeper_extra_ids: extraIds.filter((x) => x !== String(provFile.sleeper_league_id || LEAGUE_ID || "")),
+      espn_league_id: provFile.espn_league_id || null,
       mapped: bridge.mapped || 0,
     },
   });

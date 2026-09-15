@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmmerge20260915034000";
+    const DATA_V = "gmids20260915035000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15768,13 +15768,8 @@ const html = `<!DOCTYPE html>
     function fillReadyLeague(id) {
       const b = readyAddBook(id);
       if (!b) return false;
-      const rows = [{ kind: "sleeper", id: b.id }];
-      (b.sleeper_extra || []).forEach(function (extra) {
-        if (extra && extra !== b.id) rows.push({ kind: "sleeper", id: String(extra) });
-      });
-      if (b.espn) rows.push({ kind: "espn", id: String(b.espn) });
-      joinSources = rows;
-      syncJoinIdsFromSources();
+      const rows = rowsFromReady(b.id) || [{ kind: "sleeper", id: b.id }];
+      applyJoinSources(rows, b.id);
       pendingAddLeague = b.id;
       return true;
     }
@@ -15925,6 +15920,103 @@ const html = `<!DOCTYPE html>
       next.splice(Number(i) || 0, 1);
       joinSources = next.length ? next : [{ kind: "sleeper", id: "" }];
       syncJoinIdsFromSources();
+    }
+    const JOIN_SOURCES_KEY = "cuckle.join_sources.v1";
+    function loadJoinBook() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(JOIN_SOURCES_KEY) || "{}");
+        return raw && typeof raw === "object" ? raw : {};
+      } catch (err) {
+        return {};
+      }
+    }
+    function saveJoinSources(lid, rows) {
+      const id = String(lid || "").trim();
+      if (!id) return;
+      const book = loadJoinBook();
+      const kept = (rows || []).map(function (row) {
+        return {
+          kind: (row && row.kind) === "espn" ? "espn" : "sleeper",
+          id: String((row && row.id) || "").trim(),
+        };
+      }).filter(function (row) { return row.id; });
+      book[id] = kept.length ? kept : [{ kind: "sleeper", id: id }];
+      try { localStorage.setItem(JOIN_SOURCES_KEY, JSON.stringify(book)); } catch (err) { /* private */ }
+    }
+    function rowsFromReady(lid) {
+      const b = readyAddBook(lid);
+      if (!b) return null;
+      const rows = [{ kind: "sleeper", id: b.id }];
+      (b.sleeper_extra || []).forEach(function (extra) {
+        if (extra && extra !== b.id) rows.push({ kind: "sleeper", id: String(extra) });
+      });
+      if (b.espn) rows.push({ kind: "espn", id: String(b.espn) });
+      return rows;
+    }
+    function rowsFromProviders(lid, p) {
+      if (!p) return null;
+      const rows = [{ kind: "sleeper", id: String(lid || "") }];
+      (p.sleeper_extra_ids || []).forEach(function (x) {
+        const id = String(x || "").trim();
+        if (id && id !== String(lid)) rows.push({ kind: "sleeper", id: id });
+      });
+      if (p.espn_league_id) rows.push({ kind: "espn", id: String(p.espn_league_id) });
+      return rows.length > 1 || p.espn_league_id ? rows : null;
+    }
+    function sourcesForLeague(lid) {
+      const id = String(lid || "").trim();
+      const saved = id ? loadJoinBook()[id] : null;
+      if (saved && saved.length) return saved.slice();
+      return rowsFromReady(id) || [{ kind: "sleeper", id: id }];
+    }
+    function applyJoinSources(rows, lid) {
+      joinSources = (rows && rows.length) ? rows.slice() : [{ kind: "sleeper", id: lid || "" }];
+      syncJoinIdsFromSources();
+      if (lid) saveJoinSources(lid, joinSources);
+      return joinSources;
+    }
+    function joinSrcRoot(lid) {
+      const want = String(lid || "new");
+      const nodes = document.querySelectorAll("[data-join-src-box]");
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].getAttribute("data-join-src-box") === want) return nodes[i];
+      }
+      return document;
+    }
+    function joinSrcForFromEl(el) {
+      const addFor = el && el.getAttribute && el.getAttribute("data-join-src-for");
+      if (addFor) return addFor;
+      const box = el && el.closest && el.closest("[data-join-src-box]");
+      const id = box && box.getAttribute("data-join-src-box");
+      return id && id !== "new" ? id : "";
+    }
+    function resetCreateSources() {
+      if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) return;
+      joinSources = [{ kind: "sleeper", id: "" }];
+      syncJoinIdsFromSources();
+    }
+    function hydrateOwnedJoinSources() {
+      const seen = {};
+      const ids = [];
+      (ownedLeagues || []).concat(memberships || []).forEach(function (row) {
+        const id = String((row && row.sleeper_league_id) || "");
+        if (!id || seen[id]) return;
+        seen[id] = true;
+        ids.push(id);
+      });
+      ids.forEach(function (id) {
+        const have = loadJoinBook()[id];
+        if (have && have.length) return;
+        const ready = rowsFromReady(id);
+        if (ready) {
+          saveJoinSources(id, ready);
+          return;
+        }
+        getJson("data/leagues/" + id + "/ui/league.json").then(function (book) {
+          const rows = rowsFromProviders(id, book && book.providers);
+          if (rows) saveJoinSources(id, rows);
+        }).catch(function () { /* book not on Pages yet */ });
+      });
     }
     let joinBusy = false;
     let joinError = "";
@@ -17564,6 +17656,7 @@ const html = `<!DOCTYPE html>
       } else {
         ownedLeagues = [];
       }
+      hydrateOwnedJoinSources();
       return list;
     }
 
@@ -17614,8 +17707,13 @@ const html = `<!DOCTYPE html>
     async function onRebuildLeague(leagueId) {
       const lid = String(leagueId || joinLeagueId || "").trim();
       if (!lid || joinBusy) return;
-      readJoinSourcesFromDom();
-      const ids = syncJoinIdsFromSources();
+      readJoinSourcesFromDom(lid);
+      let ids = syncJoinIdsFromSources();
+      if (!ids.sleeper.length) {
+        applyJoinSources(sourcesForLeague(lid), lid);
+        ids = syncJoinIdsFromSources();
+      }
+      saveJoinSources(lid, joinSources);
       joinBusy = true;
       joinError = "";
       settingsCopyNote = "";
@@ -17666,6 +17764,7 @@ const html = `<!DOCTYPE html>
         joinPreview = data.league;
         inviteTab = "unclaimed";
         pendingAddLeague = "";
+        if (joinLeagueId) saveJoinSources(joinLeagueId, joinSources);
         if (joinPreview && joinPreview.sleeper_league_id) {
           try {
             await getJson("data/leagues/" + joinPreview.sleeper_league_id + "/ui/league.json");
@@ -17694,6 +17793,7 @@ const html = `<!DOCTYPE html>
       transferPickId = "";
       inviteTab = "unclaimed";
       joinLeagueId = leagueId;
+      applyJoinSources(sourcesForLeague(leagueId), leagueId);
       // Keep prior seats on screen while we refresh (avoids an empty flash + feels faster).
       if (!joinPreview || joinPreview.sleeper_league_id !== leagueId) {
         const owned = (ownedLeagues || []).find((o) => o.sleeper_league_id === leagueId);
@@ -24301,10 +24401,12 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
-    function readJoinSourcesFromDom() {
-      const nodes = document.querySelectorAll("[data-join-src]");
+    function readJoinSourcesFromDom(lid) {
+      const root = joinSrcRoot(lid);
+      const nodes = root.querySelectorAll("[data-join-src]");
       if (!nodes.length) {
-        syncJoinIdsFromSources();
+        if (lid) applyJoinSources(sourcesForLeague(lid), lid);
+        else syncJoinIdsFromSources();
         return joinSources;
       }
       const rows = [];
@@ -24315,13 +24417,14 @@ const html = `<!DOCTYPE html>
         const kind = kindEl && kindEl.value === "espn" ? "espn" : "sleeper";
         rows.push({ kind: kind, id: idEl ? String(idEl.value || "").trim() : "" });
       }
-      joinSources = rows.length ? rows : [{ kind: "sleeper", id: "" }];
+      joinSources = rows.length ? rows : [{ kind: "sleeper", id: lid || "" }];
       syncJoinIdsFromSources();
+      if (lid) saveJoinSources(lid, joinSources);
       return joinSources;
     }
 
-    function joinSourceRowHtml(row, i) {
-      const n = (joinSources || []).length;
+    function joinSourceRowHtml(row, i, rows) {
+      const n = (rows && rows.length) || (joinSources || []).length;
       const kind = (row && row.kind) === "espn" ? "espn" : "sleeper";
       return '<div class="join-src" data-join-src="' + i + '">'
         + receiptLookSelect("Source", "data-join-src-kind",
@@ -24337,21 +24440,30 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    function joinIdsFormHtml(lid) {
+      const boxId = lid || "new";
+      const rows = lid && lid !== "new" ? sourcesForLeague(lid) : (joinSources || [{ kind: "sleeper", id: "" }]);
+      const forAttr = lid && lid !== "new" ? lid : "";
+      return '<div class="app-form" data-join-src-box="' + esc(boxId) + '">'
+        + rows.map(function (row, i) { return joinSourceRowHtml(row, i, rows); }).join("")
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-src-add="sleeper" data-join-src-for="'
+        + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add Sleeper ID</button>"
+        + '<button type="button" class="chip" data-join-src-add="espn" data-join-src-for="'
+        + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add ESPN ID</button>"
+        + "</div></div>";
+    }
+
     function renderCreateLeague() {
       if (!joinSources || !joinSources.length) joinSources = [{ kind: "sleeper", id: joinLeagueId || "" }];
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
-        + '<p class="caption">First Sleeper ID is the dashboard key. Add every other Sleeper season and the ESPN ID — they merge into one book and league-sync builds the dashboard.</p>'
+        + '<p class="caption">First Sleeper ID is the dashboard key. Add each other Sleeper season and each ESPN ID — they merge into one book and league-sync builds the dashboard.</p>'
         + (isStoreShell()
           ? '<p class="caption">This TestFlight build features Cuckle. Another Sleeper ID still registers. A first-year league stays thin — no fake crowns.</p>'
           : "")
         + '<div class="app-card"><h3>League IDs</h3>'
-        + '<div class="app-form">'
-        + (joinSources || []).map(joinSourceRowHtml).join("")
-        + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-join-src-add="sleeper"' + (joinBusy ? " disabled" : "") + ">Add Sleeper ID</button>"
-        + '<button type="button" class="chip" data-join-src-add="espn"' + (joinBusy ? " disabled" : "") + ">Add ESPN ID</button>"
-        + "</div>"
+        + joinIdsFormHtml("new")
         + (joinLeagueId === GM_LEAGUE_ID
           ? '<p class="caption">Gm 2026 LLJ is filled: current Sleeper, 2025 Sleeper, and ESPN. Create, then claim your seat (TrumanCooper if that is you).</p>'
           : "")
@@ -24359,7 +24471,7 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="chip" data-create-league="1"' + (joinBusy ? " disabled" : "") + ">"
         + (joinBusy ? "Creating…" : "Create, merge, and build") + "</button>"
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
-        + "</div></div></div></div>";
+        + "</div></div></div>";
     }
 
     function renderInvites() {
@@ -24452,11 +24564,16 @@ const html = `<!DOCTYPE html>
             ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
             : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
         + transferBlock
-        + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id || "") + '"'
-        + (joinBusy || !L.sleeper_league_id ? " disabled" : "") + ">"
-        + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
-        + "</div>"
+        + (L.sleeper_league_id
+          ? ('<div class="app-card" style="margin-top:12px"><h3>Merge IDs and build</h3>'
+            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
+            + joinIdsFormHtml(L.sleeper_league_id)
+            + '<div class="app-actions">'
+            + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id) + '"'
+            + (joinBusy ? " disabled" : "") + ">"
+            + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
+            + "</div></div>")
+          : "")
         + "</div>";
     }
 
@@ -24561,6 +24678,9 @@ const html = `<!DOCTYPE html>
             + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
             + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
             + "</p>"
+            + "<h3>Merge IDs and build</h3>"
+            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
+            + joinIdsFormHtml(o.sleeper_league_id)
             + '<div class="app-actions">'
             + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
               + '">Send / manage invites</button>'
@@ -25037,6 +25157,7 @@ const html = `<!DOCTYPE html>
         const appCreate = e.target.closest("[data-app-create]");
         if (appCreate) {
           closeLeaguesDrawer(true);
+          resetCreateSources();
           appScreen = "create";
           joinError = "";
           createdInvites = null;
@@ -25369,7 +25490,9 @@ const html = `<!DOCTYPE html>
       if (t.id === "joinLeagueId" || t.id === "joinEspnId" || (t.closest && t.closest("[data-join-src-id]"))) {
         if (e.key !== "Enter") return;
         e.preventDefault();
-        onCreateLeague();
+        const forId = joinSrcForFromEl(t);
+        if (forId) onRebuildLeague(forId);
+        else onCreateLeague();
         return;
       }
       if (t.id === "redeemCode") {
@@ -26502,6 +26625,7 @@ const html = `<!DOCTYPE html>
       const appCreate = e.target.closest("[data-app-create]");
       if (appCreate) {
         closeLeaguesDrawer(true);
+        resetCreateSources();
         appScreen = "create";
         joinError = "";
         createdInvites = null;
@@ -26526,15 +26650,19 @@ const html = `<!DOCTYPE html>
       }
       const joinAdd = e.target.closest("[data-join-src-add]");
       if (joinAdd) {
-        readJoinSourcesFromDom();
+        const forId = joinSrcForFromEl(joinAdd);
+        readJoinSourcesFromDom(forId);
         addJoinSource(joinAdd.getAttribute("data-join-src-add"));
+        if (forId) saveJoinSources(forId, joinSources);
         render();
         return;
       }
       const joinCut = e.target.closest("[data-join-src-cut]");
       if (joinCut) {
-        readJoinSourcesFromDom();
+        const forId = joinSrcForFromEl(joinCut);
+        readJoinSourcesFromDom(forId);
         cutJoinSource(joinCut.getAttribute("data-join-src-cut"));
+        if (forId) saveJoinSources(forId, joinSources);
         render();
         return;
       }
@@ -27307,7 +27435,7 @@ const html = `<!DOCTYPE html>
     document.getElementById("app").addEventListener("change", (e) => {
       const joinKindSel = e.target && e.target.closest && e.target.closest("[data-join-src-kind]");
       if (joinKindSel) {
-        readJoinSourcesFromDom();
+        readJoinSourcesFromDom(joinSrcForFromEl(joinKindSel));
         render();
         return;
       }
@@ -27438,7 +27566,7 @@ const html = `<!DOCTYPE html>
     });
     document.getElementById("app").addEventListener("input", (e) => {
       if (e.target && e.target.closest && e.target.closest("[data-join-src-id]")) {
-        readJoinSourcesFromDom();
+        readJoinSourcesFromDom(joinSrcForFromEl(e.target));
         return;
       }
       const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
@@ -30260,12 +30388,18 @@ if (!inline.includes("function openAddReadyLeague(")
   throw new Error("Your leagues must offer Add this league for Gm 2026 LLJ");
 }
 if (!inline.includes("function readJoinSourcesFromDom(")
+  || !inline.includes("function sourcesForLeague(")
+  || !inline.includes("function joinIdsFormHtml(")
+  || !inline.includes("cuckle.join_sources.v1")
+  || !inline.includes("data-join-src-box")
   || !inline.includes("Add Sleeper ID")
   || !inline.includes("Add ESPN ID")
   || !inline.includes("sleeper_extra_ids")
   || !inline.includes("Rebuild dashboard")
   || !inline.includes("Create, merge, and build")
-  || !inline.includes("sleeper_extra_ids: ids.sleeper.slice(1)")) {
+  || !inline.includes("sleeper_extra_ids: ids.sleeper.slice(1)")
+  || fnSrc("renderSettingsLeaguesTab").indexOf("joinIdsFormHtml(") < 0
+  || fnSrc("renderInvites").indexOf("joinIdsFormHtml(") < 0) {
   throw new Error("Create a league must accept multiple Sleeper and ESPN IDs and rebuild the book");
 }
 if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel")

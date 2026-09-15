@@ -50,8 +50,9 @@ It must look **new**, not like a broken Cuckle.
 3. [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml) runs
    `node build.mjs <id>` (generate-page is no longer Cuckle-only).
 4. `mark-league-ready.mjs` flips `ready` when the service role key is present.
-5. Commissioner can tap **Rebuild dashboard** on Settings → Leagues or the
-   invite console to run the same merge + build again.
+5. Commissioner can add more IDs on Settings → Leagues or the invite console
+   (Add Sleeper ID / Add ESPN ID) and tap **Rebuild dashboard** to run the
+   same merge + build again. Those IDs stay on this device for the next rebuild.
 
 Laptop fallback: `node build.mjs <sleeper_league_id>`.
 

@@ -83,7 +83,8 @@ try {
     const cuckle = await page.locator(".receipt-portal-list").innerText();
     console.log("CUCKLE ALL\n" + cuckle);
     if (!cuckle.includes("bigjberg") || !cuckle.includes("278.93")) fail("Cuckle high missing bigjberg 278.93");
-    if (!cuckle.includes("TrumanCooper") || !cuckle.includes("5.04")) fail("Cuckle low missing TrumanCooper 5.04");
+    if (!cuckle.includes("BubbaCuckShremp") || !cuckle.includes("30.00")) fail("Cuckle low missing BubbaCuckShremp 30.00");
+    if (cuckle.includes("5.04")) fail("Cuckle all lists still show week 18 leftover 5.04");
     await page.screenshot({ path: `${shotDir}/week-scores-cuckle-all.png`, fullPage: true });
   } else {
     fail("Cuckle League Data menu missing");

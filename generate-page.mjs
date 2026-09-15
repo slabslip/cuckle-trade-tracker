@@ -5456,7 +5456,7 @@ const html = `<!DOCTYPE html>
 
     function weekScoreLine(r) {
       if (!r) return "";
-      const phase = r.phase === "playoff" ? "title hunt" : "regular";
+      const phase = r.phase === "playoff" ? (r.hunt === true ? "title hunt" : "playoff") : "regular";
       return (r.season || "") + " · week " + (r.week || "") + " · " + phase;
     }
 

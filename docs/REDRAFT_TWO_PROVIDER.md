@@ -86,9 +86,14 @@ Same path as any second Sleeper league ([`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) §3
    `https://slabslip.github.io/cuckle-trade-tracker/`.
    Review door: `design-redraft-home.html` on that origin.
 
-4. **Store register** — Create a league, paste `1389723418827460608`, optional ESPN
-   `35763180`. `join-league` dispatches `league-sync` when `GITHUB_PAT` is set.
-   Actions runs `node build.mjs <id>` on `main` and commits the scoped book.
+4. **Add it to your dashboard** — sign in on Pages, then open
+   `https://slabslip.github.io/cuckle-trade-tracker/?add=gm`
+   (or tap **Add this league** on Your leagues / Settings → Leagues). IDs are
+   filled: Sleeper `1389723418827460608`, ESPN `35763180`. Create & generate
+   invites, then **Claim this seat** for your team (TrumanCooper is
+   `458342725222133760`). `join-league` dispatches `league-sync` when
+   `GITHUB_PAT` is set. The book is already on Pages, so the meter opens
+   without waiting on a rebuild.
 
 5. **Invite seats** — same CF- codes as Cuckle. Truman’s Sleeper id on this
    league is `458342725222133760` (same person, different book).

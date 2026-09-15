@@ -4128,7 +4128,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "weekscores20260915040000";
+    const DATA_V = "gmadd20260915032000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15734,6 +15734,67 @@ const html = `<!DOCTYPE html>
     // First hosted league — legacy data/ui is its ready dataset.
     const CUCKLE_LEAGUE_ID = "1315431339301806080";
     const GM_LEAGUE_ID = "1389723418827460608";
+    const GM_ESPN_LEAGUE_ID = "35763180";
+    const READY_ADD_BOOKS = [
+      {
+        id: GM_LEAGUE_ID,
+        name: "Gm 2026 LLJ",
+        espn: GM_ESPN_LEAGUE_ID,
+        why: "1QB redraft. Book is already on this site.",
+      },
+    ];
+    let pendingAddLeague = "";
+    function readyAddBook(id) {
+      const want = String(id || "").trim();
+      const alias = want.toLowerCase() === "gm" ? GM_LEAGUE_ID : want;
+      for (let i = 0; i < READY_ADD_BOOKS.length; i++) {
+        if (READY_ADD_BOOKS[i].id === alias) return READY_ADD_BOOKS[i];
+      }
+      return null;
+    }
+    function readyAddBooksOpen() {
+      return READY_ADD_BOOKS.filter(function (b) {
+        const haveMem = (memberships || []).some(function (m) { return String(m.sleeper_league_id) === b.id; });
+        const haveOwn = (ownedLeagues || []).some(function (o) { return String(o.sleeper_league_id) === b.id; });
+        return !haveMem && !haveOwn;
+      });
+    }
+    function fillReadyLeague(id) {
+      const b = readyAddBook(id);
+      if (!b) return false;
+      joinLeagueId = b.id;
+      joinEspnId = b.espn || "";
+      pendingAddLeague = b.id;
+      return true;
+    }
+    function openAddReadyLeague(id) {
+      if (!fillReadyLeague(id)) return;
+      joinError = "";
+      createdInvites = null;
+      inviteTab = "unclaimed";
+      if (!authSession) {
+        appScreen = "gate";
+        gateMode = "signin";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      closeLeaguesDrawer(true);
+      appScreen = "create";
+      focusNext = "#joinLeagueId";
+      render();
+    }
+    function readyAddBooksHtml() {
+      const rows = readyAddBooksOpen();
+      if (!rows.length) return "";
+      return rows.map(function (b) {
+        return '<div class="league-block">'
+          + '<div class="league-row static"><div><b>' + esc(b.name) + "</b>"
+          + "<span>" + esc(b.why) + "</span></div></div>"
+          + '<button type="button" class="chip" data-add-ready-league="' + esc(b.id) + '">Add this league</button>'
+          + "</div>";
+      }).join("");
+    }
     function isGmLeague() {
       return String((activeLeague && activeLeague.sleeper_league_id) || "") === GM_LEAGUE_ID;
     }
@@ -16090,7 +16151,7 @@ const html = `<!DOCTYPE html>
           + '">Invites & claim seat</button>'
           + "</div>";
       }).join("");
-      const body = rows + ownedOnly;
+      const body = rows + ownedOnly + readyAddBooksHtml();
       return '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
@@ -17496,6 +17557,9 @@ const html = `<!DOCTYPE html>
           receiptTicket = false;
           appScreen = "create";
           focusNext = ".screen-h";
+        } else if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
+          appScreen = "create";
+          focusNext = "#joinLeagueId";
         } else {
           appScreen = "home";
           focusNext = ".screen-h";
@@ -17531,6 +17595,13 @@ const html = `<!DOCTYPE html>
         leagueMembers = data.members || [];
         joinPreview = data.league;
         inviteTab = "unclaimed";
+        pendingAddLeague = "";
+        if (joinPreview && joinPreview.sleeper_league_id) {
+          try {
+            await getJson("data/leagues/" + joinPreview.sleeper_league_id + "/ui/league.json");
+            joinPreview.status = "ready";
+          } catch (err) { /* sync still pending */ }
+        }
         await loadMemberships().catch(() => {});
         receiptPublic = false;
         receiptImportPending = false;
@@ -24174,6 +24245,9 @@ const html = `<!DOCTYPE html>
         + '<label>ESPN league ID (optional)<input id="joinEspnId" name="espnId" autocomplete="off"'
         + ' placeholder="Only if you have ESPN data too" value="' + esc(joinEspnId) + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
+        + (joinLeagueId === GM_LEAGUE_ID
+          ? '<p class="caption">Gm 2026 LLJ is filled in. Create it, then claim your seat (TrumanCooper if that is you).</p>'
+          : "")
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-create-league="1"' + (joinBusy ? " disabled" : "") + ">"
         + (joinBusy ? "Creating…" : "Create & generate invites") + "</button>"
@@ -24389,6 +24463,7 @@ const html = `<!DOCTYPE html>
       return (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
+        + readyAddBooksHtml()
         + '<div class="app-actions" style="margin-top:8px">'
         + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
         + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
@@ -24839,6 +24914,11 @@ const html = `<!DOCTYPE html>
           document.getElementById("app").hidden = false;
           focusNext = ".screen-h";
           render();
+          return;
+        }
+        const addReady = e.target.closest("[data-add-ready-league]");
+        if (addReady) {
+          openAddReadyLeague(addReady.getAttribute("data-add-ready-league"));
           return;
         }
         const appCreate = e.target.closest("[data-app-create]");
@@ -26301,6 +26381,11 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const addReady = e.target.closest("[data-add-ready-league]");
+      if (addReady) {
+        openAddReadyLeague(addReady.getAttribute("data-add-ready-league"));
+        return;
+      }
       const appCreate = e.target.closest("[data-app-create]");
       if (appCreate) {
         closeLeaguesDrawer(true);
@@ -27309,6 +27394,17 @@ const html = `<!DOCTYPE html>
       ledgerAbandonCompose();
     });
     authLoad();
+    const addParam = (params.get("add") || "").trim();
+    if (addParam && fillReadyLeague(addParam)) {
+      try {
+        const u = new URL(location.href);
+        if (u.searchParams.has("add")) {
+          u.searchParams.delete("add");
+          const q = u.searchParams.toString();
+          history.replaceState(history.state || {}, "", u.pathname + (q ? "?" + q : "") + u.hash);
+        }
+      } catch (err) { /* ignore */ }
+    }
     const inviteParam = (params.get("invite") || "").trim();
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
@@ -27374,6 +27470,12 @@ const html = `<!DOCTYPE html>
         const designLeagueHome = isDesignLeagueHome();
         if (!designLeagueHome) {
           await loadMemberships().catch((err) => console.error(err));
+        }
+        if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
+          appScreen = "create";
+          focusNext = "#joinLeagueId";
+          render();
+          return;
         }
         if (activeLeague && activeLeague.sleeper_league_id) {
           const m = (memberships || []).find((x) => x.sleeper_league_id === activeLeague.sleeper_league_id);
@@ -30005,6 +30107,15 @@ if (inline.includes("Your team, login, and avatar.")
   || inline.includes("← Your leagues")
   || inline.includes("← League home")) {
   throw new Error("Settings must drop descriptive blurbs; remove ← Your leagues / ← League home chips (top-bar back)");
+}
+if (!inline.includes("function openAddReadyLeague(")
+  || !inline.includes("function readyAddBooksHtml(")
+  || !inline.includes('data-add-ready-league')
+  || !inline.includes('params.get("add")')
+  || !inline.includes("Gm 2026 LLJ")
+  || !inline.includes("1389723418827460608")
+  || fnSrc("leaguesListHtml").indexOf("readyAddBooksHtml(") < 0) {
+  throw new Error("Your leagues must offer Add this league for Gm 2026 LLJ");
 }
 if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel")
   || !inline.includes("function openLeaguesDrawer(")

@@ -15913,13 +15913,13 @@
     function espnUnlockStepsHtml() {
       return '<div class="app-card" aria-label="Unlock ESPN history">'
         + "<h3>Unlock ESPN history</h3>"
-        + '<p class="caption">Week scores are Sleeper 2025-2026 only until this lands. ESPN 35763180 is private. A manager who left stays on that ESPN team slot and attaches to the current Sleeper seat. Consolation weeks still do not set the low.</p>'
+        + '<p class="caption">GitHub secrets do nothing until Rebuild runs. Your login only unlocks ESPN years you can open. 2024 is visible; 2020-2023 need cookies from someone who was in those years (the original LM). Making you LM now does not unlock years you were not in.</p>'
         + '<ol class="caption" style="padding-left:1.2rem;margin:8px 0">'
-        + "<li>On a computer, open that ESPN league in Chrome while signed in.</li>"
-        + "<li>Press F12. Open Application (Chrome) or Storage (Firefox). Cookies → fantasy.espn.com.</li>"
-        + "<li>Copy the value of <b>espn_s2</b>. Copy the value of <b>SWID</b> (keep the curly braces).</li>"
-        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Add <b>ESPN_S2</b> and <b>ESPN_SWID</b>.</li>"
-        + "<li>Come back here and tap <b>Rebuild dashboard</b>. Older years merge onto current Sleeper names.</li>"
+        + "<li>On a computer, the original LM signs into ESPN and opens 2023: fantasy.espn.com/football/league?leagueId=35763180&seasonId=2023. Repeat 2022, 2021, 2020. If a year is blank, they cannot unlock it.</li>"
+        + "<li>While those years load, press F12. Application (Chrome) or Storage (Firefox). Cookies → fantasy.espn.com.</li>"
+        + "<li>Copy <b>espn_s2</b> and <b>SWID</b> (keep the curly braces) from that original-LM browser.</li>"
+        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Replace <b>ESPN_S2</b> and <b>ESPN_SWID</b> with those values.</li>"
+        + "<li>Stay in Cuckle. Tap <b>Rebuild dashboard</b>. That is the only job that reads the secrets. Do not look for a rebuild on ESPN.</li>"
         + "</ol>"
         + '<p class="caption">Laptop without GitHub: export ESPN_S2 and ESPN_SWID, then run node build.mjs 1389723418827460608 --skip-snapshot.</p>'
         + "</div>";

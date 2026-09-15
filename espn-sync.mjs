@@ -137,9 +137,8 @@ async function fetchSeason(season) {
         return { season, body, status: last.status, url };
       }
     }
-    if (last.status === 401 || last.status === 403) return { season, body: null, status: last.status, url };
   }
-  return { season, body: null, status: last.status, url: urls[0] };
+  return { season, body: null, status: last.status, url: last.url || urls[0] };
 }
 
 async function fetchSchedule(season) {
@@ -166,6 +165,8 @@ async function fetchTrades(season) {
   const urls = [
     `${ESPN_READS}/seasons/${season}/segments/0/leagues/${ESPN_ID}?view=mTransactions2`,
     `${ESPN_WEB}/seasons/${season}/segments/0/leagues/${ESPN_ID}?view=mTransactions2`,
+    `${ESPN_WEB}/leagueHistory/${ESPN_ID}?seasonId=${season}&view=mTransactions2`,
+    `${ESPN_READS}/leagueHistory/${ESPN_ID}?seasonId=${season}&view=mTransactions2`,
   ];
   for (const url of urls) {
     const res = await espnGet(url + `&scoringPeriodId=0&X-Fantasy-Filter=${filter}`);

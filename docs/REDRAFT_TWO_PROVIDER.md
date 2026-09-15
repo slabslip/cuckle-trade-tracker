@@ -40,20 +40,30 @@ Playoff consolation still does not set the low.
 
 ## 2. ESPN prior years — step by step
 
-ESPN league `35763180` is **private**. Without cookies the API returns 401,
-so Week scores can only use Sleeper 2025–2026. That is why every current
-low is a 2025 week. The import and franchise attach are already wired;
-they stay empty until the two cookies below are set.
+ESPN league `35763180` is **private**. GitHub secrets `ESPN_S2` / `ESPN_SWID`
+do **nothing** until `league-sync` (Cuckle **Rebuild dashboard**) actually
+runs. That Action has never run, so the live book still has
+`authorized: false` and empty ESPN seasons.
 
-### A. Copy the cookies (Chrome, computer)
+A cookie only unlocks years **that ESPN account can open**. Being made
+league manager now does **not** unlock 2020–2023 if you were not in those
+seasons. 2024 showing on ESPN and older years staying blank is ESPN’s
+rule, not a Cuckle bug. Setting a season to view-public also does not
+unlock the JSON API.
 
-1. Sign into ESPN in Chrome.
-2. Open the fantasy league (the one whose URL has `leagueId=35763180`).
-3. Press **F12** (or right-click → Inspect).
-4. Open the **Application** tab (Chrome) or **Storage** (Firefox).
-5. Left rail: **Cookies** → `https://fantasy.espn.com`.
-6. Click **espn_s2**. Copy the whole **Cookie Value**. It is a long string.
-7. Click **SWID**. Copy the **Cookie Value**. Keep the `{` `}` around it.
+Use cookies from someone who can open each `seasonId=` year — usually
+the **original LM**. Then Rebuild in Cuckle. There is no rebuild on ESPN.
+
+### A. Copy the cookies (original LM, computer)
+
+1. The original LM signs into ESPN and opens 2023:
+   `fantasy.espn.com/football/league?leagueId=35763180&seasonId=2023`.
+   Repeat 2022, 2021, 2020. If a year is blank, that login cannot unlock it.
+2. Press **F12** (or right-click → Inspect).
+3. Open the **Application** tab (Chrome) or **Storage** (Firefox / Safari Develop).
+4. Left rail: **Cookies** → `https://fantasy.espn.com`.
+5. Click **espn_s2**. Copy the whole **Cookie Value**. It is a long string.
+6. Click **SWID**. Copy the **Cookie Value**. Keep the `{` `}` around it.
 
 Do not paste these into a chat, a commit, or `espn_bridge.json`.
 
@@ -61,12 +71,12 @@ Do not paste these into a chat, a commit, or `espn_bridge.json`.
 
 **GitHub (what Rebuild dashboard uses)**
 
-1. Open the repo on GitHub → **Settings** → **Secrets and variables** → **Actions**.
-2. **New repository secret** named `ESPN_S2` → paste the espn_s2 value.
-3. **New repository secret** named `ESPN_SWID` → paste the SWID value.
-4. In the app: Menu → **Settings** → **Leagues** → **Rebuild dashboard**.
-   That runs `league-sync.yml`, which already passes those two secrets into
-   `build.mjs`.
+1. Open the repo on GitHub as **slabslip** → **Settings** → **Secrets and variables** → **Actions**.
+2. **Replace** `ESPN_S2` and `ESPN_SWID` with the original-LM values (your
+   cookies only cover years you can open — 2024).
+3. In Cuckle: Menu → **Settings** → **Leagues** → **Rebuild dashboard**.
+   That is the only job that reads the secrets (`league-sync.yml` →
+   `build.mjs`). Do not look for a rebuild on ESPN.
 
 **Laptop (optional, same book)**
 
@@ -80,7 +90,7 @@ Then commit `data/leagues/1389723418827460608/` and push `main`.
 
 ### C. What happens after a green rebuild
 
-- ESPN team-weeks 2010–2024 (whatever years the league actually has) join
+- ESPN team-weeks 2020–2024 (the years this league actually has) join
   the Week scores door.
 - Current Sleeper **names** are used. A manager who left stays on that
   ESPN team slot and attaches to the Sleeper seat that inherited it.
@@ -100,7 +110,8 @@ Then commit `data/leagues/1389723418827460608/` and push `main`.
 - ESPN playoff consolation still does not set the low (same hunt rule).
 - Past Champions gets ESPN crowns only from a real ESPN payload — never invented.
 
-The same five steps also sit on **Settings → Leagues** when ESPN is locked.
+The same original-LM cookie + Rebuild steps sit on **Settings → Leagues**
+when ESPN is locked.
 
 ---
 

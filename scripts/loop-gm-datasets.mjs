@@ -216,8 +216,11 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
   && page.includes("Unlock ESPN history")
   && page.includes("espn_s2")
   && page.includes("ESPN_SWID")
-  && page.includes("unlock in Settings"),
-  "Settings lists the ESPN cookie unlock steps");
+  && page.includes("unlock in Settings")
+  && page.includes("GitHub secrets do nothing until Rebuild runs")
+  && page.includes("original LM")
+  && page.includes("Making you LM now does not unlock"),
+  "Settings lists original-LM cookie + Rebuild unlock");
 
 const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
 const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");

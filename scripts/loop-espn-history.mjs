@@ -214,8 +214,10 @@ function runLive() {
   loop("L1", src.includes("got.status === 401 || got.status === 403")
     && src.includes("sawAuthBlock = true")
     && src.includes("continue;")
-    && !src.includes("sawAuthBlock = true;\n      break;"),
-    "espn-sync tries every year even when one season 401s");
+    && !src.includes("sawAuthBlock = true;\n      break;")
+    && !src.includes("if (last.status === 401 || last.status === 403) return")
+    && src.includes("leagueHistory/${ESPN_ID}?seasonId="),
+    "espn-sync tries every year and every history URL even when one season 401s");
   loop("L2", mergeSrc.includes("inheritParkedToLive(")
     && fs.readFileSync(`${ROOT}build-finishes.mjs`, "utf8").includes("inheritParkedToLive("),
     "merge and finishes inherit a parked franchise onto the live Sleeper seat");

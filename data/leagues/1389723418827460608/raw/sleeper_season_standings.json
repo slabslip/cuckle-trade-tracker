@@ -1,0 +1,141 @@
+[
+  {
+    "season": "2025",
+    "league_id": "1253382148073725952",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 8,
+        "user_id": "1132355027018035200",
+        "name": "Biff34",
+        "place": 1,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 1665.62
+      },
+      {
+        "roster_id": 11,
+        "user_id": "1259573343355404288",
+        "name": "JnastyGBE300",
+        "place": 2,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 1498.34
+      },
+      {
+        "roster_id": 1,
+        "user_id": "1132151320410140672",
+        "name": "ztrain123",
+        "place": 3,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 1532.18
+      },
+      {
+        "roster_id": 12,
+        "user_id": "1132552110328983552",
+        "name": "collinmccaskill",
+        "place": 4,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 1428.96
+      },
+      {
+        "roster_id": 10,
+        "user_id": "741001884449525760",
+        "name": "fatassmexican",
+        "place": 5,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 1453.42
+      },
+      {
+        "roster_id": 9,
+        "user_id": "1131056110791880704",
+        "name": "sbzy11",
+        "place": 6,
+        "from": "bracket",
+        "wins": 9,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 1517.4
+      },
+      {
+        "roster_id": 5,
+        "user_id": "1132151393051095040",
+        "name": "Tbow00",
+        "place": 7,
+        "from": "record",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 1401.38
+      },
+      {
+        "roster_id": 3,
+        "user_id": "740721014035660800",
+        "name": "kotula69",
+        "place": 8,
+        "from": "record",
+        "wins": 6,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1420.12
+      },
+      {
+        "roster_id": 4,
+        "user_id": "1132149096636141568",
+        "name": "Aballers",
+        "place": 9,
+        "from": "record",
+        "wins": 6,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1402.12
+      },
+      {
+        "roster_id": 2,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 10,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1421.92
+      },
+      {
+        "roster_id": 6,
+        "user_id": "719995760556478464",
+        "name": "TaylorJohnson16",
+        "place": 11,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1198.38
+      },
+      {
+        "roster_id": 7,
+        "user_id": "1132146625205567488",
+        "name": "Adizzl3",
+        "place": 12,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1331.56
+      }
+    ]
+  }
+]

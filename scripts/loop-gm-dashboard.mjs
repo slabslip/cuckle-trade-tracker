@@ -87,5 +87,7 @@ const hunt = spawnSync(process.execPath, [new URL("test-week-score-hunt.mjs", im
 if (hunt.status) process.exit(hunt.status);
 const espnLaws = spawnSync(process.execPath, [new URL("test-espn-franchise.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (espnLaws.status) process.exit(espnLaws.status);
+const finishes = spawnSync(process.execPath, [new URL("test-finishes.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (finishes.status) process.exit(finishes.status);
 const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (more.status) process.exit(more.status);

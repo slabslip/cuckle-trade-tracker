@@ -131,6 +131,23 @@ bracket's placement games first, then regular-season record (standings points, p
 `roster_id`) for the teams the bracket does not place; see `UI_SDD.md` §2. This is presentation
 only and never reaches the value book.
 
+### `data/ui/finishes.json`
+
+Career finishes for How I finished. `build-finishes.mjs` walks every completed
+Sleeper season (winners-bracket, then record — the same rule as `members.place`)
+and remaps ESPN standings onto those seats when cookies unlock 2010–2024. In-progress
+years and parked joiners stay out.
+
+```text
+{
+  v: 1, seasons: ["2025", ...],
+  seats: [{ user_id, name, n, avg, places: [{ season, place, from, provider }] }]
+}
+```
+
+`seats` is ranked by `avg` ascending (best finish first), then more seasons, then name.
+`n` is how many completed seasons that manager played.
+
 ### `data/ui/league.json`
 
 ```text

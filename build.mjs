@@ -41,6 +41,7 @@ const steps = [
   ...(skipSnapshot ? [] : [["value-snapshot.mjs"]]),
   ["revalue.mjs", leagueId],
   ["title-path.mjs", leagueId],
+  ["build-finishes.mjs", leagueId],
   ["weekly-scores.mjs", leagueId],
   ["apply-value-adjust.mjs", leagueId],
   ["build-cuffs.mjs", leagueId],

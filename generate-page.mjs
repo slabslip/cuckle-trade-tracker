@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260915093855";
+    const DATA_V = "gmfinish20260915154000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4239,7 +4239,7 @@ const html = `<!DOCTYPE html>
       { id: "league_trades", lab: "League Trade History", desk: "lists", group: "memory", size: "full", why: "Every pairing, most deals first." },
       { id: "my_draft", lab: "My Draft Picks", desk: "lists", group: "memory", size: "full", why: "Used, traded away, and traded in — with a grade." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
-      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Where this seat finished." },
+      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Every completed season they played, ranked by average finish." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
@@ -4319,6 +4319,7 @@ const html = `<!DOCTYPE html>
     let cosmeticsBook = null;
     let weekScoresBook = null;
     let weekScoresLoading = false;
+    let finishesBook = null;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
     let cosmeticsReloadAt = 0;
@@ -5739,7 +5740,7 @@ const html = `<!DOCTYPE html>
       if (id === "forever" || id === "passed_around" || id === "least_traded") {
         return "A player, a pick, a seat";
       }
-      if (id === "season_place") return "A seat, a place";
+      if (id === "season_place") return "A seat, an average, a year";
       if (id === "past_champions") return "A year, a seat";
       if (id === "vs_you") return "A name";
       if (id === "week_scores") return "A seat, a week, a year";
@@ -6614,15 +6615,38 @@ const html = `<!DOCTYPE html>
         return html;
       }
       if (id === "season_place") {
-        return (members || []).filter(function (m) {
-          return hit([m.name, m.place, m.place ? nth(m.place) : "", m.place_season]);
-        }).map(function (m) {
-          const year = m.place_season ? String(m.place_season) : "";
+        const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
+        const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
+          ? finishesBook.seats
+          : (members || []).filter(function (m) {
+            return m.place && m.place_season && (!teamN || Number(m.place) <= teamN);
+          }).map(function (m) {
+            return {
+              user_id: m.user_id,
+              name: m.name,
+              n: 1,
+              avg: Number(m.place),
+              places: [{ season: m.place_season, place: m.place }],
+            };
+          }).sort(function (a, b) { return a.avg - b.avg; });
+        return seats.filter(function (s) {
+          const years = (s.places || []).map(function (p) {
+            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
+          });
+          return hit([s.name, s.avg, s.n, "season", "seasons"].concat(years));
+        }).map(function (s, i) {
+          const n = Number(s.n) || 0;
+          const count = n === 1 ? "1 season" : (n + " seasons");
+          const years = (s.places || []).map(function (p) {
+            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
+          }).join(" · ");
+          const avg = s.avg != null ? (Number(s.avg).toFixed(1) + " avg") : "—";
           return '<div class="row"><div class="row-top"><div><div class="names">'
-            + seatLabel(m.name, { link: false }) + "</div>"
-            + (year ? '<div class="date">' + esc(year) + "</div>" : "")
+            + esc((i + 1) + ". ") + seatLabel(s.name, { link: false }) + "</div>"
+            + '<div class="date">' + esc(count) + "</div>"
+            + (years ? '<div class="date">' + esc(years) + "</div>" : "")
             + "</div>"
-            + '<div class="margin">' + esc(m.place ? nth(m.place) : "—") + "</div></div></div>";
+            + '<div class="margin">' + esc(avg) + "</div></div></div>";
         }).join("");
       }
       if (id === "past_champions") {
@@ -6858,7 +6882,7 @@ const html = `<!DOCTYPE html>
           ? ("Picks that started on " + pickSeat + ". Follow them after a sale.")
           : "Claim your seat to see the picks that started here.";
       } else if (id === "past_champions") caption = "Every year someone won. Search a year or a seat.";
-      else if (id === "season_place") caption = "Where each seat finished last season. Year is on the row.";
+      else if (id === "season_place") caption = "Every completed season they played, ranked by average finish. Season count is under each name.";
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
       else if (id === "firsts_held") {
@@ -8067,7 +8091,7 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -8081,6 +8105,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("pe.json").catch(() => null),
         getLeagueJson("seat-direction.json").catch(() => null),
         getLeagueJson("week-scores.json").catch(() => null),
+        getLeagueJson("finishes.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -8135,6 +8160,11 @@ const html = `<!DOCTYPE html>
       try {
         weekScoresBook = weekRaw && Number(weekRaw.v) >= 1 && weekRaw.all ? weekRaw : null;
       } catch (err) { weekScoresBook = null; }
+      try {
+        finishesBook = finishesRaw && Number(finishesRaw.v) >= 1 && Array.isArray(finishesRaw.seats)
+          ? finishesRaw
+          : null;
+      } catch (err) { finishesBook = null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
@@ -29538,6 +29568,10 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptPortalRows").includes("is FA")
     || !fnSrc("receiptPortalRows").includes("No future first")
     || !fnSrc("receiptPortalRows").includes("m.place_season")
+    || !fnSrc("receiptPortalRows").includes("finishesBook")
+    || !fnSrc("receiptPortalRows").includes(" seasons")
+    || !inline.includes('getLeagueJson("finishes.json")')
+    || !inline.includes("Every completed season they played, ranked by average finish.")
     || !inline.includes("Type a player name")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")

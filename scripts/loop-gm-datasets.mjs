@@ -36,6 +36,7 @@ const dir = load(`${ui}/seat-direction.json`, { seats: [] });
 const cuffs = load(`${ui}/cuffs.json`, {});
 const calc = load(`${ui}/calculator.json`, {});
 const weeks = load(`${ui}/week-scores.json`, {});
+const finishes = load(`${ui}/finishes.json`, {});
 const picks = load(`${ui}/picks.json`, {});
 const trades = load(`${raw}/trades.json`, []);
 const legs = load(`${raw}/trade_legs.json`, []);
@@ -203,4 +204,29 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
   && page.includes("unlock in Settings"),
   "Settings lists the ESPN cookie unlock steps");
 
-console.log("PASS 37 Gm dataset loops");
+const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
+const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
+const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
+loop(38, finishes.v === 1 && Array.isArray(finishes.seats)
+  && (finishes.seasons || []).includes("2025")
+  && !(finishes.seasons || []).includes("2026")
+  && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
+  && biffFin && biffFin.avg === 1 && biffFin.n === 1 && biffFin.places[0].place === 1
+  && jnFin && jnFin.avg === 2 && jnFin.n === 1
+  && truFin && truFin.avg === 10 && truFin.n === 1
+  && finishes.seats[0].name === "Biff34",
+  "How I finished ranks 2025 places; Seth has no completed season; 2026 is out");
+loop(39, page.includes("function buildFinishesBook(") === false
+  && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
+  && page.includes('getLeagueJson("finishes.json")')
+  && page.includes("Every completed season they played, ranked by average finish.")
+  && page.includes("1 season")
+  && page.includes(" seasons"),
+  "How I finished door reads finishes.json and prints season count under each name");
+loop(40, page.includes("const DATA_REPORTS = [")
+  && (page.match(/id: "season_place"/g) || []).length >= 1
+  && !page.includes('id: "avg_finish"')
+  && page.includes('"past_champions", "season_place", "vs_you"'),
+  "average finish lives on the existing How I finished door, not a 33rd catalog id");
+
+console.log("PASS 40 Gm dataset loops");

@@ -1,0 +1,821 @@
+[
+  {
+    "season": "2025",
+    "league_id": "1183265256141869056",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "SF69erss",
+        "place": 1,
+        "from": "bracket",
+        "wins": 11,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2242.8
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "TipsUp",
+        "place": 2,
+        "from": "bracket",
+        "wins": 11,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2157.08
+      },
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "TedCumberbatch",
+        "place": 3,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 2525.46
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "KingHenryXXVI",
+        "place": 4,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 1985.28
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 5,
+        "from": "bracket",
+        "wins": 6,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1874.26
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "DarkWingDucks2023",
+        "place": 6,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 2020.92
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "bigjberg",
+        "place": 7,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 2006.5
+      },
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "ChiefGumby",
+        "place": 8,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1866.76
+      },
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 9,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1797.36
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 10,
+        "from": "record",
+        "wins": 3,
+        "losses": 11,
+        "ties": 0,
+        "fpts": 1800.62
+      }
+    ]
+  },
+  {
+    "season": "2024",
+    "league_id": "1048309758392000512",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "SF69erss",
+        "place": 1,
+        "from": "bracket",
+        "wins": 12,
+        "losses": 2,
+        "ties": 0,
+        "fpts": 2480.02
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "KingHenryXXVI",
+        "place": 2,
+        "from": "bracket",
+        "wins": 9,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 2280.44
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "TipsUp",
+        "place": 3,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 2250
+      },
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "TedCumberbatch",
+        "place": 4,
+        "from": "bracket",
+        "wins": 9,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 2253.82
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "DuckTipsYumm",
+        "place": 5,
+        "from": "bracket",
+        "wins": 6,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1978.78
+      },
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 6,
+        "from": "bracket",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1904.86
+      },
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "ChiefGumby",
+        "place": 7,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1867.24
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "DarkWingDucks2023",
+        "place": 8,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1782
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 9,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1742.7
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "bigjberg",
+        "place": 10,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1746.92
+      }
+    ]
+  },
+  {
+    "season": "2023",
+    "league_id": "917168707477233664",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "TedCumberbatch",
+        "place": 1,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 2211.9
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 2,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 2069.5
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "TipTip",
+        "place": 3,
+        "from": "bracket",
+        "wins": 11,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2323.84
+      },
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "SF69erss",
+        "place": 4,
+        "from": "bracket",
+        "wins": 11,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2483.26
+      },
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 5,
+        "from": "bracket",
+        "wins": 9,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 2114.16
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "bigjberg",
+        "place": 6,
+        "from": "bracket",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1739.72
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 7,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1684.34
+      },
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "ChiefGumby",
+        "place": 8,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1786.42
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "DarkWingDucks2023",
+        "place": 9,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1629.36
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "KingHenryXXVI",
+        "place": 10,
+        "from": "record",
+        "wins": 3,
+        "losses": 11,
+        "ties": 0,
+        "fpts": 1598.42
+      }
+    ]
+  },
+  {
+    "season": "2022",
+    "league_id": "784465088559046656",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "ChiefGumby",
+        "place": 1,
+        "from": "bracket",
+        "wins": 11,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2228.62
+      },
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 2,
+        "from": "bracket",
+        "wins": 11,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2213.1
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "TipTip",
+        "place": 3,
+        "from": "bracket",
+        "wins": 9,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 2180.68
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "KingHenryXXVI",
+        "place": 4,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2054.12
+      },
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "TedCumberbatch",
+        "place": 5,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 1973.02
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "MightyDucks420",
+        "place": 6,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2012.66
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "bigjberg",
+        "place": 7,
+        "from": "record",
+        "wins": 6,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1981.66
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 8,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1791.6
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 9,
+        "from": "record",
+        "wins": 4,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1697.6
+      },
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "SF69erss",
+        "place": 10,
+        "from": "record",
+        "wins": 3,
+        "losses": 11,
+        "ties": 0,
+        "fpts": 1472
+      }
+    ]
+  },
+  {
+    "season": "2021",
+    "league_id": "650061903124582400",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 1,
+        "from": "bracket",
+        "wins": 13,
+        "losses": 1,
+        "ties": 0,
+        "fpts": 2807.41
+      },
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "ChiefGumby",
+        "place": 2,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 2661.5
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 3,
+        "from": "bracket",
+        "wins": 6,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 2224.52
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "TipTip",
+        "place": 4,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2440.28
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "DAKDAMAC",
+        "place": 5,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2343.39
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "bigjberg",
+        "place": 6,
+        "from": "bracket",
+        "wins": 9,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 2636.7
+      },
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "TedCumberbatch",
+        "place": 7,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 2478.86
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 8,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 2476.35
+      },
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "TonyGalliani",
+        "place": 9,
+        "from": "record",
+        "wins": 5,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 2198.58
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "ImpeachTonyZH",
+        "place": 10,
+        "from": "record",
+        "wins": 3,
+        "losses": 11,
+        "ties": 0,
+        "fpts": 2230.06
+      }
+    ]
+  },
+  {
+    "season": "2020",
+    "league_id": "514103570328997888",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 1,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2552.12
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 2,
+        "from": "bracket",
+        "wins": 6,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2412.98
+      },
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "ChiefGumby",
+        "place": 3,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 2461.23
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "ImpeachTonyZH",
+        "place": 4,
+        "from": "bracket",
+        "wins": 10,
+        "losses": 3,
+        "ties": 0,
+        "fpts": 2456.7
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "DAAB",
+        "place": 5,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 5,
+        "ties": 0,
+        "fpts": 2426.34
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "bigjberg",
+        "place": 6,
+        "from": "bracket",
+        "wins": 7,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 2387.76
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "TipTip",
+        "place": 7,
+        "from": "record",
+        "wins": 6,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2409.44
+      },
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "TedCumberbatch",
+        "place": 8,
+        "from": "record",
+        "wins": 6,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 2127.94
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 9,
+        "from": "record",
+        "wins": 3,
+        "losses": 10,
+        "ties": 0,
+        "fpts": 1961.15
+      },
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "TonyGalliani",
+        "place": 10,
+        "from": "record",
+        "wins": 2,
+        "losses": 11,
+        "ties": 0,
+        "fpts": 2107.47
+      }
+    ]
+  },
+  {
+    "season": "2019",
+    "league_id": "457780103087124480",
+    "status": "complete",
+    "rows": [
+      {
+        "roster_id": 4,
+        "user_id": "458004578168729600",
+        "name": "ARae",
+        "place": 1,
+        "from": "bracket",
+        "wins": 6,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 1786.12
+      },
+      {
+        "roster_id": 5,
+        "user_id": "458715702119886848",
+        "name": "ImpeachTonyZH",
+        "place": 2,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 2029.36
+      },
+      {
+        "roster_id": 6,
+        "user_id": "458315051980288000",
+        "name": "BigJBerg",
+        "place": 3,
+        "from": "bracket",
+        "wins": 12,
+        "losses": 0,
+        "ties": 0,
+        "fpts": 1979.2
+      },
+      {
+        "roster_id": 2,
+        "user_id": "457784547094818816",
+        "name": "JustThaTip",
+        "place": 4,
+        "from": "bracket",
+        "wins": 8,
+        "losses": 4,
+        "ties": 0,
+        "fpts": 1875.74
+      },
+      {
+        "roster_id": 10,
+        "user_id": "470311990468800512",
+        "name": "BradenHoff67",
+        "place": 5,
+        "from": "bracket",
+        "wins": 5,
+        "losses": 7,
+        "ties": 0,
+        "fpts": 1639.64
+      },
+      {
+        "roster_id": 8,
+        "user_id": "458723431387492352",
+        "name": "BubbaCuckShremp",
+        "place": 6,
+        "from": "bracket",
+        "wins": 6,
+        "losses": 6,
+        "ties": 0,
+        "fpts": 1748.14
+      },
+      {
+        "roster_id": 3,
+        "user_id": "457945712932417536",
+        "name": "420MiaKhalifaGuy69",
+        "place": 7,
+        "from": "record",
+        "wins": 4,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1649.18
+      },
+      {
+        "roster_id": 7,
+        "user_id": "458342725222133760",
+        "name": "TrumanCooper",
+        "place": 8,
+        "from": "record",
+        "wins": 4,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1571.64
+      },
+      {
+        "roster_id": 1,
+        "user_id": "457779824002330624",
+        "name": "SanFrancisco69ers",
+        "place": 9,
+        "from": "record",
+        "wins": 4,
+        "losses": 8,
+        "ties": 0,
+        "fpts": 1525.48
+      },
+      {
+        "roster_id": 9,
+        "user_id": "458766127967760384",
+        "name": "dmfb",
+        "place": 10,
+        "from": "record",
+        "wins": 3,
+        "losses": 9,
+        "ties": 0,
+        "fpts": 1587.38
+      }
+    ]
+  }
+]

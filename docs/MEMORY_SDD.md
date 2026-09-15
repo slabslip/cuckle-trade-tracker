@@ -245,7 +245,7 @@ says so. Do not add a catalog id `realized`.
 **Season / finish portal**
 
 - Who won the year: year · seat rows. Tap → existing Past Champions body.
-- How I finished: seat · place list.
+- How I finished: ranked average finish, season count under the name, every year · place.
 
 A door’s list is the **catalog**, not one lead example. Tap a row → that
 object’s ticket. Share lives on the ticket.

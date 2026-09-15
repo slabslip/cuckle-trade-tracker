@@ -6635,7 +6635,8 @@
           const avg = s.avg != null ? (Number(s.avg).toFixed(1) + " avg") : "—";
           return '<div class="row"><div class="row-top"><div><div class="names">'
             + esc((i + 1) + ". ") + seatLabel(s.name, { link: false }) + "</div>"
-            + '<div class="date">' + esc(count) + (years ? " · " + esc(years) : "") + "</div>"
+            + '<div class="date">' + esc(count) + "</div>"
+            + (years ? '<div class="date">' + esc(years) + "</div>" : "")
             + "</div>"
             + '<div class="margin">' + esc(avg) + "</div></div></div>";
         }).join("");

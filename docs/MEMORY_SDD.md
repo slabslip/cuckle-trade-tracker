@@ -65,8 +65,8 @@ four history doors.
 |----|----------|
 | `passed_around` | Passed around |
 | `least_traded` | Least traded (catalog only) |
-| `forever` | Never left |
-| `homesteaders` | Homesteaders (catalog only) |
+| `forever` | Never left (catalog only) |
+| `week_scores` | Week scores — highest / lowest five team weeks |
 | `past_champions` | Who won the year |
 | `widest_clock` | Same smash/bust if you change the question (catalog only) |
 | `seat_run` | Who has been on a heater / cold streak on tape (catalog only) |
@@ -157,7 +157,7 @@ filters by a Team dropdown, not a type-in.
 7. How I finished (`season_place`)
 8. Me vs them (`vs_you`)
 9. Who has firsts (`firsts_held`)
-10. Never left (`forever`)
+10. Week scores (`week_scores`) — highest five and lowest five team weeks ever
 11. Passed around (`passed_around`)
 12. Draft hits (`seat_draft`)
 13. No backup (`uninsured`)

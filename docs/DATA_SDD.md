@@ -68,8 +68,8 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
   `seat_posture`; Biggest names stays in the encyclopedia). Persist `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>` still exists for Your board + hunt routing.
 - **Your board** (thirteen doors: My Trade History, League Trade History, My Draft
-  Picks, League Draft Picks, Profit / Loss, who won the year, how I finished, me vs them, who has firsts, never
-  left, passed around, draft hits, no backup) **is** the Data
+  Picks, League Draft Picks, Profit / Loss, who won the year, how I finished, me vs them, who has firsts, week
+  scores, passed around, draft hits, no backup) **is** the Data
   cold load. That is memory law ([`MEMORY_SDD.md`](MEMORY_SDD.md)).
   Edit persist still uses `seat_data_dash` +
   `cuckle.data.dash.v2.<league>.<seat>`.
@@ -84,7 +84,7 @@ Data is not standings, luck, H2H, a chart product, or a personal bag-total page.
 `book_top`, `my_trades`, `seat_run`, `cuffs_board`.
 
 **Research preset 12:** `firsts_held`, `uninsured`, `widest_clock`, `passed_around`,
-`homesteaders`, `draft_board`, `cuffs_board`, `my_trades`, `seat_run`, `least_traded`,
+`week_scores`, `draft_board`, `cuffs_board`, `my_trades`, `seat_run`, `least_traded`,
 `forever`, `past_champions`.
 
 ### Hunts

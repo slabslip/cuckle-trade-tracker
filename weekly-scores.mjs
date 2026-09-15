@@ -6,6 +6,7 @@
  */
 import { existsSync, readFileSync } from "node:fs";
 import { isSleeperLeagueId, leagueRawDir, setLeagueId, sleeperGet, writeJson } from "./lib.mjs";
+import { writeWeekScoreUi } from "./lib/week-score-lists.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -104,6 +105,7 @@ const book = {
 };
 
 writeJson("weekly_scores.json", book);
+const lists = writeWeekScoreUi(book);
 
 const byUid = {};
 let min = Infinity;
@@ -113,7 +115,13 @@ for (const s of regular) {
   max = Math.max(max, s.points);
   (byUid[s.user_id] || (byUid[s.user_id] = [])).push(s.points);
 }
+const high0 = (lists.all && lists.all.high && lists.all.high[0]) || {};
+const low0 = (lists.all && lists.all.low && lists.all.low[0]) || {};
 console.log(
   `weekly_scores.json ${scores.length} team-weeks (${regular.length} regular / ${playoff.length} playoff), `
   + `regular min ${min} max ${max}, seats ${Object.keys(byUid).length}`,
+);
+console.log(
+  `week-scores.json high ${high0.name || "—"} ${high0.points ?? "—"} · `
+  + `low ${low0.name || "—"} ${low0.points ?? "—"}`,
 );

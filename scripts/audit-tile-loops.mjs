@@ -18,10 +18,11 @@ const league = read("league.json");
 const marks = read("marks.json");
 const direction = read("seat-direction.json");
 const calc = read("calculator.json");
+const weekScores = read("week-scores.json");
 
 const DOORS = [
   "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-  "past_champions", "season_place", "vs_you", "firsts_held", "forever",
+  "past_champions", "season_place", "vs_you", "firsts_held", "week_scores",
   "passed_around", "seat_draft", "uninsured",
 ];
 const PARKED_DEAL = [
@@ -174,9 +175,15 @@ function jobFirsts(seat) {
     hiddenZero: n === 0,
   };
 }
-function jobForever(seat) {
-  const rows = (lists.forever || []).filter((r) => r.team === seat);
-  return score(true, rows.length ? rows.slice(0, 2).map((r) => r.name).join(", ") : "none on this seat", "forever");
+function jobWeekScores() {
+  const high = (weekScores && weekScores.all && weekScores.all.high) || [];
+  const low = (weekScores && weekScores.all && weekScores.all.low) || [];
+  const ok = high.length === 5 && low.length === 5 && high[0].name && low[0].name
+    && high[0].points >= low[0].points;
+  const note = ok
+    ? high[0].name + " " + high[0].points + " / " + low[0].name + " " + low[0].points
+    : "missing highest or lowest five";
+  return score(ok, note, "week_scores");
 }
 function jobDepthFlow(mem) {
   const mine = ((cuffs && cuffs.rows) || []).filter((r) => String(r.owner_id) === String(mem.user_id) && !r.cuff_owned);
@@ -204,7 +211,7 @@ const JOBS = [
   ["last_finish", (m) => jobFinish(m)],
   ["vs_them", (m) => jobVs(m)],
   ["future_firsts", (m) => jobFirsts(m.name)],
-  ["forever_home", (m) => jobForever(m.name)],
+  ["week_high_low", () => jobWeekScores()],
   ["depth_or_flow", (m) => jobDepthFlow(m)],
 ];
 

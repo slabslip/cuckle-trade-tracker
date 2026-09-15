@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { setLeagueId } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, setLeagueId } from "./lib.mjs";
 
 /**
  * Rebuild one league's meter book.
@@ -32,8 +32,9 @@ const steps = [
   ["build-cosmetics.mjs", leagueId],
 ];
 
-// Shared shell — regenerate after any league book so Pages stays current.
-steps.push(["generate-page.mjs"]);
+// Shared shell + Cuckle tape audit. A second league must not rewrite index.html
+// or run check-value-feed against Cuckle's 10-seat book.
+if (leagueId === CUCKLE_LEAGUE_ID) steps.push(["generate-page.mjs"]);
 
 for (const [script, ...args] of steps) {
   console.log(`\n== ${script} (${leagueId}) ==`);

@@ -1,0 +1,2181 @@
+{
+  "v": 2,
+  "as_of": "2026-09-15",
+  "n": 216,
+  "n_regular": 168,
+  "n_playoff": 48,
+  "seasons": [
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "playoff_week_start": 15
+    }
+  ],
+  "scores": [
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 99.08,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 119.26,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 76.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 110.38,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 135.16,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 93.22,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 81.98,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 93.72,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 75.52,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 82.52,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 94.22,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 1,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 94.18,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 109.3,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 91.6,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 103.9,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 91.38,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 62.72,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 131.8,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 79.94,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 100.54,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 100.44,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 106.68,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 123.98,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 2,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 83.94,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 125.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 103.72,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 131.12,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 106.92,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 104.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 105.66,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 90.42,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 136.94,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 91.18,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 114.36,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 77.22,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 3,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 52.84,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 115.46,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 91.78,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 124.38,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 129.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 94.46,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 123.2,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 87.56,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 110.12,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 112.98,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 107.2,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 101.2,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 4,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 94.42,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 101.36,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 87.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 103.24,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 123.02,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 86.32,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 120.4,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 110.28,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 116.98,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 104.88,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 122.14,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 88.1,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 5,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 107.34,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 134.14,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 77.5,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 71.34,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 112.04,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 98.1,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 120.74,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 126.76,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 91.84,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 93.38,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 90.88,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 100.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 6,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 134.96,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 118.12,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 99.52,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 119.74,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 124.98,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 86.76,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 172.08,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 97.06,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 81.66,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 124.52,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 58.04,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 134.04,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 7,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 85.9,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 108.68,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 117.22,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 90.9,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 104.18,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 91.32,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 144.02,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 98.2,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 34.82,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 90.98,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 82.22,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 127.36,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 8,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 100.58,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 124.72,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 82.56,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 84.7,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 138.66,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 110.42,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 104.84,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 81.92,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 125.9,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 102.18,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 80.5,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 95.8,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 9,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 135.5,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 121.42,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 90.24,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 101,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 92,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 101.24,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 144.68,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 109.14,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 130.8,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 129,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 47.2,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 92.22,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 10,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 112.3,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 101.32,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 65.32,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 75.82,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 95.64,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 111.58,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 99,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 125.4,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 102.82,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 100.92,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 53.14,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 76.7,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 11,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 116.54,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 92.44,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 96.92,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 134.16,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 97.16,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 86.02,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 101.32,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 125.62,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 154.46,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 111.04,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 89.68,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 98.86,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 12,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 109.32,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 99.16,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 50.64,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 69.06,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 128.28,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 112.72,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 103.42,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 109.24,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 67,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 97.34,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 91.54,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 122.5,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 13,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 104.34,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 66.58,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 157.66,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 116.14,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 77.92,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 119.94,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 101.24,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 105.44,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 150.74,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 87.56,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 72.28,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 87.3,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 14,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 121.26,
+      "phase": "regular",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 103.48,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 105.3,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 66.18,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 84.7,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 98.32,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 161.62,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 150.6,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 126.66,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 99.4,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 84.28,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 94.1,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 15,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 148.3,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 117.7,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 87.74,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 86.3,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 119.1,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 81.4,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 163.38,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 102.7,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 151.36,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 100.06,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 44.58,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 69.7,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 16,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 124.26,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 45.54,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 77.4,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 70.1,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 147.64,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 157.58,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 118.86,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 123.22,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 85.28,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 65.9,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 86.18,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 47.6,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 17,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 110.52,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 75.72,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 83.62,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 65.98,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 46.44,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 45.7,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 88.76,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 84.08,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 11,
+      "user_id": "1259573343355404288",
+      "points": 87.6,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 99.04,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 76.04,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 47.8,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2025",
+      "league_id": "1253382148073725952",
+      "week": 18,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 68.5,
+      "phase": "playoff",
+      "playoff_week_start": 15
+    }
+  ]
+}

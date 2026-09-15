@@ -1,0 +1,178 @@
+[
+  {
+    "date": "2025-09-11",
+    "season": "2025",
+    "week": 2,
+    "transaction_id": "1271954165261692928",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Calvin Ridley"
+        ],
+        "out": [
+          "Keon Coleman"
+        ]
+      },
+      "Aballers": {
+        "in": [
+          "Keon Coleman"
+        ],
+        "out": [
+          "Calvin Ridley"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-22",
+    "season": "2025",
+    "week": 3,
+    "transaction_id": "1275994024758509568",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Jonnu Smith",
+          "Daniel Jones"
+        ],
+        "out": [
+          "Kyle Pitts",
+          "Calvin Austin"
+        ]
+      },
+      "collinmccaskill": {
+        "in": [
+          "Kyle Pitts",
+          "Calvin Austin"
+        ],
+        "out": [
+          "Jonnu Smith",
+          "Daniel Jones"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-22",
+    "season": "2025",
+    "week": 3,
+    "transaction_id": "1275983247628595200",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Michael Pittman",
+          "Tyler Warren"
+        ],
+        "out": [
+          "DJ Moore",
+          "Dalton Kincaid"
+        ]
+      },
+      "TaylorJohnson16": {
+        "in": [
+          "DJ Moore",
+          "Dalton Kincaid"
+        ],
+        "out": [
+          "Michael Pittman",
+          "Tyler Warren"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-22",
+    "season": "2025",
+    "week": 3,
+    "transaction_id": "1275965278907269120",
+    "sides": {
+      "kotula69": {
+        "in": [
+          "CeeDee Lamb",
+          "Jalen Hurts"
+        ],
+        "out": [
+          "Nico Collins",
+          "George Pickens"
+        ]
+      },
+      "fatassmexican": {
+        "in": [
+          "Nico Collins",
+          "George Pickens"
+        ],
+        "out": [
+          "CeeDee Lamb",
+          "Jalen Hurts"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-30",
+    "season": "2025",
+    "week": 4,
+    "transaction_id": "1278857113552044032",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Tyler Allgeier"
+        ],
+        "out": [
+          "DeVonta Smith"
+        ]
+      },
+      "sbzy11": {
+        "in": [
+          "DeVonta Smith"
+        ],
+        "out": [
+          "Tyler Allgeier"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-11-05",
+    "season": "2025",
+    "week": 10,
+    "transaction_id": "1291857537913606144",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Tyrone Tracy",
+          "Tetairoa McMillan"
+        ],
+        "out": [
+          "Michael Pittman",
+          "Zach Charbonnet"
+        ]
+      },
+      "Aballers": {
+        "in": [
+          "Michael Pittman",
+          "Zach Charbonnet"
+        ],
+        "out": [
+          "Tyrone Tracy",
+          "Tetairoa McMillan"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-11-11",
+    "season": "2025",
+    "week": 10,
+    "transaction_id": "1294075214996475904",
+    "sides": {
+      "Tbow00": {
+        "in": [],
+        "out": []
+      },
+      "fatassmexican": {
+        "in": [],
+        "out": []
+      }
+    }
+  }
+]

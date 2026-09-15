@@ -1,0 +1,14 @@
+{
+  "espn_league_id": "35763180",
+  "sleeper_league_id": "1389723418827460608",
+  "cookie": false,
+  "authorized": false,
+  "reason": "espn_private_needs_cookie",
+  "seasons": [],
+  "tried": [
+    {
+      "season": 2024,
+      "status": 401
+    }
+  ]
+}

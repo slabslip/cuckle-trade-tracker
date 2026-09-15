@@ -92,6 +92,7 @@ export function isSleeperLeagueId(id) {
 export function loadProviders(id = LEAGUE_ID) {
   const fallback = {
     sleeper_league_id: String(id),
+    sleeper_extra_ids: [],
     espn_league_id: null,
     espn_through_season: null,
     kind: null,
@@ -99,7 +100,15 @@ export function loadProviders(id = LEAGUE_ID) {
   };
   const raw = readJson("providers.json", null);
   if (!raw || typeof raw !== "object") return fallback;
-  return { ...fallback, ...raw, sleeper_league_id: String(raw.sleeper_league_id || id) };
+  const extra = Array.isArray(raw.sleeper_extra_ids)
+    ? raw.sleeper_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : String(raw.sleeper_extra_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
+  return {
+    ...fallback,
+    ...raw,
+    sleeper_league_id: String(raw.sleeper_league_id || id),
+    sleeper_extra_ids: extra.filter((x) => x !== String(raw.sleeper_league_id || id)),
+  };
 }
 
 export function espnCookieHeader() {

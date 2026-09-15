@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { CUCKLE_LEAGUE_ID, setLeagueId } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, loadProviders, setLeagueId, writeJson } from "./lib.mjs";
 
 /**
  * Rebuild one league's meter book.
@@ -15,6 +15,23 @@ const argv = process.argv.slice(2);
 const skipSnapshot = argv.includes("--skip-snapshot");
 const leagueArg = argv.find((a) => /^\d{6,64}$/.test(a));
 const leagueId = setLeagueId(leagueArg);
+{
+  const extra = String(process.env.SLEEPER_EXTRA_IDS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => /^\d{6,64}$/.test(s) && s !== String(leagueId));
+  const espn = String(process.env.ESPN_LEAGUE_ID || "").trim();
+  if (extra.length || espn) {
+    const cur = loadProviders(leagueId);
+    writeJson("providers.json", {
+      ...cur,
+      sleeper_league_id: String(leagueId),
+      sleeper_extra_ids: extra.length ? extra : (cur.sleeper_extra_ids || []),
+      espn_league_id: espn || cur.espn_league_id || null,
+    });
+    console.log("providers.json", extra.join(",") || "—", espn || cur.espn_league_id || "—");
+  }
+}
 const steps = [
   ["sleeper-sync.mjs", leagueId],
   ["espn-sync.mjs", leagueId],

@@ -12,9 +12,17 @@ on:
   workflow_dispatch:
     inputs:
       league_id:
-        description: Sleeper league ID
+        description: Canonical Sleeper league ID (dashboard key)
         required: true
         default: "1315431339301806080"
+      sleeper_extra_ids:
+        description: Extra Sleeper season IDs, comma-separated
+        required: false
+        default: ""
+      espn_league_id:
+        description: ESPN league ID to merge
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -40,8 +48,12 @@ jobs:
         id: league
         run: |
           ID="${{ github.event.client_payload.league_id || github.event.inputs.league_id }}"
+          EXTRA="${{ github.event.client_payload.sleeper_extra_ids || github.event.inputs.sleeper_extra_ids || '' }}"
+          ESPN="${{ github.event.client_payload.espn_league_id || github.event.inputs.espn_league_id || '' }}"
           if [ -z "$ID" ]; then ID="1315431339301806080"; fi
           echo "id=$ID" >> "$GITHUB_OUTPUT"
+          echo "extra=$EXTRA" >> "$GITHUB_OUTPUT"
+          echo "espn=$ESPN" >> "$GITHUB_OUTPUT"
 
       - name: Cache Sleeper players dictionary
         uses: actions/cache@v4
@@ -57,6 +69,8 @@ jobs:
       - name: Build league meter
         env:
           LEAGUE_ID: ${{ steps.league.outputs.id }}
+          SLEEPER_EXTRA_IDS: ${{ steps.league.outputs.extra }}
+          ESPN_LEAGUE_ID: ${{ steps.league.outputs.espn }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ESPN_S2: ${{ secrets.ESPN_S2 }}
           ESPN_SWID: ${{ secrets.ESPN_SWID }}

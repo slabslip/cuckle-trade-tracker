@@ -902,6 +902,11 @@
     .app-form input:focus-visible, .app-form select:focus-visible {
       outline: 2px solid #c8c8d0; outline-offset: 2px;
     }
+    .join-src {
+      display: grid; gap: 8px; padding: 10px 0 4px;
+      border-top: 1px solid var(--line);
+    }
+    .join-src:first-child { border-top: 0; padding-top: 0; }
     .app-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
     .app-actions .err { color: var(--red); font-size: 0.8125rem; margin: 0; flex: 1 1 100%; }
     /* Settings → Profile: square crop → circular preview used as seat flair app-wide. */
@@ -4120,7 +4125,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmadd20260915032000";
+    const DATA_V = "gmmerge20260915034000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15732,7 +15737,8 @@
         id: GM_LEAGUE_ID,
         name: "Gm 2026 LLJ",
         espn: GM_ESPN_LEAGUE_ID,
-        why: "1QB redraft. Book is already on this site.",
+        sleeper_extra: ["1253382148073725952"],
+        why: "Sleeper 2026 + 2025 and ESPN 35763180 merge into one book.",
       },
     ];
     let pendingAddLeague = "";
@@ -15754,8 +15760,13 @@
     function fillReadyLeague(id) {
       const b = readyAddBook(id);
       if (!b) return false;
-      joinLeagueId = b.id;
-      joinEspnId = b.espn || "";
+      const rows = [{ kind: "sleeper", id: b.id }];
+      (b.sleeper_extra || []).forEach(function (extra) {
+        if (extra && extra !== b.id) rows.push({ kind: "sleeper", id: String(extra) });
+      });
+      if (b.espn) rows.push({ kind: "espn", id: String(b.espn) });
+      joinSources = rows;
+      syncJoinIdsFromSources();
       pendingAddLeague = b.id;
       return true;
     }
@@ -15773,7 +15784,7 @@
       }
       closeLeaguesDrawer(true);
       appScreen = "create";
-      focusNext = "#joinLeagueId";
+      focusNext = "[data-join-src-id]";
       render();
     }
     function readyAddBooksHtml() {
@@ -15880,6 +15891,33 @@
     let joinPreview = null; // league preview from Edge Function
     let joinLeagueId = "";
     let joinEspnId = "";
+    let joinSources = [{ kind: "sleeper", id: "" }];
+    function syncJoinIdsFromSources() {
+      const sleepers = [];
+      const espns = [];
+      (joinSources || []).forEach(function (row) {
+        const id = String((row && row.id) || "").trim();
+        if (!id) return;
+        if ((row.kind || "sleeper") === "espn") espns.push(id);
+        else sleepers.push(id);
+      });
+      joinLeagueId = sleepers[0] || "";
+      joinEspnId = espns[0] || "";
+      return { sleeper: sleepers, espn: espns };
+    }
+    function joinExtraSleeperIds() {
+      return syncJoinIdsFromSources().sleeper.slice(1);
+    }
+    function addJoinSource(kind) {
+      joinSources = (joinSources || []).concat([{ kind: kind === "espn" ? "espn" : "sleeper", id: "" }]);
+    }
+    function cutJoinSource(i) {
+      const next = (joinSources || []).slice();
+      if (next.length <= 1) return;
+      next.splice(Number(i) || 0, 1);
+      joinSources = next.length ? next : [{ kind: "sleeper", id: "" }];
+      syncJoinIdsFromSources();
+    }
     let joinBusy = false;
     let joinError = "";
     let createdInvites = null; // [{ team_name, code, claimed, sleeper_user_id, claimed_username? }]
@@ -17551,7 +17589,7 @@
           focusNext = ".screen-h";
         } else if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
           appScreen = "create";
-          focusNext = "#joinLeagueId";
+          focusNext = "[data-join-src-id]";
         } else {
           appScreen = "home";
           focusNext = ".screen-h";
@@ -17565,12 +17603,43 @@
       }
     }
 
+    async function onRebuildLeague(leagueId) {
+      const lid = String(leagueId || joinLeagueId || "").trim();
+      if (!lid || joinBusy) return;
+      readJoinSourcesFromDom();
+      const ids = syncJoinIdsFromSources();
+      joinBusy = true;
+      joinError = "";
+      settingsCopyNote = "";
+      render();
+      try {
+        const data = await joinLeagueCall("rebuild", {
+          sleeper_league_id: lid,
+          sleeper_extra_ids: ids.sleeper.filter(function (id) { return id !== lid; }),
+          espn_league_id: joinEspnId || undefined,
+        });
+        settingsCopyNote = data && data.sync_dispatched
+          ? "Dashboard rebuild started. The meter refreshes when league-sync finishes."
+          : "Rebuild asked. If GitHub PAT is unset on join-league, run node build.mjs " + lid + " on a laptop.";
+        if (data && data.league) joinPreview = data.league;
+      } catch (err) {
+        joinError = (err && err.message) || "Could not rebuild that league.";
+        console.error(err);
+      } finally {
+        joinBusy = false;
+        render();
+      }
+    }
+
     async function onCreateLeague() {
       if (joinBusy) return;
-      const el = document.getElementById("joinLeagueId");
-      const espnEl = document.getElementById("joinEspnId");
-      joinLeagueId = el ? String(el.value || "").trim() : joinLeagueId;
-      joinEspnId = espnEl ? String(espnEl.value || "").trim() : joinEspnId;
+      readJoinSourcesFromDom();
+      const ids = syncJoinIdsFromSources();
+      if (!joinLeagueId) {
+        joinError = "Add at least one Sleeper league ID. That ID is the dashboard key.";
+        render();
+        return;
+      }
       joinBusy = true;
       joinError = "";
       createdInvites = null;
@@ -17581,6 +17650,7 @@
         await authRefreshIfNeeded();
         const data = await joinLeagueCall("create", {
           sleeper_league_id: joinLeagueId,
+          sleeper_extra_ids: ids.sleeper.slice(1),
           espn_league_id: joinEspnId || undefined,
         });
         createdInvites = data.invites || [];
@@ -24223,26 +24293,63 @@
         + "</div>";
     }
 
+    function readJoinSourcesFromDom() {
+      const nodes = document.querySelectorAll("[data-join-src]");
+      if (!nodes.length) {
+        syncJoinIdsFromSources();
+        return joinSources;
+      }
+      const rows = [];
+      for (let i = 0; i < nodes.length; i++) {
+        const box = nodes[i];
+        const kindEl = box.querySelector("[data-join-src-kind]");
+        const idEl = box.querySelector("[data-join-src-id]");
+        const kind = kindEl && kindEl.value === "espn" ? "espn" : "sleeper";
+        rows.push({ kind: kind, id: idEl ? String(idEl.value || "").trim() : "" });
+      }
+      joinSources = rows.length ? rows : [{ kind: "sleeper", id: "" }];
+      syncJoinIdsFromSources();
+      return joinSources;
+    }
+
+    function joinSourceRowHtml(row, i) {
+      const n = (joinSources || []).length;
+      const kind = (row && row.kind) === "espn" ? "espn" : "sleeper";
+      return '<div class="join-src" data-join-src="' + i + '">'
+        + receiptLookSelect("Source", "data-join-src-kind",
+          [["sleeper", "Sleeper"], ["espn", "ESPN"]], kind)
+        + '<label class="receipt-look"><span>League ID</span>'
+        + '<input data-join-src-id="1" inputmode="numeric" autocomplete="off"'
+        + ' placeholder="' + (kind === "espn" ? "35763180" : CUCKLE_LEAGUE_ID) + '"'
+        + ' value="' + esc((row && row.id) || "") + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + (n > 1
+          ? '<button type="button" class="linkish" data-join-src-cut="' + i + '">Remove</button>'
+          : "")
+        + "</div>";
+    }
+
     function renderCreateLeague() {
+      if (!joinSources || !joinSources.length) joinSources = [{ kind: "sleeper", id: joinLeagueId || "" }];
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
+        + '<p class="caption">First Sleeper ID is the dashboard key. Add every other Sleeper season and the ESPN ID — they merge into one book and league-sync builds the dashboard.</p>'
         + (isStoreShell()
-          ? '<p class="caption">This TestFlight build features Cuckle. Another Sleeper ID still registers and league-sync builds the meter. A first-year league stays thin — no fake crowns.</p>'
+          ? '<p class="caption">This TestFlight build features Cuckle. Another Sleeper ID still registers. A first-year league stays thin — no fake crowns.</p>'
           : "")
         + '<div class="app-card"><h3>League IDs</h3>'
         + '<div class="app-form">'
-        + '<label>Sleeper league ID<input id="joinLeagueId" name="leagueId" inputmode="numeric" autocomplete="off"'
-        + ' placeholder="' + CUCKLE_LEAGUE_ID + '" value="' + esc(joinLeagueId) + '"'
-        + (joinBusy ? " disabled" : "") + " /></label>"
-        + '<label>ESPN league ID (optional)<input id="joinEspnId" name="espnId" autocomplete="off"'
-        + ' placeholder="Only if you have ESPN data too" value="' + esc(joinEspnId) + '"'
-        + (joinBusy ? " disabled" : "") + " /></label>"
+        + (joinSources || []).map(joinSourceRowHtml).join("")
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-src-add="sleeper"' + (joinBusy ? " disabled" : "") + ">Add Sleeper ID</button>"
+        + '<button type="button" class="chip" data-join-src-add="espn"' + (joinBusy ? " disabled" : "") + ">Add ESPN ID</button>"
+        + "</div>"
         + (joinLeagueId === GM_LEAGUE_ID
-          ? '<p class="caption">Gm 2026 LLJ is filled in. Create it, then claim your seat (TrumanCooper if that is you).</p>'
+          ? '<p class="caption">Gm 2026 LLJ is filled: current Sleeper, 2025 Sleeper, and ESPN. Create, then claim your seat (TrumanCooper if that is you).</p>'
           : "")
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-create-league="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy ? "Creating…" : "Create & generate invites") + "</button>"
+        + (joinBusy ? "Creating…" : "Create, merge, and build") + "</button>"
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + "</div></div></div></div>";
     }
@@ -24337,6 +24444,11 @@
             ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
             : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
         + transferBlock
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id || "") + '"'
+        + (joinBusy || !L.sleeper_league_id ? " disabled" : "") + ">"
+        + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
+        + "</div>"
         + "</div>";
     }
 
@@ -24443,7 +24555,8 @@
             + "</p>"
             + '<div class="app-actions">'
             + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
-            + '">Send / manage invites</button>'
+              + '">Send / manage invites</button>'
+            + '<button type="button" class="chip" data-rebuild-league="' + esc(o.sleeper_league_id) + '">Rebuild dashboard</button>'
             + (mem
               ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
                 + '">Open dashboard</button>'
@@ -25245,7 +25358,7 @@
         onGateSubmit();
         return;
       }
-      if (t.id === "joinLeagueId" || t.id === "joinEspnId") {
+      if (t.id === "joinLeagueId" || t.id === "joinEspnId" || (t.closest && t.closest("[data-join-src-id]"))) {
         if (e.key !== "Enter") return;
         e.preventDefault();
         onCreateLeague();
@@ -26403,6 +26516,25 @@
         onCreateLeague();
         return;
       }
+      const joinAdd = e.target.closest("[data-join-src-add]");
+      if (joinAdd) {
+        readJoinSourcesFromDom();
+        addJoinSource(joinAdd.getAttribute("data-join-src-add"));
+        render();
+        return;
+      }
+      const joinCut = e.target.closest("[data-join-src-cut]");
+      if (joinCut) {
+        readJoinSourcesFromDom();
+        cutJoinSource(joinCut.getAttribute("data-join-src-cut"));
+        render();
+        return;
+      }
+      const rebuildBtn = e.target.closest("[data-rebuild-league]");
+      if (rebuildBtn) {
+        onRebuildLeague(rebuildBtn.getAttribute("data-rebuild-league"));
+        return;
+      }
       const redeemGo = e.target.closest("[data-redeem-go]");
       if (redeemGo) {
         onRedeemInvite();
@@ -27165,6 +27297,12 @@
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
+      const joinKindSel = e.target && e.target.closest && e.target.closest("[data-join-src-kind]");
+      if (joinKindSel) {
+        readJoinSourcesFromDom();
+        render();
+        return;
+      }
       const huntPosSel = e.target && e.target.closest && e.target.closest("select[data-hunt-pos]");
       if (huntPosSel) {
         dataHuntPos = huntPosSel.value === "all" ? "" : (huntPosSel.value || "");
@@ -27291,6 +27429,10 @@
       }
     });
     document.getElementById("app").addEventListener("input", (e) => {
+      if (e.target && e.target.closest && e.target.closest("[data-join-src-id]")) {
+        readJoinSourcesFromDom();
+        return;
+      }
       const wagerLive = e.target && e.target.closest && e.target.closest("[data-ledger-wager-live]");
       if (wagerLive) {
         const form = wagerLive.form || wagerLive.closest("form");
@@ -27465,7 +27607,7 @@
         }
         if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
           appScreen = "create";
-          focusNext = "#joinLeagueId";
+          focusNext = "[data-join-src-id]";
           render();
           return;
         }

@@ -6,7 +6,8 @@
 // Actions:
 //   invite_preview   { code }               → public: team_name + suggested username (no auth)
 //   preview         { sleeper_league_id }
-//   create          { sleeper_league_id, espn_league_id? }
+//   create          { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
+//   rebuild         { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
 //                   → first time: mint codes; revisit by same commissioner: status only (no remint)
 //   list_invites    { sleeper_league_id }  → unclaimed codes + claimed seats + members
 //   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats
@@ -39,10 +40,28 @@ function json(status: number, body: unknown) {
   });
 }
 
-async function dispatchLeagueSync(leagueId: string) {
+function cleanIdList(raw: unknown) {
+  const src = Array.isArray(raw) ? raw : String(raw || "").split(",");
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of src) {
+    const id = String(item || "").trim();
+    if (!/^\d{6,64}$/.test(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+async function dispatchLeagueSync(
+  leagueId: string,
+  extras?: { sleeper_extra_ids?: string[]; espn_league_id?: string | null },
+) {
   const pat = Deno.env.get("GITHUB_PAT");
   if (!pat || !leagueId) return { ok: false, skipped: true };
   try {
+    const extra = cleanIdList(extras && extras.sleeper_extra_ids).filter((id) => id !== String(leagueId));
+    const espn = extras && extras.espn_league_id ? String(extras.espn_league_id).trim() : "";
     const res = await fetch("https://api.github.com/repos/slabslip/cuckle-trade-tracker/dispatches", {
       method: "POST",
       headers: {
@@ -54,7 +73,11 @@ async function dispatchLeagueSync(leagueId: string) {
       },
       body: JSON.stringify({
         event_type: "league-sync",
-        client_payload: { league_id: String(leagueId) },
+        client_payload: {
+          league_id: String(leagueId),
+          sleeper_extra_ids: extra.join(","),
+          espn_league_id: espn || "",
+        },
       }),
     });
     return { ok: res.status === 204, github_status: res.status };
@@ -385,6 +408,7 @@ Deno.serve(async (req) => {
   if (action === "create" || action === "rotate_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
     const espnId = String(body.espn_league_id || "").trim() || null;
+    const extraIds = cleanIdList(body.sleeper_extra_ids).filter((id) => id !== leagueId);
     if (!/^\d{6,64}$/.test(leagueId)) {
       return json(400, { ok: false, error: "Enter a valid Sleeper league ID (digits only)" });
     }
@@ -427,7 +451,10 @@ Deno.serve(async (req) => {
         return json(500, { ok: false, error: String((err as Error).message || err) });
       }
       if ((prior.status || "pending_sync") !== "ready") {
-        await dispatchLeagueSync(preview.sleeper_league_id);
+        await dispatchLeagueSync(preview.sleeper_league_id, {
+          sleeper_extra_ids: extraIds,
+          espn_league_id: espnId,
+        });
       }
       return json(200, {
         ok: true,
@@ -469,7 +496,10 @@ Deno.serve(async (req) => {
       return json(500, { ok: false, error: String((err as Error).message || err) });
     }
 
-    const sync = await dispatchLeagueSync(preview.sleeper_league_id);
+    const sync = await dispatchLeagueSync(preview.sleeper_league_id, {
+      sleeper_extra_ids: extraIds,
+      espn_league_id: espnId,
+    });
     return json(200, {
       ok: true,
       already_exists: false,
@@ -481,6 +511,40 @@ Deno.serve(async (req) => {
       invites: invitesOut,
       sync_dispatched: !!sync.ok,
       note: "DM each manager their code. Unclaimed codes stay visible in the invite console until redeemed. Meter sync starts automatically when GitHub PAT is set on this function.",
+    });
+  }
+
+  // ---- rebuild meter from listed IDs ----
+  if (action === "rebuild") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const espnId = String(body.espn_league_id || "").trim() || null;
+    const extraIds = cleanIdList(body.sleeper_extra_ids).filter((id) => id !== leagueId);
+    if (!/^\d{6,64}$/.test(leagueId)) {
+      return json(400, { ok: false, error: "Enter a valid Sleeper league ID (digits only)" });
+    }
+    const { data: league } = await admin.from("leagues")
+      .select("created_by, name, status, season, total_rosters, espn_league_id")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!league || league.created_by !== user.id) {
+      return json(403, { ok: false, error: "Only the league creator can rebuild this book" });
+    }
+    if (espnId) {
+      await admin.from("leagues").update({ espn_league_id: espnId }).eq("sleeper_league_id", leagueId);
+    }
+    const sync = await dispatchLeagueSync(leagueId, {
+      sleeper_extra_ids: extraIds,
+      espn_league_id: espnId || league.espn_league_id,
+    });
+    return json(200, {
+      ok: true,
+      league: {
+        sleeper_league_id: leagueId,
+        name: league.name,
+        status: league.status,
+        espn_league_id: espnId || league.espn_league_id,
+      },
+      sync_dispatched: !!sync.ok,
     });
   }
 

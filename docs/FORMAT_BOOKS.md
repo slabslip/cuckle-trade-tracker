@@ -42,12 +42,16 @@ It must look **new**, not like a broken Cuckle.
 
 ## 3. How a second league arrives
 
-1. Commissioner pastes a Sleeper ID in Create a league.
+1. Commissioner opens Create a league from the current dashboard and adds
+   **each** source ID (current Sleeper, prior Sleeper seasons, ESPN). First
+   Sleeper ID is the dashboard key. Extra IDs merge into that one book.
 2. `join-league` GETs rosters and, when `GITHUB_PAT` is set, POSTs
-   `repository_dispatch` `league-sync`.
+   `repository_dispatch` `league-sync` with `sleeper_extra_ids` + `espn_league_id`.
 3. [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml) runs
    `node build.mjs <id>` (generate-page is no longer Cuckle-only).
 4. `mark-league-ready.mjs` flips `ready` when the service role key is present.
+5. Commissioner can tap **Rebuild dashboard** on Settings → Leagues or the
+   invite console to run the same merge + build again.
 
 Laptop fallback: `node build.mjs <sleeper_league_id>`.
 

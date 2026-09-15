@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Official Sleeper GETs only. Trade tape + aliases. Does not overwrite aliases.overrides.json. */
 import fs from "node:fs";
-import { DATA, readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
+import { DATA, loadProviders, readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -77,6 +77,17 @@ async function main() {
   const overrides = readJson("aliases.overrides.json", {}) || {};
 
   const leagues = await walkLeagues(LEAGUE_ID);
+  const extraIds = (loadProviders(LEAGUE_ID).sleeper_extra_ids || [])
+    .map((id) => String(id || "").trim())
+    .filter((id) => id && id !== String(LEAGUE_ID));
+  for (const extraId of extraIds) {
+    const more = await walkLeagues(extraId);
+    for (const lg of more) {
+      if (!leagues.some((row) => String(row.league_id) === String(lg.league_id))) {
+        leagues.push(lg);
+      }
+    }
+  }
   const members = new Map();
   const observations = [];
   const seats = [];

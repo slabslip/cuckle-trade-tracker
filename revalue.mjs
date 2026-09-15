@@ -835,7 +835,9 @@ async function main() {
       year_ends: evenYearEnds,
       incomplete: entry.lenses.realized.incomplete,
     };
-    const winKeys = ["t0", "y1", "y2", "y3", "all"];
+    const winKeys = (leagueFormat.windows && leagueFormat.windows.length)
+      ? leagueFormat.windows.slice()
+      : ["t0", "y1", "y2", "y3", "all"];
     entry.lenses.windows = {};
     for (const key of winKeys) {
       const dates = lensAsOfs(key, t0, today);
@@ -1110,7 +1112,7 @@ async function main() {
         value: nowVal(key),
         rostered: rosterOwner.has(key),
         drafted: !!d,
-        forever: !!(d && d.season === "2019" && !leftHome && sitsWith === d.drafted_by_user_id && rosterOwner.has(key)),
+        forever: !!(d && d.season === foreverSeason && !leftHome && sitsWith === d.drafted_by_user_id && rosterOwner.has(key)),
       });
     }
     const slim = (r) => ({
@@ -1132,8 +1134,33 @@ async function main() {
     return { most_traded, least_traded, forever, homesteaders };
   }
 
+  const draftSeasons = [...new Set((draftPicks || []).map((p) => String(p.season || "")).filter(Boolean))].sort();
+  const foreverSeason = leagueFormat.kind === "redraft"
+    ? (draftSeasons[draftSeasons.length - 1] || String(today).slice(0, 4))
+    : "2019";
   const player_lists = playerLists();
   const rostersNow = readJson("rosters_now.json", []);
+  const nowOwner = new Map();
+  for (const r of rostersNow) {
+    const uid = r.owner_id || r.user_id;
+    for (const pid of (r.players || [])) nowOwner.set(String(pid), uid);
+  }
+  const firstsHeld = leagueFormat.kind === "redraft"
+    ? (draftPicks || []).filter((p) => String(p.season) === foreverSeason && Number(p.round) === 1)
+      .map((p) => {
+        const sits = nowOwner.get(String(p.player_id));
+        return {
+          season: String(p.season),
+          round: 1,
+          pick_no: Number(p.pick_no) || 0,
+          player: p.label || p.player_id,
+          owner_id: sits || p.drafted_by_user_id || "",
+          owner: nameById[sits || p.drafted_by_user_id] || "",
+          drafted_by: nameById[p.drafted_by_user_id] || "",
+          held: !!(sits && sits === p.drafted_by_user_id),
+        };
+      })
+    : [];
   check("has current rosters", rostersNow.length === TEAMS || rostersNow.length >= 2);
   if (player_lists.most_traded.length >= 2) {
     check("most ranked by trades", player_lists.most_traded[0].trades >= player_lists.most_traded[player_lists.most_traded.length - 1].trades);
@@ -1199,6 +1226,7 @@ async function main() {
     player_lists,
     today,
     format: leagueFormat,
+    firsts_held: firstsHeld,
     providers: {
       sleeper_seasons: bridge.sleeper_seasons || [],
       espn_seasons: bridge.espn_seasons || [],

@@ -4,6 +4,7 @@
  * Each loop is one law. Fail fast with the loop number.
  */
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import { detectLeagueFormat } from "../lib.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -82,3 +83,5 @@ loop(12, page.includes("Cuckle trade calculator") && page.includes("data/ui/calc
   "Cuckle door and title stay the default; DATA_V present");
 
 console.log("PASS 12 Gm dashboard loops");
+const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (more.status) process.exit(more.status);

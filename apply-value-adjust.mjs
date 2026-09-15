@@ -133,7 +133,8 @@ function partnerDeltas(seat, name, lens, today) {
  * The browser used to fetch all ten seat files (~7.4 MB) to draw one bar chart, and
  * computed the same numbers a second way for its own tiles.
  */
-function buildMarks(seats, today) {
+function buildMarks(seats, today, lenses) {
+  const use = (lenses && lenses.length) ? lenses : LENSES;
   const out = {};
   for (const seat of seats) {
     const st = seat.style || {};
@@ -147,7 +148,7 @@ function buildMarks(seats, today) {
     }
     const rookie = ((seat.drafts && seat.drafts.rookie) || []).filter((p) => p.surplus != null);
     const byLens = {};
-    for (const lens of LENSES) {
+    for (const lens of use) {
       const ds = (seat.trades || [])
         .map((t) => tradeDeltaAtTarget(t, lens, today))
         .filter((d) => d != null);
@@ -332,11 +333,11 @@ function main() {
   delete league.drafters_startup;
 
   writeUi("league.json", league);
-  const marks = buildMarks(seats, league.today);
-  writeUi("marks.json", marks);
-
   const isCuckle = String(process.env.LEAGUE_ID || "") === CUCKLE_LEAGUE_ID;
   const formatWindows = (league.format && league.format.windows) || ["t0", "y1", "y2", "y3", "all"];
+  const markLenses = formatWindows.filter((k) => LENSES.includes(k));
+  const marks = buildMarks(seats, league.today, markLenses);
+  writeUi("marks.json", marks);
   let ceedee = null;
   let ceedeeVa = null;
   let zeke = null;
@@ -420,11 +421,11 @@ function main() {
   // revalue.mjs still emits it, so dropping it belongs to a payload pass, not to a delete here.
   if (isCuckle) check("drafters_rookie still present", (league.drafters_rookie || []).length > 0);
   check("marks cover every seat and clock", Object.keys(marks.seats).length === seats.length
-    && Object.values(marks.seats).every((m) => LENSES.every((k) => m.lens[k])));
+    && Object.values(marks.seats).every((m) => markLenses.every((k) => m.lens[k])));
   check("marks partner counts add up", Object.values(marks.seats).every((m) => {
     const seat = seats.find((s) => s.name === m.name);
     const graded = (seat.partners || []).filter((p) => p.complete >= 1).length;
-    return LENSES.every((k) => m.lens[k].extract + m.lens[k].farmed + m.lens[k].even === graded);
+    return markLenses.every((k) => m.lens[k].extract + m.lens[k].farmed + m.lens[k].even === graded);
   }));
   // "all" is the flatten windows.all delta, not the today blend in `even` — see AUDIT §8c.
   check("marks 'all' total matches the windows.all deltas", Object.values(marks.seats).every((m) => {
@@ -433,12 +434,14 @@ function main() {
     const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
     return (want == null && m.lens.all.total == null) || Math.abs(want - m.lens.all.total) < 1e-6;
   }));
-  check("marks 'y2' uses best available window per trade", Object.values(marks.seats).every((m) => {
-    const seat = seats.find((s) => s.name === m.name);
-    const ds = (seat.trades || []).map((t) => tradeDeltaAtTarget(t, "y2", league.today)).filter((d) => d != null);
-    const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
-    return (want == null && m.lens.y2.total == null) || Math.abs(want - m.lens.y2.total) < 1e-6;
-  }));
+  if (markLenses.includes("y2")) {
+    check("marks 'y2' uses best available window per trade", Object.values(marks.seats).every((m) => {
+      const seat = seats.find((s) => s.name === m.name);
+      const ds = (seat.trades || []).map((t) => tradeDeltaAtTarget(t, "y2", league.today)).filter((d) => d != null);
+      const want = ds.length ? ds.reduce((a, b) => a + b, 0) : null;
+      return (want == null && m.lens.y2.total == null) || Math.abs(want - m.lens.y2.total) < 1e-6;
+    }));
+  }
   check("dead league keys gone", !("review_trades" in league) && !("drafters_startup" in league)
     && !("today" in league.trade_boards) && !("aged" in league.trade_boards));
 

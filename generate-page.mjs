@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmids20260915040000";
+    const DATA_V = "gmredraft20260915043000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4268,6 +4268,14 @@ const html = `<!DOCTYPE html>
         return WINDOWS.filter(function (w) { return w[0] === "t0" || w[0] === "all"; });
       }
       return WINDOWS;
+    }
+    function formatLensOrT0(key) {
+      const keys = scoreWindows().map(function (w) { return w[0]; });
+      if (keys.indexOf(key) >= 0) return key;
+      return keys.indexOf("t0") >= 0 ? "t0" : (keys[0] || "t0");
+    }
+    function effectiveRunLens() {
+      return formatLensOrT0(runLens);
     }
     let view = "home";
     // League-home top tabs: home (digest) | teams | ledger | history.
@@ -5456,7 +5464,7 @@ const html = `<!DOCTYPE html>
       if (weekScoresBook || weekScoresLoading) return;
       weekScoresLoading = true;
       getLeagueJson("week-scores.json").then(function (book) {
-        weekScoresBook = book && book.v === 1 ? book : {
+        weekScoresBook = book && Number(book.v) >= 1 && book.all ? book : {
           v: 1, all: { high: [], low: [] }, regular: { high: [], low: [] }, playoff: { high: [], low: [] },
         };
         weekScoresLoading = false;
@@ -6299,7 +6307,17 @@ const html = `<!DOCTYPE html>
       } else if (id === "firsts_held") {
         lab = "Season";
         opts = [["all", "All"]];
-        const years = (typeof pickSeasonsAvailable === "function") ? pickSeasonsAvailable() : [];
+        let years = [];
+        if (leagueFormat().kind === "redraft" && league && Array.isArray(league.firsts_held)) {
+          const seen = {};
+          for (let i = 0; i < league.firsts_held.length; i++) {
+            const y = String(league.firsts_held[i].season || "");
+            if (y && !seen[y]) { seen[y] = true; years.push(y); }
+          }
+          years.sort();
+        } else {
+          years = (typeof pickSeasonsAvailable === "function") ? pickSeasonsAvailable() : [];
+        }
         for (let i = 0; i < years.length; i++) opts.push(["y" + years[i], years[i]]);
       } else if (id === "week_scores") {
         lab = "Phase";
@@ -6665,6 +6683,30 @@ const html = `<!DOCTYPE html>
         }).join("");
       }
       if (id === "firsts_held") {
+        if (leagueFormat().kind === "redraft") {
+          const rows = (league && Array.isArray(league.firsts_held)) ? league.firsts_held : [];
+          const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
+            ? receiptDoorFilter.slice(1) : "";
+          const bag = {};
+          for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            if (!r || (yearWant && String(r.season) !== yearWant)) continue;
+            if (!r.held) continue;
+            const owner = r.owner || "League";
+            if (!bag[owner]) bag[owner] = [];
+            bag[owner].push(r.player || r.season);
+          }
+          return Object.keys(bag).sort(function (a, b) {
+            return bag[b].length - bag[a].length || a.localeCompare(b);
+          }).filter(function (name) {
+            return hit([name, bag[name].join(" ")]);
+          }).map(function (name) {
+            const line = bag[name].join(" · ") || "No first held";
+            return '<div class="row"><div class="row-top"><div><div class="names">' + esc(name) + "</div>"
+              + '<div class="date">' + esc(line) + "</div></div>"
+              + '<div class="margin">' + esc(String(bag[name].length)) + "</div></div></div>";
+          }).join("");
+        }
         if (typeof ensurePicks === "function") ensurePicks();
         if (!picks && picksLoading) return '<p class="caption">Loading firsts…</p>';
         if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
@@ -6819,9 +6861,17 @@ const html = `<!DOCTYPE html>
       else if (id === "season_place") caption = "Where each seat finished last season. Year is on the row.";
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
-      else if (id === "firsts_held") caption = "Who is sitting on future firsts.";
+      else if (id === "firsts_held") {
+        caption = leagueFormat().kind === "redraft"
+          ? "This season first-round draftees still on that roster."
+          : "Who is sitting on future firsts.";
+      }
       else if (id === "week_scores") caption = "Highest five and lowest five team weeks on tape. Regular, playoff, or all.";
-      else if (id === "forever") caption = "Still on the team that drafted them in 2019.";
+      else if (id === "forever") {
+        caption = leagueFormat().kind === "redraft"
+          ? "Still on the team that drafted them this season."
+          : "Still on the team that drafted them in 2019.";
+      }
       else if (id === "passed_around") caption = "Players who moved the most.";
       else if (id === "seat_draft") caption = "Rookie surplus vs the pick, by seat.";
       else if (id === "uninsured") caption = "Starters whose backup is not rostered. The missing name is on the row.";
@@ -8078,7 +8128,7 @@ const html = `<!DOCTYPE html>
         seatDirection = dirRaw && dirRaw.v === 1 && Array.isArray(dirRaw.seats) ? dirRaw : null;
       } catch (err) { seatDirection = null; }
       try {
-        weekScoresBook = weekRaw && weekRaw.v === 1 ? weekRaw : null;
+        weekScoresBook = weekRaw && Number(weekRaw.v) >= 1 && weekRaw.all ? weekRaw : null;
       } catch (err) { weekScoresBook = null; }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
@@ -8741,16 +8791,16 @@ const html = `<!DOCTYPE html>
      * List defaults follow the newest deal so y1/y2 never hide younger trades still on the tape.
      */
     function applyDefaultLens(date) {
-      lens = defaultLensForDate(date || newestTradeDate(me && me.user_id) || newestTradeDate(null));
+      lens = formatLensOrT0(defaultLensForDate(date || newestTradeDate(me && me.user_id) || newestTradeDate(null)));
     }
 
     /** True when the shared lens is still the age default for the current screen. */
     function lensIsAgeDefault() {
       if (view === "trade" && openId) {
         const side = tradeSide(openId, tradeSeat) || tradeSide(openId, null);
-        return lens === defaultLensForDate(side && side.date);
+        return lens === formatLensOrT0(defaultLensForDate(side && side.date));
       }
-      return lens === defaultLensForDate(newestTradeDate(me && me.user_id) || newestTradeDate(null));
+      return lens === formatLensOrT0(defaultLensForDate(newestTradeDate(me && me.user_id) || newestTradeDate(null)));
     }
 
     function windowLived(date) {
@@ -9318,6 +9368,14 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashFirstsHeld() {
+      if (leagueFormat().kind === "redraft") {
+        const rows = (league && league.firsts_held) || [];
+        let n = 0;
+        for (let i = 0; i < rows.length; i++) {
+          if (rows[i] && rows[i].held) n += 1;
+        }
+        return n;
+      }
       const picks = (calcBook && calcBook.picks) || [];
       let n = 0;
       for (let i = 0; i < picks.length; i++) {
@@ -10410,7 +10468,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashBagExtras(bag, pos) {
-      const slots = (DESK_SLOTS && DESK_SLOTS[pos]) || 1;
+      const slots = (deskSlots() && deskSlots()[pos]) || 1;
       const at = (bag || []).filter(function (a) {
         return homeDeskAssetPos(a) === pos && calcValueNum(a) >= DESK_MID;
       }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
@@ -15562,7 +15620,7 @@ const html = `<!DOCTYPE html>
     function marksOf(row) {
       const m = row || {};
       const w = (m.lens && m.lens[lens]) || {};
-      const runW = (m.lens && m.lens[runLens]) || {};
+      const runW = (m.lens && (m.lens[effectiveRunLens()] || m.lens[runLens])) || {};
       const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
       const soldPicks = m.sold_picks || 0;
@@ -15652,14 +15710,15 @@ const html = `<!DOCTYPE html>
     }
 
     function runLensCaption() {
-      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
-      if (runLens === "t0") return "Average value at accept across every deal.";
-      if (runLens === "all") return "Weekly average from accept through today across every deal.";
+      const key = effectiveRunLens();
+      const name = (WINDOWS.find((w) => w[0] === key) || [])[1] || "";
+      if (key === "t0") return "Average value at accept across every deal.";
+      if (key === "all") return "Weekly average from accept through today across every deal.";
       return "Average at " + name.toLowerCase() + " where lived; younger deals use their best window.";
     }
 
     function runLensHtml() {
-      const name = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      const name = (WINDOWS.find((w) => w[0] === effectiveRunLens()) || [])[1] || "";
       return '<span class="chip-lens is-inline">'
         + '<button type="button" class="chip-lens-btn" data-run-lens="1"'
         + ' aria-label="Ahead or behind window: ' + esc(name) + '" aria-haspopup="true" aria-expanded="false"'
@@ -21335,6 +21394,9 @@ const html = `<!DOCTYPE html>
     const DESK_START = 2200;
     const DESK_MID = 1800;
     const DESK_SLOTS = { QB: 2, RB: 2, WR: 3, TE: 1 };
+    function deskSlots() {
+      return leagueFormat().kind === "redraft" ? { QB: 1, RB: 2, WR: 2, TE: 1 } : DESK_SLOTS;
+    }
 
     function homeDeskAssetPos(a) {
       if (!a) return "";
@@ -21411,7 +21473,7 @@ const html = `<!DOCTYPE html>
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
         const vs = (byPos[pos] || []).filter(function (x) { return x >= DESK_START; });
         const mid = (byPos[pos] || []).filter(function (x) { return x >= DESK_MID; });
-        const slots = DESK_SLOTS[pos];
+        const slots = deskSlots()[pos];
         const extras = Math.max(0, mid.length - slots);
         if (vs.length < slots) holes.push(pos);
         if (extras >= 1) surplus.push(pos);
@@ -21482,6 +21544,18 @@ const html = `<!DOCTYPE html>
     }
 
     function homeDeskWants(uid, prof) {
+      if (leagueFormat().kind === "redraft") {
+        const wants = [];
+        if ((prof.holes || []).length || (prof.thin || []).length) wants.push("upgrade", "buy");
+        else wants.push("buy", "upgrade");
+        if ((prof.surplus || []).length || (prof.deep || []).length) wants.push("sell");
+        wants.push("swap");
+        const out = [];
+        for (let i = 0; i < wants.length; i++) {
+          if (out.indexOf(wants[i]) < 0) out.push(wants[i]);
+        }
+        return out;
+      }
       const lab = homeDeskWindowOf(uid, prof);
       if (lab === "Hard rebuild") return ["downgrade", "sell", "swap"];
       if (lab === "Rebuild") return ["downgrade", "sell", "swap", "buy"];
@@ -24195,10 +24269,10 @@ const html = `<!DOCTYPE html>
         panel.innerHTML = "";
         return;
       }
-      const active = lensPicker === "run" ? runLens : lens;
+      const active = lensPicker === "run" ? effectiveRunLens() : lens;
       const activeName = (WINDOWS.find((w) => w[0] === active) || [])[1] || "";
       const tradeName = (WINDOWS.find((w) => w[0] === lens) || [])[1] || "";
-      const runName = (WINDOWS.find((w) => w[0] === runLens) || [])[1] || "";
+      const runName = (WINDOWS.find((w) => w[0] === effectiveRunLens()) || [])[1] || "";
       for (const btn of btns) {
         btn.className = "chip-lens-btn" + (lensPicker === "trade" && (lens !== "all" || lensOpen) ? " on" : "");
         btn.setAttribute("aria-label", "Score window: " + tradeName);
@@ -29327,6 +29401,15 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
     || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")) {
     throw new Error("Week scores door must list highest and lowest team weeks from week-scores.json");
+  }
+  if (!inline.includes("function formatLensOrT0(")
+    || !inline.includes("function effectiveRunLens(")
+    || !fnSrc("applyDefaultLens").includes("formatLensOrT0")
+    || !fnSrc("dataDashFirstsHeld").includes("firsts_held")
+    || !inline.includes("This season first-round")
+    || !fnSrc("homeDeskWants").includes('kind === "redraft"')
+    || !inline.includes("function deskSlots(")) {
+    throw new Error("redraft must clamp clocks to t0/all and read this-season firsts");
   }
   if (!inline.includes('["deal", "Deal"]')
     || !fnSrc("dataDashLibraryHtml").includes("dataDashLibGroup(")

@@ -14,6 +14,7 @@ import {
   CUCKLE_LEAGUE_ID,
   DATA,
   LEAGUE_ID,
+  detectLeagueFormat,
   leagueRawDir,
   leagueUiDir,
   readJson,
@@ -30,7 +31,11 @@ const POSITIONS = ["QB", "RB", "WR", "TE"];
 const DESK_STUD = 5500;
 const DESK_START = 2200;
 const DESK_MID = 1800;
-const DESK_SLOTS = { QB: 2, RB: 2, WR: 3, TE: 1 };
+const leagueFormat = detectLeagueFormat(readJson("leagues.json", []) || []);
+const isRedraft = leagueFormat.kind === "redraft";
+const DESK_SLOTS = isRedraft
+  ? { QB: 1, RB: 2, WR: 2, TE: 1 }
+  : { QB: 2, RB: 2, WR: 3, TE: 1 };
 
 function readUiJson(name, fallback) {
   const scoped = `${leagueUiDir()}/${name}`;
@@ -335,19 +340,32 @@ function build() {
     const net2027 = p27in - p27out;
     const firstsIn = inPick.filter((x) => x.round === 1).length;
     const firstsOut = outPick.filter((x) => x.round === 1).length;
+    const bagLen = (bags.get(uid) || []).length;
     const votes = [];
-    if (Number(m.place) >= 8 && Number(m.place) <= 10) votes.push("place");
-    if (prof.pickShare >= 0.30) votes.push("picks");
-    if (net2027 >= 2) votes.push("net_2027");
-    if (soldStudNoBuy.length) votes.push("sold_stud");
     let label = "Reload";
-    if (votes.length >= 2) label = "Hard rebuild";
-    else if (prof.pickShare >= 0.28 || soldStudNoBuy.length >= 2) label = "Rebuild";
-    else if (
-      Number(m.place) >= 1 && Number(m.place) <= 4
-      && prof.pickShare <= 0.22
-      && !soldStudNoBuy.length
-    ) label = "Win-now";
+    if (isRedraft) {
+      if (!bagLen) {
+        label = "Parked";
+        votes.push("parked");
+      } else if (Number(m.place) >= 1 && Number(m.place) <= 4) {
+        label = "Win-now";
+      } else if (Number(m.place) >= 10) {
+        label = "Out";
+        votes.push("place");
+      }
+    } else {
+      if (Number(m.place) >= 8 && Number(m.place) <= 10) votes.push("place");
+      if (prof.pickShare >= 0.30) votes.push("picks");
+      if (net2027 >= 2) votes.push("net_2027");
+      if (soldStudNoBuy.length) votes.push("sold_stud");
+      if (votes.length >= 2) label = "Hard rebuild";
+      else if (prof.pickShare >= 0.28 || soldStudNoBuy.length >= 2) label = "Rebuild";
+      else if (
+        Number(m.place) >= 1 && Number(m.place) <= 4
+        && prof.pickShare <= 0.22
+        && !soldStudNoBuy.length
+      ) label = "Win-now";
+    }
 
     const studsOut = [];
     const studsIn = [];
@@ -366,17 +384,33 @@ function build() {
       picksOut: outPick.length,
       byPos,
     };
-    const intent = intentFor(label, soldPos, prof.holes, prof.thin, prof.surplus, prof.deep, flow);
+    const intent = isRedraft
+      ? (label === "Parked"
+        ? { buy: [], sell: [], refuse: [] }
+        : { buy: prof.holes.slice(), sell: prof.surplus.slice(), refuse: [] })
+      : intentFor(label, soldPos, prof.holes, prof.thin, prof.surplus, prof.deep, flow);
 
     const held = heldPicks(bags.get(uid) || []);
     const aging = bagAging(bags.get(uid) || []);
-    const pace = paceOf(label, held, aging, prof.pickShare);
+    const pace = isRedraft
+      ? (label === "Parked"
+        ? { pace: "not this season", pace_why: "no 2026 roster" }
+        : (prof.holes.length
+          ? { pace: "plug holes", pace_why: prof.holes.join("/") }
+          : { pace: "this season", pace_why: "weekly floor" }))
+      : paceOf(label, held, aging, prof.pickShare);
 
     const whyBits = [];
     if (m.place && m.place_season) whyBits.push(`${nth(m.place)} in ${m.place_season}`);
     if (studsOut[0]) whyBits.push(`sold ${studsOut[0]}`);
-    whyBits.push(`${held.y2027} 2027s`);
-    if (pace.pace) whyBits.push(pace.pace);
+    if (isRedraft) {
+      if (label === "Parked") whyBits.push("no 2026 roster");
+      else if (prof.holes.length) whyBits.push("plug " + prof.holes.join("/"));
+      else whyBits.push("this season");
+    } else {
+      whyBits.push(`${held.y2027} 2027s`);
+      if (pace.pace) whyBits.push(pace.pace);
+    }
 
     const byPosOut = {};
     for (const pos of POSITIONS) {
@@ -393,8 +427,8 @@ function build() {
       why: whyBits.join(" · "),
       pick_share: Math.round(prof.pickShare * 1000) / 1000,
       stud_share: Math.round(prof.studShare * 1000) / 1000,
-      holes: prof.holes,
-      thin: prof.thin,
+      holes: (isRedraft && label === "Parked") ? [] : prof.holes,
+      thin: (isRedraft && label === "Parked") ? [] : prof.thin,
       sold_pos: soldPos,
       buy: intent.buy,
       sell: intent.sell,

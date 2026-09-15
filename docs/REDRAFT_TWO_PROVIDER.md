@@ -25,6 +25,8 @@ Open locally after `python3 -m http.server`:
 - or Create a league in the store and paste `1389723418827460608`
 
 `node scripts/review-redraft.mjs` prints format, seasons, titles, and ESPN status.
+`node scripts/loop-gm-dashboard.mjs` runs the 12 shell laws plus 32 dataset
+loops (dual-API merge, redraft clocks, firsts, forever, direction, weeks).
 
 ---
 

@@ -196,5 +196,11 @@ loop(35, fs.existsSync(`${raw}/espn_weekly_scores.json`)
 loop(36, (weekly.scores || []).filter((s) => s.provider === "espn" && ["2025", "2026"].includes(String(s.season))).length === 0
   && page.includes("Sleeper tape only until ESPN years unlock."),
   "ESPN weeks never overwrite Sleeper 2025-2026; door states the lock");
+loop(37, page.includes("function espnUnlockStepsHtml(")
+  && page.includes("Unlock ESPN history")
+  && page.includes("espn_s2")
+  && page.includes("ESPN_SWID")
+  && page.includes("unlock in Settings"),
+  "Settings lists the ESPN cookie unlock steps");
 
-console.log("PASS 36 Gm dataset loops");
+console.log("PASS 37 Gm dataset loops");

@@ -4133,7 +4133,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmredraft20260915063000";
+    const DATA_V = "gmredraft20260915065000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15885,8 +15885,22 @@ const html = `<!DOCTYPE html>
         : "Sleeper 2025/2026";
       const espn = p.espn_authorized
         ? ("ESPN " + ((p.espn_seasons || []).join("/") || p.espn_league_id || "history"))
-        : ("ESPN " + (p.espn_league_id || "35763180") + " locked");
+        : ("ESPN " + (p.espn_league_id || "35763180") + " locked · unlock in Settings");
       return '<p class="caption league-tape">' + esc(sl + " · " + espn) + "</p>";
+    }
+    function espnUnlockStepsHtml() {
+      return '<div class="app-card" aria-label="Unlock ESPN history">'
+        + "<h3>Unlock ESPN history</h3>"
+        + '<p class="caption">Week scores are Sleeper 2025-2026 only until this lands. ESPN 35763180 is private. A manager who left stays on that ESPN team slot and attaches to the current Sleeper seat. Consolation weeks still do not set the low.</p>'
+        + '<ol class="caption" style="padding-left:1.2rem;margin:8px 0">'
+        + "<li>On a computer, open that ESPN league in Chrome while signed in.</li>"
+        + "<li>Press F12. Open Application (Chrome) or Storage (Firefox). Cookies → fantasy.espn.com.</li>"
+        + "<li>Copy the value of <b>espn_s2</b>. Copy the value of <b>SWID</b> (keep the curly braces).</li>"
+        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Add <b>ESPN_S2</b> and <b>ESPN_SWID</b>.</li>"
+        + "<li>Come back here and tap <b>Rebuild dashboard</b>. Older years merge onto current Sleeper names.</li>"
+        + "</ol>"
+        + '<p class="caption">Laptop without GitHub: export ESPN_S2 and ESPN_SWID, then run node build.mjs 1389723418827460608 --skip-snapshot.</p>'
+        + "</div>";
     }
     const LEAGUE_KEY = "cuckle.active_league.v1";
     const MEMBERSHIPS_KEY = "cuckle.memberships.v1";
@@ -24653,6 +24667,9 @@ const html = `<!DOCTYPE html>
             + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
             + "</div></div>")
           : "")
+        + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
+          ? espnUnlockStepsHtml()
+          : "")
         + "</div>";
     }
 
@@ -24775,6 +24792,9 @@ const html = `<!DOCTYPE html>
       return (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + adminRows
+        + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
+          ? espnUnlockStepsHtml()
+          : "")
         + readyAddBooksHtml()
         + '<div class="app-actions" style="margin-top:8px">'
         + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
@@ -30489,7 +30509,10 @@ if (!inline.includes("function readJoinSourcesFromDom(")
   || !inline.includes("Rebuild dashboard")
   || !inline.includes("Create, merge, and build")
   || !inline.includes("sleeper_extra_ids: ids.sleeper.slice(1)")
+  || !inline.includes("function espnUnlockStepsHtml(")
+  || !inline.includes("Unlock ESPN history")
   || fnSrc("renderSettingsLeaguesTab").indexOf("joinIdsFormHtml(") < 0
+  || fnSrc("renderSettingsLeaguesTab").indexOf("espnUnlockStepsHtml(") < 0
   || fnSrc("renderInvites").indexOf("joinIdsFormHtml(") < 0) {
   throw new Error("Create a league must accept multiple Sleeper and ESPN IDs and rebuild the book");
 }

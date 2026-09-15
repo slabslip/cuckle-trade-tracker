@@ -35,25 +35,54 @@ does not set the low.
 
 ---
 
-## 2. ESPN prior years
+## 2. ESPN prior years — step by step
 
-ESPN league `35763180` returns **401 AUTH_LEAGUE_NOT_VISIBLE** without cookies.
-`espn-sync.mjs` writes `espn_status.json` and empty ESPN books, then the Sleeper
-build continues.
+ESPN league `35763180` is **private**. Without cookies the API returns 401,
+so Week scores can only use Sleeper 2025–2026. That is why every current
+low is a 2025 week. The import and franchise attach are already wired;
+they stay empty until the two cookies below are set.
 
-To unlock 2010–2024 (or whatever years the league actually has):
+### A. Copy the cookies (Chrome, computer)
 
-1. In a browser where you can open that ESPN league, copy `espn_s2` and `SWID`.
-2. Set them on the machine that runs the build:
+1. Sign into ESPN in Chrome.
+2. Open the fantasy league (the one whose URL has `leagueId=35763180`).
+3. Press **F12** (or right-click → Inspect).
+4. Open the **Application** tab (Chrome) or **Storage** (Firefox).
+5. Left rail: **Cookies** → `https://fantasy.espn.com`.
+6. Click **espn_s2**. Copy the whole **Cookie Value**. It is a long string.
+7. Click **SWID**. Copy the **Cookie Value**. Keep the `{` `}` around it.
+
+Do not paste these into a chat, a commit, or `espn_bridge.json`.
+
+### B. Give the cookies to the rebuild
+
+**GitHub (what Rebuild dashboard uses)**
+
+1. Open the repo on GitHub → **Settings** → **Secrets and variables** → **Actions**.
+2. **New repository secret** named `ESPN_S2` → paste the espn_s2 value.
+3. **New repository secret** named `ESPN_SWID` → paste the SWID value.
+4. In the app: Menu → **Settings** → **Leagues** → **Rebuild dashboard**.
+   That runs `league-sync.yml`, which already passes those two secrets into
+   `build.mjs`.
+
+**Laptop (optional, same book)**
 
 ```bash
-export ESPN_S2='...'
-export ESPN_SWID='{...}'
+export ESPN_S2='paste espn_s2 here'
+export ESPN_SWID='{paste SWID here}'
 node build.mjs 1389723418827460608 --skip-snapshot
 ```
 
-3. Optional name pins when auto-match misses: edit
-   `data/leagues/1389723418827460608/raw/espn_bridge.json`
+Then commit `data/leagues/1389723418827460608/` and push `main`.
+
+### C. What happens after a green rebuild
+
+- ESPN team-weeks 2010–2024 (whatever years the league actually has) join
+  the Week scores door.
+- Current Sleeper **names** are used. A manager who left stays on that
+  ESPN team slot and attaches to the Sleeper seat that inherited it.
+- Unique name / team-name matches first. Misses can be pinned in
+  `data/leagues/1389723418827460608/raw/espn_bridge.json`:
 
 ```json
 {
@@ -62,17 +91,13 @@ node build.mjs 1389723418827460608 --skip-snapshot
 }
 ```
 
-`espn:{SWID}` is a person. `espn-team:{id}` is the franchise slot when
-managers changed. Unpinned leavers follow the latest mapped owner of
-that ESPN team id.
+`espn:{SWID}` is a person. `espn-team:{id}` is the franchise slot.
 
-4. For GitHub Actions, add repo secrets `ESPN_S2` and `ESPN_SWID`.
-   [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml)
-   passes them into `build.mjs`.
+- ESPN weeks never overwrite Sleeper 2025–2026.
+- ESPN playoff consolation still does not set the low (same hunt rule).
+- Past Champions gets ESPN crowns only from a real ESPN payload — never invented.
 
-ESPN seasons **do not** overwrite 2025–2026 Sleeper rows. They append older
-seats, trades, and champion cards. Format detection still reads the Sleeper
-`leagues.json` (redraft / 1QB).
+The same five steps also sit on **Settings → Leagues** when ESPN is locked.
 
 ---
 

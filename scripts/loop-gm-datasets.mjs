@@ -71,21 +71,30 @@ loop(4, leagues.some((l) => String(l.league_id) === ID && String(l.season) === "
   && leagues.some((l) => String(l.league_id) === PRIOR && String(l.season) === "2025")
   && leagues.every((l) => !l.provider || l.provider === "sleeper"),
   "Sleeper walk has 2026 current + 2025 prior; no fake ESPN league rows");
-loop(5, espn.authorized === false && espn.reason === "espn_private_needs_cookie"
-  && (bridge.espn_seasons || []).length === 0 && (bridge.mapped || 0) === 0,
-  "ESPN lock is honest — empty seasons, mapped 0");
+loop(5, espn.authorized
+  ? ["2020", "2021", "2022", "2023", "2024"].every((y) => (espn.seasons || []).includes(y))
+    && (bridge.mapped || 0) >= 1
+  : espn.reason === "espn_private_needs_cookie"
+    && (bridge.espn_seasons || []).length === 0 && (bridge.mapped || 0) === 0,
+  espn.authorized
+    ? "ESPN 2020-2024 unlocked and mapped onto Sleeper seats"
+    : "ESPN lock is honest — empty seasons, mapped 0");
 loop(6, rosters.length === 12 && members.length === 13
   && members.some((m) => m.name === "SethHenry12" && m.place > 12)
   && members[0].name === "Biff34" && members[9].name === "TrumanCooper",
   "12 live rosters, 2025 finish order, Seth parked 13th, Truman 10th");
 loop(7, !rosterOwners.has("1259573343355404288") && rosterOwners.has("1338979666412716032"),
   "Jnasty has no 2026 roster; Seth is the 2026 seat");
-loop(8, (titles.titles || []).length === 1 && titles.titles[0].name === "Biff34"
-  && titles.titles[0].season === "2025" && titles.titles.every((t) => t.provider !== "espn"),
-  "one Sleeper crown (Biff34 2025); no invented ESPN titles");
-loop(9, trades.length === 7 && legs.length >= 14 && tape.length === 7
-  && trades.every((t) => String(t.season) === "2025"),
-  "seven 2025 two-way trades on the merged tape");
+const sleeperCrowns = (titles.titles || []).filter((t) => t.provider !== "espn");
+loop(8, sleeperCrowns.some((t) => t.name === "Biff34" && t.season === "2025")
+  && (espn.authorized || (titles.titles || []).every((t) => t.provider !== "espn")),
+  espn.authorized
+    ? "2025 Sleeper crown Biff34 stays; ESPN titles may join older years"
+    : "one Sleeper crown (Biff34 2025); no invented ESPN titles");
+const sleeperTrades = trades.filter((t) => String(t.season) === "2025" && t.provider !== "espn");
+loop(9, sleeperTrades.length === 7 && legs.length >= 14
+  && sleeperTrades.every((t) => String(t.season) === "2025"),
+  "seven 2025 two-way Sleeper trades stay on the merged tape");
 loop(10, (league.trade_boards && league.trade_boards.sides || []).length === 12
   && league.trade_boards.sides.every((s) => s.windows && s.windows.t0 && s.windows.all)
   && league.trade_boards.sides.every((s) => !s.windows.y1 && !s.windows.y2 && !s.windows.y3),
@@ -110,9 +119,12 @@ loop(15, weekly.v >= 3 && weekly.n === weekly.n_regular + weekly.n_playoff
   "weekly tape has complete 2025 plus in-season 2026 regular weeks");
 loop(16, weeks.v >= 2 && weeks.n >= 228
   && weeks.all && weeks.all.high && weeks.all.high[0] && weeks.all.high[0].points >= 177.96
-  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].name === "JnastyGBE300"
-  && weeks.all.low[0].points === 34.82 && weeks.all.low[0].phase === "regular",
-  "week-scores high is a real scored week; low is Jnasty 34.82 regular");
+  && (weekly.scores || []).some((s) => String(s.user_id) === "1259573343355404288"
+    && s.points === 34.82 && String(s.season) === "2025" && s.phase === "regular")
+  && (espn.authorized
+    || (weeks.all.low && weeks.all.low[0] && weeks.all.low[0].name === "JnastyGBE300"
+      && weeks.all.low[0].points === 34.82)),
+  "Jnasty 34.82 2025 regular stays on the tape; it is the all-time low until ESPN years unlock");
 loop(17, (calc.players || []).length >= 180
   && Object.keys(calcOwners).length === 12
   && Object.keys(calcOwners).every((id) => rosterOwners.has(id))
@@ -124,8 +136,11 @@ loop(18, (calc.picks || []).length === 0,
 loop(19, drafts.length === 2 && draftPicks.length === 360
   && drafts.every((d) => d.status === "complete" && d.type === "snake"),
   "two complete snake drafts (2025 + 2026), 360 picks");
-loop(20, seats.length === 24,
-  "seats cover both Sleeper seasons (12 x 2)");
+loop(20, seats.filter((s) => String(s.season) === "2025" || String(s.season) === "2026").length === 24
+  && (espn.authorized ? seats.length >= 24 + 12 * 5 : seats.length === 24),
+  espn.authorized
+    ? "Sleeper 2025-2026 seats stay 24; ESPN 2020-2024 adds franchise rows"
+    : "seats cover both Sleeper seasons (12 x 2)");
 loop(21, Object.keys(marks.seats || {}).length === 13
   && Object.values(marks.seats).every((m) => m.lens && m.lens.t0 && m.lens.all)
   && Object.values(marks.seats).every((m) => !m.lens.y1 && !m.lens.y2 && !m.lens.y3),
@@ -210,12 +225,16 @@ const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
 loop(38, finishes.v === 1 && Array.isArray(finishes.seats)
   && (finishes.seasons || []).includes("2025")
   && !(finishes.seasons || []).includes("2026")
-  && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
-  && biffFin && biffFin.avg === 1 && biffFin.n === 1 && biffFin.places[0].place === 1
-  && jnFin && jnFin.avg === 2 && jnFin.n === 1
-  && truFin && truFin.avg === 10 && truFin.n === 1
-  && finishes.seats[0].name === "Biff34",
-  "How I finished ranks 2025 places; Seth has no completed season; 2026 is out");
+  && (espn.authorized
+    ? ["2020", "2021", "2022", "2023", "2024"].every((y) => (finishes.seasons || []).includes(y))
+    : (!(finishes.seats || []).some((s) => s.name === "SethHenry12")
+      && biffFin && biffFin.avg === 1 && biffFin.n === 1 && biffFin.places[0].place === 1
+      && jnFin && jnFin.avg === 2 && jnFin.n === 1
+      && truFin && truFin.avg === 10 && truFin.n === 1
+      && finishes.seats[0].name === "Biff34")),
+  espn.authorized
+    ? "How I finished includes ESPN 2020-2024 plus Sleeper 2025; 2026 is out"
+    : "How I finished ranks 2025 places; Seth has no completed season; 2026 is out");
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')

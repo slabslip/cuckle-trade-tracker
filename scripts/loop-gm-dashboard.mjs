@@ -55,9 +55,12 @@ loop(4, league.format && league.format.kind === "redraft" && league.format.forma
 loop(5, (bridge.sleeper_seasons || []).includes("2025") && (bridge.sleeper_seasons || []).includes("2026"),
   "Sleeper 2025 and 2026 are on the merged bridge");
 // 6 ESPN honest lock
-loop(6, espn.authorized === false && espn.reason === "espn_private_needs_cookie"
-  && (bridge.espn_seasons || []).length === 0,
-  "ESPN years stay empty and locked without cookies (no fake history)");
+loop(6, espn.authorized
+  ? ["2020", "2021", "2022", "2023", "2024"].every((y) => (espn.seasons || []).includes(y))
+  : espn.reason === "espn_private_needs_cookie" && (bridge.espn_seasons || []).length === 0,
+  espn.authorized
+    ? "ESPN 2020-2024 are on the live book"
+    : "ESPN years stay empty and locked without cookies (no fake history)");
 // 7 Titles from Sleeper only until ESPN lands
 loop(7, (titles.titles || []).length >= 1 && titles.titles.every((t) => t.provider !== "espn")
   && titles.titles.some((t) => t.season === "2025" && t.name === "Biff34"),
@@ -91,3 +94,5 @@ const finishes = spawnSync(process.execPath, [new URL("test-finishes.mjs", impor
 if (finishes.status) process.exit(finishes.status);
 const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (more.status) process.exit(more.status);
+const hist = spawnSync(process.execPath, [new URL("loop-espn-history.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (hist.status) process.exit(hist.status);

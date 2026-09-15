@@ -6,7 +6,10 @@
  * (franchise) maps onto a current Sleeper seat. Managers who left stay on
  * the franchise; still-here people keep a person match when the name is unique.
  */
+import { inheritParkedToLive } from "./lib/espn-history.mjs";
 import { readJson, setLeagueId, writeJson } from "./lib.mjs";
+
+export { inheritParkedToLive, ESPN_HISTORY_YEARS, SLEEPER_KEEP_YEARS } from "./lib/espn-history.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -147,7 +150,10 @@ function main() {
   const explicit = readJson("espn_bridge.json", {}) || {};
 
   const bridge = buildBridge(espnMembers, sleeperMembers, explicit, espnSeats);
-  const franchise = buildFranchiseMap(espnSeats, bridge, explicit);
+  const franchise = inheritParkedToLive(
+    buildFranchiseMap(espnSeats, bridge, explicit),
+    sleeperSeats,
+  );
   const members = mergeMembers(sleeperMembers, espnMembers, bridge);
   const seats = [
     ...sleeperSeats,

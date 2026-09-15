@@ -392,7 +392,7 @@ async function main() {
     status.tried.push({ season: year, status: got.status });
     if (got.status === 401 || got.status === 403) {
       sawAuthBlock = true;
-      break;
+      continue;
     }
     if (!got.body) continue;
     status.authorized = true;

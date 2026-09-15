@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** ESPN name / franchise attach + hunt tiers. Fail fast. */
+import { inheritParkedToLive } from "../lib/espn-history.mjs";
 import { buildBridge, buildFranchiseMap, resolveEspnScoreUid } from "../merge-provider-history.mjs";
 import { espnPhase, espnPlayoffHunt, espnScoresFromSchedule, espnSidePoints } from "../lib/espn-weeks.mjs";
 
@@ -35,6 +36,15 @@ const oldWeek = resolveEspnScoreUid({ user_id: "espn:old", roster_id: 3, points:
 if (oldWeek !== "s-biff") fail("leaver week on team 3 must attach to current Sleeper seat, got " + oldWeek);
 const pinned = resolveEspnScoreUid({ user_id: "espn:ghost", roster_id: 9, points: 80 }, person, franchise);
 if (pinned !== "s-truman") fail("pinned franchise week must attach");
+
+const inherited = inheritParkedToLive({ 3: "s-biff", 4: "s-gone" }, [
+  { season: "2025", owner_id: "s-gone", roster_id: 4 },
+  { season: "2025", owner_id: "s-biff", roster_id: 3 },
+  { season: "2026", owner_id: "s-new", roster_id: 4 },
+  { season: "2026", owner_id: "s-biff", roster_id: 3 },
+]);
+if (inherited["4"] !== "s-new") fail("parked 2025 owner must hand ESPN slot to 2026 seat");
+if (inherited["3"] !== "s-biff") fail("staying owner keeps their ESPN slot");
 
 if (espnPlayoffHunt("WINNERS_BRACKET") !== true) fail("winners bracket is hunt");
 if (espnPlayoffHunt("WINNERS") !== true) fail("WINNERS is hunt");

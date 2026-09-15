@@ -9,6 +9,22 @@
     {
       "season": 2024,
       "status": 401
+    },
+    {
+      "season": 2023,
+      "status": 401
+    },
+    {
+      "season": 2022,
+      "status": 401
+    },
+    {
+      "season": 2021,
+      "status": 401
+    },
+    {
+      "season": 2020,
+      "status": 401
     }
   ]
 }

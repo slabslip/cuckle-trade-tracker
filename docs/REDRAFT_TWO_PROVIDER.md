@@ -6,7 +6,7 @@ crowns are copied over.
 
 | Provider | ID | Years |
 | --- | --- | --- |
-| ESPN (prior) | `35763180` | through 2024, once cookies are set |
+| ESPN (prior) | `35763180` | **2020–2024** (2010–2019 404; 2020–2024 exist but 401 without cookies) |
 | Sleeper (recent + current) | `1389723418827460608` | 2026 live; walks to `1253382148073725952` (2025) |
 
 Canonical key on disk and in the store: the **Sleeper** id.
@@ -26,12 +26,15 @@ Open locally after `python3 -m http.server`:
 
 `node scripts/review-redraft.mjs` prints format, seasons, titles, and ESPN status.
 `node scripts/loop-gm-dashboard.mjs` runs the 12 shell laws, hunt-week laws,
-ESPN franchise laws, and 36 dataset loops.
+ESPN franchise laws, dataset loops, and `loop-espn-history.mjs` (three
+passes). Every live 2026 seat must carry ESPN 2020–2024 once cookies
+land. A one-for-one parked Sleeper seat (Jnasty → Seth) inherits that
+franchise so next year keeps the same tape. ESPN never overwrites
+Sleeper 2025–2026.
 
 Week scores stay Sleeper-only until ESPN cookies unlock 2010–2024. Those
-years attach to current Sleeper seats by name, then by ESPN team slot
-(a manager who left stays on that franchise). Playoff consolation still
-does not set the low.
+years attach to current Sleeper seats by name, then by ESPN team slot.
+Playoff consolation still does not set the low.
 
 ---
 

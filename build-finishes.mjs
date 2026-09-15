@@ -15,6 +15,7 @@ import {
 } from "./lib.mjs";
 import { standingsFor } from "./lib/standings.mjs";
 import { buildFinishesBook, remapEspnStanding } from "./lib/finishes.mjs";
+import { inheritParkedToLive } from "./lib/espn-history.mjs";
 import { buildBridge, buildFranchiseMap } from "./merge-provider-history.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
@@ -76,7 +77,11 @@ function espnRows() {
   const espnSeats = readJson("espn_seats.json", []) || [];
   const explicit = readJson("espn_bridge.json", {}) || {};
   const person = buildBridge(espnMembers, sleeperMembers, explicit, espnSeats);
-  const franchise = buildFranchiseMap(espnSeats, person, explicit);
+  const sleeperSeats = readJson("seats.json", []) || [];
+  const franchise = inheritParkedToLive(
+    buildFranchiseMap(espnSeats, person, explicit),
+    sleeperSeats,
+  );
   return raw.map((row) => remapEspnStanding(row, person, franchise)).filter(Boolean);
 }
 

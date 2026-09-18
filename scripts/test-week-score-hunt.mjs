@@ -41,6 +41,8 @@ if (!scoreIsChampionshipHunt({ phase: "regular", hunt: false })) fail("regular w
 if (scoreIsChampionshipHunt({ phase: "playoff", hunt: false })) fail("consolation must not count");
 if (!scoreIsChampionshipHunt({ phase: "playoff", hunt: true })) fail("title-hunt playoff must count");
 if (scoreIsChampionshipHunt({ phase: "playoff" })) fail("untagged playoff must not count as hunt");
+if (scoreIsChampionshipHunt({ phase: "playoff", hunt: true, points: 9 })) fail("ESPN stub hunt under 20 must not count");
+if (!scoreIsChampionshipHunt({ phase: "playoff", hunt: true, points: 57.1 })) fail("real hunt 57.1 must still count");
 
 const tape = {
   as_of: "2026-09-15",
@@ -52,10 +54,14 @@ const tape = {
     { user_id: "e", season: "2025", week: 17, points: 85.28, phase: "playoff", hunt: true },
     { user_id: "f", season: "2025", week: 16, points: 163.38, phase: "playoff", hunt: true },
     { user_id: "g", season: "2025", week: 17, points: 157.58, phase: "playoff", hunt: false },
+    { user_id: "h", season: "2020", week: 14, points: 9, phase: "playoff", hunt: true },
   ],
 };
 const book = weekScoreBookFromTape(tape);
-if (book.n_playoff !== 5 || book.n_playoff_hunt !== 2) fail("hunt counts wrong: " + book.n_playoff + "/" + book.n_playoff_hunt);
+if (book.n_playoff !== 6 || book.n_playoff_hunt !== 3) fail("hunt counts wrong: " + book.n_playoff + "/" + book.n_playoff_hunt);
+if (book.all.low.some((r) => r.points === 9) || book.playoff.low.some((r) => r.points === 9)) {
+  fail("9-pt ESPN stub leaked into high/low lists");
+}
 if (book.all.low[0].points !== 34.82) fail("all low leaked consolation: " + book.all.low[0].points);
 if (book.all.high[0].points !== 172.08) fail("all high drifted: " + book.all.high[0].points);
 if (book.playoff.high[0].points !== 163.38) fail("playoff high should be the title-hunt 163.38");

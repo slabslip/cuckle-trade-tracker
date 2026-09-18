@@ -79,10 +79,18 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
   throw new Error("tile Share must not start a door drag");
 }
 
-if (page.includes('const DATA_V = "joinland20260918143000"')
-  || !page.includes('const DATA_V = "tileshare20260918154500"')
-  || !sw.includes("chuckle-shell-v273-tile-share")) {
+if (page.includes('const DATA_V = "tileshare20260918154500"')
+  || !page.includes('const DATA_V = "shareclaim20260918143500"')
+  || !sw.includes("chuckle-shell-v275-share-claim")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
+}
+
+const shareBtn = fnSrc(page, "dataTileShareBtn");
+if (shareBtn.includes("<span>Share</span>") || shareBtn.includes(">Share<")) {
+  throw new Error("tile share must be icon-only — no Share word");
+}
+if (!fnSrc(page, "honorPendingDataTile").includes("dataTileSeatReady(")) {
+  throw new Error("shared tiles must wait for a claimed seat");
 }
 
 if (!mem.includes("view=data&tile=") || !mem.includes("honorPendingDataTile")) {

@@ -3413,8 +3413,16 @@ const html = `<!DOCTYPE html>
       letter-spacing: 0; text-transform: none; max-width: 100%;
     }
     .door-fig {
-      font-size: 0.68rem; font-weight: 650; line-height: 1.2; color: #e0b44c;
+      font-size: 0.68rem; font-weight: 650; line-height: 1.15; color: #e0b44c;
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      max-width: 100%;
     }
+    .door-who {
+      font-weight: 750; max-width: 100%;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .door-metric { font-weight: 650; opacity: 0.92; }
+    .home-top-doors .door { min-height: 108px; }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -4138,7 +4146,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmbeef20260918043000";
+    const DATA_V = "gmbeef20260918062000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5634,13 +5642,21 @@ const html = `<!DOCTYPE html>
           v: 1, all: { high: [], low: [] }, regular: { high: [], low: [] }, playoff: { high: [], low: [] },
         };
         weekScoresLoading = false;
-        if (receiptWhoList === "week_scores") render();
+        if (receiptWhoList === "week_scores"
+          || (typeof isRedraftLeague === "function" && isRedraftLeague() && appScreen === "dash")) {
+          if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
+          else render();
+        }
       }).catch(function () {
         weekScoresBook = {
           v: 1, all: { high: [], low: [] }, regular: { high: [], low: [] }, playoff: { high: [], low: [] },
         };
         weekScoresLoading = false;
-        if (receiptWhoList === "week_scores") render();
+        if (receiptWhoList === "week_scores"
+          || (typeof isRedraftLeague === "function" && isRedraftLeague() && appScreen === "dash")) {
+          if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
+          else render();
+        }
       });
     }
 
@@ -5991,23 +6007,39 @@ const html = `<!DOCTYPE html>
         + inner + "</svg>";
     }
 
+    function receiptDoorWhoName(name) {
+      const s = String(name || "").trim();
+      if (!s) return "";
+      return s.length > 13 ? (s.slice(0, 12) + "…") : s;
+    }
+
+    function receiptDoorLeadFig(who, metric) {
+      const name = receiptDoorWhoName(who);
+      const fig = String(metric == null ? "" : metric).trim();
+      if (!name && !fig) return "";
+      return '<span class="door-fig">'
+        + (name ? '<span class="door-who">' + esc(name) + "</span>" : "")
+        + (fig ? '<span class="door-metric">' + esc(fig) + "</span>" : "")
+        + "</span>";
+    }
+
     function receiptDoorFace(id) {
       const spec = dataDashById(id);
       if (!spec) return "";
       let fig = "";
       if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
-          const n = ((titles && titles.titles) || []).length;
-          if (n) fig = '<span class="door-fig">' + n + "</span>";
+          const last = ((titles && titles.titles) || [])[0];
+          if (last) fig = receiptDoorLeadFig(last.name, last.season);
         } else if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
           const lead = finishCareerSeats(id)[0];
-          if (lead) fig = '<span class="door-fig">' + esc(finishCareerMetric(id, lead)) + "</span>";
+          if (lead) fig = receiptDoorLeadFig(lead.name, finishCareerMetric(id, lead));
         } else if (id === "season_place") {
-          const n = (finishesBook && finishesBook.seasons && finishesBook.seasons.length) || 0;
-          if (n) fig = '<span class="door-fig">' + n + " yrs</span>";
+          const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
+          if (lead) fig = receiptDoorLeadFig(lead.name, lead.avg != null ? Number(lead.avg).toFixed(1) : "");
         } else if (id === "week_scores") {
-          const n = weekScoresBook && Number(weekScoresBook.n);
-          if (n) fig = '<span class="door-fig">' + n + "</span>";
+          const high = weekScoresBook && weekScoresBook.all && weekScoresBook.all.high && weekScoresBook.all.high[0];
+          if (high) fig = receiptDoorLeadFig(high.name, weekScorePts(high));
         }
       }
       return receiptDoorIco(id) + '<span class="door-lab">' + esc(spec.lab) + "</span>" + fig;
@@ -9884,7 +9916,7 @@ const html = `<!DOCTYPE html>
         || "";
       const seat = authSeatId() || "";
       if (!leagueId || !seat) return "";
-      return "cuckle.data.dash.v2." + leagueId + "." + seat;
+      return "cuckle.data.dash.v3." + leagueId + "." + seat;
     }
 
     function dataDashReadLocal() {
@@ -9894,7 +9926,12 @@ const html = `<!DOCTYPE html>
         const parsed = raw ? JSON.parse(raw) : null;
         if (Array.isArray(parsed)) {
           const next = dataDashMigrateMyPicks(parsed);
-          return dataDashRedraftStale(next) ? dataDashCanon(dataDashDefaultTiles()) : next;
+          if (dataDashRedraftStale(next)) {
+            const fresh = dataDashCanon(dataDashDefaultTiles());
+            dataDashWriteLocal(fresh);
+            return fresh;
+          }
+          return next;
         }
       } catch (err) { /* private mode */ }
       return dataDashCanon(dataDashDefaultTiles());
@@ -11175,10 +11212,11 @@ const html = `<!DOCTYPE html>
     function dataDashPresetHtml() {
       if (!dataDashEdit) return "";
       const cur = dataDashBoardTiles().join(",");
-      const dealOn = cur === DATA_DASH_DEFAULT.join(",");
-      const researchOn = cur === DATA_DASH_RESEARCH.join(",");
+      const homeOn = cur === dataDashDefaultTiles().join(",");
+      const researchOn = cur === dataDashResearchTiles().join(",");
+      const homeLab = (typeof isRedraftLeague === "function" && isRedraftLeague()) ? "Career" : "Deal";
       return '<div class="data-filters" aria-label="Board presets">'
-        + '<button type="button" class="data-chip' + (dealOn ? " on" : "") + '" data-dash-preset="deal">Deal</button>'
+        + '<button type="button" class="data-chip' + (homeOn ? " on" : "") + '" data-dash-preset="deal">' + homeLab + "</button>"
         + '<button type="button" class="data-chip' + (researchOn ? " on" : "") + '" data-dash-preset="research">Research</button>'
         + "</div>";
     }
@@ -21592,10 +21630,12 @@ const html = `<!DOCTYPE html>
         const remote = rows && rows[0] && rows[0].tiles;
         if (Array.isArray(remote) && remote.length) {
           const next = dataDashCanon(remote);
-          dataDashTiles = (dataDashIsLegacyBoard(next) || dataDashRedraftStale(next))
+          const stale = dataDashIsLegacyBoard(next) || dataDashRedraftStale(next);
+          dataDashTiles = stale
             ? dataDashCanon(dataDashDefaultTiles())
             : dataDashMigrateMyPicks(next);
           dataDashWriteLocal(dataDashTiles);
+          if (stale) saveSeatDataDash(dataDashTiles);
         }
       } catch (err) {
         console.error(err);
@@ -24343,6 +24383,9 @@ const html = `<!DOCTYPE html>
     function homeTopDoorsHtml() {
       const ids = dataDashTopIds();
       if (!ids.length) return "";
+      if (typeof isRedraftLeague === "function" && isRedraftLeague() && typeof ensureWeekScores === "function") {
+        ensureWeekScores();
+      }
       return '<section class="home-top-doors" aria-label="Board doors">'
         + '<div class="receipt-board home-top-board">'
         + ids.map(function (id) {
@@ -30148,8 +30191,16 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function loadSeatDataDash(")
     || !inline.includes("function saveSeatDataDash(")
     || !inline.includes("seat_data_dash")
-    || !inline.includes("cuckle.data.dash.v2")
-    || !inline.includes("function dataDashIsLegacyBoard(")) {
+    || !inline.includes("cuckle.data.dash.v3")
+    || !inline.includes("function dataDashIsLegacyBoard(")
+    || !inline.includes("function receiptDoorLeadFig(")
+    || !inline.includes("function receiptDoorWhoName(")
+    || !inline.includes("if (stale) saveSeatDataDash(dataDashTiles)")
+    || !fnSrc("dataDashReadLocal").includes("dataDashWriteLocal")
+    || !fnSrc("dataDashPresetHtml").includes("dataDashDefaultTiles")
+    || !fnSrc("dataDashPresetHtml").includes("Career")
+    || !fnSrc("receiptDoorFace").includes("receiptDoorLeadFig")
+    || !fnSrc("homeTopDoorsHtml").includes("ensureWeekScores")) {
     throw new Error("Data board must persist per seat via seat_data_dash");
   }
   if (!inline.includes("function shareProofNow(")

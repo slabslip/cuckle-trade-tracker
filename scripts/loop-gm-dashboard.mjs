@@ -100,3 +100,5 @@ const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import
 if (more.status) process.exit(more.status);
 const iso = spawnSync(process.execPath, [new URL("loop-format-isolation.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (iso.status) process.exit(iso.status);
+const board = spawnSync(process.execPath, [new URL("loop-redraft-board.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (board.status) process.exit(board.status);

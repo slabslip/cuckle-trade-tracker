@@ -219,9 +219,8 @@ Open **https://slabslip.github.io/cuckle-trade-tracker/** (already deployed from
 7. You land on **Invite console** with `CF-XXXX-XXXX` codes  
 8. **Copy invite link** (or each `CF-` code) and DM it — do **not** save the CF- code as the
    account password. Managers pick their own username + password on the link.  
-9. Find **your** team row → click **Claim this seat**  
-10. Click **Open dashboard**  
-11. Confirm the trade meter loads and Teams is your seat  
+9. Find **your** team row → click **This is my team**  
+10. Confirm you land on **your team homepage**  
 
 ---
 
@@ -230,11 +229,11 @@ Open **https://slabslip.github.io/cuckle-trade-tracker/** (already deployed from
 **Where:** a **different** browser profile or a **Private / Incognito** window (so you are not still signed in as commissioner).
 
 1. Open an **invite link** from Step 6 (preferred), or the app URL + **Redeem invite**  
-2. Confirm the page says the CF- code is a **seat ticket, not your password**  
-3. **Create account** with a **username** and a **new password** (not the CF- code)  
-4. You should land in that team’s dashboard (link path redeems automatically)  
-5. If you used Redeem by hand: paste an unused `CF-` code → **Join & open dashboard**  
-6. Confirm you are that team  
+2. Confirm the page asks for a **username** and **password** to join that team  
+3. **Create account** with a **username** and a **new password**  
+4. You should land on **that team’s homepage** (link path redeems automatically)  
+5. If you used Redeem by hand: paste an unused `CF-` code → **Join my team**  
+6. Confirm you are on that team homepage  
 7. Open any **2-team trade** → tap a side to **vote** → tally should move  
 
 ---

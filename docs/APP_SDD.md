@@ -33,15 +33,15 @@ Commissioner
   ├─ Create account (username + password)
   ├─ Create a league → Sleeper league ID (+ optional ESPN league ID)
   ├─ App GETs Sleeper roster → one CF- invite per owned seat
-  ├─ Invite console: copy codes, rotate unclaimed, claim own seat
+  ├─ Invite managers: copy a link per seat, claim own team
   └─ Home: leagues created + seats claimed
 
 Member
-  ├─ Create account (username + password only — no platform IDs)
+  ├─ Open invite link → username + password
   ├─ Optional recovery email (Forgot → email a reset, if Resend is set)
-  ├─ Redeem CF-XXXX-XXXX
+  ├─ Land on their team homepage
   ├─ Forgot: new CF- ticket from commissioner Reset login → new username/password + reclaim
-  └─ Dashboard for that seat (Teams auto-selected when possible)
+  └─ Team homepage for that seat
 ```
 
 **Seat identity:** Sleeper roster `user_id` + team name on create. Invite hash stores that binding. Member never enters a Sleeper ID.
@@ -73,6 +73,7 @@ flowchart LR
   Create --> Invites
   Invites --> Dash
   Redeem --> Dash
+  Gate --> Dash
 ```
 
 | Screen | Purpose | Key actions |
@@ -80,17 +81,17 @@ flowchart LR
 | **Gate** | Account | Create account / Sign in / Forgot (ticket reclaim or email reset) |
 | **Your leagues** | Home | Open dash, Manage invites, Create, Redeem |
 | **Create a league** | Commissioner | Sleeper league ID + optional ESPN → mint or reopen console |
-| **Invite console** | Commissioner | Codes, Reset login, Reissue, Claim this seat, Open dash |
-| **Redeem invite** | Member | Enter `CF-…` → membership → dash |
+| **Invite console** | Commissioner | Copy invite link, Reset login, Reissue, This is my team |
+| **Redeem invite** | Member | Username + password (or `CF-…`) → team homepage |
 | **Dashboard** | Meter | Existing Cuckle UI; vote as membership seat |
 
 ### Happy paths
 
 **A. Commissioner (first time)**  
-Sign up → Create league `1315431339301806080` → see 10 codes → DM each manager → **Claim this seat** for own team → Open dashboard → vote.
+Sign up → Create league `1315431339301806080` → copy invite links → DM each manager → **This is my team** for own roster → team homepage → vote.
 
 **B. Member**  
-Sign up → Redeem code → dashboard with that seat → vote.
+Open invite link → username + password → team homepage → vote.
 
 **C. Commissioner revisit**  
 Create again with same ID → **no remint** → invite console (status only) → Rotate only if a code was lost.

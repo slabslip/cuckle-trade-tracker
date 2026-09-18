@@ -14,7 +14,7 @@ When invoked:
 3. Check browser Back / `applyState` / `screenKey` / `stateNow`. Portal drill
    (`receiptWhoList`, team, pair, draft seat) must not leak onto Home or the
    next History visit after a tab hop.
-4. Settings Back is `returnToLeagueHome()`, never `openMyTeamHome()`. That is law.
+4. Settings Back / Done is `leaveSettingsToTeamHome()` → `openMyTeamHome()` when a seat is claimed. That is law.
 5. Vote / cold `?t=` tickets may still use `openTradesList()`. Do not reroute
    those to Home unless the user asked to kill that list.
 6. Verify generate asserts: five-tab Menu (`Calculator`, `League Data`,

@@ -4,7 +4,7 @@
  * Deploys: merge to main → GitHub Pages. Clients reg.update() on load/focus; skipWaiting
  * + claim then controllerchange reloads once.
  */
-const CACHE = "chuckle-shell-v258-news-feed";
+const CACHE = "chuckle-shell-v259-invite-home";
 /* Icons + manifest only. brand-mark / gate-logo are loaded with ?DATA_V from the page. */
 const SHELL = [
   "./manifest.webmanifest",

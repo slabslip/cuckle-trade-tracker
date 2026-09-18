@@ -3463,19 +3463,18 @@ const html = `<!DOCTYPE html>
       gap: 8px; cursor: pointer; flex: 1; min-height: 0;
     }
     button.tile-share {
-      appearance: none; font: inherit; font-size: 0.68rem; font-weight: 750;
-      letter-spacing: 0.03em; color: #0b0b0d; background: #e0b44c; border: 0;
-      border-radius: 8px; min-height: 32px; width: 100%; padding: 0 8px;
-      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-      cursor: pointer; flex: 0 0 auto;
+      appearance: none; font: inherit; color: #0b0b0d; background: #e0b44c; border: 0;
+      border-radius: 7px; width: 22px; height: 22px; min-width: 22px; min-height: 22px;
+      padding: 0; display: inline-grid; place-items: center; cursor: pointer;
+      position: absolute; right: 6px; bottom: 6px; z-index: 2; flex: 0 0 auto;
     }
-    button.tile-share svg { width: 13px; height: 13px; display: block; }
+    button.tile-share svg { width: 11px; height: 11px; display: block; }
     .tile-share-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      margin: 0 0 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 8px; position: relative;
     }
-    .tile-share-row .screen-h { margin: 0; flex: 1; min-width: 0; }
-    .tile-share-row button.tile-share { width: auto; min-width: 88px; padding: 0 12px; }
+    .tile-share-row .screen-h { margin: 0; flex: 1; min-width: 0; padding-right: 28px; }
+    .tile-share-row button.tile-share { position: static; }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -4199,7 +4198,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tileshare20260918154500";
+    const DATA_V = "shareclaim20260918143500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4759,19 +4758,62 @@ const html = `<!DOCTYPE html>
     function dataTileShareBtn(id) {
       return '<button type="button" class="tile-share" data-tile-share="' + esc(id || "") + '"'
         + ' aria-label="Share this view">'
-        + receiptShareIco() + "<span>Share</span></button>";
+        + receiptShareIco() + "</button>";
     }
 
-    function honorPendingDataTile() {
-      let tile = dataTileCanon(pendingDataTile);
+    function shareAccessPending() {
+      if (pendingDataTile) return true;
+      try {
+        const q = new URLSearchParams(location.search);
+        if (q.get("tile") || q.get("src") === "share") return true;
+      } catch (err) { /* ignore */ }
+      try { if (sessionStorage.getItem("cuckle.pending.tile")) return true; }
+      catch (err) { /* private */ }
+      return false;
+    }
+
+    function rememberPendingDataTile(tile) {
+      const next = (typeof dataTileCanon === "function" ? dataTileCanon(tile) : "") || String(tile || "").trim();
+      if (next) pendingDataTile = next;
+      try {
+        if (pendingDataTile) sessionStorage.setItem("cuckle.pending.tile", pendingDataTile);
+      } catch (err) { /* private */ }
+    }
+
+    function readPendingDataTile() {
+      let tile = typeof dataTileCanon === "function" ? dataTileCanon(pendingDataTile) : "";
       if (!tile) {
         try { tile = dataTileCanon(new URLSearchParams(location.search).get("tile")); }
         catch (err) { tile = ""; }
       }
-      if (!tile) return false;
-      pendingDataTile = tile;
-      if (appScreen !== "dash") return false;
+      if (!tile) {
+        try { tile = dataTileCanon(sessionStorage.getItem("cuckle.pending.tile")); }
+        catch (err) { tile = ""; }
+      }
+      return tile || "";
+    }
+
+    function clearPendingDataTile() {
       pendingDataTile = "";
+      try { sessionStorage.removeItem("cuckle.pending.tile"); } catch (err) { /* ignore */ }
+    }
+
+    function dataTileSeatReady() {
+      if (typeof isDesignLeagueHome === "function" && isDesignLeagueHome()) return true;
+      if (activeLeague && activeLeague.sleeper_user_id) return true;
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || claimLeagueId || "";
+      return !!(memberships || []).find(function (m) {
+        return m && String(m.sleeper_league_id) === String(lid) && m.sleeper_user_id;
+      });
+    }
+
+    function honorPendingDataTile() {
+      const tile = readPendingDataTile();
+      if (!tile) return false;
+      rememberPendingDataTile(tile);
+      if (appScreen !== "dash") return false;
+      if (!dataTileSeatReady()) return false;
+      clearPendingDataTile();
       view = "home";
       me = null;
       homeTab = "history";
@@ -8851,6 +8893,7 @@ const html = `<!DOCTYPE html>
         view = "home";
         homeTab = "history";
         pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
+        if (pendingDataTile && typeof rememberPendingDataTile === "function") rememberPendingDataTile(pendingDataTile);
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
@@ -16602,6 +16645,14 @@ const html = `<!DOCTYPE html>
       },
     ];
     let pendingAddLeague = "";
+    function leagueNameForId(id) {
+      const lid = String(id || "").trim();
+      if (!lid) return "";
+      if (lid === GM_LEAGUE_ID) return "Gm 2026 LLJ";
+      if (lid === CUCKLE_LEAGUE_ID) return "CuckleChunckle";
+      const book = readyAddBook(lid);
+      return (book && book.name) || "";
+    }
     function readyAddBook(id) {
       const want = String(id || "").trim();
       const alias = want.toLowerCase() === "gm" ? GM_LEAGUE_ID : want;
@@ -18314,6 +18365,10 @@ const html = `<!DOCTYPE html>
         return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
           + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
       }
+      if (typeof shareAccessPending === "function" && shareAccessPending()) {
+        return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
+          + "</b>. Create a username and password, then claim a remaining team to open it.</p>";
+      }
       return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
         + "</b>. After you set a username and password, pick your team.</p>";
     }
@@ -18882,8 +18937,23 @@ const html = `<!DOCTYPE html>
           return;
         }
         if (claimLeagueId || gateInviteLeagueId) {
+          const lid = claimLeagueId || gateInviteLeagueId;
+          const already = (memberships || []).find(function (m) {
+            return m && m.sleeper_league_id === lid && m.sleeper_user_id;
+          });
+          if (already) {
+            handedOff = true;
+            await openLeagueDashboard({
+              sleeper_league_id: already.sleeper_league_id,
+              name: already.name || claimLeagueName || lid,
+              status: already.status || "ready",
+              sleeper_user_id: already.sleeper_user_id,
+              team_name: already.team_name,
+            });
+            return;
+          }
           handedOff = true;
-          await openClaimPick(claimLeagueId || gateInviteLeagueId, claimLeagueName || gateInviteLeague);
+          await openClaimPick(lid, claimLeagueName || gateInviteLeague);
           return;
         }
         if (receiptImportPending) {
@@ -19368,7 +19438,10 @@ const html = `<!DOCTYPE html>
       try {
         const q = new URLSearchParams(location.search);
         const t = (typeof dataTileCanon === "function") ? dataTileCanon(q.get("tile")) : String(q.get("tile") || "");
-        if (t) pendingDataTile = t;
+        if (t) {
+          pendingDataTile = t;
+          if (typeof rememberPendingDataTile === "function") rememberPendingDataTile(t);
+        }
         const v = q.get("view");
         if (v && VIEWS.indexOf(v) >= 0) wantView = v;
         else if (v === "data" || pendingDataTile) wantView = "home";
@@ -25661,16 +25734,21 @@ const html = `<!DOCTYPE html>
 
     function renderAppGate() {
       const invited = !!(redeemCode && String(redeemCode).trim());
+      const shared = !invited && typeof shareAccessPending === "function" && shareAccessPending();
       const forgot = gateMode === "forgot";
       const title = forgot
         ? "Reset login"
         : invited
           ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
+          : shared
+            ? (gateMode === "signup" ? "Create account to open this view" : "Sign in to open this view")
           : (gateMode === "signup" ? "Create account" : "Sign in");
       const go = forgot
         ? "Reclaim seat"
         : invited
           ? (gateMode === "signup" ? "Create account & join" : "Sign in & join")
+          : shared
+            ? (gateMode === "signup" ? "Create account & claim" : "Sign in & claim")
           : (gateMode === "signup" ? "Create account" : "Sign in");
       const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
         + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
@@ -25740,7 +25818,7 @@ const html = `<!DOCTYPE html>
             + esc(String(redeemCode).toUpperCase()) + "</code>"
             + " — this is your <b>seat ticket</b>, not your account password. "
             + "Pick a username and a <b>new password</b> you will use to sign in later.</p>")
-          : (claimLeagueId && !forgot
+          : ((claimLeagueId || shared) && !forgot
             ? (joinStepsHtml("account") + joinInviteLeadHtml())
             : ""))
         + (gateSuggestedUser && invited && !forgot
@@ -26119,30 +26197,38 @@ const html = `<!DOCTYPE html>
 
     function renderClaimTeam() {
       const league = claimLeagueName || gateInviteLeague || "this league";
-      const picked = (claimSeats || []).find(function (s) {
+      const remaining = (claimSeats || []).filter(function (s) { return !s.claimed; });
+      const takenN = (claimSeats || []).length - remaining.length;
+      const picked = remaining.find(function (s) {
         return String(s.sleeper_user_id) === String(claimPickId);
       });
-      const rows = (claimSeats || []).map(function (s) {
-        const taken = !!s.claimed;
-        const on = !taken && String(s.sleeper_user_id) === String(claimPickId);
+      const rows = remaining.map(function (s) {
+        const on = String(s.sleeper_user_id) === String(claimPickId);
         return '<button type="button" class="chip'
-          + (on ? " claim-team-on" : "")
-          + (taken ? " claim-team-taken" : "") + '"'
+          + (on ? " claim-team-on" : "") + '"'
           + ' data-claim-pick="' + esc(s.sleeper_user_id) + '"'
-          + (taken || joinBusy ? " disabled" : "") + ">"
+          + (joinBusy ? " disabled" : "") + ">"
           + esc(s.team_name)
-          + (taken ? " — claimed" : "")
           + "</button>";
       }).join("");
+      const hero = (typeof shareAccessPending === "function" && shareAccessPending())
+        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim one of the remaining teams to open it.")
+        : ("You've been invited to join <b>" + esc(league) + "</b>. Pick the team that is yours.");
+      const hint = !claimSeats.length
+        ? "Could not load teams yet. Ask your commissioner for an invite link."
+        : (!remaining.length
+          ? "No remaining teams. Sign in if yours is already claimed."
+          : (takenN
+            ? (takenN + " already claimed. Remaining teams below.")
+            : "League added. Team not claimed yet."));
       return '<div class="app-shell">'
         + joinStepsHtml("team")
         + '<h2 class="screen-h" tabindex="-1">Claim your team</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
-        + "</b>. Pick the team that is yours.</p>"
-        + '<p class="caption">League added. Team not claimed yet.</p>'
+        + '<p class="join-land-hero">' + hero + "</p>"
+        + '<p class="caption">' + esc(hint) + "</p>"
         + '<div class="claim-team-list">'
-        + (rows || '<p class="caption">Could not load teams yet. Ask your commissioner for an invite link.</p>')
+        + (rows || "")
         + "</div>"
         + (picked
           ? ('<p class="caption" style="margin-top:12px">You picked <b>' + esc(picked.team_name)
@@ -29212,8 +29298,12 @@ const html = `<!DOCTYPE html>
     const leagueParam = (params.get("league") || "").trim();
     if (leagueParam && !inviteParam) {
       claimLeagueId = leagueParam;
+      if (!claimLeagueName && typeof leagueNameForId === "function") {
+        claimLeagueName = leagueNameForId(leagueParam);
+      }
     }
     pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
+    if (pendingDataTile && typeof rememberPendingDataTile === "function") rememberPendingDataTile(pendingDataTile);
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";
@@ -31077,6 +31167,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function dataTileShareUrl(")
     || !inline.includes("function dataTileShareTextFor(")
     || !inline.includes("function honorPendingDataTile(")
+    || !inline.includes("function dataTileSeatReady(")
+    || !inline.includes("function shareAccessPending(")
+    || fnSrc("dataTileShareBtn").includes("<span>Share</span>")
+    || !fnSrc("honorPendingDataTile").includes("dataTileSeatReady(")
     || !inline.includes('q.set("view", "data")')
     || !inline.includes('q.set("tile", tile)')
     || !inline.includes("data-tile-share")

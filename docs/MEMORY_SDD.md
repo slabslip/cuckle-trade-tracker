@@ -335,11 +335,14 @@ the URL** if we add one later.
 ```
 
 Data-tile shares are **member views**, not public receipts. Do not reuse
-`?r=trade`. A gold Share chip sits on every data-set door (home top 4 +
-Your board) and on the open tile. Tapping it runs `shareProofNow` with a
-one-line headline plus the URL so a group text can tap straight back into
-that board. Signed-in members land on the tile. Logged-out `?league=` still
-goes claim / join, then `honorPendingDataTile()` opens the same door.
+`?r=trade`. A small gold share icon sits bottom-right on every data-set
+door (home top 4 + Your board) and beside the open-tile title — icon only,
+no “Share” word. Tapping it runs `shareProofNow` with a one-line headline
+plus the URL so a group text can tap straight back into that board.
+Signed-in members with a claimed seat land on the tile. Anyone without a
+username/password or a claimed seat is gated: create account, then claim
+one of the **remaining** (unclaimed) teams. `honorPendingDataTile()` waits
+for `dataTileSeatReady()` and then opens the same door.
 
 ```text
 GM 1QB · Career net

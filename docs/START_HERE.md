@@ -57,6 +57,7 @@ Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**
 16. `db/wave18-seat-cosmetics.sql` — equipped titles / emblems (if not already applied)
 17. `db/wave21-news-league.sql` — optional `sleeper_league_id` on news shares
 18. `db/wave22-seat-reset.sql` — recovery email + Reset login prior username on invites
+19. `db/wave23-gm-espn-standings.sql` — GM-only ESPN standings screenshots (Past Champions)
 
 **Ledger:** after wave12 + wave13 + wave16 + wave17, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
 Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  

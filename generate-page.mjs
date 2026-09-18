@@ -297,6 +297,12 @@ const html = `<!DOCTYPE html>
     body.has-leagues-drawer { overflow: hidden; }
     /* Settings Profile | Leagues — reuse .nav / .tab; slight top gap under the screen title. */
     .settings-tabs.nav { margin: 4px 0 14px; }
+    .espn-stand { margin: 0 0 18px; }
+    .espn-stand h3 { margin: 8px 0 6px; font-size: 0.95rem; }
+    img.espn-stand-shot {
+      width: 100%; height: auto; display: block; border-radius: 12px;
+      background: #111; margin: 8px 0 12px;
+    }
     /* Right slot is .brand-end — team flair and settings gear stay hidden. */
     .brand-end { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; gap: 2px; }
     .brand-end:empty { display: none; }
@@ -4124,6 +4130,10 @@ const html = `<!DOCTYPE html>
     let cuffFilterSelf = false; // starter owner also owns the cuff (insurer)
     let cuffFilterOther = false; // cuff owned by someone other than the starter's manager (poach)
     let titles = null;
+    let espnStandBook = null;
+    let espnStandRemote = {};
+    let espnStandBusy = false;
+    let espnStandNote = "";
     let marks = null;
     let news = null;
     // Soft-deleted shared tweets, by item id (tweet:22). Filled from Supabase on load and on
@@ -4133,7 +4143,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260918002626";
+    const DATA_V = "stand20260918020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4445,6 +4455,7 @@ const html = `<!DOCTYPE html>
     let openDraft = null;
     let partnerName = null;
     let titleYear = null;
+    let espnStandYear = null;
     // The seat whose side frames the full-screen trade. A trade has two sides and the board
     // rows are per seat, so the screen needs to know which one it is reading from. Deliberately
     // not the selected seat: the full-screen trade is league-wide and must not select one.
@@ -8091,7 +8102,7 @@ const html = `<!DOCTYPE html>
 
     async function loadMembers() {
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, espnStandRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -8106,6 +8117,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("seat-direction.json").catch(() => null),
         getLeagueJson("week-scores.json").catch(() => null),
         getLeagueJson("finishes.json").catch(() => null),
+        getLeagueJson("espn-standings.json").catch(() => null),
       ]);
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
@@ -8165,6 +8177,12 @@ const html = `<!DOCTYPE html>
           ? finishesRaw
           : null;
       } catch (err) { finishesBook = null; }
+      try {
+        espnStandBook = espnStandRaw && Number(espnStandRaw.v) >= 1 ? espnStandRaw : null;
+      } catch (err) { espnStandBook = null; }
+      if (typeof loadEspnStandRemote === "function") {
+        loadEspnStandRemote().catch((err) => console.error(err));
+      }
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
@@ -8338,6 +8356,7 @@ const html = `<!DOCTYPE html>
       openDraft = null;
       markOpen = null;
       titleYear = null;
+      espnStandYear = null;
       tradeSeat = null;
       voteToast = null;
       // Filters are per-seat state. Leaving them set filtered the next seat to a season it may not have.
@@ -8385,6 +8404,7 @@ const html = `<!DOCTYPE html>
       if (me) q.set("me", me.name);
       if (view && view !== "home") q.set("view", view);
       if (view === "titles" && titleYear) q.set("title", titleYear);
+      if (view === "titles" && espnStandYear) q.set("espnstand", espnStandYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
       // Persist league-home tab so a document reload (browser PTR / SW) does not dump to League.
@@ -8415,7 +8435,7 @@ const html = `<!DOCTYPE html>
         (me && me.user_id) || "",
         view,
         homeTabCanon(homeTab) || "home",
-        view === "titles" ? (titleYear || "") : "",
+        view === "titles" ? ((titleYear || "") + "/" + (espnStandYear || "")) : "",
         view === "trade" ? (openId || "") + "/" + (tradeSeat || "") : "",
         view === "datasets" ? (dataSet || "") : "",
       ].join("|");
@@ -8434,6 +8454,7 @@ const html = `<!DOCTYPE html>
         me: (me && me.user_id) || null,
         view: view,
         titleYear: titleYear,
+        espnStandYear: espnStandYear,
         openId: openId,
         tradeSeat: tradeSeat,
         lens: lens,
@@ -8469,6 +8490,7 @@ const html = `<!DOCTYPE html>
         me: (seat && seat.user_id) || null,
         view: q.get("view") || "home",
         titleYear: q.get("title") || null,
+        espnStandYear: q.get("espnstand") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
         // null when omitted so trade screens can age-default (t0 / y1 / y2).
@@ -8489,6 +8511,7 @@ const html = `<!DOCTYPE html>
         depth = want.d || 0;
         view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
         titleYear = want.titleYear || null;
+        espnStandYear = want.espnStandYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
         homeTab = homeTabCanon(want.homeTab);
@@ -14956,9 +14979,12 @@ const html = `<!DOCTYPE html>
     }
 
     function renderTitles() {
+      if (isGmLeague() && espnStandYear) return renderEspnStandYear(espnStandYear);
       const list = (titles && titles.titles) || [];
+      const espnBlock = isGmLeague() ? renderEspnStandingsIndex() : "";
       if (!list.length) {
         return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
+          + espnBlock
           + '<p class="caption">No championship seasons on this tape yet. '
           + "Sleeper years unlock from a completed season. ESPN years unlock when the cookie import lands.</p>";
       }
@@ -14968,6 +14994,7 @@ const html = `<!DOCTYPE html>
         ? '<p class="caption">Sleeper titles are on. ESPN 35763180 stays locked until ESPN_S2 and SWID are set.</p>'
         : "";
       return '<h2 class="screen-h" tabindex="-1">Past Champions</h2>'
+        + espnBlock
         + espnLock
         + list.map((t) => {
           const rec = t.record || {};
@@ -15898,6 +15925,201 @@ const html = `<!DOCTYPE html>
     function isGmLeague() {
       return String((activeLeague && activeLeague.sleeper_league_id) || "") === GM_LEAGUE_ID;
     }
+
+    function isGmCommissioner() {
+      if (!isGmLeague()) return false;
+      return (ownedLeagues || []).some((o) => String(o.sleeper_league_id) === GM_LEAGUE_ID);
+    }
+
+    function espnStandYears() {
+      const fromBook = (espnStandBook && Array.isArray(espnStandBook.years)) ? espnStandBook.years : [];
+      const years = fromBook.length ? fromBook.slice() : ["2024", "2023", "2022", "2021", "2020"];
+      const extra = Object.keys(espnStandLocalRead()).concat(Object.keys(espnStandRemote || {}));
+      for (let i = 0; i < extra.length; i++) {
+        if (years.indexOf(extra[i]) < 0 && /^[0-9]{4}$/.test(extra[i])) years.push(extra[i]);
+      }
+      years.sort(function (a, b) { return String(b).localeCompare(String(a)); });
+      return years;
+    }
+
+    function espnStandKey() {
+      return "cuckle.gm.espn_standings.v1." + GM_LEAGUE_ID;
+    }
+
+    function espnStandLocalRead() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(espnStandKey()) || "{}");
+        return raw && typeof raw === "object" ? raw : {};
+      } catch (err) { return {}; }
+    }
+
+    function espnStandLocalWrite(map) {
+      try { localStorage.setItem(espnStandKey(), JSON.stringify(map || {})); } catch (err) { /* quota */ }
+    }
+
+    function espnStandSrc(shot) {
+      if (!shot) return "";
+      if (String(shot).indexOf("data:image/") === 0 || String(shot).indexOf("http") === 0) return shot;
+      const path = String(shot).indexOf("data/") === 0
+        ? String(shot)
+        : ("data/leagues/" + GM_LEAGUE_ID + "/ui/" + (String(shot).indexOf("./") === 0 ? String(shot).slice(2) : String(shot)));
+      return path + (path.indexOf("?") >= 0 ? "" : "?" + DATA_V);
+    }
+
+    function espnStandShot(year) {
+      if (!isGmLeague() || !year) return "";
+      const y = String(year);
+      const local = espnStandLocalRead()[y];
+      if (local) return espnStandSrc(local);
+      if (espnStandRemote && espnStandRemote[y]) return espnStandSrc(espnStandRemote[y]);
+      const shots = (espnStandBook && espnStandBook.shots) || [];
+      for (let i = 0; i < shots.length; i++) {
+        if (String(shots[i].season) === y && shots[i].src) return espnStandSrc(shots[i].src);
+      }
+      return "";
+    }
+
+    async function loadEspnStandRemote() {
+      if (!isGmLeague()) {
+        espnStandRemote = {};
+        return;
+      }
+      try {
+        const res = await fetch(
+          VOTE_API + "/league_standings_shots?select=season,image_data&sleeper_league_id=eq."
+            + encodeURIComponent(GM_LEAGUE_ID),
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + VOTE_ANON },
+            signal: voteAbort(),
+          },
+        );
+        if (!res.ok) return;
+        const rows = await res.json().catch(() => []);
+        const next = {};
+        for (let i = 0; i < (rows || []).length; i++) {
+          if (rows[i] && rows[i].season && rows[i].image_data) next[rows[i].season] = rows[i].image_data;
+        }
+        espnStandRemote = next;
+        if (appScreen === "dash" && view === "titles") render();
+      } catch (err) { /* table may not exist yet */ }
+    }
+
+    function compressEspnStandShot(file) {
+      return new Promise(function (resolve, reject) {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+          URL.revokeObjectURL(url);
+          const maxW = 900;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          let q = 0.72;
+          let out = canvas.toDataURL("image/jpeg", q);
+          while (out.length > 900000 && q > 0.4) {
+            q -= 0.08;
+            out = canvas.toDataURL("image/jpeg", q);
+          }
+          resolve(out);
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          reject(new Error("Could not read that image."));
+        };
+        img.src = url;
+      });
+    }
+
+    async function saveEspnStandShot(year, file) {
+      const y = String(year || "");
+      if (!isGmLeague() || !/^[0-9]{4}$/.test(y) || !file) return;
+      espnStandBusy = true;
+      espnStandNote = "";
+      render();
+      try {
+        const dataUrl = await compressEspnStandShot(file);
+        const local = espnStandLocalRead();
+        local[y] = dataUrl;
+        espnStandLocalWrite(local);
+        espnStandRemote = Object.assign({}, espnStandRemote, { [y]: dataUrl });
+        espnStandNote = "Saved on this device.";
+        if (authSession && authSession.access_token && authSession.access_token !== "design-mode") {
+          await authRefreshIfNeeded();
+          const res = await fetch(
+            VOTE_API + "/league_standings_shots?on_conflict=sleeper_league_id,season",
+            {
+              method: "POST",
+              headers: {
+                apikey: VOTE_ANON,
+                Authorization: "Bearer " + authSession.access_token,
+                "Content-Type": "application/json",
+                Prefer: "resolution=merge-duplicates,return=minimal",
+              },
+              body: JSON.stringify({
+                sleeper_league_id: GM_LEAGUE_ID,
+                season: y,
+                image_data: dataUrl,
+                updated_at: new Date().toISOString(),
+              }),
+              signal: voteAbort(),
+            },
+          );
+          if (res.ok) espnStandNote = "Saved — every GM manager can open this table.";
+          else if (res.status === 404 || res.status === 401) {
+            espnStandNote = "Saved on this device. Run db/wave23-gm-espn-standings.sql so the league sees it.";
+          } else {
+            const t = await res.text();
+            espnStandNote = "Saved on this device. Cloud save failed (" + res.status + ").";
+            console.error(t);
+          }
+        }
+      } catch (err) {
+        espnStandNote = (err && err.message) || "Could not save that screenshot.";
+        console.error(err);
+      } finally {
+        espnStandBusy = false;
+        render();
+      }
+    }
+
+    function renderEspnStandYear(year) {
+      const shot = espnStandShot(year);
+      const commish = isGmCommissioner();
+      return '<button type="button" class="chip back" data-espn-stand-back="1">← ESPN standings</button>'
+        + '<h2 class="screen-h" tabindex="-1">' + esc(year) + " ESPN standings</h2>"
+        + (shot
+          ? '<img class="espn-stand-shot" src="' + shot + '" alt="' + esc(year) + ' ESPN standings" />'
+          : '<p class="caption">No screenshot for this year yet. Open ESPN, capture the final standings, then add it here.</p>')
+        + (espnStandNote ? '<p class="caption" role="status">' + esc(espnStandNote) + "</p>" : "")
+        + (commish
+          ? ('<div class="app-actions">'
+            + '<button type="button" class="chip" data-espn-stand-add="' + esc(year) + '"'
+            + (espnStandBusy ? " disabled" : "") + ">"
+            + (espnStandBusy ? "Saving…" : (shot ? "Replace screenshot" : "Add screenshot")) + "</button>"
+            + '<input type="file" accept="image/jpeg,image/png,image/webp,image/*" hidden'
+            + ' id="espnStandFile" data-espn-stand-file="' + esc(year) + '" />'
+            + "</div>")
+          : "");
+    }
+
+    function renderEspnStandingsIndex() {
+      if (!isGmLeague()) return "";
+      const years = espnStandYears();
+      return '<div class="espn-stand">'
+        + "<h3>ESPN standings</h3>"
+        + '<p class="caption">Final tables from ESPN 35763180. The API stays locked until ESPN_S2 and SWID are set — add a screenshot of each year.</p>'
+        + years.map(function (year) {
+          const shot = espnStandShot(year);
+          return '<button type="button" class="row" data-espn-stand="' + esc(year) + '">'
+            + '<div class="row-top"><div><div class="names">' + esc(year) + " standings</div>"
+            + '<div class="date">' + (shot ? "ESPN final table" : (isGmCommissioner() ? "Add a screenshot" : "No screenshot yet"))
+            + "</div></div>"
+            + '<div class="margin">' + (shot ? "Open" : "—") + "</div></div></button>";
+        }).join("")
+        + "</div>";
+    }
     function calcBrandTitle() {
       return isGmLeague() ? "#1GM calc" : "Cuckle trade calculator";
     }
@@ -16503,6 +16725,7 @@ const html = `<!DOCTYPE html>
         && !openDraft
         && !markOpen
         && !titleYear
+        && !espnStandYear
         && !dataSet
         && !dsOpen;
     }
@@ -16661,6 +16884,15 @@ const html = `<!DOCTYPE html>
         return;
       }
       // Past Champions year detail → champions list (same as ← All champions chip).
+      if (appScreen === "dash" && !me && view === "titles" && espnStandYear) {
+        goBack(() => {
+          espnStandYear = null;
+          espnStandNote = "";
+          focusNext = ".screen-h";
+          render();
+        });
+        return;
+      }
       if (appScreen === "dash" && !me && view === "titles" && titleYear) {
         goBack(() => {
           titleYear = null;
@@ -18376,6 +18608,7 @@ const html = `<!DOCTYPE html>
       openDraft = null;
       markOpen = null;
       titleYear = null;
+      espnStandYear = null;
       voteToast = null;
       voteSheetTx = null;
       voteSheetSeat = null;
@@ -27284,10 +27517,34 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const espnStandBtn = e.target.closest("[data-espn-stand]");
+      if (espnStandBtn) {
+        view = "titles";
+        espnStandYear = espnStandBtn.getAttribute("data-espn-stand") || null;
+        titleYear = null;
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const espnStandBack = e.target.closest("[data-espn-stand-back]");
+      if (espnStandBack) {
+        espnStandYear = null;
+        espnStandNote = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const espnStandAdd = e.target.closest("[data-espn-stand-add]");
+      if (espnStandAdd) {
+        const inp = document.getElementById("espnStandFile");
+        if (inp) inp.click();
+        return;
+      }
       const titleBtn = e.target.closest("[data-title]");
       if (titleBtn) {
         view = "titles";
         titleYear = titleBtn.dataset.title || null;
+        espnStandYear = null;
         openId = null;
         tradeSeat = null;
         markOpen = null;
@@ -27933,6 +28190,12 @@ const html = `<!DOCTYPE html>
         e.target.value = "";
         return;
       }
+      if (e.target && e.target.id === "espnStandFile" && e.target.files && e.target.files[0]) {
+        const year = e.target.getAttribute("data-espn-stand-file") || espnStandYear;
+        saveEspnStandShot(year, e.target.files[0]).catch((err) => console.error(err));
+        e.target.value = "";
+        return;
+      }
     });
     document.getElementById("app").addEventListener("input", (e) => {
       if (e.target && e.target.closest && e.target.closest("[data-join-src-id]")) {
@@ -28177,7 +28440,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v258-news-feed";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v259-gm-standings";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -28268,13 +28531,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v258-news-feed")) {
+  || !html.includes("chuckle-shell-v259-gm-standings")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v258-news-feed")
+  || !swSrc.includes("chuckle-shell-v259-gm-standings")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -31074,6 +31337,18 @@ if (!inline.includes("function isGmLeague(") || !inline.includes("function calcB
   || !inline.includes("data/ui/gm-calc-door.png")
   || !fs.existsSync(path.join(ROOT, "data/ui/gm-calc-door.png"))) {
   throw new Error("Gm 2026 LLJ must brand the calculator #1GM calc with its own door art");
+}
+if (!inline.includes("function renderEspnStandingsIndex(")
+  || !inline.includes("function renderEspnStandYear(")
+  || !inline.includes("function saveEspnStandShot(")
+  || !inline.includes("espn-standings.json")
+  || !inline.includes("league_standings_shots")
+  || !fnSrc("renderTitles").includes("renderEspnStandingsIndex(")
+  || !fnSrc("renderTitles").includes("isGmLeague()")
+  || !fnSrc("onBrandBack").includes("espnStandYear")
+  || !fs.existsSync(path.join(ROOT, "data/leagues/1389723418827460608/ui/espn-standings.json"))
+  || !fs.existsSync(path.join(ROOT, "db/wave23-gm-espn-standings.sql"))) {
+  throw new Error("GM Past Champions must offer ESPN standings screenshots; other leagues must not");
 }
 if (!inline.includes("function calcDoorLabel(") || !inline.includes("Cuckle calculator")
   || !inline.includes("Cuckle trade calculator")) {

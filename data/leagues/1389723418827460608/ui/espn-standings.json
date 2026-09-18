@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "league_id": "1389723418827460608",
+  "espn_league_id": "35763180",
+  "years": ["2024", "2023", "2022", "2021", "2020"],
+  "shots": [],
+  "note": "GM-only. Drop a JPEG as espn-standings/YYYY.jpg and list it here, or add from Past Champions (commissioner). ESPN API stays locked until cookies land."
+}

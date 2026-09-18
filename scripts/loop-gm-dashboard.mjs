@@ -75,8 +75,10 @@ loop(10, page.includes("This season · plug") && page.includes("value_1qb")
   "Team Ideas and calc info switch to this-season / 1QB copy");
 // 11 Tape caption + titles lock copy
 loop(11, page.includes("function leagueTapeHtml(") && page.includes("ESPN 35763180 stays locked")
-  && page.includes("no Cuckle crowns are copied over"),
-  "dashboard states Sleeper/ESPN merge status and does not copy Cuckle crowns");
+  && page.includes("no Cuckle crowns are copied over")
+  && page.includes("function renderEspnStandingsIndex(")
+  && page.includes("espn-standings.json"),
+  "dashboard states Sleeper/ESPN merge status and hosts GM standings screenshots");
 // 12 Shared shell still Cuckle-default
 loop(12, page.includes("Cuckle trade calculator") && page.includes("data/ui/calc-door.png")
   && page.includes("const DATA_V"),

@@ -97,6 +97,18 @@ Then commit `data/leagues/1389723418827460608/` and push `main`.
 - ESPN playoff consolation still does not set the low (same hunt rule).
 - Past Champions gets ESPN crowns only from a real ESPN payload — never invented.
 
+### D. Standings screenshots (GM only)
+
+Until cookies unlock the API, Past Champions on the GM book shows **ESPN standings**
+years 2024–2020. The commissioner opens ESPN, screenshots each final table, and taps
+**Add screenshot**. That is GM-only (`1389723418827460608`). Other leagues never see
+this door.
+
+Run `db/wave23-gm-espn-standings.sql` so every manager sees the same photos. Without
+it, the shot stays on the commissioner's device. You can also drop
+`data/leagues/1389723418827460608/ui/espn-standings/YYYY.jpg` and list it in
+`espn-standings.json`.
+
 The same five steps also sit on **Settings → Leagues** when ESPN is locked.
 
 ---

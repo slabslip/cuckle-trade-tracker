@@ -16645,6 +16645,14 @@ const html = `<!DOCTYPE html>
       },
     ];
     let pendingAddLeague = "";
+    function leagueNameForId(id) {
+      const lid = String(id || "").trim();
+      if (!lid) return "";
+      if (lid === GM_LEAGUE_ID) return "Gm 2026 LLJ";
+      if (lid === CUCKLE_LEAGUE_ID) return "CuckleChunckle";
+      const book = readyAddBook(lid);
+      return (book && book.name) || "";
+    }
     function readyAddBook(id) {
       const want = String(id || "").trim();
       const alias = want.toLowerCase() === "gm" ? GM_LEAGUE_ID : want;
@@ -29290,6 +29298,9 @@ const html = `<!DOCTYPE html>
     const leagueParam = (params.get("league") || "").trim();
     if (leagueParam && !inviteParam) {
       claimLeagueId = leagueParam;
+      if (!claimLeagueName && typeof leagueNameForId === "function") {
+        claimLeagueName = leagueNameForId(leagueParam);
+      }
     }
     pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
     if (pendingDataTile && typeof rememberPendingDataTile === "function") rememberPendingDataTile(pendingDataTile);

@@ -38,6 +38,7 @@ need(page, "index.html", [
   "claim a remaining team to open it",
   "Claim one of the remaining teams to open it",
   "Create account to open this view",
+  "function leagueNameForId(",
   "cuckle.pending.tile",
   "right: 6px; bottom: 6px",
 ]);

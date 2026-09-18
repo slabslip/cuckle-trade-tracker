@@ -6,11 +6,16 @@ import {
   buildFinishesBook,
   careerFloorSeats,
   contenderSeats,
+  grossWonSeats,
+  playoffAvgSeats,
+  playoffNSeats,
   pointsKingSeats,
   rankFinishes,
   remapEspnStanding,
+  rsAvgSeats,
   sackoSeats,
 } from "../lib/finishes.mjs";
+import { GM_POT } from "../lib/redraft-season.mjs";
 
 function fail(msg) {
   console.error("FINISH FAIL: " + msg);
@@ -94,6 +99,34 @@ if (careerFloorSeats(book.seats, 3).length) fail("no seat has 3 seasons in this 
 if (pointsKingSeats(book.seats, 1)[0].name !== "Biff34") fail("points king at n=1 is Biff");
 if (contenderSeats(book.seats, 1)[0].contender < 50) fail("title year is a contender season");
 if (sackoSeats(book.seats)[0].name !== "Adizzl3") fail("sacko list starts with last place");
+
+const potBook = buildFinishesBook({
+  sleeperSeasons: [{ season: "2025", rows }],
+  espnStandings: [
+    { season: "2024", user_id: "a", name: "Biff34", place: 5, from: "first_round", rs_place: 2 },
+    { season: "2024", user_id: "l", name: "Adizzl3", place: 12, from: "regular", rs_place: 12 },
+  ],
+  members: Object.entries(names).map(([user_id, name]) => ({ user_id, name })),
+  leagueId: "test",
+  sleeperYears: ["2025"],
+  pot: GM_POT,
+});
+if (potBook.v !== 4 || !potBook.pot || potBook.pot.entry !== 300) fail("redraft pot book is v4");
+const potBiff = potBook.seats.find((s) => s.name === "Biff34");
+if (!potBiff || potBiff.playoff_n !== 2 || potBiff.playoff_avg !== 3) {
+  fail("Biff 2025 title + 2024 first-round is 2 playoff years / 3.0 avg: " + JSON.stringify(potBiff));
+}
+if (potBiff.rs_avg == null) fail("Biff keeps an RS average");
+if (potBiff.won !== 2600 || potBiff.lost !== 600 || potBiff.net !== 2000) {
+  fail("Biff $2,300 title + $300 MP, $0 for 5th, $600 entries: " + JSON.stringify(potBiff));
+}
+if (!potBiff.payouts.some((p) => p.kind === "mp" && p.amount === 300)) {
+  fail("Biff 2025 most points pays $300: " + JSON.stringify(potBiff.payouts));
+}
+if (playoffNSeats(potBook.seats)[0].name !== "Biff34") fail("playoff appearances start with Biff");
+if (grossWonSeats(potBook.seats)[0].name !== "Biff34") fail("gross won starts with the title");
+if (!rsAvgSeats(potBook.seats, 1).length) fail("RS average list is not empty");
+if (playoffAvgSeats(potBook.seats, 2)[0].name !== "Biff34") fail("playoff avg floor 2 starts with Biff");
 
 const remapped = remapEspnStanding(
   { season: "2018", user_id: "espn:old", roster_id: 3, place: 2, name: "Old" },

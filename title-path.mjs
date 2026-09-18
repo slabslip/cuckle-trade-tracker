@@ -5,7 +5,7 @@ import { CUCKLE_LEAGUE_ID, DATA, NFL_KICKOFF, detectLeagueFormat, readJson, read
 import { fptsOf, pptsOf, placesFromBracket, recordRowsFor, standingsFor, standingsForRedraft } from "./lib/standings.mjs";
 import { remapEspnStanding } from "./lib/finishes.mjs";
 import { enrichTitleHistory } from "./lib/title-history.mjs";
-import { applyCountableFpts, applyRedraftSeasons, champBySeasonFromTitles, seasonPointBuckets } from "./lib/redraft-season.mjs";
+import { applyRedraftSeasons, champBySeasonFromTitles, decorateRedraftRows, seasonPointBuckets } from "./lib/redraft-season.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const KICKOFF = NFL_KICKOFF;
@@ -18,7 +18,7 @@ function placeRowsFor(s, nameByUser) {
   const rows = seasonPlaceFn(s.league)(s, nameByUser);
   if (detectLeagueFormat(s.league).kind !== "redraft") return rows;
   const tape = readJson("weekly_scores.json", { scores: [] }) || {};
-  return applyCountableFpts(rows, seasonPointBuckets(tape.scores || [], s.season));
+  return decorateRedraftRows(rows, seasonPointBuckets(tape.scores || [], s.season));
 }
 
 async function walkLeagues(startId) {

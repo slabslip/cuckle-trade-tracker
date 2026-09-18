@@ -16,7 +16,7 @@ import {
 } from "./lib.mjs";
 import { standingsFor, standingsForRedraft } from "./lib/standings.mjs";
 import { buildFinishesBook, remapEspnStanding } from "./lib/finishes.mjs";
-import { applyRedraftSeason, applyRedraftSeasons, champBySeasonFromTitles, REDRAFT_PLACE_RULE } from "./lib/redraft-season.mjs";
+import { applyRedraftSeason, applyRedraftSeasons, champBySeasonFromTitles, GM_POT, REDRAFT_PLACE_RULE } from "./lib/redraft-season.mjs";
 import { buildBridge, buildFranchiseMap } from "./merge-provider-history.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
@@ -112,6 +112,7 @@ const book = buildFinishesBook({
   asOf: ymd(Date.now()),
   sleeperYears: sleeperFixed.map((s) => s.season),
   rule: format.kind === "redraft" ? REDRAFT_PLACE_RULE : undefined,
+  pot: format.kind === "redraft" ? GM_POT : undefined,
 });
 if (format.kind === "redraft") writeJson("sleeper_season_standings.json", sleeperFixed);
 writeUi("finishes.json", book);

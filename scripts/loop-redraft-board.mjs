@@ -50,24 +50,24 @@ const defEnd = page.indexOf("];", defStart);
 const defIds = [...page.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
 
 // 1 Career-first home board
-loop(1, redIds.join(",") === "career_avg,past_champions,points_king,contender_rate,sacko,week_scores,season_place"
-  && html.includes('"career_avg", "past_champions", "points_king", "contender_rate"')
-  && html.includes('"sacko", "week_scores", "season_place"'),
-  "redraft home is the 7 career doors, floor-average first");
+loop(1, redIds.join(",") === "rs_avg,playoff_n,playoff_avg,gross_won,gross_lost,career_avg,points_king,sacko,past_champions,contender_rate,week_scores,season_place"
+  && html.includes('"rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost"')
+  && html.includes('"career_avg", "points_king", "sacko", "past_champions"'),
+  "redraft home leads with RS / playoff / pot doors");
 
 // 2 Saved-board key bumped so Safari / old seats drop the dynasty layout
-loop(2, page.includes("cuckle.data.dash.v3.") && html.includes("cuckle.data.dash.v3.")
-  && !page.includes("cuckle.data.dash.v2.") && !html.includes("cuckle.data.dash.v2."),
-  "seat board key is v3 so saved dynasty tiles cannot paint GM home");
+loop(2, page.includes("cuckle.data.dash.v4.") && html.includes("cuckle.data.dash.v4.")
+  && !page.includes("cuckle.data.dash.v3.") && !html.includes("cuckle.data.dash.v3."),
+  "seat board key is v4 so the old 7-door career board cannot paint GM home");
 
 // 3 Stale remote / local boards persist the reset
 loop(3, page.includes("if (stale) saveSeatDataDash(dataDashTiles)")
   && html.includes("if (stale) saveSeatDataDash(dataDashTiles)")
   && fnSrc(page, "dataDashReadLocal").includes("dataDashWriteLocal")
   && fnSrc(html, "dataDashReadLocal").includes("dataDashWriteLocal")
-  && fnSrc(page, "dataDashRedraftStale").includes('list[0] !== "career_avg"')
-  && fnSrc(page, "dataDashRedraftStale").includes("points_king")
-  && fnSrc(page, "dataDashRedraftStale").includes("sacko"),
+  && fnSrc(page, "dataDashRedraftStale").includes('list[0] !== "rs_avg"')
+  && fnSrc(page, "dataDashRedraftStale").includes("playoff_n")
+  && fnSrc(page, "dataDashRedraftStale").includes("gross_won"),
   "stale redraft boards reset, write local, and push the career board remote");
 
 // 4 Door figs show the lead name, not a bare count
@@ -130,10 +130,10 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmbeef20260918073000"')
-  && html.includes('const DATA_V = "gmbeef20260918073000"')
-  && sw.includes('chuckle-shell-v263-gm-rs')
-  && !sw.includes("chuckle-shell-v262-gm-board"),
+loop(10, page.includes('const DATA_V = "gmbeef20260918102000"')
+  && html.includes('const DATA_V = "gmbeef20260918102000"')
+  && sw.includes('chuckle-shell-v265-gm-pot')
+  && !sw.includes("chuckle-shell-v264-gm-rs-money"),
   "DATA_V and SW cache moved so Safari cannot keep the old board");
 
 // 11 Redraft library still hides dynasty ops
@@ -154,11 +154,13 @@ const jnasty = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const champ = (titles.titles || [])[0];
 const y25 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
   ?.find((p) => p.season === "2025");
-loop(12, finishes.v === 3 && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.3
+loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
+  && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.3 && tbow.rs_avg === 4 && tbow.playoff_avg === 2.8
   && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
-  && adizz && adizz.contender === 83.3 && adizz.last_n === 1
+  && adizz && adizz.contender === 83.3 && adizz.last_n === 1 && adizz.playoff_n === 5
+  && tully && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
   && jnasty && jnasty.last_n === 2
-  && ztrain && ztrain.last_n === 1
+  && ztrain && ztrain.last_n === 1 && ztrain.playoff_avg === 2.8
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
   && y25("fatassmexican") && y25("fatassmexican").place === 6
   && y25("Adizzl3") && y25("Adizzl3").place === 12 && y25("Adizzl3").from === "regular"
@@ -166,7 +168,8 @@ loop(12, finishes.v === 3 && finishes.seats[0].name === "Tbow00" && tbow && tbow
   && champ && champ.season === "2025" && champ.name === "Biff34"
   && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02
   && page.includes("Last in regular season")
-  && page.includes("consolation is out"),
-  "home leads: Tbow 4.3 career, Biff points (RS+hunt), Jnasty two RS sackos");
+  && page.includes("most points $300")
+  && page.includes("Regular-season record only"),
+  "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, real pot");
 
 console.log("PASS 12 redraft board loops");

@@ -240,7 +240,8 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
 const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
 const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
-loop(38, finishes.v === 3 && Array.isArray(finishes.seats)
+loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
+  && finishes.pot && finishes.pot.entry === 300
   && finishes.career_floor === 3
   && /consolation points out/.test(finishes.rule || "")
   && (finishes.seasons || []).includes("2025")
@@ -271,7 +272,10 @@ loop(40, page.includes("const DATA_REPORTS = [")
   && page.includes('id: "points_king"')
   && page.includes('id: "contender_rate"')
   && page.includes('id: "sacko"')
-  && page.includes('"career_avg", "past_champions", "points_king", "contender_rate"')
+  && page.includes('id: "rs_avg"')
+  && page.includes('id: "playoff_n"')
+  && page.includes('id: "gross_won"')
+  && page.includes('"rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost"')
   && page.includes("function dataDashRedraftStale(")
   && page.includes("function finishCareerClaim(")
   && !page.includes('id: "avg_finish"')
@@ -301,9 +305,10 @@ const tully = (finishes.seats || []).find((s) => s.name === "fatassmexican");
 const y25 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
   ?.find((p) => p.season === "2025");
 loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3 && adizz.last_n === 1
-  && tbow && tbow.avg === 4.3 && tbow.fpts_avg === 1645.1
+  && adizz.playoff_n === 5 && adizz.playoff_avg === 3.4
+  && tbow && tbow.avg === 4.3 && tbow.fpts_avg === 1645.1 && tbow.rs_avg === 4 && tbow.playoff_avg === 2.8
   && ztrain && ztrain.last_n === 1
-  && tully && tully.titles_n === 2
+  && tully && tully.titles_n === 2 && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
   && y25("fatassmexican") && y25("fatassmexican").place === 6
   && y25("Biff34") && y25("Biff34").fpts === 2109.48

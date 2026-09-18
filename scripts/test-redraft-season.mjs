@@ -52,6 +52,10 @@ if (by.Biff34.place !== 9) fail("Biff stays 9th from regular season");
 if (by.Tbow00.fpts >= 1743) fail("consolation 200 must not stay in Tbow's season points: " + by.Tbow00.fpts);
 if (by.ztrain123.fpts !== 180) fail("sacko points are regular season only, not consolation 10: " + by.ztrain123.fpts);
 if (by.fatassmexican.fpts !== 180 + 120 + 110 + 150) fail("champ keeps title-hunt weeks: " + by.fatassmexican.fpts);
+if (by.Tbow00.rs_place !== 1) fail("Tbow 11-3 is regular-season 1st, not final 3rd: " + by.Tbow00.rs_place);
+if (by.TaylorJohnson16.rs_place !== 7) fail("Taylor 6-8 is RS 7th among missed + worse records: " + by.TaylorJohnson16.rs_place);
+if (by.ztrain123.rs_place !== 12) fail("ztrain is RS last");
+if (by.Tbow00.rs_fpts !== 180) fail("Tbow RS points drop hunt and consolation: " + by.Tbow00.rs_fpts);
 
 const buckets = seasonPointBuckets(scores, "2024");
 if (countableFpts(buckets.last) !== 180) fail("countable drops consolation");

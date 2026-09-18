@@ -1,8 +1,18 @@
 [
   {
-    "user_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
-    "canonical_name": "AB2official",
+    "user_id": "1132149096636141568",
+    "canonical_name": "Aballers",
     "aliases": [
+      {
+        "name": "Aballers",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "The Aballers",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
       {
         "name": "AB2official",
         "kind": "espn_display",
@@ -26,22 +36,6 @@
     ]
   },
   {
-    "user_id": "1132149096636141568",
-    "canonical_name": "Aballers",
-    "aliases": [
-      {
-        "name": "Aballers",
-        "kind": "display_name",
-        "first_seen_season": "2026"
-      },
-      {
-        "name": "The Aballers",
-        "kind": "team_name",
-        "first_seen_season": "2026"
-      }
-    ]
-  },
-  {
     "user_id": "1132146625205567488",
     "canonical_name": "Adizzl3",
     "aliases": [
@@ -59,13 +53,7 @@
         "name": "MyBallZachErtz (2017 5th)",
         "kind": "team_name",
         "first_seen_season": "2025"
-      }
-    ]
-  },
-  {
-    "user_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
-    "canonical_name": "Austin Durham",
-    "aliases": [
+      },
       {
         "name": "ESPNFAN1357922193",
         "kind": "espn_display",
@@ -188,6 +176,26 @@
         "name": "B2B Champion (trans)",
         "kind": "team_name",
         "first_seen_season": "2025"
+      },
+      {
+        "name": "modano913",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Spencer",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Tully",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Spencer Tully",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
       }
     ]
   },
@@ -316,32 +324,6 @@
     ]
   },
   {
-    "user_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
-    "canonical_name": "modano913",
-    "aliases": [
-      {
-        "name": "modano913",
-        "kind": "espn_display",
-        "first_seen_season": "2024"
-      },
-      {
-        "name": "Spencer",
-        "kind": "espn_display",
-        "first_seen_season": "2024"
-      },
-      {
-        "name": "Tully",
-        "kind": "espn_display",
-        "first_seen_season": "2024"
-      },
-      {
-        "name": "Spencer Tully",
-        "kind": "espn_display",
-        "first_seen_season": "2024"
-      }
-    ]
-  },
-  {
     "user_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
     "canonical_name": "Ricky Swink",
     "aliases": [
@@ -385,29 +367,7 @@
         "name": "W 6th Lessee",
         "kind": "team_name",
         "first_seen_season": "2025"
-      }
-    ]
-  },
-  {
-    "user_id": "1338979666412716032",
-    "canonical_name": "SethHenry12",
-    "aliases": [
-      {
-        "name": "SethHenry12",
-        "kind": "display_name",
-        "first_seen_season": "2026"
       },
-      {
-        "name": "Ass Interference",
-        "kind": "team_name",
-        "first_seen_season": "2026"
-      }
-    ]
-  },
-  {
-    "user_id": "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}",
-    "canonical_name": "ShaneBrandes11",
-    "aliases": [
       {
         "name": "ShaneBrandes11",
         "kind": "espn_display",
@@ -427,6 +387,22 @@
         "name": "Shane Brandes",
         "kind": "espn_display",
         "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "1338979666412716032",
+    "canonical_name": "SethHenry12",
+    "aliases": [
+      {
+        "name": "SethHenry12",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Ass Interference",
+        "kind": "team_name",
+        "first_seen_season": "2026"
       }
     ]
   },

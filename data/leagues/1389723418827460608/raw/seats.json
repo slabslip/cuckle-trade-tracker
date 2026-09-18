@@ -180,7 +180,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 5,
-    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "owner_id": "1132146625205567488",
     "team_name": "NUT"
   },
   {
@@ -188,7 +188,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 6,
-    "owner_id": "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}",
+    "owner_id": "1131056110791880704",
     "team_name": "HTTR"
   },
   {
@@ -196,7 +196,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 7,
-    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "owner_id": "741001884449525760",
     "team_name": "POOP"
   },
   {
@@ -236,7 +236,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 12,
-    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "owner_id": "1132149096636141568",
     "team_name": "AB"
   },
   {
@@ -276,7 +276,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 5,
-    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "owner_id": "1132146625205567488",
     "team_name": "NUT"
   },
   {
@@ -284,7 +284,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 6,
-    "owner_id": "espn:{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+    "owner_id": "1131056110791880704",
     "team_name": "STNk"
   },
   {
@@ -292,7 +292,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 7,
-    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "owner_id": "741001884449525760",
     "team_name": "POOP"
   },
   {
@@ -332,7 +332,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 12,
-    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "owner_id": "1132149096636141568",
     "team_name": "AB"
   },
   {
@@ -372,7 +372,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 5,
-    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "owner_id": "1132146625205567488",
     "team_name": "NUT"
   },
   {
@@ -380,7 +380,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 6,
-    "owner_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "owner_id": "1131056110791880704",
     "team_name": "SWIN"
   },
   {
@@ -388,7 +388,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 7,
-    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "owner_id": "741001884449525760",
     "team_name": "POOP"
   },
   {
@@ -428,7 +428,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 12,
-    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "owner_id": "1132149096636141568",
     "team_name": "MORS"
   },
   {
@@ -468,7 +468,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 5,
-    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "owner_id": "1132146625205567488",
     "team_name": "NUT"
   },
   {
@@ -476,7 +476,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 6,
-    "owner_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "owner_id": "1131056110791880704",
     "team_name": "SWIN"
   },
   {
@@ -484,7 +484,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 7,
-    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "owner_id": "741001884449525760",
     "team_name": "NAZI"
   },
   {
@@ -524,7 +524,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 12,
-    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "owner_id": "1132149096636141568",
     "team_name": "MORS"
   },
   {
@@ -564,7 +564,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 5,
-    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "owner_id": "1132146625205567488",
     "team_name": "BLM"
   },
   {
@@ -572,7 +572,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 6,
-    "owner_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "owner_id": "1131056110791880704",
     "team_name": "SWIN"
   },
   {
@@ -580,7 +580,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 7,
-    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "owner_id": "741001884449525760",
     "team_name": "BLM1"
   },
   {
@@ -620,7 +620,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 12,
-    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "owner_id": "1132149096636141568",
     "team_name": "MORS"
   }
 ]

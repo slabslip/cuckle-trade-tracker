@@ -72,6 +72,31 @@ const dirty = buildBridge(dirtyEspn, dirtyTbow, { "espn:tb2": "s-tbow2" }, []);
 if (dirty["espn:nut2"]) fail("polluted espn_display aliases on Tbow must not steal Durham");
 if (dirty["espn:tb2"] !== "s-tbow2") fail("explicit Tbow pin still wins");
 
+const gmPins = {
+  "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}": "s-adizz",
+  "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}": "s-fatass",
+  "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}": "s-aball",
+  "espn:{F3C43C4E-029B-4774-B558-02D6531A61B0}": "s-aball",
+  "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}": "s-sbzy",
+};
+const pinSleeper = [
+  { user_id: "s-adizz", canonical_name: "Adizzl3", aliases: [] },
+  { user_id: "s-fatass", canonical_name: "fatassmexican", aliases: [] },
+  { user_id: "s-aball", canonical_name: "Aballers", aliases: [] },
+  { user_id: "s-sbzy", canonical_name: "sbzy11", aliases: [] },
+];
+const pinEspn = [
+  { user_id: "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}", canonical_name: "Austin Durham" },
+  { user_id: "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}", canonical_name: "modano913" },
+  { user_id: "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}", canonical_name: "AB2official" },
+  { user_id: "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}", canonical_name: "ShaneBrandes11" },
+];
+const pinnedPeople = buildBridge(pinEspn, pinSleeper, gmPins, []);
+if (pinnedPeople["espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}"] !== "s-adizz") fail("Durham pins to Adizzl3");
+if (pinnedPeople["espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}"] !== "s-fatass") fail("Tully pins to fatassmexican");
+if (pinnedPeople["espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}"] !== "s-aball") fail("AB2 pins to Aballers");
+if (pinnedPeople["espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}"] !== "s-sbzy") fail("Shane pins to sbzy11");
+
 const franchise = buildFranchiseMap(espnSeats, person, { "espn-team:9": "s-truman" });
 if (franchise["3"] !== "s-biff") fail("team 3 franchise should follow latest matched owner: " + franchise["3"]);
 if (franchise["9"] !== "s-truman") fail("espn-team pin should attach that slot");

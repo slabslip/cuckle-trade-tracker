@@ -11,6 +11,7 @@ import {
   ESPN_WEB,
   REDRAFT_ESPN_LEAGUE_ID,
   espnCookieHeader,
+  espnCookieDebug,
   espnGet,
   loadProviders,
   parseCsv,
@@ -137,9 +138,8 @@ async function fetchSeason(season) {
         return { season, body, status: last.status, url };
       }
     }
-    if (last.status === 401 || last.status === 403) return { season, body: null, status: last.status, url };
   }
-  return { season, body: null, status: last.status, url: urls[0] };
+  return { season, body: null, status: last.status, url: last.url || urls[0] };
 }
 
 async function fetchSchedule(season) {
@@ -373,6 +373,7 @@ async function main() {
     espn_league_id: ESPN_ID,
     sleeper_league_id: LEAGUE_ID,
     cookie: !!cookie,
+    cookie_debug: espnCookieDebug(),
     authorized: false,
     reason: null,
     seasons: [],
@@ -392,7 +393,7 @@ async function main() {
     status.tried.push({ season: year, status: got.status });
     if (got.status === 401 || got.status === 403) {
       sawAuthBlock = true;
-      break;
+      continue;
     }
     if (!got.body) continue;
     status.authorized = true;

@@ -57,6 +57,9 @@ if (by.Tbow00.rs_place !== 1) fail("Tbow 11-3 is regular-season 1st, not final 3
 if (by.TaylorJohnson16.rs_place !== 7) fail("Taylor 6-8 is RS 7th among missed + worse records: " + by.TaylorJohnson16.rs_place);
 if (by.ztrain123.rs_place !== 12) fail("ztrain is RS last");
 if (by.Tbow00.rs_fpts !== 180) fail("Tbow RS points drop hunt and consolation: " + by.Tbow00.rs_fpts);
+if (by.Tbow00.fpts !== 180 + 120 + 110 + 101.62) fail("Tbow 3rd-place game counts as a set lineup: " + by.Tbow00.fpts);
+if (by.kotula69.fpts !== 180 + 120 + 110 + 106.96) fail("kotula 3rd-place win counts: " + by.kotula69.fpts);
+if (by.sbzy11.fpts !== 180 + 120) fail("first-round consolation 40 stays out: " + by.sbzy11.fpts);
 
 const buckets = seasonPointBuckets(scores, "2024");
 if (countableFpts(buckets.last) !== 180) fail("countable drops consolation");

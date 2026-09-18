@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Winners-bracket hunt map + list filter. Fail fast. */
-import { huntByWeekFromBracket, huntByWeekJson, scoreIsChampionshipHunt, weekScoreBookFromTape } from "../lib/week-score-lists.mjs";
+import { huntByWeekFromBracket, huntByWeekJson, scoreIsChampionshipHunt, scoreIsSemiMoneyPlace, weekScoreBookFromTape } from "../lib/week-score-lists.mjs";
 
 function fail(msg) {
   console.error("HUNT FAIL: " + msg);
@@ -24,16 +24,16 @@ const GM_2025_WB = [
 const by = huntByWeekFromBracket(GM_2025_WB, 15);
 if (ids(by[15]) !== "8,9,10,11") fail("week 15 hunt should be the four QF seats, not byes: " + ids(by[15]));
 if (ids(by[16]) !== "1,8,11,12") fail("week 16 hunt should be semis, not 5th place: " + ids(by[16]));
-if (ids(by[17]) !== "8,11") fail("week 17 hunt should be the title game only: " + ids(by[17]));
+if (ids(by[17]) !== "1,8,11,12") fail("week 17 hunt is title + 3rd place: " + ids(by[17]));
 if (by[18]) fail("week 18 has no title game");
 const huntWeeks = [15, 16, 17].reduce((n, w) => n + (by[w] ? by[w].size : 0), 0);
-if (huntWeeks !== 10) fail("2025 title hunt is 10 team-weeks, got " + huntWeeks);
+if (huntWeeks !== 12) fail("2025 money hunt is 12 team-weeks, got " + huntWeeks);
 if (huntByWeekJson([{ p: 1, r: 3, t1: 0, t2: 0 }], 15)[17]) fail("TBD title game must not write an empty hunt week");
 if (Object.keys(huntByWeekFromBracket([], 15)).length) fail("empty bracket must yield no hunt weeks");
 if (Object.keys(huntByWeekFromBracket(GM_2025_WB, 0)).length) fail("bad playoff_week_start must yield no hunt weeks");
 
 const json = huntByWeekJson(GM_2025_WB, 15);
-if (json[15].join(",") !== "8,9,10,11" || json[17].join(",") !== "8,11") {
+if (json[15].join(",") !== "8,9,10,11" || json[17].join(",") !== "1,8,11,12") {
   fail("huntByWeekJson drifted from the Set map");
 }
 
@@ -54,11 +54,13 @@ const tape = {
     { user_id: "e", season: "2025", week: 17, points: 85.28, phase: "playoff", hunt: true },
     { user_id: "f", season: "2025", week: 16, points: 163.38, phase: "playoff", hunt: true },
     { user_id: "g", season: "2025", week: 17, points: 157.58, phase: "playoff", hunt: false },
+    { user_id: "semi", season: "2025", week: 16, points: 119.1, phase: "playoff", hunt: true },
+    { user_id: "semi", season: "2025", week: 17, points: 147.64, phase: "playoff", hunt: false },
     { user_id: "h", season: "2020", week: 14, points: 9, phase: "playoff", hunt: true },
   ],
 };
 const book = weekScoreBookFromTape(tape);
-if (book.n_playoff !== 6 || book.n_playoff_hunt !== 3) fail("hunt counts wrong: " + book.n_playoff + "/" + book.n_playoff_hunt);
+if (book.n_playoff !== 8 || book.n_playoff_hunt !== 4) fail("hunt counts wrong: " + book.n_playoff + "/" + book.n_playoff_hunt);
 if (book.all.low.some((r) => r.points === 9) || book.playoff.low.some((r) => r.points === 9)) {
   fail("9-pt ESPN stub leaked into high/low lists");
 }
@@ -67,6 +69,15 @@ if (book.all.high[0].points !== 172.08) fail("all high drifted: " + book.all.hig
 if (book.playoff.high[0].points !== 163.38) fail("playoff high should be the title-hunt 163.38");
 if (book.playoff.low[0].points !== 85.28) fail("playoff low should be the title-game 85.28, not 44.58");
 if (book.playoff.high.some((r) => r.points === 157.58)) fail("consolation 157.58 leaked into playoff highs");
+if (!book.playoff.high.some((r) => r.points === 147.64)) fail("3rd-place money game 147.64 must count");
+if (!scoreIsSemiMoneyPlace(
+  { user_id: "semi", season: "2025", week: 17, points: 147.64, phase: "playoff", hunt: false },
+  tape.scores,
+)) fail("semi 3rd-place week is a money lineup");
+if (scoreIsSemiMoneyPlace(
+  { user_id: "g", season: "2025", week: 17, points: 157.58, phase: "playoff", hunt: false },
+  tape.scores,
+)) fail("missed-playoff leftover is not a money lineup");
 if (book.all.low.some((r) => r.week === 18)) fail("week 18 leftover leaked into all lows");
 
 console.log("PASS week-score hunt laws");

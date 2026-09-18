@@ -153,11 +153,24 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "thirdplace20260918160000"')
-  && html.includes('const DATA_V = "thirdplace20260918160000"')
-  && sw.includes('chuckle-shell-v276-third-place')
-  && !sw.includes("chuckle-shell-v275-share-claim")
-  && !sw.includes("chuckle-shell-v273-tile-share"),
+function inlineScriptParses(src) {
+  const open = src.lastIndexOf("<script>");
+  const close = src.lastIndexOf("</script>");
+  if (open < 0 || close < open) return false;
+  try {
+    new Function(src.slice(open + 8, close));
+    return true;
+  } catch (err) {
+    console.error(err && err.message);
+    return false;
+  }
+}
+loop(10, page.includes('const DATA_V = "yearboard20260918183000"')
+  && html.includes('const DATA_V = "yearboard20260918183000"')
+  && sw.includes('chuckle-shell-v280-year-boards')
+  && !sw.includes("chuckle-shell-v279-po-standings")
+  && !sw.includes("chuckle-shell-v278-po-bracket")
+  && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
@@ -182,10 +195,11 @@ const y24 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}
   ?.find((p) => p.season === "2024");
 loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.5 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
-  && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
+  && biff && biff.avg === 4.7 && biff.fpts_avg === 1676.5
   && adizz && adizz.contender === 83.3 && adizz.last_n === 1 && adizz.playoff_n === 5
+  && adizz.net === -500 && adizz.lost === 2000
   && tully && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
-  && jnasty && jnasty.last_n === 2
+  && jnasty && jnasty.last_n === 2 && jnasty.lost === 2200 && jnasty.net === -1300
   && ztrain && ztrain.last_n === 1 && ztrain.playoff_avg === 2.8
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
   && y25("fatassmexican") && y25("fatassmexican").place === 6
@@ -198,6 +212,13 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && page.includes("Last in regular season")
   && page.includes("most regular-season points $300")
   && html.includes("most regular-season points $300")
+  && page.includes("Last place pays $200 extra into the pot")
+  && html.includes("Last place pays $200 extra into the pot")
+  && page.includes("3rd/4th from the 3rd-place game")
+  && html.includes("3rd/4th from the 3rd-place game")
+  && page.includes("Each year's real final standing")
+  && html.includes("Each year's real final standing")
+  && finishes.pot && finishes.pot.sacko === 200
   && finLib.includes("regularSeasonPointsForMp")
   && mpMatchesRsLeader()
   && finishes.pot && finishes.pot.mp === 300
@@ -220,4 +241,22 @@ loop(13, page.includes("function dataTileShareUrl(")
   && fnSrc(page, "honorPendingDataTile").includes("dataDashOpenReport"),
   "every data door ships a Share chip to a view=data&tile= group-text URL");
 
-console.log("PASS 13 redraft board loops");
+const yOf = (name, season) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
+  ?.find((p) => p.season === season);
+loop(14, yOf("fatassmexican", "2024") && yOf("fatassmexican", "2024").place === 1
+  && yOf("Adizzl3", "2024") && yOf("Adizzl3", "2024").place === 2
+  && yOf("kotula69", "2024") && yOf("kotula69", "2024").place === 3
+  && yOf("Tbow00", "2024") && yOf("Tbow00", "2024").place === 4
+  && yOf("TaylorJohnson16", "2024") && yOf("TaylorJohnson16", "2024").place === 7
+  && yOf("ztrain123", "2025") && yOf("ztrain123", "2025").place === 3
+  && yOf("collinmccaskill", "2025") && yOf("collinmccaskill", "2025").place === 4
+  && yOf("TaylorJohnson16", "2020") && yOf("TaylorJohnson16", "2020").place === 12
+  && yOf("JnastyGBE300", "2021") && yOf("JnastyGBE300", "2021").place === 12
+  && /last = worst RS record/.test(finishes.rule || "")
+  && Array.isArray(finishes.years) && finishes.years[0] && finishes.years[0].season === "2025"
+  && finishes.years.find((y) => y.season === "2024")?.rows[2]?.name === "kotula69"
+  && page.includes("function finishYearBoard(") && html.includes("function finishYearBoard(")
+  && page.includes('["all", "Career avg"]') && html.includes('["all", "Career avg"]'),
+  "playoff bracket 1-4 from money games; bottom six and sacko stay regular season");
+
+console.log("PASS 14 redraft board loops");

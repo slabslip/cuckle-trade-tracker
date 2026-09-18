@@ -202,18 +202,17 @@ loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 70
   && sleeperHunt.length === 10 && espnHunt.length === 60
   && (weekly.scores || []).filter((s) => s.phase === "playoff" && !s.hunt).length === 158
   && weeks.n_playoff_hunt === 70
-  && (weeks.playoff.high || []).every((r) => r.hunt)
-  && (weeks.playoff.low || []).every((r) => r.hunt)
-  && (weeks.all.low || []).every((r) => r.phase !== "playoff" || r.hunt)
+  && (weeks.playoff.high || []).every((r) => r.phase === "playoff")
+  && (weeks.playoff.low || []).every((r) => r.phase === "playoff")
   && !(weeks.all.low || []).some((r) => r.week === 18)
   && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16" && r.week === 18)
-  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58 && r.week === 18)
+  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58)
   && weeks.playoff.high[0] && weeks.playoff.high[0].name === "Biff34" && weeks.playoff.high[0].points === 163.38
-  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "Tbow00" && weeks.playoff.low[0].points === 57.1
+  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "kotula69" && weeks.playoff.low[0].points === 56.06
   && !(weeks.playoff.low || []).some((r) => r.name === "collinmccaskill" && r.points === 9),
-  "playoff lists are championship hunt only — ESPN stub 9-pt week is out");
-loop(34, page.includes("championship hunt only") && page.includes("title hunt")
-  && page.includes("still hunting the title"),
+  "playoff lists are title + 3rd-place money games — ESPN stub 9-pt week is out");
+loop(34, page.includes("championship hunt plus the 3rd-place game") && page.includes("title hunt")
+  && page.includes("still hunting the title or playing for 3rd"),
   "Week scores copy drops out-of-hunt playoff weeks");
 loop(35, fs.existsSync(`${raw}/espn_weekly_scores.json`)
   && Array.isArray(load(`${raw}/espn_weekly_scores.json`, {}).scores)
@@ -242,16 +241,18 @@ const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
 loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
   && finishes.pot && finishes.pot.entry === 300
+  && finishes.pot.sacko === 200
   && finishes.career_floor === 3
   && /consolation points out/.test(finishes.rule || "")
   && /3rd-place game/.test(finishes.rule || "")
+  && /last = worst RS record/.test(finishes.rule || "")
   && (finishes.seasons || []).includes("2025")
   && (finishes.seasons || []).includes("2020")
   && !(finishes.seasons || []).includes("2026")
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
   && biffFin && biffFin.n === 6 && biffFin.places.some((p) => p.season === "2025" && p.place === 1)
   && biffFin.places.some((p) => p.season === "2024" && p.provider === "espn")
-  && biffFin.fpts_avg === 1657.2 && biffFin.top6_n === 4 && biffFin.last_n === 0
+  && biffFin.fpts_avg === 1676.5 && biffFin.top6_n === 4 && biffFin.last_n === 0
   && jnFin && jnFin.n === 6 && jnFin.places.some((p) => p.season === "2025" && p.place === 2)
   && jnFin.places.some((p) => p.season === "2020" && p.provider === "espn")
   && jnFin.last_n === 2
@@ -263,7 +264,7 @@ loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
-  && page.includes("Every completed season they played, ranked by average finish.")
+  && page.includes("Each year's real final standing. Top six from the playoff bracket")
   && page.includes("1 season")
   && page.includes(" seasons"),
   "How I finished door reads finishes.json and prints season count under each name");
@@ -309,7 +310,7 @@ const y24 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}
   ?.find((p) => p.season === "2024");
 loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3 && adizz.last_n === 1
   && adizz.playoff_n === 5 && adizz.playoff_avg === 3.4
-  && tbow && tbow.avg === 4.5 && tbow.fpts_avg === 1645.1 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
+  && tbow && tbow.avg === 4.5 && tbow.fpts_avg === 1662.1 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
   && ztrain && ztrain.last_n === 1
   && tully && tully.titles_n === 2 && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
@@ -325,4 +326,45 @@ loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3
   && page.includes("dataDashRedraftStale"),
   "career tiles: Tbow 4.5, Biff RS+hunt points, Adizzl3 contender, Jnasty sackos");
 
-console.log("PASS 42 Gm dataset loops");
+const yearPlace = (season, place) => {
+  for (const seat of finishes.seats || []) {
+    const row = (seat.places || []).find((p) => p.season === season && p.place === place);
+    if (row) return { name: seat.name, from: row.from, rs_place: row.rs_place };
+  }
+  return null;
+};
+const YEAR_LOCK = {
+  2025: { 1: ["Biff34", "title"], 2: ["JnastyGBE300", "title"], 3: ["ztrain123", "semi"], 4: ["collinmccaskill", "semi"], 5: ["sbzy11", "first_round"], 6: ["fatassmexican", "first_round"], 12: ["Adizzl3", "regular"] },
+  2024: { 1: ["fatassmexican", "title"], 2: ["Adizzl3", "title"], 3: ["kotula69", "semi"], 4: ["Tbow00", "semi"], 5: ["sbzy11", "first_round"], 6: ["Aballers", "first_round"], 12: ["ztrain123", "regular"] },
+  2023: { 1: ["fatassmexican", "title"], 2: ["Biff34", "title"], 3: ["Adizzl3", "semi"], 4: ["Aballers", "semi"], 5: ["ztrain123", "first_round"], 6: ["kotula69", "first_round"], 12: ["JnastyGBE300", "regular"] },
+  2022: { 1: ["Tbow00", "title"], 2: ["TaylorJohnson16", "title"], 3: ["Ricky Swink", "semi"], 4: ["collinmccaskill", "semi"], 5: ["Adizzl3", "first_round"], 6: ["JaredMcFadden", "first_round"], 12: ["hudmorse", "regular"] },
+  2021: { 1: ["ztrain123", "title"], 2: ["Tbow00", "title"], 3: ["Adizzl3", "semi"], 4: ["kotula69", "semi"], 5: ["fatassmexican", "first_round"], 6: ["Biff34", "first_round"], 12: ["JnastyGBE300", "regular"] },
+  2020: { 1: ["collinmccaskill", "title"], 2: ["ztrain123", "title"], 3: ["Biff34", "semi"], 4: ["Adizzl3", "semi"], 5: ["Tbow00", "first_round"], 6: ["JaredMcFadden", "first_round"], 12: ["TaylorJohnson16", "regular"] },
+};
+const yearLockOk = Object.entries(YEAR_LOCK).every(([season, places]) => (
+  Object.entries(places).every(([place, [name, from]]) => {
+    const row = yearPlace(season, Number(place));
+    return row && row.name === name && row.from === from;
+  })
+));
+const y24Taylor = y24("TaylorJohnson16");
+const y20Taylor = ((finishes.seats || []).find((s) => s.name === "TaylorJohnson16") || {}).places
+  ?.find((p) => p.season === "2020");
+const y21Jnasty = ((finishes.seats || []).find((s) => s.name === "JnastyGBE300") || {}).places
+  ?.find((p) => p.season === "2021");
+loop(43, yearLockOk
+  && y24Taylor && y24Taylor.place === 7 && y24Taylor.from === "regular" && y24Taylor.rs_place === 7
+  && y20Taylor && y20Taylor.place === 12 && y20Taylor.rs_place === 12
+  && y21Jnasty && y21Jnasty.place === 12 && y21Jnasty.rs_place === 12
+  && y24("kotula69") && y24("kotula69").place === 3
+  && y25("ztrain123") && y25("ztrain123").place === 3
+  && y25("collinmccaskill") && y25("collinmccaskill").place === 4
+  && page.includes("Leftover scores do not move this number")
+  && Array.isArray(finishes.years) && finishes.years.length === 6
+  && finishes.years[0].season === "2025" && finishes.years[0].rows[0].name === "Biff34"
+  && finishes.years.find((y) => y.season === "2024")?.rows[2]?.name === "kotula69"
+  && page.includes("function finishYearBoard(")
+  && page.includes("Pick a year for that board."),
+  "final standings: champ 1-2, 3rd-place 3-4, first-round 5-6, RS 7-12 including sacko");
+
+console.log("PASS 43 Gm dataset loops");

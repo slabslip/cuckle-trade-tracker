@@ -4198,7 +4198,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "thirdplace20260918160000";
+    const DATA_V = "yearboard20260918183000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4294,11 +4294,11 @@ const html = `<!DOCTYPE html>
       past_champions: { lab: "Who won the year", why: "Every real crown on this book. Host year tagged." },
       points_king: { lab: "Points king", why: "Highest average points per season. Regular season plus title-hunt weeks only — consolation is out." },
       contender_rate: { lab: "Contender rate", why: "Top-six finishes over seasons played. Three seasons minimum." },
-      sacko: { lab: "Sacko", why: "Last in regular season. Consolation weeks do not set last place." },
+      sacko: { lab: "Sacko", why: "Last in regular season. Pays $200 extra into the pot that year. Consolation weeks do not set last place." },
       rs_avg: { lab: "Regular season avg", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       playoff_n: { lab: "Playoff appearances", why: "Times they made the top six and kept setting lineups." },
-      playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
-      pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
+      playoff_avg: { lab: "Playoff average", why: "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season. Leftover scores do not move this number." },
+      pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
       season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
@@ -4316,7 +4316,7 @@ const html = `<!DOCTYPE html>
       { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
-      { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks still hunting the title." },
+      { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks still hunting the title or playing for 3rd." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -4335,15 +4335,15 @@ const html = `<!DOCTYPE html>
       { id: "league_trades", lab: "League Trade History", desk: "lists", group: "memory", size: "full", why: "Every pairing, most deals first." },
       { id: "my_draft", lab: "My Draft Picks", desk: "lists", group: "memory", size: "full", why: "Used, traded away, and traded in — with a grade." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
-      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Every completed season they played, ranked by average finish." },
+      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Each year's real final standing. Top six from the playoff bracket. Bottom six stay regular-season order." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
       { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Regular season plus title-hunt weeks only." },
       { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
-      { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last in regular season. Consolation weeks do not count." },
+      { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last in regular season. Pays $200 extra into the pot that year. Consolation weeks do not count." },
       { id: "rs_avg", lab: "Regular season avg", desk: "lists", group: "who", size: "full", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       { id: "playoff_n", lab: "Playoff appearances", desk: "lists", group: "who", size: "full", why: "Times they made the top six and kept setting lineups." },
-      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
-      { id: "pot_net", lab: "Career net", desk: "lists", group: "who", size: "full", why: "Winnings minus $300 entry each year. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300." },
+      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season. Leftover scores do not move this number." },
+      { id: "pot_net", lab: "Career net", desk: "lists", group: "who", size: "full", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
@@ -5788,19 +5788,22 @@ const html = `<!DOCTYPE html>
     function finishYearLedger(seat) {
       const pot = finishesBook && finishesBook.pot;
       const entry = pot && pot.entry != null ? Number(pot.entry) : 300;
-      const lost = Number.isFinite(entry) ? entry : 300;
+      const baseLost = Number.isFinite(entry) ? entry : 300;
       const wonBy = {};
+      const sackoBy = {};
       const kindsBy = {};
       ((seat && seat.payouts) || []).forEach(function (p) {
         const y = String((p && p.season) || "");
         if (!y) return;
-        wonBy[y] = (wonBy[y] || 0) + (Number(p.amount) || 0);
+        if ((p && p.kind) === "sacko") sackoBy[y] = (sackoBy[y] || 0) + (Number(p.amount) || 0);
+        else wonBy[y] = (wonBy[y] || 0) + (Number(p.amount) || 0);
         if (!kindsBy[y]) kindsBy[y] = [];
         kindsBy[y].push(p.kind || "place");
       });
       return ((seat && seat.places) || []).map(function (row) {
         const y = String((row && row.season) || "");
         const won = wonBy[y] || 0;
+        const lost = baseLost + (sackoBy[y] || 0);
         return {
           season: y,
           place: row && row.place != null ? Number(row.place) : null,
@@ -5819,7 +5822,36 @@ const html = `<!DOCTYPE html>
       const bits = [];
       if (row && row.place) bits.push(nth(row.place));
       if (row && (row.kinds || []).indexOf("mp") >= 0) bits.push("most regular-season points");
+      if (row && (row.kinds || []).indexOf("sacko") >= 0) bits.push("sacko $200");
       return bits.join(" + ") || "unpaid";
+    }
+
+    function finishFromLabel(from) {
+      if (from === "title") return "Championship";
+      if (from === "semi") return "3rd-place game";
+      if (from === "first_round") return "First round";
+      return "Regular season";
+    }
+
+    function finishYearBoard(season) {
+      const want = String(season || "");
+      const boards = (finishesBook && Array.isArray(finishesBook.years)) ? finishesBook.years : [];
+      const hit = boards.find(function (b) { return String(b.season) === want; });
+      if (hit && Array.isArray(hit.rows) && hit.rows.length) return hit.rows;
+      const rows = [];
+      finishSeats().forEach(function (seat) {
+        (seat.places || []).forEach(function (p) {
+          if (String(p.season) !== want) return;
+          rows.push({
+            place: p.place,
+            rs_place: p.rs_place,
+            from: p.from,
+            user_id: seat.user_id,
+            name: seat.name,
+          });
+        });
+      });
+      return rows.sort(function (a, b) { return (Number(a.place) || 99) - (Number(b.place) || 99); });
     }
 
     function finishNetWhoSeat() {
@@ -5896,7 +5928,7 @@ const html = `<!DOCTYPE html>
         because = "Average final place in playoff years only. Two appearances minimum. First-round outs are 5th/6th.";
       } else if (id === "pot_net") {
         verdict = (lead.name || "This seat") + " is " + finishMoney(lead.net) + " after entries.";
-        because = finishMoney(lead.won) + " collected − " + finishMoney(lead.lost) + " in $300 entries. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300.";
+        because = finishMoney(lead.won) + " collected − " + finishMoney(lead.lost) + " in $300 entries and $200 sacko fees. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300.";
       }
       return {
         id: id,
@@ -6003,7 +6035,7 @@ const html = `<!DOCTYPE html>
           print: high ? weekScorePts(high) : "—",
           because: (league && league.providers && league.providers.espn_authorized)
             ? "Highest and lowest hunt weeks on Sleeper and ESPN tape."
-            : "Highest and lowest team weeks still hunting the title.",
+            : "Highest and lowest team weeks still hunting the title or playing for 3rd.",
           shareKind: "title",
           shareId: "",
         };
@@ -6871,6 +6903,11 @@ const html = `<!DOCTYPE html>
       } else if (id === "week_scores") {
         lab = "Phase";
         opts = [["all", "All"], ["regular", "Regular"], ["playoff", "Playoff"]];
+      } else if (id === "season_place") {
+        lab = "League year";
+        opts = [["all", "Career avg"]];
+        const years = (finishesBook && Array.isArray(finishesBook.seasons)) ? finishesBook.seasons : [];
+        for (let i = 0; i < years.length; i++) opts.push(["y" + years[i], years[i]]);
       } else if (id === "uninsured" || id === "book_top") {
         lab = "Position";
         opts = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
@@ -7163,6 +7200,25 @@ const html = `<!DOCTYPE html>
         return html;
       }
       if (id === "season_place") {
+        const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
+          ? receiptDoorFilter.slice(1) : "";
+        if (yearWant) {
+          return finishYearBoard(yearWant).filter(function (r) {
+            return hit([r.name, r.place, r.from, r.rs_place, yearWant, finishFromLabel(r.from)]);
+          }).map(function (r) {
+            const how = finishFromLabel(r.from);
+            const rs = r.rs_place ? ("RS " + nth(r.rs_place)) : "";
+            const rec = (r.wins != null && r.losses != null)
+              ? (r.wins + "-" + r.losses + (r.ties ? "-" + r.ties : ""))
+              : "";
+            const sub = [how, rs, rec].filter(Boolean).join(" · ");
+            return '<div class="row"><div class="row-top"><div><div class="names">'
+              + esc((r.place || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (sub ? '<div class="date">' + esc(sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.place ? nth(r.place) : "—") + "</div></div></div>";
+          }).join("");
+        }
         const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
         const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
           ? finishesBook.seats
@@ -7500,7 +7556,11 @@ const html = `<!DOCTYPE html>
         }
       }
       else if (id === "season_place") {
-        caption = "Every completed season they played, ranked by average finish. Season count is under each name.";
+        const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
+          ? receiptDoorFilter.slice(1) : "";
+        caption = yearWant
+          ? (yearWant + " final standings. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record.")
+          : "Each year's real final standing. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record. Ranked by average finish. Pick a year for that board.";
         if (league && league.providers && league.providers.espn_authorized) {
           caption += " Imported ESPN years count.";
         }
@@ -7516,7 +7576,7 @@ const html = `<!DOCTYPE html>
         caption = "Top-six finishes divided by seasons played. Three seasons minimum.";
       }
       else if (id === "sacko") {
-        caption = "Last in regular season. Teams that missed the top six, or lost in the first round, stopped setting lineups — consolation weeks do not count.";
+        caption = "Last in regular season. Pays $200 extra into the pot that year. Teams that missed the top six, or lost in the first round, stopped setting lineups — consolation weeks do not count.";
       }
       else if (id === "rs_avg") {
         caption = "Average regular-season place. A title from 7th in the regular season still counts as 7th here. Three seasons minimum.";
@@ -7525,15 +7585,15 @@ const html = `<!DOCTYPE html>
         caption = "Times they made the top six and kept setting lineups. Consolation is not a playoff appearance.";
       }
       else if (id === "playoff_avg") {
-        caption = "Average final place in years they made the hunt. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
+        caption = "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game — those seats set lineups. First-round losers are 5th/6th by regular-season record. Leftover scores do not move this number. Two appearances minimum.";
       }
       else if (id === "pot_net" && receiptNetWho) {
         const seat = finishNetWhoSeat();
         caption = (seat && seat.name ? seat.name : "This seat")
-          + " year by year. Place money plus $300 most regular-season points, minus the $300 entry.";
+          + " year by year. Place money plus $300 most regular-season points, minus the $300 entry. Last place pays $200 extra into the pot.";
       }
       else if (id === "pot_net") {
-        caption = "Winnings minus $300 entry each completed season. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for the year ledger.";
+        caption = "Winnings minus $300 entry each completed season. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for the year ledger.";
       }
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
@@ -7543,7 +7603,7 @@ const html = `<!DOCTYPE html>
           : "Who is sitting on future firsts.";
       }
       else if (id === "week_scores") {
-        caption = "Highest five and lowest five team weeks. Playoff is championship hunt only — consolation and leftover weeks are out.";
+        caption = "Highest five and lowest five team weeks. Playoff is the championship hunt plus the 3rd-place game — 5th-place consolation and leftover weeks are out.";
         if (leagueFormat().kind === "redraft" && league && league.providers && league.providers.espn_authorized) {
           caption += " ESPN years sit next to Sleeper.";
         } else if (leagueFormat().kind === "redraft" && league && league.providers && !league.providers.espn_authorized) {
@@ -30988,7 +31048,7 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptDoorFilterHtml").includes('id === "week_scores"')
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
     || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")
-    || !inline.includes("championship hunt only")
+    || !inline.includes("championship hunt plus the 3rd-place game")
     || !inline.includes("title hunt")
     || !inline.includes("Sleeper tape only until ESPN years unlock.")) {
     throw new Error("Week scores door must list highest and lowest team weeks from week-scores.json");
@@ -31141,7 +31201,9 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptPortalRows").includes("finishesBook")
     || !fnSrc("receiptPortalRows").includes(" seasons")
     || !inline.includes('getLeagueJson("finishes.json")')
-    || !inline.includes("Every completed season they played, ranked by average finish.")
+    || !inline.includes("Each year's real final standing. Top six from the playoff bracket")
+    || !inline.includes("function finishYearBoard(")
+    || !inline.includes("Pick a year for that board.")
     || !inline.includes("Type a player name")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")

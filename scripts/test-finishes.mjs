@@ -81,6 +81,9 @@ const book = buildFinishesBook({
   sleeperYears: ["2025"],
 });
 if (book.seasons.join(",") !== "2025,2024") fail("seasons newest first, ESPN year kept: " + book.seasons);
+if (!Array.isArray(book.years) || book.years[0].season !== "2025" || book.years[0].rows[0].name !== "Biff34") {
+  fail("year boards save each season's 1-N: " + JSON.stringify(book.years && book.years[0]));
+}
 if (book.seats.find((s) => s.name === "Biff34").avg !== 1) fail("ESPN 2025 must not overwrite Sleeper 2025");
 const tru = book.seats.find((s) => s.name === "TrumanCooper");
 if (!tru || tru.n !== 2 || tru.avg !== 7) fail("Truman 2025 10th + ESPN 2024 4th = 7.0: " + JSON.stringify(tru));
@@ -135,8 +138,20 @@ if (biffYears.length !== 2 || biffYears[0].season !== "2025" || biffYears[0].won
   fail("Biff 2025 ledger is $2,600 − $300: " + JSON.stringify(biffYears[0]));
 }
 if (biffYears[1].season !== "2024" || biffYears[1].place !== 5
-  || biffYears[1].won !== 0 || biffYears[1].net !== -300) {
+  || biffYears[1].won !== 0 || biffYears[1].net !== -300 || biffYears[1].lost !== 300) {
   fail("Biff 2024 unpaid 5th is −$300: " + JSON.stringify(biffYears[1]));
+}
+const potAdizz = potBook.seats.find((s) => s.name === "Adizzl3");
+if (!potAdizz || potAdizz.last_n !== 2 || potAdizz.lost !== 1000 || potAdizz.net !== -1000) {
+  fail("Adizz two sackos pay $200 extra each year: " + JSON.stringify(potAdizz));
+}
+if (!potAdizz.payouts.some((p) => p.kind === "sacko" && p.amount === 200 && p.season === "2024")) {
+  fail("sacko fee is a payout line, not prize money: " + JSON.stringify(potAdizz.payouts));
+}
+const adizzYears = seatYearLedger(potAdizz, GM_POT);
+const adizz24 = adizzYears.find((r) => r.season === "2024");
+if (!adizz24 || adizz24.lost !== 500 || adizz24.net !== -500 || !adizz24.kinds.includes("sacko")) {
+  fail("Adizz 2024 ledger is $0 − $500: " + JSON.stringify(adizz24));
 }
 if (!rsAvgSeats(potBook.seats, 1).length) fail("RS average list is not empty");
 if (playoffAvgSeats(potBook.seats, 2)[0].name !== "Biff34") fail("playoff avg floor 2 starts with Biff");

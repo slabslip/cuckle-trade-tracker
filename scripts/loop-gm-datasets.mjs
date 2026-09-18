@@ -264,7 +264,7 @@ loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
-  && page.includes("Each year's real final standing. Top six from the playoff bracket")
+  && page.includes("Career average. Three completed seasons minimum")
   && page.includes("1 season")
   && page.includes(" seasons"),
   "How I finished door reads finishes.json and prints season count under each name");

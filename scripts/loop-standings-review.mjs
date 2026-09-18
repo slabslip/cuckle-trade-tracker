@@ -139,9 +139,9 @@ loop(8, tbow && tbow.rs_avg === 4 && tbow.playoff_avg === 3
 loop(9, finishes.pot && finishes.pot.sacko === 200 && finishes.pot.pot === 3800
   && seatOf("Adizzl3")?.net === -500
   && seatOf("JnastyGBE300")?.lost === 2200
-  && page.includes('const DATA_V = "review20260918184500"')
-  && html.includes("chuckle-shell-v281-standings-review") === false
-  && fs.readFileSync(`${ROOT}sw.js`, "utf8").includes("chuckle-shell-v281-standings-review"),
+  && page.includes('const DATA_V = "finishone20260918171000"')
+  && html.includes("chuckle-shell-v282-finish-one") === false
+  && fs.readFileSync(`${ROOT}sw.js`, "utf8").includes("chuckle-shell-v282-finish-one"),
   "sacko $200 / pot $3800 still on the book; cache moved for the review ship");
 
 // 10 Cuckle isolation: old dynasty book, no year picker leak
@@ -150,7 +150,9 @@ loop(10, cuckleFin.v === 1 && !cuckleFin.years && cuckleFin.rule.indexOf("winner
   && page.includes('id === "season_place" && leagueFormat().kind === "redraft"')
   && html.includes('id === "season_place" && leagueFormat().kind === "redraft"')
   && page.includes("function finishYearWant(") && html.includes("function finishYearWant(")
+  && page.includes("function finishPlaceSeats(") && html.includes("function finishPlaceSeats(")
   && page.includes("Winners bracket, then record.") && html.includes("Winners bracket, then record.")
+  && !page.includes('"career_avg", "points_king"') && !html.includes('"career_avg", "points_king"')
   && page.includes('from === "bracket"') && page.includes('return "Playoff"'),
   "Cuckle book unchanged; year picker, yearWant, and Playoff label stay redraft-safe");
 

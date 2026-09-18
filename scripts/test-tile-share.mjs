@@ -79,9 +79,9 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
   throw new Error("tile Share must not start a door drag");
 }
 
-if (page.includes('const DATA_V = "sacko20020260918162000"')
-  || !page.includes('const DATA_V = "review20260918184500"')
-  || !sw.includes("chuckle-shell-v281-standings-review")) {
+if (page.includes('const DATA_V = "review20260918184500"')
+  || !page.includes('const DATA_V = "finishone20260918171000"')
+  || !sw.includes("chuckle-shell-v282-finish-one")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
 }
 

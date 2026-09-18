@@ -124,8 +124,10 @@ try {
   if (gmCareer.kind !== "redraft") fail("GM How I finished is not redraft");
   if (!gmCareer.hasYear) fail("GM How I finished missing League year picker");
   if (!gmCareer.opts.some((o) => o.indexOf("2024") >= 0)) fail("GM year picker missing 2024");
+  if (!/Three completed seasons minimum/.test(gmCareer.caption)) fail("GM career caption missing 3-season floor");
   if (!/Pick a year for that board/.test(gmCareer.caption)) fail("GM career caption missing year-board copy");
   if (/Winners bracket, then record/.test(gmCareer.caption)) fail("GM career caption leaked dynasty copy");
+  if (/sbzy11/.test(gmCareer.list)) fail("Shane 2 seasons must not lead the career floor list");
   await page.screenshot({ path: `${shotDir}/review_gm_how_i_finished_career.png`, fullPage: true });
 
   await page.evaluate(() => {

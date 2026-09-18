@@ -10,10 +10,12 @@ import {
   playoffAvgSeats,
   playoffNSeats,
   pointsKingSeats,
+  potNetSeats,
   rankFinishes,
   remapEspnStanding,
   rsAvgSeats,
   sackoSeats,
+  seatYearLedger,
 } from "../lib/finishes.mjs";
 import { GM_POT } from "../lib/redraft-season.mjs";
 
@@ -125,6 +127,17 @@ if (!potBiff.payouts.some((p) => p.kind === "mp" && p.amount === 300)) {
 }
 if (playoffNSeats(potBook.seats)[0].name !== "Biff34") fail("playoff appearances start with Biff");
 if (grossWonSeats(potBook.seats)[0].name !== "Biff34") fail("gross won starts with the title");
+if (potNetSeats(potBook.seats)[0].name !== "Biff34") fail("career net starts with the title");
+const biffYears = seatYearLedger(potBiff, GM_POT);
+if (biffYears.length !== 2 || biffYears[0].season !== "2025" || biffYears[0].won !== 2600
+  || biffYears[0].lost !== 300 || biffYears[0].net !== 2300
+  || !biffYears[0].kinds.includes("mp") || !biffYears[0].kinds.includes("place")) {
+  fail("Biff 2025 ledger is $2,600 − $300: " + JSON.stringify(biffYears[0]));
+}
+if (biffYears[1].season !== "2024" || biffYears[1].place !== 5
+  || biffYears[1].won !== 0 || biffYears[1].net !== -300) {
+  fail("Biff 2024 unpaid 5th is −$300: " + JSON.stringify(biffYears[1]));
+}
 if (!rsAvgSeats(potBook.seats, 1).length) fail("RS average list is not empty");
 if (playoffAvgSeats(potBook.seats, 2)[0].name !== "Biff34") fail("playoff avg floor 2 starts with Biff");
 

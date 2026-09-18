@@ -34,7 +34,7 @@ loop(2, gm.format && gm.format.kind === "redraft" && gm.format.format_key === "1
 loop(3, page.includes('const DATA_DASH_DEFAULT = [')
   && page.includes('"my_trades", "league_trades", "my_draft", "league_draft", "profit_loss"')
   && page.includes("const DATA_DASH_REDRAFT = [")
-  && page.includes('"rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost"')
+  && page.includes('"rs_avg", "playoff_n", "playoff_avg", "pot_net"')
   && page.includes('"my_trades", "league_trades", "my_draft", "league_draft", "profit_loss"'),
   "dynasty default board unchanged; redraft board leads RS / playoff / pot");
 loop(4, page.includes("function resetLeagueSession(")

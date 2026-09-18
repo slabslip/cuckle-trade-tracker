@@ -94,6 +94,8 @@ export function loadProviders(id = LEAGUE_ID) {
     sleeper_league_id: String(id),
     sleeper_extra_ids: [],
     espn_league_id: null,
+    espn_extra_ids: [],
+    yahoo_league_ids: [],
     espn_through_season: null,
     kind: null,
     name: null,
@@ -103,11 +105,19 @@ export function loadProviders(id = LEAGUE_ID) {
   const extra = Array.isArray(raw.sleeper_extra_ids)
     ? raw.sleeper_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
     : String(raw.sleeper_extra_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const espnExtra = Array.isArray(raw.espn_extra_ids)
+    ? raw.espn_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : String(raw.espn_extra_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const yahoo = Array.isArray(raw.yahoo_league_ids)
+    ? raw.yahoo_league_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : String(raw.yahoo_league_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
   return {
     ...fallback,
     ...raw,
     sleeper_league_id: String(raw.sleeper_league_id || id),
     sleeper_extra_ids: extra.filter((x) => x !== String(raw.sleeper_league_id || id)),
+    espn_extra_ids: espnExtra,
+    yahoo_league_ids: yahoo,
   };
 }
 

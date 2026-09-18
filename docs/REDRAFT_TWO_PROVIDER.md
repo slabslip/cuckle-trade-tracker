@@ -2,7 +2,8 @@
 
 A **separate** league book from CuckleChunckle. Same dashboard, same `build.mjs`
 pipeline, 1QB half-PPR **redraft** clocks (Date of Trade + as of today). No Cuckle
-crowns are copied over.
+crowns are copied over. Views, tiles, titles, calc, and toggle:
+[`FORMAT_VIEWS.md`](FORMAT_VIEWS.md).
 
 | Provider | ID | Years |
 | --- | --- | --- |

@@ -5,6 +5,8 @@ Superflex dynasty defaults. Detection lives in [`lib.mjs`](../lib.mjs) `detectLe
 The meter, calculator, and Score-as clocks read `league.json.format` written by `revalue.mjs`.
 
 Companion: [`STORE_LAW.md`](STORE_LAW.md) (store shell), [`VALUE_SDD.md`](VALUE_SDD.md) (needle).
+Redraft vs dynasty views, tiles, titles, calc, and toggle:
+[`FORMAT_VIEWS.md`](FORMAT_VIEWS.md).
 
 ---
 

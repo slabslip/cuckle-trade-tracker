@@ -5,9 +5,41 @@
  * Equip remains one title + one emblem at a time.
  */
 import { readFileSync, existsSync } from "node:fs";
-import { leagueRawDir, leagueUiDir, setLeagueId, writeUi } from "./lib.mjs";
+import {
+  detectLeagueFormat,
+  leagueRawDir,
+  leagueUiDir,
+  readJson,
+  setLeagueId,
+  writeUi,
+} from "./lib.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const leagueFormat = detectLeagueFormat(readJson("leagues.json", []) || []);
+const isRedraft = leagueFormat.kind === "redraft";
+const REDRAFT_SKIP_PAIRS = new Set([
+  "pick_hoard", "pick_path", "farm_sold", "investor", "win_now",
+  "firsts_merchant", "aging", "loyalty", "founding_draft",
+]);
+
+function pairForFormat(p) {
+  if (!isRedraft) return p;
+  if (REDRAFT_SKIP_PAIRS.has(p.pair)) return null;
+  if (p.pair === "four_time") {
+    return { ...p, title: { ...p.title, name: "Four-Time Champion" } };
+  }
+  if (p.pair === "three_time") {
+    return { ...p, title: { ...p.title, name: "Three-Time Champion" } };
+  }
+  if (p.pair === "inaugural") {
+    return {
+      ...p,
+      title: { ...p.title, how: "Win the league's first championship." },
+      emblem: { ...p.emblem, how: "Win the league's first championship." },
+    };
+  }
+  return p;
+}
 
 function loadUi(name, fallback) {
   const p = `${leagueUiDir()}/${name}`;
@@ -431,7 +463,9 @@ export function weekScoreBand(points) {
 
 const CATALOG = [];
 const pairIds = {}; // pair -> { title, emblem }
-for (const p of PAIRS) {
+for (const raw of PAIRS) {
+  const p = pairForFormat(raw);
+  if (!p) continue;
   if (!p.pair || !p.title || !p.emblem) throw new Error("pair needs pair/title/emblem");
   if (pairIds[p.pair]) throw new Error(`duplicate pair ${p.pair}`);
   pairIds[p.pair] = { title: p.title.id, emblem: p.emblem.id };
@@ -475,6 +509,11 @@ function unlockPair(uid, pair, got) {
   addUnlock(uid, ids.title, got);
   addUnlock(uid, ids.emblem, got);
 }
+
+const firstChampYear = titles
+  .map((t) => String(t && t.season || ""))
+  .filter((y) => /^\d{4}$/.test(y))
+  .sort()[0] || "";
 
 const champCount = {};
 const finalistCount = {};
@@ -566,8 +605,8 @@ for (const t of titles) {
       unlockPair(uid, "player_path", receipt([t.season, "player-heavy regular"]));
     }
   }
-  if (String(t.season) === "2019") {
-    unlockPair(uid, "inaugural", receipt(["2019", "first championship"]));
+  if (firstChampYear && String(t.season) === firstChampYear) {
+    unlockPair(uid, "inaugural", receipt([firstChampYear, "first championship"]));
   }
   if (t.record && t.record.fpts_rank === 1 && Number.isFinite(margin) && margin >= 25) {
     unlockPair(uid, "perfect_chip", receipt([t.season, "1st in points", `+${Math.round(margin)}`]));

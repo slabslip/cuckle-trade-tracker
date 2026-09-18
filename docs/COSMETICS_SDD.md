@@ -8,6 +8,7 @@ barracks / Profile plate. Header names, news bylines, trade cards, ledger, and s
 later pass.
 
 Want → [`PRODUCT.md`](./PRODUCT.md). Display chrome → [`UI_SDD.md`](./UI_SDD.md) §3c.
+Redraft barracks (dropped dynasty-only pairs, renamed rungs): [`FORMAT_VIEWS.md`](FORMAT_VIEWS.md) §3.
 Expanded award review + parked grind list → [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
 
 ---

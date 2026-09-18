@@ -21,20 +21,26 @@ const leagueId = setLeagueId(leagueArg);
     .map((s) => s.trim())
     .filter((s) => /^\d{6,64}$/.test(s) && s !== String(leagueId));
   const espn = String(process.env.ESPN_LEAGUE_ID || "").trim();
-  if (extra.length || espn) {
+  const yahoo = String(process.env.YAHOO_LEAGUE_IDS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (extra.length || espn || yahoo.length) {
     const cur = loadProviders(leagueId);
     writeJson("providers.json", {
       ...cur,
       sleeper_league_id: String(leagueId),
       sleeper_extra_ids: extra.length ? extra : (cur.sleeper_extra_ids || []),
       espn_league_id: espn || cur.espn_league_id || null,
+      yahoo_league_ids: yahoo.length ? yahoo : (cur.yahoo_league_ids || []),
     });
-    console.log("providers.json", extra.join(",") || "—", espn || cur.espn_league_id || "—");
+    console.log("providers.json", extra.join(",") || "—", espn || cur.espn_league_id || "—", yahoo.join(",") || "—");
   }
 }
 const steps = [
   ["sleeper-sync.mjs", leagueId],
   ["espn-sync.mjs", leagueId],
+  ["yahoo-sync.mjs", leagueId],
   ["merge-provider-history.mjs", leagueId],
   ["draft-resolve.mjs", leagueId],
   ["ensure-1qb-curve.mjs"],

@@ -201,8 +201,13 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
   && page.includes("Unlock ESPN history")
   && page.includes("espn_s2")
   && page.includes("ESPN_SWID")
-  && page.includes("unlock in Settings"),
-  "Settings lists the ESPN cookie unlock steps");
+  && page.includes("unlock in Settings")
+  && page.includes("GitHub secrets do nothing until Rebuild runs")
+  && page.includes("DATA_DASH_REDRAFT")
+  && page.includes("function resetLeagueSession(")
+  && page.includes("Redraft calculator")
+  && page.includes("Add Yahoo ID"),
+  "Settings lists ESPN unlock; redraft board, calc, and Yahoo slot ship");
 
 const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
 const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");

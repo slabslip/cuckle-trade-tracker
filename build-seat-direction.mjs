@@ -28,11 +28,11 @@ const leagueArg = process.argv[2] && /^\d{6,64}$/.test(process.argv[2])
 setLeagueId(leagueArg);
 
 const POSITIONS = ["QB", "RB", "WR", "TE"];
-const DESK_STUD = 5500;
-const DESK_START = 2200;
-const DESK_MID = 1800;
 const leagueFormat = detectLeagueFormat(readJson("leagues.json", []) || []);
 const isRedraft = leagueFormat.kind === "redraft";
+const DESK_STUD = leagueFormat.format_key === "1qb" ? 3800 : 5500;
+const DESK_START = leagueFormat.format_key === "1qb" ? 1400 : 2200;
+const DESK_MID = leagueFormat.format_key === "1qb" ? 1100 : 1800;
 const DESK_SLOTS = isRedraft
   ? { QB: 1, RB: 2, WR: 2, TE: 1 }
   : { QB: 2, RB: 2, WR: 3, TE: 1 };

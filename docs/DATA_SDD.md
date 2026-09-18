@@ -3,8 +3,10 @@
 The league **deal-research terminal**. Visible tab label is **Data**. Internal `homeTab` stays
 `history` (`?tab=history` and `?tab=data` both open it).
 
-**This file is the Data law.** UI chrome also lives in [`UI_SDD.md`](./UI_SDD.md). Product
-needle / clocks → [`PRODUCT.md`](./PRODUCT.md). Pipeline HAVE → [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+**This file is the Data law for dynasty (Cuckle).** Redraft Your-board, parked
+doors, and toggle isolation → [`FORMAT_VIEWS.md`](FORMAT_VIEWS.md). UI chrome
+also lives in [`UI_SDD.md`](./UI_SDD.md). Product needle / clocks →
+[`PRODUCT.md`](./PRODUCT.md). Pipeline HAVE → [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 Pricing → [`VALUE_SDD.md`](./VALUE_SDD.md). Memory receipts → [`MEMORY_SDD.md`](./MEMORY_SDD.md).
 
 **Priority:** a recent-window direction review on every seat. Managers see who is Hard rebuild,

@@ -4012,6 +4012,8 @@ const html = `<!DOCTYPE html>
       if (m && seatAvatarByUid[String(m.user_id)]) {
         return { img: seatAvatarByUid[String(m.user_id)], custom: true };
       }
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || "";
+      if (lid && lid !== "1315431339301806080") return null;
       return SEAT_FLAIR[n] || null;
     }
     function setSeatAvatar(uid, name, dataUrl) {
@@ -4208,6 +4210,34 @@ const html = `<!DOCTYPE html>
       "week_scores", "draft_board", "cuffs_board", "my_trades",
       "seat_run", "least_traded", "forever", "past_champions",
     ];
+    const DATA_DASH_REDRAFT = [
+      "season_place", "week_scores", "past_champions", "firsts_held", "uninsured",
+      "my_trades", "league_trades", "my_draft", "league_draft", "vs_you",
+      "profit_loss", "available_cuffs", "passed_around",
+    ];
+    const DATA_DASH_REDRAFT_RESEARCH = [
+      "week_scores", "uninsured", "available_cuffs", "firsts_held", "season_place",
+      "past_champions", "my_trades", "passed_around", "least_traded", "forever",
+      "cuffs_board", "fill_holes",
+    ];
+    const DATA_DASH_DYNASTY_ONLY = [
+      "stash_young", "draft_board", "held_picks", "widest_clock", "seat_aging", "seat_run",
+    ];
+    const DATA_REPORT_REDRAFT_LABS = {
+      firsts_held: { lab: "Firsts still here", why: "This season's first-round players still on that roster." },
+      forever: { lab: "Still here", why: "Drafted this season and never left that roster." },
+      profit_loss: { lab: "This season P/L", why: "Held is still on this roster. Sold is gone this year." },
+      passed_around: { lab: "Moved this season", why: "Players who changed teams the most this year." },
+      my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
+      league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
+      available_cuffs: { lab: "Wire cuffs", why: "Free-agent backups, your holes first." },
+      uninsured: { lab: "No backup", why: "Starters whose NFL cuff is not on a roster." },
+      week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks. Year stays on the row." },
+      season_place: { lab: "How I finished", why: "Every completed imported year they played, ranked by average." },
+      past_champions: { lab: "Who won the year", why: "Every real crown in this book. Host year tagged." },
+      fill_holes: { lab: "Who fills your lineup", why: "Get a starter at a hole. This season only." },
+      move_extras: { lab: "Who wants your extras", why: "Move a surplus starter this season." },
+    };
     const DATA_REPORTS = [
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
       { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Give book, Dart to Star by color." },
@@ -4257,6 +4287,15 @@ const html = `<!DOCTYPE html>
         kind: "dynasty", superflex: true, tep: false, format_key: "2qb", book: "2qb",
         team_n: null, windows: ["t0", "y1", "y2", "y3", "all"],
       };
+    }
+    function isRedraftLeague() {
+      return leagueFormat().kind === "redraft";
+    }
+    function dataDashDefaultTiles() {
+      return isRedraftLeague() ? DATA_DASH_REDRAFT : DATA_DASH_DEFAULT;
+    }
+    function dataDashResearchTiles() {
+      return isRedraftLeague() ? DATA_DASH_REDRAFT_RESEARCH : DATA_DASH_RESEARCH;
     }
     function scoreWindows() {
       const keys = leagueFormat().windows;
@@ -4320,6 +4359,7 @@ const html = `<!DOCTYPE html>
     let weekScoresBook = null;
     let weekScoresLoading = false;
     let finishesBook = null;
+    let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
     let cosmeticsReloadAt = 0;
@@ -8089,7 +8129,33 @@ const html = `<!DOCTYPE html>
     const VIEWS = ["home", "trades", "partners", "drafts", "titles", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics", "news"];
     const SEATLESS = ["home", "titles", "trades", "trade", "account", "teams", "datasets", "draftdata", "cuffs", "ledger", "calc", "cosmetics", "news"];
 
+    function resetLeagueSession() {
+      if (typeof calcWipe === "function") calcWipe();
+      if (typeof dataDashReset === "function") dataDashReset();
+      members = [];
+      league = null;
+      titles = null;
+      marks = null;
+      news = null;
+      calcBook = null;
+      peBook = null;
+      cosmeticsBook = null;
+      picks = null;
+      cuffs = null;
+      seatDirection = null;
+      weekScoresBook = null;
+      finishesBook = null;
+      dataDashTiles = null;
+      ledgerBets = null;
+      ledgerLoadState = "idle";
+      lens = "t0";
+      runLens = "all";
+      homeTab = "home";
+    }
+
     async function loadMembers() {
+      const gen = ++leagueLoadGen;
+      const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
       const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw] = await Promise.all([
         getLeagueJson("members.json"),
@@ -8107,6 +8173,9 @@ const html = `<!DOCTYPE html>
         getLeagueJson("week-scores.json").catch(() => null),
         getLeagueJson("finishes.json").catch(() => null),
       ]);
+      if (gen !== leagueLoadGen) return;
+      const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
+      if (String(nowId) !== String(wantId)) return;
       members = membersRaw;
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
@@ -8149,8 +8218,8 @@ const html = `<!DOCTYPE html>
       }).catch((err) => console.error(err));
       try {
         if (picksRaw) applyPicksBook(picksRaw);
-        else picks = picks || null;
-      } catch (err) { picks = picks || null; }
+        else picks = null;
+      } catch (err) { picks = null; }
       try {
         cuffs = cuffsRaw && cuffsRaw.v === 1 && Array.isArray(cuffsRaw.rows) ? cuffsRaw : null;
       } catch (err) { cuffs = null; }
@@ -8165,6 +8234,8 @@ const html = `<!DOCTYPE html>
           ? finishesRaw
           : null;
       } catch (err) { finishesBook = null; }
+      if (typeof applyDefaultLens === "function") applyDefaultLens(null);
+      runLens = isRedraftLeague() ? "all" : "y2";
       // Warm Latest trade bags before the first home paint when we can — seat bags are
       // not in league.json, so painting the chip from headlines alone looked half-empty.
       try {
@@ -8796,6 +8867,7 @@ const html = `<!DOCTYPE html>
      * Users can still pick 3 seasons or as-of-today from the chip menu.
      */
     function defaultLensForDate(date) {
+      if (isRedraftLeague()) return "t0";
       const today = (league && league.today) || "";
       if (!date || !today) return "t0";
       if (seasonLived(date, 2, today)) return "y2";
@@ -8964,7 +9036,11 @@ const html = `<!DOCTYPE html>
     }
 
     function dataSetDef(id) {
-      return DATA_SETS.find((d) => d[0] === id) || DATA_SETS[0];
+      const row = DATA_SETS.find((d) => d[0] === id) || DATA_SETS[0];
+      if (isRedraftLeague() && row[0] === "forever") {
+        return [row[0], "Still here", "Drafted this season and never left that roster."];
+      }
+      return row;
     }
 
     /**
@@ -9494,10 +9570,19 @@ const html = `<!DOCTYPE html>
 
     function dataDashById(id) {
       const alias = (typeof receiptDoorCanon === "function") ? receiptDoorCanon(id) : id;
+      let row = null;
       for (let i = 0; i < DATA_REPORTS.length; i++) {
-        if (DATA_REPORTS[i].id === alias || DATA_REPORTS[i].id === id) return DATA_REPORTS[i];
+        if (DATA_REPORTS[i].id === alias || DATA_REPORTS[i].id === id) {
+          row = DATA_REPORTS[i];
+          break;
+        }
       }
-      return null;
+      if (!row) return null;
+      if (isRedraftLeague() && DATA_DASH_DYNASTY_ONLY.indexOf(row.id) >= 0) return null;
+      if (isRedraftLeague() && DATA_REPORT_REDRAFT_LABS[row.id]) {
+        return Object.assign({}, row, DATA_REPORT_REDRAFT_LABS[row.id]);
+      }
+      return row;
     }
 
     function dataDashCanon(tiles) {
@@ -9514,9 +9599,10 @@ const html = `<!DOCTYPE html>
         if (out.length >= DATA_DASH_MAX) break;
       }
       if (out.length < DATA_DASH_MIN) {
-        for (let j = 0; j < DATA_DASH_DEFAULT.length; j++) {
-          const id = DATA_DASH_DEFAULT[j];
-          if (seen[id]) continue;
+        const fill = dataDashDefaultTiles();
+        for (let j = 0; j < fill.length; j++) {
+          const id = fill[j];
+          if (seen[id] || !dataDashById(id)) continue;
           seen[id] = true;
           out.push(id);
           if (out.length >= DATA_DASH_MIN) break;
@@ -9566,24 +9652,28 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashKey() {
-      const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId()) || "";
+      const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId())
+        || (activeLeague && activeLeague.sleeper_league_id)
+        || "";
       const seat = authSeatId() || "";
-      if (leagueId && seat) return "cuckle.data.dash.v2." + leagueId + "." + seat;
-      if (seat) return "cuckle.data.dash.v2." + seat;
-      return "cuckle.data.dash.v2";
+      if (!leagueId || !seat) return "";
+      return "cuckle.data.dash.v2." + leagueId + "." + seat;
     }
 
     function dataDashReadLocal() {
       try {
-        const raw = localStorage.getItem(dataDashKey());
+        const key = dataDashKey();
+        const raw = key ? localStorage.getItem(key) : null;
         const parsed = raw ? JSON.parse(raw) : null;
         if (Array.isArray(parsed)) return dataDashMigrateMyPicks(parsed);
       } catch (err) { /* private mode */ }
-      return dataDashCanon(DATA_DASH_DEFAULT);
+      return dataDashCanon(dataDashDefaultTiles());
     }
 
     function dataDashWriteLocal(tiles) {
-      try { localStorage.setItem(dataDashKey(), JSON.stringify(dataDashCanon(tiles))); }
+      const key = dataDashKey();
+      if (!key) return;
+      try { localStorage.setItem(key, JSON.stringify(dataDashCanon(tiles))); }
       catch (err) { /* private mode */ }
     }
 
@@ -11055,7 +11145,9 @@ const html = `<!DOCTYPE html>
       const head = dataDashSwapId ? "Replace door" : "Add a door";
       let body = "";
       for (let d = 0; d < desks.length; d++) {
-        const rows = DATA_REPORTS.filter(function (r) { return dataDashLibGroup(r) === desks[d][0]; });
+        const rows = DATA_REPORTS.filter(function (r) {
+          return dataDashById(r.id) && dataDashLibGroup(dataDashById(r.id)) === desks[d][0];
+        }).map(function (r) { return dataDashById(r.id); });
         if (!rows.length) continue;
         body += '<div class="data-h">' + desks[d][1] + "</div>";
         body += rows.map(function (r) {
@@ -15655,7 +15747,7 @@ const html = `<!DOCTYPE html>
     function marksOf(row) {
       const m = row || {};
       const w = (m.lens && m.lens[lens]) || {};
-      const runW = (m.lens && (m.lens[effectiveRunLens()] || m.lens[runLens])) || {};
+      const runW = (m.lens && (m.lens[effectiveRunLens()] || m.lens.all || m.lens.t0)) || {};
       const n = m.two_way || 0;
       const volume = n >= 80 ? "Hyper" : n >= 40 ? "Active" : "Quiet";
       const soldPicks = m.sold_picks || 0;
@@ -15899,10 +15991,14 @@ const html = `<!DOCTYPE html>
       return String((activeLeague && activeLeague.sleeper_league_id) || "") === GM_LEAGUE_ID;
     }
     function calcBrandTitle() {
-      return isGmLeague() ? "#1GM calc" : "Cuckle trade calculator";
+      if (isGmLeague()) return "#1GM calc";
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return "Redraft calculator";
+      return "Cuckle trade calculator";
     }
     function calcDoorLabel() {
-      return isGmLeague() ? "#1GM calc" : "Cuckle calculator";
+      if (isGmLeague()) return "#1GM calc";
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return "Redraft calculator";
+      return "Cuckle calculator";
     }
     function calcDoorSrc() {
       return (isGmLeague() ? "data/ui/gm-calc-door.png" : "data/ui/calc-door.png") + "?" + DATA_V;
@@ -15921,13 +16017,13 @@ const html = `<!DOCTYPE html>
     function espnUnlockStepsHtml() {
       return '<div class="app-card" aria-label="Unlock ESPN history">'
         + "<h3>Unlock ESPN history</h3>"
-        + '<p class="caption">Week scores are Sleeper 2025-2026 only until this lands. ESPN 35763180 is private. A manager who left stays on that ESPN team slot and attaches to the current Sleeper seat. Consolation weeks still do not set the low.</p>'
+        + '<p class="caption">GitHub secrets do nothing until Rebuild runs. Your login only unlocks ESPN years you can open. 2024 is visible; 2020-2023 need cookies from someone who was in those years (the original LM). Making you LM now does not unlock years you were not in.</p>'
         + '<ol class="caption" style="padding-left:1.2rem;margin:8px 0">'
-        + "<li>On a computer, open that ESPN league in Chrome while signed in.</li>"
-        + "<li>Press F12. Open Application (Chrome) or Storage (Firefox). Cookies → fantasy.espn.com.</li>"
-        + "<li>Copy the value of <b>espn_s2</b>. Copy the value of <b>SWID</b> (keep the curly braces).</li>"
-        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Add <b>ESPN_S2</b> and <b>ESPN_SWID</b>.</li>"
-        + "<li>Come back here and tap <b>Rebuild dashboard</b>. Older years merge onto current Sleeper names.</li>"
+        + "<li>On a computer, the original LM signs into ESPN and opens 2023: fantasy.espn.com/football/league?leagueId=35763180&seasonId=2023. Repeat 2022, 2021, 2020. If a year is blank, they cannot unlock it.</li>"
+        + "<li>While those years load, press F12. Application (Chrome) or Storage (Firefox). Cookies → fantasy.espn.com.</li>"
+        + "<li>Copy <b>espn_s2</b> and <b>SWID</b> (keep the curly braces) from that original-LM browser.</li>"
+        + "<li>GitHub → this repo → Settings → Secrets and variables → Actions. Replace <b>ESPN_S2</b> and <b>ESPN_SWID</b> with those values.</li>"
+        + "<li>Stay in Cuckle. Tap <b>Rebuild dashboard</b>. That is the only job that reads the secrets. Do not look for a rebuild on ESPN.</li>"
         + "</ol>"
         + '<p class="caption">Laptop without GitHub: export ESPN_S2 and ESPN_SWID, then run node build.mjs 1389723418827460608 --skip-snapshot.</p>'
         + "</div>";
@@ -16006,21 +16102,24 @@ const html = `<!DOCTYPE html>
     function syncJoinIdsFromSources() {
       const sleepers = [];
       const espns = [];
+      const yahoos = [];
       (joinSources || []).forEach(function (row) {
         const id = String((row && row.id) || "").trim();
         if (!id) return;
         if ((row.kind || "sleeper") === "espn") espns.push(id);
+        else if (row.kind === "yahoo") yahoos.push(id);
         else sleepers.push(id);
       });
       joinLeagueId = sleepers[0] || "";
       joinEspnId = espns[0] || "";
-      return { sleeper: sleepers, espn: espns };
+      return { sleeper: sleepers, espn: espns, yahoo: yahoos };
     }
     function joinExtraSleeperIds() {
       return syncJoinIdsFromSources().sleeper.slice(1);
     }
     function addJoinSource(kind) {
-      joinSources = (joinSources || []).concat([{ kind: kind === "espn" ? "espn" : "sleeper", id: "" }]);
+      const k = kind === "espn" ? "espn" : (kind === "yahoo" ? "yahoo" : "sleeper");
+      joinSources = (joinSources || []).concat([{ kind: k, id: "" }]);
     }
     function cutJoinSource(i) {
       const next = (joinSources || []).slice();
@@ -16044,7 +16143,7 @@ const html = `<!DOCTYPE html>
       const book = loadJoinBook();
       const kept = (rows || []).map(function (row) {
         return {
-          kind: (row && row.kind) === "espn" ? "espn" : "sleeper",
+          kind: (row && row.kind) === "espn" ? "espn" : ((row && row.kind) === "yahoo" ? "yahoo" : "sleeper"),
           id: String((row && row.id) || "").trim(),
         };
       }).filter(function (row) { return row.id; });
@@ -16069,7 +16168,15 @@ const html = `<!DOCTYPE html>
         if (id && id !== String(lid)) rows.push({ kind: "sleeper", id: id });
       });
       if (p.espn_league_id) rows.push({ kind: "espn", id: String(p.espn_league_id) });
-      return rows.length > 1 || p.espn_league_id ? rows : null;
+      (p.espn_extra_ids || []).forEach(function (x) {
+        const id = String(x || "").trim();
+        if (id) rows.push({ kind: "espn", id: id });
+      });
+      (p.yahoo_league_ids || []).forEach(function (x) {
+        const id = String(x || "").trim();
+        if (id) rows.push({ kind: "yahoo", id: id });
+      });
+      return rows.length > 1 || p.espn_league_id || (p.yahoo_league_ids || []).length ? rows : null;
     }
     function sourcesForLeague(lid) {
       const id = String(lid || "").trim();
@@ -16182,7 +16289,17 @@ const html = `<!DOCTYPE html>
 
     function authSeatId() {
       if (activeLeague && activeLeague.sleeper_user_id) return activeLeague.sleeper_user_id;
-      return (authSession && authSession.seat_user_id) || null;
+      const lid = activeLeague && activeLeague.sleeper_league_id;
+      if (lid && Array.isArray(memberships)) {
+        const mem = memberships.find(function (m) {
+          return m && String(m.sleeper_league_id) === String(lid) && m.sleeper_user_id;
+        });
+        if (mem) return mem.sleeper_user_id;
+      }
+      if (!lid || lid === CUCKLE_LEAGUE_ID) {
+        return (authSession && authSession.seat_user_id) || null;
+      }
+      return null;
     }
 
     /** Live Sleeper team_name from membership (may be emoji / renamed). */
@@ -17929,6 +18046,7 @@ const html = `<!DOCTYPE html>
           sleeper_league_id: lid,
           sleeper_extra_ids: ids.sleeper.filter(function (id) { return id !== lid; }),
           espn_league_id: joinEspnId || undefined,
+          yahoo_league_ids: ids.yahoo || undefined,
         });
         settingsCopyNote = data && data.sync_dispatched
           ? "Dashboard rebuild started. The meter refreshes when league-sync finishes."
@@ -17964,6 +18082,7 @@ const html = `<!DOCTYPE html>
           sleeper_league_id: joinLeagueId,
           sleeper_extra_ids: ids.sleeper.slice(1),
           espn_league_id: joinEspnId || undefined,
+          yahoo_league_ids: ids.yahoo || undefined,
         });
         createdInvites = data.invites || [];
         leagueMembers = data.members || [];
@@ -18354,6 +18473,7 @@ const html = `<!DOCTYPE html>
 
     async function openLeagueDashboard(leagueInfo) {
       saveActiveLeague(leagueInfo);
+      if (typeof resetLeagueSession === "function") resetLeagueSession();
       joinBusy = false;
       joinError = "";
       joinPreview = null;
@@ -18462,12 +18582,7 @@ const html = `<!DOCTYPE html>
           ballotRows = await voteGet(ballotsQ);
         } catch (ballotErr) {
           console.warn("vote ballot marks load failed; count-only lean", ballotErr);
-          try {
-            ballotRows = await voteGet(VOTE_API + "/trade_votes?select=transaction_id,choice,voter"
-              + "&choice=neq." + encodeURIComponent(VOTE_CLEARED));
-          } catch (ballotErr2) {
-            ballotRows = [];
-          }
+          ballotRows = [];
         }
 
         let rows = null;
@@ -20952,11 +21067,10 @@ const html = `<!DOCTYPE html>
     }
 
     function cosmeticsEquipKey() {
-      const league = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID || "";
+      const league = (activeLeague && activeLeague.sleeper_league_id) || "";
       const seat = authSeatId() || "";
-      if (league && seat) return "cuckle.cosmetics.equip.v1." + league + "." + seat;
-      if (seat) return "cuckle.cosmetics.equip.v1." + seat;
-      return "cuckle.cosmetics.equip.v1";
+      if (!league || !seat) return "";
+      return "cuckle.cosmetics.equip.v1." + league + "." + seat;
     }
 
     function cosmeticsNormalizeEquip(raw) {
@@ -20985,6 +21099,10 @@ const html = `<!DOCTYPE html>
     function cosmeticsLoadEquip() {
       try {
         const key = cosmeticsEquipKey();
+        if (!key) {
+          cosmeticsEquip = { title: null, emblem: null };
+          return;
+        }
         const legacy = "cuckle.cosmetics.equip.v1";
         let raw = localStorage.getItem(key);
         let fromLegacy = false;
@@ -21026,7 +21144,8 @@ const html = `<!DOCTYPE html>
 
     function cosmeticsSaveEquip() {
       try {
-        localStorage.setItem(cosmeticsEquipKey(), JSON.stringify(cosmeticsEquip));
+        const key = cosmeticsEquipKey();
+        if (key) localStorage.setItem(key, JSON.stringify(cosmeticsEquip));
       } catch (err) { /* private mode */ }
       const uid = authSeatId();
       const lid = avatarLeagueId();
@@ -21272,16 +21391,18 @@ const html = `<!DOCTYPE html>
     }
 
     function seatTradeBlockKey() {
-      const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId()) || "";
+      const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId())
+        || (activeLeague && activeLeague.sleeper_league_id)
+        || "";
       const seat = authSeatId() || "";
-      if (leagueId && seat) return "cuckle.trade.block.v1." + leagueId + "." + seat;
-      if (seat) return "cuckle.trade.block.v1." + seat;
-      return "cuckle.trade.block.v1";
+      if (!leagueId || !seat) return "";
+      return "cuckle.trade.block.v1." + leagueId + "." + seat;
     }
 
     function seatTradeBlockReadLocal() {
       try {
-        const raw = localStorage.getItem(seatTradeBlockKey());
+        const key = seatTradeBlockKey();
+        const raw = key ? localStorage.getItem(key) : null;
         const parsed = raw ? JSON.parse(raw) : null;
         if (parsed && Array.isArray(parsed.assets)) return dataDashBlockCanon(parsed.assets);
       } catch (err) { /* private mode */ }
@@ -21290,7 +21411,9 @@ const html = `<!DOCTYPE html>
 
     function seatTradeBlockWriteLocal(ids) {
       try {
-        localStorage.setItem(seatTradeBlockKey(), JSON.stringify({
+        const key = seatTradeBlockKey();
+        if (!key) return;
+        localStorage.setItem(key, JSON.stringify({
           assets: dataDashBlockCanon(ids),
           updated_at: new Date().toISOString(),
         }));
@@ -21452,9 +21575,15 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    function newsSeenKey() {
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || "";
+      return lid ? ("cuckle.newsSeenAt." + lid) : "";
+    }
+
     function newsSeenAt() {
       try {
-        const n = Number(localStorage.getItem("cuckle.newsSeenAt") || 0);
+        const key = newsSeenKey();
+        const n = Number((key && localStorage.getItem(key)) || 0);
         return n > 0 ? n : 0;
       } catch (err) {
         return 0;
@@ -21462,7 +21591,9 @@ const html = `<!DOCTYPE html>
     }
 
     function newsMarkSeen() {
-      try { localStorage.setItem("cuckle.newsSeenAt", String(Date.now())); } catch (err) { /* ignore */ }
+      const key = newsSeenKey();
+      if (!key) return;
+      try { localStorage.setItem(key, String(Date.now())); } catch (err) { /* ignore */ }
     }
 
     function newsUnreadCount() {
@@ -21609,6 +21740,10 @@ const html = `<!DOCTYPE html>
     const DESK_START = 2200;
     const DESK_MID = 1800;
     const DESK_SLOTS = { QB: 2, RB: 2, WR: 3, TE: 1 };
+    function deskCuts() {
+      if (leagueFormat().format_key === "1qb") return { stud: 3800, start: 1400, mid: 1100 };
+      return { stud: DESK_STUD, start: DESK_START, mid: DESK_MID };
+    }
     function deskSlots() {
       return leagueFormat().kind === "redraft" ? { QB: 1, RB: 2, WR: 2, TE: 1 } : DESK_SLOTS;
     }
@@ -21672,7 +21807,7 @@ const html = `<!DOCTYPE html>
         const pos = homeDeskAssetPos(a);
         if (pos === "PICK") pick += v;
         else {
-          if (v >= DESK_STUD) stud += v;
+          if (v >= deskCuts().stud) stud += v;
           const age = Number(a && a.age);
           if (Number.isFinite(age)) {
             ageW += age * v;
@@ -21686,8 +21821,9 @@ const html = `<!DOCTYPE html>
       const deep = [];
       const thin = [];
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        const vs = (byPos[pos] || []).filter(function (x) { return x >= DESK_START; });
-        const mid = (byPos[pos] || []).filter(function (x) { return x >= DESK_MID; });
+        const cuts = deskCuts();
+        const vs = (byPos[pos] || []).filter(function (x) { return x >= cuts.start; });
+        const mid = (byPos[pos] || []).filter(function (x) { return x >= cuts.mid; });
         const slots = deskSlots()[pos];
         const extras = Math.max(0, mid.length - slots);
         if (vs.length < slots) holes.push(pos);
@@ -21713,7 +21849,7 @@ const html = `<!DOCTYPE html>
     }
 
     function homeDeskIsStud(a) {
-      return !homeDeskIsPick(a) && calcValueNum(a) >= DESK_STUD;
+      return !homeDeskIsPick(a) && calcValueNum(a) >= deskCuts().stud;
     }
 
     function homeDeskNflTeam(a) {
@@ -21761,8 +21897,9 @@ const html = `<!DOCTYPE html>
     function homeDeskWants(uid, prof) {
       if (leagueFormat().kind === "redraft") {
         const wants = [];
-        if ((prof.holes || []).length || (prof.thin || []).length) wants.push("upgrade", "buy");
-        else wants.push("buy", "upgrade");
+        if ((prof.holes || []).length) wants.push("buy", "upgrade");
+        else if ((prof.thin || []).length) wants.push("upgrade", "buy");
+        else wants.push("upgrade");
         if ((prof.surplus || []).length || (prof.deep || []).length) wants.push("sell");
         wants.push("swap");
         const out = [];
@@ -24749,7 +24886,8 @@ const html = `<!DOCTYPE html>
         const box = nodes[i];
         const kindEl = box.querySelector("[data-join-src-kind]");
         const idEl = box.querySelector("[data-join-src-id]");
-        const kind = kindEl && kindEl.value === "espn" ? "espn" : "sleeper";
+        const kind = kindEl && kindEl.value === "espn" ? "espn"
+          : (kindEl && kindEl.value === "yahoo" ? "yahoo" : "sleeper");
         rows.push({ kind: kind, id: idEl ? String(idEl.value || "").trim() : "" });
       }
       joinSources = rows.length ? rows : [{ kind: "sleeper", id: lid || "" }];
@@ -24760,13 +24898,15 @@ const html = `<!DOCTYPE html>
 
     function joinSourceRowHtml(row, i, rows) {
       const n = (rows && rows.length) || (joinSources || []).length;
-      const kind = (row && row.kind) === "espn" ? "espn" : "sleeper";
+      const kind = (row && row.kind) === "espn" ? "espn"
+        : ((row && row.kind) === "yahoo" ? "yahoo" : "sleeper");
       return '<div class="join-src" data-join-src="' + i + '">'
         + receiptLookSelect("Source", "data-join-src-kind",
-          [["sleeper", "Sleeper"], ["espn", "ESPN"]], kind)
+          [["sleeper", "Sleeper"], ["espn", "ESPN"], ["yahoo", "Yahoo"]], kind)
         + '<label class="receipt-look"><span>League ID</span>'
         + '<input data-join-src-id="1" inputmode="numeric" autocomplete="off"'
-        + ' placeholder="' + (kind === "espn" ? "ESPN league ID" : "Sleeper league ID") + '"'
+        + ' placeholder="' + (kind === "espn" ? "ESPN league ID"
+          : (kind === "yahoo" ? "Yahoo league key" : "Sleeper league ID")) + '"'
         + ' value="' + esc((row && row.id) || "") + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + (n > 1
@@ -24786,6 +24926,8 @@ const html = `<!DOCTYPE html>
         + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add Sleeper ID</button>"
         + '<button type="button" class="chip" data-join-src-add="espn" data-join-src-for="'
         + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add ESPN ID</button>"
+        + '<button type="button" class="chip" data-join-src-add="yahoo" data-join-src-for="'
+        + esc(forAttr) + '"' + (joinBusy ? " disabled" : "") + ">Add Yahoo ID</button>"
         + "</div></div>";
     }
 
@@ -24793,7 +24935,7 @@ const html = `<!DOCTYPE html>
       if (!joinSources || !joinSources.length) joinSources = [{ kind: "sleeper", id: joinLeagueId || "" }];
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Create a league</h2>'
-        + '<p class="caption">First Sleeper ID is the dashboard key. Add each other Sleeper season and each ESPN ID — they merge into one book and league-sync builds the dashboard.</p>'
+        + '<p class="caption">First Sleeper ID is the dashboard key. Add each other Sleeper season and each ESPN or Yahoo ID — they merge into one book and league-sync builds the dashboard.</p>'
         + (isStoreShell()
           ? '<p class="caption">This TestFlight build features Cuckle. Another Sleeper ID still registers. A first-year league stays thin — no fake crowns.</p>'
           : "")
@@ -26449,7 +26591,7 @@ const html = `<!DOCTYPE html>
       if (dashPresetBtn) {
         if (!dataDashCanEdit()) return;
         const kind = dashPresetBtn.getAttribute("data-dash-preset") || "";
-        const next = kind === "research" ? DATA_DASH_RESEARCH : DATA_DASH_DEFAULT;
+        const next = kind === "research" ? dataDashResearchTiles() : dataDashDefaultTiles();
         dataDashCommit(next.slice());
         render();
         return;
@@ -28937,7 +29079,7 @@ if (!inline.includes("Number.isFinite(l.value)")) {
 }
 if (!inline.includes('let runLens = "y2"') || !inline.includes("function runLensHtml(")
   || !inline.includes("function runLensCaption(") || !inline.includes("data-run-lens")
-  || !inline.includes("m.lens[runLens]") || !html.includes(".mark-chart-h-row")) {
+  || !inline.includes("m.lens[effectiveRunLens()]") || !html.includes(".mark-chart-h-row")) {
   throw new Error("Ahead or behind must default to y2 with its own lens filter and best-window marks");
 }
 {
@@ -29707,8 +29849,26 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashFirstsHeld").includes("firsts_held")
     || !inline.includes("This season first-round")
     || !fnSrc("homeDeskWants").includes('kind === "redraft"')
-    || !inline.includes("function deskSlots(")) {
+    || !inline.includes("function deskSlots(")
+    || !inline.includes("function isRedraftLeague(")
+    || !inline.includes("function deskCuts(")
+    || !inline.includes("function resetLeagueSession(")
+    || !inline.includes("const DATA_DASH_REDRAFT = [")
+    || !inline.includes("DATA_DASH_DYNASTY_ONLY")
+    || !inline.includes("Redraft calculator")
+    || !inline.includes("Add Yahoo ID")
+    || !inline.includes("GitHub secrets do nothing until Rebuild runs")) {
     throw new Error("redraft must clamp clocks to t0/all and read this-season firsts");
+  }
+  {
+    const redStart = inline.indexOf("    const DATA_DASH_REDRAFT = [");
+    const redEnd = inline.indexOf("];", redStart);
+    const redIds = [...inline.slice(redStart, redEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+    if (redStart < 0 || redIds.length !== 13 || redIds[0] !== "season_place"
+      || redIds[1] !== "week_scores" || redIds.indexOf("available_cuffs") < 0
+      || redIds.indexOf("draft_board") >= 0) {
+      throw new Error("DATA_DASH_REDRAFT must be the 13 redraft doors, finishes first");
+    }
   }
   if (!inline.includes('["deal", "Deal"]')
     || !fnSrc("dataDashLibraryHtml").includes("dataDashLibGroup(")

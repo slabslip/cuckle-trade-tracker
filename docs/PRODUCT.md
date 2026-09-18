@@ -7,6 +7,7 @@
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
 **Values:** DynastyProcess from GitHub `dynastyprocess/data` is the history book. Cuckle (and any Superflex / 2QB roster) uses `value_2qb` and five Score-as windows. A 1QB league uses `value_1qb`. Redraft keeps Date of Trade + as of today only. TEP is a scoring flag, not a second needle. Today / `even` is a daily multi-source blend (flatten + KTC + FantasyCalc + DynastyDealer). Official Sleeper GETs for tape and drafts. The phone never scrapes price APIs. Format detection: [`FORMAT_BOOKS.md`](./FORMAT_BOOKS.md).
+Redraft environment (tiles, titles, calc, suggestions): [`FORMAT_VIEWS.md`](./FORMAT_VIEWS.md).
 
 ---
 

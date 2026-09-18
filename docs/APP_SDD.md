@@ -5,7 +5,7 @@ Companion to the meter canon [`PRODUCT.md`](PRODUCT.md). Votes wire: [`VOTES_SDD
 News / smack: [`NEWS_SDD.md`](NEWS_SDD.md) / [`SMACK_AGENT.md`](SMACK_AGENT.md). Domain: [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md).
 **Build today:** [`START_HERE.md`](START_HERE.md) · [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 Store: [`STORE_LAW.md`](STORE_LAW.md) · [`STORE_OPS.md`](STORE_OPS.md) · [`STORE_GATE.md`](STORE_GATE.md).
-Formats: [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
+Formats: [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md). Redraft vs dynasty views: [`FORMAT_VIEWS.md`](FORMAT_VIEWS.md).
 Memory: [`MEMORY_SDD.md`](MEMORY_SDD.md).
 
 **Status:** On **`main`**, live at https://slabslip.github.io/cuckle-trade-tracker/. Requires Supabase SQL + `join-league` deploy + Auth settings (see START_HERE). TestFlight wrapper lives in [`ios/`](../ios/) and loads that origin with `?store=1`.

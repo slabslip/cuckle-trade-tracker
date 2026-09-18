@@ -71,7 +71,9 @@ loop(9, Array.isArray(calc.players) && calc.players.length > 100,
   "calculator catalog is this league roster, not Cuckle");
 // 10 Page helpers for redraft vs dynasty
 loop(10, page.includes("This season · plug") && page.includes("value_1qb")
-  && page.includes("function scoreWindows(") && page.includes('kind === "redraft"'),
+  && page.includes("function scoreWindows(") && page.includes('kind === "redraft"')
+  && page.includes("DATA_DASH_REDRAFT") && page.includes("function resetLeagueSession(")
+  && page.includes("function deskCuts("),
   "Team Ideas and calc info switch to this-season / 1QB copy");
 // 11 Tape caption + titles lock copy
 loop(11, page.includes("function leagueTapeHtml(") && page.includes("ESPN 35763180 stays locked")
@@ -91,3 +93,5 @@ const finishes = spawnSync(process.execPath, [new URL("test-finishes.mjs", impor
 if (finishes.status) process.exit(finishes.status);
 const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (more.status) process.exit(more.status);
+const iso = spawnSync(process.execPath, [new URL("loop-format-isolation.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (iso.status) process.exit(iso.status);

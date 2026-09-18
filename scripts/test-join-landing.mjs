@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v282-finish-one")) {
-  throw new Error("sw.js must bump to v282-finish-one");
+if (!sw.includes("chuckle-shell-v283-list-share")) {
+  throw new Error("sw.js must bump to v283-list-share");
 }
 
 console.log("join landing ok");

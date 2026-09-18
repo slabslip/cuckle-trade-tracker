@@ -35,11 +35,22 @@ const need = [
   'q.set("view", "data")',
   'q.set("tile", tile)',
   "Share this view",
+  "Share top 5",
+  "Share this team",
   "Chuckle data",
   "pendingDataTile",
+  "pendingDataSlice",
+  "pendingDataWho",
   "startView === \"data\"",
   "button.tile-share",
   "tile-share-row",
+  "data-share-slice",
+  "data-share-who",
+  "data-list-share-all",
+  "function dataListBandsHtml(",
+  "function dataListItems(",
+  'q.set("slice", slice)',
+  'q.set("who", who)',
 ];
 const missing = need.filter((s) => !page.includes(s));
 if (missing.length) {
@@ -79,10 +90,23 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
   throw new Error("tile Share must not start a door drag");
 }
 
-if (page.includes('const DATA_V = "review20260918184500"')
-  || !page.includes('const DATA_V = "finishone20260918171000"')
-  || !sw.includes("chuckle-shell-v282-finish-one")) {
+if (page.includes('const DATA_V = "finishone20260918171000"')
+  || !page.includes('const DATA_V = "listshare20260918172000"')
+  || !sw.includes("chuckle-shell-v283-list-share")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
+}
+
+const shareUrlFn = fnSrc(page, "dataTileShareUrl");
+if (!shareUrlFn.includes('q.set("slice", slice)') || !shareUrlFn.includes('q.set("who", who)')) {
+  throw new Error("data tile URL must carry slice= and who= for band/row shares");
+}
+const shareText = fnSrc(page, "dataTileShareTextFor");
+if (!shareText.includes("Top 5") || !shareText.includes("finishYearLedger")) {
+  throw new Error("band share must print the five lines; pot_net who= must include the year ledger");
+}
+const bands = fnSrc(page, "dataListBandsHtml");
+if (!bands.includes('dataTileShareBtn(id, { slice: key })') || !bands.includes("dataListRowWrap")) {
+  throw new Error("list tiles must band Top 5 / Bottom 5 and wrap each row with a share chip");
 }
 
 const shareBtn = fnSrc(page, "dataTileShareBtn");
@@ -93,7 +117,8 @@ if (!fnSrc(page, "honorPendingDataTile").includes("dataTileSeatReady(")) {
   throw new Error("shared tiles must wait for a claimed seat");
 }
 
-if (!mem.includes("view=data&tile=") || !mem.includes("honorPendingDataTile")) {
+if (!mem.includes("view=data&tile=") || !mem.includes("honorPendingDataTile")
+  || !mem.includes("slice=top|bot") || !mem.includes("who=<user_id|name>")) {
   throw new Error("MEMORY_SDD must lock the data-tile share contract");
 }
 

@@ -3467,6 +3467,16 @@
     }
     .tile-share-row .screen-h { margin: 0; flex: 1; min-width: 0; padding-right: 28px; }
     .tile-share-row button.tile-share { position: static; }
+    .list-band { margin: 12px 0 16px; }
+    .list-band-h {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 6px; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: #e0b44c;
+    }
+    .list-band-h button.tile-share { position: static; width: 20px; height: 20px; min-width: 20px; min-height: 20px; }
+    .list-row { position: relative; }
+    .list-row > .row { padding-right: 30px; width: 100%; box-sizing: border-box; }
+    .list-row > button.tile-share { position: absolute; right: 4px; top: 10px; }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -4190,7 +4200,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "finishone20260918171000";
+    const DATA_V = "listshare20260918172000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4702,13 +4712,17 @@
       return pendingDataTile || "";
     }
 
-    function dataTileShareUrl(id) {
+    function dataTileShareUrl(id, opts) {
       const tile = dataTileCanon(id) || String(id || "").trim();
       const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
       const q = new URLSearchParams();
       q.set("league", leagueId);
       q.set("view", "data");
       if (tile) q.set("tile", tile);
+      const slice = opts && opts.slice ? String(opts.slice) : "";
+      const who = opts && opts.who ? String(opts.who) : "";
+      if (slice && slice !== "all") q.set("slice", slice);
+      if (who) q.set("who", who);
       q.set("src", "share");
       const path = location.pathname || "/";
       return location.origin + path + "?" + q.toString();
@@ -4743,14 +4757,349 @@
       return lead ? (leagueName + " · " + lab + "\n" + lead) : (leagueName + " · " + lab);
     }
 
-    function dataTileShareTextFor(id) {
+    function dataTileShareTextFor(id, opts) {
+      opts = opts || {};
+      const spec = typeof dataDashById === "function" ? dataDashById(id) : null;
+      const lab = (spec && spec.lab) || String(id || "Data");
+      const leagueName = (activeLeague && activeLeague.name) || (league && league.name) || "League";
+      const items = typeof dataListItems === "function" ? dataListItems(id) : [];
+      const picked = typeof dataListPickSlice === "function"
+        ? dataListPickSlice(items, opts.slice, opts.who)
+        : items;
+      if (opts.who && picked[0]) {
+        const r = picked[0];
+        let body = leagueName + " · " + lab + "\n" + String(r.name || "") + (r.metric ? " · " + r.metric : "");
+        if (r.sub) body += "\n" + r.sub;
+        if ((id === "pot_net" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "pot_net"))
+          && r.seat && typeof finishYearLedger === "function") {
+          finishYearLedger(r.seat).forEach(function (row) {
+            body += "\n" + String(row.season || "") + " · " + finishYearHow(row) + " · " + finishMoney(row.net);
+          });
+        }
+        return body;
+      }
+      if ((opts.slice === "top" || opts.slice === "bot") && picked.length) {
+        const week = id === "week_scores" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "week_scores");
+        const tag = week
+          ? (opts.slice === "top" ? "Highest 5" : "Lowest 5")
+          : (opts.slice === "top" ? "Top 5" : "Bottom 5");
+        let body = leagueName + " · " + lab + " · " + tag;
+        picked.forEach(function (r, i) {
+          body += "\n" + (r.rank || (i + 1)) + ". " + String(r.name || "") + (r.metric ? " · " + r.metric : "");
+        });
+        return body;
+      }
+      if (items.length && items.length <= 16) {
+        let body = leagueName + " · " + lab;
+        items.forEach(function (r, i) {
+          body += "\n" + (r.rank || (i + 1)) + ". " + String(r.name || "") + (r.metric ? " · " + r.metric : "");
+        });
+        return body;
+      }
       return dataTileLeadLine(id);
     }
 
-    function dataTileShareBtn(id) {
+    function dataTileShareBtn(id, opts) {
+      opts = opts || {};
+      const slice = opts.slice ? String(opts.slice) : "";
+      const who = opts.who ? String(opts.who) : "";
+      const label = who ? "Share this team" : (slice === "top" ? "Share top 5" : (slice === "bot" ? "Share bottom 5" : "Share this view"));
       return '<button type="button" class="tile-share" data-tile-share="' + esc(id || "") + '"'
-        + ' aria-label="Share this view">'
+        + (slice ? ' data-share-slice="' + esc(slice) + '"' : "")
+        + (who ? ' data-share-who="' + esc(who) + '"' : "")
+        + ' aria-label="' + esc(label) + '">'
         + receiptShareIco() + "</button>";
+    }
+
+    function dataListShareable(id) {
+      const canon = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
+      if (typeof isFinishCareerTile === "function" && isFinishCareerTile(canon)) return true;
+      return canon === "season_place" || canon === "week_scores" || canon === "firsts_held"
+        || canon === "vs_you" || canon === "seat_draft" || canon === "forever"
+        || canon === "homesteaders" || canon === "least_traded" || canon === "passed_around"
+        || canon === "past_champions";
+    }
+
+    function dataListPickSlice(items, slice, who) {
+      const list = items || [];
+      if (who) {
+        const want = String(who);
+        return list.filter(function (r) {
+          return String(r.key || "") === want || String(r.name || "") === want;
+        });
+      }
+      if (list[0] && list[0].band && (slice === "top" || slice === "bot")) {
+        return list.filter(function (r) { return r.band === slice; });
+      }
+      if (slice === "top") return list.slice(0, 5);
+      if (slice === "bot") return list.slice(Math.max(0, list.length - 5));
+      return list;
+    }
+
+    function dataListItems(id) {
+      const canon = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
+      if (canon === "season_place") {
+        const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
+        if (yearWant && typeof finishYearBoard === "function") {
+          return finishYearBoard(yearWant).map(function (r, i) {
+            const rec = (r.wins != null && r.losses != null)
+              ? (r.wins + "-" + r.losses + (r.ties ? "-" + r.ties : ""))
+              : "";
+            const how = typeof finishFromLabel === "function" ? finishFromLabel(r.from) : "";
+            const rs = r.rs_place && typeof nth === "function" ? ("RS " + nth(r.rs_place)) : "";
+            return {
+              key: String(r.user_id || r.name || i),
+              name: r.name,
+              metric: r.place && typeof nth === "function" ? nth(r.place) : String(r.place || "—"),
+              sub: [how, rs, rec].filter(Boolean).join(" · "),
+              rank: r.place || (i + 1),
+              seat: r,
+            };
+          });
+        }
+        const seats = typeof finishPlaceSeats === "function" ? finishPlaceSeats() : finishSeats();
+        return (seats || []).map(function (s, i) {
+          const n = Number(s.n) || 0;
+          const years = (s.places || []).map(function (p) {
+            return (p.season || "") + " " + (p.place && typeof nth === "function" ? nth(p.place) : "");
+          }).join(" · ");
+          return {
+            key: String(s.user_id || s.name || i),
+            name: s.name,
+            metric: s.avg != null ? (Number(s.avg).toFixed(1) + " avg") : "—",
+            sub: (n === 1 ? "1 season" : (n + " seasons")) + (years ? " · " + years : ""),
+            rank: i + 1,
+            seat: s,
+          };
+        });
+      }
+      if (typeof isFinishCareerTile === "function" && isFinishCareerTile(canon)) {
+        return (finishCareerSeats(canon) || []).map(function (s, i) {
+          const n = Number(s.n) || 0;
+          const count = n === 1 ? "1 season" : (n + " seasons");
+          let sub = count;
+          if (canon === "points_king") sub = count + (s.fpts_avg != null ? (" · " + Math.round(Number(s.fpts_avg)) + " avg PF") : "");
+          else if (canon === "contender_rate") sub = (s.top6_n || 0) + " top six · " + count;
+          else if (canon === "sacko") sub = (s.last_years || []).join(" · ") || count;
+          else if (canon === "rs_avg") {
+            sub = (s.places || []).map(function (p) {
+              const rs = p.rs_place || p.place;
+              return (p.season || "") + " " + (rs && typeof nth === "function" ? nth(rs) + " RS" : "");
+            }).join(" · ");
+          } else if (canon === "playoff_n") {
+            sub = (s.playoff_n || 0) + " of " + count + ((s.playoff_years || []).length ? (" · " + s.playoff_years.join(" · ")) : "");
+          } else if (canon === "playoff_avg") {
+            sub = (s.places || []).filter(function (p) {
+              return p.from === "title" || p.from === "semi" || p.from === "first_round";
+            }).map(function (p) {
+              return (p.season || "") + " " + (p.place && typeof nth === "function" ? nth(p.place) : "");
+            }).join(" · ") || count;
+          } else if (canon === "pot_net") sub = typeof finishNetMath === "function" ? finishNetMath(s.won, s.lost) : count;
+          return {
+            key: String(s.user_id || s.name || i),
+            name: s.name,
+            metric: finishCareerMetric(canon, s),
+            sub: sub,
+            rank: i + 1,
+            seat: s,
+          };
+        });
+      }
+      if (canon === "week_scores") {
+        const pack = function (kind) {
+          return (typeof weekScoreRows === "function" ? weekScoreRows(kind) : []).map(function (r, i) {
+            return {
+              key: String(r.user_id || r.name || "") + ":" + r.season + ":" + r.week,
+              name: r.name,
+              metric: typeof weekScorePts === "function" ? weekScorePts(r) : String(r.points || ""),
+              sub: typeof weekScoreLine === "function" ? weekScoreLine(r) : ("W" + r.week + " · " + r.season),
+              rank: i + 1,
+              band: kind === "high" ? "top" : "bot",
+              seat: r,
+            };
+          });
+        };
+        return pack("high").concat(pack("low"));
+      }
+      if (canon === "past_champions") {
+        return ((titles && titles.titles) || []).map(function (t, i) {
+          return {
+            key: String(t.season || i),
+            name: t.name,
+            metric: "1st",
+            sub: String(t.season || ""),
+            rank: i + 1,
+            seat: t,
+          };
+        });
+      }
+      if (canon === "firsts_held") {
+        const yearWant = (typeof receiptDoorFilter === "string" && receiptDoorFilter.indexOf("y") === 0)
+          ? receiptDoorFilter.slice(1) : "";
+        if (typeof leagueFormat === "function" && leagueFormat().kind === "redraft") {
+          const rows = (league && Array.isArray(league.firsts_held)) ? league.firsts_held : [];
+          const bag = {};
+          for (let i = 0; i < rows.length; i++) {
+            const r = rows[i];
+            if (!r || (yearWant && String(r.season) !== yearWant)) continue;
+            if (!r.held) continue;
+            const owner = r.owner || "League";
+            if (!bag[owner]) bag[owner] = [];
+            bag[owner].push(r.player || r.season);
+          }
+          return Object.keys(bag).sort(function (a, b) {
+            return bag[b].length - bag[a].length || a.localeCompare(b);
+          }).map(function (name, i) {
+            return {
+              key: name,
+              name: name,
+              metric: String(bag[name].length),
+              sub: bag[name].join(" · ") || "No first held",
+              rank: i + 1,
+              seat: { name: name, held: bag[name] },
+            };
+          });
+        }
+        if (typeof ensurePicks === "function") ensurePicks();
+        if (!picks) return [];
+        const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+        const bag = {};
+        for (let i = 0; i < rows.length; i++) {
+          const parts = pickKeyParts(rows[i].key);
+          if (!parts || parts.round !== 1) continue;
+          if (yearWant && parts.season !== yearWant) continue;
+          const owner = pickOwnerName(rows[i].entry) || "League";
+          if (!bag[owner]) bag[owner] = [];
+          bag[owner].push(parts.season);
+        }
+        for (let i = 0; i < (members || []).length; i++) {
+          const nm = members[i] && members[i].name;
+          if (nm && !bag[nm]) bag[nm] = [];
+        }
+        return Object.keys(bag).sort(function (a, b) {
+          return bag[b].length - bag[a].length || a.localeCompare(b);
+        }).map(function (name, i) {
+          const years = bag[name].slice().sort();
+          const counts = {};
+          for (let j = 0; j < years.length; j++) counts[years[j]] = (counts[years[j]] || 0) + 1;
+          const line = years.length
+            ? Object.keys(counts).sort().map(function (y) {
+              return counts[y] > 1 ? (y + " x" + counts[y]) : y;
+            }).join(" · ")
+            : (yearWant ? ("No " + yearWant + " first") : "No future first");
+          return {
+            key: name,
+            name: name,
+            metric: String(years.length),
+            sub: line,
+            rank: i + 1,
+            seat: { name: name, years: years },
+          };
+        });
+      }
+      if (canon === "vs_you") {
+        const mine = typeof authSeatId === "function" ? authSeatId() : "";
+        let partners = [];
+        if (mine && seatCache[mine] && Array.isArray(seatCache[mine].partners)) {
+          partners = seatCache[mine].partners.slice();
+        } else if (mine && marks && marks.seats && marks.seats[mine] && Array.isArray(marks.seats[mine].partners)) {
+          partners = marks.seats[mine].partners.slice();
+        } else {
+          partners = (members || []).filter(function (m) {
+            return !mine || String(m.user_id) !== String(mine);
+          }).map(function (m) {
+            return { name: m.name, user_id: m.user_id, trades: 0, even_per_trade: null };
+          });
+        }
+        partners.sort(function (a, b) { return (Number(b.trades) || 0) - (Number(a.trades) || 0); });
+        return partners.map(function (p, i) {
+          const n = Number(p.trades) || 0;
+          const per = p.even_per_trade != null ? p.even_per_trade : p.per;
+          return {
+            key: String(p.user_id || p.name || i),
+            name: p.name || "them",
+            metric: per == null ? "—" : (typeof signedNum === "function" ? signedNum(per) : String(per)),
+            sub: n + (n === 1 ? " deal" : " deals"),
+            rank: i + 1,
+            seat: p,
+          };
+        });
+      }
+      if (canon === "seat_draft") {
+        const pack = typeof dataDashMarkRows === "function" ? dataDashMarkRows("draft", 40) : { rows: [] };
+        return (pack.rows || []).map(function (r, i) {
+          return {
+            key: String(r.uid || r.name || i),
+            name: r.name,
+            metric: r.sort == null ? "—" : (typeof signedNum === "function" ? signedNum(r.sort) : String(r.sort)),
+            sub: r.title || "",
+            rank: i + 1,
+            seat: r,
+          };
+        });
+      }
+      if (canon === "forever" || canon === "homesteaders" || canon === "least_traded" || canon === "passed_around") {
+        const key = canon === "passed_around" ? "most_traded" : canon;
+        return (typeof dataDashListPeek === "function" ? dataDashListPeek(key, 80) : []).map(function (r, i) {
+          const metric = (canon === "forever" || canon === "homesteaders")
+            ? (typeof yearsOn === "function" ? yearsOn(r.days) : String(r.days || "—"))
+            : ((r.trades || 0) + (Number(r.trades) === 1 ? " trade" : " trades"));
+          return {
+            key: String(r.player_id || r.name || i),
+            name: r.name,
+            metric: metric,
+            sub: (r.team || "") + (r.stays > 1 ? " · " + r.stays + " stays" : ""),
+            rank: i + 1,
+            seat: r,
+          };
+        });
+      }
+      return [];
+    }
+
+    function dataListRowWrap(id, item, inner) {
+      return '<div class="list-row">' + inner
+        + dataTileShareBtn(id, { who: item.key || item.name })
+        + "</div>";
+    }
+
+    function dataListBandsHtml(id, items, rowFn) {
+      const slice = receiptListSlice || "";
+      const who = receiptListWho || "";
+      const list = items || [];
+      const picked = dataListPickSlice(list, slice, who);
+      const wrap = function (item, i) {
+        return dataListRowWrap(id, item, rowFn(item, i));
+      };
+      const band = function (lab, key, rows, offset) {
+        if (!rows.length) return "";
+        return '<div class="list-band" data-list-band="' + esc(key) + '">'
+          + '<div class="list-band-h"><span>' + esc(lab) + "</span>"
+          + (key === "mid" ? "" : dataTileShareBtn(id, { slice: key }))
+          + "</div>"
+          + rows.map(function (item, i) { return wrap(item, offset + i); }).join("")
+          + "</div>";
+      };
+      if (who || slice === "top" || slice === "bot") {
+        return picked.map(wrap).join("");
+      }
+      if (list[0] && list[0].band) {
+        const highs = list.filter(function (r) { return r.band === "top"; });
+        const lows = list.filter(function (r) { return r.band === "bot"; });
+        return band("Highest weeks", "top", highs, 0)
+          + band("Lowest weeks", "bot", lows, highs.length);
+      }
+      if (list.length < 6) {
+        return picked.map(wrap).join("");
+      }
+      const top = list.slice(0, 5);
+      const botN = Math.min(5, Math.max(0, list.length - 5));
+      const bot = list.slice(list.length - botN);
+      const midEnd = list.length - botN;
+      const mid = midEnd > 5 ? list.slice(5, midEnd) : [];
+      return band("Top 5", "top", top, 0)
+        + (mid.length ? band("Also", "mid", mid, 5) : "")
+        + band("Bottom 5", "bot", bot, list.length - bot.length);
     }
 
     function shareAccessPending() {
@@ -4764,11 +5113,17 @@
       return false;
     }
 
-    function rememberPendingDataTile(tile) {
+    function rememberPendingDataTile(tile, opts) {
       const next = (typeof dataTileCanon === "function" ? dataTileCanon(tile) : "") || String(tile || "").trim();
       if (next) pendingDataTile = next;
+      if (opts && opts.slice != null) pendingDataSlice = String(opts.slice || "");
+      if (opts && opts.who != null) pendingDataWho = String(opts.who || "");
       try {
         if (pendingDataTile) sessionStorage.setItem("cuckle.pending.tile", pendingDataTile);
+        if (pendingDataSlice) sessionStorage.setItem("cuckle.pending.slice", pendingDataSlice);
+        else sessionStorage.removeItem("cuckle.pending.slice");
+        if (pendingDataWho) sessionStorage.setItem("cuckle.pending.who", pendingDataWho);
+        else sessionStorage.removeItem("cuckle.pending.who");
       } catch (err) { /* private */ }
     }
 
@@ -4787,7 +5142,13 @@
 
     function clearPendingDataTile() {
       pendingDataTile = "";
-      try { sessionStorage.removeItem("cuckle.pending.tile"); } catch (err) { /* ignore */ }
+      pendingDataSlice = "";
+      pendingDataWho = "";
+      try {
+        sessionStorage.removeItem("cuckle.pending.tile");
+        sessionStorage.removeItem("cuckle.pending.slice");
+        sessionStorage.removeItem("cuckle.pending.who");
+      } catch (err) { /* ignore */ }
     }
 
     function dataTileSeatReady() {
@@ -4802,7 +5163,16 @@
     function honorPendingDataTile() {
       const tile = readPendingDataTile();
       if (!tile) return false;
-      rememberPendingDataTile(tile);
+      let slice = pendingDataSlice || "";
+      let who = pendingDataWho || "";
+      try {
+        const q = new URLSearchParams(location.search);
+        if (!slice) slice = String(q.get("slice") || "");
+        if (!who) who = String(q.get("who") || "");
+        if (!slice) slice = sessionStorage.getItem("cuckle.pending.slice") || "";
+        if (!who) who = sessionStorage.getItem("cuckle.pending.who") || "";
+      } catch (err) { /* private */ }
+      rememberPendingDataTile(tile, { slice: slice, who: who });
       if (appScreen !== "dash") return false;
       if (!dataTileSeatReady()) return false;
       clearPendingDataTile();
@@ -4810,6 +5180,11 @@
       me = null;
       homeTab = "history";
       if (typeof dataDashOpenReport === "function") dataDashOpenReport(tile);
+      receiptListSlice = (slice === "top" || slice === "bot") ? slice : "";
+      receiptListWho = who || "";
+      if (receiptListWho && tile === "pot_net") receiptNetWho = receiptListWho;
+      if (receiptListWho && tile === "vs_you") receiptVsWho = receiptListWho;
+      if (typeof render === "function") render();
       return true;
     }
 
@@ -7211,57 +7586,16 @@
         return html;
       }
       if (id === "season_place") {
-        const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
-        if (yearWant) {
-          return finishYearBoard(yearWant).filter(function (r) {
-            return hit([r.name, r.place, r.from, r.rs_place, yearWant, finishFromLabel(r.from)]);
-          }).map(function (r) {
-            const how = finishFromLabel(r.from);
-            const rs = r.rs_place ? ("RS " + nth(r.rs_place)) : "";
-            const rec = (r.wins != null && r.losses != null)
-              ? (r.wins + "-" + r.losses + (r.ties ? "-" + r.ties : ""))
-              : "";
-            const sub = [how, rs, rec].filter(Boolean).join(" · ");
-            return '<div class="row"><div class="row-top"><div><div class="names">'
-              + esc((r.place || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
-              + (sub ? '<div class="date">' + esc(sub) + "</div>" : "")
-              + "</div>"
-              + '<div class="margin">' + esc(r.place ? nth(r.place) : "—") + "</div></div></div>";
-          }).join("");
-        }
-        const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
-        const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
-          ? ((typeof finishPlaceSeats === "function") ? finishPlaceSeats() : finishesBook.seats)
-          : (members || []).filter(function (m) {
-            return m.place && m.place_season && (!teamN || Number(m.place) <= teamN);
-          }).map(function (m) {
-            return {
-              user_id: m.user_id,
-              name: m.name,
-              n: 1,
-              avg: Number(m.place),
-              places: [{ season: m.place_season, place: m.place }],
-            };
-          }).sort(function (a, b) { return a.avg - b.avg; });
-        return seats.filter(function (s) {
-          const years = (s.places || []).map(function (p) {
-            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
-          });
-          return hit([s.name, s.avg, s.n, "season", "seasons"].concat(years));
-        }).map(function (s, i) {
-          const n = Number(s.n) || 0;
-          const count = n === 1 ? "1 season" : (n + " seasons");
-          const years = (s.places || []).map(function (p) {
-            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
-          }).join(" · ");
-          const avg = s.avg != null ? (Number(s.avg).toFixed(1) + " avg") : "—";
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub, r.rank]);
+        });
+        return dataListBandsHtml(id, items, function (r) {
           return '<div class="row"><div class="row-top"><div><div class="names">'
-            + esc((i + 1) + ". ") + seatLabel(s.name, { link: false }) + "</div>"
-            + '<div class="date">' + esc(count) + "</div>"
-            + (years ? '<div class="date">' + esc(years) + "</div>" : "")
+            + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+            + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
             + "</div>"
-            + '<div class="margin">' + esc(avg) + "</div></div></div>";
-        }).join("");
+            + '<div class="margin">' + esc(r.metric || "—") + "</div></div></div>";
+        });
       }
       if (isFinishCareerTile(id)) {
         if (id === "pot_net" && receiptNetWho) {
@@ -7276,64 +7610,34 @@
               + '<div class="margin">' + esc(finishMoney(row.net)) + "</div></div></div>";
           }).join("");
         }
-        return finishCareerSeats(id).filter(function (s) {
-          const years = (s.places || []).map(function (p) {
-            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
-          });
-          return hit([s.name, s.avg, s.rs_avg, s.n, s.fpts_avg, s.contender, s.last_n, s.playoff_n, s.won, s.lost, s.net, "season", "seasons"].concat(years).concat(s.last_years || []).concat(s.playoff_years || []));
-        }).map(function (s, i) {
-          const n = Number(s.n) || 0;
-          const count = n === 1 ? "1 season" : (n + " seasons");
-          let sub = (s.places || []).map(function (p) {
-            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
-          }).join(" · ");
-          if (id === "points_king") {
-            sub = count + (s.fpts_avg != null ? (" · " + Math.round(Number(s.fpts_avg)) + " avg PF") : "");
-          } else if (id === "contender_rate") {
-            sub = (s.top6_n || 0) + " top six · " + count;
-          } else if (id === "sacko") {
-            sub = (s.last_years || []).join(" · ") || count;
-          } else if (id === "rs_avg") {
-            sub = (s.places || []).map(function (p) {
-              const rs = p.rs_place || p.place;
-              return (p.season || "") + " " + (rs ? nth(rs) + " RS" : "");
-            }).join(" · ");
-          } else if (id === "playoff_n") {
-            sub = (s.playoff_n || 0) + " of " + count + ((s.playoff_years || []).length ? (" · " + s.playoff_years.join(" · ")) : "");
-          } else if (id === "playoff_avg") {
-            sub = (s.places || []).filter(function (p) {
-              return p.from === "title" || p.from === "semi" || p.from === "first_round";
-            }).map(function (p) {
-              return (p.season || "") + " " + (p.place ? nth(p.place) : "");
-            }).join(" · ") || count;
-          } else if (id === "pot_net") {
-            sub = finishNetMath(s.won, s.lost);
-          } else {
-            sub = count + (s.avg != null ? (" · " + Number(s.avg).toFixed(1) + " avg") : "");
-          }
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub, r.rank]);
+        });
+        return dataListBandsHtml(id, items, function (r) {
           const open = id === "pot_net"
-            ? '<button type="button" class="row" data-receipt-net="' + esc(s.user_id || s.name || "") + '">'
+            ? '<button type="button" class="row" data-receipt-net="' + esc(r.key || r.name || "") + '">'
             : '<div class="row">';
           const close = id === "pot_net" ? "</button>" : "</div>";
           return open + '<div class="row-top"><div><div class="names">'
-            + esc((i + 1) + ". ") + seatLabel(s.name, { link: false }) + "</div>"
-            + '<div class="date">' + esc(sub) + "</div></div>"
-            + '<div class="margin">' + esc(finishCareerMetric(id, s)) + "</div></div>" + close;
-        }).join("");
+            + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+            + '<div class="date">' + esc(r.sub || "") + "</div></div>"
+            + '<div class="margin">' + esc(r.metric || "—") + "</div></div>" + close;
+        });
       }
       if (id === "past_champions") {
-        return ((titles && titles.titles) || []).filter(function (t) {
-          return hit([t.season, t.name, t.provider]);
-        }).map(function (t) {
-          const rec = t.record || {};
-          const src = t.provider === "espn" ? "ESPN" : "Sleeper";
+        const items = dataListItems(id).filter(function (t) {
+          return hit([t.sub, t.name, t.metric]);
+        });
+        return dataListBandsHtml(id, items, function (t) {
+          const rec = (t.seat && t.seat.record) || {};
+          const src = t.seat && t.seat.provider === "espn" ? "ESPN" : "Sleeper";
           const how = rec.fpts_rank === 1 ? "points race" : (rec.fpts_rank ? ("from " + nth(rec.fpts_rank) + " in points") : "bracket");
           const recLine = (rec.wins != null ? (rec.wins + "–" + rec.losses + " · ") : "") + how + " · " + src;
-          return '<button type="button" class="row" data-title="' + esc(t.season) + '">'
-            + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + seatLabel(t.name)
+          return '<button type="button" class="row" data-title="' + esc(t.key || "") + '">'
+            + '<div class="row-top"><div><div class="names">' + esc(t.sub) + " · " + seatLabel(t.name)
             + '</div><div class="date">' + esc(recLine) + "</div></div>"
             + '<div class="margin">1st</div></div></button>';
-        }).join("");
+        });
       }
       if (id === "vs_you") {
         const claimed = typeof authSeatId === "function" ? authSeatId() : "";
@@ -7371,94 +7675,50 @@
             return { name: m.name, trades: 0, even_per_trade: null };
           });
         }
-        partners.sort(function (a, b) { return (Number(b.trades) || 0) - (Number(a.trades) || 0); });
-        return partners.filter(function (p) {
-          return hit([p.name, p.trades]);
-        }).map(function (p) {
-          const n = Number(p.trades) || 0;
-          const per = p.even_per_trade != null ? p.even_per_trade : p.per;
+        const items = dataListItems(id).filter(function (p) {
+          return hit([p.name, p.metric, p.sub]);
+        });
+        return dataListBandsHtml(id, items, function (p) {
+          const per = p.seat && (p.seat.even_per_trade != null ? p.seat.even_per_trade : p.seat.per);
           return '<button type="button" class="row" data-receipt-vs="' + esc(p.name || "") + '">'
             + '<div class="row-top"><div><div class="names">' + esc(p.name || "them") + "</div>"
-            + '<div class="date">' + esc(n + (n === 1 ? " deal" : " deals")) + "</div></div>"
+            + '<div class="date">' + esc(p.sub || "") + "</div></div>"
             + '<div class="margin">' + (per == null ? "—" : tapeMargin(per)) + "</div></div></button>";
-        }).join("");
+        });
       }
       if (id === "firsts_held") {
         if (leagueFormat().kind === "redraft") {
-          const rows = (league && Array.isArray(league.firsts_held)) ? league.firsts_held : [];
-          const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
-            ? receiptDoorFilter.slice(1) : "";
-          const bag = {};
-          for (let i = 0; i < rows.length; i++) {
-            const r = rows[i];
-            if (!r || (yearWant && String(r.season) !== yearWant)) continue;
-            if (!r.held) continue;
-            const owner = r.owner || "League";
-            if (!bag[owner]) bag[owner] = [];
-            bag[owner].push(r.player || r.season);
-          }
-          return Object.keys(bag).sort(function (a, b) {
-            return bag[b].length - bag[a].length || a.localeCompare(b);
-          }).filter(function (name) {
-            return hit([name, bag[name].join(" ")]);
-          }).map(function (name) {
-            const line = bag[name].join(" · ") || "No first held";
-            return '<div class="row"><div class="row-top"><div><div class="names">' + esc(name) + "</div>"
-              + '<div class="date">' + esc(line) + "</div></div>"
-              + '<div class="margin">' + esc(String(bag[name].length)) + "</div></div></div>";
-          }).join("");
+          const items = dataListItems(id).filter(function (r) {
+            return hit([r.name, r.metric, r.sub]);
+          });
+          return dataListBandsHtml(id, items, function (r) {
+            return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.name) + "</div>"
+              + '<div class="date">' + esc(r.sub || "") + "</div></div>"
+              + '<div class="margin">' + esc(r.metric || "0") + "</div></div></div>";
+          });
         }
         if (typeof ensurePicks === "function") ensurePicks();
         if (!picks && picksLoading) return '<p class="caption">Loading firsts…</p>';
         if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
-        const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
-        const bag = {};
-        const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
-          ? receiptDoorFilter.slice(1) : "";
-        for (let i = 0; i < rows.length; i++) {
-          const parts = pickKeyParts(rows[i].key);
-          if (!parts || parts.round !== 1) continue;
-          if (yearWant && parts.season !== yearWant) continue;
-          const owner = pickOwnerName(rows[i].entry) || "League";
-          if (!bag[owner]) bag[owner] = [];
-          bag[owner].push(parts.season);
-        }
-        const names = {};
-        for (let i = 0; i < (members || []).length; i++) {
-          const nm = members[i] && members[i].name;
-          if (nm) names[nm] = true;
-        }
-        const shown = Object.keys(names);
-        for (let i = 0; i < shown.length; i++) {
-          if (!bag[shown[i]]) bag[shown[i]] = [];
-        }
-        return Object.keys(bag).filter(function (name) {
-          return hit([name, bag[name].join(" "), bag[name].length]);
-        }).sort(function (a, b) { return bag[b].length - bag[a].length || a.localeCompare(b); })
-          .map(function (name) {
-            const years = bag[name].slice().sort();
-            const counts = {};
-            for (let i = 0; i < years.length; i++) counts[years[i]] = (counts[years[i]] || 0) + 1;
-            const line = years.length
-              ? Object.keys(counts).sort().map(function (y) {
-                return counts[y] > 1 ? (y + " x" + counts[y]) : y;
-              }).join(" · ")
-              : (yearWant ? ("No " + yearWant + " first") : "No future first");
-            const n = years.length;
-            return '<div class="row"><div class="row-top"><div><div class="names">' + esc(name) + "</div>"
-              + '<div class="date">' + esc(line) + "</div></div>"
-              + '<div class="margin">' + esc(String(n)) + "</div></div></div>";
-          }).join("");
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub]);
+        });
+        return dataListBandsHtml(id, items, function (r) {
+          return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.name) + "</div>"
+            + '<div class="date">' + esc(r.sub || "") + "</div></div>"
+            + '<div class="margin">' + esc(r.metric || "0") + "</div></div></div>";
+        });
       }
       if (id === "seat_draft") {
-        const pack = dataDashMarkRows("draft", 40);
-        return pack.rows.filter(function (r) {
-          return hit([r.name, r.title]);
-        }).map(function (r) {
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub]);
+        });
+        return dataListBandsHtml(id, items, function (r) {
+          const sort = r.seat && r.seat.sort;
           return '<div class="row"><div class="row-top"><div><div class="names">' + esc(r.name) + "</div>"
-            + '<div class="date">' + esc(r.title || "") + "</div></div>"
-            + '<div class="margin">' + (r.sort == null ? "—" : tapeMargin(r.sort)) + "</div></div></div>";
-        }).join("");
+            + '<div class="date">' + esc(r.sub || "") + "</div></div>"
+            + '<div class="margin">' + (sort == null ? "—" : tapeMargin(sort)) + "</div></div></div>";
+        });
       }
       if (id === "uninsured") {
         if (typeof ensureCuffs === "function") ensureCuffs();
@@ -7490,31 +7750,23 @@
           if (typeof ensureWeekScores === "function") ensureWeekScores();
           return '<p class="caption">Loading week scores…</p>';
         }
-        const high = weekScoreRows("high").filter(function (r) {
-          return hit([r.name, r.season, "week " + r.week, r.phase]);
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub, r.seat && r.seat.season, r.seat && ("week " + r.seat.week), r.seat && r.seat.phase]);
         });
-        const low = weekScoreRows("low").filter(function (r) {
-          return hit([r.name, r.season, "week " + r.week, r.phase]);
-        });
-        if (!high.length && !low.length) {
+        if (!items.length) {
           return '<p class="caption">No scored team weeks on tape yet.</p>';
         }
-        const rowHtml = function (r, i) {
-          return listRow({ name: (i + 1) + ". " + (r.name || "Unknown"), team: weekScoreLine(r) }, weekScorePts(r));
-        };
-        return '<div class="data-h">Highest weeks</div>'
-          + high.map(rowHtml).join("")
-          + '<div class="data-h">Lowest weeks</div>'
-          + low.map(rowHtml).join("");
+        return dataListBandsHtml(id, items, function (r) {
+          return listRow({ name: (r.rank || "") + ". " + (r.name || "Unknown"), team: r.sub }, r.metric);
+        });
       }
       if (id === "forever" || id === "homesteaders" || id === "least_traded" || id === "passed_around") {
-        const key = id === "passed_around" ? "most_traded" : id;
-        return dataDashListPeek(key, 80).filter(function (r) {
-          return hit([r.name, r.team]);
-        }).map(function (r) {
-          return listRow(r, id === "forever" || id === "homesteaders" ? yearsOn(r.days)
-            : (r.trades + (r.trades === 1 ? " trade" : " trades")));
-        }).join("");
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub]);
+        });
+        return dataListBandsHtml(id, items, function (r) {
+          return listRow({ name: r.name, team: r.sub }, r.metric);
+        });
       }
       return "";
     }
@@ -7646,13 +7898,19 @@
       const draftBack = (id === "league_draft" && receiptDraftSeat)
         ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
         : "";
+      const listAll = ((receiptListSlice || receiptListWho) && typeof dataListShareable === "function" && dataListShareable(id))
+        ? '<button type="button" class="chip" data-list-share-all="1">Show all</button> '
+        : "";
+      const shareOpts = receiptListWho
+        ? { who: receiptListWho }
+        : (receiptListSlice ? { slice: receiptListSlice } : {});
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
-        + '<p class="caption">' + vsBack + netBack + histBack + draftBack
+        + '<p class="caption">' + vsBack + netBack + histBack + draftBack + listAll
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<div class="tile-share-row">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
-        + dataTileShareBtn(id)
+        + dataTileShareBtn(id, shareOpts)
         + "</div>"
         + '<p class="caption">' + esc(caption) + "</p>"
         + (receiptPortalNeedsSearch(id)
@@ -8968,7 +9226,11 @@
         view = "home";
         homeTab = "history";
         pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
-        if (pendingDataTile && typeof rememberPendingDataTile === "function") rememberPendingDataTile(pendingDataTile);
+        pendingDataSlice = String(params.get("slice") || pendingDataSlice || "");
+        pendingDataWho = String(params.get("who") || pendingDataWho || "");
+        if (pendingDataTile && typeof rememberPendingDataTile === "function") {
+          rememberPendingDataTile(pendingDataTile, { slice: pendingDataSlice, who: pendingDataWho });
+        }
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
@@ -10163,6 +10425,8 @@
       receiptWhoList = "";
       receiptQ = "";
       receiptDoorFilter = "all";
+      receiptListSlice = "";
+      receiptListWho = "";
       receiptVsWho = "";
       receiptNetWho = "";
       receiptHistPair = "";
@@ -11962,6 +12226,8 @@
         receiptWhoList = receiptDoorCanon(id);
         receiptQ = "";
         receiptDoorFilter = "all";
+        receiptListSlice = "";
+        receiptListWho = "";
         receiptVsWho = "";
         receiptNetWho = "";
         receiptHistPair = "";
@@ -16870,6 +17136,10 @@
     let receiptPickKey = "";
     let receiptWhoList = "";
     let pendingDataTile = "";
+    let pendingDataSlice = "";
+    let pendingDataWho = "";
+    let receiptListSlice = "";
+    let receiptListWho = "";
     let receiptSeatUid = "";
     let receiptShareNote = "";
     let receiptQ = "";
@@ -27467,7 +27737,22 @@
         e.preventDefault();
         e.stopPropagation();
         const id = tileShareBtn.getAttribute("data-tile-share") || receiptWhoList || dataHunt || "";
-        shareProofNow(dataTileShareTextFor(id), dataTileShareUrl(id), "Chuckle data");
+        const slice = tileShareBtn.getAttribute("data-share-slice") || "";
+        const who = tileShareBtn.getAttribute("data-share-who") || "";
+        shareProofNow(
+          dataTileShareTextFor(id, { slice: slice, who: who }),
+          dataTileShareUrl(id, { slice: slice, who: who }),
+          "Chuckle data"
+        );
+        return;
+      }
+      const listAllBtn = e.target.closest("[data-list-share-all]");
+      if (listAllBtn) {
+        receiptListSlice = "";
+        receiptListWho = "";
+        if (receiptWhoList === "pot_net") receiptNetWho = "";
+        if (receiptWhoList === "vs_you") receiptVsWho = "";
+        render();
         return;
       }
       const receiptShareBtn = e.target.closest("[data-receipt-share]");
@@ -29382,7 +29667,11 @@
       }
     }
     pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
-    if (pendingDataTile && typeof rememberPendingDataTile === "function") rememberPendingDataTile(pendingDataTile);
+    pendingDataSlice = String(params.get("slice") || pendingDataSlice || "");
+    pendingDataWho = String(params.get("who") || pendingDataWho || "");
+    if (pendingDataTile && typeof rememberPendingDataTile === "function") {
+      rememberPendingDataTile(pendingDataTile, { slice: pendingDataSlice, who: pendingDataWho });
+    }
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";

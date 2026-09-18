@@ -332,22 +332,33 @@ the URL** if we add one later.
 /?r=pick&pick=<asset_key>&league=…&src=share
 /?r=title&title=2025&league=…&src=share
 /?league=<sleeper_id>&view=data&tile=<door_id>&src=share
+/?league=<sleeper_id>&view=data&tile=<door_id>&slice=top|bot&src=share
+/?league=<sleeper_id>&view=data&tile=<door_id>&who=<user_id|name>&src=share
 ```
 
 Data-tile shares are **member views**, not public receipts. Do not reuse
 `?r=trade`. A small gold share icon sits bottom-right on every data-set
 door (home top 4 + Your board) and beside the open-tile title — icon only,
-no “Share” word. Tapping it runs `shareProofNow` with a one-line headline
-plus the URL so a group text can tap straight back into that board.
+no “Share” word. Team lists (Career net, How I finished, week scores, and
+the other door lists) break into **Top 5 / Also / Bottom 5**. Each band
+and each row has its own share chip so a group text can send the whole
+list, just the top 5, just the bottom 5, or one seat. Week scores use
+Highest 5 / Lowest 5. Tapping a chip runs `shareProofNow` with the
+actual lines plus the URL (`slice=` or `who=`). A Career net seat share
+includes that seat’s year ledger (entry, place money, sacko, MP).
 Signed-in members with a claimed seat land on the tile. Anyone without a
 username/password or a claimed seat is gated: create account, then claim
 one of the **remaining** (unclaimed) teams. `honorPendingDataTile()` waits
-for `dataTileSeatReady()` and then opens the same door.
+for `dataTileSeatReady()`, opens the same door, and applies `slice` / `who`
+(Career net `who=` opens the year ledger). Show all clears the slice.
 
 ```text
 GM 1QB · Career net
-Biff34 · +$2,100
-https://…/?league=…&view=data&tile=pot_net&src=share
+kotula · −$2,400
+won $300 · lost $2,700
+2024 · 3rd · +$0
+2023 · 12th · −$500
+https://…/?league=…&view=data&tile=pot_net&who=kotula&src=share
 ```
 
 Honor existing `?view=trade&t=` and `?tx=` as the same as `r=trade`. Default

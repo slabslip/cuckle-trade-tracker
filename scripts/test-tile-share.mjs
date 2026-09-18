@@ -79,9 +79,9 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
   throw new Error("tile Share must not start a door drag");
 }
 
-if (page.includes('const DATA_V = "shareclaim20260918143500"')
-  || !page.includes('const DATA_V = "thirdplace20260918160000"')
-  || !sw.includes("chuckle-shell-v276-third-place")) {
+if (page.includes('const DATA_V = "thirdplace20260918160000"')
+  || !page.includes('const DATA_V = "sacko20020260918162000"')
+  || !sw.includes("chuckle-shell-v277-sacko-200")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
 }
 

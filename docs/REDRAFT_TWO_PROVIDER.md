@@ -100,6 +100,7 @@ Then commit `data/leagues/1389723418827460608/` and push `main`.
 - ESPN weeks never overwrite Sleeper 2025–2026.
 - ESPN playoff consolation still does not set the low (same hunt rule).
 - The 3rd-place game (`WINNERS_CONSOLATION_LADDER` / Sleeper `p=3`) sets 3rd and 4th. 5th-place stays out.
+- Last place (regular-season sacko) pays $200 extra into the pot that year.
 - Past Champions gets ESPN crowns only from a real ESPN payload — never invented.
 
 The same five steps also sit on **Settings → Leagues** when ESPN is locked.

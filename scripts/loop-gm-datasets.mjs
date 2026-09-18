@@ -242,6 +242,7 @@ const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
 loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
   && finishes.pot && finishes.pot.entry === 300
+  && finishes.pot.sacko === 200
   && finishes.career_floor === 3
   && /consolation points out/.test(finishes.rule || "")
   && /3rd-place game/.test(finishes.rule || "")

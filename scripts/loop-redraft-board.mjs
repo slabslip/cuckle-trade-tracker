@@ -153,11 +153,11 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "thirdplace20260918160000"')
-  && html.includes('const DATA_V = "thirdplace20260918160000"')
-  && sw.includes('chuckle-shell-v276-third-place')
-  && !sw.includes("chuckle-shell-v275-share-claim")
-  && !sw.includes("chuckle-shell-v273-tile-share"),
+loop(10, page.includes('const DATA_V = "sacko20020260918162000"')
+  && html.includes('const DATA_V = "sacko20020260918162000"')
+  && sw.includes('chuckle-shell-v277-sacko-200')
+  && !sw.includes("chuckle-shell-v276-third-place")
+  && !sw.includes("chuckle-shell-v275-share-claim"),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
@@ -184,8 +184,9 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.5 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
   && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
   && adizz && adizz.contender === 83.3 && adizz.last_n === 1 && adizz.playoff_n === 5
+  && adizz.net === -500 && adizz.lost === 2000
   && tully && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
-  && jnasty && jnasty.last_n === 2
+  && jnasty && jnasty.last_n === 2 && jnasty.lost === 2200 && jnasty.net === -1300
   && ztrain && ztrain.last_n === 1 && ztrain.playoff_avg === 2.8
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
   && y25("fatassmexican") && y25("fatassmexican").place === 6
@@ -198,6 +199,9 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && page.includes("Last in regular season")
   && page.includes("most regular-season points $300")
   && html.includes("most regular-season points $300")
+  && page.includes("Last place pays $200 extra into the pot")
+  && html.includes("Last place pays $200 extra into the pot")
+  && finishes.pot && finishes.pot.sacko === 200
   && finLib.includes("regularSeasonPointsForMp")
   && mpMatchesRsLeader()
   && finishes.pot && finishes.pot.mp === 300

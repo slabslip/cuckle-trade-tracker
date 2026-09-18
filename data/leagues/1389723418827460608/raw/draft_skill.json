@@ -5943,8 +5943,8 @@
       "drafted_by": "kotula69",
       "startup": false,
       "pick_cost": 993,
-      "player_today": 0,
-      "surplus": -993,
+      "player_today": 1245,
+      "surplus": 252,
       "flag": "priced_as_2027r5"
     },
     {
@@ -7023,6 +7023,24 @@
       }
     },
     {
+      "user_id": "740721014035660800",
+      "name": "kotula69",
+      "used": 30,
+      "graded": 28,
+      "surplus": 62097,
+      "per_pick": 2217.75,
+      "best": {
+        "player": "Garrett Wilson",
+        "season": "2026",
+        "surplus": 5398
+      },
+      "worst": {
+        "player": "Jacksonville Jaguars",
+        "season": "2026",
+        "surplus": -993
+      }
+    },
+    {
       "user_id": "1132151393051095040",
       "name": "Tbow00",
       "used": 30,
@@ -7036,24 +7054,6 @@
       },
       "worst": {
         "player": "New England Patriots",
-        "season": "2026",
-        "surplus": -993
-      }
-    },
-    {
-      "user_id": "740721014035660800",
-      "name": "kotula69",
-      "used": 30,
-      "graded": 28,
-      "surplus": 60852,
-      "per_pick": 2173.285714285714,
-      "best": {
-        "player": "Garrett Wilson",
-        "season": "2026",
-        "surplus": 5398
-      },
-      "worst": {
-        "player": "Jacksonville Jaguars",
         "season": "2026",
         "surplus": -993
       }
@@ -7075,9 +7075,159 @@
         "season": "2026",
         "surplus": -993
       }
+    },
+    {
+      "user_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+      "name": "AB2official",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{F3C43C4E-029B-4774-B558-02D6531A61B0}",
+      "name": "Austin Bowling",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+      "name": "espnfan0776830917",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+      "name": "ESPNFAN1357922193",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+      "name": "ESPNfan7396258614",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+      "name": "hudmorse",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+      "name": "JaredMcFadden",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+      "name": "kotulac27",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+      "name": "modano913",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}",
+      "name": "ShaneBrandes11",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+      "name": "SkrongMeat_Jnast_88",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+      "name": "Stank93",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+      "name": "Taylor_DJohnson",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+      "name": "ztrain12",
+      "used": 0,
+      "graded": 0,
+      "surplus": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
     }
   ],
   "drafters_startup": [
+    {
+      "user_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+      "name": "AB2official",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
     {
       "user_id": "1132149096636141568",
       "name": "Aballers",
@@ -7091,6 +7241,16 @@
     {
       "user_id": "1132146625205567488",
       "name": "Adizzl3",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{F3C43C4E-029B-4774-B558-02D6531A61B0}",
+      "name": "Austin Bowling",
       "used": 0,
       "graded": 0,
       "player_today": 0,
@@ -7119,8 +7279,58 @@
       "worst": null
     },
     {
+      "user_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+      "name": "espnfan0776830917",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+      "name": "ESPNFAN1357922193",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+      "name": "ESPNfan7396258614",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
       "user_id": "741001884449525760",
       "name": "fatassmexican",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+      "name": "hudmorse",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+      "name": "JaredMcFadden",
       "used": 0,
       "graded": 0,
       "player_today": 0,
@@ -7149,6 +7359,26 @@
       "worst": null
     },
     {
+      "user_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+      "name": "kotulac27",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+      "name": "modano913",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
       "user_id": "1131056110791880704",
       "name": "sbzy11",
       "used": 0,
@@ -7161,6 +7391,46 @@
     {
       "user_id": "1338979666412716032",
       "name": "SethHenry12",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}",
+      "name": "ShaneBrandes11",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+      "name": "SkrongMeat_Jnast_88",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+      "name": "Stank93",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+      "name": "Taylor_DJohnson",
       "used": 0,
       "graded": 0,
       "player_today": 0,
@@ -7191,6 +7461,16 @@
     {
       "user_id": "458342725222133760",
       "name": "TrumanCooper",
+      "used": 0,
+      "graded": 0,
+      "player_today": 0,
+      "per_pick": null,
+      "best": null,
+      "worst": null
+    },
+    {
+      "user_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+      "name": "ztrain12",
       "used": 0,
       "graded": 0,
       "player_today": 0,

@@ -1,1 +1,227 @@
-[]
+[
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "espn_league_id": "35763180",
+    "season": "2024",
+    "name": "2024 GM BOIS",
+    "previous_league_id": null,
+    "num_teams": 12,
+    "playoff_teams": 6,
+    "superflex": false,
+    "roster_positions": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "settings": {
+      "type": 0,
+      "num_teams": 12
+    },
+    "scoring_settings": {
+      "rec": null
+    }
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "espn_league_id": "35763180",
+    "season": "2023",
+    "name": "2023 GM BOIS",
+    "previous_league_id": null,
+    "num_teams": 12,
+    "playoff_teams": 6,
+    "superflex": false,
+    "roster_positions": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "settings": {
+      "type": 0,
+      "num_teams": 12
+    },
+    "scoring_settings": {
+      "rec": null
+    }
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "espn_league_id": "35763180",
+    "season": "2022",
+    "name": "2022 GM BOIS",
+    "previous_league_id": null,
+    "num_teams": 12,
+    "playoff_teams": 6,
+    "superflex": false,
+    "roster_positions": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "settings": {
+      "type": 0,
+      "num_teams": 12
+    },
+    "scoring_settings": {
+      "rec": null
+    }
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "espn_league_id": "35763180",
+    "season": "2021",
+    "name": "2021 GM BOIS",
+    "previous_league_id": null,
+    "num_teams": 12,
+    "playoff_teams": 6,
+    "superflex": false,
+    "roster_positions": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "settings": {
+      "type": 0,
+      "num_teams": 12
+    },
+    "scoring_settings": {
+      "rec": null
+    }
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "espn_league_id": "35763180",
+    "season": "2020",
+    "name": "2020 GM BOIS",
+    "previous_league_id": null,
+    "num_teams": 12,
+    "playoff_teams": 6,
+    "superflex": false,
+    "roster_positions": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24"
+    ],
+    "settings": {
+      "type": 0,
+      "num_teams": 12
+    },
+    "scoring_settings": {
+      "rec": null
+    }
+  }
+]

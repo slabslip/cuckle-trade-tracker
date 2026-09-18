@@ -4857,7 +4857,20 @@
             };
           });
         }
-        const seats = typeof finishPlaceSeats === "function" ? finishPlaceSeats() : finishSeats();
+        const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
+        const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
+          ? ((typeof finishPlaceSeats === "function") ? finishPlaceSeats() : finishesBook.seats)
+          : (members || []).filter(function (m) {
+            return m.place && m.place_season && (!teamN || Number(m.place) <= teamN);
+          }).map(function (m) {
+            return {
+              user_id: m.user_id,
+              name: m.name,
+              n: 1,
+              avg: Number(m.place),
+              places: [{ season: m.place_season, place: m.place }],
+            };
+          }).sort(function (a, b) { return a.avg - b.avg; });
         return (seats || []).map(function (s, i) {
           const n = Number(s.n) || 0;
           const years = (s.places || []).map(function (p) {

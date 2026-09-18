@@ -4865,7 +4865,20 @@ const html = `<!DOCTYPE html>
             };
           });
         }
-        const seats = typeof finishPlaceSeats === "function" ? finishPlaceSeats() : finishSeats();
+        const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
+        const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
+          ? ((typeof finishPlaceSeats === "function") ? finishPlaceSeats() : finishesBook.seats)
+          : (members || []).filter(function (m) {
+            return m.place && m.place_season && (!teamN || Number(m.place) <= teamN);
+          }).map(function (m) {
+            return {
+              user_id: m.user_id,
+              name: m.name,
+              n: 1,
+              avg: Number(m.place),
+              places: [{ season: m.place_season, place: m.place }],
+            };
+          }).sort(function (a, b) { return a.avg - b.avg; });
         return (seats || []).map(function (s, i) {
           const n = Number(s.n) || 0;
           const years = (s.places || []).map(function (p) {
@@ -31359,8 +31372,8 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function weekScoreRows(")
     || !inline.includes("function ensureWeekScores(")
     || !inline.includes('getLeagueJson("week-scores.json")')
-    || !fnSrc("receiptPortalRows").includes("Highest weeks")
-    || !fnSrc("receiptPortalRows").includes("Lowest weeks")
+    || !fnSrc("dataListBandsHtml").includes("Highest weeks")
+    || !fnSrc("dataListBandsHtml").includes("Lowest weeks")
     || !fnSrc("receiptDoorFilterHtml").includes('id === "week_scores"')
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
     || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")
@@ -31513,9 +31526,9 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("Player you rostered")
     || !fnSrc("receiptPortalRows").includes("is FA")
     || !fnSrc("receiptPortalRows").includes("No future first")
-    || !fnSrc("receiptPortalRows").includes("m.place_season")
-    || !fnSrc("receiptPortalRows").includes("finishesBook")
-    || !fnSrc("receiptPortalRows").includes(" seasons")
+    || !fnSrc("dataListItems").includes("m.place_season")
+    || !fnSrc("dataListItems").includes("finishesBook")
+    || !fnSrc("dataListItems").includes(" seasons")
     || !inline.includes('getLeagueJson("finishes.json")')
     || !inline.includes("Career average. Three completed seasons minimum")
     || !inline.includes("function finishYearBoard(")

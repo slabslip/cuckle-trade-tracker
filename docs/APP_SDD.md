@@ -63,25 +63,33 @@ flowchart LR
   Create[Create league]
   Invites[Invite console]
   Redeem[Redeem invite]
+  Claim[Claim your team]
+  Land[Join welcome]
   Dash[League dashboard meter]
 
   Gate --> Home
+  Gate --> Redeem
+  Gate --> Claim
   Home --> Create
   Home --> Redeem
   Home --> Invites
   Home --> Dash
   Create --> Invites
-  Invites --> Dash
-  Redeem --> Dash
+  Invites --> Land
+  Redeem --> Land
+  Claim --> Land
+  Land --> Dash
 ```
 
 | Screen | Purpose | Key actions |
 | --- | --- | --- |
-| **Gate** | Account | Create account / Sign in / Forgot (ticket reclaim or email reset) |
+| **Gate** | Account | Create account / Sign in / Forgot (ticket reclaim or email reset). Invite copy: you've been invited to join {league}, claim your team {team}. |
 | **Your leagues** | Home | Open dash, Manage invites, Create, Redeem |
 | **Create a league** | Commissioner | Sleeper league ID + optional ESPN → mint or reopen console |
 | **Invite console** | Commissioner | Codes, Reset login, Reissue, Claim this seat, Open dash |
-| **Redeem invite** | Member | Enter `CF-…` → membership → dash |
+| **Redeem invite** | Member | Seat ticket `CF-…` auto-claims that team → join welcome |
+| **Claim your team** | Member | Share / `?league=` with no seat — pick an open team, then welcome |
+| **Join welcome** | Member | After league add + team claim, before dash: crowns, career/RS/playoff avg, net, past names + finishes |
 | **Dashboard** | Meter | Existing Cuckle UI; vote as membership seat |
 
 ### Happy paths
@@ -90,7 +98,7 @@ flowchart LR
 Sign up → Create league `1315431339301806080` → see 10 codes → DM each manager → **Claim this seat** for own team → Open dashboard → vote.
 
 **B. Member**  
-Sign up → Redeem code → dashboard with that seat → vote.
+Sign up → Redeem code (or pick a team if the link had no seat) → join welcome (history) → dashboard with that seat → vote.
 
 **C. Commissioner revisit**  
 Create again with same ID → **no remint** → invite console (status only) → Rotate only if a code was lost.
@@ -122,10 +130,12 @@ Create again with same ID → **no remint** → invite console (status only) →
 ## 5. Edge Function `join-league`
 
 Source: [`supabase/functions/join-league/index.ts`](../supabase/functions/join-league/index.ts).  
-Auth: caller JWT required. Writes: **service role** only (clients cannot insert leagues/memberships/invites).
+Auth: most actions need the caller JWT. `invite_preview`, `league_claim_preview`, and `request_reset` are public. Writes: **service role** only (clients cannot insert leagues/memberships/invites).
 
 | `action` | Who | Behavior |
 | --- | --- | --- |
+| `invite_preview` | Public | Team + league names for a `CF-` ticket (no codes leaked) |
+| `league_claim_preview` | Public | League name + seats with claimed flag (no invite codes) |
 | `preview` | Signed-in | Sleeper roster preview |
 | `create` | Commissioner | First claim of `created_by`: upsert league + mint codes. Same commissioner again: `already_exists` + status list (**no remint**) |
 | `list_invites` | Creator | Unclaimed codes returned (stored `code_plain`); claimed seats + member list |
@@ -134,6 +144,7 @@ Auth: caller JWT required. Writes: **service role** only (clients cannot insert 
 | `transfer_commissioner` | Creator | Set `created_by` to another **league member**; former commissioner keeps their seat |
 | `redeem` | Member | RPC `redeem_seat_invite` — atomic membership + claim (clears `code_plain`) |
 | `claim_seat` | Creator | RPC `claim_commissioner_seat` — consume own seat invite |
+| `claim_open_seat` | Signed-in | Claim an unclaimed seat from a share / `?league=` link |
 
 Invite format: `CF-XXXX-XXXX` (SHA-256 + `code_plain` while unclaimed). Console tabs: **Unclaimed** / **Claimed**.
 

@@ -5,6 +5,8 @@
 //
 // Actions:
 //   invite_preview   { code }               → public: team_name + suggested username (no auth)
+//   league_claim_preview { sleeper_league_id }
+//                   → public: league name + seats with claimed flag (no invite codes)
 //   request_reset   { email | username }   → public: email a reset if recover_email is on file
 //   reclaim_seat    { code, username, password, recover_email? }
 //                   → public: unused CF- ticket sets a new login and claims the seat
@@ -22,6 +24,8 @@
 //                   → give dashboard admin to another league member
 //   redeem          { code }               → atomic membership + claim
 //   claim_seat      { sleeper_league_id, sleeper_user_id }  → commissioner claims own seat
+//   claim_open_seat { sleeper_league_id, sleeper_user_id }
+//                   → any signed-in user claims an unclaimed seat
 //
 // Deploy: supabase functions deploy join-league
 // SQL: also apply db/wave5-invite-plain.sql (code_plain column)
@@ -432,6 +436,43 @@ Deno.serve(async (req) => {
       sleeper_user_id: invite.sleeper_user_id || null,
       prior_username: prior || null,
       suggested_username: prior || suggestUsername(invite.team_name),
+    });
+  }
+
+  // Public: shared page / no-seat invite — list teams so a manager can verify theirs.
+  // Never returns invite codes.
+  if (action === "league_claim_preview") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    if (!/^\d{6,64}$/.test(leagueId)) {
+      return json(400, { ok: false, error: "Unknown league" });
+    }
+    const { data: leagueRow } = await admin.from("leagues")
+      .select("name, status, sleeper_league_id")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (!leagueRow) return json(404, { ok: false, error: "Unknown league" });
+    const { data: invites, error: invErr } = await admin.from("seat_invites")
+      .select("sleeper_user_id, team_name, claimed_by")
+      .eq("sleeper_league_id", leagueId);
+    if (invErr) return json(500, { ok: false, error: invErr.message });
+    const seats = (invites || []).map((inv: {
+      sleeper_user_id: string;
+      team_name: string;
+      claimed_by: string | null;
+    }) => ({
+      sleeper_user_id: inv.sleeper_user_id,
+      team_name: inv.team_name,
+      claimed: !!inv.claimed_by,
+      suggested_username: suggestUsername(inv.team_name),
+    })).sort((a: { team_name: string }, b: { team_name: string }) =>
+      a.team_name.localeCompare(b.team_name)
+    );
+    return json(200, {
+      ok: true,
+      sleeper_league_id: leagueId,
+      league_name: leagueRow.name || leagueId,
+      status: leagueRow.status || "pending_sync",
+      seats,
     });
   }
 
@@ -1299,6 +1340,95 @@ Deno.serve(async (req) => {
       return json(500, { ok: false, error: error.message });
     }
     return json(200, { ok: true, ...(data as Record<string, unknown>) });
+  }
+
+  // ---- any signed-in user claims an unclaimed seat ----
+  if (action === "claim_open_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const seatId = String(body.sleeper_user_id || "").trim();
+    if (!leagueId || !seatId) {
+      return json(400, { ok: false, error: "Pick your team to claim" });
+    }
+    const { data: invite } = await admin.from("seat_invites")
+      .select("*")
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId)
+      .maybeSingle();
+    if (!invite) {
+      return json(404, {
+        ok: false,
+        error: "That team is not open to claim. Ask your commissioner for an invite link.",
+      });
+    }
+    if (invite.claimed_by && invite.claimed_by !== user.id) {
+      return json(409, { ok: false, error: "That team is already claimed — sign in instead." });
+    }
+    const { data: priorMem } = await admin.from("league_memberships")
+      .select("sleeper_user_id, team_name")
+      .eq("auth_user_id", user.id)
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    if (priorMem && priorMem.sleeper_user_id
+      && priorMem.sleeper_user_id !== invite.sleeper_user_id) {
+      return json(409, {
+        ok: false,
+        error: "You already sit as " + (priorMem.team_name || "another team")
+          + " in this league. Reissue the wrong seat from Manage invites before claiming another.",
+      });
+    }
+    if (invite.code_hash) {
+      const { data, error } = await admin.rpc("redeem_seat_invite", {
+        p_code_hash: invite.code_hash,
+        p_auth_user_id: user.id,
+      });
+      if (!error) return json(200, { ok: true, ...(data as Record<string, unknown>) });
+      const msg = String(error.message || "");
+      if (msg.includes("already have a seat in this league")) {
+        return json(409, {
+          ok: false,
+          error: "You already have a seat in this league. Reissue the wrong seat first.",
+        });
+      }
+      if (msg.includes("already used") || msg.includes("seat already claimed")) {
+        return json(409, { ok: false, error: "That team is already claimed — sign in instead." });
+      }
+      if (!(msg.includes("redeem_seat_invite") || msg.includes("Could not find the function"))) {
+        return json(500, { ok: false, error: error.message });
+      }
+    }
+    const { data: membership, error: memErr } = await admin.from("league_memberships").upsert({
+      auth_user_id: user.id,
+      sleeper_league_id: invite.sleeper_league_id,
+      sleeper_user_id: invite.sleeper_user_id,
+      team_name: invite.team_name,
+    }, { onConflict: "auth_user_id,sleeper_league_id" }).select("*").maybeSingle();
+    if (memErr) {
+      if (String(memErr.message || "").includes("league_memberships_seat_key")) {
+        return json(409, { ok: false, error: "That team is already claimed by another account" });
+      }
+      return json(500, { ok: false, error: memErr.message });
+    }
+    await admin.from("seat_invites").update({
+      claimed_by: user.id,
+      claimed_at: new Date().toISOString(),
+      code_plain: null,
+    }).eq("id", invite.id);
+    const { data: leagueRow } = await admin.from("leagues")
+      .select("name, status, season")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    return json(200, {
+      ok: true,
+      membership,
+      league: {
+        sleeper_league_id: leagueId,
+        name: (leagueRow && leagueRow.name) || leagueId,
+        status: (leagueRow && leagueRow.status) || "pending_sync",
+        season: leagueRow && leagueRow.season,
+        team_name: invite.team_name,
+        sleeper_user_id: invite.sleeper_user_id,
+      },
+    });
   }
 
   if (action === "join") {

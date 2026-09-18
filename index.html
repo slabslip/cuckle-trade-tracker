@@ -967,6 +967,38 @@
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
       padding: 10px 12px; margin: 0 0 12px; font-size: 0.875rem; line-height: 1.45;
     }
+    .join-steps {
+      list-style: none; margin: 0 0 14px; padding: 0;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+    }
+    .join-step {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      text-align: center; font-size: 0.7rem; color: var(--dim); line-height: 1.25;
+    }
+    .join-step-n {
+      width: 22px; height: 22px; border-radius: 999px; border: 1px solid var(--line);
+      display: grid; place-items: center; font-size: 0.7rem; font-weight: 700;
+    }
+    .join-step-now .join-step-n { border-color: #c9a227; color: #f3d27a; background: #1a1810; }
+    .join-step-done .join-step-n { border-color: #6b5a2e; background: #3a2e12; color: #f3d27a; }
+    .join-step-now .join-step-lab, .join-step-done .join-step-lab { color: var(--text); }
+    .join-land-hero { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.4; }
+    .join-land-stats {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px;
+    }
+    .join-land-stat {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+    }
+    .join-land-stat b { display: block; font-size: 1.2rem; font-weight: 700; }
+    .join-land-stat span { display: block; color: var(--dim); font-size: 0.75rem; margin-top: 2px; }
+    .join-land-year {
+      display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+      padding: 8px 0; border-bottom: 1px solid var(--line);
+    }
+    .join-land-year:last-child { border-bottom: 0; }
+    .claim-team-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    button.claim-team-on { border-color: #c9a227; background: #1a1810; }
+    button.claim-team-taken { opacity: 0.55; }
     /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
     .vote-note {
       background: #1a1810; border: 1px solid #6b5a2e; border-radius: 12px;
@@ -4138,7 +4170,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmnet20260918112800";
+    const DATA_V = "joinland20260918130000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8665,6 +8697,10 @@
           ? finishesRaw
           : null;
       } catch (err) { finishesBook = null; }
+      getLeagueJson("name-history.json").then(function (book) {
+        nameHistoryBook = book && book.v === 1 && book.seats ? book : null;
+        if (appScreen === "joinWelcome") render();
+      }).catch(function () { nameHistoryBook = null; });
       if (typeof applyDefaultLens === "function") applyDefaultLens(null);
       runLens = isRedraftLeague() ? "all" : "y2";
       // Warm Latest trade bags before the first home paint when we can — seat bags are
@@ -16540,7 +16576,7 @@
     let authBusy = false;
     let authError = "";
     // Multi-league app shell. "dash" = existing meter for the active league.
-    // gate | home | create | invites | redeem | settings | dash | receipt
+    // gate | home | create | invites | redeem | inviteConfirm | claimTeam | joinWelcome | settings | dash | receipt
     let appScreen = "gate";
     let receiptPublic = false;
     let receiptImportPending = false;
@@ -16721,6 +16757,12 @@
     let gateInviteLeagueId = null;
     let gateInviteSeatId = null;
     let gateInviteClaimed = false;
+    let joinLand = null;
+    let claimSeats = [];
+    let claimPickId = "";
+    let claimLeagueId = "";
+    let claimLeagueName = "";
+    let nameHistoryBook = null;
     let gateSuggestedUser = null;
     let gateMode = "signin"; // signin | signup | forgot — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
@@ -16946,7 +16988,8 @@
 
     /** Top-left Back: hide on the login gate / multi-league home. */
     function paintBrandHome() {
-      const hide = appScreen === "gate" || appScreen === "home";
+      const hide = appScreen === "gate" || appScreen === "home"
+        || appScreen === "claimTeam" || appScreen === "joinWelcome";
       const back = document.getElementById("goBack");
       if (back) back.hidden = hide;
     }
@@ -18088,6 +18131,200 @@
       }
     }
 
+    function joinStepsHtml(cur) {
+      const steps = [
+        ["invite", "Invite", "Invited"],
+        ["account", "Account", "Signed in"],
+        ["league", "League", "League added"],
+        ["team", "Team", "Team claimed"],
+      ];
+      const order = { invite: 0, account: 1, league: 2, team: 3, land: 4 };
+      const at = order[cur] != null ? order[cur] : 0;
+      return '<ol class="join-steps" aria-label="Join progress">'
+        + steps.map(function (s, i) {
+          const state = i < at || cur === "land" ? "done" : (i === at ? "now" : "todo");
+          const lab = state === "done" ? s[2] : s[1];
+          return '<li class="join-step join-step-' + state + '">'
+            + '<span class="join-step-n">' + (i + 1) + "</span>"
+            + '<span class="join-step-lab">' + esc(lab) + "</span></li>";
+        }).join("")
+        + "</ol>";
+    }
+
+    function joinInviteLeadHtml() {
+      const league = gateInviteLeague || claimLeagueName || "this league";
+      const team = gateInviteTeam || "";
+      if (team) {
+        return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+          + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
+      }
+      return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+        + "</b>. After you set a username and password, pick your team.</p>";
+    }
+
+    function joinLandSeat(uid) {
+      const want = String(uid || "");
+      return (finishesBook && Array.isArray(finishesBook.seats) ? finishesBook.seats : []).find(function (s) {
+        return s && String(s.user_id) === want;
+      }) || null;
+    }
+
+    function joinLandSafeName(name, fallback) {
+      const bad = /nigg|underage|panty|fatass|nazi/i;
+      const t = String(name || "").trim();
+      if (t && !bad.test(t)) return t;
+      const fb = String(fallback || "").trim();
+      if (fb && !bad.test(fb)) return fb;
+      return "this team";
+    }
+
+    function joinLandTeamName(uid, season, fallback) {
+      const hist = nameHistoryBook && nameHistoryBook.seats && nameHistoryBook.seats[String(uid || "")];
+      const year = hist && Array.isArray(hist.years)
+        ? hist.years.find(function (y) { return String(y.season) === String(season); })
+        : null;
+      return joinLandSafeName((year && year.team_name) || fallback || (hist && hist.name) || "", fallback);
+    }
+
+    function joinLandCrownsHtml(seat, uid) {
+      const titlesWon = ((titles && titles.titles) || []).filter(function (t) {
+        return t && String(t.user_id) === String(uid);
+      });
+      const bits = [];
+      if (titlesWon.length) {
+        bits.push((titlesWon.length === 1 ? "Champion " : (titlesWon.length + " titles · "))
+          + titlesWon.map(function (t) { return t.season; }).join(", "));
+      }
+      if (seat && seat.last_n) bits.push((seat.last_n === 1 ? "Sacko " : (seat.last_n + " sackos · "))
+        + ((seat.last_years || []).join(", ") || ""));
+      const mp = (seat && seat.payouts || []).filter(function (p) { return p && p.kind === "mp"; });
+      if (mp.length) bits.push("Most points " + mp.map(function (p) { return p.season; }).join(", "));
+      if (seat && seat.playoff_n) bits.push(seat.playoff_n + (seat.playoff_n === 1 ? " playoff trip" : " playoff trips"));
+      if (!bits.length) bits.push("First page of the book — the crowns start now.");
+      return "<ul>" + bits.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>";
+    }
+
+    async function openJoinWelcome(leagueInfo, opts) {
+      const L = leagueInfo || {};
+      joinLand = {
+        sleeper_league_id: L.sleeper_league_id,
+        name: L.name,
+        team_name: L.team_name,
+        sleeper_user_id: L.sleeper_user_id,
+        auto: !!(opts && opts.auto),
+      };
+      joinBusy = false;
+      saveActiveLeague({
+        sleeper_league_id: L.sleeper_league_id,
+        name: L.name,
+        status: L.status || "ready",
+        sleeper_user_id: L.sleeper_user_id,
+        team_name: L.team_name,
+      });
+      if (typeof resetLeagueSession === "function") resetLeagueSession();
+      appScreen = "joinWelcome";
+      focusNext = ".screen-h";
+      render();
+      try { await loadMembers(); } catch (err) { console.error(err); }
+      render();
+    }
+
+    async function openClaimPick(leagueId, leagueName) {
+      claimLeagueId = String(leagueId || "").trim();
+      claimLeagueName = leagueName || claimLeagueName || "";
+      claimPickId = "";
+      appScreen = "claimTeam";
+      focusNext = ".screen-h";
+      render();
+      try {
+        const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: claimLeagueId });
+        claimSeats = data.seats || [];
+        claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
+      } catch (err) {
+        try {
+          saveActiveLeague({
+            sleeper_league_id: claimLeagueId,
+            name: claimLeagueName || claimLeagueId,
+            status: "ready",
+          });
+          await loadMembers();
+          claimSeats = (members || []).map(function (m) {
+            return { sleeper_user_id: m.user_id, team_name: m.name, claimed: false };
+          });
+        } catch (err2) {
+          joinError = (err && err.message) || "Could not load teams. Ask your commissioner for an invite link.";
+        }
+      }
+      render();
+    }
+
+    async function onClaimOpenSeat(sleeperUserId) {
+      const seatId = String(sleeperUserId || claimPickId || "").trim();
+      const lid = claimLeagueId || gateInviteLeagueId || "";
+      if (!authSession) {
+        joinError = "Create a username and password first, then claim your team.";
+        gateMode = "signup";
+        appScreen = "gate";
+        render();
+        return;
+      }
+      if (!seatId || !lid) {
+        joinError = "Pick the team that is yours.";
+        appScreen = "claimTeam";
+        render();
+        return;
+      }
+      if (joinBusy) return;
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinLeagueCall("claim_open_seat", {
+          sleeper_league_id: lid,
+          sleeper_user_id: seatId,
+        });
+        await loadMemberships();
+        const L = data.league || {};
+        const leagueInfo = {
+          sleeper_league_id: L.sleeper_league_id || lid,
+          name: L.name || claimLeagueName || lid,
+          status: L.status || "pending_sync",
+          sleeper_user_id: L.sleeper_user_id || seatId,
+          team_name: L.team_name,
+        };
+        if (authSession) {
+          authSave(Object.assign({}, authSession, {
+            seat_user_id: leagueInfo.sleeper_user_id,
+            seat_name: leagueInfo.team_name,
+          }));
+        }
+        voteSeatRemember(leagueInfo.sleeper_user_id);
+        await openJoinWelcome(leagueInfo, { auto: false });
+      } catch (err) {
+        const msg = (err && err.message) || "Could not claim that team.";
+        joinError = /unknown action/i.test(msg)
+          ? "Ask your commissioner for an invite link, then open it to claim this team."
+          : msg;
+        joinBusy = false;
+        render();
+      }
+    }
+
+    function enterJoinDashboard() {
+      const L = joinLand || activeLeague;
+      joinLand = null;
+      if (!L || !L.sleeper_league_id) {
+        appScreen = "home";
+        render();
+        return;
+      }
+      openLeagueDashboard(L).catch(function (err) {
+        console.error(err);
+        appScreen = "dash";
+        render();
+      });
+    }
+
     /**
      * Soft-delete for the alert feed. UI-gated to TrumanCooper; the write is a stamp on
      * deleted_at / deleted_by (anon has no DELETE — see db/schema.sql). Prefers the claimed
@@ -18483,9 +18720,14 @@
         await loadMemberships();
         authError = "";
         authBusy = false;
-        if (redeemCode) {
+        if (redeemCode && gateInviteSeatId && !gateInviteClaimed) {
           handedOff = true;
           await onRedeemInvite();
+          return;
+        }
+        if (claimLeagueId || gateInviteLeagueId) {
+          handedOff = true;
+          await openClaimPick(claimLeagueId || gateInviteLeagueId, claimLeagueName || gateInviteLeague);
           return;
         }
         if (receiptImportPending) {
@@ -18787,7 +19029,7 @@
           }));
         }
         voteSeatRemember(L.sleeper_user_id);
-        await openLeagueDashboard(leagueInfo);
+        await openJoinWelcome(leagueInfo, { auto: false });
       } catch (err) {
         joinError = (err && err.message) || "Could not claim that seat.";
         console.error(err);
@@ -18844,7 +19086,7 @@
         voteSeatRemember(L.sleeper_user_id);
         redeemCode = "";
         gateInviteClaimed = false;
-        await openLeagueDashboard(leagueInfo);
+        await openJoinWelcome(leagueInfo, { auto: true });
       } catch (err) {
         joinError = (err && err.message) || "Could not redeem that invite.";
         console.error(err);
@@ -25328,17 +25570,15 @@
         + "</div>"
         + '<h2 class="screen-h sr-only" tabindex="-1">' + esc(title) + "</h2>"
         + (invited && !forgot
-          ? ('<p class="caption">Seat invite <code style="user-select:all">'
+          ? (joinStepsHtml("account")
+            + joinInviteLeadHtml()
+            + '<p class="caption">Seat invite <code style="user-select:all">'
             + esc(String(redeemCode).toUpperCase()) + "</code>"
-            + " — this is your <b>seat ticket</b>, not your account password.</p>"
-            + (gateInviteTeam
-              ? ('<p class="caption">Joining as <b>' + esc(gateInviteTeam) + "</b>"
-                + (gateInviteLeague ? " in " + esc(gateInviteLeague) : "") + ". "
-                + "Pick any username (3–32 letters, numbers, _ . -) and a "
-                + "<b>new password</b> you will use to sign in later.</p>")
-              : '<p class="caption">Pick a username and a <b>new password</b> to claim your seat. '
-                + "Do not paste the invite code into the password field.</p>"))
-          : "")
+            + " — this is your <b>seat ticket</b>, not your account password. "
+            + "Pick a username and a <b>new password</b> you will use to sign in later.</p>")
+          : (claimLeagueId && !forgot
+            ? (joinStepsHtml("account") + joinInviteLeadHtml())
+            : ""))
         + (gateSuggestedUser && invited && !forgot
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
             + "</b> — change it if you like.</p>")
@@ -25713,6 +25953,91 @@
       return renderSettings();
     }
 
+    function renderClaimTeam() {
+      const league = claimLeagueName || gateInviteLeague || "this league";
+      const picked = (claimSeats || []).find(function (s) {
+        return String(s.sleeper_user_id) === String(claimPickId);
+      });
+      const rows = (claimSeats || []).map(function (s) {
+        const taken = !!s.claimed;
+        const on = !taken && String(s.sleeper_user_id) === String(claimPickId);
+        return '<button type="button" class="chip'
+          + (on ? " claim-team-on" : "")
+          + (taken ? " claim-team-taken" : "") + '"'
+          + ' data-claim-pick="' + esc(s.sleeper_user_id) + '"'
+          + (taken || joinBusy ? " disabled" : "") + ">"
+          + esc(s.team_name)
+          + (taken ? " — claimed" : "")
+          + "</button>";
+      }).join("");
+      return '<div class="app-shell">'
+        + joinStepsHtml("team")
+        + '<h2 class="screen-h" tabindex="-1">Claim your team</h2>'
+        + '<div class="app-card">'
+        + '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+        + "</b>. Pick the team that is yours.</p>"
+        + '<p class="caption">League added. Team not claimed yet.</p>'
+        + '<div class="claim-team-list">'
+        + (rows || '<p class="caption">Could not load teams yet. Ask your commissioner for an invite link.</p>')
+        + "</div>"
+        + (picked
+          ? ('<p class="caption" style="margin-top:12px">You picked <b>' + esc(picked.team_name)
+            + "</b>. Only claim it if that is your team.</p>")
+          : "")
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + '<div class="app-actions" style="margin-top:12px">'
+        + (picked
+          ? ('<button type="button" class="chip" data-claim-open-go="1"'
+            + (joinBusy ? " disabled" : "") + ">"
+            + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>")
+          : '<p class="caption">Tap your team above.</p>')
+        + '<button type="button" class="linkish" data-app-home="1">Your leagues</button>'
+        + "</div></div></div>";
+    }
+
+    function renderJoinWelcome() {
+      const L = joinLand || activeLeague || {};
+      const uid = L.sleeper_user_id || "";
+      const team = joinLandSafeName(L.team_name, "your team");
+      const league = L.name || "the league";
+      const seat = joinLandSeat(uid);
+      const places = (seat && seat.places) || [];
+      const years = places.map(function (p) {
+        const nm = joinLandTeamName(uid, p.season, team);
+        return '<div class="join-land-year"><div>'
+          + "<b>" + esc(p.season) + "</b> · " + esc(nm) + "</div>"
+          + "<span>" + esc(p.place ? nth(p.place) : "—") + "</span></div>";
+      }).join("");
+      const avg = seat && seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
+      const rs = seat && seat.rs_avg != null ? Number(seat.rs_avg).toFixed(1) : "—";
+      const po = seat && seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
+      const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
+      return '<div class="app-shell">'
+        + joinStepsHtml("land")
+        + '<h2 class="screen-h" tabindex="-1">You\'re in</h2>'
+        + '<div class="app-card">'
+        + '<p class="join-land-hero">You\'ve joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
+        + '<p class="caption">League added. Team claimed.'
+        + (L.auto ? " This invite linked the seat for you." : " You picked this team.")
+        + "</p></div>"
+        + '<div class="app-card"><h3>Crowning achievements</h3>'
+        + joinLandCrownsHtml(seat, uid)
+        + "</div>"
+        + '<div class="app-card"><h3>Your book so far</h3>'
+        + '<div class="join-land-stats">'
+        + '<div class="join-land-stat"><b>' + esc(avg) + "</b><span>Career avg</span></div>"
+        + '<div class="join-land-stat"><b>' + esc(rs) + "</b><span>Regular season avg</span></div>"
+        + '<div class="join-land-stat"><b>' + esc(po) + "</b><span>Playoff avg</span></div>"
+        + '<div class="join-land-stat"><b>' + esc(net) + "</b><span>Career net</span></div>"
+        + "</div>"
+        + (years
+          ? ('<h3>Past names and finishes</h3>' + years)
+          : '<p class="caption">No completed seasons on this book yet.</p>')
+        + '<div class="app-actions" style="margin-top:12px">'
+        + '<button type="button" class="chip" data-join-enter-dash="1">Enter the dashboard</button>'
+        + "</div></div></div>";
+    }
+
     function renderRedeemInvite() {
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Redeem invite</h2>'
@@ -25761,10 +26086,9 @@
         body = '<p class="caption">You already sit as <b>' + esc(team) + "</b>. "
           + "Open Your leagues to continue.</p>";
       } else {
-        body = '<p class="caption">You are signed in as <b>' + esc(uname) + "</b>. "
-          + "This invite is for <b>" + esc(team) + "</b>"
-          + (gateInviteLeague ? " in " + esc(league) : "") + ".</p>"
-          + '<p class="caption">Only redeem if <b>you</b> are joining that seat. '
+        body = joinInviteLeadHtml()
+          + '<p class="caption">You are signed in as <b>' + esc(uname) + "</b>. "
+          + "Only redeem if <b>you</b> are joining that seat. "
           + "If you are the commissioner sending this link, go back and paste it to the other manager.</p>";
       }
       const canRedeem = !gateInviteClaimed && !mySeat;
@@ -25830,6 +26154,7 @@
       }
       if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
           || appScreen === "invites" || appScreen === "redeem" || appScreen === "inviteConfirm"
+          || appScreen === "claimTeam" || appScreen === "joinWelcome"
           || appScreen === "settings" || appScreen === "profile") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
@@ -25838,6 +26163,8 @@
           : appScreen === "invites" ? renderInvites()
           : appScreen === "redeem" ? renderRedeemInvite()
           : appScreen === "inviteConfirm" ? renderInviteConfirm()
+          : appScreen === "claimTeam" ? renderClaimTeam()
+          : appScreen === "joinWelcome" ? renderJoinWelcome()
           : appScreen === "settings" ? renderSettings()
           : appScreen === "profile" ? renderProfile()
           : renderAppHome();
@@ -27688,6 +28015,23 @@
         onRedeemInvite();
         return;
       }
+      const claimPick = e.target.closest("[data-claim-pick]");
+      if (claimPick) {
+        claimPickId = claimPick.getAttribute("data-claim-pick") || "";
+        joinError = "";
+        render();
+        return;
+      }
+      const claimOpenGo = e.target.closest("[data-claim-open-go]");
+      if (claimOpenGo) {
+        onClaimOpenSeat(claimPickId).catch(function (err) { console.error(err); });
+        return;
+      }
+      const joinEnterDash = e.target.closest("[data-join-enter-dash]");
+      if (joinEnterDash) {
+        enterJoinDashboard();
+        return;
+      }
       const manageInvites = e.target.closest("[data-manage-invites]");
       if (manageInvites) {
         closeLeaguesDrawer(true);
@@ -28693,6 +29037,10 @@
       } catch (err) { /* ignore */ }
     }
     const inviteParam = (params.get("invite") || "").trim();
+    const leagueParam = (params.get("league") || "").trim();
+    if (leagueParam && !inviteParam) {
+      claimLeagueId = leagueParam;
+    }
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";
@@ -28723,7 +29071,7 @@
             return;
           }
           appScreen = "gate";
-          if (inviteParam) gateMode = "signup";
+          if (inviteParam || (leagueParam && !inviteParam)) gateMode = "signup";
           focusNext = ".screen-h";
           render();
           return;
@@ -28753,10 +29101,39 @@
           if ((params.get("design") || "") === "league-home") {
             sessionStorage.setItem("cuckle.design.league_home", "1");
           }
+          if ((params.get("design") || "") === "join-land"
+              || (params.get("design") || "") === "claim-team") {
+            sessionStorage.setItem("cuckle.design.join_land", "1");
+          }
         } catch (err) { /* private mode */ }
+        const designMode = (params.get("design") || "");
+        if (designMode === "join-land" && activeLeague && activeLeague.sleeper_league_id) {
+          await openJoinWelcome({
+            sleeper_league_id: activeLeague.sleeper_league_id,
+            name: activeLeague.name,
+            team_name: activeLeague.team_name,
+            sleeper_user_id: activeLeague.sleeper_user_id,
+            status: activeLeague.status || "ready",
+          }, { auto: true });
+          return;
+        }
+        if (designMode === "claim-team") {
+          await openClaimPick(
+            claimLeagueId || (activeLeague && activeLeague.sleeper_league_id) || "",
+            claimLeagueName || (activeLeague && activeLeague.name) || ""
+          );
+          return;
+        }
         const designLeagueHome = isDesignLeagueHome();
         if (!designLeagueHome) {
           await loadMemberships().catch((err) => console.error(err));
+        }
+        if (leagueParam && !inviteParam && !designLeagueHome) {
+          const already = (memberships || []).find((x) => x.sleeper_league_id === leagueParam);
+          if (!already || !already.sleeper_user_id) {
+            await openClaimPick(leagueParam, (already && already.name) || "");
+            return;
+          }
         }
         if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
           appScreen = "create";

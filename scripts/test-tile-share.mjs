@@ -91,8 +91,8 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
 }
 
 if (page.includes('const DATA_V = "finishone20260918171000"')
-  || !page.includes('const DATA_V = "listshare20260918172000"')
-  || !sw.includes("chuckle-shell-v283-list-share")) {
+  || !page.includes('const DATA_V = "pastchamp20260918230000"')
+  || !sw.includes("chuckle-shell-v284-past-champions")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
 }
 
@@ -120,6 +120,10 @@ if (!fnSrc(page, "honorPendingDataTile").includes("dataTileSeatReady(")) {
 if (!mem.includes("view=data&tile=") || !mem.includes("honorPendingDataTile")
   || !mem.includes("slice=top|bot") || !mem.includes("who=<user_id|name>")) {
   throw new Error("MEMORY_SDD must lock the data-tile share contract");
+}
+if (page.includes('lab: "Who won the year"') || gen.includes('lab: "Who won the year"')
+  || !page.includes('lab: "Past champions"') || !gen.includes('lab: "Past champions"')) {
+  throw new Error("past_champions door must be labeled Past champions");
 }
 
 // Receipt tickets stay on r= and must not be rewritten as view=data.

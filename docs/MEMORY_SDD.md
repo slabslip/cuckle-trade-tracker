@@ -67,7 +67,7 @@ four history doors.
 | `least_traded` | Least traded (catalog only) |
 | `forever` | Never left (catalog only) |
 | `week_scores` | Week scores — highest / lowest five team weeks (playoff = title hunt) |
-| `past_champions` | Who won the year |
+| `past_champions` | Past champions |
 | `widest_clock` | Same smash/bust if you change the question (catalog only) |
 | `seat_run` | Who has been on a heater / cold streak on tape (catalog only) |
 | `draft_marks` | Draft hits (`seat_draft`) |
@@ -153,7 +153,7 @@ filters by a Team dropdown, not a type-in.
 3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded, no search
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
 5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top, sort only
-6. Who won the year (`past_champions`)
+6. Past champions (`past_champions`)
 7. How I finished (`season_place`)
 8. Me vs them (`vs_you`)
 9. Who has firsts (`firsts_held`)
@@ -244,7 +244,7 @@ says so. Do not add a catalog id `realized`.
 
 **Season / finish portal**
 
-- Who won the year: year · seat rows. Tap → existing Past Champions body.
+- Past champions: year · seat rows. Tap → the crown list.
 - How I finished: ranked average finish, season count under the name, every year · place.
 
 A door’s list is the **catalog**, not one lead example. Tap a row → that

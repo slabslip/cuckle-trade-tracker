@@ -165,11 +165,11 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "listshare20260918172000"')
-  && html.includes('const DATA_V = "listshare20260918172000"')
-  && sw.includes('chuckle-shell-v283-list-share')
+loop(10, page.includes('const DATA_V = "pastchamp20260918230000"')
+  && html.includes('const DATA_V = "pastchamp20260918230000"')
+  && sw.includes('chuckle-shell-v284-past-champions')
+  && !sw.includes("chuckle-shell-v283-list-share")
   && !sw.includes("chuckle-shell-v282-finish-one")
-  && !sw.includes("chuckle-shell-v281-standings-review")
   && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 

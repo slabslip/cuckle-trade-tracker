@@ -61,7 +61,7 @@ Parked on redraft (hidden from the library): `stash_young`, `draft_board`,
 | --- | --- |
 | How I finished | Completed imported years they played. Average of those. |
 | Week scores | Native points. Hunt weeks only. Year named on the row. |
-| Who won the year | Real crowns only. Host year tagged. |
+| Past champions | Real crowns only. Host year tagged. |
 | Firsts still here | This season’s first-round **players** still on that roster. |
 | No backup | Starter whose NFL cuff is not rostered. |
 | Trades / Me vs them | t0 and today. History years once the host authorized. |

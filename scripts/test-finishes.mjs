@@ -79,6 +79,9 @@ const tru = book.seats.find((s) => s.name === "TrumanCooper");
 if (!tru || tru.n !== 2 || tru.avg !== 7) fail("Truman 2025 10th + ESPN 2024 4th = 7.0: " + JSON.stringify(tru));
 if (book.seats.some((s) => s.name === "SethHenry12")) fail("book must omit people who never finished");
 if (book.v !== 3 || book.career_floor !== 3) fail("career book v3 ships a 3-season floor");
+if (book.rule !== "winners-bracket then record; average of completed seasons only") {
+  fail("default finishes rule stays dynasty / winners-bracket: " + book.rule);
+}
 const biffSeat = book.seats.find((s) => s.name === "Biff34");
 if (!biffSeat || biffSeat.titles_n !== 1 || biffSeat.top6_n !== 1 || biffSeat.last_n !== 0) {
   fail("Biff 2025 title is one crown, not a sacko: " + JSON.stringify(biffSeat));

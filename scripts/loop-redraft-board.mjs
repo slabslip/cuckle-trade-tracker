@@ -153,11 +153,11 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "shareclaim20260918143500"')
-  && html.includes('const DATA_V = "shareclaim20260918143500"')
-  && sw.includes('chuckle-shell-v275-share-claim')
-  && !sw.includes("chuckle-shell-v273-tile-share")
-  && !sw.includes("chuckle-shell-v272-join-land"),
+loop(10, page.includes('const DATA_V = "thirdplace20260918160000"')
+  && html.includes('const DATA_V = "thirdplace20260918160000"')
+  && sw.includes('chuckle-shell-v276-third-place')
+  && !sw.includes("chuckle-shell-v275-share-claim")
+  && !sw.includes("chuckle-shell-v273-tile-share"),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
@@ -178,8 +178,10 @@ const jnasty = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const champ = (titles.titles || [])[0];
 const y25 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
   ?.find((p) => p.season === "2025");
+const y24 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
+  ?.find((p) => p.season === "2024");
 loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
-  && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.3 && tbow.rs_avg === 4 && tbow.playoff_avg === 2.8
+  && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.5 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
   && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
   && adizz && adizz.contender === 83.3 && adizz.last_n === 1 && adizz.playoff_n === 5
   && tully && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
@@ -189,6 +191,8 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && y25("fatassmexican") && y25("fatassmexican").place === 6
   && y25("Adizzl3") && y25("Adizzl3").place === 12 && y25("Adizzl3").from === "regular"
   && y25("Biff34") && y25("Biff34").fpts === 2109.48
+  && y24("kotula69") && y24("kotula69").place === 3 && y24("Tbow00") && y24("Tbow00").place === 4
+  && /3rd-place game/.test(finishes.rule || "")
   && champ && champ.season === "2025" && champ.name === "Biff34"
   && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02
   && page.includes("Last in regular season")
@@ -201,7 +205,7 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && page.includes("function finishYearLedger(") && html.includes("function finishYearLedger(")
   && page.includes("data-receipt-net") && html.includes("data-receipt-net")
   && page.includes("Career net") && html.includes("Career net"),
-  "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, one net pot door");
+  "home leads: Tbow RS 4.0 / playoff 3.0, Adizzl3 5 playoffs, one net pot door");
 
 loop(13, page.includes("function dataTileShareUrl(")
   && html.includes("function dataTileShareUrl(")

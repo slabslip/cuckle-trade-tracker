@@ -1,0 +1,85 @@
+# One-shot: import GM ESPN history with repo secrets, commit the book on this branch.
+name: espn-unlock-gm
+
+on:
+  push:
+    branches: [cursor/espn-swid-alias-af37]
+    paths-ignore:
+      - "data/leagues/**"
+      - "data/ui/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: espn-unlock-gm
+  cancel-in-progress: false
+
+jobs:
+  unlock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cursor/espn-swid-alias-af37
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Cache Sleeper players dictionary
+        uses: actions/cache@v4
+        with:
+          path: data/players.nfl.json
+          key: players-nfl-${{ runner.os }}-v1
+          restore-keys: |
+            players-nfl-${{ runner.os }}-
+
+      - name: Ensure players.nfl.json
+        run: node ensure-players.mjs
+
+      - name: Build GM book with ESPN cookies
+        env:
+          SLEEPER_EXTRA_IDS: "1253382148073725952"
+          ESPN_LEAGUE_ID: "35763180"
+          ESPN_S2: ${{ secrets.ESPN_S2 }}
+          ESPN_SWID: ${{ secrets.ESPN_SWID || secrets.SWID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$ESPN_S2" ] || [ -z "$ESPN_SWID" ]; then
+            echo "ESPN_S2 or ESPN_SWID is empty in Actions secrets"
+            exit 1
+          fi
+          echo "ESPN_S2 length=${#ESPN_S2} ESPN_SWID length=${#ESPN_SWID}"
+          node build.mjs 1389723418827460608 --skip-snapshot
+
+      - name: Show ESPN unlock status
+        run: |
+          node scripts/review-redraft.mjs 1389723418827460608
+          node -e '
+            const fs = require("fs");
+            const s = JSON.parse(fs.readFileSync("data/leagues/1389723418827460608/raw/espn_status.json","utf8"));
+            const w = JSON.parse(fs.readFileSync("data/leagues/1389723418827460608/raw/espn_weekly_scores.json","utf8"));
+            const t = JSON.parse(fs.readFileSync("data/leagues/1389723418827460608/raw/espn_titles.json","utf8"));
+            console.log("authorized", s.authorized, "cookie", s.cookie, "reason", s.reason);
+            console.log("espn_seasons", s.seasons);
+            console.log("tried", JSON.stringify(s.tried || []));
+            console.log("weekly_n", w.n || (w.scores || []).length);
+            console.log("titles_n", Array.isArray(t) ? t.length : (t.titles || []).length);
+            if (!s.authorized) process.exit(1);
+          '
+
+      - name: Commit GM ESPN book
+        run: |
+          set -e
+          git config user.name "cuckle-league-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "data/leagues/1389723418827460608"
+          if git diff --cached --quiet; then
+            echo "No ESPN book changes to commit"
+            exit 0
+          fi
+          git commit -m "Import GM ESPN history."
+          git pull --rebase origin cursor/espn-swid-alias-af37
+          git push origin cursor/espn-swid-alias-af37

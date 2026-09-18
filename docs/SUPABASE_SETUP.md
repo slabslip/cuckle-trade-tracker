@@ -432,6 +432,11 @@ entirely. Empty/`null` is fine too; the matcher fills the manager header.
 That is the whole Shortcut — three taps on the phone become two: Share, then
 Send to Cuckle. Instant publish is §3d (webhook → `news-refresh` → `main`).
 
+The same POST is every league's feed (Cuckle, GM, and any later book). Do not
+add `sleeper_league_id` to the JSON. `news-sync.mjs` fans the tweet to each
+`data/leagues/<id>/ui/news.json` and retags that book's own managers. The
+notification can still say “Sent to Cuckle”.
+
 ### Optional fields (only if you want them later)
 
 Only `url` is required. A successful POST answers **201** with an empty body.

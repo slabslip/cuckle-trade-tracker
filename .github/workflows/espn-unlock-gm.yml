@@ -1,4 +1,5 @@
 # One-shot: import GM ESPN history with repo secrets, commit the book on this branch.
+# Rerun 2026-09-18T02:02 after ESPN_S2 / ESPN_SWID were replaced.
 name: espn-unlock-gm
 
 on:

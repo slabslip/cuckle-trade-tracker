@@ -153,11 +153,11 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "mprsnet20260918140000"')
-  && html.includes('const DATA_V = "mprsnet20260918140000"')
-  && sw.includes('chuckle-shell-v271-mp-rs')
-  && !sw.includes("chuckle-shell-v270-shane-yr")
-  && !sw.includes("chuckle-shell-v267-gm-net"),
+loop(10, page.includes('const DATA_V = "joinland20260918143000"')
+  && html.includes('const DATA_V = "joinland20260918143000"')
+  && sw.includes('chuckle-shell-v272-join-land')
+  && !sw.includes("chuckle-shell-v271-mp-rs")
+  && !sw.includes("chuckle-shell-v269-join-land"),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops

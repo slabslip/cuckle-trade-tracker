@@ -125,7 +125,7 @@ export function espnCookieHeader() {
   const full = String(process.env.ESPN_COOKIE || "").trim();
   if (full) return full;
   const s2 = String(process.env.ESPN_S2 || "").trim();
-  const swid = String(process.env.ESPN_SWID || "").trim();
+  const swid = String(process.env.ESPN_SWID || process.env.SWID || "").trim();
   if (!s2 && !swid) return "";
   const parts = [];
   if (s2) parts.push(`espn_s2=${s2}`);

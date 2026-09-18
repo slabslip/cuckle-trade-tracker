@@ -2,9 +2,9 @@
 /**
  * Stitch ESPN history onto a Sleeper book without rewriting leagues.json.
  * Sleeper remains the live format. ESPN seats/trades/titles/weeks join the
- * same members when espn_bridge.json, a unique name, or an ESPN team slot
- * (franchise) maps onto a current Sleeper seat. Managers who left stay on
- * the franchise; still-here people keep a person match when the name is unique.
+ * same members when espn_bridge.json or a unique name maps that year's
+ * ESPN owner onto a Sleeper seat. Managers who left keep their own years.
+ * `espn-team:` / franchise only fills a year with no owner id.
  */
 import { readJson, setLeagueId, writeJson } from "./lib.mjs";
 
@@ -152,10 +152,13 @@ export function buildFranchiseMap(espnSeats, personBridge, explicit = {}) {
 }
 
 export function resolveEspnScoreUid(score, personBridge, franchiseMap) {
+  const uid = score && score.user_id;
+  // This year's owner wins. Shane on roster 6 in 2024 is Shane; Ricky on
+  // that same slot in 2020–22 stays Ricky. Franchise only fills a blank.
+  if (uid && personBridge && personBridge[uid]) return personBridge[uid];
+  if (uid) return uid;
   const team = score && score.roster_id != null ? String(score.roster_id) : "";
   if (team && franchiseMap && franchiseMap[team]) return franchiseMap[team];
-  const uid = score && score.user_id;
-  if (uid && personBridge && personBridge[uid]) return personBridge[uid];
   return uid;
 }
 

@@ -105,12 +105,14 @@ loop(7, espnBridge["espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}"] === "113214662
   && espnBridge["espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}"] === "1131056110791880704"
   && adizz && adizz.n === 6 && adizz.contender === 83.3
   && tully && tully.titles_n === 2
-  && aball && aball.n === 6
-  && sbzy && sbzy.n === 6
+  && aball && aball.n === 3
+  && sbzy && sbzy.n === 2 && sbzy.avg === 5
+  && (finishes.seats || []).some((s) => s.name === "Ricky Swink" && s.n === 3)
+  && (finishes.seats || []).some((s) => s.name === "Stank93" && s.n === 1)
   && (titles.titles || []).some((t) => t.season === "2024" && t.name === "fatassmexican")
   && (titles.titles || []).some((t) => t.season === "2023" && t.name === "fatassmexican")
   && weeks.all && weeks.all.high[0].name === "Adizzl3",
-  "Durham/Tully/AB2/Shane pins land on Adizzl3, fatassmexican, Aballers, sbzy11");
+  "Durham/Tully/AB2/Shane person pins; Shane is 2024–25 only, Ricky/Stank keep slot 6");
 
 // 8 Hunt stub stays out of the low book
 const lows = ((weeks.all && weeks.all.low) || []);
@@ -123,19 +125,21 @@ loop(8, weeks.v === 2
 // 9 Leftover ESPN-only names stay unmapped until someone claims them
 const leftovers = (bridge.espn_only_members || []).slice().sort();
 loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
-  && !(finishes.seats || []).some((s) => /hudmorse|Swink|Stank93/i.test(s.name || ""))
+  && (finishes.seats || []).some((s) => s.name === "Ricky Swink" && s.n === 3)
+  && (finishes.seats || []).some((s) => s.name === "Stank93" && s.n === 1)
+  && (finishes.seats || []).some((s) => s.name === "hudmorse" && s.n === 3)
   && (finishes.seats || []).some((s) => s.name === "JaredMcFadden" && String(s.user_id).indexOf("espn:") === 0)
   && members.some((m) => m.name === "SethHenry12" && m.place > 12)
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12"),
-  "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
+  "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmnet20260918112800"')
-  && html.includes('const DATA_V = "gmnet20260918112800"')
-  && sw.includes('chuckle-shell-v267-gm-net')
-  && !sw.includes("chuckle-shell-v266-news-leagues")
-  && !sw.includes("chuckle-shell-v265-gm-pot"),
-  "DATA_V and SW cache moved so Safari cannot keep the old board");
+loop(10, page.includes('const DATA_V = "shaneyr20260918133000"')
+  && html.includes('const DATA_V = "shaneyr20260918133000"')
+  && sw.includes('chuckle-shell-v270-shane-yr')
+  && !sw.includes("chuckle-shell-v267-gm-net")
+  && !sw.includes("chuckle-shell-v266-news-leagues"),
+  "DATA_V and SW cache moved so Safari cannot keep Shane's inherited years");
 
 // 11 Redraft library still hides dynasty ops
 loop(11, page.includes("DATA_DASH_DYNASTY_ONLY")

@@ -146,7 +146,19 @@ const remapped = remapEspnStanding(
   { "espn:old": "person" },
   { 3: "franchise" },
 );
-if (remapped.user_id !== "franchise") fail("franchise map wins over person map");
+if (remapped.user_id !== "person") fail("this year's person wins over the franchise slot");
+const leaver = remapEspnStanding(
+  { season: "2020", user_id: "espn:ricky", roster_id: 6, place: 8, name: "SWIN" },
+  { "espn:shane": "s-sbzy" },
+  { 6: "s-sbzy" },
+);
+if (leaver.user_id !== "espn:ricky") fail("unbridged ESPN owner keeps that year");
+const blank = remapEspnStanding(
+  { season: "2019", roster_id: 9, place: 4, name: "Ghost" },
+  {},
+  { 9: "s-truman" },
+);
+if (blank.user_id !== "s-truman") fail("blank owner still follows an espn-team pin");
 
 const gmWb = [
   { m: 1, r: 1, l: 10, w: 8, t1: 10, t2: 8 },

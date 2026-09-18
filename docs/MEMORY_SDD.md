@@ -331,6 +331,20 @@ the URL** if we add one later.
 /?r=trade&t=<tx>&league=<sleeper_id>&lens=all&src=share
 /?r=pick&pick=<asset_key>&league=…&src=share
 /?r=title&title=2025&league=…&src=share
+/?league=<sleeper_id>&view=data&tile=<door_id>&src=share
+```
+
+Data-tile shares are **member views**, not public receipts. Do not reuse
+`?r=trade`. A gold Share chip sits on every data-set door (home top 4 +
+Your board) and on the open tile. Tapping it runs `shareProofNow` with a
+one-line headline plus the URL so a group text can tap straight back into
+that board. Signed-in members land on the tile. Logged-out `?league=` still
+goes claim / join, then `honorPendingDataTile()` opens the same door.
+
+```text
+GM 1QB · Career net
+Biff34 · +$2,100
+https://…/?league=…&view=data&tile=pot_net&src=share
 ```
 
 Honor existing `?view=trade&t=` and `?tx=` as the same as `r=trade`. Default

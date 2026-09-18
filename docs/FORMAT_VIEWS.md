@@ -103,8 +103,9 @@ Cuckle’s `data/ui/cosmetics.json` is not rewritten by a redraft build.
 `espn_extra_ids`, `yahoo_league_ids`.
 
 Merge: live Sleeper → extra Sleeper → ESPN years Sleeper lacks → Yahoo years
-neither has. Seat map: pin → unique name → franchise → one-for-one parked
-inherit. Two swaps: do not guess.
+neither has. Seat map: pin → unique name → **this year's owner** → franchise only
+when the owner id is blank. Two swaps: do not guess. A later manager
+on an ESPN slot does not inherit earlier managers' careers.
 
 Yahoo client is a stub (`yahoo_status.json` reason `not_configured`) until OAuth.
 ESPN still needs original-LM cookies for private years. Secrets do nothing

@@ -369,6 +369,11 @@
         "first_seen_season": "2025"
       },
       {
+        "name": "HTTR",
+        "kind": "team_name",
+        "first_seen_season": "2024"
+      },
+      {
         "name": "ShaneBrandes11",
         "kind": "espn_display",
         "first_seen_season": "2024"

@@ -69,15 +69,15 @@ const defEnd = page.indexOf("];", defStart);
 const defIds = [...page.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
 
 // 1 Career-first home board
-loop(1, redIds.join(",") === "rs_avg,playoff_n,playoff_avg,pot_net,career_avg,points_king,sacko,past_champions,contender_rate,week_scores,season_place"
+loop(1, redIds.join(",") === "rs_avg,playoff_n,playoff_avg,pot_net,season_place,points_king,sacko,past_champions,contender_rate,week_scores"
   && html.includes('"rs_avg", "playoff_n", "playoff_avg", "pot_net"')
-  && html.includes('"career_avg", "points_king", "sacko", "past_champions"'),
+  && html.includes('"season_place", "points_king", "sacko", "past_champions"'),
   "redraft home leads with RS / playoff / one net pot door");
 
 // 2 Saved-board key bumped so Safari / old seats drop the two-door money board
-loop(2, page.includes("cuckle.data.dash.v5.") && html.includes("cuckle.data.dash.v5.")
-  && !page.includes("cuckle.data.dash.v4.") && !html.includes("cuckle.data.dash.v4."),
-  "seat board key is v5 so the old most-winnings / most-losses board cannot paint GM home");
+loop(2, page.includes("cuckle.data.dash.v6.") && html.includes("cuckle.data.dash.v6.")
+  && !page.includes("cuckle.data.dash.v5.") && !html.includes("cuckle.data.dash.v5."),
+  "seat board key is v6 so the old career-avg plus how-i-finished board cannot paint GM home");
 
 // 3 Stale remote / local boards persist the reset
 loop(3, page.includes("if (stale) saveSeatDataDash(dataDashTiles)")
@@ -165,11 +165,11 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "yearboard20260918183000"')
-  && html.includes('const DATA_V = "yearboard20260918183000"')
-  && sw.includes('chuckle-shell-v280-year-boards')
+loop(10, page.includes('const DATA_V = "finishone20260918171000"')
+  && html.includes('const DATA_V = "finishone20260918171000"')
+  && sw.includes('chuckle-shell-v282-finish-one')
+  && !sw.includes("chuckle-shell-v281-standings-review")
   && !sw.includes("chuckle-shell-v279-po-standings")
-  && !sw.includes("chuckle-shell-v278-po-bracket")
   && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
@@ -216,8 +216,8 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && html.includes("Last place pays $200 extra into the pot")
   && page.includes("3rd/4th from the 3rd-place game")
   && html.includes("3rd/4th from the 3rd-place game")
-  && page.includes("Each year's real final standing")
-  && html.includes("Each year's real final standing")
+  && page.includes("Career average. Three completed seasons minimum")
+  && html.includes("Career average. Three completed seasons minimum")
   && finishes.pot && finishes.pot.sacko === 200
   && finLib.includes("regularSeasonPointsForMp")
   && mpMatchesRsLeader()
@@ -256,7 +256,13 @@ loop(14, yOf("fatassmexican", "2024") && yOf("fatassmexican", "2024").place === 
   && Array.isArray(finishes.years) && finishes.years[0] && finishes.years[0].season === "2025"
   && finishes.years.find((y) => y.season === "2024")?.rows[2]?.name === "kotula69"
   && page.includes("function finishYearBoard(") && html.includes("function finishYearBoard(")
-  && page.includes('["all", "Career avg"]') && html.includes('["all", "Career avg"]'),
+  && page.includes('id === "season_place" && leagueFormat().kind === "redraft"')
+  && html.includes('id === "season_place" && leagueFormat().kind === "redraft"')
+  && page.includes("function finishYearWant(") && html.includes("function finishYearWant(")
+  && page.includes("function finishPlaceSeats(") && html.includes("function finishPlaceSeats(")
+  && page.includes('id === "career_avg" && typeof isRedraftLeague')
+  && html.includes('id === "career_avg" && typeof isRedraftLeague')
+  && page.includes('from === "bracket"') && html.includes('from === "bracket"'),
   "playoff bracket 1-4 from money games; bottom six and sacko stay regular season");
 
 console.log("PASS 14 redraft board loops");

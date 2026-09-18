@@ -71,4 +71,15 @@ if (noGameBy.kotula69.place !== 3 || noGameBy.Tbow00.place !== 4) {
   fail("official incoming 3rd/4th stand when the 3rd-place tape is missing");
 }
 
+const tagged = scores.map((s) => (
+  s.playoff_tier === "WINNERS_CONSOLATION_LADDER" ? { ...s, hunt: true } : s
+));
+const taggedBy = Object.fromEntries(applyRedraftSeason(rows, tagged, "champ").map((r) => [r.name, r]));
+if (taggedBy.kotula69.place !== 3 || taggedBy.Tbow00.place !== 4) {
+  fail("hunt=true 3rd-place tape must not promote semis to finalists");
+}
+if (taggedBy.fatassmexican.place !== 1 || taggedBy.Adizzl3.place !== 2) {
+  fail("title game stays 1-2 when 3rd-place is mis-tagged hunt");
+}
+
 console.log("PASS redraft season: 3rd-place game, RS last place, consolation points out");

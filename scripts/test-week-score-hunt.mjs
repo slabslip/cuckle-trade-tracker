@@ -24,16 +24,16 @@ const GM_2025_WB = [
 const by = huntByWeekFromBracket(GM_2025_WB, 15);
 if (ids(by[15]) !== "8,9,10,11") fail("week 15 hunt should be the four QF seats, not byes: " + ids(by[15]));
 if (ids(by[16]) !== "1,8,11,12") fail("week 16 hunt should be semis, not 5th place: " + ids(by[16]));
-if (ids(by[17]) !== "1,8,11,12") fail("week 17 hunt is title + 3rd place: " + ids(by[17]));
+if (ids(by[17]) !== "8,11") fail("week 17 hunt is the title game only, not 3rd place: " + ids(by[17]));
 if (by[18]) fail("week 18 has no title game");
 const huntWeeks = [15, 16, 17].reduce((n, w) => n + (by[w] ? by[w].size : 0), 0);
-if (huntWeeks !== 12) fail("2025 money hunt is 12 team-weeks, got " + huntWeeks);
+if (huntWeeks !== 10) fail("2025 title-path hunt is 10 team-weeks, got " + huntWeeks);
 if (huntByWeekJson([{ p: 1, r: 3, t1: 0, t2: 0 }], 15)[17]) fail("TBD title game must not write an empty hunt week");
 if (Object.keys(huntByWeekFromBracket([], 15)).length) fail("empty bracket must yield no hunt weeks");
 if (Object.keys(huntByWeekFromBracket(GM_2025_WB, 0)).length) fail("bad playoff_week_start must yield no hunt weeks");
 
 const json = huntByWeekJson(GM_2025_WB, 15);
-if (json[15].join(",") !== "8,9,10,11" || json[17].join(",") !== "1,8,11,12") {
+if (json[15].join(",") !== "8,9,10,11" || json[17].join(",") !== "8,11") {
   fail("huntByWeekJson drifted from the Set map");
 }
 
@@ -43,6 +43,9 @@ if (!scoreIsChampionshipHunt({ phase: "playoff", hunt: true })) fail("title-hunt
 if (scoreIsChampionshipHunt({ phase: "playoff" })) fail("untagged playoff must not count as hunt");
 if (scoreIsChampionshipHunt({ phase: "playoff", hunt: true, points: 9 })) fail("ESPN stub hunt under 20 must not count");
 if (!scoreIsChampionshipHunt({ phase: "playoff", hunt: true, points: 57.1 })) fail("real hunt 57.1 must still count");
+if (scoreIsChampionshipHunt({ phase: "playoff", hunt: true, points: 101, playoff_tier: "WINNERS_CONSOLATION_LADDER" })) {
+  fail("3rd-place must not count as title hunt even when hunt=true");
+}
 
 const tape = {
   as_of: "2026-09-15",

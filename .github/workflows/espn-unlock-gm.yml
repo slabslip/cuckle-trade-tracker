@@ -63,6 +63,7 @@ jobs:
             const w = JSON.parse(fs.readFileSync("data/leagues/1389723418827460608/raw/espn_weekly_scores.json","utf8"));
             const t = JSON.parse(fs.readFileSync("data/leagues/1389723418827460608/raw/espn_titles.json","utf8"));
             console.log("authorized", s.authorized, "cookie", s.cookie, "reason", s.reason);
+            console.log("cookie_debug", JSON.stringify(s.cookie_debug || {}));
             console.log("espn_seasons", s.seasons);
             console.log("tried", JSON.stringify(s.tried || []));
             console.log("weekly_n", w.n || (w.scores || []).length);

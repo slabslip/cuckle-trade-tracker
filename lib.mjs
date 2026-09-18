@@ -121,11 +121,35 @@ export function loadProviders(id = LEAGUE_ID) {
   };
 }
 
+function stripSecretWrap(raw) {
+  let s = String(raw || "").trim();
+  if ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
+function cleanEspnS2(raw) {
+  let s = stripSecretWrap(raw);
+  if (/^espn_s2=/i.test(s)) s = s.replace(/^espn_s2=/i, "").trim();
+  return s;
+}
+
+function cleanEspnSwid(raw) {
+  let s = stripSecretWrap(raw);
+  if (/^swid=/i.test(s)) s = s.replace(/^swid=/i, "").trim();
+  const braced = s.match(/\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}/);
+  if (braced) return braced[0];
+  const bare = s.match(/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/);
+  if (bare) return "{" + bare[0] + "}";
+  return s;
+}
+
 export function espnCookieHeader() {
-  const full = String(process.env.ESPN_COOKIE || "").trim();
+  const full = stripSecretWrap(process.env.ESPN_COOKIE);
   if (full) return full;
-  const s2 = String(process.env.ESPN_S2 || "").trim();
-  const swid = String(process.env.ESPN_SWID || process.env.SWID || "").trim();
+  const s2 = cleanEspnS2(process.env.ESPN_S2 || "");
+  const swid = cleanEspnSwid(process.env.ESPN_SWID || process.env.SWID || "");
   if (!s2 && !swid) return "";
   const parts = [];
   if (s2) parts.push(`espn_s2=${s2}`);
@@ -133,10 +157,22 @@ export function espnCookieHeader() {
   return parts.join("; ");
 }
 
+export function espnCookieDebug() {
+  const s2 = cleanEspnS2(process.env.ESPN_S2 || "");
+  const swid = cleanEspnSwid(process.env.ESPN_SWID || process.env.SWID || "");
+  return {
+    s2_len: s2.length,
+    swid_len: swid.length,
+    swid_uuid: /^\{[0-9A-Fa-f-]{36}\}$/.test(swid),
+  };
+}
+
 export async function espnGet(url) {
   const headers = {
     Accept: "application/json, text/plain, */*",
-    "User-Agent": "Mozilla/5.0 (compatible; ChuckleFantasy/1.0)",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    Referer: "https://fantasy.espn.com/",
+    Origin: "https://fantasy.espn.com",
     "X-Fantasy-Source": "kona",
     "X-Fantasy-Platform": "kona-web-2.0.0",
   };

@@ -4146,7 +4146,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmnet20260918112800";
+    const DATA_V = "dashrev20260918122800";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4224,7 +4224,7 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
       "career_avg", "points_king", "sacko", "past_champions",
-      "contender_rate", "week_scores", "season_place",
+      "contender_rate", "week_scores",
     ];
     const DATA_DASH_REDRAFT_RESEARCH = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5453,21 +5453,19 @@ const html = `<!DOCTYPE html>
 
     function receiptSeasonClaim() {
       if (typeof isRedraftLeague === "function" && isRedraftLeague()
-        && finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats[0]) {
-        const lead = finishesBook.seats[0];
+        && finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length) {
         const years = (finishesBook.seasons || []).slice();
         const oldest = years.length ? years[years.length - 1] : "";
         const newest = years[0] || "";
-        const span = oldest && newest ? (oldest + "–" + newest) : "";
-        const n = Number(lead.n) || 0;
+        const span = oldest && newest ? (oldest === newest ? String(oldest) : (oldest + "–" + newest)) : "";
+        const n = years.length || finishesBook.seats.length;
         return {
           id: "season_place",
           kind: "Season",
-          verdict: (lead.name || "This seat") + " has the best average finish"
-            + (n ? (" over " + n + (n === 1 ? " season" : " seasons")) : "") + ".",
-          who: lead.name || "",
-          print: lead.avg != null ? String(lead.avg) : "—",
-          because: span ? (span + " imported years, ranked by average.") : "Every completed imported year they played.",
+          verdict: "Every completed season, ranked by average finish. No three-year floor.",
+          who: span || "",
+          print: n ? (n + (n === 1 ? " yr" : " yrs")) : "—",
+          because: span ? (span + " imported years. Career average is the three-season floor.") : "One year still counts.",
           shareKind: "title",
           shareId: "",
         };
@@ -6172,8 +6170,12 @@ const html = `<!DOCTYPE html>
           const lead = finishCareerSeats(id)[0];
           if (lead) fig = receiptDoorLeadFig(lead.name, finishCareerMetric(id, lead));
         } else if (id === "season_place") {
-          const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
-          if (lead) fig = receiptDoorLeadFig(lead.name, lead.avg != null ? Number(lead.avg).toFixed(1) : "");
+          const years = (finishesBook && finishesBook.seasons) || [];
+          const n = years.length;
+          const oldest = n ? years[n - 1] : "";
+          const newest = n ? years[0] : "";
+          const span = oldest && newest ? (oldest === newest ? String(oldest) : (oldest + "–" + newest)) : "";
+          if (n) fig = receiptDoorLeadFig(span, n + (n === 1 ? " yr" : " yrs"));
         } else if (id === "week_scores") {
           const high = weekScoresBook && weekScoresBook.all && weekScoresBook.all.high && weekScoresBook.all.high[0];
           if (high) fig = receiptDoorLeadFig(high.name, weekScorePts(high));
@@ -8615,12 +8617,13 @@ const html = `<!DOCTYPE html>
       if (gen !== leagueLoadGen) return;
       const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       if (String(nowId) !== String(wantId)) return;
-      members = membersRaw;
+      members = Array.isArray(membersRaw) ? membersRaw : [];
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
       // and a build with no places sorts to a no-op and keeps the file's own order.
       members.sort((a, b) => (a.place || 99) - (b.place || 99));
       league = leagueRaw;
+      markLeagueBookReady();
       titles = titlesRaw || { titles: [] };
       marks = marksRaw || { seats: {} };
       // News is additive and third-party. A missing, stale or malformed file must cost the news
@@ -10086,10 +10089,12 @@ const html = `<!DOCTYPE html>
     function dataDashRedraftStale(tiles) {
       if (typeof isRedraftLeague !== "function" || !isRedraftLeague()) return false;
       const list = Array.isArray(tiles) ? tiles : [];
+      const oldHowIFinished = "rs_avg,playoff_n,playoff_avg,pot_net,career_avg,points_king,sacko,past_champions,contender_rate,week_scores,season_place";
       return list[0] !== "rs_avg"
         || list.indexOf("playoff_n") < 0
         || list.indexOf("playoff_avg") < 0
-        || list.indexOf("pot_net") < 0;
+        || list.indexOf("pot_net") < 0
+        || list.join(",") === oldHowIFinished;
     }
 
     function dataDashHas(id) {
@@ -10106,7 +10111,7 @@ const html = `<!DOCTYPE html>
         || "";
       const seat = authSeatId() || "";
       if (!leagueId || !seat) return "";
-      return "cuckle.data.dash.v5." + leagueId + "." + seat;
+      return "cuckle.data.dash.v6." + leagueId + "." + seat;
     }
 
     function dataDashReadLocal() {
@@ -11468,9 +11473,8 @@ const html = `<!DOCTYPE html>
       }
       if (id === "season_place") {
         const n = (finishesBook && finishesBook.seasons && finishesBook.seasons.length) || 0;
-        const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
-        return dataDashHead(spec, lead && lead.avg != null ? String(lead.avg) : (n ? (n + " yrs") : "Open"),
-          lead ? ((lead.name || "Lead") + " career avg") : "Average finish");
+        return dataDashHead(spec, n ? (n + " yrs") : "Open",
+          "Every year · no floor");
       }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
@@ -15788,14 +15792,11 @@ const html = `<!DOCTYPE html>
     function renderLeagueHome() {
       // Linear pill owns the bottom. News is a peer tab (Alerts + feed).
       // Each block is isolated so a throw in one tab cannot blank the rest.
-      if (homeTab === "news") newsMarkSeen();
       let chips = "";
       let progress = "";
       let tabBody = "";
       try { chips = homeChips(); } catch (err) { console.error(err); chips = ""; }
-      if (!chips) {
-        try { chips = homeChips(); } catch (err2) { console.error(err2); }
-      }
+      if (!chips) chips = '<nav class="lh-actions" role="tablist" aria-label="League home tabs"></nav>';
       if (homeTab === "teams") {
         try { tabBody = renderTeamsPage(); } catch (err) { console.error(err); tabBody = ""; }
       } else if (homeTab === "ledger") {
@@ -15806,6 +15807,10 @@ const html = `<!DOCTYPE html>
         try { tabBody = renderNewsTab(); } catch (err) { console.error(err); tabBody = ""; }
       } else {
         try { progress = leagueInProgress(); } catch (err) { console.error(err); progress = ""; }
+        if (!progress) progress = '<p class="caption">Home could not load. Open Teams or News.</p>';
+      }
+      if (!tabBody && homeTab !== "home" && homeTab !== "league") {
+        tabBody = '<p class="caption">This tab could not load. Try Home.</p>';
       }
       return chips + (tabBody || progress);
     }
@@ -16473,6 +16478,43 @@ const html = `<!DOCTYPE html>
     function isGmLeague() {
       return String((activeLeague && activeLeague.sleeper_league_id) || "") === GM_LEAGUE_ID;
     }
+    /** Hosted Pages book is loaded — league.json plus at least one seat. */
+    function leagueBookReady() {
+      return !!(league && members && members.length);
+    }
+    /** Client UI only. Does not write Supabase. A live book is ready even if the row still says pending_sync. */
+    function markLeagueBookReady() {
+      if (!leagueBookReady()) return false;
+      const lid = String((activeLeague && activeLeague.sleeper_league_id) || "");
+      if (activeLeague && activeLeague.status !== "ready") {
+        saveActiveLeague(Object.assign({}, activeLeague, { status: "ready" }));
+      }
+      function stamp(row) {
+        if (!row || String(row.sleeper_league_id) !== lid) return row;
+        if (row.status === "error" || row.status === "ready") return row;
+        return Object.assign({}, row, { status: "ready" });
+      }
+      if (lid && memberships && memberships.some(function (m) {
+        return String(m.sleeper_league_id) === lid && m.status !== "ready" && m.status !== "error";
+      })) {
+        saveMemberships(memberships.map(stamp));
+      }
+      if (lid && ownedLeagues && ownedLeagues.length) {
+        ownedLeagues = ownedLeagues.map(stamp);
+      }
+      return true;
+    }
+    function leagueStatusLabel(row) {
+      const st = row && row.status;
+      if (st === "error") return "Sync error";
+      if (st === "ready") return "Ready";
+      const id = String((row && row.sleeper_league_id) || "");
+      if (id === CUCKLE_LEAGUE_ID || id === GM_LEAGUE_ID
+        || (typeof readyAddBook === "function" && readyAddBook(id))) {
+        return "Ready";
+      }
+      return "Sync pending";
+    }
     function calcBrandTitle() {
       if (isGmLeague()) return "#1GM calc";
       if (typeof isRedraftLeague === "function" && isRedraftLeague()) return "Redraft calculator";
@@ -16963,7 +17005,7 @@ const html = `<!DOCTYPE html>
       const uname = (authSession && authSession.username) || "you";
       const memIds = new Set((memberships || []).map((m) => m.sleeper_league_id));
       const rows = (memberships || []).map((m) => {
-        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
+        const st = leagueStatusLabel(m);
         const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
         return '<div class="league-block">'
           + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
@@ -16980,7 +17022,7 @@ const html = `<!DOCTYPE html>
           + "</div>";
       }).join("");
       const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
-        const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+        const st = leagueStatusLabel(o);
         return '<div class="league-block">'
           + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
           + "<span>Commissioner · " + st
@@ -25661,7 +25703,7 @@ const html = `<!DOCTYPE html>
       const adminRows = owned.length
         ? owned.map((o) => {
           const mem = memById[o.sleeper_league_id];
-          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
+          const st = leagueStatusLabel(o);
           return '<div class="app-card">'
             + "<h3>" + esc(o.name) + "</h3>"
             + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
@@ -25868,17 +25910,15 @@ const html = `<!DOCTYPE html>
         paintBottomNav();
         return;
       }
-      if (appScreen === "dash" && activeLeague && activeLeague.status && activeLeague.status !== "ready") {
-        // Any league without a ready sync gets the pending screen, not a broken meter.
-        const hasBook = !!(league && members);
-        if (!hasBook) {
-          paintSettingsBtn();
-          paintBrandHome();
-          paintLeagueSub();
-          paintBottomNav();
-          app.innerHTML = renderPendingLeague();
-          return;
-        }
+      if (appScreen === "dash" && !leagueBookReady()) {
+        // No hosted book yet — pending screen, even if the leagues.status row already says ready.
+        // A live Pages book skips this and never paints the meter-sync strip.
+        paintSettingsBtn();
+        paintBrandHome();
+        paintLeagueSub();
+        paintBottomNav();
+        app.innerHTML = renderPendingLeague();
+        return;
       }
       // Normalize before chrome so brand / tabs match the body. Legacy full-screen
       // doors (teams / news / ledger / datasets) always become league-home tabs —
@@ -25915,7 +25955,7 @@ const html = `<!DOCTYPE html>
           + seatLabel(me.name) + "</h2>"
         : "";
       const seatPlate = tabs.length ? cosmeticsSeatPlateHtml() : "";
-      const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready")
+      const syncNote = (activeLeague && activeLeague.status && activeLeague.status !== "ready" && !leagueBookReady())
         ? '<div class="sync-banner">Meter sync still pending for this league. Showing what is available.</div>'
         : "";
       const nav = (tabs.length
@@ -29409,6 +29449,14 @@ if (inline.includes("const leagueChip") || inline.includes("leagueChip +")
 if (!inline.includes("app.innerHTML = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();")) {
   throw new Error("league dash render must compose syncNote + seatName + seatPlate + nav + body + vote sheets with no caption row");
 }
+if (!inline.includes("function leagueBookReady(")
+  || !inline.includes("function markLeagueBookReady(")
+  || !inline.includes("function leagueStatusLabel(")
+  || !inline.includes("&& !leagueBookReady()")
+  || !inline.includes("if (!leagueBookReady())")
+  || !inline.includes("markLeagueBookReady();")) {
+  throw new Error("hosted book must hide the meter-sync banner and promote UI ready");
+}
 // day-alert-top header row still hosts Pause; keep its min-width guard.
 for (const need of [".day-alert-top .day-alert-h { min-width: 0; }"]) {
   if (!html.includes(need)) throw new Error(`generated stylesheet lost the news header row: ${need}`);
@@ -30391,9 +30439,10 @@ if (!inline.includes("function dataDashHtml(")
     const redStart = inline.indexOf("    const DATA_DASH_REDRAFT = [");
     const redEnd = inline.indexOf("];", redStart);
     const redIds = [...inline.slice(redStart, redEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-    if (redStart < 0 || redIds.length !== 11 || redIds[0] !== "rs_avg"
+    if (redStart < 0 || redIds.length !== 10 || redIds[0] !== "rs_avg"
       || redIds[1] !== "playoff_n" || redIds[2] !== "playoff_avg"
       || redIds[3] !== "pot_net"
+      || redIds.indexOf("season_place") >= 0
       || redIds.indexOf("gross_won") >= 0 || redIds.indexOf("gross_lost") >= 0
       || redIds.indexOf("draft_board") >= 0 || redIds.indexOf("firsts_held") >= 0) {
       throw new Error("DATA_DASH_REDRAFT must lead with RS / playoff / pot doors");
@@ -30417,7 +30466,7 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function loadSeatDataDash(")
     || !inline.includes("function saveSeatDataDash(")
     || !inline.includes("seat_data_dash")
-    || !inline.includes("cuckle.data.dash.v5")
+    || !inline.includes("cuckle.data.dash.v6")
     || !inline.includes("function dataDashIsLegacyBoard(")
     || !inline.includes("function receiptDoorLeadFig(")
     || !inline.includes("function receiptDoorWhoName(")

@@ -148,9 +148,9 @@ Owned by [`generate-page.mjs`](../generate-page.mjs) → `index.html`.
 | Session | `localStorage` Auth tokens + active league + memberships cache |
 | Home list | `league_memberships` ∪ `leagues.created_by = me` |
 | Data load | Prefer `data/leagues/<id>/ui/…`; Cuckle falls back to `data/ui/` |
-| Pending | Non-Cuckle + `status ≠ ready` + no book → pending banner |
+| Pending | `status ≠ ready` **and no hosted book** (`league` + `members.length`) → pending screen. A live Pages book hides the meter-sync strip and treats the client as ready. |
 | Vote write | JWT + `sleeper_league_id` + seat; DB rewrites `voter` |
-| Teams | On open dash, auto-`selectMe` when membership matches a member |
+| Teams | League home on open. Seat via Teams / stats chip. Deep-link `?me=` still honored. |
 
 Dead paths removed: platform-ID signup, Phase 1 CUCK claim UI, open client membership insert.
 
@@ -210,7 +210,7 @@ Do **not** run [`seed-seat-auth.mjs`](../seed-seat-auth.mjs) (retired).
 | Commissioner never claims seat | League on home as commissioner-only; no meter until claim/redeem |
 | Vacant roster / no Sleeper user | No invite for that slot; console shows minted vs `total_rosters` |
 | Vote without membership | Trigger/RLS reject |
-| Non-Cuckle before build | `pending_sync` screen until `build.mjs` + ready |
+| Non-Cuckle before build | `pending_sync` screen until a hosted book is on Pages (or `build.mjs` + ready). A live book hides the meter-sync strip. |
 | Wrong Site URL / Confirm email ON | Signup/session breaks — fix Auth settings |
 
 ---

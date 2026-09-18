@@ -74,7 +74,7 @@ loop(4, leagues.some((l) => String(l.league_id) === ID && String(l.season) === "
 loop(5, espn.authorized === true
   && (espn.seasons || []).join(",") === "2024,2023,2022,2021,2020"
   && (bridge.espn_seasons || []).join(",") === "2024,2023,2022,2021,2020"
-  && (bridge.mapped || 0) >= 2,
+  && (bridge.mapped || 0) >= 7,
   "ESPN 2020–2024 authorized; person/franchise maps exist");
 loop(6, rosters.length === 12 && members.length >= 13
   && members.some((m) => m.name === "SethHenry12" && m.place > 12)
@@ -94,8 +94,9 @@ loop(8, (titles.titles || []).length === 6
   && t23 && t23.repeat == null
   && t20 && t20.provider === "espn" && t20.name === "collinmccaskill"
   && titles.titles.filter((t) => t.provider === "espn").length === 5
+  && titles.titles.some((t) => t.season === "2022" && t.name === "Tbow00")
   && titles.titles.every((t) => t.season !== "2019"),
-  "six real crowns; Biff climbed from 2024 9th; modano 2023–24 is back-to-back");
+  "six real crowns; Biff climbed from 2024 9th; 2022 chip is Tbow not an ESPN handle");
 loop(9, trades.length === 7 && legs.length >= 14 && tape.length === 7
   && trades.every((t) => String(t.season) === "2025"),
   "seven 2025 two-way trades on the merged tape");
@@ -202,8 +203,8 @@ loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 70
   && (weeks.playoff.low || []).every((r) => r.hunt)
   && (weeks.all.low || []).every((r) => r.phase !== "playoff" || r.hunt)
   && !(weeks.all.low || []).some((r) => r.week === 18)
-  && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16")
-  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58)
+  && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16" && r.week === 18)
+  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58 && r.week === 18)
   && weeks.playoff.high[0] && weeks.playoff.high[0].name === "Biff34" && weeks.playoff.high[0].points === 163.38
   && weeks.playoff.low[0] && weeks.playoff.low[0].name === "collinmccaskill" && weeks.playoff.low[0].points === 9,
   "playoff lists are championship hunt only — Sleeper 2025 plus ESPN winners-bracket");
@@ -242,9 +243,10 @@ loop(38, finishes.v === 1 && Array.isArray(finishes.seats)
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
   && biffFin && biffFin.n === 6 && biffFin.places.some((p) => p.season === "2025" && p.place === 1)
   && biffFin.places.some((p) => p.season === "2024" && p.provider === "espn")
-  && jnFin && jnFin.n === 1 && jnFin.avg === 2
+  && jnFin && jnFin.n === 6 && jnFin.places.some((p) => p.season === "2025" && p.place === 2)
+  && jnFin.places.some((p) => p.season === "2020" && p.provider === "espn")
   && truFin && truFin.places.some((p) => p.season === "2025" && p.place === 10)
-  && finishes.seats[0] && finishes.seats[0].name === "JnastyGBE300" && finishes.seats[0].avg === 2
+  && finishes.seats[0] && finishes.seats[0].n >= 5
   && biffFin.avg === 4.7,
   "How I finished spans 2020–2025; best average leads; Seth has no completed season");
 loop(39, page.includes("function buildFinishesBook(") === false

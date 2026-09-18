@@ -7,7 +7,7 @@ crowns are copied over. Views, tiles, titles, calc, and toggle:
 
 | Provider | ID | Years |
 | --- | --- | --- |
-| ESPN (prior) | `35763180` | 2020–2024 imported (2019–2010 are 404s) |
+| ESPN (prior) | `35763180` | 2020–2024 imported. Walk stops at the first 404 — this league has no 2019–2010. |
 | Sleeper (recent + current) | `1389723418827460608` | 2026 live; walks to `1253382148073725952` (2025) |
 
 Canonical key on disk and in the store: the **Sleeper** id.
@@ -40,7 +40,8 @@ does not set the low. 2019–2010 returned 404 — they are not invented.
 
 ESPN league `35763180` is **private**. Cookies are set and 2020–2024 is
 on the book (`espn_status.authorized`). Re-import only if those years
-go stale. 2019–2010 are gone from ESPN (404), not a cookie miss.
+go stale. `espn_from_season` is 2020. A backward walk stops at the first
+404 — do not probe 2019–2010 again. This is GM only, never Cuckle.
 
 ### A. Copy the cookies (Chrome, computer)
 

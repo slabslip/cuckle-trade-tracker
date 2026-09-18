@@ -19,11 +19,37 @@ export function lastToken(s) {
   return n.slice(-8);
 }
 
+export function handleStem(s) {
+  return normName(s).replace(/\d+$/g, "");
+}
+
+export function looksLikeEspnHandle(s) {
+  return /^espnfan/i.test(String(s || "").replace(/[^a-z0-9]/gi, ""));
+}
+
+export function preferredEspnName(member) {
+  const canon = member && member.canonical_name;
+  if (canon && !looksLikeEspnHandle(canon)) return String(canon);
+  const aliases = (member && member.aliases) || [];
+  const names = [canon, ...aliases.map((a) => a && (a.name || a))];
+  const full = names.find((n) => n && /\s/.test(String(n)) && !looksLikeEspnHandle(n));
+  if (full) return String(full).replace(/\s+/g, " ").trim();
+  return canon || "";
+}
+
+function sleeperMatchNames(member) {
+  const out = [member && member.canonical_name];
+  for (const a of (member && member.aliases) || []) {
+    if (a && a.kind === "espn_display") continue;
+    out.push(a && (a.name || a));
+  }
+  return out.filter(Boolean);
+}
+
 function sleeperNameIndex(sleeperMembers) {
   const sleeperByNorm = new Map();
   for (const m of sleeperMembers) {
-    const names = [m.canonical_name, ...((m.aliases || []).map((a) => a.name || a))];
-    for (const name of names) {
+    for (const name of sleeperMatchNames(m)) {
       const n = normName(name);
       if (!n || n.length < 3) continue;
       if (!sleeperByNorm.has(n)) sleeperByNorm.set(n, []);
@@ -66,6 +92,41 @@ export function buildBridge(espnMembers, sleeperMembers, explicit = {}, espnSeat
     for (const name of names) {
       hit = uniqueSleeper(sleeperByNorm, name);
       if (hit) break;
+    }
+    if (!hit) {
+      const stems = new Set(
+        names.map(handleStem).filter((n) => n.length >= 5 && n !== "espnfan" && n !== "espn"),
+      );
+      for (const stem of stems) {
+        const ids = [];
+        for (const [key, list] of sleeperByNorm) {
+          if (handleStem(key) === stem) ids.push(...list);
+        }
+        const uniq = [...new Set(ids)];
+        if (uniq.length === 1) {
+          hit = uniq[0];
+          break;
+        }
+      }
+    }
+    if (!hit) {
+      const lasts = new Set(
+        names
+          .filter((n) => /\s/.test(String(n)))
+          .map((n) => normName(String(n).trim().split(/\s+/).pop()))
+          .filter((n) => n.length >= 5),
+      );
+      for (const last of lasts) {
+        const ids = [];
+        for (const [key, list] of sleeperByNorm) {
+          if (key.includes(last)) ids.push(...list);
+        }
+        const uniq = [...new Set(ids)];
+        if (uniq.length === 1) {
+          hit = uniq[0];
+          break;
+        }
+      }
     }
     if (hit) out[m.user_id] = hit;
   }
@@ -110,7 +171,7 @@ function mergeMembers(sleeper, espn, bridge) {
     if (!byId.has(uid)) {
       byId.set(uid, {
         user_id: uid,
-        canonical_name: m.canonical_name,
+        canonical_name: preferredEspnName(m) || m.canonical_name,
         aliases: [...(m.aliases || [])],
       });
       continue;
@@ -129,12 +190,29 @@ function mergeMembers(sleeper, espn, bridge) {
 function main() {
   const sleeperLeagues = readJson("leagues.json", []) || [];
   const sleeperSeasons = new Set(sleeperLeagues.map((l) => String(l.season)));
-  const sleeperMembers = readJson("members.json", []) || [];
-  const sleeperSeats = readJson("seats.json", []) || [];
-  const sleeperTrades = readJson("trades.json", []) || [];
-  const sleeperLegs = readJson("trade_legs.json", []) || [];
-  const sleeperTape = readJson("trade_tape.json", []) || [];
-  const sleeperAliases = readJson("aliases.json", {}) || {};
+  // members.json / seats.json may already be a prior merge. Only Sleeper
+  // rows are the live people — ESPN ids get rebuilt from espn_*.json.
+  const sleeperMembers = (readJson("members.json", []) || [])
+    .filter((m) => m && !String(m.user_id || "").startsWith("espn:"))
+    .map((m) => ({
+      ...m,
+      aliases: (m.aliases || []).filter((a) => !a || a.kind !== "espn_display"),
+    }));
+  const sleeperSeats = (readJson("seats.json", []) || [])
+    .filter((s) => s && s.provider !== "espn" && !String(s.league_id || "").startsWith("espn:"));
+  const sleeperTrades = (readJson("trades.json", []) || [])
+    .filter((t) => t && t.provider !== "espn");
+  const sleeperLegs = (readJson("trade_legs.json", []) || [])
+    .filter((l) => l && l.provider !== "espn" && !String(l.transaction_id || "").startsWith("espn"));
+  const sleeperTape = (readJson("trade_tape.json", []) || [])
+    .filter((t) => t && t.provider !== "espn");
+  const prevAliases = readJson("aliases.json", {}) || {};
+  const sleeperAliases = {};
+  for (const m of sleeperMembers) {
+    const key = m.canonical_name;
+    if (!key) continue;
+    sleeperAliases[key] = prevAliases[key] || [];
+  }
   const espnStatus = readJson("espn_status.json", { authorized: false });
   const espnMembers = readJson("espn_members.json", []) || [];
   const espnSeats = (readJson("espn_seats.json", []) || [])

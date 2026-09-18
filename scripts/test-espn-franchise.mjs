@@ -27,6 +27,51 @@ if (person["espn:aaa"] !== "s-biff") fail("Biff34 ESPN person should map to Slee
 if (person["espn:old"]) fail("departed manager must not invent a Sleeper seat");
 if (person["espn:zzz"] !== "s-truman") fail("explicit pin must win");
 
+const stemSleeper = [
+  { user_id: "s-z", canonical_name: "ztrain123", aliases: [] },
+  { user_id: "s-k", canonical_name: "kotula69", aliases: [] },
+  { user_id: "s-t", canonical_name: "TaylorJohnson16", aliases: [] },
+];
+const stemEspn = [
+  { user_id: "espn:z", canonical_name: "ztrain12", aliases: [{ name: "Zach Alavi" }] },
+  { user_id: "espn:k", canonical_name: "kotulac27", aliases: [{ name: "chris kotula" }] },
+  { user_id: "espn:j", canonical_name: "Taylor_DJohnson", aliases: [{ name: "Taylor Johnson" }] },
+  { user_id: "espn:gone", canonical_name: "hudmorse", aliases: [{ name: "hud morse" }] },
+];
+const stem = buildBridge(stemEspn, stemSleeper, {}, []);
+if (stem["espn:z"] !== "s-z") fail("ztrain12 stems onto ztrain123");
+if (stem["espn:k"] !== "s-k") fail("kotula last name maps uniquely");
+if (stem["espn:j"] !== "s-t") fail("Taylor Johnson last name maps uniquely");
+if (stem["espn:gone"]) fail("hudmorse must stay ESPN-only until pinned");
+
+const fanSleeper = [{ user_id: "s-tbow", canonical_name: "Tbow00", aliases: [{ name: "espnfan0776830917" }, { name: "Thatcher Bowers" }] }];
+const fanEspn = [
+  { user_id: "espn:nut", canonical_name: "ESPNFAN1357922193", aliases: [{ name: "Austin Durham" }] },
+  { user_id: "espn:swin", canonical_name: "ESPNfan7396258614", aliases: [{ name: "Ricky Swink" }] },
+  { user_id: "espn:tb", canonical_name: "espnfan0776830917", aliases: [{ name: "Thatcher Bowers" }] },
+];
+const fans = buildBridge(fanEspn, fanSleeper, {}, []);
+if (fans["espn:tb"] !== "s-tbow") fail("Thatcher handle still maps to Tbow00");
+if (fans["espn:nut"]) fail("Austin Durham must not ride the espnfan stem onto Tbow");
+if (fans["espn:swin"]) fail("Ricky Swink must not ride the espnfan stem onto Tbow");
+
+const dirtyTbow = [{
+  user_id: "s-tbow2",
+  canonical_name: "Tbow00",
+  aliases: [
+    { name: "Tbow (2022 Champ/2024 MP)", kind: "team_name" },
+    { name: "Austin Durham", kind: "espn_display" },
+    { name: "Ricky Swink", kind: "espn_display" },
+  ],
+}];
+const dirtyEspn = [
+  { user_id: "espn:nut2", canonical_name: "Austin Durham", aliases: [{ name: "Austin Durham" }] },
+  { user_id: "espn:tb2", canonical_name: "espnfan0776830917", aliases: [{ name: "Thatcher Bowers" }] },
+];
+const dirty = buildBridge(dirtyEspn, dirtyTbow, { "espn:tb2": "s-tbow2" }, []);
+if (dirty["espn:nut2"]) fail("polluted espn_display aliases on Tbow must not steal Durham");
+if (dirty["espn:tb2"] !== "s-tbow2") fail("explicit Tbow pin still wins");
+
 const franchise = buildFranchiseMap(espnSeats, person, { "espn-team:9": "s-truman" });
 if (franchise["3"] !== "s-biff") fail("team 3 franchise should follow latest matched owner: " + franchise["3"]);
 if (franchise["9"] !== "s-truman") fail("espn-team pin should attach that slot");

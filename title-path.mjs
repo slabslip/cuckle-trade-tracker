@@ -847,13 +847,31 @@ async function main() {
   if (!Array.isArray(members) || !members.length) {
     throw new Error("members.json is missing or empty -- run revalue.mjs before title-path.mjs");
   }
+  const personBridge = (bridgeDoc && bridgeDoc.bridge) || {};
+  const rawMembers = readJson("members.json", []) || [];
+  const rawById = Object.fromEntries(rawMembers.map((m) => [String(m.user_id), m]));
+  const pruned = members.filter((m) => {
+    const uid = String(m.user_id || "");
+    if (!uid.startsWith("espn:")) return true;
+    const mapped = personBridge[uid];
+    return !mapped || mapped === uid;
+  });
+  for (const raw of rawMembers) {
+    const uid = String(raw.user_id || "");
+    if (!uid.startsWith("espn:")) continue;
+    if (personBridge[uid] && personBridge[uid] !== uid) continue;
+    if (pruned.some((m) => String(m.user_id) === uid)) continue;
+    pruned.push({ user_id: uid, name: raw.canonical_name });
+  }
   const standByUser = Object.fromEntries(standings.filter((r) => r.user_id).map((r) => [r.user_id, r]));
   const absent = [];
-  const seated = members.map((m) => {
-    const row = standByUser[m.user_id];
-    if (row) return { ...m, place: row.place, place_season: lastSeason };
-    absent.push(m.name);
-    return { ...m, place: null, place_season: lastSeason };
+  const seated = pruned.map((m) => {
+    const raw = rawById[String(m.user_id)];
+    const named = raw && raw.canonical_name ? { ...m, name: raw.canonical_name } : m;
+    const row = standByUser[named.user_id];
+    if (row) return { ...named, place: row.place, place_season: lastSeason };
+    absent.push(named.name);
+    return { ...named, place: null, place_season: lastSeason };
   });
   // A manager who joined after last season has no finish. Park them after everyone who does,
   // by name, rather than guessing a place for them.

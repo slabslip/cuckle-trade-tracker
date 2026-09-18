@@ -36,46 +36,8 @@
     {
       "season": 2020,
       "status": 200
-    },
-    {
-      "season": 2019,
-      "status": 404
-    },
-    {
-      "season": 2018,
-      "status": 404
-    },
-    {
-      "season": 2017,
-      "status": 404
-    },
-    {
-      "season": 2016,
-      "status": 404
-    },
-    {
-      "season": 2015,
-      "status": 404
-    },
-    {
-      "season": 2014,
-      "status": 404
-    },
-    {
-      "season": 2013,
-      "status": 404
-    },
-    {
-      "season": 2012,
-      "status": 404
-    },
-    {
-      "season": 2011,
-      "status": 404
-    },
-    {
-      "season": 2010,
-      "status": 404
     }
-  ]
+  ],
+  "stopped_at": 2019,
+  "stop_reason": "league_missing_before_2020"
 }

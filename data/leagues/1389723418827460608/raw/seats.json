@@ -148,7 +148,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 1,
-    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "owner_id": "1132151320410140672",
     "team_name": "ALAV"
   },
   {
@@ -156,7 +156,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 2,
-    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "owner_id": "1259573343355404288",
     "team_name": "GILL"
   },
   {
@@ -172,7 +172,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 4,
-    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "owner_id": "719995760556478464",
     "team_name": "JOHN"
   },
   {
@@ -212,7 +212,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 9,
-    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "owner_id": "1132151393051095040",
     "team_name": "TB"
   },
   {
@@ -228,7 +228,7 @@
     "provider": "espn",
     "season": "2024",
     "roster_id": 11,
-    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "owner_id": "740721014035660800",
     "team_name": "KOTU"
   },
   {
@@ -244,7 +244,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 1,
-    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "owner_id": "1132151320410140672",
     "team_name": "ALAV"
   },
   {
@@ -252,7 +252,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 2,
-    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "owner_id": "1259573343355404288",
     "team_name": "GILL"
   },
   {
@@ -268,7 +268,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 4,
-    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "owner_id": "719995760556478464",
     "team_name": "JOHN"
   },
   {
@@ -308,7 +308,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 9,
-    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "owner_id": "1132151393051095040",
     "team_name": "TB"
   },
   {
@@ -324,7 +324,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 11,
-    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "owner_id": "740721014035660800",
     "team_name": "KOTU"
   },
   {
@@ -332,7 +332,7 @@
     "provider": "espn",
     "season": "2023",
     "roster_id": 12,
-    "owner_id": "espn:{F3C43C4E-029B-4774-B558-02D6531A61B0}",
+    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
     "team_name": "AB"
   },
   {
@@ -340,7 +340,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 1,
-    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "owner_id": "1132151320410140672",
     "team_name": "ALAV"
   },
   {
@@ -348,7 +348,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 2,
-    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "owner_id": "1259573343355404288",
     "team_name": "GILL"
   },
   {
@@ -364,7 +364,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 4,
-    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "owner_id": "719995760556478464",
     "team_name": "JOHN"
   },
   {
@@ -404,7 +404,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 9,
-    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "owner_id": "1132151393051095040",
     "team_name": "TB"
   },
   {
@@ -420,7 +420,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 11,
-    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "owner_id": "740721014035660800",
     "team_name": "KOTU"
   },
   {
@@ -428,7 +428,7 @@
     "provider": "espn",
     "season": "2022",
     "roster_id": 12,
-    "owner_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
     "team_name": "MORS"
   },
   {
@@ -436,7 +436,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 1,
-    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "owner_id": "1132151320410140672",
     "team_name": "ALAV"
   },
   {
@@ -444,7 +444,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 2,
-    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "owner_id": "1259573343355404288",
     "team_name": "GILL"
   },
   {
@@ -460,7 +460,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 4,
-    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "owner_id": "719995760556478464",
     "team_name": "JOHN"
   },
   {
@@ -500,7 +500,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 9,
-    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "owner_id": "1132151393051095040",
     "team_name": "TB"
   },
   {
@@ -516,7 +516,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 11,
-    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "owner_id": "740721014035660800",
     "team_name": "KOTU"
   },
   {
@@ -524,7 +524,7 @@
     "provider": "espn",
     "season": "2021",
     "roster_id": 12,
-    "owner_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
     "team_name": "MORS"
   },
   {
@@ -532,7 +532,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 1,
-    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "owner_id": "1132151320410140672",
     "team_name": "ALAV"
   },
   {
@@ -540,7 +540,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 2,
-    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "owner_id": "1259573343355404288",
     "team_name": "GILL"
   },
   {
@@ -556,7 +556,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 4,
-    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "owner_id": "719995760556478464",
     "team_name": "JOHN"
   },
   {
@@ -596,7 +596,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 9,
-    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "owner_id": "1132151393051095040",
     "team_name": "TB"
   },
   {
@@ -612,7 +612,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 11,
-    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "owner_id": "740721014035660800",
     "team_name": "KOTU"
   },
   {
@@ -620,7 +620,7 @@
     "provider": "espn",
     "season": "2020",
     "roster_id": 12,
-    "owner_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
     "team_name": "MORS"
   }
 ]

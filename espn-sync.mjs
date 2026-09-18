@@ -92,6 +92,14 @@ function memberId(raw) {
   return id != null ? `espn:${id}` : null;
 }
 
+/** ESPN default handles (espnfan…) are not how a league knows someone. Prefer first + last. */
+function espnPersonLabel(displayName, firstName, lastName, fallback) {
+  const full = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const handle = String(displayName || "").trim();
+  if (full && /^espnfan/i.test(handle)) return full;
+  return handle || full || fallback || "";
+}
+
 function teamOwnerId(team, membersBySwid) {
   const primary = team && (team.primaryOwner || (team.owners && team.owners[0]));
   if (primary && membersBySwid.has(primary)) return membersBySwid.get(primary);
@@ -186,7 +194,7 @@ function parseMembers(body, season) {
     rows.push({
       user_id: uid,
       espn_id: m.id != null ? String(m.id) : null,
-      canonical_name: m.displayName || [m.firstName, m.lastName].filter(Boolean).join(" ") || uid,
+      canonical_name: espnPersonLabel(m.displayName, m.firstName, m.lastName, uid),
       aliases: [
         m.displayName,
         m.firstName,
@@ -395,6 +403,13 @@ async function main() {
     if (got.status === 401 || got.status === 403) {
       sawAuthBlock = true;
       continue;
+    }
+    // Walking backward: first 404 after a real year means the league does not
+    // exist further back. Do not probe 2010–2018 on a 2020-born book.
+    if (got.status === 404 && status.seasons.length) {
+      status.stopped_at = year;
+      status.stop_reason = "league_missing_before_" + status.seasons[status.seasons.length - 1];
+      break;
     }
     if (!got.body) continue;
     status.authorized = true;

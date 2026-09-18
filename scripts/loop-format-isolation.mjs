@@ -34,8 +34,9 @@ loop(2, gm.format && gm.format.kind === "redraft" && gm.format.format_key === "1
 loop(3, page.includes('const DATA_DASH_DEFAULT = [')
   && page.includes('"my_trades", "league_trades", "my_draft", "league_draft", "profit_loss"')
   && page.includes("const DATA_DASH_REDRAFT = [")
-  && page.includes('"season_place", "week_scores", "past_champions"'),
-  "dynasty default board unchanged; redraft board is finishes-first");
+  && page.includes('"career_avg", "past_champions", "points_king", "contender_rate"')
+  && page.includes('"sacko", "week_scores", "season_place"'),
+  "dynasty default board unchanged; redraft board is career-first");
 loop(4, page.includes("function resetLeagueSession(")
   && page.includes("function isRedraftLeague(")
   && page.includes("function deskCuts(")

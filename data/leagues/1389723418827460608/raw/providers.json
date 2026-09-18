@@ -9,6 +9,6 @@
   "espn_through_season": 2024,
   "kind": "redraft",
   "name": "Gm 2026 LLJ",
-  "espn_from_season": 2010,
-  "note": "ESPN prior years + Sleeper 2025-2026. Set ESPN_S2 and ESPN_SWID to unlock ESPN seasons."
+  "espn_from_season": 2020,
+  "note": "ESPN 2020-2024 + Sleeper 2025-2026. This league has no 2019-2010 seasons (404). Do not walk those years."
 }

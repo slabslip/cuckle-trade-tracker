@@ -74,7 +74,7 @@ loop(4, leagues.some((l) => String(l.league_id) === ID && String(l.season) === "
 loop(5, espn.authorized === true
   && (espn.seasons || []).join(",") === "2024,2023,2022,2021,2020"
   && (bridge.espn_seasons || []).join(",") === "2024,2023,2022,2021,2020"
-  && (bridge.mapped || 0) >= 2,
+  && (bridge.mapped || 0) >= 12,
   "ESPN 2020–2024 authorized; person/franchise maps exist");
 loop(6, rosters.length === 12 && members.length >= 13
   && members.some((m) => m.name === "SethHenry12" && m.place > 12)
@@ -89,13 +89,14 @@ const t20 = (titles.titles || []).find((t) => t.season === "2020");
 loop(8, (titles.titles || []).length === 6
   && t25 && t25.name === "Biff34" && t25.record && t25.record.fpts_rank === 1
   && t25.prior && Number(t25.prior.place) === 9 && String(t25.prior.season) === "2024"
-  && t24 && t24.provider === "espn" && t24.name === "modano913"
+  && t24 && t24.provider === "espn" && t24.name === "fatassmexican"
   && t24.repeat === "repeat" && t24.record && t24.record.fpts_rank === 3
   && t23 && t23.repeat == null
   && t20 && t20.provider === "espn" && t20.name === "collinmccaskill"
   && titles.titles.filter((t) => t.provider === "espn").length === 5
+  && titles.titles.some((t) => t.season === "2022" && t.name === "Tbow00")
   && titles.titles.every((t) => t.season !== "2019"),
-  "six real crowns; Biff climbed from 2024 9th; modano 2023–24 is back-to-back");
+  "six real crowns; Biff climbed from 2024 9th; 2024/2023 chips are fatassmexican");
 loop(9, trades.length === 7 && legs.length >= 14 && tape.length === 7
   && trades.every((t) => String(t.season) === "2025"),
   "seven 2025 two-way trades on the merged tape");
@@ -124,10 +125,13 @@ loop(15, weekly.v >= 3 && weekly.n === weekly.n_regular + weekly.n_playoff
   "weekly tape has Sleeper 2025–2026 plus ESPN 2020–2024");
 loop(16, weeks.v >= 2 && weeks.n >= 1000
   && weeks.all && weeks.all.high && weeks.all.high[0] && weeks.all.high[0].points >= 180
+  && weeks.all.high[0].name === "Adizzl3"
   && weeks.regular && weeks.regular.low && weeks.regular.low[0] && weeks.regular.low[0].points <= 28.34
   && weeks.regular.low[0].phase === "regular"
-  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].hunt === true,
-  "week-scores high/low use imported ESPN tape; regular floor can beat the old Sleeper 34.82");
+  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].name === "TaylorJohnson16"
+  && weeks.all.low[0].points === 28.34
+  && !(weeks.all.low || []).some((r) => r.points === 9 && r.name === "collinmccaskill"),
+  "week-scores high/low use imported ESPN tape; 9-pt ESPN stub is not the league low");
 loop(17, (calc.players || []).length >= 180
   && Object.keys(calcOwners).length === 12
   && Object.keys(calcOwners).every((id) => rosterOwners.has(id))
@@ -202,11 +206,12 @@ loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 70
   && (weeks.playoff.low || []).every((r) => r.hunt)
   && (weeks.all.low || []).every((r) => r.phase !== "playoff" || r.hunt)
   && !(weeks.all.low || []).some((r) => r.week === 18)
-  && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16")
-  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58)
+  && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16" && r.week === 18)
+  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58 && r.week === 18)
   && weeks.playoff.high[0] && weeks.playoff.high[0].name === "Biff34" && weeks.playoff.high[0].points === 163.38
-  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "collinmccaskill" && weeks.playoff.low[0].points === 9,
-  "playoff lists are championship hunt only — Sleeper 2025 plus ESPN winners-bracket");
+  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "Tbow00" && weeks.playoff.low[0].points === 57.1
+  && !(weeks.playoff.low || []).some((r) => r.name === "collinmccaskill" && r.points === 9),
+  "playoff lists are championship hunt only — ESPN stub 9-pt week is out");
 loop(34, page.includes("championship hunt only") && page.includes("title hunt")
   && page.includes("still hunting the title"),
   "Week scores copy drops out-of-hunt playoff weeks");
@@ -235,18 +240,22 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
 const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
 const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
-loop(38, finishes.v === 1 && Array.isArray(finishes.seats)
+loop(38, finishes.v === 2 && Array.isArray(finishes.seats)
+  && finishes.career_floor === 3
   && (finishes.seasons || []).includes("2025")
   && (finishes.seasons || []).includes("2020")
   && !(finishes.seasons || []).includes("2026")
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
   && biffFin && biffFin.n === 6 && biffFin.places.some((p) => p.season === "2025" && p.place === 1)
   && biffFin.places.some((p) => p.season === "2024" && p.provider === "espn")
-  && jnFin && jnFin.n === 1 && jnFin.avg === 2
+  && biffFin.fpts_avg != null && biffFin.top6_n === 4 && biffFin.last_n === 0
+  && jnFin && jnFin.n === 6 && jnFin.places.some((p) => p.season === "2025" && p.place === 2)
+  && jnFin.places.some((p) => p.season === "2020" && p.provider === "espn")
   && truFin && truFin.places.some((p) => p.season === "2025" && p.place === 10)
-  && finishes.seats[0] && finishes.seats[0].name === "JnastyGBE300" && finishes.seats[0].avg === 2
+  && truFin.last_n === 0
+  && finishes.seats[0] && finishes.seats[0].name === "Biff34" && finishes.seats[0].n === 6
   && biffFin.avg === 4.7,
-  "How I finished spans 2020–2025; best average leads; Seth has no completed season");
+  "How I finished spans 2020–2025; career fields ship; Seth has no completed season");
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
@@ -256,14 +265,21 @@ loop(39, page.includes("function buildFinishesBook(") === false
   "How I finished door reads finishes.json and prints season count under each name");
 loop(40, page.includes("const DATA_REPORTS = [")
   && (page.match(/id: "season_place"/g) || []).length >= 1
+  && page.includes('id: "career_avg"')
+  && page.includes('id: "points_king"')
+  && page.includes('id: "contender_rate"')
+  && page.includes('id: "sacko"')
+  && page.includes('"career_avg", "past_champions", "points_king", "contender_rate"')
+  && page.includes("function dataDashRedraftStale(")
+  && page.includes("function finishCareerClaim(")
   && !page.includes('id: "avg_finish"')
   && page.includes('"past_champions", "season_place", "vs_you"'),
-  "average finish lives on the existing How I finished door, not a 33rd catalog id");
+  "redraft home is career tiles; dynasty default board stays the 13 doors");
 
 const cosmetics = load(`${ui}/cosmetics.json`, { unlocks: {} });
 const unlocks = cosmetics.unlocks || {};
 const biffUnlock = unlocks["1132355027018035200"] || {};
-const poopUnlock = unlocks["espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}"] || {};
+const poopUnlock = unlocks["741001884449525760"] || {};
 const collinUnlock = unlocks["1132552110328983552"] || {};
 const truUnlock = unlocks["458342725222133760"] || {};
 const dizUnlock = unlocks["1132146625205567488"] || {};
@@ -276,4 +292,17 @@ loop(41, biffUnlock.climber && biffUnlock.champion
   && (cosmetics.catalog || []).some((c) => c.id === "inaugural" && !/\(2019\)/.test(c.how || "")),
   "titles/emblems rebuilt: climber, repeat, inaugural; Sacko is last place not 10th");
 
-console.log("PASS 41 Gm dataset loops");
+const adizz = (finishes.seats || []).find((s) => s.name === "Adizzl3");
+const tbow = (finishes.seats || []).find((s) => s.name === "Tbow00");
+const ztrain = (finishes.seats || []).find((s) => s.name === "ztrain123");
+const tully = (finishes.seats || []).find((s) => s.name === "fatassmexican");
+loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3
+  && tbow && tbow.fpts_avg >= 1500
+  && ztrain && ztrain.last_n === 2
+  && tully && tully.titles_n === 2
+  && page.includes("Three completed seasons minimum")
+  && page.includes("Worst place that year, not 10th")
+  && page.includes("dataDashRedraftStale"),
+  "career tiles after name pins: Biff floor-average, Tbow points, Adizzl3 contender, ztrain sackos");
+
+console.log("PASS 42 Gm dataset loops");

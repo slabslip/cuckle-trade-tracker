@@ -4130,7 +4130,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmhist20260918030000";
+    const DATA_V = "gmbeef20260918043000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4206,32 +4206,30 @@
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_DASH_REDRAFT = [
-      "season_place", "week_scores", "past_champions", "firsts_held", "uninsured",
-      "my_trades", "league_trades", "my_draft", "league_draft", "vs_you",
-      "profit_loss", "available_cuffs", "passed_around",
+      "career_avg", "past_champions", "points_king", "contender_rate",
+      "sacko", "week_scores", "season_place",
     ];
     const DATA_DASH_REDRAFT_RESEARCH = [
-      "week_scores", "uninsured", "available_cuffs", "firsts_held", "season_place",
-      "past_champions", "my_trades", "passed_around", "least_traded", "forever",
-      "cuffs_board", "fill_holes",
+      "career_avg", "points_king", "contender_rate", "sacko",
+      "week_scores", "season_place", "past_champions",
     ];
     const DATA_DASH_DYNASTY_ONLY = [
       "stash_young", "draft_board", "held_picks", "widest_clock", "seat_aging", "seat_run",
+      "firsts_held", "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
+      "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
+      "fill_holes", "move_extras", "my_block", "league_block", "block_fits",
+      "vs_you", "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
-      firsts_held: { lab: "Firsts still here", why: "This season's first-round players still on that roster." },
-      forever: { lab: "Still here", why: "Drafted this season and never left that roster." },
-      profit_loss: { lab: "This season P/L", why: "Held is still on this roster. Sold is gone this year." },
-      passed_around: { lab: "Moved this season", why: "Players who changed teams the most this year." },
+      career_avg: { lab: "Career average", why: "Average finish. Three completed seasons minimum so one year cannot lead." },
+      past_champions: { lab: "Who won the year", why: "Every real crown on this book. Host year tagged." },
+      points_king: { lab: "Points king", why: "Highest average points per season. Three seasons minimum." },
+      contender_rate: { lab: "Contender rate", why: "Top-six finishes over seasons played. Three seasons minimum." },
+      sacko: { lab: "Sacko", why: "Last place in a completed year — worst place that season, not 10th." },
+      week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
+      season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
-      available_cuffs: { lab: "Wire cuffs", why: "Free-agent backups, your holes first." },
-      uninsured: { lab: "No backup", why: "Starters whose NFL cuff is not on a roster." },
-      week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
-      season_place: { lab: "How I finished", why: "Career average across every completed imported year they played." },
-      past_champions: { lab: "Who won the year", why: "Every real crown on this book. Host year tagged." },
-      fill_holes: { lab: "Who fills your lineup", why: "Get a starter at a hole. This season only." },
-      move_extras: { lab: "Who wants your extras", why: "Move a surplus starter this season." },
     };
     const DATA_REPORTS = [
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
@@ -4265,6 +4263,10 @@
       { id: "my_draft", lab: "My Draft Picks", desk: "lists", group: "memory", size: "full", why: "Used, traded away, and traded in — with a grade." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Every completed season they played, ranked by average finish." },
+      { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
+      { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Three seasons minimum." },
+      { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
+      { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last-place seasons. Worst place that year, not 10th." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
@@ -5486,6 +5488,106 @@
       };
     }
 
+    function finishSeats() {
+      return (finishesBook && Array.isArray(finishesBook.seats)) ? finishesBook.seats : [];
+    }
+
+    function finishCareerFloorN() {
+      const n = finishesBook && Number(finishesBook.career_floor);
+      return Number.isFinite(n) && n > 0 ? n : 3;
+    }
+
+    function finishCareerFloor() {
+      const floor = finishCareerFloorN();
+      return finishSeats().filter(function (s) { return (Number(s.n) || 0) >= floor; });
+    }
+
+    function finishPointsKing() {
+      return finishCareerFloor().filter(function (s) { return s.fpts_avg != null; }).slice().sort(function (a, b) {
+        const pf = (Number(b.fpts_avg) || 0) - (Number(a.fpts_avg) || 0);
+        if (pf) return pf;
+        if ((b.n || 0) !== (a.n || 0)) return (b.n || 0) - (a.n || 0);
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      });
+    }
+
+    function finishContender() {
+      return finishCareerFloor().slice().sort(function (a, b) {
+        const rate = (Number(b.contender) || 0) - (Number(a.contender) || 0);
+        if (rate) return rate;
+        if ((b.n || 0) !== (a.n || 0)) return (b.n || 0) - (a.n || 0);
+        return (Number(a.avg) || 99) - (Number(b.avg) || 99);
+      });
+    }
+
+    function finishSacko() {
+      return finishSeats().filter(function (s) { return (Number(s.last_n) || 0) > 0; }).slice().sort(function (a, b) {
+        if ((b.last_n || 0) !== (a.last_n || 0)) return (b.last_n || 0) - (a.last_n || 0);
+        if ((b.n || 0) !== (a.n || 0)) return (b.n || 0) - (a.n || 0);
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      });
+    }
+
+    function finishCareerSeats(id) {
+      if (id === "career_avg") return finishCareerFloor();
+      if (id === "points_king") return finishPointsKing();
+      if (id === "contender_rate") return finishContender();
+      if (id === "sacko") return finishSacko();
+      return finishSeats();
+    }
+
+    function finishCareerMetric(id, seat) {
+      if (!seat) return "—";
+      if (id === "points_king") return seat.fpts_avg != null ? String(Math.round(Number(seat.fpts_avg))) : "—";
+      if (id === "contender_rate") return seat.contender != null ? (Number(seat.contender).toFixed(1) + "%") : "—";
+      if (id === "sacko") return String(Number(seat.last_n) || 0);
+      return seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
+    }
+
+    function finishCareerClaim(id) {
+      const spec = dataDashById(id);
+      const seats = finishCareerSeats(id);
+      const lead = seats[0];
+      const floor = finishCareerFloorN();
+      const years = (finishesBook && finishesBook.seasons) || [];
+      const span = years.length ? (years[years.length - 1] + "–" + years[0]) : "";
+      if (!lead) {
+        return {
+          id: id,
+          kind: "Who",
+          verdict: "No completed seasons on this book yet.",
+          who: spec ? spec.lab : "",
+          print: "—",
+          because: span || "Imported years only.",
+          shareKind: "title",
+          shareId: "",
+        };
+      }
+      let verdict = (lead.name || "This seat") + " has the best average finish over " + lead.n + " seasons.";
+      let because = span ? (span + ". " + floor + " seasons minimum.") : (floor + " seasons minimum.");
+      if (id === "points_king") {
+        verdict = (lead.name || "This seat") + " scored the most points per season.";
+        because = span ? (span + ". Average PF, " + floor + " seasons minimum.") : ("Average PF, " + floor + " seasons minimum.");
+      } else if (id === "contender_rate") {
+        verdict = (lead.name || "This seat") + " finished top six " + (lead.top6_n || 0) + " of " + lead.n + " seasons.";
+        because = "Top six / seasons played. " + floor + " seasons minimum.";
+      } else if (id === "sacko") {
+        const yearsLine = (lead.last_years || []).join(" · ");
+        verdict = (lead.name || "This seat") + " has " + lead.last_n + (lead.last_n === 1 ? " last-place season." : " last-place seasons.");
+        because = yearsLine ? ("Last in " + yearsLine + ".") : "Worst place that year, not 10th.";
+      }
+      return {
+        id: id,
+        kind: "Who",
+        verdict: verdict,
+        who: lead.name || "",
+        print: finishCareerMetric(id, lead),
+        because: because,
+        shareKind: "title",
+        shareId: "",
+      };
+    }
+
     function weekScorePhaseKey() {
       const f = receiptDoorFilter;
       if (f === "regular" || f === "playoff") return f;
@@ -5554,6 +5656,9 @@
           shareKind: "trade",
           shareId: row ? row.transaction_id : "",
         };
+      }
+      if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+        return finishCareerClaim(id);
       }
       if (id === "week_scores") {
         const high = weekScoreRows("high", "all")[0];
@@ -5803,7 +5908,10 @@
       if (id === "forever" || id === "passed_around" || id === "least_traded") {
         return "A player, a pick, a seat";
       }
-      if (id === "season_place") return "A seat, an average, a year";
+      if (id === "season_place" || id === "career_avg") return "A seat, an average, a year";
+      if (id === "points_king") return "A seat, points, a year";
+      if (id === "contender_rate") return "A seat, top six, a year";
+      if (id === "sacko") return "A seat, last place, a year";
       if (id === "past_champions") return "A year, a seat";
       if (id === "vs_you") return "A name";
       if (id === "week_scores") return "A seat, a week, a year";
@@ -5819,6 +5927,7 @@
       if (id === "my_draft" || id === "league_trades") return false;
       if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
+      if (key === "career_avg" || key === "points_king" || key === "contender_rate" || key === "sacko") return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
       if (key === "league_draft" && !receiptDraftSeat) return false;
@@ -5828,6 +5937,7 @@
     function receiptIsDoor(id) {
       const canon = receiptDoorCanon(id);
       if (id === "season_title" || canon === "season_place") return true;
+      if (canon === "career_avg" || canon === "points_king" || canon === "contender_rate" || canon === "sacko") return true;
       if (id === "draft_marks" || id === "held_firsts") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -5856,6 +5966,10 @@
         my_picks: '<path d="M6 20V5h8l3 3v12H6z"/><path d="M9 10h6M9 14h4M9 18h5"/>',
         past_champions: '<path d="M4 16l3.2-8 4.8 4.5L16.8 8 20 16H4z"/><path d="M5 19h14"/>',
         season_place: '<path d="M4 14h5v6H4zM9.5 8h5v12h-5zM15 12h5v8h-5z"/>',
+        career_avg: '<path d="M4 16h5v4H4zM9.5 10h5v10h-5zM15 6h5v14h-5z"/>',
+        points_king: '<path d="M12 3.4l2.2 5.2 5.6.8-4.1 3.9.9 5.8L12 16.4 7.4 19.1l.9-5.8-4.1-3.9 5.6-.8z"/>',
+        contender_rate: '<circle cx="12" cy="12" r="7.2"/><path d="M12 8v4.2l2.6 1.6"/>',
+        sacko: '<path d="M7 9v8M4.8 14.6L7 17l2.2-2.4"/><path d="M17 15V7M14.8 9.4L17 7l2.2 2.4"/>',
         vs_you: '<circle cx="8" cy="8" r="2.4"/><circle cx="16" cy="8" r="2.4"/><path d="M3.8 18c.8-3 2.8-4.2 4.2-4.2S12 15 12.8 18M11.2 18c.8-3 2.8-4.2 4.2-4.2S20 15 20.2 18"/>',
         firsts_held: '<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M8.5 7v10M12 10.5h5"/>',
         week_scores: '<path d="M7 15V7M4.8 9.4L7 7l2.2 2.4"/><path d="M17 9v8M14.8 14.6L17 17l2.2-2.4"/>',
@@ -5877,6 +5991,9 @@
         if (id === "past_champions") {
           const n = ((titles && titles.titles) || []).length;
           if (n) fig = '<span class="door-fig">' + n + "</span>";
+        } else if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+          const lead = finishCareerSeats(id)[0];
+          if (lead) fig = '<span class="door-fig">' + esc(finishCareerMetric(id, lead)) + "</span>";
         } else if (id === "season_place") {
           const n = (finishesBook && finishesBook.seasons && finishesBook.seasons.length) || 0;
           if (n) fig = '<span class="door-fig">' + n + " yrs</span>";
@@ -6725,6 +6842,33 @@
             + '<div class="margin">' + esc(avg) + "</div></div></div>";
         }).join("");
       }
+      if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+        return finishCareerSeats(id).filter(function (s) {
+          const years = (s.places || []).map(function (p) {
+            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
+          });
+          return hit([s.name, s.avg, s.n, s.fpts_avg, s.contender, s.last_n, "season", "seasons"].concat(years).concat(s.last_years || []));
+        }).map(function (s, i) {
+          const n = Number(s.n) || 0;
+          const count = n === 1 ? "1 season" : (n + " seasons");
+          let sub = (s.places || []).map(function (p) {
+            return (p.season || "") + " " + (p.place ? nth(p.place) : "");
+          }).join(" · ");
+          if (id === "points_king") {
+            sub = count + (s.fpts_avg != null ? (" · " + Math.round(Number(s.fpts_avg)) + " avg PF") : "");
+          } else if (id === "contender_rate") {
+            sub = (s.top6_n || 0) + " top six · " + count;
+          } else if (id === "sacko") {
+            sub = (s.last_years || []).join(" · ") || count;
+          } else {
+            sub = count + (s.avg != null ? (" · " + Number(s.avg).toFixed(1) + " avg") : "");
+          }
+          return '<div class="row"><div class="row-top"><div><div class="names">'
+            + esc((i + 1) + ". ") + seatLabel(s.name, { link: false }) + "</div>"
+            + '<div class="date">' + esc(sub) + "</div></div>"
+            + '<div class="margin">' + esc(finishCareerMetric(id, s)) + "</div></div></div>";
+        }).join("");
+      }
       if (id === "past_champions") {
         return ((titles && titles.titles) || []).filter(function (t) {
           return hit([t.season, t.name, t.provider]);
@@ -6973,6 +7117,19 @@
         if (league && league.providers && league.providers.espn_authorized) {
           caption += " Imported ESPN years count.";
         }
+      }
+      else if (id === "career_avg") {
+        caption = "Average finish. Three completed seasons minimum so a one-year 2nd does not beat a six-year 4.7.";
+        if (league && league.providers && league.providers.espn_authorized) caption += " Imported ESPN years count.";
+      }
+      else if (id === "points_king") {
+        caption = "Highest average points per season. Three seasons minimum.";
+      }
+      else if (id === "contender_rate") {
+        caption = "Top-six finishes divided by seasons played. Three seasons minimum.";
+      }
+      else if (id === "sacko") {
+        caption = "Last place in a completed year. Worst place that season, not 10th in a 12-team league.";
       }
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
@@ -9696,6 +9853,15 @@
       return true;
     }
 
+    function dataDashRedraftStale(tiles) {
+      if (typeof isRedraftLeague !== "function" || !isRedraftLeague()) return false;
+      const list = Array.isArray(tiles) ? tiles : [];
+      return list[0] !== "career_avg"
+        || list.indexOf("points_king") < 0
+        || list.indexOf("contender_rate") < 0
+        || list.indexOf("sacko") < 0;
+    }
+
     function dataDashHas(id) {
       return dataDashBoardTiles().indexOf(id) >= 0;
     }
@@ -9718,7 +9884,10 @@
         const key = dataDashKey();
         const raw = key ? localStorage.getItem(key) : null;
         const parsed = raw ? JSON.parse(raw) : null;
-        if (Array.isArray(parsed)) return dataDashMigrateMyPicks(parsed);
+        if (Array.isArray(parsed)) {
+          const next = dataDashMigrateMyPicks(parsed);
+          return dataDashRedraftStale(next) ? dataDashCanon(dataDashDefaultTiles()) : next;
+        }
       } catch (err) { /* private mode */ }
       return dataDashCanon(dataDashDefaultTiles());
     }
@@ -11066,6 +11235,13 @@
         const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
         return dataDashHead(spec, lead && lead.avg != null ? String(lead.avg) : (n ? (n + " yrs") : "Open"),
           lead ? ((lead.name || "Lead") + " career avg") : "Average finish");
+      }
+      if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+        const lead = finishCareerSeats(id)[0];
+        const sub = lead
+          ? ((lead.name || "Lead") + (id === "sacko" ? " last place" : (id === "points_king" ? " avg PF" : (id === "contender_rate" ? " top six" : " career avg"))))
+          : spec.why;
+        return dataDashHead(spec, lead ? finishCareerMetric(id, lead) : "Open", sub);
       }
       if (id === "seat_volume" || id === "seat_run" || id === "seat_posture"
         || id === "seat_manners" || id === "seat_aging" || id === "seat_draft") {
@@ -21408,7 +21584,9 @@
         const remote = rows && rows[0] && rows[0].tiles;
         if (Array.isArray(remote) && remote.length) {
           const next = dataDashCanon(remote);
-          dataDashTiles = dataDashIsLegacyBoard(next) ? dataDashCanon(DATA_DASH_DEFAULT) : dataDashMigrateMyPicks(next);
+          dataDashTiles = (dataDashIsLegacyBoard(next) || dataDashRedraftStale(next))
+            ? dataDashCanon(dataDashDefaultTiles())
+            : dataDashMigrateMyPicks(next);
           dataDashWriteLocal(dataDashTiles);
         }
       } catch (err) {

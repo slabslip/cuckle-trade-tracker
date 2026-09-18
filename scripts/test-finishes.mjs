@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 /** Career finishes: average place, season count, no parked / no double-count. */
 import { standingsFor } from "../lib/standings.mjs";
-import { addFinish, buildFinishesBook, rankFinishes, remapEspnStanding } from "../lib/finishes.mjs";
+import {
+  addFinish,
+  buildFinishesBook,
+  careerFloorSeats,
+  contenderSeats,
+  pointsKingSeats,
+  rankFinishes,
+  remapEspnStanding,
+  sackoSeats,
+} from "../lib/finishes.mjs";
 
 function fail(msg) {
   console.error("FINISH FAIL: " + msg);
@@ -58,6 +67,7 @@ const book = buildFinishesBook({
   espnStandings: [
     { season: "2025", user_id: "a", name: "Biff34", place: 12 },
     { season: "2024", user_id: "j", name: "TrumanCooper", place: 4 },
+    { season: "2024", user_id: "l", name: "Adizzl3", place: 12 },
   ],
   members: Object.entries(names).map(([user_id, name]) => ({ user_id, name })),
   leagueId: "test",
@@ -68,6 +78,19 @@ if (book.seats.find((s) => s.name === "Biff34").avg !== 1) fail("ESPN 2025 must 
 const tru = book.seats.find((s) => s.name === "TrumanCooper");
 if (!tru || tru.n !== 2 || tru.avg !== 7) fail("Truman 2025 10th + ESPN 2024 4th = 7.0: " + JSON.stringify(tru));
 if (book.seats.some((s) => s.name === "SethHenry12")) fail("book must omit people who never finished");
+if (book.v !== 2 || book.career_floor !== 3) fail("career book v2 ships a 3-season floor");
+const biffSeat = book.seats.find((s) => s.name === "Biff34");
+if (!biffSeat || biffSeat.titles_n !== 1 || biffSeat.top6_n !== 1 || biffSeat.last_n !== 0) {
+  fail("Biff 2025 title is one crown, not a sacko: " + JSON.stringify(biffSeat));
+}
+if (biffSeat.fpts_avg == null || biffSeat.wins < 7) fail("Biff keeps 2025 points and wins: " + JSON.stringify(biffSeat));
+const lastSeat = book.seats.find((s) => s.name === "Adizzl3");
+if (!lastSeat || lastSeat.last_n !== 2) fail("Adizzl3 is last in 2025 and 2024: " + JSON.stringify(lastSeat));
+if (tru.last_n !== 0) fail("Truman 10th in a 12-team year is not sacko");
+if (careerFloorSeats(book.seats, 3).length) fail("no seat has 3 seasons in this fixture");
+if (pointsKingSeats(book.seats, 1)[0].name !== "Biff34") fail("points king at n=1 is Biff");
+if (contenderSeats(book.seats, 1)[0].contender < 50) fail("title year is a contender season");
+if (sackoSeats(book.seats)[0].name !== "Adizzl3") fail("sacko list starts with last place");
 
 const remapped = remapEspnStanding(
   { season: "2018", user_id: "espn:old", roster_id: 3, place: 2, name: "Old" },

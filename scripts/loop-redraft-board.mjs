@@ -130,10 +130,10 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmbeef20260918102000"')
-  && html.includes('const DATA_V = "gmbeef20260918102000"')
-  && sw.includes('chuckle-shell-v265-gm-pot')
-  && !sw.includes("chuckle-shell-v264-gm-rs-money"),
+loop(10, page.includes('const DATA_V = "newsleagues20260918061500"')
+  && html.includes('const DATA_V = "newsleagues20260918061500"')
+  && sw.includes('chuckle-shell-v266-news-leagues')
+  && !sw.includes("chuckle-shell-v265-gm-pot"),
   "DATA_V and SW cache moved so Safari cannot keep the old board");
 
 // 11 Redraft library still hides dynasty ops

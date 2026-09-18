@@ -3,14 +3,16 @@
  * Build data/ui/news.json: NFL news, filtered to players this league actually rosters, addressed
  * to the manager who owns them, in the league's voice.
  *
- * Read-only against every source. Writes exactly one file. It does not touch the value book, the
+ * Read-only against every source. Writes every league's news.json (same tweets, per-book tags).
+ * It does not touch the value book, the
  * Value Adjustment, the lens windows, `today_delta`, partner grades or any ranking — news is a
  * separate payload with a separate loader, on purpose.
  *
- *   node news-sync.mjs                 # fetch live, write data/ui/news.json
+ *   node news-sync.mjs                 # fetch live, write every league's news.json
  *   node news-sync.mjs --report        # fetch live, print the match report, write nothing
  *   node news-sync.mjs --voice         # print every voice variant, fetch nothing
  *   node news-sync.mjs --empty         # write a valid empty file (no network)
+ *   node news-sync.mjs --retag-leagues # no network: fan the on-disk tape to every book
  *   node news-sync.mjs --with-automated  # turn the automated sources back on for this run
  *   node news-sync.mjs --corpus        # fetch RSS live, write data/fixtures/rss-corpus.json
  *
@@ -47,7 +49,7 @@
  */
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { CUCKLE_LEAGUE_ID, DATA, leagueUiDir, readJson } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, DATA, isSleeperLeagueId, leagueUiDir, readJson } from "./lib.mjs";
 import { CATEGORIES, classify, leagueLine, leagueLineAsync, noteFreeOfAddress, trimNote, tweetPokeKind, voiceSamples } from "./news-voice.mjs";
 import { appendSmackTip, trimAgentTip } from "./smack-tips.mjs";
 import { PUBLISH_MIN, buildMatchIndex, matchText } from "./news-match.mjs";
@@ -132,15 +134,58 @@ const automatedOn = AUTOMATED_SOURCES || args.has("--with-automated");
 /* ------------------------------------------------------------- rosters ---- */
 
 /**
+ * Every book that receives the shared-tweet tape.
+ *
+ * Cuckle is always included (legacy `data/ui/news.json`). Every numeric Sleeper id under
+ * `data/leagues/` is a second (or third) book — GM redraft today, any later league tomorrow.
+ * One Shortcut POST fans to all of them; tags are a write-time projection onto each roster.
+ */
+export function listNewsLeagues() {
+  const ids = new Set([CUCKLE_LEAGUE_ID]);
+  const root = `${DATA}/leagues`;
+  if (fs.existsSync(root)) {
+    for (const id of fs.readdirSync(root)) {
+      if (isSleeperLeagueId(id)) ids.add(id);
+    }
+  }
+  return [...ids];
+}
+
+function readLeagueMembers(leagueId) {
+  const id = String(leagueId || "").trim() || CUCKLE_LEAGUE_ID;
+  const ui = `${DATA}/leagues/${id}/ui/members.json`;
+  if (fs.existsSync(ui)) return JSON.parse(fs.readFileSync(ui, "utf8")) || [];
+  const raw = `${DATA}/leagues/${id}/raw/members.json`;
+  if (fs.existsSync(raw)) return JSON.parse(fs.readFileSync(raw, "utf8")) || [];
+  if (id === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/ui/members.json`;
+    if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8")) || [];
+  }
+  return [];
+}
+
+function readLeagueRosters(leagueId) {
+  const id = String(leagueId || "").trim() || CUCKLE_LEAGUE_ID;
+  const scoped = `${DATA}/leagues/${id}/raw/rosters_now.json`;
+  if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8")) || [];
+  if (id === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/rosters_now.json`;
+    if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8")) || [];
+  }
+  return [];
+}
+
+/**
  * player_id -> { user_id, manager } for every player on a current roster, plus the reverse
  * index the RSS matcher needs.
  *
  * A player on two rosters is impossible in Sleeper, so a collision here means the roster file
  * is stale rather than that a choice has to be made. It is counted and the first owner wins.
  */
-export function buildOwnership() {
-  const rosters = readJson("rosters_now.json", []) || [];
-  const members = readJson("ui/members.json", []) || [];
+export function buildOwnershipFor(leagueId = CUCKLE_LEAGUE_ID) {
+  const id = String(leagueId || "").trim() || CUCKLE_LEAGUE_ID;
+  const rosters = readLeagueRosters(id);
+  const members = readLeagueMembers(id);
   const nameById = new Map(members.map((m) => [m.user_id, m.name]));
   const owner = new Map();
   let dupes = 0;
@@ -156,7 +201,52 @@ export function buildOwnership() {
       });
     }
   }
-  return { owner, dupes, rosters: rosters.length, managers: nameById.size };
+  return {
+    league_id: id,
+    owner,
+    members,
+    dupes,
+    rosters: rosters.length,
+    managers: nameById.size,
+  };
+}
+
+/** Cuckle (or `LEAGUE_ID`) ownership. Kept so existing callers and `--corpus` stay one-arg. */
+export function buildOwnership() {
+  return buildOwnershipFor(CUCKLE_LEAGUE_ID);
+}
+
+/**
+ * Union of every book's rostered player_ids so a GM-only name still identifies.
+ * Shared players keep the first book (Cuckle) as a placeholder; write-time retag
+ * overwrites seat names with that league's own owners.
+ */
+export function mergeOwnership(packs) {
+  const owner = new Map();
+  const ordered = [...(packs || [])].sort((a, b) => {
+    if (a.league_id === CUCKLE_LEAGUE_ID) return -1;
+    if (b.league_id === CUCKLE_LEAGUE_ID) return 1;
+    return String(a.league_id).localeCompare(String(b.league_id));
+  });
+  for (const pack of ordered) {
+    for (const [pid, own] of pack.owner || []) {
+      if (!owner.has(String(pid))) owner.set(String(pid), own);
+    }
+  }
+  return owner;
+}
+
+function playersDict() {
+  const path = `${DATA}/players.nfl.json`;
+  if (!fs.existsSync(path)) {
+    throw new Error("data/players.nfl.json missing — run `node sleeper-sync.mjs` first");
+  }
+  return JSON.parse(fs.readFileSync(path, "utf8"));
+}
+
+export function unionMatchIndex(players = playersDict()) {
+  const packs = listNewsLeagues().map((id) => buildOwnershipFor(id));
+  return buildMatchIndex(mergeOwnership(packs), players);
 }
 
 /** Normalise a name for comparison: lower case, no punctuation, no suffix, single spaces. */
@@ -443,6 +533,151 @@ function managersFromSubjects(subjects) {
   return out;
 }
 
+function managersFromPlayers(players) {
+  const out = [];
+  const seen = new Set();
+  for (const p of players || []) {
+    if (!p || !p.manager || seen.has(p.user_id || p.manager)) continue;
+    seen.add(p.user_id || p.manager);
+    out.push(p.manager);
+  }
+  return out;
+}
+
+function retagPlayers(players, ownerMap) {
+  return (players || []).filter((p) => p && p.player_id && p.player).map((p) => {
+    const own = ownerMap.get(String(p.player_id));
+    return {
+      ...p,
+      user_id: own ? own.user_id : "",
+      manager: own ? own.manager : "",
+    };
+  });
+}
+
+function memberByNameOrId(members, own) {
+  if (!own) return null;
+  const names = new Set((members || []).map((m) => m.name).filter(Boolean));
+  const ids = new Set((members || []).map((m) => m.user_id).filter(Boolean));
+  if (own.manager && names.has(own.manager)) {
+    const hit = (members || []).find((m) => m.name === own.manager);
+    return { user_id: hit ? hit.user_id : own.user_id, manager: own.manager };
+  }
+  if (own.user_id && ids.has(own.user_id)) {
+    const hit = (members || []).find((m) => m.user_id === own.user_id);
+    return { user_id: own.user_id, manager: hit ? hit.name : own.manager };
+  }
+  return null;
+}
+
+/**
+ * Project a matched row onto one book's seats.
+ *
+ * `target_name` stays Cuckle-authoritative at ingest. Other books only keep that
+ * seat if the same name/id sits in *their* members file — SF69erss never lands
+ * on GM. Unrostered-here players stay on the row with an empty manager so the
+ * name still highlights.
+ */
+export function bindAttributionToLeague({ target = null, how = "none", playersList = [] } = {}, ownerMap, members) {
+  const players = retagPlayers(playersList, ownerMap);
+  const playerManagers = managersFromPlayers(players);
+  const keptTarget = memberByNameOrId(members, target);
+  if (how === "target_name" && keptTarget) {
+    const tagged = [keptTarget.manager];
+    for (const name of playerManagers) {
+      if (!tagged.includes(name)) tagged.push(name);
+    }
+    return { players, own: keptTarget, taggedManagers: tagged, how: "target_name" };
+  }
+  if (playerManagers.length >= 2) {
+    const first = players.find((p) => p.manager);
+    return {
+      players,
+      own: { user_id: first.user_id, manager: first.manager },
+      taggedManagers: playerManagers,
+      how: "player_auto_multi",
+    };
+  }
+  if (playerManagers.length === 1) {
+    const first = players.find((p) => p.manager);
+    return {
+      players,
+      own: { user_id: first.user_id, manager: first.manager },
+      taggedManagers: playerManagers,
+      how: "player_auto",
+    };
+  }
+  if (players.length) {
+    return { players, own: null, taggedManagers: [], how: "player" };
+  }
+  return { players, own: null, taggedManagers: [], how: "none" };
+}
+
+/** Add union-matched players the original Cuckle row missed (GM-only names). */
+export function enrichPlayersFromText(it, matchIndex) {
+  if (!it || !it.tweet_text || !matchIndex) return it;
+  const subjects = matchTweetSubjects(it.tweet_text, matchIndex);
+  const found = playersFromSubjects(subjects);
+  const have = new Set((it.players || []).map((p) => String(p.player_id)));
+  const merged = [...(it.players || [])];
+  for (const p of found) {
+    if (!p || !p.player_id || have.has(String(p.player_id))) continue;
+    merged.push(p);
+    have.add(String(p.player_id));
+  }
+  const next = { ...it, players: merged };
+  if (!next.player_id && merged[0]) {
+    next.player = merged[0].player;
+    next.player_id = merged[0].player_id;
+    next.player_team = merged[0].player_team || null;
+    next.player_position = merged[0].player_position || null;
+  }
+  return next;
+}
+
+/**
+ * Same tweet tape, this book's seats. Does not rewrite `league_line`.
+ *
+ * Cuckle (`keepTags`) only appends players this book does not own, so existing
+ * Cuckle manager chips stay put. Other books retag every matched player.
+ */
+export function retagItemForLeague(it, pack, matchIndex, { keepTags = false } = {}) {
+  const ownerMap = pack.owner || new Map();
+  const members = pack.members || [];
+  const enriched = enrichPlayersFromText({ ...it, players: Array.isArray(it.players) ? [...it.players] : [] }, matchIndex);
+  if (keepTags) {
+    const extra = [];
+    const have = new Set((it.players || []).map((p) => String(p.player_id)));
+    for (const p of enriched.players || []) {
+      if (have.has(String(p.player_id))) continue;
+      if (ownerMap.has(String(p.player_id))) continue;
+      extra.push({ ...p, user_id: "", manager: "" });
+    }
+    return extra.length ? { ...it, players: [...(it.players || []), ...extra] } : { ...it };
+  }
+  const bound = bindAttributionToLeague({
+    target: it.match === "target_name" && (it.manager || it.user_id)
+      ? { user_id: it.user_id || "", manager: it.manager || "" }
+      : null,
+    how: it.match || "none",
+    playersList: enriched.players,
+  }, ownerMap, members);
+  const next = { ...enriched };
+  next.players = bound.players;
+  next.user_id = bound.own ? bound.own.user_id : "";
+  next.manager = bound.own ? bound.own.manager : "";
+  next.managers = bound.taggedManagers;
+  next.match = bound.how;
+  if (next.players[0]) {
+    const prim = next.players.find((p) => p.player_id === it.player_id) || next.players[0];
+    next.player = prim.player;
+    next.player_id = prim.player_id;
+    next.player_team = prim.player_team || null;
+    next.player_position = prim.player_position || null;
+  }
+  return next;
+}
+
 /**
  * One share per tweet.
  *
@@ -624,61 +859,28 @@ async function ingestSubmissions(ownership, index, members, {
      * Unchanged. The player still ships when one was identified — it is what the meta line prints,
      * `Keenan Allen · IND WR`, and it is a fact about the tweet rather than a claim about a person.
      */
-    let own = null;
-    let player = null;
-    let how = "none";
-    let taggedManagers = null;
     const target = resolveTarget(sub.target_name, members, aliasesByCanon);
-    // Always run the matcher: even when target_name is authoritative for the *seat*, every
-    // rostered player named in the text still fills players[] (highlights + related team tags).
-    // Addressing still only comes from target_name or from subjects.addressable / subjects.multi
-    // below — never from a below-threshold hit.
+    // Union matcher (every book's rostered names). Bind the seats onto *this*
+    // book's ownership so a GM user_id never lands in the Cuckle self-check.
     const subjects = matchTweetSubjects(tweet.text, matchIndex);
-    const playersList = playersFromSubjects(subjects);
-    // Fantasy seats that own any matched player — every related team gets tagged on the row.
-    const playerManagers = managersFromSubjects(subjects);
-
-    if (target) {
-      own = target;
-      how = "target_name";
-      // Keep the named seat first, then every other seat that owns a matched player.
-      taggedManagers = [target.manager];
-      for (const name of playerManagers) {
-        if (!taggedManagers.includes(name)) taggedManagers.push(name);
-      }
-      report.targeted++;
-      if (subjects.top) {
-        const s = subjects.top;
-        player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
-      }
-    } else if (subjects.addressable) {
-      const s = subjects.addressable;
-      own = { user_id: s.user_id, manager: s.manager };
+    const bound = bindAttributionToLeague({
+      target,
+      how: target ? "target_name" : "none",
+      playersList: playersFromSubjects(subjects),
+    }, (ownership && ownership.owner) || new Map(), members);
+    const playersList = bound.players;
+    let own = bound.own;
+    let how = bound.how;
+    let taggedManagers = bound.taggedManagers;
+    let player = null;
+    if (playersList[0]) {
+      const s = playersList[0];
       player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
-      how = "player_auto";
-      taggedManagers = playerManagers.length ? playerManagers : [s.manager];
-      report.auto_tagged++;
-    } else if (subjects.multi) {
-      // Several seats cleared the bar (roundup naming multiple rostered players). Tag them all;
-      // the header lists every name, the summary stays impersonal (no second-person roast aimed
-      // at one of them). Primary own/user_id is the strongest seat for any single-id consumers.
-      const tagged = subjects.multi;
-      own = { user_id: tagged[0].user_id, manager: tagged[0].manager };
-      const s = subjects.top || tagged[0];
-      player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
-      how = "player_auto_multi";
-      taggedManagers = playerManagers.length ? playerManagers : tagged.map((t) => t.manager);
-      report.auto_tagged_multi = (report.auto_tagged_multi || 0) + 1;
-    } else {
-      // Not addressed, but a player above the threshold still identifies the story.
-      if (subjects.top) {
-        const s = subjects.top;
-        player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
-        how = "player";
-        taggedManagers = playerManagers.length ? playerManagers : null;
-        report.player_only++;
-      }
     }
+    if (how === "target_name") report.targeted++;
+    else if (how === "player_auto") report.auto_tagged++;
+    else if (how === "player_auto_multi") report.auto_tagged_multi = (report.auto_tagged_multi || 0) + 1;
+    else if (how === "player") report.player_only++;
     if (String(sub.target_name || "").trim() && !target) report.target_unresolved++;
     if (!own) report.unaddressed++;
 
@@ -1048,13 +1250,12 @@ async function build() {
   const players = JSON.parse(fs.readFileSync(playersPath, "utf8"));
   const index = buildPlayerIndex(ownership.owner, players);
   /**
-   * The cherry-picked matcher's index, built from the **whole dictionary** rather than from the
-   * roster, which is the difference that makes it worth having: a collision is only visible if
-   * the same-named stranger is a candidate. `buildPlayerIndex()` above still exists and is still
-   * what the RSS path uses, because RSS should keep refusing on ambiguity and nothing on the
-   * shared-tweet path should be able to change what the automated feed does.
+   * Shared-tweet matcher: union of every book's rostered names so a GM-only
+   * player still identifies. Seat names are rebound onto Cuckle at ingest
+   * (`bindAttributionToLeague`) and onto each book again in `writeBook`.
+   * RSS still uses the Cuckle-only `buildPlayerIndex` above.
    */
-  const matchIndex = buildMatchIndex(ownership.owner, players);
+  const matchIndex = unionMatchIndex(players);
 
   // The switch is enforced at the fetch, not at a filter downstream: with AUTOMATED_SOURCES off
   // this build makes no request to Sleeper's news graph, to any of the five RSS feeds, or to the
@@ -1295,35 +1496,153 @@ function bookOf(items, rssResults, sleeper) {
   };
 }
 
-function itemLeagueId(it) {
-  return String((it && it.sleeper_league_id) || "").trim();
+function projectBookForLeague(book, pack, matchIndex, { keepTags = false } = {}) {
+  const items = (book.items || []).map((it) => retagItemForLeague(it, pack, matchIndex, { keepTags }));
+  return { ...book, items, generated: Date.now() };
 }
 
-function bookForLeague(book, leagueId) {
-  const items = (book.items || []).filter((it) => {
-    const lid = itemLeagueId(it);
-    if (lid) return lid === leagueId;
-    return leagueId === CUCKLE_LEAGUE_ID;
-  });
-  return { ...book, items };
-}
-
-function writeBook(book) {
-  const leaguesRoot = `${DATA}/leagues`;
-  const ids = fs.existsSync(leaguesRoot)
-    ? fs.readdirSync(leaguesRoot).filter((id) => /^\d{6,64}$/.test(id))
-    : [CUCKLE_LEAGUE_ID];
-  if (!ids.includes(CUCKLE_LEAGUE_ID)) ids.push(CUCKLE_LEAGUE_ID);
-  const cuckleBook = bookForLeague(book, CUCKLE_LEAGUE_ID);
-  const path = `${DATA}/ui/news.json`;
-  fs.mkdirSync(`${DATA}/ui`, { recursive: true });
-  fs.writeFileSync(path, JSON.stringify(cuckleBook) + "\n");
-  for (const id of ids) {
+/**
+ * One Shortcut share is every book's tape. `sleeper_league_id` on a row is not a
+ * filter — null (the one-tap path) and a tagged id both fan out. Each write
+ * retags seats from that league's own rosters.
+ */
+export function writeBook(book) {
+  const players = fs.existsSync(`${DATA}/players.nfl.json`) ? playersDict() : {};
+  const matchIndex = Object.keys(players).length ? unionMatchIndex(players) : null;
+  const projected = [];
+  for (const id of listNewsLeagues()) {
+    const pack = buildOwnershipFor(id);
+    const keepTags = id === CUCKLE_LEAGUE_ID;
+    const next = projectBookForLeague(book, pack, matchIndex, { keepTags });
+    assertNewsBook(next, pack.members, { voice: id === CUCKLE_LEAGUE_ID });
+    projected.push({ id, book: next });
+  }
+  let path = `${DATA}/ui/news.json`;
+  for (const { id, book: next } of projected) {
     const dest = `${leagueUiDir(id)}/news.json`;
     fs.mkdirSync(dest.slice(0, dest.lastIndexOf("/")), { recursive: true });
-    fs.writeFileSync(dest, JSON.stringify(bookForLeague(book, id)) + "\n");
+    fs.writeFileSync(dest, JSON.stringify(next) + "\n");
+    if (id === CUCKLE_LEAGUE_ID) {
+      fs.mkdirSync(`${DATA}/ui`, { recursive: true });
+      fs.writeFileSync(path, JSON.stringify(next) + "\n");
+    }
   }
   return path;
+}
+
+function readCuckleNewsBook() {
+  const legacy = `${DATA}/ui/news.json`;
+  if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8"));
+  const scoped = `${DATA}/leagues/${CUCKLE_LEAGUE_ID}/ui/news.json`;
+  if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8"));
+  return null;
+}
+
+/**
+ * @param voice  Cuckle-only: league_line was written for this book, so
+ *   unaddressed / multi-tag rows must stay impersonal. Fan-out books keep the
+ *   Cuckle voice and only prove their *tags* belong to that league.
+ */
+export function assertNewsBook(book, members, { voice = true } = {}) {
+  const known = new Set((members || []).map((m) => m.user_id));
+  const knownNames = new Set((members || []).map((m) => m.name).filter(Boolean));
+  for (const it of book.items || []) {
+    const unaddressed = it.user_id === "" && it.category === "tweet";
+    if (!unaddressed && !known.has(it.user_id)) {
+      throw new Error(`self-check failed: item ${it.id} is addressed to unknown user ${it.user_id}`);
+    }
+    if (unaddressed && it.manager !== "") {
+      throw new Error(`self-check failed: item ${it.id} names a manager but is addressed to nobody`);
+    }
+    if (!it.league_line) {
+      throw new Error(`self-check failed: item ${it.id} has no league line`);
+    }
+    if (!CATEGORIES.some((c) => c.id === it.category)) {
+      throw new Error(`self-check failed: item ${it.id} has unknown category ${it.category}`);
+    }
+    if (voice && it.category === "tweet" && !it.manager) {
+      const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
+      if (offence) {
+        throw new Error(`self-check failed: shared tweet ${it.id}'s summary ${offence} — an unaddressed summary must not address a person`);
+      }
+    }
+    if (!["target_name", "player_auto", "player_auto_multi", "player_id", "name", "player", "none"].includes(it.match)) {
+      throw new Error(`self-check failed: item ${it.id} records an unknown attribution route ${it.match}`);
+    }
+    if (it.manager && (it.match === "player" || it.match === "none")) {
+      throw new Error(`self-check failed: item ${it.id} is addressed to ${it.manager} on route ${it.match}, which means "not addressed"`);
+    }
+    if (!it.manager && (it.match === "target_name" || it.match === "player_auto" || it.match === "player_auto_multi")) {
+      throw new Error(`self-check failed: item ${it.id} claims route ${it.match} but names no manager`);
+    }
+    if (it.match === "player_auto_multi") {
+      if (!Array.isArray(it.managers) || it.managers.length < 2) {
+        throw new Error(`self-check failed: item ${it.id} is player_auto_multi but managers[] is missing or too short`);
+      }
+      if (voice) {
+        const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
+        if (offence) {
+          throw new Error(`self-check failed: multi-tag ${it.id}'s summary ${offence}`);
+        }
+      }
+    }
+    if (Array.isArray(it.managers)) {
+      for (const name of it.managers) {
+        if (!knownNames.has(name)) {
+          throw new Error(`self-check failed: item ${it.id} tags unknown manager ${JSON.stringify(name)}`);
+        }
+      }
+    }
+    if (it.player_id || it.player) {
+      if (!Array.isArray(it.players) || !it.players.length) {
+        throw new Error(`self-check failed: item ${it.id} has a primary player but empty players[]`);
+      }
+    }
+    if (Array.isArray(it.players)) {
+      for (const p of it.players) {
+        if (!p || !p.player_id || !p.player) {
+          throw new Error(`self-check failed: item ${it.id} has a players[] entry missing id/name`);
+        }
+        if (p.manager && !knownNames.has(p.manager)) {
+          throw new Error(`self-check failed: item ${it.id} player ${p.player} tags unknown manager ${p.manager}`);
+        }
+      }
+      if (it.players.length > 1 && Array.isArray(it.managers) && it.managers.length) {
+        for (const p of it.players) {
+          if (p.manager && !it.managers.includes(p.manager)) {
+            throw new Error(`self-check failed: item ${it.id} matched ${p.player} for ${p.manager} but managers[] omits them`);
+          }
+        }
+      }
+    }
+    if (it.category === "tweet") {
+      if (!it.tweet_text || !it.tweet_handle) {
+        throw new Error(`self-check failed: shared tweet ${it.id} has no text or no handle`);
+      }
+      const parsed = parseTweetUrl(it.source_url);
+      if (!parsed) {
+        throw new Error(`self-check failed: shared tweet ${it.id} has a non-tweet source_url ${it.source_url}`);
+      }
+      if (parsed.canonical !== it.source_url) {
+        throw new Error(`self-check failed: shared tweet ${it.id} ships an uncanonical url ${it.source_url} (should be ${parsed.canonical})`);
+      }
+    }
+  }
+  if (!automatedOn) {
+    const stray = (book.items || []).find((it) => it.category !== "tweet" || it.source !== "x:submission");
+    if (stray) {
+      throw new Error(`self-check failed: AUTOMATED_SOURCES is off but item ${stray.id} came from ${stray.source} — the feed is submissions only`);
+    }
+  }
+  const seenTweets = new Map();
+  for (const it of book.items || []) {
+    if (it.category !== "tweet") continue;
+    const tid = parseTweetUrl(it.source_url).id;
+    if (seenTweets.has(tid)) {
+      throw new Error(`self-check failed: tweet ${tid} appears twice (${seenTweets.get(tid)} and ${it.id}) — the same tweet shared twice must be one story`);
+    }
+    seenTweets.set(tid, it.id);
+  }
 }
 
 /* -------------------------------------------------------------- corpus ---- */
@@ -1521,6 +1840,21 @@ async function main() {
     }
     return;
   }
+  if (args.has("--retag-leagues")) {
+    const book = readCuckleNewsBook();
+    if (!book || !Array.isArray(book.items)) {
+      throw new Error("no on-disk news.json to fan out — run a live news-sync first");
+    }
+    const out = writeBook(book);
+    const leagues = listNewsLeagues();
+    console.log(JSON.stringify({
+      out,
+      mode: "retag-leagues",
+      items: book.items.length,
+      leagues,
+    }, null, 2));
+    return;
+  }
   if (args.has("--empty")) {
     const book = bookOf([], RSS_FEEDS.map((f) => ({ feed: f, ok: false, items: 0 })), null);
     console.log("wrote", writeBook(book), "— empty, no network");
@@ -1539,139 +1873,8 @@ async function main() {
     );
   }
 
-  // A row addressed to a manager who is not in this league is the failure that matters most:
-  // it means the ownership map and the members file disagree, and the feed would be lying about
-  // who owns whom. Refuse to write rather than ship it.
-  const known = new Set((readJson("ui/members.json", []) || []).map((m) => m.user_id));
-  const knownNames = new Set((readJson("ui/members.json", []) || []).map((m) => m.name).filter(Boolean));
-  for (const it of book.items) {
-    // "" is the deliberate unaddressed case, and only a shared tweet may use it: an automated
-    // row always knows its owner, because it was matched from a roster in the first place. Any
-    // other empty user_id is the ownership map and the members file disagreeing.
-    const unaddressed = it.user_id === "" && it.category === "tweet";
-    if (!unaddressed && !known.has(it.user_id)) {
-      throw new Error(`self-check failed: item ${it.id} is addressed to unknown user ${it.user_id}`);
-    }
-    if (unaddressed && it.manager !== "") {
-      throw new Error(`self-check failed: item ${it.id} names a manager but is addressed to nobody`);
-    }
-    if (!it.league_line) {
-      throw new Error(`self-check failed: item ${it.id} has no league line`);
-    }
-    if (!CATEGORIES.some((c) => c.id === it.category)) {
-      throw new Error(`self-check failed: item ${it.id} has unknown category ${it.category}`);
-    }
-    /**
-     * Unaddressed summaries (The league) must not second-person anyone. Addressed rows use the
-     * locker-room banks on purpose — that is the app speaking TO the manager, separate from the
-     * sharer's note in its own field. The check only applies when nobody was tagged.
-     */
-    if (it.category === "tweet" && !it.manager) {
-      const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
-      if (offence) {
-        throw new Error(`self-check failed: shared tweet ${it.id}'s summary ${offence} — an unaddressed summary must not address a person`);
-      }
-    }
-    /**
-     * A row may only be addressed by a rule that exists. `player_auto_multi` tags every seat
-     * that cleared the bar on a roundup; the UI lists them all in the header.
-     */
-    if (!["target_name", "player_auto", "player_auto_multi", "player_id", "name", "player", "none"].includes(it.match)) {
-      throw new Error(`self-check failed: item ${it.id} records an unknown attribution route ${it.match}`);
-    }
-    if (it.manager && (it.match === "player" || it.match === "none")) {
-      throw new Error(`self-check failed: item ${it.id} is addressed to ${it.manager} on route ${it.match}, which means "not addressed"`);
-    }
-    if (!it.manager && (it.match === "target_name" || it.match === "player_auto" || it.match === "player_auto_multi")) {
-      throw new Error(`self-check failed: item ${it.id} claims route ${it.match} but names no manager`);
-    }
-    if (it.match === "player_auto_multi") {
-      if (!Array.isArray(it.managers) || it.managers.length < 2) {
-        throw new Error(`self-check failed: item ${it.id} is player_auto_multi but managers[] is missing or too short`);
-      }
-      // Multi-tag summaries must stay impersonal — the header already lists every seat.
-      const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
-      if (offence) {
-        throw new Error(`self-check failed: multi-tag ${it.id}'s summary ${offence}`);
-      }
-    }
-    if (Array.isArray(it.managers)) {
-      for (const name of it.managers) {
-        if (!knownNames.has(name)) {
-          throw new Error(`self-check failed: item ${it.id} tags unknown manager ${JSON.stringify(name)}`);
-        }
-      }
-    }
-    // Every matched rostered player ships on players[] so the UI can highlight them all and
-    // tag every related fantasy seat. Primary player_* fields stay for back-compat.
-    if (it.player_id || it.player) {
-      if (!Array.isArray(it.players) || !it.players.length) {
-        throw new Error(`self-check failed: item ${it.id} has a primary player but empty players[]`);
-      }
-    }
-    if (Array.isArray(it.players)) {
-      for (const p of it.players) {
-        if (!p || !p.player_id || !p.player) {
-          throw new Error(`self-check failed: item ${it.id} has a players[] entry missing id/name`);
-        }
-        if (p.manager && !knownNames.has(p.manager)) {
-          throw new Error(`self-check failed: item ${it.id} player ${p.player} tags unknown manager ${p.manager}`);
-        }
-      }
-      if (it.players.length > 1 && Array.isArray(it.managers) && it.managers.length) {
-        // Every seat that owns a matched player must appear in managers[].
-        for (const p of it.players) {
-          if (p.manager && !it.managers.includes(p.manager)) {
-            throw new Error(`self-check failed: item ${it.id} matched ${p.player} for ${p.manager} but managers[] omits them`);
-          }
-        }
-      }
-    }
-    // The expandable detail is third-party prose. It must arrive as text, never as markup —
-    // news-sources.mjs strips the oEmbed HTML rather than trusting it, and this is the assertion
-    // that the stripping actually ran before anything was written to disk.
-    if (it.category === "tweet") {
-      if (!it.tweet_text || !it.tweet_handle) {
-        throw new Error(`self-check failed: shared tweet ${it.id} has no text or no handle`);
-      }
-      // Canonical, not merely valid. `parseTweetUrl()` accepts the tracking parameters a share
-      // sheet appends and strips them, so a URL that parses but is not equal to its own
-      // canonical form means something bypassed the canonicaliser and reached the row raw —
-      // which is exactly how the same tweet shared twice becomes two stories.
-      const parsed = parseTweetUrl(it.source_url);
-      if (!parsed) {
-        throw new Error(`self-check failed: shared tweet ${it.id} has a non-tweet source_url ${it.source_url}`);
-      }
-      if (parsed.canonical !== it.source_url) {
-        throw new Error(`self-check failed: shared tweet ${it.id} ships an uncanonical url ${it.source_url} (should be ${parsed.canonical})`);
-      }
-    }
-  }
-
-  // Manual-only, asserted rather than assumed. AUTOMATED_SOURCES gates two fetches, and a later
-  // edit that reads a cached feed, or a path that slips past the gate, would put automated rows
-  // back into a file the user asked to contain only their own shares. This is the one check that
-  // states the product decision, so it is written as a refusal to write the file.
-  if (!automatedOn) {
-    const stray = book.items.find((it) => it.category !== "tweet" || it.source !== "x:submission");
-    if (stray) {
-      throw new Error(`self-check failed: AUTOMATED_SOURCES is off but item ${stray.id} came from ${stray.source} — the feed is submissions only`);
-    }
-  }
-  // One story per tweet. collapseShares() is the only thing standing between "shared twice" and
-  // two identical rows in a feed that may only have two rows in it, and a duplicate is invisible
-  // in a count — both files have the right length. Compared on the tweet id rather than on the
-  // URL string, for the same reason collapseShares() keys on it: two spellings of one handle
-  // are two strings and one tweet, and a check on the string would miss exactly that case.
-  const seenTweets = new Map();
-  for (const it of book.items) {
-    if (it.category !== "tweet") continue;
-    const tid = parseTweetUrl(it.source_url).id;
-    if (seenTweets.has(tid)) {
-      throw new Error(`self-check failed: tweet ${tid} appears twice (${seenTweets.get(tid)} and ${it.id}) — the same tweet shared twice must be one story`);
-    }
-    seenTweets.set(tid, it.id);
-  }
+  // Ingest book is Cuckle-bound. writeBook() asserts again per league after retag.
+  assertNewsBook(book, readLeagueMembers(CUCKLE_LEAGUE_ID), { voice: true });
 
   if (args.has("--report")) {
     console.log(JSON.stringify(report, null, 2));
@@ -1680,6 +1883,7 @@ async function main() {
   writeBook(book);
   console.log(JSON.stringify({
     out: "data/ui/news.json",
+    leagues: listNewsLeagues(),
     automated_sources: automatedOn ? "on" : "off",
     items: book.items.length,
     managers_addressed: Object.keys(report.by_manager).length,

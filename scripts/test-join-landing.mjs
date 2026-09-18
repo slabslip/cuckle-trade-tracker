@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v273-tile-share")) {
-  throw new Error("sw.js must bump to v273-tile-share");
+if (!sw.includes("chuckle-shell-v274-finish-years")) {
+  throw new Error("sw.js must bump to v274-finish-years");
 }
 
 console.log("join landing ok");

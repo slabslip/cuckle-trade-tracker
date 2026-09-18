@@ -4199,7 +4199,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tileshare20260918154500";
+    const DATA_V = "finishyrs20260918141500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4291,7 +4291,7 @@ const html = `<!DOCTYPE html>
       "vs_you", "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
-      career_avg: { lab: "Career average", why: "Average finish. Three completed seasons minimum so one year cannot lead." },
+      career_avg: { lab: "Career average", why: "Final-place average. Three completed seasons minimum. How I finished is each year." },
       past_champions: { lab: "Who won the year", why: "Every real crown on this book. Host year tagged." },
       points_king: { lab: "Points king", why: "Highest average points per season. Regular season plus title-hunt weeks only — consolation is out." },
       contender_rate: { lab: "Contender rate", why: "Top-six finishes over seasons played. Three seasons minimum." },
@@ -4301,7 +4301,7 @@ const html = `<!DOCTYPE html>
       playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
       pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
-      season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
+      season_place: { lab: "How I finished", why: "Each completed year, 1st through last. Not the career ranking." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
@@ -4337,7 +4337,7 @@ const html = `<!DOCTYPE html>
       { id: "my_draft", lab: "My Draft Picks", desk: "lists", group: "memory", size: "full", why: "Used, traded away, and traded in — with a grade." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Every completed season they played, ranked by average finish." },
-      { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
+      { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Final-place average. Three completed seasons minimum." },
       { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Regular season plus title-hunt weeks only." },
       { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
       { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last in regular season. Consolation weeks do not count." },
@@ -4738,9 +4738,15 @@ const html = `<!DOCTYPE html>
           lead = String(row.name || "") + (metric && metric !== "—" ? " · " + metric : "");
         }
       } else if (id === "season_place") {
-        const row = finishesBook && finishesBook.seats && finishesBook.seats[0];
-        if (row) {
-          lead = String(row.name || "") + (row.avg != null ? " · " + Number(row.avg).toFixed(1) : "");
+        if (typeof finishIsYearTape === "function" && finishIsYearTape()) {
+          const y = typeof finishLatestSeason === "function" ? finishLatestSeason() : "";
+          const row = y && typeof finishYearRows === "function" ? finishYearRows(y)[0] : null;
+          if (row) lead = String(row.name || "") + " · " + y + " " + nth(row.place);
+        } else {
+          const row = finishesBook && finishesBook.seats && finishesBook.seats[0];
+          if (row) {
+            lead = String(row.name || "") + (row.avg != null ? " · " + Number(row.avg).toFixed(1) : "");
+          }
         }
       } else if (id === "week_scores") {
         const high = weekScoresBook && weekScoresBook.all && weekScoresBook.all.high && weekScoresBook.all.high[0];
@@ -5589,24 +5595,21 @@ const html = `<!DOCTYPE html>
 
     function receiptSeasonClaim() {
       if (typeof isRedraftLeague === "function" && isRedraftLeague()
-        && finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats[0]) {
-        const lead = finishesBook.seats[0];
-        const years = (finishesBook.seasons || []).slice();
-        const oldest = years.length ? years[years.length - 1] : "";
-        const newest = years[0] || "";
-        const span = oldest && newest ? (oldest + "–" + newest) : "";
-        const n = Number(lead.n) || 0;
-        return {
-          id: "season_place",
-          kind: "Season",
-          verdict: (lead.name || "This seat") + " has the best average finish"
-            + (n ? (" over " + n + (n === 1 ? " season" : " seasons")) : "") + ".",
-          who: lead.name || "",
-          print: lead.avg != null ? String(lead.avg) : "—",
-          because: span ? (span + " imported years, ranked by average.") : "Every completed imported year they played.",
-          shareKind: "title",
-          shareId: "",
-        };
+        && finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length) {
+        const y = typeof finishLatestSeason === "function" ? finishLatestSeason() : "";
+        const lead = y && typeof finishYearRows === "function" ? finishYearRows(y)[0] : null;
+        if (lead) {
+          return {
+            id: "season_place",
+            kind: "Season",
+            verdict: (lead.name || "This seat") + " finished " + nth(lead.place) + " in " + y + ".",
+            who: lead.name || "",
+            print: nth(lead.place),
+            because: "Year-by-year tape. Career average is the ranking with a three-season floor.",
+            shareKind: "title",
+            shareId: y,
+          };
+        }
       }
       const title = receiptLastSeason();
       const mine = receiptMySeat();
@@ -5651,6 +5654,46 @@ const html = `<!DOCTYPE html>
 
     function finishSeats() {
       return (finishesBook && Array.isArray(finishesBook.seats)) ? finishesBook.seats : [];
+    }
+
+    function finishSeasons() {
+      if (finishesBook && Array.isArray(finishesBook.seasons) && finishesBook.seasons.length) {
+        return finishesBook.seasons;
+      }
+      const seen = {};
+      finishSeats().forEach(function (s) {
+        (s.places || []).forEach(function (p) {
+          if (p && p.season) seen[String(p.season)] = true;
+        });
+      });
+      return Object.keys(seen).sort().reverse();
+    }
+
+    function finishLatestSeason() {
+      return finishSeasons()[0] || "";
+    }
+
+    function finishPlaceInYear(seat, season) {
+      const row = ((seat && seat.places) || []).find(function (p) {
+        return String(p.season) === String(season);
+      });
+      const n = row && row.place != null ? Number(row.place) : NaN;
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function finishYearRows(season) {
+      const y = String(season || "");
+      return finishSeats().map(function (s) {
+        const place = finishPlaceInYear(s, y);
+        if (place == null) return null;
+        return { user_id: s.user_id, name: s.name, place: place, season: y };
+      }).filter(Boolean).sort(function (a, b) {
+        return a.place - b.place || String(a.name || "").localeCompare(String(b.name || ""));
+      });
+    }
+
+    function finishIsYearTape() {
+      return typeof isRedraftLeague === "function" && isRedraftLeague();
     }
 
     function finishCareerFloorN() {
@@ -6196,7 +6239,12 @@ const html = `<!DOCTYPE html>
       if (id === "forever" || id === "passed_around" || id === "least_traded") {
         return "A player, a pick, a seat";
       }
-      if (id === "season_place" || id === "career_avg") return "A seat, an average, a year";
+      if (id === "career_avg") return "A seat, an average, a year";
+      if (id === "season_place") {
+        return (typeof finishIsYearTape === "function" && finishIsYearTape())
+          ? "A year, a seat, a place"
+          : "A seat, an average, a year";
+      }
       if (id === "points_king") return "A seat, points, a year";
       if (id === "contender_rate") return "A seat, top six, a year";
       if (id === "sacko") return "A seat, last place, a year";
@@ -6308,8 +6356,9 @@ const html = `<!DOCTYPE html>
           const lead = finishCareerSeats(id)[0];
           if (lead) fig = receiptDoorLeadFig(lead.name, finishCareerMetric(id, lead));
         } else if (id === "season_place") {
-          const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
-          if (lead) fig = receiptDoorLeadFig(lead.name, lead.avg != null ? Number(lead.avg).toFixed(1) : "");
+          const y = typeof finishLatestSeason === "function" ? finishLatestSeason() : "";
+          const lead = y && typeof finishYearRows === "function" ? finishYearRows(y)[0] : null;
+          if (lead) fig = receiptDoorLeadFig(lead.name, y + " " + nth(lead.place));
         } else if (id === "week_scores") {
           const high = weekScoresBook && weekScoresBook.all && weekScoresBook.all.high && weekScoresBook.all.high[0];
           if (high) fig = receiptDoorLeadFig(high.name, weekScorePts(high));
@@ -7121,6 +7170,25 @@ const html = `<!DOCTYPE html>
         return html;
       }
       if (id === "season_place") {
+        const years = (typeof finishIsYearTape === "function" && finishIsYearTape()
+          && typeof finishSeasons === "function") ? finishSeasons() : [];
+        if (years.length) {
+          let html = "";
+          for (let i = 0; i < years.length; i++) {
+            const y = years[i];
+            const rows = finishYearRows(y).filter(function (s) {
+              return hit([s.name, s.place, y, nth(s.place), "finished"]);
+            });
+            if (!rows.length) continue;
+            html += '<div class="data-sec-h">' + esc(y) + "</div>";
+            html += rows.map(function (s) {
+              return '<div class="row"><div class="row-top"><div><div class="names">'
+                + seatLabel(s.name, { link: false }) + "</div></div>"
+                + '<div class="margin">' + esc(nth(s.place)) + "</div></div></div>";
+            }).join("");
+          }
+          return html || '<p class="caption">Nothing on this tape matches.</p>';
+        }
         const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
         const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
           ? finishesBook.seats
@@ -7458,13 +7526,15 @@ const html = `<!DOCTYPE html>
         }
       }
       else if (id === "season_place") {
-        caption = "Every completed season they played, ranked by average finish. Season count is under each name.";
+        caption = (typeof finishIsYearTape === "function" && finishIsYearTape())
+          ? "Each completed year, 1st through last. This is not the career ranking — that is Career average."
+          : "Every completed season they played, ranked by average finish. Season count is under each name.";
         if (league && league.providers && league.providers.espn_authorized) {
           caption += " Imported ESPN years count.";
         }
       }
       else if (id === "career_avg") {
-        caption = "Average finish. Three completed seasons minimum so a one-year 2nd does not beat a six-year 4.7.";
+        caption = "Final-place average. Three completed seasons minimum so a one-year 2nd does not beat a six-year 4.7. How I finished is the year-by-year tape.";
         if (league && league.providers && league.providers.espn_authorized) caption += " Imported ESPN years count.";
       }
       else if (id === "points_king") {
@@ -11646,6 +11716,12 @@ const html = `<!DOCTYPE html>
         return dataDashHead(spec, n ? (n + " titles") : "Open", espnN ? (espnN + " from ESPN") : "Every title path");
       }
       if (id === "season_place") {
+        if (typeof finishIsYearTape === "function" && finishIsYearTape()) {
+          const y = typeof finishLatestSeason === "function" ? finishLatestSeason() : "";
+          const lead = y && typeof finishYearRows === "function" ? finishYearRows(y)[0] : null;
+          return dataDashHead(spec, lead ? nth(lead.place) : (y || "Open"),
+            lead ? ((lead.name || "Lead") + " · " + y) : "Each completed year");
+        }
         const n = (finishesBook && finishesBook.seasons && finishesBook.seasons.length) || 0;
         const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
         return dataDashHead(spec, lead && lead.avg != null ? String(lead.avg) : (n ? (n + " yrs") : "Open"),
@@ -31051,7 +31127,12 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptPortalRows").includes("finishesBook")
     || !fnSrc("receiptPortalRows").includes(" seasons")
     || !inline.includes('getLeagueJson("finishes.json")')
-    || !inline.includes("Every completed season they played, ranked by average finish.")
+    || !inline.includes("Each completed year, 1st through last. This is not the career ranking")
+    || !inline.includes("function finishYearRows(")
+    || !inline.includes("function finishLatestSeason(")
+    || !inline.includes("function finishIsYearTape(")
+    || !fnSrc("receiptWhoListHtml").includes("finishYearRows(")
+    || !fnSrc("receiptWhoListHtml").includes("finishIsYearTape(")
     || !inline.includes("Type a player name")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")

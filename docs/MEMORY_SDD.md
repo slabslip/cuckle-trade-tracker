@@ -245,7 +245,7 @@ says so. Do not add a catalog id `realized`.
 **Season / finish portal**
 
 - Who won the year: year · seat rows. Tap → existing Past Champions body.
-- How I finished: ranked average finish, season count under the name, every year · place.
+- How I finished (`season_place`): on redraft, each completed year, 1st through last. Door lead is the latest-year winner. Career average (`career_avg`) is the ranking — final-place average, three completed seasons minimum. On dynasty, How I finished stays the ranked average with no season floor.
 
 A door’s list is the **catalog**, not one lead example. Tap a row → that
 object’s ticket. Share lives on the ticket.

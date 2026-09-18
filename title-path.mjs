@@ -1,13 +1,25 @@
 #!/usr/bin/env node
 /** Champions path. Official Sleeper GETs. Does not touch the trade needle. */
 import fs from "node:fs";
-import { CUCKLE_LEAGUE_ID, DATA, NFL_KICKOFF, readJson, readUi, setLeagueId, sleeperGet, writeJson, writeUi, ymd, roundName } from "./lib.mjs";
-import { fptsOf, pptsOf, placesFromBracket, recordRowsFor, standingsFor } from "./lib/standings.mjs";
+import { CUCKLE_LEAGUE_ID, DATA, NFL_KICKOFF, detectLeagueFormat, readJson, readUi, setLeagueId, sleeperGet, writeJson, writeUi, ymd, roundName } from "./lib.mjs";
+import { fptsOf, pptsOf, placesFromBracket, recordRowsFor, standingsFor, standingsForRedraft } from "./lib/standings.mjs";
 import { remapEspnStanding } from "./lib/finishes.mjs";
 import { enrichTitleHistory } from "./lib/title-history.mjs";
+import { applyCountableFpts, applyRedraftSeasons, champBySeasonFromTitles, seasonPointBuckets } from "./lib/redraft-season.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const KICKOFF = NFL_KICKOFF;
+
+function seasonPlaceFn(league) {
+  return detectLeagueFormat(league).kind === "redraft" ? standingsForRedraft : standingsFor;
+}
+
+function placeRowsFor(s, nameByUser) {
+  const rows = seasonPlaceFn(s.league)(s, nameByUser);
+  if (detectLeagueFormat(s.league).kind !== "redraft") return rows;
+  const tape = readJson("weekly_scores.json", { scores: [] }) || {};
+  return applyCountableFpts(rows, seasonPointBuckets(tape.scores || [], s.season));
+}
 
 async function walkLeagues(startId) {
   const leagues = [];
@@ -704,11 +716,15 @@ async function main() {
   for (const year of years) {
     const s = seasons[String(year)];
     if (!s || s.league.status !== "complete") continue;
-    for (const r of standingsFor(s, nameByUser)) {
+    for (const r of placeRowsFor(s, nameByUser)) {
       sleeperPlaceRows.push({ ...r, season: String(year) });
     }
   }
-  enrichTitleHistory(titles, [...sleeperPlaceRows, ...espnStandings]);
+  const tape = readJson("weekly_scores.json", { scores: [] }) || {};
+  const espnPlaces = detectLeagueFormat(readJson("leagues.json", []) || []).kind === "redraft"
+    ? applyRedraftSeasons(espnStandings, tape.scores || [], champBySeasonFromTitles(titles))
+    : espnStandings;
+  enrichTitleHistory(titles, [...sleeperPlaceRows, ...espnPlaces]);
 
   const isCuckle = String(LEAGUE_ID) === CUCKLE_LEAGUE_ID;
   if (isCuckle) {
@@ -776,7 +792,7 @@ async function main() {
       season: String(year),
       league_id: String(s.league.league_id),
       status: "complete",
-      rows: standingsFor(s, nameByUser).map((r) => ({
+      rows: placeRowsFor(s, nameByUser).map((r) => ({
         roster_id: r.roster_id,
         user_id: r.user_id || null,
         name: r.name,
@@ -811,7 +827,7 @@ async function main() {
     }, null, 2));
     return;
   }
-  const standings = standingsFor(seasons[lastSeason], nameByUser);
+  const standings = placeRowsFor(seasons[lastSeason], nameByUser);
   const places = standings.map((r) => r.place);
   if (new Set(places).size !== places.length) throw new Error(`standings ${lastSeason}: duplicate place`);
   if (places.some((p, i) => p !== i + 1)) throw new Error(`standings ${lastSeason}: places are not 1..n`);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Career finishes: average place, season count, no parked / no double-count. */
-import { standingsFor } from "../lib/standings.mjs";
+import { standingsFor, standingsForRedraft } from "../lib/standings.mjs";
 import {
   addFinish,
   buildFinishesBook,
@@ -37,7 +37,7 @@ const names = {
   l: "Adizzl3",
 };
 const owner = { 8: "a", 11: "b", 1: "c", 12: "d", 10: "e", 9: "f", 7: "g", 6: "h", 5: "i", 4: "j", 3: "k", 2: "l" };
-const recordOrder = [8, 11, 1, 12, 10, 9, 7, 6, 5, 4, 3, 2];
+const recordOrder = [8, 11, 1, 12, 9, 10, 7, 6, 5, 4, 3, 2];
 const rosters = recordOrder.map((rid, i) => ({
   roster_id: rid,
   owner_id: owner[rid],
@@ -78,7 +78,7 @@ if (book.seats.find((s) => s.name === "Biff34").avg !== 1) fail("ESPN 2025 must 
 const tru = book.seats.find((s) => s.name === "TrumanCooper");
 if (!tru || tru.n !== 2 || tru.avg !== 7) fail("Truman 2025 10th + ESPN 2024 4th = 7.0: " + JSON.stringify(tru));
 if (book.seats.some((s) => s.name === "SethHenry12")) fail("book must omit people who never finished");
-if (book.v !== 2 || book.career_floor !== 3) fail("career book v2 ships a 3-season floor");
+if (book.v !== 3 || book.career_floor !== 3) fail("career book v3 ships a 3-season floor");
 const biffSeat = book.seats.find((s) => s.name === "Biff34");
 if (!biffSeat || biffSeat.titles_n !== 1 || biffSeat.top6_n !== 1 || biffSeat.last_n !== 0) {
   fail("Biff 2025 title is one crown, not a sacko: " + JSON.stringify(biffSeat));
@@ -98,5 +98,22 @@ const remapped = remapEspnStanding(
   { 3: "franchise" },
 );
 if (remapped.user_id !== "franchise") fail("franchise map wins over person map");
+
+const gmWb = [
+  { m: 1, r: 1, l: 10, w: 8, t1: 10, t2: 8 },
+  { m: 2, r: 1, l: 9, w: 11, t1: 11, t2: 9 },
+  { m: 3, r: 2, l: 1, w: 8, t1: 1, t2: 8 },
+  { m: 4, r: 2, l: 12, w: 11, t1: 12, t2: 11 },
+  { p: 5, m: 5, r: 2, l: 9, w: 10, t1: 10, t2: 9 },
+  { p: 1, m: 6, r: 3, l: 11, w: 8, t1: 8, t2: 11 },
+  { p: 3, m: 7, r: 3, l: 12, w: 1, t1: 1, t2: 12 },
+];
+const redraft = standingsForRedraft({ season: "2025", rosters, owner, names, wb: gmWb }, names);
+if (redraft[0].name !== "Biff34" || redraft[1].name !== "JnastyGBE300") fail("title game still 1-2");
+if (redraft.find((r) => r.name === "sbzy11").place !== 5) fail("first-round outs sort by regular season: sbzy 9-5 is 5th");
+if (redraft.find((r) => r.name === "fatassmexican").place !== 6) fail("p=5 consolation must not put fatass over sbzy");
+if (redraft.find((r) => r.name === "Adizzl3").place !== 12) fail("missed playoffs still regular-season last");
+if (redraft.find((r) => r.name === "sbzy11").from !== "first_round") fail("first-round loser is tagged first_round");
+if (redraft.find((r) => r.name === "ztrain123").from !== "semi") fail("bye who lost a semi is tagged semi");
 
 console.log("PASS finishes: avg rank, season count, no parked, Sleeper year wins");

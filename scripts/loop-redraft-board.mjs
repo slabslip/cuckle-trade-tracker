@@ -130,10 +130,10 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmbeef20260918062000"')
-  && html.includes('const DATA_V = "gmbeef20260918062000"')
-  && sw.includes('chuckle-shell-v262-gm-board')
-  && !sw.includes("chuckle-shell-v261-gm-beef"),
+loop(10, page.includes('const DATA_V = "gmbeef20260918073000"')
+  && html.includes('const DATA_V = "gmbeef20260918073000"')
+  && sw.includes('chuckle-shell-v263-gm-rs')
+  && !sw.includes("chuckle-shell-v262-gm-board"),
   "DATA_V and SW cache moved so Safari cannot keep the old board");
 
 // 11 Redraft library still hides dynasty ops
@@ -150,13 +150,23 @@ loop(11, page.includes("DATA_DASH_DYNASTY_ONLY")
 const biff = (finishes.seats || []).find((s) => s.name === "Biff34");
 const tbow = (finishes.seats || []).find((s) => s.name === "Tbow00");
 const ztrain = (finishes.seats || []).find((s) => s.name === "ztrain123");
+const jnasty = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const champ = (titles.titles || [])[0];
-loop(12, biff && biff.avg === 4.7 && finishes.seats[0].name === "Biff34"
-  && tbow && tbow.fpts_avg >= 1500
-  && adizz && adizz.contender === 83.3
-  && ztrain && ztrain.last_n === 2
+const y25 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
+  ?.find((p) => p.season === "2025");
+loop(12, finishes.v === 3 && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.3
+  && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
+  && adizz && adizz.contender === 83.3 && adizz.last_n === 1
+  && jnasty && jnasty.last_n === 2
+  && ztrain && ztrain.last_n === 1
+  && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
+  && y25("fatassmexican") && y25("fatassmexican").place === 6
+  && y25("Adizzl3") && y25("Adizzl3").place === 12 && y25("Adizzl3").from === "regular"
+  && y25("Biff34") && y25("Biff34").fpts === 2109.48
   && champ && champ.season === "2025" && champ.name === "Biff34"
-  && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02,
-  "home leads: Biff 4.7 / 2025, Tbow points, Adizzl3 180.02, ztrain two sackos");
+  && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02
+  && page.includes("Last in regular season")
+  && page.includes("consolation is out"),
+  "home leads: Tbow 4.3 career, Biff points (RS+hunt), Jnasty two RS sackos");
 
 console.log("PASS 12 redraft board loops");

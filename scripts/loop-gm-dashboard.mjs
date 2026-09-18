@@ -92,6 +92,8 @@ const hunt = spawnSync(process.execPath, [new URL("test-week-score-hunt.mjs", im
 if (hunt.status) process.exit(hunt.status);
 const espnLaws = spawnSync(process.execPath, [new URL("test-espn-franchise.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (espnLaws.status) process.exit(espnLaws.status);
+const redraftSeason = spawnSync(process.execPath, [new URL("test-redraft-season.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (redraftSeason.status) process.exit(redraftSeason.status);
 const finishes = spawnSync(process.execPath, [new URL("test-finishes.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (finishes.status) process.exit(finishes.status);
 const hist = spawnSync(process.execPath, [new URL("test-title-history.mjs", import.meta.url).pathname], { stdio: "inherit" });

@@ -240,22 +240,24 @@ loop(37, page.includes("function espnUnlockStepsHtml(")
 const biffFin = (finishes.seats || []).find((s) => s.name === "Biff34");
 const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
-loop(38, finishes.v === 2 && Array.isArray(finishes.seats)
+loop(38, finishes.v === 3 && Array.isArray(finishes.seats)
   && finishes.career_floor === 3
+  && /consolation points out/.test(finishes.rule || "")
   && (finishes.seasons || []).includes("2025")
   && (finishes.seasons || []).includes("2020")
   && !(finishes.seasons || []).includes("2026")
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
   && biffFin && biffFin.n === 6 && biffFin.places.some((p) => p.season === "2025" && p.place === 1)
   && biffFin.places.some((p) => p.season === "2024" && p.provider === "espn")
-  && biffFin.fpts_avg != null && biffFin.top6_n === 4 && biffFin.last_n === 0
+  && biffFin.fpts_avg === 1657.2 && biffFin.top6_n === 4 && biffFin.last_n === 0
   && jnFin && jnFin.n === 6 && jnFin.places.some((p) => p.season === "2025" && p.place === 2)
   && jnFin.places.some((p) => p.season === "2020" && p.provider === "espn")
+  && jnFin.last_n === 2
   && truFin && truFin.places.some((p) => p.season === "2025" && p.place === 10)
   && truFin.last_n === 0
-  && finishes.seats[0] && finishes.seats[0].name === "Biff34" && finishes.seats[0].n === 6
+  && finishes.seats[0] && finishes.seats[0].name === "Tbow00" && finishes.seats[0].avg === 4.3
   && biffFin.avg === 4.7,
-  "How I finished spans 2020–2025; career fields ship; Seth has no completed season");
+  "How I finished spans 2020–2025; RS+hunt places; Seth has no completed season");
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
@@ -296,13 +298,22 @@ const adizz = (finishes.seats || []).find((s) => s.name === "Adizzl3");
 const tbow = (finishes.seats || []).find((s) => s.name === "Tbow00");
 const ztrain = (finishes.seats || []).find((s) => s.name === "ztrain123");
 const tully = (finishes.seats || []).find((s) => s.name === "fatassmexican");
-loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3
-  && tbow && tbow.fpts_avg >= 1500
-  && ztrain && ztrain.last_n === 2
+const y25 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}).places
+  ?.find((p) => p.season === "2025");
+loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3 && adizz.last_n === 1
+  && tbow && tbow.avg === 4.3 && tbow.fpts_avg === 1645.1
+  && ztrain && ztrain.last_n === 1
   && tully && tully.titles_n === 2
+  && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
+  && y25("fatassmexican") && y25("fatassmexican").place === 6
+  && y25("Biff34") && y25("Biff34").fpts === 2109.48
+  && members[4] && members[4].name === "sbzy11" && members[5] && members[5].name === "fatassmexican"
+  && members[11] && members[11].name === "Adizzl3"
   && page.includes("Three completed seasons minimum")
-  && page.includes("Worst place that year, not 10th")
+  && page.includes("Last in regular season")
+  && page.includes("consolation is out")
+  && !page.includes("Worst place that year, not 10th")
   && page.includes("dataDashRedraftStale"),
-  "career tiles after name pins: Biff floor-average, Tbow points, Adizzl3 contender, ztrain sackos");
+  "career tiles: Tbow 4.3, Biff RS+hunt points, Adizzl3 contender, Jnasty sackos");
 
 console.log("PASS 42 Gm dataset loops");

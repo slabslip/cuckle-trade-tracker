@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Consolation-free redraft places and points. Fail fast. */
+/** 3rd-place game sets 3rd/4th; consolation points stay out. Fail fast. */
 import { applyRedraftSeason, countableFpts, seasonPointBuckets } from "../lib/redraft-season.mjs";
 import { scoreIsChampionshipHunt } from "../lib/week-score-lists.mjs";
 
@@ -24,8 +24,8 @@ const rows = [
 ];
 
 const scores = [];
-function add(uid, week, points, phase, hunt) {
-  scores.push({ user_id: uid, season: "2024", week, points, phase, hunt });
+function add(uid, week, points, phase, hunt, extra) {
+  scores.push({ user_id: uid, season: "2024", week, points, phase, hunt, ...(extra || {}) });
 }
 for (const r of rows) {
   add(r.user_id, 1, r.user_id === "rs7" ? 140 : 100, "regular", true);
@@ -37,14 +37,15 @@ add("qfA", 16, 40, "playoff", false);
 add("qfB", 16, 30, "playoff", false);
 add("champ", 17, 150, "playoff", true);
 add("final", 17, 90, "playoff", true);
-add("semiA", 17, 200, "playoff", false);
+add("semiA", 17, 101.62, "playoff", false, { playoff_tier: "WINNERS_CONSOLATION_LADDER" });
+add("semiB", 17, 106.96, "playoff", false, { playoff_tier: "WINNERS_CONSOLATION_LADDER" });
 add("last", 17, 10, "playoff", false);
 
 const next = applyRedraftSeason(rows, scores, "champ");
 const by = Object.fromEntries(next.map((r) => [r.name, r]));
 if (by.fatassmexican.place !== 1 || by.Adizzl3.place !== 2) fail("title game stays 1-2");
-if (by.Tbow00.place !== 3) fail("semi losers sort by regular season: Tbow 11-3 is 3rd, not consolation 4th: " + by.Tbow00.place);
-if (by.kotula69.place !== 4) fail("kotula 7-7 is 4th after Tbow");
+if (by.kotula69.place !== 3) fail("3rd-place game winner is 3rd even at 7-7: " + by.kotula69.place);
+if (by.Tbow00.place !== 4) fail("3rd-place game loser is 4th even at 11-3: " + by.Tbow00.place);
 if (by.sbzy11.place !== 5 || by.Aballers.place !== 6) fail("first-round outs by regular season");
 if (by.TaylorJohnson16.place !== 7) fail("Taylor 6-8 1554 PF is 7th in regular season, not 11th from consolation");
 if (by.ztrain123.place !== 12) fail("ztrain 4-10 is regular-season last / sacko");
@@ -61,4 +62,10 @@ const buckets = seasonPointBuckets(scores, "2024");
 if (countableFpts(buckets.last) !== 180) fail("countable drops consolation");
 if (scoreIsChampionshipHunt({ phase: "playoff", hunt: false })) fail("consolation hunt flag");
 
-console.log("PASS redraft season: RS last place, consolation points out");
+const noGame = applyRedraftSeason(rows, scores.filter((s) => s.playoff_tier !== "WINNERS_CONSOLATION_LADDER"), "champ");
+const noGameBy = Object.fromEntries(noGame.map((r) => [r.name, r]));
+if (noGameBy.kotula69.place !== 3 || noGameBy.Tbow00.place !== 4) {
+  fail("official incoming 3rd/4th stand when the 3rd-place tape is missing");
+}
+
+console.log("PASS redraft season: 3rd-place game, RS last place, consolation points out");

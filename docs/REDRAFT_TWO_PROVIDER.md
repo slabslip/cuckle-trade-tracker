@@ -32,7 +32,8 @@ ESPN franchise laws, and 36 dataset loops.
 Week scores now include ESPN 2020–2024 next to Sleeper 2025–2026. Those
 years attach to current Sleeper seats by name, then by ESPN team slot
 (a manager who left stays on that franchise). Playoff consolation still
-does not set the low. 2019–2010 returned 404 — they are not invented.
+does not set the low. The 3rd-place game does set 3rd and 4th. 2019–2010
+returned 404 — they are not invented.
 
 ---
 
@@ -98,6 +99,7 @@ Then commit `data/leagues/1389723418827460608/` and push `main`.
 
 - ESPN weeks never overwrite Sleeper 2025–2026.
 - ESPN playoff consolation still does not set the low (same hunt rule).
+- The 3rd-place game (`WINNERS_CONSOLATION_LADDER` / Sleeper `p=3`) sets 3rd and 4th. 5th-place stays out.
 - Past Champions gets ESPN crowns only from a real ESPN payload — never invented.
 
 The same five steps also sit on **Settings → Leagues** when ESPN is locked.

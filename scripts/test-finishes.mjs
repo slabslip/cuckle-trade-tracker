@@ -203,5 +203,31 @@ if (redraft.find((r) => r.name === "fatassmexican").place !== 6) fail("p=5 conso
 if (redraft.find((r) => r.name === "Adizzl3").place !== 12) fail("missed playoffs still regular-season last");
 if (redraft.find((r) => r.name === "sbzy11").from !== "first_round") fail("first-round loser is tagged first_round");
 if (redraft.find((r) => r.name === "ztrain123").from !== "semi") fail("bye who lost a semi is tagged semi");
+if (redraft.find((r) => r.name === "ztrain123").place !== 3) fail("p=3 winner is 3rd: " + redraft.find((r) => r.name === "ztrain123").place);
+if (redraft.find((r) => r.name === "collinmccaskill").place !== 4) fail("p=3 loser is 4th");
+
+const thirdFlip = standingsForRedraft({
+  season: "2024",
+  rosters: [
+    { roster_id: 7, settings: { wins: 9, losses: 5, ties: 0, fpts: 1518, fpts_decimal: 0 } },
+    { roster_id: 5, settings: { wins: 9, losses: 5, ties: 0, fpts: 1458, fpts_decimal: 0 } },
+    { roster_id: 9, settings: { wins: 11, losses: 3, ties: 0, fpts: 1743, fpts_decimal: 0 } },
+    { roster_id: 11, settings: { wins: 7, losses: 7, ties: 0, fpts: 1326, fpts_decimal: 0 } },
+  ],
+  owner: { 7: "poop", 5: "nut", 9: "tbow", 11: "kotu" },
+  names: { poop: "fatassmexican", nut: "Adizzl3", tbow: "Tbow00", kotu: "kotula69" },
+  wb: [
+    { r: 2, w: 7, l: 9, t1: 7, t2: 9 },
+    { r: 2, w: 5, l: 11, t1: 5, t2: 11 },
+    { p: 1, r: 3, w: 7, l: 5, t1: 7, t2: 5 },
+    { p: 3, r: 3, w: 11, l: 9, t1: 11, t2: 9 },
+  ],
+}, { poop: "fatassmexican", nut: "Adizzl3", tbow: "Tbow00", kotu: "kotula69" });
+if (thirdFlip.find((r) => r.name === "kotula69").place !== 3) {
+  fail("p=3 winner is 3rd even at 7-7: " + JSON.stringify(thirdFlip));
+}
+if (thirdFlip.find((r) => r.name === "Tbow00").place !== 4) {
+  fail("p=3 loser stays 4th even at 11-3");
+}
 
 console.log("PASS finishes: avg rank, season count, no parked, Sleeper year wins");

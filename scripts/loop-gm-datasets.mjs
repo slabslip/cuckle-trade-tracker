@@ -202,18 +202,17 @@ loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 70
   && sleeperHunt.length === 10 && espnHunt.length === 60
   && (weekly.scores || []).filter((s) => s.phase === "playoff" && !s.hunt).length === 158
   && weeks.n_playoff_hunt === 70
-  && (weeks.playoff.high || []).every((r) => r.hunt)
-  && (weeks.playoff.low || []).every((r) => r.hunt)
-  && (weeks.all.low || []).every((r) => r.phase !== "playoff" || r.hunt)
+  && (weeks.playoff.high || []).every((r) => r.phase === "playoff")
+  && (weeks.playoff.low || []).every((r) => r.phase === "playoff")
   && !(weeks.all.low || []).some((r) => r.week === 18)
   && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16" && r.week === 18)
-  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58 && r.week === 18)
+  && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58)
   && weeks.playoff.high[0] && weeks.playoff.high[0].name === "Biff34" && weeks.playoff.high[0].points === 163.38
-  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "Tbow00" && weeks.playoff.low[0].points === 57.1
+  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "kotula69" && weeks.playoff.low[0].points === 56.06
   && !(weeks.playoff.low || []).some((r) => r.name === "collinmccaskill" && r.points === 9),
-  "playoff lists are championship hunt only — ESPN stub 9-pt week is out");
-loop(34, page.includes("championship hunt only") && page.includes("title hunt")
-  && page.includes("still hunting the title"),
+  "playoff lists are title + 3rd-place money games — ESPN stub 9-pt week is out");
+loop(34, page.includes("championship hunt plus the 3rd-place game") && page.includes("title hunt")
+  && page.includes("still hunting the title or playing for 3rd"),
   "Week scores copy drops out-of-hunt playoff weeks");
 loop(35, fs.existsSync(`${raw}/espn_weekly_scores.json`)
   && Array.isArray(load(`${raw}/espn_weekly_scores.json`, {}).scores)
@@ -252,7 +251,7 @@ loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
   && biffFin && biffFin.n === 6 && biffFin.places.some((p) => p.season === "2025" && p.place === 1)
   && biffFin.places.some((p) => p.season === "2024" && p.provider === "espn")
-  && biffFin.fpts_avg === 1657.2 && biffFin.top6_n === 4 && biffFin.last_n === 0
+  && biffFin.fpts_avg === 1676.5 && biffFin.top6_n === 4 && biffFin.last_n === 0
   && jnFin && jnFin.n === 6 && jnFin.places.some((p) => p.season === "2025" && p.place === 2)
   && jnFin.places.some((p) => p.season === "2020" && p.provider === "espn")
   && jnFin.last_n === 2
@@ -310,7 +309,7 @@ const y24 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}
   ?.find((p) => p.season === "2024");
 loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3 && adizz.last_n === 1
   && adizz.playoff_n === 5 && adizz.playoff_avg === 3.4
-  && tbow && tbow.avg === 4.5 && tbow.fpts_avg === 1645.1 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
+  && tbow && tbow.avg === 4.5 && tbow.fpts_avg === 1662.1 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
   && ztrain && ztrain.last_n === 1
   && tully && tully.titles_n === 2 && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"

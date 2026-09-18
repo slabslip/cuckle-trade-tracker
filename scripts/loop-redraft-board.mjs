@@ -153,11 +153,11 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "sacko20020260918162000"')
-  && html.includes('const DATA_V = "sacko20020260918162000"')
-  && sw.includes('chuckle-shell-v277-sacko-200')
-  && !sw.includes("chuckle-shell-v276-third-place")
-  && !sw.includes("chuckle-shell-v275-share-claim"),
+loop(10, page.includes('const DATA_V = "pobracket20260918164000"')
+  && html.includes('const DATA_V = "pobracket20260918164000"')
+  && sw.includes('chuckle-shell-v278-po-bracket')
+  && !sw.includes("chuckle-shell-v277-sacko-200")
+  && !sw.includes("chuckle-shell-v276-third-place"),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
@@ -182,7 +182,7 @@ const y24 = (name) => ((finishes.seats || []).find((s) => s.name === name) || {}
   ?.find((p) => p.season === "2024");
 loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.5 && tbow.rs_avg === 4 && tbow.playoff_avg === 3
-  && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
+  && biff && biff.avg === 4.7 && biff.fpts_avg === 1676.5
   && adizz && adizz.contender === 83.3 && adizz.last_n === 1 && adizz.playoff_n === 5
   && adizz.net === -500 && adizz.lost === 2000
   && tully && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
@@ -201,6 +201,8 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && html.includes("most regular-season points $300")
   && page.includes("Last place pays $200 extra into the pot")
   && html.includes("Last place pays $200 extra into the pot")
+  && page.includes("3rd/4th from the 3rd-place game")
+  && html.includes("3rd/4th from the 3rd-place game")
   && finishes.pot && finishes.pot.sacko === 200
   && finLib.includes("regularSeasonPointsForMp")
   && mpMatchesRsLeader()

@@ -4198,7 +4198,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "sacko20020260918162000";
+    const DATA_V = "pobracket20260918164000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4297,7 +4297,7 @@ const html = `<!DOCTYPE html>
       sacko: { lab: "Sacko", why: "Last in regular season. Pays $200 extra into the pot that year. Consolation weeks do not set last place." },
       rs_avg: { lab: "Regular season avg", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       playoff_n: { lab: "Playoff appearances", why: "Times they made the top six and kept setting lineups." },
-      playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
+      playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season." },
       pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
       season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
@@ -4316,7 +4316,7 @@ const html = `<!DOCTYPE html>
       { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
-      { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks still hunting the title." },
+      { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks still hunting the title or playing for 3rd." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -4342,7 +4342,7 @@ const html = `<!DOCTYPE html>
       { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last in regular season. Pays $200 extra into the pot that year. Consolation weeks do not count." },
       { id: "rs_avg", lab: "Regular season avg", desk: "lists", group: "who", size: "full", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       { id: "playoff_n", lab: "Playoff appearances", desk: "lists", group: "who", size: "full", why: "Times they made the top six and kept setting lineups." },
-      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
+      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season." },
       { id: "pot_net", lab: "Career net", desk: "lists", group: "who", size: "full", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
@@ -6007,7 +6007,7 @@ const html = `<!DOCTYPE html>
           print: high ? weekScorePts(high) : "—",
           because: (league && league.providers && league.providers.espn_authorized)
             ? "Highest and lowest hunt weeks on Sleeper and ESPN tape."
-            : "Highest and lowest team weeks still hunting the title.",
+            : "Highest and lowest team weeks still hunting the title or playing for 3rd.",
           shareKind: "title",
           shareId: "",
         };
@@ -7529,7 +7529,7 @@ const html = `<!DOCTYPE html>
         caption = "Times they made the top six and kept setting lineups. Consolation is not a playoff appearance.";
       }
       else if (id === "playoff_avg") {
-        caption = "Average final place in years they made the hunt. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
+        caption = "Average final place in years they made the hunt. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game — those seats set lineups. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
       }
       else if (id === "pot_net" && receiptNetWho) {
         const seat = finishNetWhoSeat();
@@ -7547,7 +7547,7 @@ const html = `<!DOCTYPE html>
           : "Who is sitting on future firsts.";
       }
       else if (id === "week_scores") {
-        caption = "Highest five and lowest five team weeks. Playoff is championship hunt only — consolation and leftover weeks are out.";
+        caption = "Highest five and lowest five team weeks. Playoff is the championship hunt plus the 3rd-place game — 5th-place consolation and leftover weeks are out.";
         if (leagueFormat().kind === "redraft" && league && league.providers && league.providers.espn_authorized) {
           caption += " ESPN years sit next to Sleeper.";
         } else if (leagueFormat().kind === "redraft" && league && league.providers && !league.providers.espn_authorized) {
@@ -30992,7 +30992,7 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptDoorFilterHtml").includes('id === "week_scores"')
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
     || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")
-    || !inline.includes("championship hunt only")
+    || !inline.includes("championship hunt plus the 3rd-place game")
     || !inline.includes("title hunt")
     || !inline.includes("Sleeper tape only until ESPN years unlock.")) {
     throw new Error("Week scores door must list highest and lowest team weeks from week-scores.json");

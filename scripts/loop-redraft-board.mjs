@@ -130,10 +130,10 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmbeef20260918090000"')
-  && html.includes('const DATA_V = "gmbeef20260918090000"')
-  && sw.includes('chuckle-shell-v264-gm-rs-money')
-  && !sw.includes("chuckle-shell-v263-gm-rs"),
+loop(10, page.includes('const DATA_V = "gmbeef20260918102000"')
+  && html.includes('const DATA_V = "gmbeef20260918102000"')
+  && sw.includes('chuckle-shell-v265-gm-pot')
+  && !sw.includes("chuckle-shell-v264-gm-rs-money"),
   "DATA_V and SW cache moved so Safari cannot keep the old board");
 
 // 11 Redraft library still hides dynasty ops
@@ -158,7 +158,7 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && finishes.seats[0].name === "Tbow00" && tbow && tbow.avg === 4.3 && tbow.rs_avg === 4 && tbow.playoff_avg === 2.8
   && biff && biff.avg === 4.7 && biff.fpts_avg === 1657.2
   && adizz && adizz.contender === 83.3 && adizz.last_n === 1 && adizz.playoff_n === 5
-  && tully && tully.won === 3340 && tully.lost === 1800
+  && tully && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
   && jnasty && jnasty.last_n === 2
   && ztrain && ztrain.last_n === 1 && ztrain.playoff_avg === 2.8
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
@@ -168,8 +168,8 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && champ && champ.season === "2025" && champ.name === "Biff34"
   && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02
   && page.includes("Last in regular season")
-  && page.includes("Placeholder pot")
+  && page.includes("most points $300")
   && page.includes("Regular-season record only"),
-  "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, fatass $3,340");
+  "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, real pot");
 
 console.log("PASS 12 redraft board loops");

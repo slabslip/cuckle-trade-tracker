@@ -4138,7 +4138,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmbeef20260918090000";
+    const DATA_V = "gmbeef20260918102000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4238,8 +4238,8 @@
       rs_avg: { lab: "Regular season avg", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       playoff_n: { lab: "Playoff appearances", why: "Times they made the top six and kept setting lineups." },
       playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
-      gross_won: { lab: "Gross winnings", why: "Prize money collected. Placeholder top-six pot — $300 entry." },
-      gross_lost: { lab: "Gross losses", why: "Buy-ins paid. $300 every completed season." },
+      gross_won: { lab: "Most winnings", why: "Prize money collected. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300." },
+      gross_lost: { lab: "Most losses", why: "Money down: $300 entry minus what they cashed. 4th on is unpaid unless they took most points." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
       season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
@@ -4284,8 +4284,8 @@
       { id: "rs_avg", lab: "Regular season avg", desk: "lists", group: "who", size: "full", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       { id: "playoff_n", lab: "Playoff appearances", desk: "lists", group: "who", size: "full", why: "Times they made the top six and kept setting lineups." },
       { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
-      { id: "gross_won", lab: "Gross winnings", desk: "lists", group: "who", size: "full", why: "Prize money collected. Placeholder top-six pot until the real sheet lands." },
-      { id: "gross_lost", lab: "Gross losses", desk: "lists", group: "who", size: "full", why: "Buy-ins paid. $300 every completed season." },
+      { id: "gross_won", lab: "Most winnings", desk: "lists", group: "who", size: "full", why: "Prize money collected. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300." },
+      { id: "gross_lost", lab: "Most losses", desk: "lists", group: "who", size: "full", why: "Money down: $300 entry minus what they cashed." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
@@ -5598,7 +5598,9 @@
 
     function finishGrossLost() {
       return finishSeats().filter(function (s) { return s.lost != null; }).slice().sort(function (a, b) {
-        if ((Number(b.lost) || 0) !== (Number(a.lost) || 0)) return (Number(b.lost) || 0) - (Number(a.lost) || 0);
+        const ha = Math.max(0, (Number(a.lost) || 0) - (Number(a.won) || 0));
+        const hb = Math.max(0, (Number(b.lost) || 0) - (Number(b.won) || 0));
+        if (hb !== ha) return hb - ha;
         return (Number(a.net) || 0) - (Number(b.net) || 0);
       });
     }
@@ -5625,7 +5627,7 @@
       if (id === "playoff_n") return String(Number(seat.playoff_n) || 0);
       if (id === "playoff_avg") return seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
       if (id === "gross_won") return seat.won != null ? finishMoney(seat.won) : "—";
-      if (id === "gross_lost") return seat.lost != null ? finishMoney(seat.lost) : "—";
+      if (id === "gross_lost") return seat.hole != null ? finishMoney(seat.hole) : (seat.lost != null ? finishMoney(seat.lost) : "—");
       return seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
     }
 
@@ -5671,10 +5673,10 @@
         because = "Average final place in playoff years only. Two appearances minimum. First-round outs are 5th/6th.";
       } else if (id === "gross_won") {
         verdict = (lead.name || "This seat") + " has collected " + finishMoney(lead.won) + ".";
-        because = "Placeholder pot: 1st $1,500 · 2nd $900 · 3rd $500 · 4th $360 · 5th $200 · 6th $140. $300 entry. Net " + finishMoney(lead.net) + ".";
+        because = "1st $2,300 · 2nd $900 · 3rd $300 · most points $300. $300 entry. Net " + finishMoney(lead.net) + ".";
       } else if (id === "gross_lost") {
-        verdict = (lead.name || "This seat") + " has paid " + finishMoney(lead.lost) + " in entries.";
-        because = "$300 every completed season. Sorted by money in, then worst net.";
+        verdict = (lead.name || "This seat") + " is down " + finishMoney(lead.hole != null ? lead.hole : lead.lost) + ".";
+        because = "$300 every completed season. 4th and later are unpaid unless they took most points. Sorted by money down.";
       }
       return {
         id: id,
@@ -7008,10 +7010,10 @@
             }).join(" · ") || count;
           } else if (id === "gross_won") {
             sub = "net " + finishMoney(s.net) + ((s.payouts || []).length ? (" · " + s.payouts.map(function (p) {
-              return p.season + " " + nth(p.place);
+              return p.kind === "mp" ? (p.season + " MP") : (p.season + " " + nth(p.place));
             }).join(" · ")) : "");
           } else if (id === "gross_lost") {
-            sub = count + " × $300 · net " + finishMoney(s.net);
+            sub = count + " × $300 · won " + finishMoney(s.won) + " · net " + finishMoney(s.net);
           } else {
             sub = count + (s.avg != null ? (" · " + Number(s.avg).toFixed(1) + " avg") : "");
           }
@@ -7293,10 +7295,10 @@
         caption = "Average final place in years they made the hunt. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
       }
       else if (id === "gross_won") {
-        caption = "Prize money collected. Placeholder pot until the real sheet lands: 1st $1,500 · 2nd $900 · 3rd $500 · 4th $360 · 5th $200 · 6th $140. $300 entry. Only the top six are paid.";
+        caption = "Prize money collected. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. $300 entry. A champ who also wins MP takes both.";
       }
       else if (id === "gross_lost") {
-        caption = "Buy-ins paid — $300 every completed season. Six-year seats paid $1,800. Sorted by money in, then worst net.";
+        caption = "Money down: $300 every completed season minus what they cashed. 4th and later are unpaid unless they took most points.";
       }
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";

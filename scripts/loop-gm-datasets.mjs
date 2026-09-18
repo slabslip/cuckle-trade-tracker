@@ -308,7 +308,7 @@ loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3
   && adizz.playoff_n === 5 && adizz.playoff_avg === 3.4
   && tbow && tbow.avg === 4.3 && tbow.fpts_avg === 1645.1 && tbow.rs_avg === 4 && tbow.playoff_avg === 2.8
   && ztrain && ztrain.last_n === 1
-  && tully && tully.titles_n === 2 && tully.won === 3340 && tully.lost === 1800
+  && tully && tully.titles_n === 2 && tully.won === 4600 && tully.lost === 1800 && tully.net === 2800
   && y25("sbzy11") && y25("sbzy11").place === 5 && y25("sbzy11").from === "first_round"
   && y25("fatassmexican") && y25("fatassmexican").place === 6
   && y25("Biff34") && y25("Biff34").fpts === 2109.48

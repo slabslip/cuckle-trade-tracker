@@ -117,8 +117,11 @@ if (!potBiff || potBiff.playoff_n !== 2 || potBiff.playoff_avg !== 3) {
   fail("Biff 2025 title + 2024 first-round is 2 playoff years / 3.0 avg: " + JSON.stringify(potBiff));
 }
 if (potBiff.rs_avg == null) fail("Biff keeps an RS average");
-if (potBiff.won !== 1700 || potBiff.lost !== 600 || potBiff.net !== 1100) {
-  fail("Biff $1500 title + $200 fifth, $600 entries: " + JSON.stringify(potBiff));
+if (potBiff.won !== 2600 || potBiff.lost !== 600 || potBiff.net !== 2000) {
+  fail("Biff $2,300 title + $300 MP, $0 for 5th, $600 entries: " + JSON.stringify(potBiff));
+}
+if (!potBiff.payouts.some((p) => p.kind === "mp" && p.amount === 300)) {
+  fail("Biff 2025 most points pays $300: " + JSON.stringify(potBiff.payouts));
 }
 if (playoffNSeats(potBook.seats)[0].name !== "Biff34") fail("playoff appearances start with Biff");
 if (grossWonSeats(potBook.seats)[0].name !== "Biff34") fail("gross won starts with the title");

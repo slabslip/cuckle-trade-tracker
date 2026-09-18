@@ -141,6 +141,33 @@ if (biffYears[1].season !== "2024" || biffYears[1].place !== 5
 if (!rsAvgSeats(potBook.seats, 1).length) fail("RS average list is not empty");
 if (playoffAvgSeats(potBook.seats, 2)[0].name !== "Biff34") fail("playoff avg floor 2 starts with Biff");
 
+const mpHunt = buildFinishesBook({
+  sleeperSeasons: [{
+    season: "2024",
+    rows: [
+      { user_id: "champ", name: "Champ", place: 1, from: "title", fpts: 1913.3, rs_fpts: 1518.54 },
+      { user_id: "mp", name: "Points", place: 3, from: "semi", fpts: 1912.26, rs_fpts: 1742.68 },
+    ],
+  }],
+  members: [
+    { user_id: "champ", name: "Champ" },
+    { user_id: "mp", name: "Points" },
+  ],
+  sleeperYears: ["2024"],
+  pot: GM_POT,
+});
+const mpChamp = mpHunt.seats.find((s) => s.name === "Champ");
+const mpRs = mpHunt.seats.find((s) => s.name === "Points");
+if (!mpRs || !mpRs.payouts.some((p) => p.kind === "mp" && p.amount === 300)) {
+  fail("most regular-season points pays $300 even when hunt PF is lower: " + JSON.stringify(mpRs));
+}
+if (mpChamp && mpChamp.payouts.some((p) => p.kind === "mp")) {
+  fail("title + higher hunt PF must not take the MP $300: " + JSON.stringify(mpChamp));
+}
+if (!mpChamp || mpChamp.won !== 2300 || mpRs.won !== 600) {
+  fail("Champ $2,300 place only; RS leader $300 place + $300 MP: " + JSON.stringify({ mpChamp, mpRs }));
+}
+
 const remapped = remapEspnStanding(
   { season: "2018", user_id: "espn:old", roster_id: 3, place: 2, name: "Old" },
   { "espn:old": "person" },

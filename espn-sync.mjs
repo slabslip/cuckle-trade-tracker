@@ -19,6 +19,7 @@ import {
   writeJson,
 } from "./lib.mjs";
 import { espnPlayoffWeekStart, espnScoresFromSchedule } from "./lib/espn-weeks.mjs";
+import { enrichTitleHistory, fptsRankInSeason } from "./lib/title-history.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const providers = loadProviders(LEAGUE_ID);
@@ -270,7 +271,7 @@ function parseSeason(body, season, idMap) {
         fpts: champ.fpts,
         ppts: null,
         sit: null,
-        fpts_rank: null,
+        fpts_rank: fptsRankInSeason(standings, champ.user_id),
         teams: standings.length,
         trades: 0,
         league_mean_trades: null,
@@ -432,6 +433,7 @@ async function main() {
   books.members = [...memberMap.values()].sort((a, b) =>
     a.canonical_name.localeCompare(b.canonical_name),
   );
+  enrichTitleHistory(books.titles, books.standings);
 
   if (!status.authorized) {
     status.reason = sawAuthBlock

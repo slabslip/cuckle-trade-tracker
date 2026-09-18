@@ -3404,6 +3404,9 @@
       font-size: 0.78rem; font-weight: 750; line-height: 1.2; color: var(--text);
       letter-spacing: 0; text-transform: none; max-width: 100%;
     }
+    .door-fig {
+      font-size: 0.68rem; font-weight: 650; line-height: 1.2; color: #e0b44c;
+    }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -4127,7 +4130,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260918022820";
+    const DATA_V = "gmhist20260918030000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4224,9 +4227,9 @@
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
       available_cuffs: { lab: "Wire cuffs", why: "Free-agent backups, your holes first." },
       uninsured: { lab: "No backup", why: "Starters whose NFL cuff is not on a roster." },
-      week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks. Year stays on the row." },
-      season_place: { lab: "How I finished", why: "Every completed imported year they played, ranked by average." },
-      past_champions: { lab: "Who won the year", why: "Every real crown in this book. Host year tagged." },
+      week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
+      season_place: { lab: "How I finished", why: "Career average across every completed imported year they played." },
+      past_champions: { lab: "Who won the year", why: "Every real crown on this book. Host year tagged." },
       fill_holes: { lab: "Who fills your lineup", why: "Get a starter at a hole. This season only." },
       move_extras: { lab: "Who wants your extras", why: "Move a surplus starter this season." },
     };
@@ -5422,6 +5425,26 @@
     }
 
     function receiptSeasonClaim() {
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()
+        && finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats[0]) {
+        const lead = finishesBook.seats[0];
+        const years = (finishesBook.seasons || []).slice();
+        const oldest = years.length ? years[years.length - 1] : "";
+        const newest = years[0] || "";
+        const span = oldest && newest ? (oldest + "–" + newest) : "";
+        const n = Number(lead.n) || 0;
+        return {
+          id: "season_place",
+          kind: "Season",
+          verdict: (lead.name || "This seat") + " has the best average finish"
+            + (n ? (" over " + n + (n === 1 ? " season" : " seasons")) : "") + ".",
+          who: lead.name || "",
+          print: lead.avg != null ? String(lead.avg) : "—",
+          because: span ? (span + " imported years, ranked by average.") : "Every completed imported year they played.",
+          shareKind: "title",
+          shareId: "",
+        };
+      }
       const title = receiptLastSeason();
       const mine = receiptMySeat();
       if (title) {
@@ -5543,7 +5566,9 @@
             : "No scored team weeks on tape yet.",
           who: spec.lab,
           print: high ? weekScorePts(high) : "—",
-          because: "Highest and lowest team weeks still hunting the title.",
+          because: (league && league.providers && league.providers.espn_authorized)
+            ? "Highest and lowest hunt weeks on Sleeper and ESPN tape."
+            : "Highest and lowest team weeks still hunting the title.",
           shareKind: "title",
           shareId: "",
         };
@@ -5565,8 +5590,12 @@
         };
       }
       if (id === "past_champions") {
-        const n = ((titles && titles.titles) || []).length;
+        const list = (titles && titles.titles) || [];
+        const n = list.length;
         const last = receiptLastSeason();
+        const years = list.map(function (t) { return String(t.season || ""); }).filter(Boolean).sort();
+        const span = years.length ? (years[0] + "–" + years[years.length - 1]) : "";
+        const espnN = list.filter(function (t) { return t.provider === "espn"; }).length;
         return {
           id: id,
           kind: "Who",
@@ -5575,7 +5604,9 @@
             : "No title yet. New book.",
           who: spec.lab,
           print: n ? (n + " titles") : "—",
-          because: "Who actually won years.",
+          because: span
+            ? (span + (espnN ? (" · " + espnN + " ESPN") : "") + ".")
+            : "Who actually won years.",
           shareKind: "title",
           shareId: last ? last.season : "",
         };
@@ -5841,7 +5872,20 @@
     function receiptDoorFace(id) {
       const spec = dataDashById(id);
       if (!spec) return "";
-      return receiptDoorIco(id) + '<span class="door-lab">' + esc(spec.lab) + "</span>";
+      let fig = "";
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
+        if (id === "past_champions") {
+          const n = ((titles && titles.titles) || []).length;
+          if (n) fig = '<span class="door-fig">' + n + "</span>";
+        } else if (id === "season_place") {
+          const n = (finishesBook && finishesBook.seasons && finishesBook.seasons.length) || 0;
+          if (n) fig = '<span class="door-fig">' + n + " yrs</span>";
+        } else if (id === "week_scores") {
+          const n = weekScoresBook && Number(weekScoresBook.n);
+          if (n) fig = '<span class="door-fig">' + n + "</span>";
+        }
+      }
+      return receiptDoorIco(id) + '<span class="door-lab">' + esc(spec.lab) + "</span>" + fig;
     }
 
     function receiptIsWho(id) {
@@ -6683,11 +6727,16 @@
       }
       if (id === "past_champions") {
         return ((titles && titles.titles) || []).filter(function (t) {
-          return hit([t.season, t.name]);
+          return hit([t.season, t.name, t.provider]);
         }).map(function (t) {
+          const rec = t.record || {};
+          const src = t.provider === "espn" ? "ESPN" : "Sleeper";
+          const how = rec.fpts_rank === 1 ? "points race" : (rec.fpts_rank ? ("from " + nth(rec.fpts_rank) + " in points") : "bracket");
+          const recLine = (rec.wins != null ? (rec.wins + "–" + rec.losses + " · ") : "") + how + " · " + src;
           return '<button type="button" class="row" data-title="' + esc(t.season) + '">'
             + '<div class="row-top"><div><div class="names">' + esc(t.season) + " · " + seatLabel(t.name)
-            + '</div></div><div class="margin">1st</div></div></button>';
+            + '</div><div class="date">' + esc(recLine) + "</div></div>"
+            + '<div class="margin">1st</div></div></button>';
         }).join("");
       }
       if (id === "vs_you") {
@@ -6913,8 +6962,18 @@
         caption = pickSeat
           ? ("Picks that started on " + pickSeat + ". Follow them after a sale.")
           : "Claim your seat to see the picks that started here.";
-      } else if (id === "past_champions") caption = "Every year someone won. Search a year or a seat.";
-      else if (id === "season_place") caption = "Every completed season they played, ranked by average finish. Season count is under each name.";
+      }       else if (id === "past_champions") {
+        caption = "Every real crown on this book. Host year tagged. Search a year or a seat.";
+        if (league && league.providers && league.providers.espn_authorized) {
+          caption += " ESPN years sit next to Sleeper.";
+        }
+      }
+      else if (id === "season_place") {
+        caption = "Every completed season they played, ranked by average finish. Season count is under each name.";
+        if (league && league.providers && league.providers.espn_authorized) {
+          caption += " Imported ESPN years count.";
+        }
+      }
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
       else if (id === "firsts_held") {
@@ -6924,7 +6983,9 @@
       }
       else if (id === "week_scores") {
         caption = "Highest five and lowest five team weeks. Playoff is championship hunt only — consolation and leftover weeks are out.";
-        if (leagueFormat().kind === "redraft" && league && league.providers && !league.providers.espn_authorized) {
+        if (leagueFormat().kind === "redraft" && league && league.providers && league.providers.espn_authorized) {
+          caption += " ESPN years sit next to Sleeper.";
+        } else if (leagueFormat().kind === "redraft" && league && league.providers && !league.providers.espn_authorized) {
           caption += " Sleeper tape only until ESPN years unlock.";
         }
       }
@@ -10995,8 +11056,16 @@
         return dataDashHead(spec, y ? (n + " in " + y) : "—", "Latest year on the tape");
       }
       if (id === "past_champions") {
-        const n = (titles && titles.titles && titles.titles.length) || 0;
-        return dataDashHead(spec, n ? (n + " titles") : "Open", "Every title path");
+        const list = (titles && titles.titles) || [];
+        const n = list.length;
+        const espnN = list.filter(function (t) { return t.provider === "espn"; }).length;
+        return dataDashHead(spec, n ? (n + " titles") : "Open", espnN ? (espnN + " from ESPN") : "Every title path");
+      }
+      if (id === "season_place") {
+        const n = (finishesBook && finishesBook.seasons && finishesBook.seasons.length) || 0;
+        const lead = finishesBook && finishesBook.seats && finishesBook.seats[0];
+        return dataDashHead(spec, lead && lead.avg != null ? String(lead.avg) : (n ? (n + " yrs") : "Open"),
+          lead ? ((lead.name || "Lead") + " career avg") : "Average finish");
       }
       if (id === "seat_volume" || id === "seat_run" || id === "seat_posture"
         || id === "seat_manners" || id === "seat_aging" || id === "seat_draft") {
@@ -11119,6 +11188,9 @@
       if (typeof ensureCuffs === "function") ensureCuffs();
       let html = dataDashPresetHtml();
       html += '<div class="receipt-board" data-dash-board="1" aria-label="Your board">';
+      if (typeof isRedraftLeague === "function" && isRedraftLeague() && typeof ensureWeekScores === "function") {
+        ensureWeekScores();
+      }
       html += tiles.map(dataDashTileHtml).join("");
       if (dataDashEdit && dataDashBoardTiles().length < DATA_DASH_MAX) {
         html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a door</button>';

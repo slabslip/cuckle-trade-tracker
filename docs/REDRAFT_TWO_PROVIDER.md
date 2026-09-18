@@ -7,7 +7,7 @@ crowns are copied over. Views, tiles, titles, calc, and toggle:
 
 | Provider | ID | Years |
 | --- | --- | --- |
-| ESPN (prior) | `35763180` | through 2024, once cookies are set |
+| ESPN (prior) | `35763180` | 2020–2024 imported (2019–2010 are 404s) |
 | Sleeper (recent + current) | `1389723418827460608` | 2026 live; walks to `1253382148073725952` (2025) |
 
 Canonical key on disk and in the store: the **Sleeper** id.
@@ -29,19 +29,18 @@ Open locally after `python3 -m http.server`:
 `node scripts/loop-gm-dashboard.mjs` runs the 12 shell laws, hunt-week laws,
 ESPN franchise laws, and 36 dataset loops.
 
-Week scores stay Sleeper-only until ESPN cookies unlock 2010–2024. Those
+Week scores now include ESPN 2020–2024 next to Sleeper 2025–2026. Those
 years attach to current Sleeper seats by name, then by ESPN team slot
 (a manager who left stays on that franchise). Playoff consolation still
-does not set the low.
+does not set the low. 2019–2010 returned 404 — they are not invented.
 
 ---
 
 ## 2. ESPN prior years — step by step
 
-ESPN league `35763180` is **private**. Without cookies the API returns 401,
-so Week scores can only use Sleeper 2025–2026. That is why every current
-low is a 2025 week. The import and franchise attach are already wired;
-they stay empty until the two cookies below are set.
+ESPN league `35763180` is **private**. Cookies are set and 2020–2024 is
+on the book (`espn_status.authorized`). Re-import only if those years
+go stale. 2019–2010 are gone from ESPN (404), not a cookie miss.
 
 ### A. Copy the cookies (Chrome, computer)
 
@@ -148,7 +147,7 @@ Same path as any second Sleeper league ([`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) §3
 - Redraft clocks only (Date of Trade + as of today)
 - Calculator door and screen: **#1GM calc** (Menu still says Calculator)
 - Today prices are DynastyProcess **value_1qb** flatten only — no Superflex KTC/FC/DD blend
-- 2025 is complete on Sleeper (Biff34). ESPN years fill in when cookies are present
+- 2025 is complete on Sleeper (Biff34). ESPN 2020–2024 crowns and weeks are imported
 - Home tape line states Sleeper seasons vs ESPN locked/imported
 
 ---

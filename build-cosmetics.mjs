@@ -13,6 +13,7 @@ import {
   setLeagueId,
   writeUi,
 } from "./lib.mjs";
+import { lastPlaceUnlocks } from "./lib/title-history.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const leagueFormat = detectLeagueFormat(readJson("leagues.json", []) || []);
@@ -58,6 +59,7 @@ function loadRaw(name, fallback) {
   return JSON.parse(readFileSync(p, "utf8"));
 }
 const weekTape = loadRaw("weekly_scores.json", { scores: [] });
+const finishesBook = loadUi("finishes.json", { seats: [] });
 
 const titles = titlesBook.titles || [];
 const traders = league.traders || [];
@@ -631,10 +633,8 @@ for (const [uid, n] of Object.entries(finalistCount)) {
   if (n >= 2) unlockPair(uid, "two_time_finalist", receipt([`${n} championship games`, years.join(", ")]));
 }
 
-for (const m of members) {
-  if (Number(m.place) === 10) {
-    unlockPair(String(m.user_id), "last_place", receipt([m.place_season || "latest", m.name]));
-  }
+for (const row of lastPlaceUnlocks(finishesBook)) {
+  unlockPair(String(row.user_id), "last_place", receipt([row.season, row.name]));
 }
 
 if (traders.length) {

@@ -54,14 +54,17 @@ loop(4, league.format && league.format.kind === "redraft" && league.format.forma
 // 5 Sleeper seasons present
 loop(5, (bridge.sleeper_seasons || []).includes("2025") && (bridge.sleeper_seasons || []).includes("2026"),
   "Sleeper 2025 and 2026 are on the merged bridge");
-// 6 ESPN honest lock
-loop(6, espn.authorized === false && espn.reason === "espn_private_needs_cookie"
-  && (bridge.espn_seasons || []).length === 0,
-  "ESPN years stay empty and locked without cookies (no fake history)");
-// 7 Titles from Sleeper only until ESPN lands
-loop(7, (titles.titles || []).length >= 1 && titles.titles.every((t) => t.provider !== "espn")
-  && titles.titles.some((t) => t.season === "2025" && t.name === "Biff34"),
-  "2025 Sleeper champion Biff34 is on Past Champions; no invented ESPN titles");
+// 6 ESPN authorized history
+loop(6, espn.authorized === true && Array.isArray(espn.seasons)
+  && espn.seasons.join(",") === "2024,2023,2022,2021,2020"
+  && (bridge.espn_seasons || []).join(",") === "2024,2023,2022,2021,2020",
+  "ESPN 2020–2024 is authorized and on the merged bridge");
+// 7 Titles from Sleeper + imported ESPN years
+loop(7, (titles.titles || []).some((t) => t.season === "2025" && t.name === "Biff34")
+  && (titles.titles || []).filter((t) => t.provider === "espn").length === 5
+  && (titles.titles || []).some((t) => t.season === "2024" && t.provider === "espn" && t.repeat === "repeat")
+  && (titles.titles || []).some((t) => t.season === "2025" && t.prior && Number(t.prior.place) === 9),
+  "2025 Sleeper champion Biff34 plus five imported ESPN crowns; history enriched");
 // 8 12 seats + parked 2026 join
 loop(8, members.length >= 12 && members.some((m) => m.name === "SethHenry12" && m.place > 12)
   && members[0].name === "Biff34",
@@ -91,6 +94,8 @@ const espnLaws = spawnSync(process.execPath, [new URL("test-espn-franchise.mjs",
 if (espnLaws.status) process.exit(espnLaws.status);
 const finishes = spawnSync(process.execPath, [new URL("test-finishes.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (finishes.status) process.exit(finishes.status);
+const hist = spawnSync(process.execPath, [new URL("test-title-history.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (hist.status) process.exit(hist.status);
 const more = spawnSync(process.execPath, [new URL("loop-gm-datasets.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (more.status) process.exit(more.status);
 const iso = spawnSync(process.execPath, [new URL("loop-format-isolation.mjs", import.meta.url).pathname], { stdio: "inherit" });

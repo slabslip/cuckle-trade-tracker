@@ -3,6 +3,8 @@
 import fs from "node:fs";
 import { CUCKLE_LEAGUE_ID, DATA, NFL_KICKOFF, readJson, readUi, setLeagueId, sleeperGet, writeJson, writeUi, ymd, roundName } from "./lib.mjs";
 import { fptsOf, pptsOf, placesFromBracket, recordRowsFor, standingsFor } from "./lib/standings.mjs";
+import { remapEspnStanding } from "./lib/finishes.mjs";
+import { enrichTitleHistory } from "./lib/title-history.mjs";
 
 const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 const KICKOFF = NFL_KICKOFF;
@@ -693,6 +695,20 @@ async function main() {
   }
 
   titles.sort((a, b) => String(b.season).localeCompare(String(a.season)));
+
+  const bridgeDoc = readJson("provider_bridge.json", {}) || {};
+  const espnStandings = (readJson("espn_standings.json", []) || [])
+    .map((r) => remapEspnStanding(r, bridgeDoc.bridge || {}, bridgeDoc.franchise || {}))
+    .filter(Boolean);
+  const sleeperPlaceRows = [];
+  for (const year of years) {
+    const s = seasons[String(year)];
+    if (!s || s.league.status !== "complete") continue;
+    for (const r of standingsFor(s, nameByUser)) {
+      sleeperPlaceRows.push({ ...r, season: String(year) });
+    }
+  }
+  enrichTitleHistory(titles, [...sleeperPlaceRows, ...espnStandings]);
 
   const isCuckle = String(LEAGUE_ID) === CUCKLE_LEAGUE_ID;
   if (isCuckle) {

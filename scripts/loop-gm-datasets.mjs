@@ -71,18 +71,31 @@ loop(4, leagues.some((l) => String(l.league_id) === ID && String(l.season) === "
   && leagues.some((l) => String(l.league_id) === PRIOR && String(l.season) === "2025")
   && leagues.every((l) => !l.provider || l.provider === "sleeper"),
   "Sleeper walk has 2026 current + 2025 prior; no fake ESPN league rows");
-loop(5, espn.authorized === false && espn.reason === "espn_private_needs_cookie"
-  && (bridge.espn_seasons || []).length === 0 && (bridge.mapped || 0) === 0,
-  "ESPN lock is honest — empty seasons, mapped 0");
-loop(6, rosters.length === 12 && members.length === 13
+loop(5, espn.authorized === true
+  && (espn.seasons || []).join(",") === "2024,2023,2022,2021,2020"
+  && (bridge.espn_seasons || []).join(",") === "2024,2023,2022,2021,2020"
+  && (bridge.mapped || 0) >= 2,
+  "ESPN 2020–2024 authorized; person/franchise maps exist");
+loop(6, rosters.length === 12 && members.length >= 13
   && members.some((m) => m.name === "SethHenry12" && m.place > 12)
-  && members[0].name === "Biff34" && members[9].name === "TrumanCooper",
-  "12 live rosters, 2025 finish order, Seth parked 13th, Truman 10th");
+  && members[0].name === "Biff34",
+  "12 live rosters, 2025 finish order, Seth parked, ESPN-only names join the book");
 loop(7, !rosterOwners.has("1259573343355404288") && rosterOwners.has("1338979666412716032"),
   "Jnasty has no 2026 roster; Seth is the 2026 seat");
-loop(8, (titles.titles || []).length === 1 && titles.titles[0].name === "Biff34"
-  && titles.titles[0].season === "2025" && titles.titles.every((t) => t.provider !== "espn"),
-  "one Sleeper crown (Biff34 2025); no invented ESPN titles");
+const t25 = (titles.titles || []).find((t) => t.season === "2025");
+const t24 = (titles.titles || []).find((t) => t.season === "2024");
+const t23 = (titles.titles || []).find((t) => t.season === "2023");
+const t20 = (titles.titles || []).find((t) => t.season === "2020");
+loop(8, (titles.titles || []).length === 6
+  && t25 && t25.name === "Biff34" && t25.record && t25.record.fpts_rank === 1
+  && t25.prior && Number(t25.prior.place) === 9 && String(t25.prior.season) === "2024"
+  && t24 && t24.provider === "espn" && t24.name === "modano913"
+  && t24.repeat === "repeat" && t24.record && t24.record.fpts_rank === 3
+  && t23 && t23.repeat == null
+  && t20 && t20.provider === "espn" && t20.name === "collinmccaskill"
+  && titles.titles.filter((t) => t.provider === "espn").length === 5
+  && titles.titles.every((t) => t.season !== "2019"),
+  "six real crowns; Biff climbed from 2024 9th; modano 2023–24 is back-to-back");
 loop(9, trades.length === 7 && legs.length >= 14 && tape.length === 7
   && trades.every((t) => String(t.season) === "2025"),
   "seven 2025 two-way trades on the merged tape");
@@ -103,16 +116,18 @@ loop(14, (league.player_lists.homesteaders || []).length === 5
   && (league.player_lists.least_traded || []).length === 5,
   "most/least/homestead lists are five-deep");
 loop(15, weekly.v >= 3 && weekly.n === weekly.n_regular + weekly.n_playoff
-  && weekly.n_regular >= 180 && weekly.n_playoff === 48
+  && weekly.n_regular >= 180
   && (weekly.scores || []).filter((s) => s.season === "2025").length === 216
   && (weekly.scores || []).filter((s) => s.season === "2026").length >= 12
-  && (weekly.scores || []).filter((s) => s.season === "2026").every((s) => s.phase === "regular"),
-  "weekly tape has complete 2025 plus in-season 2026 regular weeks");
-loop(16, weeks.v >= 2 && weeks.n >= 228
-  && weeks.all && weeks.all.high && weeks.all.high[0] && weeks.all.high[0].points >= 177.96
-  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].name === "JnastyGBE300"
-  && weeks.all.low[0].points === 34.82 && weeks.all.low[0].phase === "regular",
-  "week-scores high is a real scored week; low is Jnasty 34.82 regular");
+  && (weekly.scores || []).filter((s) => s.provider === "espn").length >= 1000
+  && ["2024", "2023", "2022", "2021", "2020"].every((y) => (weekly.scores || []).some((s) => s.season === y && s.provider === "espn")),
+  "weekly tape has Sleeper 2025–2026 plus ESPN 2020–2024");
+loop(16, weeks.v >= 2 && weeks.n >= 1000
+  && weeks.all && weeks.all.high && weeks.all.high[0] && weeks.all.high[0].points >= 180
+  && weeks.regular && weeks.regular.low && weeks.regular.low[0] && weeks.regular.low[0].points <= 28.34
+  && weeks.regular.low[0].phase === "regular"
+  && weeks.all.low && weeks.all.low[0] && weeks.all.low[0].hunt === true,
+  "week-scores high/low use imported ESPN tape; regular floor can beat the old Sleeper 34.82");
 loop(17, (calc.players || []).length >= 180
   && Object.keys(calcOwners).length === 12
   && Object.keys(calcOwners).every((id) => rosterOwners.has(id))
@@ -124,16 +139,21 @@ loop(18, (calc.picks || []).length === 0,
 loop(19, drafts.length === 2 && draftPicks.length === 360
   && drafts.every((d) => d.status === "complete" && d.type === "snake"),
   "two complete snake drafts (2025 + 2026), 360 picks");
-loop(20, seats.length === 24,
-  "seats cover both Sleeper seasons (12 x 2)");
-loop(21, Object.keys(marks.seats || {}).length === 13
+loop(20, seats.length >= 24
+  && seats.filter((s) => s.provider === "espn").length === 60,
+  "seats cover both Sleeper seasons plus 60 ESPN seats");
+const markIds = Object.keys(marks.seats || {});
+const sleeperMarks = markIds.filter((id) => !String(id).startsWith("espn:"));
+const espnMarks = markIds.filter((id) => String(id).startsWith("espn:"));
+loop(21, sleeperMarks.length === 13 && espnMarks.length >= 14
   && Object.values(marks.seats).every((m) => m.lens && m.lens.t0 && m.lens.all)
   && Object.values(marks.seats).every((m) => !m.lens.y1 && !m.lens.y2 && !m.lens.y3),
-  "marks cover 13 seats with t0+all only");
-loop(22, (dir.seats || []).length === 13
+  "marks cover 13 Sleeper seats plus ESPN-only history; t0+all only");
+loop(22, (dir.seats || []).filter((s) => !String(s.seat_user_id || "").startsWith("espn:")).length === 13
+  && (dir.seats || []).some((s) => String(s.seat_user_id || "").startsWith("espn:") && s.label === "Parked")
   && dir.seats.every((s) => s.label !== "Hard rebuild" && s.label !== "Rebuild")
   && dir.seats.every((s) => !/2027/.test(s.why || "") && !/2027/.test(s.pace_why || "")),
-  "direction has no Hard rebuild and no 2027 pick copy");
+  "direction has 13 Sleeper seats, ESPN alumni Parked, no Hard rebuild, no 2027");
 loop(23, dir.seats.some((s) => s.name === "JnastyGBE300" && s.label === "Parked" && (s.holes || []).length === 0)
   && dir.seats.some((s) => s.name === "SethHenry12" && s.label !== "Parked" && rosterOwners.has(s.seat_user_id)),
   "Jnasty (no 2026 bag) is Parked; Seth (live 2026 roster) is not");
@@ -172,10 +192,12 @@ loop(31, jnastyDir && jnastyDir.label === "Parked" && (jnastyDir.holes || []).le
 const biffDir = (dir.seats || []).find((s) => s.name === "Biff34");
 loop(32, biffDir && biffDir.label === "Win-now" && !(biffDir.holes || []).includes("QB"),
   "Biff34 (champ, 1QB roster) is Win-now without a fake QB hole");
-loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 10
-  && (weekly.scores || []).filter((s) => s.phase === "playoff" && s.hunt).length === 10
-  && (weekly.scores || []).filter((s) => s.phase === "playoff" && !s.hunt).length === 38
-  && weeks.n_playoff_hunt === 10
+const sleeperHunt = (weekly.scores || []).filter((s) => s.phase === "playoff" && s.hunt && s.provider !== "espn");
+const espnHunt = (weekly.scores || []).filter((s) => s.phase === "playoff" && s.hunt && s.provider === "espn");
+loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 70
+  && sleeperHunt.length === 10 && espnHunt.length === 60
+  && (weekly.scores || []).filter((s) => s.phase === "playoff" && !s.hunt).length === 158
+  && weeks.n_playoff_hunt === 70
   && (weeks.playoff.high || []).every((r) => r.hunt)
   && (weeks.playoff.low || []).every((r) => r.hunt)
   && (weeks.all.low || []).every((r) => r.phase !== "playoff" || r.hunt)
@@ -183,8 +205,8 @@ loop(33, weekly.v >= 3 && weekly.n_playoff_hunt === 10
   && !(weeks.playoff.low || []).some((r) => r.name === "TaylorJohnson16")
   && !(weeks.playoff.high || []).some((r) => r.name === "Tbow00" && r.points === 157.58)
   && weeks.playoff.high[0] && weeks.playoff.high[0].name === "Biff34" && weeks.playoff.high[0].points === 163.38
-  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "JnastyGBE300" && weeks.playoff.low[0].points === 85.28,
-  "playoff lists are championship hunt only — consolation / week 18 leftovers are out");
+  && weeks.playoff.low[0] && weeks.playoff.low[0].name === "collinmccaskill" && weeks.playoff.low[0].points === 9,
+  "playoff lists are championship hunt only — Sleeper 2025 plus ESPN winners-bracket");
 loop(34, page.includes("championship hunt only") && page.includes("title hunt")
   && page.includes("still hunting the title"),
   "Week scores copy drops out-of-hunt playoff weeks");
@@ -195,8 +217,9 @@ loop(35, fs.existsSync(`${raw}/espn_weekly_scores.json`)
   && fs.readFileSync(`${ROOT}merge-provider-history.mjs`, "utf8").includes("buildFranchiseMap"),
   "ESPN weekly tape + franchise attach are wired (empty until cookies)");
 loop(36, (weekly.scores || []).filter((s) => s.provider === "espn" && ["2025", "2026"].includes(String(s.season))).length === 0
-  && page.includes("Sleeper tape only until ESPN years unlock."),
-  "ESPN weeks never overwrite Sleeper 2025-2026; door states the lock");
+  && page.includes("Sleeper tape only until ESPN years unlock.")
+  && page.includes("ESPN years sit next to Sleeper."),
+  "ESPN weeks never overwrite Sleeper 2025-2026; door copy flips when authorized");
 loop(37, page.includes("function espnUnlockStepsHtml(")
   && page.includes("Unlock ESPN history")
   && page.includes("espn_s2")
@@ -214,13 +237,16 @@ const jnFin = (finishes.seats || []).find((s) => s.name === "JnastyGBE300");
 const truFin = (finishes.seats || []).find((s) => s.name === "TrumanCooper");
 loop(38, finishes.v === 1 && Array.isArray(finishes.seats)
   && (finishes.seasons || []).includes("2025")
+  && (finishes.seasons || []).includes("2020")
   && !(finishes.seasons || []).includes("2026")
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12")
-  && biffFin && biffFin.avg === 1 && biffFin.n === 1 && biffFin.places[0].place === 1
-  && jnFin && jnFin.avg === 2 && jnFin.n === 1
-  && truFin && truFin.avg === 10 && truFin.n === 1
-  && finishes.seats[0].name === "Biff34",
-  "How I finished ranks 2025 places; Seth has no completed season; 2026 is out");
+  && biffFin && biffFin.n === 6 && biffFin.places.some((p) => p.season === "2025" && p.place === 1)
+  && biffFin.places.some((p) => p.season === "2024" && p.provider === "espn")
+  && jnFin && jnFin.n === 1 && jnFin.avg === 2
+  && truFin && truFin.places.some((p) => p.season === "2025" && p.place === 10)
+  && finishes.seats[0] && finishes.seats[0].name === "JnastyGBE300" && finishes.seats[0].avg === 2
+  && biffFin.avg === 4.7,
+  "How I finished spans 2020–2025; best average leads; Seth has no completed season");
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
@@ -234,4 +260,20 @@ loop(40, page.includes("const DATA_REPORTS = [")
   && page.includes('"past_champions", "season_place", "vs_you"'),
   "average finish lives on the existing How I finished door, not a 33rd catalog id");
 
-console.log("PASS 40 Gm dataset loops");
+const cosmetics = load(`${ui}/cosmetics.json`, { unlocks: {} });
+const unlocks = cosmetics.unlocks || {};
+const biffUnlock = unlocks["1132355027018035200"] || {};
+const poopUnlock = unlocks["espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}"] || {};
+const collinUnlock = unlocks["1132552110328983552"] || {};
+const truUnlock = unlocks["458342725222133760"] || {};
+const dizUnlock = unlocks["1132146625205567488"] || {};
+loop(41, biffUnlock.climber && biffUnlock.champion
+  && poopUnlock.repeat && poopUnlock.two_time && poopUnlock.bracket_thief
+  && collinUnlock.inaugural && collinUnlock.champion
+  && !truUnlock.last_place && !truUnlock.last_place_title
+  && dizUnlock.last_place
+  && !(cosmetics.catalog || []).some((c) => c.pair === "founding_draft")
+  && (cosmetics.catalog || []).some((c) => c.id === "inaugural" && !/\(2019\)/.test(c.how || "")),
+  "titles/emblems rebuilt: climber, repeat, inaugural; Sacko is last place not 10th");
+
+console.log("PASS 41 Gm dataset loops");

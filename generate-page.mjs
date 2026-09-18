@@ -4146,7 +4146,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmbeef20260918073000";
+    const DATA_V = "gmbeef20260918090000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4222,12 +4222,13 @@ const html = `<!DOCTYPE html>
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_DASH_REDRAFT = [
-      "career_avg", "past_champions", "points_king", "contender_rate",
-      "sacko", "week_scores", "season_place",
+      "rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost",
+      "career_avg", "points_king", "sacko", "past_champions",
+      "contender_rate", "week_scores", "season_place",
     ];
     const DATA_DASH_REDRAFT_RESEARCH = [
-      "career_avg", "points_king", "contender_rate", "sacko",
-      "week_scores", "season_place", "past_champions",
+      "rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost",
+      "career_avg", "sacko",
     ];
     const DATA_DASH_DYNASTY_ONLY = [
       "stash_young", "draft_board", "held_picks", "widest_clock", "seat_aging", "seat_run",
@@ -4242,6 +4243,11 @@ const html = `<!DOCTYPE html>
       points_king: { lab: "Points king", why: "Highest average points per season. Regular season plus title-hunt weeks only — consolation is out." },
       contender_rate: { lab: "Contender rate", why: "Top-six finishes over seasons played. Three seasons minimum." },
       sacko: { lab: "Sacko", why: "Last in regular season. Consolation weeks do not set last place." },
+      rs_avg: { lab: "Regular season avg", why: "Average regular-season place. Playoffs and consolation do not move this number." },
+      playoff_n: { lab: "Playoff appearances", why: "Times they made the top six and kept setting lineups." },
+      playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
+      gross_won: { lab: "Gross winnings", why: "Prize money collected. Placeholder top-six pot — $300 entry." },
+      gross_lost: { lab: "Gross losses", why: "Buy-ins paid. $300 every completed season." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
       season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
@@ -4283,6 +4289,11 @@ const html = `<!DOCTYPE html>
       { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Regular season plus title-hunt weeks only." },
       { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
       { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last in regular season. Consolation weeks do not count." },
+      { id: "rs_avg", lab: "Regular season avg", desk: "lists", group: "who", size: "full", why: "Average regular-season place. Playoffs and consolation do not move this number." },
+      { id: "playoff_n", lab: "Playoff appearances", desk: "lists", group: "who", size: "full", why: "Times they made the top six and kept setting lineups." },
+      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
+      { id: "gross_won", lab: "Gross winnings", desk: "lists", group: "who", size: "full", why: "Prize money collected. Placeholder top-six pot until the real sheet lands." },
+      { id: "gross_lost", lab: "Gross losses", desk: "lists", group: "who", size: "full", why: "Buy-ins paid. $300 every completed season." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
@@ -5518,6 +5529,21 @@ const html = `<!DOCTYPE html>
       return finishSeats().filter(function (s) { return (Number(s.n) || 0) >= floor; });
     }
 
+    function isFinishCareerTile(id) {
+      return id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko"
+        || id === "rs_avg" || id === "playoff_n" || id === "playoff_avg"
+        || id === "gross_won" || id === "gross_lost";
+    }
+
+    function finishMoney(n) {
+      const v = Math.round(Number(n) || 0);
+      return (v < 0 ? "-" : "") + "$" + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function finishPlayoffFloorN() {
+      return 2;
+    }
+
     function finishPointsKing() {
       return finishCareerFloor().filter(function (s) { return s.fpts_avg != null; }).slice().sort(function (a, b) {
         const pf = (Number(b.fpts_avg) || 0) - (Number(a.fpts_avg) || 0);
@@ -5544,11 +5570,57 @@ const html = `<!DOCTYPE html>
       });
     }
 
+    function finishRsAvg() {
+      return finishCareerFloor().filter(function (s) { return s.rs_avg != null; }).slice().sort(function (a, b) {
+        const avg = (Number(a.rs_avg) || 99) - (Number(b.rs_avg) || 99);
+        if (avg) return avg;
+        if ((b.n || 0) !== (a.n || 0)) return (b.n || 0) - (a.n || 0);
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      });
+    }
+
+    function finishPlayoffN() {
+      return finishSeats().filter(function (s) { return (Number(s.playoff_n) || 0) > 0; }).slice().sort(function (a, b) {
+        if ((Number(b.playoff_n) || 0) !== (Number(a.playoff_n) || 0)) return (Number(b.playoff_n) || 0) - (Number(a.playoff_n) || 0);
+        return (Number(a.playoff_avg) || 99) - (Number(b.playoff_avg) || 99);
+      });
+    }
+
+    function finishPlayoffAvg() {
+      const floor = finishPlayoffFloorN();
+      return finishSeats().filter(function (s) {
+        return (Number(s.playoff_n) || 0) >= floor && s.playoff_avg != null;
+      }).slice().sort(function (a, b) {
+        const avg = (Number(a.playoff_avg) || 99) - (Number(b.playoff_avg) || 99);
+        if (avg) return avg;
+        return (Number(b.playoff_n) || 0) - (Number(a.playoff_n) || 0);
+      });
+    }
+
+    function finishGrossWon() {
+      return finishSeats().filter(function (s) { return s.won != null; }).slice().sort(function (a, b) {
+        if ((Number(b.won) || 0) !== (Number(a.won) || 0)) return (Number(b.won) || 0) - (Number(a.won) || 0);
+        return (Number(b.net) || 0) - (Number(a.net) || 0);
+      });
+    }
+
+    function finishGrossLost() {
+      return finishSeats().filter(function (s) { return s.lost != null; }).slice().sort(function (a, b) {
+        if ((Number(b.lost) || 0) !== (Number(a.lost) || 0)) return (Number(b.lost) || 0) - (Number(a.lost) || 0);
+        return (Number(a.net) || 0) - (Number(b.net) || 0);
+      });
+    }
+
     function finishCareerSeats(id) {
       if (id === "career_avg") return finishCareerFloor();
       if (id === "points_king") return finishPointsKing();
       if (id === "contender_rate") return finishContender();
       if (id === "sacko") return finishSacko();
+      if (id === "rs_avg") return finishRsAvg();
+      if (id === "playoff_n") return finishPlayoffN();
+      if (id === "playoff_avg") return finishPlayoffAvg();
+      if (id === "gross_won") return finishGrossWon();
+      if (id === "gross_lost") return finishGrossLost();
       return finishSeats();
     }
 
@@ -5557,6 +5629,11 @@ const html = `<!DOCTYPE html>
       if (id === "points_king") return seat.fpts_avg != null ? String(Math.round(Number(seat.fpts_avg))) : "—";
       if (id === "contender_rate") return seat.contender != null ? (Number(seat.contender).toFixed(1) + "%") : "—";
       if (id === "sacko") return String(Number(seat.last_n) || 0);
+      if (id === "rs_avg") return seat.rs_avg != null ? Number(seat.rs_avg).toFixed(1) : "—";
+      if (id === "playoff_n") return String(Number(seat.playoff_n) || 0);
+      if (id === "playoff_avg") return seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
+      if (id === "gross_won") return seat.won != null ? finishMoney(seat.won) : "—";
+      if (id === "gross_lost") return seat.lost != null ? finishMoney(seat.lost) : "—";
       return seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
     }
 
@@ -5591,6 +5668,21 @@ const html = `<!DOCTYPE html>
         const yearsLine = (lead.last_years || []).join(" · ");
         verdict = (lead.name || "This seat") + " has " + lead.last_n + (lead.last_n === 1 ? " last-place season." : " last-place seasons.");
         because = yearsLine ? ("Last in regular season, " + yearsLine + ".") : "Last in regular season. Consolation weeks do not count.";
+      } else if (id === "rs_avg") {
+        verdict = (lead.name || "This seat") + " has the best regular-season average (" + Number(lead.rs_avg).toFixed(1) + ").";
+        because = "Regular-season record only. Playoff and consolation places do not move this number. " + floor + " seasons minimum.";
+      } else if (id === "playoff_n") {
+        verdict = (lead.name || "This seat") + " made the top six " + lead.playoff_n + " of " + lead.n + " seasons.";
+        because = "Top six keep setting lineups. Consolation appearances do not count.";
+      } else if (id === "playoff_avg") {
+        verdict = (lead.name || "This seat") + " finishes " + Number(lead.playoff_avg).toFixed(1) + " when they make the hunt.";
+        because = "Average final place in playoff years only. Two appearances minimum. First-round outs are 5th/6th.";
+      } else if (id === "gross_won") {
+        verdict = (lead.name || "This seat") + " has collected " + finishMoney(lead.won) + ".";
+        because = "Placeholder pot: 1st $1,500 · 2nd $900 · 3rd $500 · 4th $360 · 5th $200 · 6th $140. $300 entry. Net " + finishMoney(lead.net) + ".";
+      } else if (id === "gross_lost") {
+        verdict = (lead.name || "This seat") + " has paid " + finishMoney(lead.lost) + " in entries.";
+        because = "$300 every completed season. Sorted by money in, then worst net.";
       }
       return {
         id: id,
@@ -5681,7 +5773,7 @@ const html = `<!DOCTYPE html>
           shareId: row ? row.transaction_id : "",
         };
       }
-      if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+      if (isFinishCareerTile(id)) {
         return finishCareerClaim(id);
       }
       if (id === "week_scores") {
@@ -5936,6 +6028,10 @@ const html = `<!DOCTYPE html>
       if (id === "points_king") return "A seat, points, a year";
       if (id === "contender_rate") return "A seat, top six, a year";
       if (id === "sacko") return "A seat, last place, a year";
+      if (id === "rs_avg") return "A seat, regular season, a year";
+      if (id === "playoff_n") return "A seat, playoffs, a year";
+      if (id === "playoff_avg") return "A seat, a playoff finish";
+      if (id === "gross_won" || id === "gross_lost") return "A seat, money, a year";
       if (id === "past_champions") return "A year, a seat";
       if (id === "vs_you") return "A name";
       if (id === "week_scores") return "A seat, a week, a year";
@@ -5951,7 +6047,7 @@ const html = `<!DOCTYPE html>
       if (id === "my_draft" || id === "league_trades") return false;
       if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
-      if (key === "career_avg" || key === "points_king" || key === "contender_rate" || key === "sacko") return false;
+      if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
       if (key === "league_draft" && !receiptDraftSeat) return false;
@@ -5961,7 +6057,7 @@ const html = `<!DOCTYPE html>
     function receiptIsDoor(id) {
       const canon = receiptDoorCanon(id);
       if (id === "season_title" || canon === "season_place") return true;
-      if (canon === "career_avg" || canon === "points_king" || canon === "contender_rate" || canon === "sacko") return true;
+      if (isFinishCareerTile(canon)) return true;
       if (id === "draft_marks" || id === "held_firsts") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -5994,6 +6090,11 @@ const html = `<!DOCTYPE html>
         points_king: '<path d="M12 3.4l2.2 5.2 5.6.8-4.1 3.9.9 5.8L12 16.4 7.4 19.1l.9-5.8-4.1-3.9 5.6-.8z"/>',
         contender_rate: '<circle cx="12" cy="12" r="7.2"/><path d="M12 8v4.2l2.6 1.6"/>',
         sacko: '<path d="M7 9v8M4.8 14.6L7 17l2.2-2.4"/><path d="M17 15V7M14.8 9.4L17 7l2.2 2.4"/>',
+        rs_avg: '<path d="M4 16h4v4H4zM10 11h4v9h-4zM16 7h4v13h-4z"/>',
+        playoff_n: '<path d="M6 4h9l-2 4 2 4H6z"/><path d="M8 20V12"/>',
+        playoff_avg: '<path d="M5 18V8l4 3 4-5 4 4v8z"/>',
+        gross_won: '<path d="M12 4v16M8 8.5c1.2-1.4 6-1.8 6 1.6 0 3.6-8 2.2-8 5.8 0 3.2 4.6 3.8 8 1.6"/>',
+        gross_lost: '<path d="M5 12h14M8 8.5c1.2-1.4 6-1.8 6 1.6 0 3.6-8 2.2-8 5.8 0 3.2 4.6 3.8 8 1.6"/>',
         vs_you: '<circle cx="8" cy="8" r="2.4"/><circle cx="16" cy="8" r="2.4"/><path d="M3.8 18c.8-3 2.8-4.2 4.2-4.2S12 15 12.8 18M11.2 18c.8-3 2.8-4.2 4.2-4.2S20 15 20.2 18"/>',
         firsts_held: '<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M8.5 7v10M12 10.5h5"/>',
         week_scores: '<path d="M7 15V7M4.8 9.4L7 7l2.2 2.4"/><path d="M17 9v8M14.8 14.6L17 17l2.2-2.4"/>',
@@ -6031,7 +6132,7 @@ const html = `<!DOCTYPE html>
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
           if (last) fig = receiptDoorLeadFig(last.name, last.season);
-        } else if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+        } else if (isFinishCareerTile(id)) {
           const lead = finishCareerSeats(id)[0];
           if (lead) fig = receiptDoorLeadFig(lead.name, finishCareerMetric(id, lead));
         } else if (id === "season_place") {
@@ -6882,12 +6983,12 @@ const html = `<!DOCTYPE html>
             + '<div class="margin">' + esc(avg) + "</div></div></div>";
         }).join("");
       }
-      if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+      if (isFinishCareerTile(id)) {
         return finishCareerSeats(id).filter(function (s) {
           const years = (s.places || []).map(function (p) {
             return (p.season || "") + " " + (p.place ? nth(p.place) : "");
           });
-          return hit([s.name, s.avg, s.n, s.fpts_avg, s.contender, s.last_n, "season", "seasons"].concat(years).concat(s.last_years || []));
+          return hit([s.name, s.avg, s.rs_avg, s.n, s.fpts_avg, s.contender, s.last_n, s.playoff_n, s.won, s.lost, "season", "seasons"].concat(years).concat(s.last_years || []).concat(s.playoff_years || []));
         }).map(function (s, i) {
           const n = Number(s.n) || 0;
           const count = n === 1 ? "1 season" : (n + " seasons");
@@ -6900,6 +7001,25 @@ const html = `<!DOCTYPE html>
             sub = (s.top6_n || 0) + " top six · " + count;
           } else if (id === "sacko") {
             sub = (s.last_years || []).join(" · ") || count;
+          } else if (id === "rs_avg") {
+            sub = (s.places || []).map(function (p) {
+              const rs = p.rs_place || p.place;
+              return (p.season || "") + " " + (rs ? nth(rs) + " RS" : "");
+            }).join(" · ");
+          } else if (id === "playoff_n") {
+            sub = (s.playoff_n || 0) + " of " + count + ((s.playoff_years || []).length ? (" · " + s.playoff_years.join(" · ")) : "");
+          } else if (id === "playoff_avg") {
+            sub = (s.places || []).filter(function (p) {
+              return p.from === "title" || p.from === "semi" || p.from === "first_round";
+            }).map(function (p) {
+              return (p.season || "") + " " + (p.place ? nth(p.place) : "");
+            }).join(" · ") || count;
+          } else if (id === "gross_won") {
+            sub = "net " + finishMoney(s.net) + ((s.payouts || []).length ? (" · " + s.payouts.map(function (p) {
+              return p.season + " " + nth(p.place);
+            }).join(" · ")) : "");
+          } else if (id === "gross_lost") {
+            sub = count + " × $300 · net " + finishMoney(s.net);
           } else {
             sub = count + (s.avg != null ? (" · " + Number(s.avg).toFixed(1) + " avg") : "");
           }
@@ -7170,6 +7290,21 @@ const html = `<!DOCTYPE html>
       }
       else if (id === "sacko") {
         caption = "Last in regular season. Teams that missed the top six, or lost in the first round, stopped setting lineups — consolation weeks do not count.";
+      }
+      else if (id === "rs_avg") {
+        caption = "Average regular-season place. A title from 7th in the regular season still counts as 7th here. Three seasons minimum.";
+      }
+      else if (id === "playoff_n") {
+        caption = "Times they made the top six and kept setting lineups. Consolation is not a playoff appearance.";
+      }
+      else if (id === "playoff_avg") {
+        caption = "Average final place in years they made the hunt. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
+      }
+      else if (id === "gross_won") {
+        caption = "Prize money collected. Placeholder pot until the real sheet lands: 1st $1,500 · 2nd $900 · 3rd $500 · 4th $360 · 5th $200 · 6th $140. $300 entry. Only the top six are paid.";
+      }
+      else if (id === "gross_lost") {
+        caption = "Buy-ins paid — $300 every completed season. Six-year seats paid $1,800. Sorted by money in, then worst net.";
       }
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
@@ -9896,10 +10031,11 @@ const html = `<!DOCTYPE html>
     function dataDashRedraftStale(tiles) {
       if (typeof isRedraftLeague !== "function" || !isRedraftLeague()) return false;
       const list = Array.isArray(tiles) ? tiles : [];
-      return list[0] !== "career_avg"
-        || list.indexOf("points_king") < 0
-        || list.indexOf("contender_rate") < 0
-        || list.indexOf("sacko") < 0;
+      return list[0] !== "rs_avg"
+        || list.indexOf("playoff_n") < 0
+        || list.indexOf("playoff_avg") < 0
+        || list.indexOf("gross_won") < 0
+        || list.indexOf("gross_lost") < 0;
     }
 
     function dataDashHas(id) {
@@ -9916,7 +10052,7 @@ const html = `<!DOCTYPE html>
         || "";
       const seat = authSeatId() || "";
       if (!leagueId || !seat) return "";
-      return "cuckle.data.dash.v3." + leagueId + "." + seat;
+      return "cuckle.data.dash.v4." + leagueId + "." + seat;
     }
 
     function dataDashReadLocal() {
@@ -11282,11 +11418,18 @@ const html = `<!DOCTYPE html>
         return dataDashHead(spec, lead && lead.avg != null ? String(lead.avg) : (n ? (n + " yrs") : "Open"),
           lead ? ((lead.name || "Lead") + " career avg") : "Average finish");
       }
-      if (id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko") {
+      if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
-        const sub = lead
-          ? ((lead.name || "Lead") + (id === "sacko" ? " last place" : (id === "points_king" ? " avg PF" : (id === "contender_rate" ? " top six" : " career avg"))))
-          : spec.why;
+        const tag = id === "sacko" ? " last place"
+          : id === "points_king" ? " avg PF"
+          : id === "contender_rate" ? " top six"
+          : id === "rs_avg" ? " RS avg"
+          : id === "playoff_n" ? " playoffs"
+          : id === "playoff_avg" ? " playoff avg"
+          : id === "gross_won" ? " won"
+          : id === "gross_lost" ? " paid"
+          : " career avg";
+        const sub = lead ? ((lead.name || "Lead") + tag) : spec.why;
         return dataDashHead(spec, lead ? finishCareerMetric(id, lead) : "Open", sub);
       }
       if (id === "seat_volume" || id === "seat_run" || id === "seat_posture"
@@ -30083,11 +30226,13 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 36 || uniq.size !== 36) {
-    throw new Error("DATA_REPORTS must hold exactly 36 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 41 || uniq.size !== 41) {
+    throw new Error("DATA_REPORTS must hold exactly 41 unique reports, found " + reportIds.length);
   }
-  if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")) {
-    throw new Error("DATA_REPORTS must include career_avg, points_king, contender_rate, and sacko");
+  if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")
+    || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
+    || !uniq.has("gross_won") || !uniq.has("gross_lost")) {
+    throw new Error("DATA_REPORTS must include career, RS/playoff, and pot tiles");
   }
   const needIds = ["fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -30165,12 +30310,11 @@ if (!inline.includes("function dataDashHtml(")
     const redStart = inline.indexOf("    const DATA_DASH_REDRAFT = [");
     const redEnd = inline.indexOf("];", redStart);
     const redIds = [...inline.slice(redStart, redEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-    if (redStart < 0 || redIds.length !== 7 || redIds[0] !== "career_avg"
-      || redIds[1] !== "past_champions" || redIds[2] !== "points_king"
-      || redIds[3] !== "contender_rate" || redIds[4] !== "sacko"
-      || redIds[5] !== "week_scores" || redIds[6] !== "season_place"
+    if (redStart < 0 || redIds.length !== 12 || redIds[0] !== "rs_avg"
+      || redIds[1] !== "playoff_n" || redIds[2] !== "playoff_avg"
+      || redIds[3] !== "gross_won" || redIds[4] !== "gross_lost"
       || redIds.indexOf("draft_board") >= 0 || redIds.indexOf("firsts_held") >= 0) {
-      throw new Error("DATA_DASH_REDRAFT must be the 7 career doors, floor-average first");
+      throw new Error("DATA_DASH_REDRAFT must lead with RS / playoff / pot doors");
     }
   }
   if (!inline.includes('["deal", "Deal"]')
@@ -30191,7 +30335,7 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function loadSeatDataDash(")
     || !inline.includes("function saveSeatDataDash(")
     || !inline.includes("seat_data_dash")
-    || !inline.includes("cuckle.data.dash.v3")
+    || !inline.includes("cuckle.data.dash.v4")
     || !inline.includes("function dataDashIsLegacyBoard(")
     || !inline.includes("function receiptDoorLeadFig(")
     || !inline.includes("function receiptDoorWhoName(")

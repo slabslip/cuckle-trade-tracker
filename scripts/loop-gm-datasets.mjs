@@ -359,7 +359,12 @@ loop(43, yearLockOk
   && y24("kotula69") && y24("kotula69").place === 3
   && y25("ztrain123") && y25("ztrain123").place === 3
   && y25("collinmccaskill") && y25("collinmccaskill").place === 4
-  && page.includes("Leftover scores do not move this number"),
+  && page.includes("Leftover scores do not move this number")
+  && Array.isArray(finishes.years) && finishes.years.length === 6
+  && finishes.years[0].season === "2025" && finishes.years[0].rows[0].name === "Biff34"
+  && finishes.years.find((y) => y.season === "2024")?.rows[2]?.name === "kotula69"
+  && page.includes("function finishYearBoard(")
+  && page.includes("Pick a year for that board."),
   "final standings: champ 1-2, 3rd-place 3-4, first-round 5-6, RS 7-12 including sacko");
 
 console.log("PASS 43 Gm dataset loops");

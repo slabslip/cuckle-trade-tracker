@@ -4198,7 +4198,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "standings20260918173000";
+    const DATA_V = "yearboard20260918183000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5826,6 +5826,34 @@ const html = `<!DOCTYPE html>
       return bits.join(" + ") || "unpaid";
     }
 
+    function finishFromLabel(from) {
+      if (from === "title") return "Championship";
+      if (from === "semi") return "3rd-place game";
+      if (from === "first_round") return "First round";
+      return "Regular season";
+    }
+
+    function finishYearBoard(season) {
+      const want = String(season || "");
+      const boards = (finishesBook && Array.isArray(finishesBook.years)) ? finishesBook.years : [];
+      const hit = boards.find(function (b) { return String(b.season) === want; });
+      if (hit && Array.isArray(hit.rows) && hit.rows.length) return hit.rows;
+      const rows = [];
+      finishSeats().forEach(function (seat) {
+        (seat.places || []).forEach(function (p) {
+          if (String(p.season) !== want) return;
+          rows.push({
+            place: p.place,
+            rs_place: p.rs_place,
+            from: p.from,
+            user_id: seat.user_id,
+            name: seat.name,
+          });
+        });
+      });
+      return rows.sort(function (a, b) { return (Number(a.place) || 99) - (Number(b.place) || 99); });
+    }
+
     function finishNetWhoSeat() {
       if (!receiptNetWho) return null;
       return finishSeats().find(function (s) {
@@ -6875,6 +6903,11 @@ const html = `<!DOCTYPE html>
       } else if (id === "week_scores") {
         lab = "Phase";
         opts = [["all", "All"], ["regular", "Regular"], ["playoff", "Playoff"]];
+      } else if (id === "season_place") {
+        lab = "League year";
+        opts = [["all", "Career avg"]];
+        const years = (finishesBook && Array.isArray(finishesBook.seasons)) ? finishesBook.seasons : [];
+        for (let i = 0; i < years.length; i++) opts.push(["y" + years[i], years[i]]);
       } else if (id === "uninsured" || id === "book_top") {
         lab = "Position";
         opts = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
@@ -7167,6 +7200,25 @@ const html = `<!DOCTYPE html>
         return html;
       }
       if (id === "season_place") {
+        const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
+          ? receiptDoorFilter.slice(1) : "";
+        if (yearWant) {
+          return finishYearBoard(yearWant).filter(function (r) {
+            return hit([r.name, r.place, r.from, r.rs_place, yearWant, finishFromLabel(r.from)]);
+          }).map(function (r) {
+            const how = finishFromLabel(r.from);
+            const rs = r.rs_place ? ("RS " + nth(r.rs_place)) : "";
+            const rec = (r.wins != null && r.losses != null)
+              ? (r.wins + "-" + r.losses + (r.ties ? "-" + r.ties : ""))
+              : "";
+            const sub = [how, rs, rec].filter(Boolean).join(" · ");
+            return '<div class="row"><div class="row-top"><div><div class="names">'
+              + esc((r.place || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (sub ? '<div class="date">' + esc(sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.place ? nth(r.place) : "—") + "</div></div></div>";
+          }).join("");
+        }
         const teamN = (typeof leagueFormat === "function" && leagueFormat().team_n) || 0;
         const seats = (finishesBook && Array.isArray(finishesBook.seats) && finishesBook.seats.length)
           ? finishesBook.seats
@@ -7504,7 +7556,11 @@ const html = `<!DOCTYPE html>
         }
       }
       else if (id === "season_place") {
-        caption = "Each year's real final standing. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record. Ranked by average finish.";
+        const yearWant = (receiptDoorFilter && receiptDoorFilter.indexOf("y") === 0)
+          ? receiptDoorFilter.slice(1) : "";
+        caption = yearWant
+          ? (yearWant + " final standings. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record.")
+          : "Each year's real final standing. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record. Ranked by average finish. Pick a year for that board.";
         if (league && league.providers && league.providers.espn_authorized) {
           caption += " Imported ESPN years count.";
         }
@@ -31146,6 +31202,8 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptPortalRows").includes(" seasons")
     || !inline.includes('getLeagueJson("finishes.json")')
     || !inline.includes("Each year's real final standing. Top six from the playoff bracket")
+    || !inline.includes("function finishYearBoard(")
+    || !inline.includes("Pick a year for that board.")
     || !inline.includes("Type a player name")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")

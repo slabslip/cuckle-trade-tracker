@@ -81,6 +81,9 @@ const book = buildFinishesBook({
   sleeperYears: ["2025"],
 });
 if (book.seasons.join(",") !== "2025,2024") fail("seasons newest first, ESPN year kept: " + book.seasons);
+if (!Array.isArray(book.years) || book.years[0].season !== "2025" || book.years[0].rows[0].name !== "Biff34") {
+  fail("year boards save each season's 1-N: " + JSON.stringify(book.years && book.years[0]));
+}
 if (book.seats.find((s) => s.name === "Biff34").avg !== 1) fail("ESPN 2025 must not overwrite Sleeper 2025");
 const tru = book.seats.find((s) => s.name === "TrumanCooper");
 if (!tru || tru.n !== 2 || tru.avg !== 7) fail("Truman 2025 10th + ESPN 2024 4th = 7.0: " + JSON.stringify(tru));

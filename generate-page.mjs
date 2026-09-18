@@ -4146,7 +4146,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "gmbeef20260918102000";
+    const DATA_V = "gmbeef20260918120000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4222,12 +4222,12 @@ const html = `<!DOCTYPE html>
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_DASH_REDRAFT = [
-      "rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost",
+      "rs_avg", "playoff_n", "playoff_avg", "pot_net",
       "career_avg", "points_king", "sacko", "past_champions",
       "contender_rate", "week_scores", "season_place",
     ];
     const DATA_DASH_REDRAFT_RESEARCH = [
-      "rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost",
+      "rs_avg", "playoff_n", "playoff_avg", "pot_net",
       "career_avg", "sacko",
     ];
     const DATA_DASH_DYNASTY_ONLY = [
@@ -4246,8 +4246,7 @@ const html = `<!DOCTYPE html>
       rs_avg: { lab: "Regular season avg", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       playoff_n: { lab: "Playoff appearances", why: "Times they made the top six and kept setting lineups." },
       playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
-      gross_won: { lab: "Most winnings", why: "Prize money collected. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300." },
-      gross_lost: { lab: "Most losses", why: "Money down: $300 entry minus what they cashed. 4th on is unpaid unless they took most points." },
+      pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
       season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
@@ -4292,8 +4291,7 @@ const html = `<!DOCTYPE html>
       { id: "rs_avg", lab: "Regular season avg", desk: "lists", group: "who", size: "full", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       { id: "playoff_n", lab: "Playoff appearances", desk: "lists", group: "who", size: "full", why: "Times they made the top six and kept setting lineups." },
       { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. First-round outs are 5th/6th." },
-      { id: "gross_won", lab: "Most winnings", desk: "lists", group: "who", size: "full", why: "Prize money collected. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300." },
-      { id: "gross_lost", lab: "Most losses", desk: "lists", group: "who", size: "full", why: "Money down: $300 entry minus what they cashed." },
+      { id: "pot_net", lab: "Career net", desk: "lists", group: "who", size: "full", why: "Winnings minus $300 entry each year. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
     let dsOpen = false;
@@ -5532,7 +5530,7 @@ const html = `<!DOCTYPE html>
     function isFinishCareerTile(id) {
       return id === "career_avg" || id === "points_king" || id === "contender_rate" || id === "sacko"
         || id === "rs_avg" || id === "playoff_n" || id === "playoff_avg"
-        || id === "gross_won" || id === "gross_lost";
+        || id === "pot_net";
     }
 
     function finishMoney(n) {
@@ -5597,20 +5595,61 @@ const html = `<!DOCTYPE html>
       });
     }
 
-    function finishGrossWon() {
-      return finishSeats().filter(function (s) { return s.won != null; }).slice().sort(function (a, b) {
+    function finishPotNet() {
+      return finishSeats().filter(function (s) { return s.net != null; }).slice().sort(function (a, b) {
+        if ((Number(b.net) || 0) !== (Number(a.net) || 0)) return (Number(b.net) || 0) - (Number(a.net) || 0);
         if ((Number(b.won) || 0) !== (Number(a.won) || 0)) return (Number(b.won) || 0) - (Number(a.won) || 0);
-        return (Number(b.net) || 0) - (Number(a.net) || 0);
+        return String(a.name || "").localeCompare(String(b.name || ""));
       });
     }
 
-    function finishGrossLost() {
-      return finishSeats().filter(function (s) { return s.lost != null; }).slice().sort(function (a, b) {
-        const ha = Math.max(0, (Number(a.lost) || 0) - (Number(a.won) || 0));
-        const hb = Math.max(0, (Number(b.lost) || 0) - (Number(b.won) || 0));
-        if (hb !== ha) return hb - ha;
-        return (Number(a.net) || 0) - (Number(b.net) || 0);
+    function finishNetMath(won, lost) {
+      return finishMoney(won) + " − " + finishMoney(lost) + " = " + finishMoney((Number(won) || 0) - (Number(lost) || 0));
+    }
+
+    function finishYearLedger(seat) {
+      const pot = finishesBook && finishesBook.pot;
+      const entry = pot && pot.entry != null ? Number(pot.entry) : 300;
+      const lost = Number.isFinite(entry) ? entry : 300;
+      const wonBy = {};
+      const kindsBy = {};
+      ((seat && seat.payouts) || []).forEach(function (p) {
+        const y = String((p && p.season) || "");
+        if (!y) return;
+        wonBy[y] = (wonBy[y] || 0) + (Number(p.amount) || 0);
+        if (!kindsBy[y]) kindsBy[y] = [];
+        kindsBy[y].push(p.kind || "place");
       });
+      return ((seat && seat.places) || []).map(function (row) {
+        const y = String((row && row.season) || "");
+        const won = wonBy[y] || 0;
+        return {
+          season: y,
+          place: row && row.place != null ? Number(row.place) : null,
+          from: (row && row.from) || null,
+          won: won,
+          lost: lost,
+          net: won - lost,
+          kinds: kindsBy[y] || [],
+        };
+      }).sort(function (a, b) {
+        return String(b.season).localeCompare(String(a.season));
+      });
+    }
+
+    function finishYearHow(row) {
+      const bits = [];
+      if (row && row.place) bits.push(nth(row.place));
+      if (row && (row.kinds || []).indexOf("mp") >= 0) bits.push("most points");
+      return bits.join(" + ") || "unpaid";
+    }
+
+    function finishNetWhoSeat() {
+      if (!receiptNetWho) return null;
+      return finishSeats().find(function (s) {
+        return String(s.user_id || "") === String(receiptNetWho)
+          || String(s.name || "") === String(receiptNetWho);
+      }) || null;
     }
 
     function finishCareerSeats(id) {
@@ -5621,8 +5660,7 @@ const html = `<!DOCTYPE html>
       if (id === "rs_avg") return finishRsAvg();
       if (id === "playoff_n") return finishPlayoffN();
       if (id === "playoff_avg") return finishPlayoffAvg();
-      if (id === "gross_won") return finishGrossWon();
-      if (id === "gross_lost") return finishGrossLost();
+      if (id === "pot_net") return finishPotNet();
       return finishSeats();
     }
 
@@ -5634,8 +5672,7 @@ const html = `<!DOCTYPE html>
       if (id === "rs_avg") return seat.rs_avg != null ? Number(seat.rs_avg).toFixed(1) : "—";
       if (id === "playoff_n") return String(Number(seat.playoff_n) || 0);
       if (id === "playoff_avg") return seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
-      if (id === "gross_won") return seat.won != null ? finishMoney(seat.won) : "—";
-      if (id === "gross_lost") return seat.hole != null ? finishMoney(seat.hole) : (seat.lost != null ? finishMoney(seat.lost) : "—");
+      if (id === "pot_net") return seat.net != null ? finishMoney(seat.net) : "—";
       return seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
     }
 
@@ -5679,12 +5716,9 @@ const html = `<!DOCTYPE html>
       } else if (id === "playoff_avg") {
         verdict = (lead.name || "This seat") + " finishes " + Number(lead.playoff_avg).toFixed(1) + " when they make the hunt.";
         because = "Average final place in playoff years only. Two appearances minimum. First-round outs are 5th/6th.";
-      } else if (id === "gross_won") {
-        verdict = (lead.name || "This seat") + " has collected " + finishMoney(lead.won) + ".";
-        because = "1st $2,300 · 2nd $900 · 3rd $300 · most points $300. $300 entry. Net " + finishMoney(lead.net) + ".";
-      } else if (id === "gross_lost") {
-        verdict = (lead.name || "This seat") + " is down " + finishMoney(lead.hole != null ? lead.hole : lead.lost) + ".";
-        because = "$300 every completed season. 4th and later are unpaid unless they took most points. Sorted by money down.";
+      } else if (id === "pot_net") {
+        verdict = (lead.name || "This seat") + " is " + finishMoney(lead.net) + " after entries.";
+        because = finishMoney(lead.won) + " collected − " + finishMoney(lead.lost) + " in $300 entries. 1st $2,300 · 2nd $900 · 3rd $300 · most points $300.";
       }
       return {
         id: id,
@@ -6033,7 +6067,7 @@ const html = `<!DOCTYPE html>
       if (id === "rs_avg") return "A seat, regular season, a year";
       if (id === "playoff_n") return "A seat, playoffs, a year";
       if (id === "playoff_avg") return "A seat, a playoff finish";
-      if (id === "gross_won" || id === "gross_lost") return "A seat, money, a year";
+      if (id === "pot_net") return "A seat, money, a year";
       if (id === "past_champions") return "A year, a seat";
       if (id === "vs_you") return "A name";
       if (id === "week_scores") return "A seat, a week, a year";
@@ -6072,6 +6106,7 @@ const html = `<!DOCTYPE html>
       if (id === "season_title") return "season_place";
       if (id === "draft_marks") return "seat_draft";
       if (id === "held_firsts") return "firsts_held";
+      if (id === "gross_won" || id === "gross_lost") return "pot_net";
       return id;
     }
 
@@ -6095,8 +6130,7 @@ const html = `<!DOCTYPE html>
         rs_avg: '<path d="M4 16h4v4H4zM10 11h4v9h-4zM16 7h4v13h-4z"/>',
         playoff_n: '<path d="M6 4h9l-2 4 2 4H6z"/><path d="M8 20V12"/>',
         playoff_avg: '<path d="M5 18V8l4 3 4-5 4 4v8z"/>',
-        gross_won: '<path d="M12 4v16M8 8.5c1.2-1.4 6-1.8 6 1.6 0 3.6-8 2.2-8 5.8 0 3.2 4.6 3.8 8 1.6"/>',
-        gross_lost: '<path d="M5 12h14M8 8.5c1.2-1.4 6-1.8 6 1.6 0 3.6-8 2.2-8 5.8 0 3.2 4.6 3.8 8 1.6"/>',
+        pot_net: '<path d="M12 4v16M8 8.5c1.2-1.4 6-1.8 6 1.6 0 3.6-8 2.2-8 5.8 0 3.2 4.6 3.8 8 1.6"/><path d="M4 12h3M17 12h3"/>',
         vs_you: '<circle cx="8" cy="8" r="2.4"/><circle cx="16" cy="8" r="2.4"/><path d="M3.8 18c.8-3 2.8-4.2 4.2-4.2S12 15 12.8 18M11.2 18c.8-3 2.8-4.2 4.2-4.2S20 15 20.2 18"/>',
         firsts_held: '<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M8.5 7v10M12 10.5h5"/>',
         week_scores: '<path d="M7 15V7M4.8 9.4L7 7l2.2 2.4"/><path d="M17 9v8M14.8 14.6L17 17l2.2-2.4"/>',
@@ -6986,11 +7020,23 @@ const html = `<!DOCTYPE html>
         }).join("");
       }
       if (isFinishCareerTile(id)) {
+        if (id === "pot_net" && receiptNetWho) {
+          const seat = finishNetWhoSeat();
+          if (!seat) return '<p class="caption">That seat is not on this book.</p>';
+          return finishYearLedger(seat).filter(function (row) {
+            return hit([row.season, row.place, row.won, row.net, finishYearHow(row)]);
+          }).map(function (row) {
+            return '<div class="row"><div class="row-top"><div><div class="names">'
+              + esc((row.season || "") + " · " + finishYearHow(row)) + "</div>"
+              + '<div class="date">' + esc(finishNetMath(row.won, row.lost)) + "</div></div>"
+              + '<div class="margin">' + esc(finishMoney(row.net)) + "</div></div></div>";
+          }).join("");
+        }
         return finishCareerSeats(id).filter(function (s) {
           const years = (s.places || []).map(function (p) {
             return (p.season || "") + " " + (p.place ? nth(p.place) : "");
           });
-          return hit([s.name, s.avg, s.rs_avg, s.n, s.fpts_avg, s.contender, s.last_n, s.playoff_n, s.won, s.lost, "season", "seasons"].concat(years).concat(s.last_years || []).concat(s.playoff_years || []));
+          return hit([s.name, s.avg, s.rs_avg, s.n, s.fpts_avg, s.contender, s.last_n, s.playoff_n, s.won, s.lost, s.net, "season", "seasons"].concat(years).concat(s.last_years || []).concat(s.playoff_years || []));
         }).map(function (s, i) {
           const n = Number(s.n) || 0;
           const count = n === 1 ? "1 season" : (n + " seasons");
@@ -7016,19 +7062,19 @@ const html = `<!DOCTYPE html>
             }).map(function (p) {
               return (p.season || "") + " " + (p.place ? nth(p.place) : "");
             }).join(" · ") || count;
-          } else if (id === "gross_won") {
-            sub = "net " + finishMoney(s.net) + ((s.payouts || []).length ? (" · " + s.payouts.map(function (p) {
-              return p.kind === "mp" ? (p.season + " MP") : (p.season + " " + nth(p.place));
-            }).join(" · ")) : "");
-          } else if (id === "gross_lost") {
-            sub = count + " × $300 · won " + finishMoney(s.won) + " · net " + finishMoney(s.net);
+          } else if (id === "pot_net") {
+            sub = finishNetMath(s.won, s.lost);
           } else {
             sub = count + (s.avg != null ? (" · " + Number(s.avg).toFixed(1) + " avg") : "");
           }
-          return '<div class="row"><div class="row-top"><div><div class="names">'
+          const open = id === "pot_net"
+            ? '<button type="button" class="row" data-receipt-net="' + esc(s.user_id || s.name || "") + '">'
+            : '<div class="row">';
+          const close = id === "pot_net" ? "</button>" : "</div>";
+          return open + '<div class="row-top"><div><div class="names">'
             + esc((i + 1) + ". ") + seatLabel(s.name, { link: false }) + "</div>"
             + '<div class="date">' + esc(sub) + "</div></div>"
-            + '<div class="margin">' + esc(finishCareerMetric(id, s)) + "</div></div></div>";
+            + '<div class="margin">' + esc(finishCareerMetric(id, s)) + "</div></div>" + close;
         }).join("");
       }
       if (id === "past_champions") {
@@ -7231,7 +7277,8 @@ const html = `<!DOCTYPE html>
 
     function receiptWhoListHtml(id) {
       const spec = dataDashById(id);
-      const head = (spec && spec.lab) || "Portal";
+      const netSeat = (id === "pot_net" && receiptNetWho) ? finishNetWhoSeat() : null;
+      const head = (netSeat && netSeat.name) || (spec && spec.lab) || "Portal";
       const rows = receiptPortalRows(id, receiptQ);
       const pickSeat = id === "pick_print"
         ? receiptPickPortalSeat(receiptQ)
@@ -7302,11 +7349,13 @@ const html = `<!DOCTYPE html>
       else if (id === "playoff_avg") {
         caption = "Average final place in years they made the hunt. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
       }
-      else if (id === "gross_won") {
-        caption = "Prize money collected. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. $300 entry. A champ who also wins MP takes both.";
+      else if (id === "pot_net" && receiptNetWho) {
+        const seat = finishNetWhoSeat();
+        caption = (seat && seat.name ? seat.name : "This seat")
+          + " year by year. Winnings that year minus the $300 entry.";
       }
-      else if (id === "gross_lost") {
-        caption = "Money down: $300 every completed season minus what they cashed. 4th and later are unpaid unless they took most points.";
+      else if (id === "pot_net") {
+        caption = "Winnings minus $300 entry each completed season. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for the year ledger.";
       }
       else if (id === "vs_you" && receiptVsWho) caption = "Deals vs " + receiptVsWho + ".";
       else if (id === "vs_you") caption = "Your tape vs one name. Tap a name for the deals.";
@@ -7335,6 +7384,9 @@ const html = `<!DOCTYPE html>
       const vsBack = (id === "vs_you" && receiptVsWho)
         ? '<button type="button" class="chip" data-receipt-vs-back="1">← Names</button> '
         : "";
+      const netBack = (id === "pot_net" && receiptNetWho)
+        ? '<button type="button" class="chip" data-receipt-net-back="1">← Nets</button> '
+        : "";
       const histBack = ((id === "my_trades" || id === "league_trades") && receiptHistPair)
         ? '<button type="button" class="chip" data-hist-back="1">← Partners</button> '
         : "";
@@ -7342,7 +7394,7 @@ const html = `<!DOCTYPE html>
         ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
         : "";
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
-        + '<p class="caption">' + vsBack + histBack + draftBack
+        + '<p class="caption">' + vsBack + netBack + histBack + draftBack
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
@@ -9819,6 +9871,7 @@ const html = `<!DOCTYPE html>
       receiptQ = "";
       receiptDoorFilter = "all";
       receiptVsWho = "";
+      receiptNetWho = "";
       receiptHistPair = "";
       receiptHistTeam = "all";
       receiptDraftSeat = "";
@@ -10036,8 +10089,7 @@ const html = `<!DOCTYPE html>
       return list[0] !== "rs_avg"
         || list.indexOf("playoff_n") < 0
         || list.indexOf("playoff_avg") < 0
-        || list.indexOf("gross_won") < 0
-        || list.indexOf("gross_lost") < 0;
+        || list.indexOf("pot_net") < 0;
     }
 
     function dataDashHas(id) {
@@ -10054,7 +10106,7 @@ const html = `<!DOCTYPE html>
         || "";
       const seat = authSeatId() || "";
       if (!leagueId || !seat) return "";
-      return "cuckle.data.dash.v4." + leagueId + "." + seat;
+      return "cuckle.data.dash.v5." + leagueId + "." + seat;
     }
 
     function dataDashReadLocal() {
@@ -11428,8 +11480,7 @@ const html = `<!DOCTYPE html>
           : id === "rs_avg" ? " RS avg"
           : id === "playoff_n" ? " playoffs"
           : id === "playoff_avg" ? " playoff avg"
-          : id === "gross_won" ? " won"
-          : id === "gross_lost" ? " paid"
+          : id === "pot_net" ? " net"
           : " career avg";
         const sub = lead ? ((lead.name || "Lead") + tag) : spec.why;
         return dataDashHead(spec, lead ? finishCareerMetric(id, lead) : "Open", sub);
@@ -11609,6 +11660,7 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptVsWho = "";
+        receiptNetWho = "";
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
@@ -16510,6 +16562,7 @@ const html = `<!DOCTYPE html>
     let receiptFilter = "all";
     let receiptDoorFilter = "all";
     let receiptVsWho = "";
+    let receiptNetWho = "";
     let receiptHistPair = "";
     let receiptHistTeam = "all";
     let receiptDraftSeat = "";
@@ -17119,6 +17172,12 @@ const html = `<!DOCTYPE html>
           render();
           return true;
         }
+        if (receiptNetWho) {
+          receiptNetWho = "";
+          receiptQ = "";
+          render();
+          return true;
+        }
         if (receiptVsWho) {
           receiptVsWho = "";
           receiptQ = "";
@@ -17132,6 +17191,7 @@ const html = `<!DOCTYPE html>
         receiptHistTeam = "all";
         receiptDraftSeat = "";
         receiptVsWho = "";
+        receiptNetWho = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         homeTab = "history";
@@ -26827,6 +26887,7 @@ const html = `<!DOCTYPE html>
         receiptQ = "";
         receiptDoorFilter = "all";
         receiptVsWho = "";
+        receiptNetWho = "";
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
@@ -26880,6 +26941,20 @@ const html = `<!DOCTYPE html>
       const receiptVsBtn = e.target.closest("[data-receipt-vs]");
       if (receiptVsBtn) {
         receiptVsWho = receiptVsBtn.getAttribute("data-receipt-vs") || "";
+        receiptQ = "";
+        render();
+        return;
+      }
+      const receiptNetBack = e.target.closest("[data-receipt-net-back]");
+      if (receiptNetBack) {
+        receiptNetWho = "";
+        receiptQ = "";
+        render();
+        return;
+      }
+      const receiptNetBtn = e.target.closest("[data-receipt-net]");
+      if (receiptNetBtn) {
+        receiptNetWho = receiptNetBtn.getAttribute("data-receipt-net") || "";
         receiptQ = "";
         render();
         return;
@@ -30228,12 +30303,12 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 41 || uniq.size !== 41) {
-    throw new Error("DATA_REPORTS must hold exactly 41 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 40 || uniq.size !== 40) {
+    throw new Error("DATA_REPORTS must hold exactly 40 unique reports, found " + reportIds.length);
   }
   if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
-    || !uniq.has("gross_won") || !uniq.has("gross_lost")) {
+    || !uniq.has("pot_net")) {
     throw new Error("DATA_REPORTS must include career, RS/playoff, and pot tiles");
   }
   const needIds = ["fill_holes", "move_extras", "poach_cuffs", "stash_young",
@@ -30303,6 +30378,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function finishCareerClaim(")
     || !inline.includes("function finishPointsKing(")
     || !inline.includes("function finishSacko(")
+    || !inline.includes("function finishPotNet(")
+    || !inline.includes("function finishYearLedger(")
+    || !inline.includes("data-receipt-net")
+    || !inline.includes("let receiptNetWho")
     || !inline.includes("Redraft calculator")
     || !inline.includes("Add Yahoo ID")
     || !inline.includes("GitHub secrets do nothing until Rebuild runs")) {
@@ -30312,9 +30391,10 @@ if (!inline.includes("function dataDashHtml(")
     const redStart = inline.indexOf("    const DATA_DASH_REDRAFT = [");
     const redEnd = inline.indexOf("];", redStart);
     const redIds = [...inline.slice(redStart, redEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-    if (redStart < 0 || redIds.length !== 12 || redIds[0] !== "rs_avg"
+    if (redStart < 0 || redIds.length !== 11 || redIds[0] !== "rs_avg"
       || redIds[1] !== "playoff_n" || redIds[2] !== "playoff_avg"
-      || redIds[3] !== "gross_won" || redIds[4] !== "gross_lost"
+      || redIds[3] !== "pot_net"
+      || redIds.indexOf("gross_won") >= 0 || redIds.indexOf("gross_lost") >= 0
       || redIds.indexOf("draft_board") >= 0 || redIds.indexOf("firsts_held") >= 0) {
       throw new Error("DATA_DASH_REDRAFT must lead with RS / playoff / pot doors");
     }
@@ -30337,7 +30417,7 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function loadSeatDataDash(")
     || !inline.includes("function saveSeatDataDash(")
     || !inline.includes("seat_data_dash")
-    || !inline.includes("cuckle.data.dash.v4")
+    || !inline.includes("cuckle.data.dash.v5")
     || !inline.includes("function dataDashIsLegacyBoard(")
     || !inline.includes("function receiptDoorLeadFig(")
     || !inline.includes("function receiptDoorWhoName(")

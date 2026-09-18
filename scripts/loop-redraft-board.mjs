@@ -50,15 +50,15 @@ const defEnd = page.indexOf("];", defStart);
 const defIds = [...page.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
 
 // 1 Career-first home board
-loop(1, redIds.join(",") === "rs_avg,playoff_n,playoff_avg,gross_won,gross_lost,career_avg,points_king,sacko,past_champions,contender_rate,week_scores,season_place"
-  && html.includes('"rs_avg", "playoff_n", "playoff_avg", "gross_won", "gross_lost"')
+loop(1, redIds.join(",") === "rs_avg,playoff_n,playoff_avg,pot_net,career_avg,points_king,sacko,past_champions,contender_rate,week_scores,season_place"
+  && html.includes('"rs_avg", "playoff_n", "playoff_avg", "pot_net"')
   && html.includes('"career_avg", "points_king", "sacko", "past_champions"'),
-  "redraft home leads with RS / playoff / pot doors");
+  "redraft home leads with RS / playoff / one net pot door");
 
-// 2 Saved-board key bumped so Safari / old seats drop the dynasty layout
-loop(2, page.includes("cuckle.data.dash.v4.") && html.includes("cuckle.data.dash.v4.")
-  && !page.includes("cuckle.data.dash.v3.") && !html.includes("cuckle.data.dash.v3."),
-  "seat board key is v4 so the old 7-door career board cannot paint GM home");
+// 2 Saved-board key bumped so Safari / old seats drop the two-door money board
+loop(2, page.includes("cuckle.data.dash.v5.") && html.includes("cuckle.data.dash.v5.")
+  && !page.includes("cuckle.data.dash.v4.") && !html.includes("cuckle.data.dash.v4."),
+  "seat board key is v5 so the old most-winnings / most-losses board cannot paint GM home");
 
 // 3 Stale remote / local boards persist the reset
 loop(3, page.includes("if (stale) saveSeatDataDash(dataDashTiles)")
@@ -67,7 +67,7 @@ loop(3, page.includes("if (stale) saveSeatDataDash(dataDashTiles)")
   && fnSrc(html, "dataDashReadLocal").includes("dataDashWriteLocal")
   && fnSrc(page, "dataDashRedraftStale").includes('list[0] !== "rs_avg"')
   && fnSrc(page, "dataDashRedraftStale").includes("playoff_n")
-  && fnSrc(page, "dataDashRedraftStale").includes("gross_won"),
+  && fnSrc(page, "dataDashRedraftStale").includes("pot_net"),
   "stale redraft boards reset, write local, and push the career board remote");
 
 // 4 Door figs show the lead name, not a bare count
@@ -130,10 +130,10 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmbeef20260918102000"')
-  && html.includes('const DATA_V = "gmbeef20260918102000"')
-  && sw.includes('chuckle-shell-v265-gm-pot')
-  && !sw.includes("chuckle-shell-v264-gm-rs-money"),
+loop(10, page.includes('const DATA_V = "gmbeef20260918120000"')
+  && html.includes('const DATA_V = "gmbeef20260918120000"')
+  && sw.includes('chuckle-shell-v266-gm-net')
+  && !sw.includes("chuckle-shell-v265-gm-pot"),
   "DATA_V and SW cache moved so Safari cannot keep the old board");
 
 // 11 Redraft library still hides dynasty ops
@@ -169,7 +169,10 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02
   && page.includes("Last in regular season")
   && page.includes("most points $300")
-  && page.includes("Regular-season record only"),
-  "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, real pot");
+  && page.includes("Regular-season record only")
+  && page.includes("function finishYearLedger(") && html.includes("function finishYearLedger(")
+  && page.includes("data-receipt-net") && html.includes("data-receipt-net")
+  && page.includes("Career net") && html.includes("Career net"),
+  "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, one net pot door");
 
 console.log("PASS 12 redraft board loops");

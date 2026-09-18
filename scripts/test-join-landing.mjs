@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v269-join-land")) {
-  throw new Error("sw.js must bump to v269-join-land");
+if (!sw.includes("chuckle-shell-v272-join-land")) {
+  throw new Error("sw.js must bump to v272-join-land");
 }
 
 console.log("join landing ok");

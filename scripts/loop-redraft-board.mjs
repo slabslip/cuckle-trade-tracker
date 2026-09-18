@@ -36,6 +36,25 @@ function sha(p) {
 }
 
 const finishes = load(`${ui}/finishes.json`, {});
+const finLib = fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8");
+function mpMatchesRsLeader() {
+  const lead = {};
+  for (const s of finishes.seats || []) {
+    for (const p of s.places || []) {
+      const y = String(p.season || "");
+      const pts = Number(p.rs_fpts);
+      if (!y || !Number.isFinite(pts)) continue;
+      if (!lead[y] || pts > lead[y].pts) lead[y] = { name: s.name, pts };
+    }
+  }
+  const got = {};
+  for (const s of finishes.seats || []) {
+    for (const p of s.payouts || []) {
+      if (p && p.kind === "mp") got[String(p.season)] = s.name;
+    }
+  }
+  return (finishes.seasons || []).every((y) => got[y] && lead[y] && got[y] === lead[y].name);
+}
 const titles = load(`${ui}/titles.json`, { titles: [] });
 const weeks = load(`${ui}/week-scores.json`, {});
 const bridge = load(`${raw}/provider_bridge.json`, {});
@@ -105,12 +124,14 @@ loop(7, espnBridge["espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}"] === "113214662
   && espnBridge["espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}"] === "1131056110791880704"
   && adizz && adizz.n === 6 && adizz.contender === 83.3
   && tully && tully.titles_n === 2
-  && aball && aball.n === 6
-  && sbzy && sbzy.n === 6
+  && aball && aball.n === 3
+  && sbzy && sbzy.n === 2 && sbzy.avg === 5
+  && (finishes.seats || []).some((s) => s.name === "Ricky Swink" && s.n === 3)
+  && (finishes.seats || []).some((s) => s.name === "Stank93" && s.n === 1)
   && (titles.titles || []).some((t) => t.season === "2024" && t.name === "fatassmexican")
   && (titles.titles || []).some((t) => t.season === "2023" && t.name === "fatassmexican")
   && weeks.all && weeks.all.high[0].name === "Adizzl3",
-  "Durham/Tully/AB2/Shane pins land on Adizzl3, fatassmexican, Aballers, sbzy11");
+  "Durham/Tully/AB2/Shane person pins; Shane is 2024–25 only, Ricky/Stank keep slot 6");
 
 // 8 Hunt stub stays out of the low book
 const lows = ((weeks.all && weeks.all.low) || []);
@@ -123,19 +144,21 @@ loop(8, weeks.v === 2
 // 9 Leftover ESPN-only names stay unmapped until someone claims them
 const leftovers = (bridge.espn_only_members || []).slice().sort();
 loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
-  && !(finishes.seats || []).some((s) => /hudmorse|Swink|Stank93/i.test(s.name || ""))
+  && (finishes.seats || []).some((s) => s.name === "Ricky Swink" && s.n === 3)
+  && (finishes.seats || []).some((s) => s.name === "Stank93" && s.n === 1)
+  && (finishes.seats || []).some((s) => s.name === "hudmorse" && s.n === 3)
   && (finishes.seats || []).some((s) => s.name === "JaredMcFadden" && String(s.user_id).indexOf("espn:") === 0)
   && members.some((m) => m.name === "SethHenry12" && m.place > 12)
   && !(finishes.seats || []).some((s) => s.name === "SethHenry12"),
-  "hudmorse, McFadden, Swink, Stank93 stay ESPN-only; Seth has no completed year");
+  "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "gmnet20260918112800"')
-  && html.includes('const DATA_V = "gmnet20260918112800"')
-  && sw.includes('chuckle-shell-v267-gm-net')
-  && !sw.includes("chuckle-shell-v266-news-leagues")
-  && !sw.includes("chuckle-shell-v265-gm-pot"),
-  "DATA_V and SW cache moved so Safari cannot keep the old board");
+loop(10, page.includes('const DATA_V = "joinland20260918143000"')
+  && html.includes('const DATA_V = "joinland20260918143000"')
+  && sw.includes('chuckle-shell-v272-join-land')
+  && !sw.includes("chuckle-shell-v271-mp-rs")
+  && !sw.includes("chuckle-shell-v269-join-land"),
+  "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
 loop(11, page.includes("DATA_DASH_DYNASTY_ONLY")
@@ -169,7 +192,11 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && champ && champ.season === "2025" && champ.name === "Biff34"
   && weeks.all.high[0].name === "Adizzl3" && Number(weeks.all.high[0].points) === 180.02
   && page.includes("Last in regular season")
-  && page.includes("most points $300")
+  && page.includes("most regular-season points $300")
+  && html.includes("most regular-season points $300")
+  && finLib.includes("regularSeasonPointsForMp")
+  && mpMatchesRsLeader()
+  && finishes.pot && finishes.pot.mp === 300
   && page.includes("Regular-season record only")
   && page.includes("function finishYearLedger(") && html.includes("function finishYearLedger(")
   && page.includes("data-receipt-net") && html.includes("data-receipt-net")

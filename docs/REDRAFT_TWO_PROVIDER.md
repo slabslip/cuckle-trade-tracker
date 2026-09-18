@@ -80,8 +80,10 @@ Then commit `data/leagues/1389723418827460608/` and push `main`.
 
 - ESPN team-weeks 2010–2024 (whatever years the league actually has) join
   the Week scores door.
-- Current Sleeper **names** are used. A manager who left stays on that
-  ESPN team slot and attaches to the Sleeper seat that inherited it.
+- Current Sleeper **names** are used. A year belongs to **that year's
+  ESPN owner**. A manager who left keeps those seasons on their own
+  identity — they do not become the new manager on that slot. Franchise
+  / `espn-team:` only fills a year with no owner id.
 - Unique name / team-name matches first. Misses can be pinned in
   `data/leagues/1389723418827460608/raw/espn_bridge.json`:
 

@@ -102,9 +102,23 @@ if (franchise["3"] !== "s-biff") fail("team 3 franchise should follow latest mat
 if (franchise["9"] !== "s-truman") fail("espn-team pin should attach that slot");
 
 const oldWeek = resolveEspnScoreUid({ user_id: "espn:old", roster_id: 3, points: 22 }, person, franchise);
-if (oldWeek !== "s-biff") fail("leaver week on team 3 must attach to current Sleeper seat, got " + oldWeek);
-const pinned = resolveEspnScoreUid({ user_id: "espn:ghost", roster_id: 9, points: 80 }, person, franchise);
-if (pinned !== "s-truman") fail("pinned franchise week must attach");
+if (oldWeek !== "espn:old") fail("named leaver keeps their own year, got " + oldWeek);
+const shaneYear = resolveEspnScoreUid(
+  { user_id: "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}", roster_id: 6 },
+  pinnedPeople,
+  { 6: "s-sbzy" },
+);
+if (shaneYear !== "s-sbzy") fail("Shane 2024 person still maps to sbzy11");
+const rickyYear = resolveEspnScoreUid(
+  { user_id: "espn:{B0EF2A82-4834-4464-A821-849374CA853B}", roster_id: 6 },
+  pinnedPeople,
+  { 6: "s-sbzy" },
+);
+if (rickyYear !== "espn:{B0EF2A82-4834-4464-A821-849374CA853B}") {
+  fail("Ricky 2020–22 on slot 6 must not become Shane, got " + rickyYear);
+}
+const pinned = resolveEspnScoreUid({ user_id: "", roster_id: 9, points: 80 }, person, franchise);
+if (pinned !== "s-truman") fail("blank owner still follows an espn-team pin");
 
 if (espnPlayoffHunt("WINNERS_BRACKET") !== true) fail("winners bracket is hunt");
 if (espnPlayoffHunt("WINNERS") !== true) fail("WINNERS is hunt");

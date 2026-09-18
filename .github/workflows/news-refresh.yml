@@ -52,8 +52,8 @@ jobs:
       - name: Detect feed changes
         id: feed
         run: |
-          # news-sync writes data/ui/news.json and the Cuckle league-scoped copy.
-          # The UI prefers the league path when present, so both must stay in sync.
+          # news-sync writes data/ui/news.json plus every data/leagues/*/ui/news.json
+          # (same tweets; each book retags its own managers).
           if git diff --quiet -- data/ui/news.json data/leagues/*/ui/news.json 2>/dev/null; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "news.json unchanged"

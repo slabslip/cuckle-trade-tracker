@@ -572,9 +572,14 @@ who it is aimed at. So it does not need discovery, and it does not need to guess
 1. The Shortcut POSTs `{url, submitted_by}` (one-tap) — or optionally adds `note` /
    `target_name`. `docs/SUPABASE_SETUP.md` §3b has the exact request and the SQL.
    Omitting `target_name` is Auto: the matcher tags every seat above threshold.
+   **One POST is every book.** Do not send `sleeper_league_id`. The same tweet tape
+   lands on Cuckle, GM, and any later league under `data/leagues/`. Each book
+   retags from *its* rosters — SF69erss on Cuckle, Biff34 on GM, empty manager
+   when that player is not rostered here.
 2. `news-sync.mjs` reads unprocessed rows, fetches each tweet's text via oEmbed (§2 amendment),
    and publishes it as an ordinary `news.json` row with `category: "tweet"` plus `tweet_text`,
-   `tweet_author`, `tweet_handle` and `submitted_by`.
+   `tweet_author`, `tweet_handle` and `submitted_by`. Offline fan-out:
+   `node news-sync.mjs --retag-leagues`.
 3. `processed_at` is stamped so a submission is never ingested twice. `--report` stamps nothing,
    because it documents itself as writing nothing and consuming the queue is very much a write.
 

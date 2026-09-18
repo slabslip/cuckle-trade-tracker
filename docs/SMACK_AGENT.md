@@ -84,7 +84,8 @@ returns `""` when injury is upbeat. Revoice after changing those patterns.
 
 ### 3a. Optional Shortcut field: `agent_tip`
 
-One-tap **Send to Cuckle** stays `{url, submitted_by}` only.
+One-tap **Send to Cuckle** stays `{url, submitted_by}` only. That one POST
+lands on every league book; each book tags its own seats.
 
 When you want to coach a share, use the **with tip** recipe in
 `SUPABASE_SETUP.md` §3b: an Ask / Dictation step writes into **`agent_tip`**.

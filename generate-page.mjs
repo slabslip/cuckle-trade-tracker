@@ -3455,6 +3455,27 @@ const html = `<!DOCTYPE html>
     }
     .door-metric { font-weight: 650; opacity: 0.92; }
     .home-top-doors .door { min-height: 108px; }
+    .door { position: relative; }
+    button.door-open {
+      appearance: none; font: inherit; color: inherit; text-align: center;
+      background: transparent; border: 0; padding: 0; margin: 0; width: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; flex: 1; min-height: 0;
+    }
+    button.tile-share {
+      appearance: none; font: inherit; font-size: 0.68rem; font-weight: 750;
+      letter-spacing: 0.03em; color: #0b0b0d; background: #e0b44c; border: 0;
+      border-radius: 8px; min-height: 32px; width: 100%; padding: 0 8px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      cursor: pointer; flex: 0 0 auto;
+    }
+    button.tile-share svg { width: 13px; height: 13px; display: block; }
+    .tile-share-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      margin: 0 0 8px;
+    }
+    .tile-share-row .screen-h { margin: 0; flex: 1; min-width: 0; }
+    .tile-share-row button.tile-share { width: auto; min-width: 88px; padding: 0 12px; }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -4178,7 +4199,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "joinland20260918143000";
+    const DATA_V = "tileshare20260918154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4675,6 +4696,89 @@ const html = `<!DOCTYPE html>
         + receiptShareIco() + "</button>";
     }
 
+    function dataTileCanon(id) {
+      const raw = String(id || "").trim();
+      if (!raw) return "";
+      const canon = (typeof receiptDoorCanon === "function") ? receiptDoorCanon(raw) : raw;
+      if (typeof dataDashById === "function" && dataDashById(canon)) return canon;
+      if (typeof dataDashById === "function" && dataDashById(raw)) return raw;
+      return "";
+    }
+
+    function dataTileOpenId() {
+      if (receiptWhoList) return dataTileCanon(receiptWhoList) || String(receiptWhoList || "");
+      if (dataHunt) return dataTileCanon(dataHunt) || String(dataHunt || "");
+      return pendingDataTile || "";
+    }
+
+    function dataTileShareUrl(id) {
+      const tile = dataTileCanon(id) || String(id || "").trim();
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      const q = new URLSearchParams();
+      q.set("league", leagueId);
+      q.set("view", "data");
+      if (tile) q.set("tile", tile);
+      q.set("src", "share");
+      const path = location.pathname || "/";
+      return location.origin + path + "?" + q.toString();
+    }
+
+    function dataTileLeadLine(id) {
+      const spec = typeof dataDashById === "function" ? dataDashById(id) : null;
+      const lab = (spec && spec.lab) || String(id || "Data");
+      const leagueName = (activeLeague && activeLeague.name) || (league && league.name) || "League";
+      let lead = "";
+      if (id === "past_champions") {
+        const last = ((titles && titles.titles) || [])[0];
+        if (last) lead = String(last.name || "") + (last.season ? " · " + last.season : "");
+      } else if (typeof isFinishCareerTile === "function" && isFinishCareerTile(id)) {
+        const row = (typeof finishCareerSeats === "function" && finishCareerSeats(id)[0]) || null;
+        if (row) {
+          const metric = typeof finishCareerMetric === "function" ? finishCareerMetric(id, row) : "";
+          lead = String(row.name || "") + (metric && metric !== "—" ? " · " + metric : "");
+        }
+      } else if (id === "season_place") {
+        const row = finishesBook && finishesBook.seats && finishesBook.seats[0];
+        if (row) {
+          lead = String(row.name || "") + (row.avg != null ? " · " + Number(row.avg).toFixed(1) : "");
+        }
+      } else if (id === "week_scores") {
+        const high = weekScoresBook && weekScoresBook.all && weekScoresBook.all.high && weekScoresBook.all.high[0];
+        if (high) {
+          const pts = typeof weekScorePts === "function" ? weekScorePts(high) : "";
+          lead = String(high.name || "") + (pts ? " · " + pts : "");
+        }
+      }
+      return lead ? (leagueName + " · " + lab + "\\n" + lead) : (leagueName + " · " + lab);
+    }
+
+    function dataTileShareTextFor(id) {
+      return dataTileLeadLine(id);
+    }
+
+    function dataTileShareBtn(id) {
+      return '<button type="button" class="tile-share" data-tile-share="' + esc(id || "") + '"'
+        + ' aria-label="Share this view">'
+        + receiptShareIco() + "<span>Share</span></button>";
+    }
+
+    function honorPendingDataTile() {
+      let tile = dataTileCanon(pendingDataTile);
+      if (!tile) {
+        try { tile = dataTileCanon(new URLSearchParams(location.search).get("tile")); }
+        catch (err) { tile = ""; }
+      }
+      if (!tile) return false;
+      pendingDataTile = tile;
+      if (appScreen !== "dash") return false;
+      pendingDataTile = "";
+      view = "home";
+      me = null;
+      homeTab = "history";
+      if (typeof dataDashOpenReport === "function") dataDashOpenReport(tile);
+      return true;
+    }
+
     function windowScoreAt(r, key) {
       const w = (r && r.windows && r.windows[key]) || {};
       if (!w || w.incomplete) return null;
@@ -4741,9 +4845,9 @@ const html = `<!DOCTYPE html>
       render();
     }
 
-    function shareProofNow(text, url) {
+    function shareProofNow(text, url, title) {
       const body = String(text || "") + (url ? "\\n" + url : "");
-      const payload = { title: "Chuckle receipt", text: body };
+      const payload = { title: title || "Chuckle receipt", text: body };
       if (navigator.share) {
         navigator.share(payload).then(function () {
           receiptShareNote = "Sent";
@@ -7429,7 +7533,10 @@ const html = `<!DOCTYPE html>
         + '<p class="caption">' + vsBack + netBack + histBack + draftBack
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
+        + '<div class="tile-share-row">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(head) + "</h2>"
+        + dataTileShareBtn(id)
+        + "</div>"
         + '<p class="caption">' + esc(caption) + "</p>"
         + (receiptPortalNeedsSearch(id)
           ? ('<input class="receipt-search" data-receipt-q="1" type="search"'
@@ -8740,6 +8847,10 @@ const html = `<!DOCTYPE html>
       } else if (startView === "cosmetics" || startView === "calc") {
         // Barracks / calc are league-wide like Champions Path — honour before ?me lookup.
         view = startView;
+      } else if (startView === "data" || params.get("tile")) {
+        view = "home";
+        homeTab = "history";
+        pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");
@@ -8769,6 +8880,7 @@ const html = `<!DOCTYPE html>
       }
       document.getElementById("app").hidden = false;
       ledgerMaybeRender();
+      if (typeof honorPendingDataTile === "function") honorPendingDataTile();
     }
 
     /**
@@ -8929,7 +9041,15 @@ const html = `<!DOCTYPE html>
     function urlNow() {
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
-      if (view && view !== "home") q.set("view", view);
+      const tile = (typeof dataTileOpenId === "function") ? dataTileOpenId() : "";
+      if (tile) {
+        q.set("view", "data");
+        q.set("tile", tile);
+        const leagueId = (activeLeague && activeLeague.sleeper_league_id) || "";
+        if (leagueId) q.set("league", leagueId);
+      } else if (view && view !== "home") {
+        q.set("view", view);
+      }
       if (view === "titles" && titleYear) q.set("title", titleYear);
       if (openId) q.set("t", openId);
       if (view === "trade" && tradeSeat) q.set("seat", tradeSeat);
@@ -8964,6 +9084,7 @@ const html = `<!DOCTYPE html>
         view === "titles" ? (titleYear || "") : "",
         view === "trade" ? (openId || "") + "/" + (tradeSeat || "") : "",
         view === "datasets" ? (dataSet || "") : "",
+        (typeof dataTileOpenId === "function" ? dataTileOpenId() : "") || "",
       ].join("|");
     }
 
@@ -8984,6 +9105,7 @@ const html = `<!DOCTYPE html>
         tradeSeat: tradeSeat,
         lens: lens,
         homeTab: homeTabCanon(homeTab),
+        tile: (typeof dataTileOpenId === "function" ? dataTileOpenId() : "") || "",
         d: depth,
       };
     }
@@ -9011,15 +9133,18 @@ const html = `<!DOCTYPE html>
       const name = q.get("me");
       const seat = name ? members.find((m) => m.user_id === name || m.name === name) : null;
       const tab = String(q.get("tab") || "").toLowerCase();
+      const viewQ = q.get("view") || "home";
+      const tile = (typeof dataTileCanon === "function") ? dataTileCanon(q.get("tile") || "") : String(q.get("tile") || "");
       return {
         me: (seat && seat.user_id) || null,
-        view: q.get("view") || "home",
+        view: viewQ === "data" ? "home" : viewQ,
         titleYear: q.get("title") || null,
         openId: q.get("t") || null,
         tradeSeat: q.get("seat") || null,
         // null when omitted so trade screens can age-default (t0 / y1 / y2).
         lens: WINDOWS.some((w) => w[0] === q.get("lens")) ? q.get("lens") : null,
-        homeTab: homeTabCanon(tab),
+        homeTab: viewQ === "data" || tile ? "history" : homeTabCanon(tab),
+        tile: tile || "",
         d: 0,
       };
     }
@@ -9033,11 +9158,17 @@ const html = `<!DOCTYPE html>
       restoring = true;
       try {
         depth = want.d || 0;
-        view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
+        const wantTile = (typeof dataTileCanon === "function") ? dataTileCanon(want.tile || "") : String(want.tile || "");
+        if (want.view === "data" || wantTile) {
+          view = "home";
+          homeTab = "history";
+        } else {
+          view = VIEWS.indexOf(want.view) >= 0 ? want.view : "home";
+        }
         titleYear = want.titleYear || null;
         openId = want.openId || null;
         tradeSeat = want.tradeSeat || null;
-        homeTab = homeTabCanon(want.homeTab);
+        if (!(want.view === "data" || wantTile)) homeTab = homeTabCanon(want.homeTab);
         if (want.lens && WINDOWS.some((w) => w[0] === want.lens)) {
           lens = want.lens;
         } else if (view === "trade" && openId) {
@@ -9084,7 +9215,15 @@ const html = `<!DOCTYPE html>
         if (view !== "calc" && typeof calcWipe === "function") calcWipe();
         say("");
         focusNext = ".screen-h";
-        render();
+        if (wantTile && typeof dataDashOpenReport === "function") {
+          dataDashOpenReport(wantTile);
+        } else {
+          if (!wantTile && homeTab === "history") {
+            if (receiptWhoList) receiptWhoList = "";
+            if (dataHunt) dataHunt = "";
+          }
+          render();
+        }
       } finally {
         restoring = false;
       }
@@ -10291,6 +10430,7 @@ const html = `<!DOCTYPE html>
     document.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       if (dataDashLibOpen) return;
+      if (e.target && e.target.closest && e.target.closest("[data-tile-share]")) return;
       const door = dataDashDoorNode(e.target);
       if (!door) return;
       const id = door.getAttribute("data-dash-id") || "";
@@ -11419,7 +11559,10 @@ const html = `<!DOCTYPE html>
           : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
         + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
+        + '<div class="tile-share-row">'
         + '<h2 class="screen-h" tabindex="-1">' + esc(huntTitle) + "</h2>"
+        + dataTileShareBtn(id)
+        + "</div>"
         + '<p class="data-dash-sub">' + esc(huntSub) + "</p>"
         + chips
         + (id === "my_block" ? dataDashMyBlockAddHtml() : "")
@@ -11632,8 +11775,10 @@ const html = `<!DOCTYPE html>
           + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
           + "</div>";
       }
-      return '<button type="button" class="door' + top + '" data-dash-id="' + esc(id) + '" data-dash-open="' + esc(id) + '">'
-        + face + "</button>";
+      return '<div class="door' + top + '" data-dash-id="' + esc(id) + '">'
+        + '<button type="button" class="door-open" data-dash-open="' + esc(id) + '">' + face + "</button>"
+        + dataTileShareBtn(id)
+        + "</div>";
     }
 
     function dataDashBoardHtml() {
@@ -11722,6 +11867,7 @@ const html = `<!DOCTYPE html>
           seatData(mine).then(function () { render(); }).catch(function () {});
         }
         focusNext = ".screen-h";
+        syncUrl();
         render();
         return;
       }
@@ -11739,6 +11885,7 @@ const html = `<!DOCTYPE html>
         dataHunt = id;
         dataRoom = "overview";
         focusNext = ".screen-h";
+        syncUrl();
         render();
         return;
       }
@@ -16592,6 +16739,7 @@ const html = `<!DOCTYPE html>
     let receiptMoreClocks = false;
     let receiptPickKey = "";
     let receiptWhoList = "";
+    let pendingDataTile = "";
     let receiptSeatUid = "";
     let receiptShareNote = "";
     let receiptQ = "";
@@ -19218,8 +19366,12 @@ const html = `<!DOCTYPE html>
       // Keep a deep-linked sub-screen (calc, cosmetics, account). Drawer opens omit ?view= → Home.
       let wantView = "home";
       try {
-        const v = new URLSearchParams(location.search).get("view");
+        const q = new URLSearchParams(location.search);
+        const t = (typeof dataTileCanon === "function") ? dataTileCanon(q.get("tile")) : String(q.get("tile") || "");
+        if (t) pendingDataTile = t;
+        const v = q.get("view");
         if (v && VIEWS.indexOf(v) >= 0) wantView = v;
+        else if (v === "data" || pendingDataTile) wantView = "home";
       } catch (err) { /* ignore */ }
       view = wantView;
       openId = null;
@@ -19258,6 +19410,7 @@ const html = `<!DOCTYPE html>
       loadSeatAvatars().then(() => {
         if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
+      if (typeof honorPendingDataTile === "function") honorPendingDataTile();
       if (typeof dashWarmChrome === "function") dashWarmChrome();
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
@@ -24838,8 +24991,11 @@ const html = `<!DOCTYPE html>
         + ids.map(function (id) {
           const spec = dataDashById(id);
           if (!spec) return "";
-          return '<button type="button" class="door door-top" data-home-door="' + esc(id) + '">'
-            + receiptDoorFace(id) + "</button>";
+          return '<div class="door door-top">'
+            + '<button type="button" class="door-open" data-home-door="' + esc(id) + '">'
+            + receiptDoorFace(id) + "</button>"
+            + dataTileShareBtn(id)
+            + "</div>";
         }).join("")
         + "</div></section>";
     }
@@ -27141,6 +27297,14 @@ const html = `<!DOCTYPE html>
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
+      const tileShareBtn = e.target.closest("[data-tile-share]");
+      if (tileShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = tileShareBtn.getAttribute("data-tile-share") || receiptWhoList || dataHunt || "";
+        shareProofNow(dataTileShareTextFor(id), dataTileShareUrl(id), "Chuckle data");
+        return;
+      }
       const receiptShareBtn = e.target.closest("[data-receipt-share]");
       if (receiptShareBtn) {
         e.preventDefault();
@@ -29049,6 +29213,7 @@ const html = `<!DOCTYPE html>
     if (leagueParam && !inviteParam) {
       claimLeagueId = leagueParam;
     }
+    pendingDataTile = dataTileCanon(params.get("tile")) || pendingDataTile;
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";
@@ -30905,6 +31070,16 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashHtml").includes("receiptPickKey")
     || fnSrc("dataDashBoardHtml").includes("receiptBoardFilterHtml(")
     || fnSrc("dataDashTileHtml").includes("receiptChipHtml(")
+    || !fnSrc("dataDashTileHtml").includes("dataTileShareBtn(")
+    || !fnSrc("dataDashTileHtml").includes("data-dash-open")
+    || !fnSrc("homeTopDoorsHtml").includes("dataTileShareBtn(")
+    || !fnSrc("homeTopDoorsHtml").includes("data-home-door")
+    || !inline.includes("function dataTileShareUrl(")
+    || !inline.includes("function dataTileShareTextFor(")
+    || !inline.includes("function honorPendingDataTile(")
+    || !inline.includes('q.set("view", "data")')
+    || !inline.includes('q.set("tile", tile)')
+    || !inline.includes("data-tile-share")
     || inline.includes("exactly like")) {
     throw new Error("Receipt tiles must ship shareProofNow, public boot, clock English, and L1/L2 tickets");
   }

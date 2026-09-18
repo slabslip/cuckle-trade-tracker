@@ -72,6 +72,9 @@ const need = [
   "door-top",
   "function homeTopDoorsHtml(",
   "function dataDashPaintTop(",
+  "function dataTileShareUrl(",
+  "function dataTileShareBtn(",
+  "data-tile-share",
   "Every pick ",
   "A year, a player, a seat",
 ];

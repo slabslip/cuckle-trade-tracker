@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Twelve redraft-board laws. Fail fast. Dynasty Cuckle must not move.
+ * Thirteen redraft-board laws. Fail fast. Dynasty Cuckle must not move.
  */
 import fs from "node:fs";
 import crypto from "node:crypto";
@@ -153,11 +153,11 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "joinland20260918143000"')
-  && html.includes('const DATA_V = "joinland20260918143000"')
-  && sw.includes('chuckle-shell-v272-join-land')
-  && !sw.includes("chuckle-shell-v271-mp-rs")
-  && !sw.includes("chuckle-shell-v269-join-land"),
+loop(10, page.includes('const DATA_V = "tileshare20260918154500"')
+  && html.includes('const DATA_V = "tileshare20260918154500"')
+  && sw.includes('chuckle-shell-v273-tile-share')
+  && !sw.includes("chuckle-shell-v272-join-land")
+  && !sw.includes("chuckle-shell-v271-mp-rs"),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
@@ -203,4 +203,17 @@ loop(12, finishes.v === 4 && finishes.pot && finishes.pot.entry === 300
   && page.includes("Career net") && html.includes("Career net"),
   "home leads: Tbow RS 4.0 / playoff 2.8, Adizzl3 5 playoffs, one net pot door");
 
-console.log("PASS 12 redraft board loops");
+loop(13, page.includes("function dataTileShareUrl(")
+  && html.includes("function dataTileShareUrl(")
+  && page.includes("data-tile-share")
+  && html.includes("data-tile-share")
+  && fnSrc(page, "dataDashTileHtml").includes("dataTileShareBtn(")
+  && fnSrc(html, "dataDashTileHtml").includes("dataTileShareBtn(")
+  && fnSrc(page, "homeTopDoorsHtml").includes("dataTileShareBtn(")
+  && fnSrc(html, "homeTopDoorsHtml").includes("dataTileShareBtn(")
+  && fnSrc(page, "dataTileShareUrl").includes('q.set("view", "data")')
+  && !fnSrc(page, "dataTileShareUrl").includes('q.set("r"')
+  && fnSrc(page, "honorPendingDataTile").includes("dataDashOpenReport"),
+  "every data door ships a Share chip to a view=data&tile= group-text URL");
+
+console.log("PASS 13 redraft board loops");

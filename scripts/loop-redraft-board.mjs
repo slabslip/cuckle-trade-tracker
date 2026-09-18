@@ -165,11 +165,11 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "yearboard20260918183000"')
-  && html.includes('const DATA_V = "yearboard20260918183000"')
-  && sw.includes('chuckle-shell-v280-year-boards')
+loop(10, page.includes('const DATA_V = "review20260918184500"')
+  && html.includes('const DATA_V = "review20260918184500"')
+  && sw.includes('chuckle-shell-v281-standings-review')
+  && !sw.includes("chuckle-shell-v280-year-boards")
   && !sw.includes("chuckle-shell-v279-po-standings")
-  && !sw.includes("chuckle-shell-v278-po-bracket")
   && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
@@ -256,7 +256,10 @@ loop(14, yOf("fatassmexican", "2024") && yOf("fatassmexican", "2024").place === 
   && Array.isArray(finishes.years) && finishes.years[0] && finishes.years[0].season === "2025"
   && finishes.years.find((y) => y.season === "2024")?.rows[2]?.name === "kotula69"
   && page.includes("function finishYearBoard(") && html.includes("function finishYearBoard(")
-  && page.includes('["all", "Career avg"]') && html.includes('["all", "Career avg"]'),
+  && page.includes('id === "season_place" && leagueFormat().kind === "redraft"')
+  && html.includes('id === "season_place" && leagueFormat().kind === "redraft"')
+  && page.includes("function finishYearWant(") && html.includes("function finishYearWant(")
+  && page.includes('from === "bracket"') && html.includes('from === "bracket"'),
   "playoff bracket 1-4 from money games; bottom six and sacko stay regular season");
 
 console.log("PASS 14 redraft board loops");

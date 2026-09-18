@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v280-year-boards")) {
-  throw new Error("sw.js must bump to v280-year-boards");
+if (!sw.includes("chuckle-shell-v281-standings-review")) {
+  throw new Error("sw.js must bump to v281-standings-review");
 }
 
 console.log("join landing ok");

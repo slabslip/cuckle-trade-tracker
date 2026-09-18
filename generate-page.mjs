@@ -4198,7 +4198,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pobracket20260918164000";
+    const DATA_V = "standings20260918173000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4297,7 +4297,7 @@ const html = `<!DOCTYPE html>
       sacko: { lab: "Sacko", why: "Last in regular season. Pays $200 extra into the pot that year. Consolation weeks do not set last place." },
       rs_avg: { lab: "Regular season avg", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       playoff_n: { lab: "Playoff appearances", why: "Times they made the top six and kept setting lineups." },
-      playoff_avg: { lab: "Playoff average", why: "Average finish in years they made the hunt. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season." },
+      playoff_avg: { lab: "Playoff average", why: "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season. Leftover scores do not move this number." }
       pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest title-hunt weeks across every imported year." },
       season_place: { lab: "How I finished", why: "Average finish with no season floor. One year still counts." },
@@ -4335,14 +4335,14 @@ const html = `<!DOCTYPE html>
       { id: "league_trades", lab: "League Trade History", desk: "lists", group: "memory", size: "full", why: "Every pairing, most deals first." },
       { id: "my_draft", lab: "My Draft Picks", desk: "lists", group: "memory", size: "full", why: "Used, traded away, and traded in — with a grade." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
-      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Every completed season they played, ranked by average finish." },
+      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Each year's real final standing. Top six from the playoff bracket. Bottom six stay regular-season order." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
       { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Regular season plus title-hunt weeks only." },
       { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
       { id: "sacko", lab: "Sacko", desk: "lists", group: "who", size: "full", why: "Last in regular season. Pays $200 extra into the pot that year. Consolation weeks do not count." },
       { id: "rs_avg", lab: "Regular season avg", desk: "lists", group: "who", size: "full", why: "Average regular-season place. Playoffs and consolation do not move this number." },
       { id: "playoff_n", lab: "Playoff appearances", desk: "lists", group: "who", size: "full", why: "Times they made the top six and kept setting lineups." },
-      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average finish in years they made the hunt. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season." },
+      { id: "playoff_avg", lab: "Playoff average", desk: "lists", group: "who", size: "full", why: "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season. Leftover scores do not move this number." },
       { id: "pot_net", lab: "Career net", desk: "lists", group: "who", size: "full", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300." },
       { id: "vs_you", lab: "Me vs them", desk: "seats", group: "who", size: "full", why: "Your tape vs one name." },
     ];
@@ -7504,7 +7504,7 @@ const html = `<!DOCTYPE html>
         }
       }
       else if (id === "season_place") {
-        caption = "Every completed season they played, ranked by average finish. Season count is under each name.";
+        caption = "Each year's real final standing. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record. Ranked by average finish.";
         if (league && league.providers && league.providers.espn_authorized) {
           caption += " Imported ESPN years count.";
         }
@@ -7529,7 +7529,7 @@ const html = `<!DOCTYPE html>
         caption = "Times they made the top six and kept setting lineups. Consolation is not a playoff appearance.";
       }
       else if (id === "playoff_avg") {
-        caption = "Average final place in years they made the hunt. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game — those seats set lineups. First-round losers are 5th/6th by regular-season record. Two appearances minimum.";
+        caption = "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game — those seats set lineups. First-round losers are 5th/6th by regular-season record. Leftover scores do not move this number. Two appearances minimum.";
       }
       else if (id === "pot_net" && receiptNetWho) {
         const seat = finishNetWhoSeat();
@@ -31145,7 +31145,7 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptPortalRows").includes("finishesBook")
     || !fnSrc("receiptPortalRows").includes(" seasons")
     || !inline.includes('getLeagueJson("finishes.json")')
-    || !inline.includes("Every completed season they played, ranked by average finish.")
+    || !inline.includes("Each year's real final standing. Top six from the playoff bracket")
     || !inline.includes("Type a player name")
     || inline.includes("if (leg.became) receiptAddOwnedPlayer")
     || !inline.includes("function dataDashLiftDoor(")

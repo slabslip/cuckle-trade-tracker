@@ -245,6 +245,7 @@ loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
   && finishes.career_floor === 3
   && /consolation points out/.test(finishes.rule || "")
   && /3rd-place game/.test(finishes.rule || "")
+  && /last = worst RS record/.test(finishes.rule || "")
   && (finishes.seasons || []).includes("2025")
   && (finishes.seasons || []).includes("2020")
   && !(finishes.seasons || []).includes("2026")
@@ -263,7 +264,7 @@ loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
-  && page.includes("Every completed season they played, ranked by average finish.")
+  && page.includes("Each year's real final standing. Top six from the playoff bracket")
   && page.includes("1 season")
   && page.includes(" seasons"),
   "How I finished door reads finishes.json and prints season count under each name");
@@ -325,4 +326,40 @@ loop(42, adizz && adizz.n === 6 && adizz.avg === 4.8 && adizz.contender === 83.3
   && page.includes("dataDashRedraftStale"),
   "career tiles: Tbow 4.5, Biff RS+hunt points, Adizzl3 contender, Jnasty sackos");
 
-console.log("PASS 42 Gm dataset loops");
+const yearPlace = (season, place) => {
+  for (const seat of finishes.seats || []) {
+    const row = (seat.places || []).find((p) => p.season === season && p.place === place);
+    if (row) return { name: seat.name, from: row.from, rs_place: row.rs_place };
+  }
+  return null;
+};
+const YEAR_LOCK = {
+  2025: { 1: ["Biff34", "title"], 2: ["JnastyGBE300", "title"], 3: ["ztrain123", "semi"], 4: ["collinmccaskill", "semi"], 5: ["sbzy11", "first_round"], 6: ["fatassmexican", "first_round"], 12: ["Adizzl3", "regular"] },
+  2024: { 1: ["fatassmexican", "title"], 2: ["Adizzl3", "title"], 3: ["kotula69", "semi"], 4: ["Tbow00", "semi"], 5: ["sbzy11", "first_round"], 6: ["Aballers", "first_round"], 12: ["ztrain123", "regular"] },
+  2023: { 1: ["fatassmexican", "title"], 2: ["Biff34", "title"], 3: ["Adizzl3", "semi"], 4: ["Aballers", "semi"], 5: ["ztrain123", "first_round"], 6: ["kotula69", "first_round"], 12: ["JnastyGBE300", "regular"] },
+  2022: { 1: ["Tbow00", "title"], 2: ["TaylorJohnson16", "title"], 3: ["Ricky Swink", "semi"], 4: ["collinmccaskill", "semi"], 5: ["Adizzl3", "first_round"], 6: ["JaredMcFadden", "first_round"], 12: ["hudmorse", "regular"] },
+  2021: { 1: ["ztrain123", "title"], 2: ["Tbow00", "title"], 3: ["Adizzl3", "semi"], 4: ["kotula69", "semi"], 5: ["fatassmexican", "first_round"], 6: ["Biff34", "first_round"], 12: ["JnastyGBE300", "regular"] },
+  2020: { 1: ["collinmccaskill", "title"], 2: ["ztrain123", "title"], 3: ["Biff34", "semi"], 4: ["Adizzl3", "semi"], 5: ["Tbow00", "first_round"], 6: ["JaredMcFadden", "first_round"], 12: ["TaylorJohnson16", "regular"] },
+};
+const yearLockOk = Object.entries(YEAR_LOCK).every(([season, places]) => (
+  Object.entries(places).every(([place, [name, from]]) => {
+    const row = yearPlace(season, Number(place));
+    return row && row.name === name && row.from === from;
+  })
+));
+const y24Taylor = y24("TaylorJohnson16");
+const y20Taylor = ((finishes.seats || []).find((s) => s.name === "TaylorJohnson16") || {}).places
+  ?.find((p) => p.season === "2020");
+const y21Jnasty = ((finishes.seats || []).find((s) => s.name === "JnastyGBE300") || {}).places
+  ?.find((p) => p.season === "2021");
+loop(43, yearLockOk
+  && y24Taylor && y24Taylor.place === 7 && y24Taylor.from === "regular" && y24Taylor.rs_place === 7
+  && y20Taylor && y20Taylor.place === 12 && y20Taylor.rs_place === 12
+  && y21Jnasty && y21Jnasty.place === 12 && y21Jnasty.rs_place === 12
+  && y24("kotula69") && y24("kotula69").place === 3
+  && y25("ztrain123") && y25("ztrain123").place === 3
+  && y25("collinmccaskill") && y25("collinmccaskill").place === 4
+  && page.includes("Leftover scores do not move this number"),
+  "final standings: champ 1-2, 3rd-place 3-4, first-round 5-6, RS 7-12 including sacko");
+
+console.log("PASS 43 Gm dataset loops");

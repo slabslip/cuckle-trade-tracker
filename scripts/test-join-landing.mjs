@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v278-po-bracket")) {
-  throw new Error("sw.js must bump to v278-po-bracket");
+if (!sw.includes("chuckle-shell-v279-po-standings")) {
+  throw new Error("sw.js must bump to v279-po-standings");
 }
 
 console.log("join landing ok");

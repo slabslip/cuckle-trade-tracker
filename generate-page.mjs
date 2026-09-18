@@ -13229,7 +13229,7 @@ const html = `<!DOCTYPE html>
       const bottom = (foot || trash) ? '<div class="lc-bottom">' + foot + trash + "</div>" : "";
       const focused = ledgerFocusId && String(b.id) === String(ledgerFocusId);
       return '<article class="ledger-card' + (focused ? " is-focus" : "") + '" data-ledger-id="'
-        + esc(b.id) + '"' + (focused ? ' tabindex="-1"' : "") + ">";
+        + esc(b.id) + '"' + (focused ? ' tabindex="-1"' : "") + ">"
         + '<div class="lc-top">'
         + '<h3 class="lc-title">' + titleHtml + "</h3>"
         + '<div class="lc-amt">' + esc(draft ? "" : ledgerFmtDollars(b.amount_cents)) + "</div>"
@@ -30513,6 +30513,16 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
   ];
   const bad = ledgerNeed.filter(([s, want]) => inline.includes(s) !== want).map(([s, want]) => (want ? "missing " : "forbidden ") + s);
   if (bad.length) throw new Error("Ledger must be my-slips-only with New wager / counter / claim + team-home public W/L: " + bad.join(" | "));
+  {
+    const cardAt = inline.indexOf("function ledgerCardHtml(");
+    const cardStop = inline.indexOf("\n    function ", cardAt + 10);
+    const cardFn = inline.slice(cardAt, cardStop < 0 ? cardAt + 4000 : cardStop);
+    if (!cardFn.includes('data-ledger-id="')
+      || !cardFn.includes("lc-title")
+      || /data-ledger-id="[^;]{0,80}">;/.test(cardFn)) {
+      throw new Error("ledgerCardHtml must return a full slip card, not a closed article tag");
+    }
+  }
   const formAt = inline.indexOf("function ledgerWagerFormHtml(");
   const formStop = inline.indexOf("\n    function ", formAt + 10);
   const formFn = inline.slice(formAt, formStop < 0 ? formAt + 5000 : formStop);

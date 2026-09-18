@@ -13221,7 +13221,7 @@
       const bottom = (foot || trash) ? '<div class="lc-bottom">' + foot + trash + "</div>" : "";
       const focused = ledgerFocusId && String(b.id) === String(ledgerFocusId);
       return '<article class="ledger-card' + (focused ? " is-focus" : "") + '" data-ledger-id="'
-        + esc(b.id) + '"' + (focused ? ' tabindex="-1"' : "") + ">";
+        + esc(b.id) + '"' + (focused ? ' tabindex="-1"' : "") + ">"
         + '<div class="lc-top">'
         + '<h3 class="lc-title">' + titleHtml + "</h3>"
         + '<div class="lc-amt">' + esc(draft ? "" : ledgerFmtDollars(b.amount_cents)) + "</div>"

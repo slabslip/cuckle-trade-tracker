@@ -44,13 +44,14 @@ try {
   await openFinishDoor("http://127.0.0.1:55493/design-redraft-home.html");
   const gm = await page.locator(".receipt-portal-list").innerText();
   console.log("GM FINISHES\n" + gm);
-  if (!/Biff34/.test(gm) || !/1\.0 avg/.test(gm) || !/1 season/.test(gm) || !/2025 1st/.test(gm)) {
-    fail("Gm list missing Biff 1.0 avg / 1 season / 2025 1st");
+  if (!/2025/.test(gm) || !/Biff34/.test(gm) || !/1st/.test(gm)) {
+    fail("Gm year tape missing Biff34 2025 1st");
   }
-  if (!/TrumanCooper/.test(gm) || !/10\.0 avg/.test(gm) || !/2025 10th/.test(gm)) {
-    fail("Gm list missing Truman 10.0 avg");
+  if (!/TrumanCooper/.test(gm) || !/10th/.test(gm)) {
+    fail("Gm year tape missing TrumanCooper 2025 10th");
   }
-  if (!/JnastyGBE300/.test(gm) || !/2\.0 avg/.test(gm)) fail("Gm list missing Jnasty 2.0 avg");
+  if (!/JnastyGBE300/.test(gm) || !/2nd/.test(gm)) fail("Gm year tape missing JnastyGBE300 2025 2nd");
+  if (/1\.0 avg/.test(gm) || /10\.0 avg/.test(gm)) fail("Gm How I finished must not reprint career averages");
   if (/SethHenry12/.test(gm)) fail("Gm list must omit Seth (no completed season)");
   const caption = await page.locator(".receipt-who caption, .caption").first().innerText().catch(() => "");
   console.log("GM CAPTION " + caption);

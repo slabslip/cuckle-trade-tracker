@@ -262,10 +262,13 @@ loop(38, finishes.v === 4 && Array.isArray(finishes.seats)
 loop(39, page.includes("function buildFinishesBook(") === false
   && fs.readFileSync(`${ROOT}lib/finishes.mjs`, "utf8").includes("average of completed seasons only")
   && page.includes('getLeagueJson("finishes.json")')
-  && page.includes("Every completed season they played, ranked by average finish.")
+  && page.includes("Each completed year, 1st through last. This is not the career ranking")
+  && page.includes("function finishYearRows(")
+  && page.includes("function finishLatestSeason(")
+  && page.includes("function finishIsYearTape(")
   && page.includes("1 season")
   && page.includes(" seasons"),
-  "How I finished door reads finishes.json and prints season count under each name");
+  "How I finished is year tape on redraft; Career average still ranks finishes.json");
 loop(40, page.includes("const DATA_REPORTS = [")
   && (page.match(/id: "season_place"/g) || []).length >= 1
   && page.includes('id: "career_avg"')

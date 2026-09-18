@@ -153,11 +153,11 @@ loop(9, leftovers.join(",") === "JaredMcFadden,Ricky Swink,Stank93,hudmorse"
   "leavers keep their own ESPN years; Seth has no completed year");
 
 // 10 Cache bust so public Pages / old SW drop the prior HTML
-loop(10, page.includes('const DATA_V = "tileshare20260918154500"')
-  && html.includes('const DATA_V = "tileshare20260918154500"')
-  && sw.includes('chuckle-shell-v273-tile-share')
-  && !sw.includes("chuckle-shell-v272-join-land")
-  && !sw.includes("chuckle-shell-v271-mp-rs"),
+loop(10, page.includes('const DATA_V = "finishyrs20260918141500"')
+  && html.includes('const DATA_V = "finishyrs20260918141500"')
+  && sw.includes('chuckle-shell-v274-finish-years')
+  && !sw.includes("chuckle-shell-v273-tile-share")
+  && !sw.includes("chuckle-shell-v272-join-land"),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 
 // 11 Redraft library still hides dynasty ops
@@ -216,4 +216,26 @@ loop(13, page.includes("function dataTileShareUrl(")
   && fnSrc(page, "honorPendingDataTile").includes("dataDashOpenReport"),
   "every data door ships a Share chip to a view=data&tile= group-text URL");
 
-console.log("PASS 13 redraft board loops");
+loop(14, page.includes("function finishYearRows(")
+  && html.includes("function finishYearRows(")
+  && page.includes("function finishIsYearTape(")
+  && html.includes("function finishIsYearTape(")
+  && fnSrc(page, "receiptPortalRows").includes("finishYearRows(")
+  && fnSrc(html, "receiptPortalRows").includes("finishYearRows(")
+  && fnSrc(page, "receiptPortalRows").includes("finishIsYearTape(")
+  && fnSrc(html, "receiptPortalRows").includes("finishIsYearTape(")
+  && fnSrc(page, "receiptWhoListHtml").includes("finishIsYearTape(")
+  && fnSrc(html, "receiptWhoListHtml").includes("finishIsYearTape(")
+  && fnSrc(page, "receiptDoorFace").includes("finishYearRows(")
+  && fnSrc(html, "receiptDoorFace").includes("finishYearRows(")
+  && !fnSrc(page, "isFinishCareerTile").includes("season_place")
+  && fnSrc(page, "isFinishCareerTile").includes("career_avg")
+  && page.includes("This is not the career ranking")
+  && html.includes("This is not the career ranking")
+  && page.includes("How I finished is the year-by-year tape")
+  && html.includes("How I finished is the year-by-year tape")
+  && y25("Biff34") && y25("Biff34").place === 1
+  && finishes.seats[0].name === "Tbow00",
+  "How I finished is year tape on redraft; Career average stays the 3-season ranking");
+
+console.log("PASS 14 redraft board loops");

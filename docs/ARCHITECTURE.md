@@ -133,10 +133,12 @@ only and never reaches the value book.
 
 ### `data/ui/finishes.json`
 
-Career finishes for How I finished. `build-finishes.mjs` walks every completed
+Career finishes book. `build-finishes.mjs` walks every completed
 Sleeper season (winners-bracket, then record — the same rule as `members.place`)
 and remaps ESPN standings onto those seats when cookies unlock 2010–2024. In-progress
-years and parked joiners stay out.
+years and parked joiners stay out. Career average ranks seats by `avg` with a
+three-season floor. On redraft, How I finished reads the same book year by year.
+On dynasty, How I finished is still the ranked average (no floor).
 
 ```text
 {

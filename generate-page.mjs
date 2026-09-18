@@ -2367,6 +2367,11 @@ const html = `<!DOCTYPE html>
       background: #1c1c22; border: 1px solid #3a3428; color: var(--text);
       font-size: 0.8125rem;
     }
+    .ledger-toast .linkish { margin-left: 6px; }
+    .ledger-card.is-focus {
+      outline: 2px solid var(--lh-gold, #e0b44c);
+      outline-offset: 2px;
+    }
     @media (max-width: 420px) {
       .ledger-sum { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
@@ -4135,7 +4140,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20260918002626";
+    const DATA_V = "onboard20260918040000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4371,6 +4376,9 @@ const html = `<!DOCTYPE html>
     let ledgerLoadState = "idle";
     let ledgerFilter = "mine";
     let ledgerToast = null;
+    let ledgerOnboardLink = null;
+    let ledgerFocusId = null;
+    let ledgerUnclaimedSeats = Object.create(null);
     let ledgerBusyId = null;
     let ledgerCompleteId = null;
     let ledgerWagerOpen = false;
@@ -12773,7 +12781,7 @@ const html = `<!DOCTYPE html>
         const others = ledgerOtherSeatsByTradeFreq();
         sel.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
           const selected = String(m.user_id) === String(cur) ? " selected" : "";
-          return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
+          return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(ledgerThemOptionLabel(m)) + "</option>";
         })).join("");
         if (cur) sel.value = cur;
         return;
@@ -12784,7 +12792,7 @@ const html = `<!DOCTYPE html>
       const others = ledgerOtherSeatsByTradeFreq();
       legacy.innerHTML = ['<option value="">team</option>'].concat(others.map((m) => {
         const selected = String(m.user_id) === String(cur) ? " selected" : "";
-        return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
+        return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(ledgerThemOptionLabel(m)) + "</option>";
       })).join("");
       if (cur) legacy.value = cur;
     }
@@ -13121,6 +13129,14 @@ const html = `<!DOCTYPE html>
           }
         }
       }
+      if (seat && !readOnly && b.status === "proposed" && isParty) {
+        const them = isA ? b.side_b : b.side_a;
+        const theyLocked = isA ? b.side_b_lock : b.side_a_lock;
+        if (them && !theyLocked) {
+          btns += '<button type="button" class="chip" data-ledger-onboard="' + esc(b.id)
+            + '">Copy join link</button>';
+        }
+      }
       const canToggle = isParty && !readOnly && ledgerBusyId !== b.id && b.status !== "needs_review";
       const vis = b.status === "needs_review" ? "" : ledgerVisibilityToggle(b, { readOnly: !canToggle });
       if (!btns && !vis) return "";
@@ -13211,7 +13227,9 @@ const html = `<!DOCTYPE html>
       const foot = footBits.length ? '<p class="lc-foot">' + esc(footBits.join(" · ")) + "</p>" : "";
       const trash = ledgerPendingTrashHtml(b, opts);
       const bottom = (foot || trash) ? '<div class="lc-bottom">' + foot + trash + "</div>" : "";
-      return '<article class="ledger-card" data-ledger-id="' + esc(b.id) + '">'
+      const focused = ledgerFocusId && String(b.id) === String(ledgerFocusId);
+      return '<article class="ledger-card' + (focused ? " is-focus" : "") + '" data-ledger-id="'
+        + esc(b.id) + '"' + (focused ? ' tabindex="-1"' : "") + ">";
         + '<div class="lc-top">'
         + '<h3 class="lc-title">' + titleHtml + "</h3>"
         + '<div class="lc-amt">' + esc(draft ? "" : ledgerFmtDollars(b.amount_cents)) + "</div>"
@@ -14252,7 +14270,7 @@ const html = `<!DOCTYPE html>
         + '<option value="">team</option>'
         + others.map((m) => {
           const selected = String(m.user_id) === String(them || "") ? " selected" : "";
-          return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(m.name || m.user_id) + "</option>";
+          return '<option value="' + esc(m.user_id) + '"' + selected + ">" + esc(ledgerThemOptionLabel(m)) + "</option>";
         }).join("")
         + "</select></label>"
         + '<div class="lc-review-scrim" data-ledger-review hidden>'
@@ -14345,7 +14363,11 @@ const html = `<!DOCTYPE html>
       }
       const list = ledgerFiltered();
       const toast = ledgerToast
-        ? '<div class="ledger-toast" role="status">' + esc(ledgerToast) + "</div>"
+        ? '<div class="ledger-toast" role="status">' + esc(ledgerToast)
+          + (ledgerOnboardLink
+            ? ' <button type="button" class="linkish" data-ledger-copy-onboard="1">Copy join link</button>'
+            : "")
+          + "</div>"
         : "";
       let body = "";
       if (ledgerLoadState === "loading" && !ledgerBets) {
@@ -14880,12 +14902,16 @@ const html = `<!DOCTYPE html>
       const clockLab = parsed.clock_kind === "date"
         ? ((clockEl && clockEl.value) || "Select own date")
         : (ledgerClockKindLabel(parsed.clock_kind) || parsed.clock_kind);
+      const unclaimed = ledgerSeatUnclaimed(parsed.them)
+        ? '<p class="caption">They have not claimed a seat yet. After Send, copy the join link so they can create an account, claim the team, and accept.</p>'
+        : "";
       return '<p><span class="caption">Send to</span> ' + esc(ledgerSeatLabel(parsed.them)) + "</p>"
         + '<p><span class="caption">Your wager</span> $' + esc(String(parsed.stake / 100)) + "</p>"
         + '<p><span class="caption">Odds</span> ' + esc(parsed.odds ? ledgerFmtOdds(parsed.odds) : "even") + "</p>"
         + '<p class="lc-review-desc">' + esc(parsed.desc) + "</p>"
         + '<p><span class="caption">Clock</span> ' + esc(clockLab) + "</p>"
-        + '<p class="lc-preview">' + esc(parsed.money && parsed.money.words ? parsed.money.words : "") + "</p>";
+        + '<p class="lc-preview">' + esc(parsed.money && parsed.money.words ? parsed.money.words : "") + "</p>"
+        + unclaimed;
     }
 
     function ledgerShowReview(form) {
@@ -14911,6 +14937,125 @@ const html = `<!DOCTYPE html>
       ledgerCaptureCompose(form);
       ledgerPaintWagerPreview(form, { capture: false });
       if (!val) ledgerHideReview(form);
+    }
+
+    function ledgerCopyPlain(text, okMsg) {
+      const done = () => {
+        ledgerFlashToast(okMsg || "Copied join link.");
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(done).catch(() => {
+          ledgerFlashToast("Copy failed — long-press the link from the slip.");
+        });
+      }
+      ledgerFlashToast("Copy failed — long-press the link from the slip.");
+      return Promise.resolve();
+    }
+
+    function ledgerThemOf(b, seat) {
+      if (!b) return "";
+      const me = String(seat || authSeatId() || "");
+      if (me && String(b.side_a) === me) return String(b.side_b || "");
+      if (me && String(b.side_b) === me) return String(b.side_a || "");
+      return "";
+    }
+
+    async function ledgerLoadUnclaimedSeats() {
+      const lid = (activeLeague && activeLeague.sleeper_league_id) || "";
+      if (!lid || !authSession || authSession.access_token === "design-mode") return;
+      try {
+        const data = await joinLeagueCall("unclaimed_seats", { sleeper_league_id: lid });
+        const map = Object.create(null);
+        (data.seats || []).forEach((s) => {
+          if (s && s.sleeper_user_id) map[String(s.sleeper_user_id)] = s.team_name || true;
+        });
+        ledgerUnclaimedSeats = map;
+        const form = document.querySelector("[data-ledger-wager-form]");
+        if (form) ledgerRefreshThemOptions(form);
+      } catch (err) {
+        console.warn("unclaimed seats", err);
+      }
+    }
+
+    async function ledgerMintOnboardLink(bet) {
+      if (!bet || !bet.id) return null;
+      const them = ledgerThemOf(bet);
+      const lid = (activeLeague && activeLeague.sleeper_league_id)
+        || bet.sleeper_league_id
+        || "";
+      if (!them || !lid) return null;
+      if (isDesignLeagueHome() || (authSession && authSession.access_token === "design-mode")) {
+        return ledgerOnboardShareLink("CF-DEMO-ONBD", bet.id);
+      }
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(bet.id))) {
+        return null;
+      }
+      const data = await joinLeagueCall("onboard_link", {
+        sleeper_league_id: lid,
+        sleeper_user_id: them,
+        bet_id: bet.id,
+      });
+      if (data.claimed) {
+        delete ledgerUnclaimedSeats[them];
+        return { claimed: true };
+      }
+      if (!data.code) return null;
+      ledgerUnclaimedSeats[them] = data.team_name || true;
+      return { claimed: false, link: ledgerOnboardShareLink(data.code, bet.id) };
+    }
+
+    async function ledgerOfferOnboard(bet, opts) {
+      const silent = !!(opts && opts.silent);
+      try {
+        const out = await ledgerMintOnboardLink(bet);
+        if (!out) {
+          if (!silent) ledgerToast = "Sent. Waiting on them.";
+          return;
+        }
+        if (out.claimed) {
+          ledgerOnboardLink = null;
+          if (!silent) ledgerToast = "Sent. Waiting on them.";
+          return;
+        }
+        ledgerOnboardLink = out.link;
+        ledgerToast = "Sent. They have not claimed a seat yet — copy the join link so they can create an account, claim the team, and accept.";
+        if (!(opts && opts.skipCopy)) {
+          await ledgerCopyPlain(out.link, "Copied join link. Send it so they can claim the team and accept.");
+        }
+      } catch (err) {
+        console.warn("onboard link", err);
+        if (!silent) ledgerToast = "Sent. Waiting on them.";
+      }
+    }
+
+    async function ledgerCopyOnboard(id) {
+      const b = (ledgerBets || []).find((x) => String(x.id) === String(id));
+      if (!b && ledgerOnboardLink) {
+        await ledgerCopyPlain(ledgerOnboardLink, "Copied join link.");
+        return;
+      }
+      if (!b) {
+        ledgerFlashToast("Could not build that join link.");
+        return;
+      }
+      try {
+        const out = await ledgerMintOnboardLink(b);
+        if (!out) {
+          ledgerFlashToast("Could not build that join link.");
+          return;
+        }
+        if (out.claimed) {
+          ledgerOnboardLink = null;
+          ledgerFlashToast("They already have an account. They can accept in Ledger.");
+          return;
+        }
+        ledgerOnboardLink = out.link;
+        await ledgerCopyPlain(out.link, "Copied join link. Send it so they can claim the team and accept.");
+        if (homeTab === "ledger") render();
+      } catch (err) {
+        console.error(err);
+        ledgerFlashToast((err && err.message) || "Could not build that join link.");
+      }
     }
 
     async function ledgerWagerSave() {
@@ -14960,7 +15105,7 @@ const html = `<!DOCTYPE html>
           ledgerBets = [row].concat(ledgerBets || []);
           ledgerWagerOpen = false;
           ledgerClearCompose();
-          ledgerToast = "Sent. Waiting on them.";
+          await ledgerOfferOnboard(row);
           return;
         }
         const res = await fetch(VOTE_API + "/ledger_bets", {
@@ -14977,7 +15122,7 @@ const html = `<!DOCTYPE html>
         if (inserted) ledgerBets = [inserted].concat(ledgerBets || []);
         ledgerWagerOpen = false;
         ledgerClearCompose();
-        ledgerToast = "Sent. Waiting on them.";
+        await ledgerOfferOnboard(inserted || row);
         await fetch(VOTE_API + "/ledger_bet_events", {
           method: "POST",
           headers: ledgerAuthHeaders(),
@@ -16245,6 +16390,8 @@ const html = `<!DOCTYPE html>
     let gateInviteLeagueId = null;
     let gateInviteSeatId = null;
     let gateInviteClaimed = false;
+    let gateWagerPreview = null;
+    let pendingLedgerWagerId = null;
     let gateSuggestedUser = null;
     let gateMode = "signin"; // signin | signup | forgot — returning users land on Sign in
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
@@ -17004,6 +17151,24 @@ const html = `<!DOCTYPE html>
       return base + join + "invite=" + encodeURIComponent(code);
     }
 
+    function ledgerOnboardShareLink(code, betId) {
+      const base = inviteShareLink(code);
+      if (!betId) return base;
+      const join = base.indexOf("?") >= 0 ? "&" : "?";
+      return base + join + "wager=" + encodeURIComponent(betId);
+    }
+
+    function ledgerSeatUnclaimed(uid) {
+      const id = String(uid || "");
+      return !!(id && ledgerUnclaimedSeats[id]);
+    }
+
+    function ledgerThemOptionLabel(m) {
+      const name = (m && (m.name || m.user_id)) || "";
+      const id = m && m.user_id;
+      return ledgerSeatUnclaimed(id) ? (name + " · not claimed") : name;
+    }
+
     function copyText(text) {
       settingsCopyNote = "";
       const done = () => {
@@ -17571,10 +17736,12 @@ const html = `<!DOCTYPE html>
       const code = (redeemCode || "").trim();
       if (!code) return;
       try {
+        const body = { action: "invite_preview", code: code };
+        if (pendingLedgerWagerId) body.bet_id = pendingLedgerWagerId;
         const res = await fetch(FN_API + "/join-league", {
           method: "POST",
           headers: { apikey: VOTE_ANON, "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "invite_preview", code: code }),
+          body: JSON.stringify(body),
           signal: voteAbort(),
         });
         const data = await res.json().catch(() => ({}));
@@ -17584,13 +17751,17 @@ const html = `<!DOCTYPE html>
           gateInviteLeagueId = data.sleeper_league_id || null;
           gateInviteSeatId = data.sleeper_user_id || null;
           gateInviteClaimed = !!data.claimed;
+          gateWagerPreview = data.wager || null;
+          if (data.wager && data.wager.id) pendingLedgerWagerId = data.wager.id;
           gateSuggestedUser = data.suggested_username || data.prior_username
             || suggestUsernameFromTeam(data.team_name);
           if (gateSuggestedUser && !gateUsernameDraft) gateUsernameDraft = gateSuggestedUser;
           // Logged-out + already-used: send them to sign-in (they may already have an account).
           if (gateInviteClaimed && !authSession) {
             gateMode = "signin";
-            joinError = "This invite was already used — sign in instead.";
+            joinError = pendingLedgerWagerId
+              ? "This invite was already used — sign in to accept the wager."
+              : "This invite was already used — sign in instead.";
           }
           render();
           return;
@@ -18002,6 +18173,19 @@ const html = `<!DOCTYPE html>
         authBusy = false;
         if (redeemCode) {
           handedOff = true;
+          if (gateInviteClaimed && pendingLedgerWagerId && gateInviteLeagueId) {
+            const mine = (memberships || []).find((m) => m.sleeper_league_id === gateInviteLeagueId);
+            if (mine && gateInviteSeatId && mine.sleeper_user_id === gateInviteSeatId) {
+              await afterInviteLand({
+                sleeper_league_id: gateInviteLeagueId,
+                name: gateInviteLeague || mine.team_name || gateInviteLeagueId,
+                status: "ready",
+                sleeper_user_id: mine.sleeper_user_id,
+                team_name: mine.team_name,
+              });
+              return;
+            }
+          }
           await onRedeemInvite();
           return;
         }
@@ -18361,7 +18545,7 @@ const html = `<!DOCTYPE html>
         voteSeatRemember(L.sleeper_user_id);
         redeemCode = "";
         gateInviteClaimed = false;
-        await openLeagueDashboard(leagueInfo);
+        await afterInviteLand(leagueInfo);
       } catch (err) {
         joinError = (err && err.message) || "Could not redeem that invite.";
         console.error(err);
@@ -18415,7 +18599,7 @@ const html = `<!DOCTYPE html>
               seat_name: L.team_name,
             }));
           }
-          await openLeagueDashboard({
+          await afterInviteLand({
             sleeper_league_id: L.sleeper_league_id,
             name: L.name || L.sleeper_league_id,
             status: L.status || "ready",
@@ -18468,6 +18652,20 @@ const html = `<!DOCTYPE html>
       } catch (err) {
         if (id === CUCKLE_LEAGUE_ID) return getJson("data/ui/" + name);
         throw err;
+      }
+    }
+
+    async function afterInviteLand(leagueInfo) {
+      await openLeagueDashboard(leagueInfo);
+      if (!pendingLedgerWagerId) return;
+      ledgerFocusId = pendingLedgerWagerId;
+      pendingLedgerWagerId = null;
+      gateWagerPreview = null;
+      ledgerToast = "You're in. Accept the wager to lock it in.";
+      setHomeTab("ledger", { force: true });
+      if (ledgerFocusId) {
+        focusNext = '[data-ledger-id="' + String(ledgerFocusId).replace(/"/g, "") + '"]';
+        render();
       }
     }
 
@@ -24848,6 +25046,17 @@ const html = `<!DOCTYPE html>
                 + "<b>new password</b> you will use to sign in later.</p>")
               : '<p class="caption">Pick a username and a <b>new password</b> to claim your seat. '
                 + "Do not paste the invite code into the password field.</p>"))
+          + (gateWagerPreview
+            ? ('<p class="caption"><b>' + esc(gateWagerPreview.from_team || "A league mate")
+              + "</b> sent you a ledger bet"
+              + (gateWagerPreview.amount_cents
+                ? (" for " + esc(typeof ledgerFmtDollars === "function"
+                  ? ledgerFmtDollars(gateWagerPreview.amount_cents)
+                  : ("$" + (Number(gateWagerPreview.amount_cents) / 100))))
+                : "")
+              + (gateWagerPreview.title ? (": " + esc(gateWagerPreview.title)) : ".")
+              + " Create your account to claim the team and accept.</p>")
+            : "")
           : "")
         + (gateSuggestedUser && invited && !forgot
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
@@ -25269,15 +25478,24 @@ const html = `<!DOCTYPE html>
           + "Copy the link from Manage invites and send it to the other manager instead.</p>";
       } else if (sameSeat) {
         body = '<p class="caption">You already sit as <b>' + esc(team) + "</b>. "
-          + "Open Your leagues to continue.</p>";
+          + (pendingLedgerWagerId
+            ? "Open Ledger to accept the wager."
+            : "Open Your leagues to continue.") + "</p>";
       } else {
         body = '<p class="caption">You are signed in as <b>' + esc(uname) + "</b>. "
           + "This invite is for <b>" + esc(team) + "</b>"
           + (gateInviteLeague ? " in " + esc(league) : "") + ".</p>"
+          + (gateWagerPreview
+            ? ('<p class="caption"><b>' + esc(gateWagerPreview.from_team || "A league mate")
+              + "</b> sent a ledger bet"
+              + (gateWagerPreview.title ? (": " + esc(gateWagerPreview.title)) : "")
+              + ". Redeem only if this is your team.</p>")
+            : "")
           + '<p class="caption">Only redeem if <b>you</b> are joining that seat. '
           + "If you are the commissioner sending this link, go back and paste it to the other manager.</p>";
       }
       const canRedeem = !gateInviteClaimed && !mySeat;
+      const canOpenWager = !!(sameSeat && pendingLedgerWagerId && lid);
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Invite link</h2>'
         + '<div class="app-card">'
@@ -25288,7 +25506,12 @@ const html = `<!DOCTYPE html>
         + (canRedeem
           ? ('<button type="button" class="chip" data-redeem-go="1"'
             + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Joining…" : "Join as " + esc(team)) + "</button>")
+            + (joinBusy ? "Joining…"
+              : (pendingLedgerWagerId ? "Join as " + esc(team) + " and accept" : "Join as " + esc(team)))
+            + "</button>")
+          : "")
+        + (canOpenWager
+          ? ('<button type="button" class="chip" data-ledger-open-onboard="1">Open the wager</button>')
           : "")
         + (lid
           ? ('<button type="button" class="linkish" data-manage-invites="' + esc(lid)
@@ -26219,8 +26442,10 @@ const html = `<!DOCTYPE html>
         ledgerWagerOpen = true;
         ledgerCounterId = null;
         ledgerToast = null;
+        ledgerOnboardLink = null;
         if (!(members && members.length) && typeof loadMembers === "function") loadMembers().catch(() => {});
         ledgerWarmDescIndex();
+        ledgerLoadUnclaimedSeats();
         render();
         return;
       }
@@ -26263,6 +26488,16 @@ const html = `<!DOCTYPE html>
       if (ledgerCompleteCancel) {
         ledgerCompleteId = null;
         render();
+        return;
+      }
+      const ledgerOnboardBtn = e.target.closest("[data-ledger-onboard]");
+      if (ledgerOnboardBtn) {
+        ledgerCopyOnboard(ledgerOnboardBtn.getAttribute("data-ledger-onboard"));
+        return;
+      }
+      if (e.target.closest("[data-ledger-copy-onboard]")) {
+        if (ledgerOnboardLink) ledgerCopyPlain(ledgerOnboardLink, "Copied join link.");
+        else ledgerCopyOnboard(ledgerFocusId);
         return;
       }
       const ledgerAcceptBtn = e.target.closest("[data-ledger-accept]");
@@ -27181,6 +27416,22 @@ const html = `<!DOCTYPE html>
       const redeemGo = e.target.closest("[data-redeem-go]");
       if (redeemGo) {
         onRedeemInvite();
+        return;
+      }
+      if (e.target.closest("[data-ledger-open-onboard]")) {
+        const lid = gateInviteLeagueId;
+        const mine = lid
+          ? (memberships || []).find((m) => m.sleeper_league_id === lid)
+          : null;
+        if (mine) {
+          afterInviteLand({
+            sleeper_league_id: lid,
+            name: gateInviteLeague || mine.team_name || lid,
+            status: "ready",
+            sleeper_user_id: mine.sleeper_user_id,
+            team_name: mine.team_name,
+          }).catch((err) => console.error(err));
+        }
         return;
       }
       const manageInvites = e.target.closest("[data-manage-invites]");
@@ -28188,21 +28439,35 @@ const html = `<!DOCTYPE html>
       } catch (err) { /* ignore */ }
     }
     const inviteParam = (params.get("invite") || "").trim();
+    const wagerParam = (params.get("wager") || "").trim();
+    if (wagerParam) pendingLedgerWagerId = wagerParam;
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";
       // Drop ?invite= from the address bar immediately. Leaving CF-XXXX in the URL while the
       // username/password fields paint is how iOS Keychain / password managers save the seat
       // ticket as the account password. redeemCode keeps the value for signup → redeem.
+      // Strip ?wager= too — the id stays in pendingLedgerWagerId.
       try {
         const u = new URL(location.href);
-        if (u.searchParams.has("invite")) {
-          u.searchParams.delete("invite");
+        let stripped = false;
+        if (u.searchParams.has("invite")) { u.searchParams.delete("invite"); stripped = true; }
+        if (u.searchParams.has("wager")) { u.searchParams.delete("wager"); stripped = true; }
+        if (stripped) {
           const q = u.searchParams.toString();
           history.replaceState(history.state || {}, "", u.pathname + (q ? "?" + q : "") + u.hash);
         }
       } catch (err) { /* ignore */ }
       loadInvitePreview().catch((err) => console.error(err));
+    } else if (wagerParam) {
+      try {
+        const u = new URL(location.href);
+        if (u.searchParams.has("wager")) {
+          u.searchParams.delete("wager");
+          const q = u.searchParams.toString();
+          history.replaceState(history.state || {}, "", u.pathname + (q ? "?" + q : "") + u.hash);
+        }
+      } catch (err) { /* ignore */ }
     }
     paintSettingsBtn();
     paintBrandHome();
@@ -28231,6 +28496,7 @@ const html = `<!DOCTYPE html>
         }
         if (inviteParam) {
           await loadMemberships().catch((err) => console.error(err));
+          await loadInvitePreview().catch((err) => console.error(err));
           // Already signed in: never auto-redeem. Opening a manager invite while logged in
           // used to claim that seat onto this account and leave the prior seat stamped claimed.
           joinError = "";
@@ -28319,7 +28585,7 @@ const html = `<!DOCTYPE html>
           if (!("caches" in window)) return Promise.resolve();
           return caches.keys().then(function (keys) {
             return Promise.all(keys.filter(function (k) {
-              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v258-news-feed";
+              return k.indexOf("chuckle-shell-") === 0 && k !== "chuckle-shell-v259-ledger-onboard";
             }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {});
         }
@@ -28410,13 +28676,13 @@ if (!html.includes('updateViaCache: "none"')
   || !html.includes("cuckle.swReloaded")
   || !html.includes("reg.update()")
   || !html.includes("purgeStaleCaches")
-  || !html.includes("chuckle-shell-v258-news-feed")) {
+  || !html.includes("chuckle-shell-v259-ledger-onboard")) {
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v258-news-feed")
+  || !swSrc.includes("chuckle-shell-v259-ledger-onboard")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -30164,6 +30430,19 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerShowReview(", true],
     ["function ledgerReviewHtml(", true],
     ["Review wager", true],
+    ["function ledgerOnboardShareLink(", true],
+    ["function afterInviteLand(", true],
+    ["function ledgerOfferOnboard(", true],
+    ["function ledgerCopyOnboard(", true],
+    ["function ledgerLoadUnclaimedSeats(", true],
+    ["function ledgerThemOptionLabel(", true],
+    ['joinLeagueCall("onboard_link"', true],
+    ['joinLeagueCall("unclaimed_seats"', true],
+    ["Copy join link", true],
+    ["not claimed", true],
+    ['data-ledger-onboard="', true],
+    ['searchParams.delete("wager")', true],
+    ["Create your account to claim the team and accept.", true],
     ['data-ledger-send-them="', false],
     ['spellcheck="false"', true],
     ['autocorrect="off"', true],
@@ -30478,6 +30757,13 @@ if (!inline.includes('data-gate-mode="forgot"')
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");
+}
+if (!inline.includes('searchParams.delete("wager")')
+  || !inline.includes("function ledgerOnboardShareLink(")
+  || !inline.includes("function afterInviteLand(")
+  || !inline.includes("pendingLedgerWagerId")
+  || !inline.includes("Copy join link")) {
+  throw new Error("unclaimed managers must be able to open a ledger join link, create an account, claim the seat, and accept");
 }
 if (!inline.includes('appScreen = "inviteConfirm"')
   || !inline.includes("function renderInviteConfirm()")

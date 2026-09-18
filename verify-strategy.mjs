@@ -49,7 +49,7 @@ if (!seed.includes("--force-legacy") || !seed.includes("process.exit(1)")) {
 }
 
 const join = fs.readFileSync(ROOT + "supabase/functions/join-league/index.ts", "utf8");
-for (const action of ["create", "list_invites", "redeem", "claim_seat", "rotate_seat", "reissue_seat", "transfer_commissioner"]) {
+for (const action of ["create", "list_invites", "redeem", "claim_seat", "rotate_seat", "reissue_seat", "transfer_commissioner", "unclaimed_seats", "onboard_link"]) {
   if (!join.includes(`action === "${action}"`)) {
     console.error("join-league missing action", action);
     failed++;

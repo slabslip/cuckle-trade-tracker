@@ -129,6 +129,9 @@ Auth: caller JWT required. Writes: **service role** only (clients cannot insert 
 | `preview` | Signed-in | Sleeper roster preview |
 | `create` | Commissioner | First claim of `created_by`: upsert league + mint codes. Same commissioner again: `already_exists` + status list (**no remint**) |
 | `list_invites` | Creator | Unclaimed codes returned (stored `code_plain`); claimed seats + member list |
+| `unclaimed_seats` | Member or creator | Unclaimed roster seats (ids + team names, no codes) for Ledger Them labels |
+| `onboard_link` | Party on a proposed bet (or creator) | Unused CF- code for that **unclaimed** seat + wager id. Does not remint an existing code. Claimed seats return `{ claimed: true }` |
+| `invite_preview` | Public | Team name + suggested username; optional `bet_id` returns a matching proposed wager preview |
 | `rotate_invites` | Creator | New codes for **unclaimed** seats only |
 | `reissue_seat` | Creator | Clear membership for a **claimed** seat + mint a new code (manager left / new manager) |
 | `transfer_commissioner` | Creator | Set `created_by` to another **league member**; former commissioner keeps their seat |

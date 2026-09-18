@@ -104,6 +104,7 @@ Confirm: Supabase → **Edge Functions** → **`join-league`**.
 
 1. **Commissioner:** live URL → Create account → Create league `1315431339301806080` → copy **TrumanCooper** invite link
 2. **Member (incognito / phone):** open `?invite=CF-…` → suggested username from team name → Create account → dashboard → Add to Home Screen
+3. **Unclaimed manager via Ledger:** a claimed mate Sends a wager to that seat → **Copy join link** → they open `?invite=CF-…&wager=` → username/password → claim the team → Accept on Ledger
 
 ---
 

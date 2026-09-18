@@ -4,7 +4,8 @@
 // Authorization: Bearer <user JWT>
 //
 // Actions:
-//   invite_preview   { code }               → public: team_name + suggested username (no auth)
+//   invite_preview   { code, bet_id? }     → public: team_name + suggested username
+//                                            optional wager preview when bet is for that seat
 //   request_reset   { email | username }   → public: email a reset if recover_email is on file
 //   reclaim_seat    { code, username, password, recover_email? }
 //                   → public: unused CF- ticket sets a new login and claims the seat
@@ -13,6 +14,10 @@
 //   rebuild         { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
 //                   → first time: mint codes; revisit by same commissioner: status only (no remint)
 //   list_invites    { sleeper_league_id }  → unclaimed codes + claimed seats + members
+//   unclaimed_seats { sleeper_league_id }  → member: unclaimed roster seats (no codes)
+//   onboard_link    { sleeper_league_id, sleeper_user_id, bet_id }
+//                   → member/commissioner: unused invite for that unclaimed seat + wager
+//                     (does not remint an existing CF- code)
 //   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats
 //   rotate_seat     { sleeper_league_id, sleeper_user_id }
 //                   → new code for one unclaimed seat (Generate invite)
@@ -357,6 +362,109 @@ async function listInviteRows(
   });
 }
 
+async function callerLeagueAccess(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  leagueId: string,
+) {
+  const { data: league } = await admin.from("leagues")
+    .select("created_by, name, status")
+    .eq("sleeper_league_id", leagueId)
+    .maybeSingle();
+  if (!league) return { league: null, mem: null, allowed: false };
+  const { data: mem } = await admin.from("league_memberships")
+    .select("sleeper_user_id, team_name")
+    .eq("sleeper_league_id", leagueId)
+    .eq("auth_user_id", userId)
+    .maybeSingle();
+  const isCommissioner = league.created_by === userId;
+  return { league, mem: mem || null, allowed: !!(mem || isCommissioner) };
+}
+
+/** Existing unused CF- code for an unclaimed seat. Mint once if missing. Never remint. */
+async function unusedSeatInvite(
+  admin: ReturnType<typeof createClient>,
+  leagueId: string,
+  seatId: string,
+  userId: string,
+) {
+  let { data: invite } = await admin.from("seat_invites")
+    .select("*")
+    .eq("sleeper_league_id", leagueId)
+    .eq("sleeper_user_id", seatId)
+    .maybeSingle();
+  if (!invite) {
+    try {
+      const preview = await loadTeams(leagueId);
+      if (preview) await ensureSeatInvites(admin, preview, userId);
+    } catch {
+      // Fall through to 404 if the seat still is not there.
+    }
+    const again = await admin.from("seat_invites")
+      .select("*")
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId)
+      .maybeSingle();
+    invite = again.data || null;
+  }
+  if (!invite) return { error: "Unknown seat" as const };
+  if (invite.claimed_by) return { claimed: true as const, invite };
+  let code = invite.code_plain && String(invite.code_plain).indexOf("CF-") === 0
+    ? String(invite.code_plain)
+    : "";
+  if (!code) {
+    code = makeCode();
+    const code_hash = await sha256Hex(code);
+    const { error: updErr } = await admin.from("seat_invites").update({
+      code_hash,
+      code_plain: code,
+      claimed_by: null,
+      claimed_at: null,
+    }).eq("id", invite.id);
+    if (updErr) {
+      const msg = updErr.message || "";
+      if (msg.includes("code_plain")) {
+        return { error: "Run db/wave5-invite-plain.sql in the Supabase SQL Editor, then try again." as const };
+      }
+      return { error: "Could not prepare invite: " + msg };
+    }
+  }
+  return { claimed: false as const, code, invite };
+}
+
+function wagerPreviewFromBet(
+  bet: {
+    id: string;
+    title: string | null;
+    terms: string | null;
+    amount_cents: number | null;
+    odds: string | null;
+    house_odds: number | null;
+    side_a: string;
+    side_b: string;
+    deadline_at: string | null;
+    clock_kind: string | null;
+  },
+  seatId: string,
+  fromTeam: string | null,
+  toTeam: string | null,
+) {
+  const fromId = String(bet.side_a) === String(seatId) ? bet.side_b : bet.side_a;
+  return {
+    id: bet.id,
+    title: bet.title || "",
+    terms: bet.terms || "",
+    amount_cents: Number(bet.amount_cents) || 0,
+    odds: bet.odds || null,
+    house_odds: bet.house_odds != null ? Number(bet.house_odds) : null,
+    from_user_id: fromId,
+    from_team: fromTeam,
+    to_team: toTeam,
+    deadline_at: bet.deadline_at,
+    clock_kind: bet.clock_kind || null,
+  };
+}
+
 async function listLeagueMembers(
   admin: ReturnType<typeof createClient>,
   leagueId: string,
@@ -423,6 +531,35 @@ Deno.serve(async (req) => {
       .eq("sleeper_league_id", invite.sleeper_league_id)
       .maybeSingle();
     const prior = invite.prior_username != null ? String(invite.prior_username) : "";
+    let wager = null;
+    const betId = String(body.bet_id || "").trim();
+    if (betId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(betId)) {
+      const { data: bet } = await admin.from("ledger_bets")
+        .select("id, title, terms, amount_cents, odds, house_odds, side_a, side_b, status, deadline_at, clock_kind, sleeper_league_id")
+        .eq("id", betId)
+        .maybeSingle();
+      const seatId = String(invite.sleeper_user_id || "");
+      if (
+        bet
+        && String(bet.sleeper_league_id) === String(invite.sleeper_league_id)
+        && bet.status === "proposed"
+        && seatId
+        && (String(bet.side_a) === seatId || String(bet.side_b) === seatId)
+      ) {
+        const fromId = String(bet.side_a) === seatId ? bet.side_b : bet.side_a;
+        const { data: fromInv } = await admin.from("seat_invites")
+          .select("team_name")
+          .eq("sleeper_league_id", invite.sleeper_league_id)
+          .eq("sleeper_user_id", fromId)
+          .maybeSingle();
+        wager = wagerPreviewFromBet(
+          bet,
+          seatId,
+          (fromInv && fromInv.team_name) || null,
+          invite.team_name || null,
+        );
+      }
+    }
     return json(200, {
       ok: true,
       claimed: !!invite.claimed_by,
@@ -432,6 +569,7 @@ Deno.serve(async (req) => {
       sleeper_user_id: invite.sleeper_user_id || null,
       prior_username: prior || null,
       suggested_username: prior || suggestUsername(invite.team_name),
+      wager,
     });
   }
 
@@ -861,6 +999,98 @@ Deno.serve(async (req) => {
       },
       invites,
       members,
+    });
+  }
+
+  // ---- member: unclaimed roster seats (no codes) so Ledger can label Them ----
+  if (action === "unclaimed_seats") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    if (!leagueId) return json(400, { ok: false, error: "Missing league" });
+    const access = await callerLeagueAccess(admin, user.id, leagueId);
+    if (!access.league) return json(404, { ok: false, error: "Unknown league" });
+    if (!access.allowed) {
+      return json(403, { ok: false, error: "Claim a seat in this league first" });
+    }
+    const { data: rows, error } = await admin.from("seat_invites")
+      .select("sleeper_user_id, team_name, claimed_by")
+      .eq("sleeper_league_id", leagueId)
+      .order("team_name");
+    if (error) return json(500, { ok: false, error: error.message });
+    const seats = (rows || [])
+      .filter((r) => !r.claimed_by)
+      .map((r) => ({
+        sleeper_user_id: r.sleeper_user_id,
+        team_name: r.team_name,
+      }));
+    return json(200, { ok: true, seats });
+  }
+
+  // ---- member/commissioner: unused invite + wager for an unclaimed seat ----
+  if (action === "onboard_link") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const seatId = String(body.sleeper_user_id || "").trim();
+    const betId = String(body.bet_id || "").trim();
+    if (!leagueId || !seatId) {
+      return json(400, { ok: false, error: "Pick the unclaimed seat" });
+    }
+    if (!betId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(betId)) {
+      return json(400, { ok: false, error: "Send a ledger wager first" });
+    }
+    const access = await callerLeagueAccess(admin, user.id, leagueId);
+    if (!access.league) return json(404, { ok: false, error: "Unknown league" });
+    if (!access.allowed) {
+      return json(403, { ok: false, error: "Claim a seat in this league first" });
+    }
+    const callerSeat = access.mem ? String(access.mem.sleeper_user_id || "") : "";
+    const { data: bet } = await admin.from("ledger_bets")
+      .select("id, title, terms, amount_cents, odds, house_odds, side_a, side_b, status, deadline_at, clock_kind, sleeper_league_id, proposer")
+      .eq("id", betId)
+      .maybeSingle();
+    if (!bet || String(bet.sleeper_league_id) !== leagueId) {
+      return json(404, { ok: false, error: "Unknown wager" });
+    }
+    if (bet.status !== "proposed") {
+      return json(400, { ok: false, error: "That wager is no longer waiting on them" });
+    }
+    const a = String(bet.side_a || "");
+    const t = String(bet.side_b || "");
+    if (seatId !== a && seatId !== t) {
+      return json(400, { ok: false, error: "That wager is not for this seat" });
+    }
+    if (callerSeat && callerSeat !== a && callerSeat !== t) {
+      return json(403, { ok: false, error: "Only a party on this wager can copy the join link" });
+    }
+    if (callerSeat && callerSeat === seatId) {
+      return json(400, { ok: false, error: "That seat is yours" });
+    }
+    const unused = await unusedSeatInvite(admin, leagueId, seatId, user.id);
+    if ("error" in unused && unused.error) {
+      return json(404, { ok: false, error: unused.error });
+    }
+    if (unused.claimed) {
+      return json(200, {
+        ok: true,
+        claimed: true,
+        sleeper_user_id: seatId,
+        team_name: unused.invite && unused.invite.team_name,
+      });
+    }
+    return json(200, {
+      ok: true,
+      claimed: false,
+      code: unused.code,
+      bet_id: bet.id,
+      sleeper_league_id: leagueId,
+      sleeper_user_id: seatId,
+      team_name: unused.invite && unused.invite.team_name,
+      league_name: access.league.name,
+      wager: wagerPreviewFromBet(
+        bet,
+        seatId,
+        (access.mem && access.mem.team_name) || null,
+        (unused.invite && unused.invite.team_name) || null,
+      ),
+      note: "Send this link to that manager. They create a username and password, claim the team, and accept the wager.",
     });
   }
 

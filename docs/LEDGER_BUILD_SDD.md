@@ -123,6 +123,7 @@ returns other members’ public slips).
 - [ ] Either party can toggle Private; other members do **not** see it on team home
 - [ ] Team home for a seat shows public Taken from / Lost to / Bets lost when settled public slips exist
 - [ ] Design Mode still shows seeded slips without Supabase
+- [ ] `join-league` deployed with `onboard_link` + `unclaimed_seats` (copy join link after Send to an unclaimed seat)
 
 ---
 

@@ -84,6 +84,14 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
     No external LLM. Private slips of other people are never used. After
     Accept or settle, the next compose re-reads history. That is the v1
     learning loop. Ledger stays opinion-only (rule 4).
+15. **Onboard via bet link.** A claimed member (or the commissioner, from their
+    claimed seat) may send a proposed wager to a roster seat that has not
+    claimed yet. After Send, copy a join link (`?invite=CF-…&wager=<bet id>`).
+    Opening it asks for a username and password, redeems that seat, and lands
+    on Ledger focused on that slip so they can Accept. `onboard_link` returns
+    the existing unused invite for that unclaimed seat only — it does not remint
+    a live CF- code or expose claimed-seat tickets. Them picker labels
+    unclaimed seats “not claimed.” This is not Join / more exposure (rule 9).
 
 ### Status machine
 

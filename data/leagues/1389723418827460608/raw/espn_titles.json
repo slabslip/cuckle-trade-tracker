@@ -1,1 +1,247 @@
-[]
+[
+  {
+    "season": "2024",
+    "user_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "name": "modano913",
+    "roster_id": 7,
+    "place": 1,
+    "provider": "espn",
+    "record": {
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "fpts": 1518.54,
+      "ppts": null,
+      "sit": null,
+      "fpts_rank": null,
+      "teams": 12,
+      "trades": 0,
+      "league_mean_trades": null
+    },
+    "final": null,
+    "final_missing": "espn_history",
+    "prior": null,
+    "repeat": null,
+    "draft": {
+      "used": [],
+      "startup": false
+    },
+    "opening": {
+      "n": 0,
+      "starters": 0
+    },
+    "title_lineup": {
+      "n": 0,
+      "from_opening": 0,
+      "starters": []
+    },
+    "turnover": {
+      "vs_prev_end": null,
+      "vs_prev_opening": null,
+      "core_from_prev_end": null
+    },
+    "windows": {
+      "previous": null,
+      "offseason": null,
+      "regular": null,
+      "playoffs": null
+    },
+    "thesis": "2024 ESPN champion. Standings imported; championship final tape is not on this book yet."
+  },
+  {
+    "season": "2023",
+    "user_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "name": "modano913",
+    "roster_id": 7,
+    "place": 1,
+    "provider": "espn",
+    "record": {
+      "wins": 7,
+      "losses": 7,
+      "ties": 0,
+      "fpts": 1521.9199999999998,
+      "ppts": null,
+      "sit": null,
+      "fpts_rank": null,
+      "teams": 12,
+      "trades": 0,
+      "league_mean_trades": null
+    },
+    "final": null,
+    "final_missing": "espn_history",
+    "prior": null,
+    "repeat": null,
+    "draft": {
+      "used": [],
+      "startup": false
+    },
+    "opening": {
+      "n": 0,
+      "starters": 0
+    },
+    "title_lineup": {
+      "n": 0,
+      "from_opening": 0,
+      "starters": []
+    },
+    "turnover": {
+      "vs_prev_end": null,
+      "vs_prev_opening": null,
+      "core_from_prev_end": null
+    },
+    "windows": {
+      "previous": null,
+      "offseason": null,
+      "regular": null,
+      "playoffs": null
+    },
+    "thesis": "2023 ESPN champion. Standings imported; championship final tape is not on this book yet."
+  },
+  {
+    "season": "2022",
+    "user_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "name": "espnfan0776830917",
+    "roster_id": 9,
+    "place": 1,
+    "provider": "espn",
+    "record": {
+      "wins": 9,
+      "losses": 5,
+      "ties": 0,
+      "fpts": 1494.74,
+      "ppts": null,
+      "sit": null,
+      "fpts_rank": null,
+      "teams": 12,
+      "trades": 0,
+      "league_mean_trades": null
+    },
+    "final": null,
+    "final_missing": "espn_history",
+    "prior": null,
+    "repeat": null,
+    "draft": {
+      "used": [],
+      "startup": false
+    },
+    "opening": {
+      "n": 0,
+      "starters": 0
+    },
+    "title_lineup": {
+      "n": 0,
+      "from_opening": 0,
+      "starters": []
+    },
+    "turnover": {
+      "vs_prev_end": null,
+      "vs_prev_opening": null,
+      "core_from_prev_end": null
+    },
+    "windows": {
+      "previous": null,
+      "offseason": null,
+      "regular": null,
+      "playoffs": null
+    },
+    "thesis": "2022 ESPN champion. Standings imported; championship final tape is not on this book yet."
+  },
+  {
+    "season": "2021",
+    "user_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "name": "ztrain12",
+    "roster_id": 1,
+    "place": 1,
+    "provider": "espn",
+    "record": {
+      "wins": 10,
+      "losses": 4,
+      "ties": 0,
+      "fpts": 1488.42,
+      "ppts": null,
+      "sit": null,
+      "fpts_rank": null,
+      "teams": 12,
+      "trades": 0,
+      "league_mean_trades": null
+    },
+    "final": null,
+    "final_missing": "espn_history",
+    "prior": null,
+    "repeat": null,
+    "draft": {
+      "used": [],
+      "startup": false
+    },
+    "opening": {
+      "n": 0,
+      "starters": 0
+    },
+    "title_lineup": {
+      "n": 0,
+      "from_opening": 0,
+      "starters": []
+    },
+    "turnover": {
+      "vs_prev_end": null,
+      "vs_prev_opening": null,
+      "core_from_prev_end": null
+    },
+    "windows": {
+      "previous": null,
+      "offseason": null,
+      "regular": null,
+      "playoffs": null
+    },
+    "thesis": "2021 ESPN champion. Standings imported; championship final tape is not on this book yet."
+  },
+  {
+    "season": "2020",
+    "user_id": "1132552110328983552",
+    "name": "collinmccaskill",
+    "roster_id": 8,
+    "place": 1,
+    "provider": "espn",
+    "record": {
+      "wins": 11,
+      "losses": 2,
+      "ties": 0,
+      "fpts": 1603.64,
+      "ppts": null,
+      "sit": null,
+      "fpts_rank": null,
+      "teams": 12,
+      "trades": 0,
+      "league_mean_trades": null
+    },
+    "final": null,
+    "final_missing": "espn_history",
+    "prior": null,
+    "repeat": null,
+    "draft": {
+      "used": [],
+      "startup": false
+    },
+    "opening": {
+      "n": 0,
+      "starters": 0
+    },
+    "title_lineup": {
+      "n": 0,
+      "from_opening": 0,
+      "starters": []
+    },
+    "turnover": {
+      "vs_prev_end": null,
+      "vs_prev_opening": null,
+      "core_from_prev_end": null
+    },
+    "windows": {
+      "previous": null,
+      "offseason": null,
+      "regular": null,
+      "playoffs": null
+    },
+    "thesis": "2020 ESPN champion. Standings imported; championship final tape is not on this book yet."
+  }
+]

@@ -1,14 +1,81 @@
 {
   "espn_league_id": "35763180",
   "sleeper_league_id": "1389723418827460608",
-  "cookie": false,
-  "authorized": false,
-  "reason": "espn_private_needs_cookie",
-  "seasons": [],
+  "cookie": true,
+  "cookie_debug": {
+    "s2_len": 428,
+    "swid_len": 38,
+    "swid_uuid": true
+  },
+  "authorized": true,
+  "reason": null,
+  "seasons": [
+    "2024",
+    "2023",
+    "2022",
+    "2021",
+    "2020"
+  ],
   "tried": [
     {
       "season": 2024,
-      "status": 401
+      "status": 200
+    },
+    {
+      "season": 2023,
+      "status": 200
+    },
+    {
+      "season": 2022,
+      "status": 200
+    },
+    {
+      "season": 2021,
+      "status": 200
+    },
+    {
+      "season": 2020,
+      "status": 200
+    },
+    {
+      "season": 2019,
+      "status": 404
+    },
+    {
+      "season": 2018,
+      "status": 404
+    },
+    {
+      "season": 2017,
+      "status": 404
+    },
+    {
+      "season": 2016,
+      "status": 404
+    },
+    {
+      "season": 2015,
+      "status": 404
+    },
+    {
+      "season": 2014,
+      "status": 404
+    },
+    {
+      "season": 2013,
+      "status": 404
+    },
+    {
+      "season": 2012,
+      "status": 404
+    },
+    {
+      "season": 2011,
+      "status": 404
+    },
+    {
+      "season": 2010,
+      "status": 404
     }
   ]
 }

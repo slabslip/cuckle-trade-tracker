@@ -142,5 +142,485 @@
     "season": "2025",
     "roster_id": 12,
     "owner_id": "1132552110328983552"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 1,
+    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "team_name": "ALAV"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 2,
+    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "team_name": "GILL"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 3,
+    "owner_id": "1132355027018035200",
+    "team_name": "BIFF"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 4,
+    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "team_name": "JOHN"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 5,
+    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "team_name": "NUT"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 6,
+    "owner_id": "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}",
+    "team_name": "HTTR"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 7,
+    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "team_name": "POOP"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 8,
+    "owner_id": "1132552110328983552",
+    "team_name": "BBC"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 9,
+    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "team_name": "TB"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 10,
+    "owner_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "team_name": "MCFA"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 11,
+    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "team_name": "KOTU"
+  },
+  {
+    "league_id": "espn:35763180:2024",
+    "provider": "espn",
+    "season": "2024",
+    "roster_id": 12,
+    "owner_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "team_name": "AB"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 1,
+    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "team_name": "ALAV"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 2,
+    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "team_name": "GILL"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 3,
+    "owner_id": "1132355027018035200",
+    "team_name": "BIFf"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 4,
+    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "team_name": "JOHN"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 5,
+    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "team_name": "NUT"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 6,
+    "owner_id": "espn:{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+    "team_name": "STNk"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 7,
+    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "team_name": "POOP"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 8,
+    "owner_id": "1132552110328983552",
+    "team_name": "KPIE"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 9,
+    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "team_name": "TB"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 10,
+    "owner_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "team_name": "MCFA"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 11,
+    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "team_name": "KOTU"
+  },
+  {
+    "league_id": "espn:35763180:2023",
+    "provider": "espn",
+    "season": "2023",
+    "roster_id": 12,
+    "owner_id": "espn:{F3C43C4E-029B-4774-B558-02D6531A61B0}",
+    "team_name": "AB"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 1,
+    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "team_name": "ALAV"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 2,
+    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "team_name": "GILL"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 3,
+    "owner_id": "1132355027018035200",
+    "team_name": "BIFf"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 4,
+    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "team_name": "JOHN"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 5,
+    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "team_name": "NUT"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 6,
+    "owner_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "team_name": "SWIN"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 7,
+    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "team_name": "POOP"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 8,
+    "owner_id": "1132552110328983552",
+    "team_name": "KPIE"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 9,
+    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "team_name": "TB"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 10,
+    "owner_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "team_name": "MCFA"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 11,
+    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "team_name": "KOTU"
+  },
+  {
+    "league_id": "espn:35763180:2022",
+    "provider": "espn",
+    "season": "2022",
+    "roster_id": 12,
+    "owner_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "team_name": "MORS"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 1,
+    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "team_name": "ALAV"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 2,
+    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "team_name": "GILL"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 3,
+    "owner_id": "1132355027018035200",
+    "team_name": "BIFf"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 4,
+    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "team_name": "JOHN"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 5,
+    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "team_name": "NUT"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 6,
+    "owner_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "team_name": "SWIN"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 7,
+    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "team_name": "NAZI"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 8,
+    "owner_id": "1132552110328983552",
+    "team_name": "KPIE"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 9,
+    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "team_name": "TB"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 10,
+    "owner_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "team_name": "MCFA"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 11,
+    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "team_name": "KOTU"
+  },
+  {
+    "league_id": "espn:35763180:2021",
+    "provider": "espn",
+    "season": "2021",
+    "roster_id": 12,
+    "owner_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "team_name": "MORS"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 1,
+    "owner_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "team_name": "ALAV"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 2,
+    "owner_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "team_name": "GILL"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 3,
+    "owner_id": "1132355027018035200",
+    "team_name": "BIFf"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 4,
+    "owner_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "team_name": "JOHN"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 5,
+    "owner_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "team_name": "BLM"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 6,
+    "owner_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "team_name": "SWIN"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 7,
+    "owner_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "team_name": "BLM1"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 8,
+    "owner_id": "1132552110328983552",
+    "team_name": "KPIE"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 9,
+    "owner_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "team_name": "TB"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 10,
+    "owner_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "team_name": "MCFA"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 11,
+    "owner_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "team_name": "KOTU"
+  },
+  {
+    "league_id": "espn:35763180:2020",
+    "provider": "espn",
+    "season": "2020",
+    "roster_id": 12,
+    "owner_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "team_name": "MORS"
   }
 ]

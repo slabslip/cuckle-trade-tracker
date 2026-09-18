@@ -1,1 +1,444 @@
-[]
+[
+  {
+    "user_id": "espn:{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "espn_id": "{4636A1A4-B500-469B-85D5-11E5642D3B10}",
+    "canonical_name": "AB2official",
+    "aliases": [
+      {
+        "name": "AB2official",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{F3C43C4E-029B-4774-B558-02D6531A61B0}",
+    "espn_id": "{F3C43C4E-029B-4774-B558-02D6531A61B0}",
+    "canonical_name": "Austin Bowling",
+    "aliases": [
+      {
+        "name": "Austin Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Austin",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Austin Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{C912E4A5-5C90-49FB-A1B1-2574387FA4CA}",
+    "espn_id": "{C912E4A5-5C90-49FB-A1B1-2574387FA4CA}",
+    "canonical_name": "Biff34",
+    "aliases": [
+      {
+        "name": "Biff34",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Brandon",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Turner",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Brandon Turner",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jones",
+        "kind": "espn_display",
+        "first_seen_season": "2020"
+      },
+      {
+        "name": "Brandon Jones",
+        "kind": "espn_display",
+        "first_seen_season": "2020"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{70E4ECE3-B4B8-4A71-AFCB-1ACA36E46285}",
+    "espn_id": "{70E4ECE3-B4B8-4A71-AFCB-1ACA36E46285}",
+    "canonical_name": "collinmccaskill",
+    "aliases": [
+      {
+        "name": "collinmccaskill",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Collin",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "McCaskill",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Collin McCaskill",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "espn_id": "{AC00D705-C77B-4C99-84AA-725E43753872}",
+    "canonical_name": "espnfan0776830917",
+    "aliases": [
+      {
+        "name": "espnfan0776830917",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Thatcher",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Bowers",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Thatcher Bowers",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "espn_id": "{90C5E68F-9D70-442F-BC9A-166CEAB8036B}",
+    "canonical_name": "ESPNFAN1357922193",
+    "aliases": [
+      {
+        "name": "ESPNFAN1357922193",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Durham",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin Durham",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "espn_id": "{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "canonical_name": "ESPNfan7396258614",
+    "aliases": [
+      {
+        "name": "ESPNfan7396258614",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "Ricky",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "Swink",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "Ricky Swink",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "espn_id": "{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "canonical_name": "hudmorse",
+    "aliases": [
+      {
+        "name": "hudmorse",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "hud",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "morse",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "hud morse",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "espn_id": "{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "canonical_name": "JaredMcFadden",
+    "aliases": [
+      {
+        "name": "JaredMcFadden",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jared",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "McFadden",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jared McFadden",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "espn_id": "{D77CC4EB-C233-4E09-BCC4-EBC233DE0926}",
+    "canonical_name": "kotulac27",
+    "aliases": [
+      {
+        "name": "kotulac27",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "chris",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "kotula",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "chris kotula",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "espn_id": "{47AFDC89-7278-40E5-909E-0ABC1E1CE345}",
+    "canonical_name": "modano913",
+    "aliases": [
+      {
+        "name": "modano913",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Spencer",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Tully",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Spencer Tully",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{6D737882-6883-49E5-BEE2-DCB584C7394A}",
+    "espn_id": "{6D737882-6883-49E5-BEE2-DCB584C7394A}",
+    "canonical_name": "ShaneBrandes11",
+    "aliases": [
+      {
+        "name": "ShaneBrandes11",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Shane",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Brandes",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Shane Brandes",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "espn_id": "{4F6701DA-9B22-48E4-A701-DA9B2288E48D}",
+    "canonical_name": "SkrongMeat_Jnast_88",
+    "aliases": [
+      {
+        "name": "SkrongMeat_Jnast_88",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jason ",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Gillespie",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jason  Gillespie",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+    "espn_id": "{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+    "canonical_name": "Stank93",
+    "aliases": [
+      {
+        "name": "Stank93",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Steven",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Shrout",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Steven Shrout",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "espn_id": "{A11CD58E-2B79-402E-9CD5-8E2B79A02E37}",
+    "canonical_name": "Taylor_DJohnson",
+    "aliases": [
+      {
+        "name": "Taylor_DJohnson",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Taylor",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Johnson",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Taylor Johnson",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "espn_id": "{90C9B6BF-BFCF-488E-AFA5-7A5BEB42F0FF}",
+    "canonical_name": "ztrain12",
+    "aliases": [
+      {
+        "name": "ztrain12",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Zach",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Alavi",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Zach Alavi",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  }
+]

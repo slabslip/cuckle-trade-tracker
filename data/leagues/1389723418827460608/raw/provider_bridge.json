@@ -1,13 +1,40 @@
 {
-  "espn_authorized": false,
-  "espn_reason": "espn_private_needs_cookie",
-  "espn_seasons": [],
+  "espn_authorized": true,
+  "espn_reason": null,
+  "espn_seasons": [
+    "2024",
+    "2023",
+    "2022",
+    "2021",
+    "2020"
+  ],
   "sleeper_seasons": [
     "2026",
     "2025"
   ],
-  "mapped": 0,
-  "bridge": {},
-  "franchise": {},
-  "espn_only_members": []
+  "mapped": 2,
+  "bridge": {
+    "espn:{C912E4A5-5C90-49FB-A1B1-2574387FA4CA}": "1132355027018035200",
+    "espn:{70E4ECE3-B4B8-4A71-AFCB-1ACA36E46285}": "1132552110328983552"
+  },
+  "franchise": {
+    "3": "1132355027018035200",
+    "8": "1132552110328983552"
+  },
+  "espn_only_members": [
+    "AB2official",
+    "Austin Bowling",
+    "espnfan0776830917",
+    "ESPNFAN1357922193",
+    "ESPNfan7396258614",
+    "hudmorse",
+    "JaredMcFadden",
+    "kotulac27",
+    "modano913",
+    "ShaneBrandes11",
+    "SkrongMeat_Jnast_88",
+    "Stank93",
+    "Taylor_DJohnson",
+    "ztrain12"
+  ]
 }

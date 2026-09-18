@@ -104,3 +104,5 @@ const iso = spawnSync(process.execPath, [new URL("loop-format-isolation.mjs", im
 if (iso.status) process.exit(iso.status);
 const board = spawnSync(process.execPath, [new URL("loop-redraft-board.mjs", import.meta.url).pathname], { stdio: "inherit" });
 if (board.status) process.exit(board.status);
+const meter = spawnSync(process.execPath, [new URL("test-meter-ready.mjs", import.meta.url).pathname], { stdio: "inherit" });
+if (meter.status) process.exit(meter.status);

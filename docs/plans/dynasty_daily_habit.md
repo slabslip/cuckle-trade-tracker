@@ -85,8 +85,8 @@ opens the same card as a public receipt (existing gold share path).
 
 ### Card (one screen, ~390px)
 
-Dashboard chrome (same card, type, and gold as the rest of Home). Four meters
-(Trades / Wire / Out / IR) sit above the titled lists. No roster-slot grid.
+Dashboard chrome (same card, type, and gold as the rest of Home). Collapsed
+card is Out / IR only. Trades, wire, meters, and PUP wait on Show all.
 
 **Dateline** — `Sat Sep 19 · CuckleChunkle`
 

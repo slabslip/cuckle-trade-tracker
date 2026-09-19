@@ -1731,7 +1731,7 @@ const html = `<!DOCTYPE html>
     .overnight-slip-band.wire { color: #34d399; background: rgba(52, 211, 153, 0.08); }
     .overnight-slip-band.out { color: #ff6b3d; background: rgba(255, 107, 61, 0.12); }
     .overnight-slip-band.ir { color: #e0b44c; background: rgba(224, 180, 76, 0.12); }
-    .overnight-slip-band.other { color: #a78bfa; background: rgba(167, 139, 250, 0.10); }
+    .overnight-slip-band.other { color: var(--muted); background: #1a1a1e; }
     .overnight-slip-row {
       display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
       padding: 7px 14px;
@@ -1741,7 +1741,7 @@ const html = `<!DOCTYPE html>
     .overnight-slip-row:last-child { border-bottom: 0; }
     .overnight-slip-row.out { border-left-color: #ff6b3d; }
     .overnight-slip-row.ir { border-left-color: #e0b44c; }
-    .overnight-slip-row.other { border-left-color: #a78bfa; }
+    .overnight-slip-row.other { border-left-color: var(--line); }
     .overnight-slip-row.trades { border-left-color: var(--line); }
     .overnight-slip-who { min-width: 0; }
     .overnight-slip-who b {
@@ -4434,7 +4434,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homesummary20260919210000";
+    const DATA_V = "homeoutir20260919230000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9089,41 +9089,52 @@ const html = `<!DOCTYPE html>
       const wire = letter.wire || [];
       const cats = overnightCats(letter);
       const preview = 3;
-      const hidden = (!overnightOpen)
-        ? Math.max(0, cats.out.length - preview) + Math.max(0, cats.ir.length - preview)
-          + cats.other.length
-        : 0;
+      const extra = Math.max(0, cats.out.length - preview)
+        + Math.max(0, cats.ir.length - preview)
+        + cats.other.length
+        + wire.length
+        + (trades.length || letter.latest ? 1 : 0);
+      const hidden = overnightOpen ? 0 : extra;
       const outLimit = overnightOpen ? null : preview;
       const irLimit = overnightOpen ? null : preview;
-      const otherLimit = overnightOpen ? null : 0;
-      let tradeBlock = overnightBandHtml("trades", "Trades", trades.length);
-      if (trades.length) {
-        tradeBlock += trades.map(function (row) {
-          const legs = row.legs || [];
-          if (!legs.length) return overnightRowHtml("trades", row.line, "", "");
-          return legs.map(function (leg) {
-            return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
-          }).join("");
-        }).join("");
-      } else if (letter.latest) {
-        tradeBlock += '<p class="overnight-slip-note">Last deal · ' + esc(overnightPrettyDate(letter.latest.date)) + "</p>";
-        const legs = letter.latest.legs || [];
-        if (legs.length) {
-          tradeBlock += legs.map(function (leg) {
-            return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
-          }).join("");
-        } else if (letter.latest.line) {
-          tradeBlock += overnightRowHtml("trades", letter.latest.line, "", "");
-        }
-      } else {
-        tradeBlock += overnightRowHtml("trades", "No trades last night", "", "");
-      }
+      let tradeBlock = "";
       let wireBlock = "";
-      if (wire.length) {
-        wireBlock = overnightBandHtml("wire", "Wire", wire.length)
-          + wire.map(function (row) {
-            return overnightRowHtml("wire", row.line, "", "");
+      let meters = "";
+      if (overnightOpen) {
+        tradeBlock = overnightBandHtml("trades", "Trades", trades.length);
+        if (trades.length) {
+          tradeBlock += trades.map(function (row) {
+            const legs = row.legs || [];
+            if (!legs.length) return overnightRowHtml("trades", row.line, "", "");
+            return legs.map(function (leg) {
+              return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+            }).join("");
           }).join("");
+        } else if (letter.latest) {
+          tradeBlock += '<p class="overnight-slip-note">Last deal · ' + esc(overnightPrettyDate(letter.latest.date)) + "</p>";
+          const legs = letter.latest.legs || [];
+          if (legs.length) {
+            tradeBlock += legs.map(function (leg) {
+              return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+            }).join("");
+          } else if (letter.latest.line) {
+            tradeBlock += overnightRowHtml("trades", letter.latest.line, "", "");
+          }
+        } else {
+          tradeBlock += overnightRowHtml("trades", "No trades last night", "", "");
+        }
+        if (wire.length) {
+          wireBlock = overnightBandHtml("wire", "Wire", wire.length)
+            + wire.map(function (row) {
+              return overnightRowHtml("wire", row.line, "", "");
+            }).join("");
+        }
+        meters = '<div class="sch-meters four">'
+          + '<div class="sch-meter trades"><b>' + trades.length + "</b><span>Trades</span></div>"
+          + '<div class="sch-meter wire"><b>' + wire.length + "</b><span>Wire</span></div>"
+          + '<div class="sch-meter out"><b>' + cats.out.length + "</b><span>Out</span></div>"
+          + '<div class="sch-meter ir"><b>' + cats.ir.length + "</b><span>IR</span></div>"
+          + "</div>";
       }
       let outBlock = "";
       if (cats.out.length) {
@@ -9138,21 +9149,15 @@ const html = `<!DOCTYPE html>
       let otherBlock = "";
       if (cats.other.length && overnightOpen) {
         otherBlock = overnightBandHtml("other", "PUP / NFI", cats.other.length)
-          + overnightListHtml(cats.other, "other", otherLimit);
+          + overnightListHtml(cats.other, "other", null);
       }
       const more = hidden > 0
         ? '<button type="button" class="overnight-slip-more" data-overnight-more="1">Show all · +'
           + hidden + "</button>"
-        : (overnightOpen && (cats.out.length + cats.ir.length + cats.other.length) > preview
+        : (overnightOpen
           ? '<button type="button" class="overnight-slip-more" data-overnight-more="1">Show less</button>'
           : "");
-      const meters = '<div class="sch-meters four">'
-        + '<div class="sch-meter trades"><b>' + trades.length + "</b><span>Trades</span></div>"
-        + '<div class="sch-meter wire"><b>' + wire.length + "</b><span>Wire</span></div>"
-        + '<div class="sch-meter out"><b>' + cats.out.length + "</b><span>Out</span></div>"
-        + '<div class="sch-meter ir"><b>' + cats.ir.length + "</b><span>IR</span></div>"
-        + "</div>";
-      return '<section class="overnight-slip schematic" aria-label="League overnight">'
+      return '<section class="overnight-slip" aria-label="League overnight">'
         + '<div class="overnight-slip-hero">'
         + '<div class="overnight-slip-top">'
         + '<p class="overnight-slip-date">' + esc(letter.dateline || "Overnight") + "</p>"
@@ -32995,9 +33000,9 @@ if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.ro
 }
 if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
   || !inline.includes("data-overnight-share") || !inline.includes("function overnightEnabled(")
-  || !inline.includes("data-overnight-more") || !inline.includes('overnight-slip schematic')
+  || !inline.includes("data-overnight-more")
   || !inline.includes("function teamAnalyzerHtml(") || !inline.includes("function teamAnalyzerEnabled(")) {
-  throw new Error("Home overnight must be a schematic dynasty report; team home must paint the analyzer");
+  throw new Error("Home overnight must be a shareable dynasty report; team home must paint the analyzer");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

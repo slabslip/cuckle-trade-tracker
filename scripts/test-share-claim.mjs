@@ -69,8 +69,8 @@ if (!gate.includes("already") || !gate.includes("openClaimPick(") || !gate.inclu
   throw new Error("after account, share links must claim remaining team or open if already seated");
 }
 
-if (!page.includes('const DATA_V = "homesummary20260919210000"')
-  || !sw.includes("chuckle-shell-v296-home-summary")) {
+if (!page.includes('const DATA_V = "homeoutir20260919230000"')
+  || !sw.includes("chuckle-shell-v298-home-out-ir")) {
   throw new Error("share-claim must bust DATA_V and SW");
 }
 

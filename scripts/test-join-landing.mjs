@@ -70,7 +70,7 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v299-analyzer-share")) {
+if (!sw.includes("chuckle-shell-v300-analyzer-share")) {
   throw new Error("sw.js must bump to v291-sleeper-daily");
 }
 

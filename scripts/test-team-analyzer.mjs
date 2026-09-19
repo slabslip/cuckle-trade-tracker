@@ -47,17 +47,22 @@ need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
 need(fnSrc(page, "teamAnalyzerDraft").includes("calcBook.picks")
   || fnSrc(page, "teamAnalyzerPicks").includes("calcBook.picks"),
   "draft capital must use live pick values on the calculator book");
+need(fnSrc(page, "teamAnalyzerCard").includes("members")
+  && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile("),
+  "share card must name the seat and save a per-team PNG");
 need(fnSrc(page, "teamAnalyzerHtml").includes("schematicSettingsHtml()") === false
   && page.includes("team-sch-gbar") && page.includes("team-sch-cr")
   && page.includes("data-analyzer-share")
   && page.includes("function teamAnalyzerShareDraw(")
-  && page.includes("cuckle-team.png")
+  && page.includes("function teamAnalyzerShareFile(")
+  && page.includes("cuckle-")
   && page.includes(".team-schematic {\n      position: relative;")
   && page.includes("background: #121214")
   && page.includes("#0b1c33") === false,
   "analyzer must match Home dashboard chrome and save as an image");
 need(gen.includes("function teamAnalyzerHtml(") && gen.includes("teamAnalyzerHtml(me.user_id")
   && gen.includes("function teamAnalyzerValueGrade(")
+  && gen.includes("function teamAnalyzerShareFile(")
   && gen.includes("data-analyzer-share")
   && gen.includes("team-sch-gbar")
   && gen.includes("function teamAnalyzerPosFloor(") === false,

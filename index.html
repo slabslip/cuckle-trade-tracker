@@ -4432,7 +4432,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzershare20260919224500";
+    const DATA_V = "analyzershare20260919221500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26414,9 +26414,10 @@
       const grades = teamAnalyzerGrades(bag);
       const depth = teamAnalyzerDepth(bag);
       const draft = teamAnalyzerDraft(uid);
+      const mem = (members || []).find(function (m) { return m && String(m.user_id) === String(uid); });
       return {
         uid: String(uid || ""),
-        name: name || "Team",
+        name: name || (mem && mem.name) || "Team",
         arch: teamAnalyzerArchetype(bag, dir),
         lineup: teamAnalyzerLineup(bag),
         depth: depth,
@@ -26588,6 +26589,11 @@
       return canvas;
     }
 
+    function teamAnalyzerShareFile(name) {
+      const slug = String(name || "team").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "team";
+      return "cuckle-" + slug + ".png";
+    }
+
     function teamAnalyzerShareNow(uid) {
       if (!teamAnalyzerEnabled() || !uid) return;
       const mem = (members || []).find(function (m) { return m && String(m.user_id) === String(uid); });
@@ -26599,13 +26605,14 @@
         return;
       }
       const blob = calcShareBlob(canvas);
-      const file = new File([blob], "cuckle-team.png", { type: "image/png" });
+      const fileName = teamAnalyzerShareFile(name);
+      const file = new File([blob], fileName, { type: "image/png" });
       const payload = { files: [file], title: (name || "Team") + " analyzer", text: (name || "Team") + " · " + teamAnalyzerCard(uid, name).overall + " / 10" };
       function save() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "cuckle-team.png";
+        a.download = fileName;
         a.rel = "noopener";
         document.body.appendChild(a);
         a.click();

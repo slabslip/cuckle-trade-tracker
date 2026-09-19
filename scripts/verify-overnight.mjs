@@ -83,6 +83,9 @@ try {
   if (!/Depth score/i.test(analyzer)) fail("Team analyzer missing depth score");
   if (!/Draft capital/i.test(analyzer)) fail("Team analyzer missing draft capital");
   if (!(await page.locator(".team-sch-grades").count())) fail("Team analyzer missing positional grades");
+  if (!(await page.locator("[data-analyzer-share]").count())) fail("Team analyzer missing image share chip");
+  const analyzerBg = await page.locator(".team-schematic").evaluate((el) => getComputedStyle(el).backgroundColor);
+  if (!/rgb\(18,\s*18,\s*20\)/.test(analyzerBg)) fail("Team analyzer must use dashboard chrome, not navy");
   await page.locator(".team-schematic").screenshot({ path: `${shotDir}/team-analyzer.png` });
   await page.screenshot({ path: `${shotDir}/team-analyzer-home.png` });
 

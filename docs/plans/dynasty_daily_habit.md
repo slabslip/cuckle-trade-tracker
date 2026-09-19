@@ -97,7 +97,7 @@ say so, then **Last deal** from the tape so the letter is never empty.
 
 **On IR / Out** — ranked by the existing calculator book (no numbers on the
 card), skill / Out / starters ahead of taxi. A.J. Brown and a Darnold Out
-beat a taxi rookie. Cap 12 in JSON / 8 on the card.
+beat a taxi rookie. Cap 12 in JSON / 6 on the card.
 
 **Gold share chip** — existing `.tile-share`. Sends `overnightShareText()` +
 `?r=overnight&league=&src=share`. No “Text this” label.

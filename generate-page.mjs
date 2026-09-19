@@ -8764,6 +8764,13 @@ const html = `<!DOCTYPE html>
       return location.origin + path + "?" + q.toString();
     }
 
+    function overnightPrettyDate(iso) {
+      const p = String(iso || "").split("-");
+      if (p.length < 3) return iso || "";
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return (months[Number(p[1]) - 1] || p[1]) + " " + Number(p[2]);
+    }
+
     function overnightShareText() {
       const letter = overnight;
       if (!letter) return "League overnight";
@@ -8785,13 +8792,13 @@ const html = `<!DOCTYPE html>
       if (ir.length) {
         lines.push("");
         lines.push("On IR / Out");
-        ir.slice(0, 8).forEach(function (p) {
+        ir.slice(0, 6).forEach(function (p) {
           const bits = [p.name];
           if (p.status && p.status !== "IR") bits.push(p.status);
           if (p.owner) bits.push(p.owner);
           lines.push(bits.join(" · "));
         });
-        if ((letter.ir_n || ir.length) > 8) lines.push("+" + ((letter.ir_n || ir.length) - 8) + " more");
+        if ((letter.ir_n || ir.length) > 6) lines.push("+" + ((letter.ir_n || ir.length) - 6) + " more");
       }
       return lines.join("\n");
     }
@@ -8812,7 +8819,7 @@ const html = `<!DOCTYPE html>
       } else {
         tradeBlock += '<p class="overnight-slip-line">No trades last night.</p>';
         if (letter.latest && letter.latest.line) {
-          tradeBlock += '<p class="overnight-slip-line">' + esc("Last deal · " + letter.latest.date + " · " + letter.latest.line) + "</p>";
+          tradeBlock += '<p class="overnight-slip-line">' + esc("Last deal · " + overnightPrettyDate(letter.latest.date) + " · " + letter.latest.line) + "</p>";
         }
       }
       tradeBlock += "</div>";
@@ -8826,9 +8833,9 @@ const html = `<!DOCTYPE html>
       }
       let irBlock = "";
       if (ir.length) {
-        const extra = (letter.ir_n || ir.length) - ir.slice(0, 8).length;
+        const extra = (letter.ir_n || ir.length) - ir.slice(0, 6).length;
         irBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">On IR / Out</div>'
-          + ir.slice(0, 8).map(function (p) {
+          + ir.slice(0, 6).map(function (p) {
             const bits = [p.name];
             if (p.status && p.status !== "IR") bits.push(p.status);
             if (p.owner) bits.push(p.owner);

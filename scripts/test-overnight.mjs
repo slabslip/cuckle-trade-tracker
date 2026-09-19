@@ -33,8 +33,9 @@ need(page.includes("function overnightSlipHtml(") && page.includes('q.set("r", "
   "Home must paint the letter and share ?r=overnight");
 need(page.includes("data-overnight-share") && page.includes("overnightShareText("),
   "share chip must send league summary text + link");
-need(page.includes("overnight-slip-lede") && page.includes("letter.lede"),
-  "card must paint the league lede");
+need(page.includes("overnight-slip-lede") && page.includes("letter.lede")
+  && page.includes("overnightPrettyDate("),
+  "card must paint the league lede and a short last-deal date");
 need(page.includes('q.kind === "overnight"') && page.includes('view === "overnight"'),
   "unsigned share link must open the overnight ticket");
 need(gen.includes("function overnightSlipHtml(") && gen.includes('q.set("r", "overnight")')

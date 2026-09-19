@@ -1700,38 +1700,220 @@ const html = `<!DOCTYPE html>
     .overnight-slip {
       position: relative;
       margin: 0 0 16px;
-      background: var(--card);
+      background: #121214;
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px 14px 12px;
-      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
+      border-radius: 14px;
+      padding: 0;
+      overflow: hidden;
     }
+    .overnight-slip-hero { padding: 14px 14px 12px; }
     .overnight-slip-top {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      margin: 0 0 12px;
+      margin: 0 0 8px;
     }
     .overnight-slip-date {
-      margin: 0; font-size: 0.75rem; font-weight: 650;
-      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+      margin: 0; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
     }
     .overnight-slip-lede {
-      margin: 0 0 12px; font-size: 1.05rem; font-weight: 750;
-      color: var(--text); line-height: 1.3;
+      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em;
+      color: var(--text); line-height: 1.15;
     }
     .overnight-slip-top button.tile-share { position: static; }
-    .overnight-slip-block { margin: 0 0 12px; }
-    .overnight-slip-block:last-child { margin-bottom: 0; }
-    .overnight-slip-h {
-      margin: 0 0 5px;
-      font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--lh-gold, #e0b44c);
+    .overnight-slip-band {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 14px;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
-    .overnight-slip-line {
-      margin: 0 0 4px; font-size: 0.9375rem; font-weight: 650;
-      color: var(--text); line-height: 1.35;
+    .overnight-slip-band .n { font-variant-numeric: tabular-nums; opacity: 0.85; }
+    .overnight-slip-band.trades { color: #7dd3fc; background: rgba(125, 211, 252, 0.08); }
+    .overnight-slip-band.wire { color: #34d399; background: rgba(52, 211, 153, 0.08); }
+    .overnight-slip-band.out { color: #ff6b3d; background: rgba(255, 107, 61, 0.12); }
+    .overnight-slip-band.ir { color: #e0b44c; background: rgba(224, 180, 76, 0.12); }
+    .overnight-slip-band.other { color: #a78bfa; background: rgba(167, 139, 250, 0.10); }
+    .overnight-slip-row {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      padding: 7px 14px;
+      border-bottom: 1px solid #1c1c20;
+      border-left: 3px solid transparent;
     }
-    .overnight-slip-line:last-child { margin-bottom: 0; }
-    .overnight-slip-more { color: var(--muted); font-weight: 650; }
+    .overnight-slip-row:last-child { border-bottom: 0; }
+    .overnight-slip-row.out { border-left-color: #ff6b3d; }
+    .overnight-slip-row.ir { border-left-color: #e0b44c; }
+    .overnight-slip-row.other { border-left-color: #a78bfa; }
+    .overnight-slip-row.trades { border-left-color: #7dd3fc; }
+    .overnight-slip-who { min-width: 0; }
+    .overnight-slip-who b {
+      display: inline; font-size: 0.9375rem; font-weight: 750; color: var(--text);
+    }
+    .overnight-slip-who i {
+      display: inline; margin-left: 6px; font-style: normal;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .overnight-slip-row > span {
+      flex: 0 0 auto; max-width: 42%;
+      font-size: 0.72rem; font-weight: 650; color: var(--muted);
+      text-align: right; line-height: 1.3;
+    }
+    .overnight-slip-sent {
+      margin: 3px 0 0; font-size: 0.78rem; font-weight: 650;
+      color: var(--muted); line-height: 1.35;
+    }
+    .overnight-slip-note {
+      padding: 8px 14px 10px; font-size: 0.72rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    button.overnight-slip-more {
+      appearance: none; display: block; width: 100%;
+      background: #161618; border: 0; border-top: 1px solid var(--line);
+      color: var(--lh-gold, #e0b44c); font: inherit;
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 11px 14px; cursor: pointer;
+    }
+    .overnight-slip.schematic, .team-schematic {
+      background:
+        radial-gradient(circle at 92% 6%, rgba(224,180,76,0.09), transparent 28%),
+        linear-gradient(180deg, #10263f 0%, #0b1c33 42%);
+      border: 1px solid #1d3a5c;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+      color: #f4f7fb;
+    }
+    .overnight-slip.schematic .overnight-slip-lede { color: #f4f7fb; }
+    .overnight-slip.schematic .overnight-slip-date { color: #8fb3d9; }
+    .overnight-slip.schematic .overnight-slip-row { border-bottom-color: #1d3a5c; }
+    .overnight-slip.schematic .overnight-slip-who b { color: #f4f7fb; }
+    .overnight-slip.schematic .overnight-slip-row > span,
+    .overnight-slip.schematic .overnight-slip-sent { color: #8fb3d9; }
+    .overnight-slip.schematic .overnight-slip-note { color: #8fb3d9; }
+    .overnight-slip.schematic button.overnight-slip-more {
+      background: #0e243f; border-top-color: #1d3a5c;
+    }
+    .sch-settings {
+      margin: 6px 0 0; font-size: 0.65rem; font-weight: 750;
+      letter-spacing: 0.06em; text-transform: uppercase; color: #8fb3d9;
+    }
+    .sch-kv {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 8px;
+      margin-top: 10px;
+    }
+    .sch-kv span {
+      display: flex; justify-content: space-between; gap: 4px;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; color: #8fb3d9;
+      border-bottom: 1px dotted #2a4d73; padding-bottom: 2px;
+    }
+    .sch-kv i { font-style: normal; }
+    .sch-kv b { color: #f4f7fb; font-variant-numeric: tabular-nums; }
+    .sch-meters {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: #1d3a5c; border-top: 1px solid #1d3a5c; border-bottom: 1px solid #1d3a5c;
+    }
+    .sch-meters.four { grid-template-columns: repeat(4, 1fr); }
+    .sch-meter {
+      background: #0b1c33; padding: 10px 10px 10px 12px;
+      display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .sch-meter b {
+      font-size: 1.35rem; font-weight: 800; letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .sch-meter span {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sch-meter.trades b, .sch-meter.trades span { color: #7dd3fc; }
+    .sch-meter.wire b, .sch-meter.wire span { color: #34d399; }
+    .sch-meter.out b, .sch-meter.out span { color: #ff6b3d; }
+    .sch-meter.ir b, .sch-meter.ir span { color: #e0b44c; }
+    .team-schematic { margin: 0 0 16px; border-radius: 14px; overflow: hidden; }
+    .team-sch-hero {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      padding: 14px 14px 12px; border-bottom: 1px solid #1d3a5c;
+    }
+    .team-sch-name {
+      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em; color: #f4f7fb;
+    }
+    .team-sch-arch {
+      text-align: right; flex: 0 0 auto; max-width: 42%;
+    }
+    .team-sch-arch b {
+      display: block; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #8fb3d9;
+    }
+    .team-sch-arch span {
+      display: block; margin-top: 4px; font-size: 0.95rem; font-weight: 800;
+      letter-spacing: -0.02em; color: #e0b44c; line-height: 1.15;
+    }
+    .team-sch-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #1d3a5c;
+    }
+    .team-sch-box {
+      background: #0b1c33; padding: 10px 12px 12px; min-width: 0;
+    }
+    .team-sch-box.span2 { grid-column: 1 / -1; }
+    .team-sch-h {
+      margin: 0 0 7px; font-size: 0.6rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #8fb3d9;
+    }
+    .team-sch-line {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 0.78rem; font-weight: 650; color: #f4f7fb; line-height: 1.35;
+      padding: 2px 0;
+    }
+    .team-sch-line i {
+      font-style: normal; font-size: 0.62rem; font-weight: 800;
+      letter-spacing: 0.04em; color: #8fb3d9; flex: 0 0 auto;
+    }
+    .team-sch-line span { color: #b7c7d9; text-align: right; }
+    .team-sch-score {
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -0.04em; color: #f4f7fb;
+    }
+    .team-sch-score em { font-style: normal; font-size: 0.85rem; color: #8fb3d9; }
+    .team-sch-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .team-sch-pills b {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; padding: 3px 6px; border-radius: 4px;
+      background: #123152; color: #d5e6f7;
+    }
+    .team-sch-pills b.on { background: #e0b44c; color: #0b1c33; }
+    .team-sch-bar {
+      height: 8px; border-radius: 99px; background: #123152; overflow: hidden; margin: 6px 0 2px;
+    }
+    .team-sch-bar i {
+      display: block; height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #34d399, #e0b44c, #ff6b3d);
+    }
+    .team-sch-cr {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .team-sch-cr > span {
+      font-size: 0.7rem; font-weight: 800; color: #8fb3d9;
+    }
+    .team-sch-cr .team-sch-bar { flex: 1; margin: 0; }
+    .team-sch-grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .team-sch-grade { text-align: center; }
+    .team-sch-gbar {
+      height: 36px; width: 10px; margin: 0 auto 4px;
+      border-radius: 99px; background: #123152; overflow: hidden;
+      display: flex; align-items: flex-end;
+    }
+    .team-sch-gbar i {
+      display: block; width: 100%; min-height: 2px;
+      background: linear-gradient(180deg, #34d399, #e0b44c, #ff6b3d);
+      border-radius: 99px;
+    }
+    .team-sch-grade span {
+      display: block; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #8fb3d9;
+    }
+    .team-sch-grade b {
+      display: block; margin-top: 2px; font-size: 0.95rem; font-weight: 800; color: #f4f7fb;
+    }
+    .team-sch-note {
+      margin: 0; font-size: 0.78rem; font-weight: 650; color: #d5e6f7; line-height: 1.4;
+    }
     .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
       appearance: none; font: inherit; color: #ff9f0a;
@@ -4240,6 +4422,7 @@ const html = `<!DOCTYPE html>
     let cuffs = null;
     let overnight = null;
     let overnightLoading = false;
+    let overnightOpen = false;
     let cuffsLoading = false;
     let cuffFilterMine = false;
     let cuffFilterOwner = ""; // fantasy manager whose starters
@@ -4261,7 +4444,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "overnight20260919200000";
+    const DATA_V = "schematic20260919240000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8043,9 +8226,9 @@ const html = `<!DOCTYPE html>
       if (league && league.name) activeLeague = Object.assign({}, activeLeague, { name: league.name });
       if (q.lens && WINDOWS.some(function (w) { return w[0] === q.lens; })) lens = q.lens;
       if (q.kind === "overnight") {
-        view = "overnight";
+        view = (typeof overnightEnabled === "function" && !overnightEnabled()) ? "trade" : "overnight";
         openId = null;
-        if (typeof ensureOvernight === "function") ensureOvernight();
+        if (view === "overnight" && typeof ensureOvernight === "function") ensureOvernight();
       } else if (q.kind === "pick" && q.pick) {
         receiptPickKey = q.pick;
         view = "trade";
@@ -8740,7 +8923,18 @@ const html = `<!DOCTYPE html>
 
 
 
+    function overnightEnabled() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return false;
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return false;
+      return true;
+    }
+
     function ensureOvernight() {
+      if (!overnightEnabled()) {
+        overnight = null;
+        overnightLoading = false;
+        return;
+      }
       if (overnight || overnightLoading) return;
       overnightLoading = true;
       getLeagueJson("overnight.json").then((book) => {
@@ -8771,92 +8965,221 @@ const html = `<!DOCTYPE html>
       return (months[Number(p[1]) - 1] || p[1]) + " " + Number(p[2]);
     }
 
+    function overnightCats(letter) {
+      const book = letter || {};
+      return {
+        out: book.out || [],
+        ir: book.ir || [],
+        other: book.other || [],
+      };
+    }
+
+    function overnightPlayerLine(p) {
+      const bits = [p.name];
+      if (p.pos) bits.push(p.pos);
+      if (p.owner) bits.push(p.owner);
+      return bits.join(" · ");
+    }
+
     function overnightShareText() {
       const letter = overnight;
       if (!letter) return "League overnight";
+      const cats = overnightCats(letter);
+      const open = true;
+      const preview = 4;
       const lines = [letter.dateline || "Overnight"];
       if (letter.lede) lines.push(letter.lede);
+      lines.push("");
+      lines.push("Trades");
       if ((letter.trades || []).length) {
-        lines.push("");
-        letter.trades.forEach(function (row) { lines.push(row.line); });
+        letter.trades.forEach(function (row) {
+          if (row.legs && row.legs.length) {
+            row.legs.forEach(function (leg) {
+              lines.push(leg.name + " sent " + (leg.sent || "—"));
+            });
+          } else {
+            lines.push(row.line);
+          }
+        });
       } else {
-        lines.push("");
         lines.push("No trades last night.");
-        if (letter.latest && letter.latest.line) lines.push("Last deal · " + letter.latest.line);
+        if (letter.latest) {
+          lines.push("Last deal · " + overnightPrettyDate(letter.latest.date));
+          if (letter.latest.legs && letter.latest.legs.length) {
+            letter.latest.legs.forEach(function (leg) {
+              lines.push(leg.name + " sent " + (leg.sent || "—"));
+            });
+          } else if (letter.latest.line) {
+            lines.push(letter.latest.line);
+          }
+        }
       }
       if ((letter.wire || []).length) {
         lines.push("");
+        lines.push("Wire");
         letter.wire.forEach(function (row) { lines.push(row.line); });
       }
-      const ir = letter.ir || [];
-      if (ir.length) {
+      function catLines(title, rows) {
+        if (!rows.length) return;
         lines.push("");
-        lines.push("On IR / Out");
-        ir.slice(0, 6).forEach(function (p) {
-          const bits = [p.name];
-          if (p.status && p.status !== "IR") bits.push(p.status);
-          if (p.owner) bits.push(p.owner);
-          lines.push(bits.join(" · "));
-        });
-        if ((letter.ir_n || ir.length) > 6) lines.push("+" + ((letter.ir_n || ir.length) - 6) + " more");
+        lines.push(title + " · " + rows.length);
+        const show = open ? rows : rows.slice(0, preview);
+        show.forEach(function (p) { lines.push(overnightPlayerLine(p)); });
+        if (!open && rows.length > preview) lines.push("+" + (rows.length - preview) + " more");
       }
+      catLines("Out", cats.out);
+      catLines("IR", cats.ir);
+      catLines("PUP / NFI", cats.other);
       return lines.join("\n");
+    }
+
+    function schematicSettingsPairs() {
+      const f = (typeof leagueFormat === "function") ? leagueFormat() : {};
+      const slots = (typeof deskSlots === "function") ? deskSlots() : { QB: 2, RB: 2, WR: 3, TE: 1 };
+      const n = f.team_n || ((members || []).length) || 10;
+      return [
+        ["QB", slots.QB || 2],
+        ["RB", slots.RB || 2],
+        ["WR", slots.WR || 3],
+        ["TE", slots.TE || 1],
+        ["Teams", n],
+        ["SF", f.superflex ? "Yes" : "No"],
+        ["PPR", "Yes"],
+        ["TEP", f.tep ? "Yes" : "No"],
+      ];
+    }
+
+    function schematicSettingsLine() {
+      return schematicSettingsPairs().map(function (p) {
+        return p[0] + " " + p[1];
+      }).join(" · ");
+    }
+
+    function schematicSettingsHtml() {
+      return '<div class="sch-kv" aria-label="League settings">'
+        + schematicSettingsPairs().map(function (p) {
+          return "<span><i>" + esc(String(p[0])) + "</i><b>" + esc(String(p[1])) + "</b></span>";
+        }).join("")
+        + "</div>";
+    }
+
+    function overnightBandHtml(tone, label, n) {
+      return '<div class="overnight-slip-band ' + tone + '"><span>' + esc(label) + "</span>"
+        + (n != null ? '<span class="n">' + n + "</span>" : "") + "</div>";
+    }
+
+    function overnightRowHtml(tone, name, meta, sent) {
+      return '<div class="overnight-slip-row ' + tone + '">'
+        + '<div class="overnight-slip-who"><b>' + esc(name) + "</b>"
+        + (meta ? "<i>" + esc(meta) + "</i>" : "")
+        + (sent ? '<p class="overnight-slip-sent">' + esc(sent) + "</p>" : "")
+        + "</div></div>";
+    }
+
+    function overnightSeatRowHtml(p, tone) {
+      return '<div class="overnight-slip-row ' + tone + '">'
+        + '<div class="overnight-slip-who"><b>' + esc(p.name) + "</b>"
+        + (p.pos ? "<i>" + esc(p.pos) + "</i>" : "") + "</div>"
+        + (p.owner ? "<span>" + esc(p.owner) + "</span>" : "")
+        + "</div>";
+    }
+
+    function overnightListHtml(rows, tone, limit) {
+      const show = limit != null ? rows.slice(0, limit) : rows;
+      return show.map(function (p) { return overnightSeatRowHtml(p, tone); }).join("");
     }
 
     function overnightSlipHtml(opts) {
       opts = opts || {};
+      if (!overnightEnabled()) return "";
       ensureOvernight();
       const letter = overnight;
       if (!letter) return "";
       const trades = letter.trades || [];
       const wire = letter.wire || [];
-      const ir = letter.ir || [];
-      let tradeBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">Trades</div>';
+      const cats = overnightCats(letter);
+      const preview = 3;
+      const hidden = (!overnightOpen)
+        ? Math.max(0, cats.out.length - preview) + Math.max(0, cats.ir.length - preview)
+          + cats.other.length
+        : 0;
+      const outLimit = overnightOpen ? null : preview;
+      const irLimit = overnightOpen ? null : preview;
+      const otherLimit = overnightOpen ? null : 0;
+      let tradeBlock = overnightBandHtml("trades", "Trades", trades.length);
       if (trades.length) {
         tradeBlock += trades.map(function (row) {
-          return '<p class="overnight-slip-line">' + esc(row.line) + "</p>";
+          const legs = row.legs || [];
+          if (!legs.length) return overnightRowHtml("trades", row.line, "", "");
+          return legs.map(function (leg) {
+            return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+          }).join("");
         }).join("");
-      } else {
-        tradeBlock += '<p class="overnight-slip-line">No trades last night.</p>';
-        if (letter.latest && letter.latest.line) {
-          tradeBlock += '<p class="overnight-slip-line">' + esc("Last deal · " + overnightPrettyDate(letter.latest.date) + " · " + letter.latest.line) + "</p>";
+      } else if (letter.latest) {
+        tradeBlock += '<p class="overnight-slip-note">Last deal · ' + esc(overnightPrettyDate(letter.latest.date)) + "</p>";
+        const legs = letter.latest.legs || [];
+        if (legs.length) {
+          tradeBlock += legs.map(function (leg) {
+            return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+          }).join("");
+        } else if (letter.latest.line) {
+          tradeBlock += overnightRowHtml("trades", letter.latest.line, "", "");
         }
+      } else {
+        tradeBlock += overnightRowHtml("trades", "No trades last night", "", "");
       }
-      tradeBlock += "</div>";
       let wireBlock = "";
       if (wire.length) {
-        wireBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">Wire</div>'
+        wireBlock = overnightBandHtml("wire", "Wire", wire.length)
           + wire.map(function (row) {
-            return '<p class="overnight-slip-line">' + esc(row.line) + "</p>";
-          }).join("")
-          + "</div>";
+            return overnightRowHtml("wire", row.line, "", "");
+          }).join("");
+      }
+      let outBlock = "";
+      if (cats.out.length) {
+        outBlock = overnightBandHtml("out", "Out", cats.out.length)
+          + overnightListHtml(cats.out, "out", outLimit);
       }
       let irBlock = "";
-      if (ir.length) {
-        const extra = (letter.ir_n || ir.length) - ir.slice(0, 6).length;
-        irBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">On IR / Out</div>'
-          + ir.slice(0, 6).map(function (p) {
-            const bits = [p.name];
-            if (p.status && p.status !== "IR") bits.push(p.status);
-            if (p.owner) bits.push(p.owner);
-            return '<p class="overnight-slip-line">' + esc(bits.join(" · ")) + "</p>";
-          }).join("")
-          + (extra > 0 ? '<p class="overnight-slip-line overnight-slip-more">+' + extra + " more</p>" : "")
-          + "</div>";
+      if (cats.ir.length) {
+        irBlock = overnightBandHtml("ir", "IR", cats.ir.length)
+          + overnightListHtml(cats.ir, "ir", irLimit);
       }
-      return '<section class="overnight-slip" aria-label="League overnight">'
+      let otherBlock = "";
+      if (cats.other.length && overnightOpen) {
+        otherBlock = overnightBandHtml("other", "PUP / NFI", cats.other.length)
+          + overnightListHtml(cats.other, "other", otherLimit);
+      }
+      const more = hidden > 0
+        ? '<button type="button" class="overnight-slip-more" data-overnight-more="1">Show all · +'
+          + hidden + "</button>"
+        : (overnightOpen && (cats.out.length + cats.ir.length + cats.other.length) > preview
+          ? '<button type="button" class="overnight-slip-more" data-overnight-more="1">Show less</button>'
+          : "");
+      const meters = '<div class="sch-meters four">'
+        + '<div class="sch-meter trades"><b>' + trades.length + "</b><span>Trades</span></div>"
+        + '<div class="sch-meter wire"><b>' + wire.length + "</b><span>Wire</span></div>"
+        + '<div class="sch-meter out"><b>' + cats.out.length + "</b><span>Out</span></div>"
+        + '<div class="sch-meter ir"><b>' + cats.ir.length + "</b><span>IR</span></div>"
+        + "</div>";
+      return '<section class="overnight-slip schematic" aria-label="League overnight">'
+        + '<div class="overnight-slip-hero">'
         + '<div class="overnight-slip-top">'
         + '<p class="overnight-slip-date">' + esc(letter.dateline || "Overnight") + "</p>"
         + (opts.share === false ? "" : '<button type="button" class="tile-share" data-overnight-share="1" aria-label="Share league overnight">'
           + receiptShareIco() + "</button>")
         + "</div>"
         + (letter.lede ? '<p class="overnight-slip-lede">' + esc(letter.lede) + "</p>" : "")
-        + tradeBlock + wireBlock + irBlock
+        + schematicSettingsHtml()
+        + "</div>"
+        + meters
+        + tradeBlock + wireBlock + outBlock + irBlock + otherBlock + more
         + "</section>";
     }
 
     function honorOvernightShare() {
       try {
+        if (!overnightEnabled()) return false;
         const q = new URLSearchParams(location.search);
         if (String(q.get("r") || "") !== "overnight") return false;
         me = null;
@@ -9308,6 +9631,9 @@ const html = `<!DOCTYPE html>
       seatDirection = null;
       weekScoresBook = null;
       finishesBook = null;
+      overnight = null;
+      overnightLoading = false;
+      overnightOpen = false;
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -25888,6 +26214,232 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    function teamAnalyzerEnabled() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return false;
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return false;
+      return true;
+    }
+
+    function teamAnalyzerBag(uid) {
+      return ((calcBook && calcBook.players) || []).filter(function (p) {
+        return p && String(p.owner_id) === String(uid);
+      });
+    }
+
+    function teamAnalyzerDir(uid) {
+      return ((seatDirection && seatDirection.seats) || []).find(function (s) {
+        return s && String(s.seat_user_id) === String(uid);
+      }) || null;
+    }
+
+    function teamAnalyzerArchetype(bag, dir) {
+      const cuts = deskCuts();
+      const elite = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        elite[pos] = bag.filter(function (p) {
+          return p.pos === pos && calcValueNum(p) >= cuts.stud;
+        }).length;
+      });
+      if (elite.QB >= 2) return "Dual elite QB";
+      if (elite.QB === 1) return "Elite QB";
+      const dual = ["WR", "RB", "TE"].find(function (pos) { return elite[pos] >= 2; });
+      if (dual) return "Dual elite " + dual;
+      const lab = (dir && dir.label) || "";
+      if (lab === "Hard rebuild") return "Hard rebuild";
+      if (lab === "Win-now") return "Win now";
+      if (lab === "Reload") return "Reload";
+      return lab || "Reload";
+    }
+
+    function teamAnalyzerLineup(bag) {
+      const slots = deskSlots();
+      const used = {};
+      const rows = [];
+      function addRow(p, pos) {
+        if (!p || used[p.id || p.name]) return;
+        used[p.id || p.name] = true;
+        rows.push({
+          pos: pos,
+          name: p.name,
+          team: (typeof homeDeskNflTeam === "function") ? homeDeskNflTeam(p) : (p.team || ""),
+          injury: p.injury || "",
+        });
+      }
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        bag.filter(function (p) { return p.pos === pos; })
+          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+          .slice(0, slots[pos] || 1)
+          .forEach(function (p) { addRow(p, pos); });
+      });
+      const start = deskCuts().start;
+      bag.filter(function (p) {
+        const pos = p.pos;
+        return (pos === "RB" || pos === "WR" || pos === "TE")
+          && !used[p.id || p.name]
+          && calcValueNum(p) >= start;
+      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+        .slice(0, 2)
+        .forEach(function (p) { addRow(p, "FLEX"); });
+      return rows;
+    }
+
+    function teamAnalyzerDepth(bag) {
+      const start = deskCuts().start;
+      const startable = bag.filter(function (p) {
+        const pos = p.pos;
+        return (pos === "QB" || pos === "RB" || pos === "WR" || pos === "TE")
+          && calcValueNum(p) >= start;
+      }).length;
+      return Math.max(0, Math.min(10, startable));
+    }
+
+    function teamAnalyzerOutlook(dir) {
+      const lab = (dir && dir.label) || "Reload";
+      if (lab === "Win-now") return ["Contend", "Contend", "Reload"];
+      if (lab === "Reload") return ["Reload", "Contend", "Reload"];
+      if (lab === "Hard rebuild") return ["Rebuild", "Rebuild", "Contend"];
+      return ["Rebuild", "Reload", "Contend"];
+    }
+
+    function teamAnalyzerCorner(bag) {
+      const cuts = deskCuts();
+      const out = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const pool = bag.filter(function (p) { return p.pos === pos; })
+          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        const stud = pool.find(function (p) { return calcValueNum(p) >= cuts.stud; }) || pool[0];
+        out[pos] = stud && calcValueNum(stud) >= cuts.start ? stud.name : "—";
+      });
+      return out;
+    }
+
+    function teamAnalyzerMoves(bag, dir) {
+      const leftover = bag.filter(function (p) {
+        const v = calcValueNum(p);
+        return v >= 0 && v < deskCuts().start && Number(p.age) >= 27;
+      }).sort(function (a, b) { return Number(b.age) - Number(a.age); })
+        .slice(0, 4).map(function (p) { return p.name; });
+      const sell = leftover.length ? leftover : ((dir && dir.sell) || []).slice(0, 3);
+      const grades = teamAnalyzerGrades(bag);
+      const targets = [];
+      ((dir && dir.holes) || []).forEach(function (p) {
+        targets.push(p + " depth");
+      });
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        if (grades[pos] <= 5 && targets.length < 4) targets.push(pos + " depth");
+      });
+      ((dir && dir.buy) || []).forEach(function (x) {
+        if (targets.length < 4) targets.push(x);
+      });
+      if (!targets.length) targets.push("young");
+      return { sell: sell, targets: targets };
+    }
+
+    function teamAnalyzerGrades(bag) {
+      const slots = deskSlots();
+      const start = deskCuts().start;
+      const grades = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const vs = bag.filter(function (p) {
+          return p.pos === pos && calcValueNum(p) >= start;
+        }).length;
+        const need = slots[pos] || 1;
+        grades[pos] = Math.max(0, Math.min(10,
+          Math.round((vs / need) * 7) + Math.max(0, vs - need)));
+      });
+      return grades;
+    }
+
+    function teamAnalyzerDraft(dir) {
+      const p = (dir && dir.picks) || {};
+      const score = (p.firsts_2027 || 0) * 2.5 + (p.held_2027 || 0) * 0.6 + (p.held_later || 0) * 0.25;
+      return Math.max(0, Math.min(10, Math.round(score)));
+    }
+
+    function teamAnalyzerScale(dir) {
+      const lab = (dir && dir.label) || "Reload";
+      if (lab === "Win-now") return 18;
+      if (lab === "Reload") return 48;
+      if (lab === "Rebuild") return 70;
+      return 86;
+    }
+
+    function teamAnalyzerHtml(uid, name) {
+      if (!teamAnalyzerEnabled()) return "";
+      if (!calcBook || !Array.isArray(calcBook.players)) return "";
+      const bag = teamAnalyzerBag(uid);
+      if (!bag.length) return "";
+      const dir = teamAnalyzerDir(uid);
+      const arch = teamAnalyzerArchetype(bag, dir);
+      const lineup = teamAnalyzerLineup(bag);
+      const depth = teamAnalyzerDepth(bag);
+      const outlook = teamAnalyzerOutlook(dir);
+      const corner = teamAnalyzerCorner(bag);
+      const moves = teamAnalyzerMoves(bag, dir);
+      const grades = teamAnalyzerGrades(bag);
+      const draft = teamAnalyzerDraft(dir);
+      const scale = teamAnalyzerScale(dir);
+      const years = ["YR1", "YR2", "YR3"];
+      return '<section class="team-schematic" aria-label="Team analyzer">'
+        + '<div class="team-sch-hero">'
+        + "<div><p class=\"team-sch-name\">" + esc(name || "Team") + "</p>"
+        + schematicSettingsHtml() + "</div>"
+        + '<div class="team-sch-arch"><b>Team archetype</b><span>' + esc(arch) + "</span></div>"
+        + "</div>"
+        + '<div class="team-sch-grid">'
+        + '<div class="team-sch-box span2"><div class="team-sch-h">Starting lineup</div>'
+        + lineup.map(function (p) {
+          return '<div class="team-sch-line"><i>' + esc(p.pos) + "</i><b>" + esc(p.name) + "</b>"
+            + "<span>" + esc((p.injury ? p.injury + " · " : "") + (p.team || "")) + "</span></div>";
+        }).join("")
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Depth score</div>'
+        + '<div class="team-sch-score">' + depth + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (depth * 10) + '%"></i></div></div>'
+        + '<div class="team-sch-box"><div class="team-sch-h">3-year outlook</div>'
+        + '<div class="team-sch-pills">'
+        + outlook.map(function (lab, i) {
+          return "<b" + (i === 0 ? ' class="on"' : "") + ">" + esc(years[i] + " " + lab) + "</b>";
+        }).join("")
+        + "</div></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Cornerstones</div>'
+        + ["QB", "RB", "WR", "TE"].map(function (pos) {
+          return '<div class="team-sch-line"><i>' + pos + "</i><span>" + esc(corner[pos]) + "</span></div>";
+        }).join("")
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Look to trade</div>'
+        + (moves.sell.length ? moves.sell.map(function (n) {
+          return '<div class="team-sch-line"><span>' + esc(n) + "</span></div>";
+        }).join("") : '<div class="team-sch-line"><span>No leftover to move</span></div>')
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Players to target</div>'
+        + moves.targets.map(function (n) {
+          return '<div class="team-sch-line"><span>' + esc(n) + "</span></div>";
+        }).join("")
+        + "</div>"
+        + '<div class="team-sch-box span2"><div class="team-sch-h">Contend / rebuild</div>'
+        + '<div class="team-sch-cr"><span>C</span>'
+        + '<div class="team-sch-bar"><i style="width:' + scale + '%"></i></div>'
+        + "<span>R</span></div>"
+        + '<p class="team-sch-note">' + esc((dir && dir.label) || "Reload") + "</p></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Positional grades</div>'
+        + '<div class="team-sch-grades">'
+        + ["QB", "RB", "WR", "TE"].map(function (pos) {
+          return '<div class="team-sch-grade"><div class="team-sch-gbar"><i style="height:'
+            + (grades[pos] * 10) + '%"></i></div><span>' + pos + "</span><b>"
+            + grades[pos] + "</b></div>";
+        }).join("")
+        + "</div></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Draft capital</div>'
+        + '<div class="team-sch-score">' + draft + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (draft * 10) + '%"></i></div></div>'
+        + ((dir && dir.why)
+          ? '<div class="team-sch-box span2"><div class="team-sch-h">Note</div>'
+            + '<p class="team-sch-note">' + esc(dir.why) + "</p></div>"
+          : "")
+        + "</div></section>";
+    }
+
     function renderTeamHome() {
       if (typeof isGmLeague === "function" && isGmLeague()) return renderGmTeamHome();
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
@@ -25953,6 +26505,7 @@ const html = `<!DOCTYPE html>
         + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button>'
         + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
         + awardsChip + "</p>"
+        + teamAnalyzerHtml(me.user_id, me.name || "")
         + teamHomeFormatHtml()
         + (showMarks ? teamMarks() + markChart() : "")
         + empty
@@ -28113,10 +28666,19 @@ const html = `<!DOCTYPE html>
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
         return;
       }
+      const overnightMoreBtn = e.target.closest("[data-overnight-more]");
+      if (overnightMoreBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        overnightOpen = !overnightOpen;
+        if (typeof render === "function") render();
+        return;
+      }
       const overnightShareBtn = e.target.closest("[data-overnight-share]");
       if (overnightShareBtn) {
         e.preventDefault();
         e.stopPropagation();
+        overnightOpen = true;
         shareProofNow(overnightShareText(), overnightShareUrl(), "League overnight");
         return;
       }
@@ -32405,8 +32967,10 @@ if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.ro
   throw new Error("calcMeta must show live Sleeper IR / injury on trade options");
 }
 if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
-  || !inline.includes("data-overnight-share")) {
-  throw new Error("Home overnight must be a shareable league letter");
+  || !inline.includes("data-overnight-share") || !inline.includes("function overnightEnabled(")
+  || !inline.includes("data-overnight-more") || !inline.includes('overnight-slip schematic')
+  || !inline.includes("function teamAnalyzerHtml(") || !inline.includes("function teamAnalyzerEnabled(")) {
+  throw new Error("Home overnight must be a schematic dynasty report; team home must paint the analyzer");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

@@ -68,9 +68,14 @@ if (!page.includes("cosmeticsSeatPlateHtml()") || !page.includes('class="screen-
   throw new Error("team name / title / emblem chrome must stay above the tabs");
 }
 
-if (!page.includes('const DATA_V = "overnight20260919200000"')
-  || !sw.includes("chuckle-shell-v292-overnight")) {
+if (!page.includes('const DATA_V = "schematic20260919240000"')
+  || !sw.includes("chuckle-shell-v295-schematic")) {
   throw new Error("GM team home must bust DATA_V and SW");
+}
+
+const overnightOn = fnSrc(page, "overnightEnabled");
+if (!overnightOn.includes("isGmLeague()") || !overnightOn.includes("isRedraftLeague()")) {
+  throw new Error("overnight letter must stay off GM / redraft Home");
 }
 
 const tbow = (finishes.seats || []).find((s) => s.name === "Tbow00");

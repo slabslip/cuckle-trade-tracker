@@ -79,8 +79,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v286-claim-drop")) {
-  throw new Error("sw.js must bump to v286-claim-drop");
+if (!sw.includes("chuckle-shell-v287-share-onboard")) {
+  throw new Error("sw.js must bump to v287-share-onboard");
 }
 
 console.log("join landing ok");

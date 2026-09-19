@@ -4217,7 +4217,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "claimdrop20260919154500";
+    const DATA_V = "shareonb20260919143000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9449,6 +9449,21 @@ const html = `<!DOCTYPE html>
     }
 
     function urlNow() {
+      if ((appScreen === "gate" || appScreen === "claimTeam" || appScreen === "joinWelcome")
+        && typeof shareAccessPending === "function" && shareAccessPending()) {
+        const q = new URLSearchParams();
+        const lid = claimLeagueId || (activeLeague && activeLeague.sleeper_league_id) || "";
+        if (lid) q.set("league", lid);
+        const tile = (typeof readPendingDataTile === "function" ? readPendingDataTile() : pendingDataTile) || "";
+        if (tile) {
+          q.set("view", "data");
+          q.set("tile", tile);
+        }
+        if (pendingDataSlice) q.set("slice", pendingDataSlice);
+        if (pendingDataWho) q.set("who", pendingDataWho);
+        q.set("src", "share");
+        return "?" + q.toString();
+      }
       const q = new URLSearchParams();
       if (me) q.set("me", me.name);
       const tile = (typeof dataTileOpenId === "function") ? dataTileOpenId() : "";
@@ -18744,6 +18759,22 @@ const html = `<!DOCTYPE html>
         + "</ol>";
     }
 
+    function claimShareAboutName() {
+      const raw = String(pendingDataWho || "").trim();
+      if (!raw) return "";
+      if (/^\d{6,}$/.test(raw) || /^espn:/i.test(raw)) {
+        const seat = (claimSeats || []).find(function (s) {
+          return s && String(s.sleeper_user_id) === raw;
+        });
+        if (seat && seat.team_name) return seat.team_name;
+        const mem = (members || []).find(function (m) {
+          return m && String(m.user_id) === raw;
+        });
+        return (mem && mem.name) || "";
+      }
+      return raw;
+    }
+
     function joinInviteLeadHtml() {
       const league = gateInviteLeague || claimLeagueName || "this league";
       const team = gateInviteTeam || "";
@@ -18752,8 +18783,14 @@ const html = `<!DOCTYPE html>
           + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
+        const about = claimShareAboutName();
+        if (about) {
+          return '<p class="join-land-hero">A member shared a line about <b>' + esc(about)
+            + "</b> in <b>" + esc(league) + "</b>. Create a username and password, then claim "
+            + "<b>your</b> remaining team to open it — this link is not a seat invite.</p>";
+        }
         return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
-          + "</b>. Create a username and password, then claim a remaining team to open it.</p>";
+          + "</b>. Create a username and password, then claim <b>your</b> remaining team to open it.</p>";
       }
       return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
         + "</b>. After you set a username and password, pick your team.</p>";
@@ -18842,7 +18879,6 @@ const html = `<!DOCTYPE html>
       if (authSession && authSession.username) hints.push({ kind: "user", val: authSession.username });
       if (authSession && authSession.seat_name) hints.push({ kind: "name", val: authSession.seat_name });
       if (gateSuggestedUser) hints.push({ kind: "user", val: gateSuggestedUser });
-      if (typeof pendingDataWho === "string" && pendingDataWho) hints.push({ kind: "name", val: pendingDataWho });
       const score = function (seat, hint) {
         const id = String(seat.sleeper_user_id || "");
         const name = claimNorm(seat.team_name);
@@ -19443,6 +19479,11 @@ const html = `<!DOCTYPE html>
           handedOff = true;
           await onRedeemInvite();
           return;
+        }
+        if ((typeof shareAccessPending === "function" && shareAccessPending())
+          && !claimLeagueId && !gateInviteLeagueId) {
+          claimLeagueId = CUCKLE_LEAGUE_ID;
+          if (!claimLeagueName) claimLeagueName = leagueNameForId(claimLeagueId);
         }
         if (claimLeagueId || gateInviteLeagueId) {
           const lid = claimLeagueId || gateInviteLeagueId;
@@ -26729,8 +26770,13 @@ const html = `<!DOCTYPE html>
           + esc(s.team_name || "Team")
           + "</option>";
       }).join("");
+      const about = typeof claimShareAboutName === "function" ? claimShareAboutName() : "";
       const hero = (typeof shareAccessPending === "function" && shareAccessPending())
-        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim the remaining team that is yours.")
+        ? (about
+          ? ('A member shared a line about <b>' + esc(about) + "</b> in <b>" + esc(league)
+            + "</b>. Claim the remaining team that is <b>yours</b> — not this line.")
+          : ('A member shared a view in <b>' + esc(league)
+            + "</b>. Claim the remaining team that is yours."))
         : ("You've been invited to join <b>" + esc(league) + "</b>. Confirm the team that is yours.");
       let hint = "";
       let hintCls = "caption";
@@ -26828,7 +26874,9 @@ const html = `<!DOCTYPE html>
           ? ('<h3>Past names and finishes</h3>' + years)
           : '<p class="caption">No completed seasons on this book yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-join-enter-dash="1">Enter the dashboard</button>'
+        + '<button type="button" class="chip" data-join-enter-dash="1">'
+        + ((typeof shareAccessPending === "function" && shareAccessPending())
+          ? "Open the shared view" : "Enter the dashboard") + "</button>"
         + "</div></div></div>";
     }
 
@@ -29866,7 +29914,13 @@ const html = `<!DOCTYPE html>
       } catch (err) { /* ignore */ }
     }
     const inviteParam = (params.get("invite") || "").trim();
-    const leagueParam = (params.get("league") || "").trim();
+    let leagueParam = (params.get("league") || "").trim();
+    if (!leagueParam && !inviteParam) {
+      const tileQ = (typeof dataTileCanon === "function") ? dataTileCanon(params.get("tile")) : "";
+      const shareQ = (params.get("src") || "") === "share";
+      const receiptQ = (typeof receiptQueryFrom === "function") ? receiptQueryFrom(params) : null;
+      if (tileQ || (shareQ && !receiptQ)) leagueParam = CUCKLE_LEAGUE_ID;
+    }
     if (leagueParam && !inviteParam) {
       claimLeagueId = leagueParam;
       if (!claimLeagueName && typeof leagueNameForId === "function") {
@@ -32263,6 +32317,8 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes('data-claim-open-go="1"')
   || !inline.includes('data-claim-team-select="1"')
   || !inline.includes("function claimGuessSeat(")
+  || !inline.includes("function claimShareAboutName(")
+  || !inline.includes("Open the shared view")
   || !inline.includes("function joinFailMsg(")
   || !inline.includes('appScreen === "claimTeam"')
   || !inline.includes('appScreen === "joinWelcome"')

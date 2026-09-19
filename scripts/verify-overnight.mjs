@@ -30,6 +30,10 @@ try {
   if (!/Last deal|No trades last night|sent /i.test(home)) fail("Home letter missing trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
+  if (!(await page.locator(".overnight-slip.schematic").count())) fail("Home letter missing schematic chrome");
+  if (!(await page.locator(".sch-kv").count())) fail("Home letter missing settings grid");
+  if (!(await page.locator(".sch-meters.four").count())) fail("Home letter missing four meters");
+  if (!/Trades/i.test(home) || !/\bOut\b/i.test(home)) fail("Home letter missing schematic meter labels");
   if (/Text this|That's not how I remember/i.test(home)) fail("Home letter still has Text this");
   const chip = page.locator("[data-overnight-share]");
   if (!(await chip.count())) fail("Home gold share chip missing");
@@ -66,6 +70,21 @@ try {
   if (/\+\d+ more/.test(payload.text)) fail("full share must not say + more");
   if (/Text this|That's not how I remember/i.test(payload.text)) fail("share text still has Text this");
   await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-home-open.png` });
+
+  await page.evaluate(function () {
+    if (typeof openMyTeamHome === "function") openMyTeamHome();
+  });
+  await page.waitForSelector(".team-schematic", { timeout: 25000 });
+  await page.waitForTimeout(500);
+  const analyzer = await page.locator(".team-schematic").innerText();
+  console.log("TEAM ANALYZER\n" + analyzer);
+  if (!/Starting lineup/i.test(analyzer)) fail("Team analyzer missing starting lineup");
+  if (!/Cornerstones/i.test(analyzer)) fail("Team analyzer missing cornerstones");
+  if (!/Depth score/i.test(analyzer)) fail("Team analyzer missing depth score");
+  if (!/Draft capital/i.test(analyzer)) fail("Team analyzer missing draft capital");
+  if (!(await page.locator(".team-sch-grades").count())) fail("Team analyzer missing positional grades");
+  await page.locator(".team-schematic").screenshot({ path: `${shotDir}/team-analyzer.png` });
+  await page.screenshot({ path: `${shotDir}/team-analyzer-home.png` });
 
   const guest = await browser.newContext({
     viewport: { width: 390, height: 844 },

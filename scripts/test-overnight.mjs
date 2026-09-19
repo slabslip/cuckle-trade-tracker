@@ -45,6 +45,12 @@ need(page.includes("overnight-slip-lede") && page.includes("letter.lede")
 need(page.includes("data-overnight-more") && page.includes("overnight-slip-band")
   && page.includes('overnightBandHtml("out"'),
   "Out / IR must be titled lists with an expandable Show all");
+need(page.includes('overnight-slip schematic') && page.includes("sch-meters four")
+  && page.includes("function schematicSettingsHtml(") && page.includes("sch-kv"),
+  "league overnight must use the navy schematic meters + settings grid");
+need(gen.includes('overnight-slip schematic') && gen.includes("sch-meters four")
+  && gen.includes("function schematicSettingsHtml("),
+  "generate-page.mjs schematic overnight must stay in sync");
 need(fnSrc(page, "overnightShareText").includes('catLines("Out"')
   && fnSrc(page, "overnightShareText").includes("const open = true"),
   "share must send the full Out and IR lists");

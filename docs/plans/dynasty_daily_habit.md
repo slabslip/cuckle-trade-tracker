@@ -2,9 +2,12 @@
 
 **Status:** v1 shipping on **Cuckle dynasty Home only**. `overnightEnabled()`
 is false for GM / any redraft book. Home paints one **league** overnight letter
-with a gold share chip. The share is a text + `?r=overnight&league=&src=share`
-link, not a first-person “Text this” poke. GM gets its own voice later. Do not
-mix the books.
+as a navy schematic (settings grid + Trades / Wire / Out / IR meters, titled
+lists). The gold share chip still sends text + `?r=overnight&league=&src=share`.
+Every dynasty **team homepage** paints a matching schematic **team analyzer**
+from the calculator bag + `seat-direction.json` (lineup, depth, outlook,
+cornerstones, sell / target, C↔R, grades, draft capital). GM / redraft stay
+off. Do not mix the books.
 
 **Companion:** tape cadence [`sleeper_daily_sweep.md`](./sleeper_daily_sweep.md)
 (PR #157). Memory chips [`MEMORY_SDD.md`](../MEMORY_SDD.md). Home law
@@ -81,6 +84,10 @@ Home, signed-in or not, paints the card above the tape. Unsigned `?r=overnight`
 opens the same card as a public receipt (existing gold share path).
 
 ### Card (one screen, ~390px)
+
+Navy schematic chrome (Domain Dynasty layout language only — not their
+fields). Settings kv grid (QB / RB / WR / TE / Teams / SF / PPR / TEP) and
+four meters (Trades / Wire / Out / IR) sit above the titled lists.
 
 **Dateline** — `Sat Sep 19 · CuckleChunkle`
 
@@ -307,6 +314,17 @@ Not DAU vanity. This league is ten phones.
 
 Fail: Home grows a fourth section and the letter becomes another tile.
 Fail: we put “Text this” back on the card.
+
+---
+
+## 8b. Team analyzer (dynasty team home)
+
+Same navy schematic, every seat. `teamAnalyzerEnabled()` is false for GM /
+redraft. Grades are 0–10 displays of startable count vs `deskSlots` /
+`deskCuts().start`. Archetype is Dual elite QB / Elite QB / Dual elite
+[pos] else the seat-direction label. Outlook, C↔R, and draft capital read
+`seat-direction.json` only as captions. No `fmt()`, no bag totals, no new
+value formula.
 
 ---
 

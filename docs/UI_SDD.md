@@ -361,6 +361,12 @@ either. The **Teams list** always paints the card: selected art when they have e
 blank banner + blank emblem when they have not. Anyone opening the seat sees that pair —
 not the viewer's.
 
+**GM redraft Home tab** is the career book — the same crowning achievements / book /
+past names a manager sees at onboarding, with year money, RS place, path (championship,
+3rd-place game, first round, regular season), record, and points. Name + title + emblem
+stay in the chrome above the tabs. Cuckle dynasty Home stays the trade story (best/worst
+deal, partners, draft tape).
+
 **Six style tiles**, all read from `data/ui/marks.json` (§7). Tapping one opens a ten-row league
 chart for that metric, sorted, with your seat highlighted. The chart draws from the rows already
 loaded at boot; it must never fetch a seat file.

@@ -41,6 +41,7 @@ try {
     console.log("ANALYZER " + seat.name + "\n" + text + "\n");
     if (!/Draft capital/i.test(text)) fail(seat.name + " missing Draft capital");
     if (!/top 12 scored like roster slots/i.test(text)) fail(seat.name + " missing 12-slot draft note");
+    if (/Short a starter/i.test(text)) fail(seat.name + " depth note must name backups, not a starter hole");
     const grades = await page.evaluate((uid) => {
       const card = typeof teamAnalyzerCard === "function" ? teamAnalyzerCard(uid) : null;
       return card ? {

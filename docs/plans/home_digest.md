@@ -45,3 +45,6 @@ plans stay as history; do not paste them here.
 Oracle, waiver AI, playoff-odds, marketplace + accept odds, decision journal, push,
 Flutter rewrite, cosmetics painted on names, Manager DNA chat, weekly/waiver grind awards
 (see [`awards_titles_emblems.md`](./awards_titles_emblems.md)).
+
+**Home overnight (v1):** shareable league letter — [`dynasty_daily_habit.md`](./dynasty_daily_habit.md).
+Do not start Oracle to get daily opens.

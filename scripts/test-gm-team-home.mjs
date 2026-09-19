@@ -68,8 +68,8 @@ if (!page.includes("cosmeticsSeatPlateHtml()") || !page.includes('class="screen-
   throw new Error("team name / title / emblem chrome must stay above the tabs");
 }
 
-if (!page.includes('const DATA_V = "sleeperdaily20260919190000"')
-  || !sw.includes("chuckle-shell-v291-sleeper-daily")) {
+if (!page.includes('const DATA_V = "overnight20260919200000"')
+  || !sw.includes("chuckle-shell-v292-overnight")) {
   throw new Error("GM team home must bust DATA_V and SW");
 }
 

@@ -30,8 +30,8 @@ try {
   if (!/Last deal|No trades last night|sent /i.test(home)) fail("Home letter missing trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
-  if (!(await page.locator(".overnight-slip.schematic").count())) fail("Home letter missing schematic chrome");
-  if (!(await page.locator(".sch-kv").count())) fail("Home letter missing settings grid");
+  if (!(await page.locator(".overnight-slip").count())) fail("Home letter missing");
+  if (await page.locator(".overnight-slip .sch-kv").count()) fail("Home letter must not show the settings grid");
   if (!(await page.locator(".sch-meters.four").count())) fail("Home letter missing four meters");
   if (!/Trades/i.test(home) || !/\bOut\b/i.test(home)) fail("Home letter missing schematic meter labels");
   if (/Text this|That's not how I remember/i.test(home)) fail("Home letter still has Text this");

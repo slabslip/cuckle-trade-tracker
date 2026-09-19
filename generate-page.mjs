@@ -1727,7 +1727,7 @@ const html = `<!DOCTYPE html>
       text-transform: uppercase;
     }
     .overnight-slip-band .n { font-variant-numeric: tabular-nums; opacity: 0.85; }
-    .overnight-slip-band.trades { color: #7dd3fc; background: rgba(125, 211, 252, 0.08); }
+    .overnight-slip-band.trades { color: var(--text); background: #1a1a1e; }
     .overnight-slip-band.wire { color: #34d399; background: rgba(52, 211, 153, 0.08); }
     .overnight-slip-band.out { color: #ff6b3d; background: rgba(255, 107, 61, 0.12); }
     .overnight-slip-band.ir { color: #e0b44c; background: rgba(224, 180, 76, 0.12); }
@@ -1742,7 +1742,7 @@ const html = `<!DOCTYPE html>
     .overnight-slip-row.out { border-left-color: #ff6b3d; }
     .overnight-slip-row.ir { border-left-color: #e0b44c; }
     .overnight-slip-row.other { border-left-color: #a78bfa; }
-    .overnight-slip-row.trades { border-left-color: #7dd3fc; }
+    .overnight-slip-row.trades { border-left-color: var(--line); }
     .overnight-slip-who { min-width: 0; }
     .overnight-slip-who b {
       display: inline; font-size: 0.9375rem; font-weight: 750; color: var(--text);
@@ -1772,23 +1772,35 @@ const html = `<!DOCTYPE html>
       font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
       text-transform: uppercase; padding: 11px 14px; cursor: pointer;
     }
-    .overnight-slip.schematic, .team-schematic {
+    .sch-meters {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    }
+    .sch-meters.four { grid-template-columns: repeat(4, 1fr); }
+    .sch-meter {
+      background: #121214; padding: 10px 10px 10px 12px;
+      display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .sch-meter b {
+      font-size: 1.35rem; font-weight: 800; letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .sch-meter span {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sch-meter.trades b, .sch-meter.trades span { color: var(--text); }
+    .sch-meter.wire b, .sch-meter.wire span { color: #34d399; }
+    .sch-meter.out b, .sch-meter.out span { color: #ff6b3d; }
+    .sch-meter.ir b, .sch-meter.ir span { color: #e0b44c; }
+    .team-schematic {
+      margin: 0 0 16px; border-radius: 14px; overflow: hidden;
       background:
         radial-gradient(circle at 92% 6%, rgba(224,180,76,0.09), transparent 28%),
         linear-gradient(180deg, #10263f 0%, #0b1c33 42%);
       border: 1px solid #1d3a5c;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
       color: #f4f7fb;
-    }
-    .overnight-slip.schematic .overnight-slip-lede { color: #f4f7fb; }
-    .overnight-slip.schematic .overnight-slip-date { color: #8fb3d9; }
-    .overnight-slip.schematic .overnight-slip-row { border-bottom-color: #1d3a5c; }
-    .overnight-slip.schematic .overnight-slip-who b { color: #f4f7fb; }
-    .overnight-slip.schematic .overnight-slip-row > span,
-    .overnight-slip.schematic .overnight-slip-sent { color: #8fb3d9; }
-    .overnight-slip.schematic .overnight-slip-note { color: #8fb3d9; }
-    .overnight-slip.schematic button.overnight-slip-more {
-      background: #0e243f; border-top-color: #1d3a5c;
     }
     .sch-settings {
       margin: 6px 0 0; font-size: 0.65rem; font-weight: 750;
@@ -1806,28 +1818,6 @@ const html = `<!DOCTYPE html>
     }
     .sch-kv i { font-style: normal; }
     .sch-kv b { color: #f4f7fb; font-variant-numeric: tabular-nums; }
-    .sch-meters {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
-      background: #1d3a5c; border-top: 1px solid #1d3a5c; border-bottom: 1px solid #1d3a5c;
-    }
-    .sch-meters.four { grid-template-columns: repeat(4, 1fr); }
-    .sch-meter {
-      background: #0b1c33; padding: 10px 10px 10px 12px;
-      display: flex; flex-direction: column; gap: 4px; min-width: 0;
-    }
-    .sch-meter b {
-      font-size: 1.35rem; font-weight: 800; letter-spacing: -0.04em;
-      font-variant-numeric: tabular-nums; line-height: 1;
-    }
-    .sch-meter span {
-      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .sch-meter.trades b, .sch-meter.trades span { color: #7dd3fc; }
-    .sch-meter.wire b, .sch-meter.wire span { color: #34d399; }
-    .sch-meter.out b, .sch-meter.out span { color: #ff6b3d; }
-    .sch-meter.ir b, .sch-meter.ir span { color: #e0b44c; }
-    .team-schematic { margin: 0 0 16px; border-radius: 14px; overflow: hidden; }
     .team-sch-hero {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
       padding: 14px 14px 12px; border-bottom: 1px solid #1d3a5c;
@@ -4444,7 +4434,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "depth20260919220000";
+    const DATA_V = "homesummary20260919210000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9170,7 +9160,6 @@ const html = `<!DOCTYPE html>
           + receiptShareIco() + "</button>")
         + "</div>"
         + (letter.lede ? '<p class="overnight-slip-lede">' + esc(letter.lede) + "</p>" : "")
-        + schematicSettingsHtml()
         + "</div>"
         + meters
         + tradeBlock + wireBlock + outBlock + irBlock + otherBlock + more

@@ -4,10 +4,10 @@
 is false for GM / any redraft book. Home paints one **league** overnight letter
 in dashboard chrome (Trades / Wire / Out / IR meters, titled lists). The gold
 share chip still sends text + `?r=overnight&league=&src=share`.
-Every dynasty **team homepage** paints a matching schematic **team analyzer**
-from the calculator bag + `seat-direction.json` (lineup, depth, outlook,
-cornerstones, sell / target, C↔R, grades, draft capital). GM / redraft stay
-off. Do not mix the books.
+Every dynasty **team homepage** paints a matching **team analyzer** in the
+same dashboard chrome as the Home letter (lineup, depth, outlook,
+cornerstones, sell / target, C↔R, value grades, draft capital, gold image
+chip). GM / redraft stay off. Do not mix the books.
 
 **Companion:** tape cadence [`sleeper_daily_sweep.md`](./sleeper_daily_sweep.md)
 (PR #157). Memory chips [`MEMORY_SDD.md`](../MEMORY_SDD.md). Home law
@@ -318,13 +318,22 @@ Fail: we put “Text this” back on the card.
 
 ## 8b. Team analyzer (dynasty team home)
 
-Same navy schematic, every seat. `teamAnalyzerEnabled()` is false for GM /
-redraft. Depth is the next man after the lineup vs the league starter
-floor — not a raw startable count. Grades are 0–10 displays of startable
-count vs `deskSlots` / `deskCuts().start`. Archetype is Dual elite QB / Elite QB / Dual elite
-[pos] else the seat-direction label. Outlook, C↔R, and draft capital read
-`seat-direction.json` only as captions. No `fmt()`, no bag totals, no new
-value formula.
+Same dashboard chrome as the Home letter, every seat. `teamAnalyzerEnabled()`
+is false for GM / redraft. Grades are `teamAnalyzerValueGrade` — each desk
+slot’s `calcValueNum` against `deskCuts` stud / start / mid. Same bag always
+prints the same 0–10. Depth is the next two after the lineup on that same
+scale (empty backup slots = 0, one stud backup is not a 10), not vs the
+league floor. The depth note names backups, not a starter hole. Draft capital scores the top 12 owned
+`calcBook.picks` with the same `teamAnalyzerValueGrade` as roster slots
+(empty of the 12 = 0). Late 3rds / 4ths do not pad a chest to 10. Team
+grade is 70% positions / 15% depth / 15% draft. Two seats may share a
+grade — there is no league curve. Archetype is Dual elite QB / Elite QB /
+Dual elite [pos] else the seat-direction label. Outlook and C↔R stay
+captions from `seat-direction.json` (`Hard rebuild` is 86 on the bar).
+The gold chip saves `cuckle-<seat>.png`. Depth names the extras that
+exist, not a hard-coded eight. Look to trade is leftover names only —
+never seat-direction labels like `QB`. `scripts/loop-team-analyzer.mjs`
+reprints all ten seats. No `fmt()`, no bag totals, no new value formula.
 
 ---
 

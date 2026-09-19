@@ -369,3 +369,31 @@ export function detectLeagueFormat(raw) {
     windows,
   };
 }
+
+/**
+ * Current Sleeper holder of each moved future pick (`pick:year:round:originRoster`).
+ * Hop tape can miss a later flip; the calculator must not offer a pick the seat
+ * does not hold. Untraded origin slots are absent from this map.
+ */
+export function livePickHolders() {
+  const traded = readJson("traded_picks.json", []) || [];
+  const seats = readJson("seats.json", []) || [];
+  const members = readJson("members.json", []) || [];
+  const latestSeason = String(Math.max(0, ...seats.map((s) => Number(s.season) || 0)));
+  const uidByRoster = new Map();
+  for (const s of seats) {
+    if (String(s.season) !== latestSeason || s.roster_id == null || !s.owner_id) continue;
+    uidByRoster.set(Number(s.roster_id), String(s.owner_id));
+  }
+  const nameById = Object.fromEntries(
+    members.map((m) => [String(m.user_id), m.canonical_name || m.name || String(m.user_id)]),
+  );
+  const byKey = new Map();
+  for (const p of traded) {
+    if (!p || p.season == null || p.round == null || p.roster_id == null || p.owner_id == null) continue;
+    const key = `pick:${p.season}:${Number(p.round)}:${Number(p.roster_id)}`;
+    const uid = uidByRoster.get(Number(p.owner_id)) || String(p.owner_id);
+    byKey.set(key, { user_id: uid, name: nameById[uid] || uid });
+  }
+  return byKey;
+}

@@ -5,7 +5,7 @@
  * Same flatten constants as revalue.mjs.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { detectLeagueFormat, leagueUiDir, pickTier, readJson, setLeagueId, writeUi } from "./lib.mjs";
+import { detectLeagueFormat, leagueUiDir, livePickHolders, pickTier, readJson, setLeagueId, writeUi } from "./lib.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
@@ -193,8 +193,11 @@ function pricePick(key, row, ownerId, ownerName, curveIdx, vmax, today, todayPri
   };
 }
 
-function hopOwner(row) {
-  const hops = row.hops || [];
+function hopOwner(row, key, holders) {
+  const live = holders && holders.get(String(key));
+  if (live && live.name) return live.name;
+  if (row && row.holder) return row.holder;
+  const hops = (row && row.hops) || [];
   if (!hops.length) return null;
   return hops[hops.length - 1].to || hops[hops.length - 1].from || null;
 }
@@ -288,13 +291,20 @@ for (const r of rosters) {
   }
 }
 
+const holders = livePickHolders();
 const picksOut = [];
 for (const [key, row] of Object.entries(picks)) {
   if (!row || !row.still_pick) continue;
-  const ownerName = hopOwner(row);
-  const ownerId = ownerName ? (idByName[ownerName] || "") : "";
+  const ownerName = hopOwner(row, key, holders);
+  const live = holders.get(String(key));
+  const ownerId = (live && live.user_id) || (ownerName ? (idByName[ownerName] || "") : "");
   picksOut.push(pricePick(key, row, ownerId, ownerName || "", curveIdx, vmax, today, todayPrice));
 }
+for (const [key, row] of Object.entries(picks)) {
+  const live = holders.get(String(key));
+  if (live && row && row.still_pick) row.holder = live.name;
+}
+if (Object.keys(picks).length) writeUi("picks.json", picks);
 
 picksOut.sort((a, b) => String(a.owner_id).localeCompare(String(b.owner_id))
   || (Number(b.value) || 0) - (Number(a.value) || 0)

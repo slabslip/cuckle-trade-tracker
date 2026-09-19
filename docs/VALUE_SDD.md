@@ -295,6 +295,8 @@ w_dd   = 0.20   // DynastyDealer base_value
 
 **Nightly tape:** [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) pulls Sleeper transactions + rosters for every booked league each morning. Do not let `revalue` self-checks (`even today is retired/ktc blend` and kin) skip that commit.
 
+**Live pick holders:** calculator trade options use Sleeper `/traded_picks` (`traded_picks.json`), not the last hop on the tape. A missed later flip left TrumanCooper offering Bubba’s 2028 3rd after that pick was already back with Bubba.
+
 ---
 
 ## 12. Calculator book (HAVE)

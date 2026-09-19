@@ -992,7 +992,13 @@ const html = `<!DOCTYPE html>
     .join-step-now .join-step-lab, .join-step-done .join-step-lab { color: var(--text); }
     .join-ok { color: #c9e0b0; }
     .claim-team-list { margin-top: 8px; }
-    .claim-team-list select { font-size: 16px; }
+    .claim-team-list label {
+      display: grid; gap: 6px; font-size: 0.8125rem; color: var(--dim);
+    }
+    .claim-team-list select {
+      font-size: 16px; appearance: auto; -webkit-appearance: menulist;
+      padding-right: 28px; border-color: #c9a227;
+    }
     .join-land-hero { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.4; }
     .join-land-stats {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px;
@@ -4210,7 +4216,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "claimdrop20260919140000";
+    const DATA_V = "claimdrop20260919154500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -17132,6 +17138,7 @@ const html = `<!DOCTYPE html>
     // A paused free-tier project can hang rather than refuse. Nothing about a vote may wait
     // forever on it.
     const VOTE_TIMEOUT = 8000;
+    const JOIN_TIMEOUT = 15000;
     // One ballot per claimed seat per trade. Side can change until this window after first cast.
     const VOTE_EDIT_MS = 24 * 60 * 60 * 1000;
     // The league tally as Supabase reports it. Stays null on any failure, so the UI falls back to
@@ -18682,7 +18689,7 @@ const html = `<!DOCTYPE html>
           method: "POST",
           headers: { apikey: VOTE_ANON, "Content-Type": "application/json" },
           body: JSON.stringify({ action: "invite_preview", code: code }),
-          signal: voteAbort(),
+          signal: voteAbort(JOIN_TIMEOUT),
         });
         const data = await res.json().catch(() => ({}));
         if (data.ok) {
@@ -18709,6 +18716,10 @@ const html = `<!DOCTYPE html>
         }
       } catch (err) {
         console.warn("invite preview", err);
+        if (!joinError) {
+          joinError = joinFailMsg(err, "Could not check that invite yet. You can still create an account.");
+          render();
+        }
       }
     }
 
@@ -18883,7 +18894,10 @@ const html = `<!DOCTYPE html>
       render();
       try {
         const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: claimLeagueId });
-        claimSeats = data.seats || [];
+        if (!Array.isArray(data.seats)) {
+          throw new Error("Could not load teams. Retry, or ask your commissioner for an invite link.");
+        }
+        claimSeats = data.seats;
         claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
         claimSeatsStatus = "ready";
         claimApplyGuess(claimSeats);
@@ -18905,11 +18919,11 @@ const html = `<!DOCTYPE html>
             claimApplyGuess(claimSeats);
           } catch (err2) {
             claimSeatsStatus = "error";
-            joinError = (err && err.message) || "Could not load teams. Ask your commissioner for an invite link.";
+            joinError = joinFailMsg(err, "Could not load teams. Ask your commissioner for an invite link.");
           }
         } else {
           claimSeatsStatus = "error";
-          joinError = (err && err.message) || "Could not load teams. Ask your commissioner for an invite link.";
+          joinError = joinFailMsg(err, "Could not load teams. Ask your commissioner for an invite link.");
         }
       }
       render();
@@ -18958,7 +18972,29 @@ const html = `<!DOCTYPE html>
         }
         voteSeatRemember(leagueInfo.sleeper_user_id);
       } catch (err) {
-        const msg = (err && err.message) || "Could not claim that team.";
+        const msg = joinFailMsg(err, "Could not claim that team.");
+        if (/already sit|already have a seat/i.test(msg)) {
+          try { await loadMemberships(); } catch (err2) { /* still show the error */ }
+          const mine = (memberships || []).find(function (m) {
+            return m && String(m.sleeper_league_id) === String(lid) && m.sleeper_user_id;
+          });
+          if (mine) {
+            joinBusy = false;
+            try {
+              await openJoinWelcome({
+                sleeper_league_id: mine.sleeper_league_id || lid,
+                name: mine.name || claimLeagueName || lid,
+                status: mine.status || "ready",
+                sleeper_user_id: mine.sleeper_user_id,
+                team_name: mine.team_name,
+              }, { auto: false });
+            } catch (err3) {
+              appScreen = "joinWelcome";
+              render();
+            }
+            return;
+          }
+        }
         joinError = /unknown action/i.test(msg)
           ? "Ask your commissioner for an invite link, then open it to claim this team."
           : msg;
@@ -19115,8 +19151,24 @@ const html = `<!DOCTYPE html>
     // AbortSignal.timeout is missing on Safari before 16, where undefined just means no timeout.
     function voteAbort(ms) {
       const n = ms == null ? VOTE_TIMEOUT : ms;
-      try { return AbortSignal && AbortSignal.timeout ? AbortSignal.timeout(n) : undefined; }
-      catch (err) { return undefined; }
+      try { if (AbortSignal && AbortSignal.timeout) return AbortSignal.timeout(n); }
+      catch (err) { /* Safari < 16 */ }
+      try {
+        const ac = new AbortController();
+        setTimeout(function () {
+          try { ac.abort(); } catch (e) { /* already settled */ }
+        }, n);
+        return ac.signal;
+      } catch (err) { return undefined; }
+    }
+
+    function joinFailMsg(err, fallback) {
+      const name = err && err.name;
+      const msg = String((err && err.message) || "");
+      if (name === "AbortError" || /abort/i.test(msg)) {
+        return "That took too long. Check your connection and retry.";
+      }
+      return msg || fallback || "Something went wrong.";
     }
 
     async function voteGet(url) {
@@ -19782,7 +19834,7 @@ const html = `<!DOCTYPE html>
         method: "POST",
         headers: { apikey: VOTE_ANON, "Content-Type": "application/json" },
         body: JSON.stringify(body),
-        signal: voteAbort(),
+        signal: voteAbort(JOIN_TIMEOUT),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
@@ -19853,7 +19905,7 @@ const html = `<!DOCTYPE html>
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
-        signal: voteAbort(),
+        signal: voteAbort(JOIN_TIMEOUT),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
@@ -26276,7 +26328,7 @@ const html = `<!DOCTYPE html>
             + "Next you confirm your team.</p>")
           : ((claimLeagueId || shared) && !forgot
             ? (joinStepsHtml("account") + joinInviteLeadHtml()
-              + '<p class="caption">Create the account, then confirm your team from the list.</p>')
+              + '<p class="caption">Create the account, then confirm your team from the menu.</p>')
             : ""))
         + (gateSuggestedUser && invited && !forgot
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
@@ -26654,8 +26706,10 @@ const html = `<!DOCTYPE html>
 
     function renderClaimTeam() {
       const league = claimLeagueName || gateInviteLeague || "this league";
-      const remaining = (claimSeats || []).filter(function (s) { return s && !s.claimed; });
-      const takenN = (claimSeats || []).length - remaining.length;
+      const remaining = (claimSeats || []).filter(function (s) {
+        return s && !s.claimed && s.sleeper_user_id;
+      });
+      const takenN = (claimSeats || []).filter(function (s) { return s && s.claimed; }).length;
       const loading = claimSeatsStatus === "loading";
       const failed = claimSeatsStatus === "error";
       const picked = remaining.find(function (s) {
@@ -26681,7 +26735,8 @@ const html = `<!DOCTYPE html>
       let hintCls = "caption";
       if (loading) hint = "Loading remaining teams…";
       else if (failed) hint = "Could not load teams. Retry, or ask your commissioner for an invite link.";
-      else if (!remaining.length) hint = "No remaining teams. Sign in if yours is already claimed.";
+      else if (!(claimSeats || []).length) hint = "No teams are open yet. Ask your commissioner for an invite link.";
+      else if (!remaining.length) hint = "Every team is claimed. Sign in if yours is already yours.";
       else if (takenN) hint = takenN + " already claimed. " + remaining.length + " left to pick.";
       else hint = "League added. Team not claimed yet.";
       let pickNote = "";
@@ -26721,7 +26776,7 @@ const html = `<!DOCTYPE html>
                 + '<option value="">Select your team</option>'
                 + opts
                 + "</select></label>")
-              : "")))
+              : ('<button type="button" class="chip" data-claim-reload="1">Retry teams</button>'))))
         + "</div>"
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + '<div class="app-actions" style="margin-top:12px">'
@@ -32206,6 +32261,7 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes('data-claim-open-go="1"')
   || !inline.includes('data-claim-team-select="1"')
   || !inline.includes("function claimGuessSeat(")
+  || !inline.includes("function joinFailMsg(")
   || !inline.includes('appScreen === "claimTeam"')
   || !inline.includes('appScreen === "joinWelcome"')
   || !inline.includes('claim_open_seat')

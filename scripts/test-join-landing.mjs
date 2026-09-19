@@ -35,6 +35,9 @@ const need = [
   "Loading remaining teams",
   "Retry teams",
   "We matched you to",
+  "function joinFailMsg(",
+  "No teams are open yet",
+  "from the menu",
   "[data-claim-pick]",
   'appScreen === "claimTeam"',
   'appScreen === "joinWelcome"',
@@ -76,8 +79,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v285-claim-drop")) {
-  throw new Error("sw.js must bump to v285-claim-drop");
+if (!sw.includes("chuckle-shell-v286-claim-drop")) {
+  throw new Error("sw.js must bump to v286-claim-drop");
 }
 
 console.log("join landing ok");

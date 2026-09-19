@@ -165,9 +165,9 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "claimdrop20260919140000"')
-  && html.includes('const DATA_V = "claimdrop20260919140000"')
-  && sw.includes('chuckle-shell-v285-claim-drop')
+loop(10, page.includes('const DATA_V = "claimdrop20260919154500"')
+  && html.includes('const DATA_V = "claimdrop20260919154500"')
+  && sw.includes('chuckle-shell-v286-claim-drop')
   && !sw.includes("chuckle-shell-v284-past-champions")
   && !sw.includes("chuckle-shell-v283-list-share")
   && inlineScriptParses(html),

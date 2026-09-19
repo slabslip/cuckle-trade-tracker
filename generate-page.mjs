@@ -1697,6 +1697,41 @@ const html = `<!DOCTYPE html>
     .home-desk-meta {
       margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.3;
     }
+    .overnight-slip {
+      position: relative;
+      margin: 0 0 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+      box-shadow: inset 3px 0 0 var(--lh-gold, #e0b44c);
+    }
+    .overnight-slip-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 12px;
+    }
+    .overnight-slip-date {
+      margin: 0; font-size: 0.75rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    .overnight-slip-lede {
+      margin: 0 0 12px; font-size: 1.05rem; font-weight: 750;
+      color: var(--text); line-height: 1.3;
+    }
+    .overnight-slip-top button.tile-share { position: static; }
+    .overnight-slip-block { margin: 0 0 12px; }
+    .overnight-slip-block:last-child { margin-bottom: 0; }
+    .overnight-slip-h {
+      margin: 0 0 5px;
+      font-size: 0.68rem; font-weight: 750; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--lh-gold, #e0b44c);
+    }
+    .overnight-slip-line {
+      margin: 0 0 4px; font-size: 0.9375rem; font-weight: 650;
+      color: var(--text); line-height: 1.35;
+    }
+    .overnight-slip-line:last-child { margin-bottom: 0; }
+    .overnight-slip-more { color: var(--muted); font-weight: 650; }
     .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
       appearance: none; font: inherit; color: #ff9f0a;
@@ -4203,6 +4238,8 @@ const html = `<!DOCTYPE html>
     let picksFailed = false;
     // Cuffs: fantasy slot-1 starters → NFL handcuff + who owns them.
     let cuffs = null;
+    let overnight = null;
+    let overnightLoading = false;
     let cuffsLoading = false;
     let cuffFilterMine = false;
     let cuffFilterOwner = ""; // fantasy manager whose starters
@@ -4224,7 +4261,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "sleeperdaily20260919190000";
+    const DATA_V = "overnight20260919200000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7973,7 +8010,8 @@ const html = `<!DOCTYPE html>
 
     function renderReceiptShell() {
       let body = "";
-      if (receiptPickKey) body = renderReceiptPickTicket(receiptPickKey);
+      if (view === "overnight") body = overnightSlipHtml();
+      else if (receiptPickKey) body = renderReceiptPickTicket(receiptPickKey);
       else if (view === "titles") body = renderTitles();
       else if (openId) body = renderReceiptTradeTicket();
       else {
@@ -8004,7 +8042,11 @@ const html = `<!DOCTYPE html>
       await loadMembers();
       if (league && league.name) activeLeague = Object.assign({}, activeLeague, { name: league.name });
       if (q.lens && WINDOWS.some(function (w) { return w[0] === q.lens; })) lens = q.lens;
-      if (q.kind === "pick" && q.pick) {
+      if (q.kind === "overnight") {
+        view = "overnight";
+        openId = null;
+        if (typeof ensureOvernight === "function") ensureOvernight();
+      } else if (q.kind === "pick" && q.pick) {
         receiptPickKey = q.pick;
         view = "trade";
         openId = null;
@@ -8697,6 +8739,129 @@ const html = `<!DOCTYPE html>
     }
 
 
+
+    function ensureOvernight() {
+      if (overnight || overnightLoading) return;
+      overnightLoading = true;
+      getLeagueJson("overnight.json").then((book) => {
+        overnight = book && book.v === 1 ? book : null;
+        overnightLoading = false;
+        if (typeof render === "function") render();
+      }).catch((err) => {
+        console.error(err);
+        overnight = null;
+        overnightLoading = false;
+      });
+    }
+
+    function overnightShareUrl() {
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      const q = new URLSearchParams();
+      q.set("r", "overnight");
+      q.set("league", leagueId);
+      q.set("src", "share");
+      const path = location.pathname || "/";
+      return location.origin + path + "?" + q.toString();
+    }
+
+    function overnightShareText() {
+      const letter = overnight;
+      if (!letter) return "League overnight";
+      const lines = [letter.dateline || "Overnight"];
+      if (letter.lede) lines.push(letter.lede);
+      if ((letter.trades || []).length) {
+        lines.push("");
+        letter.trades.forEach(function (row) { lines.push(row.line); });
+      } else {
+        lines.push("");
+        lines.push("No trades last night.");
+        if (letter.latest && letter.latest.line) lines.push("Last deal · " + letter.latest.line);
+      }
+      if ((letter.wire || []).length) {
+        lines.push("");
+        letter.wire.forEach(function (row) { lines.push(row.line); });
+      }
+      const ir = letter.ir || [];
+      if (ir.length) {
+        lines.push("");
+        lines.push("On IR / Out");
+        ir.slice(0, 8).forEach(function (p) {
+          const bits = [p.name];
+          if (p.status && p.status !== "IR") bits.push(p.status);
+          if (p.owner) bits.push(p.owner);
+          lines.push(bits.join(" · "));
+        });
+        if ((letter.ir_n || ir.length) > 8) lines.push("+" + ((letter.ir_n || ir.length) - 8) + " more");
+      }
+      return lines.join("\n");
+    }
+
+    function overnightSlipHtml(opts) {
+      opts = opts || {};
+      ensureOvernight();
+      const letter = overnight;
+      if (!letter) return "";
+      const trades = letter.trades || [];
+      const wire = letter.wire || [];
+      const ir = letter.ir || [];
+      let tradeBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">Trades</div>';
+      if (trades.length) {
+        tradeBlock += trades.map(function (row) {
+          return '<p class="overnight-slip-line">' + esc(row.line) + "</p>";
+        }).join("");
+      } else {
+        tradeBlock += '<p class="overnight-slip-line">No trades last night.</p>';
+        if (letter.latest && letter.latest.line) {
+          tradeBlock += '<p class="overnight-slip-line">' + esc("Last deal · " + letter.latest.date + " · " + letter.latest.line) + "</p>";
+        }
+      }
+      tradeBlock += "</div>";
+      let wireBlock = "";
+      if (wire.length) {
+        wireBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">Wire</div>'
+          + wire.map(function (row) {
+            return '<p class="overnight-slip-line">' + esc(row.line) + "</p>";
+          }).join("")
+          + "</div>";
+      }
+      let irBlock = "";
+      if (ir.length) {
+        const extra = (letter.ir_n || ir.length) - ir.slice(0, 8).length;
+        irBlock = '<div class="overnight-slip-block"><div class="overnight-slip-h">On IR / Out</div>'
+          + ir.slice(0, 8).map(function (p) {
+            const bits = [p.name];
+            if (p.status && p.status !== "IR") bits.push(p.status);
+            if (p.owner) bits.push(p.owner);
+            return '<p class="overnight-slip-line">' + esc(bits.join(" · ")) + "</p>";
+          }).join("")
+          + (extra > 0 ? '<p class="overnight-slip-line overnight-slip-more">+' + extra + " more</p>" : "")
+          + "</div>";
+      }
+      return '<section class="overnight-slip" aria-label="League overnight">'
+        + '<div class="overnight-slip-top">'
+        + '<p class="overnight-slip-date">' + esc(letter.dateline || "Overnight") + "</p>"
+        + (opts.share === false ? "" : '<button type="button" class="tile-share" data-overnight-share="1" aria-label="Share league overnight">'
+          + receiptShareIco() + "</button>")
+        + "</div>"
+        + (letter.lede ? '<p class="overnight-slip-lede">' + esc(letter.lede) + "</p>" : "")
+        + tradeBlock + wireBlock + irBlock
+        + "</section>";
+    }
+
+    function honorOvernightShare() {
+      try {
+        const q = new URLSearchParams(location.search);
+        if (String(q.get("r") || "") !== "overnight") return false;
+        me = null;
+        view = "home";
+        homeTab = "home";
+        appScreen = "dash";
+        ensureOvernight();
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
 
     function ensureCuffs() {
       if (cuffs || cuffsLoading) return;
@@ -19871,6 +20036,8 @@ const html = `<!DOCTYPE html>
         if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
       if (typeof honorPendingDataTile === "function") honorPendingDataTile();
+      if (typeof honorOvernightShare === "function") honorOvernightShare();
+      if (typeof ensureOvernight === "function") ensureOvernight();
       if (typeof dashWarmChrome === "function") dashWarmChrome();
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
@@ -25437,6 +25604,7 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">' + esc(calcDoorLabel()) + "</span></button>";
       return homeYouHtml()
+        + overnightSlipHtml()
         + leagueTapeHtml()
         + homeTopDoorsHtml()
         + '<div class="lh-calc-slot">' + door + "</div>"
@@ -27936,6 +28104,13 @@ const html = `<!DOCTYPE html>
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
+        return;
+      }
+      const overnightShareBtn = e.target.closest("[data-overnight-share]");
+      if (overnightShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        shareProofNow(overnightShareText(), overnightShareUrl(), "League overnight");
         return;
       }
       const tileShareBtn = e.target.closest("[data-tile-share]");
@@ -32221,6 +32396,13 @@ if (!fnSrc("pickOwnerName").includes("entry.holder")) {
 }
 if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.roster_slot")) {
   throw new Error("calcMeta must show live Sleeper IR / injury on trade options");
+}
+if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
+  || !inline.includes("data-overnight-share")) {
+  throw new Error("Home overnight must be a shareable league letter");
+}
+if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
+  throw new Error("overnight must not ship a Text this poke");
 }
 // Username sanitize: generate-page embeds the page in a template literal, so whitespace
 // class must be written as /\\s+/ or the live page gets /s+/ and strips the letter "s"

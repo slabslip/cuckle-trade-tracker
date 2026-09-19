@@ -1,8 +1,8 @@
-# Dynasty dashboard — venture review and the daily-habit bet
+# Dynasty dashboard — the overnight letter
 
-**Status:** Strategy lock for the next Cuckle pass. Not built. Do not start Oracle,
-lineup-vs-optimal, playoff odds, or a sixth tab. Those are parked in
-[`PRODUCT.md`](../PRODUCT.md) for a reason.
+**Status:** v1 shipping. Home paints one **league** overnight letter with a gold
+share chip. The share is a text + `?r=overnight&league=&src=share` link, not a
+first-person “Text this” poke.
 
 **Companion:** tape cadence [`sleeper_daily_sweep.md`](./sleeper_daily_sweep.md)
 (PR #157). Memory chips [`MEMORY_SDD.md`](../MEMORY_SDD.md). Home law
@@ -14,36 +14,44 @@ lineup-vs-optimal, playoff odds, or a sixth tab. Those are parked in
 
 Chuckle is the best **receipt** in dynasty and a weak **morning paper**.
 Managers open it when they are already fighting. They do not open it to see
-what happened while they slept. That is the whole habit problem.
+what happened while they slept.
 
 KTC, Sleeper, and FantasyCalc already won “more numbers.” We cannot out-database
-them. We can be the only app that writes **one first-person letter about this
-ten-team book** and hands the manager a sentence they can drop in the group
-text before work.
+them. We can be the only app that writes **last night’s minutes for this
+ten-team book** and hands the league a card they can drop in the group text
+before work.
 
 ---
 
-## 1. Full room audit (HAVE)
+## 1. Why “Text this” was lame — and why a league letter is the product
+
+A first-person poke (“Your night… Text this”) is a coach in your pocket. Ten
+guys do not want a coach. They want **the same facts**, named, so the group
+chat has a commissioner.
+
+The real product is already the group text. Sleeper pings are personal and
+vanish. KTC has no seat names. Memory is how this league argues. The overnight
+letter is the official record of last night: one dated card, both bags named,
+who holds the hurt skill players, gold chip, one link.
+
+That is the need. Not a streak. Not a bag total. **Someone has to write the
+first message every morning.** Status goes to whoever drops the minutes.
+Chuckle writes them. The chip sends them. The link is how the other nine open
+the same card — signed-in on Home, unsigned on the public ticket, then claim.
+
+---
+
+## 2. Full room audit (HAVE)
 
 | Room | What it is good at | Why it is not daily |
 | --- | --- | --- |
-| **Home** | Calling card, four board doors, calc door, 1–3 Team Ideas | No dateline. No “since yesterday.” Ideas do not say why *today*. On a quiet Tuesday it is a museum lobby. |
+| **Home** | Calling card, four board doors, calc door, 1–3 Team Ideas | Was undated. The letter is the dateline. |
 | **Teams** | Career museum: titles, tape, partners, rookies | Great the week after the title game. Dead in Week 4. |
-| **News** | Shared tweets, seat-tagged, locker-room voice | Manual only. If nobody shares, the tab is a blank Alerts slot. Automated roster news is **built and switched off**. |
+| **News** | Shared tweets, seat-tagged, locker-room voice | Manual only. Tab stays member shares. |
 | **Ledger** | Handshake wagers, clocks, trash | High heat for two degenerates. Zero for the other eight on a Tuesday. |
 | **Data / Menu** | 13 memory doors, calc, settings, barracks | Encyclopedia. You open it to win an argument, not to start the day. |
 | **Calculator** | Best 2-team scale we have (today blend + VA + cuff) | A trade-day tool. Most mornings there is no trade. |
-| **Cuffs / IR** | Starter → backup; `injury_now` after the sweep | Buried. Home never says “Pearsall is IR on your IR slot.” |
-
-**What we already have that no competitor has, unused as a daily loop:**
-
-- Eight seasons of *this* league’s hop tape (not a generic ranker)
-- First-person seat identity (`you` is Truman, not “Team 7”)
-- Share chips that already exist to be texted
-- A twice-daily Sleeper sweep (trades, waivers, IR, values) that Home does not narrate
-- Team Ideas that are real talks, not “players you may like”
-- Smack voice that already knows upbeat-IR vs real IR
-- Memory law: one English verdict, one gold number, Text this
+| **Cuffs / IR** | Starter → backup; `injury_now` after the sweep | Was buried. The letter now surfaces the league IR / Out board. |
 
 **What we must not pretend is missing:**
 
@@ -51,100 +59,70 @@ text before work.
 - Best 10 / Worst 10. Removed twice. Dead.
 - Bag-total heroes on Home. Law.
 - A sixth pill. Law.
-- Lineup optimizer / playoff odds / waiver AI. That is Sleeper+ Yahoo. Parked on purpose.
-- Painting titles on every byline before the daily letter exists.
+- Lineup optimizer / playoff odds / waiver AI. Parked on purpose.
+- A first-person “Text this” / “That’s not how I remember” poke. Rejected.
 
 ---
 
-## 2. Why ten guys do not open this every day
+## 3. v1 shape — shareable league summary
 
-Dynasty managers already have a morning stack:
-
-1. Group text (the real product)
-2. Sleeper (roster / IR / waivers)
-3. Twitter / the News tab *if someone pasted a tweet*
-4. KTC when they are bored or about to trade
-
-Chuckle is step 5, and only when someone says “look at the tape.”
-
-Home *calls* itself the daily paper ([`UI_SDD.md`](../UI_SDD.md) §1) and then
-paints **undated** doors and a calc banner. A newspaper without yesterday’s
-date is a binder. Team Ideas can be the same three talks for a week. Values
-move every morning at 10:20 UTC and nobody is told “your bag moved.” IR lands
-in `injury_now.json` and dies in a JSON file.
-
-The habit we accidentally built: **open Chuckle after the fight starts.**
-
-The habit we need: **open Chuckle to start the fight.**
-
----
-
-## 3. The out-of-the-box bet — the Overnight Slip
-
-Not a new tab. Not a new tile wall. **Home becomes a dated letter.**
-
-After the morning tape + value snap (and again after the 22:20 catch), the
-pipeline writes one first-person artifact per seat:
+Not a new tab. Not a per-seat slip. **One letter per league.**
 
 ```text
-data/leagues/<id>/ui/me/<user_id>.slip.json
+data/leagues/<id>/ui/overnight.json
 ```
 
-Home, signed-in, cold-loads **that letter** above the calc door. Board doors
-and Team Ideas drop *under* it, or hide until the letter is short. Unsigned
-users still see the water cooler (calc + doors). The slip is identity, so it
-follows the signed-in seat the same way Team Ideas already do.
+`build-overnight.mjs` runs after the calculator in `build.mjs`. Daily jobs
+already run that chain. Do not run `generate-page.mjs`.
 
-### Shape (one screen, ~8 lines, 390px)
+Home, signed-in or not, paints the card above the tape. Unsigned `?r=overnight`
+opens the same card as a public receipt (existing gold share path).
 
-**Dateline** — `Sat Sep 20 · Cuckle · overnight`
+### Card (one screen, ~390px)
 
-**Your night** — at most three facts, all *your* bag:
+**Dateline** — `Sat Sep 19 · CuckleChunkle`
 
-- Pearsall is IR (league IR slot)
-- A.J. Brown is IR and still on your bench
-- Zay Flowers is Doubtful · markets cooler
+**Lede** — one English verdict, no numbers from the meter:
 
-**The league night** — at most three facts about the other nine:
+- `Quiet night`
+- `1 trade last night`
+- `2 trades last night`
+- `Wire moved · no trades`
 
-- Truman flipped Harrison + a 2028 1st for Jefferson (already on tape)
-- Bubba still holds Bubba’s 2028 3rd (live `traded_picks`, not hop tape)
-- Waiver: X added Y (from `moves.json`, not a fake wire AI)
+**Trades** — named both sides (`A sent X · B sent Y`). If the night is quiet,
+say so, then **Last deal** from the tape so the letter is never empty.
 
-**One sentence to send** — already written, one Share chip. Examples:
+**Wire** — named waiver / FA / commish from `moves.json`
+(`TipsUp waiver claimed Pearsall · dropped X`). Empty section collapses.
 
-- “That’s not how I remember the Hilton deal.” → existing `trade_mark` ticket
-- “Pearsall is IR on Truman. The cuff is on Chief.” → cuff + injury
-- “Would you rather hold Flowers or sell this morning?” → 24h question
+**On IR / Out** — ranked by the existing calculator book (no numbers on the
+card), skill / Out / starters ahead of taxi. A.J. Brown and a Darnold Out
+beat a taxi rookie. Cap 12 in JSON / 8 on the card.
 
-**One door** — one button. Prefills calc, opens the vote, or opens the idea.
-Never three CTAs.
+**Gold share chip** — existing `.tile-share`. Sends `overnightShareText()` +
+`?r=overnight&league=&src=share`. No “Text this” label.
 
-### The 24-hour question (the streak without a streak counter)
+### Share text (the group-chat body)
 
-Last line of the slip, some mornings only: **one league question that dies at
-the next dateline.** Everyone takes a side. It is not a trade vote and not a
-receipt. Opinion stays quarantined (same wall as News / Ledger / Votes).
+The letter *is* the text. One fact per line. Link underneath via
+`shareProofNow`. Example quiet Tuesday:
 
-This is the Duolingo loop without a flame icon: you open to see if you look
-stupid next to last night’s take. The group text is the distribution. Chuckle
-is the ballot.
+```text
+Sat Sep 19 · CuckleChunkle
+Quiet night
 
-Do **not** put a “4-day streak” badge on Home. The reward is looking sharp in
-the chat, not a counter.
+No trades last night.
+Last deal · TrumanCooper sent Justin Jefferson + Keaton Mitchell · DarkWingDucks2023 sent Marvin Harrison + 2027 2nd + 2028 1st + 2028 2nd
+
+On IR / Out
+A.J. Brown · SF69erss
+James Conner · …
+```
 
 ### What a quiet Tuesday looks like (this is the product)
 
-No trade. No tweet. Still a letter:
-
-> Sat Sep 20 · Cuckle · overnight
-> Your night: Pearsall IR. Flowers Doubtful.
-> League night: nobody moved. Bubba’s 2028 3rd still his.
-> Send: “Pearsall is IR and the cuff is on Chief.”
-> Door: Team Idea — sell a WR, you are Win-now thin at RB.
-
-That Tuesday is why people come back. Trade week is easy. Dead week is the
-test.
+No trade. No tweet. Still a letter: dateline, Quiet night, last deal, IR board,
+one chip. Trade week is easy. Dead week is the test.
 
 ---
 
@@ -152,74 +130,76 @@ test.
 
 | Old category | New category |
 | --- | --- |
-| Dynasty analytics dashboard | League social OS |
-| “Come research” | “We already wrote the text” |
+| Dynasty analytics dashboard | League minutes |
+| “Come research” | “We already wrote last night” |
 | Compete with KTC’s board | Compete with the group chat’s first message |
-| More tiles | One dated artifact |
+| More tiles | One dated, shareable artifact |
 
-**Moat:** eight years of *this* hop tape + first-person names + share chips +
-smack polarity. Sleeper cannot say “the 2028 3rd you think you have is
-Bubba’s.” KTC cannot say “Pearsall is on Truman’s IR, cuff on Chief.”
-FantasyCalc cannot hand Truman a sentence he can text TipsUp.
+**Moat:** eight years of *this* hop tape + live pick holders + `injury_now` ∩
+rosters + share chips. Sleeper cannot say “the 2028 3rd you think you have is
+Bubba’s.” KTC cannot say “A.J. Brown is IR on SF69erss.” FantasyCalc cannot
+hand the thread a link that opens the same card for all ten.
 
-**Distribution:** we do not need push for v1 (parked). The slip is designed to
-be screenshotted. One manager posting the letter *is* the notification for the
-other nine. That is how this league already lives.
+**Distribution:** we do not need push for v1 (parked). One manager hitting the
+gold chip *is* the notification for the other nine. That is how this league
+already lives.
+
+**Need loop (no streak badge):**
+
+1. Morning tape lands.
+2. Home shows the letter.
+3. Someone shares it to the thread (status).
+4. Nine phones open the same card.
+5. Argument uses named bags, not memory.
 
 **Expansion:** every booked league gets its own letter. GM redraft gets a
 different voice (money games, lineup week) later. Do not mix the books.
 
-**What we are not:** a marketplace, an accept-odds engine, a second Twitter, or
-Yahoo’s waiver bot.
+**What we are not:** a marketplace, an accept-odds engine, a second Twitter,
+Yahoo’s waiver bot, or a first-person coach.
 
 ---
 
 ## 5. How the letter is written (no new formula)
 
-Inputs we already have or just shipped:
-
 | Input | File | Line it feeds |
 | --- | --- | --- |
-| IR / Out / Doubtful on *your* ids | `injury_now.json` + `rosters_now.json` | Your night |
-| Today blend vs yesterday’s committed snap | `calculator.json` as_of + prior `calculator.json` (or `ktc/latest` vs prior date) | “markets bid up / cooler” — words only, no bag total |
-| Complete trades since last slip | `trades.json` | League night |
-| Waiver / FA / commissioner | `moves.json` | League night |
-| Live pick holders | `traded_picks.json` | “you do not hold that 3rd” |
-| Shared tweets tagged to your guys | `news.json` | Your night, one line, still quarantined |
-| Direction + holes | `seat-direction.json` + Team Ideas | The one door |
-| Hottest memory fight | [`DEBATE_CATALOG.md`](../DEBATE_CATALOG.md) | Sentence to send, only if nothing overnight is hotter |
+| Complete trades since yesterday | `trade_tape.json` | Trades / Last deal |
+| Waiver / FA / commissioner | `moves.json` | Named wire |
+| IR / Out / PUP / NFI on rostered ids | `injury_now.json` + `rosters_now.json` | On IR / Out |
+| Seat names | `members.json` | Every line |
+| Player names on the wire | `players.nfl.json` | Wire |
 
 Rules:
 
-- First person. “Your IR,” not “Roster 7 reserve.”
-- Max three + three + one + one. Cut the weakest line. Empty sections collapse.
-- No `fmt()` / `today_delta` / VA on the letter. Same quarantine as News.
-- “Markets cooler” is a word from the existing Team Ideas meta, not a new hero number.
-- If the overnight is empty, say so. Do not invent a fake Upgrade to fill space.
-- Rebuild writes the slip in `build.mjs` after calculator + cuffs + direction.
-  Daily jobs already run that chain. Do not run `generate-page.mjs`.
+- League voice. “Truman sent Jefferson,” not “Your bag.”
+- Empty sections collapse. Quiet night still prints last deal + IR.
+- No `fmt()` / `today_delta` / VA / bag totals on the letter.
+- Do not invent a fake Upgrade to fill space.
+- News tab stays member shares. The letter does not become automated roster news.
+- Rebuild writes the letter in `build.mjs` after calculator. Do not run
+  `generate-page.mjs`.
 
 ---
 
-## 6. What we are missing (ranked)
+## 6. What is next (ranked, do not start at the bottom)
 
-Ship order if we take this bet. Do not start at the bottom.
+v1 is the letter + chip + public link. Then:
 
-1. **Dateline + Your night** from `injury_now` + roster news (one slip JSON, Home paint).
-2. **League night** from new trades + `moves.json` + live pick holders.
-3. **One sentence to send** — reuse share-chip paint, do not invent a 17th memory kind.
-4. **One door** — existing Team Idea or calc prefill, tagged “because last night.”
-5. **Yesterday’s calculator snap** so “markets bid up” is real, not vibes.
-6. **24h question** two or three mornings a week, expire at next dateline.
-7. Re-open **automated roster news** *into the slip only*, not back onto the
-   News tab. The tab stays member shares. That honors the 2026-08-30 wipe.
-8. Push / PWA later. The letter has to be good in the tab first.
+1. **Yesterday’s calculator snap** so a later line can say “markets bid up /
+   cooler” in words — still no bag total.
+2. **24h question** two or three mornings a week, expire at next dateline.
+   Opinion stays quarantined (News / Ledger / Votes). Not v1.
+3. Re-open **automated roster news** *into the letter only*, not back onto the
+   News tab.
+4. Push / PWA later. The letter has to be good in the tab and in iMessage first.
 
 Still parked, still correct:
 
 - League Oracle, waiver hot sheet as a product, lineup-vs-optimal, playoff odds
 - Accept-odds marketplace
 - Title paint on every byline
+- Per-seat first-person slip
 - Weekly grind awards that need legal lineups
 
 ---
@@ -228,21 +208,17 @@ Still parked, still correct:
 
 Not DAU vanity. This league is ten phones.
 
-- A manager screenshots the slip into the group text without being asked.
-- A quiet Tuesday letter is still opened (IR / Doubtful / “nobody moved”).
-- A pick-holder line stops another Truman-2028-3rd ghost.
-- Team Ideas taps come *from the door on the slip*, not from scrolling past a
-  banner to find them.
-- News tab stays a share feed. The slip does not drown it.
+- A manager shares the letter into the group text without being asked.
+- A quiet Tuesday letter is still opened (IR / Out / last deal).
+- The public `?r=overnight` link opens the same card for an unsigned phone.
+- News tab stays a share feed. The letter does not drown it.
 
 Fail: Home grows a fourth section and the letter becomes another tile.
+Fail: we put “Text this” back on the card.
 
 ---
 
 ## 8. Decision
 
-**Recommended:** lock the Overnight Slip as the next Cuckle Home pass. Do not
-add research surfaces until the letter exists.
-
-Until Truman says go, this file is the want. The generator stays behind on
-purpose.
+Lock the shareable **league overnight letter** as the Cuckle Home daily habit.
+Do not add research surfaces until this card is the first message in the thread.

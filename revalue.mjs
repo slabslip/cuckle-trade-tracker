@@ -1381,6 +1381,9 @@ async function main() {
       if (Math.abs((e.today || 0) - (e.value_adjust || 0) - gotToday) >= 1) todayDrift += 1;
     }
   }
+  if (todayDrift) {
+    console.warn("revalue: even-today drift on " + todayDrift + " sides (meter already written)");
+  }
   check("even today is retired/ktc blend", todayDrift === 0);
   const ceedeeTx = meters.find((t) => t.date === "2025-09-04" && t.names.includes("TrumanCooper"));
   const trumanId = members.find((m) => m.canonical_name === "TrumanCooper")?.user_id;

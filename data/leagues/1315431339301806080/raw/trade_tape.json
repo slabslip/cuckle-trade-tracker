@@ -8296,5 +8296,37 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-09-17",
+    "season": "2026",
+    "week": 2,
+    "transaction_id": "1406421860110843904",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Marvin Harrison",
+          "2027 R2 (orig roster 9)",
+          "2028 R1 (orig roster 9)",
+          "2028 R2 (orig roster 9)"
+        ],
+        "out": [
+          "Justin Jefferson",
+          "Keaton Mitchell"
+        ]
+      },
+      "DarkWingDucks2023": {
+        "in": [
+          "Justin Jefferson",
+          "Keaton Mitchell"
+        ],
+        "out": [
+          "Marvin Harrison",
+          "2027 R2 (orig roster 9)",
+          "2028 R1 (orig roster 9)",
+          "2028 R2 (orig roster 9)"
+        ]
+      }
+    }
   }
 ]

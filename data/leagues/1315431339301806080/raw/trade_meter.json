@@ -23129,6 +23129,1351 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1406421860110843904",
+    "date": "2026-09-17",
+    "season": "2026",
+    "week": 2,
+    "user_ids": [
+      "458342725222133760",
+      "458766127967760384"
+    ],
+    "names": [
+      "TrumanCooper",
+      "DarkWingDucks2023"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 5615,
+            "sent_today": 7978,
+            "today_delta": -2363,
+            "t0": 5615,
+            "t0_delta": -2363,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3512,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 265,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 1623,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 215,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7864,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 114,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3512,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 265,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 1623,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 215,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 7978,
+            "sent_today": 5615,
+            "today_delta": 2363,
+            "t0": 7978,
+            "t0_delta": 2363,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7864,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 114,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3512,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 265,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 1623,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 215,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7864,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 114,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-09-01",
+            "points": {
+              "TrumanCooper": 5615,
+              "DarkWingDucks2023": 7978
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 5615,
+            "sent_today": 7978,
+            "today_delta": -2363,
+            "t0": 5615,
+            "t0_delta": -2363,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3512,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 265,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 1623,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 215,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7864,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 114,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3512,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 265,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 1623,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 215,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 7978,
+            "sent_today": 5615,
+            "today_delta": 2363,
+            "t0": 7978,
+            "t0_delta": 2363,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7864,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 114,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3512,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 265,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 1623,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 215,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7864,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 114,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-09-01",
+            "points": {
+              "TrumanCooper": 5615,
+              "DarkWingDucks2023": 7978
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 13878,
+            "sent_today": 11899.7,
+            "today_delta": 1978.2999999999993,
+            "t0": 14671,
+            "t0_delta": 2097.8999999999996,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 4531,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 5016
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 2861,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2846
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 3879,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4095
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 2607,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2714
+              }
+            ],
+            "sent": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7439,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 7877
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 2229,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2333
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 2231.7,
+            "t0_value_adjust": 0
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 11899.7,
+            "sent_today": 13878,
+            "today_delta": -1978.2999999999993,
+            "t0": 12573.1,
+            "t0_delta": -2097.8999999999996,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Justin Jefferson",
+                "kind": "player",
+                "asset_key": "player:6794",
+                "value": 7439,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 7877
+              },
+              {
+                "label": "Keaton Mitchell",
+                "kind": "player",
+                "asset_key": "player:9511",
+                "value": 2229,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2333
+              }
+            ],
+            "sent": [
+              {
+                "label": "Marvin Harrison",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 4531,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 5016
+              },
+              {
+                "label": "2027 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:9",
+                "value": 2861,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2846
+              },
+              {
+                "label": "2028 1st (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:1:9",
+                "value": 3879,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4095
+              },
+              {
+                "label": "2028 2nd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:2:9",
+                "value": 2607,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2714
+              }
+            ],
+            "value_adjust": 2231.7,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 2363.1
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-09-01",
+            "points": {
+              "TrumanCooper": 14671,
+              "DarkWingDucks2023": 10210
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 14671,
+              "sent_today": 12573.1,
+              "today_delta": 2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 2363.1
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 12573.1,
+              "sent_today": 14671,
+              "today_delta": -2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 2363.1,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 14671,
+              "sent_today": 12573.1,
+              "today_delta": 2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 2363.1
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 12573.1,
+              "sent_today": 14671,
+              "today_delta": -2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 2363.1,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 14671,
+              "sent_today": 12573.1,
+              "today_delta": 2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 2363.1
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 12573.1,
+              "sent_today": 14671,
+              "today_delta": -2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 2363.1,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 14671,
+              "sent_today": 12573.1,
+              "today_delta": 2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 2363.1
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 12573.1,
+              "sent_today": 14671,
+              "today_delta": -2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 2363.1,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 14671,
+              "sent_today": 12573.1,
+              "today_delta": 2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 2363.1
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 12573.1,
+              "sent_today": 14671,
+              "today_delta": -2097.8999999999996,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Justin Jefferson",
+                  "kind": "player",
+                  "asset_key": "player:6794",
+                  "value": 7877,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Keaton Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:9511",
+                  "value": 2333,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 5016,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:9",
+                  "value": 2846,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 1st (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:1:9",
+                  "value": 4095,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 2nd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:2:9",
+                  "value": 2714,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 2363.1,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1270932897498419200",
     "date": "2025-09-09",
     "season": "2025",
@@ -145310,8 +146655,8 @@
           "457779824002330624": {
             "name": "SF69erss",
             "today": 18852,
-            "sent_today": 22044,
-            "today_delta": -3192,
+            "sent_today": 22468,
+            "today_delta": -3616,
             "t0": 12653.7,
             "t0_delta": -3661.2999999999993,
             "unpriced": 0,
@@ -145384,7 +146729,7 @@
                 "label": "2023 4th · became Eric Gray (ARae)",
                 "kind": "pick",
                 "asset_key": "pick:2023:4:10",
-                "value": 0,
+                "value": 424,
                 "flag": null,
                 "became": "Eric Gray",
                 "drafted_by": "ARae",
@@ -145407,9 +146752,9 @@
           },
           "458004578168729600": {
             "name": "ARae",
-            "today": 22044,
+            "today": 22468,
             "sent_today": 18852,
-            "today_delta": 3192,
+            "today_delta": 3616,
             "t0": 16315,
             "t0_delta": 3661.2999999999993,
             "unpriced": 0,
@@ -145450,7 +146795,7 @@
                 "label": "2023 4th · became Eric Gray (ARae)",
                 "kind": "pick",
                 "asset_key": "pick:2023:4:10",
-                "value": 0,
+                "value": 424,
                 "flag": null,
                 "became": "Eric Gray",
                 "drafted_by": "ARae",
@@ -171164,8 +172509,8 @@
           "458342725222133760": {
             "name": "TrumanCooper",
             "today": 681.8669527896996,
-            "sent_today": 932,
-            "today_delta": -250.13304721030045,
+            "sent_today": 1355,
+            "today_delta": -673.1330472103004,
             "t0": 2627.0395123658423,
             "t0_delta": -2331.9604876341577,
             "unpriced": 0,
@@ -171208,7 +172553,7 @@
                 "label": "Marquez Valdes-Scantling",
                 "kind": "player",
                 "asset_key": "player:5086",
-                "value": 0,
+                "value": 423,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -171231,9 +172576,9 @@
           },
           "458723431387492352": {
             "name": "BubbaCuckShremp",
-            "today": 932,
+            "today": 1355,
             "sent_today": 681.8669527896996,
-            "today_delta": 250.13304721030045,
+            "today_delta": 673.1330472103004,
             "t0": 4959,
             "t0_delta": 2331.9604876341577,
             "unpriced": 0,
@@ -171254,7 +172599,7 @@
                 "label": "Marquez Valdes-Scantling",
                 "kind": "player",
                 "asset_key": "player:5086",
-                "value": 0,
+                "value": 423,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -188851,9 +190196,9 @@
         "sides": {
           "458766127967760384": {
             "name": "DarkWingDucks2023",
-            "today": 680,
+            "today": 1300,
             "sent_today": 5859.25,
-            "today_delta": -5179.25,
+            "today_delta": -4559.25,
             "t0": 7170,
             "t0_delta": 1729.3500000000004,
             "unpriced": 0,
@@ -188864,7 +190209,7 @@
                 "label": "Jalen Reagor",
                 "kind": "player",
                 "asset_key": "player:6798",
-                "value": 0,
+                "value": 620,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -188900,8 +190245,8 @@
           "470311990468800512": {
             "name": "TedCumberbatch",
             "today": 5859.25,
-            "sent_today": 680,
-            "today_delta": 5179.25,
+            "sent_today": 1300,
+            "today_delta": 4559.25,
             "t0": 5440.65,
             "t0_delta": -1729.3500000000004,
             "unpriced": 0,
@@ -188924,7 +190269,7 @@
                 "label": "Jalen Reagor",
                 "kind": "player",
                 "asset_key": "player:6798",
-                "value": 0,
+                "value": 620,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -193419,9 +194764,9 @@
         "sides": {
           "457779824002330624": {
             "name": "SF69erss",
-            "today": 0,
+            "today": 424,
             "sent_today": 0,
-            "today_delta": 0,
+            "today_delta": 424,
             "t0": 5544,
             "t0_delta": 3349.336100815419,
             "unpriced": 0,
@@ -193442,7 +194787,7 @@
                 "label": "2023 4th · became Eric Gray (ARae)",
                 "kind": "pick",
                 "asset_key": "pick:2023:4:10",
-                "value": 0,
+                "value": 424,
                 "flag": null,
                 "became": "Eric Gray",
                 "drafted_by": "ARae",
@@ -193468,8 +194813,8 @@
           "470311990468800512": {
             "name": "TedCumberbatch",
             "today": 0,
-            "sent_today": 0,
-            "today_delta": 0,
+            "sent_today": 424,
+            "today_delta": -424,
             "t0": 2194.663899184581,
             "t0_delta": -3349.336100815419,
             "unpriced": 0,
@@ -193502,7 +194847,7 @@
                 "label": "2023 4th · became Eric Gray (ARae)",
                 "kind": "pick",
                 "asset_key": "pick:2023:4:10",
-                "value": 0,
+                "value": 424,
                 "flag": null,
                 "became": "Eric Gray",
                 "drafted_by": "ARae",
@@ -233397,9 +234742,9 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 0,
+            "today": 441,
             "sent_today": 0,
-            "today_delta": 0,
+            "today_delta": 441,
             "t0": 4322,
             "t0_delta": -1647,
             "unpriced": 0,
@@ -233410,7 +234755,7 @@
                 "label": "Sterling Shepard",
                 "kind": "player",
                 "asset_key": "player:3200",
-                "value": 0,
+                "value": 441,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -233456,8 +234801,8 @@
           "458766127967760384": {
             "name": "DarkWingDucks2023",
             "today": 0,
-            "sent_today": 0,
-            "today_delta": 0,
+            "sent_today": 441,
+            "today_delta": -441,
             "t0": 5969,
             "t0_delta": 1647,
             "unpriced": 0,
@@ -233490,7 +234835,7 @@
                 "label": "Sterling Shepard",
                 "kind": "player",
                 "asset_key": "player:3200",
-                "value": 0,
+                "value": 441,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -256981,9 +258326,9 @@
         "sides": {
           "457779824002330624": {
             "name": "SF69erss",
-            "today": 2961,
+            "today": 3384,
             "sent_today": 0,
-            "today_delta": 2961,
+            "today_delta": 3384,
             "t0": 3690,
             "t0_delta": 1245.1,
             "unpriced": 0,
@@ -256994,7 +258339,7 @@
                 "label": "Marquez Valdes-Scantling",
                 "kind": "player",
                 "asset_key": "player:5086",
-                "value": 0,
+                "value": 423,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -257030,8 +258375,8 @@
           "458004578168729600": {
             "name": "ARae",
             "today": 0,
-            "sent_today": 2961,
-            "today_delta": -2961,
+            "sent_today": 3384,
+            "today_delta": -3384,
             "t0": 2444.9,
             "t0_delta": -1245.1,
             "unpriced": 0,
@@ -257054,7 +258399,7 @@
                 "label": "Marquez Valdes-Scantling",
                 "kind": "player",
                 "asset_key": "player:5086",
-                "value": 0,
+                "value": 423,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -260734,8 +262079,8 @@
           "457779824002330624": {
             "name": "SF69erss",
             "today": 0,
-            "sent_today": 0,
-            "today_delta": 0,
+            "sent_today": 423,
+            "today_delta": -423,
             "t0": 2905.266592920354,
             "t0_delta": -2340.733407079646,
             "unpriced": 0,
@@ -260758,7 +262103,7 @@
                 "label": "Marquez Valdes-Scantling",
                 "kind": "player",
                 "asset_key": "player:5086",
-                "value": 0,
+                "value": 423,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
@@ -260781,9 +262126,9 @@
           },
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 0,
+            "today": 423,
             "sent_today": 0,
-            "today_delta": 0,
+            "today_delta": 423,
             "t0": 5246,
             "t0_delta": 2340.733407079646,
             "unpriced": 0,
@@ -260794,7 +262139,7 @@
                 "label": "Marquez Valdes-Scantling",
                 "kind": "player",
                 "asset_key": "player:5086",
-                "value": 0,
+                "value": 423,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,

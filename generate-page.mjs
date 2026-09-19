@@ -4224,7 +4224,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "trumanpick20260919190000";
+    const DATA_V = "sleeperdaily20260919190000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -23884,6 +23884,9 @@ const html = `<!DOCTYPE html>
       if (a.pos) bits.push(a.pos);
       if (a.team) bits.push(a.team);
       if (a.age != null && Number.isFinite(Number(a.age))) bits.push(Number(a.age).toFixed(1) + " y.o.");
+      if (a.roster_slot === "ir" || String(a.injury || "").toUpperCase() === "IR") bits.push("IR");
+      else if (a.roster_slot === "taxi") bits.push("Taxi");
+      if (a.injury && String(a.injury).toUpperCase() !== "IR") bits.push(a.injury);
       if (showOwner && a.owner) bits.push(a.owner);
       if (!skipPe) {
         const pe = homeDeskPe(a);
@@ -32215,6 +32218,9 @@ if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
 }
 if (!fnSrc("pickOwnerName").includes("entry.holder")) {
   throw new Error("pickOwnerName must prefer live Sleeper holder over a stale hop");
+}
+if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.roster_slot")) {
+  throw new Error("calcMeta must show live Sleeper IR / injury on trade options");
 }
 // Username sanitize: generate-page embeds the page in a template literal, so whitespace
 // class must be written as /\\s+/ or the live page gets /s+/ and strips the letter "s"

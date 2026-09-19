@@ -162,6 +162,8 @@ function pricePlayer(sid, name, ownerId, ownerName, curveIdx, vmax, today, today
     owner: ownerName,
     value: value == null ? null : Math.round(value),
     value_flat: flat,
+    injury: extra.injury || null,
+    roster_slot: extra.slot || extra.roster_slot || null,
   };
 }
 
@@ -203,10 +205,13 @@ function hopOwner(row, key, holders) {
 }
 
 /** Sleeper team page: starters, bench, IR, taxi — each player once. */
-function sleeperRosterIds(r) {
+function sleeperRosterRows(r) {
   const starters = (r.starters || []).map(String).filter((id) => id && id !== "0");
   const reserve = (r.reserve || []).map(String).filter(Boolean);
   const taxi = (r.taxi || []).map(String).filter(Boolean);
+  const starterSet = new Set(starters);
+  const reserveSet = new Set(reserve);
+  const taxiSet = new Set(taxi);
   const taken = new Set(starters.concat(reserve, taxi));
   const bench = (r.players || []).map(String).filter((id) => id && !taken.has(id));
   const out = [];
@@ -214,7 +219,8 @@ function sleeperRosterIds(r) {
   for (const id of starters.concat(bench, reserve, taxi)) {
     if (!id || seen.has(id)) continue;
     seen.add(id);
-    out.push(id);
+    const slot = starterSet.has(id) ? "starter" : reserveSet.has(id) ? "ir" : taxiSet.has(id) ? "taxi" : "bench";
+    out.push({ id, slot });
   }
   return out;
 }
@@ -269,9 +275,9 @@ const players = [];
 for (const r of rosters) {
   const ownerId = String(r.owner_id || "");
   const ownerName = nameById[ownerId] || ownerId;
-  const ordered = sleeperRosterIds(r);
+  const ordered = sleeperRosterRows(r);
   let i = 0;
-  for (const pid of ordered) {
+  for (const { id: pid, slot } of ordered) {
     const p = playersNfl[String(pid)] || {};
     let name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ")
       || ktcNameBySid[String(pid)] || String(pid);
@@ -279,11 +285,13 @@ for (const r of rosters) {
       pos: p.position || "",
       team: p.team || "",
       age: p.age == null || p.age === "" ? null : Number(p.age),
+      injury: p.injury_status || null,
+      slot,
     };
     if (looksLikeId(name)) {
       const live = (await sleeperPlayer(pid)) || {};
       if (live.name) name = live.name;
-      extra = { ...extra, ...live };
+      extra = { ...extra, ...live, injury: extra.injury, slot };
     }
     const row = pricePlayer(pid, name, ownerId, ownerName, curveIdx, vmax, today, todayPrice, extra);
     row.roster_ord = i++;

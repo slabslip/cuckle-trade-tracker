@@ -17,6 +17,7 @@ const skipEspn = argv.includes("--skip-espn");
 const skipPage = argv.includes("--skip-page");
 const skipFinishes = argv.includes("--skip-finishes");
 const allowRevalueFail = argv.includes("--allow-revalue-fail");
+const freshPlayers = argv.includes("--fresh-players");
 const leagueArg = argv.find((a) => /^\d{6,64}$/.test(a));
 const leagueId = setLeagueId(leagueArg);
 {
@@ -42,7 +43,7 @@ const leagueId = setLeagueId(leagueArg);
   }
 }
 const steps = [
-  ["sleeper-sync.mjs", leagueId],
+  ["sleeper-sync.mjs", leagueId, ...(freshPlayers ? ["--fresh-players"] : [])],
   ...(skipEspn ? [] : [["espn-sync.mjs", leagueId]]),
   ["yahoo-sync.mjs", leagueId],
   ["merge-provider-history.mjs", leagueId],

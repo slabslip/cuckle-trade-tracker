@@ -1,0 +1,146 @@
+{
+  "as_of": "2026-09-19",
+  "n": 20,
+  "players": {
+    "4983": {
+      "name": "DJ Moore",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "BUF",
+      "pos": "WR"
+    },
+    "5189": {
+      "name": "Eddy Pineiro",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SF",
+      "pos": "K"
+    },
+    "5849": {
+      "name": "Kyler Murray",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "MIN",
+      "pos": "QB"
+    },
+    "5850": {
+      "name": "Josh Jacobs",
+      "injury_status": "NA",
+      "status": "Active",
+      "team": "GB",
+      "pos": "RB"
+    },
+    "5859": {
+      "name": "A.J. Brown",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "NE",
+      "pos": "WR"
+    },
+    "6770": {
+      "name": "Joe Burrow",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CIN",
+      "pos": "QB"
+    },
+    "6819": {
+      "name": "Michael Pittman",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "PIT",
+      "pos": "WR"
+    },
+    "7569": {
+      "name": "Nico Collins",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "HOU",
+      "pos": "WR"
+    },
+    "8144": {
+      "name": "Chris Olave",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NO",
+      "pos": "WR"
+    },
+    "8205": {
+      "name": "Isiah Pacheco",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "DET",
+      "pos": "RB"
+    },
+    "8408": {
+      "name": "Jordan Mason",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "MIN",
+      "pos": "RB"
+    },
+    "9493": {
+      "name": "Puka Nacua",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "WR"
+    },
+    "9502": {
+      "name": "Tank Dell",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "HOU",
+      "pos": "WR"
+    },
+    "9753": {
+      "name": "Zach Charbonnet",
+      "injury_status": "PUP",
+      "status": "Active",
+      "team": "SEA",
+      "pos": "RB"
+    },
+    "9997": {
+      "name": "Zay Flowers",
+      "injury_status": "Doubtful",
+      "status": "Active",
+      "team": "BAL",
+      "pos": "WR"
+    },
+    "11604": {
+      "name": "Brock Bowers",
+      "injury_status": "Doubtful",
+      "status": "Active",
+      "team": "LV",
+      "pos": "TE"
+    },
+    "11635": {
+      "name": "Ladd McConkey",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAC",
+      "pos": "WR"
+    },
+    "12489": {
+      "name": "RJ Harvey",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "RB"
+    },
+    "13281": {
+      "name": "Jordyn Tyson",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "NO",
+      "pos": "WR"
+    },
+    "13414": {
+      "name": "Kaelon Black",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SF",
+      "pos": "RB"
+    }
+  }
+}

@@ -293,7 +293,7 @@ w_dd   = 0.20   // DynastyDealer base_value
 
 `build.mjs` / `league-sync` use the latest **committed** snaps. They do not scrape.
 
-**Nightly tape:** [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) pulls Sleeper transactions + rosters for every booked league each morning. Do not let `revalue` self-checks (`even today is retired/ktc blend` and kin) skip that commit.
+**Nightly tape:** [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) pulls Sleeper transactions + rosters + injury for every booked league at 08:10 and 22:20 UTC. Force-refresh `/players/nfl` so IR / Out is same-day. Do not let `revalue` self-checks (`even today is retired/ktc blend` and kin) skip that commit. Plan: [`plans/sleeper_daily_sweep.md`](./plans/sleeper_daily_sweep.md).
 
 **Live pick holders:** calculator trade options use Sleeper `/traded_picks` (`traded_picks.json`), not the last hop on the tape. A missed later flip left TrumanCooper offering Bubba’s 2028 3rd after that pick was already back with Bubba.
 

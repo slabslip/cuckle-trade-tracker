@@ -63,6 +63,22 @@ try {
     const slug = seat.name.toLowerCase();
     await page.locator(".team-schematic").screenshot({ path: `${shotDir}/analyzer-${slug}.png` });
     await page.screenshot({ path: `${shotDir}/analyzer-${slug}-home.png` });
+    const png = await page.evaluate((uid) => {
+      const canvas = teamAnalyzerShareDraw(uid);
+      if (!canvas) return null;
+      return {
+        w: canvas.width,
+        h: canvas.height,
+        data: canvas.toDataURL("image/png"),
+      };
+    }, seat.uid);
+    if (!png || !png.data) fail(seat.name + " share PNG missing");
+    else if (png.w !== 1080 || png.h < 1400) fail(seat.name + " share PNG is not a full card " + png.w + "x" + png.h);
+    else {
+      const buf = Buffer.from(png.data.replace(/^data:image\/png;base64,/, ""), "base64");
+      fs.writeFileSync(`${shotDir}/share-${slug}.png`, buf);
+      console.log("PNG " + seat.name + " " + png.w + "x" + png.h + " " + buf.length);
+    }
   }
 
   const homeBg = await page.locator(".team-schematic").evaluate((el) => getComputedStyle(el).backgroundColor);

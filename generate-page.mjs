@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerloops20260919224500";
+    const DATA_V = "analyzersave20260919231500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26528,82 +26528,304 @@ const html = `<!DOCTYPE html>
         + "</section>";
     }
 
+    function teamAnalyzerShareWrap(ctx, text, maxW) {
+      const words = String(text || "").split(/\s+/).filter(Boolean);
+      const lines = [];
+      let cur = "";
+      words.forEach(function (w) {
+        const next = cur ? cur + " " + w : w;
+        if (cur && ctx.measureText(next).width > maxW) {
+          lines.push(cur);
+          cur = w;
+        } else cur = next;
+      });
+      if (cur) lines.push(cur);
+      return lines.length ? lines : [""];
+    }
+
+    function teamAnalyzerShareBar(ctx, x, y, w, h, pct) {
+      const fill = Math.max(0, Math.min(1, Number(pct) || 0));
+      ctx.fillStyle = "#1a1a1e";
+      if (typeof calcShareRound === "function") calcShareRound(ctx, x, y, w, h, h / 2);
+      else ctx.rect(x, y, w, h);
+      ctx.fill();
+      const fw = Math.max(fill > 0 ? 2 : 0, w * fill);
+      if (!fw) return;
+      const g = ctx.createLinearGradient(x, y, x + w, y);
+      g.addColorStop(0, "#34d399");
+      g.addColorStop(0.5, "#e0b44c");
+      g.addColorStop(1, "#ff6b3d");
+      ctx.save();
+      ctx.beginPath();
+      if (typeof calcShareRound === "function") calcShareRound(ctx, x, y, fw, h, h / 2);
+      else ctx.rect(x, y, fw, h);
+      ctx.clip();
+      ctx.fillStyle = g;
+      ctx.fillRect(x, y, w, h);
+      ctx.restore();
+    }
+
     function teamAnalyzerShareDraw(uid, name) {
       const card = teamAnalyzerCard(uid, name);
       const W = 1080;
-      const PAD = 56;
-      const lineupN = Math.min((card.lineup || []).length, 10);
-      const H = 280 + lineupN * 44 + 300;
+      const S = W / 390;
+      const px = function (n) { return n * S; };
+      const FONT = "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      const lineup = card.lineup || [];
+      const sell = (card.moves && card.moves.sell) || [];
+      const targets = (card.moves && card.moves.targets) || [];
+      const outlook = card.outlook || [];
+      const years = ["YR1", "YR2", "YR3"];
+      const draftNote = card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · top 12 scored like roster slots";
+      const measure = document.createElement("canvas").getContext("2d");
+      if (!measure) return null;
+      measure.font = "650 " + px(12.5) + "px " + FONT;
+      const noteLines = teamAnalyzerShareWrap(measure, card.depth && card.depth.note, px(173));
+      const draftLines = teamAnalyzerShareWrap(measure, draftNote, px(173));
+      const whyLines = card.why ? teamAnalyzerShareWrap(measure, card.why, px(350)) : [];
+      const lineH = 22;
+      const boxPad = 12;
+      const head = 20;
+      const half = function (n) { return boxPad + head + n * lineH + 10; };
+      const cssH = 14 + 86 + 1
+        + (boxPad + head + lineup.length * lineH + 10)
+        + 1 + Math.max(118, 86 + noteLines.length * 16)
+        + 1 + Math.max(half(4), half(Math.max(sell.length, 1)))
+        + 1 + half(Math.max(targets.length, 1))
+        + 1 + 88
+        + 1 + Math.max(148, 96 + draftLines.length * 16)
+        + (card.why ? 1 + boxPad + head + whyLines.length * 16 + 10 : 0)
+        + 14;
+      const H = Math.ceil(px(cssH));
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
+      const LINE = "#2a2a30";
+      const TEXT = "#f0f0f0";
+      const DIM = "#8a8a93";
+      const MUTED = "#9a9aa3";
+      const GOLD = "#e0b44c";
       ctx.fillStyle = "#121214";
       ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "#2a2a30";
-      ctx.lineWidth = 2;
-      if (typeof calcShareRound === "function") calcShareRound(ctx, 24, 24, W - 48, H - 48, 28);
-      else ctx.rect(24, 24, W - 48, H - 48);
+      ctx.strokeStyle = LINE;
+      ctx.lineWidth = Math.max(1, px(1));
+      if (typeof calcShareRound === "function") calcShareRound(ctx, 0.5, 0.5, W - 1, H - 1, px(14));
       ctx.stroke();
-      ctx.fillStyle = "#8a8a93";
-      ctx.font = "750 20px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("TEAM ANALYZER", PAD, 78);
-      ctx.fillStyle = "#f0f0f0";
-      ctx.font = "800 44px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.fillText(card.name, PAD, 128);
-      ctx.fillStyle = "#e0b44c";
-      ctx.font = "800 28px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.textAlign = "right";
-      ctx.fillText(card.overall + " / 10", W - PAD, 88);
-      ctx.fillStyle = "#8a8a93";
-      ctx.font = "700 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.fillText(card.arch, W - PAD, 120);
-      let y = 180;
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#8a8a93";
-      ctx.font = "800 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.fillText("STARTING LINEUP", PAD, y);
-      y += 36;
-      (card.lineup || []).slice(0, 10).forEach(function (p) {
-        ctx.fillStyle = "#8a8a93";
-        ctx.font = "800 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText(p.pos, PAD, y);
-        ctx.fillStyle = "#f0f0f0";
-        ctx.font = "700 24px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText(p.name, PAD + 80, y);
-        y += 44;
-      });
-      y += 16;
-      const cells = [
-        ["QB", card.grades.QB],
-        ["RB", card.grades.RB],
-        ["WR", card.grades.WR],
-        ["TE", card.grades.TE],
-        ["Depth", card.depth.score],
-        ["Draft", card.draft],
-      ];
-      const cellW = (W - PAD * 2 - 40) / 3;
-      cells.forEach(function (cell, i) {
-        const cx = PAD + (i % 3) * (cellW + 20);
-        const cy = y + Math.floor(i / 3) * 110;
-        ctx.fillStyle = "#1a1a1e";
-        if (typeof calcShareRound === "function") calcShareRound(ctx, cx, cy, cellW, 90, 14);
-        else ctx.rect(cx, cy, cellW, 90);
-        ctx.fill();
-        ctx.fillStyle = "#8a8a93";
-        ctx.font = "800 16px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      function heading(label, x, y) {
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(9.6) + "px " + FONT;
         ctx.textAlign = "left";
-        ctx.fillText(String(cell[0]).toUpperCase(), cx + 16, cy + 32);
-        ctx.fillStyle = "#f0f0f0";
-        ctx.font = "800 36px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-        ctx.fillText(String(cell[1]) + " / 10", cx + 16, cy + 72);
-      });
+        ctx.fillText(String(label || "").toUpperCase(), x, y);
+      }
+      function row(pos, left, right, x, y, w) {
+        ctx.textAlign = "left";
+        if (pos) {
+          ctx.fillStyle = DIM;
+          ctx.font = "800 " + px(10) + "px " + FONT;
+          ctx.fillText(pos, x, y);
+        }
+        ctx.fillStyle = TEXT;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        const leftX = pos ? x + px(28) : x;
+        const rightW = right ? ctx.measureText(right).width + px(8) : 0;
+        const leftW = w - (pos ? px(28) : 0) - rightW;
+        ctx.fillText(typeof calcShareFit === "function" ? calcShareFit(ctx, left, leftW) : left, leftX, y);
+        if (right) {
+          ctx.fillStyle = MUTED;
+          ctx.textAlign = "right";
+          ctx.fillText(right, x + w, y);
+          ctx.textAlign = "left";
+        }
+      }
+      let y = px(14);
+      const inset = px(14);
+      const inner = W - inset * 2;
+      ctx.fillStyle = DIM;
+      ctx.font = "700 " + px(10.9) + "px " + FONT;
       ctx.textAlign = "left";
-      ctx.fillStyle = "#8a8a93";
-      ctx.font = "500 18px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.fillText("Chuckle Fantasy", PAD, H - 48);
+      ctx.fillText("TEAM ANALYZER", inset, y + px(12));
+      ctx.fillStyle = TEXT;
+      ctx.font = "800 " + px(19.2) + "px " + FONT;
+      ctx.fillText(typeof calcShareFit === "function" ? calcShareFit(ctx, card.name, inner * 0.54) : card.name, inset, y + px(40));
+      ctx.textAlign = "right";
+      ctx.fillStyle = DIM;
+      ctx.font = "800 " + px(9.9) + "px " + FONT;
+      ctx.fillText("TEAM GRADE", W - inset, y + px(12));
+      ctx.fillStyle = GOLD;
+      ctx.font = "800 " + px(15.2) + "px " + FONT;
+      ctx.fillText(card.overall + " / 10", W - inset, y + px(32));
+      ctx.fillStyle = DIM;
+      ctx.font = "800 " + px(9.9) + "px " + FONT;
+      ctx.fillText("ARCHETYPE", W - inset, y + px(52));
+      ctx.fillStyle = GOLD;
+      ctx.font = "800 " + px(15.2) + "px " + FONT;
+      ctx.fillText(typeof calcShareFit === "function" ? calcShareFit(ctx, card.arch, inner * 0.42) : card.arch, W - inset, y + px(72));
+      y += px(86);
+      const boxes = [];
+      function pushBox(span2, h, paint) {
+        boxes.push({ span2: span2, h: h, paint: paint });
+      }
+      pushBox(true, boxPad + head + lineup.length * lineH + 10, function (x, top, w) {
+        heading("Starting lineup", x, top + px(head - 4));
+        lineup.forEach(function (p, i) {
+          const meta = ((p.injury ? p.injury + " · " : "") + (p.team || "")).replace(/\s+$/, "");
+          row(p.pos, p.name, meta, x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      const depthH = Math.max(118, 86 + noteLines.length * 16);
+      pushBox(false, depthH, function (x, top, w) {
+        heading("Depth score", x, top + px(head - 4));
+        ctx.fillStyle = TEXT;
+        ctx.font = "800 " + px(28.8) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText(String(card.depth.score), x, top + px(52));
+        const scoreW = ctx.measureText(String(card.depth.score)).width;
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(13.6) + "px " + FONT;
+        ctx.fillText("/10", x + scoreW + px(4), top + px(52));
+        teamAnalyzerShareBar(ctx, x, top + px(62), w, px(8), card.depth.score / 10);
+        ctx.fillStyle = MUTED;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        noteLines.forEach(function (ln, i) {
+          ctx.fillText(ln, x, top + px(86 + i * 16));
+        });
+      });
+      pushBox(false, depthH, function (x, top) {
+        heading("3-year outlook", x, top + px(head - 4));
+        outlook.forEach(function (lab, i) {
+          const label = years[i] + " " + lab;
+          ctx.font = "800 " + px(10) + "px " + FONT;
+          const tw = ctx.measureText(label).width + px(12);
+          const py = top + px(28 + i * 24);
+          ctx.fillStyle = i === 0 ? GOLD : "#1a1a1e";
+          if (typeof calcShareRound === "function") calcShareRound(ctx, x, py, tw, px(18), px(4));
+          else ctx.rect(x, py, tw, px(18));
+          ctx.fill();
+          ctx.fillStyle = i === 0 ? "#0b0b0d" : TEXT;
+          ctx.textAlign = "left";
+          ctx.fillText(label, x + px(6), py + px(13));
+        });
+      });
+      const sellRows = sell.length ? sell : ["No leftover to move"];
+      const midH = Math.max(half(4), half(sellRows.length));
+      pushBox(false, midH, function (x, top, w) {
+        heading("Cornerstones", x, top + px(head - 4));
+        ["QB", "RB", "WR", "TE"].forEach(function (pos, i) {
+          row(pos, (card.corner && card.corner[pos]) || "—", "", x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      pushBox(false, midH, function (x, top, w) {
+        heading("Look to trade", x, top + px(head - 4));
+        sellRows.forEach(function (n, i) {
+          row("", n, "", x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      pushBox(false, half(Math.max(targets.length, 1)), function (x, top, w) {
+        heading("Players to target", x, top + px(head - 4));
+        targets.forEach(function (n, i) {
+          row("", n, "", x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      pushBox(true, 88, function (x, top, w) {
+        heading("Contend / rebuild", x, top + px(head - 4));
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(11.2) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText("C", x, top + px(48));
+        ctx.textAlign = "right";
+        ctx.fillText("R", x + w, top + px(48));
+        teamAnalyzerShareBar(ctx, x + px(18), top + px(40), w - px(36), px(8), (card.scale || 0) / 100);
+        ctx.textAlign = "left";
+        ctx.fillStyle = MUTED;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        ctx.fillText(card.label || "", x, top + px(70));
+      });
+      const gradeH = Math.max(148, 96 + draftLines.length * 16);
+      pushBox(false, gradeH, function (x, top, w) {
+        heading("Positional grades", x, top + px(head - 4));
+        const cell = w / 4;
+        ["QB", "RB", "WR", "TE"].forEach(function (pos, i) {
+          const cx = x + i * cell + cell / 2;
+          const gh = px(36);
+          const gw = px(10);
+          const gx = cx - gw / 2;
+          const gy = top + px(26);
+          ctx.fillStyle = "#1a1a1e";
+          if (typeof calcShareRound === "function") calcShareRound(ctx, gx, gy, gw, gh, px(99));
+          ctx.fill();
+          const pct = Math.max(0, Math.min(1, (card.grades[pos] || 0) / 10));
+          const fh = Math.max(px(2), gh * pct);
+          const g = ctx.createLinearGradient(gx, gy + gh, gx, gy);
+          g.addColorStop(0, "#ff6b3d");
+          g.addColorStop(0.5, "#e0b44c");
+          g.addColorStop(1, "#34d399");
+          ctx.fillStyle = g;
+          if (typeof calcShareRound === "function") calcShareRound(ctx, gx, gy + gh - fh, gw, fh, px(99));
+          ctx.fill();
+          ctx.textAlign = "center";
+          ctx.fillStyle = DIM;
+          ctx.font = "800 " + px(9.3) + "px " + FONT;
+          ctx.fillText(pos, cx, gy + gh + px(14));
+          ctx.fillStyle = TEXT;
+          ctx.font = "800 " + px(15.2) + "px " + FONT;
+          ctx.fillText(String(card.grades[pos]), cx, gy + gh + px(32));
+        });
+      });
+      pushBox(false, gradeH, function (x, top, w) {
+        heading("Draft capital", x, top + px(head - 4));
+        ctx.fillStyle = TEXT;
+        ctx.font = "800 " + px(28.8) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText(String(card.draft), x, top + px(52));
+        const scoreW = ctx.measureText(String(card.draft)).width;
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(13.6) + "px " + FONT;
+        ctx.fillText("/10", x + scoreW + px(4), top + px(52));
+        teamAnalyzerShareBar(ctx, x, top + px(62), w, px(8), card.draft / 10);
+        ctx.fillStyle = MUTED;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        draftLines.forEach(function (ln, i) {
+          ctx.fillText(ln, x, top + px(86 + i * 16));
+        });
+      });
+      if (card.why) {
+        pushBox(true, boxPad + head + whyLines.length * 16 + 10, function (x, top) {
+          heading("Note", x, top + px(head - 4));
+          ctx.fillStyle = MUTED;
+          ctx.font = "650 " + px(12.5) + "px " + FONT;
+          ctx.textAlign = "left";
+          whyLines.forEach(function (ln, i) {
+            ctx.fillText(ln, x, top + px(head + 12 + i * 16));
+          });
+        });
+      }
+      let i = 0;
+      while (i < boxes.length) {
+        const a = boxes[i];
+        if (a.span2) {
+          ctx.fillStyle = LINE;
+          ctx.fillRect(0, y, W, px(1));
+          a.paint(inset, y + px(boxPad), inner);
+          y += px(a.h);
+          i += 1;
+          continue;
+        }
+        const b = boxes[i + 1] && !boxes[i + 1].span2 ? boxes[i + 1] : null;
+        const rowH = Math.max(a.h, b ? b.h : a.h);
+        const col = (inner - px(1)) / 2;
+        ctx.fillStyle = LINE;
+        ctx.fillRect(0, y, W, px(1));
+        a.paint(inset, y + px(boxPad), col);
+        if (b) {
+          ctx.fillStyle = LINE;
+          ctx.fillRect(inset + col, y, px(1), px(rowH));
+          b.paint(inset + col + px(1), y + px(boxPad), col);
+          i += 2;
+        } else i += 1;
+        y += px(rowH);
+      }
       return canvas;
     }
 

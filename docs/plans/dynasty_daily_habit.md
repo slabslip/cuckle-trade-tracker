@@ -330,7 +330,10 @@ grade is 70% positions / 15% depth / 15% draft. Two seats may share a
 grade — there is no league curve. Archetype is Dual elite QB / Elite QB /
 Dual elite [pos] else the seat-direction label. Outlook and C↔R stay
 captions from `seat-direction.json` (`Hard rebuild` is 86 on the bar).
-The gold chip saves `cuckle-<seat>.png`. Depth names the extras that
+The gold chip saves `cuckle-<seat>.png` as the full dashboard card
+(lineup, depth, outlook, cornerstones, leftover, targets, C↔R,
+positional grades, draft, note) — not a short six-cell picture.
+Depth names the extras that
 exist, not a hard-coded eight. Look to trade is leftover names only —
 never seat-direction labels like `QB`. `scripts/loop-team-analyzer.mjs`
 reprints all ten seats. No `fmt()`, no bag totals, no new value formula.

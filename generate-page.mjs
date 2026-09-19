@@ -26384,7 +26384,7 @@ const html = `<!DOCTYPE html>
       const note = miss
         ? "Short a starter"
         : (startable
-          ? (startable + " of 8 backup spots " + (startable === 1 ? "is" : "are") + " starter value")
+          ? (startable + " of " + n + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
           : "Backups sit below starter value");
       return { score: score, note: note };
     }

@@ -65,6 +65,9 @@ need(gen.includes("function teamAnalyzerHtml(") && gen.includes("teamAnalyzerHtm
 need(plan.includes("team analyzer") && plan.includes("dashboard chrome")
   && plan.includes("teamAnalyzerValueGrade"),
   "plan must lock the dashboard team analyzer and value grades");
+need(fs.existsSync(`${ROOT}scripts/loop-team-analyzer.mjs`)
+  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,"),
+  "dozen analyzer loops must stay on the book");
 
 const DESK_STUD = 5500;
 const DESK_START = 2200;
@@ -107,7 +110,7 @@ function draftOf(uid) {
 
 const truman = "458342725222133760";
 const king = "458715702119886848";
-const arae = "457945712932417536";
+const arae = "458004578168729600";
 const gTruman = gradesOf(bagOf(truman));
 const gKing = gradesOf(bagOf(king));
 const gARae = gradesOf(bagOf(arae));

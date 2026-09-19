@@ -326,8 +326,9 @@ scale, not vs the league floor. Draft capital sums owned `calcBook.picks`
 values vs twelve starter cuts. Team grade is 70% positions / 15% depth / 15% draft.
 Archetype is Dual elite QB / Elite QB / Dual elite [pos] else the
 seat-direction label. Outlook and C↔R stay captions from
-`seat-direction.json`. The gold chip saves `cuckle-team.png`. No `fmt()`,
-no bag totals, no new value formula.
+`seat-direction.json`. The gold chip saves `cuckle-team.png`. Depth names the extras that
+exist, not a hard-coded eight. `scripts/loop-team-analyzer.mjs` reprints
+all ten seats. No `fmt()`, no bag totals, no new value formula.
 
 ---
 

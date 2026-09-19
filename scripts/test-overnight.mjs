@@ -29,6 +29,12 @@ need(script.includes("irScore") && script.includes("readUi") && script.includes(
   "IR board must rank by the existing value book, not taxi soup");
 need(!script.includes("Text this") && !page.includes("That's not how I remember"),
   "overnight must not ship the lame Text this poke");
+need(page.includes("function overnightEnabled(") && page.includes("isRedraftLeague()")
+  && page.includes("isGmLeague()"),
+  "overnight must stay off GM / redraft Home");
+need(fnSrc(page, "overnightSlipHtml").includes("overnightEnabled()")
+  && fnSrc(page, "ensureOvernight").includes("overnightEnabled()"),
+  "dynasty Home paints the letter; redraft Home must not");
 need(page.includes("function overnightSlipHtml(") && page.includes('q.set("r", "overnight")'),
   "Home must paint the letter and share ?r=overnight");
 need(page.includes("data-overnight-share") && page.includes("overnightShareText("),
@@ -39,7 +45,7 @@ need(page.includes("overnight-slip-lede") && page.includes("letter.lede")
 need(page.includes('q.kind === "overnight"') && page.includes('view === "overnight"'),
   "unsigned share link must open the overnight ticket");
 need(gen.includes("function overnightSlipHtml(") && gen.includes('q.set("r", "overnight")')
-  && gen.includes("overnight-slip-lede"),
+  && gen.includes("overnight-slip-lede") && gen.includes("function overnightEnabled("),
   "generate-page.mjs must stay in sync (do not execute it)");
 need(fnSrc(page, "overnightSlipHtml").includes("Text this") === false
   && fnSrc(page, "overnightShareText").includes("Text this") === false,

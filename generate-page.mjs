@@ -4261,7 +4261,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "overnight20260919200000";
+    const DATA_V = "overnight20260919213000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8043,9 +8043,9 @@ const html = `<!DOCTYPE html>
       if (league && league.name) activeLeague = Object.assign({}, activeLeague, { name: league.name });
       if (q.lens && WINDOWS.some(function (w) { return w[0] === q.lens; })) lens = q.lens;
       if (q.kind === "overnight") {
-        view = "overnight";
+        view = (typeof overnightEnabled === "function" && !overnightEnabled()) ? "trade" : "overnight";
         openId = null;
-        if (typeof ensureOvernight === "function") ensureOvernight();
+        if (view === "overnight" && typeof ensureOvernight === "function") ensureOvernight();
       } else if (q.kind === "pick" && q.pick) {
         receiptPickKey = q.pick;
         view = "trade";
@@ -8740,7 +8740,18 @@ const html = `<!DOCTYPE html>
 
 
 
+    function overnightEnabled() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return false;
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return false;
+      return true;
+    }
+
     function ensureOvernight() {
+      if (!overnightEnabled()) {
+        overnight = null;
+        overnightLoading = false;
+        return;
+      }
       if (overnight || overnightLoading) return;
       overnightLoading = true;
       getLeagueJson("overnight.json").then((book) => {
@@ -8805,6 +8816,7 @@ const html = `<!DOCTYPE html>
 
     function overnightSlipHtml(opts) {
       opts = opts || {};
+      if (!overnightEnabled()) return "";
       ensureOvernight();
       const letter = overnight;
       if (!letter) return "";
@@ -8857,6 +8869,7 @@ const html = `<!DOCTYPE html>
 
     function honorOvernightShare() {
       try {
+        if (!overnightEnabled()) return false;
         const q = new URLSearchParams(location.search);
         if (String(q.get("r") || "") !== "overnight") return false;
         me = null;
@@ -9308,6 +9321,8 @@ const html = `<!DOCTYPE html>
       seatDirection = null;
       weekScoresBook = null;
       finishesBook = null;
+      overnight = null;
+      overnightLoading = false;
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -32405,8 +32420,8 @@ if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.ro
   throw new Error("calcMeta must show live Sleeper IR / injury on trade options");
 }
 if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
-  || !inline.includes("data-overnight-share")) {
-  throw new Error("Home overnight must be a shareable league letter");
+  || !inline.includes("data-overnight-share") || !inline.includes("function overnightEnabled(")) {
+  throw new Error("Home overnight must be a shareable league letter on dynasty only");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

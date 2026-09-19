@@ -1,8 +1,10 @@
 # Dynasty dashboard — the overnight letter
 
-**Status:** v1 shipping. Home paints one **league** overnight letter with a gold
-share chip. The share is a text + `?r=overnight&league=&src=share` link, not a
-first-person “Text this” poke.
+**Status:** v1 shipping on **Cuckle dynasty Home only**. `overnightEnabled()`
+is false for GM / any redraft book. Home paints one **league** overnight letter
+with a gold share chip. The share is a text + `?r=overnight&league=&src=share`
+link, not a first-person “Text this” poke. GM gets its own voice later. Do not
+mix the books.
 
 **Companion:** tape cadence [`sleeper_daily_sweep.md`](./sleeper_daily_sweep.md)
 (PR #157). Memory chips [`MEMORY_SDD.md`](../MEMORY_SDD.md). Home law

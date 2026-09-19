@@ -154,7 +154,7 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 `generate-page`.
 
 Home digest + calc + barracks archive: [`plans/home_digest.md`](plans/home_digest.md).
-**Home overnight (v1, Cuckle dynasty only):** league letter each night in dashboard chrome (Out / IR on the card; trades, wire, meters behind Show all), gold share chip, `?r=overnight` link — [`plans/dynasty_daily_habit.md`](./plans/dynasty_daily_habit.md). Off on GM / redraft. **Team analyzer** on every dynasty team home uses dashboard chrome (same card as the Home letter), scores slots and picks with `calcValueNum` against `deskCuts` (not vs the league), and the gold chip saves a PNG. Next need cut: hurt starter → cuff owner (or unowned), still on that card.
+**Home overnight (v1, Cuckle dynasty only):** league letter each night in dashboard chrome (Out / IR on the card; trades, wire, meters behind Show all), gold share chip, `?r=overnight` link — [`plans/dynasty_daily_habit.md`](./plans/dynasty_daily_habit.md). Off on GM / redraft. **Team analyzer** on every dynasty team home uses dashboard chrome (same card as the Home letter), scores desk slots and the top 12 picks with `teamAnalyzerValueGrade` (`calcValueNum` vs `deskCuts`, not vs the league; same bag reprints the same 0–10), and the gold chip saves a PNG. Next need cut: hurt starter → cuff owner (or unowned), still on that card.
 Memory / proof tiles: [`MEMORY_SDD.md`](./MEMORY_SDD.md).
 Titles/emblems law: [`COSMETICS_SDD.md`](COSMETICS_SDD.md). Award expansion:
 [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).

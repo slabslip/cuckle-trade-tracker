@@ -68,7 +68,8 @@ function bagOf(uid) {
   return (book.players || []).filter((p) => p && String(p.owner_id) === String(uid));
 }
 function picksOf(uid) {
-  return (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid));
+  return (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid))
+    .sort((a, b) => calcValueNum(b) - calcValueNum(a));
 }
 function gradesOf(bag, slots, cuts) {
   const s = slots || DESK_SLOTS;
@@ -107,12 +108,15 @@ function depthOf(bag, slots, cuts) {
     miss: miss,
   };
 }
+function draftFrom(picks, cuts) {
+  const ordered = (picks || []).slice().sort((a, b) => calcValueNum(b) - calcValueNum(a));
+  const need = 12;
+  let pts = 0;
+  for (let i = 0; i < need; i++) pts += valueGrade(ordered[i] ? calcValueNum(ordered[i]) : -1, cuts);
+  return round10(pts / need);
+}
 function draftOf(uid, cuts) {
-  const picks = picksOf(uid);
-  if (!picks.length) return 0;
-  const start = (cuts || { start: DESK_START }).start;
-  const sum = picks.reduce((s, p) => s + Math.max(0, calcValueNum(p)), 0);
-  return round10(10 * sum / Math.max(1, start * 12));
+  return draftFrom(picksOf(uid), cuts);
 }
 function overallOf(grades, depth, draft) {
   const pos = ((grades.QB || 0) + (grades.RB || 0) + (grades.WR || 0) + (grades.TE || 0)) / 4;
@@ -148,7 +152,8 @@ loop(2, seats.every((s) => {
 loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, TE: 0 })
   && depthOf([]).score === 0
   && overallOf({ QB: 0, RB: 0, WR: 0, TE: 0 }, { score: 0 }, 0) === 0
-  && draftOf("no-such-seat") === 0,
+  && draftOf("no-such-seat") === 0
+  && draftFrom([]) === 0,
   "empty bag and missing picks grade 0, not NaN");
 
 // 4 Missing a position is a zero slot, not a skip
@@ -169,7 +174,8 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
     { pos: "WR" },
   ];
   const g = gradesOf(junk);
-  loop(5, g.RB === 0 && g.WR === 0 && valueGrade(null) === 0 && valueGrade("x") === 0,
+  loop(5, g.RB === 0 && g.WR === 0 && valueGrade(null) === 0 && valueGrade("x") === 0
+    && draftFrom([{ value: null }, { value: "nope" }, { value: -9 }]) === 0,
     "null / NaN / string / negative values grade 0");
 }
 
@@ -198,8 +204,10 @@ loop(6, valueGrade(DESK_STUD) === 10
   loop(8, king && arae && tips
     && king.grades.RB > arae.grades.RB
     && tips.draft < arae.draft
-    && king.grades.WR >= 7,
-    "KingHenry RB beats ARae; TipsUp pick chest grades under ARae");
+    && king.grades.WR >= 7
+    && arae.draft >= 7
+    && tips.draft <= 2,
+    "KingHenry RB beats ARae; TipsUp thin chest grades under ARae firsts");
 }
 
 // 9 Team grade is the published mix, not a new curve
@@ -208,14 +216,24 @@ loop(9, seats.every((s) => {
   return expect === s.overall;
 }), "team grade is 70% positions / 15% depth / 15% draft");
 
-// 10 Depth counts the extras that exist, not a hardcoded 8
+// 10 Draft is a 12-slot valueGrade chest — extras and late 4ths cannot pad to 10
 {
-  const depthFn = fnSrc(page, "teamAnalyzerDepth");
-  loop(10, depthFn.includes("of 8 backup spots") === false
-    && depthFn.includes("startable")
-    && depthFn.includes("n ?")
-    && seats.every((s) => s.depth.n >= 0 && s.depth.n <= 8),
-    "depth note uses the extras that exist, not a hard-coded 8");
+  const draftFn = fnSrc(page, "teamAnalyzerDraft");
+  const twelveStart = Array.from({ length: 12 }, () => ({ value: DESK_START }));
+  const twentyStart = Array.from({ length: 20 }, () => ({ value: DESK_START }));
+  const twelveStud = Array.from({ length: 12 }, () => ({ value: DESK_STUD }));
+  const twentyLate = Array.from({ length: 20 }, () => ({ value: 1400 }));
+  const twoFirsts = [{ value: 5785 }, { value: 3667 }];
+  loop(10, draftFn.includes("teamAnalyzerValueGrade")
+    && draftFn.includes("const need = 12")
+    && draftFn.includes("start * 12") === false
+    && draftFrom(twelveStart) === 7
+    && draftFrom(twentyStart) === 7
+    && draftFrom(twelveStud) === 10
+    && draftFrom(twentyLate) <= 4
+    && draftFrom(twoFirsts) <= 2
+    && fnSrc(page, "teamAnalyzerDepth").includes("of 8 backup spots") === false,
+    "draft scores top 12 like roster slots; late 4ths and extra picks do not pad to 10");
 }
 
 // 11 Page and generate-page stay on the same formula
@@ -223,8 +241,10 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerGrades") === fnSrc(gen, "teamAnalyzerGrades")
   && fnSrc(page, "teamAnalyzerDraft") === fnSrc(gen, "teamAnalyzerDraft")
   && fnSrc(page, "teamAnalyzerOverall") === fnSrc(gen, "teamAnalyzerOverall")
+  && fnSrc(page, "teamAnalyzerScale") === fnSrc(gen, "teamAnalyzerScale")
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
-  && fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false,
+  && fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
+  && fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"'),
   "index.html and generate-page.mjs share one grade formula; no league floor, no fmt");
 
 // 12 Two equal bags can share a grade; different bags can too — no forced curve

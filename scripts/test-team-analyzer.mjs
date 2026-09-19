@@ -47,6 +47,14 @@ need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
 need(fnSrc(page, "teamAnalyzerDraft").includes("calcBook.picks")
   || fnSrc(page, "teamAnalyzerPicks").includes("calcBook.picks"),
   "draft capital must use live pick values on the calculator book");
+need(fnSrc(page, "teamAnalyzerDraft").includes("teamAnalyzerValueGrade")
+  && fnSrc(page, "teamAnalyzerDraft").includes("const need = 12")
+  && fnSrc(page, "teamAnalyzerDraft").includes("start * 12") === false
+  && fnSrc(page, "teamAnalyzerHtml").includes("top 12 scored like roster slots"),
+  "draft capital must grade a 12-slot chest like roster slots, not a raw dollar sum");
+need(fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"')
+  && fnSrc(page, "teamAnalyzerScale").includes("return 86"),
+  "C↔R bar must map Hard rebuild explicitly, not by fallthrough");
 need(fnSrc(page, "teamAnalyzerCard").includes("members")
   && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile("),
   "share card must name the seat and save a per-team PNG");
@@ -68,7 +76,9 @@ need(gen.includes("function teamAnalyzerHtml(") && gen.includes("teamAnalyzerHtm
   && gen.includes("function teamAnalyzerPosFloor(") === false,
   "generate-page.mjs team analyzer must stay in sync (do not execute it)");
 need(plan.includes("team analyzer") && plan.includes("dashboard chrome")
-  && plan.includes("teamAnalyzerValueGrade"),
+  && plan.includes("teamAnalyzerValueGrade")
+  && plan.includes("top 12")
+  && plan.includes("no league curve"),
   "plan must lock the dashboard team analyzer and value grades");
 need(fs.existsSync(`${ROOT}scripts/loop-team-analyzer.mjs`)
   && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,"),
@@ -107,10 +117,12 @@ function gradesOf(bag) {
   return grades;
 }
 function draftOf(uid) {
-  const picks = (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid));
-  if (!picks.length) return 0;
-  const sum = picks.reduce((s, p) => s + Math.max(0, calcValueNum(p)), 0);
-  return round10(10 * sum / (DESK_START * 12));
+  const picks = (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid))
+    .sort((a, b) => calcValueNum(b) - calcValueNum(a));
+  const need = 12;
+  let pts = 0;
+  for (let i = 0; i < need; i++) pts += valueGrade(picks[i] ? calcValueNum(picks[i]) : -1);
+  return round10(pts / need);
 }
 
 const truman = "458342725222133760";

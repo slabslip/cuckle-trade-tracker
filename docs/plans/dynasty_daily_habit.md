@@ -322,11 +322,14 @@ Same dashboard chrome as the Home letter, every seat. `teamAnalyzerEnabled()`
 is false for GM / redraft. Grades are `teamAnalyzerValueGrade` — each desk
 slot’s `calcValueNum` against `deskCuts` stud / start / mid. Same bag always
 prints the same 0–10. Depth is the next two after the lineup on that same
-scale, not vs the league floor. Draft capital sums owned `calcBook.picks`
-values vs twelve starter cuts. Team grade is 70% positions / 15% depth / 15% draft.
-Archetype is Dual elite QB / Elite QB / Dual elite [pos] else the
-seat-direction label. Outlook and C↔R stay captions from
-`seat-direction.json`. The gold chip saves `cuckle-team.png`. Depth names the extras that
+scale, not vs the league floor. Draft capital scores the top 12 owned
+`calcBook.picks` with the same `teamAnalyzerValueGrade` as roster slots
+(empty of the 12 = 0). Late 3rds / 4ths do not pad a chest to 10. Team
+grade is 70% positions / 15% depth / 15% draft. Two seats may share a
+grade — there is no league curve. Archetype is Dual elite QB / Elite QB /
+Dual elite [pos] else the seat-direction label. Outlook and C↔R stay
+captions from `seat-direction.json` (`Hard rebuild` is 86 on the bar).
+The gold chip saves `cuckle-<seat>.png`. Depth names the extras that
 exist, not a hard-coded eight. `scripts/loop-team-analyzer.mjs` reprints
 all ten seats. No `fmt()`, no bag totals, no new value formula.
 

@@ -22,12 +22,15 @@ need(!/if \(leagueId === CUCKLE_LEAGUE_ID\) steps.push\(\["generate-page.mjs"\]\
   "Cuckle generate-page must stay gated on !skipPage");
 
 need(nightly.includes('cron: "10 8 * * *"'), "league-nightly must run every morning");
+need(nightly.includes('cron: "20 22 * * *"'), "league-nightly must catch afternoon IR / waiver / trades");
+need(nightly.includes("--fresh-players"), "nightly must refresh Sleeper player IR / Out status");
 need(nightly.includes("--skip-snapshot --skip-page --skip-espn --skip-finishes --allow-revalue-fail"),
   "nightly must refresh Sleeper tape without espn, generate-page, or a dynasty finishes rewrite");
 need(!nightly.includes("node generate-page.mjs"), "nightly must never run generate-page.mjs");
 
-need(daily.includes("--skip-snapshot --skip-page --skip-finishes --allow-revalue-fail"),
+need(daily.includes("--fresh-players --skip-snapshot --skip-page --skip-espn --skip-finishes --allow-revalue-fail"),
   "values-daily must still ship trades when revalue checks fail");
+need(daily.includes("1389723418827460608"), "values-daily must also reprice the GM book");
 need(!/node generate-page\.mjs/.test(daily), "values-daily must not execute generate-page.mjs");
 
 need(sync.includes("--skip-page --allow-revalue-fail"),

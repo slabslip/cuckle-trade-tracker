@@ -184,9 +184,9 @@ node build.mjs [league_id]
 | `data/ui/` | Cuckle dual-write |
 | Shared | `value_curve`, `players.nfl`, `ktc/`, `tx_cache/` |
 
-Actions: [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml) (on create / manual), [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) (UTC 08:10 Sleeper trades + rosters + seats), [`.github/workflows/values-daily.yml`](../.github/workflows/values-daily.yml) (market snaps + reprice).
+Actions: [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml) (on create / manual), [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) (UTC 08:10 + 22:20 Sleeper trades, waivers, IR, seats), [`.github/workflows/values-daily.yml`](../.github/workflows/values-daily.yml) (market snaps + reprice both books). Daily contract: [`plans/sleeper_daily_sweep.md`](./plans/sleeper_daily_sweep.md).
 
-Nightly tape is Sleeper-only (`--skip-espn --skip-page --allow-revalue-fail`). A today-book self-check must not block new trades from landing — that freeze is how Cuckle missed the 2026-09-17 Truman ↔ Ducks swap. `values-daily` uses the same flags so a blend check cannot roll back the tape.
+There is no live Sleeper webhook. Nightly tape is Sleeper-only (`--fresh-players --skip-espn --skip-page --allow-revalue-fail`). A today-book self-check must not block new trades from landing — that freeze is how Cuckle missed the 2026-09-17 Truman ↔ Ducks swap. `values-daily` uses the same flags so a blend check cannot roll back the tape.
 
 Cuckle is seeded / forced `ready` so the existing book works before a second-league sync.
 

@@ -4,15 +4,17 @@
  *
  * The file is gitignored (~15MB). Locally and in CI it is produced by sleeper-sync.mjs;
  * a news-only refresh should not re-walk every season's transactions just to get the
- * dictionary. Cache for 24h, same rule sleeper-sync uses.
+ * dictionary. Cache for 24h, same rule sleeper-sync uses. Daily tape jobs pass
+ * --fresh / SLEEPER_FRESH_PLAYERS=1 so IR / Out status is not a day late.
  */
 import fs from "node:fs";
 import { DATA, sleeperGet } from "./lib.mjs";
 
 const cache = `${DATA}/players.nfl.json`;
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const fresh = process.argv.includes("--fresh") || process.env.SLEEPER_FRESH_PLAYERS === "1";
 
-if (fs.existsSync(cache)) {
+if (!fresh && fs.existsSync(cache)) {
   const age = Date.now() - fs.statSync(cache).mtimeMs;
   if (age < MAX_AGE_MS) {
     console.log(`players.nfl.json ok (${Math.round(age / 60000)}m old)`);

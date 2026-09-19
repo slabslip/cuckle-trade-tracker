@@ -342,10 +342,11 @@ Still open:
 11. **IDP / no Sleeper map** → unpriced, incomplete, off the needle. No separate IDP book.
 12. **The global click handler is one long if-chain.** Adding a `data-*` name that a prior branch
     already matches will silently shadow it.
-13. **No publish cadence.** Rebuild is manual. `players.nfl.json` caches 24h; past-season tx weeks
-    stay cached forever. `league.today` can sit a day behind the newest trade on the tape, so that
-    trade is priced on yesterday's board. The Recent Trade card handles the display side by taking
-    the later of the two dates; the pricing clock is unhandled.
+13. **Publish cadence is GitHub Actions, not a live agent.** `league-nightly` (08:10 + 22:20 UTC)
+    sweeps Sleeper trades / waivers / IR / rosters. `values-daily` (10:20 UTC) snapshots markets
+    and reprices. Daily tape jobs pass `--fresh-players` so `players.nfl.json` is not a day late
+    on IR / Out. Past-season tx weeks stay cached. A today-book self-check must not block the
+    tape commit. Law: [`plans/sleeper_daily_sweep.md`](./plans/sleeper_daily_sweep.md).
 14. **`league.drafters_rookie` has no reader** (~2.5 KB). It lost its last one when
     `renderLeague()` was deleted. `revalue.mjs` still emits it.
 15. **Tape prefers stored VA; calc still clones.** `sideOf` returns the pipeline window when

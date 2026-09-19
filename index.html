@@ -1708,7 +1708,7 @@
       letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
     }
     .overnight-slip-lede {
-      margin: 0; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em;
+      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em;
       color: var(--text); line-height: 1.15;
     }
     .overnight-slip-top button.tile-share { position: static; }
@@ -1726,7 +1726,7 @@
     .overnight-slip-band.other { color: #a78bfa; background: rgba(167, 139, 250, 0.10); }
     .overnight-slip-row {
       display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-bottom: 1px solid #1c1c20;
       border-left: 3px solid transparent;
     }
@@ -8918,14 +8918,14 @@
       const trades = letter.trades || [];
       const wire = letter.wire || [];
       const cats = overnightCats(letter);
-      const preview = 4;
+      const preview = 3;
       const hidden = (!overnightOpen)
         ? Math.max(0, cats.out.length - preview) + Math.max(0, cats.ir.length - preview)
-          + Math.max(0, cats.other.length - preview)
+          + cats.other.length
         : 0;
       const outLimit = overnightOpen ? null : preview;
       const irLimit = overnightOpen ? null : preview;
-      const otherLimit = overnightOpen ? null : preview;
+      const otherLimit = overnightOpen ? null : 0;
       let tradeBlock = overnightBandHtml("trades", "Trades", trades.length);
       if (trades.length) {
         tradeBlock += trades.map(function (row) {
@@ -8935,19 +8935,18 @@
             return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
           }).join("");
         }).join("");
+      } else if (letter.latest) {
+        tradeBlock += '<p class="overnight-slip-note">Last deal · ' + esc(overnightPrettyDate(letter.latest.date)) + "</p>";
+        const legs = letter.latest.legs || [];
+        if (legs.length) {
+          tradeBlock += legs.map(function (leg) {
+            return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+          }).join("");
+        } else if (letter.latest.line) {
+          tradeBlock += overnightRowHtml("trades", letter.latest.line, "", "");
+        }
       } else {
         tradeBlock += overnightRowHtml("trades", "No trades last night", "", "");
-        if (letter.latest) {
-          tradeBlock += '<p class="overnight-slip-note">Last deal · ' + esc(overnightPrettyDate(letter.latest.date)) + "</p>";
-          const legs = letter.latest.legs || [];
-          if (legs.length) {
-            tradeBlock += legs.map(function (leg) {
-              return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
-            }).join("");
-          } else if (letter.latest.line) {
-            tradeBlock += overnightRowHtml("trades", letter.latest.line, "", "");
-          }
-        }
       }
       let wireBlock = "";
       if (wire.length) {
@@ -8967,7 +8966,7 @@
           + overnightListHtml(cats.ir, "ir", irLimit);
       }
       let otherBlock = "";
-      if (cats.other.length) {
+      if (cats.other.length && overnightOpen) {
         otherBlock = overnightBandHtml("other", "PUP / NFI", cats.other.length)
           + overnightListHtml(cats.other, "other", otherLimit);
       }

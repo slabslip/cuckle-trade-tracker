@@ -27,7 +27,7 @@ try {
   const home = await page.locator(".overnight-slip").innerText();
   console.log("HOME LETTER\n" + home);
   if (!/Quiet night|trade last night|Wire moved/i.test(home)) fail("Home letter missing lede");
-  if (!/No trades last night|sent /.test(home)) fail("Home letter missing trades / last deal");
+  if (!/Last deal|No trades last night|sent /i.test(home)) fail("Home letter missing trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
   if (/Text this|That's not how I remember/i.test(home)) fail("Home letter still has Text this");
@@ -65,7 +65,7 @@ try {
   }
   if (/\+\d+ more/.test(payload.text)) fail("full share must not say + more");
   if (/Text this|That's not how I remember/i.test(payload.text)) fail("share text still has Text this");
-  await page.screenshot({ path: `${shotDir}/overnight-home-open.png`, fullPage: true });
+  await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-home-open.png` });
 
   const guest = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -81,6 +81,7 @@ try {
   const ticket = await guestPage.locator(".overnight-slip").innerText();
   console.log("PUBLIC LETTER\n" + ticket);
   if (!/Quiet night|trade last night|Wire moved/i.test(ticket)) fail("Public letter missing lede");
+  if (!/Last deal|No trades last night/i.test(ticket)) fail("Public letter missing last deal");
   if (!/^OUT\b/m.test(ticket) || !/^IR\b/m.test(ticket)) fail("Public letter missing Out / IR bands");
   if (!(await guestPage.locator(".receipt-cta").count())) fail("Unsigned overnight ticket missing claim CTA");
   await guestPage.screenshot({ path: `${shotDir}/overnight-share.png` });

@@ -37,6 +37,7 @@ need(fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
 need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor")
   && fnSrc(page, "teamAnalyzerDepth").includes("pool.slice(need, need + 2)")
   && fnSrc(page, "teamAnalyzerDepth").includes("starter behind")
+  && fnSrc(page, "teamAnalyzerDepth").includes("Backups sit below league starters")
   && fnSrc(page, "teamAnalyzerDepth").includes("startable") === false,
   "depth scores the next man vs the league starter floor, not raw startable count");
 need(gen.includes("function teamAnalyzerPosFloor(")

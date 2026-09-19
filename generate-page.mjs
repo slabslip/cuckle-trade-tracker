@@ -26322,7 +26322,9 @@ const html = `<!DOCTYPE html>
       const score = Math.max(0, Math.min(10, Math.round((pts / 12) * 10) - miss * 2));
       const note = miss
         ? "Short a starter"
-        : (covered + " of 4 spots have a starter behind");
+        : (covered
+          ? (covered + " of 4 spots " + (covered === 1 ? "has" : "have") + " a starter behind")
+          : "Backups sit below league starters");
       return { score: score, note: note };
     }
 

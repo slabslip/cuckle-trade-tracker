@@ -154,6 +154,7 @@ non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomp
 `generate-page`.
 
 Home digest + calc + barracks archive: [`plans/home_digest.md`](plans/home_digest.md).
+**Next Home bet (not built):** a dated Overnight Slip so Home is a morning letter, not a museum — [`plans/dynasty_daily_habit.md`](./plans/dynasty_daily_habit.md).
 Memory / proof tiles: [`MEMORY_SDD.md`](./MEMORY_SDD.md).
 Titles/emblems law: [`COSMETICS_SDD.md`](COSMETICS_SDD.md). Award expansion:
 [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).

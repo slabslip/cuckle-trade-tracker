@@ -4224,7 +4224,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cucklenightly20260919180000";
+    const DATA_V = "trumanpick20260919190000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8069,6 +8069,7 @@ const html = `<!DOCTYPE html>
     }
 
     function pickOwnerName(entry) {
+      if (entry && entry.holder) return entry.holder;
       const hops = (entry && entry.hops) || [];
       if (hops.length) return hops[hops.length - 1].to || null;
       return pickOriginName(entry);
@@ -32211,6 +32212,9 @@ if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("func
 }
 if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
   throw new Error("pickOriginName regex must escape parens through the HTML template literal");
+}
+if (!fnSrc("pickOwnerName").includes("entry.holder")) {
+  throw new Error("pickOwnerName must prefer live Sleeper holder over a stale hop");
 }
 // Username sanitize: generate-page embeds the page in a template literal, so whitespace
 // class must be written as /\\s+/ or the live page gets /s+/ and strips the letter "s"

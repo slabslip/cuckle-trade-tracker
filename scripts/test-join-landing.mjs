@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v289-cuckle-nightly")) {
-  throw new Error("sw.js must bump to v289-cuckle-nightly");
+if (!sw.includes("chuckle-shell-v290-truman-pick")) {
+  throw new Error("sw.js must bump to v290-truman-pick");
 }
 
 console.log("join landing ok");

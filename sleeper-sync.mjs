@@ -292,6 +292,8 @@ async function main() {
   writeJson("name_observations.json", observations);
   writeJson("seats.json", seats);
   writeJson("rosters_now.json", currentRosters);
+  const tradedPicks = (await sleeperGet(`/league/${LEAGUE_ID}/traded_picks`)) || [];
+  writeJson("traded_picks.json", Array.isArray(tradedPicks) ? tradedPicks : []);
   writeJson("trades.json", trades);
   writeJson("trade_legs.json", legs);
   writeJson("trade_tape.json", tape);

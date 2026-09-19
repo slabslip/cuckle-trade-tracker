@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzergrades20260919223000";
+    const DATA_V = "analyzerloops20260919224500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26232,12 +26232,16 @@ const html = `<!DOCTYPE html>
       }) || null;
     }
 
+    function teamAnalyzerPos(p) {
+      return String((p && p.pos) || "").toUpperCase();
+    }
+
     function teamAnalyzerArchetype(bag, dir) {
       const cuts = deskCuts();
       const elite = {};
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
         elite[pos] = bag.filter(function (p) {
-          return p.pos === pos && calcValueNum(p) >= cuts.stud;
+          return teamAnalyzerPos(p) === pos && calcValueNum(p) >= cuts.stud;
         }).length;
       });
       if (elite.QB >= 2) return "Dual elite QB";
@@ -26266,14 +26270,14 @@ const html = `<!DOCTYPE html>
         });
       }
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        bag.filter(function (p) { return p.pos === pos; })
+        bag.filter(function (p) { return teamAnalyzerPos(p) === pos; })
           .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
           .slice(0, slots[pos] || 1)
           .forEach(function (p) { addRow(p, pos); });
       });
       const start = deskCuts().start;
       bag.filter(function (p) {
-        const pos = p.pos;
+        const pos = teamAnalyzerPos(p);
         return (pos === "RB" || pos === "WR" || pos === "TE")
           && !used[p.id || p.name]
           && calcValueNum(p) >= start;
@@ -26301,7 +26305,7 @@ const html = `<!DOCTYPE html>
     }
 
     function teamAnalyzerPosPool(bag, pos) {
-      return bag.filter(function (p) { return p && p.pos === pos; })
+      return bag.filter(function (p) { return p && teamAnalyzerPos(p) === pos; })
         .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
     }
 
@@ -26330,7 +26334,7 @@ const html = `<!DOCTYPE html>
         return v >= 0 && v < deskCuts().start && Number(p.age) >= 27;
       }).sort(function (a, b) { return Number(b.age) - Number(a.age); })
         .slice(0, 4).map(function (p) { return p.name; });
-      const sell = leftover.length ? leftover : ((dir && dir.sell) || []).slice(0, 3);
+      const sell = leftover;
       const grades = teamAnalyzerGrades(bag);
       const targets = [];
       ((dir && dir.holes) || []).forEach(function (p) {
@@ -26365,26 +26369,28 @@ const html = `<!DOCTYPE html>
       const slots = deskSlots();
       const start = deskCuts().start;
       let pts = 0;
-      let n = 0;
+      let slotN = 0;
+      let exist = 0;
       let startable = 0;
-      let miss = 0;
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
         const need = slots[pos] || 1;
         const pool = teamAnalyzerPosPool(bag, pos);
-        const filled = pool.filter(function (p) { return calcValueNum(p) >= start; }).length;
-        miss += Math.max(0, need - filled);
-        pool.slice(need, need + 2).forEach(function (p) {
-          const v = calcValueNum(p);
+        for (let i = 0; i < 2; i++) {
+          const p = pool[need + i];
+          const v = p ? calcValueNum(p) : -1;
           pts += teamAnalyzerValueGrade(v);
-          n += 1;
-          if (v >= start) startable += 1;
-        });
+          slotN += 1;
+          if (p) {
+            exist += 1;
+            if (v >= start) startable += 1;
+          }
+        }
       });
-      const score = teamAnalyzerRound(n ? (pts / n) : 0);
-      const note = miss
-        ? "Short a starter"
+      const score = teamAnalyzerRound(slotN ? (pts / slotN) : 0);
+      const note = exist === 0
+        ? "No backups scored"
         : (startable
-          ? (startable + " of " + n + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
+          ? (startable + " of " + exist + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
           : "Backups sit below starter value");
       return { score: score, note: note };
     }

@@ -76,36 +76,42 @@ function gradesOf(bag, slots, cuts) {
   const grades = {};
   ["QB", "RB", "WR", "TE"].forEach((pos) => {
     const need = s[pos] || 1;
-    const pool = bag.filter((p) => p.pos === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a));
+    const pool = bag.filter((p) => posOf(p) === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a));
     let pts = 0;
     for (let i = 0; i < need; i++) pts += valueGrade(pool[i] ? calcValueNum(pool[i]) : -1, cuts);
     grades[pos] = round10(pts / need);
   });
   return grades;
 }
+function posOf(p) {
+  return String((p && p.pos) || "").toUpperCase();
+}
 function depthOf(bag, slots, cuts) {
   const s = slots || DESK_SLOTS;
   const start = (cuts || { start: DESK_START }).start;
   let pts = 0;
-  let n = 0;
+  let slotN = 0;
+  let exist = 0;
   let startable = 0;
-  let miss = 0;
   ["QB", "RB", "WR", "TE"].forEach((pos) => {
     const need = s[pos] || 1;
-    const pool = bag.filter((p) => p.pos === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a));
-    miss += Math.max(0, need - pool.filter((p) => calcValueNum(p) >= start).length);
-    pool.slice(need, need + 2).forEach((p) => {
-      const v = calcValueNum(p);
+    const pool = bag.filter((p) => posOf(p) === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a));
+    for (let i = 0; i < 2; i++) {
+      const p = pool[need + i];
+      const v = p ? calcValueNum(p) : -1;
       pts += valueGrade(v, cuts);
-      n += 1;
-      if (v >= start) startable += 1;
-    });
+      slotN += 1;
+      if (p) {
+        exist += 1;
+        if (v >= start) startable += 1;
+      }
+    }
   });
   return {
-    score: round10(n ? (pts / n) : 0),
-    n: n,
+    score: round10(slotN ? (pts / slotN) : 0),
+    n: exist,
+    slots: slotN,
     startable: startable,
-    miss: miss,
   };
 }
 function draftFrom(picks, cuts) {
@@ -146,15 +152,18 @@ loop(1, seats.every((s) => {
 loop(2, seats.every((s) => {
   const nums = [s.grades.QB, s.grades.RB, s.grades.WR, s.grades.TE, s.depth.score, s.draft, s.overall];
   return nums.every((n) => Number.isFinite(n) && n >= 0 && n <= 10 && n === Math.round(n));
-}) && seats.length === 10, "all ten seats print integer 0–10 grades with no NaN");
+}) && seats.length === 10 && seats.every((s) => s.depth.slots === 8),
+  "all ten seats print integer 0–10 grades with no NaN");
 
-// 3 Empty bag / empty picks
+// 3 Empty bag / empty picks / one backup is not elite depth
 loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, TE: 0 })
   && depthOf([]).score === 0
+  && depthOf([]).slots === 8
+  && depthOf([{ pos: "QB", value: 8000 }, { pos: "QB", value: 6000 }, { pos: "QB", value: 9000 }]).score === 1
   && overallOf({ QB: 0, RB: 0, WR: 0, TE: 0 }, { score: 0 }, 0) === 0
   && draftOf("no-such-seat") === 0
   && draftFrom([]) === 0,
-  "empty bag and missing picks grade 0, not NaN");
+  "empty bag grades 0; one stud backup is 1/10, not 10");
 
 // 4 Missing a position is a zero slot, not a skip
 {
@@ -174,9 +183,17 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
     { pos: "WR" },
   ];
   const g = gradesOf(junk);
+  const lower = [
+    { pos: "qb", value: 8000 },
+    { pos: "qb", value: 6000 },
+    { pos: "rb", value: 9000 },
+    { pos: "rb", value: 7000 },
+  ];
   loop(5, g.RB === 0 && g.WR === 0 && valueGrade(null) === 0 && valueGrade("x") === 0
-    && draftFrom([{ value: null }, { value: "nope" }, { value: -9 }]) === 0,
-    "null / NaN / string / negative values grade 0");
+    && valueGrade(Infinity) === 0 && valueGrade(-Infinity) === 0
+    && draftFrom([{ value: null }, { value: "nope" }, { value: -9 }]) === 0
+    && gradesOf(lower).QB === 10 && gradesOf(lower).RB === 10,
+    "junk values grade 0; lowercase pos tags still score");
 }
 
 // 6 Exact cuts are defendable and stable
@@ -232,7 +249,9 @@ loop(9, seats.every((s) => {
     && draftFrom(twelveStud) === 10
     && draftFrom(twentyLate) <= 4
     && draftFrom(twoFirsts) <= 2
-    && fnSrc(page, "teamAnalyzerDepth").includes("of 8 backup spots") === false,
+    && fnSrc(page, "teamAnalyzerDepth").includes("of 8 backup spots") === false
+    && fnSrc(page, "teamAnalyzerDepth").includes("Short a starter") === false
+    && fnSrc(page, "teamAnalyzerMoves").includes("dir.sell") === false,
     "draft scores top 12 like roster slots; late 4ths and extra picks do not pad to 10");
 }
 
@@ -242,6 +261,9 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerDraft") === fnSrc(gen, "teamAnalyzerDraft")
   && fnSrc(page, "teamAnalyzerOverall") === fnSrc(gen, "teamAnalyzerOverall")
   && fnSrc(page, "teamAnalyzerScale") === fnSrc(gen, "teamAnalyzerScale")
+  && fnSrc(page, "teamAnalyzerDepth") === fnSrc(gen, "teamAnalyzerDepth")
+  && fnSrc(page, "teamAnalyzerPos") === fnSrc(gen, "teamAnalyzerPos")
+  && fnSrc(page, "teamAnalyzerMoves") === fnSrc(gen, "teamAnalyzerMoves")
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
   && fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"'),

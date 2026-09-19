@@ -41,9 +41,13 @@ need(fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
   "analyzer grades score slot values on the book, not a startable count");
 need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerValueGrade")
-  && fnSrc(page, "teamAnalyzerDepth").includes("pool.slice(need, need + 2)")
+  && fnSrc(page, "teamAnalyzerDepth").includes("Short a starter") === false
+  && fnSrc(page, "teamAnalyzerDepth").includes("slotN")
   && fnSrc(page, "teamAnalyzerDepth").includes("starter value"),
-  "depth scores the next man against starter value, not the league floor");
+  "depth scores eight backup slots on the book, not the league floor");
+need(fnSrc(page, "teamAnalyzerPos").includes("toUpperCase")
+  && fnSrc(page, "teamAnalyzerMoves").includes("dir.sell") === false,
+  "pos tags normalize; Look to trade is leftover names, not seat-direction labels");
 need(fnSrc(page, "teamAnalyzerDraft").includes("calcBook.picks")
   || fnSrc(page, "teamAnalyzerPicks").includes("calcBook.picks"),
   "draft capital must use live pick values on the calculator book");

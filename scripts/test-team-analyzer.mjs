@@ -34,6 +34,15 @@ need(fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
   && fnSrc(page, "teamAnalyzerGrades").includes("deskCuts().start")
   && fnSrc(page, "teamAnalyzerGrades").includes("deskSlots()"),
   "analyzer grades are startable vs desk slots, not a new formula");
+need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor")
+  && fnSrc(page, "teamAnalyzerDepth").includes("pool.slice(need, need + 2)")
+  && fnSrc(page, "teamAnalyzerDepth").includes("starter behind")
+  && fnSrc(page, "teamAnalyzerDepth").includes("Backups sit below league starters")
+  && fnSrc(page, "teamAnalyzerDepth").includes("startable") === false,
+  "depth scores the next man vs the league starter floor, not raw startable count");
+need(gen.includes("function teamAnalyzerPosFloor(")
+  && fnSrc(gen, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor"),
+  "generate-page.mjs depth score must stay in sync");
 need(fnSrc(page, "teamAnalyzerHtml").includes("schematicSettingsHtml()")
   && page.includes("team-sch-gbar") && page.includes("team-sch-cr"),
   "analyzer must use the navy schematic settings grid, grade bars, and C↔R");

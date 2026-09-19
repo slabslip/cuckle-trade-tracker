@@ -4444,7 +4444,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "schematic20260919240000";
+    const DATA_V = "depth20260919220000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26283,14 +26283,49 @@ const html = `<!DOCTYPE html>
       return rows;
     }
 
+    function teamAnalyzerPosFloor(pos) {
+      const slots = deskSlots();
+      const n = Math.max(1, ((members || []).length) || (leagueFormat().team_n) || 10);
+      const need = (slots[pos] || 1) * n;
+      const pool = ((calcBook && calcBook.players) || []).filter(function (p) {
+        return p && p.pos === pos;
+      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+      const row = pool[need - 1];
+      const v = row ? calcValueNum(row) : -1;
+      return v >= 0 ? v : deskCuts().start;
+    }
+
     function teamAnalyzerDepth(bag) {
-      const start = deskCuts().start;
-      const startable = bag.filter(function (p) {
-        const pos = p.pos;
-        return (pos === "QB" || pos === "RB" || pos === "WR" || pos === "TE")
-          && calcValueNum(p) >= start;
-      }).length;
-      return Math.max(0, Math.min(10, startable));
+      const slots = deskSlots();
+      const cuts = deskCuts();
+      let pts = 0;
+      let miss = 0;
+      let covered = 0;
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const need = slots[pos] || 1;
+        const pool = bag.filter(function (p) { return p.pos === pos; })
+          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        const filled = pool.filter(function (p) { return calcValueNum(p) >= cuts.start; }).length;
+        miss += Math.max(0, need - filled);
+        const floor = teamAnalyzerPosFloor(pos);
+        const extras = pool.slice(need, need + 2);
+        extras.forEach(function (p, i) {
+          const v = calcValueNum(p);
+          if (v >= floor) {
+            pts += (i === 0 ? 2 : 1);
+            if (i === 0) covered += 1;
+          } else if (v >= cuts.start) {
+            pts += (i === 0 ? 1 : 0.5);
+          }
+        });
+      });
+      const score = Math.max(0, Math.min(10, Math.round((pts / 12) * 10) - miss * 2));
+      const note = miss
+        ? "Short a starter"
+        : (covered
+          ? (covered + " of 4 spots " + (covered === 1 ? "has" : "have") + " a starter behind")
+          : "Backups sit below league starters");
+      return { score: score, note: note };
     }
 
     function teamAnalyzerOutlook(dir) {
@@ -26373,6 +26408,7 @@ const html = `<!DOCTYPE html>
       const arch = teamAnalyzerArchetype(bag, dir);
       const lineup = teamAnalyzerLineup(bag);
       const depth = teamAnalyzerDepth(bag);
+      const depthScore = depth && depth.score != null ? depth.score : 0;
       const outlook = teamAnalyzerOutlook(dir);
       const corner = teamAnalyzerCorner(bag);
       const moves = teamAnalyzerMoves(bag, dir);
@@ -26394,8 +26430,10 @@ const html = `<!DOCTYPE html>
         }).join("")
         + "</div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Depth score</div>'
-        + '<div class="team-sch-score">' + depth + "<em>/10</em></div>"
-        + '<div class="team-sch-bar"><i style="width:' + (depth * 10) + '%"></i></div></div>'
+        + '<div class="team-sch-score">' + depthScore + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (depthScore * 10) + '%"></i></div>'
+        + (depth && depth.note ? '<p class="team-sch-note">' + esc(depth.note) + "</p>" : "")
+        + "</div>"
         + '<div class="team-sch-box"><div class="team-sch-h">3-year outlook</div>'
         + '<div class="team-sch-pills">'
         + outlook.map(function (lab, i) {

@@ -320,8 +320,9 @@ Fail: we put “Text this” back on the card.
 ## 8b. Team analyzer (dynasty team home)
 
 Same navy schematic, every seat. `teamAnalyzerEnabled()` is false for GM /
-redraft. Grades are 0–10 displays of startable count vs `deskSlots` /
-`deskCuts().start`. Archetype is Dual elite QB / Elite QB / Dual elite
+redraft. Depth is the next man after the lineup vs the league starter
+floor — not a raw startable count. Grades are 0–10 displays of startable
+count vs `deskSlots` / `deskCuts().start`. Archetype is Dual elite QB / Elite QB / Dual elite
 [pos] else the seat-direction label. Outlook, C↔R, and draft capital read
 `seat-direction.json` only as captions. No `fmt()`, no bag totals, no new
 value formula.

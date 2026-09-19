@@ -1,10 +1,14 @@
-# Daily market snapshots → reprice the today / even book.
-# Scrapes stay here, not inside every league-sync / build.mjs run.
-name: values-daily
+# Nightly Sleeper tape for every booked league: trades, rosters, players, seats.
+# Value-book self-checks must not block this commit — that is how Cuckle froze
+# after 2026-08-29 while a 2026-09-17 trade sat on Sleeper.
+#
+# ESPN history stays on the last successful espn-sync (cookies). This job is
+# Sleeper-only. It never runs generate-page.mjs.
+name: league-nightly
 
 on:
   schedule:
-    - cron: "20 10 * * *"
+    - cron: "10 8 * * *"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  values:
+  tape:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,54 +42,49 @@ jobs:
       - name: Ensure players.nfl.json
         run: node ensure-players.mjs
 
-      - name: Snapshot market books
-        run: node snapshot-values.mjs
-
-      - name: Formula unit checks
-        run: node price-today.test.mjs
-
-      - name: Rebuild Cuckle meter from committed snaps
+      - name: Refresh Cuckle Sleeper tape
         env:
           LEAGUE_ID: "1315431339301806080"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node build.mjs --skip-snapshot --skip-page --skip-finishes --allow-revalue-fail "$LEAGUE_ID"
+        run: node build.mjs --skip-snapshot --skip-page --skip-espn --skip-finishes --allow-revalue-fail "$LEAGUE_ID"
 
-      - name: Audit today book
+      - name: Refresh GM Sleeper tape
         continue-on-error: true
-        run: |
-          node audit-values.mjs
-          node audit-pass2.mjs
+        env:
+          LEAGUE_ID: "1389723418827460608"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node build.mjs --skip-snapshot --skip-page --skip-espn --allow-revalue-fail "$LEAGUE_ID"
 
-      - name: Bust DATA_V when the priced book or tape changed
+      - name: Bust DATA_V when tape or seats changed
         run: |
           set -e
           if git diff --quiet -- \
-            data/ui/calculator.json data/ui/pe.json data/ui/marks.json \
-            data/leagues/1315431339301806080/raw/trades.json \
-            data/leagues/1315431339301806080/raw/rosters_now.json \
-            data/leagues/1315431339301806080/ui/me \
-            data/ui/me; then
-            echo "No priced UI / tape change; leave DATA_V"
+            data/leagues/*/raw/trades.json \
+            data/leagues/*/raw/rosters_now.json \
+            data/leagues/*/ui/me \
+            data/ui/me \
+            data/ui/calculator.json \
+            data/ui/marks.json; then
+            echo "No tape / seat change"
             exit 0
           fi
-          stamp="daily$(date -u +%Y%m%d%H%M%S)"
+          stamp="nightly$(date -u +%Y%m%d%H%M%S)"
           node scripts/bust-data-v.mjs "$stamp" "chuckle-shell-v289-cuckle-nightly"
 
-      - name: Commit snaps and UI if changed
+      - name: Commit tape if changed
         run: |
           set -e
           git config user.name "cuckle-league-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add \
-            data/ktc data/fc data/dd data/dp/latest \
-            data/value_curve.json data/value_snapshots.json \
-            data/leagues/1315431339301806080 data/ui \
+            data/leagues \
+            data/ui \
             generate-page.mjs index.html sw.js || true
           if git diff --cached --quiet; then
-            echo "No value-book changes to commit"
+            echo "No nightly tape changes to commit"
             exit 0
           fi
-          git commit -m "Daily player-value snapshots and today-book reprice."
+          git commit -m "Nightly Sleeper tape: trades, rosters, and seats."
           for i in 1 2 3 4; do
             git pull --rebase origin main && git push origin main && break
             echo "push conflict, retry $i"

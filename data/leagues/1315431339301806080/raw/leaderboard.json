@@ -6,8 +6,8 @@
     "incomplete": 0,
     "pick_total": 6611,
     "pick_per_trade": 227.9655172413793,
-    "even_total": 20400.935881751495,
-    "even_per_trade": 703.4805476466033,
+    "even_total": 20823.935881751495,
+    "even_per_trade": 718.066754543155,
     "style": {
       "label": "Balanced",
       "now_share": 0.508291894275286,
@@ -74,8 +74,8 @@
     "incomplete": 0,
     "pick_total": 423,
     "pick_per_trade": 8.294117647058824,
-    "even_total": -996.4486048290655,
-    "even_per_trade": -19.538207937824815,
+    "even_total": -2040.4486048290655,
+    "even_per_trade": -40.00879617311893,
     "style": {
       "label": "Balanced",
       "now_share": 0.7876084924556015,
@@ -104,16 +104,16 @@
   {
     "user_id": "458766127967760384",
     "name": "DarkWingDucks2023",
-    "two_way": 56,
+    "two_way": 57,
     "incomplete": 0,
-    "pick_total": 4676,
-    "pick_per_trade": 83.5,
-    "even_total": -6538.378957434488,
-    "even_per_trade": -116.75676709704443,
+    "pick_total": 7039,
+    "pick_per_trade": 123.49122807017544,
+    "even_total": -8337.678957434491,
+    "even_per_trade": -146.2750694286753,
     "style": {
       "label": "Win-now",
-      "now_share": 0.6767370640782461,
-      "horizon": -169.78571428571428,
+      "now_share": 0.7019355721222899,
+      "horizon": -166.80701754385964,
       "sold_picks_for_players": 13,
       "sold_players_for_picks": 11
     }
@@ -121,16 +121,16 @@
   {
     "user_id": "458342725222133760",
     "name": "TrumanCooper",
-    "two_way": 86,
+    "two_way": 87,
     "incomplete": 1,
-    "pick_total": -17958,
-    "pick_per_trade": -206.41379310344828,
-    "even_total": -23965.84607859402,
-    "even_per_trade": -278.67262882086067,
+    "pick_total": -20321,
+    "pick_per_trade": -230.92045454545453,
+    "even_total": -21546.54607859402,
+    "even_per_trade": -247.6614491792416,
     "style": {
       "label": "Win-now",
-      "now_share": 0.7691281138790036,
-      "horizon": -51.04761904761905,
+      "now_share": 0.7637319633145357,
+      "horizon": -50.44705882352941,
       "sold_picks_for_players": 25,
       "sold_players_for_picks": 18
     }
@@ -142,8 +142,8 @@
     "incomplete": 1,
     "pick_total": 16,
     "pick_per_trade": 0.25806451612903225,
-    "even_total": -19215.346544749664,
-    "even_per_trade": -309.9249442701559,
+    "even_total": -19214.346544749664,
+    "even_per_trade": -309.9088152378978,
     "style": {
       "label": "Win-now",
       "now_share": 0.5575718791424784,

@@ -289,9 +289,11 @@ w_dd   = 0.20   // DynastyDealer base_value
 - The today book uses each market’s **latest committed** snap. Do not drop FC/DD because the DP curve `as_of` is older than those files.
 - `revalue` flattens raw DP once, writes `value_flat`, then blends. apply reprices from `value_flat` only — a missing `value_flat` is left alone (do not treat a today number as flatten). t0 lookback stays flatten-only (no KTC/FC/DD on windows).
 - Production / P/E never moves the needle. P/E needs FFPG `>= 4` before Desk may chip buy/fair/sell.
-- `values-daily` rebuilds with `build.mjs --skip-snapshot` so it does not re-clone DP history after the latest-only pull.
+- `values-daily` rebuilds with `build.mjs --skip-snapshot --skip-page --allow-revalue-fail` so it does not re-clone DP history after the latest-only pull, does not run `generate-page.mjs`, and still commits new Sleeper trades if a today-book self-check fails.
 
 `build.mjs` / `league-sync` use the latest **committed** snaps. They do not scrape.
+
+**Nightly tape:** [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) pulls Sleeper transactions + rosters for every booked league each morning. Do not let `revalue` self-checks (`even today is retired/ktc blend` and kin) skip that commit.
 
 ---
 

@@ -2960,8 +2960,8 @@
       "drafted_by": "ARae",
       "startup": false,
       "pick_cost": 1476,
-      "player_today": 0,
-      "surplus": -1476,
+      "player_today": 424,
+      "surplus": -1052,
       "flag": null
     },
     {
@@ -4480,8 +4480,8 @@
       "drafted_by": "DarkWingDucks2023",
       "startup": false,
       "pick_cost": 1812,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1812,
       "flag": "unpriced"
     },
     {
@@ -4860,8 +4860,8 @@
       "drafted_by": "TedCumberbatch",
       "startup": false,
       "pick_cost": 2926,
-      "player_today": 0,
-      "surplus": -2926,
+      "player_today": 620,
+      "surplus": -2306,
       "flag": null
     },
     {
@@ -6152,8 +6152,8 @@
       "drafted_by": "TipsUp",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -6969,8 +6969,8 @@
       "drafted_by": "DarkWingDucks2023",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": 0,
-      "surplus": -1548,
+      "player_today": 441,
+      "surplus": -1107,
       "flag": "priced_as_2021r5"
     },
     {
@@ -7425,8 +7425,8 @@
       "drafted_by": "ChiefGumby",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": 0,
-      "surplus": -1548,
+      "player_today": 423,
+      "surplus": -1125,
       "flag": "priced_as_2021r5"
     },
     {
@@ -9021,8 +9021,8 @@
       "drafted_by": "SF69erss",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -9553,8 +9553,8 @@
       "drafted_by": "TedCumberbatch",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -9838,8 +9838,8 @@
       "drafted_by": "TedCumberbatch",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -9857,8 +9857,8 @@
       "drafted_by": "BubbaCuckShremp",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -9914,8 +9914,8 @@
       "drafted_by": "BubbaCuckShremp",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -9952,8 +9952,8 @@
       "drafted_by": "TipsUp",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10047,8 +10047,8 @@
       "drafted_by": "KingHenryXXVI",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10104,8 +10104,8 @@
       "drafted_by": "KingHenryXXVI",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10180,8 +10180,8 @@
       "drafted_by": "TrumanCooper",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10199,8 +10199,8 @@
       "drafted_by": "TipsUp",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10294,8 +10294,8 @@
       "drafted_by": "BubbaCuckShremp",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10313,8 +10313,8 @@
       "drafted_by": "TedCumberbatch",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10427,8 +10427,8 @@
       "drafted_by": "KingHenryXXVI",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -1548,
       "flag": "unpriced"
     },
     {
@@ -10529,8 +10529,8 @@
       "name": "TedCumberbatch",
       "used": 19,
       "graded": 19,
-      "surplus": -10708,
-      "per_pick": -563.578947368421,
+      "surplus": -10088,
+      "per_pick": -530.9473684210526,
       "best": {
         "player": "Ja'Marr Chase",
         "season": "2021",
@@ -10583,8 +10583,8 @@
       "name": "ARae",
       "used": 26,
       "graded": 26,
-      "surplus": -21283,
-      "per_pick": -818.5769230769231,
+      "surplus": -20859,
+      "per_pick": -802.2692307692307,
       "best": {
         "player": "Bijan Robinson",
         "season": "2023",
@@ -10594,24 +10594,6 @@
         "player": "Ke'Shawn Vaughn",
         "season": "2020",
         "surplus": -3734
-      }
-    },
-    {
-      "user_id": "458766127967760384",
-      "name": "DarkWingDucks2023",
-      "used": 28,
-      "graded": 27,
-      "surplus": -25313,
-      "per_pick": -937.5185185185185,
-      "best": {
-        "player": "Drake Maye",
-        "season": "2024",
-        "surplus": 3365
-      },
-      "worst": {
-        "player": "Clyde Edwards-Helaire",
-        "season": "2020",
-        "surplus": -7518
       }
     },
     {
@@ -10630,6 +10612,24 @@
         "player": "Anthony Richardson",
         "season": "2023",
         "surplus": -5846
+      }
+    },
+    {
+      "user_id": "458766127967760384",
+      "name": "DarkWingDucks2023",
+      "used": 28,
+      "graded": 28,
+      "surplus": -27125,
+      "per_pick": -968.75,
+      "best": {
+        "player": "Drake Maye",
+        "season": "2024",
+        "surplus": 3365
+      },
+      "worst": {
+        "player": "Clyde Edwards-Helaire",
+        "season": "2020",
+        "surplus": -7518
       }
     }
   ],
@@ -10674,9 +10674,9 @@
       "user_id": "458342725222133760",
       "name": "TrumanCooper",
       "used": 29,
-      "graded": 28,
+      "graded": 29,
       "player_today": 24710,
-      "per_pick": 882.5,
+      "per_pick": 852.0689655172414,
       "best": {
         "player": "Patrick Mahomes",
         "season": "2019",
@@ -10692,9 +10692,9 @@
       "user_id": "458715702119886848",
       "name": "KingHenryXXVI",
       "used": 28,
-      "graded": 25,
+      "graded": 28,
       "player_today": 21096,
-      "per_pick": 843.84,
+      "per_pick": 753.4285714285714,
       "best": {
         "player": "Christian McCaffrey",
         "season": "2019",
@@ -10710,9 +10710,9 @@
       "user_id": "470311990468800512",
       "name": "TedCumberbatch",
       "used": 28,
-      "graded": 25,
+      "graded": 28,
       "player_today": 19096,
-      "per_pick": 763.84,
+      "per_pick": 682,
       "best": {
         "player": "Baker Mayfield",
         "season": "2019",
@@ -10725,30 +10725,12 @@
       }
     },
     {
-      "user_id": "457784547094818816",
-      "name": "TipsUp",
-      "used": 28,
-      "graded": 25,
-      "player_today": 14182,
-      "per_pick": 567.28,
-      "best": {
-        "player": "Daniel Jones",
-        "season": "2019",
-        "value": 3572
-      },
-      "worst": {
-        "player": "JuJu Smith-Schuster",
-        "season": "2019",
-        "value": 0
-      }
-    },
-    {
       "user_id": "458766127967760384",
       "name": "DarkWingDucks2023",
       "used": 27,
       "graded": 27,
-      "player_today": 13867,
-      "per_pick": 513.5925925925926,
+      "player_today": 14308,
+      "per_pick": 529.925925925926,
       "best": {
         "player": "Kyler Murray",
         "season": "2019",
@@ -10761,12 +10743,30 @@
       }
     },
     {
+      "user_id": "457784547094818816",
+      "name": "TipsUp",
+      "used": 28,
+      "graded": 28,
+      "player_today": 14182,
+      "per_pick": 506.5,
+      "best": {
+        "player": "Daniel Jones",
+        "season": "2019",
+        "value": 3572
+      },
+      "worst": {
+        "player": "JuJu Smith-Schuster",
+        "season": "2019",
+        "value": 0
+      }
+    },
+    {
       "user_id": "457779824002330624",
       "name": "SF69erss",
       "used": 28,
-      "graded": 27,
+      "graded": 28,
       "player_today": 10359,
-      "per_pick": 383.6666666666667,
+      "per_pick": 369.9642857142857,
       "best": {
         "player": "Stefon Diggs",
         "season": "2019",
@@ -10779,30 +10779,12 @@
       }
     },
     {
-      "user_id": "458723431387492352",
-      "name": "BubbaCuckShremp",
-      "used": 28,
-      "graded": 25,
-      "player_today": 7436,
-      "per_pick": 297.44,
-      "best": {
-        "player": "Dak Prescott",
-        "season": "2019",
-        "value": 5197
-      },
-      "worst": {
-        "player": "Michael Thomas",
-        "season": "2019",
-        "value": 0
-      }
-    },
-    {
       "user_id": "457945712932417536",
       "name": "ChiefGumby",
       "used": 28,
       "graded": 28,
-      "player_today": 7991,
-      "per_pick": 285.39285714285717,
+      "player_today": 8414,
+      "per_pick": 300.5,
       "best": {
         "player": "Travis Kelce",
         "season": "2019",
@@ -10810,6 +10792,24 @@
       },
       "worst": {
         "player": "Ezekiel Elliott",
+        "season": "2019",
+        "value": 0
+      }
+    },
+    {
+      "user_id": "458723431387492352",
+      "name": "BubbaCuckShremp",
+      "used": 28,
+      "graded": 28,
+      "player_today": 7436,
+      "per_pick": 265.57142857142856,
+      "best": {
+        "player": "Dak Prescott",
+        "season": "2019",
+        "value": 5197
+      },
+      "worst": {
+        "player": "Michael Thomas",
         "season": "2019",
         "value": 0
       }

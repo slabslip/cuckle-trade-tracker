@@ -999,6 +999,7 @@ const html = `<!DOCTYPE html>
       font-size: 16px; appearance: auto; -webkit-appearance: menulist;
       padding-right: 28px; border-color: #c9a227;
     }
+    .app-actions .chip[disabled] { opacity: 0.45; cursor: not-allowed; }
     .join-land-hero { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.4; }
     .join-land-stats {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px;
@@ -26763,11 +26764,12 @@ const html = `<!DOCTYPE html>
         + '<div class="app-card">'
         + '<p class="join-land-hero">' + hero + "</p>"
         + signed
-        + '<p class="' + hintCls + '">' + (pickNote || esc(hint)) + "</p>"
+        + '<p class="' + hintCls + '"' + (loading ? ' role="status"' : "") + ">"
+        + (pickNote || esc(hint)) + "</p>"
         + (!pickNote ? "" : '<p class="caption">' + esc(hint) + "</p>")
         + '<div class="app-form claim-team-list">'
         + (loading
-          ? '<p class="caption" role="status">Loading remaining teams…</p>'
+          ? ""
           : (failed
             ? ('<button type="button" class="chip" data-claim-reload="1">Retry teams</button>')
             : (remaining.length

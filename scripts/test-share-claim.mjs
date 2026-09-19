@@ -35,8 +35,8 @@ need(page, "index.html", [
   "function readPendingDataTile(",
   "function dataTileSeatReady(",
   "function honorPendingDataTile(",
-  "claim a remaining team to open it",
-  "Claim one of the remaining teams to open it",
+  "claim <b>your</b> remaining team to open it",
+  "Claim the remaining team that is yours",
   "Create account to open this view",
   "function leagueNameForId(",
   "cuckle.pending.tile",
@@ -45,7 +45,7 @@ need(page, "index.html", [
 need(gen, "generate-page.mjs", [
   "function shareAccessPending(",
   "function dataTileSeatReady(",
-  "claim a remaining team to open it",
+  "claim <b>your</b> remaining team to open it",
   "Create account to open this view",
 ]);
 
@@ -63,14 +63,23 @@ const claim = fnSrc(page, "renderClaimTeam");
 if (!claim.includes("remaining") || !claim.includes("!s.claimed")) {
   throw new Error("claim picker must list remaining (unclaimed) teams only");
 }
+const guess = fnSrc(page, "claimGuessSeat");
+if (guess.includes("pendingDataWho")) {
+  throw new Error("group-share who= must not preselect the shared line as the clicker's team");
+}
+if (!page.includes("this link is not a seat invite")
+  || !page.includes("Open the shared view")
+  || !page.includes("function claimShareAboutName(")) {
+  throw new Error("group share must say the line is not their seat and open the tile after claim");
+}
 
 const gate = fnSrc(page, "onGateSubmit");
 if (!gate.includes("already") || !gate.includes("openClaimPick(") || !gate.includes("openLeagueDashboard(")) {
   throw new Error("after account, share links must claim remaining team or open if already seated");
 }
 
-if (!page.includes('const DATA_V = "pastchamp20260918230000"')
-  || !sw.includes("chuckle-shell-v284-past-champions")) {
+if (!page.includes('const DATA_V = "shareonb20260919143000"')
+  || !sw.includes("chuckle-shell-v287-share-onboard")) {
   throw new Error("share-claim must bust DATA_V and SW");
 }
 

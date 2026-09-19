@@ -29,7 +29,16 @@ const need = [
   "Career net",
   'data-join-enter-dash="1"',
   'data-claim-open-go="1"',
-  'data-claim-pick="',
+  'data-claim-team-select="1"',
+  "function claimGuessSeat(",
+  "function claimApplyGuess(",
+  "Loading remaining teams",
+  "Retry teams",
+  "We matched you to",
+  "function joinFailMsg(",
+  "No teams are open yet",
+  "from the menu",
+  "[data-claim-pick]",
   'appScreen === "claimTeam"',
   'appScreen === "joinWelcome"',
   'claim_open_seat',
@@ -70,8 +79,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v284-past-champions")) {
-  throw new Error("sw.js must bump to v284-past-champions");
+if (!sw.includes("chuckle-shell-v287-share-onboard")) {
+  throw new Error("sw.js must bump to v287-share-onboard");
 }
 
 console.log("join landing ok");

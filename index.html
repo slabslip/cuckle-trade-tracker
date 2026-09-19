@@ -996,6 +996,22 @@
       padding: 8px 0; border-bottom: 1px solid var(--line);
     }
     .join-land-year:last-child { border-bottom: 0; }
+    .join-land-stats.is-wide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (min-width: 420px) {
+      .join-land-stats.is-wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .team-book-year {
+      padding: 10px 0; border-bottom: 1px solid var(--line);
+    }
+    .team-book-year:last-child { border-bottom: 0; }
+    .team-book-year-top {
+      display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+    }
+    .team-book-year-sub {
+      color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.4;
+    }
+    .team-book-crowns { margin: 0; padding-left: 1.2em; }
+    .team-book-crowns li { margin: 0 0 6px; }
     .claim-team-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     button.claim-team-on { border-color: #c9a227; background: #1a1810; }
     button.claim-team-taken { opacity: 0.55; }
@@ -4200,7 +4216,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pastchamp20260918230000";
+    const DATA_V = "gmteamhome20260919163000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -25521,7 +25537,172 @@
         + "</div>";
     }
 
+    function gmTeamSeat(uid) {
+      const want = String(uid || (me && me.user_id) || "");
+      const seats = (typeof finishSeats === "function") ? finishSeats() : [];
+      return seats.find(function (s) { return s && String(s.user_id) === want; })
+        || ((typeof joinLandSeat === "function") ? joinLandSeat(want) : null);
+    }
+
+    function gmTeamYears(seat) {
+      const ledger = (typeof finishYearLedger === "function") ? finishYearLedger(seat) : [];
+      const byY = {};
+      ((seat && seat.places) || []).forEach(function (p) {
+        if (p && p.season != null) byY[String(p.season)] = p;
+      });
+      return ledger.map(function (row) {
+        const p = byY[String(row.season)] || {};
+        return {
+          season: row.season,
+          place: row.place != null ? row.place : p.place,
+          rs_place: p.rs_place,
+          from: p.from || row.from,
+          wins: p.wins,
+          losses: p.losses,
+          ties: p.ties,
+          fpts: p.fpts,
+          rs_fpts: p.rs_fpts,
+          won: row.won,
+          lost: row.lost,
+          net: row.net,
+          kinds: row.kinds || [],
+        };
+      });
+    }
+
+    function gmTeamCrownsHtml(seat, uid) {
+      const years = gmTeamYears(seat);
+      const titlesWon = ((titles && titles.titles) || []).filter(function (t) {
+        return t && String(t.user_id) === String(uid);
+      });
+      const bits = [];
+      if (titlesWon.length) {
+        bits.push((titlesWon.length === 1 ? "Champion " : (titlesWon.length + " titles · "))
+          + titlesWon.map(function (t) { return t.season; }).join(", "));
+      } else if (seat && seat.titles_n) {
+        bits.push(seat.titles_n === 1 ? "Champion" : (seat.titles_n + " titles"));
+      }
+      const second = years.filter(function (y) { return Number(y.place) === 2; }).map(function (y) { return y.season; });
+      if (second.length) bits.push("Runner-up " + second.join(", "));
+      const third = years.filter(function (y) { return Number(y.place) === 3; }).map(function (y) { return y.season; });
+      if (third.length) bits.push("3rd place " + third.join(", "));
+      if (seat && seat.last_n) {
+        bits.push((seat.last_n === 1 ? "Sacko " : (seat.last_n + " sackos · "))
+          + ((seat.last_years || []).join(", ") || ""));
+      }
+      const mp = (seat && seat.payouts || []).filter(function (p) { return p && p.kind === "mp"; });
+      if (mp.length) bits.push("Most regular-season points " + mp.map(function (p) { return p.season; }).join(", "));
+      if (seat && seat.playoff_n) {
+        bits.push(seat.playoff_n + (seat.playoff_n === 1 ? " playoff trip" : " playoff trips")
+          + ((seat.playoff_years || []).length ? " · " + seat.playoff_years.join(", ") : ""));
+      }
+      const champ = years.filter(function (y) { return y.from === "title"; }).map(function (y) { return y.season; });
+      if (champ.length && champ.length !== titlesWon.length) {
+        bits.push("Championship game " + champ.join(", "));
+      }
+      if (seat && seat.n) bits.push(seat.n + (seat.n === 1 ? " season on the book" : " seasons on the book"));
+      if (!bits.length) bits.push("First page of the book — the crowns start now.");
+      return '<ul class="team-book-crowns">' + bits.map(function (b) {
+        return "<li>" + esc(b) + "</li>";
+      }).join("") + "</ul>";
+    }
+
+    function gmTeamStat(val, lab) {
+      return '<div class="join-land-stat"><b>' + esc(val) + "</b><span>" + esc(lab) + "</span></div>";
+    }
+
+    function gmTeamYearsHtml(seat, uid) {
+      const years = gmTeamYears(seat);
+      if (!years.length) return '<p class="caption">No completed seasons on this book yet.</p>';
+      const team = (me && me.name) || (seat && seat.name) || "this team";
+      return years.map(function (y) {
+        const nm = (typeof joinLandTeamName === "function")
+          ? joinLandTeamName(uid, y.season, team)
+          : team;
+        const rec = (y.wins != null && y.losses != null)
+          ? (y.wins + "–" + y.losses + (y.ties ? ("–" + y.ties) : ""))
+          : "";
+        const path = (typeof finishFromLabel === "function") ? finishFromLabel(y.from) : (y.from || "");
+        const rs = y.rs_place ? ("RS " + nth(y.rs_place)) : "";
+        const pf = y.fpts != null ? (Number(y.fpts).toFixed(1) + " pts") : "";
+        const how = (typeof finishYearHow === "function") ? finishYearHow(y) : "";
+        const line = [path, rs, rec, pf].filter(Boolean).join(" · ");
+        const money = "Won " + finishMoney(y.won) + " · paid " + finishMoney(y.lost)
+          + " · net " + finishMoney(y.net)
+          + (how ? " · " + how : "");
+        return '<div class="team-book-year"><div class="team-book-year-top"><div>'
+          + "<b>" + esc(y.season) + "</b> · " + esc(nm) + "</div>"
+          + "<span>" + esc(y.place ? nth(y.place) : "—") + "</span></div>"
+          + (line ? '<div class="team-book-year-sub">' + esc(line) + "</div>" : "")
+          + '<div class="team-book-year-sub">' + esc(money) + "</div></div>";
+      }).join("");
+    }
+
+    function gmTeamTapeHtml(uid) {
+      if (typeof ensureWeekScores === "function") ensureWeekScores();
+      const want = String(uid || "");
+      const high = (typeof weekScoreRows === "function" ? weekScoreRows("high", "all") : []).find(function (r) {
+        return r && String(r.user_id) === want;
+      });
+      const low = (typeof weekScoreRows === "function" ? weekScoreRows("low", "all") : []).find(function (r) {
+        return r && String(r.user_id) === want;
+      });
+      if (!high && !low) return "";
+      const bits = [];
+      if (high) bits.push("League-high week · " + weekScorePts(high) + " · " + weekScoreLine(high));
+      if (low) bits.push("League-low week · " + weekScorePts(low) + " · " + weekScoreLine(low));
+      return '<div class="app-card"><h3>On the week tape</h3><ul class="team-book-crowns">'
+        + bits.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("")
+        + "</ul></div>";
+    }
+
+    function renderGmTeamHome() {
+      const uid = me && me.user_id;
+      const seat = gmTeamSeat(uid);
+      const mine = teamHomeIsMine();
+      const mem = (members || []).find(function (row) {
+        return row && me && String(row.user_id) === String(me.user_id);
+      });
+      const place = mem && mem.place && typeof nth === "function" ? nth(mem.place) : "";
+      const awardsChip = mine
+        ? ' <button type="button" class="chip" data-home-awards="1">Titles and Emblems</button>'
+        : "";
+      const avg = seat && seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
+      const rs = seat && seat.rs_avg != null ? Number(seat.rs_avg).toFixed(1) : "—";
+      const po = seat && seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
+      const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
+      const won = seat && seat.won != null ? finishMoney(seat.won) : "—";
+      const lost = seat && seat.lost != null ? finishMoney(seat.lost) : "—";
+      const rec = (seat && seat.wins != null)
+        ? (seat.wins + "–" + (seat.losses || 0))
+        : "—";
+      const pf = seat && seat.fpts_avg != null ? String(Math.round(Number(seat.fpts_avg))) : "—";
+      return (place ? '<p class="caption">' + esc(place) + " last season.</p>" : "")
+        + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(uid) + '">Price a deal</button>'
+        + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
+        + awardsChip + "</p>"
+        + '<div class="app-card"><h3>Crowning achievements</h3>'
+        + gmTeamCrownsHtml(seat, uid)
+        + "</div>"
+        + '<div class="app-card"><h3>The book so far</h3>'
+        + '<div class="join-land-stats is-wide">'
+        + gmTeamStat(avg, "Career avg")
+        + gmTeamStat(rs, "Regular season avg")
+        + gmTeamStat(po, "Playoff avg")
+        + gmTeamStat(net, "Career net")
+        + gmTeamStat(won, "Won")
+        + gmTeamStat(lost, "Lost")
+        + gmTeamStat(rec, "Career record")
+        + gmTeamStat(pf, "Points avg")
+        + "</div></div>"
+        + gmTeamTapeHtml(uid)
+        + '<div class="app-card"><h3>Past names and finishes</h3>'
+        + gmTeamYearsHtml(seat, uid)
+        + "</div>";
+    }
+
     function renderTeamHome() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return renderGmTeamHome();
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
       const best = pool[0];

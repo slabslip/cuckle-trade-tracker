@@ -91,8 +91,8 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
 }
 
 if (page.includes('const DATA_V = "finishone20260918171000"')
-  || !page.includes('const DATA_V = "pastchamp20260918230000"')
-  || !sw.includes("chuckle-shell-v284-past-champions")) {
+  || !page.includes('const DATA_V = "gmteamhome20260919163000"')
+  || !sw.includes("chuckle-shell-v288-gm-team-home")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
 }
 

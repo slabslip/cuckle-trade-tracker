@@ -60,8 +60,18 @@ need(fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"')
   && fnSrc(page, "teamAnalyzerScale").includes("return 86"),
   "C↔R bar must map Hard rebuild explicitly, not by fallthrough");
 need(fnSrc(page, "teamAnalyzerCard").includes("members")
-  && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile("),
-  "share card must name the seat and save a per-team PNG");
+  && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile(")
+  && page.includes('heading("Starting lineup"')
+  && page.includes('heading("Cornerstones"')
+  && page.includes('heading("Look to trade"')
+  && page.includes('heading("Players to target"')
+  && page.includes('heading("Contend / rebuild"')
+  && page.includes('heading("Positional grades"')
+  && page.includes('heading("Draft capital"')
+  && page.includes('heading("3-year outlook"')
+  && page.includes('heading("Depth score"')
+  && fnSrc(page, "teamAnalyzerShareDraw").includes("Chuckle Fantasy") === false,
+  "share PNG must paint the full dashboard analyzer, not a short lineup card");
 need(fnSrc(page, "teamAnalyzerHtml").includes("schematicSettingsHtml()") === false
   && page.includes("team-sch-gbar") && page.includes("team-sch-cr")
   && page.includes("data-analyzer-share")

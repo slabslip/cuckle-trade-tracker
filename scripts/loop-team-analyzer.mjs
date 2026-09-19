@@ -266,6 +266,9 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerMoves") === fnSrc(gen, "teamAnalyzerMoves")
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
+  && fnSrc(page, "teamAnalyzerShareDraw") === fnSrc(gen, "teamAnalyzerShareDraw")
+  && fnSrc(page, "teamAnalyzerShareDraw").includes("Starting lineup")
+  && fnSrc(page, "teamAnalyzerShareDraw").includes("Chuckle Fantasy") === false
   && fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"'),
   "index.html and generate-page.mjs share one grade formula; no league floor, no fmt");
 

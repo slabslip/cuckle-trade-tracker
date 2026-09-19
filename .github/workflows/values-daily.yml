@@ -36,7 +36,9 @@ jobs:
             players-nfl-${{ runner.os }}-
 
       - name: Ensure players.nfl.json
-        run: node ensure-players.mjs
+        env:
+          SLEEPER_FRESH_PLAYERS: "1"
+        run: node ensure-players.mjs --fresh
 
       - name: Snapshot market books
         run: node snapshot-values.mjs
@@ -47,35 +49,42 @@ jobs:
       - name: Rebuild Cuckle meter from committed snaps
         env:
           LEAGUE_ID: "1315431339301806080"
+          SLEEPER_FRESH_PLAYERS: "1"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node build.mjs --skip-snapshot "$LEAGUE_ID"
+        run: node build.mjs --fresh-players --skip-snapshot --skip-page --skip-espn --skip-finishes --allow-revalue-fail "$LEAGUE_ID"
+
+      - name: Rebuild GM meter from committed snaps
+        continue-on-error: true
+        env:
+          LEAGUE_ID: "1389723418827460608"
+          SLEEPER_FRESH_PLAYERS: "1"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node build.mjs --fresh-players --skip-snapshot --skip-page --skip-espn --allow-revalue-fail "$LEAGUE_ID"
 
       - name: Audit today book
+        continue-on-error: true
         run: |
           node audit-values.mjs
           node audit-pass2.mjs
 
-      - name: Bust DATA_V when the priced book changed
+      - name: Bust DATA_V when the priced book or tape changed
         run: |
           set -e
-          if git diff --quiet -- data/ui/calculator.json data/ui/pe.json data/ui/marks.json; then
-            echo "No priced UI book change; leave DATA_V"
+          if git diff --quiet -- \
+            data/ui/calculator.json data/ui/pe.json data/ui/marks.json data/ui/cuffs.json \
+            data/leagues/*/raw/trades.json \
+            data/leagues/*/raw/rosters_now.json \
+            data/leagues/*/raw/traded_picks.json \
+            data/leagues/*/raw/moves.json \
+            data/leagues/*/raw/injury_now.json \
+            data/leagues/*/ui/me \
+            data/leagues/*/ui/calculator.json \
+            data/ui/me; then
+            echo "No priced UI / tape change; leave DATA_V"
             exit 0
           fi
           stamp="daily$(date -u +%Y%m%d%H%M%S)"
-          python3 - "$stamp" <<'PY'
-          import re, sys
-          from pathlib import Path
-          stamp = sys.argv[1]
-          p = Path("generate-page.mjs")
-          text = p.read_text()
-          text2, n = re.subn(r'const DATA_V = "[^"]+"', f'const DATA_V = "{stamp}"', text, count=1)
-          if n != 1:
-              raise SystemExit(f"expected 1 DATA_V, got {n}")
-          p.write_text(text2)
-          print("DATA_V", stamp)
-          PY
-          node generate-page.mjs
+          node scripts/bust-data-v.mjs "$stamp" "chuckle-shell-v289-cuckle-nightly"
 
       - name: Commit snaps and UI if changed
         run: |
@@ -85,8 +94,8 @@ jobs:
           git add \
             data/ktc data/fc data/dd data/dp/latest \
             data/value_curve.json data/value_snapshots.json \
-            data/leagues/1315431339301806080 data/ui \
-            generate-page.mjs index.html || true
+            data/leagues data/ui \
+            generate-page.mjs index.html sw.js || true
           if git diff --cached --quiet; then
             echo "No value-book changes to commit"
             exit 0

@@ -1014,6 +1014,23 @@ const html = `<!DOCTYPE html>
       padding: 8px 0; border-bottom: 1px solid var(--line);
     }
     .join-land-year:last-child { border-bottom: 0; }
+    .join-land-stats.is-wide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (min-width: 420px) {
+      .join-land-stats.is-wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .team-book-year {
+      padding: 10px 0; border-bottom: 1px solid var(--line);
+    }
+    .team-book-year:last-child { border-bottom: 0; }
+    .team-book-year-top {
+      display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+    }
+    .team-book-year-sub {
+      color: var(--dim); font-size: 0.75rem; margin-top: 4px; line-height: 1.4;
+    }
+    .team-book-crowns { margin: 0; padding-left: 1.2em; }
+    .team-book-crowns li { margin: 0 0 6px; }
+    .claim-team-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     button.claim-team-on { border-color: #c9a227; background: #1a1810; }
     button.claim-team-taken { opacity: 0.55; }
     /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
@@ -1689,6 +1706,213 @@ const html = `<!DOCTYPE html>
     }
     .home-desk-meta {
       margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.3;
+    }
+    .overnight-slip {
+      position: relative;
+      margin: 0 0 16px;
+      background: #121214;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .overnight-slip-hero { padding: 14px 14px 12px; }
+    .overnight-slip-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 8px;
+    }
+    .overnight-slip-date {
+      margin: 0; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
+    }
+    .overnight-slip-lede {
+      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em;
+      color: var(--text); line-height: 1.15;
+    }
+    .overnight-slip-top button.tile-share { position: static; }
+    .overnight-slip-band {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 14px;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .overnight-slip-band .n { font-variant-numeric: tabular-nums; opacity: 0.85; }
+    .overnight-slip-band.trades { color: var(--text); background: #1a1a1e; }
+    .overnight-slip-band.wire { color: #34d399; background: rgba(52, 211, 153, 0.08); }
+    .overnight-slip-band.out { color: #ff6b3d; background: rgba(255, 107, 61, 0.12); }
+    .overnight-slip-band.ir { color: #e0b44c; background: rgba(224, 180, 76, 0.12); }
+    .overnight-slip-band.other { color: var(--muted); background: #1a1a1e; }
+    .overnight-slip-row {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      padding: 7px 14px;
+      border-bottom: 1px solid #1c1c20;
+      border-left: 3px solid transparent;
+    }
+    .overnight-slip-row:last-child { border-bottom: 0; }
+    .overnight-slip-row.out { border-left-color: #ff6b3d; }
+    .overnight-slip-row.ir { border-left-color: #e0b44c; }
+    .overnight-slip-row.other { border-left-color: var(--line); }
+    .overnight-slip-row.trades { border-left-color: var(--line); }
+    .overnight-slip-who { min-width: 0; }
+    .overnight-slip-who b {
+      display: inline; font-size: 0.9375rem; font-weight: 750; color: var(--text);
+    }
+    .overnight-slip-who i {
+      display: inline; margin-left: 6px; font-style: normal;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .overnight-slip-row > span {
+      flex: 0 0 auto; max-width: 42%;
+      font-size: 0.72rem; font-weight: 650; color: var(--muted);
+      text-align: right; line-height: 1.3;
+    }
+    .overnight-slip-sent {
+      margin: 3px 0 0; font-size: 0.78rem; font-weight: 650;
+      color: var(--muted); line-height: 1.35;
+    }
+    .overnight-slip-note {
+      padding: 8px 14px 10px; font-size: 0.72rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    button.overnight-slip-more {
+      appearance: none; display: block; width: 100%;
+      background: #161618; border: 0; border-top: 1px solid var(--line);
+      color: var(--lh-gold, #e0b44c); font: inherit;
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 11px 14px; cursor: pointer;
+    }
+    .sch-meters {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--line); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    }
+    .sch-meters.four { grid-template-columns: repeat(4, 1fr); }
+    .sch-meter {
+      background: #121214; padding: 10px 10px 10px 12px;
+      display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .sch-meter b {
+      font-size: 1.35rem; font-weight: 800; letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .sch-meter span {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sch-meter.trades b, .sch-meter.trades span { color: var(--text); }
+    .sch-meter.wire b, .sch-meter.wire span { color: #34d399; }
+    .sch-meter.out b, .sch-meter.out span { color: #ff6b3d; }
+    .sch-meter.ir b, .sch-meter.ir span { color: #e0b44c; }
+    .team-schematic {
+      margin: 0 0 16px; border-radius: 14px; overflow: hidden;
+      background:
+        radial-gradient(circle at 92% 6%, rgba(224,180,76,0.09), transparent 28%),
+        linear-gradient(180deg, #10263f 0%, #0b1c33 42%);
+      border: 1px solid #1d3a5c;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+      color: #f4f7fb;
+    }
+    .sch-settings {
+      margin: 6px 0 0; font-size: 0.65rem; font-weight: 750;
+      letter-spacing: 0.06em; text-transform: uppercase; color: #8fb3d9;
+    }
+    .sch-kv {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 8px;
+      margin-top: 10px;
+    }
+    .sch-kv span {
+      display: flex; justify-content: space-between; gap: 4px;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; color: #8fb3d9;
+      border-bottom: 1px dotted #2a4d73; padding-bottom: 2px;
+    }
+    .sch-kv i { font-style: normal; }
+    .sch-kv b { color: #f4f7fb; font-variant-numeric: tabular-nums; }
+    .team-sch-hero {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      padding: 14px 14px 12px; border-bottom: 1px solid #1d3a5c;
+    }
+    .team-sch-name {
+      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em; color: #f4f7fb;
+    }
+    .team-sch-arch {
+      text-align: right; flex: 0 0 auto; max-width: 42%;
+    }
+    .team-sch-arch b {
+      display: block; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #8fb3d9;
+    }
+    .team-sch-arch span {
+      display: block; margin-top: 4px; font-size: 0.95rem; font-weight: 800;
+      letter-spacing: -0.02em; color: #e0b44c; line-height: 1.15;
+    }
+    .team-sch-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #1d3a5c;
+    }
+    .team-sch-box {
+      background: #0b1c33; padding: 10px 12px 12px; min-width: 0;
+    }
+    .team-sch-box.span2 { grid-column: 1 / -1; }
+    .team-sch-h {
+      margin: 0 0 7px; font-size: 0.6rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #8fb3d9;
+    }
+    .team-sch-line {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 0.78rem; font-weight: 650; color: #f4f7fb; line-height: 1.35;
+      padding: 2px 0;
+    }
+    .team-sch-line i {
+      font-style: normal; font-size: 0.62rem; font-weight: 800;
+      letter-spacing: 0.04em; color: #8fb3d9; flex: 0 0 auto;
+    }
+    .team-sch-line span { color: #b7c7d9; text-align: right; }
+    .team-sch-score {
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -0.04em; color: #f4f7fb;
+    }
+    .team-sch-score em { font-style: normal; font-size: 0.85rem; color: #8fb3d9; }
+    .team-sch-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .team-sch-pills b {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; padding: 3px 6px; border-radius: 4px;
+      background: #123152; color: #d5e6f7;
+    }
+    .team-sch-pills b.on { background: #e0b44c; color: #0b1c33; }
+    .team-sch-bar {
+      height: 8px; border-radius: 99px; background: #123152; overflow: hidden; margin: 6px 0 2px;
+    }
+    .team-sch-bar i {
+      display: block; height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #34d399, #e0b44c, #ff6b3d);
+    }
+    .team-sch-cr {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .team-sch-cr > span {
+      font-size: 0.7rem; font-weight: 800; color: #8fb3d9;
+    }
+    .team-sch-cr .team-sch-bar { flex: 1; margin: 0; }
+    .team-sch-grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .team-sch-grade { text-align: center; }
+    .team-sch-gbar {
+      height: 36px; width: 10px; margin: 0 auto 4px;
+      border-radius: 99px; background: #123152; overflow: hidden;
+      display: flex; align-items: flex-end;
+    }
+    .team-sch-gbar i {
+      display: block; width: 100%; min-height: 2px;
+      background: linear-gradient(180deg, #34d399, #e0b44c, #ff6b3d);
+      border-radius: 99px;
+    }
+    .team-sch-grade span {
+      display: block; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #8fb3d9;
+    }
+    .team-sch-grade b {
+      display: block; margin-top: 2px; font-size: 0.95rem; font-weight: 800; color: #f4f7fb;
+    }
+    .team-sch-note {
+      margin: 0; font-size: 0.78rem; font-weight: 650; color: #d5e6f7; line-height: 1.4;
     }
     .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
@@ -4196,6 +4420,9 @@ const html = `<!DOCTYPE html>
     let picksFailed = false;
     // Cuffs: fantasy slot-1 starters → NFL handcuff + who owns them.
     let cuffs = null;
+    let overnight = null;
+    let overnightLoading = false;
+    let overnightOpen = false;
     let cuffsLoading = false;
     let cuffFilterMine = false;
     let cuffFilterOwner = ""; // fantasy manager whose starters
@@ -4217,7 +4444,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "shareonb20260919143000";
+    const DATA_V = "homeoutir20260919230000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7966,7 +8193,8 @@ const html = `<!DOCTYPE html>
 
     function renderReceiptShell() {
       let body = "";
-      if (receiptPickKey) body = renderReceiptPickTicket(receiptPickKey);
+      if (view === "overnight") body = overnightSlipHtml();
+      else if (receiptPickKey) body = renderReceiptPickTicket(receiptPickKey);
       else if (view === "titles") body = renderTitles();
       else if (openId) body = renderReceiptTradeTicket();
       else {
@@ -7997,7 +8225,11 @@ const html = `<!DOCTYPE html>
       await loadMembers();
       if (league && league.name) activeLeague = Object.assign({}, activeLeague, { name: league.name });
       if (q.lens && WINDOWS.some(function (w) { return w[0] === q.lens; })) lens = q.lens;
-      if (q.kind === "pick" && q.pick) {
+      if (q.kind === "overnight") {
+        view = (typeof overnightEnabled === "function" && !overnightEnabled()) ? "trade" : "overnight";
+        openId = null;
+        if (view === "overnight" && typeof ensureOvernight === "function") ensureOvernight();
+      } else if (q.kind === "pick" && q.pick) {
         receiptPickKey = q.pick;
         view = "trade";
         openId = null;
@@ -8062,6 +8294,7 @@ const html = `<!DOCTYPE html>
     }
 
     function pickOwnerName(entry) {
+      if (entry && entry.holder) return entry.holder;
       const hops = (entry && entry.hops) || [];
       if (hops.length) return hops[hops.length - 1].to || null;
       return pickOriginName(entry);
@@ -8690,6 +8923,280 @@ const html = `<!DOCTYPE html>
 
 
 
+    function overnightEnabled() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return false;
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return false;
+      return true;
+    }
+
+    function ensureOvernight() {
+      if (!overnightEnabled()) {
+        overnight = null;
+        overnightLoading = false;
+        return;
+      }
+      if (overnight || overnightLoading) return;
+      overnightLoading = true;
+      getLeagueJson("overnight.json").then((book) => {
+        overnight = book && book.v === 1 ? book : null;
+        overnightLoading = false;
+        if (typeof render === "function") render();
+      }).catch((err) => {
+        console.error(err);
+        overnight = null;
+        overnightLoading = false;
+      });
+    }
+
+    function overnightShareUrl() {
+      const leagueId = (activeLeague && activeLeague.sleeper_league_id) || CUCKLE_LEAGUE_ID;
+      const q = new URLSearchParams();
+      q.set("r", "overnight");
+      q.set("league", leagueId);
+      q.set("src", "share");
+      const path = location.pathname || "/";
+      return location.origin + path + "?" + q.toString();
+    }
+
+    function overnightPrettyDate(iso) {
+      const p = String(iso || "").split("-");
+      if (p.length < 3) return iso || "";
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return (months[Number(p[1]) - 1] || p[1]) + " " + Number(p[2]);
+    }
+
+    function overnightCats(letter) {
+      const book = letter || {};
+      return {
+        out: book.out || [],
+        ir: book.ir || [],
+        other: book.other || [],
+      };
+    }
+
+    function overnightPlayerLine(p) {
+      const bits = [p.name];
+      if (p.pos) bits.push(p.pos);
+      if (p.owner) bits.push(p.owner);
+      return bits.join(" · ");
+    }
+
+    function overnightShareText() {
+      const letter = overnight;
+      if (!letter) return "League overnight";
+      const cats = overnightCats(letter);
+      const open = true;
+      const preview = 4;
+      const lines = [letter.dateline || "Overnight"];
+      if (letter.lede) lines.push(letter.lede);
+      lines.push("");
+      lines.push("Trades");
+      if ((letter.trades || []).length) {
+        letter.trades.forEach(function (row) {
+          if (row.legs && row.legs.length) {
+            row.legs.forEach(function (leg) {
+              lines.push(leg.name + " sent " + (leg.sent || "—"));
+            });
+          } else {
+            lines.push(row.line);
+          }
+        });
+      } else {
+        lines.push("No trades last night.");
+        if (letter.latest) {
+          lines.push("Last deal · " + overnightPrettyDate(letter.latest.date));
+          if (letter.latest.legs && letter.latest.legs.length) {
+            letter.latest.legs.forEach(function (leg) {
+              lines.push(leg.name + " sent " + (leg.sent || "—"));
+            });
+          } else if (letter.latest.line) {
+            lines.push(letter.latest.line);
+          }
+        }
+      }
+      if ((letter.wire || []).length) {
+        lines.push("");
+        lines.push("Wire");
+        letter.wire.forEach(function (row) { lines.push(row.line); });
+      }
+      function catLines(title, rows) {
+        if (!rows.length) return;
+        lines.push("");
+        lines.push(title + " · " + rows.length);
+        const show = open ? rows : rows.slice(0, preview);
+        show.forEach(function (p) { lines.push(overnightPlayerLine(p)); });
+        if (!open && rows.length > preview) lines.push("+" + (rows.length - preview) + " more");
+      }
+      catLines("Out", cats.out);
+      catLines("IR", cats.ir);
+      catLines("PUP / NFI", cats.other);
+      return lines.join("\n");
+    }
+
+    function schematicSettingsPairs() {
+      const f = (typeof leagueFormat === "function") ? leagueFormat() : {};
+      const slots = (typeof deskSlots === "function") ? deskSlots() : { QB: 2, RB: 2, WR: 3, TE: 1 };
+      const n = f.team_n || ((members || []).length) || 10;
+      return [
+        ["QB", slots.QB || 2],
+        ["RB", slots.RB || 2],
+        ["WR", slots.WR || 3],
+        ["TE", slots.TE || 1],
+        ["Teams", n],
+        ["SF", f.superflex ? "Yes" : "No"],
+        ["PPR", "Yes"],
+        ["TEP", f.tep ? "Yes" : "No"],
+      ];
+    }
+
+    function schematicSettingsLine() {
+      return schematicSettingsPairs().map(function (p) {
+        return p[0] + " " + p[1];
+      }).join(" · ");
+    }
+
+    function schematicSettingsHtml() {
+      return '<div class="sch-kv" aria-label="League settings">'
+        + schematicSettingsPairs().map(function (p) {
+          return "<span><i>" + esc(String(p[0])) + "</i><b>" + esc(String(p[1])) + "</b></span>";
+        }).join("")
+        + "</div>";
+    }
+
+    function overnightBandHtml(tone, label, n) {
+      return '<div class="overnight-slip-band ' + tone + '"><span>' + esc(label) + "</span>"
+        + (n != null ? '<span class="n">' + n + "</span>" : "") + "</div>";
+    }
+
+    function overnightRowHtml(tone, name, meta, sent) {
+      return '<div class="overnight-slip-row ' + tone + '">'
+        + '<div class="overnight-slip-who"><b>' + esc(name) + "</b>"
+        + (meta ? "<i>" + esc(meta) + "</i>" : "")
+        + (sent ? '<p class="overnight-slip-sent">' + esc(sent) + "</p>" : "")
+        + "</div></div>";
+    }
+
+    function overnightSeatRowHtml(p, tone) {
+      return '<div class="overnight-slip-row ' + tone + '">'
+        + '<div class="overnight-slip-who"><b>' + esc(p.name) + "</b>"
+        + (p.pos ? "<i>" + esc(p.pos) + "</i>" : "") + "</div>"
+        + (p.owner ? "<span>" + esc(p.owner) + "</span>" : "")
+        + "</div>";
+    }
+
+    function overnightListHtml(rows, tone, limit) {
+      const show = limit != null ? rows.slice(0, limit) : rows;
+      return show.map(function (p) { return overnightSeatRowHtml(p, tone); }).join("");
+    }
+
+    function overnightSlipHtml(opts) {
+      opts = opts || {};
+      if (!overnightEnabled()) return "";
+      ensureOvernight();
+      const letter = overnight;
+      if (!letter) return "";
+      const trades = letter.trades || [];
+      const wire = letter.wire || [];
+      const cats = overnightCats(letter);
+      const preview = 3;
+      const extra = Math.max(0, cats.out.length - preview)
+        + Math.max(0, cats.ir.length - preview)
+        + cats.other.length
+        + wire.length
+        + (trades.length || letter.latest ? 1 : 0);
+      const hidden = overnightOpen ? 0 : extra;
+      const outLimit = overnightOpen ? null : preview;
+      const irLimit = overnightOpen ? null : preview;
+      let tradeBlock = "";
+      let wireBlock = "";
+      let meters = "";
+      if (overnightOpen) {
+        tradeBlock = overnightBandHtml("trades", "Trades", trades.length);
+        if (trades.length) {
+          tradeBlock += trades.map(function (row) {
+            const legs = row.legs || [];
+            if (!legs.length) return overnightRowHtml("trades", row.line, "", "");
+            return legs.map(function (leg) {
+              return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+            }).join("");
+          }).join("");
+        } else if (letter.latest) {
+          tradeBlock += '<p class="overnight-slip-note">Last deal · ' + esc(overnightPrettyDate(letter.latest.date)) + "</p>";
+          const legs = letter.latest.legs || [];
+          if (legs.length) {
+            tradeBlock += legs.map(function (leg) {
+              return overnightRowHtml("trades", leg.name, "", leg.sent || "—");
+            }).join("");
+          } else if (letter.latest.line) {
+            tradeBlock += overnightRowHtml("trades", letter.latest.line, "", "");
+          }
+        } else {
+          tradeBlock += overnightRowHtml("trades", "No trades last night", "", "");
+        }
+        if (wire.length) {
+          wireBlock = overnightBandHtml("wire", "Wire", wire.length)
+            + wire.map(function (row) {
+              return overnightRowHtml("wire", row.line, "", "");
+            }).join("");
+        }
+        meters = '<div class="sch-meters four">'
+          + '<div class="sch-meter trades"><b>' + trades.length + "</b><span>Trades</span></div>"
+          + '<div class="sch-meter wire"><b>' + wire.length + "</b><span>Wire</span></div>"
+          + '<div class="sch-meter out"><b>' + cats.out.length + "</b><span>Out</span></div>"
+          + '<div class="sch-meter ir"><b>' + cats.ir.length + "</b><span>IR</span></div>"
+          + "</div>";
+      }
+      let outBlock = "";
+      if (cats.out.length) {
+        outBlock = overnightBandHtml("out", "Out", cats.out.length)
+          + overnightListHtml(cats.out, "out", outLimit);
+      }
+      let irBlock = "";
+      if (cats.ir.length) {
+        irBlock = overnightBandHtml("ir", "IR", cats.ir.length)
+          + overnightListHtml(cats.ir, "ir", irLimit);
+      }
+      let otherBlock = "";
+      if (cats.other.length && overnightOpen) {
+        otherBlock = overnightBandHtml("other", "PUP / NFI", cats.other.length)
+          + overnightListHtml(cats.other, "other", null);
+      }
+      const more = hidden > 0
+        ? '<button type="button" class="overnight-slip-more" data-overnight-more="1">Show all · +'
+          + hidden + "</button>"
+        : (overnightOpen
+          ? '<button type="button" class="overnight-slip-more" data-overnight-more="1">Show less</button>'
+          : "");
+      return '<section class="overnight-slip" aria-label="League overnight">'
+        + '<div class="overnight-slip-hero">'
+        + '<div class="overnight-slip-top">'
+        + '<p class="overnight-slip-date">' + esc(letter.dateline || "Overnight") + "</p>"
+        + (opts.share === false ? "" : '<button type="button" class="tile-share" data-overnight-share="1" aria-label="Share league overnight">'
+          + receiptShareIco() + "</button>")
+        + "</div>"
+        + (letter.lede ? '<p class="overnight-slip-lede">' + esc(letter.lede) + "</p>" : "")
+        + "</div>"
+        + meters
+        + tradeBlock + wireBlock + outBlock + irBlock + otherBlock + more
+        + "</section>";
+    }
+
+    function honorOvernightShare() {
+      try {
+        if (!overnightEnabled()) return false;
+        const q = new URLSearchParams(location.search);
+        if (String(q.get("r") || "") !== "overnight") return false;
+        me = null;
+        view = "home";
+        homeTab = "home";
+        appScreen = "dash";
+        ensureOvernight();
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+
     function ensureCuffs() {
       if (cuffs || cuffsLoading) return;
       cuffsLoading = true;
@@ -9128,6 +9635,9 @@ const html = `<!DOCTYPE html>
       seatDirection = null;
       weekScoresBook = null;
       finishesBook = null;
+      overnight = null;
+      overnightLoading = false;
+      overnightOpen = false;
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -20033,6 +20543,8 @@ const html = `<!DOCTYPE html>
         if (appScreen === "dash") ledgerMaybeRender();
       }).catch((err) => console.error(err));
       if (typeof honorPendingDataTile === "function") honorPendingDataTile();
+      if (typeof honorOvernightShare === "function") honorOvernightShare();
+      if (typeof ensureOvernight === "function") ensureOvernight();
       if (typeof dashWarmChrome === "function") dashWarmChrome();
       // Design Mode uses a fake token; skip soft-delete sync so a remote wipe cannot blank the hero.
       // syncUrl() strips ?design= before we get here, so rely on the sticky session flag / token.
@@ -24046,6 +24558,9 @@ const html = `<!DOCTYPE html>
       if (a.pos) bits.push(a.pos);
       if (a.team) bits.push(a.team);
       if (a.age != null && Number.isFinite(Number(a.age))) bits.push(Number(a.age).toFixed(1) + " y.o.");
+      if (a.roster_slot === "ir" || String(a.injury || "").toUpperCase() === "IR") bits.push("IR");
+      else if (a.roster_slot === "taxi") bits.push("Taxi");
+      if (a.injury && String(a.injury).toUpperCase() !== "IR") bits.push(a.injury);
       if (showOwner && a.owner) bits.push(a.owner);
       if (!skipPe) {
         const pe = homeDeskPe(a);
@@ -25596,6 +26111,7 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">' + esc(calcDoorLabel()) + "</span></button>";
       return homeYouHtml()
+        + overnightSlipHtml()
         + leagueTapeHtml()
         + homeTopDoorsHtml()
         + '<div class="lh-calc-slot">' + door + "</div>"
@@ -25708,7 +26224,436 @@ const html = `<!DOCTYPE html>
         + "</div>";
     }
 
+    function gmTeamSeat(uid) {
+      const want = String(uid || (me && me.user_id) || "");
+      const seats = (typeof finishSeats === "function") ? finishSeats() : [];
+      return seats.find(function (s) { return s && String(s.user_id) === want; })
+        || ((typeof joinLandSeat === "function") ? joinLandSeat(want) : null);
+    }
+
+    function gmTeamYears(seat) {
+      const ledger = (typeof finishYearLedger === "function") ? finishYearLedger(seat) : [];
+      const byY = {};
+      ((seat && seat.places) || []).forEach(function (p) {
+        if (p && p.season != null) byY[String(p.season)] = p;
+      });
+      return ledger.map(function (row) {
+        const p = byY[String(row.season)] || {};
+        return {
+          season: row.season,
+          place: row.place != null ? row.place : p.place,
+          rs_place: p.rs_place,
+          from: p.from || row.from,
+          wins: p.wins,
+          losses: p.losses,
+          ties: p.ties,
+          fpts: p.fpts,
+          rs_fpts: p.rs_fpts,
+          won: row.won,
+          lost: row.lost,
+          net: row.net,
+          kinds: row.kinds || [],
+        };
+      });
+    }
+
+    function gmTeamCrownsHtml(seat, uid) {
+      const years = gmTeamYears(seat);
+      const titlesWon = ((titles && titles.titles) || []).filter(function (t) {
+        return t && String(t.user_id) === String(uid);
+      });
+      const bits = [];
+      if (titlesWon.length) {
+        bits.push((titlesWon.length === 1 ? "Champion " : (titlesWon.length + " titles · "))
+          + titlesWon.map(function (t) { return t.season; }).join(", "));
+      } else if (seat && seat.titles_n) {
+        bits.push(seat.titles_n === 1 ? "Champion" : (seat.titles_n + " titles"));
+      }
+      const second = years.filter(function (y) { return Number(y.place) === 2; }).map(function (y) { return y.season; });
+      if (second.length) bits.push("Runner-up " + second.join(", "));
+      const third = years.filter(function (y) { return Number(y.place) === 3; }).map(function (y) { return y.season; });
+      if (third.length) bits.push("3rd place " + third.join(", "));
+      if (seat && seat.last_n) {
+        bits.push((seat.last_n === 1 ? "Sacko " : (seat.last_n + " sackos · "))
+          + ((seat.last_years || []).join(", ") || ""));
+      }
+      const mp = (seat && seat.payouts || []).filter(function (p) { return p && p.kind === "mp"; });
+      if (mp.length) bits.push("Most regular-season points " + mp.map(function (p) { return p.season; }).join(", "));
+      if (seat && seat.playoff_n) {
+        bits.push(seat.playoff_n + (seat.playoff_n === 1 ? " playoff trip" : " playoff trips")
+          + ((seat.playoff_years || []).length ? " · " + seat.playoff_years.join(", ") : ""));
+      }
+      const champ = years.filter(function (y) { return y.from === "title"; }).map(function (y) { return y.season; });
+      if (champ.length && champ.length !== titlesWon.length) {
+        bits.push("Championship game " + champ.join(", "));
+      }
+      if (seat && seat.n) bits.push(seat.n + (seat.n === 1 ? " season on the book" : " seasons on the book"));
+      if (!bits.length) bits.push("First page of the book — the crowns start now.");
+      return '<ul class="team-book-crowns">' + bits.map(function (b) {
+        return "<li>" + esc(b) + "</li>";
+      }).join("") + "</ul>";
+    }
+
+    function gmTeamStat(val, lab) {
+      return '<div class="join-land-stat"><b>' + esc(val) + "</b><span>" + esc(lab) + "</span></div>";
+    }
+
+    function gmTeamYearsHtml(seat, uid) {
+      const years = gmTeamYears(seat);
+      if (!years.length) return '<p class="caption">No completed seasons on this book yet.</p>';
+      const team = (me && me.name) || (seat && seat.name) || "this team";
+      return years.map(function (y) {
+        const nm = (typeof joinLandTeamName === "function")
+          ? joinLandTeamName(uid, y.season, team)
+          : team;
+        const rec = (y.wins != null && y.losses != null)
+          ? (y.wins + "–" + y.losses + (y.ties ? ("–" + y.ties) : ""))
+          : "";
+        const path = (typeof finishFromLabel === "function") ? finishFromLabel(y.from) : (y.from || "");
+        const rs = y.rs_place ? ("RS " + nth(y.rs_place)) : "";
+        const pf = y.fpts != null ? (Number(y.fpts).toFixed(1) + " pts") : "";
+        const how = (typeof finishYearHow === "function") ? finishYearHow(y) : "";
+        const line = [path, rs, rec, pf].filter(Boolean).join(" · ");
+        const money = "Won " + finishMoney(y.won) + " · paid " + finishMoney(y.lost)
+          + " · net " + finishMoney(y.net)
+          + (how ? " · " + how : "");
+        return '<div class="team-book-year"><div class="team-book-year-top"><div>'
+          + "<b>" + esc(y.season) + "</b> · " + esc(nm) + "</div>"
+          + "<span>" + esc(y.place ? nth(y.place) : "—") + "</span></div>"
+          + (line ? '<div class="team-book-year-sub">' + esc(line) + "</div>" : "")
+          + '<div class="team-book-year-sub">' + esc(money) + "</div></div>";
+      }).join("");
+    }
+
+    function gmTeamTapeHtml(uid) {
+      if (typeof ensureWeekScores === "function") ensureWeekScores();
+      const want = String(uid || "");
+      const high = (typeof weekScoreRows === "function" ? weekScoreRows("high", "all") : []).find(function (r) {
+        return r && String(r.user_id) === want;
+      });
+      const low = (typeof weekScoreRows === "function" ? weekScoreRows("low", "all") : []).find(function (r) {
+        return r && String(r.user_id) === want;
+      });
+      if (!high && !low) return "";
+      const bits = [];
+      if (high) bits.push("League-high week · " + weekScorePts(high) + " · " + weekScoreLine(high));
+      if (low) bits.push("League-low week · " + weekScorePts(low) + " · " + weekScoreLine(low));
+      return '<div class="app-card"><h3>On the week tape</h3><ul class="team-book-crowns">'
+        + bits.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("")
+        + "</ul></div>";
+    }
+
+    function renderGmTeamHome() {
+      const uid = me && me.user_id;
+      const seat = gmTeamSeat(uid);
+      const mine = teamHomeIsMine();
+      const mem = (members || []).find(function (row) {
+        return row && me && String(row.user_id) === String(me.user_id);
+      });
+      const place = mem && mem.place && typeof nth === "function" ? nth(mem.place) : "";
+      const awardsChip = mine
+        ? ' <button type="button" class="chip" data-home-awards="1">Titles and Emblems</button>'
+        : "";
+      const avg = seat && seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
+      const rs = seat && seat.rs_avg != null ? Number(seat.rs_avg).toFixed(1) : "—";
+      const po = seat && seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
+      const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
+      const won = seat && seat.won != null ? finishMoney(seat.won) : "—";
+      const lost = seat && seat.lost != null ? finishMoney(seat.lost) : "—";
+      const rec = (seat && seat.wins != null)
+        ? (seat.wins + "–" + (seat.losses || 0))
+        : "—";
+      const pf = seat && seat.fpts_avg != null ? String(Math.round(Number(seat.fpts_avg))) : "—";
+      return (place ? '<p class="caption">' + esc(place) + " last season.</p>" : "")
+        + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(uid) + '">Price a deal</button>'
+        + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
+        + awardsChip + "</p>"
+        + '<div class="app-card"><h3>Crowning achievements</h3>'
+        + gmTeamCrownsHtml(seat, uid)
+        + "</div>"
+        + '<div class="app-card"><h3>The book so far</h3>'
+        + '<div class="join-land-stats is-wide">'
+        + gmTeamStat(avg, "Career avg")
+        + gmTeamStat(rs, "Regular season avg")
+        + gmTeamStat(po, "Playoff avg")
+        + gmTeamStat(net, "Career net")
+        + gmTeamStat(won, "Won")
+        + gmTeamStat(lost, "Lost")
+        + gmTeamStat(rec, "Career record")
+        + gmTeamStat(pf, "Points avg")
+        + "</div></div>"
+        + gmTeamTapeHtml(uid)
+        + '<div class="app-card"><h3>Past names and finishes</h3>'
+        + gmTeamYearsHtml(seat, uid)
+        + "</div>";
+    }
+
+    function teamAnalyzerEnabled() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return false;
+      if (typeof isRedraftLeague === "function" && isRedraftLeague()) return false;
+      return true;
+    }
+
+    function teamAnalyzerBag(uid) {
+      return ((calcBook && calcBook.players) || []).filter(function (p) {
+        return p && String(p.owner_id) === String(uid);
+      });
+    }
+
+    function teamAnalyzerDir(uid) {
+      return ((seatDirection && seatDirection.seats) || []).find(function (s) {
+        return s && String(s.seat_user_id) === String(uid);
+      }) || null;
+    }
+
+    function teamAnalyzerArchetype(bag, dir) {
+      const cuts = deskCuts();
+      const elite = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        elite[pos] = bag.filter(function (p) {
+          return p.pos === pos && calcValueNum(p) >= cuts.stud;
+        }).length;
+      });
+      if (elite.QB >= 2) return "Dual elite QB";
+      if (elite.QB === 1) return "Elite QB";
+      const dual = ["WR", "RB", "TE"].find(function (pos) { return elite[pos] >= 2; });
+      if (dual) return "Dual elite " + dual;
+      const lab = (dir && dir.label) || "";
+      if (lab === "Hard rebuild") return "Hard rebuild";
+      if (lab === "Win-now") return "Win now";
+      if (lab === "Reload") return "Reload";
+      return lab || "Reload";
+    }
+
+    function teamAnalyzerLineup(bag) {
+      const slots = deskSlots();
+      const used = {};
+      const rows = [];
+      function addRow(p, pos) {
+        if (!p || used[p.id || p.name]) return;
+        used[p.id || p.name] = true;
+        rows.push({
+          pos: pos,
+          name: p.name,
+          team: (typeof homeDeskNflTeam === "function") ? homeDeskNflTeam(p) : (p.team || ""),
+          injury: p.injury || "",
+        });
+      }
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        bag.filter(function (p) { return p.pos === pos; })
+          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+          .slice(0, slots[pos] || 1)
+          .forEach(function (p) { addRow(p, pos); });
+      });
+      const start = deskCuts().start;
+      bag.filter(function (p) {
+        const pos = p.pos;
+        return (pos === "RB" || pos === "WR" || pos === "TE")
+          && !used[p.id || p.name]
+          && calcValueNum(p) >= start;
+      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+        .slice(0, 2)
+        .forEach(function (p) { addRow(p, "FLEX"); });
+      return rows;
+    }
+
+    function teamAnalyzerPosFloor(pos) {
+      const slots = deskSlots();
+      const n = Math.max(1, ((members || []).length) || (leagueFormat().team_n) || 10);
+      const need = (slots[pos] || 1) * n;
+      const pool = ((calcBook && calcBook.players) || []).filter(function (p) {
+        return p && p.pos === pos;
+      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+      const row = pool[need - 1];
+      const v = row ? calcValueNum(row) : -1;
+      return v >= 0 ? v : deskCuts().start;
+    }
+
+    function teamAnalyzerDepth(bag) {
+      const slots = deskSlots();
+      const cuts = deskCuts();
+      let pts = 0;
+      let miss = 0;
+      let covered = 0;
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const need = slots[pos] || 1;
+        const pool = bag.filter(function (p) { return p.pos === pos; })
+          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        const filled = pool.filter(function (p) { return calcValueNum(p) >= cuts.start; }).length;
+        miss += Math.max(0, need - filled);
+        const floor = teamAnalyzerPosFloor(pos);
+        const extras = pool.slice(need, need + 2);
+        extras.forEach(function (p, i) {
+          const v = calcValueNum(p);
+          if (v >= floor) {
+            pts += (i === 0 ? 2 : 1);
+            if (i === 0) covered += 1;
+          } else if (v >= cuts.start) {
+            pts += (i === 0 ? 1 : 0.5);
+          }
+        });
+      });
+      const score = Math.max(0, Math.min(10, Math.round((pts / 12) * 10) - miss * 2));
+      const note = miss
+        ? "Short a starter"
+        : (covered
+          ? (covered + " of 4 spots " + (covered === 1 ? "has" : "have") + " a starter behind")
+          : "Backups sit below league starters");
+      return { score: score, note: note };
+    }
+
+    function teamAnalyzerOutlook(dir) {
+      const lab = (dir && dir.label) || "Reload";
+      if (lab === "Win-now") return ["Contend", "Contend", "Reload"];
+      if (lab === "Reload") return ["Reload", "Contend", "Reload"];
+      if (lab === "Hard rebuild") return ["Rebuild", "Rebuild", "Contend"];
+      return ["Rebuild", "Reload", "Contend"];
+    }
+
+    function teamAnalyzerCorner(bag) {
+      const cuts = deskCuts();
+      const out = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const pool = bag.filter(function (p) { return p.pos === pos; })
+          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        const stud = pool.find(function (p) { return calcValueNum(p) >= cuts.stud; }) || pool[0];
+        out[pos] = stud && calcValueNum(stud) >= cuts.start ? stud.name : "—";
+      });
+      return out;
+    }
+
+    function teamAnalyzerMoves(bag, dir) {
+      const leftover = bag.filter(function (p) {
+        const v = calcValueNum(p);
+        return v >= 0 && v < deskCuts().start && Number(p.age) >= 27;
+      }).sort(function (a, b) { return Number(b.age) - Number(a.age); })
+        .slice(0, 4).map(function (p) { return p.name; });
+      const sell = leftover.length ? leftover : ((dir && dir.sell) || []).slice(0, 3);
+      const grades = teamAnalyzerGrades(bag);
+      const targets = [];
+      ((dir && dir.holes) || []).forEach(function (p) {
+        targets.push(p + " depth");
+      });
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        if (grades[pos] <= 5 && targets.length < 4) targets.push(pos + " depth");
+      });
+      ((dir && dir.buy) || []).forEach(function (x) {
+        if (targets.length < 4) targets.push(x);
+      });
+      if (!targets.length) targets.push("young");
+      return { sell: sell, targets: targets };
+    }
+
+    function teamAnalyzerGrades(bag) {
+      const slots = deskSlots();
+      const start = deskCuts().start;
+      const grades = {};
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const vs = bag.filter(function (p) {
+          return p.pos === pos && calcValueNum(p) >= start;
+        }).length;
+        const need = slots[pos] || 1;
+        grades[pos] = Math.max(0, Math.min(10,
+          Math.round((vs / need) * 7) + Math.max(0, vs - need)));
+      });
+      return grades;
+    }
+
+    function teamAnalyzerDraft(dir) {
+      const p = (dir && dir.picks) || {};
+      const score = (p.firsts_2027 || 0) * 2.5 + (p.held_2027 || 0) * 0.6 + (p.held_later || 0) * 0.25;
+      return Math.max(0, Math.min(10, Math.round(score)));
+    }
+
+    function teamAnalyzerScale(dir) {
+      const lab = (dir && dir.label) || "Reload";
+      if (lab === "Win-now") return 18;
+      if (lab === "Reload") return 48;
+      if (lab === "Rebuild") return 70;
+      return 86;
+    }
+
+    function teamAnalyzerHtml(uid, name) {
+      if (!teamAnalyzerEnabled()) return "";
+      if (!calcBook || !Array.isArray(calcBook.players)) return "";
+      const bag = teamAnalyzerBag(uid);
+      if (!bag.length) return "";
+      const dir = teamAnalyzerDir(uid);
+      const arch = teamAnalyzerArchetype(bag, dir);
+      const lineup = teamAnalyzerLineup(bag);
+      const depth = teamAnalyzerDepth(bag);
+      const depthScore = depth && depth.score != null ? depth.score : 0;
+      const outlook = teamAnalyzerOutlook(dir);
+      const corner = teamAnalyzerCorner(bag);
+      const moves = teamAnalyzerMoves(bag, dir);
+      const grades = teamAnalyzerGrades(bag);
+      const draft = teamAnalyzerDraft(dir);
+      const scale = teamAnalyzerScale(dir);
+      const years = ["YR1", "YR2", "YR3"];
+      return '<section class="team-schematic" aria-label="Team analyzer">'
+        + '<div class="team-sch-hero">'
+        + "<div><p class=\"team-sch-name\">" + esc(name || "Team") + "</p>"
+        + schematicSettingsHtml() + "</div>"
+        + '<div class="team-sch-arch"><b>Team archetype</b><span>' + esc(arch) + "</span></div>"
+        + "</div>"
+        + '<div class="team-sch-grid">'
+        + '<div class="team-sch-box span2"><div class="team-sch-h">Starting lineup</div>'
+        + lineup.map(function (p) {
+          return '<div class="team-sch-line"><i>' + esc(p.pos) + "</i><b>" + esc(p.name) + "</b>"
+            + "<span>" + esc((p.injury ? p.injury + " · " : "") + (p.team || "")) + "</span></div>";
+        }).join("")
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Depth score</div>'
+        + '<div class="team-sch-score">' + depthScore + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (depthScore * 10) + '%"></i></div>'
+        + (depth && depth.note ? '<p class="team-sch-note">' + esc(depth.note) + "</p>" : "")
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">3-year outlook</div>'
+        + '<div class="team-sch-pills">'
+        + outlook.map(function (lab, i) {
+          return "<b" + (i === 0 ? ' class="on"' : "") + ">" + esc(years[i] + " " + lab) + "</b>";
+        }).join("")
+        + "</div></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Cornerstones</div>'
+        + ["QB", "RB", "WR", "TE"].map(function (pos) {
+          return '<div class="team-sch-line"><i>' + pos + "</i><span>" + esc(corner[pos]) + "</span></div>";
+        }).join("")
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Look to trade</div>'
+        + (moves.sell.length ? moves.sell.map(function (n) {
+          return '<div class="team-sch-line"><span>' + esc(n) + "</span></div>";
+        }).join("") : '<div class="team-sch-line"><span>No leftover to move</span></div>')
+        + "</div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Players to target</div>'
+        + moves.targets.map(function (n) {
+          return '<div class="team-sch-line"><span>' + esc(n) + "</span></div>";
+        }).join("")
+        + "</div>"
+        + '<div class="team-sch-box span2"><div class="team-sch-h">Contend / rebuild</div>'
+        + '<div class="team-sch-cr"><span>C</span>'
+        + '<div class="team-sch-bar"><i style="width:' + scale + '%"></i></div>'
+        + "<span>R</span></div>"
+        + '<p class="team-sch-note">' + esc((dir && dir.label) || "Reload") + "</p></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Positional grades</div>'
+        + '<div class="team-sch-grades">'
+        + ["QB", "RB", "WR", "TE"].map(function (pos) {
+          return '<div class="team-sch-grade"><div class="team-sch-gbar"><i style="height:'
+            + (grades[pos] * 10) + '%"></i></div><span>' + pos + "</span><b>"
+            + grades[pos] + "</b></div>";
+        }).join("")
+        + "</div></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Draft capital</div>'
+        + '<div class="team-sch-score">' + draft + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (draft * 10) + '%"></i></div></div>'
+        + ((dir && dir.why)
+          ? '<div class="team-sch-box span2"><div class="team-sch-h">Note</div>'
+            + '<p class="team-sch-note">' + esc(dir.why) + "</p></div>"
+          : "")
+        + "</div></section>";
+    }
+
     function renderTeamHome() {
+      if (typeof isGmLeague === "function" && isGmLeague()) return renderGmTeamHome();
       const pool = (data.trades || []).filter((t) => chipLived(t.date) && tradeDelta(t) != null)
         .slice().sort((a, b) => tradeDelta(b) - tradeDelta(a));
       const best = pool[0];
@@ -25772,6 +26717,7 @@ const html = `<!DOCTYPE html>
         + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button>'
         + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
         + awardsChip + "</p>"
+        + teamAnalyzerHtml(me.user_id, me.name || "")
         + teamHomeFormatHtml()
         + (showMarks ? teamMarks() + markChart() : "")
         + empty
@@ -27973,6 +28919,22 @@ const html = `<!DOCTYPE html>
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
+        return;
+      }
+      const overnightMoreBtn = e.target.closest("[data-overnight-more]");
+      if (overnightMoreBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        overnightOpen = !overnightOpen;
+        if (typeof render === "function") render();
+        return;
+      }
+      const overnightShareBtn = e.target.closest("[data-overnight-share]");
+      if (overnightShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        overnightOpen = true;
+        shareProofNow(overnightShareText(), overnightShareUrl(), "League overnight");
         return;
       }
       const tileShareBtn = e.target.closest("[data-tile-share]");
@@ -31307,6 +32269,13 @@ if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("fun
   if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(best)") || fn.includes("tradeRow(worst)")) {
     throw new Error("team home best/worst deals must use seatTradeFeedCardHtml");
   }
+  if (!inline.includes("function renderGmTeamHome(")
+    || !fn.includes("isGmLeague()")
+    || !inline.includes("Crowning achievements")
+    || !inline.includes("Past names and finishes")
+    || !inline.includes("function gmTeamYearsHtml(")) {
+    throw new Error("GM team home Home tab must be the career book, not the dynasty trade story");
+  }
 }
 {
   const at = inline.indexOf("function renderPartners(");
@@ -32263,6 +33232,21 @@ if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("func
 }
 if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
   throw new Error("pickOriginName regex must escape parens through the HTML template literal");
+}
+if (!fnSrc("pickOwnerName").includes("entry.holder")) {
+  throw new Error("pickOwnerName must prefer live Sleeper holder over a stale hop");
+}
+if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.roster_slot")) {
+  throw new Error("calcMeta must show live Sleeper IR / injury on trade options");
+}
+if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
+  || !inline.includes("data-overnight-share") || !inline.includes("function overnightEnabled(")
+  || !inline.includes("data-overnight-more")
+  || !inline.includes("function teamAnalyzerHtml(") || !inline.includes("function teamAnalyzerEnabled(")) {
+  throw new Error("Home overnight must be a shareable dynasty report; team home must paint the analyzer");
+}
+if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
+  throw new Error("overnight must not ship a Text this poke");
 }
 // Username sanitize: generate-page embeds the page in a template literal, so whitespace
 // class must be written as /\\s+/ or the live page gets /s+/ and strips the letter "s"

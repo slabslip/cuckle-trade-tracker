@@ -108,7 +108,7 @@ loop(5, fnSrc(page, "dataDashPresetHtml").includes("dataDashDefaultTiles")
 
 // 6 Dynasty default board and Cuckle cosmetics stay put
 loop(6, defIds.join(",") === "my_trades,league_trades,my_draft,league_draft,profit_loss,past_champions,season_place,vs_you,firsts_held,week_scores,passed_around,seat_draft,uninsured"
-  && sha(`${ROOT}data/ui/cosmetics.json`) === "840e2d358e28815ab28144379b9d6cc35860532f7d2c4fc5db260ffa4db7c318"
+  && sha(`${ROOT}data/ui/cosmetics.json`) === "ef5d357636402f73d479925c5434a10e9bcd1a54ad679c189c4aab72955f650d"
   && page.includes("Cuckle trade calculator")
   && page.includes("data/ui/calc-door.png"),
   "Cuckle 13-door board and cosmetics hash are unchanged");
@@ -165,10 +165,9 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "shareonb20260919143000"')
-  && html.includes('const DATA_V = "shareonb20260919143000"')
-  && sw.includes('chuckle-shell-v287-share-onboard')
-  && !sw.includes("chuckle-shell-v284-past-champions")
+loop(10, page.includes('const DATA_V = "homeoutir20260919230000"')
+  && html.includes('const DATA_V = "homeoutir20260919230000"')
+  && sw.includes('chuckle-shell-v298-home-out-ir')
   && !sw.includes("chuckle-shell-v283-list-share")
   && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");

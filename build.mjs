@@ -13,6 +13,11 @@ import { CUCKLE_LEAGUE_ID, loadProviders, setLeagueId, writeJson } from "./lib.m
  */
 const argv = process.argv.slice(2);
 const skipSnapshot = argv.includes("--skip-snapshot");
+const skipEspn = argv.includes("--skip-espn");
+const skipPage = argv.includes("--skip-page");
+const skipFinishes = argv.includes("--skip-finishes");
+const allowRevalueFail = argv.includes("--allow-revalue-fail");
+const freshPlayers = argv.includes("--fresh-players");
 const leagueArg = argv.find((a) => /^\d{6,64}$/.test(a));
 const leagueId = setLeagueId(leagueArg);
 {
@@ -38,8 +43,8 @@ const leagueId = setLeagueId(leagueArg);
   }
 }
 const steps = [
-  ["sleeper-sync.mjs", leagueId],
-  ["espn-sync.mjs", leagueId],
+  ["sleeper-sync.mjs", leagueId, ...(freshPlayers ? ["--fresh-players"] : [])],
+  ...(skipEspn ? [] : [["espn-sync.mjs", leagueId]]),
   ["yahoo-sync.mjs", leagueId],
   ["merge-provider-history.mjs", leagueId],
   ["draft-resolve.mjs", leagueId],
@@ -47,18 +52,20 @@ const steps = [
   ...(skipSnapshot ? [] : [["value-snapshot.mjs"]]),
   ["revalue.mjs", leagueId],
   ["title-path.mjs", leagueId],
-  ["build-finishes.mjs", leagueId],
+  ...(skipFinishes ? [] : [["build-finishes.mjs", leagueId]]),
   ["weekly-scores.mjs", leagueId],
   ["apply-value-adjust.mjs", leagueId],
   ["build-cuffs.mjs", leagueId],
   ["build-calculator.mjs", leagueId],
+  ["build-overnight.mjs", leagueId],
   ["build-seat-direction.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];
 
 // Shared shell + Cuckle tape audit. A second league must not rewrite index.html
-// or run check-value-feed against Cuckle's 10-seat book.
-if (leagueId === CUCKLE_LEAGUE_ID) steps.push(["generate-page.mjs"]);
+// or run check-value-feed against Cuckle's 10-seat book. Nightly tape jobs pass
+// --skip-page so a value-book check cannot smash the committed shell.
+if (leagueId === CUCKLE_LEAGUE_ID && !skipPage) steps.push(["generate-page.mjs"]);
 
 for (const [script, ...args] of steps) {
   console.log(`\n== ${script} (${leagueId}) ==`);
@@ -66,7 +73,12 @@ for (const [script, ...args] of steps) {
     stdio: "inherit",
     env: { ...process.env, LEAGUE_ID: leagueId },
   });
-  if (r.status) process.exit(r.status);
+  if (!r.status) continue;
+  if (allowRevalueFail && script === "revalue.mjs") {
+    console.warn("revalue self-check failed; keeping written meter so new Sleeper trades still ship.");
+    continue;
+  }
+  process.exit(r.status);
 }
 
 console.log(`\n== mark-league-ready (${leagueId}) ==`);

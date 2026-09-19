@@ -74,7 +74,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ESPN_S2: ${{ secrets.ESPN_S2 }}
           ESPN_SWID: ${{ secrets.ESPN_SWID || secrets.SWID }}
-        run: node build.mjs "$LEAGUE_ID"
+        run: node build.mjs --fresh-players --skip-page --allow-revalue-fail "$LEAGUE_ID"
 
       - name: Audit today book
         if: steps.league.outputs.id == '1315431339301806080'

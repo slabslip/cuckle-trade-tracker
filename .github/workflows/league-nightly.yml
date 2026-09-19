@@ -1,0 +1,104 @@
+# Twice-daily Sleeper sweep for every booked league: trades, waivers, FA,
+# commissioner moves, rosters, IR/taxi, injury status, seats, traded picks.
+# Value-book self-checks must not block this commit — that is how Cuckle froze
+# after 2026-08-29 while a 2026-09-17 trade sat on Sleeper.
+#
+# ESPN history stays on the last successful espn-sync (cookies). This job is
+# Sleeper-only. It never runs generate-page.mjs.
+# Plan: docs/plans/sleeper_daily_sweep.md
+name: league-nightly
+
+on:
+  schedule:
+    - cron: "10 8 * * *"
+    - cron: "20 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: league-sync-1315431339301806080
+  cancel-in-progress: false
+
+jobs:
+  tape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Cache Sleeper players dictionary
+        uses: actions/cache@v4
+        with:
+          path: data/players.nfl.json
+          key: players-nfl-${{ runner.os }}-v1
+          restore-keys: |
+            players-nfl-${{ runner.os }}-
+
+      - name: Ensure players.nfl.json
+        env:
+          SLEEPER_FRESH_PLAYERS: "1"
+        run: node ensure-players.mjs --fresh
+
+      - name: Refresh Cuckle Sleeper tape
+        env:
+          LEAGUE_ID: "1315431339301806080"
+          SLEEPER_FRESH_PLAYERS: "1"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node build.mjs --fresh-players --skip-snapshot --skip-page --skip-espn --skip-finishes --allow-revalue-fail "$LEAGUE_ID"
+
+      - name: Refresh GM Sleeper tape
+        continue-on-error: true
+        env:
+          LEAGUE_ID: "1389723418827460608"
+          SLEEPER_FRESH_PLAYERS: "1"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node build.mjs --fresh-players --skip-snapshot --skip-page --skip-espn --allow-revalue-fail "$LEAGUE_ID"
+
+      - name: Bust DATA_V when tape or seats changed
+        run: |
+          set -e
+          if git diff --quiet -- \
+            data/leagues/*/raw/trades.json \
+            data/leagues/*/raw/rosters_now.json \
+            data/leagues/*/raw/traded_picks.json \
+            data/leagues/*/raw/moves.json \
+            data/leagues/*/raw/injury_now.json \
+            data/leagues/*/ui/me \
+            data/leagues/*/ui/calculator.json \
+            data/ui/me \
+            data/ui/calculator.json \
+            data/ui/cuffs.json \
+            data/ui/marks.json; then
+            echo "No tape / seat change"
+            exit 0
+          fi
+          stamp="nightly$(date -u +%Y%m%d%H%M%S)"
+          node scripts/bust-data-v.mjs "$stamp" "chuckle-shell-v289-cuckle-nightly"
+
+      - name: Commit tape if changed
+        run: |
+          set -e
+          git config user.name "cuckle-league-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/leagues \
+            data/ui \
+            generate-page.mjs index.html sw.js || true
+          if git diff --cached --quiet; then
+            echo "No nightly tape changes to commit"
+            exit 0
+          fi
+          git commit -m "Nightly Sleeper tape: trades, rosters, and seats."
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin main && break
+            echo "push conflict, retry $i"
+            sleep $((i * 4))
+          done

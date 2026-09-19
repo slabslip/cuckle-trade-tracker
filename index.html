@@ -982,6 +982,9 @@
     .join-step-now .join-step-n { border-color: #c9a227; color: #f3d27a; background: #1a1810; }
     .join-step-done .join-step-n { border-color: #6b5a2e; background: #3a2e12; color: #f3d27a; }
     .join-step-now .join-step-lab, .join-step-done .join-step-lab { color: var(--text); }
+    .join-ok { color: #c9e0b0; }
+    .claim-team-list { margin-top: 8px; }
+    .claim-team-list select { font-size: 16px; }
     .join-land-hero { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.4; }
     .join-land-stats {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px;
@@ -996,7 +999,6 @@
       padding: 8px 0; border-bottom: 1px solid var(--line);
     }
     .join-land-year:last-child { border-bottom: 0; }
-    .claim-team-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
     button.claim-team-on { border-color: #c9a227; background: #1a1810; }
     button.claim-team-taken { opacity: 0.55; }
     /* Voting hands the user back to the league list. Say the vote landed, and that it moves. */
@@ -4200,7 +4202,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pastchamp20260918230000";
+    const DATA_V = "claimdrop20260919140000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -17329,6 +17331,8 @@
     let joinLand = null;
     let claimSeats = [];
     let claimPickId = "";
+    let claimGuessedId = "";
+    let claimSeatsStatus = "";
     let claimLeagueId = "";
     let claimLeagueName = "";
     let nameHistoryBook = null;
@@ -18714,7 +18718,7 @@
           const state = i < at || cur === "land" ? "done" : (i === at ? "now" : "todo");
           const lab = state === "done" ? s[2] : s[1];
           return '<li class="join-step join-step-' + state + '">'
-            + '<span class="join-step-n">' + (i + 1) + "</span>"
+            + '<span class="join-step-n">' + (state === "done" ? "✓" : String(i + 1)) + "</span>"
             + '<span class="join-step-lab">' + esc(lab) + "</span></li>";
         }).join("")
         + "</ol>";
@@ -18802,10 +18806,70 @@
       render();
     }
 
+    function claimNorm(s) {
+      return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    function claimGuessSeat(seats) {
+      const remaining = (seats || []).filter(function (s) { return s && !s.claimed && s.sleeper_user_id; });
+      if (!remaining.length) return { id: "", how: "", name: "" };
+      if (remaining.length === 1) {
+        return { id: String(remaining[0].sleeper_user_id), how: "only", name: remaining[0].team_name || "" };
+      }
+      const hints = [];
+      if (gateInviteSeatId) hints.push({ kind: "id", val: String(gateInviteSeatId) });
+      if (gateInviteTeam) hints.push({ kind: "name", val: gateInviteTeam });
+      if (authSession && authSession.username) hints.push({ kind: "user", val: authSession.username });
+      if (authSession && authSession.seat_name) hints.push({ kind: "name", val: authSession.seat_name });
+      if (gateSuggestedUser) hints.push({ kind: "user", val: gateSuggestedUser });
+      if (typeof pendingDataWho === "string" && pendingDataWho) hints.push({ kind: "name", val: pendingDataWho });
+      const score = function (seat, hint) {
+        const id = String(seat.sleeper_user_id || "");
+        const name = claimNorm(seat.team_name);
+        const sug = claimNorm(seat.suggested_username || (typeof suggestUsernameFromTeam === "function"
+          ? suggestUsernameFromTeam(seat.team_name) : ""));
+        if (hint.kind === "id" && String(hint.val) === id) return 100;
+        const hv = claimNorm(hint.val);
+        if (!hv) return 0;
+        if (name === hv || sug === hv) return 90;
+        if (name.indexOf(hv) >= 0 || hv.indexOf(name) >= 0) return 75;
+        if (sug && (sug.indexOf(hv) >= 0 || hv.indexOf(sug) >= 0)) return 70;
+        return 0;
+      };
+      let best = null;
+      let bestScore = 0;
+      for (let i = 0; i < remaining.length; i++) {
+        for (let h = 0; h < hints.length; h++) {
+          const sc = score(remaining[i], hints[h]);
+          if (sc > bestScore) {
+            bestScore = sc;
+            best = remaining[i];
+          }
+        }
+      }
+      if (!best || bestScore < 70) return { id: "", how: "", name: "" };
+      return {
+        id: String(best.sleeper_user_id),
+        how: bestScore >= 90 ? "match" : "guess",
+        name: best.team_name || "",
+      };
+    }
+
+    function claimApplyGuess(seats) {
+      const guess = claimGuessSeat(seats);
+      claimGuessedId = guess.id || "";
+      if (!claimPickId && guess.id) claimPickId = guess.id;
+      return guess;
+    }
+
     async function openClaimPick(leagueId, leagueName) {
       claimLeagueId = String(leagueId || "").trim();
       claimLeagueName = leagueName || claimLeagueName || "";
       claimPickId = "";
+      claimGuessedId = "";
+      claimSeats = [];
+      claimSeatsStatus = "loading";
+      joinError = "";
       appScreen = "claimTeam";
       focusNext = ".screen-h";
       render();
@@ -18813,18 +18877,30 @@
         const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: claimLeagueId });
         claimSeats = data.seats || [];
         claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
+        claimSeatsStatus = "ready";
+        claimApplyGuess(claimSeats);
       } catch (err) {
-        try {
-          saveActiveLeague({
-            sleeper_league_id: claimLeagueId,
-            name: claimLeagueName || claimLeagueId,
-            status: "ready",
-          });
-          await loadMembers();
-          claimSeats = (members || []).map(function (m) {
-            return { sleeper_user_id: m.user_id, team_name: m.name, claimed: false };
-          });
-        } catch (err2) {
+        const design = (typeof isDesignLeagueHome === "function" && isDesignLeagueHome())
+          || (authSession && authSession.access_token === "design-mode");
+        if (design) {
+          try {
+            saveActiveLeague({
+              sleeper_league_id: claimLeagueId,
+              name: claimLeagueName || claimLeagueId,
+              status: "ready",
+            });
+            await loadMembers();
+            claimSeats = (members || []).map(function (m) {
+              return { sleeper_user_id: m.user_id, team_name: m.name, claimed: false };
+            });
+            claimSeatsStatus = "ready";
+            claimApplyGuess(claimSeats);
+          } catch (err2) {
+            claimSeatsStatus = "error";
+            joinError = (err && err.message) || "Could not load teams. Ask your commissioner for an invite link.";
+          }
+        } else {
+          claimSeatsStatus = "error";
           joinError = (err && err.message) || "Could not load teams. Ask your commissioner for an invite link.";
         }
       }
@@ -18851,6 +18927,7 @@
       joinBusy = true;
       joinError = "";
       render();
+      let leagueInfo = null;
       try {
         const data = await joinLeagueCall("claim_open_seat", {
           sleeper_league_id: lid,
@@ -18858,7 +18935,7 @@
         });
         await loadMemberships();
         const L = data.league || {};
-        const leagueInfo = {
+        leagueInfo = {
           sleeper_league_id: L.sleeper_league_id || lid,
           name: L.name || claimLeagueName || lid,
           status: L.status || "pending_sync",
@@ -18872,13 +18949,21 @@
           }));
         }
         voteSeatRemember(leagueInfo.sleeper_user_id);
-        await openJoinWelcome(leagueInfo, { auto: false });
       } catch (err) {
         const msg = (err && err.message) || "Could not claim that team.";
         joinError = /unknown action/i.test(msg)
           ? "Ask your commissioner for an invite link, then open it to claim this team."
           : msg;
         joinBusy = false;
+        render();
+        return;
+      }
+      try {
+        await openJoinWelcome(leagueInfo, { auto: false });
+      } catch (err) {
+        console.error(err);
+        joinBusy = false;
+        appScreen = "joinWelcome";
         render();
       }
     }
@@ -26179,9 +26264,11 @@
             + '<p class="caption">Seat invite <code style="user-select:all">'
             + esc(String(redeemCode).toUpperCase()) + "</code>"
             + " — this is your <b>seat ticket</b>, not your account password. "
-            + "Pick a username and a <b>new password</b> you will use to sign in later.</p>")
+            + "Pick a username and a <b>new password</b> you will use to sign in later. "
+            + "Next you confirm your team.</p>")
           : ((claimLeagueId || shared) && !forgot
-            ? (joinStepsHtml("account") + joinInviteLeadHtml())
+            ? (joinStepsHtml("account") + joinInviteLeadHtml()
+              + '<p class="caption">Create the account, then confirm your team from the list.</p>')
             : ""))
         + (gateSuggestedUser && invited && !forgot
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
@@ -26559,50 +26646,80 @@
 
     function renderClaimTeam() {
       const league = claimLeagueName || gateInviteLeague || "this league";
-      const remaining = (claimSeats || []).filter(function (s) { return !s.claimed; });
+      const remaining = (claimSeats || []).filter(function (s) { return s && !s.claimed; });
       const takenN = (claimSeats || []).length - remaining.length;
+      const loading = claimSeatsStatus === "loading";
+      const failed = claimSeatsStatus === "error";
       const picked = remaining.find(function (s) {
         return String(s.sleeper_user_id) === String(claimPickId);
       });
-      const rows = remaining.map(function (s) {
-        const on = String(s.sleeper_user_id) === String(claimPickId);
-        return '<button type="button" class="chip'
-          + (on ? " claim-team-on" : "") + '"'
-          + ' data-claim-pick="' + esc(s.sleeper_user_id) + '"'
-          + (joinBusy ? " disabled" : "") + ">"
-          + esc(s.team_name)
-          + "</button>";
+      const guessed = remaining.find(function (s) {
+        return String(s.sleeper_user_id) === String(claimGuessedId);
+      });
+      const who = (authSession && authSession.username) || "";
+      const opts = remaining.slice().sort(function (a, b) {
+        return String(a.team_name || "").localeCompare(String(b.team_name || ""));
+      }).map(function (s) {
+        const id = String(s.sleeper_user_id || "");
+        return '<option value="' + esc(id) + '"'
+          + (id === String(claimPickId) ? " selected" : "") + ">"
+          + esc(s.team_name || "Team")
+          + "</option>";
       }).join("");
       const hero = (typeof shareAccessPending === "function" && shareAccessPending())
-        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim one of the remaining teams to open it.")
-        : ("You've been invited to join <b>" + esc(league) + "</b>. Pick the team that is yours.");
-      const hint = !claimSeats.length
-        ? "Could not load teams yet. Ask your commissioner for an invite link."
-        : (!remaining.length
-          ? "No remaining teams. Sign in if yours is already claimed."
-          : (takenN
-            ? (takenN + " already claimed. Remaining teams below.")
-            : "League added. Team not claimed yet."));
+        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim the remaining team that is yours.")
+        : ("You've been invited to join <b>" + esc(league) + "</b>. Confirm the team that is yours.");
+      let hint = "";
+      let hintCls = "caption";
+      if (loading) hint = "Loading remaining teams…";
+      else if (failed) hint = "Could not load teams. Retry, or ask your commissioner for an invite link.";
+      else if (!remaining.length) hint = "No remaining teams. Sign in if yours is already claimed.";
+      else if (takenN) hint = takenN + " already claimed. " + remaining.length + " left to pick.";
+      else hint = "League added. Team not claimed yet.";
+      let pickNote = "";
+      if (picked && guessed && String(claimPickId) === String(claimGuessedId)) {
+        hintCls = "caption join-ok";
+        if (remaining.length === 1) {
+          pickNote = "One remaining team: <b>" + esc(picked.team_name) + "</b>. Confirm if it is yours.";
+        } else {
+          pickNote = "We matched you to <b>" + esc(picked.team_name)
+            + "</b>. Change the menu if that is wrong, then confirm.";
+        }
+      } else if (picked) {
+        hintCls = "caption join-ok";
+        pickNote = "You picked <b>" + esc(picked.team_name) + "</b>. Confirm only if that is your team.";
+      } else if (!loading && !failed && remaining.length) {
+        pickNote = "Choose your team, then confirm.";
+      }
+      const signed = who
+        ? '<p class="caption join-ok">Signed in as <b>' + esc(who) + "</b>. Account ready.</p>"
+        : "";
       return '<div class="app-shell">'
         + joinStepsHtml("team")
         + '<h2 class="screen-h" tabindex="-1">Claim your team</h2>'
         + '<div class="app-card">'
         + '<p class="join-land-hero">' + hero + "</p>"
-        + '<p class="caption">' + esc(hint) + "</p>"
-        + '<div class="claim-team-list">'
-        + (rows || "")
+        + signed
+        + '<p class="' + hintCls + '">' + (pickNote || esc(hint)) + "</p>"
+        + (!pickNote ? "" : '<p class="caption">' + esc(hint) + "</p>")
+        + '<div class="app-form claim-team-list">'
+        + (loading
+          ? '<p class="caption" role="status">Loading remaining teams…</p>'
+          : (failed
+            ? ('<button type="button" class="chip" data-claim-reload="1">Retry teams</button>')
+            : (remaining.length
+              ? ('<label>Your team<select data-claim-team-select="1"'
+                + (joinBusy ? " disabled" : "") + ">"
+                + '<option value="">Select your team</option>'
+                + opts
+                + "</select></label>")
+              : "")))
         + "</div>"
-        + (picked
-          ? ('<p class="caption" style="margin-top:12px">You picked <b>' + esc(picked.team_name)
-            + "</b>. Only claim it if that is your team.</p>")
-          : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + '<div class="app-actions" style="margin-top:12px">'
-        + (picked
-          ? ('<button type="button" class="chip" data-claim-open-go="1"'
-            + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>")
-          : '<p class="caption">Tap your team above.</p>')
+        + '<button type="button" class="chip" data-claim-open-go="1"'
+        + ((!picked || joinBusy || loading || failed) ? " disabled" : "") + ">"
+        + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>"
         + '<button type="button" class="linkish" data-app-home="1">Your leagues</button>'
         + "</div></div></div>";
     }
@@ -28657,6 +28774,11 @@
         render();
         return;
       }
+      const claimReload = e.target.closest("[data-claim-reload]");
+      if (claimReload) {
+        openClaimPick(claimLeagueId, claimLeagueName).catch(function (err) { console.error(err); });
+        return;
+      }
       const claimOpenGo = e.target.closest("[data-claim-open-go]");
       if (claimOpenGo) {
         onClaimOpenSeat(claimPickId).catch(function (err) { console.error(err); });
@@ -29429,6 +29551,13 @@
       ledgerHydrateCompose(form);
     }, true);
     document.getElementById("app").addEventListener("change", (e) => {
+      const claimSel = e.target && e.target.closest && e.target.closest("[data-claim-team-select]");
+      if (claimSel) {
+        claimPickId = claimSel.value || "";
+        joinError = "";
+        render();
+        return;
+      }
       const joinKindSel = e.target && e.target.closest && e.target.closest("[data-join-src-kind]");
       if (joinKindSel) {
         readJoinSourcesFromDom(joinSrcForFromEl(joinKindSel));

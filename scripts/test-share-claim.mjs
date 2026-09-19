@@ -36,7 +36,7 @@ need(page, "index.html", [
   "function dataTileSeatReady(",
   "function honorPendingDataTile(",
   "claim a remaining team to open it",
-  "Claim one of the remaining teams to open it",
+  "Claim the remaining team that is yours",
   "Create account to open this view",
   "function leagueNameForId(",
   "cuckle.pending.tile",
@@ -69,8 +69,8 @@ if (!gate.includes("already") || !gate.includes("openClaimPick(") || !gate.inclu
   throw new Error("after account, share links must claim remaining team or open if already seated");
 }
 
-if (!page.includes('const DATA_V = "pastchamp20260918230000"')
-  || !sw.includes("chuckle-shell-v284-past-champions")) {
+if (!page.includes('const DATA_V = "claimdrop20260919140000"')
+  || !sw.includes("chuckle-shell-v285-claim-drop")) {
   throw new Error("share-claim must bust DATA_V and SW");
 }
 

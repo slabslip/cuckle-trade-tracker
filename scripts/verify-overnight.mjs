@@ -27,13 +27,12 @@ try {
   const home = await page.locator(".overnight-slip").innerText();
   console.log("HOME LETTER\n" + home);
   if (!/Quiet night|trade last night|Wire moved/i.test(home)) fail("Home letter missing lede");
-  if (!/Last deal|No trades last night|sent /i.test(home)) fail("Home letter missing trades / last deal");
+  if (/Last deal|No trades last night/i.test(home)) fail("Collapsed letter must hide trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
-  if (!(await page.locator(".overnight-slip.schematic").count())) fail("Home letter missing schematic chrome");
-  if (!(await page.locator(".sch-kv").count())) fail("Home letter missing settings grid");
-  if (!(await page.locator(".sch-meters.four").count())) fail("Home letter missing four meters");
-  if (!/Trades/i.test(home) || !/\bOut\b/i.test(home)) fail("Home letter missing schematic meter labels");
+  if (!(await page.locator(".overnight-slip").count())) fail("Home letter missing");
+  if (await page.locator(".overnight-slip .sch-kv").count()) fail("Home letter must not show the settings grid");
+  if (await page.locator(".sch-meters.four").count()) fail("Collapsed letter must hide meters");
   if (/Text this|That's not how I remember/i.test(home)) fail("Home letter still has Text this");
   const chip = page.locator("[data-overnight-share]");
   if (!(await chip.count())) fail("Home gold share chip missing");
@@ -47,6 +46,7 @@ try {
   console.log("HOME EXPANDED\n" + open);
   if (/Show all/i.test(open)) fail("Show all still visible after expand");
   if (!/Show less/i.test(open)) fail("Expanded letter missing Show less");
+  if (!/Last deal|No trades last night|sent /i.test(open)) fail("Expanded letter missing trades / last deal");
   if ((open.match(/\n/g) || []).length <= (home.match(/\n/g) || []).length) {
     fail("Expand did not reveal more rows");
   }
@@ -100,7 +100,7 @@ try {
   const ticket = await guestPage.locator(".overnight-slip").innerText();
   console.log("PUBLIC LETTER\n" + ticket);
   if (!/Quiet night|trade last night|Wire moved/i.test(ticket)) fail("Public letter missing lede");
-  if (!/Last deal|No trades last night/i.test(ticket)) fail("Public letter missing last deal");
+  if (/Last deal|No trades last night/i.test(ticket)) fail("Public collapsed letter must hide last deal");
   if (!/^OUT\b/m.test(ticket) || !/^IR\b/m.test(ticket)) fail("Public letter missing Out / IR bands");
   if (!(await guestPage.locator(".receipt-cta").count())) fail("Unsigned overnight ticket missing claim CTA");
   await guestPage.screenshot({ path: `${shotDir}/overnight-share.png` });

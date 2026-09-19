@@ -2,8 +2,8 @@
 
 **Status:** v1 shipping on **Cuckle dynasty Home only**. `overnightEnabled()`
 is false for GM / any redraft book. Home paints one **league** overnight letter
-as a navy schematic (settings grid + Trades / Wire / Out / IR meters, titled
-lists). The gold share chip still sends text + `?r=overnight&league=&src=share`.
+in dashboard chrome (Trades / Wire / Out / IR meters, titled lists). The gold
+share chip still sends text + `?r=overnight&league=&src=share`.
 Every dynasty **team homepage** paints a matching schematic **team analyzer**
 from the calculator bag + `seat-direction.json` (lineup, depth, outlook,
 cornerstones, sell / target, C↔R, grades, draft capital). GM / redraft stay
@@ -85,9 +85,8 @@ opens the same card as a public receipt (existing gold share path).
 
 ### Card (one screen, ~390px)
 
-Navy schematic chrome (Domain Dynasty layout language only — not their
-fields). Settings kv grid (QB / RB / WR / TE / Teams / SF / PPR / TEP) and
-four meters (Trades / Wire / Out / IR) sit above the titled lists.
+Dashboard chrome (same card, type, and gold as the rest of Home). Collapsed
+card is Out / IR only. Trades, wire, meters, and PUP wait on Show all.
 
 **Dateline** — `Sat Sep 19 · CuckleChunkle`
 

@@ -45,12 +45,15 @@ need(page.includes("overnight-slip-lede") && page.includes("letter.lede")
 need(page.includes("data-overnight-more") && page.includes("overnight-slip-band")
   && page.includes('overnightBandHtml("out"'),
   "Out / IR must be titled lists with an expandable Show all");
-need(page.includes('overnight-slip schematic') && page.includes("sch-meters four")
-  && page.includes("function schematicSettingsHtml(") && page.includes("sch-kv"),
-  "league overnight must use the navy schematic meters + settings grid");
-need(gen.includes('overnight-slip schematic') && gen.includes("sch-meters four")
-  && gen.includes("function schematicSettingsHtml("),
-  "generate-page.mjs schematic overnight must stay in sync");
+need(fnSrc(page, "overnightSlipHtml").includes("schematicSettingsHtml") === false,
+  "Home summary must not paint the QB/RB/WR/TE settings grid");
+need(fnSrc(page, "overnightSlipHtml").includes("if (overnightOpen)")
+  && fnSrc(page, "overnightSlipHtml").includes("Show all")
+  && fnSrc(page, "overnightSlipHtml").includes('overnightBandHtml("out"'),
+  "collapsed Home letter shows Out / IR; trades and wire wait on Show all");
+need(fnSrc(gen, "overnightSlipHtml").includes("if (overnightOpen)")
+  && fnSrc(gen, "overnightSlipHtml").includes("schematicSettingsHtml") === false,
+  "generate-page.mjs Home summary must stay in sync");
 need(fnSrc(page, "overnightShareText").includes('catLines("Out"')
   && fnSrc(page, "overnightShareText").includes("const open = true"),
   "share must send the full Out and IR lists");

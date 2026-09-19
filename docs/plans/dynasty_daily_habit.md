@@ -97,9 +97,9 @@ say so, then **Last deal** from the tape so the letter is never empty.
 **Wire** — named waiver / FA / commish from `moves.json`
 (`TipsUp waiver claimed Pearsall · dropped X`). Empty section collapses.
 
-**On IR / Out** — ranked by the existing calculator book (no numbers on the
-card), skill / Out / starters ahead of taxi. A.J. Brown and a Darnold Out
-beat a taxi rookie. Cap 12 in JSON / 6 on the card.
+**Lists** — titled, color-coded bands: Trades (ice), Wire (green), Out (orange),
+IR (gold), PUP/NFI (violet). Rows are name + pos + owner. Collapsed preview is
+four per list; **Show all** expands the rest. Share always sends every name.
 
 **Gold share chip** — existing `.tile-share`. Sends `overnightShareText()` +
 `?r=overnight&league=&src=share`. No “Text this” label.

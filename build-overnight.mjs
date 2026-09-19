@@ -24,19 +24,33 @@ function prettyAsset(label) {
   return raw;
 }
 
+function tradeLegs(row) {
+  return Object.keys((row && row.sides) || {}).map((name) => {
+    const bag = row.sides[name] || {};
+    return {
+      name,
+      sent: (bag.out || []).map(prettyAsset).join(" + "),
+      got: (bag.in || []).map(prettyAsset).join(" + "),
+    };
+  });
+}
+
 function tradeLine(row) {
-  const names = Object.keys((row && row.sides) || {});
-  if (!names.length) return "A trade landed.";
-  if (names.length === 1) {
-    const bag = row.sides[names[0]] || {};
-    const got = (bag.in || []).map(prettyAsset).join(" + ");
-    return names[0] + (got ? (" got " + got) : " was in a deal");
+  const legs = tradeLegs(row);
+  if (!legs.length) return "A trade landed.";
+  if (legs.length === 1) {
+    return legs[0].name + (legs[0].got ? (" got " + legs[0].got) : " was in a deal");
   }
-  const a = names[0];
-  const b = names[1];
-  const aOut = (row.sides[a].out || []).map(prettyAsset).join(" + ") || "—";
-  const bOut = (row.sides[b].out || []).map(prettyAsset).join(" + ") || "—";
-  return a + " sent " + aOut + " · " + b + " sent " + bOut;
+  return legs.map((leg) => leg.name + " sent " + (leg.sent || "—")).join(" · ");
+}
+
+function tradeRecord(row) {
+  return {
+    date: row.date,
+    transaction_id: String(row.transaction_id || ""),
+    line: tradeLine(row),
+    legs: tradeLegs(row),
+  };
 }
 
 function dateline(asOf, leagueName) {
@@ -148,19 +162,9 @@ function main() {
 
   const trades = tape
     .filter((row) => row && String(row.date || "") >= since)
-    .map((row) => ({
-      date: row.date,
-      transaction_id: String(row.transaction_id || ""),
-      line: tradeLine(row),
-    }));
+    .map(tradeRecord);
 
-  const latest = tape.length
-    ? {
-      date: tape[tape.length - 1].date,
-      transaction_id: String(tape[tape.length - 1].transaction_id || ""),
-      line: tradeLine(tape[tape.length - 1]),
-    }
-    : null;
+  const latest = tape.length ? tradeRecord(tape[tape.length - 1]) : null;
 
   const wire = (Array.isArray(moves) ? moves : [])
     .filter((row) => row && String(row.date || "") >= since)
@@ -171,12 +175,12 @@ function main() {
     }))
     .slice(0, 8);
 
-  const ir = [];
+  const board = [];
   for (const [id, p] of Object.entries(injury.players || {})) {
     const status = String((p && p.injury_status) || "").toUpperCase();
     if (!IR_STATUSES.has(status)) continue;
     const seat = byPid.get(String(id)) || { owner: "", slot: "bench" };
-    ir.push({
+    board.push({
       id,
       name: p.name || id,
       owner: seat.owner,
@@ -186,8 +190,15 @@ function main() {
       value: valueById.get(String(id)) || 0,
     });
   }
-  ir.sort((a, b) => irScore(b) - irScore(a)
+  board.sort((a, b) => irScore(b) - irScore(a)
     || String(a.name).localeCompare(String(b.name)));
+  const strip = (row) => {
+    const { value: _v, ...rest } = row;
+    return rest;
+  };
+  const out = board.filter((p) => p.status === "OUT").map(strip);
+  const ir = board.filter((p) => p.status === "IR").map(strip);
+  const other = board.filter((p) => p.status !== "OUT" && p.status !== "IR").map(strip);
 
   const letter = {
     v: 1,
@@ -200,8 +211,13 @@ function main() {
     trades,
     latest: trades.length ? null : latest,
     wire,
-    ir: ir.slice(0, 12).map(({ value: _v, ...row }) => row),
+    out,
+    ir,
+    other,
+    out_n: out.length,
     ir_n: ir.length,
+    other_n: other.length,
+    board_n: board.length,
     quiet: !trades.length && !wire.length,
   };
   writeUi("overnight.json", letter);
@@ -210,7 +226,9 @@ function main() {
     lede: letter.lede,
     trades: trades.length,
     wire: wire.length,
+    out: letter.out_n,
     ir: letter.ir_n,
+    other: letter.other_n,
     quiet: letter.quiet,
   }));
 }

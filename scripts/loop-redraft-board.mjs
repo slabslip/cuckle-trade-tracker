@@ -165,9 +165,9 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "overnight20260919213000"')
-  && html.includes('const DATA_V = "overnight20260919213000"')
-  && sw.includes('chuckle-shell-v293-overnight-dynasty')
+loop(10, page.includes('const DATA_V = "overnight20260919220000"')
+  && html.includes('const DATA_V = "overnight20260919220000"')
+  && sw.includes('chuckle-shell-v294-overnight-report')
   && !sw.includes("chuckle-shell-v283-list-share")
   && !sw.includes("chuckle-shell-v282-finish-one")
   && inlineScriptParses(html),

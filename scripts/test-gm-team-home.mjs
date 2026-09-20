@@ -68,8 +68,8 @@ if (!page.includes("cosmeticsSeatPlateHtml()") || !page.includes('class="screen-
   throw new Error("team name / title / emblem chrome must stay above the tabs");
 }
 
-if (!page.includes('const DATA_V = "analyzerflock20260920024500"')
-  || !sw.includes("chuckle-shell-v314-analyzer-flock")) {
+if (!page.includes('const DATA_V = "homebenef20260920123600"')
+  || !sw.includes("chuckle-shell-v316-home-benef")) {
   throw new Error("GM team home must bust DATA_V and SW");
 }
 

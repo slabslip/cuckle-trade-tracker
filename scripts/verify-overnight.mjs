@@ -1,9 +1,11 @@
 import { chromium } from "/tmp/node_modules/playwright/index.mjs";
 import fs from "node:fs";
 
-const shotDir = "/opt/cursor/artifacts/screenshots";
+const shotDir = "/tmp/overnight-shots";
 fs.mkdirSync(shotDir, { recursive: true });
-const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:55494";
+const pubDir = "/opt/cursor/artifacts/screenshots";
+try { fs.mkdirSync(pubDir, { recursive: true }); } catch (e) { /* optional */ }
+const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:8765";
 
 const browser = await chromium.launch({
   executablePath: "/usr/bin/google-chrome",
@@ -29,6 +31,9 @@ try {
   if (!/Quiet night|trade last night|Wire moved/i.test(home)) fail("Home letter missing lede");
   if (/Last deal|No trades last night/i.test(home)) fail("Collapsed letter must hide trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
+  if (!/DJ Moore/i.test(home) || !/Michael Pittman/i.test(home)) fail("Collapsed Out must lead with Sunday starters");
+  if (!/Nico Collins/i.test(home) || !/cuff unowned/i.test(home)) fail("Nico Out must name cuff unowned");
+  if (!(await page.locator("[data-overnight-player]").count())) fail("Out / IR names are not clickable");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
   if (!(await page.locator(".overnight-slip").count())) fail("Home letter missing");
   if (await page.locator(".overnight-slip .sch-kv").count()) fail("Home letter must not show the settings grid");
@@ -67,8 +72,42 @@ try {
   if (!/A\.J\. Brown/.test(payload.text) || (payload.text.match(/ · /g) || []).length < 8) {
     fail("expanded share must send the full lists");
   }
+  if (!/Nico Collins · WR · TipsUp · cuff unowned/.test(payload.text)) {
+    fail("share must send Nico cuff unowned");
+  }
   if (/\+\d+ more/.test(payload.text)) fail("full share must not say + more");
   if (/Text this|That's not how I remember/i.test(payload.text)) fail("share text still has Text this");
+  const nicoBtn = page.locator('[data-overnight-player="7569"]');
+  if (!(await nicoBtn.count())) fail("Nico row is not a clickable letter line");
+  await nicoBtn.first().click();
+  await page.waitForTimeout(300);
+  const nicoOpen = await page.locator(".overnight-slip").innerText();
+  console.log("NICO PANEL\n" + nicoOpen);
+  if (!/Xavier Hutchinson|Kayshon Boutte|Jaylin Noel/i.test(nicoOpen)) {
+    fail("Nico tap must name HOU WRs who take snaps");
+  }
+  if (!/DarkWingDucks2023|ChiefGumby|unowned/i.test(nicoOpen)) {
+    fail("Nico tap must name who holds the HOU WRs or unowned");
+  }
+  if (/send .+ · get /i.test(nicoOpen)) fail("Nico bench Out must not invent a leftover trade");
+  if (!(await page.locator(".overnight-benef").count())) fail("Nico tap missing beneficiary sheet");
+  await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-nico.png` });
+
+  const mooreBtn = page.locator('[data-overnight-player="4983"]');
+  if (!(await mooreBtn.count())) fail("DJ Moore row is not clickable");
+  await mooreBtn.first().click();
+  await page.waitForTimeout(300);
+  const mooreOpen = await page.locator(".overnight-slip").innerText();
+  console.log("MOORE PANEL\n" + mooreOpen);
+  if (!/Khalil Shakir/i.test(mooreOpen) || !/DarkWingDucks2023/i.test(mooreOpen)) {
+    fail("Moore tap must name Shakir on Ducks");
+  }
+  if (!/Joshua Palmer/i.test(mooreOpen) || !/unowned/i.test(mooreOpen)) {
+    fail("Moore tap must name Palmer unowned");
+  }
+  if (/TedCumberbatch send /i.test(mooreOpen)) fail("Moore must not invent a trade on a deep WR desk");
+  await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-moore.png` });
+
   await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-home-open.png` });
 
   await page.evaluate(function () {
@@ -111,6 +150,12 @@ try {
 } finally {
   await browser.close();
 }
+
+try {
+  for (const name of fs.readdirSync(shotDir)) {
+    fs.copyFileSync(`${shotDir}/${name}`, `${pubDir}/${name}`);
+  }
+} catch (e) { /* artifacts store can EIO */ }
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log("PASS overnight letter");

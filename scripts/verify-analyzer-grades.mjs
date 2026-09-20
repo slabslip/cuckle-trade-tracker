@@ -42,6 +42,7 @@ try {
     if (!/Draft capital/i.test(text)) fail(seat.name + " missing Draft capital");
     if (!/next two drafts weigh most/i.test(text)) fail(seat.name + " missing next-two-drafts note");
     if (/Short a starter/i.test(text)) fail(seat.name + " depth note must name backups, not a starter hole");
+    if (!/after the desk/i.test(text)) fail(seat.name + " depth note must say after the desk");
     const grades = await page.evaluate((uid) => {
       const card = typeof teamAnalyzerCard === "function" ? teamAnalyzerCard(uid) : null;
       return card ? {

@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerdraft20260920023000";
+    const DATA_V = "analyzerloops20260920015000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26273,8 +26273,7 @@ const html = `<!DOCTYPE html>
         });
       }
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        bag.filter(function (p) { return teamAnalyzerPos(p) === pos; })
-          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+        teamAnalyzerPosPool(bag, pos)
           .slice(0, slots[pos] || 1)
           .forEach(function (p) { addRow(p, pos); });
       });
@@ -26284,7 +26283,7 @@ const html = `<!DOCTYPE html>
         return (pos === "RB" || pos === "WR" || pos === "TE")
           && !used[p.id || p.name]
           && calcValueNum(p) >= start;
-      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+      }).sort(teamAnalyzerAssetCmp)
         .slice(0, 2)
         .forEach(function (p) { addRow(p, "FLEX"); });
       return rows;
@@ -26309,9 +26308,19 @@ const html = `<!DOCTYPE html>
       return Math.max(0, Math.min(10, Math.round(Number(n) || 0)));
     }
 
+    function teamAnalyzerAssetCmp(a, b) {
+      const d = calcValueNum(b) - calcValueNum(a);
+      if (d) return d;
+      const na = String((a && a.name) || "");
+      const nb = String((b && b.name) || "");
+      if (na < nb) return -1;
+      if (na > nb) return 1;
+      return String((a && a.id) || "").localeCompare(String((b && b.id) || ""));
+    }
+
     function teamAnalyzerPosPool(bag, pos) {
       return bag.filter(function (p) { return p && teamAnalyzerPos(p) === pos; })
-        .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        .sort(teamAnalyzerAssetCmp);
     }
 
     function teamAnalyzerNearYears() {
@@ -26437,9 +26446,9 @@ const html = `<!DOCTYPE html>
       const raw = slotN ? (pts / slotN) : 0;
       const note = exist === 0
         ? "No backups scored"
-        : (startable
-          ? (startable + " of " + exist + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
-          : "Backups sit below starter value");
+        : (exist + " after the desk · " + (startable
+          ? (startable + " starter value")
+          : "below starter value"));
       return { score: teamAnalyzerRound(raw), raw: raw, note: note };
     }
 
@@ -26456,6 +26465,7 @@ const html = `<!DOCTYPE html>
       let farPts = 0;
       picks.forEach(function (p) {
         const y = teamAnalyzerPickYear(p);
+        if (y < years.near1) return;
         const g = teamAnalyzerValueGrade(calcValueNum(p));
         if (y === years.near1 || y === years.near2) {
           nearPts += Math.min(10, g * teamAnalyzerPickWeight(p));
@@ -26496,14 +26506,15 @@ const html = `<!DOCTYPE html>
       teamAnalyzerDesk(bag).forEach(function (p) {
         const age = Number(p && p.age);
         const val = calcValueNum(p);
-        if (age >= 27 && val >= cuts.start) aging += 1;
-        if (age < 25.5 && val >= cuts.stud) young += 1;
+        if (Number.isFinite(age) && age >= 27 && val >= cuts.start) aging += 1;
+        if (Number.isFinite(age) && age < 25.5 && val >= cuts.stud) young += 1;
       });
       if (pos <= 6.25 && near >= 6.2) return "tank";
       if (pos <= 5.55 && near >= 4.8) return "rebuild";
+      if (pos >= 6.35 && aging >= 3 && near < 5) return "win-now";
       if (pos >= 6.35 && young >= 3 && near >= 2.2) return "contend-soon";
       if (pos >= 6.35 && young >= 2 && aging <= 2 && near <= 2.6) return "tween";
-      if (pos >= 6.35 && near <= 2.6 && (aging >= 3 || young <= 1)) return "win-now";
+      if (pos >= 6.35 && aging >= 3 && near <= 2.6) return "win-now";
       if (pos >= 6.2 && near >= 3.5 && young >= 1) return "contend-soon";
       return "tween";
     }

@@ -44,8 +44,9 @@ need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerValueGrade")
   && fnSrc(page, "teamAnalyzerDepth").includes("Short a starter") === false
   && fnSrc(page, "teamAnalyzerDepth").includes("slotN")
-  && fnSrc(page, "teamAnalyzerDepth").includes("starter value"),
-  "depth scores eight backup slots on the book, not the league floor");
+  && fnSrc(page, "teamAnalyzerDepth").includes("starter value")
+  && fnSrc(page, "teamAnalyzerDepth").includes("after the desk"),
+  "depth scores eight after-desk slots on the book, not the league floor");
 need(fnSrc(page, "teamAnalyzerPos").includes("toUpperCase")
   && fnSrc(page, "teamAnalyzerMoves").includes("dir.sell") === false,
   "pos tags normalize; Look to trade is leftover names, not seat-direction labels");
@@ -99,8 +100,9 @@ need(plan.includes("team analyzer") && plan.includes("dashboard chrome")
   && plan.includes("8–9 is rare"),
   "plan must lock the dashboard team analyzer and value grades");
 need(fs.existsSync(`${ROOT}scripts/loop-team-analyzer.mjs`)
-  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,"),
-  "dozen analyzer loops must stay on the book");
+  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,")
+  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(24,"),
+  "two dozen analyzer loops must stay on the book");
 
 const DESK_STUD = 5500;
 const DESK_START = 2200;
@@ -159,6 +161,7 @@ function draftOf(uid) {
     else if (r === 2) rw = 0.8;
     else if (r === 3) rw = 0.4;
     else rw = 0.22;
+    if (y < near1) return;
     if (near) nearPts += Math.min(10, g * yw * rw);
     else if (y >= near2 + 1) farPts += Math.min(10, g);
   });

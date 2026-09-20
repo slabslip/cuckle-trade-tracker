@@ -165,9 +165,9 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "claimdrop20260919220000"')
-  && html.includes('const DATA_V = "claimdrop20260919220000"')
-  && sw.includes('chuckle-shell-v299-claim-drop')
+loop(10, page.includes('const DATA_V = "claimdrop20260920013500"')
+  && html.includes('const DATA_V = "claimdrop20260920013500"')
+  && sw.includes('chuckle-shell-v308-claim-drop')
   && !sw.includes("chuckle-shell-v283-list-share")
   && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");

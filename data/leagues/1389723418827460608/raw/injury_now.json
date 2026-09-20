@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-19",
+  "as_of": "2026-09-20",
   "n": 20,
   "players": {
     "4983": {
@@ -102,7 +102,7 @@
     },
     "9997": {
       "name": "Zay Flowers",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "BAL",
       "pos": "WR"

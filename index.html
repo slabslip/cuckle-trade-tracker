@@ -1796,17 +1796,18 @@
     .sch-meter.out b, .sch-meter.out span { color: #ff6b3d; }
     .sch-meter.ir b, .sch-meter.ir span { color: #e0b44c; }
     .team-schematic {
-      margin: 0 0 16px; border-radius: 14px; overflow: hidden;
-      background:
-        radial-gradient(circle at 92% 6%, rgba(224,180,76,0.09), transparent 28%),
-        linear-gradient(180deg, #10263f 0%, #0b1c33 42%);
-      border: 1px solid #1d3a5c;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
-      color: #f4f7fb;
+      position: relative;
+      margin: 0 0 16px;
+      background: #121214;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      color: var(--text);
     }
+    .team-schematic .overnight-slip-top button.tile-share { position: static; }
     .sch-settings {
       margin: 6px 0 0; font-size: 0.65rem; font-weight: 750;
-      letter-spacing: 0.06em; text-transform: uppercase; color: #8fb3d9;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
     }
     .sch-kv {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 8px;
@@ -1815,63 +1816,63 @@
     .sch-kv span {
       display: flex; justify-content: space-between; gap: 4px;
       font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
-      text-transform: uppercase; color: #8fb3d9;
-      border-bottom: 1px dotted #2a4d73; padding-bottom: 2px;
+      text-transform: uppercase; color: var(--dim);
+      border-bottom: 1px dotted var(--line); padding-bottom: 2px;
     }
     .sch-kv i { font-style: normal; }
-    .sch-kv b { color: #f4f7fb; font-variant-numeric: tabular-nums; }
+    .sch-kv b { color: var(--text); font-variant-numeric: tabular-nums; }
     .team-sch-hero {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
-      padding: 14px 14px 12px; border-bottom: 1px solid #1d3a5c;
+      padding: 14px 14px 12px; border-bottom: 1px solid var(--line);
     }
     .team-sch-name {
-      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em; color: #f4f7fb;
+      margin: 0; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text);
     }
     .team-sch-arch {
-      text-align: right; flex: 0 0 auto; max-width: 42%;
+      text-align: right; flex: 0 0 auto; max-width: 46%;
     }
     .team-sch-arch b {
       display: block; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em;
-      text-transform: uppercase; color: #8fb3d9;
+      text-transform: uppercase; color: var(--dim);
     }
     .team-sch-arch span {
       display: block; margin-top: 4px; font-size: 0.95rem; font-weight: 800;
-      letter-spacing: -0.02em; color: #e0b44c; line-height: 1.15;
+      letter-spacing: -0.02em; color: var(--lh-gold, #e0b44c); line-height: 1.15;
     }
     .team-sch-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #1d3a5c;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line);
     }
     .team-sch-box {
-      background: #0b1c33; padding: 10px 12px 12px; min-width: 0;
+      background: #121214; padding: 10px 12px 12px; min-width: 0;
     }
     .team-sch-box.span2 { grid-column: 1 / -1; }
     .team-sch-h {
       margin: 0 0 7px; font-size: 0.6rem; font-weight: 800;
-      letter-spacing: 0.08em; text-transform: uppercase; color: #8fb3d9;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
     }
     .team-sch-line {
       display: flex; justify-content: space-between; gap: 8px;
-      font-size: 0.78rem; font-weight: 650; color: #f4f7fb; line-height: 1.35;
+      font-size: 0.78rem; font-weight: 650; color: var(--text); line-height: 1.35;
       padding: 2px 0;
     }
     .team-sch-line i {
       font-style: normal; font-size: 0.62rem; font-weight: 800;
-      letter-spacing: 0.04em; color: #8fb3d9; flex: 0 0 auto;
+      letter-spacing: 0.04em; color: var(--dim); flex: 0 0 auto;
     }
-    .team-sch-line span { color: #b7c7d9; text-align: right; }
+    .team-sch-line span { color: var(--muted); text-align: right; }
     .team-sch-score {
-      font-size: 1.8rem; font-weight: 800; letter-spacing: -0.04em; color: #f4f7fb;
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -0.04em; color: var(--text);
     }
-    .team-sch-score em { font-style: normal; font-size: 0.85rem; color: #8fb3d9; }
+    .team-sch-score em { font-style: normal; font-size: 0.85rem; color: var(--dim); }
     .team-sch-pills { display: flex; flex-wrap: wrap; gap: 4px; }
     .team-sch-pills b {
       font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
       text-transform: uppercase; padding: 3px 6px; border-radius: 4px;
-      background: #123152; color: #d5e6f7;
+      background: #1a1a1e; color: var(--text);
     }
-    .team-sch-pills b.on { background: #e0b44c; color: #0b1c33; }
+    .team-sch-pills b.on { background: #e0b44c; color: #0b0b0d; }
     .team-sch-bar {
-      height: 8px; border-radius: 99px; background: #123152; overflow: hidden; margin: 6px 0 2px;
+      height: 8px; border-radius: 99px; background: #1a1a1e; overflow: hidden; margin: 6px 0 2px;
     }
     .team-sch-bar i {
       display: block; height: 100%; border-radius: 99px;
@@ -1881,14 +1882,14 @@
       display: flex; align-items: center; gap: 8px;
     }
     .team-sch-cr > span {
-      font-size: 0.7rem; font-weight: 800; color: #8fb3d9;
+      font-size: 0.7rem; font-weight: 800; color: var(--dim);
     }
     .team-sch-cr .team-sch-bar { flex: 1; margin: 0; }
     .team-sch-grades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .team-sch-grade { text-align: center; }
     .team-sch-gbar {
       height: 36px; width: 10px; margin: 0 auto 4px;
-      border-radius: 99px; background: #123152; overflow: hidden;
+      border-radius: 99px; background: #1a1a1e; overflow: hidden;
       display: flex; align-items: flex-end;
     }
     .team-sch-gbar i {
@@ -1898,13 +1899,17 @@
     }
     .team-sch-grade span {
       display: block; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em;
-      text-transform: uppercase; color: #8fb3d9;
+      text-transform: uppercase; color: var(--dim);
     }
     .team-sch-grade b {
-      display: block; margin-top: 2px; font-size: 0.95rem; font-weight: 800; color: #f4f7fb;
+      display: block; margin-top: 2px; font-size: 0.95rem; font-weight: 800; color: var(--text);
     }
     .team-sch-note {
-      margin: 0; font-size: 0.78rem; font-weight: 650; color: #d5e6f7; line-height: 1.4;
+      margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted); line-height: 1.4;
+    }
+    .team-sch-share-note {
+      margin: 0; padding: 8px 14px 12px; font-size: 0.72rem; font-weight: 650;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
     }
     .vote:empty, .vote-card:empty { display: none; }
     button.lh-calc-door {
@@ -4415,6 +4420,7 @@
     let overnight = null;
     let overnightLoading = false;
     let overnightOpen = false;
+    let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
     let cuffFilterOwner = ""; // fantasy manager whose starters
@@ -4436,7 +4442,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "claimdrop20260919220000";
+    const DATA_V = "claimdrop20260920013500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26398,12 +26404,16 @@
       }) || null;
     }
 
+    function teamAnalyzerPos(p) {
+      return String((p && p.pos) || "").toUpperCase();
+    }
+
     function teamAnalyzerArchetype(bag, dir) {
       const cuts = deskCuts();
       const elite = {};
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
         elite[pos] = bag.filter(function (p) {
-          return p.pos === pos && calcValueNum(p) >= cuts.stud;
+          return teamAnalyzerPos(p) === pos && calcValueNum(p) >= cuts.stud;
         }).length;
       });
       if (elite.QB >= 2) return "Dual elite QB";
@@ -26432,14 +26442,14 @@
         });
       }
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        bag.filter(function (p) { return p.pos === pos; })
+        bag.filter(function (p) { return teamAnalyzerPos(p) === pos; })
           .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
           .slice(0, slots[pos] || 1)
           .forEach(function (p) { addRow(p, pos); });
       });
       const start = deskCuts().start;
       bag.filter(function (p) {
-        const pos = p.pos;
+        const pos = teamAnalyzerPos(p);
         return (pos === "RB" || pos === "WR" || pos === "TE")
           && !used[p.id || p.name]
           && calcValueNum(p) >= start;
@@ -26449,49 +26459,26 @@
       return rows;
     }
 
-    function teamAnalyzerPosFloor(pos) {
-      const slots = deskSlots();
-      const n = Math.max(1, ((members || []).length) || (leagueFormat().team_n) || 10);
-      const need = (slots[pos] || 1) * n;
-      const pool = ((calcBook && calcBook.players) || []).filter(function (p) {
-        return p && p.pos === pos;
-      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
-      const row = pool[need - 1];
-      const v = row ? calcValueNum(row) : -1;
-      return v >= 0 ? v : deskCuts().start;
+    function teamAnalyzerValueGrade(v) {
+      const cuts = deskCuts();
+      const n = Number(v);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      const stud = cuts.stud;
+      const start = cuts.start;
+      const mid = cuts.mid;
+      if (n >= stud) return 10;
+      if (n >= start) return 7 + 3 * (n - start) / Math.max(1, stud - start);
+      if (n >= mid) return 4 + 3 * (n - mid) / Math.max(1, start - mid);
+      return Math.max(0, 4 * n / Math.max(1, mid));
     }
 
-    function teamAnalyzerDepth(bag) {
-      const slots = deskSlots();
-      const cuts = deskCuts();
-      let pts = 0;
-      let miss = 0;
-      let covered = 0;
-      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        const need = slots[pos] || 1;
-        const pool = bag.filter(function (p) { return p.pos === pos; })
-          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
-        const filled = pool.filter(function (p) { return calcValueNum(p) >= cuts.start; }).length;
-        miss += Math.max(0, need - filled);
-        const floor = teamAnalyzerPosFloor(pos);
-        const extras = pool.slice(need, need + 2);
-        extras.forEach(function (p, i) {
-          const v = calcValueNum(p);
-          if (v >= floor) {
-            pts += (i === 0 ? 2 : 1);
-            if (i === 0) covered += 1;
-          } else if (v >= cuts.start) {
-            pts += (i === 0 ? 1 : 0.5);
-          }
-        });
-      });
-      const score = Math.max(0, Math.min(10, Math.round((pts / 12) * 10) - miss * 2));
-      const note = miss
-        ? "Short a starter"
-        : (covered
-          ? (covered + " of 4 spots " + (covered === 1 ? "has" : "have") + " a starter behind")
-          : "Backups sit below league starters");
-      return { score: score, note: note };
+    function teamAnalyzerRound(n) {
+      return Math.max(0, Math.min(10, Math.round(Number(n) || 0)));
+    }
+
+    function teamAnalyzerPosPool(bag, pos) {
+      return bag.filter(function (p) { return p && teamAnalyzerPos(p) === pos; })
+        .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
     }
 
     function teamAnalyzerOutlook(dir) {
@@ -26506,8 +26493,7 @@
       const cuts = deskCuts();
       const out = {};
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        const pool = bag.filter(function (p) { return p.pos === pos; })
-          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        const pool = teamAnalyzerPosPool(bag, pos);
         const stud = pool.find(function (p) { return calcValueNum(p) >= cuts.stud; }) || pool[0];
         out[pos] = stud && calcValueNum(stud) >= cuts.start ? stud.name : "—";
       });
@@ -26520,7 +26506,7 @@
         return v >= 0 && v < deskCuts().start && Number(p.age) >= 27;
       }).sort(function (a, b) { return Number(b.age) - Number(a.age); })
         .slice(0, 4).map(function (p) { return p.name; });
-      const sell = leftover.length ? leftover : ((dir && dir.sell) || []).slice(0, 3);
+      const sell = leftover;
       const grades = teamAnalyzerGrades(bag);
       const targets = [];
       ((dir && dir.holes) || []).forEach(function (p) {
@@ -26538,23 +26524,69 @@
 
     function teamAnalyzerGrades(bag) {
       const slots = deskSlots();
-      const start = deskCuts().start;
       const grades = {};
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        const vs = bag.filter(function (p) {
-          return p.pos === pos && calcValueNum(p) >= start;
-        }).length;
         const need = slots[pos] || 1;
-        grades[pos] = Math.max(0, Math.min(10,
-          Math.round((vs / need) * 7) + Math.max(0, vs - need)));
+        const pool = teamAnalyzerPosPool(bag, pos);
+        let pts = 0;
+        for (let i = 0; i < need; i++) {
+          pts += teamAnalyzerValueGrade(pool[i] ? calcValueNum(pool[i]) : -1);
+        }
+        grades[pos] = teamAnalyzerRound(pts / need);
       });
       return grades;
     }
 
-    function teamAnalyzerDraft(dir) {
-      const p = (dir && dir.picks) || {};
-      const score = (p.firsts_2027 || 0) * 2.5 + (p.held_2027 || 0) * 0.6 + (p.held_later || 0) * 0.25;
-      return Math.max(0, Math.min(10, Math.round(score)));
+    function teamAnalyzerDepth(bag) {
+      const slots = deskSlots();
+      const start = deskCuts().start;
+      let pts = 0;
+      let slotN = 0;
+      let exist = 0;
+      let startable = 0;
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        const need = slots[pos] || 1;
+        const pool = teamAnalyzerPosPool(bag, pos);
+        for (let i = 0; i < 2; i++) {
+          const p = pool[need + i];
+          const v = p ? calcValueNum(p) : -1;
+          pts += teamAnalyzerValueGrade(v);
+          slotN += 1;
+          if (p) {
+            exist += 1;
+            if (v >= start) startable += 1;
+          }
+        }
+      });
+      const score = teamAnalyzerRound(slotN ? (pts / slotN) : 0);
+      const note = exist === 0
+        ? "No backups scored"
+        : (startable
+          ? (startable + " of " + exist + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
+          : "Backups sit below starter value");
+      return { score: score, note: note };
+    }
+
+    function teamAnalyzerPicks(uid) {
+      return ((calcBook && calcBook.picks) || []).filter(function (p) {
+        return p && String(p.owner_id) === String(uid);
+      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+    }
+
+    function teamAnalyzerDraft(uid) {
+      const picks = teamAnalyzerPicks(uid);
+      const need = 12;
+      let pts = 0;
+      for (let i = 0; i < need; i++) {
+        pts += teamAnalyzerValueGrade(picks[i] ? calcValueNum(picks[i]) : -1);
+      }
+      return teamAnalyzerRound(pts / need);
+    }
+
+    function teamAnalyzerOverall(grades, depth, draft) {
+      const pos = ((grades.QB || 0) + (grades.RB || 0) + (grades.WR || 0) + (grades.TE || 0)) / 4;
+      const d = depth && depth.score != null ? depth.score : 0;
+      return teamAnalyzerRound(pos * 0.7 + d * 0.15 + (Number(draft) || 0) * 0.15);
     }
 
     function teamAnalyzerScale(dir) {
@@ -26562,7 +26594,34 @@
       if (lab === "Win-now") return 18;
       if (lab === "Reload") return 48;
       if (lab === "Rebuild") return 70;
-      return 86;
+      if (lab === "Hard rebuild") return 86;
+      return 48;
+    }
+
+    function teamAnalyzerCard(uid, name) {
+      const bag = teamAnalyzerBag(uid);
+      const dir = teamAnalyzerDir(uid);
+      const grades = teamAnalyzerGrades(bag);
+      const depth = teamAnalyzerDepth(bag);
+      const draft = teamAnalyzerDraft(uid);
+      const mem = (members || []).find(function (m) { return m && String(m.user_id) === String(uid); });
+      return {
+        uid: String(uid || ""),
+        name: name || (mem && mem.name) || "Team",
+        arch: teamAnalyzerArchetype(bag, dir),
+        lineup: teamAnalyzerLineup(bag),
+        depth: depth,
+        outlook: teamAnalyzerOutlook(dir),
+        corner: teamAnalyzerCorner(bag),
+        moves: teamAnalyzerMoves(bag, dir),
+        grades: grades,
+        draft: draft,
+        overall: teamAnalyzerOverall(grades, depth, draft),
+        scale: teamAnalyzerScale(dir),
+        label: (dir && dir.label) || "Reload",
+        why: (dir && dir.why) || "",
+        pick_n: teamAnalyzerPicks(uid).length,
+      };
     }
 
     function teamAnalyzerHtml(uid, name) {
@@ -26570,78 +26629,428 @@
       if (!calcBook || !Array.isArray(calcBook.players)) return "";
       const bag = teamAnalyzerBag(uid);
       if (!bag.length) return "";
-      const dir = teamAnalyzerDir(uid);
-      const arch = teamAnalyzerArchetype(bag, dir);
-      const lineup = teamAnalyzerLineup(bag);
-      const depth = teamAnalyzerDepth(bag);
-      const depthScore = depth && depth.score != null ? depth.score : 0;
-      const outlook = teamAnalyzerOutlook(dir);
-      const corner = teamAnalyzerCorner(bag);
-      const moves = teamAnalyzerMoves(bag, dir);
-      const grades = teamAnalyzerGrades(bag);
-      const draft = teamAnalyzerDraft(dir);
-      const scale = teamAnalyzerScale(dir);
+      const card = teamAnalyzerCard(uid, name);
       const years = ["YR1", "YR2", "YR3"];
       return '<section class="team-schematic" aria-label="Team analyzer">'
         + '<div class="team-sch-hero">'
-        + "<div><p class=\"team-sch-name\">" + esc(name || "Team") + "</p>"
-        + schematicSettingsHtml() + "</div>"
-        + '<div class="team-sch-arch"><b>Team archetype</b><span>' + esc(arch) + "</span></div>"
+        + "<div><div class=\"overnight-slip-top\">"
+        + '<p class="overnight-slip-date">Team analyzer</p>'
+        + '<button type="button" class="tile-share" data-analyzer-share="' + esc(String(uid)) + '" aria-label="Save team analyzer image">'
+        + receiptShareIco() + "</button></div>"
+        + "<p class=\"team-sch-name\">" + esc(card.name) + "</p></div>"
+        + '<div class="team-sch-arch"><b>Team grade</b><span>' + card.overall + " / 10</span>"
+        + "<b style=\"margin-top:8px\">Archetype</b><span>" + esc(card.arch) + "</span></div>"
         + "</div>"
         + '<div class="team-sch-grid">'
         + '<div class="team-sch-box span2"><div class="team-sch-h">Starting lineup</div>'
-        + lineup.map(function (p) {
+        + card.lineup.map(function (p) {
           return '<div class="team-sch-line"><i>' + esc(p.pos) + "</i><b>" + esc(p.name) + "</b>"
             + "<span>" + esc((p.injury ? p.injury + " · " : "") + (p.team || "")) + "</span></div>";
         }).join("")
         + "</div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Depth score</div>'
-        + '<div class="team-sch-score">' + depthScore + "<em>/10</em></div>"
-        + '<div class="team-sch-bar"><i style="width:' + (depthScore * 10) + '%"></i></div>'
-        + (depth && depth.note ? '<p class="team-sch-note">' + esc(depth.note) + "</p>" : "")
+        + '<div class="team-sch-score">' + card.depth.score + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (card.depth.score * 10) + '%"></i></div>'
+        + (card.depth.note ? '<p class="team-sch-note">' + esc(card.depth.note) + "</p>" : "")
         + "</div>"
         + '<div class="team-sch-box"><div class="team-sch-h">3-year outlook</div>'
         + '<div class="team-sch-pills">'
-        + outlook.map(function (lab, i) {
+        + card.outlook.map(function (lab, i) {
           return "<b" + (i === 0 ? ' class="on"' : "") + ">" + esc(years[i] + " " + lab) + "</b>";
         }).join("")
         + "</div></div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Cornerstones</div>'
         + ["QB", "RB", "WR", "TE"].map(function (pos) {
-          return '<div class="team-sch-line"><i>' + pos + "</i><span>" + esc(corner[pos]) + "</span></div>";
+          return '<div class="team-sch-line"><i>' + pos + "</i><span>" + esc(card.corner[pos]) + "</span></div>";
         }).join("")
         + "</div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Look to trade</div>'
-        + (moves.sell.length ? moves.sell.map(function (n) {
+        + (card.moves.sell.length ? card.moves.sell.map(function (n) {
           return '<div class="team-sch-line"><span>' + esc(n) + "</span></div>";
         }).join("") : '<div class="team-sch-line"><span>No leftover to move</span></div>')
         + "</div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Players to target</div>'
-        + moves.targets.map(function (n) {
+        + card.moves.targets.map(function (n) {
           return '<div class="team-sch-line"><span>' + esc(n) + "</span></div>";
         }).join("")
         + "</div>"
         + '<div class="team-sch-box span2"><div class="team-sch-h">Contend / rebuild</div>'
         + '<div class="team-sch-cr"><span>C</span>'
-        + '<div class="team-sch-bar"><i style="width:' + scale + '%"></i></div>'
+        + '<div class="team-sch-bar"><i style="width:' + card.scale + '%"></i></div>'
         + "<span>R</span></div>"
-        + '<p class="team-sch-note">' + esc((dir && dir.label) || "Reload") + "</p></div>"
+        + '<p class="team-sch-note">' + esc(card.label) + "</p></div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Positional grades</div>'
         + '<div class="team-sch-grades">'
         + ["QB", "RB", "WR", "TE"].map(function (pos) {
           return '<div class="team-sch-grade"><div class="team-sch-gbar"><i style="height:'
-            + (grades[pos] * 10) + '%"></i></div><span>' + pos + "</span><b>"
-            + grades[pos] + "</b></div>";
+            + (card.grades[pos] * 10) + '%"></i></div><span>' + pos + "</span><b>"
+            + card.grades[pos] + "</b></div>";
         }).join("")
         + "</div></div>"
         + '<div class="team-sch-box"><div class="team-sch-h">Draft capital</div>'
-        + '<div class="team-sch-score">' + draft + "<em>/10</em></div>"
-        + '<div class="team-sch-bar"><i style="width:' + (draft * 10) + '%"></i></div></div>'
-        + ((dir && dir.why)
+        + '<div class="team-sch-score">' + card.draft + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (card.draft * 10) + '%"></i></div>'
+        + '<p class="team-sch-note">' + esc(card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · top 12 scored like roster slots") + "</p></div>"
+        + (card.why
           ? '<div class="team-sch-box span2"><div class="team-sch-h">Note</div>'
-            + '<p class="team-sch-note">' + esc(dir.why) + "</p></div>"
+            + '<p class="team-sch-note">' + esc(card.why) + "</p></div>"
           : "")
-        + "</div></section>";
+        + "</div>"
+        + (analyzerShareNote ? '<p class="team-sch-share-note">' + esc(analyzerShareNote) + "</p>" : "")
+        + "</section>";
+    }
+
+    function teamAnalyzerShareWrap(ctx, text, maxW) {
+      const words = String(text || "").split(/\s+/).filter(Boolean);
+      const lines = [];
+      let cur = "";
+      words.forEach(function (w) {
+        const next = cur ? cur + " " + w : w;
+        if (cur && ctx.measureText(next).width > maxW) {
+          lines.push(cur);
+          cur = w;
+        } else cur = next;
+      });
+      if (cur) lines.push(cur);
+      return lines.length ? lines : [""];
+    }
+
+    function teamAnalyzerShareBar(ctx, x, y, w, h, pct) {
+      const fill = Math.max(0, Math.min(1, Number(pct) || 0));
+      ctx.fillStyle = "#1a1a1e";
+      if (typeof calcShareRound === "function") calcShareRound(ctx, x, y, w, h, h / 2);
+      else ctx.rect(x, y, w, h);
+      ctx.fill();
+      const fw = Math.max(fill > 0 ? 2 : 0, w * fill);
+      if (!fw) return;
+      const g = ctx.createLinearGradient(x, y, x + w, y);
+      g.addColorStop(0, "#34d399");
+      g.addColorStop(0.5, "#e0b44c");
+      g.addColorStop(1, "#ff6b3d");
+      ctx.save();
+      ctx.beginPath();
+      if (typeof calcShareRound === "function") calcShareRound(ctx, x, y, fw, h, h / 2);
+      else ctx.rect(x, y, fw, h);
+      ctx.clip();
+      ctx.fillStyle = g;
+      ctx.fillRect(x, y, w, h);
+      ctx.restore();
+    }
+
+    function teamAnalyzerShareDraw(uid, name) {
+      const card = teamAnalyzerCard(uid, name);
+      const W = 1080;
+      const S = W / 390;
+      const px = function (n) { return n * S; };
+      const FONT = "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      const lineup = card.lineup || [];
+      const sell = (card.moves && card.moves.sell) || [];
+      const targets = (card.moves && card.moves.targets) || [];
+      const outlook = card.outlook || [];
+      const years = ["YR1", "YR2", "YR3"];
+      const draftNote = card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · top 12 scored like roster slots";
+      const measure = document.createElement("canvas").getContext("2d");
+      if (!measure) return null;
+      measure.font = "650 " + px(12.5) + "px " + FONT;
+      const noteLines = teamAnalyzerShareWrap(measure, card.depth && card.depth.note, px(173));
+      const draftLines = teamAnalyzerShareWrap(measure, draftNote, px(173));
+      const whyLines = card.why ? teamAnalyzerShareWrap(measure, card.why, px(350)) : [];
+      const lineH = 22;
+      const boxPad = 12;
+      const head = 20;
+      const half = function (n) { return boxPad + head + n * lineH + 10; };
+      const cssH = 14 + 86 + 1
+        + (boxPad + head + lineup.length * lineH + 10)
+        + 1 + Math.max(118, 86 + noteLines.length * 16)
+        + 1 + Math.max(half(4), half(Math.max(sell.length, 1)))
+        + 1 + half(Math.max(targets.length, 1))
+        + 1 + 88
+        + 1 + Math.max(148, 96 + draftLines.length * 16)
+        + (card.why ? 1 + boxPad + head + whyLines.length * 16 + 10 : 0)
+        + 14;
+      const H = Math.ceil(px(cssH));
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      const LINE = "#2a2a30";
+      const TEXT = "#f0f0f0";
+      const DIM = "#8a8a93";
+      const MUTED = "#9a9aa3";
+      const GOLD = "#e0b44c";
+      ctx.fillStyle = "#121214";
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = LINE;
+      ctx.lineWidth = Math.max(1, px(1));
+      if (typeof calcShareRound === "function") calcShareRound(ctx, 0.5, 0.5, W - 1, H - 1, px(14));
+      ctx.stroke();
+      function heading(label, x, y) {
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(9.6) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText(String(label || "").toUpperCase(), x, y);
+      }
+      function row(pos, left, right, x, y, w) {
+        ctx.textAlign = "left";
+        if (pos) {
+          ctx.fillStyle = DIM;
+          ctx.font = "800 " + px(10) + "px " + FONT;
+          ctx.fillText(pos, x, y);
+        }
+        ctx.fillStyle = TEXT;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        const leftX = pos ? x + px(28) : x;
+        const rightW = right ? ctx.measureText(right).width + px(8) : 0;
+        const leftW = w - (pos ? px(28) : 0) - rightW;
+        ctx.fillText(typeof calcShareFit === "function" ? calcShareFit(ctx, left, leftW) : left, leftX, y);
+        if (right) {
+          ctx.fillStyle = MUTED;
+          ctx.textAlign = "right";
+          ctx.fillText(right, x + w, y);
+          ctx.textAlign = "left";
+        }
+      }
+      let y = px(14);
+      const inset = px(14);
+      const inner = W - inset * 2;
+      ctx.fillStyle = DIM;
+      ctx.font = "700 " + px(10.9) + "px " + FONT;
+      ctx.textAlign = "left";
+      ctx.fillText("TEAM ANALYZER", inset, y + px(12));
+      ctx.fillStyle = TEXT;
+      ctx.font = "800 " + px(19.2) + "px " + FONT;
+      ctx.fillText(typeof calcShareFit === "function" ? calcShareFit(ctx, card.name, inner * 0.54) : card.name, inset, y + px(40));
+      ctx.textAlign = "right";
+      ctx.fillStyle = DIM;
+      ctx.font = "800 " + px(9.9) + "px " + FONT;
+      ctx.fillText("TEAM GRADE", W - inset, y + px(12));
+      ctx.fillStyle = GOLD;
+      ctx.font = "800 " + px(15.2) + "px " + FONT;
+      ctx.fillText(card.overall + " / 10", W - inset, y + px(32));
+      ctx.fillStyle = DIM;
+      ctx.font = "800 " + px(9.9) + "px " + FONT;
+      ctx.fillText("ARCHETYPE", W - inset, y + px(52));
+      ctx.fillStyle = GOLD;
+      ctx.font = "800 " + px(15.2) + "px " + FONT;
+      ctx.fillText(typeof calcShareFit === "function" ? calcShareFit(ctx, card.arch, inner * 0.42) : card.arch, W - inset, y + px(72));
+      y += px(86);
+      const boxes = [];
+      function pushBox(span2, h, paint) {
+        boxes.push({ span2: span2, h: h, paint: paint });
+      }
+      pushBox(true, boxPad + head + lineup.length * lineH + 10, function (x, top, w) {
+        heading("Starting lineup", x, top + px(head - 4));
+        lineup.forEach(function (p, i) {
+          const meta = ((p.injury ? p.injury + " · " : "") + (p.team || "")).replace(/\s+$/, "");
+          row(p.pos, p.name, meta, x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      const depthH = Math.max(118, 86 + noteLines.length * 16);
+      pushBox(false, depthH, function (x, top, w) {
+        heading("Depth score", x, top + px(head - 4));
+        ctx.fillStyle = TEXT;
+        ctx.font = "800 " + px(28.8) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText(String(card.depth.score), x, top + px(52));
+        const scoreW = ctx.measureText(String(card.depth.score)).width;
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(13.6) + "px " + FONT;
+        ctx.fillText("/10", x + scoreW + px(4), top + px(52));
+        teamAnalyzerShareBar(ctx, x, top + px(62), w, px(8), card.depth.score / 10);
+        ctx.fillStyle = MUTED;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        noteLines.forEach(function (ln, i) {
+          ctx.fillText(ln, x, top + px(86 + i * 16));
+        });
+      });
+      pushBox(false, depthH, function (x, top) {
+        heading("3-year outlook", x, top + px(head - 4));
+        outlook.forEach(function (lab, i) {
+          const label = years[i] + " " + lab;
+          ctx.font = "800 " + px(10) + "px " + FONT;
+          const tw = ctx.measureText(label).width + px(12);
+          const py = top + px(28 + i * 24);
+          ctx.fillStyle = i === 0 ? GOLD : "#1a1a1e";
+          if (typeof calcShareRound === "function") calcShareRound(ctx, x, py, tw, px(18), px(4));
+          else ctx.rect(x, py, tw, px(18));
+          ctx.fill();
+          ctx.fillStyle = i === 0 ? "#0b0b0d" : TEXT;
+          ctx.textAlign = "left";
+          ctx.fillText(label, x + px(6), py + px(13));
+        });
+      });
+      const sellRows = sell.length ? sell : ["No leftover to move"];
+      const midH = Math.max(half(4), half(sellRows.length));
+      pushBox(false, midH, function (x, top, w) {
+        heading("Cornerstones", x, top + px(head - 4));
+        ["QB", "RB", "WR", "TE"].forEach(function (pos, i) {
+          row(pos, (card.corner && card.corner[pos]) || "—", "", x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      pushBox(false, midH, function (x, top, w) {
+        heading("Look to trade", x, top + px(head - 4));
+        sellRows.forEach(function (n, i) {
+          row("", n, "", x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      pushBox(false, half(Math.max(targets.length, 1)), function (x, top, w) {
+        heading("Players to target", x, top + px(head - 4));
+        targets.forEach(function (n, i) {
+          row("", n, "", x, top + px(head + 14 + i * lineH), w);
+        });
+      });
+      pushBox(true, 88, function (x, top, w) {
+        heading("Contend / rebuild", x, top + px(head - 4));
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(11.2) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText("C", x, top + px(48));
+        ctx.textAlign = "right";
+        ctx.fillText("R", x + w, top + px(48));
+        teamAnalyzerShareBar(ctx, x + px(18), top + px(40), w - px(36), px(8), (card.scale || 0) / 100);
+        ctx.textAlign = "left";
+        ctx.fillStyle = MUTED;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        ctx.fillText(card.label || "", x, top + px(70));
+      });
+      const gradeH = Math.max(148, 96 + draftLines.length * 16);
+      pushBox(false, gradeH, function (x, top, w) {
+        heading("Positional grades", x, top + px(head - 4));
+        const cell = w / 4;
+        ["QB", "RB", "WR", "TE"].forEach(function (pos, i) {
+          const cx = x + i * cell + cell / 2;
+          const gh = px(36);
+          const gw = px(10);
+          const gx = cx - gw / 2;
+          const gy = top + px(26);
+          ctx.fillStyle = "#1a1a1e";
+          if (typeof calcShareRound === "function") calcShareRound(ctx, gx, gy, gw, gh, px(99));
+          ctx.fill();
+          const pct = Math.max(0, Math.min(1, (card.grades[pos] || 0) / 10));
+          const fh = Math.max(px(2), gh * pct);
+          const g = ctx.createLinearGradient(gx, gy + gh, gx, gy);
+          g.addColorStop(0, "#ff6b3d");
+          g.addColorStop(0.5, "#e0b44c");
+          g.addColorStop(1, "#34d399");
+          ctx.fillStyle = g;
+          if (typeof calcShareRound === "function") calcShareRound(ctx, gx, gy + gh - fh, gw, fh, px(99));
+          ctx.fill();
+          ctx.textAlign = "center";
+          ctx.fillStyle = DIM;
+          ctx.font = "800 " + px(9.3) + "px " + FONT;
+          ctx.fillText(pos, cx, gy + gh + px(14));
+          ctx.fillStyle = TEXT;
+          ctx.font = "800 " + px(15.2) + "px " + FONT;
+          ctx.fillText(String(card.grades[pos]), cx, gy + gh + px(32));
+        });
+      });
+      pushBox(false, gradeH, function (x, top, w) {
+        heading("Draft capital", x, top + px(head - 4));
+        ctx.fillStyle = TEXT;
+        ctx.font = "800 " + px(28.8) + "px " + FONT;
+        ctx.textAlign = "left";
+        ctx.fillText(String(card.draft), x, top + px(52));
+        const scoreW = ctx.measureText(String(card.draft)).width;
+        ctx.fillStyle = DIM;
+        ctx.font = "800 " + px(13.6) + "px " + FONT;
+        ctx.fillText("/10", x + scoreW + px(4), top + px(52));
+        teamAnalyzerShareBar(ctx, x, top + px(62), w, px(8), card.draft / 10);
+        ctx.fillStyle = MUTED;
+        ctx.font = "650 " + px(12.5) + "px " + FONT;
+        draftLines.forEach(function (ln, i) {
+          ctx.fillText(ln, x, top + px(86 + i * 16));
+        });
+      });
+      if (card.why) {
+        pushBox(true, boxPad + head + whyLines.length * 16 + 10, function (x, top) {
+          heading("Note", x, top + px(head - 4));
+          ctx.fillStyle = MUTED;
+          ctx.font = "650 " + px(12.5) + "px " + FONT;
+          ctx.textAlign = "left";
+          whyLines.forEach(function (ln, i) {
+            ctx.fillText(ln, x, top + px(head + 12 + i * 16));
+          });
+        });
+      }
+      let i = 0;
+      while (i < boxes.length) {
+        const a = boxes[i];
+        if (a.span2) {
+          ctx.fillStyle = LINE;
+          ctx.fillRect(0, y, W, px(1));
+          a.paint(inset, y + px(boxPad), inner);
+          y += px(a.h);
+          i += 1;
+          continue;
+        }
+        const b = boxes[i + 1] && !boxes[i + 1].span2 ? boxes[i + 1] : null;
+        const rowH = Math.max(a.h, b ? b.h : a.h);
+        const col = (inner - px(1)) / 2;
+        ctx.fillStyle = LINE;
+        ctx.fillRect(0, y, W, px(1));
+        a.paint(inset, y + px(boxPad), col);
+        if (b) {
+          ctx.fillStyle = LINE;
+          ctx.fillRect(inset + col, y, px(1), px(rowH));
+          b.paint(inset + col + px(1), y + px(boxPad), col);
+          i += 2;
+        } else i += 1;
+        y += px(rowH);
+      }
+      return canvas;
+    }
+
+    function teamAnalyzerShareFile(name) {
+      const slug = String(name || "team").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "team";
+      return "cuckle-" + slug + ".png";
+    }
+
+    function teamAnalyzerShareNow(uid) {
+      if (!teamAnalyzerEnabled() || !uid) return;
+      const mem = (members || []).find(function (m) { return m && String(m.user_id) === String(uid); });
+      const name = (mem && mem.name) || "";
+      const canvas = teamAnalyzerShareDraw(uid, name);
+      if (!canvas) {
+        analyzerShareNote = "Could not build that image.";
+        render();
+        return;
+      }
+      const blob = calcShareBlob(canvas);
+      const fileName = teamAnalyzerShareFile(name);
+      const file = new File([blob], fileName, { type: "image/png" });
+      const payload = { files: [file], title: (name || "Team") + " analyzer", text: (name || "Team") + " · " + teamAnalyzerCard(uid, name).overall + " / 10" };
+      function save() {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
+        analyzerShareNote = "Saved image";
+        render();
+      }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share(payload).then(function () {
+          analyzerShareNote = "Sent";
+          render();
+        }).catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          save();
+        });
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () {
+          analyzerShareNote = "Copied image";
+          render();
+        }).catch(function () { save(); });
+        return;
+      }
+      save();
     }
 
     function renderTeamHome() {
@@ -28919,6 +29328,13 @@
         e.stopPropagation();
         overnightOpen = !overnightOpen;
         if (typeof render === "function") render();
+        return;
+      }
+      const analyzerShareBtn = e.target.closest("[data-analyzer-share]");
+      if (analyzerShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        teamAnalyzerShareNow(analyzerShareBtn.getAttribute("data-analyzer-share"));
         return;
       }
       const overnightShareBtn = e.target.closest("[data-overnight-share]");

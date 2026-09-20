@@ -1,0 +1,6227 @@
+[
+  {
+    "transaction_id": "1268975176310063104",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756909767753,
+    "date": "2025-09-03",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "4195": 8
+    },
+    "drops": {
+      "8110": 8
+    }
+  },
+  {
+    "transaction_id": "1268948800077041664",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756903479168,
+    "date": "2025-09-03",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "11565": 3
+    },
+    "drops": {
+      "5022": 3
+    }
+  },
+  {
+    "transaction_id": "1268807202798305280",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756869719746,
+    "date": "2025-09-03",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "11626": 12
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1268801825163726848",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756868437618,
+    "date": "2025-09-03",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "GB": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1268801754573578240",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756868420788,
+    "date": "2025-09-03",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "12535": 2
+    }
+  },
+  {
+    "transaction_id": "1268800702096879616",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756868169859,
+    "date": "2025-09-03",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "LAR": 3
+    },
+    "drops": {
+      "MIA": 3
+    }
+  },
+  {
+    "transaction_id": "1268800613752242177",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1756868148795,
+    "date": "2025-09-03",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "ARI": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1269464573811884032",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757026449209,
+    "date": "2025-09-04",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "CIN": 1
+    },
+    "drops": {
+      "NYJ": 1
+    }
+  },
+  {
+    "transaction_id": "1270869289859026944",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757361359613,
+    "date": "2025-09-08",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "5848": 4
+    },
+    "drops": {
+      "11560": 4
+    }
+  },
+  {
+    "transaction_id": "1270869181687926784",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757361333823,
+    "date": "2025-09-08",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "8125": 4
+    },
+    "drops": {
+      "9494": 4
+    }
+  },
+  {
+    "transaction_id": "1271277015126786048",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757458568893,
+    "date": "2025-09-09",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "12506": 8
+    },
+    "drops": {
+      "8136": 8
+    }
+  },
+  {
+    "transaction_id": "1271164608421322752",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757431769046,
+    "date": "2025-09-09",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "7567": 6
+    },
+    "drops": {
+      "KC": 6
+    }
+  },
+  {
+    "transaction_id": "1271137172396736512",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757425227787,
+    "date": "2025-09-09",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "NE": 1
+    },
+    "drops": {
+      "CIN": 1
+    }
+  },
+  {
+    "transaction_id": "1271362057165344768",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757478844495,
+    "date": "2025-09-10",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "5870": 12
+    },
+    "drops": {
+      "9758": 12
+    }
+  },
+  {
+    "transaction_id": "1271361331559137280",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757478671497,
+    "date": "2025-09-10",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "4144": 12
+    },
+    "drops": {
+      "11626": 12
+    }
+  },
+  {
+    "transaction_id": "1271350583948738560",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 1,
+    "created": 1757476109067,
+    "date": "2025-09-10",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "DET": 7
+    },
+    "drops": {
+      "4950": 7
+    }
+  },
+  {
+    "transaction_id": "1271462571496468480",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757502808978,
+    "date": "2025-09-10",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "12535": 7
+    },
+    "drops": {
+      "12509": 7
+    }
+  },
+  {
+    "transaction_id": "1271914392371363840",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757610531469,
+    "date": "2025-09-11",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "1339": 3
+    },
+    "drops": {
+      "8143": 3
+    }
+  },
+  {
+    "transaction_id": "1271913813762924544",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757610393518,
+    "date": "2025-09-11",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "7002": 7
+    },
+    "drops": {
+      "12535": 7
+    }
+  },
+  {
+    "transaction_id": "1272333440934490112",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757710440433,
+    "date": "2025-09-12",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "3214": 4
+    },
+    "drops": {
+      "4066": 4
+    }
+  },
+  {
+    "transaction_id": "1272019872573845504",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757635679910,
+    "date": "2025-09-12",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "4950": 12
+    },
+    "drops": {
+      "12519": 12
+    }
+  },
+  {
+    "transaction_id": "1273017666763763712",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757873572583,
+    "date": "2025-09-14",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11559": 2
+    },
+    "drops": {
+      "9501": 2
+    }
+  },
+  {
+    "transaction_id": "1272960897735753728",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757860037791,
+    "date": "2025-09-14",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "17": 2
+    },
+    "drops": {
+      "4666": 2
+    }
+  },
+  {
+    "transaction_id": "1273384272308240384",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757960978156,
+    "date": "2025-09-15",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "9482": 4
+    },
+    "drops": {
+      "8125": 4
+    }
+  },
+  {
+    "transaction_id": "1273772293184581632",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758053489541,
+    "date": "2025-09-16",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "3451": 10
+    },
+    "drops": {
+      "7839": 10
+    }
+  },
+  {
+    "transaction_id": "1273723589878640640",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758041877768,
+    "date": "2025-09-16",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "SEA": 5
+    },
+    "drops": {
+      "ARI": 5
+    }
+  },
+  {
+    "transaction_id": "1273722851001667584",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758041701606,
+    "date": "2025-09-16",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "8136": 5
+    },
+    "drops": {
+      "4098": 5
+    }
+  },
+  {
+    "transaction_id": "1273722684785577984",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758041661977,
+    "date": "2025-09-16",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "9508": 5
+    }
+  },
+  {
+    "transaction_id": "1273722450244272128",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758041606059,
+    "date": "2025-09-16",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "1426": 5
+    },
+    "drops": {
+      "7670": 5
+    }
+  },
+  {
+    "transaction_id": "1273705246014603264",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758037504250,
+    "date": "2025-09-16",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "11560": 4
+    },
+    "drops": {
+      "9482": 4
+    }
+  },
+  {
+    "transaction_id": "1273686309092745216",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758032989336,
+    "date": "2025-09-16",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "12534": 8
+    },
+    "drops": {
+      "4663": 8
+    }
+  },
+  {
+    "transaction_id": "1273675489180921856",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758030409669,
+    "date": "2025-09-16",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "BUF": 1
+    },
+    "drops": {
+      "NE": 1
+    }
+  },
+  {
+    "transaction_id": "1273488658317459456",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1757985865720,
+    "date": "2025-09-16",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "8110": 7
+    },
+    "drops": {
+      "5012": 7
+    }
+  },
+  {
+    "transaction_id": "1273896105037275136",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758083008587,
+    "date": "2025-09-17",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "11627": 11
+    },
+    "drops": {
+      "12484": 11
+    }
+  },
+  {
+    "transaction_id": "1273845996354306048",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758071061746,
+    "date": "2025-09-17",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "8126": 12
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1273845096231493632",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 2,
+    "created": 1758070847141,
+    "date": "2025-09-17",
+    "roster_ids": [
+      12
+    ],
+    "adds": {},
+    "drops": {
+      "4018": 12
+    }
+  },
+  {
+    "transaction_id": "1274151599647768576",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758143923249,
+    "date": "2025-09-17",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11586": 2
+    },
+    "drops": {
+      "6111": 2
+    }
+  },
+  {
+    "transaction_id": "1274151432848687104",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758143883481,
+    "date": "2025-09-17",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "8121": 2
+    },
+    "drops": {
+      "1689": 2
+    }
+  },
+  {
+    "transaction_id": "1274151159682043904",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758143818354,
+    "date": "2025-09-17",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "6111": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1274021156323598336",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758112823137,
+    "date": "2025-09-17",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12499": 3
+    },
+    "drops": {
+      "11565": 3
+    }
+  },
+  {
+    "transaction_id": "1274008449004343296",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758109793476,
+    "date": "2025-09-17",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "ATL": 10
+    },
+    "drops": {
+      "SF": 10
+    }
+  },
+  {
+    "transaction_id": "1274001172700594176",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758108058670,
+    "date": "2025-09-17",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "KC": 7
+    },
+    "drops": {
+      "DET": 7
+    }
+  },
+  {
+    "transaction_id": "1274195178600546304",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758154313281,
+    "date": "2025-09-18",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "11600": 10
+    },
+    "drops": {
+      "9225": 10
+    }
+  },
+  {
+    "transaction_id": "1274784566271315968",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758294834253,
+    "date": "2025-09-19",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "8125": 2
+    },
+    "drops": {
+      "11559": 2
+    }
+  },
+  {
+    "transaction_id": "1274783221556457472",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758294513647,
+    "date": "2025-09-19",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "7523": 2
+    },
+    "drops": {
+      "11586": 2
+    }
+  },
+  {
+    "transaction_id": "1275518942709809152",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758469923240,
+    "date": "2025-09-21",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "5012": 11
+    },
+    "drops": {
+      "11627": 11
+    }
+  },
+  {
+    "transaction_id": "1275985365353664512",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758581127064,
+    "date": "2025-09-22",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "DET": 4
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1275985173992701952",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758581081439,
+    "date": "2025-09-22",
+    "roster_ids": [
+      4
+    ],
+    "adds": {},
+    "drops": {
+      "4137": 4
+    }
+  },
+  {
+    "transaction_id": "1275970394079133696",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758577557633,
+    "date": "2025-09-22",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "6770": 2
+    }
+  },
+  {
+    "transaction_id": "1276360047370203136",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758670458217,
+    "date": "2025-09-23",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "LAC": 7
+    },
+    "drops": {
+      "KC": 7
+    }
+  },
+  {
+    "transaction_id": "1276339343618752512",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758665522058,
+    "date": "2025-09-23",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "8188": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1276335777491472384",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758664671828,
+    "date": "2025-09-23",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "4219": 9
+    },
+    "drops": {
+      "7528": 9
+    }
+  },
+  {
+    "transaction_id": "1276283800753553408",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758652279608,
+    "date": "2025-09-23",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "3200": 2
+    },
+    "drops": {
+      "7523": 2
+    }
+  },
+  {
+    "transaction_id": "1276247175864524800",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758643547553,
+    "date": "2025-09-23",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "11586": 10
+    },
+    "drops": {
+      "12469": 10
+    }
+  },
+  {
+    "transaction_id": "1276246642982416384",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758643420505,
+    "date": "2025-09-23",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "9508": 10
+    },
+    "drops": {
+      "ATL": 10
+    }
+  },
+  {
+    "transaction_id": "1276246022921658368",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758643272670,
+    "date": "2025-09-23",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "7021": 10
+    },
+    "drops": {
+      "11600": 10
+    }
+  },
+  {
+    "transaction_id": "1276225329282715648",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758638338922,
+    "date": "2025-09-23",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "1433": 1
+    },
+    "drops": {
+      "11786": 1
+    }
+  },
+  {
+    "transaction_id": "1276223104812613632",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758637808568,
+    "date": "2025-09-23",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "10219": 1
+    },
+    "drops": {
+      "12474": 1
+    }
+  },
+  {
+    "transaction_id": "1276204860009619456",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758633458667,
+    "date": "2025-09-23",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "NE": 3
+    },
+    "drops": {
+      "LAR": 3
+    }
+  },
+  {
+    "transaction_id": "1276024708394946560",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758590507176,
+    "date": "2025-09-23",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "10213": 2
+    },
+    "drops": {
+      "8121": 2
+    }
+  },
+  {
+    "transaction_id": "1276420981103013888",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 3,
+    "created": 1758684985952,
+    "date": "2025-09-24",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "4098": 3
+    },
+    "drops": {
+      "6804": 3
+    }
+  },
+  {
+    "transaction_id": "1276711781967880192",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1758754318280,
+    "date": "2025-09-24",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "12474": 10
+    },
+    "drops": {
+      "11575": 10
+    }
+  },
+  {
+    "transaction_id": "1276608576957202432",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1758729712289,
+    "date": "2025-09-24",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "12185": 8
+    },
+    "drops": {
+      "4195": 8
+    }
+  },
+  {
+    "transaction_id": "1276572467862736896",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1758721103209,
+    "date": "2025-09-24",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "SF": 10
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1276509871931412480",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1758706179177,
+    "date": "2025-09-24",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12497": 3
+    },
+    "drops": {
+      "12457": 3
+    }
+  },
+  {
+    "transaction_id": "1276959806430646272",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1758813451920,
+    "date": "2025-09-25",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "IND": 4
+    },
+    "drops": {
+      "BAL": 4
+    }
+  },
+  {
+    "transaction_id": "1277164027612516352",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1758862142044,
+    "date": "2025-09-26",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "8917": 11
+    },
+    "drops": {
+      "6803": 11
+    }
+  },
+  {
+    "transaction_id": "1278106196955365376",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759086772720,
+    "date": "2025-09-28",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "6826": 6
+    },
+    "drops": {
+      "7090": 6
+    }
+  },
+  {
+    "transaction_id": "1278400422574292992",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759156921574,
+    "date": "2025-09-29",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "9757": 3
+    },
+    "drops": {
+      "12497": 3
+    }
+  },
+  {
+    "transaction_id": "1278884855064584192",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759272419281,
+    "date": "2025-09-30",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "11610": 5
+    },
+    "drops": {
+      "1426": 5
+    }
+  },
+  {
+    "transaction_id": "1278794292726370304",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759250827537,
+    "date": "2025-09-30",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "2747": 5
+    },
+    "drops": {
+      "1945": 5
+    }
+  },
+  {
+    "transaction_id": "1278779532068798464",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759247308321,
+    "date": "2025-09-30",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11786": 2
+    },
+    "drops": {
+      "17": 2
+    }
+  },
+  {
+    "transaction_id": "1278779110411243520",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759247207790,
+    "date": "2025-09-30",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "BAL": 2
+    },
+    "drops": {
+      "4144": 2
+    }
+  },
+  {
+    "transaction_id": "1278759655073394688",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759242569277,
+    "date": "2025-09-30",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "8121": 4
+    },
+    "drops": {
+      "12541": 4
+    }
+  },
+  {
+    "transaction_id": "1278751471118065664",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759240618070,
+    "date": "2025-09-30",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "10955": 1
+    },
+    "drops": {
+      "1433": 1
+    }
+  },
+  {
+    "transaction_id": "1278751211566166016",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759240556187,
+    "date": "2025-09-30",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "ARI": 1
+    },
+    "drops": {
+      "BUF": 1
+    }
+  },
+  {
+    "transaction_id": "1278739568274726912",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759237780210,
+    "date": "2025-09-30",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "6149": 9
+    },
+    "drops": {
+      "3321": 9
+    }
+  },
+  {
+    "transaction_id": "1278735379867893760",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759236781616,
+    "date": "2025-09-30",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "421": 8
+    },
+    "drops": {
+      "10444": 8
+    }
+  },
+  {
+    "transaction_id": "1278734859723866112",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759236657604,
+    "date": "2025-09-30",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "2505": 8
+    },
+    "drops": {
+      "12506": 8
+    }
+  },
+  {
+    "transaction_id": "1278577001019490304",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759199021157,
+    "date": "2025-09-30",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "6804": 12
+    },
+    "drops": {
+      "4950": 12
+    }
+  },
+  {
+    "transaction_id": "1278955763766657024",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759289325233,
+    "date": "2025-10-01",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "5022": 12
+    },
+    "drops": {
+      "12504": 12
+    }
+  },
+  {
+    "transaction_id": "1278942225266393088",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759286097402,
+    "date": "2025-10-01",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "1373": 7
+    },
+    "drops": {
+      "LAC": 7
+    }
+  },
+  {
+    "transaction_id": "1278921379214819328",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759281127316,
+    "date": "2025-10-01",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "CLE": 3
+    },
+    "drops": {
+      "NE": 3
+    }
+  },
+  {
+    "transaction_id": "1278906298649317376",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 4,
+    "created": 1759277531829,
+    "date": "2025-10-01",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "11627": 9
+    },
+    "drops": {
+      "7571": 9
+    }
+  },
+  {
+    "transaction_id": "1279209180040790016",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759349744380,
+    "date": "2025-10-01",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "7607": 1
+    },
+    "drops": {
+      "10219": 1
+    }
+  },
+  {
+    "transaction_id": "1279173796808372224",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759341308361,
+    "date": "2025-10-01",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "IND": 8
+    },
+    "drops": {
+      "HOU": 8
+    }
+  },
+  {
+    "transaction_id": "1279167066917597184",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759339703829,
+    "date": "2025-10-01",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "9506": 4
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1279162982676307968",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759338730070,
+    "date": "2025-10-01",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "6151": 4
+    },
+    "drops": {
+      "IND": 4
+    }
+  },
+  {
+    "transaction_id": "1279162230167863296",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759338550658,
+    "date": "2025-10-01",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "6803": 6
+    },
+    "drops": {
+      "11632": 6
+    }
+  },
+  {
+    "transaction_id": "1279161027035955200",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759338263809,
+    "date": "2025-10-01",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "4018": 10
+    },
+    "drops": {
+      "11586": 10
+    }
+  },
+  {
+    "transaction_id": "1279149300927971328",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759335468087,
+    "date": "2025-10-01",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "11199": 3
+    },
+    "drops": {
+      "12499": 3
+    }
+  },
+  {
+    "transaction_id": "1279101477247258624",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759324066033,
+    "date": "2025-10-01",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "12503": 11
+    },
+    "drops": {
+      "8917": 11
+    }
+  },
+  {
+    "transaction_id": "1279091891211616256",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759321780544,
+    "date": "2025-10-01",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "NYG": 11
+    },
+    "drops": {
+      "WAS": 11
+    }
+  },
+  {
+    "transaction_id": "1279088244402704384",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759320911077,
+    "date": "2025-10-01",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "DAL": 2
+    },
+    "drops": {
+      "BAL": 2
+    }
+  },
+  {
+    "transaction_id": "1279078763476324352",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759318650648,
+    "date": "2025-10-01",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "5995": 12
+    },
+    "drops": {
+      "11576": 12
+    }
+  },
+  {
+    "transaction_id": "1279072898232905728",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759317252266,
+    "date": "2025-10-01",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "9480": 3
+    },
+    "drops": {
+      "4033": 3
+    }
+  },
+  {
+    "transaction_id": "1279038453043974144",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759309039892,
+    "date": "2025-10-01",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "LAR": 10
+    },
+    "drops": {
+      "SF": 10
+    }
+  },
+  {
+    "transaction_id": "1279621725381754880",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759448102854,
+    "date": "2025-10-02",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "12508": 12
+    },
+    "drops": {
+      "8125": 12
+    }
+  },
+  {
+    "transaction_id": "1279858923049852928",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759504655185,
+    "date": "2025-10-03",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "BUF": 6
+    },
+    "drops": {
+      "6803": 6
+    }
+  },
+  {
+    "transaction_id": "1280708877523902464",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759707300123,
+    "date": "2025-10-05",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "4040": 2
+    },
+    "drops": {
+      "12495": 2
+    }
+  },
+  {
+    "transaction_id": "1280540892632977408",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759667249404,
+    "date": "2025-10-05",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12506": 1
+    },
+    "drops": {
+      "12490": 1
+    }
+  },
+  {
+    "transaction_id": "1281430030458580992",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759879236382,
+    "date": "2025-10-07",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "11647": 3
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1281408415561682944",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759874082989,
+    "date": "2025-10-07",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "NE": 3
+    },
+    "drops": {
+      "CLE": 3
+    }
+  },
+  {
+    "transaction_id": "1281351027945148416",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759860400714,
+    "date": "2025-10-07",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "12498": 11
+    },
+    "drops": {
+      "12503": 11
+    }
+  },
+  {
+    "transaction_id": "1281318680495398912",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759852688481,
+    "date": "2025-10-07",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11603": 2
+    },
+    "drops": {
+      "4040": 2
+    }
+  },
+  {
+    "transaction_id": "1281302269677023232",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759848775838,
+    "date": "2025-10-07",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "8123": 5
+    },
+    "drops": {
+      "8188": 5
+    }
+  },
+  {
+    "transaction_id": "1281297997627396096",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759847757301,
+    "date": "2025-10-07",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "1433": 8
+    },
+    "drops": {
+      "12185": 8
+    }
+  },
+  {
+    "transaction_id": "1281281848034459648",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759843906938,
+    "date": "2025-10-07",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "17": 1
+    },
+    "drops": {
+      "10955": 1
+    }
+  },
+  {
+    "transaction_id": "1281281668329521152",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759843864094,
+    "date": "2025-10-07",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "LV": 1
+    },
+    "drops": {
+      "ARI": 1
+    }
+  },
+  {
+    "transaction_id": "1281502176723615744",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759896437392,
+    "date": "2025-10-08",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "5230": 7
+    },
+    "drops": {
+      "12711": 7
+    }
+  },
+  {
+    "transaction_id": "1281497192036581376",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759895248949,
+    "date": "2025-10-08",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "11783": 7
+    },
+    "drops": {
+      "7002": 7
+    }
+  },
+  {
+    "transaction_id": "1281493578337484800",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759894387377,
+    "date": "2025-10-08",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "4943": 7
+    },
+    "drops": {
+      "1373": 7
+    }
+  },
+  {
+    "transaction_id": "1281457676655546368",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759885827748,
+    "date": "2025-10-08",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "4195": 10
+    },
+    "drops": {
+      "9500": 10
+    }
+  },
+  {
+    "transaction_id": "1281455868180705280",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 5,
+    "created": 1759885396574,
+    "date": "2025-10-08",
+    "roster_ids": [
+      10
+    ],
+    "adds": {},
+    "drops": {
+      "4018": 10
+    }
+  },
+  {
+    "transaction_id": "1281629816050700288",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1759926868978,
+    "date": "2025-10-08",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "LAC": 9
+    },
+    "drops": {
+      "4219": 9
+    }
+  },
+  {
+    "transaction_id": "1281614875386183680",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1759923306847,
+    "date": "2025-10-08",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12495": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1281614841248751616",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1759923298708,
+    "date": "2025-10-08",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12469": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1281611546409066496",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1759922513156,
+    "date": "2025-10-08",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "3200": 2
+    }
+  },
+  {
+    "transaction_id": "1281611517954899968",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1759922506372,
+    "date": "2025-10-08",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "DAL": 2
+    }
+  },
+  {
+    "transaction_id": "1282146749388972032",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760050115490,
+    "date": "2025-10-09",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "WAS": 11
+    },
+    "drops": {
+      "NYG": 11
+    }
+  },
+  {
+    "transaction_id": "1282216888121720832",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760066837868,
+    "date": "2025-10-10",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "19": 12
+    },
+    "drops": {
+      "12508": 12
+    }
+  },
+  {
+    "transaction_id": "1282727161945419776",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760188496627,
+    "date": "2025-10-11",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "4033": 3
+    },
+    "drops": {
+      "1339": 3
+    }
+  },
+  {
+    "transaction_id": "1283178280291164160",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760296051623,
+    "date": "2025-10-12",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "1339": 1
+    },
+    "drops": {
+      "12506": 1
+    }
+  },
+  {
+    "transaction_id": "1283122587211173888",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760282773358,
+    "date": "2025-10-12",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "8122": 3
+    },
+    "drops": {
+      "11199": 3
+    }
+  },
+  {
+    "transaction_id": "1283970188898762752",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760484857348,
+    "date": "2025-10-14",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "KC": 7
+    },
+    "drops": {
+      "4037": 7
+    }
+  },
+  {
+    "transaction_id": "1283880152383639552",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760463390970,
+    "date": "2025-10-14",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12506": 3
+    },
+    "drops": {
+      "4033": 3
+    }
+  },
+  {
+    "transaction_id": "1283865234330624000",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760459834228,
+    "date": "2025-10-14",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "6083": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1283865001295114240",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760459778669,
+    "date": "2025-10-14",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "11786": 2
+    }
+  },
+  {
+    "transaction_id": "1283864604199387136",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760459683994,
+    "date": "2025-10-14",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "96": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1283864294202540032",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760459610085,
+    "date": "2025-10-14",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "11610": 5
+    }
+  },
+  {
+    "transaction_id": "1283854082758422528",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760457175486,
+    "date": "2025-10-14",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "7523": 3
+    },
+    "drops": {
+      "4098": 3
+    }
+  },
+  {
+    "transaction_id": "1283825093201387520",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760450263838,
+    "date": "2025-10-14",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "1945": 1
+    },
+    "drops": {
+      "17": 1
+    }
+  },
+  {
+    "transaction_id": "1283824363618992129",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760450089891,
+    "date": "2025-10-14",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "4454": 1
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1284058753766793216",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760505972858,
+    "date": "2025-10-15",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "9504": 10
+    },
+    "drops": {
+      "11655": 10
+    }
+  },
+  {
+    "transaction_id": "1284023679033806848",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 6,
+    "created": 1760497610390,
+    "date": "2025-10-15",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "11789": 8
+    },
+    "drops": {
+      "1433": 8
+    }
+  },
+  {
+    "transaction_id": "1284316945876799488",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760567530653,
+    "date": "2025-10-15",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "8111": 10
+    },
+    "drops": {
+      "4195": 10
+    }
+  },
+  {
+    "transaction_id": "1284176875169542144",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760534135194,
+    "date": "2025-10-15",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "ATL": 11
+    },
+    "drops": {
+      "WAS": 11
+    }
+  },
+  {
+    "transaction_id": "1284176317859790848",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760534002321,
+    "date": "2025-10-15",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "9482": 11
+    },
+    "drops": {
+      "12498": 11
+    }
+  },
+  {
+    "transaction_id": "1284173567205871616",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760533346514,
+    "date": "2025-10-15",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "9500": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1284173505667014656",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760533331843,
+    "date": "2025-10-15",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "12469": 2
+    }
+  },
+  {
+    "transaction_id": "1284166179744677888",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760531585206,
+    "date": "2025-10-15",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "12499": 9
+    },
+    "drops": {
+      "MIN": 9
+    }
+  },
+  {
+    "transaction_id": "1284165594106589184",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760531445579,
+    "date": "2025-10-15",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "CHI": 9
+    },
+    "drops": {
+      "LAC": 9
+    }
+  },
+  {
+    "transaction_id": "1284160228299902976",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760530166272,
+    "date": "2025-10-15",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "11646": 12
+    },
+    "drops": {
+      "5995": 12
+    }
+  },
+  {
+    "transaction_id": "1284156825213636608",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760529354913,
+    "date": "2025-10-15",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "CLE": 1
+    },
+    "drops": {
+      "LV": 1
+    }
+  },
+  {
+    "transaction_id": "1284624022973206528",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760640743539,
+    "date": "2025-10-16",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "CAR": 4
+    },
+    "drops": {
+      "6151": 4
+    }
+  },
+  {
+    "transaction_id": "1285331194342305792",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760809346331,
+    "date": "2025-10-18",
+    "roster_ids": [
+      12
+    ],
+    "adds": {},
+    "drops": {
+      "11646": 12
+    }
+  },
+  {
+    "transaction_id": "1285746768687947776",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760908426977,
+    "date": "2025-10-19",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "7090": 7
+    },
+    "drops": {
+      "11783": 7
+    }
+  },
+  {
+    "transaction_id": "1286034536395730944",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760977036144,
+    "date": "2025-10-20",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "5189": 4
+    },
+    "drops": {
+      "4227": 4
+    }
+  },
+  {
+    "transaction_id": "1286003830353301504",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1760969715254,
+    "date": "2025-10-20",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12455": 2
+    },
+    "drops": {
+      "9500": 2
+    }
+  },
+  {
+    "transaction_id": "1286501542446260224",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761088379064,
+    "date": "2025-10-21",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "TB": 1
+    },
+    "drops": {
+      "CLE": 1
+    }
+  },
+  {
+    "transaction_id": "1286398338878418944",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761063773415,
+    "date": "2025-10-21",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "12711": 5
+    },
+    "drops": {
+      "2747": 5
+    }
+  },
+  {
+    "transaction_id": "1286393658932744192",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761062657629,
+    "date": "2025-10-21",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "4037": 8
+    },
+    "drops": {
+      "2505": 8
+    }
+  },
+  {
+    "transaction_id": "1286392359789002752",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761062347889,
+    "date": "2025-10-21",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12493": 3
+    },
+    "drops": {
+      "7523": 3
+    }
+  },
+  {
+    "transaction_id": "1286384462535327744",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761060465037,
+    "date": "2025-10-21",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "12508": 8
+    },
+    "drops": {
+      "5849": 8
+    }
+  },
+  {
+    "transaction_id": "1286383403490344960",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761060212542,
+    "date": "2025-10-21",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "8123": 5
+    }
+  },
+  {
+    "transaction_id": "1286383257415331840",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761060177714,
+    "date": "2025-10-21",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "96": 5
+    }
+  },
+  {
+    "transaction_id": "1286571900947959808",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761105153839,
+    "date": "2025-10-22",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "4098": 12
+    },
+    "drops": {
+      "19": 12
+    }
+  },
+  {
+    "transaction_id": "1286558467204587520",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761101950984,
+    "date": "2025-10-22",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "12457": 7
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1286558449924075521",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 7,
+    "created": 1761101946864,
+    "date": "2025-10-22",
+    "roster_ids": [
+      7
+    ],
+    "adds": {},
+    "drops": {
+      "7090": 7
+    }
+  },
+  {
+    "transaction_id": "1286760714651832320",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761150170532,
+    "date": "2025-10-22",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "11571": 3
+    },
+    "drops": {
+      "9757": 3
+    }
+  },
+  {
+    "transaction_id": "1286754835554656256",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761148768846,
+    "date": "2025-10-22",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "11655": 4
+    },
+    "drops": {
+      "9506": 4
+    }
+  },
+  {
+    "transaction_id": "1286749039659843584",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761147386997,
+    "date": "2025-10-22",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "SF": 10
+    },
+    "drops": {
+      "6783": 10
+    }
+  },
+  {
+    "transaction_id": "1286713399941558272",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761138889826,
+    "date": "2025-10-22",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "11792": 8
+    },
+    "drops": {
+      "11789": 8
+    }
+  },
+  {
+    "transaction_id": "1286702627551219712",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761136321488,
+    "date": "2025-10-22",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "LAC": 4
+    },
+    "drops": {
+      "CAR": 4
+    }
+  },
+  {
+    "transaction_id": "1286689453045198848",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761133180441,
+    "date": "2025-10-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "4066": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1286687919104356352",
+    "type": "commissioner",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761132814722,
+    "date": "2025-10-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "SEA": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1286687679324381184",
+    "type": "commissioner",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761132757554,
+    "date": "2025-10-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "SEA": 5
+    }
+  },
+  {
+    "transaction_id": "1286687374402682880",
+    "type": "commissioner",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761132684854,
+    "date": "2025-10-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "3198": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1286686864203321344",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761132563214,
+    "date": "2025-10-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "CIN": 5
+    },
+    "drops": {
+      "3198": 5
+    }
+  },
+  {
+    "transaction_id": "1286628122279567360",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761118558047,
+    "date": "2025-10-22",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "HOU": 2
+    },
+    "drops": {
+      "GB": 2
+    }
+  },
+  {
+    "transaction_id": "1286626668856758272",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761118211524,
+    "date": "2025-10-22",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11626": 2
+    },
+    "drops": {
+      "11603": 2
+    }
+  },
+  {
+    "transaction_id": "1287142940958814208",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761241300385,
+    "date": "2025-10-23",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "6783": 1
+    },
+    "drops": {
+      "7591": 1
+    }
+  },
+  {
+    "transaction_id": "1287079100170645504",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761226079555,
+    "date": "2025-10-23",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "12485": 11
+    },
+    "drops": {
+      "9482": 11
+    }
+  },
+  {
+    "transaction_id": "1287855714340966400",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761411238802,
+    "date": "2025-10-25",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "19": 7
+    },
+    "drops": {
+      "4943": 7
+    }
+  },
+  {
+    "transaction_id": "1288214066317238272",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761496676572,
+    "date": "2025-10-26",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "4227": 2
+    },
+    "drops": {
+      "6083": 2
+    }
+  },
+  {
+    "transaction_id": "1288211855818387456",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761496149548,
+    "date": "2025-10-26",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "5001": 2
+    },
+    "drops": {
+      "11626": 2
+    }
+  },
+  {
+    "transaction_id": "1288997758472028160",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761683523342,
+    "date": "2025-10-28",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "4943": 3
+    },
+    "drops": {
+      "11571": 3
+    }
+  },
+  {
+    "transaction_id": "1288923508688039936",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761665820813,
+    "date": "2025-10-28",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "9225": 2
+    },
+    "drops": {
+      "12455": 2
+    }
+  },
+  {
+    "transaction_id": "1288908052065423360",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761662135667,
+    "date": "2025-10-28",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "12469": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1288906519449960448",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761661770264,
+    "date": "2025-10-28",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "11789": 8
+    },
+    "drops": {
+      "11792": 8
+    }
+  },
+  {
+    "transaction_id": "1288904944098746368",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761661394670,
+    "date": "2025-10-28",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "CIN": 5
+    }
+  },
+  {
+    "transaction_id": "1288903522670096384",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761661055776,
+    "date": "2025-10-28",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "8167": 1
+    },
+    "drops": {
+      "4454": 1
+    }
+  },
+  {
+    "transaction_id": "1288903286346227712",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761660999431,
+    "date": "2025-10-28",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "9500": 1
+    },
+    "drops": {
+      "6783": 1
+    }
+  },
+  {
+    "transaction_id": "1289107620459741184",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761709716480,
+    "date": "2025-10-29",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "GB": 7
+    },
+    "drops": {
+      "KC": 7
+    }
+  },
+  {
+    "transaction_id": "1289054357865664512",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761697017689,
+    "date": "2025-10-29",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "5849": 9
+    },
+    "drops": {
+      "6149": 9
+    }
+  },
+  {
+    "transaction_id": "1289053893963034624",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 8,
+    "created": 1761696907085,
+    "date": "2025-10-29",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "4147": 9
+    },
+    "drops": {
+      "12481": 9
+    }
+  },
+  {
+    "transaction_id": "1289635405754302464",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1761835550300,
+    "date": "2025-10-30",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "6130": 4
+    },
+    "drops": {
+      "5848": 4
+    }
+  },
+  {
+    "transaction_id": "1289634842979364864",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1761835416124,
+    "date": "2025-10-30",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "11435": 7
+    },
+    "drops": {
+      "19": 7
+    }
+  },
+  {
+    "transaction_id": "1289633966130757632",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1761835207068,
+    "date": "2025-10-30",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "BAL": 1
+    },
+    "drops": {
+      "TB": 1
+    }
+  },
+  {
+    "transaction_id": "1289789761141100544",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1761872351493,
+    "date": "2025-10-31",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "17": 6
+    },
+    "drops": {
+      "6650": 6
+    }
+  },
+  {
+    "transaction_id": "1290430443266506752",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762025102014,
+    "date": "2025-11-01",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "96": 9
+    },
+    "drops": {
+      "5849": 9
+    }
+  },
+  {
+    "transaction_id": "1290142570889908224",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1761956467891,
+    "date": "2025-11-01",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12540": 2
+    },
+    "drops": {
+      "9487": 2
+    }
+  },
+  {
+    "transaction_id": "1290142321169408000",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1761956408353,
+    "date": "2025-11-01",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "9487": 2
+    },
+    "drops": {
+      "5001": 2
+    }
+  },
+  {
+    "transaction_id": "1290766890607611904",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762105317311,
+    "date": "2025-11-02",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "2747": 10
+    },
+    "drops": {
+      "SF": 10
+    }
+  },
+  {
+    "transaction_id": "1291508787215106048",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762282199247,
+    "date": "2025-11-04",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "CAR": 7
+    },
+    "drops": {
+      "GB": 7
+    }
+  },
+  {
+    "transaction_id": "1291488964905021440",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762277473240,
+    "date": "2025-11-04",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "2020": 5
+    },
+    "drops": {
+      "12711": 5
+    }
+  },
+  {
+    "transaction_id": "1291483616206929920",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762276198011,
+    "date": "2025-11-04",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "11597": 8
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1291481779248578560",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762275760046,
+    "date": "2025-11-04",
+    "roster_ids": [
+      8
+    ],
+    "adds": {},
+    "drops": {
+      "9484": 8
+    }
+  },
+  {
+    "transaction_id": "1291471185854365696",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762273234383,
+    "date": "2025-11-04",
+    "roster_ids": [
+      4
+    ],
+    "adds": {},
+    "drops": {
+      "11566": 4
+    }
+  },
+  {
+    "transaction_id": "1291441487824850944",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762266153821,
+    "date": "2025-11-04",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "9487": 1
+    },
+    "drops": {
+      "1339": 1
+    }
+  },
+  {
+    "transaction_id": "1291431886156996608",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762263864605,
+    "date": "2025-11-04",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "6650": 3
+    },
+    "drops": {
+      "4943": 3
+    }
+  },
+  {
+    "transaction_id": "1291616091990163456",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762307782699,
+    "date": "2025-11-05",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "12490": 11
+    },
+    "drops": {
+      "12485": 11
+    }
+  },
+  {
+    "transaction_id": "1291602377543016448",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 9,
+    "created": 1762304512920,
+    "date": "2025-11-05",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "7002": 9
+    },
+    "drops": {
+      "96": 9
+    }
+  },
+  {
+    "transaction_id": "1291900986608087040",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762375706868,
+    "date": "2025-11-05",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "1339": 7
+    },
+    "drops": {
+      "12457": 7
+    }
+  },
+  {
+    "transaction_id": "1291846465794113536",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762362708094,
+    "date": "2025-11-05",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "CLE": 2
+    },
+    "drops": {
+      "HOU": 2
+    }
+  },
+  {
+    "transaction_id": "1291843951623413760",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762362108668,
+    "date": "2025-11-05",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "4943": 4
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1291838013566885888",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762360692925,
+    "date": "2025-11-05",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "8142": 2
+    },
+    "drops": {
+      "12540": 2
+    }
+  },
+  {
+    "transaction_id": "1291793217095745536",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762350012614,
+    "date": "2025-11-05",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11786": 2
+    },
+    "drops": {
+      "4227": 2
+    }
+  },
+  {
+    "transaction_id": "1292250271660908544",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762458982915,
+    "date": "2025-11-06",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "JAX": 9
+    },
+    "drops": {
+      "CHI": 9
+    }
+  },
+  {
+    "transaction_id": "1292238262303207424",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762456119661,
+    "date": "2025-11-06",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "11199": 7
+    },
+    "drops": {
+      "4039": 7
+    }
+  },
+  {
+    "transaction_id": "1292184778325360640",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762443368086,
+    "date": "2025-11-06",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "4454": 1
+    },
+    "drops": {
+      "7607": 1
+    }
+  },
+  {
+    "transaction_id": "1292166352743714816",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762438975086,
+    "date": "2025-11-06",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12485": 3
+    },
+    "drops": {
+      "8122": 3
+    }
+  },
+  {
+    "transaction_id": "1292030994903236608",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762406703262,
+    "date": "2025-11-06",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "6149": 10
+    },
+    "drops": {
+      "8111": 10
+    }
+  },
+  {
+    "transaction_id": "1292010381560004608",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762401788657,
+    "date": "2025-11-06",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "6039": 9
+    },
+    "drops": {
+      "4147": 9
+    }
+  },
+  {
+    "transaction_id": "1292635630307663872",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762550859576,
+    "date": "2025-11-07",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "10219": 3
+    },
+    "drops": {
+      "12506": 3
+    }
+  },
+  {
+    "transaction_id": "1292602647949373440",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762542995969,
+    "date": "2025-11-07",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11626": 2
+    },
+    "drops": {
+      "9225": 2
+    }
+  },
+  {
+    "transaction_id": "1292957798094618624",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762627670362,
+    "date": "2025-11-08",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "11792": 8
+    },
+    "drops": {
+      "11789": 8
+    }
+  },
+  {
+    "transaction_id": "1293691538970251264",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762802607818,
+    "date": "2025-11-10",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "6770": 2
+    },
+    "drops": {
+      "11626": 2
+    }
+  },
+  {
+    "transaction_id": "1294094628391243776",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762898711826,
+    "date": "2025-11-11",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "4227": 5
+    },
+    "drops": {
+      "2020": 5
+    }
+  },
+  {
+    "transaction_id": "1294064172744609792",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762891450633,
+    "date": "2025-11-11",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "8111": 6
+    },
+    "drops": {
+      "10236": 6
+    }
+  },
+  {
+    "transaction_id": "1294056203151740928",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762889550534,
+    "date": "2025-11-11",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "HOU": 8
+    },
+    "drops": {
+      "IND": 8
+    }
+  },
+  {
+    "transaction_id": "1294040923889479680",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762885907675,
+    "date": "2025-11-11",
+    "roster_ids": [
+      6
+    ],
+    "adds": {
+      "8125": 6
+    },
+    "drops": {
+      "6826": 6
+    }
+  },
+  {
+    "transaction_id": "1294033426629816320",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762884120189,
+    "date": "2025-11-11",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "7922": 7
+    },
+    "drops": {
+      "5230": 7
+    }
+  },
+  {
+    "transaction_id": "1294032122138353664",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762883809174,
+    "date": "2025-11-11",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "GB": 7
+    },
+    "drops": {
+      "CAR": 7
+    }
+  },
+  {
+    "transaction_id": "1293831451090911232",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762835965468,
+    "date": "2025-11-11",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "5001": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1294182269111533568",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762919607001,
+    "date": "2025-11-12",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "9506": 3
+    },
+    "drops": {
+      "6650": 3
+    }
+  },
+  {
+    "transaction_id": "1294182157668851712",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762919580432,
+    "date": "2025-11-12",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "12711": 12
+    },
+    "drops": {
+      "3678": 12
+    }
+  },
+  {
+    "transaction_id": "1294181047231062017",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762919315682,
+    "date": "2025-11-12",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "3257": 12
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1294178010789842944",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 10,
+    "created": 1762918591739,
+    "date": "2025-11-12",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "11586": 9
+    },
+    "drops": {
+      "12499": 9
+    }
+  },
+  {
+    "transaction_id": "1294371083708821504",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762964623909,
+    "date": "2025-11-12",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "96": 10
+    },
+    "drops": {
+      "9504": 10
+    }
+  },
+  {
+    "transaction_id": "1294326688439611392",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762954039253,
+    "date": "2025-11-12",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "7523": 2
+    },
+    "drops": {
+      "2306": 2
+    }
+  },
+  {
+    "transaction_id": "1294326300617506816",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762953946788,
+    "date": "2025-11-12",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "2306": 2
+    },
+    "drops": {
+      "7523": 2
+    }
+  },
+  {
+    "transaction_id": "1294321065182375936",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762952698564,
+    "date": "2025-11-12",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "KC": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1294320990414721024",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762952680737,
+    "date": "2025-11-12",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "12495": 2
+    }
+  },
+  {
+    "transaction_id": "1294320419993579520",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762952544739,
+    "date": "2025-11-12",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "7523": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1294320380525174784",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1762952535328,
+    "date": "2025-11-12",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "CLE": 2
+    }
+  },
+  {
+    "transaction_id": "1294793580237303808",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763065354931,
+    "date": "2025-11-13",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "12506": 10
+    },
+    "drops": {
+      "3451": 10
+    }
+  },
+  {
+    "transaction_id": "1294537413598650368",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763004280045,
+    "date": "2025-11-13",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "CHI": 9
+    },
+    "drops": {
+      "JAX": 9
+    }
+  },
+  {
+    "transaction_id": "1294909421654151168",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763092973678,
+    "date": "2025-11-14",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "8208": 1
+    },
+    "drops": {
+      "4454": 1
+    }
+  },
+  {
+    "transaction_id": "1294876183602692096",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763085049108,
+    "date": "2025-11-14",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "6783": 12
+    },
+    "drops": {
+      "6804": 12
+    }
+  },
+  {
+    "transaction_id": "1295564506914648064",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763249158174,
+    "date": "2025-11-15",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "TB": 10
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1295957894293901312",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763342949035,
+    "date": "2025-11-17",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "8122": 1
+    },
+    "drops": {
+      "8208": 1
+    }
+  },
+  {
+    "transaction_id": "1296563459181277184",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763487326955,
+    "date": "2025-11-18",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "4177": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1296563262074134528",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763487279961,
+    "date": "2025-11-18",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "11603": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1296562469740769280",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763487091053,
+    "date": "2025-11-18",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "12469": 5
+    }
+  },
+  {
+    "transaction_id": "1296562314018828288",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763487053926,
+    "date": "2025-11-18",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "4066": 5
+    }
+  },
+  {
+    "transaction_id": "1296561894311612416",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763486953860,
+    "date": "2025-11-18",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "2216": 5
+    }
+  },
+  {
+    "transaction_id": "1296496655817781248",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763471399791,
+    "date": "2025-11-18",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "6803": 11
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1296488278555369472",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763469402496,
+    "date": "2025-11-18",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "CLE": 12
+    },
+    "drops": {
+      "7553": 12
+    }
+  },
+  {
+    "transaction_id": "1296743151049904128",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763530168834,
+    "date": "2025-11-19",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "4195": 7
+    },
+    "drops": {
+      "1339": 7
+    }
+  },
+  {
+    "transaction_id": "1296741503653146624",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763529776065,
+    "date": "2025-11-19",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "10232": 7
+    },
+    "drops": {
+      "7922": 7
+    }
+  },
+  {
+    "transaction_id": "1296717230230212608",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763523988830,
+    "date": "2025-11-19",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12498": 3
+    },
+    "drops": {
+      "12485": 3
+    }
+  },
+  {
+    "transaction_id": "1296675263647612928",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763513983217,
+    "date": "2025-11-19",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "19": 10
+    },
+    "drops": {
+      "TB": 10
+    }
+  },
+  {
+    "transaction_id": "1296665361680171008",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763511622404,
+    "date": "2025-11-19",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "9504": 12
+    },
+    "drops": {
+      "6783": 12
+    }
+  },
+  {
+    "transaction_id": "1296665346450665472",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 11,
+    "created": 1763511618772,
+    "date": "2025-11-19",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "7090": 9
+    },
+    "drops": {
+      "7002": 9
+    }
+  },
+  {
+    "transaction_id": "1296861002461102080",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763558266800,
+    "date": "2025-11-19",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "LV": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1296860824459051008",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763558224361,
+    "date": "2025-11-19",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "KC": 2
+    }
+  },
+  {
+    "transaction_id": "1297378141911674880",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763681562453,
+    "date": "2025-11-20",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "7002": 10
+    },
+    "drops": {
+      "6149": 10
+    }
+  },
+  {
+    "transaction_id": "1297301767091937280",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763663353277,
+    "date": "2025-11-20",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "9479": 4
+    },
+    "drops": {
+      "LAC": 4
+    }
+  },
+  {
+    "transaction_id": "1297230884860088320",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763646453636,
+    "date": "2025-11-20",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "6650": 4
+    },
+    "drops": {
+      "5189": 4
+    }
+  },
+  {
+    "transaction_id": "1297028908067086336",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763598298617,
+    "date": "2025-11-20",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "SF": 9
+    },
+    "drops": {
+      "CHI": 9
+    }
+  },
+  {
+    "transaction_id": "1297028510707126272",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763598203878,
+    "date": "2025-11-20",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "2020": 9
+    },
+    "drops": {
+      "6039": 9
+    }
+  },
+  {
+    "transaction_id": "1298354798491361280",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763914415528,
+    "date": "2025-11-23",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "8131": 4
+    },
+    "drops": {
+      "8210": 4
+    }
+  },
+  {
+    "transaction_id": "1298354772448915456",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763914409318,
+    "date": "2025-11-23",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "8210": 4
+    },
+    "drops": {
+      "4144": 4
+    }
+  },
+  {
+    "transaction_id": "1298354732414304256",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763914399773,
+    "date": "2025-11-23",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "4144": 4
+    },
+    "drops": {
+      "4033": 4
+    }
+  },
+  {
+    "transaction_id": "1298354674964905984",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763914386076,
+    "date": "2025-11-23",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "4033": 4
+    },
+    "drops": {
+      "7553": 4
+    }
+  },
+  {
+    "transaction_id": "1298354644879171584",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763914378904,
+    "date": "2025-11-23",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "7553": 4
+    },
+    "drops": {
+      "9479": 4
+    }
+  },
+  {
+    "transaction_id": "1298354467783077888",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1763914336680,
+    "date": "2025-11-23",
+    "roster_ids": [
+      3
+    ],
+    "adds": {},
+    "drops": {
+      "12498": 3
+    }
+  },
+  {
+    "transaction_id": "1299117676991377408",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1764096299936,
+    "date": "2025-11-25",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "LAC": 1
+    },
+    "drops": {
+      "BAL": 1
+    }
+  },
+  {
+    "transaction_id": "1299117114757509120",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1764096165888,
+    "date": "2025-11-25",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12476": 1
+    },
+    "drops": {
+      "4981": 1
+    }
+  },
+  {
+    "transaction_id": "1299098800232611840",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1764091799365,
+    "date": "2025-11-25",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "8147": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1299022306756038656",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1764073561900,
+    "date": "2025-11-25",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "JAX": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1299022128053493760",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1764073519293,
+    "date": "2025-11-25",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "LV": 2
+    }
+  },
+  {
+    "transaction_id": "1299211279612801024",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 12,
+    "created": 1764118616540,
+    "date": "2025-11-26",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "6804": 9
+    },
+    "drops": {
+      "2020": 9
+    }
+  },
+  {
+    "transaction_id": "1299431375140585472",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764171091402,
+    "date": "2025-11-26",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12540": 2
+    },
+    "drops": {
+      "7523": 2
+    }
+  },
+  {
+    "transaction_id": "1299340536011853824",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764149433666,
+    "date": "2025-11-26",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "8129": 3
+    },
+    "drops": {
+      "7594": 3
+    }
+  },
+  {
+    "transaction_id": "1299904606897188864",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764283918645,
+    "date": "2025-11-27",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "12540": 2
+    }
+  },
+  {
+    "transaction_id": "1299831781763084288",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764266555780,
+    "date": "2025-11-27",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "IND": 10
+    },
+    "drops": {
+      "96": 10
+    }
+  },
+  {
+    "transaction_id": "1299831198872264704",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764266416808,
+    "date": "2025-11-27",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "3451": 10
+    },
+    "drops": {
+      "19": 10
+    }
+  },
+  {
+    "transaction_id": "1299725248354078720",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764241156236,
+    "date": "2025-11-27",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "MIA": 7
+    },
+    "drops": {
+      "GB": 7
+    }
+  },
+  {
+    "transaction_id": "1300859228231065600",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764511518107,
+    "date": "2025-11-30",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "2216": 3
+    },
+    "drops": {
+      "8129": 3
+    }
+  },
+  {
+    "transaction_id": "1301669016896536576",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764704586770,
+    "date": "2025-12-02",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "7553": 8
+    },
+    "drops": {
+      "11597": 8
+    }
+  },
+  {
+    "transaction_id": "1301621786542080000",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764693326177,
+    "date": "2025-12-02",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "3678": 1
+    },
+    "drops": {
+      "1945": 1
+    }
+  },
+  {
+    "transaction_id": "1301621326020100096",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764693216379,
+    "date": "2025-12-02",
+    "roster_ids": [
+      1
+    ],
+    "adds": {},
+    "drops": {
+      "6806": 1
+    }
+  },
+  {
+    "transaction_id": "1301620748338614272",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764693078650,
+    "date": "2025-12-02",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "7839": 5
+    },
+    "drops": {
+      "4227": 5
+    }
+  },
+  {
+    "transaction_id": "1301620329755463680",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764692978851,
+    "date": "2025-12-02",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "12484": 5
+    },
+    "drops": {
+      "12533": 5
+    }
+  },
+  {
+    "transaction_id": "1301620143599677440",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764692934469,
+    "date": "2025-12-02",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "12535": 5
+    },
+    "drops": {
+      "4177": 5
+    }
+  },
+  {
+    "transaction_id": "1301617454622973952",
+    "type": "commissioner",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764692293367,
+    "date": "2025-12-02",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "4866": 7,
+      "4881": 7
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1301616404889374720",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764692043090,
+    "date": "2025-12-02",
+    "roster_ids": [
+      7
+    ],
+    "adds": {},
+    "drops": {
+      "4866": 7
+    }
+  },
+  {
+    "transaction_id": "1301615731674218496",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764691882583,
+    "date": "2025-12-02",
+    "roster_ids": [
+      7
+    ],
+    "adds": {},
+    "drops": {
+      "4881": 7
+    }
+  },
+  {
+    "transaction_id": "1301394996221464576",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764639255151,
+    "date": "2025-12-02",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "TB": 3
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1301749217588436992",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 13,
+    "created": 1764723708105,
+    "date": "2025-12-03",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "7523": 10
+    },
+    "drops": {
+      "IND": 10
+    }
+  },
+  {
+    "transaction_id": "1301984155554291712",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764779721681,
+    "date": "2025-12-03",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "12015": 8
+    },
+    "drops": {
+      "11792": 8
+    }
+  },
+  {
+    "transaction_id": "1301955343261122560",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764772852296,
+    "date": "2025-12-03",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "GB": 1
+    },
+    "drops": {
+      "LAC": 1
+    }
+  },
+  {
+    "transaction_id": "1301955191406338048",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764772816090,
+    "date": "2025-12-03",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "11566": 1
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1301934228220440576",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764767818077,
+    "date": "2025-12-03",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "WAS": 9
+    },
+    "drops": {
+      "SF": 9
+    }
+  },
+  {
+    "transaction_id": "1301919606662774784",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764764332026,
+    "date": "2025-12-03",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "10236": 10
+    },
+    "drops": {
+      "9508": 10
+    }
+  },
+  {
+    "transaction_id": "1302344739105800192",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764865691499,
+    "date": "2025-12-04",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "MIN": 11
+    },
+    "drops": {
+      "ATL": 11
+    }
+  },
+  {
+    "transaction_id": "1302138710451572736",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764816570440,
+    "date": "2025-12-04",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "2505": 11
+    },
+    "drops": {
+      "6803": 11
+    }
+  },
+  {
+    "transaction_id": "1302498978851487744",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764902465120,
+    "date": "2025-12-05",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11625": 2
+    },
+    "drops": {
+      "10213": 2
+    }
+  },
+  {
+    "transaction_id": "1302498614626521088",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1764902378283,
+    "date": "2025-12-05",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "BAL": 2
+    },
+    "drops": {
+      "JAX": 2
+    }
+  },
+  {
+    "transaction_id": "1304259478882877440",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1765322201036,
+    "date": "2025-12-09",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "SF": 9
+    },
+    "drops": {
+      "WAS": 9
+    }
+  },
+  {
+    "transaction_id": "1304140753127079936",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1765293894610,
+    "date": "2025-12-09",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "NO": 1
+    },
+    "drops": {
+      "GB": 1
+    }
+  },
+  {
+    "transaction_id": "1304140180982079488",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1765293758200,
+    "date": "2025-12-09",
+    "roster_ids": [
+      1
+    ],
+    "adds": {},
+    "drops": {
+      "11566": 1
+    }
+  },
+  {
+    "transaction_id": "1304137764589031424",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1765293182087,
+    "date": "2025-12-09",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "11643": 8
+    },
+    "drops": {
+      "9754": 8
+    }
+  },
+  {
+    "transaction_id": "1304271067648393216",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 14,
+    "created": 1765324964014,
+    "date": "2025-12-10",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "JAX": 10
+    },
+    "drops": {
+      "LAR": 10
+    }
+  },
+  {
+    "transaction_id": "1304504960154603520",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765380728333,
+    "date": "2025-12-10",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "11597": 11
+    },
+    "drops": {
+      "11783": 11
+    }
+  },
+  {
+    "transaction_id": "1304499007359295488",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765379309075,
+    "date": "2025-12-10",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "11783": 11
+    },
+    "drops": {
+      "5844": 11
+    }
+  },
+  {
+    "transaction_id": "1304498624998182912",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765379217913,
+    "date": "2025-12-10",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "CHI": 11
+    },
+    "drops": {
+      "MIN": 11
+    }
+  },
+  {
+    "transaction_id": "1304683347758288896",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765423259251,
+    "date": "2025-12-11",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "7594": 12
+    },
+    "drops": {
+      "CLE": 12
+    }
+  },
+  {
+    "transaction_id": "1305979851718533120",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765732369883,
+    "date": "2025-12-14",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "GB": 2
+    },
+    "drops": {
+      "BAL": 2
+    }
+  },
+  {
+    "transaction_id": "1306770303292035072",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765920828224,
+    "date": "2025-12-16",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "7607": 8
+    },
+    "drops": {
+      "11643": 8
+    }
+  },
+  {
+    "transaction_id": "1306648100680523776",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765891692851,
+    "date": "2025-12-16",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "6149": 1
+    },
+    "drops": {
+      "9500": 1
+    }
+  },
+  {
+    "transaction_id": "1306644736999690240",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 15,
+    "created": 1765890890888,
+    "date": "2025-12-16",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12533": 1
+    },
+    "drops": {
+      "8122": 1
+    }
+  },
+  {
+    "transaction_id": "1307395207280488448",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 16,
+    "created": 1766069816945,
+    "date": "2025-12-18",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "11579": 1
+    },
+    "drops": {
+      "12476": 1
+    }
+  },
+  {
+    "transaction_id": "1308257551896305664",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 16,
+    "created": 1766275415923,
+    "date": "2025-12-21",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12713": 1
+    },
+    "drops": {
+      "3678": 1
+    }
+  },
+  {
+    "transaction_id": "1309219284970389504",
+    "type": "waiver",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 16,
+    "created": 1766504710957,
+    "date": "2025-12-23",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12472": 1
+    },
+    "drops": {
+      "6149": 1
+    }
+  },
+  {
+    "transaction_id": "1309637953575731200",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 17,
+    "created": 1766604529330,
+    "date": "2025-12-24",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "9482": 11
+    },
+    "drops": {
+      "12490": 11
+    }
+  },
+  {
+    "transaction_id": "1309916467772272640",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 17,
+    "created": 1766670932289,
+    "date": "2025-12-25",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12469": 1
+    },
+    "drops": {
+      "11579": 1
+    }
+  },
+  {
+    "transaction_id": "1309915469712457728",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 17,
+    "created": 1766670694333,
+    "date": "2025-12-25",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "4381": 1
+    },
+    "drops": {
+      "11604": 1
+    }
+  },
+  {
+    "transaction_id": "1309792161931227136",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 17,
+    "created": 1766641295467,
+    "date": "2025-12-25",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "LAR": 11
+    },
+    "drops": {
+      "CHI": 11
+    }
+  },
+  {
+    "transaction_id": "1310425860586618880",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 17,
+    "created": 1766792381000,
+    "date": "2025-12-26",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "6865": 11
+    },
+    "drops": {
+      "3163": 11
+    }
+  },
+  {
+    "transaction_id": "1310425745633320960",
+    "type": "free_agent",
+    "league_id": "1253382148073725952",
+    "season": "2025",
+    "week": 17,
+    "created": 1766792353593,
+    "date": "2025-12-26",
+    "roster_ids": [
+      11
+    ],
+    "adds": {
+      "8698": 11
+    },
+    "drops": {
+      "8408": 11
+    }
+  },
+  {
+    "transaction_id": "1400879007951544320",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788358091870,
+    "date": "2026-09-02",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "8800": 4
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1400714960337661952",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788318979871,
+    "date": "2026-09-02",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "7528": 2
+    },
+    "drops": {
+      "5189": 2
+    }
+  },
+  {
+    "transaction_id": "1400712180025794560",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788318316993,
+    "date": "2026-09-02",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "6650": 10
+    },
+    "drops": {
+      "12509": 10
+    }
+  },
+  {
+    "transaction_id": "1400690392600461312",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788313122467,
+    "date": "2026-09-02",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "13337": 7
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1400690306940178432",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788313102043,
+    "date": "2026-09-02",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "8205": 7
+    },
+    "drops": {
+      "13337": 7
+    }
+  },
+  {
+    "transaction_id": "1400689971685265408",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788313022112,
+    "date": "2026-09-02",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "5189": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1400689825484406784",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788312987256,
+    "date": "2026-09-02",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "9502": 2
+    },
+    "drops": {
+      "1945": 2
+    }
+  },
+  {
+    "transaction_id": "1400689415843532800",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788312889589,
+    "date": "2026-09-02",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "8183": 12
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1401339517050310656",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788467885795,
+    "date": "2026-09-03",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12048": 2
+    },
+    "drops": {
+      "7528": 2
+    }
+  },
+  {
+    "transaction_id": "1403507692911284224",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788984819203,
+    "date": "2026-09-09",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "9482": 12
+    },
+    "drops": {
+      "8183": 12
+    }
+  },
+  {
+    "transaction_id": "1403476464887746560",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1788977373862,
+    "date": "2026-09-09",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "6083": 2
+    },
+    "drops": {
+      "12048": 2
+    }
+  },
+  {
+    "transaction_id": "1404481597071265792",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789217016049,
+    "date": "2026-09-12",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "11199": 4
+    },
+    "drops": {
+      "8800": 4
+    }
+  },
+  {
+    "transaction_id": "1405732385080795136",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789515227149,
+    "date": "2026-09-15",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "4993": 5
+    },
+    "drops": {
+      "8110": 5
+    }
+  },
+  {
+    "transaction_id": "1405595391495311360",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789482565334,
+    "date": "2026-09-15",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "TB": 1
+    },
+    "drops": {
+      "LAC": 1
+    }
+  },
+  {
+    "transaction_id": "1405581576070238208",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789479271480,
+    "date": "2026-09-15",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "11834": 4
+    },
+    "drops": {
+      "11655": 4
+    }
+  },
+  {
+    "transaction_id": "1405801812203720704",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789531779866,
+    "date": "2026-09-16",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "SF": 7
+    },
+    "drops": {
+      "HOU": 7
+    }
+  },
+  {
+    "transaction_id": "1405799968542875648",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789531340302,
+    "date": "2026-09-16",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "8183": 7
+    },
+    "drops": {
+      "9511": 7
+    }
+  },
+  {
+    "transaction_id": "1405772705969508352",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 1,
+    "created": 1789524840399,
+    "date": "2026-09-16",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "5844": 12
+    },
+    "drops": {
+      "9482": 12
+    }
+  },
+  {
+    "transaction_id": "1406001777874137088",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789579455397,
+    "date": "2026-09-16",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "2020": 5
+    },
+    "drops": {
+      "12015": 5
+    }
+  },
+  {
+    "transaction_id": "1405979164670021632",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789574063989,
+    "date": "2026-09-16",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "8110": 8
+    },
+    "drops": {
+      "8136": 8
+    }
+  },
+  {
+    "transaction_id": "1405959807738839040",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789569448937,
+    "date": "2026-09-16",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "5189": 10
+    },
+    "drops": {
+      "6650": 10
+    }
+  },
+  {
+    "transaction_id": "1405958382157914112",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789569109051,
+    "date": "2026-09-16",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "KC": 10
+    },
+    "drops": {
+      "DET": 10
+    }
+  },
+  {
+    "transaction_id": "1405931922764378112",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789562800641,
+    "date": "2026-09-16",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "6130": 2
+    },
+    "drops": {
+      "12472": 2
+    }
+  },
+  {
+    "transaction_id": "1405922465883906048",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789560545945,
+    "date": "2026-09-16",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "GB": 3
+    },
+    "drops": {
+      "JAX": 3
+    }
+  },
+  {
+    "transaction_id": "1405918885701545984",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789559692362,
+    "date": "2026-09-16",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12472": 2
+    },
+    "drops": {
+      "12469": 2
+    }
+  },
+  {
+    "transaction_id": "1405912765452800000",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789558233181,
+    "date": "2026-09-16",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "13301": 2
+    },
+    "drops": {
+      "8210": 2
+    }
+  },
+  {
+    "transaction_id": "1406412296841912320",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789677330745,
+    "date": "2026-09-17",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "7571": 1
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1406411797644222464",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789677211728,
+    "date": "2026-09-17",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "12048": 1
+    },
+    "drops": {
+      "13417": 1
+    }
+  },
+  {
+    "transaction_id": "1406147194964197376",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789614125533,
+    "date": "2026-09-17",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "HOU": 12
+    },
+    "drops": {
+      "DEN": 12
+    }
+  },
+  {
+    "transaction_id": "1406103237286805504",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789603645205,
+    "date": "2026-09-17",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "13301": 9
+    },
+    "drops": {
+      "11618": 9
+    }
+  },
+  {
+    "transaction_id": "1406102993635377152",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789603587114,
+    "date": "2026-09-17",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "13347": 2
+    },
+    "drops": {
+      "13301": 2
+    }
+  }
+]

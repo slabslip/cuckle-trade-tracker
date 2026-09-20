@@ -1,8 +1,10 @@
 import { chromium } from "/tmp/node_modules/playwright/index.mjs";
 import fs from "node:fs";
 
-const shotDir = "/opt/cursor/artifacts/screenshots";
+const shotDir = "/tmp/analyzer-shots";
 fs.mkdirSync(shotDir, { recursive: true });
+const pubDir = "/opt/cursor/artifacts/screenshots";
+try { fs.mkdirSync(pubDir, { recursive: true }); } catch (e) { /* optional */ }
 const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:8765";
 
 const seats = [
@@ -41,7 +43,7 @@ try {
     const text = await page.locator(".team-schematic").innerText();
     console.log("ANALYZER " + seat.name + "\n" + text + "\n");
     if (!/Draft capital/i.test(text)) fail(seat.name + " missing Draft capital");
-    if (!/\bNow\b/.test(text) || !/\bLater\b/.test(text)) fail(seat.name + " missing Now / Later");
+    if (!/\bNOW\b/.test(text) || !/\bLATER\b/.test(text)) fail(seat.name + " missing Now / Later");
     if (!/this year's desk/i.test(text)) fail(seat.name + " missing Now desk note");
     if (!/next two drafts \+ book/i.test(text)) fail(seat.name + " missing Later book note");
     if (!/next two drafts weigh most/i.test(text)) fail(seat.name + " missing next-two-drafts note");
@@ -73,8 +75,14 @@ try {
       fail(seat.name + " analyzer is not dashboard chrome");
     }
     const slug = seat.name.toLowerCase();
-    await page.locator(".team-schematic").screenshot({ path: `${shotDir}/analyzer-${slug}.png` });
-    await page.screenshot({ path: `${shotDir}/analyzer-${slug}-home.png` });
+    const cardShot = `${shotDir}/analyzer-${slug}.png`;
+    const homeShot = `${shotDir}/analyzer-${slug}-home.png`;
+    await page.locator(".team-schematic").screenshot({ path: cardShot });
+    await page.screenshot({ path: homeShot });
+    try {
+      fs.copyFileSync(cardShot, `${pubDir}/analyzer-${slug}.png`);
+      fs.copyFileSync(homeShot, `${pubDir}/analyzer-${slug}-home.png`);
+    } catch (e) { /* artifacts store can EIO */ }
     const png = await page.evaluate((uid) => {
       const canvas = teamAnalyzerShareDraw(uid);
       if (!canvas) return null;
@@ -89,6 +97,7 @@ try {
     else {
       const buf = Buffer.from(png.data.replace(/^data:image\/png;base64,/, ""), "base64");
       fs.writeFileSync(`${shotDir}/share-${slug}.png`, buf);
+      try { fs.writeFileSync(`${pubDir}/share-${slug}.png`, buf); } catch (e) { /* artifacts store can EIO */ }
       console.log("PNG " + seat.name + " " + png.w + "x" + png.h + " " + buf.length);
     }
   }

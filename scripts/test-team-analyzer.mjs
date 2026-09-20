@@ -30,7 +30,7 @@ need(fnSrc(page, "renderGmTeamHome").includes("teamAnalyzerHtml") === false,
   "GM team home must not paint the dynasty analyzer");
 ["Starting lineup", "Depth score", "3-year outlook", "Cornerstones",
   "Look to trade", "Players to target", "Contend / rebuild", "Positional grades",
-  "Draft capital", "Team grade"].forEach(function (label) {
+  "Draft capital", "Team grade", "Now", "Later"].forEach(function (label) {
   need(fnSrc(page, "teamAnalyzerHtml").includes(label),
     "team analyzer must include " + label);
 });
@@ -44,8 +44,9 @@ need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerValueGrade")
   && fnSrc(page, "teamAnalyzerDepth").includes("Short a starter") === false
   && fnSrc(page, "teamAnalyzerDepth").includes("slotN")
-  && fnSrc(page, "teamAnalyzerDepth").includes("starter value"),
-  "depth scores eight backup slots on the book, not the league floor");
+  && fnSrc(page, "teamAnalyzerDepth").includes("starter value")
+  && fnSrc(page, "teamAnalyzerDepth").includes("after the desk"),
+  "depth scores eight after-desk slots on the book, not the league floor");
 need(fnSrc(page, "teamAnalyzerPos").includes("toUpperCase")
   && fnSrc(page, "teamAnalyzerMoves").includes("dir.sell") === false,
   "pos tags normalize; Look to trade is leftover names, not seat-direction labels");
@@ -58,8 +59,9 @@ need(fnSrc(page, "teamAnalyzerDraftParts").includes("teamAnalyzerValueGrade")
   && fnSrc(page, "teamAnalyzerDraft").includes("teamAnalyzerDraftRaw")
   && fnSrc(page, "teamAnalyzerHtml").includes("next two drafts weigh most"),
   "draft capital must weigh the next two drafts, not a 12-slot pad");
-need(fnSrc(page, "teamAnalyzerScale").includes('kind === "tank"')
-  && fnSrc(page, "teamAnalyzerScale").includes("return 88"),
+need(fnSrc(page, "teamAnalyzerScale").includes('kind === "hard-tank"')
+  && fnSrc(page, "teamAnalyzerScale").includes("6.3 - pos")
+  && fnSrc(page, "teamAnalyzerWindow").includes("win-now-reload"),
   "C↔R bar must map tank / win-now from the bag and chest, not only seat-direction");
 need(fnSrc(page, "teamAnalyzerCard").includes("members")
   && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile(")
@@ -72,6 +74,8 @@ need(fnSrc(page, "teamAnalyzerCard").includes("members")
   && page.includes('heading("Draft capital"')
   && page.includes('heading("3-year outlook"')
   && page.includes('heading("Depth score"')
+  && page.includes('scoreBox("Now"')
+  && page.includes('scoreBox("Later"')
   && fnSrc(page, "teamAnalyzerShareDraw").includes("Chuckle Fantasy") === false,
   "share PNG must paint the full dashboard analyzer, not a short lineup card");
 need(fnSrc(page, "teamAnalyzerHtml").includes("schematicSettingsHtml()") === false
@@ -96,11 +100,14 @@ need(plan.includes("team analyzer") && plan.includes("dashboard chrome")
   && plan.includes("next two drafts")
   && plan.includes("no league curve")
   && plan.includes("starter is 3")
-  && plan.includes("8–9 is rare"),
+  && plan.includes("8–9 is rare")
+  && plan.includes("Now is this year’s starting-desk")
+  && plan.includes("Later is the dynasty book"),
   "plan must lock the dashboard team analyzer and value grades");
 need(fs.existsSync(`${ROOT}scripts/loop-team-analyzer.mjs`)
-  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,"),
-  "dozen analyzer loops must stay on the book");
+  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,")
+  && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(24,"),
+  "two dozen analyzer loops must stay on the book");
 
 const DESK_STUD = 5500;
 const DESK_START = 2200;
@@ -159,6 +166,7 @@ function draftOf(uid) {
     else if (r === 2) rw = 0.8;
     else if (r === 3) rw = 0.4;
     else rw = 0.22;
+    if (y < near1) return;
     if (near) nearPts += Math.min(10, g * yw * rw);
     else if (y >= near2 + 1) farPts += Math.min(10, g);
   });
@@ -178,7 +186,11 @@ need(gKing.WR >= 7, "KingHenry WR core must grade as starters");
 need(draftOf(truman) >= draftOf(king), "Truman pick chest must grade at or above KingHenry");
 need(draftOf(arae) >= 7, "ARae pick chest must grade as historic draft capital");
 need(fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
-  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.75 + hole * 0.25")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("1 - hw")
+  && fnSrc(page, "teamAnalyzerStretch").includes("1.55")
+  && fnSrc(page, "teamAnalyzerNowRaw").includes("0.94")
+  && fnSrc(page, "teamAnalyzerLaterRaw").includes("0.45")
+  && fnSrc(page, "teamAnalyzerNowRaw").includes("teamAnalyzerDraft") === false
   && page.includes("starter 3 · stud 7.5 · elite 10"),
   "analyzer scale must keep starter=3 / stud=7.5 / elite=10 with a weakest-slot pull");
 

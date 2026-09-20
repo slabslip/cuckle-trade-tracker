@@ -4432,7 +4432,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerdraft20260920023000";
+    const DATA_V = "analyzerflock20260920024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26265,8 +26265,7 @@
         });
       }
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        bag.filter(function (p) { return teamAnalyzerPos(p) === pos; })
-          .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+        teamAnalyzerPosPool(bag, pos)
           .slice(0, slots[pos] || 1)
           .forEach(function (p) { addRow(p, pos); });
       });
@@ -26276,7 +26275,7 @@
         return (pos === "RB" || pos === "WR" || pos === "TE")
           && !used[p.id || p.name]
           && calcValueNum(p) >= start;
-      }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); })
+      }).sort(teamAnalyzerAssetCmp)
         .slice(0, 2)
         .forEach(function (p) { addRow(p, "FLEX"); });
       return rows;
@@ -26301,9 +26300,19 @@
       return Math.max(0, Math.min(10, Math.round(Number(n) || 0)));
     }
 
+    function teamAnalyzerAssetCmp(a, b) {
+      const d = calcValueNum(b) - calcValueNum(a);
+      if (d) return d;
+      const na = String((a && a.name) || "");
+      const nb = String((b && b.name) || "");
+      if (na < nb) return -1;
+      if (na > nb) return 1;
+      return String((a && a.id) || "").localeCompare(String((b && b.id) || ""));
+    }
+
     function teamAnalyzerPosPool(bag, pos) {
       return bag.filter(function (p) { return p && teamAnalyzerPos(p) === pos; })
-        .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
+        .sort(teamAnalyzerAssetCmp);
     }
 
     function teamAnalyzerNearYears() {
@@ -26338,10 +26347,12 @@
 
     function teamAnalyzerOutlook(kind) {
       if (kind === "win-now") return ["Contend", "Contend", "Rebuild"];
+      if (kind === "win-now-reload") return ["Contend", "Reload", "Rebuild"];
       if (kind === "contend-soon") return ["Reload", "Contend", "Contend"];
+      if (kind === "climbing") return ["Reload", "Reload", "Contend"];
       if (kind === "tween") return ["Reload", "Contend", "Rebuild"];
       if (kind === "rebuild") return ["Rebuild", "Reload", "Contend"];
-      if (kind === "tank") return ["Rebuild", "Rebuild", "Contend"];
+      if (kind === "tank" || kind === "hard-tank") return ["Rebuild", "Rebuild", "Contend"];
       return ["Rebuild", "Reload", "Contend"];
     }
 
@@ -26396,13 +26407,34 @@
       return grades;
     }
 
-    function teamAnalyzerPosBlend(bag) {
+    function teamAnalyzerPosBlend(bag, holeW) {
       const scores = ["QB", "RB", "WR", "TE"].map(function (pos) {
         return teamAnalyzerPosScore(bag, pos);
       });
       const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
       const hole = Math.min(scores[0], scores[1], scores[2], scores[3]);
-      return mean * 0.75 + hole * 0.25;
+      const hw = holeW == null ? 0.25 : holeW;
+      return mean * (1 - hw) + hole * hw;
+    }
+
+    function teamAnalyzerHole(bag) {
+      return Math.min(
+        teamAnalyzerPosScore(bag, "QB"),
+        teamAnalyzerPosScore(bag, "RB"),
+        teamAnalyzerPosScore(bag, "WR"),
+        teamAnalyzerPosScore(bag, "TE"),
+      );
+    }
+
+    function teamAnalyzerStretch(n, kind) {
+      const x = Number(n) || 0;
+      const c = 6.15;
+      if (kind === "win-now" || kind === "win-now-reload") {
+        if (x >= c) return c + (x - c) * 1.55;
+        return x;
+      }
+      if (x >= c) return c + (x - c) * 1.2;
+      return c + (x - c) * 2.05;
     }
 
     function teamAnalyzerDepth(bag) {
@@ -26429,9 +26461,9 @@
       const raw = slotN ? (pts / slotN) : 0;
       const note = exist === 0
         ? "No backups scored"
-        : (startable
-          ? (startable + " of " + exist + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
-          : "Backups sit below starter value");
+        : (exist + " after the desk · " + (startable
+          ? (startable + " starter value")
+          : "below starter value"));
       return { score: teamAnalyzerRound(raw), raw: raw, note: note };
     }
 
@@ -26448,6 +26480,7 @@
       let farPts = 0;
       picks.forEach(function (p) {
         const y = teamAnalyzerPickYear(p);
+        if (y < years.near1) return;
         const g = teamAnalyzerValueGrade(calcValueNum(p));
         if (y === years.near1 || y === years.near2) {
           nearPts += Math.min(10, g * teamAnalyzerPickWeight(p));
@@ -26481,6 +26514,7 @@
 
     function teamAnalyzerWindow(bag, uid) {
       const pos = teamAnalyzerPosBlend(bag);
+      const hole = teamAnalyzerHole(bag);
       const near = teamAnalyzerDraftParts(uid).nearRaw;
       const cuts = deskCuts();
       let aging = 0;
@@ -26488,47 +26522,130 @@
       teamAnalyzerDesk(bag).forEach(function (p) {
         const age = Number(p && p.age);
         const val = calcValueNum(p);
-        if (age >= 27 && val >= cuts.start) aging += 1;
-        if (age < 25.5 && val >= cuts.stud) young += 1;
+        if (Number.isFinite(age) && age >= 27 && val >= cuts.start) aging += 1;
+        if (Number.isFinite(age) && age < 25.5 && val >= cuts.stud) young += 1;
       });
+      if (pos <= 6.25 && near >= 8) return "hard-tank";
       if (pos <= 6.25 && near >= 6.2) return "tank";
       if (pos <= 5.55 && near >= 4.8) return "rebuild";
-      if (pos >= 6.35 && young >= 3 && near >= 2.2) return "contend-soon";
+      if (pos >= 6.35 && aging >= 3 && near < 5 && hole <= 5.2) return "win-now-reload";
+      if (pos >= 6.35 && aging >= 3 && near < 5) return "win-now";
+      if (pos >= 6.35 && young >= 3 && near >= 3.8) return "contend-soon";
+      if (pos >= 6.35 && young >= 3 && near >= 2.2) return "climbing";
       if (pos >= 6.35 && young >= 2 && aging <= 2 && near <= 2.6) return "tween";
-      if (pos >= 6.35 && near <= 2.6 && (aging >= 3 || young <= 1)) return "win-now";
-      if (pos >= 6.2 && near >= 3.5 && young >= 1) return "contend-soon";
+      if (pos >= 6.35 && aging >= 3 && near <= 2.6) return "win-now";
+      if (pos >= 6.2 && near >= 3.5 && young >= 1) return "climbing";
       return "tween";
     }
 
     function teamAnalyzerWindowLabel(kind) {
+      if (kind === "hard-tank") return "Hard tank";
       if (kind === "tank") return "Tank";
       if (kind === "rebuild") return "Rebuild";
       if (kind === "win-now") return "Win now";
+      if (kind === "win-now-reload") return "Win now · reload";
       if (kind === "contend-soon") return "Compete soon";
+      if (kind === "climbing") return "Climbing";
       return "Reload";
     }
 
+    function teamAnalyzerMix(kind) {
+      if (kind === "hard-tank") return [0.5, 0.1, 0.4];
+      if (kind === "tank") return [0.52, 0.1, 0.38];
+      if (kind === "rebuild") return [0.56, 0.12, 0.32];
+      if (kind === "win-now" || kind === "win-now-reload") return [0.9, 0.08, 0.02];
+      if (kind === "contend-soon") return [0.66, 0.13, 0.21];
+      if (kind === "climbing") return [0.7, 0.14, 0.16];
+      return [0.64, 0.16, 0.2];
+    }
+
+    function teamAnalyzerNowKind(kind) {
+      return kind === "win-now" || kind === "win-now-reload";
+    }
+
     function teamAnalyzerOverall(bag, uid) {
-      const pos = teamAnalyzerPosBlend(bag);
+      const kind = teamAnalyzerWindow(bag, uid);
+      const pos = teamAnalyzerPosBlend(bag, teamAnalyzerNowKind(kind) ? 0.18 : 0.32);
       const depth = teamAnalyzerDepth(bag);
       const d = depth && depth.raw != null ? depth.raw : 0;
       const draft = teamAnalyzerDraftRaw(uid);
-      const kind = teamAnalyzerWindow(bag, uid);
-      let mix = [0.66, 0.14, 0.2];
-      if (kind === "tank") mix = [0.52, 0.1, 0.38];
-      else if (kind === "rebuild") mix = [0.58, 0.12, 0.3];
-      else if (kind === "win-now") mix = [0.88, 0.1, 0.02];
-      else if (kind === "contend-soon") mix = [0.7, 0.12, 0.18];
-      return teamAnalyzerRound(pos * mix[0] + d * mix[1] + draft * mix[2]);
+      const mix = teamAnalyzerMix(kind);
+      return teamAnalyzerRound(teamAnalyzerStretch(pos * mix[0] + d * mix[1] + draft * mix[2], kind));
     }
 
-    function teamAnalyzerScale(kind) {
-      if (kind === "win-now") return 18;
-      if (kind === "contend-soon") return 32;
-      if (kind === "tween") return 52;
-      if (kind === "rebuild") return 72;
-      if (kind === "tank") return 88;
-      return 52;
+    function teamAnalyzerPosMean(bag) {
+      return (
+        teamAnalyzerPosScore(bag, "QB")
+        + teamAnalyzerPosScore(bag, "RB")
+        + teamAnalyzerPosScore(bag, "WR")
+        + teamAnalyzerPosScore(bag, "TE")
+      ) / 4;
+    }
+
+    function teamAnalyzerNowRaw(bag) {
+      const depth = teamAnalyzerDepth(bag);
+      const d = depth && depth.raw != null ? depth.raw : 0;
+      return teamAnalyzerPosMean(bag) * 0.94 + d * 0.06;
+    }
+
+    function teamAnalyzerNow(bag) {
+      return teamAnalyzerRound(teamAnalyzerStretch(teamAnalyzerNowRaw(bag), "win-now"));
+    }
+
+    function teamAnalyzerLaterRaw(bag, uid) {
+      const pos = teamAnalyzerPosBlend(bag, 0.32);
+      const depth = teamAnalyzerDepth(bag);
+      const d = depth && depth.raw != null ? depth.raw : 0;
+      return pos * 0.4 + d * 0.15 + teamAnalyzerDraftRaw(uid) * 0.45;
+    }
+
+    function teamAnalyzerLater(bag, uid) {
+      return teamAnalyzerRound(teamAnalyzerStretch(teamAnalyzerLaterRaw(bag, uid), "rebuild"));
+    }
+
+    function teamAnalyzerRooms(bag) {
+      const grades = teamAnalyzerGrades(bag);
+      const keys = ["QB", "RB", "WR", "TE"];
+      let hi = keys[0];
+      let lo = keys[0];
+      keys.forEach(function (pos) {
+        if (grades[pos] > grades[hi]) hi = pos;
+        if (grades[pos] < grades[lo]) lo = pos;
+      });
+      if (grades[hi] === grades[lo]) return { strength: "Balanced", need: "—" };
+      return { strength: hi, need: lo };
+    }
+
+    function teamAnalyzerScale(kind, bag, uid) {
+      const pos = bag ? teamAnalyzerPosBlend(bag) : 6.3;
+      const hole = bag ? teamAnalyzerHole(bag) : 5.8;
+      const near = uid != null ? teamAnalyzerDraftParts(uid).nearRaw : 3;
+      const cuts = deskCuts();
+      let aging = 0;
+      let young = 0;
+      if (bag) {
+        teamAnalyzerDesk(bag).forEach(function (p) {
+          const age = Number(p && p.age);
+          const val = calcValueNum(p);
+          if (Number.isFinite(age) && age >= 27 && val >= cuts.start) aging += 1;
+          if (Number.isFinite(age) && age < 25.5 && val >= cuts.stud) young += 1;
+        });
+      }
+      let s = 48;
+      s += (6.3 - pos) * 11;
+      s += (near - 3) * 5.5;
+      s -= aging * 3.2;
+      s += young * 2.4;
+      s += (5.8 - hole) * 2;
+      if (kind === "hard-tank") s = Math.max(s, 86);
+      else if (kind === "tank") s = Math.max(s, 74);
+      else if (kind === "rebuild") s = Math.min(Math.max(s, 62), 78);
+      else if (kind === "win-now") s = Math.min(s, 20);
+      else if (kind === "win-now-reload") s = Math.min(Math.max(s, 26), 38);
+      else if (kind === "contend-soon") s = Math.min(Math.max(s, 24), 36);
+      else if (kind === "climbing") s = Math.min(Math.max(s, 34), 46);
+      else s = Math.min(Math.max(s, 46), 60);
+      return Math.max(10, Math.min(92, Math.round(s)));
     }
 
     function teamAnalyzerCard(uid, name) {
@@ -26550,8 +26667,11 @@
         moves: teamAnalyzerMoves(bag, dir),
         grades: grades,
         draft: draft,
+        now: teamAnalyzerNow(bag),
+        later: teamAnalyzerLater(bag, uid),
+        rooms: teamAnalyzerRooms(bag),
         overall: teamAnalyzerOverall(bag, uid),
-        scale: teamAnalyzerScale(kind),
+        scale: teamAnalyzerScale(kind, bag, uid),
         label: teamAnalyzerWindowLabel(kind),
         why: (dir && dir.why) || "",
         pick_n: teamAnalyzerPicks(uid).length,
@@ -26576,6 +26696,20 @@
         + "<b style=\"margin-top:8px\">Archetype</b><span>" + esc(card.arch) + "</span></div>"
         + "</div>"
         + '<div class="team-sch-grid">'
+        + '<div class="team-sch-box"><div class="team-sch-h">Now</div>'
+        + '<div class="team-sch-score">' + card.now + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (card.now * 10) + '%"></i></div>'
+        + '<p class="team-sch-note">this year\'s desk'
+        + (card.rooms && card.rooms.strength && card.rooms.strength !== "—"
+          ? " · Strength " + esc(card.rooms.strength) : "")
+        + "</p></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Later</div>'
+        + '<div class="team-sch-score">' + card.later + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (card.later * 10) + '%"></i></div>'
+        + '<p class="team-sch-note">next two drafts + book'
+        + (card.rooms && card.rooms.need && card.rooms.need !== "—"
+          ? " · Need " + esc(card.rooms.need) : "")
+        + "</p></div>"
         + '<div class="team-sch-box span2"><div class="team-sch-h">Starting lineup</div>'
         + card.lineup.map(function (p) {
           return '<div class="team-sch-line"><i>' + esc(p.pos) + "</i><b>" + esc(p.name) + "</b>"
@@ -26694,7 +26828,8 @@
       const head = 20;
       const half = function (n) { return boxPad + head + n * lineH + 10; };
       const cssH = 14 + 86 + 1
-        + (boxPad + head + lineup.length * lineH + 10)
+        + 118
+        + 1 + (boxPad + head + lineup.length * lineH + 10)
         + 1 + Math.max(118, 86 + noteLines.length * 16)
         + 1 + Math.max(half(4), half(Math.max(sell.length, 1)))
         + 1 + half(Math.max(targets.length, 1))
@@ -26773,6 +26908,30 @@
       function pushBox(span2, h, paint) {
         boxes.push({ span2: span2, h: h, paint: paint });
       }
+      function scoreBox(label, value, note) {
+        return function (x, top, w) {
+          heading(label, x, top + px(head - 4));
+          ctx.fillStyle = TEXT;
+          ctx.font = "800 " + px(28.8) + "px " + FONT;
+          ctx.textAlign = "left";
+          ctx.fillText(String(value), x, top + px(52));
+          const scoreW = ctx.measureText(String(value)).width;
+          ctx.fillStyle = DIM;
+          ctx.font = "800 " + px(13.6) + "px " + FONT;
+          ctx.fillText("/10", x + scoreW + px(4), top + px(52));
+          teamAnalyzerShareBar(ctx, x, top + px(62), w, px(8), (Number(value) || 0) / 10);
+          ctx.fillStyle = MUTED;
+          ctx.font = "650 " + px(12.5) + "px " + FONT;
+          ctx.fillText(note, x, top + px(86));
+        };
+      }
+      const rooms = card.rooms || {};
+      const nowNote = "this year's desk"
+        + (rooms.strength && rooms.strength !== "—" ? " · Strength " + rooms.strength : "");
+      const laterNote = "next two drafts + book"
+        + (rooms.need && rooms.need !== "—" ? " · Need " + rooms.need : "");
+      pushBox(false, 118, scoreBox("Now", card.now, nowNote));
+      pushBox(false, 118, scoreBox("Later", card.later, laterNote));
       pushBox(true, boxPad + head + lineup.length * lineH + 10, function (x, top, w) {
         heading("Starting lineup", x, top + px(head - 4));
         lineup.forEach(function (p, i) {

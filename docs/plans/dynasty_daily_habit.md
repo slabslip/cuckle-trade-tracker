@@ -324,23 +324,40 @@ slot’s `calcValueNum` against `deskCuts`. A starter is 3, mid is 2, stud is
 7.5, and 10 is only `stud + (stud − start)` (elite). Same bag always prints
 the same 0–10. Depth is the next two after the lineup on that same
 scale (empty backup slots = 0, one stud backup is not a 10), not vs the
-league floor. The depth note names backups, not a starter hole. Draft capital
+league floor and not a starter-value headcount — eight startable
+backups can still print a 4 if they sit on the starter cut. The depth
+note says how many after the desk were scored and how many are starter
+value. Draft capital
 weighs the next two drafts (`as_of` year + 1 / + 2) hardest — 2027/2028
 firsts now, with the nearer year a touch heavier — then far picks at a
 discount. A historic near chest can print 8; two far leftovers cannot pad
 to 10. Team grade uses a window mix
-(win-now leans roster, tank leans that chest) on unrounded scores. 8–9 is rare.
+(win-now leans roster, tank leans that chest) on unrounded scores, then a
+fixed stretch away from 6 so 4 and 5 can print without a league curve.
+A real positional hole pulls a tank / rebuild harder than a win-now
+desk. Win-now team grade is today’s roster — a title desk cannot print
+under a tank that only has draft capital. Reload stays on the window
+label and outlook, not as a penalty on the 0–10.
+Now is this year’s starting-desk mean (picks do not count; a TE hole
+is a Need, not a Now sink). Later is the dynasty book plus the next
+two drafts. Team grade stays the window mix. Strength / Need name the
+highest and lowest rooms on the bag. No league curve.
+8–9 is rare.
 Two seats may share a grade — there is no league curve. Archetype is
 Dual elite QB / Elite QB / Dual elite [pos] else the seat-direction label.
-Outlook and C↔R come from the bag + chest window (tank / rebuild / reload /
-compete soon / win now), not only `seat-direction.json`.
+Outlook and C↔R come from the bag + chest window (hard tank / tank /
+rebuild / reload / climbing / compete soon / win now / win now · reload),
+not only `seat-direction.json`. C↔R is continuous from those facts so
+four win-now desks do not share one tick. An aging desk
+stays win-now with a modest 27/28 chest; missing ages do not vote.
+Equal-value players sort by name / id so the same bag reprints.
+`scripts/loop-team-analyzer.mjs` reprints all ten seats across two dozen
+loops. No `fmt()`, no bag totals, no new value formula.
 The gold chip saves `cuckle-<seat>.png` as the full dashboard card
-(lineup, depth, outlook, cornerstones, leftover, targets, C↔R,
+(Now / Later, lineup, depth, outlook, cornerstones, leftover, targets, C↔R,
 positional grades, draft, note) — not a short six-cell picture.
-Depth names the extras that
-exist, not a hard-coded eight. Look to trade is leftover names only —
-never seat-direction labels like `QB`. `scripts/loop-team-analyzer.mjs`
-reprints all ten seats. No `fmt()`, no bag totals, no new value formula.
+Depth names the extras that exist, not a hard-coded eight. Look to trade
+is leftover names only — never seat-direction labels like `QB`.
 
 ---
 

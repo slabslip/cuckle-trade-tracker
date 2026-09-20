@@ -35,9 +35,10 @@ need(fnSrc(page, "renderGmTeamHome").includes("teamAnalyzerHtml") === false,
     "team analyzer must include " + label);
 });
 need(fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
-  && fnSrc(page, "teamAnalyzerGrades").includes("teamAnalyzerValueGrade")
-  && fnSrc(page, "teamAnalyzerGrades").includes("calcValueNum")
-  && fnSrc(page, "teamAnalyzerGrades").includes(".length") === false,
+  && fnSrc(page, "teamAnalyzerPosScore").includes("teamAnalyzerValueGrade")
+  && fnSrc(page, "teamAnalyzerPosScore").includes("calcValueNum")
+  && fnSrc(page, "teamAnalyzerGrades").includes("teamAnalyzerPosScore")
+  && fnSrc(page, "teamAnalyzerPosScore").includes(".length") === false,
   "analyzer grades score slot values on the book, not a startable count");
 need(fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerValueGrade")
@@ -51,9 +52,10 @@ need(fnSrc(page, "teamAnalyzerPos").includes("toUpperCase")
 need(fnSrc(page, "teamAnalyzerDraft").includes("calcBook.picks")
   || fnSrc(page, "teamAnalyzerPicks").includes("calcBook.picks"),
   "draft capital must use live pick values on the calculator book");
-need(fnSrc(page, "teamAnalyzerDraft").includes("teamAnalyzerValueGrade")
-  && fnSrc(page, "teamAnalyzerDraft").includes("const need = 12")
-  && fnSrc(page, "teamAnalyzerDraft").includes("start * 12") === false
+need(fnSrc(page, "teamAnalyzerDraftRaw").includes("teamAnalyzerValueGrade")
+  && fnSrc(page, "teamAnalyzerDraftRaw").includes("const need = 12")
+  && fnSrc(page, "teamAnalyzerDraftRaw").includes("start * 12") === false
+  && fnSrc(page, "teamAnalyzerDraft").includes("teamAnalyzerDraftRaw")
   && fnSrc(page, "teamAnalyzerHtml").includes("top 12 scored like roster slots"),
   "draft capital must grade a 12-slot chest like roster slots, not a raw dollar sum");
 need(fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"')
@@ -92,7 +94,9 @@ need(gen.includes("function teamAnalyzerHtml(") && gen.includes("teamAnalyzerHtm
 need(plan.includes("team analyzer") && plan.includes("dashboard chrome")
   && plan.includes("teamAnalyzerValueGrade")
   && plan.includes("top 12")
-  && plan.includes("no league curve"),
+  && plan.includes("no league curve")
+  && plan.includes("starter is 3")
+  && plan.includes("8–9 is rare"),
   "plan must lock the dashboard team analyzer and value grades");
 need(fs.existsSync(`${ROOT}scripts/loop-team-analyzer.mjs`)
   && fs.readFileSync(`${ROOT}scripts/loop-team-analyzer.mjs`, "utf8").includes("loop(12,"),
@@ -110,10 +114,12 @@ function calcValueNum(a) {
 function valueGrade(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n <= 0) return 0;
-  if (n >= DESK_STUD) return 10;
-  if (n >= DESK_START) return 7 + 3 * (n - DESK_START) / (DESK_STUD - DESK_START);
-  if (n >= DESK_MID) return 4 + 3 * (n - DESK_MID) / (DESK_START - DESK_MID);
-  return Math.max(0, 4 * n / DESK_MID);
+  const elite = DESK_STUD + (DESK_STUD - DESK_START);
+  if (n >= elite) return 10;
+  if (n >= DESK_STUD) return 7.5 + 2.5 * (n - DESK_STUD) / (elite - DESK_STUD);
+  if (n >= DESK_START) return 3 + 4.5 * (n - DESK_START) / (DESK_STUD - DESK_START);
+  if (n >= DESK_MID) return 2 + (n - DESK_MID) / (DESK_START - DESK_MID);
+  return Math.max(0, 2 * n / DESK_MID);
 }
 function round10(n) { return Math.max(0, Math.min(10, Math.round(n))); }
 function bagOf(uid) {
@@ -150,7 +156,11 @@ need(JSON.stringify(gTruman) === JSON.stringify(gTruman2), "same bag must reprin
 need(gKing.RB > gARae.RB, "KingHenry RB value must grade above ARae RB");
 need(gKing.WR >= 7, "KingHenry WR core must grade as starters");
 need(draftOf(truman) >= draftOf(king), "Truman pick chest must grade at or above KingHenry");
-need(draftOf(arae) >= 7, "ARae pick chest must grade as real draft capital");
+need(draftOf(arae) >= 4, "ARae pick chest must grade as real draft capital");
+need(fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.7 + hole * 0.3")
+  && page.includes("starter 3 · stud 7.5 · elite 10"),
+  "analyzer scale must keep starter=3 / stud=7.5 / elite=10 with a weakest-slot pull");
 
 console.log(JSON.stringify({
   ok: true,

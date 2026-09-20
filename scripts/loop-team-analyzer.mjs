@@ -56,10 +56,12 @@ function valueGrade(v, cuts) {
   const c = cuts || { stud: DESK_STUD, start: DESK_START, mid: DESK_MID };
   const n = Number(v);
   if (!Number.isFinite(n) || n <= 0) return 0;
-  if (n >= c.stud) return 10;
-  if (n >= c.start) return 7 + 3 * (n - c.start) / Math.max(1, c.stud - c.start);
-  if (n >= c.mid) return 4 + 3 * (n - c.mid) / Math.max(1, c.start - c.mid);
-  return Math.max(0, 4 * n / Math.max(1, c.mid));
+  const elite = c.stud + (c.stud - c.start);
+  if (n >= elite) return 10;
+  if (n >= c.stud) return 7.5 + 2.5 * (n - c.stud) / Math.max(1, elite - c.stud);
+  if (n >= c.start) return 3 + 4.5 * (n - c.start) / Math.max(1, c.stud - c.start);
+  if (n >= c.mid) return 2 + (n - c.mid) / Math.max(1, c.start - c.mid);
+  return Math.max(0, 2 * n / Math.max(1, c.mid));
 }
 function round10(n) {
   return Math.max(0, Math.min(10, Math.round(Number(n) || 0)));
@@ -71,17 +73,26 @@ function picksOf(uid) {
   return (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid))
     .sort((a, b) => calcValueNum(b) - calcValueNum(a));
 }
-function gradesOf(bag, slots, cuts) {
+function posScoreOf(bag, pos, slots, cuts) {
   const s = slots || DESK_SLOTS;
+  const need = s[pos] || 1;
+  const pool = bag.filter((p) => posOf(p) === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a));
+  let pts = 0;
+  for (let i = 0; i < need; i++) pts += valueGrade(pool[i] ? calcValueNum(pool[i]) : -1, cuts);
+  return pts / need;
+}
+function gradesOf(bag, slots, cuts) {
   const grades = {};
   ["QB", "RB", "WR", "TE"].forEach((pos) => {
-    const need = s[pos] || 1;
-    const pool = bag.filter((p) => posOf(p) === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a));
-    let pts = 0;
-    for (let i = 0; i < need; i++) pts += valueGrade(pool[i] ? calcValueNum(pool[i]) : -1, cuts);
-    grades[pos] = round10(pts / need);
+    grades[pos] = round10(posScoreOf(bag, pos, slots, cuts));
   });
   return grades;
+}
+function posBlendOf(bag, slots, cuts) {
+  const scores = ["QB", "RB", "WR", "TE"].map((pos) => posScoreOf(bag, pos, slots, cuts));
+  const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
+  const hole = Math.min(...scores);
+  return mean * 0.7 + hole * 0.3;
 }
 function posOf(p) {
   return String((p && p.pos) || "").toUpperCase();
@@ -107,26 +118,36 @@ function depthOf(bag, slots, cuts) {
       }
     }
   });
+  const raw = slotN ? (pts / slotN) : 0;
   return {
-    score: round10(slotN ? (pts / slotN) : 0),
+    score: round10(raw),
+    raw: raw,
     n: exist,
     slots: slotN,
     startable: startable,
   };
 }
-function draftFrom(picks, cuts) {
+function draftFromRaw(picks, cuts) {
   const ordered = (picks || []).slice().sort((a, b) => calcValueNum(b) - calcValueNum(a));
   const need = 12;
   let pts = 0;
   for (let i = 0; i < need; i++) pts += valueGrade(ordered[i] ? calcValueNum(ordered[i]) : -1, cuts);
-  return round10(pts / need);
+  return pts / need;
+}
+function draftFrom(picks, cuts) {
+  return round10(draftFromRaw(picks, cuts));
 }
 function draftOf(uid, cuts) {
   return draftFrom(picksOf(uid), cuts);
 }
-function overallOf(grades, depth, draft) {
-  const pos = ((grades.QB || 0) + (grades.RB || 0) + (grades.WR || 0) + (grades.TE || 0)) / 4;
-  return round10(pos * 0.7 + (depth && depth.score != null ? depth.score : 0) * 0.15 + (Number(draft) || 0) * 0.15);
+function overallFrom(bag, picks, slots, cuts) {
+  const pos = posBlendOf(bag, slots, cuts);
+  const depth = depthOf(bag, slots, cuts);
+  const draft = draftFromRaw(picks || [], cuts);
+  return round10(pos * 0.7 + depth.raw * 0.15 + draft * 0.15);
+}
+function overallOf(bag, uid, slots, cuts) {
+  return overallFrom(bag, picksOf(uid), slots, cuts);
 }
 
 const seats = members.map((m) => ({
@@ -137,7 +158,7 @@ const seats = members.map((m) => ({
   const grades = gradesOf(s.bag);
   const depth = depthOf(s.bag);
   const draft = draftOf(s.uid);
-  return Object.assign(s, { grades: grades, depth: depth, draft: draft, overall: overallOf(grades, depth, draft) });
+  return Object.assign(s, { grades: grades, depth: depth, draft: draft, overall: overallOf(s.bag, s.uid) });
 });
 
 // 1 Repeatability — same bag, same numbers, twice
@@ -145,7 +166,7 @@ loop(1, seats.every((s) => {
   const again = gradesOf(bagOf(s.uid));
   return JSON.stringify(again) === JSON.stringify(s.grades)
     && draftOf(s.uid) === s.draft
-    && overallOf(again, depthOf(bagOf(s.uid)), draftOf(s.uid)) === s.overall;
+    && overallOf(bagOf(s.uid), s.uid) === s.overall;
 }), "same bag reprints the same grades, draft, and team grade");
 
 // 2 Bounds — every seat, every number is 0–10 and finite
@@ -160,7 +181,7 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
   && depthOf([]).score === 0
   && depthOf([]).slots === 8
   && depthOf([{ pos: "QB", value: 8000 }, { pos: "QB", value: 6000 }, { pos: "QB", value: 9000 }]).score === 1
-  && overallOf({ QB: 0, RB: 0, WR: 0, TE: 0 }, { score: 0 }, 0) === 0
+  && overallFrom([], []) === 0
   && draftOf("no-such-seat") === 0
   && draftFrom([]) === 0,
   "empty bag grades 0; one stud backup is 1/10, not 10");
@@ -169,7 +190,7 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
 {
   const onlyQb = [{ pos: "QB", value: 8000 }, { pos: "QB", value: 6000 }];
   const g = gradesOf(onlyQb);
-  loop(4, g.QB === 10 && g.RB === 0 && g.WR === 0 && g.TE === 0,
+  loop(4, g.QB === 9 && g.RB === 0 && g.WR === 0 && g.TE === 0,
     "a bag with only QBs zeros the empty desk slots");
 }
 
@@ -192,24 +213,27 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
   loop(5, g.RB === 0 && g.WR === 0 && valueGrade(null) === 0 && valueGrade("x") === 0
     && valueGrade(Infinity) === 0 && valueGrade(-Infinity) === 0
     && draftFrom([{ value: null }, { value: "nope" }, { value: -9 }]) === 0
-    && gradesOf(lower).QB === 10 && gradesOf(lower).RB === 10,
+    && gradesOf(lower).QB === 9 && gradesOf(lower).RB === 9,
     "junk values grade 0; lowercase pos tags still score");
 }
 
 // 6 Exact cuts are defendable and stable
-loop(6, valueGrade(DESK_STUD) === 10
-  && valueGrade(DESK_START) === 7
-  && valueGrade(DESK_MID) === 4
-  && valueGrade(DESK_STUD - 1) < 10
-  && valueGrade(DESK_START - 1) < 7
-  && Math.abs(valueGrade(DESK_START) - 7) < 1e-9,
-  "stud=10, start=7, mid=4 on the Superflex cuts");
+{
+  const elite = DESK_STUD + (DESK_STUD - DESK_START);
+  loop(6, Math.abs(valueGrade(DESK_STUD) - 7.5) < 1e-9
+    && Math.abs(valueGrade(DESK_START) - 3) < 1e-9
+    && Math.abs(valueGrade(DESK_MID) - 2) < 1e-9
+    && valueGrade(elite) === 10
+    && valueGrade(DESK_STUD - 1) < 7.5
+    && valueGrade(DESK_START - 1) < 3,
+    "start=3, mid=2, stud=7.5, elite=10 on the Superflex cuts");
+}
 
 // 7 1QB cuts move the same player — not a league rank
 {
   const oneQb = { stud: 3800, start: 1400, mid: 1100 };
   const v = 2200;
-  loop(7, valueGrade(v) === 7 && valueGrade(v, oneQb) > 7,
+  loop(7, valueGrade(v) === 3 && valueGrade(v, oneQb) > 3,
     "same 2200 player is a starter on SF and above a starter on 1QB cuts");
 }
 
@@ -222,20 +246,20 @@ loop(6, valueGrade(DESK_STUD) === 10
     && king.grades.RB > arae.grades.RB
     && tips.draft < arae.draft
     && king.grades.WR >= 7
-    && arae.draft >= 7
+    && arae.draft >= 4
     && tips.draft <= 2,
     "KingHenry RB beats ARae; TipsUp thin chest grades under ARae firsts");
 }
 
 // 9 Team grade is the published mix, not a new curve
 loop(9, seats.every((s) => {
-  const expect = overallOf(s.grades, s.depth, s.draft);
+  const expect = overallOf(s.bag, s.uid);
   return expect === s.overall;
-}), "team grade is 70% positions / 15% depth / 15% draft");
+}), "team grade is 70% pos blend (70/30 hole) / 15% depth / 15% draft");
 
 // 10 Draft is a 12-slot valueGrade chest — extras and late 4ths cannot pad to 10
 {
-  const draftFn = fnSrc(page, "teamAnalyzerDraft");
+  const draftFn = fnSrc(page, "teamAnalyzerDraftRaw");
   const twelveStart = Array.from({ length: 12 }, () => ({ value: DESK_START }));
   const twentyStart = Array.from({ length: 20 }, () => ({ value: DESK_START }));
   const twelveStud = Array.from({ length: 12 }, () => ({ value: DESK_STUD }));
@@ -244,10 +268,10 @@ loop(9, seats.every((s) => {
   loop(10, draftFn.includes("teamAnalyzerValueGrade")
     && draftFn.includes("const need = 12")
     && draftFn.includes("start * 12") === false
-    && draftFrom(twelveStart) === 7
-    && draftFrom(twentyStart) === 7
-    && draftFrom(twelveStud) === 10
-    && draftFrom(twentyLate) <= 4
+    && draftFrom(twelveStart) === 3
+    && draftFrom(twentyStart) === 3
+    && draftFrom(twelveStud) === 8
+    && draftFrom(twentyLate) <= 2
     && draftFrom(twoFirsts) <= 2
     && fnSrc(page, "teamAnalyzerDepth").includes("of 8 backup spots") === false
     && fnSrc(page, "teamAnalyzerDepth").includes("Short a starter") === false
@@ -258,12 +282,17 @@ loop(9, seats.every((s) => {
 // 11 Page and generate-page stay on the same formula
 loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValueGrade")
   && fnSrc(page, "teamAnalyzerGrades") === fnSrc(gen, "teamAnalyzerGrades")
+  && fnSrc(page, "teamAnalyzerPosScore") === fnSrc(gen, "teamAnalyzerPosScore")
+  && fnSrc(page, "teamAnalyzerPosBlend") === fnSrc(gen, "teamAnalyzerPosBlend")
   && fnSrc(page, "teamAnalyzerDraft") === fnSrc(gen, "teamAnalyzerDraft")
+  && fnSrc(page, "teamAnalyzerDraftRaw") === fnSrc(gen, "teamAnalyzerDraftRaw")
   && fnSrc(page, "teamAnalyzerOverall") === fnSrc(gen, "teamAnalyzerOverall")
   && fnSrc(page, "teamAnalyzerScale") === fnSrc(gen, "teamAnalyzerScale")
   && fnSrc(page, "teamAnalyzerDepth") === fnSrc(gen, "teamAnalyzerDepth")
   && fnSrc(page, "teamAnalyzerPos") === fnSrc(gen, "teamAnalyzerPos")
   && fnSrc(page, "teamAnalyzerMoves") === fnSrc(gen, "teamAnalyzerMoves")
+  && fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.7 + hole * 0.3")
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
   && fnSrc(page, "teamAnalyzerShareDraw") === fnSrc(gen, "teamAnalyzerShareDraw")
@@ -272,14 +301,36 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"'),
   "index.html and generate-page.mjs share one grade formula; no league floor, no fmt");
 
-// 12 Two equal bags can share a grade; different bags can too — no forced curve
+// 12 Same bags match; 8–9 is rare; starter-only is not an 8
 {
   const clone = seats[0].bag.map((p) => Object.assign({}, p));
   const a = gradesOf(seats[0].bag);
   const b = gradesOf(clone);
   const sameOverall = seats.filter((s) => s.overall === seats[0].overall).length >= 1;
-  loop(12, JSON.stringify(a) === JSON.stringify(b) && sameOverall,
-    "cloned bag matches; identical team grades are allowed (no forced curve)");
+  const overs = seats.map((s) => s.overall);
+  const truman = seats.find((s) => s.name === "TrumanCooper");
+  const starters = [
+    { pos: "QB", value: DESK_START }, { pos: "QB", value: DESK_START },
+    { pos: "RB", value: DESK_START }, { pos: "RB", value: DESK_START },
+    { pos: "WR", value: DESK_START }, { pos: "WR", value: DESK_START }, { pos: "WR", value: DESK_START },
+    { pos: "TE", value: DESK_START },
+  ];
+  const elites = [
+    { pos: "QB", value: 8800 }, { pos: "QB", value: 8800 },
+    { pos: "RB", value: 8800 }, { pos: "RB", value: 8800 },
+    { pos: "WR", value: 8800 }, { pos: "WR", value: 8800 }, { pos: "WR", value: 8800 },
+    { pos: "TE", value: 8800 },
+  ];
+  const elitePicks = Array.from({ length: 12 }, () => ({ value: 8800 }));
+  loop(12, JSON.stringify(a) === JSON.stringify(b) && sameOverall
+    && truman && truman.overall <= 6
+    && Math.max(...overs) <= 8
+    && Math.min(...overs) <= 5
+    && (Math.max(...overs) - Math.min(...overs)) >= 2
+    && seats.every((s) => s.overall < 8 || s.overall <= 8)
+    && overallFrom(starters, []) <= 3
+    && overallFrom(elites, elitePicks) >= 8,
+    "cloned bag matches; 8–9 is rare; starter-only prints 3 or under");
 }
 
 console.log(JSON.stringify({

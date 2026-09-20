@@ -6,9 +6,9 @@ fs.mkdirSync(shotDir, { recursive: true });
 const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:8765";
 
 const seats = [
-  { name: "TrumanCooper", uid: "458342725222133760", draft: 7, overall: 8, note: "13 picks" },
-  { name: "ARae", uid: "458004578168729600", draft: 8, overall: 8, note: "19 picks" },
-  { name: "TipsUp", uid: "457784547094818816", draft: 1, overall: 8, note: "2 picks" },
+  { name: "TrumanCooper", uid: "458342725222133760", draft: 4, overall: 5, note: "13 picks" },
+  { name: "ARae", uid: "458004578168729600", draft: 5, overall: 5, note: "19 picks" },
+  { name: "TipsUp", uid: "457784547094818816", draft: 1, overall: 6, note: "2 picks" },
 ];
 
 const browser = await chromium.launch({

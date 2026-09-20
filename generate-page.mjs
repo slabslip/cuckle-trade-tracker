@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "teamhomemenu20260920013500";
+    const DATA_V = "teamhomemenu20260920020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26297,10 +26297,12 @@ const html = `<!DOCTYPE html>
       const stud = cuts.stud;
       const start = cuts.start;
       const mid = cuts.mid;
-      if (n >= stud) return 10;
-      if (n >= start) return 7 + 3 * (n - start) / Math.max(1, stud - start);
-      if (n >= mid) return 4 + 3 * (n - mid) / Math.max(1, start - mid);
-      return Math.max(0, 4 * n / Math.max(1, mid));
+      const elite = stud + (stud - start);
+      if (n >= elite) return 10;
+      if (n >= stud) return 7.5 + 2.5 * (n - stud) / Math.max(1, elite - stud);
+      if (n >= start) return 3 + 4.5 * (n - start) / Math.max(1, stud - start);
+      if (n >= mid) return 2 + (n - mid) / Math.max(1, start - mid);
+      return Math.max(0, 2 * n / Math.max(1, mid));
     }
 
     function teamAnalyzerRound(n) {
@@ -26353,19 +26355,31 @@ const html = `<!DOCTYPE html>
       return { sell: sell, targets: targets };
     }
 
+    function teamAnalyzerPosScore(bag, pos) {
+      const need = (deskSlots()[pos] || 1);
+      const pool = teamAnalyzerPosPool(bag, pos);
+      let pts = 0;
+      for (let i = 0; i < need; i++) {
+        pts += teamAnalyzerValueGrade(pool[i] ? calcValueNum(pool[i]) : -1);
+      }
+      return pts / need;
+    }
+
     function teamAnalyzerGrades(bag) {
-      const slots = deskSlots();
       const grades = {};
       ["QB", "RB", "WR", "TE"].forEach(function (pos) {
-        const need = slots[pos] || 1;
-        const pool = teamAnalyzerPosPool(bag, pos);
-        let pts = 0;
-        for (let i = 0; i < need; i++) {
-          pts += teamAnalyzerValueGrade(pool[i] ? calcValueNum(pool[i]) : -1);
-        }
-        grades[pos] = teamAnalyzerRound(pts / need);
+        grades[pos] = teamAnalyzerRound(teamAnalyzerPosScore(bag, pos));
       });
       return grades;
+    }
+
+    function teamAnalyzerPosBlend(bag) {
+      const scores = ["QB", "RB", "WR", "TE"].map(function (pos) {
+        return teamAnalyzerPosScore(bag, pos);
+      });
+      const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
+      const hole = Math.min(scores[0], scores[1], scores[2], scores[3]);
+      return mean * 0.7 + hole * 0.3;
     }
 
     function teamAnalyzerDepth(bag) {
@@ -26389,13 +26403,13 @@ const html = `<!DOCTYPE html>
           }
         }
       });
-      const score = teamAnalyzerRound(slotN ? (pts / slotN) : 0);
+      const raw = slotN ? (pts / slotN) : 0;
       const note = exist === 0
         ? "No backups scored"
         : (startable
           ? (startable + " of " + exist + " backup spots " + (startable === 1 ? "is" : "are") + " starter value")
           : "Backups sit below starter value");
-      return { score: score, note: note };
+      return { score: teamAnalyzerRound(raw), raw: raw, note: note };
     }
 
     function teamAnalyzerPicks(uid) {
@@ -26404,20 +26418,25 @@ const html = `<!DOCTYPE html>
       }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
     }
 
-    function teamAnalyzerDraft(uid) {
+    function teamAnalyzerDraftRaw(uid) {
       const picks = teamAnalyzerPicks(uid);
       const need = 12;
       let pts = 0;
       for (let i = 0; i < need; i++) {
         pts += teamAnalyzerValueGrade(picks[i] ? calcValueNum(picks[i]) : -1);
       }
-      return teamAnalyzerRound(pts / need);
+      return pts / need;
     }
 
-    function teamAnalyzerOverall(grades, depth, draft) {
-      const pos = ((grades.QB || 0) + (grades.RB || 0) + (grades.WR || 0) + (grades.TE || 0)) / 4;
-      const d = depth && depth.score != null ? depth.score : 0;
-      return teamAnalyzerRound(pos * 0.7 + d * 0.15 + (Number(draft) || 0) * 0.15);
+    function teamAnalyzerDraft(uid) {
+      return teamAnalyzerRound(teamAnalyzerDraftRaw(uid));
+    }
+
+    function teamAnalyzerOverall(bag, uid) {
+      const pos = teamAnalyzerPosBlend(bag);
+      const depth = teamAnalyzerDepth(bag);
+      const d = depth && depth.raw != null ? depth.raw : 0;
+      return teamAnalyzerRound(pos * 0.7 + d * 0.15 + teamAnalyzerDraftRaw(uid) * 0.15);
     }
 
     function teamAnalyzerScale(dir) {
@@ -26447,7 +26466,7 @@ const html = `<!DOCTYPE html>
         moves: teamAnalyzerMoves(bag, dir),
         grades: grades,
         draft: draft,
-        overall: teamAnalyzerOverall(grades, depth, draft),
+        overall: teamAnalyzerOverall(bag, uid),
         scale: teamAnalyzerScale(dir),
         label: (dir && dir.label) || "Reload",
         why: (dir && dir.why) || "",
@@ -26517,7 +26536,7 @@ const html = `<!DOCTYPE html>
             + (card.grades[pos] * 10) + '%"></i></div><span>' + pos + "</span><b>"
             + card.grades[pos] + "</b></div>";
         }).join("")
-        + "</div></div>"
+        + '</div><p class="team-sch-note">starter 3 · stud 7.5 · elite 10 · weakest slot pulls the team grade</p></div>'
         + '<div class="team-sch-box"><div class="team-sch-h">Draft capital</div>'
         + '<div class="team-sch-score">' + card.draft + "<em>/10</em></div>"
         + '<div class="team-sch-bar"><i style="width:' + (card.draft * 10) + '%"></i></div>'

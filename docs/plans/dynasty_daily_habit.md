@@ -320,13 +320,15 @@ Fail: we put “Text this” back on the card.
 
 Same dashboard chrome as the Home letter, every seat. `teamAnalyzerEnabled()`
 is false for GM / redraft. Grades are `teamAnalyzerValueGrade` — each desk
-slot’s `calcValueNum` against `deskCuts` stud / start / mid. Same bag always
-prints the same 0–10. Depth is the next two after the lineup on that same
+slot’s `calcValueNum` against `deskCuts`. A starter is 3, mid is 2, stud is
+7.5, and 10 is only `stud + (stud − start)` (elite). Same bag always prints
+the same 0–10. Depth is the next two after the lineup on that same
 scale (empty backup slots = 0, one stud backup is not a 10), not vs the
 league floor. The depth note names backups, not a starter hole. Draft capital scores the top 12 owned
 `calcBook.picks` with the same `teamAnalyzerValueGrade` as roster slots
 (empty of the 12 = 0). Late 3rds / 4ths do not pad a chest to 10. Team
-grade is 70% positions / 15% depth / 15% draft. Two seats may share a
+grade is 70% position blend (70% mean / 30% weakest desk) / 15% depth /
+15% draft, using unrounded slot scores. 8–9 is rare. Two seats may share a
 grade — there is no league curve. Archetype is Dual elite QB / Elite QB /
 Dual elite [pos] else the seat-direction label. Outlook and C↔R stay
 captions from `seat-direction.json` (`Hard rebuild` is 86 on the bar).

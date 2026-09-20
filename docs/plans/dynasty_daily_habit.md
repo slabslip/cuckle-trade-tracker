@@ -324,14 +324,16 @@ slot’s `calcValueNum` against `deskCuts`. A starter is 3, mid is 2, stud is
 7.5, and 10 is only `stud + (stud − start)` (elite). Same bag always prints
 the same 0–10. Depth is the next two after the lineup on that same
 scale (empty backup slots = 0, one stud backup is not a 10), not vs the
-league floor. The depth note names backups, not a starter hole. Draft capital scores the top 12 owned
-`calcBook.picks` with the same `teamAnalyzerValueGrade` as roster slots
-(empty of the 12 = 0). Late 3rds / 4ths do not pad a chest to 10. Team
-grade is 70% position blend (70% mean / 30% weakest desk) / 15% depth /
-15% draft, using unrounded slot scores. 8–9 is rare. Two seats may share a
-grade — there is no league curve. Archetype is Dual elite QB / Elite QB /
-Dual elite [pos] else the seat-direction label. Outlook and C↔R stay
-captions from `seat-direction.json` (`Hard rebuild` is 86 on the bar).
+league floor. The depth note names backups, not a starter hole. Draft capital
+weighs the next two drafts (`as_of` year + 1 / + 2) hardest — 2027/2028
+firsts now, with the nearer year a touch heavier — then far picks at a
+discount. A historic near chest can print 8; two far leftovers cannot pad
+to 10. Team grade uses a window mix
+(win-now leans roster, tank leans that chest) on unrounded scores. 8–9 is rare.
+Two seats may share a grade — there is no league curve. Archetype is
+Dual elite QB / Elite QB / Dual elite [pos] else the seat-direction label.
+Outlook and C↔R come from the bag + chest window (tank / rebuild / reload /
+compete soon / win now), not only `seat-direction.json`.
 The gold chip saves `cuckle-<seat>.png` as the full dashboard card
 (lineup, depth, outlook, cornerstones, leftover, targets, C↔R,
 positional grades, draft, note) — not a short six-cell picture.

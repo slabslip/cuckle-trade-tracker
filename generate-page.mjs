@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerflock20260920024500";
+    const DATA_V = "homecuff20260920123000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -8970,10 +8970,19 @@ const html = `<!DOCTYPE html>
       };
     }
 
+    function overnightCuffNote(p) {
+      if (!p) return "";
+      if (p.cuff_owned === true && p.cuff_owner) return "cuff " + p.cuff_owner;
+      if (p.cuff_owned === false) return "cuff unowned";
+      return "";
+    }
+
     function overnightPlayerLine(p) {
       const bits = [p.name];
       if (p.pos) bits.push(p.pos);
       if (p.owner) bits.push(p.owner);
+      const cuff = overnightCuffNote(p);
+      if (cuff) bits.push(cuff);
       return bits.join(" · ");
     }
 
@@ -9073,9 +9082,12 @@ const html = `<!DOCTYPE html>
     }
 
     function overnightSeatRowHtml(p, tone) {
+      const cuff = overnightCuffNote(p);
       return '<div class="overnight-slip-row ' + tone + '">'
         + '<div class="overnight-slip-who"><b>' + esc(p.name) + "</b>"
-        + (p.pos ? "<i>" + esc(p.pos) + "</i>" : "") + "</div>"
+        + (p.pos ? "<i>" + esc(p.pos) + "</i>" : "")
+        + (cuff ? '<p class="overnight-slip-sent">' + esc(cuff) + "</p>" : "")
+        + "</div>"
         + (p.owner ? "<span>" + esc(p.owner) + "</span>" : "")
         + "</div>";
     }

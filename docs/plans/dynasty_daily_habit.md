@@ -104,8 +104,10 @@ say so, then **Last deal** from the tape so the letter is never empty.
 (`TipsUp waiver claimed Pearsall · dropped X`). Empty section collapses.
 
 **Lists** — titled, color-coded bands: Trades (ice), Wire (green), Out (orange),
-IR (gold), PUP/NFI (violet). Rows are name + pos + owner. Collapsed preview is
-four per list; **Show all** expands the rest. Share always sends every name.
+IR (gold), PUP/NFI (violet). Rows are name + pos + owner, plus cuff owner or
+`cuff unowned` when `cuffs.json` has that starter. Collapsed preview is
+three per list, starters first; **Show all** expands the rest. Share always
+sends every name.
 
 **Gold share chip** — existing `.tile-share`. Sends `overnightShareText()` +
 `?r=overnight&league=&src=share`. No “Text this” label.
@@ -195,13 +197,14 @@ Rules:
 v1 is the letter + chip + public link. That is distribution. Then, in this
 order, only facts that make **missing the letter expensive**:
 
-1. **Hurt starter → cuff owner (or unowned)** on the IR/Out lines. Data is
-   already in `cuffs.json`. Tonight: Nico Collins Out on TipsUp, cuff
-   unowned. That is a waiver, not a roster list. Do this before any new
-   surface.
+1. **Hurt starter → cuff owner (or unowned)** on the IR/Out lines. **Shipped.**
+   `cuffs.json` joins by starter id. Collapsed Out / IR lead with Sunday
+   cost (starters, then unowned cuff), not raw book value. Nico Collins
+   Out on TipsUp prints `cuff unowned`. Players without a cuff row stay
+   silent — do not invent unowned.
 2. **Yesterday’s injury / tape snap** so the lede can say “Nico went Out
    last night,” not reprint a 36-man IR museum. Delta is the addiction.
-   Status board is a museum.
+   Status board is a museum. This is the next cut.
 3. **Live pick-holder ghost** only when it is live (“Truman still does not
    hold that 2028 3rd”). Already true in the calc. One line on the letter
    the morning after someone gets it wrong.
@@ -365,5 +368,5 @@ is leftover names only — never seat-direction labels like `QB`.
 
 Lock the shareable **league overnight letter** as the Cuckle Home daily habit.
 Do not add research surfaces until this card is the first message in the thread.
-The next cut is not a new room. It is the one line that makes missing the
-letter expensive: hurt starter → cuff owner or unowned. See §9.
+The next cut is not a new room. Hurt starter → cuff is on the letter.
+Yesterday’s injury snap is the next line that makes missing it expensive.

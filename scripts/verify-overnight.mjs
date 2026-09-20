@@ -29,6 +29,8 @@ try {
   if (!/Quiet night|trade last night|Wire moved/i.test(home)) fail("Home letter missing lede");
   if (/Last deal|No trades last night/i.test(home)) fail("Collapsed letter must hide trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
+  if (!/DJ Moore/i.test(home) || !/Michael Pittman/i.test(home)) fail("Collapsed Out must lead with Sunday starters");
+  if (!/Nico Collins/i.test(home) || !/cuff unowned/i.test(home)) fail("Nico Out must name cuff unowned");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
   if (!(await page.locator(".overnight-slip").count())) fail("Home letter missing");
   if (await page.locator(".overnight-slip .sch-kv").count()) fail("Home letter must not show the settings grid");
@@ -66,6 +68,9 @@ try {
   }
   if (!/A\.J\. Brown/.test(payload.text) || (payload.text.match(/ · /g) || []).length < 8) {
     fail("expanded share must send the full lists");
+  }
+  if (!/Nico Collins · WR · TipsUp · cuff unowned/.test(payload.text)) {
+    fail("share must send Nico cuff unowned");
   }
   if (/\+\d+ more/.test(payload.text)) fail("full share must not say + more");
   if (/Text this|That's not how I remember/i.test(payload.text)) fail("share text still has Text this");

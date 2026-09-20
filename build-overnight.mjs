@@ -130,15 +130,37 @@ function wireLine(row, byRoster, playersNfl, injury) {
   return lines.join(" · ") || (kind + " move");
 }
 
+function cuffIndex(cuffs) {
+  const byStarter = new Map();
+  for (const row of (cuffs && cuffs.rows) || []) {
+    if (!row || row.starter_id == null) continue;
+    byStarter.set(String(row.starter_id), row);
+  }
+  return byStarter;
+}
+
+function attachCuff(row, cuff) {
+  if (!cuff) {
+    return Object.assign({}, row, { cuff: "", cuff_owner: "", cuff_owned: null });
+  }
+  return Object.assign({}, row, {
+    cuff: cuff.cuff || "",
+    cuff_owner: cuff.cuff_owned ? (cuff.cuff_owner || "") : "",
+    cuff_owned: !!cuff.cuff_owned,
+  });
+}
+
 function irScore(row) {
-  let s = Number(row.value) || 0;
-  if (SKILL.has(row.pos)) s += 80;
+  let s = 0;
+  if (row.slot === "starter") s += 400;
+  else if (row.slot === "ir") s += 20;
+  else if (row.slot === "taxi") s -= 800;
   if (row.status === "OUT") s += 120;
   else if (row.status === "IR") s += 60;
   else if (row.status === "PUP" || row.status === "NFI") s += 30;
-  if (row.slot === "starter") s += 100;
-  else if (row.slot === "ir") s += 20;
-  else if (row.slot === "taxi") s -= 800;
+  if (SKILL.has(row.pos)) s += 80;
+  if (row.cuff_owned === false) s += 150;
+  s += Math.min(50, Math.round((Number(row.value) || 0) / 200));
   return s;
 }
 
@@ -151,6 +173,8 @@ function main() {
   const injury = readJson("injury_now.json", { players: {} }) || { players: {} };
   const playersNfl = readJson("players.nfl.json", {}) || {};
   const calc = readUi("calculator.json", { players: [] }) || { players: [] };
+  const cuffs = readUi("cuffs.json", { rows: [] }) || { rows: [] };
+  const cuffByStarter = cuffIndex(cuffs);
   const valueById = new Map();
   for (const p of calc.players || []) {
     if (p && p.sleeper_id) valueById.set(String(p.sleeper_id), Number(p.value) || 0);
@@ -180,7 +204,7 @@ function main() {
     const status = String((p && p.injury_status) || "").toUpperCase();
     if (!IR_STATUSES.has(status)) continue;
     const seat = byPid.get(String(id)) || { owner: "", slot: "bench" };
-    board.push({
+    board.push(attachCuff({
       id,
       name: p.name || id,
       owner: seat.owner,
@@ -188,7 +212,7 @@ function main() {
       pos: p.pos || "",
       slot: seat.slot,
       value: valueById.get(String(id)) || 0,
-    });
+    }, cuffByStarter.get(String(id))));
   }
   board.sort((a, b) => irScore(b) - irScore(a)
     || String(a.name).localeCompare(String(b.name)));

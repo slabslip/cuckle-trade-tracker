@@ -267,6 +267,22 @@ function overallFrom(bag, picks, slots, cuts, uid) {
 function overallOf(bag, uid, slots, cuts) {
   return overallFrom(bag, picksOf(uid), slots, cuts, uid);
 }
+function nowFrom(bag, slots, cuts) {
+  const mean = ["QB", "RB", "WR", "TE"].reduce((s, pos) => s + posScoreOf(bag, pos, slots, cuts), 0) / 4;
+  const d = depthOf(bag, slots, cuts).raw;
+  return round10(stretchOf(mean * 0.94 + d * 0.06, "win-now"));
+}
+function laterFrom(bag, picks, slots, cuts) {
+  const pos = posBlendOf(bag, slots, cuts, 0.32);
+  const d = depthOf(bag, slots, cuts).raw;
+  return round10(stretchOf(pos * 0.4 + d * 0.15 + draftFromRaw(picks || [], cuts) * 0.45, "rebuild"));
+}
+function nowOf(bag, uid, slots, cuts) {
+  return nowFrom(bag, slots, cuts);
+}
+function laterOf(bag, uid, slots, cuts) {
+  return laterFrom(bag, picksOf(uid), slots, cuts);
+}
 
 const seats = members.map((m) => ({
   uid: String(m.user_id),
@@ -282,6 +298,8 @@ const seats = members.map((m) => ({
     draft: draft,
     window: windowOf(s.bag, s.uid),
     overall: overallOf(s.bag, s.uid),
+    now: nowOf(s.bag, s.uid),
+    later: laterOf(s.bag, s.uid),
   });
 });
 
@@ -290,8 +308,10 @@ loop(1, seats.every((s) => {
   const again = gradesOf(bagOf(s.uid));
   return JSON.stringify(again) === JSON.stringify(s.grades)
     && draftOf(s.uid) === s.draft
-    && overallOf(bagOf(s.uid), s.uid) === s.overall;
-}), "same bag reprints the same grades, draft, and team grade");
+    && overallOf(bagOf(s.uid), s.uid) === s.overall
+    && nowOf(bagOf(s.uid), s.uid) === s.now
+    && laterOf(bagOf(s.uid), s.uid) === s.later;
+}), "same bag reprints the same grades, draft, Now, Later, and team grade");
 
 // 2 Bounds — every seat, every number is 0–10 and finite
 loop(2, seats.every((s) => {
@@ -443,6 +463,10 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerPosBlend").includes("1 - hw")
   && fnSrc(page, "teamAnalyzerStretch") === fnSrc(gen, "teamAnalyzerStretch")
   && fnSrc(page, "teamAnalyzerNowKind") === fnSrc(gen, "teamAnalyzerNowKind")
+  && fnSrc(page, "teamAnalyzerNow") === fnSrc(gen, "teamAnalyzerNow")
+  && fnSrc(page, "teamAnalyzerLater") === fnSrc(gen, "teamAnalyzerLater")
+  && fnSrc(page, "teamAnalyzerRooms") === fnSrc(gen, "teamAnalyzerRooms")
+  && fnSrc(page, "teamAnalyzerPosMean") === fnSrc(gen, "teamAnalyzerPosMean")
   && fnSrc(page, "teamAnalyzerMix") === fnSrc(gen, "teamAnalyzerMix")
   && fnSrc(page, "teamAnalyzerHole") === fnSrc(gen, "teamAnalyzerHole")
   && fnSrc(page, "teamAnalyzerAssetCmp") === fnSrc(gen, "teamAnalyzerAssetCmp")
@@ -641,13 +665,19 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   loop(22, htmlFn.includes("card.overall")
     && htmlFn.includes("card.depth.note")
     && htmlFn.includes("card.draft")
+    && htmlFn.includes("card.now")
+    && htmlFn.includes("card.later")
+    && htmlFn.includes("this year\\'s desk")
+    && htmlFn.includes("next two drafts + book")
     && htmlFn.includes("next two drafts weigh most")
     && shareFn.includes("card.overall")
     && shareFn.includes("card.depth")
     && shareFn.includes("draftNote")
+    && shareFn.includes('scoreBox("Now"')
+    && shareFn.includes('scoreBox("Later"')
     && shareFn.includes("next two drafts weigh most")
     && shareFn === fnSrc(gen, "teamAnalyzerShareDraw"),
-    "on-page card and share PNG print the same overall / depth / draft fields");
+    "on-page card and share PNG print the same overall / Now / Later / draft fields");
 }
 
 {
@@ -673,9 +703,15 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
       draft: draftOf(uid),
       window: windowOf(bag, uid),
       overall: overallOf(bag, uid),
+      now: nowOf(bag, uid),
+      later: laterOf(bag, uid),
     };
   });
   const ners = seats.find((s) => s.name === "SF69erss");
+  const arae = seats.find((s) => s.name === "ARae");
+  const tips = seats.find((s) => s.name === "TipsUp");
+  const years = nearYears();
+  const historic = Array.from({ length: 6 }, () => ({ value: 5785, year: years.near1, round: 1 }));
   loop(24, seats.length === 10
     && again.every((a, i) => JSON.stringify(a) === JSON.stringify({
       name: seats[i].name,
@@ -684,14 +720,25 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
       draft: seats[i].draft,
       window: seats[i].window,
       overall: seats[i].overall,
+      now: seats[i].now,
+      later: seats[i].later,
     }))
     && ners && ners.grades.TE <= 4
     && ners.overall >= 7
+    && ners.now >= 8
+    && ners.later <= 3
     && ners.window === "win-now-reload"
-    && ners.overall >= (seats.find((s) => s.name === "ARae") || {}).overall
+    && ners.overall >= (arae || {}).overall
+    && ners.now >= (arae || {}).now
+    && arae && arae.later >= arae.now
+    && tips && nowFrom(tips.bag) === nowFrom(tips.bag)
+    && laterFrom(tips.bag, []) < laterFrom(tips.bag, historic)
+    && fnSrc(page, "teamAnalyzerNowRaw").includes("0.94")
+    && fnSrc(page, "teamAnalyzerLaterRaw").includes("0.45")
+    && fnSrc(page, "teamAnalyzerNowRaw").includes("teamAnalyzerDraft") === false
     && seats.filter((s) => s.overall >= 8).length === 0
     && seats.filter((s) => s.overall <= 5).length >= 1,
-    "second reprint matches; 69ers today-roster grades above a tank chest");
+    "second reprint matches; Now is the desk, Later is the book, 69ers today above a tank");
 }
 
 console.log(JSON.stringify({
@@ -700,6 +747,8 @@ console.log(JSON.stringify({
   seats: seats.map((s) => ({
     name: s.name,
     overall: s.overall,
+    now: s.now,
+    later: s.later,
     grades: s.grades,
     depth: s.depth.score,
     extras: s.depth.n,

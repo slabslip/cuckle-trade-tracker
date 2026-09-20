@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzernow20260920020000";
+    const DATA_V = "analyzerflock20260920024500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26581,6 +26581,49 @@ const html = `<!DOCTYPE html>
       return teamAnalyzerRound(teamAnalyzerStretch(pos * mix[0] + d * mix[1] + draft * mix[2], kind));
     }
 
+    function teamAnalyzerPosMean(bag) {
+      return (
+        teamAnalyzerPosScore(bag, "QB")
+        + teamAnalyzerPosScore(bag, "RB")
+        + teamAnalyzerPosScore(bag, "WR")
+        + teamAnalyzerPosScore(bag, "TE")
+      ) / 4;
+    }
+
+    function teamAnalyzerNowRaw(bag) {
+      const depth = teamAnalyzerDepth(bag);
+      const d = depth && depth.raw != null ? depth.raw : 0;
+      return teamAnalyzerPosMean(bag) * 0.94 + d * 0.06;
+    }
+
+    function teamAnalyzerNow(bag) {
+      return teamAnalyzerRound(teamAnalyzerStretch(teamAnalyzerNowRaw(bag), "win-now"));
+    }
+
+    function teamAnalyzerLaterRaw(bag, uid) {
+      const pos = teamAnalyzerPosBlend(bag, 0.32);
+      const depth = teamAnalyzerDepth(bag);
+      const d = depth && depth.raw != null ? depth.raw : 0;
+      return pos * 0.4 + d * 0.15 + teamAnalyzerDraftRaw(uid) * 0.45;
+    }
+
+    function teamAnalyzerLater(bag, uid) {
+      return teamAnalyzerRound(teamAnalyzerStretch(teamAnalyzerLaterRaw(bag, uid), "rebuild"));
+    }
+
+    function teamAnalyzerRooms(bag) {
+      const grades = teamAnalyzerGrades(bag);
+      const keys = ["QB", "RB", "WR", "TE"];
+      let hi = keys[0];
+      let lo = keys[0];
+      keys.forEach(function (pos) {
+        if (grades[pos] > grades[hi]) hi = pos;
+        if (grades[pos] < grades[lo]) lo = pos;
+      });
+      if (grades[hi] === grades[lo]) return { strength: "Balanced", need: "—" };
+      return { strength: hi, need: lo };
+    }
+
     function teamAnalyzerScale(kind, bag, uid) {
       const pos = bag ? teamAnalyzerPosBlend(bag) : 6.3;
       const hole = bag ? teamAnalyzerHole(bag) : 5.8;
@@ -26632,6 +26675,9 @@ const html = `<!DOCTYPE html>
         moves: teamAnalyzerMoves(bag, dir),
         grades: grades,
         draft: draft,
+        now: teamAnalyzerNow(bag),
+        later: teamAnalyzerLater(bag, uid),
+        rooms: teamAnalyzerRooms(bag),
         overall: teamAnalyzerOverall(bag, uid),
         scale: teamAnalyzerScale(kind, bag, uid),
         label: teamAnalyzerWindowLabel(kind),
@@ -26658,6 +26704,20 @@ const html = `<!DOCTYPE html>
         + "<b style=\"margin-top:8px\">Archetype</b><span>" + esc(card.arch) + "</span></div>"
         + "</div>"
         + '<div class="team-sch-grid">'
+        + '<div class="team-sch-box"><div class="team-sch-h">Now</div>'
+        + '<div class="team-sch-score">' + card.now + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (card.now * 10) + '%"></i></div>'
+        + '<p class="team-sch-note">this year\'s desk'
+        + (card.rooms && card.rooms.strength && card.rooms.strength !== "—"
+          ? " · Strength " + esc(card.rooms.strength) : "")
+        + "</p></div>"
+        + '<div class="team-sch-box"><div class="team-sch-h">Later</div>'
+        + '<div class="team-sch-score">' + card.later + "<em>/10</em></div>"
+        + '<div class="team-sch-bar"><i style="width:' + (card.later * 10) + '%"></i></div>'
+        + '<p class="team-sch-note">next two drafts + book'
+        + (card.rooms && card.rooms.need && card.rooms.need !== "—"
+          ? " · Need " + esc(card.rooms.need) : "")
+        + "</p></div>"
         + '<div class="team-sch-box span2"><div class="team-sch-h">Starting lineup</div>'
         + card.lineup.map(function (p) {
           return '<div class="team-sch-line"><i>' + esc(p.pos) + "</i><b>" + esc(p.name) + "</b>"
@@ -26776,7 +26836,8 @@ const html = `<!DOCTYPE html>
       const head = 20;
       const half = function (n) { return boxPad + head + n * lineH + 10; };
       const cssH = 14 + 86 + 1
-        + (boxPad + head + lineup.length * lineH + 10)
+        + 118
+        + 1 + (boxPad + head + lineup.length * lineH + 10)
         + 1 + Math.max(118, 86 + noteLines.length * 16)
         + 1 + Math.max(half(4), half(Math.max(sell.length, 1)))
         + 1 + half(Math.max(targets.length, 1))
@@ -26855,6 +26916,30 @@ const html = `<!DOCTYPE html>
       function pushBox(span2, h, paint) {
         boxes.push({ span2: span2, h: h, paint: paint });
       }
+      function scoreBox(label, value, note) {
+        return function (x, top, w) {
+          heading(label, x, top + px(head - 4));
+          ctx.fillStyle = TEXT;
+          ctx.font = "800 " + px(28.8) + "px " + FONT;
+          ctx.textAlign = "left";
+          ctx.fillText(String(value), x, top + px(52));
+          const scoreW = ctx.measureText(String(value)).width;
+          ctx.fillStyle = DIM;
+          ctx.font = "800 " + px(13.6) + "px " + FONT;
+          ctx.fillText("/10", x + scoreW + px(4), top + px(52));
+          teamAnalyzerShareBar(ctx, x, top + px(62), w, px(8), (Number(value) || 0) / 10);
+          ctx.fillStyle = MUTED;
+          ctx.font = "650 " + px(12.5) + "px " + FONT;
+          ctx.fillText(note, x, top + px(86));
+        };
+      }
+      const rooms = card.rooms || {};
+      const nowNote = "this year's desk"
+        + (rooms.strength && rooms.strength !== "—" ? " · Strength " + rooms.strength : "");
+      const laterNote = "next two drafts + book"
+        + (rooms.need && rooms.need !== "—" ? " · Need " + rooms.need : "");
+      pushBox(false, 118, scoreBox("Now", card.now, nowNote));
+      pushBox(false, 118, scoreBox("Later", card.later, laterNote));
       pushBox(true, boxPad + head + lineup.length * lineH + 10, function (x, top, w) {
         heading("Starting lineup", x, top + px(head - 4));
         lineup.forEach(function (p, i) {
@@ -33607,7 +33692,8 @@ if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.ro
 if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
   || !inline.includes("data-overnight-share") || !inline.includes("function overnightEnabled(")
   || !inline.includes("data-overnight-more")
-  || !inline.includes("function teamAnalyzerHtml(") || !inline.includes("function teamAnalyzerEnabled(")) {
+  || !inline.includes("function teamAnalyzerHtml(") || !inline.includes("function teamAnalyzerEnabled(")
+  || !inline.includes("function teamAnalyzerNow(") || !inline.includes("function teamAnalyzerLater(")) {
   throw new Error("Home overnight must be a shareable dynasty report; team home must paint the analyzer");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {

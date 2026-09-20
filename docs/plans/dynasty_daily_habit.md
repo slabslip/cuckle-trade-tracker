@@ -338,6 +338,10 @@ A real positional hole pulls a tank / rebuild harder than a win-now
 desk. Win-now team grade is today’s roster — a title desk cannot print
 under a tank that only has draft capital. Reload stays on the window
 label and outlook, not as a penalty on the 0–10.
+Now is this year’s starting-desk mean (picks do not count; a TE hole
+is a Need, not a Now sink). Later is the dynasty book plus the next
+two drafts. Team grade stays the window mix. Strength / Need name the
+highest and lowest rooms on the bag. No league curve.
 8–9 is rare.
 Two seats may share a grade — there is no league curve. Archetype is
 Dual elite QB / Elite QB / Dual elite [pos] else the seat-direction label.
@@ -350,7 +354,7 @@ Equal-value players sort by name / id so the same bag reprints.
 `scripts/loop-team-analyzer.mjs` reprints all ten seats across two dozen
 loops. No `fmt()`, no bag totals, no new value formula.
 The gold chip saves `cuckle-<seat>.png` as the full dashboard card
-(lineup, depth, outlook, cornerstones, leftover, targets, C↔R,
+(Now / Later, lineup, depth, outlook, cornerstones, leftover, targets, C↔R,
 positional grades, draft, note) — not a short six-cell picture.
 Depth names the extras that exist, not a hard-coded eight. Look to trade
 is leftover names only — never seat-direction labels like `QB`.

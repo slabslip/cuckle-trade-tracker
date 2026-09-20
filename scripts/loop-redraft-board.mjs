@@ -165,9 +165,9 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "analyzerspread20260920011500"')
-  && html.includes('const DATA_V = "analyzerspread20260920011500"')
-  && sw.includes('chuckle-shell-v305-analyzer-spread')
+loop(10, page.includes('const DATA_V = "analyzerspread20260920013500"')
+  && html.includes('const DATA_V = "analyzerspread20260920013500"')
+  && sw.includes('chuckle-shell-v306-analyzer-spread')
   && !sw.includes("chuckle-shell-v283-list-share")
   && !sw.includes("chuckle-shell-v282-finish-one")
   && inlineScriptParses(html),

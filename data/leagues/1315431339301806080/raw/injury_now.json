@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-19",
+  "as_of": "2026-09-20",
   "n": 48,
   "players": {
     "4137": {
@@ -165,7 +165,7 @@
     },
     "9997": {
       "name": "Zay Flowers",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "BAL",
       "pos": "WR"
@@ -277,8 +277,8 @@
     },
     "13276": {
       "name": "Omar Cooper",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "NYJ",
       "pos": "WR"
     },
@@ -333,7 +333,7 @@
     },
     "13417": {
       "name": "De'Zhaun Stribling",
-      "injury_status": "Out",
+      "injury_status": "IR",
       "status": "Inactive",
       "team": "SF",
       "pos": "WR"

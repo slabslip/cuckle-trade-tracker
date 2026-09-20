@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerspread20260920013500";
+    const DATA_V = "teamhomemenu20260920020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18499,8 +18499,11 @@ const html = `<!DOCTYPE html>
       // League dock removed — Trades/Teams/Champions/Data Sets under Latest trade replace it.
       nav.hidden = true;
       document.body.classList.remove("has-bottom-nav");
-      const on = (appScreen === "dash" && !(me && data)
-          && (view === "home" || view === "calc" || view === "trade"))
+      const on = (appScreen === "dash"
+          && (view === "home" || view === "calc" || view === "trade"
+            || view === "trades" || view === "partners" || view === "drafts"
+            || view === "titles" || view === "cosmetics" || view === "cuffs"
+            || view === "draftdata" || view === "account"))
         || appScreen === "settings" || appScreen === "profile";
       try { document.body.classList.toggle("has-lh-bar", on); } catch (err) { /* ignore */ }
       if (!on) lhMenuOpen = false;
@@ -28272,7 +28275,9 @@ const html = `<!DOCTYPE html>
         calcRememberHitsScroll("a");
         calcRememberHitsScroll("b");
       }
-      app.innerHTML = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();
+      let html = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();
+      if (html.indexOf('class="lh-actions') < 0) html += homeChips();
+      app.innerHTML = html;
       ledgerUnparkCompose();
       ledgerRememberCompose();
       document.body.classList.toggle("has-vote-sheet", !!(voteSheetTx || voteConfirmTx));
@@ -34565,7 +34570,8 @@ if (!inline.includes(">Team settings</h2>") || !inline.includes('item("settings"
       && inline.includes('homeTab === "news"')
       && inline.includes("renderNewsTab(")
       && fnSrc("paintBottomNav").includes('view === "calc"')
-      && fnSrc("paintBottomNav").includes('view === "trade"')],
+      && fnSrc("paintBottomNav").includes('view === "trade"')
+      && fnSrc("paintBottomNav").includes("!(me && data)") === false],
     ["HIG-09", html.includes("@media (prefers-reduced-motion: reduce)")],
     ["HIG-10", html.includes("position: fixed") && html.includes(".lh-actions {")],
     ["HIG-11", html.includes("--hig-space: 8px")],

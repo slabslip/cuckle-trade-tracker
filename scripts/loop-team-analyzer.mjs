@@ -103,10 +103,14 @@ function holeOf(bag, slots, cuts) {
     posScoreOf(bag, "TE", slots, cuts),
   );
 }
-function stretchOf(n) {
+function stretchOf(n, kind) {
   const x = Number(n) || 0;
   const c = 6.15;
-  if (x >= c) return c + (x - c) * 1.45;
+  if (kind === "win-now" || kind === "win-now-reload") {
+    if (x >= c) return c + (x - c) * 1.55;
+    return x;
+  }
+  if (x >= c) return c + (x - c) * 1.2;
   return c + (x - c) * 2.05;
 }
 function posOf(p) {
@@ -246,18 +250,19 @@ function mixOf(kind) {
   if (kind === "hard-tank") return [0.5, 0.1, 0.4];
   if (kind === "tank") return [0.52, 0.1, 0.38];
   if (kind === "rebuild") return [0.56, 0.12, 0.32];
-  if (kind === "win-now") return [0.86, 0.11, 0.03];
-  if (kind === "win-now-reload") return [0.8, 0.14, 0.06];
+  if (kind === "win-now" || kind === "win-now-reload") return [0.9, 0.08, 0.02];
   if (kind === "contend-soon") return [0.66, 0.13, 0.21];
   if (kind === "climbing") return [0.7, 0.14, 0.16];
   return [0.64, 0.16, 0.2];
 }
 function overallFrom(bag, picks, slots, cuts, uid) {
-  const pos = posBlendOf(bag, slots, cuts, 0.32);
+  const kind = windowFrom(bag, picks || [], slots, cuts);
+  const now = kind === "win-now" || kind === "win-now-reload";
+  const pos = posBlendOf(bag, slots, cuts, now ? 0.18 : 0.32);
   const depth = depthOf(bag, slots, cuts);
   const draft = draftFromRaw(picks || [], cuts);
-  const mix = mixOf(windowFrom(bag, picks || [], slots, cuts));
-  return round10(stretchOf(pos * mix[0] + depth.raw * mix[1] + draft * mix[2]));
+  const mix = mixOf(kind);
+  return round10(stretchOf(pos * mix[0] + depth.raw * mix[1] + draft * mix[2], kind));
 }
 function overallOf(bag, uid, slots, cuts) {
   return overallFrom(bag, picksOf(uid), slots, cuts, uid);
@@ -437,6 +442,7 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
   && fnSrc(page, "teamAnalyzerPosBlend").includes("1 - hw")
   && fnSrc(page, "teamAnalyzerStretch") === fnSrc(gen, "teamAnalyzerStretch")
+  && fnSrc(page, "teamAnalyzerNowKind") === fnSrc(gen, "teamAnalyzerNowKind")
   && fnSrc(page, "teamAnalyzerMix") === fnSrc(gen, "teamAnalyzerMix")
   && fnSrc(page, "teamAnalyzerHole") === fnSrc(gen, "teamAnalyzerHole")
   && fnSrc(page, "teamAnalyzerAssetCmp") === fnSrc(gen, "teamAnalyzerAssetCmp")
@@ -623,7 +629,8 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   loop(21, tips && arae
     && Math.abs(winNowFat - winNowEmpty) <= 1
     && (tankFat - tankEmpty) >= 2
-    && mixOf("win-now")[2] === 0.03
+    && mixOf("win-now")[2] === 0.02
+    && mixOf("win-now-reload")[2] === 0.02
     && mixOf("tank")[2] === 0.38,
     "win-now team grade barely moves with picks; a tank chest lifts the overall");
 }
@@ -679,10 +686,12 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
       overall: seats[i].overall,
     }))
     && ners && ners.grades.TE <= 4
-    && ners.overall <= 6
+    && ners.overall >= 7
+    && ners.window === "win-now-reload"
+    && ners.overall >= (seats.find((s) => s.name === "ARae") || {}).overall
     && seats.filter((s) => s.overall >= 8).length === 0
     && seats.filter((s) => s.overall <= 5).length >= 1,
-    "second reprint of all ten seats matches; 69ers TE hole holds; no 8s");
+    "second reprint matches; 69ers today-roster grades above a tank chest");
 }
 
 console.log(JSON.stringify({

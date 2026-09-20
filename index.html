@@ -4432,7 +4432,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerspread20260920015500";
+    const DATA_V = "analyzernow20260920020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26426,10 +26426,14 @@
       );
     }
 
-    function teamAnalyzerStretch(n) {
+    function teamAnalyzerStretch(n, kind) {
       const x = Number(n) || 0;
       const c = 6.15;
-      if (x >= c) return c + (x - c) * 1.45;
+      if (kind === "win-now" || kind === "win-now-reload") {
+        if (x >= c) return c + (x - c) * 1.55;
+        return x;
+      }
+      if (x >= c) return c + (x - c) * 1.2;
       return c + (x - c) * 2.05;
     }
 
@@ -26549,21 +26553,24 @@
       if (kind === "hard-tank") return [0.5, 0.1, 0.4];
       if (kind === "tank") return [0.52, 0.1, 0.38];
       if (kind === "rebuild") return [0.56, 0.12, 0.32];
-      if (kind === "win-now") return [0.86, 0.11, 0.03];
-      if (kind === "win-now-reload") return [0.8, 0.14, 0.06];
+      if (kind === "win-now" || kind === "win-now-reload") return [0.9, 0.08, 0.02];
       if (kind === "contend-soon") return [0.66, 0.13, 0.21];
       if (kind === "climbing") return [0.7, 0.14, 0.16];
       return [0.64, 0.16, 0.2];
     }
 
+    function teamAnalyzerNowKind(kind) {
+      return kind === "win-now" || kind === "win-now-reload";
+    }
+
     function teamAnalyzerOverall(bag, uid) {
-      const pos = teamAnalyzerPosBlend(bag, 0.32);
+      const kind = teamAnalyzerWindow(bag, uid);
+      const pos = teamAnalyzerPosBlend(bag, teamAnalyzerNowKind(kind) ? 0.18 : 0.32);
       const depth = teamAnalyzerDepth(bag);
       const d = depth && depth.raw != null ? depth.raw : 0;
       const draft = teamAnalyzerDraftRaw(uid);
-      const kind = teamAnalyzerWindow(bag, uid);
       const mix = teamAnalyzerMix(kind);
-      return teamAnalyzerRound(teamAnalyzerStretch(pos * mix[0] + d * mix[1] + draft * mix[2]));
+      return teamAnalyzerRound(teamAnalyzerStretch(pos * mix[0] + d * mix[1] + draft * mix[2], kind));
     }
 
     function teamAnalyzerScale(kind, bag, uid) {

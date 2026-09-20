@@ -9,6 +9,7 @@ const seats = [
   { name: "TrumanCooper", uid: "458342725222133760", draft: 5, overall: 4, label: "Rebuild", note: "13 picks" },
   { name: "ARae", uid: "458004578168729600", draft: 8, overall: 6, label: "Hard tank", note: "19 picks" },
   { name: "TipsUp", uid: "457784547094818816", draft: 0, overall: 7, label: "Win now", note: "2 picks" },
+  { name: "SF69erss", uid: "457779824002330624", draft: 2, overall: 7, label: "Win now · reload", note: "10 picks" },
 ];
 
 const browser = await chromium.launch({

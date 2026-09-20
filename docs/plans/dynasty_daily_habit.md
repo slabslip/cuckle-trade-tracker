@@ -334,7 +334,10 @@ discount. A historic near chest can print 8; two far leftovers cannot pad
 to 10. Team grade uses a window mix
 (win-now leans roster, tank leans that chest) on unrounded scores, then a
 fixed stretch away from 6 so 4 and 5 can print without a league curve.
-A real positional hole pulls the team grade harder than the window does.
+A real positional hole pulls a tank / rebuild harder than a win-now
+desk. Win-now team grade is today’s roster — a title desk cannot print
+under a tank that only has draft capital. Reload stays on the window
+label and outlook, not as a penalty on the 0–10.
 8–9 is rare.
 Two seats may share a grade — there is no league curve. Archetype is
 Dual elite QB / Elite QB / Dual elite [pos] else the seat-direction label.

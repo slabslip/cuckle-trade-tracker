@@ -183,7 +183,7 @@ need(draftOf(truman) >= draftOf(king), "Truman pick chest must grade at or above
 need(draftOf(arae) >= 7, "ARae pick chest must grade as historic draft capital");
 need(fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
   && fnSrc(page, "teamAnalyzerPosBlend").includes("1 - hw")
-  && fnSrc(page, "teamAnalyzerStretch").includes("1.45")
+  && fnSrc(page, "teamAnalyzerStretch").includes("1.55")
   && page.includes("starter 3 · stud 7.5 · elite 10"),
   "analyzer scale must keep starter=3 / stud=7.5 / elite=10 with a weakest-slot pull");
 

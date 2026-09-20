@@ -27,8 +27,10 @@ need(script.includes("wireLine") && script.includes("claimed"),
   "wire lines must name who claimed whom");
 need(script.includes("irScore") && script.includes("readUi") && script.includes("calculator.json")
   && script.includes("cuffs.json") && script.includes("attachCuff")
-  && script.includes("cuff_owned === false"),
-  "IR board must join cuffs and rank Sunday starters ahead of taxi soup");
+  && script.includes("cuff_owned === false")
+  && script.includes("beneficiariesFor") && script.includes("proposeTrade")
+  && script.includes("TRADE_LO") && script.includes("DESK_START"),
+  "IR board must join cuffs, name NFL beneficiaries, and only invent leftover trades");
 need(!script.includes("Text this") && !page.includes("That's not how I remember"),
   "overnight must not ship the lame Text this poke");
 need(page.includes("function overnightEnabled(") && page.includes("isRedraftLeague()")
@@ -85,6 +87,26 @@ need(fnSrc(page, "overnightPlayerLine").includes("overnightCuffNote")
   && fnSrc(page, "overnightSeatRowHtml").includes("overnightCuffNote")
   && fnSrc(page, "overnightCuffNote") === fnSrc(gen, "overnightCuffNote"),
   "card and share must name the cuff owner or unowned");
+need(page.includes("data-overnight-player") && page.includes("function overnightBenefHtml(")
+  && page.includes("No depth listed") && page.includes("overnightOpenPlayer")
+  && fnSrc(page, "overnightBenefHtml") === fnSrc(gen, "overnightBenefHtml")
+  && fnSrc(page, "overnightSeatRowHtml").includes("overnightBenefHtml"),
+  "Out / IR names must open baked beneficiaries without a live fetch");
+need(letter.out.every((p) => Array.isArray(p.beneficiaries))
+  && letter.ir.every((p) => Array.isArray(p.beneficiaries)),
+  "letter must bake who benefits for every Out / IR name");
+const moore = letter.out.find((p) => p.name === "DJ Moore");
+need(moore && moore.beneficiaries.some((b) => b.name === "Khalil Shakir" && b.owned && b.owner === "DarkWingDucks2023")
+  && moore.beneficiaries.some((b) => b.name === "Joshua Palmer" && b.owned === false),
+  "Moore Out must name Shakir on Ducks and Palmer unowned");
+need(nico.beneficiaries.some((b) => /Hutchinson|Boutte|Noel/.test(b.name))
+  && !nico.trade,
+  "Nico panel names HOU WRs and does not invent a trade for a bench Out");
+need(!moore.trade && letter.out.every((p) => !p.trade || (p.slot === "starter" && p.trade.line)),
+  "trade lines stay off unless a Sunday starter has an obvious leftover band");
+need(letter.out.every((p) => p.beneficiaries.every((b) => b.value == null))
+  && letter.out.every((p) => !p.trade || p.trade.line),
+  "beneficiary sheet must not print book values");
 need(letter.out.every((p) => p.status === "OUT") && letter.ir.every((p) => p.status === "IR"),
   "Out and IR lists must not mix");
 need(letter.ir.every((p) => p.value == null) && letter.out.every((p) => p.value == null),
@@ -92,7 +114,7 @@ need(letter.ir.every((p) => p.value == null) && letter.out.every((p) => p.value 
 need(letter.out.length + letter.ir.length + (letter.other || []).length === letter.board_n,
   "expand must have every board row, not a 12-name cap");
 need(plan.includes("league summary") && plan.includes("?r=overnight")
-  && plan.includes("cuff unowned"),
+  && plan.includes("cuff unowned") && plan.includes("Unowned is a waiver"),
   "plan must lock the shareable league letter");
 need(product.includes("?r=overnight"), "PRODUCT.md must point at the shareable overnight letter");
 

@@ -105,9 +105,13 @@ say so, then **Last deal** from the tape so the letter is never empty.
 
 **Lists** — titled, color-coded bands: Trades (ice), Wire (green), Out (orange),
 IR (gold), PUP/NFI (violet). Rows are name + pos + owner, plus cuff owner or
-`cuff unowned` when `cuffs.json` has that starter. Collapsed preview is
-three per list, starters first; **Show all** expands the rest. Share always
-sends every name.
+`cuff unowned` when `cuffs.json` has that starter. Tap a name for the NFL
+teammates who take snaps, each with a seat or `unowned`. An obvious leftover
+↔ cuff trade prints only when the hurt name is a Sunday starter, the seat is
+short that pos after the loss, the cuff owner can spare it, and the book
+band is close. Unowned is a waiver, not a trade. No depth row stays silent.
+Collapsed preview is three per list, starters first; **Show all** expands the
+rest. Share always sends every name.
 
 **Gold share chip** — existing `.tile-share`. Sends `overnightShareText()` +
 `?r=overnight&league=&src=share`. No “Text this” label.
@@ -200,8 +204,10 @@ order, only facts that make **missing the letter expensive**:
 1. **Hurt starter → cuff owner (or unowned)** on the IR/Out lines. **Shipped.**
    `cuffs.json` joins by starter id. Collapsed Out / IR lead with Sunday
    cost (starters, then unowned cuff), not raw book value. Nico Collins
-   Out on TipsUp prints `cuff unowned`. Players without a cuff row stay
-   silent — do not invent unowned.
+   Out on TipsUp prints `cuff unowned`. Tap a name for the next NFL
+   teammates and who holds them. A leftover ↔ cuff trade only when the
+   need is obvious (`deskCuts` + leftover band). Players without a depth
+   row stay silent — do not invent unowned.
 2. **Yesterday’s injury / tape snap** so the lede can say “Nico went Out
    last night,” not reprint a 36-man IR museum. Delta is the addiction.
    Status board is a museum. This is the next cut.

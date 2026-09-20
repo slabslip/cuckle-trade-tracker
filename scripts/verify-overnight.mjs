@@ -33,6 +33,7 @@ try {
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
   if (!/DJ Moore/i.test(home) || !/Michael Pittman/i.test(home)) fail("Collapsed Out must lead with Sunday starters");
   if (!/Nico Collins/i.test(home) || !/cuff unowned/i.test(home)) fail("Nico Out must name cuff unowned");
+  if (!(await page.locator("[data-overnight-player]").count())) fail("Out / IR names are not clickable");
   if (!/Show all/i.test(home)) fail("Home letter missing expandable Show all");
   if (!(await page.locator(".overnight-slip").count())) fail("Home letter missing");
   if (await page.locator(".overnight-slip .sch-kv").count()) fail("Home letter must not show the settings grid");
@@ -76,6 +77,37 @@ try {
   }
   if (/\+\d+ more/.test(payload.text)) fail("full share must not say + more");
   if (/Text this|That's not how I remember/i.test(payload.text)) fail("share text still has Text this");
+  const nicoBtn = page.locator('[data-overnight-player="7569"]');
+  if (!(await nicoBtn.count())) fail("Nico row is not a clickable letter line");
+  await nicoBtn.first().click();
+  await page.waitForTimeout(300);
+  const nicoOpen = await page.locator(".overnight-slip").innerText();
+  console.log("NICO PANEL\n" + nicoOpen);
+  if (!/Xavier Hutchinson|Kayshon Boutte|Jaylin Noel/i.test(nicoOpen)) {
+    fail("Nico tap must name HOU WRs who take snaps");
+  }
+  if (!/DarkWingDucks2023|ChiefGumby|unowned/i.test(nicoOpen)) {
+    fail("Nico tap must name who holds the HOU WRs or unowned");
+  }
+  if (/send .+ · get /i.test(nicoOpen)) fail("Nico bench Out must not invent a leftover trade");
+  if (!(await page.locator(".overnight-benef").count())) fail("Nico tap missing beneficiary sheet");
+  await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-nico.png` });
+
+  const mooreBtn = page.locator('[data-overnight-player="4983"]');
+  if (!(await mooreBtn.count())) fail("DJ Moore row is not clickable");
+  await mooreBtn.first().click();
+  await page.waitForTimeout(300);
+  const mooreOpen = await page.locator(".overnight-slip").innerText();
+  console.log("MOORE PANEL\n" + mooreOpen);
+  if (!/Khalil Shakir/i.test(mooreOpen) || !/DarkWingDucks2023/i.test(mooreOpen)) {
+    fail("Moore tap must name Shakir on Ducks");
+  }
+  if (!/Joshua Palmer/i.test(mooreOpen) || !/unowned/i.test(mooreOpen)) {
+    fail("Moore tap must name Palmer unowned");
+  }
+  if (/TedCumberbatch send /i.test(mooreOpen)) fail("Moore must not invent a trade on a deep WR desk");
+  await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-moore.png` });
+
   await page.locator(".overnight-slip").screenshot({ path: `${shotDir}/overnight-home-open.png` });
 
   await page.evaluate(function () {

@@ -1724,17 +1724,39 @@
     .overnight-slip-band.out { color: #ff6b3d; background: rgba(255, 107, 61, 0.12); }
     .overnight-slip-band.ir { color: #e0b44c; background: rgba(224, 180, 76, 0.12); }
     .overnight-slip-band.other { color: var(--muted); background: #1a1a1e; }
+    .overnight-slip-seat { border-bottom: 1px solid #1c1c20; }
+    .overnight-slip-seat:last-child { border-bottom: 0; }
     .overnight-slip-row {
       display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
       padding: 7px 14px;
       border-bottom: 1px solid #1c1c20;
       border-left: 3px solid transparent;
     }
+    .overnight-slip-seat .overnight-slip-row { border-bottom: 0; }
     .overnight-slip-row:last-child { border-bottom: 0; }
     .overnight-slip-row.out { border-left-color: #ff6b3d; }
     .overnight-slip-row.ir { border-left-color: #e0b44c; }
     .overnight-slip-row.other { border-left-color: var(--line); }
     .overnight-slip-row.trades { border-left-color: var(--line); }
+    .overnight-slip-row[data-overnight-player] { cursor: pointer; }
+    .overnight-slip-row[data-overnight-player]:hover,
+    .overnight-slip-row.is-open { background: #161618; }
+    .overnight-benef { padding: 0 14px 10px 17px; }
+    .overnight-benef p {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+      margin: 0 0 4px; font-size: 0.78rem; font-weight: 650; line-height: 1.35;
+    }
+    .overnight-benef p:last-child { margin-bottom: 0; }
+    .overnight-benef b { font-weight: 750; color: var(--text); }
+    .overnight-benef i {
+      margin-left: 6px; font-style: normal; font-size: 0.65rem; font-weight: 800;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
+    }
+    .overnight-benef span { flex: 0 0 auto; color: var(--muted); text-align: right; }
+    .overnight-benef .overnight-trade {
+      display: block; margin-top: 6px;
+      color: var(--lh-gold, #e0b44c);
+    }
     .overnight-slip-who { min-width: 0; }
     .overnight-slip-who b {
       display: inline; font-size: 0.9375rem; font-weight: 750; color: var(--text);
@@ -4410,6 +4432,7 @@
     let overnight = null;
     let overnightLoading = false;
     let overnightOpen = false;
+    let overnightOpenPlayer = "";
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -4432,7 +4455,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homecuff20260920123000";
+    const DATA_V = "homebenef20260920123600";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9075,13 +9098,38 @@
 
     function overnightSeatRowHtml(p, tone) {
       const cuff = overnightCuffNote(p);
-      return '<div class="overnight-slip-row ' + tone + '">'
+      const open = !!(p && p.id && String(overnightOpenPlayer) === String(p.id));
+      return '<div class="overnight-slip-seat">'
+        + '<div class="overnight-slip-row ' + tone + (open ? " is-open" : "") + '"'
+        + (p.id ? ' data-overnight-player="' + esc(String(p.id)) + '" role="button" tabindex="0" aria-expanded="'
+          + (open ? "true" : "false") + '"' : "")
+        + ">"
         + '<div class="overnight-slip-who"><b>' + esc(p.name) + "</b>"
         + (p.pos ? "<i>" + esc(p.pos) + "</i>" : "")
         + (cuff ? '<p class="overnight-slip-sent">' + esc(cuff) + "</p>" : "")
         + "</div>"
         + (p.owner ? "<span>" + esc(p.owner) + "</span>" : "")
+        + "</div>"
+        + (open ? overnightBenefHtml(p) : "")
         + "</div>";
+    }
+
+    function overnightBenefHtml(p) {
+      const rows = (p && p.beneficiaries) || [];
+      let html = '<div class="overnight-benef">';
+      if (!rows.length) {
+        html += '<p class="overnight-slip-sent">No depth listed</p>';
+      } else {
+        html += rows.map(function (b) {
+          return "<p><b>" + esc(b.name) + "</b>"
+            + (b.pos ? "<i>" + esc(b.pos) + "</i>" : "")
+            + "<span>" + esc(b.owned ? (b.owner || "owned") : "unowned") + "</span></p>";
+        }).join("");
+      }
+      if (p && p.trade && p.trade.line) {
+        html += '<p class="overnight-slip-sent overnight-trade">' + esc(p.trade.line) + "</p>";
+      }
+      return html + "</div>";
     }
 
     function overnightListHtml(rows, tone, limit) {
@@ -9638,6 +9686,7 @@
       overnight = null;
       overnightLoading = false;
       overnightOpen = false;
+      overnightOpenPlayer = "";
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -29077,6 +29126,15 @@
         selectMe(seatLink.dataset.who);
         return;
       }
+      const overnightPlayerKey = t.closest && t.closest("[data-overnight-player]");
+      if (overnightPlayerKey && overnightPlayerKey.closest(".overnight-slip")
+        && (t === overnightPlayerKey || overnightPlayerKey.contains(t))) {
+        e.preventDefault();
+        const id = overnightPlayerKey.getAttribute("data-overnight-player") || "";
+        overnightOpenPlayer = (String(overnightOpenPlayer) === String(id)) ? "" : id;
+        if (typeof render === "function") render();
+        return;
+      }
       const boardRow = t.closest && t.closest("[data-board-open]");
       if (boardRow && boardRow.dataset.boardOpen && t === boardRow) {
         if (newsPullupLocksHome()) {
@@ -29384,6 +29442,15 @@
       const seatPick = e.target.closest("[data-who]");
       if (seatPick) {
         if (seatPick.dataset.who) selectMe(seatPick.dataset.who);
+        return;
+      }
+      const overnightPlayerBtn = e.target.closest("[data-overnight-player]");
+      if (overnightPlayerBtn && overnightPlayerBtn.closest(".overnight-slip")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = overnightPlayerBtn.getAttribute("data-overnight-player") || "";
+        overnightOpenPlayer = (String(overnightOpenPlayer) === String(id)) ? "" : id;
+        if (typeof render === "function") render();
         return;
       }
       const overnightMoreBtn = e.target.closest("[data-overnight-more]");

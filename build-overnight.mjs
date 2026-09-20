@@ -150,6 +150,192 @@ function attachCuff(row, cuff) {
   });
 }
 
+const DESK_STUD = 5500;
+const DESK_START = 2200;
+const DESK_MID = 1800;
+const DESK_SLOTS = { QB: 2, RB: 2, WR: 3, TE: 1 };
+const TRADE_LO = 0.55;
+const TRADE_HI = 1.8;
+
+function nflName(p, id) {
+  return (p && (p.full_name || p.name || `${p.first_name || ""} ${p.last_name || ""}`.trim())) || String(id);
+}
+
+function nflPos(p) {
+  const pos = (p && (p.position || (p.fantasy_positions || [])[0])) || "";
+  return SKILL.has(pos) ? pos : "";
+}
+
+function onDepthChart(p) {
+  if (!p || !p.team || !nflPos(p)) return false;
+  if (p.active === false) return false;
+  const st = String(p.status || "");
+  if (st === "Inactive" || st === "Retired" || st === "Practice Squad") return false;
+  return p.depth_chart_order != null;
+}
+
+/** Same NFL team + position, ordered by depth_chart_order. */
+function depthLists(playersNfl) {
+  const groups = new Map();
+  for (const [pid, p] of Object.entries(playersNfl || {})) {
+    if (!onDepthChart(p)) continue;
+    const pos = nflPos(p);
+    const key = `${p.team}|${pos}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({
+      id: String(pid),
+      order: Number(p.depth_chart_order),
+      name: nflName(p, pid),
+      team: p.team,
+      pos,
+    });
+  }
+  for (const list of groups.values()) {
+    list.sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+  }
+  return groups;
+}
+
+function nflTeamOf(id, playersNfl, injury) {
+  const p = (playersNfl && playersNfl[id]) || {};
+  const inj = ((injury && injury.players) || {})[id] || {};
+  return p.team || inj.team || "";
+}
+
+/**
+ * Who takes snaps if this name is out: next 2–3 on the same team/pos chart.
+ * If nobody sits behind them, the remaining charted teammates.
+ * Empty list = no depth — do not invent unowned.
+ */
+function beneficiariesFor(id, team, pos, depthGroups, byPid) {
+  if (!team || !pos) return [];
+  const list = depthGroups.get(`${team}|${pos}`) || [];
+  const sid = String(id);
+  const idx = list.findIndex((r) => r.id === sid);
+  let after = idx >= 0 ? list.slice(idx + 1) : [];
+  if (!after.length) after = list.filter((r) => r.id !== sid);
+  return after.slice(0, 3).map((r) => {
+    const seat = byPid.get(r.id) || { owner: "" };
+    return {
+      id: r.id,
+      name: r.name,
+      pos: r.pos || pos,
+      owner: seat.owner || "",
+      owned: !!(seat.owner),
+    };
+  });
+}
+
+function assetPos(a) {
+  if (!a) return "";
+  if (a.kind === "pick" || a.pos === "PICK") return "PICK";
+  return String(a.pos || "").toUpperCase();
+}
+
+function assetVal(a) {
+  const n = Number(a && a.value);
+  return Number.isFinite(n) ? n : -1;
+}
+
+function bagsByOwner(calc, names) {
+  const by = new Map();
+  const all = ((calc && calc.players) || []).concat((calc && calc.picks) || []);
+  for (const a of all) {
+    if (!a || a.value == null || !a.owner_id) continue;
+    const name = names[String(a.owner_id)] || a.owner || String(a.owner_id);
+    if (!by.has(name)) by.set(name, []);
+    by.get(name).push(a);
+  }
+  by.forEach((bag) => bag.sort((x, y) => assetVal(y) - assetVal(x)));
+  return by;
+}
+
+/** Same cuts as homeDeskProfile / deskCuts — SF dynasty book. */
+function bagProfile(bag) {
+  const byPos = { QB: [], RB: [], WR: [], TE: [] };
+  for (const a of bag || []) {
+    const v = assetVal(a);
+    if (v < 0) continue;
+    const pos = assetPos(a);
+    if (byPos[pos]) byPos[pos].push(v);
+  }
+  const holes = [];
+  const thin = [];
+  const surplus = [];
+  const deep = [];
+  for (const pos of ["QB", "RB", "WR", "TE"]) {
+    const vs = (byPos[pos] || []).filter((x) => x >= DESK_START);
+    const mid = (byPos[pos] || []).filter((x) => x >= DESK_MID);
+    const slots = DESK_SLOTS[pos];
+    const extras = Math.max(0, mid.length - slots);
+    if (vs.length < slots) holes.push(pos);
+    if (extras >= 1) surplus.push(pos);
+    if (extras >= 2) deep.push(pos);
+    if (vs.length <= Math.max(0, slots - 1)) thin.push(pos);
+  }
+  return { holes, thin, surplus, deep };
+}
+
+function bagExtras(bag, pos) {
+  const slots = DESK_SLOTS[pos] || 1;
+  return (bag || []).filter((a) => assetPos(a) === pos && assetVal(a) >= DESK_MID)
+    .sort((a, b) => assetVal(b) - assetVal(a))
+    .slice(slots);
+}
+
+/**
+ * Obvious cuff trade only: Sunday starter, other-seat owned beneficiary,
+ * hurt seat short that pos after the loss, cuff owner can spare it,
+ * leftover vs cuff in the 0.55–1.8 book band. Unowned = no trade.
+ */
+function proposeTrade(hurt, beneficiaries, bags) {
+  if (!hurt || hurt.slot !== "starter" || !hurt.owner) return null;
+  const pos = String(hurt.pos || "").toUpperCase();
+  if (!SKILL.has(pos)) return null;
+  const myBag = bags.get(hurt.owner) || [];
+  if (!myBag.length) return null;
+  const without = myBag.filter((a) => String(a.sleeper_id) !== String(hurt.id));
+  const myProf = bagProfile(without);
+  if (!myProf.holes.includes(pos) && !myProf.thin.includes(pos)) return null;
+  const owned = (beneficiaries || []).filter((b) => b.owned && b.owner && b.owner !== hurt.owner);
+  if (!owned.length) return null;
+  const givePos = ["QB", "RB", "WR", "TE"].filter((p) => (
+    p !== pos && (myProf.surplus.includes(p) || myProf.deep.includes(p))
+  ));
+  const leftovers = givePos.flatMap((p) => bagExtras(without, p));
+  if (!leftovers.length) return null;
+  let best = null;
+  for (const cuff of owned) {
+    const cuffAsset = (bags.get(cuff.owner) || []).find((a) => String(a.sleeper_id) === String(cuff.id));
+    const cuffVal = assetVal(cuffAsset);
+    if (cuffVal < DESK_MID) continue;
+    const theirBag = bags.get(cuff.owner) || [];
+    const theirProf = bagProfile(theirBag);
+    if (!theirProf.surplus.includes(pos) && !theirProf.deep.includes(pos)) continue;
+    const theirBest = theirBag.find((a) => assetPos(a) === pos);
+    if (theirBest && String(theirBest.sleeper_id) === String(cuff.id)) continue;
+    for (const left of leftovers) {
+      const lv = assetVal(left);
+      if (lv < DESK_MID) continue;
+      const ratio = lv / cuffVal;
+      if (ratio < TRADE_LO || ratio > TRADE_HI) continue;
+      const dist = Math.abs(1 - ratio);
+      if (!best || dist < best.dist) {
+        best = {
+          dist,
+          trade: {
+            send: left.name,
+            get: cuff.name,
+            get_owner: cuff.owner,
+            line: hurt.owner + " send " + left.name + " · get " + cuff.name + " from " + cuff.owner,
+          },
+        };
+      }
+    }
+  }
+  return best ? best.trade : null;
+}
+
 function irScore(row) {
   let s = 0;
   if (row.slot === "starter") s += 400;
@@ -183,6 +369,9 @@ function main() {
   const since = addDays(asOf, -1);
   const leagueName = (leagues[0] && leagues[0].name) || "League";
   const { byPid, byRoster } = rosterIndex(rosters, members);
+  const names = nameByUser(members);
+  const depthGroups = depthLists(playersNfl);
+  const bags = bagsByOwner(calc, names);
 
   const trades = tape
     .filter((row) => row && String(row.date || "") >= since)
@@ -204,20 +393,26 @@ function main() {
     const status = String((p && p.injury_status) || "").toUpperCase();
     if (!IR_STATUSES.has(status)) continue;
     const seat = byPid.get(String(id)) || { owner: "", slot: "bench" };
-    board.push(attachCuff({
+    const pos = p.pos || "";
+    const team = nflTeamOf(id, playersNfl, injury);
+    const row = attachCuff({
       id,
       name: p.name || id,
       owner: seat.owner,
       status,
-      pos: p.pos || "",
+      pos,
       slot: seat.slot,
       value: valueById.get(String(id)) || 0,
-    }, cuffByStarter.get(String(id))));
+    }, cuffByStarter.get(String(id)));
+    row.beneficiaries = beneficiariesFor(id, team, pos, depthGroups, byPid);
+    row.trade = proposeTrade(row, row.beneficiaries, bags);
+    board.push(row);
   }
   board.sort((a, b) => irScore(b) - irScore(a)
     || String(a.name).localeCompare(String(b.name)));
   const strip = (row) => {
-    const { value: _v, ...rest } = row;
+    const { value: _v, trade, ...rest } = row;
+    if (trade && trade.line) rest.trade = trade;
     return rest;
   };
   const out = board.filter((p) => p.status === "OUT").map(strip);
@@ -254,6 +449,8 @@ function main() {
     ir: letter.ir_n,
     other: letter.other_n,
     quiet: letter.quiet,
+    benef: board.filter((p) => (p.beneficiaries || []).length).length,
+    ideas: board.filter((p) => p.trade && p.trade.line).length,
   }));
 }
 

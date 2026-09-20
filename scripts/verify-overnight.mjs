@@ -1,9 +1,11 @@
 import { chromium } from "/tmp/node_modules/playwright/index.mjs";
 import fs from "node:fs";
 
-const shotDir = "/opt/cursor/artifacts/screenshots";
+const shotDir = "/tmp/overnight-shots";
 fs.mkdirSync(shotDir, { recursive: true });
-const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:55494";
+const pubDir = "/opt/cursor/artifacts/screenshots";
+try { fs.mkdirSync(pubDir, { recursive: true }); } catch (e) { /* optional */ }
+const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:8765";
 
 const browser = await chromium.launch({
   executablePath: "/usr/bin/google-chrome",
@@ -116,6 +118,12 @@ try {
 } finally {
   await browser.close();
 }
+
+try {
+  for (const name of fs.readdirSync(shotDir)) {
+    fs.copyFileSync(`${shotDir}/${name}`, `${pubDir}/${name}`);
+  }
+} catch (e) { /* artifacts store can EIO */ }
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log("PASS overnight letter");

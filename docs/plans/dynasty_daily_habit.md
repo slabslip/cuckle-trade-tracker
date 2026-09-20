@@ -332,11 +332,16 @@ weighs the next two drafts (`as_of` year + 1 / + 2) hardest — 2027/2028
 firsts now, with the nearer year a touch heavier — then far picks at a
 discount. A historic near chest can print 8; two far leftovers cannot pad
 to 10. Team grade uses a window mix
-(win-now leans roster, tank leans that chest) on unrounded scores. 8–9 is rare.
+(win-now leans roster, tank leans that chest) on unrounded scores, then a
+fixed stretch away from 6 so 4 and 5 can print without a league curve.
+A real positional hole pulls the team grade harder than the window does.
+8–9 is rare.
 Two seats may share a grade — there is no league curve. Archetype is
 Dual elite QB / Elite QB / Dual elite [pos] else the seat-direction label.
-Outlook and C↔R come from the bag + chest window (tank / rebuild / reload /
-compete soon / win now), not only `seat-direction.json`. An aging desk
+Outlook and C↔R come from the bag + chest window (hard tank / tank /
+rebuild / reload / climbing / compete soon / win now / win now · reload),
+not only `seat-direction.json`. C↔R is continuous from those facts so
+four win-now desks do not share one tick. An aging desk
 stays win-now with a modest 27/28 chest; missing ages do not vote.
 Equal-value players sort by name / id so the same bag reprints.
 `scripts/loop-team-analyzer.mjs` reprints all ten seats across two dozen

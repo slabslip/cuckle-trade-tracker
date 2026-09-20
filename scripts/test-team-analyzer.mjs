@@ -59,8 +59,9 @@ need(fnSrc(page, "teamAnalyzerDraftParts").includes("teamAnalyzerValueGrade")
   && fnSrc(page, "teamAnalyzerDraft").includes("teamAnalyzerDraftRaw")
   && fnSrc(page, "teamAnalyzerHtml").includes("next two drafts weigh most"),
   "draft capital must weigh the next two drafts, not a 12-slot pad");
-need(fnSrc(page, "teamAnalyzerScale").includes('kind === "tank"')
-  && fnSrc(page, "teamAnalyzerScale").includes("return 88"),
+need(fnSrc(page, "teamAnalyzerScale").includes('kind === "hard-tank"')
+  && fnSrc(page, "teamAnalyzerScale").includes("6.3 - pos")
+  && fnSrc(page, "teamAnalyzerWindow").includes("win-now-reload"),
   "C↔R bar must map tank / win-now from the bag and chest, not only seat-direction");
 need(fnSrc(page, "teamAnalyzerCard").includes("members")
   && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile(")
@@ -181,7 +182,8 @@ need(gKing.WR >= 7, "KingHenry WR core must grade as starters");
 need(draftOf(truman) >= draftOf(king), "Truman pick chest must grade at or above KingHenry");
 need(draftOf(arae) >= 7, "ARae pick chest must grade as historic draft capital");
 need(fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
-  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.75 + hole * 0.25")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("1 - hw")
+  && fnSrc(page, "teamAnalyzerStretch").includes("1.45")
   && page.includes("starter 3 · stud 7.5 · elite 10"),
   "analyzer scale must keep starter=3 / stud=7.5 / elite=10 with a weakest-slot pull");
 

@@ -6,8 +6,8 @@ fs.mkdirSync(shotDir, { recursive: true });
 const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:8765";
 
 const seats = [
-  { name: "TrumanCooper", uid: "458342725222133760", draft: 5, overall: 5, label: "Rebuild", note: "13 picks" },
-  { name: "ARae", uid: "458004578168729600", draft: 8, overall: 6, label: "Tank", note: "19 picks" },
+  { name: "TrumanCooper", uid: "458342725222133760", draft: 5, overall: 4, label: "Rebuild", note: "13 picks" },
+  { name: "ARae", uid: "458004578168729600", draft: 8, overall: 6, label: "Hard tank", note: "19 picks" },
   { name: "TipsUp", uid: "457784547094818816", draft: 0, overall: 7, label: "Win now", note: "2 picks" },
 ];
 

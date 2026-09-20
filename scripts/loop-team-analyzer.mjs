@@ -88,11 +88,26 @@ function gradesOf(bag, slots, cuts) {
   });
   return grades;
 }
-function posBlendOf(bag, slots, cuts) {
+function posBlendOf(bag, slots, cuts, holeW) {
   const scores = ["QB", "RB", "WR", "TE"].map((pos) => posScoreOf(bag, pos, slots, cuts));
   const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
   const hole = Math.min(...scores);
-  return mean * 0.75 + hole * 0.25;
+  const hw = holeW == null ? 0.25 : holeW;
+  return mean * (1 - hw) + hole * hw;
+}
+function holeOf(bag, slots, cuts) {
+  return Math.min(
+    posScoreOf(bag, "QB", slots, cuts),
+    posScoreOf(bag, "RB", slots, cuts),
+    posScoreOf(bag, "WR", slots, cuts),
+    posScoreOf(bag, "TE", slots, cuts),
+  );
+}
+function stretchOf(n) {
+  const x = Number(n) || 0;
+  const c = 6.15;
+  if (x >= c) return c + (x - c) * 1.45;
+  return c + (x - c) * 2.05;
 }
 function posOf(p) {
   return String((p && p.pos) || "").toUpperCase();
@@ -214,28 +229,35 @@ function windowFrom(bag, picks, slots, cuts) {
     if (Number.isFinite(age) && age >= 27 && val >= c.start) aging += 1;
     if (Number.isFinite(age) && age < 25.5 && val >= c.stud) young += 1;
   });
+  const hole = holeOf(bag, slots, cuts);
+  if (pos <= 6.25 && near >= 8) return "hard-tank";
   if (pos <= 6.25 && near >= 6.2) return "tank";
   if (pos <= 5.55 && near >= 4.8) return "rebuild";
+  if (pos >= 6.35 && aging >= 3 && near < 5 && hole <= 5.2) return "win-now-reload";
   if (pos >= 6.35 && aging >= 3 && near < 5) return "win-now";
-  if (pos >= 6.35 && young >= 3 && near >= 2.2) return "contend-soon";
+  if (pos >= 6.35 && young >= 3 && near >= 3.8) return "contend-soon";
+  if (pos >= 6.35 && young >= 3 && near >= 2.2) return "climbing";
   if (pos >= 6.35 && young >= 2 && aging <= 2 && near <= 2.6) return "tween";
   if (pos >= 6.35 && aging >= 3 && near <= 2.6) return "win-now";
-  if (pos >= 6.2 && near >= 3.5 && young >= 1) return "contend-soon";
+  if (pos >= 6.2 && near >= 3.5 && young >= 1) return "climbing";
   return "tween";
 }
 function mixOf(kind) {
+  if (kind === "hard-tank") return [0.5, 0.1, 0.4];
   if (kind === "tank") return [0.52, 0.1, 0.38];
-  if (kind === "rebuild") return [0.58, 0.12, 0.3];
-  if (kind === "win-now") return [0.88, 0.1, 0.02];
-  if (kind === "contend-soon") return [0.7, 0.12, 0.18];
-  return [0.66, 0.14, 0.2];
+  if (kind === "rebuild") return [0.56, 0.12, 0.32];
+  if (kind === "win-now") return [0.86, 0.11, 0.03];
+  if (kind === "win-now-reload") return [0.8, 0.14, 0.06];
+  if (kind === "contend-soon") return [0.66, 0.13, 0.21];
+  if (kind === "climbing") return [0.7, 0.14, 0.16];
+  return [0.64, 0.16, 0.2];
 }
 function overallFrom(bag, picks, slots, cuts, uid) {
-  const pos = posBlendOf(bag, slots, cuts);
+  const pos = posBlendOf(bag, slots, cuts, 0.32);
   const depth = depthOf(bag, slots, cuts);
   const draft = draftFromRaw(picks || [], cuts);
   const mix = mixOf(windowFrom(bag, picks || [], slots, cuts));
-  return round10(pos * mix[0] + depth.raw * mix[1] + draft * mix[2]);
+  return round10(stretchOf(pos * mix[0] + depth.raw * mix[1] + draft * mix[2]));
 }
 function overallOf(bag, uid, slots, cuts) {
   return overallFrom(bag, picksOf(uid), slots, cuts, uid);
@@ -353,11 +375,11 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
     && king.window === "win-now"
     && tips.window === "win-now"
     && ted.window === "win-now"
-    && ners.window === "win-now"
-    && berg.window === "contend-soon"
+    && ners.window === "win-now-reload"
+    && berg.window === "climbing"
     && shremp.window === "contend-soon"
     && ducks.window === "tween",
-    "KingHenry RB beats ARae; win-now / compete-soon / tween windows match the bags");
+    "KingHenry RB beats ARae; win-now / reload / climbing / compete-soon match the bags");
 }
 
 // 9 Team grade is the published window mix, not a new value formula
@@ -388,7 +410,7 @@ loop(9, seats.every((s) => {
     && arae && gumby && truman
     && arae.draft >= gumby.draft
     && gumby.draft >= truman.draft
-    && arae.window === "tank"
+    && arae.window === "hard-tank"
     && gumby.window === "tank"
     && truman.window === "rebuild"
     && fnSrc(page, "teamAnalyzerDepth").includes("of 8 backup spots") === false
@@ -413,7 +435,10 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerPos") === fnSrc(gen, "teamAnalyzerPos")
   && fnSrc(page, "teamAnalyzerMoves") === fnSrc(gen, "teamAnalyzerMoves")
   && fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
-  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.75 + hole * 0.25")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("1 - hw")
+  && fnSrc(page, "teamAnalyzerStretch") === fnSrc(gen, "teamAnalyzerStretch")
+  && fnSrc(page, "teamAnalyzerMix") === fnSrc(gen, "teamAnalyzerMix")
+  && fnSrc(page, "teamAnalyzerHole") === fnSrc(gen, "teamAnalyzerHole")
   && fnSrc(page, "teamAnalyzerAssetCmp") === fnSrc(gen, "teamAnalyzerAssetCmp")
   && fnSrc(page, "teamAnalyzerPickWeight").includes("1.55")
   && fnSrc(page, "teamAnalyzerWindow").includes("Number.isFinite(age)")
@@ -449,10 +474,10 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   const years = nearYears();
   const elitePicks = Array.from({ length: 8 }, () => ({ value: 8800, year: years.near1, round: 1 }));
   loop(12, JSON.stringify(a) === JSON.stringify(b) && sameOverall
-    && truman && truman.overall <= 6
+    && truman && truman.overall <= 5
     && Math.max(...overs) <= 8
-    && Math.min(...overs) <= 5
-    && (Math.max(...overs) - Math.min(...overs)) >= 2
+    && Math.min(...overs) <= 4
+    && (Math.max(...overs) - Math.min(...overs)) >= 3
     && seats.every((s) => s.overall < 8 || s.overall <= 8)
     && overallFrom(starters, [], DESK_SLOTS, null, "synth-start") <= 3
     && overallFrom(elites, elitePicks, DESK_SLOTS, null, "synth-elite") >= 7,
@@ -574,12 +599,15 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
 
 {
   const winFn = fnSrc(page, "teamAnalyzerWindow");
-  loop(20, winFn.indexOf('return "tank"') < winFn.indexOf('return "rebuild"')
+  loop(20, winFn.indexOf('return "hard-tank"') < winFn.indexOf('return "tank"')
+    && winFn.indexOf('return "tank"') < winFn.indexOf('return "rebuild"')
     && winFn.indexOf("aging >= 3 && near < 5") < winFn.indexOf("young >= 3")
+    && winFn.includes("win-now-reload")
+    && winFn.includes("climbing")
     && winFn.includes("seatDirection") === false
     && winFn.includes("dir.") === false
     && winFn === fnSrc(gen, "teamAnalyzerWindow"),
-    "window order is tank / rebuild / aging-now / young, never seat-direction");
+    "window order is hard-tank / tank / rebuild / aging-now / young, never seat-direction");
 }
 
 {
@@ -595,7 +623,7 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   loop(21, tips && arae
     && Math.abs(winNowFat - winNowEmpty) <= 1
     && (tankFat - tankEmpty) >= 2
-    && mixOf("win-now")[2] === 0.02
+    && mixOf("win-now")[2] === 0.03
     && mixOf("tank")[2] === 0.38,
     "win-now team grade barely moves with picks; a tank chest lifts the overall");
 }

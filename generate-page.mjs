@@ -4440,7 +4440,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "analyzerloops20260920015000";
+    const DATA_V = "analyzerspread20260920015500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26355,10 +26355,12 @@ const html = `<!DOCTYPE html>
 
     function teamAnalyzerOutlook(kind) {
       if (kind === "win-now") return ["Contend", "Contend", "Rebuild"];
+      if (kind === "win-now-reload") return ["Contend", "Reload", "Rebuild"];
       if (kind === "contend-soon") return ["Reload", "Contend", "Contend"];
+      if (kind === "climbing") return ["Reload", "Reload", "Contend"];
       if (kind === "tween") return ["Reload", "Contend", "Rebuild"];
       if (kind === "rebuild") return ["Rebuild", "Reload", "Contend"];
-      if (kind === "tank") return ["Rebuild", "Rebuild", "Contend"];
+      if (kind === "tank" || kind === "hard-tank") return ["Rebuild", "Rebuild", "Contend"];
       return ["Rebuild", "Reload", "Contend"];
     }
 
@@ -26413,13 +26415,30 @@ const html = `<!DOCTYPE html>
       return grades;
     }
 
-    function teamAnalyzerPosBlend(bag) {
+    function teamAnalyzerPosBlend(bag, holeW) {
       const scores = ["QB", "RB", "WR", "TE"].map(function (pos) {
         return teamAnalyzerPosScore(bag, pos);
       });
       const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
       const hole = Math.min(scores[0], scores[1], scores[2], scores[3]);
-      return mean * 0.75 + hole * 0.25;
+      const hw = holeW == null ? 0.25 : holeW;
+      return mean * (1 - hw) + hole * hw;
+    }
+
+    function teamAnalyzerHole(bag) {
+      return Math.min(
+        teamAnalyzerPosScore(bag, "QB"),
+        teamAnalyzerPosScore(bag, "RB"),
+        teamAnalyzerPosScore(bag, "WR"),
+        teamAnalyzerPosScore(bag, "TE"),
+      );
+    }
+
+    function teamAnalyzerStretch(n) {
+      const x = Number(n) || 0;
+      const c = 6.15;
+      if (x >= c) return c + (x - c) * 1.45;
+      return c + (x - c) * 2.05;
     }
 
     function teamAnalyzerDepth(bag) {
@@ -26499,6 +26518,7 @@ const html = `<!DOCTYPE html>
 
     function teamAnalyzerWindow(bag, uid) {
       const pos = teamAnalyzerPosBlend(bag);
+      const hole = teamAnalyzerHole(bag);
       const near = teamAnalyzerDraftParts(uid).nearRaw;
       const cuts = deskCuts();
       let aging = 0;
@@ -26509,45 +26529,81 @@ const html = `<!DOCTYPE html>
         if (Number.isFinite(age) && age >= 27 && val >= cuts.start) aging += 1;
         if (Number.isFinite(age) && age < 25.5 && val >= cuts.stud) young += 1;
       });
+      if (pos <= 6.25 && near >= 8) return "hard-tank";
       if (pos <= 6.25 && near >= 6.2) return "tank";
       if (pos <= 5.55 && near >= 4.8) return "rebuild";
+      if (pos >= 6.35 && aging >= 3 && near < 5 && hole <= 5.2) return "win-now-reload";
       if (pos >= 6.35 && aging >= 3 && near < 5) return "win-now";
-      if (pos >= 6.35 && young >= 3 && near >= 2.2) return "contend-soon";
+      if (pos >= 6.35 && young >= 3 && near >= 3.8) return "contend-soon";
+      if (pos >= 6.35 && young >= 3 && near >= 2.2) return "climbing";
       if (pos >= 6.35 && young >= 2 && aging <= 2 && near <= 2.6) return "tween";
       if (pos >= 6.35 && aging >= 3 && near <= 2.6) return "win-now";
-      if (pos >= 6.2 && near >= 3.5 && young >= 1) return "contend-soon";
+      if (pos >= 6.2 && near >= 3.5 && young >= 1) return "climbing";
       return "tween";
     }
 
     function teamAnalyzerWindowLabel(kind) {
+      if (kind === "hard-tank") return "Hard tank";
       if (kind === "tank") return "Tank";
       if (kind === "rebuild") return "Rebuild";
       if (kind === "win-now") return "Win now";
+      if (kind === "win-now-reload") return "Win now · reload";
       if (kind === "contend-soon") return "Compete soon";
+      if (kind === "climbing") return "Climbing";
       return "Reload";
     }
 
+    function teamAnalyzerMix(kind) {
+      if (kind === "hard-tank") return [0.5, 0.1, 0.4];
+      if (kind === "tank") return [0.52, 0.1, 0.38];
+      if (kind === "rebuild") return [0.56, 0.12, 0.32];
+      if (kind === "win-now") return [0.86, 0.11, 0.03];
+      if (kind === "win-now-reload") return [0.8, 0.14, 0.06];
+      if (kind === "contend-soon") return [0.66, 0.13, 0.21];
+      if (kind === "climbing") return [0.7, 0.14, 0.16];
+      return [0.64, 0.16, 0.2];
+    }
+
     function teamAnalyzerOverall(bag, uid) {
-      const pos = teamAnalyzerPosBlend(bag);
+      const pos = teamAnalyzerPosBlend(bag, 0.32);
       const depth = teamAnalyzerDepth(bag);
       const d = depth && depth.raw != null ? depth.raw : 0;
       const draft = teamAnalyzerDraftRaw(uid);
       const kind = teamAnalyzerWindow(bag, uid);
-      let mix = [0.66, 0.14, 0.2];
-      if (kind === "tank") mix = [0.52, 0.1, 0.38];
-      else if (kind === "rebuild") mix = [0.58, 0.12, 0.3];
-      else if (kind === "win-now") mix = [0.88, 0.1, 0.02];
-      else if (kind === "contend-soon") mix = [0.7, 0.12, 0.18];
-      return teamAnalyzerRound(pos * mix[0] + d * mix[1] + draft * mix[2]);
+      const mix = teamAnalyzerMix(kind);
+      return teamAnalyzerRound(teamAnalyzerStretch(pos * mix[0] + d * mix[1] + draft * mix[2]));
     }
 
-    function teamAnalyzerScale(kind) {
-      if (kind === "win-now") return 18;
-      if (kind === "contend-soon") return 32;
-      if (kind === "tween") return 52;
-      if (kind === "rebuild") return 72;
-      if (kind === "tank") return 88;
-      return 52;
+    function teamAnalyzerScale(kind, bag, uid) {
+      const pos = bag ? teamAnalyzerPosBlend(bag) : 6.3;
+      const hole = bag ? teamAnalyzerHole(bag) : 5.8;
+      const near = uid != null ? teamAnalyzerDraftParts(uid).nearRaw : 3;
+      const cuts = deskCuts();
+      let aging = 0;
+      let young = 0;
+      if (bag) {
+        teamAnalyzerDesk(bag).forEach(function (p) {
+          const age = Number(p && p.age);
+          const val = calcValueNum(p);
+          if (Number.isFinite(age) && age >= 27 && val >= cuts.start) aging += 1;
+          if (Number.isFinite(age) && age < 25.5 && val >= cuts.stud) young += 1;
+        });
+      }
+      let s = 48;
+      s += (6.3 - pos) * 11;
+      s += (near - 3) * 5.5;
+      s -= aging * 3.2;
+      s += young * 2.4;
+      s += (5.8 - hole) * 2;
+      if (kind === "hard-tank") s = Math.max(s, 86);
+      else if (kind === "tank") s = Math.max(s, 74);
+      else if (kind === "rebuild") s = Math.min(Math.max(s, 62), 78);
+      else if (kind === "win-now") s = Math.min(s, 20);
+      else if (kind === "win-now-reload") s = Math.min(Math.max(s, 26), 38);
+      else if (kind === "contend-soon") s = Math.min(Math.max(s, 24), 36);
+      else if (kind === "climbing") s = Math.min(Math.max(s, 34), 46);
+      else s = Math.min(Math.max(s, 46), 60);
+      return Math.max(10, Math.min(92, Math.round(s)));
     }
 
     function teamAnalyzerCard(uid, name) {
@@ -26570,7 +26626,7 @@ const html = `<!DOCTYPE html>
         grades: grades,
         draft: draft,
         overall: teamAnalyzerOverall(bag, uid),
-        scale: teamAnalyzerScale(kind),
+        scale: teamAnalyzerScale(kind, bag, uid),
         label: teamAnalyzerWindowLabel(kind),
         why: (dir && dir.why) || "",
         pick_n: teamAnalyzerPicks(uid).length,

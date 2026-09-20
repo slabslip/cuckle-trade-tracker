@@ -165,11 +165,10 @@ function inlineScriptParses(src) {
     return false;
   }
 }
-loop(10, page.includes('const DATA_V = "analyzersave20260919231500"')
-  && html.includes('const DATA_V = "analyzersave20260919231500"')
-  && sw.includes('chuckle-shell-v303-analyzer-save')
+loop(10, page.includes('const DATA_V = "claimdrop20260920013500"')
+  && html.includes('const DATA_V = "claimdrop20260920013500"')
+  && sw.includes('chuckle-shell-v308-claim-drop')
   && !sw.includes("chuckle-shell-v283-list-share")
-  && !sw.includes("chuckle-shell-v282-finish-one")
   && inlineScriptParses(html),
   "DATA_V and SW cache moved so Safari cannot keep the old net copy");
 

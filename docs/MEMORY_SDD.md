@@ -348,7 +348,10 @@ actual lines plus the URL (`slice=` or `who=`). A Career net seat share
 includes that seat’s year ledger (entry, place money, sacko, MP).
 Signed-in members with a claimed seat land on the tile. Anyone without a
 username/password or a claimed seat is gated: create account, then claim
-one of the **remaining** (unclaimed) teams. `honorPendingDataTile()` waits
+one of the **remaining** (unclaimed) teams. A group-text tile URL is **not**
+a seat invite — `who=` names the shared line, not the clicker. Claim guess
+uses invite seat / username only. After they confirm their team, welcome
+offers **Open the shared view**. `honorPendingDataTile()` waits
 for `dataTileSeatReady()`, opens the same door, and applies `slice` / `who`
 (Career net `who=` opens the year ledger). Show all clears the slice.
 

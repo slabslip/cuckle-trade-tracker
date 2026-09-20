@@ -15,9 +15,9 @@
         "ties": 0,
         "fpts": 2109.48,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 5,
-        "rs_fpts": 1665.62
+        "rs_fpts": 1665.62,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 11,
@@ -30,9 +30,9 @@
         "ties": 0,
         "fpts": 1861.64,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 6,
-        "rs_fpts": 1498.34
+        "rs_fpts": 1498.34,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 1,
@@ -45,9 +45,9 @@
         "ties": 0,
         "fpts": 1798.92,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 1,
-        "rs_fpts": 1532.18
+        "rs_fpts": 1532.18,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 12,
@@ -60,9 +60,9 @@
         "ties": 0,
         "fpts": 1654.88,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 2,
-        "rs_fpts": 1428.96
+        "rs_fpts": 1428.96,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 9,
@@ -75,9 +75,9 @@
         "ties": 0,
         "fpts": 1620.88,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 3,
-        "rs_fpts": 1517.4
+        "rs_fpts": 1517.4,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 10,
@@ -90,9 +90,9 @@
         "ties": 0,
         "fpts": 1601.72,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 4,
-        "rs_fpts": 1453.42
+        "rs_fpts": 1453.42,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 5,
@@ -105,9 +105,9 @@
         "ties": 0,
         "fpts": 1401.38,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 7,
-        "rs_fpts": 1401.38
+        "rs_fpts": 1401.38,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 3,
@@ -120,9 +120,9 @@
         "ties": 0,
         "fpts": 1420.12,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 8,
-        "rs_fpts": 1420.12
+        "rs_fpts": 1420.12,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 4,
@@ -135,9 +135,9 @@
         "ties": 0,
         "fpts": 1402.12,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 9,
-        "rs_fpts": 1402.12
+        "rs_fpts": 1402.12,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 2,
@@ -150,9 +150,9 @@
         "ties": 0,
         "fpts": 1421.92,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 10,
-        "rs_fpts": 1421.92
+        "rs_fpts": 1421.92,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 6,
@@ -165,9 +165,9 @@
         "ties": 0,
         "fpts": 1198.38,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 11,
-        "rs_fpts": 1198.38
+        "rs_fpts": 1198.38,
+        "fpts_from": "regular+hunt"
       },
       {
         "roster_id": 7,
@@ -180,9 +180,9 @@
         "ties": 0,
         "fpts": 1331.56,
         "season": "2025",
-        "fpts_from": "regular+hunt",
         "rs_place": 12,
-        "rs_fpts": 1331.56
+        "rs_fpts": 1331.56,
+        "fpts_from": "regular+hunt"
       }
     ]
   }

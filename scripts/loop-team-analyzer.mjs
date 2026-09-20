@@ -92,7 +92,7 @@ function posBlendOf(bag, slots, cuts) {
   const scores = ["QB", "RB", "WR", "TE"].map((pos) => posScoreOf(bag, pos, slots, cuts));
   const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
   const hole = Math.min(...scores);
-  return mean * 0.7 + hole * 0.3;
+  return mean * 0.75 + hole * 0.25;
 }
 function posOf(p) {
   return String((p && p.pos) || "").toUpperCase();
@@ -127,12 +127,43 @@ function depthOf(bag, slots, cuts) {
     startable: startable,
   };
 }
+function nearYears() {
+  const y = Number(String(book.as_of || "").slice(0, 4));
+  const base = Number.isFinite(y) && y >= 2020 ? y : 2026;
+  return { near1: base + 1, near2: base + 2 };
+}
+function pickYear(p) {
+  const n = Number(p && (p.year != null ? p.year : p.season));
+  return Number.isFinite(n) ? n : 0;
+}
+function pickWeight(p) {
+  const years = nearYears();
+  const y = pickYear(p);
+  const r = Number(p && p.round) || 99;
+  const near = y === years.near1 || y === years.near2;
+  let yw = 0.45;
+  if (y === years.near1) yw = 1.55;
+  else if (y === years.near2) yw = 1.35;
+  else if (y === years.near2 + 1) yw = 0.45;
+  else if (y >= years.near2 + 2) yw = 0.3;
+  let rw = 1;
+  if (r === 1) rw = near ? 1.35 : 1;
+  else if (r === 2) rw = 0.8;
+  else if (r === 3) rw = 0.4;
+  else rw = 0.22;
+  return yw * rw;
+}
 function draftFromRaw(picks, cuts) {
-  const ordered = (picks || []).slice().sort((a, b) => calcValueNum(b) - calcValueNum(a));
-  const need = 12;
-  let pts = 0;
-  for (let i = 0; i < need; i++) pts += valueGrade(ordered[i] ? calcValueNum(ordered[i]) : -1, cuts);
-  return pts / need;
+  const years = nearYears();
+  let nearPts = 0;
+  let farPts = 0;
+  (picks || []).forEach((p) => {
+    const y = pickYear(p);
+    const g = valueGrade(calcValueNum(p), cuts);
+    if (y === years.near1 || y === years.near2) nearPts += Math.min(10, g * pickWeight(p));
+    else if (y >= years.near2 + 1) farPts += Math.min(10, g);
+  });
+  return Math.min(10, nearPts / 9) * 0.88 + Math.min(10, farPts / 8) * 0.12;
 }
 function draftFrom(picks, cuts) {
   return round10(draftFromRaw(picks, cuts));
@@ -140,14 +171,61 @@ function draftFrom(picks, cuts) {
 function draftOf(uid, cuts) {
   return draftFrom(picksOf(uid), cuts);
 }
-function overallFrom(bag, picks, slots, cuts) {
+function deskOf(bag, slots) {
+  const s = slots || DESK_SLOTS;
+  const out = [];
+  ["QB", "RB", "WR", "TE"].forEach((pos) => {
+    bag.filter((p) => posOf(p) === pos).sort((a, b) => calcValueNum(b) - calcValueNum(a))
+      .slice(0, s[pos] || 1).forEach((p) => out.push(p));
+  });
+  return out;
+}
+function windowOf(bag, uid, slots, cuts) {
+  const pos = posBlendOf(bag, slots, cuts);
+  const years = nearYears();
+  const picks = picksOf(uid);
+  let nearPts = 0;
+  picks.forEach((p) => {
+    const y = pickYear(p);
+    if (y === years.near1 || y === years.near2) {
+      nearPts += Math.min(10, valueGrade(calcValueNum(p), cuts) * pickWeight(p));
+    }
+  });
+  const near = Math.min(10, nearPts / 9);
+  const c = cuts || { start: DESK_START, stud: DESK_STUD };
+  const desk = deskOf(bag, slots);
+  let aging = 0;
+  let young = 0;
+  desk.forEach((p) => {
+    const age = Number(p && p.age);
+    const val = calcValueNum(p);
+    if (age >= 27 && val >= c.start) aging += 1;
+    if (age < 25.5 && val >= c.stud) young += 1;
+  });
+  if (pos <= 6.25 && near >= 6.2) return "tank";
+  if (pos <= 5.55 && near >= 4.8) return "rebuild";
+  if (pos >= 6.35 && young >= 3 && near >= 2.2) return "contend-soon";
+  if (pos >= 6.35 && young >= 2 && aging <= 2 && near <= 2.6) return "tween";
+  if (pos >= 6.35 && near <= 2.6 && (aging >= 3 || young <= 1)) return "win-now";
+  if (pos >= 6.2 && near >= 3.5 && young >= 1) return "contend-soon";
+  return "tween";
+}
+function mixOf(kind) {
+  if (kind === "tank") return [0.52, 0.1, 0.38];
+  if (kind === "rebuild") return [0.58, 0.12, 0.3];
+  if (kind === "win-now") return [0.88, 0.1, 0.02];
+  if (kind === "contend-soon") return [0.7, 0.12, 0.18];
+  return [0.66, 0.14, 0.2];
+}
+function overallFrom(bag, picks, slots, cuts, uid) {
   const pos = posBlendOf(bag, slots, cuts);
   const depth = depthOf(bag, slots, cuts);
   const draft = draftFromRaw(picks || [], cuts);
-  return round10(pos * 0.7 + depth.raw * 0.15 + draft * 0.15);
+  const mix = mixOf(windowOf(bag, uid || "", slots, cuts));
+  return round10(pos * mix[0] + depth.raw * mix[1] + draft * mix[2]);
 }
 function overallOf(bag, uid, slots, cuts) {
-  return overallFrom(bag, picksOf(uid), slots, cuts);
+  return overallFrom(bag, picksOf(uid), slots, cuts, uid);
 }
 
 const seats = members.map((m) => ({
@@ -158,7 +236,13 @@ const seats = members.map((m) => ({
   const grades = gradesOf(s.bag);
   const depth = depthOf(s.bag);
   const draft = draftOf(s.uid);
-  return Object.assign(s, { grades: grades, depth: depth, draft: draft, overall: overallOf(s.bag, s.uid) });
+  return Object.assign(s, {
+    grades: grades,
+    depth: depth,
+    draft: draft,
+    window: windowOf(s.bag, s.uid),
+    overall: overallOf(s.bag, s.uid),
+  });
 });
 
 // 1 Repeatability — same bag, same numbers, twice
@@ -242,41 +326,62 @@ loop(3, JSON.stringify(gradesOf([])) === JSON.stringify({ QB: 0, RB: 0, WR: 0, T
   const king = seats.find((s) => s.name === "KingHenryXXVI");
   const arae = seats.find((s) => s.name === "ARae");
   const tips = seats.find((s) => s.name === "TipsUp");
-  loop(8, king && arae && tips
+  const ted = seats.find((s) => s.name === "TedCumberbatch");
+  const ners = seats.find((s) => s.name === "SF69erss");
+  const berg = seats.find((s) => s.name === "bigjberg");
+  const shremp = seats.find((s) => s.name === "BubbaCuckShremp");
+  const ducks = seats.find((s) => s.name === "DarkWingDucks2023");
+  loop(8, king && arae && tips && ted && ners && berg && shremp && ducks
     && king.grades.RB > arae.grades.RB
     && tips.draft < arae.draft
     && king.grades.WR >= 7
-    && arae.draft >= 4
-    && tips.draft <= 2,
-    "KingHenry RB beats ARae; TipsUp thin chest grades under ARae firsts");
+    && arae.draft >= 7
+    && tips.draft <= 1
+    && king.window === "win-now"
+    && tips.window === "win-now"
+    && ted.window === "win-now"
+    && ners.window === "win-now"
+    && berg.window === "contend-soon"
+    && shremp.window === "contend-soon"
+    && ducks.window === "tween",
+    "KingHenry RB beats ARae; win-now / compete-soon / tween windows match the bags");
 }
 
-// 9 Team grade is the published mix, not a new curve
+// 9 Team grade is the published window mix, not a new value formula
 loop(9, seats.every((s) => {
   const expect = overallOf(s.bag, s.uid);
   return expect === s.overall;
-}), "team grade is 70% pos blend (70/30 hole) / 15% depth / 15% draft");
+}), "team grade uses the window mix on unrounded pos / depth / draft");
 
-// 10 Draft is a 12-slot valueGrade chest — extras and late 4ths cannot pad to 10
+// 10 Draft weights the next two drafts; far 4ths cannot pad a chest to 10
 {
-  const draftFn = fnSrc(page, "teamAnalyzerDraftRaw");
-  const twelveStart = Array.from({ length: 12 }, () => ({ value: DESK_START }));
-  const twentyStart = Array.from({ length: 20 }, () => ({ value: DESK_START }));
-  const twelveStud = Array.from({ length: 12 }, () => ({ value: DESK_STUD }));
-  const twentyLate = Array.from({ length: 20 }, () => ({ value: 1400 }));
-  const twoFirsts = [{ value: 5785 }, { value: 3667 }];
-  loop(10, draftFn.includes("teamAnalyzerValueGrade")
-    && draftFn.includes("const need = 12")
-    && draftFn.includes("start * 12") === false
-    && draftFrom(twelveStart) === 3
-    && draftFrom(twentyStart) === 3
-    && draftFrom(twelveStud) === 8
-    && draftFrom(twentyLate) <= 2
-    && draftFrom(twoFirsts) <= 2
+  const partsFn = fnSrc(page, "teamAnalyzerDraftParts");
+  const years = nearYears();
+  const fourNearFirsts = Array.from({ length: 4 }, () => ({ value: 5785, year: years.near1, round: 1 }));
+  const sixNearFirsts = Array.from({ length: 6 }, () => ({ value: 5785, year: years.near1, round: 1 }));
+  const twentyFarLate = Array.from({ length: 20 }, () => ({ value: 1400, year: years.near2 + 1, round: 4 }));
+  const twoFarFirsts = [{ value: 5785, year: years.near2 + 1, round: 1 }, { value: 3667, year: years.near2 + 1, round: 1 }];
+  const gumby = seats.find((s) => s.name === "ChiefGumby");
+  const truman = seats.find((s) => s.name === "TrumanCooper");
+  const arae = seats.find((s) => s.name === "ARae");
+  loop(10, partsFn.includes("teamAnalyzerValueGrade")
+    && partsFn.includes("nearPts / 9")
+    && partsFn.includes("start * 12") === false
+    && draftFrom([]) === 0
+    && draftFrom(fourNearFirsts) >= 4
+    && draftFrom(sixNearFirsts) >= 6
+    && draftFrom(twentyFarLate) <= 2
+    && draftFrom(twoFarFirsts) <= 2
+    && arae && gumby && truman
+    && arae.draft >= gumby.draft
+    && gumby.draft >= truman.draft
+    && arae.window === "tank"
+    && gumby.window === "tank"
+    && truman.window === "rebuild"
     && fnSrc(page, "teamAnalyzerDepth").includes("of 8 backup spots") === false
     && fnSrc(page, "teamAnalyzerDepth").includes("Short a starter") === false
     && fnSrc(page, "teamAnalyzerMoves").includes("dir.sell") === false,
-    "draft scores top 12 like roster slots; late 4ths and extra picks do not pad to 10");
+    "2027/2028 firsts weigh most; late far picks do not pad to 10");
 }
 
 // 11 Page and generate-page stay on the same formula
@@ -286,19 +391,22 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
   && fnSrc(page, "teamAnalyzerPosBlend") === fnSrc(gen, "teamAnalyzerPosBlend")
   && fnSrc(page, "teamAnalyzerDraft") === fnSrc(gen, "teamAnalyzerDraft")
   && fnSrc(page, "teamAnalyzerDraftRaw") === fnSrc(gen, "teamAnalyzerDraftRaw")
+  && fnSrc(page, "teamAnalyzerDraftParts") === fnSrc(gen, "teamAnalyzerDraftParts")
+  && fnSrc(page, "teamAnalyzerWindow") === fnSrc(gen, "teamAnalyzerWindow")
   && fnSrc(page, "teamAnalyzerOverall") === fnSrc(gen, "teamAnalyzerOverall")
   && fnSrc(page, "teamAnalyzerScale") === fnSrc(gen, "teamAnalyzerScale")
   && fnSrc(page, "teamAnalyzerDepth") === fnSrc(gen, "teamAnalyzerDepth")
   && fnSrc(page, "teamAnalyzerPos") === fnSrc(gen, "teamAnalyzerPos")
   && fnSrc(page, "teamAnalyzerMoves") === fnSrc(gen, "teamAnalyzerMoves")
   && fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
-  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.7 + hole * 0.3")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.75 + hole * 0.25")
+  && fnSrc(page, "teamAnalyzerPickWeight").includes("1.55")
   && fnSrc(page, "teamAnalyzerDepth").includes("teamAnalyzerPosFloor") === false
   && fnSrc(page, "teamAnalyzerHtml").includes("fmt(") === false
   && fnSrc(page, "teamAnalyzerShareDraw") === fnSrc(gen, "teamAnalyzerShareDraw")
   && fnSrc(page, "teamAnalyzerShareDraw").includes("Starting lineup")
   && fnSrc(page, "teamAnalyzerShareDraw").includes("Chuckle Fantasy") === false
-  && fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"'),
+  && fnSrc(page, "teamAnalyzerScale").includes('kind === "tank"'),
   "index.html and generate-page.mjs share one grade formula; no league floor, no fmt");
 
 // 12 Same bags match; 8–9 is rare; starter-only is not an 8
@@ -321,15 +429,16 @@ loop(11, fnSrc(page, "teamAnalyzerValueGrade") === fnSrc(gen, "teamAnalyzerValue
     { pos: "WR", value: 8800 }, { pos: "WR", value: 8800 }, { pos: "WR", value: 8800 },
     { pos: "TE", value: 8800 },
   ];
-  const elitePicks = Array.from({ length: 12 }, () => ({ value: 8800 }));
+  const years = nearYears();
+  const elitePicks = Array.from({ length: 8 }, () => ({ value: 8800, year: years.near1, round: 1 }));
   loop(12, JSON.stringify(a) === JSON.stringify(b) && sameOverall
     && truman && truman.overall <= 6
     && Math.max(...overs) <= 8
     && Math.min(...overs) <= 5
     && (Math.max(...overs) - Math.min(...overs)) >= 2
     && seats.every((s) => s.overall < 8 || s.overall <= 8)
-    && overallFrom(starters, []) <= 3
-    && overallFrom(elites, elitePicks) >= 8,
+    && overallFrom(starters, [], DESK_SLOTS, null, "synth-start") <= 3
+    && overallFrom(elites, elitePicks, DESK_SLOTS, null, "synth-elite") >= 7,
     "cloned bag matches; 8–9 is rare; starter-only prints 3 or under");
 }
 
@@ -344,6 +453,7 @@ console.log(JSON.stringify({
     extras: s.depth.n,
     startable: s.depth.startable,
     draft: s.draft,
+    window: s.window,
     players: s.bag.length,
     picks: picksOf(s.uid).length,
   })),

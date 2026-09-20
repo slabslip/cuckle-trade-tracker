@@ -6,9 +6,9 @@ fs.mkdirSync(shotDir, { recursive: true });
 const host = process.env.OVERNIGHT_HOST || "http://127.0.0.1:8765";
 
 const seats = [
-  { name: "TrumanCooper", uid: "458342725222133760", draft: 4, overall: 5, note: "13 picks" },
-  { name: "ARae", uid: "458004578168729600", draft: 5, overall: 5, note: "19 picks" },
-  { name: "TipsUp", uid: "457784547094818816", draft: 1, overall: 6, note: "2 picks" },
+  { name: "TrumanCooper", uid: "458342725222133760", draft: 5, overall: 5, label: "Rebuild", note: "13 picks" },
+  { name: "ARae", uid: "458004578168729600", draft: 8, overall: 6, label: "Tank", note: "19 picks" },
+  { name: "TipsUp", uid: "457784547094818816", draft: 0, overall: 7, label: "Win now", note: "2 picks" },
 ];
 
 const browser = await chromium.launch({
@@ -40,7 +40,7 @@ try {
     const text = await page.locator(".team-schematic").innerText();
     console.log("ANALYZER " + seat.name + "\n" + text + "\n");
     if (!/Draft capital/i.test(text)) fail(seat.name + " missing Draft capital");
-    if (!/top 12 scored like roster slots/i.test(text)) fail(seat.name + " missing 12-slot draft note");
+    if (!/next two drafts weigh most/i.test(text)) fail(seat.name + " missing next-two-drafts note");
     if (/Short a starter/i.test(text)) fail(seat.name + " depth note must name backups, not a starter hole");
     const grades = await page.evaluate((uid) => {
       const card = typeof teamAnalyzerCard === "function" ? teamAnalyzerCard(uid) : null;
@@ -51,12 +51,14 @@ try {
         grades: card.grades,
         pick_n: card.pick_n,
         depth: card.depth && card.depth.score,
+        label: card.label,
       } : null;
     }, seat.uid);
     console.log("CARD " + JSON.stringify(grades));
     if (!grades) fail(seat.name + " card missing");
     if (grades.draft !== seat.draft) fail(seat.name + " draft " + grades.draft + " != " + seat.draft);
     if (grades.overall !== seat.overall) fail(seat.name + " overall " + grades.overall + " != " + seat.overall);
+    if (grades.label !== seat.label) fail(seat.name + " window " + grades.label + " != " + seat.label);
     if (!/rgb\(18,\s*18,\s*20\)/.test(await page.locator(".team-schematic").evaluate((el) => getComputedStyle(el).backgroundColor))) {
       fail(seat.name + " analyzer is not dashboard chrome");
     }

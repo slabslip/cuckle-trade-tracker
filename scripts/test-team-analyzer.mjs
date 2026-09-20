@@ -52,15 +52,15 @@ need(fnSrc(page, "teamAnalyzerPos").includes("toUpperCase")
 need(fnSrc(page, "teamAnalyzerDraft").includes("calcBook.picks")
   || fnSrc(page, "teamAnalyzerPicks").includes("calcBook.picks"),
   "draft capital must use live pick values on the calculator book");
-need(fnSrc(page, "teamAnalyzerDraftRaw").includes("teamAnalyzerValueGrade")
-  && fnSrc(page, "teamAnalyzerDraftRaw").includes("const need = 12")
-  && fnSrc(page, "teamAnalyzerDraftRaw").includes("start * 12") === false
+need(fnSrc(page, "teamAnalyzerDraftParts").includes("teamAnalyzerValueGrade")
+  && fnSrc(page, "teamAnalyzerDraftParts").includes("nearPts / 9")
+  && fnSrc(page, "teamAnalyzerDraftParts").includes("start * 12") === false
   && fnSrc(page, "teamAnalyzerDraft").includes("teamAnalyzerDraftRaw")
-  && fnSrc(page, "teamAnalyzerHtml").includes("top 12 scored like roster slots"),
-  "draft capital must grade a 12-slot chest like roster slots, not a raw dollar sum");
-need(fnSrc(page, "teamAnalyzerScale").includes('lab === "Hard rebuild"')
-  && fnSrc(page, "teamAnalyzerScale").includes("return 86"),
-  "C↔R bar must map Hard rebuild explicitly, not by fallthrough");
+  && fnSrc(page, "teamAnalyzerHtml").includes("next two drafts weigh most"),
+  "draft capital must weigh the next two drafts, not a 12-slot pad");
+need(fnSrc(page, "teamAnalyzerScale").includes('kind === "tank"')
+  && fnSrc(page, "teamAnalyzerScale").includes("return 88"),
+  "C↔R bar must map tank / win-now from the bag and chest, not only seat-direction");
 need(fnSrc(page, "teamAnalyzerCard").includes("members")
   && fnSrc(page, "teamAnalyzerShareNow").includes("teamAnalyzerShareFile(")
   && page.includes('heading("Starting lineup"')
@@ -93,7 +93,7 @@ need(gen.includes("function teamAnalyzerHtml(") && gen.includes("teamAnalyzerHtm
   "generate-page.mjs team analyzer must stay in sync (do not execute it)");
 need(plan.includes("team analyzer") && plan.includes("dashboard chrome")
   && plan.includes("teamAnalyzerValueGrade")
-  && plan.includes("top 12")
+  && plan.includes("next two drafts")
   && plan.includes("no league curve")
   && plan.includes("starter is 3")
   && plan.includes("8–9 is rare"),
@@ -137,12 +137,32 @@ function gradesOf(bag) {
   return grades;
 }
 function draftOf(uid) {
-  const picks = (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid))
-    .sort((a, b) => calcValueNum(b) - calcValueNum(a));
-  const need = 12;
-  let pts = 0;
-  for (let i = 0; i < need; i++) pts += valueGrade(picks[i] ? calcValueNum(picks[i]) : -1);
-  return round10(pts / need);
+  const y0 = Number(String(book.as_of || "").slice(0, 4));
+  const base = Number.isFinite(y0) && y0 >= 2020 ? y0 : 2026;
+  const near1 = base + 1;
+  const near2 = base + 2;
+  const picks = (book.picks || []).filter((p) => p && String(p.owner_id) === String(uid));
+  let nearPts = 0;
+  let farPts = 0;
+  picks.forEach((p) => {
+    const y = Number(p.year != null ? p.year : p.season) || 0;
+    const r = Number(p.round) || 99;
+    const g = valueGrade(calcValueNum(p));
+    const near = y === near1 || y === near2;
+    let yw = 0.45;
+    if (y === near1) yw = 1.55;
+    else if (y === near2) yw = 1.35;
+    else if (y === near2 + 1) yw = 0.45;
+    else if (y >= near2 + 2) yw = 0.3;
+    let rw = 1;
+    if (r === 1) rw = near ? 1.35 : 1;
+    else if (r === 2) rw = 0.8;
+    else if (r === 3) rw = 0.4;
+    else rw = 0.22;
+    if (near) nearPts += Math.min(10, g * yw * rw);
+    else if (y >= near2 + 1) farPts += Math.min(10, g);
+  });
+  return round10(Math.min(10, nearPts / 9) * 0.88 + Math.min(10, farPts / 8) * 0.12);
 }
 
 const truman = "458342725222133760";
@@ -156,9 +176,9 @@ need(JSON.stringify(gTruman) === JSON.stringify(gTruman2), "same bag must reprin
 need(gKing.RB > gARae.RB, "KingHenry RB value must grade above ARae RB");
 need(gKing.WR >= 7, "KingHenry WR core must grade as starters");
 need(draftOf(truman) >= draftOf(king), "Truman pick chest must grade at or above KingHenry");
-need(draftOf(arae) >= 4, "ARae pick chest must grade as real draft capital");
+need(draftOf(arae) >= 7, "ARae pick chest must grade as historic draft capital");
 need(fnSrc(page, "teamAnalyzerValueGrade").includes("const elite = stud + (stud - start)")
-  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.7 + hole * 0.3")
+  && fnSrc(page, "teamAnalyzerPosBlend").includes("mean * 0.75 + hole * 0.25")
   && page.includes("starter 3 · stud 7.5 · elite 10"),
   "analyzer scale must keep starter=3 / stud=7.5 / elite=10 with a weakest-slot pull");
 

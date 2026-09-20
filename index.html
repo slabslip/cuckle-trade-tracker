@@ -4432,7 +4432,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "teamhomemenu20260920020000";
+    const DATA_V = "analyzerdraft20260920023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26306,11 +26306,42 @@
         .sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
     }
 
-    function teamAnalyzerOutlook(dir) {
-      const lab = (dir && dir.label) || "Reload";
-      if (lab === "Win-now") return ["Contend", "Contend", "Reload"];
-      if (lab === "Reload") return ["Reload", "Contend", "Reload"];
-      if (lab === "Hard rebuild") return ["Rebuild", "Rebuild", "Contend"];
+    function teamAnalyzerNearYears() {
+      const asOf = (calcBook && calcBook.as_of) || "";
+      const y = Number(String(asOf).slice(0, 4));
+      const base = Number.isFinite(y) && y >= 2020 ? y : 2026;
+      return { near1: base + 1, near2: base + 2 };
+    }
+
+    function teamAnalyzerPickYear(p) {
+      const n = Number(p && (p.year != null ? p.year : p.season));
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function teamAnalyzerPickWeight(p) {
+      const years = teamAnalyzerNearYears();
+      const y = teamAnalyzerPickYear(p);
+      const r = Number(p && p.round) || 99;
+      const near = y === years.near1 || y === years.near2;
+      let yw = 0.45;
+      if (y === years.near1) yw = 1.55;
+      else if (y === years.near2) yw = 1.35;
+      else if (y === years.near2 + 1) yw = 0.45;
+      else if (y >= years.near2 + 2) yw = 0.3;
+      let rw = 1;
+      if (r === 1) rw = near ? 1.35 : 1;
+      else if (r === 2) rw = 0.8;
+      else if (r === 3) rw = 0.4;
+      else rw = 0.22;
+      return yw * rw;
+    }
+
+    function teamAnalyzerOutlook(kind) {
+      if (kind === "win-now") return ["Contend", "Contend", "Rebuild"];
+      if (kind === "contend-soon") return ["Reload", "Contend", "Contend"];
+      if (kind === "tween") return ["Reload", "Contend", "Rebuild"];
+      if (kind === "rebuild") return ["Rebuild", "Reload", "Contend"];
+      if (kind === "tank") return ["Rebuild", "Rebuild", "Contend"];
       return ["Rebuild", "Reload", "Contend"];
     }
 
@@ -26371,7 +26402,7 @@
       });
       const mean = (scores[0] + scores[1] + scores[2] + scores[3]) / 4;
       const hole = Math.min(scores[0], scores[1], scores[2], scores[3]);
-      return mean * 0.7 + hole * 0.3;
+      return mean * 0.75 + hole * 0.25;
     }
 
     function teamAnalyzerDepth(bag) {
@@ -26410,34 +26441,94 @@
       }).sort(function (a, b) { return calcValueNum(b) - calcValueNum(a); });
     }
 
-    function teamAnalyzerDraftRaw(uid) {
+    function teamAnalyzerDraftParts(uid) {
       const picks = teamAnalyzerPicks(uid);
-      const need = 12;
-      let pts = 0;
-      for (let i = 0; i < need; i++) {
-        pts += teamAnalyzerValueGrade(picks[i] ? calcValueNum(picks[i]) : -1);
-      }
-      return pts / need;
+      const years = teamAnalyzerNearYears();
+      let nearPts = 0;
+      let farPts = 0;
+      picks.forEach(function (p) {
+        const y = teamAnalyzerPickYear(p);
+        const g = teamAnalyzerValueGrade(calcValueNum(p));
+        if (y === years.near1 || y === years.near2) {
+          nearPts += Math.min(10, g * teamAnalyzerPickWeight(p));
+        } else if (y >= years.near2 + 1) {
+          farPts += Math.min(10, g);
+        }
+      });
+      const nearRaw = Math.min(10, nearPts / 9);
+      const farRaw = Math.min(10, farPts / 8);
+      return { raw: nearRaw * 0.88 + farRaw * 0.12, nearRaw: nearRaw, farRaw: farRaw };
+    }
+
+    function teamAnalyzerDraftRaw(uid) {
+      return teamAnalyzerDraftParts(uid).raw;
     }
 
     function teamAnalyzerDraft(uid) {
       return teamAnalyzerRound(teamAnalyzerDraftRaw(uid));
     }
 
+    function teamAnalyzerDesk(bag) {
+      const slots = deskSlots();
+      const out = [];
+      ["QB", "RB", "WR", "TE"].forEach(function (pos) {
+        teamAnalyzerPosPool(bag, pos).slice(0, slots[pos] || 1).forEach(function (p) {
+          out.push(p);
+        });
+      });
+      return out;
+    }
+
+    function teamAnalyzerWindow(bag, uid) {
+      const pos = teamAnalyzerPosBlend(bag);
+      const near = teamAnalyzerDraftParts(uid).nearRaw;
+      const cuts = deskCuts();
+      let aging = 0;
+      let young = 0;
+      teamAnalyzerDesk(bag).forEach(function (p) {
+        const age = Number(p && p.age);
+        const val = calcValueNum(p);
+        if (age >= 27 && val >= cuts.start) aging += 1;
+        if (age < 25.5 && val >= cuts.stud) young += 1;
+      });
+      if (pos <= 6.25 && near >= 6.2) return "tank";
+      if (pos <= 5.55 && near >= 4.8) return "rebuild";
+      if (pos >= 6.35 && young >= 3 && near >= 2.2) return "contend-soon";
+      if (pos >= 6.35 && young >= 2 && aging <= 2 && near <= 2.6) return "tween";
+      if (pos >= 6.35 && near <= 2.6 && (aging >= 3 || young <= 1)) return "win-now";
+      if (pos >= 6.2 && near >= 3.5 && young >= 1) return "contend-soon";
+      return "tween";
+    }
+
+    function teamAnalyzerWindowLabel(kind) {
+      if (kind === "tank") return "Tank";
+      if (kind === "rebuild") return "Rebuild";
+      if (kind === "win-now") return "Win now";
+      if (kind === "contend-soon") return "Compete soon";
+      return "Reload";
+    }
+
     function teamAnalyzerOverall(bag, uid) {
       const pos = teamAnalyzerPosBlend(bag);
       const depth = teamAnalyzerDepth(bag);
       const d = depth && depth.raw != null ? depth.raw : 0;
-      return teamAnalyzerRound(pos * 0.7 + d * 0.15 + teamAnalyzerDraftRaw(uid) * 0.15);
+      const draft = teamAnalyzerDraftRaw(uid);
+      const kind = teamAnalyzerWindow(bag, uid);
+      let mix = [0.66, 0.14, 0.2];
+      if (kind === "tank") mix = [0.52, 0.1, 0.38];
+      else if (kind === "rebuild") mix = [0.58, 0.12, 0.3];
+      else if (kind === "win-now") mix = [0.88, 0.1, 0.02];
+      else if (kind === "contend-soon") mix = [0.7, 0.12, 0.18];
+      return teamAnalyzerRound(pos * mix[0] + d * mix[1] + draft * mix[2]);
     }
 
-    function teamAnalyzerScale(dir) {
-      const lab = (dir && dir.label) || "Reload";
-      if (lab === "Win-now") return 18;
-      if (lab === "Reload") return 48;
-      if (lab === "Rebuild") return 70;
-      if (lab === "Hard rebuild") return 86;
-      return 48;
+    function teamAnalyzerScale(kind) {
+      if (kind === "win-now") return 18;
+      if (kind === "contend-soon") return 32;
+      if (kind === "tween") return 52;
+      if (kind === "rebuild") return 72;
+      if (kind === "tank") return 88;
+      return 52;
     }
 
     function teamAnalyzerCard(uid, name) {
@@ -26446,6 +26537,7 @@
       const grades = teamAnalyzerGrades(bag);
       const depth = teamAnalyzerDepth(bag);
       const draft = teamAnalyzerDraft(uid);
+      const kind = teamAnalyzerWindow(bag, uid);
       const mem = (members || []).find(function (m) { return m && String(m.user_id) === String(uid); });
       return {
         uid: String(uid || ""),
@@ -26453,14 +26545,14 @@
         arch: teamAnalyzerArchetype(bag, dir),
         lineup: teamAnalyzerLineup(bag),
         depth: depth,
-        outlook: teamAnalyzerOutlook(dir),
+        outlook: teamAnalyzerOutlook(kind),
         corner: teamAnalyzerCorner(bag),
         moves: teamAnalyzerMoves(bag, dir),
         grades: grades,
         draft: draft,
         overall: teamAnalyzerOverall(bag, uid),
-        scale: teamAnalyzerScale(dir),
-        label: (dir && dir.label) || "Reload",
+        scale: teamAnalyzerScale(kind),
+        label: teamAnalyzerWindowLabel(kind),
         why: (dir && dir.why) || "",
         pick_n: teamAnalyzerPicks(uid).length,
       };
@@ -26532,7 +26624,7 @@
         + '<div class="team-sch-box"><div class="team-sch-h">Draft capital</div>'
         + '<div class="team-sch-score">' + card.draft + "<em>/10</em></div>"
         + '<div class="team-sch-bar"><i style="width:' + (card.draft * 10) + '%"></i></div>'
-        + '<p class="team-sch-note">' + esc(card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · top 12 scored like roster slots") + "</p></div>"
+        + '<p class="team-sch-note">' + esc(card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · next two drafts weigh most") + "</p></div>"
         + (card.why
           ? '<div class="team-sch-box span2"><div class="team-sch-h">Note</div>'
             + '<p class="team-sch-note">' + esc(card.why) + "</p></div>"
@@ -26590,7 +26682,7 @@
       const targets = (card.moves && card.moves.targets) || [];
       const outlook = card.outlook || [];
       const years = ["YR1", "YR2", "YR3"];
-      const draftNote = card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · top 12 scored like roster slots";
+      const draftNote = card.pick_n + (card.pick_n === 1 ? " pick" : " picks") + " · next two drafts weigh most";
       const measure = document.createElement("canvas").getContext("2d");
       if (!measure) return null;
       measure.font = "650 " + px(12.5) + "px " + FONT;

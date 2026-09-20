@@ -139,9 +139,9 @@ loop(8, tbow && tbow.rs_avg === 4 && tbow.playoff_avg === 3
 loop(9, finishes.pot && finishes.pot.sacko === 200 && finishes.pot.pot === 3800
   && seatOf("Adizzl3")?.net === -500
   && seatOf("JnastyGBE300")?.lost === 2200
-  && page.includes('const DATA_V = "teamhomemenu20260920020000"')
+  && page.includes('const DATA_V = "analyzerdraft20260920023000"')
   && html.includes("chuckle-shell-v283-list-share") === false
-  && fs.readFileSync(`${ROOT}sw.js`, "utf8").includes("chuckle-shell-v309-team-home-menu"),
+  && fs.readFileSync(`${ROOT}sw.js`, "utf8").includes("chuckle-shell-v310-analyzer-draft"),
   "sacko $200 / pot $3800 still on the book; cache moved for the review ship");
 
 // 10 Cuckle isolation: old dynasty book, no year picker leak

@@ -4159,6 +4159,10 @@ const html = `<!DOCTYPE html>
       max-height: min(70dvh, 520px); overflow-y: auto;
     }
     #seatTradeFilters .filter-h:first-child { margin-top: 4px; }
+    #partnerFilters { margin: 0 0 14px; }
+    #partnerFilters .filter-h:first-child { margin-top: 4px; }
+    #dataSetSort { margin: 0 0 14px; }
+    #dataSetSort .filter-h:first-child { margin-top: 4px; }
     .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
     .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
     .path-hero h2 { margin: 0 0 6px; }
@@ -4440,7 +4444,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nightly20260920130239";
+    const DATA_V = "highlow20260928233000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4784,7 +4788,9 @@ const html = `<!DOCTYPE html>
     let year = "all";
     let yearFilterOpen = false;
     let seatTradeTeam = "all";
-    let seatTradeSort = "new"; // new = Most Recent, old = Oldest
+    let seatTradeSort = "new"; // new | old | gain | loss (Value high↔low like Drafts)
+    let partnerSort = "gain"; // gain = Value high to low, loss = Value low to high
+    let partnerFilterOpen = false;
     // League-wide trades feed filters (years / teams / players). Separate from the
     // per-seat Trades tab year filter so the two screens do not clobber each other.
     let tapeFilterOpen = false;
@@ -4792,7 +4798,10 @@ const html = `<!DOCTYPE html>
     let tapeTeam = "all";
     let tapePlayer = "all";
     let tapePlayerQ = "";
+    let tapeSort = "new"; // new | old | gain | loss
     let tapeLimit = 20;
+    // Highest↔lowest order for every Tape DATA_SETS category (wide / passed / least / forever / home).
+    let dataSetSort = "high";
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -9026,7 +9035,7 @@ const html = `<!DOCTYPE html>
       catLines("Out", cats.out);
       catLines("IR", cats.ir);
       catLines("PUP / NFI", cats.other);
-      return lines.join("\n");
+      return lines.join("\\n");
     }
 
     function schematicSettingsPairs() {
@@ -9918,6 +9927,8 @@ const html = `<!DOCTYPE html>
       year = "all";
       seatTradeTeam = "all";
       seatTradeSort = "new";
+      partnerSort = "gain";
+      partnerFilterOpen = false;
       applyDefaultLens(null);
       draftSort = "new";
       draftRounds = { 1: true, 2: true, 3: true, 4: true };
@@ -9930,7 +9941,9 @@ const html = `<!DOCTYPE html>
       tapeTeam = "all";
       tapePlayer = "all";
       tapePlayerQ = "";
+      tapeSort = "new";
       tapeLimit = 20;
+      dataSetSort = "high";
       dsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
@@ -10576,22 +10589,55 @@ const html = `<!DOCTYPE html>
     /**
      * The rows of one data set. Every list is rendered exactly as its pack rendered it -- the
      * same listRow, the same right-hand figure, the same boardTape for the lopsided board. This
-     * change swapped the container, not the lists.
+     * change swapped the container, not the lists. dataSetSort flips highest↔lowest on every
+     * category (default high→low matches the shipped ranking).
      */
     function dataSetRows(id) {
       const p = (league && league.player_lists) || {};
       const trades = (r) => r.trades + (r.trades === 1 ? " trade" : " trades");
+      const lowFirst = dataSetSort === "low";
       if (id === "wide") {
-        const list = rankWide();
+        let list = rankWide();
+        if (lowFirst) list = list.slice().reverse();
         ensureTradesFeedBags(list);
         return list.length
           ? '<div class="trades-feed">' + list.map((r) => tradeFeedCardHtml(r)).join("") + "</div>"
           : "";
       }
-      if (id === "passed") return (p.most_traded || []).map((r) => listRow(r, trades(r))).join("");
-      if (id === "least") return (p.least_traded || []).map((r) => listRow(r, trades(r))).join("");
-      if (id === "forever") return (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
-      return (p.homesteaders || []).map((r) => listRow(r, yearsOn(r.days))).join("");
+      if (id === "passed") {
+        const rows = (p.most_traded || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, trades(r))).join("");
+      }
+      if (id === "least") {
+        const rows = (p.least_traded || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, trades(r))).join("");
+      }
+      if (id === "forever") {
+        const rows = (p.forever || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, yearsOn(r.days))).join("");
+      }
+      {
+        const rows = (p.homesteaders || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, yearsOn(r.days))).join("");
+      }
+    }
+
+    function dataSetSortHtml() {
+      const sorts = [
+        ["high", "Highest to lowest"],
+        ["low", "Lowest to highest"],
+      ];
+      return '<div class="filter-panel ds-sort" id="dataSetSort">'
+        + '<div class="filter-h">Order</div>'
+        + sorts.map((s) =>
+          '<label data-dset-sort="' + s[0] + '"><input type="radio" name="dsetSort"'
+          + (dataSetSort === s[0] ? " checked" : "") + "> " + s[1] + "</label>"
+        ).join("")
+        + "</div>";
     }
 
     function dsOpt(row) {
@@ -10952,6 +10998,7 @@ const html = `<!DOCTYPE html>
         + (cur[0] === "wide" ? chipLensHtml({ inline: true }) : "")
         + "</div>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
+        + dataSetSortHtml()
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
         + "</div></div>";
@@ -17053,7 +17100,26 @@ const html = `<!DOCTYPE html>
         list = list.filter((r) => (hlByTx[r.transaction_id] || [])
           .some((h) => String(h).toLowerCase().includes(playerNeedle)));
       }
-      const filtered = tapeYear !== "all" || tapeTeam !== "all" || tapePlayer !== "all" || !!playerNeedle;
+      list = list.slice().sort((a, b) => {
+        if (tapeSort === "gain" || tapeSort === "loss") {
+          const da = windowScore(a), db = windowScore(b);
+          if (da == null && db == null) {
+            if (a.date !== b.date) return String(a.date || "") < String(b.date || "") ? 1 : -1;
+            return 0;
+          }
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return tapeSort === "gain" ? db - da : da - db;
+        }
+        if (a.date !== b.date) return String(a.date || "") < String(b.date || "") ? -1 : 1;
+        const ta = a.transaction_id || "";
+        const tb = b.transaction_id || "";
+        if (ta !== tb) return ta < tb ? -1 : 1;
+        return 0;
+      });
+      if (tapeSort === "new") list.reverse();
+      const filtered = tapeYear !== "all" || tapeTeam !== "all" || tapePlayer !== "all"
+        || !!playerNeedle || tapeSort !== "new";
       const empty = !all.length
         ? '<p class="caption">No trades on the league tape yet.</p>'
         : !lived.length
@@ -17084,9 +17150,12 @@ const html = `<!DOCTYPE html>
       if (tapeTeam !== "all") hintBits.push(tapeTeam);
       if (tapePlayer !== "all") hintBits.push(tapePlayer);
       else if (ctx.playerNeedle) hintBits.push('"' + tapePlayerQ.trim() + '"');
+      if (tapeSort === "old") hintBits.push("Oldest");
+      else if (tapeSort === "gain") hintBits.push("Value high to low");
+      else if (tapeSort === "loss") hintBits.push("Value low to high");
       const filterHint = ctx.filtered
         ? "Filter · " + hintBits.join(" · ")
-        : (defaultHint || "Filter by year, team, or player");
+        : (defaultHint || "Filter by year, team, player, or sort");
       const filterBtn = '<button type="button" class="filter-btn'
         + (ctx.filtered || tapeFilterOpen ? " on" : "") + '" data-tfilter="1" aria-label="Filter trades"'
         + ' aria-expanded="' + (tapeFilterOpen ? "true" : "false") + '">'
@@ -17110,6 +17179,24 @@ const html = `<!DOCTYPE html>
           + esc(row[0]) + '"' + (tapePlayer === row[0] ? " checked" : "") + "> "
           + esc(row[1]) + "</label>"
         ).join("");
+      const dateSorts = [
+        ["new", "Most Recent"],
+        ["old", "Oldest"],
+      ];
+      const valueSorts = [
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const dateRadios = dateSorts.map((row) =>
+        '<label data-tape-sort="' + esc(row[0]) + '"><input type="radio" name="tapeSort" value="'
+        + esc(row[0]) + '"' + (tapeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const valueRadios = valueSorts.map((row) =>
+        '<label data-tape-sort="' + esc(row[0]) + '"><input type="radio" name="tapeSort" value="'
+        + esc(row[0]) + '"' + (tapeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
       const panel = tapeFilterOpen
         ? '<div class="filter-panel" id="tapeFilters">'
           + '<div class="filter-h">Year</div>'
@@ -17123,6 +17210,11 @@ const html = `<!DOCTYPE html>
           + ' value="' + esc(tapePlayerQ) + '" aria-label="Search players in trades"'
           + ' autocomplete="off" spellcheck="false" />'
           + playerRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Date</div>'
+          + dateRadios
+          + '<div class="filter-h">Value</div>'
+          + valueRadios
           + "</div>"
         : "";
       return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
@@ -19250,14 +19342,14 @@ const html = `<!DOCTYPE html>
       const league = gateInviteLeague || claimLeagueName || "this league";
       const team = gateInviteTeam || "";
       if (team) {
-        return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+        return '<p class="join-land-hero">You\\'ve been invited to join <b>' + esc(league)
           + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
         return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
           + "</b>. Create a username and password, then claim a remaining team to open it.</p>";
       }
-      return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+      return '<p class="join-land-hero">You\\'ve been invited to join <b>' + esc(league)
         + "</b>. After you set a username and password, pick your team.</p>";
     }
 
@@ -24014,8 +24106,8 @@ const html = `<!DOCTYPE html>
 
     function homeDeskBags() {
       const book = calcBook || { players: [], picks: [] };
-      const key = String((book && book.as_of) || "") + "\t"
-        + ((book.players && book.players.length) || 0) + "\t"
+      const key = String((book && book.as_of) || "") + "\\t"
+        + ((book.players && book.players.length) || 0) + "\\t"
         + ((book.picks && book.picks.length) || 0);
       if (homeDeskBagMemo && homeDeskBagKey === key) return homeDeskBagMemo;
       const by = new Map();
@@ -24129,10 +24221,10 @@ const html = `<!DOCTYPE html>
       if (!authSeatId() || !authSession) return [];
       if (typeof ensureCuffs === "function") ensureCuffs();
       const mine = String(authSeatId());
-      const key = mine + "\t" + ((calcBook && calcBook.as_of) || "") + "\t"
-        + ((members && members.length) || 0) + "\t"
-        + ((seatDirection && seatDirection.as_of) || "") + "\t"
-        + ((peBook && peBook.as_of) || "") + "\t"
+      const key = mine + "\\t" + ((calcBook && calcBook.as_of) || "") + "\\t"
+        + ((members && members.length) || 0) + "\\t"
+        + ((seatDirection && seatDirection.as_of) || "") + "\\t"
+        + ((peBook && peBook.as_of) || "") + "\\t"
         + ((cuffs && cuffs.as_of) || "");
       if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
@@ -26695,19 +26787,19 @@ const html = `<!DOCTYPE html>
       const years = ["YR1", "YR2", "YR3"];
       return '<section class="team-schematic" aria-label="Team analyzer">'
         + '<div class="team-sch-hero">'
-        + "<div><div class=\"overnight-slip-top\">"
+        + "<div><div class=\\"overnight-slip-top\\">"
         + '<p class="overnight-slip-date">Team analyzer</p>'
         + '<button type="button" class="tile-share" data-analyzer-share="' + esc(String(uid)) + '" aria-label="Save team analyzer image">'
         + receiptShareIco() + "</button></div>"
-        + "<p class=\"team-sch-name\">" + esc(card.name) + "</p></div>"
+        + "<p class=\\"team-sch-name\\">" + esc(card.name) + "</p></div>"
         + '<div class="team-sch-arch"><b>Team grade</b><span>' + card.overall + " / 10</span>"
-        + "<b style=\"margin-top:8px\">Archetype</b><span>" + esc(card.arch) + "</span></div>"
+        + "<b style=\\"margin-top:8px\\">Archetype</b><span>" + esc(card.arch) + "</span></div>"
         + "</div>"
         + '<div class="team-sch-grid">'
         + '<div class="team-sch-box"><div class="team-sch-h">Now</div>'
         + '<div class="team-sch-score">' + card.now + "<em>/10</em></div>"
         + '<div class="team-sch-bar"><i style="width:' + (card.now * 10) + '%"></i></div>'
-        + '<p class="team-sch-note">this year\'s desk'
+        + '<p class="team-sch-note">this year\\'s desk'
         + (card.rooms && card.rooms.strength && card.rooms.strength !== "—"
           ? " · Strength " + esc(card.rooms.strength) : "")
         + "</p></div>"
@@ -27419,14 +27511,24 @@ const html = `<!DOCTYPE html>
       }
       let lived = list.filter((t) => chipLived(t.date));
       lived = lived.slice().sort((a, b) => {
+        if (seatTradeSort === "gain" || seatTradeSort === "loss") {
+          const da = tradeDelta(a), db = tradeDelta(b);
+          if (da == null && db == null) {
+            if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+            return 0;
+          }
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return seatTradeSort === "gain" ? db - da : da - db;
+        }
         if (a.date !== b.date) return a.date < b.date ? -1 : 1;
         const ta = a.transaction_id || "";
         const tb = b.transaction_id || "";
         if (ta !== tb) return ta < tb ? -1 : 1;
         return 0;
       });
-      if (seatTradeSort !== "old") lived.reverse();
-      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort === "old";
+      if (seatTradeSort === "new") lived.reverse();
+      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort !== "new";
       const empty = !all.length
         ? '<p class="caption">No trades on this seat yet.</p>'
         : !list.length
@@ -27443,6 +27545,8 @@ const html = `<!DOCTYPE html>
       if (year !== "all") hintBits.push(year);
       if (seatTradeTeam !== "all") hintBits.push(seatTradeTeam);
       if (seatTradeSort === "old") hintBits.push("Oldest");
+      else if (seatTradeSort === "gain") hintBits.push("Value high to low");
+      else if (seatTradeSort === "loss") hintBits.push("Value low to high");
       const filterHint = ctx.filtered
         ? "Filter · " + hintBits.join(" · ")
         : "Filter by year, team, or sort";
@@ -27463,10 +27567,20 @@ const html = `<!DOCTYPE html>
         + esc(row[0]) + '"' + (seatTradeTeam === row[0] ? " checked" : "") + "> "
         + esc(row[1]) + "</label>"
       ).join("");
-      const sortRadios = [
+      const dateSorts = [
         ["new", "Most Recent"],
         ["old", "Oldest"],
-      ].map((row) =>
+      ];
+      const valueSorts = [
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const dateRadios = dateSorts.map((row) =>
+        '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
+        + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const valueRadios = valueSorts.map((row) =>
         '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
         + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
         + esc(row[1]) + "</label>"
@@ -27479,8 +27593,10 @@ const html = `<!DOCTYPE html>
           + '<div class="filter-h">Team</div>'
           + teamRadios
           + '<hr class="rule" />'
-          + '<div class="filter-h">Sort</div>'
-          + sortRadios
+          + '<div class="filter-h">Date</div>'
+          + dateRadios
+          + '<div class="filter-h">Value</div>'
+          + valueRadios
           + "</div>"
         : "";
       return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
@@ -27704,7 +27820,35 @@ const html = `<!DOCTYPE html>
       const list = (data && data.partners) || [];
       // One per-partner number, scored once. Sorting used to call it twice per comparison.
       const scored = list.map((p) => ({ p: p, w: partnerPer(data, p.name) }))
-        .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
+        .sort((a, b) => {
+          const pa = a.w.per, pb = b.w.per;
+          if (pa == null && pb == null) return String(a.p.name || "").localeCompare(String(b.p.name || ""));
+          if (pa == null) return 1;
+          if (pb == null) return -1;
+          return partnerSort === "loss" ? pa - pb : pb - pa;
+        });
+      const filtered = partnerSort !== "gain";
+      const filterHint = filtered ? "Filter · Value low to high" : "Filter by value";
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (filtered || partnerFilterOpen ? " on" : "") + '" data-pfilter="1" aria-label="Filter partners"'
+        + ' aria-expanded="' + (partnerFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const valueSorts = [
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const panel = partnerFilterOpen
+        ? '<div class="filter-panel" id="partnerFilters">'
+          + '<div class="filter-h">Value</div>'
+          + valueSorts.map((s) =>
+            '<label data-psort="' + s[0] + '"><input type="radio" name="psort"'
+            + (partnerSort === s[0] ? " checked" : "") + "> " + s[1] + "</label>"
+          ).join("")
+          + "</div>"
+        : "";
       const rows = scored.map((row) => {
         const p = row.p, per = row.w.per;
         return '<div class="row' + (partnerName === p.name ? " open" : "") + '" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
@@ -27726,7 +27870,8 @@ const html = `<!DOCTYPE html>
           : "";
       }
       const empty = list.length ? "" : '<p class="caption">No trade partners yet on this seat.</p>';
-      return empty + rows + detail;
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>"
+        + empty + rows + detail;
     }
 
     function renderAppGate() {
@@ -28261,9 +28406,9 @@ const html = `<!DOCTYPE html>
       const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
       return '<div class="app-shell">'
         + joinStepsHtml("land")
-        + '<h2 class="screen-h" tabindex="-1">You\'re in</h2>'
+        + '<h2 class="screen-h" tabindex="-1">You\\'re in</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">You\'ve joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
+        + '<p class="join-land-hero">You\\'ve joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
         + '<p class="caption">League added. Team claimed.'
         + (L.auto ? " This invite linked the seat for you." : " You picked this team.")
         + "</p></div>"
@@ -28636,9 +28781,12 @@ const html = `<!DOCTYPE html>
       year = "all";
       seatTradeTeam = "all";
       seatTradeSort = "new";
+      partnerSort = "gain";
+      partnerFilterOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
       tapeFilterOpen = false;
+      tapeSort = "new";
       lensOpen = false;
       applyDefaultLens(null);
       voteToast = toast || null;
@@ -28883,6 +29031,7 @@ const html = `<!DOCTYPE html>
       if (view === "datasets") { setHomeTab("history", { force: true }); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
+      if (partnerFilterOpen) { partnerFilterOpen = false; render(); return true; }
       if (tapeFilterOpen) { tapeFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
       if (openDraft) { openDraft = null; render(); return true; }
@@ -28940,6 +29089,7 @@ const html = `<!DOCTYPE html>
     function selectDataSet(id) {
       if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
       dataSet = id;
+      dataSetSort = "high";
       dsOpen = false;
       homeTab = "history";
       me = null;
@@ -30839,14 +30989,23 @@ const html = `<!DOCTYPE html>
       const stfilterBtn = e.target.closest("[data-stfilter]");
       if (stfilterBtn) {
         yearFilterOpen = !yearFilterOpen;
-        if (yearFilterOpen) lensOpen = false;
+        if (yearFilterOpen) { lensOpen = false; partnerFilterOpen = false; }
+        render();
+        return;
+      }
+      const pfilterBtn = e.target.closest("[data-pfilter]");
+      if (pfilterBtn) {
+        partnerFilterOpen = !partnerFilterOpen;
+        if (partnerFilterOpen) { lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; }
         render();
         return;
       }
       const tfilterBtn = e.target.closest("[data-tfilter]");
       if (tfilterBtn) {
         tapeFilterOpen = !tapeFilterOpen;
-        if (tapeFilterOpen) { lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; }
+        if (tapeFilterOpen) {
+          lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; partnerFilterOpen = false;
+        }
         render();
         return;
       }
@@ -30857,8 +31016,8 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (e.target.closest("#draftFilters") || e.target.closest("#seatTradeFilters")
-        || e.target.closest("#tapeFilters")
-        || e.target.closest("#dataSets")) return;
+        || e.target.closest("#partnerFilters") || e.target.closest("#tapeFilters")
+        || e.target.closest("#dataSetSort") || e.target.closest("#dataSets")) return;
       let closedFilter = false;
       if (dsOpen) {
         dsOpen = false;
@@ -30870,6 +31029,10 @@ const html = `<!DOCTYPE html>
       }
       if (yearFilterOpen && !e.target.closest("#seatTradeFilters") && !e.target.closest("[data-stfilter]")) {
         yearFilterOpen = false;
+        closedFilter = true;
+      }
+      if (partnerFilterOpen && !e.target.closest("#partnerFilters") && !e.target.closest("[data-pfilter]")) {
+        partnerFilterOpen = false;
         closedFilter = true;
       }
       if (tapeFilterOpen && !e.target.closest("#tapeFilters") && !e.target.closest("[data-tfilter]")) {
@@ -30984,6 +31147,27 @@ const html = `<!DOCTYPE html>
         seatTradeSort = seatSortLab.dataset.seatSort || "new";
         tapeLimit = 20;
         yearFilterOpen = true;
+        render();
+        return;
+      }
+      const partnerSortLab = e.target.closest("[data-psort]");
+      if (partnerSortLab) {
+        partnerSort = partnerSortLab.dataset.psort || "gain";
+        partnerFilterOpen = true;
+        render();
+        return;
+      }
+      const tapeSortLab = e.target.closest("[data-tape-sort]");
+      if (tapeSortLab) {
+        tapeSort = tapeSortLab.dataset.tapeSort || "new";
+        tapeLimit = 20;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const dsetSortLab = e.target.closest("[data-dset-sort]");
+      if (dsetSortLab) {
+        dataSetSort = dsetSortLab.dataset.dsetSort === "low" ? "low" : "high";
         render();
         return;
       }
@@ -31602,7 +31786,6 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v258-news-feed")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -32079,7 +32262,8 @@ if (inline.includes("const leagueChip") || inline.includes("leagueChip +")
     || /class="caption" style="margin:0 0 8px"[\s\S]{0,160}data-app-home="1"/.test(inline)) {
   throw new Error("league dash must not rebuild the leagues caption row inside #app");
 }
-if (!inline.includes("app.innerHTML = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();")) {
+if (!inline.includes("let html = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();")
+    || !inline.includes("app.innerHTML = html;")) {
   throw new Error("league dash render must compose syncNote + seatName + seatPlate + nav + body + vote sheets with no caption row");
 }
 // day-alert-top header row still hosts Pause; keep its min-width guard.
@@ -32444,7 +32628,7 @@ if (!inline.includes("    function showMenu(menu) {") && !inline.includes("    f
 for (const need of [
   '<h2 class="screen-h seat-h" tabindex="-1"><span class="sr-only">Team: </span>',
   "+ seatLabel(me.name) + \"</h2>\"",
-  "app.innerHTML = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();",
+  "let html = syncNote + seatName + seatPlate + nav + body + voteSheetHtml() + voteConfirmHtml();",
   "function cosmeticsSeatPlateHtml(",
   "function cosmeticsPairForSeat(",
 ]) {
@@ -32495,11 +32679,14 @@ for (const need of [
 {
   const at = inline.indexOf("function tapeFilterHtml(");
   const stop = inline.indexOf("\n    function ", at + 10);
-  const fn = inline.slice(at, stop < 0 ? at + 4000 : stop);
+  const fn = inline.slice(at, stop < 0 ? at + 4500 : stop);
   if (!fn.includes("data-tfilter") || !fn.includes("tapeFilters")
     || !fn.includes("data-tape-year") || !fn.includes("data-tape-team")
-    || !fn.includes("data-tape-player")) {
-    throw new Error("tapeFilterHtml must ship year/team/player filter controls");
+    || !fn.includes("data-tape-player")
+    || !fn.includes("data-tape-sort")
+    || !fn.includes("Value high to low") || !fn.includes("Value low to high")
+    || !fn.includes("filter-h\">Date") || !fn.includes("filter-h\">Value")) {
+    throw new Error("tapeFilterHtml must ship year/team/player plus Date/Value sort controls");
   }
 }
 {
@@ -32708,8 +32895,10 @@ if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("fun
   const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
   if (!fn.includes("data-stfilter") || !fn.includes('id="seatTradeFilters"')
     || !fn.includes("Most Recent") || !fn.includes("Oldest")
-    || !fn.includes("filter-h\">Year") || !fn.includes("filter-h\">Team")) {
-    throw new Error("seat Trades tab must ship unified Year/Team/Sort filter panel");
+    || !fn.includes("Value high to low") || !fn.includes("Value low to high")
+    || !fn.includes("filter-h\">Year") || !fn.includes("filter-h\">Team")
+    || !fn.includes("filter-h\">Date") || !fn.includes("filter-h\">Value")) {
+    throw new Error("seat Trades tab must ship Year/Team/Date/Value filter panel");
   }
 }
 {
@@ -32730,22 +32919,38 @@ if (!inline.includes("function seatTradeFeedCardHtml(") || !inline.includes("fun
 {
   const at = inline.indexOf("function renderPartners(");
   const stop = inline.indexOf("\n    function ", at + 10);
-  const fn = inline.slice(at, stop < 0 ? at + 2500 : stop);
+  const fn = inline.slice(at, stop < 0 ? at + 3500 : stop);
   if (!fn.includes("seatTradeFeedCardHtml(") || fn.includes("tradeRow(t)")) {
     throw new Error("partners deal list must use seatTradeFeedCardHtml");
+  }
+  if (!fn.includes("data-pfilter") || !fn.includes('id="partnerFilters"')
+    || !fn.includes("Value high to low") || !fn.includes("Value low to high")
+    || !fn.includes("data-psort") || !fn.includes("partnerSort")) {
+    throw new Error("Partners tab must ship Value high↔low filter toggle");
   }
 }
 {
   const at = inline.indexOf("function dataSetRows(");
   const stop = inline.indexOf("\n    function ", at + 10);
-  const fn = inline.slice(at, stop < 0 ? at + 1200 : stop);
+  const fn = inline.slice(at, stop < 0 ? at + 2000 : stop);
   if (!fn.includes("tradeFeedCardHtml(") || fn.includes("boardTape(r)")) {
     throw new Error("most-lopsided dataset must use tradeFeedCardHtml, not boardTape");
   }
+  if (!fn.includes("dataSetSort") || !fn.includes('dataSetSort === "low"')) {
+    throw new Error("every Tape data-set category must honor highest↔lowest order");
+  }
+}
+if (!inline.includes("function dataSetSortHtml(")
+  || !inline.includes("Highest to lowest")
+  || !inline.includes("Lowest to highest")
+  || !inline.includes('data-dset-sort="')
+  || !inline.includes("dataSetSortHtml()")) {
+  throw new Error("every Tape DATA_SETS category must ship Highest↔Lowest order toggle");
 }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")
-  || !html.includes("div.lh-trade-feed-card.is-selected") || !html.includes("#tapeFilters")) {
-  throw new Error("stylesheet must style the league trades feed + tape filter panel");
+  || !html.includes("div.lh-trade-feed-card.is-selected") || !html.includes("#tapeFilters")
+  || !html.includes("#partnerFilters") || !html.includes("#dataSetSort")) {
+  throw new Error("stylesheet must style trades feed + tape/partner/data-set sort panels");
 }
 // Text fitting, asserted rather than trusted. Each of these was a measured defect, and each
 // is one deletion away from returning silently, because none of them changes what the page
@@ -33071,7 +33276,7 @@ if (!inline.includes("function dataDashHtml(")
     const redStart = inline.indexOf("    const DATA_DASH_REDRAFT = [");
     const redEnd = inline.indexOf("];", redStart);
     const redIds = [...inline.slice(redStart, redEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-    if (redStart < 0 || redIds.length !== 11 || redIds[0] !== "rs_avg"
+    if (redStart < 0 || redIds.length !== 10 || redIds[0] !== "rs_avg"
       || redIds[1] !== "playoff_n" || redIds[2] !== "playoff_avg"
       || redIds[3] !== "pot_net"
       || redIds.indexOf("gross_won") >= 0 || redIds.indexOf("gross_lost") >= 0
@@ -33184,7 +33389,7 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("League year")
     || !inline.includes("Player you rostered")
     || !fnSrc("receiptPortalRows").includes("is FA")
-    || !fnSrc("receiptPortalRows").includes("No future first")
+    || !inline.includes("No future first")
     || !fnSrc("dataListItems").includes("m.place_season")
     || !fnSrc("dataListItems").includes("finishesBook")
     || !fnSrc("dataListItems").includes(" seasons")

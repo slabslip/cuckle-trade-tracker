@@ -4151,6 +4151,10 @@
       max-height: min(70dvh, 520px); overflow-y: auto;
     }
     #seatTradeFilters .filter-h:first-child { margin-top: 4px; }
+    #partnerFilters { margin: 0 0 14px; }
+    #partnerFilters .filter-h:first-child { margin-top: 4px; }
+    #dataSetSort { margin: 0 0 14px; }
+    #dataSetSort .filter-h:first-child { margin-top: 4px; }
     .path-hero { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 14px; }
     .path-hero .kicker { color: var(--dim); font-size: 0.75rem; margin: 0 0 4px; }
     .path-hero h2 { margin: 0 0 6px; }
@@ -4432,7 +4436,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nightly20260920130239";
+    const DATA_V = "highlow20260928233000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4776,7 +4780,9 @@
     let year = "all";
     let yearFilterOpen = false;
     let seatTradeTeam = "all";
-    let seatTradeSort = "new"; // new = Most Recent, old = Oldest
+    let seatTradeSort = "new"; // new | old | gain | loss (Value high↔low like Drafts)
+    let partnerSort = "gain"; // gain = Value high to low, loss = Value low to high
+    let partnerFilterOpen = false;
     // League-wide trades feed filters (years / teams / players). Separate from the
     // per-seat Trades tab year filter so the two screens do not clobber each other.
     let tapeFilterOpen = false;
@@ -4784,7 +4790,10 @@
     let tapeTeam = "all";
     let tapePlayer = "all";
     let tapePlayerQ = "";
+    let tapeSort = "new"; // new | old | gain | loss
     let tapeLimit = 20;
+    // Highest↔lowest order for every Tape DATA_SETS category (wide / passed / least / forever / home).
+    let dataSetSort = "high";
     let lensOpen = false;
     let markOpen = null;
     let openId = null;
@@ -6330,7 +6339,7 @@
 
     function finishMoney(n) {
       const v = Math.round(Number(n) || 0);
-      return (v < 0 ? "-" : "") + "$" + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return (v < 0 ? "-" : "") + "$" + String(Math.abs(v)).replace(/B(?=(d{3})+(?!d))/g, ",");
     }
 
     function finishPlayoffFloorN() {
@@ -9910,6 +9919,8 @@
       year = "all";
       seatTradeTeam = "all";
       seatTradeSort = "new";
+      partnerSort = "gain";
+      partnerFilterOpen = false;
       applyDefaultLens(null);
       draftSort = "new";
       draftRounds = { 1: true, 2: true, 3: true, 4: true };
@@ -9922,7 +9933,9 @@
       tapeTeam = "all";
       tapePlayer = "all";
       tapePlayerQ = "";
+      tapeSort = "new";
       tapeLimit = 20;
+      dataSetSort = "high";
       dsOpen = false;
       // The home icon returns league home to exactly what a cold load shows, which is now the
       // chip box with nothing under it. It used to reset to Most lopsided.
@@ -10568,22 +10581,55 @@
     /**
      * The rows of one data set. Every list is rendered exactly as its pack rendered it -- the
      * same listRow, the same right-hand figure, the same boardTape for the lopsided board. This
-     * change swapped the container, not the lists.
+     * change swapped the container, not the lists. dataSetSort flips highest↔lowest on every
+     * category (default high→low matches the shipped ranking).
      */
     function dataSetRows(id) {
       const p = (league && league.player_lists) || {};
       const trades = (r) => r.trades + (r.trades === 1 ? " trade" : " trades");
+      const lowFirst = dataSetSort === "low";
       if (id === "wide") {
-        const list = rankWide();
+        let list = rankWide();
+        if (lowFirst) list = list.slice().reverse();
         ensureTradesFeedBags(list);
         return list.length
           ? '<div class="trades-feed">' + list.map((r) => tradeFeedCardHtml(r)).join("") + "</div>"
           : "";
       }
-      if (id === "passed") return (p.most_traded || []).map((r) => listRow(r, trades(r))).join("");
-      if (id === "least") return (p.least_traded || []).map((r) => listRow(r, trades(r))).join("");
-      if (id === "forever") return (p.forever || []).map((r) => listRow(r, yearsOn(r.days))).join("");
-      return (p.homesteaders || []).map((r) => listRow(r, yearsOn(r.days))).join("");
+      if (id === "passed") {
+        const rows = (p.most_traded || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, trades(r))).join("");
+      }
+      if (id === "least") {
+        const rows = (p.least_traded || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, trades(r))).join("");
+      }
+      if (id === "forever") {
+        const rows = (p.forever || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, yearsOn(r.days))).join("");
+      }
+      {
+        const rows = (p.homesteaders || []).slice();
+        if (lowFirst) rows.reverse();
+        return rows.map((r) => listRow(r, yearsOn(r.days))).join("");
+      }
+    }
+
+    function dataSetSortHtml() {
+      const sorts = [
+        ["high", "Highest to lowest"],
+        ["low", "Lowest to highest"],
+      ];
+      return '<div class="filter-panel ds-sort" id="dataSetSort">'
+        + '<div class="filter-h">Order</div>'
+        + sorts.map((s) =>
+          '<label data-dset-sort="' + s[0] + '"><input type="radio" name="dsetSort"'
+          + (dataSetSort === s[0] ? " checked" : "") + "> " + s[1] + "</label>"
+        ).join("")
+        + "</div>";
     }
 
     function dsOpt(row) {
@@ -10944,6 +10990,7 @@
         + (cur[0] === "wide" ? chipLensHtml({ inline: true }) : "")
         + "</div>"
         + '<p class="caption">' + esc(cur[2]) + "</p>"
+        + dataSetSortHtml()
         + '<div class="pack-body">'
         + (rows || '<p class="caption">Nothing in this data set yet.</p>')
         + "</div></div>";
@@ -17045,7 +17092,26 @@
         list = list.filter((r) => (hlByTx[r.transaction_id] || [])
           .some((h) => String(h).toLowerCase().includes(playerNeedle)));
       }
-      const filtered = tapeYear !== "all" || tapeTeam !== "all" || tapePlayer !== "all" || !!playerNeedle;
+      list = list.slice().sort((a, b) => {
+        if (tapeSort === "gain" || tapeSort === "loss") {
+          const da = windowScore(a), db = windowScore(b);
+          if (da == null && db == null) {
+            if (a.date !== b.date) return String(a.date || "") < String(b.date || "") ? 1 : -1;
+            return 0;
+          }
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return tapeSort === "gain" ? db - da : da - db;
+        }
+        if (a.date !== b.date) return String(a.date || "") < String(b.date || "") ? -1 : 1;
+        const ta = a.transaction_id || "";
+        const tb = b.transaction_id || "";
+        if (ta !== tb) return ta < tb ? -1 : 1;
+        return 0;
+      });
+      if (tapeSort === "new") list.reverse();
+      const filtered = tapeYear !== "all" || tapeTeam !== "all" || tapePlayer !== "all"
+        || !!playerNeedle || tapeSort !== "new";
       const empty = !all.length
         ? '<p class="caption">No trades on the league tape yet.</p>'
         : !lived.length
@@ -17076,9 +17142,12 @@
       if (tapeTeam !== "all") hintBits.push(tapeTeam);
       if (tapePlayer !== "all") hintBits.push(tapePlayer);
       else if (ctx.playerNeedle) hintBits.push('"' + tapePlayerQ.trim() + '"');
+      if (tapeSort === "old") hintBits.push("Oldest");
+      else if (tapeSort === "gain") hintBits.push("Value high to low");
+      else if (tapeSort === "loss") hintBits.push("Value low to high");
       const filterHint = ctx.filtered
         ? "Filter · " + hintBits.join(" · ")
-        : (defaultHint || "Filter by year, team, or player");
+        : (defaultHint || "Filter by year, team, player, or sort");
       const filterBtn = '<button type="button" class="filter-btn'
         + (ctx.filtered || tapeFilterOpen ? " on" : "") + '" data-tfilter="1" aria-label="Filter trades"'
         + ' aria-expanded="' + (tapeFilterOpen ? "true" : "false") + '">'
@@ -17102,6 +17171,24 @@
           + esc(row[0]) + '"' + (tapePlayer === row[0] ? " checked" : "") + "> "
           + esc(row[1]) + "</label>"
         ).join("");
+      const dateSorts = [
+        ["new", "Most Recent"],
+        ["old", "Oldest"],
+      ];
+      const valueSorts = [
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const dateRadios = dateSorts.map((row) =>
+        '<label data-tape-sort="' + esc(row[0]) + '"><input type="radio" name="tapeSort" value="'
+        + esc(row[0]) + '"' + (tapeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const valueRadios = valueSorts.map((row) =>
+        '<label data-tape-sort="' + esc(row[0]) + '"><input type="radio" name="tapeSort" value="'
+        + esc(row[0]) + '"' + (tapeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
       const panel = tapeFilterOpen
         ? '<div class="filter-panel" id="tapeFilters">'
           + '<div class="filter-h">Year</div>'
@@ -17115,6 +17202,11 @@
           + ' value="' + esc(tapePlayerQ) + '" aria-label="Search players in trades"'
           + ' autocomplete="off" spellcheck="false" />'
           + playerRadios
+          + '<hr class="rule" />'
+          + '<div class="filter-h">Date</div>'
+          + dateRadios
+          + '<div class="filter-h">Value</div>'
+          + valueRadios
           + "</div>"
         : "";
       return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
@@ -24006,8 +24098,8 @@
 
     function homeDeskBags() {
       const book = calcBook || { players: [], picks: [] };
-      const key = String((book && book.as_of) || "") + "	"
-        + ((book.players && book.players.length) || 0) + "	"
+      const key = String((book && book.as_of) || "") + "\t"
+        + ((book.players && book.players.length) || 0) + "\t"
         + ((book.picks && book.picks.length) || 0);
       if (homeDeskBagMemo && homeDeskBagKey === key) return homeDeskBagMemo;
       const by = new Map();
@@ -24121,10 +24213,10 @@
       if (!authSeatId() || !authSession) return [];
       if (typeof ensureCuffs === "function") ensureCuffs();
       const mine = String(authSeatId());
-      const key = mine + "	" + ((calcBook && calcBook.as_of) || "") + "	"
-        + ((members && members.length) || 0) + "	"
-        + ((seatDirection && seatDirection.as_of) || "") + "	"
-        + ((peBook && peBook.as_of) || "") + "	"
+      const key = mine + "\t" + ((calcBook && calcBook.as_of) || "") + "\t"
+        + ((members && members.length) || 0) + "\t"
+        + ((seatDirection && seatDirection.as_of) || "") + "\t"
+        + ((peBook && peBook.as_of) || "") + "\t"
         + ((cuffs && cuffs.as_of) || "");
       if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
@@ -26769,7 +26861,7 @@
     }
 
     function teamAnalyzerShareWrap(ctx, text, maxW) {
-      const words = String(text || "").split(/\s+/).filter(Boolean);
+      const words = String(text || "").split(/s+/).filter(Boolean);
       const lines = [];
       let cur = "";
       words.forEach(function (w) {
@@ -26935,7 +27027,7 @@
       pushBox(true, boxPad + head + lineup.length * lineH + 10, function (x, top, w) {
         heading("Starting lineup", x, top + px(head - 4));
         lineup.forEach(function (p, i) {
-          const meta = ((p.injury ? p.injury + " · " : "") + (p.team || "")).replace(/\s+$/, "");
+          const meta = ((p.injury ? p.injury + " · " : "") + (p.team || "")).replace(/s+$/, "");
           row(p.pos, p.name, meta, x, top + px(head + 14 + i * lineH), w);
         });
       });
@@ -27411,14 +27503,24 @@
       }
       let lived = list.filter((t) => chipLived(t.date));
       lived = lived.slice().sort((a, b) => {
+        if (seatTradeSort === "gain" || seatTradeSort === "loss") {
+          const da = tradeDelta(a), db = tradeDelta(b);
+          if (da == null && db == null) {
+            if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+            return 0;
+          }
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return seatTradeSort === "gain" ? db - da : da - db;
+        }
         if (a.date !== b.date) return a.date < b.date ? -1 : 1;
         const ta = a.transaction_id || "";
         const tb = b.transaction_id || "";
         if (ta !== tb) return ta < tb ? -1 : 1;
         return 0;
       });
-      if (seatTradeSort !== "old") lived.reverse();
-      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort === "old";
+      if (seatTradeSort === "new") lived.reverse();
+      const filtered = year !== "all" || seatTradeTeam !== "all" || seatTradeSort !== "new";
       const empty = !all.length
         ? '<p class="caption">No trades on this seat yet.</p>'
         : !list.length
@@ -27435,6 +27537,8 @@
       if (year !== "all") hintBits.push(year);
       if (seatTradeTeam !== "all") hintBits.push(seatTradeTeam);
       if (seatTradeSort === "old") hintBits.push("Oldest");
+      else if (seatTradeSort === "gain") hintBits.push("Value high to low");
+      else if (seatTradeSort === "loss") hintBits.push("Value low to high");
       const filterHint = ctx.filtered
         ? "Filter · " + hintBits.join(" · ")
         : "Filter by year, team, or sort";
@@ -27455,10 +27559,20 @@
         + esc(row[0]) + '"' + (seatTradeTeam === row[0] ? " checked" : "") + "> "
         + esc(row[1]) + "</label>"
       ).join("");
-      const sortRadios = [
+      const dateSorts = [
         ["new", "Most Recent"],
         ["old", "Oldest"],
-      ].map((row) =>
+      ];
+      const valueSorts = [
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const dateRadios = dateSorts.map((row) =>
+        '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
+        + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
+        + esc(row[1]) + "</label>"
+      ).join("");
+      const valueRadios = valueSorts.map((row) =>
         '<label data-seat-sort="' + esc(row[0]) + '"><input type="radio" name="seatTradeSort" value="'
         + esc(row[0]) + '"' + (seatTradeSort === row[0] ? " checked" : "") + "> "
         + esc(row[1]) + "</label>"
@@ -27471,8 +27585,10 @@
           + '<div class="filter-h">Team</div>'
           + teamRadios
           + '<hr class="rule" />'
-          + '<div class="filter-h">Sort</div>'
-          + sortRadios
+          + '<div class="filter-h">Date</div>'
+          + dateRadios
+          + '<div class="filter-h">Value</div>'
+          + valueRadios
           + "</div>"
         : "";
       return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>";
@@ -27696,7 +27812,35 @@
       const list = (data && data.partners) || [];
       // One per-partner number, scored once. Sorting used to call it twice per comparison.
       const scored = list.map((p) => ({ p: p, w: partnerPer(data, p.name) }))
-        .sort((a, b) => (b.w.per ?? -1e9) - (a.w.per ?? -1e9));
+        .sort((a, b) => {
+          const pa = a.w.per, pb = b.w.per;
+          if (pa == null && pb == null) return String(a.p.name || "").localeCompare(String(b.p.name || ""));
+          if (pa == null) return 1;
+          if (pb == null) return -1;
+          return partnerSort === "loss" ? pa - pb : pb - pa;
+        });
+      const filtered = partnerSort !== "gain";
+      const filterHint = filtered ? "Filter · Value low to high" : "Filter by value";
+      const filterBtn = '<button type="button" class="filter-btn'
+        + (filtered || partnerFilterOpen ? " on" : "") + '" data-pfilter="1" aria-label="Filter partners"'
+        + ' aria-expanded="' + (partnerFilterOpen ? "true" : "false") + '">'
+        + '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 5h16l-6.2 7.2V19l-3.6 1.8v-8.6L4 5z"/></svg>'
+        + (filtered ? '<span class="dot"></span>' : "")
+        + "</button>"
+        + '<div class="caption">' + esc(filterHint) + "</div>";
+      const valueSorts = [
+        ["gain", "Value high to low"],
+        ["loss", "Value low to high"],
+      ];
+      const panel = partnerFilterOpen
+        ? '<div class="filter-panel" id="partnerFilters">'
+          + '<div class="filter-h">Value</div>'
+          + valueSorts.map((s) =>
+            '<label data-psort="' + s[0] + '"><input type="radio" name="psort"'
+            + (partnerSort === s[0] ? " checked" : "") + "> " + s[1] + "</label>"
+          ).join("")
+          + "</div>"
+        : "";
       const rows = scored.map((row) => {
         const p = row.p, per = row.w.per;
         return '<div class="row' + (partnerName === p.name ? " open" : "") + '" role="button" tabindex="0" data-partner="' + esc(p.name) + '">'
@@ -27718,7 +27862,8 @@
           : "";
       }
       const empty = list.length ? "" : '<p class="caption">No trade partners yet on this seat.</p>';
-      return empty + rows + detail;
+      return '<div class="filter-wrap">' + filterRow(filterBtn) + panel + "</div>"
+        + empty + rows + detail;
     }
 
     function renderAppGate() {
@@ -28628,9 +28773,12 @@
       year = "all";
       seatTradeTeam = "all";
       seatTradeSort = "new";
+      partnerSort = "gain";
+      partnerFilterOpen = false;
       yearFilterOpen = false;
       draftFilterOpen = false;
       tapeFilterOpen = false;
+      tapeSort = "new";
       lensOpen = false;
       applyDefaultLens(null);
       voteToast = toast || null;
@@ -28875,6 +29023,7 @@
       if (view === "datasets") { setHomeTab("history", { force: true }); return true; }
       if (yearFilterOpen) { yearFilterOpen = false; render(); return true; }
       if (draftFilterOpen) { draftFilterOpen = false; render(); return true; }
+      if (partnerFilterOpen) { partnerFilterOpen = false; render(); return true; }
       if (tapeFilterOpen) { tapeFilterOpen = false; render(); return true; }
       if (openPick) { openPick = null; render(); return true; }
       if (openDraft) { openDraft = null; render(); return true; }
@@ -28932,6 +29081,7 @@
     function selectDataSet(id) {
       if (!id || !DATA_SETS.some((d) => d[0] === id)) return;
       dataSet = id;
+      dataSetSort = "high";
       dsOpen = false;
       homeTab = "history";
       me = null;
@@ -30831,14 +30981,23 @@
       const stfilterBtn = e.target.closest("[data-stfilter]");
       if (stfilterBtn) {
         yearFilterOpen = !yearFilterOpen;
-        if (yearFilterOpen) lensOpen = false;
+        if (yearFilterOpen) { lensOpen = false; partnerFilterOpen = false; }
+        render();
+        return;
+      }
+      const pfilterBtn = e.target.closest("[data-pfilter]");
+      if (pfilterBtn) {
+        partnerFilterOpen = !partnerFilterOpen;
+        if (partnerFilterOpen) { lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; }
         render();
         return;
       }
       const tfilterBtn = e.target.closest("[data-tfilter]");
       if (tfilterBtn) {
         tapeFilterOpen = !tapeFilterOpen;
-        if (tapeFilterOpen) { lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; }
+        if (tapeFilterOpen) {
+          lensOpen = false; yearFilterOpen = false; draftFilterOpen = false; partnerFilterOpen = false;
+        }
         render();
         return;
       }
@@ -30849,8 +31008,8 @@
         return;
       }
       if (e.target.closest("#draftFilters") || e.target.closest("#seatTradeFilters")
-        || e.target.closest("#tapeFilters")
-        || e.target.closest("#dataSets")) return;
+        || e.target.closest("#partnerFilters") || e.target.closest("#tapeFilters")
+        || e.target.closest("#dataSetSort") || e.target.closest("#dataSets")) return;
       let closedFilter = false;
       if (dsOpen) {
         dsOpen = false;
@@ -30862,6 +31021,10 @@
       }
       if (yearFilterOpen && !e.target.closest("#seatTradeFilters") && !e.target.closest("[data-stfilter]")) {
         yearFilterOpen = false;
+        closedFilter = true;
+      }
+      if (partnerFilterOpen && !e.target.closest("#partnerFilters") && !e.target.closest("[data-pfilter]")) {
+        partnerFilterOpen = false;
         closedFilter = true;
       }
       if (tapeFilterOpen && !e.target.closest("#tapeFilters") && !e.target.closest("[data-tfilter]")) {
@@ -30976,6 +31139,27 @@
         seatTradeSort = seatSortLab.dataset.seatSort || "new";
         tapeLimit = 20;
         yearFilterOpen = true;
+        render();
+        return;
+      }
+      const partnerSortLab = e.target.closest("[data-psort]");
+      if (partnerSortLab) {
+        partnerSort = partnerSortLab.dataset.psort || "gain";
+        partnerFilterOpen = true;
+        render();
+        return;
+      }
+      const tapeSortLab = e.target.closest("[data-tape-sort]");
+      if (tapeSortLab) {
+        tapeSort = tapeSortLab.dataset.tapeSort || "new";
+        tapeLimit = 20;
+        tapeFilterOpen = true;
+        render();
+        return;
+      }
+      const dsetSortLab = e.target.closest("[data-dset-sort]");
+      if (dsetSortLab) {
+        dataSetSort = dsetSortLab.dataset.dsetSort === "low" ? "low" : "high";
         render();
         return;
       }

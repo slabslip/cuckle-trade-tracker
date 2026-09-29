@@ -4444,7 +4444,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "highlow20260928233000";
+    const DATA_V = "highlow20260929001500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5328,7 +5328,11 @@ const html = `<!DOCTYPE html>
     function dataListBandsHtml(id, items, rowFn) {
       const slice = receiptListSlice || "";
       const who = receiptListWho || "";
-      const list = items || [];
+      let list = items || [];
+      if (typeof receiptListSortable === "function" && receiptListSortable(id)
+        && typeof receiptListOrdered === "function") {
+        list = receiptListOrdered(list);
+      }
       const picked = dataListPickSlice(list, slice, who);
       const wrap = function (item, i) {
         return dataListRowWrap(id, item, rowFn(item, i));
@@ -6055,8 +6059,33 @@ const html = `<!DOCTYPE html>
       receiptPlPos = "all";
       receiptPlRoom = "held";
       receiptPlSort = "most";
+      receiptListSort = "high";
       receiptSeatWarming = "";
       receiptSeatFailed = "";
+    }
+
+    /** Ranked League Data doors that share Highest↔Lowest order with Tape DATA_SETS. */
+    function receiptListSortable(id) {
+      const canon = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
+      return canon === "forever" || canon === "homesteaders" || canon === "least_traded"
+        || canon === "passed_around" || canon === "book_top" || canon === "uninsured"
+        || canon === "seat_draft" || canon === "season_place" || canon === "points_king"
+        || canon === "contender_rate" || canon === "sacko" || canon === "rs_avg"
+        || canon === "playoff_n" || canon === "playoff_avg" || canon === "pot_net"
+        || canon === "firsts_held" || canon === "week_scores";
+    }
+
+    function receiptListOrderHtml(id) {
+      if (!receiptListSortable(id) || id === "profit_loss") return "";
+      return receiptLookSelect("Order", "data-receipt-list-sort",
+        [["high", "Highest to lowest"], ["low", "Lowest to highest"]],
+        receiptListSort === "low" ? "low" : "high");
+    }
+
+    function receiptListOrdered(items) {
+      const list = (items || []).slice();
+      if (receiptListSort === "low") list.reverse();
+      return list;
     }
 
     function receiptDraftTeamCounts(seat) {
@@ -7561,8 +7590,13 @@ const html = `<!DOCTYPE html>
         opts = [["all", "All"], ["QB", "QB"], ["RB", "RB"], ["WR", "WR"], ["TE", "TE"]];
         if (id === "book_top") opts.push(["pick", "Picks"]);
       }
-      if (opts.length <= 1) return "";
-      return receiptLookSelect(lab, "data-receipt-door-filter", opts, receiptDoorFilter);
+      const order = receiptListOrderHtml(id);
+      const filter = (opts.length > 1)
+        ? receiptLookSelect(lab, "data-receipt-door-filter", opts, receiptDoorFilter)
+        : "";
+      if (!filter && !order) return "";
+      if (filter && order) return '<div class="receipt-trade-menus">' + filter + order + "</div>";
+      return filter || order;
     }
 
     function receiptPortalRows(id, q) {
@@ -17786,6 +17820,7 @@ const html = `<!DOCTYPE html>
     let receiptPlPos = "all";
     let receiptPlRoom = "held";
     let receiptPlSort = "most";
+    let receiptListSort = "high"; // high = Highest to lowest, low = reverse — every ranked list door
     let receiptSeatWarming = "";
     let receiptSeatFailed = "";
     let memberships = [];
@@ -31309,6 +31344,12 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const listSortSel = e.target && e.target.closest && e.target.closest("[data-receipt-list-sort]");
+      if (listSortSel) {
+        receiptListSort = listSortSel.value === "low" ? "low" : "high";
+        render();
+        return;
+      }
       const histTeamSel = e.target && e.target.closest && e.target.closest("[data-receipt-hist-team]");
       if (histTeamSel) {
         receiptHistTeam = histTeamSel.value || "all";
@@ -32947,6 +32988,14 @@ if (!inline.includes("function dataSetSortHtml(")
   || !inline.includes("dataSetSortHtml()")) {
   throw new Error("every Tape DATA_SETS category must ship Highest↔Lowest order toggle");
 }
+  if (!inline.includes("function receiptListOrderHtml(")
+    || !inline.includes("function receiptListSortable(")
+    || !inline.includes("data-receipt-list-sort")
+    || !inline.includes("Highest to lowest")
+    || !fnSrc("receiptDoorFilterHtml").includes("receiptListOrderHtml(")
+    || !fnSrc("dataListBandsHtml").includes("receiptListOrdered(")) {
+    throw new Error("every ranked League Data door must ship Highest↔Lowest order toggle");
+  }
 if (!html.includes(".trades-feed") || !html.includes("div.lh-trade-feed-card")
   || !html.includes("div.lh-trade-feed-card.is-selected") || !html.includes("#tapeFilters")
   || !html.includes("#partnerFilters") || !html.includes("#dataSetSort")) {

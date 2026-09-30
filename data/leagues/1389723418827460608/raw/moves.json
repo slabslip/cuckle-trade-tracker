@@ -6223,5 +6223,667 @@
     "drops": {
       "13301": 2
     }
+  },
+  {
+    "transaction_id": "1407488987085504512",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1789934033704,
+    "date": "2026-09-20",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "8161": 4
+    },
+    "drops": {
+      "11199": 4
+    }
+  },
+  {
+    "transaction_id": "1407900843876896768",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790032228014,
+    "date": "2026-09-21",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "13285": 10
+    },
+    "drops": {
+      "11563": 10
+    }
+  },
+  {
+    "transaction_id": "1407817995178278912",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790012475346,
+    "date": "2026-09-21",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "12545": 4
+    },
+    "drops": {
+      "8161": 4
+    }
+  },
+  {
+    "transaction_id": "1408199721939451904",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790103486097,
+    "date": "2026-09-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "2505": 5
+    },
+    "drops": {
+      "13305": 5
+    }
+  },
+  {
+    "transaction_id": "1408199396897607680",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790103408602,
+    "date": "2026-09-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "11435": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1408199314047606784",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790103388848,
+    "date": "2026-09-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "12508": 5
+    }
+  },
+  {
+    "transaction_id": "1408134737976930304",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790087992714,
+    "date": "2026-09-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "9228": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1408134271582871552",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790087881516,
+    "date": "2026-09-22",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "4993": 5
+    }
+  },
+  {
+    "transaction_id": "1408123296825782272",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790085264931,
+    "date": "2026-09-22",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "CAR": 1
+    },
+    "drops": {
+      "TB": 1
+    }
+  },
+  {
+    "transaction_id": "1408122867110920192",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790085162479,
+    "date": "2026-09-22",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "11625": 1
+    },
+    "drops": {
+      "12048": 1
+    }
+  },
+  {
+    "transaction_id": "1408101314805719040",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790080024009,
+    "date": "2026-09-22",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "5001": 3
+    },
+    "drops": {
+      "5022": 3
+    }
+  },
+  {
+    "transaction_id": "1408344128185552896",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790137915230,
+    "date": "2026-09-23",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "3163": 9
+    },
+    "drops": {
+      "13330": 9
+    }
+  },
+  {
+    "transaction_id": "1408281228771102720",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 2,
+    "created": 1790122918841,
+    "date": "2026-09-23",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "13346": 2
+    },
+    "drops": {
+      "13347": 2
+    }
+  },
+  {
+    "transaction_id": "1408557171054014464",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790188708607,
+    "date": "2026-09-23",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "13288": 2
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1408557128888668160",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790188698554,
+    "date": "2026-09-23",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "9502": 2
+    }
+  },
+  {
+    "transaction_id": "1408480953009016832",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790170536809,
+    "date": "2026-09-23",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12504": 3
+    },
+    "drops": {
+      "8136": 3
+    }
+  },
+  {
+    "transaction_id": "1408480354427310080",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790170394097,
+    "date": "2026-09-23",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "8136": 3
+    },
+    "drops": {
+      "8142": 3
+    }
+  },
+  {
+    "transaction_id": "1408476077709393920",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790169374447,
+    "date": "2026-09-23",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12487": 2
+    },
+    "drops": {
+      "6130": 2
+    }
+  },
+  {
+    "transaction_id": "1408474458166956032",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790168988318,
+    "date": "2026-09-23",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "13545": 7
+    },
+    "drops": {
+      "8259": 7
+    }
+  },
+  {
+    "transaction_id": "1408471625514446848",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790168312961,
+    "date": "2026-09-23",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "9486": 10
+    },
+    "drops": {
+      "13285": 10
+    }
+  },
+  {
+    "transaction_id": "1408882294948708352",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790266224184,
+    "date": "2026-09-24",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "6650": 5
+    },
+    "drops": {
+      "2020": 5
+    }
+  },
+  {
+    "transaction_id": "1409958268276572160",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790522756216,
+    "date": "2026-09-27",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "8136": 9
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1410136261682819072",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790565193151,
+    "date": "2026-09-28",
+    "roster_ids": [
+      12
+    ],
+    "adds": {
+      "3321": 12
+    },
+    "drops": {
+      "11575": 12
+    }
+  },
+  {
+    "transaction_id": "1410700605743267840",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790699743261,
+    "date": "2026-09-29",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "LV": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1410700574940303360",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790699735916,
+    "date": "2026-09-29",
+    "roster_ids": [
+      5
+    ],
+    "adds": {},
+    "drops": {
+      "NE": 5
+    }
+  },
+  {
+    "transaction_id": "1410675356393840640",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790693723346,
+    "date": "2026-09-29",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "BUF": 1
+    },
+    "drops": {
+      "CAR": 1
+    }
+  },
+  {
+    "transaction_id": "1410675204052578304",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790693687026,
+    "date": "2026-09-29",
+    "roster_ids": [
+      1
+    ],
+    "adds": {
+      "6804": 1
+    },
+    "drops": {
+      "7571": 1
+    }
+  },
+  {
+    "transaction_id": "1410672579554889728",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790693061296,
+    "date": "2026-09-29",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "CHI": 3
+    },
+    "drops": {
+      "GB": 3
+    }
+  },
+  {
+    "transaction_id": "1410479705433423872",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790647076522,
+    "date": "2026-09-29",
+    "roster_ids": [
+      4
+    ],
+    "adds": {
+      "9511": 4
+    },
+    "drops": {
+      "8676": 4
+    }
+  },
+  {
+    "transaction_id": "1410857209146957824",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790737080422,
+    "date": "2026-09-30",
+    "roster_ids": [
+      9
+    ],
+    "adds": {
+      "1479": 9
+    },
+    "drops": {
+      "9226": 9
+    }
+  },
+  {
+    "transaction_id": "1410854366058967040",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790736402577,
+    "date": "2026-09-30",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "3634": 3
+    },
+    "drops": {
+      "12504": 3
+    }
+  },
+  {
+    "transaction_id": "1410847032570081280",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790734654137,
+    "date": "2026-09-30",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "13330": 10
+    },
+    "drops": {
+      "10222": 10
+    }
+  },
+  {
+    "transaction_id": "1410846897681231872",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790734621977,
+    "date": "2026-09-30",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "12495": 10
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1410844495070707712",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790734049150,
+    "date": "2026-09-30",
+    "roster_ids": [
+      10
+    ],
+    "adds": {},
+    "drops": {
+      "5012": 10
+    }
+  },
+  {
+    "transaction_id": "1410840854771339264",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 3,
+    "created": 1790733181234,
+    "date": "2026-09-30",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "11643": 2
+    },
+    "drops": {
+      "13288": 2
+    }
+  },
+  {
+    "transaction_id": "1410973710936018944",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 4,
+    "created": 1790764856612,
+    "date": "2026-09-30",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "CLE": 2
+    },
+    "drops": {
+      "PHI": 2
+    }
+  },
+  {
+    "transaction_id": "1410938275337650176",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 4,
+    "created": 1790756408107,
+    "date": "2026-09-30",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "12185": 3
+    },
+    "drops": {
+      "3451": 3
+    }
+  },
+  {
+    "transaction_id": "1410936123781349376",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 4,
+    "created": 1790755895136,
+    "date": "2026-09-30",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "13305": 3
+    },
+    "drops": {
+      "5001": 3
+    }
   }
 ]

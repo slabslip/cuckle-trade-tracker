@@ -8328,5 +8328,57 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-09-22",
+    "season": "2026",
+    "week": 2,
+    "transaction_id": "1408167358056394752",
+    "sides": {
+      "ARae": {
+        "in": [
+          "Jonathon Brooks"
+        ],
+        "out": [
+          "Terrance Ferguson"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Terrance Ferguson"
+        ],
+        "out": [
+          "Jonathon Brooks"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-09-28",
+    "season": "2026",
+    "week": 3,
+    "transaction_id": "1410348964254851072",
+    "sides": {
+      "SF69erss": {
+        "in": [
+          "Quinshon Judkins",
+          "Kaelon Black",
+          "2027 R2 (orig roster 6)"
+        ],
+        "out": [
+          "De'Von Achane"
+        ]
+      },
+      "ARae": {
+        "in": [
+          "De'Von Achane"
+        ],
+        "out": [
+          "Quinshon Judkins",
+          "Kaelon Black",
+          "2027 R2 (orig roster 6)"
+        ]
+      }
+    }
   }
 ]

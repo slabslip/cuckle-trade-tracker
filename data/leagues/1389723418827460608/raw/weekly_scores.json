@@ -1,8 +1,8 @@
 {
   "v": 3,
-  "as_of": "2026-09-20",
-  "n": 1236,
-  "n_regular": 1008,
+  "as_of": "2026-09-30",
+  "n": 1260,
+  "n_regular": 1032,
   "n_playoff": 228,
   "n_playoff_hunt": 70,
   "seasons": [
@@ -12,14 +12,14 @@
       "playoff_week_start": 15,
       "hunt_by_week": {
         "15": [
-          2,
           3,
-          9,
+          6,
+          11,
           12
         ],
         "16": [
           4,
-          6
+          8
         ]
       }
     },
@@ -15656,6 +15656,270 @@
       "roster_id": 10,
       "user_id": "741001884449525760",
       "points": 90.56,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 116.14,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 112.58,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 102.62,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 74.32,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 72.3,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 145.88,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 105.56,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 11,
+      "user_id": "1338979666412716032",
+      "points": 125.7,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 89.66,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 126.72,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 91.96,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 2,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 43.48,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 9,
+      "user_id": "1131056110791880704",
+      "points": 87.16,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 7,
+      "user_id": "1132146625205567488",
+      "points": 116.88,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 4,
+      "user_id": "1132149096636141568",
+      "points": 110.5,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 1,
+      "user_id": "1132151320410140672",
+      "points": 66.76,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 5,
+      "user_id": "1132151393051095040",
+      "points": 95.84,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 8,
+      "user_id": "1132355027018035200",
+      "points": 127.74,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 12,
+      "user_id": "1132552110328983552",
+      "points": 144.74,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 11,
+      "user_id": "1338979666412716032",
+      "points": 127.1,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 2,
+      "user_id": "458342725222133760",
+      "points": 90.92,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 6,
+      "user_id": "719995760556478464",
+      "points": 105.26,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 3,
+      "user_id": "740721014035660800",
+      "points": 83.68,
+      "phase": "regular",
+      "hunt": true,
+      "playoff_week_start": 15
+    },
+    {
+      "season": "2026",
+      "league_id": "1389723418827460608",
+      "week": 3,
+      "roster_id": 10,
+      "user_id": "741001884449525760",
+      "points": 69.08,
       "phase": "regular",
       "hunt": true,
       "playoff_week_start": 15

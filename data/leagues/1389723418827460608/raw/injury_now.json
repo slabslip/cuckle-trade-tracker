@@ -1,26 +1,19 @@
 {
-  "as_of": "2026-09-20",
-  "n": 20,
+  "as_of": "2026-09-30",
+  "n": 24,
   "players": {
-    "4983": {
-      "name": "DJ Moore",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "WR"
-    },
-    "5189": {
-      "name": "Eddy Pineiro",
+    "2216": {
+      "name": "Mike Evans",
       "injury_status": "Questionable",
       "status": "Active",
       "team": "SF",
-      "pos": "K"
+      "pos": "WR"
     },
-    "5849": {
-      "name": "Kyler Murray",
-      "injury_status": "Out",
+    "4984": {
+      "name": "Josh Allen",
+      "injury_status": "Questionable",
       "status": "Active",
-      "team": "MIN",
+      "team": "BUF",
       "pos": "QB"
     },
     "5850": {
@@ -37,33 +30,47 @@
       "team": "NE",
       "pos": "WR"
     },
-    "6770": {
-      "name": "Joe Burrow",
+    "6794": {
+      "name": "Justin Jefferson",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "CIN",
-      "pos": "QB"
+      "team": "MIN",
+      "pos": "WR"
     },
-    "6819": {
-      "name": "Michael Pittman",
-      "injury_status": "Out",
+    "7021": {
+      "name": "Rico Dowdle",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "PIT",
+      "pos": "RB"
+    },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DEN",
       "pos": "WR"
+    },
+    "7543": {
+      "name": "Travis Etienne",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "NO",
+      "pos": "RB"
     },
     "7569": {
       "name": "Nico Collins",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "HOU",
       "pos": "WR"
     },
-    "8144": {
-      "name": "Chris Olave",
+    "8155": {
+      "name": "Breece Hall",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "NO",
-      "pos": "WR"
+      "team": "NYJ",
+      "pos": "RB"
     },
     "8205": {
       "name": "Isiah Pacheco",
@@ -86,13 +93,6 @@
       "team": "LAR",
       "pos": "WR"
     },
-    "9502": {
-      "name": "Tank Dell",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "HOU",
-      "pos": "WR"
-    },
     "9753": {
       "name": "Zach Charbonnet",
       "injury_status": "PUP",
@@ -100,33 +100,54 @@
       "team": "SEA",
       "pos": "RB"
     },
-    "9997": {
-      "name": "Zay Flowers",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "BAL",
-      "pos": "WR"
-    },
-    "11604": {
-      "name": "Brock Bowers",
+    "11560": {
+      "name": "Caleb Williams",
       "injury_status": "Doubtful",
       "status": "Active",
-      "team": "LV",
-      "pos": "TE"
+      "team": "CHI",
+      "pos": "QB"
     },
-    "11635": {
-      "name": "Ladd McConkey",
+    "11566": {
+      "name": "Jayden Daniels",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "LAC",
+      "team": "WAS",
+      "pos": "QB"
+    },
+    "11583": {
+      "name": "Jonathon Brooks",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "CAR",
+      "pos": "RB"
+    },
+    "11625": {
+      "name": "Adonai Mitchell",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NYJ",
       "pos": "WR"
     },
-    "12489": {
-      "name": "RJ Harvey",
+    "11643": {
+      "name": "Jaylen Wright",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "DEN",
+      "team": "MIA",
       "pos": "RB"
+    },
+    "11646": {
+      "name": "Jalen Coker",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CAR",
+      "pos": "WR"
+    },
+    "12487": {
+      "name": "Terrance Ferguson",
+      "injury_status": "Doubtful",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "TE"
     },
     "13281": {
       "name": "Jordyn Tyson",
@@ -135,11 +156,18 @@
       "team": "NO",
       "pos": "WR"
     },
-    "13414": {
-      "name": "Kaelon Black",
+    "13296": {
+      "name": "Caleb Douglas",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "SF",
+      "team": "MIA",
+      "pos": "WR"
+    },
+    "13345": {
+      "name": "Jonah Coleman",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "DEN",
       "pos": "RB"
     }
   }

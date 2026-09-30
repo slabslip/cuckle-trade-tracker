@@ -17,11 +17,11 @@
         "sides": {
           "1132151320410140672": {
             "name": "ztrain123",
-            "today": 90,
-            "sent_today": 43,
-            "today_delta": 47,
-            "t0": 90,
-            "t0_delta": 47,
+            "today": 163,
+            "sent_today": 51,
+            "today_delta": 112,
+            "t0": 163,
+            "t0_delta": 112,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -31,7 +31,7 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 90,
+                "value": 163,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -42,7 +42,7 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 43,
+                "value": 51,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -53,7 +53,7 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 90,
+                "value": 163,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -62,11 +62,11 @@
           },
           "1132149096636141568": {
             "name": "Aballers",
-            "today": 43,
-            "sent_today": 90,
-            "today_delta": -47,
-            "t0": 43,
-            "t0_delta": -47,
+            "today": 51,
+            "sent_today": 163,
+            "today_delta": -112,
+            "t0": 51,
+            "t0_delta": -112,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -76,7 +76,7 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 43,
+                "value": 51,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -87,7 +87,7 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 90,
+                "value": 163,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -98,7 +98,7 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 43,
+                "value": 51,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -110,15 +110,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "ztrain123": 90,
-              "Aballers": 43
+              "ztrain123": 163,
+              "Aballers": 51
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "ztrain123": 90,
-              "Aballers": 43
+              "ztrain123": 163,
+              "Aballers": 51
             }
           }
         ],
@@ -129,11 +129,11 @@
         "sides": {
           "1132151320410140672": {
             "name": "ztrain123",
-            "today": 90,
-            "sent_today": 43,
-            "today_delta": 47,
-            "t0": 90,
-            "t0_delta": 47,
+            "today": 163,
+            "sent_today": 51,
+            "today_delta": 112,
+            "t0": 163,
+            "t0_delta": 112,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -143,7 +143,7 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 90,
+                "value": 163,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -154,7 +154,7 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 43,
+                "value": 51,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -165,7 +165,7 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 90,
+                "value": 163,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -174,11 +174,11 @@
           },
           "1132149096636141568": {
             "name": "Aballers",
-            "today": 43,
-            "sent_today": 90,
-            "today_delta": -47,
-            "t0": 43,
-            "t0_delta": -47,
+            "today": 51,
+            "sent_today": 163,
+            "today_delta": -112,
+            "t0": 51,
+            "t0_delta": -112,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -188,7 +188,7 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 43,
+                "value": 51,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -199,7 +199,7 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 90,
+                "value": 163,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -210,7 +210,7 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 43,
+                "value": 51,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -222,15 +222,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "ztrain123": 90,
-              "Aballers": 43
+              "ztrain123": 163,
+              "Aballers": 51
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "ztrain123": 90,
-              "Aballers": 43
+              "ztrain123": 163,
+              "Aballers": 51
             }
           }
         ],
@@ -241,11 +241,11 @@
         "sides": {
           "1132151320410140672": {
             "name": "ztrain123",
-            "today": 2199,
-            "sent_today": 1814,
-            "today_delta": 385,
-            "t0": 2199,
-            "t0_delta": 385,
+            "today": 2545,
+            "sent_today": 1899,
+            "today_delta": 646,
+            "t0": 2545,
+            "t0_delta": 646,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -254,11 +254,11 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 2199,
+                "value": 2545,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 2199
+                "value_flat": 2545
               }
             ],
             "sent": [
@@ -266,11 +266,11 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 1814,
+                "value": 1899,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 1814
+                "value_flat": 1899
               }
             ],
             "value_adjust": 0,
@@ -279,11 +279,11 @@
           },
           "1132149096636141568": {
             "name": "Aballers",
-            "today": 1814,
-            "sent_today": 2199,
-            "today_delta": -385,
-            "t0": 1814,
-            "t0_delta": -385,
+            "today": 1899,
+            "sent_today": 2545,
+            "today_delta": -646,
+            "t0": 1899,
+            "t0_delta": -646,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -292,11 +292,11 @@
                 "label": "Keon Coleman",
                 "kind": "player",
                 "asset_key": "player:11637",
-                "value": 1814,
+                "value": 1899,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 1814
+                "value_flat": 1899
               }
             ],
             "sent": [
@@ -304,11 +304,11 @@
                 "label": "Calvin Ridley",
                 "kind": "player",
                 "asset_key": "player:4981",
-                "value": 2199,
+                "value": 2545,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 2199
+                "value_flat": 2545
               }
             ],
             "value_adjust": 0,
@@ -320,15 +320,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "ztrain123": 2199,
-              "Aballers": 1814
+              "ztrain123": 2545,
+              "Aballers": 1899
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "ztrain123": 2199,
-              "Aballers": 1814
+              "ztrain123": 2545,
+              "Aballers": 1899
             }
           }
         ],
@@ -339,9 +339,9 @@
           "sides": {
             "1132151320410140672": {
               "name": "ztrain123",
-              "today": 2199,
-              "sent_today": 1814,
-              "today_delta": 385,
+              "today": 2545,
+              "sent_today": 1899,
+              "today_delta": 646,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -351,7 +351,7 @@
                   "label": "Calvin Ridley",
                   "kind": "player",
                   "asset_key": "player:4981",
-                  "value": 2199,
+                  "value": 2545,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -362,7 +362,7 @@
                   "label": "Keon Coleman",
                   "kind": "player",
                   "asset_key": "player:11637",
-                  "value": 1814,
+                  "value": 1899,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -373,9 +373,9 @@
             },
             "1132149096636141568": {
               "name": "Aballers",
-              "today": 1814,
-              "sent_today": 2199,
-              "today_delta": -385,
+              "today": 1899,
+              "sent_today": 2545,
+              "today_delta": -646,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -385,7 +385,7 @@
                   "label": "Keon Coleman",
                   "kind": "player",
                   "asset_key": "player:11637",
-                  "value": 1814,
+                  "value": 1899,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -396,7 +396,7 @@
                   "label": "Calvin Ridley",
                   "kind": "player",
                   "asset_key": "player:4981",
-                  "value": 2199,
+                  "value": 2545,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -413,19 +413,19 @@
           "sides": {
             "1132151320410140672": {
               "name": "ztrain123",
-              "today": 2199,
-              "sent_today": 1814,
-              "today_delta": 385,
+              "today": 2545,
+              "sent_today": 1899,
+              "today_delta": 646,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 52,
+              "snaps": 56,
               "legs": [
                 {
                   "label": "Calvin Ridley",
                   "kind": "player",
                   "asset_key": "player:4981",
-                  "value": 2199,
+                  "value": 2545,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -436,7 +436,7 @@
                   "label": "Keon Coleman",
                   "kind": "player",
                   "asset_key": "player:11637",
-                  "value": 1814,
+                  "value": 1899,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -447,19 +447,19 @@
             },
             "1132149096636141568": {
               "name": "Aballers",
-              "today": 1814,
-              "sent_today": 2199,
-              "today_delta": -385,
+              "today": 1899,
+              "sent_today": 2545,
+              "today_delta": -646,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 52,
+              "snaps": 56,
               "legs": [
                 {
                   "label": "Keon Coleman",
                   "kind": "player",
                   "asset_key": "player:11637",
-                  "value": 1814,
+                  "value": 1899,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -470,7 +470,7 @@
                   "label": "Calvin Ridley",
                   "kind": "player",
                   "asset_key": "player:4981",
-                  "value": 2199,
+                  "value": 2545,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -480,7 +480,7 @@
               "value_adjust_sent": 0
             }
           },
-          "snaps": 52,
+          "snaps": 56,
           "incomplete": false
         }
       }
@@ -505,22 +505,22 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 340,
-            "sent_today": 2815,
-            "today_delta": -2475,
-            "t0": 340,
-            "t0_delta": -2475,
-            "unpriced": 0,
+            "today": 348,
+            "sent_today": 2921,
+            "today_delta": null,
+            "t0": 348,
+            "t0_delta": null,
+            "unpriced": 1,
             "sent_unpriced": 0,
-            "t0_unpriced": 0,
-            "incomplete": false,
+            "t0_unpriced": 1,
+            "incomplete": true,
             "legs": [
               {
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 3,
-                "flag": null,
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null
               },
@@ -528,7 +528,7 @@
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 337,
+                "value": 348,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -539,7 +539,7 @@
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 2810,
+                "value": 2904,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -548,7 +548,7 @@
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 5,
+                "value": 17,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -559,8 +559,8 @@
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 3,
-                "flag": "first_snap",
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null
               },
@@ -568,7 +568,7 @@
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 337,
+                "value": 348,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -577,21 +577,21 @@
           },
           "1132552110328983552": {
             "name": "collinmccaskill",
-            "today": 2815,
-            "sent_today": 340,
-            "today_delta": 2475,
-            "t0": 2815,
-            "t0_delta": 2475,
+            "today": 2921,
+            "sent_today": 348,
+            "today_delta": null,
+            "t0": 2921,
+            "t0_delta": null,
             "unpriced": 0,
-            "sent_unpriced": 0,
+            "sent_unpriced": 1,
             "t0_unpriced": 0,
-            "incomplete": false,
+            "incomplete": true,
             "legs": [
               {
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 2810,
+                "value": 2904,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -600,7 +600,7 @@
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 5,
+                "value": 17,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -611,8 +611,8 @@
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 3,
-                "flag": null,
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null
               },
@@ -620,7 +620,7 @@
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 337,
+                "value": 348,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -631,7 +631,7 @@
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 2810,
+                "value": 2904,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -640,7 +640,7 @@
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 5,
+                "value": 17,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -652,41 +652,41 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 340,
-              "collinmccaskill": 2815
+              "TrumanCooper": 348,
+              "collinmccaskill": 2921
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 340,
-              "collinmccaskill": 2815
+              "TrumanCooper": 348,
+              "collinmccaskill": 2921
             }
           }
         ],
         "t0_priced": true,
-        "incomplete": false
+        "incomplete": true
       },
       "pick": {
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 340,
-            "sent_today": 2815,
-            "today_delta": -2475,
-            "t0": 340,
-            "t0_delta": -2475,
-            "unpriced": 0,
+            "today": 348,
+            "sent_today": 2921,
+            "today_delta": null,
+            "t0": 348,
+            "t0_delta": null,
+            "unpriced": 1,
             "sent_unpriced": 0,
-            "t0_unpriced": 0,
-            "incomplete": false,
+            "t0_unpriced": 1,
+            "incomplete": true,
             "legs": [
               {
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 3,
-                "flag": null,
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null
               },
@@ -694,7 +694,7 @@
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 337,
+                "value": 348,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -705,7 +705,7 @@
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 2810,
+                "value": 2904,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -714,7 +714,7 @@
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 5,
+                "value": 17,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -725,8 +725,8 @@
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 3,
-                "flag": "first_snap",
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null
               },
@@ -734,7 +734,7 @@
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 337,
+                "value": 348,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -743,21 +743,21 @@
           },
           "1132552110328983552": {
             "name": "collinmccaskill",
-            "today": 2815,
-            "sent_today": 340,
-            "today_delta": 2475,
-            "t0": 2815,
-            "t0_delta": 2475,
+            "today": 2921,
+            "sent_today": 348,
+            "today_delta": null,
+            "t0": 2921,
+            "t0_delta": null,
             "unpriced": 0,
-            "sent_unpriced": 0,
+            "sent_unpriced": 1,
             "t0_unpriced": 0,
-            "incomplete": false,
+            "incomplete": true,
             "legs": [
               {
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 2810,
+                "value": 2904,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -766,7 +766,7 @@
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 5,
+                "value": 17,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -777,8 +777,8 @@
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 3,
-                "flag": null,
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null
               },
@@ -786,7 +786,7 @@
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 337,
+                "value": 348,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -797,7 +797,7 @@
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 2810,
+                "value": 2904,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -806,7 +806,7 @@
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 5,
+                "value": 17,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -818,53 +818,53 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 340,
-              "collinmccaskill": 2815
+              "TrumanCooper": 348,
+              "collinmccaskill": 2921
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 340,
-              "collinmccaskill": 2815
+              "TrumanCooper": 348,
+              "collinmccaskill": 2921
             }
           }
         ],
         "t0_priced": true,
-        "incomplete": false
+        "incomplete": true
       },
       "even": {
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 3856,
-            "sent_today": 5662,
-            "today_delta": -1806,
-            "t0": 3856,
-            "t0_delta": -1806,
-            "unpriced": 0,
+            "today": 3022,
+            "sent_today": 6126,
+            "today_delta": -3104,
+            "t0": 3022,
+            "t0_delta": null,
+            "unpriced": 1,
             "sent_unpriced": 0,
-            "incomplete": false,
+            "incomplete": true,
             "legs": [
               {
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 856,
-                "flag": null,
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 856
+                "value_flat": null
               },
               {
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 3000,
+                "value": 3022,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 3000
+                "value_flat": 3022
               }
             ],
             "sent": [
@@ -872,57 +872,56 @@
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 4669,
+                "value": 4718,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4669
+                "value_flat": 4718
               },
               {
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 993,
+                "value": 1408,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 993
+                "value_flat": 1408
               }
             ],
             "value_adjust": 0,
-            "value_adjust_sent": 0,
-            "t0_value_adjust": 0
+            "value_adjust_sent": 0
           },
           "1132552110328983552": {
             "name": "collinmccaskill",
-            "today": 5662,
-            "sent_today": 3856,
-            "today_delta": 1806,
-            "t0": 5662,
-            "t0_delta": 1806,
+            "today": 6126,
+            "sent_today": 3022,
+            "today_delta": 3104,
+            "t0": 6126,
+            "t0_delta": null,
             "unpriced": 0,
-            "sent_unpriced": 0,
-            "incomplete": false,
+            "sent_unpriced": 1,
+            "incomplete": true,
             "legs": [
               {
                 "label": "Kyle Pitts",
                 "kind": "player",
                 "asset_key": "player:7553",
-                "value": 4669,
+                "value": 4718,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4669
+                "value_flat": 4718
               },
               {
                 "label": "Calvin Austin",
                 "kind": "player",
                 "asset_key": "player:8125",
-                "value": 993,
+                "value": 1408,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 993
+                "value_flat": 1408
               }
             ],
             "sent": [
@@ -930,65 +929,64 @@
                 "label": "Jonnu Smith",
                 "kind": "player",
                 "asset_key": "player:4144",
-                "value": 856,
-                "flag": null,
+                "value": null,
+                "flag": "unpriced",
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 856
+                "value_flat": null
               },
               {
                 "label": "Daniel Jones",
                 "kind": "player",
                 "asset_key": "player:5870",
-                "value": 3000,
+                "value": 3022,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 3000
+                "value_flat": 3022
               }
             ],
             "value_adjust": 0,
-            "value_adjust_sent": 0,
-            "t0_value_adjust": 0
+            "value_adjust_sent": 0
           }
         },
         "year_ends": [
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 3856,
-              "collinmccaskill": 5662
+              "TrumanCooper": 3022,
+              "collinmccaskill": 6126
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 3856,
-              "collinmccaskill": 5662
+              "TrumanCooper": 3022,
+              "collinmccaskill": 6126
             }
           }
         ],
-        "incomplete": false
+        "incomplete": true
       },
       "windows": {
         "t0": {
           "sides": {
             "458342725222133760": {
               "name": "TrumanCooper",
-              "today": 3856,
-              "sent_today": 5662,
-              "today_delta": -1806,
-              "unpriced": 0,
+              "today": 3022,
+              "sent_today": 6126,
+              "today_delta": -3104,
+              "unpriced": 1,
               "sent_unpriced": 0,
-              "incomplete": false,
+              "incomplete": true,
               "snaps": 1,
               "legs": [
                 {
                   "label": "Jonnu Smith",
                   "kind": "player",
                   "asset_key": "player:4144",
-                  "value": 856,
-                  "flag": "first_snap",
+                  "value": null,
+                  "flag": "unpriced",
                   "became": null,
                   "drafted_by": null
                 },
@@ -996,7 +994,7 @@
                   "label": "Daniel Jones",
                   "kind": "player",
                   "asset_key": "player:5870",
-                  "value": 3000,
+                  "value": 3022,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1007,7 +1005,7 @@
                   "label": "Kyle Pitts",
                   "kind": "player",
                   "asset_key": "player:7553",
-                  "value": 4669,
+                  "value": 4718,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1016,7 +1014,7 @@
                   "label": "Calvin Austin",
                   "kind": "player",
                   "asset_key": "player:8125",
-                  "value": 993,
+                  "value": 1408,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1027,19 +1025,19 @@
             },
             "1132552110328983552": {
               "name": "collinmccaskill",
-              "today": 5662,
-              "sent_today": 3856,
-              "today_delta": 1806,
+              "today": 6126,
+              "sent_today": 3022,
+              "today_delta": 3104,
               "unpriced": 0,
-              "sent_unpriced": 0,
-              "incomplete": false,
+              "sent_unpriced": 1,
+              "incomplete": true,
               "snaps": 1,
               "legs": [
                 {
                   "label": "Kyle Pitts",
                   "kind": "player",
                   "asset_key": "player:7553",
-                  "value": 4669,
+                  "value": 4718,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1048,7 +1046,7 @@
                   "label": "Calvin Austin",
                   "kind": "player",
                   "asset_key": "player:8125",
-                  "value": 993,
+                  "value": 1408,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1059,8 +1057,8 @@
                   "label": "Jonnu Smith",
                   "kind": "player",
                   "asset_key": "player:4144",
-                  "value": 856,
-                  "flag": "first_snap",
+                  "value": null,
+                  "flag": "unpriced",
                   "became": null,
                   "drafted_by": null
                 },
@@ -1068,7 +1066,7 @@
                   "label": "Daniel Jones",
                   "kind": "player",
                   "asset_key": "player:5870",
-                  "value": 3000,
+                  "value": 3022,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1079,26 +1077,26 @@
             }
           },
           "snaps": 1,
-          "incomplete": false
+          "incomplete": true
         },
         "all": {
           "sides": {
             "458342725222133760": {
               "name": "TrumanCooper",
-              "today": 3856,
-              "sent_today": 5662,
-              "today_delta": -1806,
-              "unpriced": 0,
+              "today": 3022,
+              "sent_today": 6126,
+              "today_delta": -3104,
+              "unpriced": 1,
               "sent_unpriced": 0,
-              "incomplete": false,
-              "snaps": 51,
+              "incomplete": true,
+              "snaps": 55,
               "legs": [
                 {
                   "label": "Jonnu Smith",
                   "kind": "player",
                   "asset_key": "player:4144",
-                  "value": 856,
-                  "flag": null,
+                  "value": null,
+                  "flag": "unpriced",
                   "became": null,
                   "drafted_by": null
                 },
@@ -1106,7 +1104,7 @@
                   "label": "Daniel Jones",
                   "kind": "player",
                   "asset_key": "player:5870",
-                  "value": 3000,
+                  "value": 3022,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1117,7 +1115,7 @@
                   "label": "Kyle Pitts",
                   "kind": "player",
                   "asset_key": "player:7553",
-                  "value": 4669,
+                  "value": 4718,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1126,7 +1124,7 @@
                   "label": "Calvin Austin",
                   "kind": "player",
                   "asset_key": "player:8125",
-                  "value": 993,
+                  "value": 1408,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1137,19 +1135,19 @@
             },
             "1132552110328983552": {
               "name": "collinmccaskill",
-              "today": 5662,
-              "sent_today": 3856,
-              "today_delta": 1806,
+              "today": 6126,
+              "sent_today": 3022,
+              "today_delta": 3104,
               "unpriced": 0,
-              "sent_unpriced": 0,
-              "incomplete": false,
-              "snaps": 51,
+              "sent_unpriced": 1,
+              "incomplete": true,
+              "snaps": 55,
               "legs": [
                 {
                   "label": "Kyle Pitts",
                   "kind": "player",
                   "asset_key": "player:7553",
-                  "value": 4669,
+                  "value": 4718,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1158,7 +1156,7 @@
                   "label": "Calvin Austin",
                   "kind": "player",
                   "asset_key": "player:8125",
-                  "value": 993,
+                  "value": 1408,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1169,8 +1167,8 @@
                   "label": "Jonnu Smith",
                   "kind": "player",
                   "asset_key": "player:4144",
-                  "value": 856,
-                  "flag": null,
+                  "value": null,
+                  "flag": "unpriced",
                   "became": null,
                   "drafted_by": null
                 },
@@ -1178,7 +1176,7 @@
                   "label": "Daniel Jones",
                   "kind": "player",
                   "asset_key": "player:5870",
-                  "value": 3000,
+                  "value": 3022,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1188,12 +1186,12 @@
               "value_adjust_sent": 0
             }
           },
-          "snaps": 51,
-          "incomplete": false
+          "snaps": 55,
+          "incomplete": true
         }
       }
     },
-    "incomplete": false
+    "incomplete": true
   },
   {
     "transaction_id": "1275983247628595200",
@@ -1213,11 +1211,11 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 5723,
-            "sent_today": 4540,
-            "today_delta": 1183,
-            "t0": 5723,
-            "t0_delta": 1183,
+            "today": 5616,
+            "sent_today": 5687,
+            "today_delta": -71,
+            "t0": 5616,
+            "t0_delta": -71,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -1227,7 +1225,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1236,7 +1234,7 @@
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 3913,
+                "value": 3822,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1247,7 +1245,7 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 2345,
+                "value": 2312,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1256,7 +1254,7 @@
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 2195,
+                "value": 3375,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1267,7 +1265,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1276,7 +1274,7 @@
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 3913,
+                "value": 3822,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1285,11 +1283,11 @@
           },
           "719995760556478464": {
             "name": "TaylorJohnson16",
-            "today": 4540,
-            "sent_today": 5723,
-            "today_delta": -1183,
-            "t0": 4540,
-            "t0_delta": -1183,
+            "today": 5687,
+            "sent_today": 5616,
+            "today_delta": 71,
+            "t0": 5687,
+            "t0_delta": 71,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -1299,7 +1297,7 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 2345,
+                "value": 2312,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1308,7 +1306,7 @@
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 2195,
+                "value": 3375,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1319,7 +1317,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1328,7 +1326,7 @@
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 3913,
+                "value": 3822,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1339,7 +1337,7 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 2345,
+                "value": 2312,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1348,7 +1346,7 @@
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 2195,
+                "value": 3375,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1360,15 +1358,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 5723,
-              "TaylorJohnson16": 4540
+              "TrumanCooper": 5616,
+              "TaylorJohnson16": 5687
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 5723,
-              "TaylorJohnson16": 4540
+              "TrumanCooper": 5616,
+              "TaylorJohnson16": 5687
             }
           }
         ],
@@ -1379,11 +1377,11 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 5723,
-            "sent_today": 4540,
-            "today_delta": 1183,
-            "t0": 5723,
-            "t0_delta": 1183,
+            "today": 5616,
+            "sent_today": 5687,
+            "today_delta": -71,
+            "t0": 5616,
+            "t0_delta": -71,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -1393,7 +1391,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1402,7 +1400,7 @@
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 3913,
+                "value": 3822,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1413,7 +1411,7 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 2345,
+                "value": 2312,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1422,7 +1420,7 @@
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 2195,
+                "value": 3375,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1433,7 +1431,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1442,7 +1440,7 @@
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 3913,
+                "value": 3822,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1451,11 +1449,11 @@
           },
           "719995760556478464": {
             "name": "TaylorJohnson16",
-            "today": 4540,
-            "sent_today": 5723,
-            "today_delta": -1183,
-            "t0": 4540,
-            "t0_delta": -1183,
+            "today": 5687,
+            "sent_today": 5616,
+            "today_delta": 71,
+            "t0": 5687,
+            "t0_delta": 71,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -1465,7 +1463,7 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 2345,
+                "value": 2312,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1474,7 +1472,7 @@
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 2195,
+                "value": 3375,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1485,7 +1483,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1494,7 +1492,7 @@
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 3913,
+                "value": 3822,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1505,7 +1503,7 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 2345,
+                "value": 2312,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1514,7 +1512,7 @@
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 2195,
+                "value": 3375,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1526,15 +1524,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 5723,
-              "TaylorJohnson16": 4540
+              "TrumanCooper": 5616,
+              "TaylorJohnson16": 5687
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 5723,
-              "TaylorJohnson16": 4540
+              "TrumanCooper": 5616,
+              "TaylorJohnson16": 5687
             }
           }
         ],
@@ -1545,11 +1543,11 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 9415,
-            "sent_today": 8824,
-            "today_delta": 591,
-            "t0": 9415,
-            "t0_delta": 591,
+            "today": 9365,
+            "sent_today": 9385,
+            "today_delta": -20,
+            "t0": 9365,
+            "t0_delta": -20,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -1558,21 +1556,21 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 4190,
+                "value": 4184,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4190
+                "value_flat": 4184
               },
               {
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 5225,
+                "value": 5181,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5225
+                "value_flat": 5181
               }
             ],
             "sent": [
@@ -1580,21 +1578,21 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 4448,
+                "value": 4435,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4448
+                "value_flat": 4435
               },
               {
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 4376,
+                "value": 4950,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4376
+                "value_flat": 4950
               }
             ],
             "value_adjust": 0,
@@ -1603,11 +1601,11 @@
           },
           "719995760556478464": {
             "name": "TaylorJohnson16",
-            "today": 8824,
-            "sent_today": 9415,
-            "today_delta": -591,
-            "t0": 8824,
-            "t0_delta": -591,
+            "today": 9385,
+            "sent_today": 9365,
+            "today_delta": 20,
+            "t0": 9385,
+            "t0_delta": 20,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -1616,21 +1614,21 @@
                 "label": "DJ Moore",
                 "kind": "player",
                 "asset_key": "player:4983",
-                "value": 4448,
+                "value": 4435,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4448
+                "value_flat": 4435
               },
               {
                 "label": "Dalton Kincaid",
                 "kind": "player",
                 "asset_key": "player:10236",
-                "value": 4376,
+                "value": 4950,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4376
+                "value_flat": 4950
               }
             ],
             "sent": [
@@ -1638,21 +1636,21 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 4190,
+                "value": 4184,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4190
+                "value_flat": 4184
               },
               {
                 "label": "Tyler Warren",
                 "kind": "player",
                 "asset_key": "player:12518",
-                "value": 5225,
+                "value": 5181,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5225
+                "value_flat": 5181
               }
             ],
             "value_adjust": 0,
@@ -1664,15 +1662,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 9415,
-              "TaylorJohnson16": 8824
+              "TrumanCooper": 9365,
+              "TaylorJohnson16": 9385
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 9415,
-              "TaylorJohnson16": 8824
+              "TrumanCooper": 9365,
+              "TaylorJohnson16": 9385
             }
           }
         ],
@@ -1683,9 +1681,9 @@
           "sides": {
             "458342725222133760": {
               "name": "TrumanCooper",
-              "today": 9415,
-              "sent_today": 8824,
-              "today_delta": 591,
+              "today": 9365,
+              "sent_today": 9385,
+              "today_delta": -20,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -1695,7 +1693,7 @@
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1704,7 +1702,7 @@
                   "label": "Tyler Warren",
                   "kind": "player",
                   "asset_key": "player:12518",
-                  "value": 5225,
+                  "value": 5181,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1715,7 +1713,7 @@
                   "label": "DJ Moore",
                   "kind": "player",
                   "asset_key": "player:4983",
-                  "value": 4448,
+                  "value": 4435,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1724,7 +1722,7 @@
                   "label": "Dalton Kincaid",
                   "kind": "player",
                   "asset_key": "player:10236",
-                  "value": 4376,
+                  "value": 4950,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1735,9 +1733,9 @@
             },
             "719995760556478464": {
               "name": "TaylorJohnson16",
-              "today": 8824,
-              "sent_today": 9415,
-              "today_delta": -591,
+              "today": 9385,
+              "sent_today": 9365,
+              "today_delta": 20,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -1747,7 +1745,7 @@
                   "label": "DJ Moore",
                   "kind": "player",
                   "asset_key": "player:4983",
-                  "value": 4448,
+                  "value": 4435,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1756,7 +1754,7 @@
                   "label": "Dalton Kincaid",
                   "kind": "player",
                   "asset_key": "player:10236",
-                  "value": 4376,
+                  "value": 4950,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1767,7 +1765,7 @@
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1776,7 +1774,7 @@
                   "label": "Tyler Warren",
                   "kind": "player",
                   "asset_key": "player:12518",
-                  "value": 5225,
+                  "value": 5181,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -1793,19 +1791,19 @@
           "sides": {
             "458342725222133760": {
               "name": "TrumanCooper",
-              "today": 9415,
-              "sent_today": 8824,
-              "today_delta": 591,
+              "today": 9365,
+              "sent_today": 9385,
+              "today_delta": -20,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 51,
+              "snaps": 55,
               "legs": [
                 {
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1814,7 +1812,7 @@
                   "label": "Tyler Warren",
                   "kind": "player",
                   "asset_key": "player:12518",
-                  "value": 5225,
+                  "value": 5181,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1825,7 +1823,7 @@
                   "label": "DJ Moore",
                   "kind": "player",
                   "asset_key": "player:4983",
-                  "value": 4448,
+                  "value": 4435,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1834,7 +1832,7 @@
                   "label": "Dalton Kincaid",
                   "kind": "player",
                   "asset_key": "player:10236",
-                  "value": 4376,
+                  "value": 4950,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1845,19 +1843,19 @@
             },
             "719995760556478464": {
               "name": "TaylorJohnson16",
-              "today": 8824,
-              "sent_today": 9415,
-              "today_delta": -591,
+              "today": 9385,
+              "sent_today": 9365,
+              "today_delta": 20,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 51,
+              "snaps": 55,
               "legs": [
                 {
                   "label": "DJ Moore",
                   "kind": "player",
                   "asset_key": "player:4983",
-                  "value": 4448,
+                  "value": 4435,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1866,7 +1864,7 @@
                   "label": "Dalton Kincaid",
                   "kind": "player",
                   "asset_key": "player:10236",
-                  "value": 4376,
+                  "value": 4950,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1877,7 +1875,7 @@
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1886,7 +1884,7 @@
                   "label": "Tyler Warren",
                   "kind": "player",
                   "asset_key": "player:12518",
-                  "value": 5225,
+                  "value": 5181,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -1896,7 +1894,7 @@
               "value_adjust_sent": 0
             }
           },
-          "snaps": 51,
+          "snaps": 55,
           "incomplete": false
         }
       }
@@ -1921,11 +1919,11 @@
         "sides": {
           "740721014035660800": {
             "name": "kotula69",
-            "today": 12853,
-            "sent_today": 11355,
-            "today_delta": 1498,
-            "t0": 12853,
-            "t0_delta": 1498,
+            "today": 13219,
+            "sent_today": 10980,
+            "today_delta": 2239,
+            "t0": 13219,
+            "t0_delta": 2239,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -1935,7 +1933,7 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 9013,
+                "value": 9098,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1944,7 +1942,7 @@
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 3840,
+                "value": 4121,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1955,7 +1953,7 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6335,
+                "value": 6030,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1964,7 +1962,7 @@
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5020,
+                "value": 4950,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -1975,7 +1973,7 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 9013,
+                "value": 9098,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1984,7 +1982,7 @@
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 3840,
+                "value": 4121,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -1993,11 +1991,11 @@
           },
           "741001884449525760": {
             "name": "fatassmexican",
-            "today": 11355,
-            "sent_today": 12853,
-            "today_delta": -1498,
-            "t0": 11355,
-            "t0_delta": -1498,
+            "today": 10980,
+            "sent_today": 13219,
+            "today_delta": -2239,
+            "t0": 10980,
+            "t0_delta": -2239,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2007,7 +2005,7 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6335,
+                "value": 6030,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2016,7 +2014,7 @@
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5020,
+                "value": 4950,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2027,7 +2025,7 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 9013,
+                "value": 9098,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2036,7 +2034,7 @@
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 3840,
+                "value": 4121,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2047,7 +2045,7 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6335,
+                "value": 6030,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2056,7 +2054,7 @@
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5020,
+                "value": 4950,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2068,15 +2066,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "kotula69": 12853,
-              "fatassmexican": 11355
+              "kotula69": 13219,
+              "fatassmexican": 10980
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "kotula69": 12853,
-              "fatassmexican": 11355
+              "kotula69": 13219,
+              "fatassmexican": 10980
             }
           }
         ],
@@ -2087,11 +2085,11 @@
         "sides": {
           "740721014035660800": {
             "name": "kotula69",
-            "today": 12853,
-            "sent_today": 11355,
-            "today_delta": 1498,
-            "t0": 12853,
-            "t0_delta": 1498,
+            "today": 13219,
+            "sent_today": 10980,
+            "today_delta": 2239,
+            "t0": 13219,
+            "t0_delta": 2239,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2101,7 +2099,7 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 9013,
+                "value": 9098,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2110,7 +2108,7 @@
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 3840,
+                "value": 4121,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2121,7 +2119,7 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6335,
+                "value": 6030,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2130,7 +2128,7 @@
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5020,
+                "value": 4950,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2141,7 +2139,7 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 9013,
+                "value": 9098,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2150,7 +2148,7 @@
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 3840,
+                "value": 4121,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2159,11 +2157,11 @@
           },
           "741001884449525760": {
             "name": "fatassmexican",
-            "today": 11355,
-            "sent_today": 12853,
-            "today_delta": -1498,
-            "t0": 11355,
-            "t0_delta": -1498,
+            "today": 10980,
+            "sent_today": 13219,
+            "today_delta": -2239,
+            "t0": 10980,
+            "t0_delta": -2239,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2173,7 +2171,7 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6335,
+                "value": 6030,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2182,7 +2180,7 @@
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5020,
+                "value": 4950,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2193,7 +2191,7 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 9013,
+                "value": 9098,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2202,7 +2200,7 @@
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 3840,
+                "value": 4121,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2213,7 +2211,7 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6335,
+                "value": 6030,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2222,7 +2220,7 @@
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5020,
+                "value": 4950,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2234,15 +2232,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "kotula69": 12853,
-              "fatassmexican": 11355
+              "kotula69": 13219,
+              "fatassmexican": 10980
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "kotula69": 12853,
-              "fatassmexican": 11355
+              "kotula69": 13219,
+              "fatassmexican": 10980
             }
           }
         ],
@@ -2253,11 +2251,11 @@
         "sides": {
           "740721014035660800": {
             "name": "kotula69",
-            "today": 14045,
-            "sent_today": 12574,
-            "today_delta": 1471,
-            "t0": 14045,
-            "t0_delta": 1471,
+            "today": 14297,
+            "sent_today": 12337,
+            "today_delta": 1960,
+            "t0": 14297,
+            "t0_delta": 1960,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -2266,21 +2264,21 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 8859,
+                "value": 8954,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 8859
+                "value_flat": 8954
               },
               {
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 5186,
+                "value": 5343,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5186
+                "value_flat": 5343
               }
             ],
             "sent": [
@@ -2288,21 +2286,21 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6718,
+                "value": 6516,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 6718
+                "value_flat": 6516
               },
               {
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5856,
+                "value": 5821,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5856
+                "value_flat": 5821
               }
             ],
             "value_adjust": 0,
@@ -2311,11 +2309,11 @@
           },
           "741001884449525760": {
             "name": "fatassmexican",
-            "today": 12574,
-            "sent_today": 14045,
-            "today_delta": -1471,
-            "t0": 12574,
-            "t0_delta": -1471,
+            "today": 12337,
+            "sent_today": 14297,
+            "today_delta": -1960,
+            "t0": 12337,
+            "t0_delta": -1960,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -2324,21 +2322,21 @@
                 "label": "Nico Collins",
                 "kind": "player",
                 "asset_key": "player:7569",
-                "value": 6718,
+                "value": 6516,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 6718
+                "value_flat": 6516
               },
               {
                 "label": "George Pickens",
                 "kind": "player",
                 "asset_key": "player:8137",
-                "value": 5856,
+                "value": 5821,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5856
+                "value_flat": 5821
               }
             ],
             "sent": [
@@ -2346,21 +2344,21 @@
                 "label": "CeeDee Lamb",
                 "kind": "player",
                 "asset_key": "player:6786",
-                "value": 8859,
+                "value": 8954,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 8859
+                "value_flat": 8954
               },
               {
                 "label": "Jalen Hurts",
                 "kind": "player",
                 "asset_key": "player:6904",
-                "value": 5186,
+                "value": 5343,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5186
+                "value_flat": 5343
               }
             ],
             "value_adjust": 0,
@@ -2372,15 +2370,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "kotula69": 14045,
-              "fatassmexican": 12574
+              "kotula69": 14297,
+              "fatassmexican": 12337
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "kotula69": 14045,
-              "fatassmexican": 12574
+              "kotula69": 14297,
+              "fatassmexican": 12337
             }
           }
         ],
@@ -2391,9 +2389,9 @@
           "sides": {
             "740721014035660800": {
               "name": "kotula69",
-              "today": 14045,
-              "sent_today": 12574,
-              "today_delta": 1471,
+              "today": 14297,
+              "sent_today": 12337,
+              "today_delta": 1960,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -2403,7 +2401,7 @@
                   "label": "CeeDee Lamb",
                   "kind": "player",
                   "asset_key": "player:6786",
-                  "value": 8859,
+                  "value": 8954,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2412,7 +2410,7 @@
                   "label": "Jalen Hurts",
                   "kind": "player",
                   "asset_key": "player:6904",
-                  "value": 5186,
+                  "value": 5343,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2423,7 +2421,7 @@
                   "label": "Nico Collins",
                   "kind": "player",
                   "asset_key": "player:7569",
-                  "value": 6718,
+                  "value": 6516,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2432,7 +2430,7 @@
                   "label": "George Pickens",
                   "kind": "player",
                   "asset_key": "player:8137",
-                  "value": 5856,
+                  "value": 5821,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2443,9 +2441,9 @@
             },
             "741001884449525760": {
               "name": "fatassmexican",
-              "today": 12574,
-              "sent_today": 14045,
-              "today_delta": -1471,
+              "today": 12337,
+              "sent_today": 14297,
+              "today_delta": -1960,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -2455,7 +2453,7 @@
                   "label": "Nico Collins",
                   "kind": "player",
                   "asset_key": "player:7569",
-                  "value": 6718,
+                  "value": 6516,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2464,7 +2462,7 @@
                   "label": "George Pickens",
                   "kind": "player",
                   "asset_key": "player:8137",
-                  "value": 5856,
+                  "value": 5821,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2475,7 +2473,7 @@
                   "label": "CeeDee Lamb",
                   "kind": "player",
                   "asset_key": "player:6786",
-                  "value": 8859,
+                  "value": 8954,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2484,7 +2482,7 @@
                   "label": "Jalen Hurts",
                   "kind": "player",
                   "asset_key": "player:6904",
-                  "value": 5186,
+                  "value": 5343,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2501,19 +2499,19 @@
           "sides": {
             "740721014035660800": {
               "name": "kotula69",
-              "today": 14045,
-              "sent_today": 12574,
-              "today_delta": 1471,
+              "today": 14297,
+              "sent_today": 12337,
+              "today_delta": 1960,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 51,
+              "snaps": 55,
               "legs": [
                 {
                   "label": "CeeDee Lamb",
                   "kind": "player",
                   "asset_key": "player:6786",
-                  "value": 8859,
+                  "value": 8954,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2522,7 +2520,7 @@
                   "label": "Jalen Hurts",
                   "kind": "player",
                   "asset_key": "player:6904",
-                  "value": 5186,
+                  "value": 5343,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2533,7 +2531,7 @@
                   "label": "Nico Collins",
                   "kind": "player",
                   "asset_key": "player:7569",
-                  "value": 6718,
+                  "value": 6516,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2542,7 +2540,7 @@
                   "label": "George Pickens",
                   "kind": "player",
                   "asset_key": "player:8137",
-                  "value": 5856,
+                  "value": 5821,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2553,19 +2551,19 @@
             },
             "741001884449525760": {
               "name": "fatassmexican",
-              "today": 12574,
-              "sent_today": 14045,
-              "today_delta": -1471,
+              "today": 12337,
+              "sent_today": 14297,
+              "today_delta": -1960,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 51,
+              "snaps": 55,
               "legs": [
                 {
                   "label": "Nico Collins",
                   "kind": "player",
                   "asset_key": "player:7569",
-                  "value": 6718,
+                  "value": 6516,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2574,7 +2572,7 @@
                   "label": "George Pickens",
                   "kind": "player",
                   "asset_key": "player:8137",
-                  "value": 5856,
+                  "value": 5821,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2585,7 +2583,7 @@
                   "label": "CeeDee Lamb",
                   "kind": "player",
                   "asset_key": "player:6786",
-                  "value": 8859,
+                  "value": 8954,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2594,7 +2592,7 @@
                   "label": "Jalen Hurts",
                   "kind": "player",
                   "asset_key": "player:6904",
-                  "value": 5186,
+                  "value": 5343,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -2604,7 +2602,7 @@
               "value_adjust_sent": 0
             }
           },
-          "snaps": 51,
+          "snaps": 55,
           "incomplete": false
         }
       }
@@ -2629,11 +2627,11 @@
         "sides": {
           "1132151320410140672": {
             "name": "ztrain123",
-            "today": 188,
-            "sent_today": 5103,
-            "today_delta": -4915,
-            "t0": 188,
-            "t0_delta": -4915,
+            "today": 181,
+            "sent_today": 5152,
+            "today_delta": -4971,
+            "t0": 181,
+            "t0_delta": -4971,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2643,7 +2641,7 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 188,
+                "value": 181,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2654,7 +2652,7 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5103,
+                "value": 5152,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2665,7 +2663,7 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 188,
+                "value": 181,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2674,11 +2672,11 @@
           },
           "1131056110791880704": {
             "name": "sbzy11",
-            "today": 5103,
-            "sent_today": 188,
-            "today_delta": 4915,
-            "t0": 5103,
-            "t0_delta": 4915,
+            "today": 5152,
+            "sent_today": 181,
+            "today_delta": 4971,
+            "t0": 5152,
+            "t0_delta": 4971,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2688,7 +2686,7 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5103,
+                "value": 5152,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2699,7 +2697,7 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 188,
+                "value": 181,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2710,7 +2708,7 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5103,
+                "value": 5152,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2722,15 +2720,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "ztrain123": 188,
-              "sbzy11": 5103
+              "ztrain123": 181,
+              "sbzy11": 5152
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "ztrain123": 188,
-              "sbzy11": 5103
+              "ztrain123": 181,
+              "sbzy11": 5152
             }
           }
         ],
@@ -2741,11 +2739,11 @@
         "sides": {
           "1132151320410140672": {
             "name": "ztrain123",
-            "today": 188,
-            "sent_today": 5103,
-            "today_delta": -4915,
-            "t0": 188,
-            "t0_delta": -4915,
+            "today": 181,
+            "sent_today": 5152,
+            "today_delta": -4971,
+            "t0": 181,
+            "t0_delta": -4971,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2755,7 +2753,7 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 188,
+                "value": 181,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2766,7 +2764,7 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5103,
+                "value": 5152,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2777,7 +2775,7 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 188,
+                "value": 181,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2786,11 +2784,11 @@
           },
           "1131056110791880704": {
             "name": "sbzy11",
-            "today": 5103,
-            "sent_today": 188,
-            "today_delta": 4915,
-            "t0": 5103,
-            "t0_delta": 4915,
+            "today": 5152,
+            "sent_today": 181,
+            "today_delta": 4971,
+            "t0": 5152,
+            "t0_delta": 4971,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -2800,7 +2798,7 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5103,
+                "value": 5152,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2811,7 +2809,7 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 188,
+                "value": 181,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -2822,7 +2820,7 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5103,
+                "value": 5152,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -2834,15 +2832,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "ztrain123": 188,
-              "sbzy11": 5103
+              "ztrain123": 181,
+              "sbzy11": 5152
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "ztrain123": 188,
-              "sbzy11": 5103
+              "ztrain123": 181,
+              "sbzy11": 5152
             }
           }
         ],
@@ -2853,11 +2851,11 @@
         "sides": {
           "1132151320410140672": {
             "name": "ztrain123",
-            "today": 2631,
-            "sent_today": 5907,
-            "today_delta": -3276,
-            "t0": 2631,
-            "t0_delta": -3276,
+            "today": 2609,
+            "sent_today": 5944,
+            "today_delta": -3335,
+            "t0": 2609,
+            "t0_delta": -3335,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -2866,11 +2864,11 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 2631,
+                "value": 2609,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 2631
+                "value_flat": 2609
               }
             ],
             "sent": [
@@ -2878,11 +2876,11 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5907,
+                "value": 5944,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5907
+                "value_flat": 5944
               }
             ],
             "value_adjust": 0,
@@ -2891,11 +2889,11 @@
           },
           "1131056110791880704": {
             "name": "sbzy11",
-            "today": 5907,
-            "sent_today": 2631,
-            "today_delta": 3276,
-            "t0": 5907,
-            "t0_delta": 3276,
+            "today": 5944,
+            "sent_today": 2609,
+            "today_delta": 3335,
+            "t0": 5944,
+            "t0_delta": 3335,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -2904,11 +2902,11 @@
                 "label": "DeVonta Smith",
                 "kind": "player",
                 "asset_key": "player:7525",
-                "value": 5907,
+                "value": 5944,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 5907
+                "value_flat": 5944
               }
             ],
             "sent": [
@@ -2916,11 +2914,11 @@
                 "label": "Tyler Allgeier",
                 "kind": "player",
                 "asset_key": "player:8132",
-                "value": 2631,
+                "value": 2609,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 2631
+                "value_flat": 2609
               }
             ],
             "value_adjust": 0,
@@ -2932,15 +2930,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "ztrain123": 2631,
-              "sbzy11": 5907
+              "ztrain123": 2609,
+              "sbzy11": 5944
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "ztrain123": 2631,
-              "sbzy11": 5907
+              "ztrain123": 2609,
+              "sbzy11": 5944
             }
           }
         ],
@@ -2951,9 +2949,9 @@
           "sides": {
             "1132151320410140672": {
               "name": "ztrain123",
-              "today": 2631,
-              "sent_today": 5907,
-              "today_delta": -3276,
+              "today": 2609,
+              "sent_today": 5944,
+              "today_delta": -3335,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -2963,7 +2961,7 @@
                   "label": "Tyler Allgeier",
                   "kind": "player",
                   "asset_key": "player:8132",
-                  "value": 2631,
+                  "value": 2609,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2974,7 +2972,7 @@
                   "label": "DeVonta Smith",
                   "kind": "player",
                   "asset_key": "player:7525",
-                  "value": 5907,
+                  "value": 5944,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -2985,9 +2983,9 @@
             },
             "1131056110791880704": {
               "name": "sbzy11",
-              "today": 5907,
-              "sent_today": 2631,
-              "today_delta": 3276,
+              "today": 5944,
+              "sent_today": 2609,
+              "today_delta": 3335,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -2997,7 +2995,7 @@
                   "label": "DeVonta Smith",
                   "kind": "player",
                   "asset_key": "player:7525",
-                  "value": 5907,
+                  "value": 5944,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3008,7 +3006,7 @@
                   "label": "Tyler Allgeier",
                   "kind": "player",
                   "asset_key": "player:8132",
-                  "value": 2631,
+                  "value": 2609,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3025,19 +3023,19 @@
           "sides": {
             "1132151320410140672": {
               "name": "ztrain123",
-              "today": 2631,
-              "sent_today": 5907,
-              "today_delta": -3276,
+              "today": 2609,
+              "sent_today": 5944,
+              "today_delta": -3335,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 49,
+              "snaps": 54,
               "legs": [
                 {
                   "label": "Tyler Allgeier",
                   "kind": "player",
                   "asset_key": "player:8132",
-                  "value": 2631,
+                  "value": 2609,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3048,7 +3046,7 @@
                   "label": "DeVonta Smith",
                   "kind": "player",
                   "asset_key": "player:7525",
-                  "value": 5907,
+                  "value": 5944,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3059,19 +3057,19 @@
             },
             "1131056110791880704": {
               "name": "sbzy11",
-              "today": 5907,
-              "sent_today": 2631,
-              "today_delta": 3276,
+              "today": 5944,
+              "sent_today": 2609,
+              "today_delta": 3335,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 49,
+              "snaps": 54,
               "legs": [
                 {
                   "label": "DeVonta Smith",
                   "kind": "player",
                   "asset_key": "player:7525",
-                  "value": 5907,
+                  "value": 5944,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3082,7 +3080,7 @@
                   "label": "Tyler Allgeier",
                   "kind": "player",
                   "asset_key": "player:8132",
-                  "value": 2631,
+                  "value": 2609,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3092,7 +3090,7 @@
               "value_adjust_sent": 0
             }
           },
-          "snaps": 49,
+          "snaps": 54,
           "incomplete": false
         }
       }
@@ -3117,11 +3115,11 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 7074,
-            "sent_today": 2320,
-            "today_delta": 4754,
-            "t0": 7074,
-            "t0_delta": 4754,
+            "today": 6787,
+            "sent_today": 2073,
+            "today_delta": 4714,
+            "t0": 6787,
+            "t0_delta": 4714,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -3131,7 +3129,7 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 196,
+                "value": 162,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3140,7 +3138,7 @@
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 6878,
+                "value": 6625,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3151,7 +3149,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3160,7 +3158,7 @@
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 510,
+                "value": 279,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3171,7 +3169,7 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 196,
+                "value": 162,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3180,7 +3178,7 @@
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 6878,
+                "value": 6625,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3189,11 +3187,11 @@
           },
           "1132149096636141568": {
             "name": "Aballers",
-            "today": 2320,
-            "sent_today": 7074,
-            "today_delta": -4754,
-            "t0": 2320,
-            "t0_delta": -4754,
+            "today": 2073,
+            "sent_today": 6787,
+            "today_delta": -4714,
+            "t0": 2073,
+            "t0_delta": -4714,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -3203,7 +3201,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3212,7 +3210,7 @@
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 510,
+                "value": 279,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3223,7 +3221,7 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 196,
+                "value": 162,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3232,7 +3230,7 @@
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 6878,
+                "value": 6625,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3243,7 +3241,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3252,7 +3250,7 @@
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 510,
+                "value": 279,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3264,15 +3262,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 7074,
-              "Aballers": 2320
+              "TrumanCooper": 6787,
+              "Aballers": 2073
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 7074,
-              "Aballers": 2320
+              "TrumanCooper": 6787,
+              "Aballers": 2073
             }
           }
         ],
@@ -3283,11 +3281,11 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 7074,
-            "sent_today": 2320,
-            "today_delta": 4754,
-            "t0": 7074,
-            "t0_delta": 4754,
+            "today": 6787,
+            "sent_today": 2073,
+            "today_delta": 4714,
+            "t0": 6787,
+            "t0_delta": 4714,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -3297,7 +3295,7 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 196,
+                "value": 162,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3306,7 +3304,7 @@
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 6878,
+                "value": 6625,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3317,7 +3315,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3326,7 +3324,7 @@
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 510,
+                "value": 279,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3337,7 +3335,7 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 196,
+                "value": 162,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3346,7 +3344,7 @@
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 6878,
+                "value": 6625,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3355,11 +3353,11 @@
           },
           "1132149096636141568": {
             "name": "Aballers",
-            "today": 2320,
-            "sent_today": 7074,
-            "today_delta": -4754,
-            "t0": 2320,
-            "t0_delta": -4754,
+            "today": 2073,
+            "sent_today": 6787,
+            "today_delta": -4714,
+            "t0": 2073,
+            "t0_delta": -4714,
             "unpriced": 0,
             "sent_unpriced": 0,
             "t0_unpriced": 0,
@@ -3369,7 +3367,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3378,7 +3376,7 @@
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 510,
+                "value": 279,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3389,7 +3387,7 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 196,
+                "value": 162,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3398,7 +3396,7 @@
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 6878,
+                "value": 6625,
                 "flag": null,
                 "became": null,
                 "drafted_by": null
@@ -3409,7 +3407,7 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 1810,
+                "value": 1794,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3418,7 +3416,7 @@
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 510,
+                "value": 279,
                 "flag": "first_snap",
                 "became": null,
                 "drafted_by": null
@@ -3430,15 +3428,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 7074,
-              "Aballers": 2320
+              "TrumanCooper": 6787,
+              "Aballers": 2073
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 7074,
-              "Aballers": 2320
+              "TrumanCooper": 6787,
+              "Aballers": 2073
             }
           }
         ],
@@ -3449,11 +3447,11 @@
         "sides": {
           "458342725222133760": {
             "name": "TrumanCooper",
-            "today": 9767,
-            "sent_today": 7460,
-            "today_delta": 2307,
-            "t0": 9767,
-            "t0_delta": 2307,
+            "today": 9478,
+            "sent_today": 7064,
+            "today_delta": 2414,
+            "t0": 9478,
+            "t0_delta": 2414,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -3462,21 +3460,21 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 2657,
+                "value": 2542,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 2657
+                "value_flat": 2542
               },
               {
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 7110,
+                "value": 6936,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 7110
+                "value_flat": 6936
               }
             ],
             "sent": [
@@ -3484,21 +3482,21 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 4190,
+                "value": 4184,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4190
+                "value_flat": 4184
               },
               {
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 3270,
+                "value": 2880,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 3270
+                "value_flat": 2880
               }
             ],
             "value_adjust": 0,
@@ -3507,11 +3505,11 @@
           },
           "1132149096636141568": {
             "name": "Aballers",
-            "today": 7460,
-            "sent_today": 9767,
-            "today_delta": -2307,
-            "t0": 7460,
-            "t0_delta": -2307,
+            "today": 7064,
+            "sent_today": 9478,
+            "today_delta": -2414,
+            "t0": 7064,
+            "t0_delta": -2414,
             "unpriced": 0,
             "sent_unpriced": 0,
             "incomplete": false,
@@ -3520,21 +3518,21 @@
                 "label": "Michael Pittman",
                 "kind": "player",
                 "asset_key": "player:6819",
-                "value": 4190,
+                "value": 4184,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 4190
+                "value_flat": 4184
               },
               {
                 "label": "Zach Charbonnet",
                 "kind": "player",
                 "asset_key": "player:9753",
-                "value": 3270,
+                "value": 2880,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 3270
+                "value_flat": 2880
               }
             ],
             "sent": [
@@ -3542,21 +3540,21 @@
                 "label": "Tyrone Tracy",
                 "kind": "player",
                 "asset_key": "player:11655",
-                "value": 2657,
+                "value": 2542,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 2657
+                "value_flat": 2542
               },
               {
                 "label": "Tetairoa McMillan",
                 "kind": "player",
                 "asset_key": "player:12526",
-                "value": 7110,
+                "value": 6936,
                 "flag": null,
                 "became": null,
                 "drafted_by": null,
-                "value_flat": 7110
+                "value_flat": 6936
               }
             ],
             "value_adjust": 0,
@@ -3568,15 +3566,15 @@
           {
             "as_of": "2025-12-31",
             "points": {
-              "TrumanCooper": 9767,
-              "Aballers": 7460
+              "TrumanCooper": 9478,
+              "Aballers": 7064
             }
           },
           {
-            "as_of": "2026-09-01",
+            "as_of": "2026-09-30",
             "points": {
-              "TrumanCooper": 9767,
-              "Aballers": 7460
+              "TrumanCooper": 9478,
+              "Aballers": 7064
             }
           }
         ],
@@ -3587,9 +3585,9 @@
           "sides": {
             "458342725222133760": {
               "name": "TrumanCooper",
-              "today": 9767,
-              "sent_today": 7460,
-              "today_delta": 2307,
+              "today": 9478,
+              "sent_today": 7064,
+              "today_delta": 2414,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -3599,7 +3597,7 @@
                   "label": "Tyrone Tracy",
                   "kind": "player",
                   "asset_key": "player:11655",
-                  "value": 2657,
+                  "value": 2542,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3608,7 +3606,7 @@
                   "label": "Tetairoa McMillan",
                   "kind": "player",
                   "asset_key": "player:12526",
-                  "value": 7110,
+                  "value": 6936,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3619,7 +3617,7 @@
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3628,7 +3626,7 @@
                   "label": "Zach Charbonnet",
                   "kind": "player",
                   "asset_key": "player:9753",
-                  "value": 3270,
+                  "value": 2880,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3639,9 +3637,9 @@
             },
             "1132149096636141568": {
               "name": "Aballers",
-              "today": 7460,
-              "sent_today": 9767,
-              "today_delta": -2307,
+              "today": 7064,
+              "sent_today": 9478,
+              "today_delta": -2414,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
@@ -3651,7 +3649,7 @@
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3660,7 +3658,7 @@
                   "label": "Zach Charbonnet",
                   "kind": "player",
                   "asset_key": "player:9753",
-                  "value": 3270,
+                  "value": 2880,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3671,7 +3669,7 @@
                   "label": "Tyrone Tracy",
                   "kind": "player",
                   "asset_key": "player:11655",
-                  "value": 2657,
+                  "value": 2542,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3680,7 +3678,7 @@
                   "label": "Tetairoa McMillan",
                   "kind": "player",
                   "asset_key": "player:12526",
-                  "value": 7110,
+                  "value": 6936,
                   "flag": "first_snap",
                   "became": null,
                   "drafted_by": null
@@ -3697,19 +3695,19 @@
           "sides": {
             "458342725222133760": {
               "name": "TrumanCooper",
-              "today": 9767,
-              "sent_today": 7460,
-              "today_delta": 2307,
+              "today": 9478,
+              "sent_today": 7064,
+              "today_delta": 2414,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 44,
+              "snaps": 48,
               "legs": [
                 {
                   "label": "Tyrone Tracy",
                   "kind": "player",
                   "asset_key": "player:11655",
-                  "value": 2657,
+                  "value": 2542,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3718,7 +3716,7 @@
                   "label": "Tetairoa McMillan",
                   "kind": "player",
                   "asset_key": "player:12526",
-                  "value": 7110,
+                  "value": 6936,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3729,7 +3727,7 @@
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3738,7 +3736,7 @@
                   "label": "Zach Charbonnet",
                   "kind": "player",
                   "asset_key": "player:9753",
-                  "value": 3270,
+                  "value": 2880,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3749,19 +3747,19 @@
             },
             "1132149096636141568": {
               "name": "Aballers",
-              "today": 7460,
-              "sent_today": 9767,
-              "today_delta": -2307,
+              "today": 7064,
+              "sent_today": 9478,
+              "today_delta": -2414,
               "unpriced": 0,
               "sent_unpriced": 0,
               "incomplete": false,
-              "snaps": 44,
+              "snaps": 48,
               "legs": [
                 {
                   "label": "Michael Pittman",
                   "kind": "player",
                   "asset_key": "player:6819",
-                  "value": 4190,
+                  "value": 4184,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3770,7 +3768,7 @@
                   "label": "Zach Charbonnet",
                   "kind": "player",
                   "asset_key": "player:9753",
-                  "value": 3270,
+                  "value": 2880,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3781,7 +3779,7 @@
                   "label": "Tyrone Tracy",
                   "kind": "player",
                   "asset_key": "player:11655",
-                  "value": 2657,
+                  "value": 2542,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3790,7 +3788,7 @@
                   "label": "Tetairoa McMillan",
                   "kind": "player",
                   "asset_key": "player:12526",
-                  "value": 7110,
+                  "value": 6936,
                   "flag": null,
                   "became": null,
                   "drafted_by": null
@@ -3800,7 +3798,7 @@
               "value_adjust_sent": 0
             }
           },
-          "snaps": 44,
+          "snaps": 48,
           "incomplete": false
         }
       }

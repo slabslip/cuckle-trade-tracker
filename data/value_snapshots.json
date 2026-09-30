@@ -1,5 +1,11 @@
 [
   {
+    "as_of": "2026-09-30",
+    "source": "latest",
+    "players": 344,
+    "picks": 85
+  },
+  {
     "as_of": "2026-09-01",
     "source": "latest",
     "players": 530,

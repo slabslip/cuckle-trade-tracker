@@ -167,7 +167,7 @@ export function espnCookieDebug() {
   };
 }
 
-export async function espnGet(url) {
+export async function espnGet(url, extraHeaders) {
   const headers = {
     Accept: "application/json, text/plain, */*",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -175,6 +175,7 @@ export async function espnGet(url) {
     Origin: "https://fantasy.espn.com",
     "X-Fantasy-Source": "kona",
     "X-Fantasy-Platform": "kona-web-2.0.0",
+    ...(extraHeaders || {}),
   };
   const cookie = espnCookieHeader();
   if (cookie) headers.Cookie = cookie;

@@ -168,22 +168,36 @@ async function fetchSchedule(season) {
   return [];
 }
 
+const TRADE_FILTER = {
+  transactions: { filterType: { value: ["TRADE_ACCEPT", "TRADE_ACCEPTED", "TRADE"] } },
+};
+
+/** mTransactions2 needs a real scoring period. Week 0 + filterType TRADE returns no rows. */
 async function fetchTrades(season) {
-  const filter = encodeURIComponent(JSON.stringify({
-    transactions: { filterType: { value: ["TRADE"] } },
-  }));
-  const urls = [
-    `${ESPN_READS}/seasons/${season}/segments/0/leagues/${ESPN_ID}?view=mTransactions2`,
-    `${ESPN_WEB}/seasons/${season}/segments/0/leagues/${ESPN_ID}?view=mTransactions2`,
-  ];
-  for (const url of urls) {
-    const res = await espnGet(url + `&scoringPeriodId=0&X-Fantasy-Filter=${filter}`);
-    if (res.ok && res.json) {
+  const seen = new Set();
+  const out = [];
+  const filterHeader = { "X-Fantasy-Filter": JSON.stringify(TRADE_FILTER) };
+  for (let week = 1; week <= 18; week++) {
+    const urls = [
+      `${ESPN_READS}/seasons/${season}/segments/0/leagues/${ESPN_ID}?view=mTransactions2&scoringPeriodId=${week}`,
+      `${ESPN_WEB}/seasons/${season}/segments/0/leagues/${ESPN_ID}?view=mTransactions2&scoringPeriodId=${week}`,
+      `${ESPN_WEB}/leagueHistory/${ESPN_ID}?seasonId=${season}&view=mTransactions2&scoringPeriodId=${week}`,
+    ];
+    for (const url of urls) {
+      const res = await espnGet(url, filterHeader);
+      if (!res.ok || !res.json) continue;
       const body = Array.isArray(res.json) ? res.json[0] : res.json;
-      return Array.isArray(body && body.transactions) ? body.transactions : [];
+      const txs = Array.isArray(body && body.transactions) ? body.transactions : [];
+      for (const tx of txs) {
+        const id = String((tx && (tx.id || tx.proposedDate)) || "");
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        out.push(tx);
+      }
+      if (txs.length || res.ok) break;
     }
   }
-  return [];
+  return out;
 }
 
 function parseMembers(body, season) {
@@ -300,13 +314,15 @@ function parseSeason(body, season, idMap) {
   return { leagueRow, members, seats, standings, titles, idMap };
 }
 
-function parseTrades(txs, season, seats, idMap) {
+export function parseTrades(txs, season, seats, idMap) {
   const ownerByRoster = new Map(seats.map((s) => [Number(s.roster_id), s.owner_id]));
   const trades = [];
   const legs = [];
   for (const tx of txs || []) {
-    const type = String(tx.type || tx.typeId || "").toUpperCase();
-    if (type !== "TRADE" && tx.typeId !== 4) continue;
+    const type = String(tx.type || "").toUpperCase();
+    const accepted = type === "TRADE_ACCEPT" || type === "TRADE_ACCEPTED"
+      || type === "TRADE" || tx.typeId === 4;
+    if (!accepted) continue;
     const status = String(tx.status || "").toUpperCase();
     if (status && status !== "EXECUTED" && status !== "SUCCESSFUL") continue;
     const id = String(tx.id || tx.proposedDate || `${season}-${trades.length}`);
@@ -454,6 +470,8 @@ async function main() {
     status.reason = sawAuthBlock
       ? (cookie ? "espn_unauthorized_with_cookie" : "espn_private_needs_cookie")
       : "espn_no_season_payload";
+    console.log(JSON.stringify({ ...status, kept_last_good_book: true }, null, 2));
+    return;
   }
 
   writeBooks(books, status);
@@ -467,7 +485,9 @@ async function main() {
   }, null, 2));
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

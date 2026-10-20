@@ -50,7 +50,12 @@ There is no brand Home icon (`#goHome`); the centered league name returns to Lea
     the **same** `offer_rev`. Any counter resets the other side’s lock. Locked
     `open` slips are not edited (cancel only if already allowed; default: no edit
     after lock). Live preview is derived from stake + house American line
-    (`house_odds`, Them is the opposite sign).
+    (`house_odds`, Them is the opposite sign). House American +400 on a $100
+    house stake: house risks $100 to win $400; Them is −400 and risks $400 to
+    win $100. House −400 on $100: house is favorite and risks $100 to win $25;
+    Them risks $25 to win $100. `amount_cents` is the house stake. Card payout
+    is recomputed from `amount_cents` + `house_odds` so a stored `terms_json`
+    that inverted the sides cannot lie on send or receive.
 11. **Ledger badge.** Count of slips **sent to you** on the current version
     (amount > 0, your lock is false) plus **Due** slips (`open`, clock resolved,
     I have not claimed). Copy for accepts: “sent to you, you have not accepted

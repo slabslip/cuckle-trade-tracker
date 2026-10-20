@@ -174,5 +174,173 @@
         "out": []
       }
     }
+  },
+  {
+    "date": "2026-09-29",
+    "season": "2026",
+    "week": 3,
+    "transaction_id": "1410775725224603648",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "DeVonta Smith",
+          "Jacory Croskey-Merritt"
+        ],
+        "out": [
+          "A.J. Brown",
+          "Cam Skattebo"
+        ]
+      },
+      "kotula69": {
+        "in": [
+          "A.J. Brown",
+          "Cam Skattebo"
+        ],
+        "out": [
+          "DeVonta Smith",
+          "Jacory Croskey-Merritt"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-09-30",
+    "season": "2026",
+    "week": 3,
+    "transaction_id": "1410848003199188992",
+    "sides": {
+      "TaylorJohnson16": {
+        "in": [
+          "Emeka Egbuka"
+        ],
+        "out": [
+          "Quinshon Judkins"
+        ]
+      },
+      "sbzy11": {
+        "in": [
+          "Quinshon Judkins"
+        ],
+        "out": [
+          "Emeka Egbuka"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-06",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1413203445120278528",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Terry McLaurin",
+          "Bhayshul Tuten"
+        ],
+        "out": [
+          "Saquon Barkley",
+          "Ladd McConkey"
+        ]
+      },
+      "collinmccaskill": {
+        "in": [
+          "Saquon Barkley",
+          "Ladd McConkey"
+        ],
+        "out": [
+          "Terry McLaurin",
+          "Bhayshul Tuten"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1415780413250506752",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Wan'Dale Robinson",
+          "Woody Marks",
+          "Ollie Gordon"
+        ],
+        "out": [
+          "Aaron Jones",
+          "Jacory Croskey-Merritt",
+          "Denzel Boston"
+        ]
+      },
+      "fatassmexican": {
+        "in": [
+          "Aaron Jones",
+          "Jacory Croskey-Merritt",
+          "Denzel Boston"
+        ],
+        "out": [
+          "Wan'Dale Robinson",
+          "Woody Marks",
+          "Ollie Gordon"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1415766310914170880",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Makai Lemon"
+        ],
+        "out": [
+          "Khalil Shakir"
+        ]
+      },
+      "TaylorJohnson16": {
+        "in": [
+          "Khalil Shakir"
+        ],
+        "out": [
+          "Makai Lemon"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1415552518649356288",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Trevor Lawrence",
+          "Nico Collins",
+          "Rhamondre Stevenson"
+        ],
+        "out": [
+          "Chase Brown",
+          "Michael Wilson",
+          "Drake Maye"
+        ]
+      },
+      "kotula69": {
+        "in": [
+          "Chase Brown",
+          "Michael Wilson",
+          "Drake Maye"
+        ],
+        "out": [
+          "Trevor Lawrence",
+          "Nico Collins",
+          "Rhamondre Stevenson"
+        ]
+      }
+    }
   }
 ]

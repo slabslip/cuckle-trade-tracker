@@ -53,6 +53,11 @@ function tradeRecord(row) {
   };
 }
 
+function tradeHasAssets(row) {
+  const sides = (row && row.sides) || {};
+  return Object.values(sides).some((bag) => ((bag && bag.in) || []).length + ((bag && bag.out) || []).length > 0);
+}
+
 function dateline(asOf, leagueName) {
   const d = new Date(asOf + "T12:00:00Z");
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -374,10 +379,11 @@ function main() {
   const bags = bagsByOwner(calc, names);
 
   const trades = tape
-    .filter((row) => row && String(row.date || "") >= since)
+    .filter((row) => row && String(row.date || "") >= since && tradeHasAssets(row))
     .map(tradeRecord);
 
-  const latest = tape.length ? tradeRecord(tape[tape.length - 1]) : null;
+  const withAssets = tape.filter(tradeHasAssets);
+  const latest = withAssets.length ? tradeRecord(withAssets[withAssets.length - 1]) : null;
 
   const wire = (Array.isArray(moves) ? moves : [])
     .filter((row) => row && String(row.date || "") >= since)

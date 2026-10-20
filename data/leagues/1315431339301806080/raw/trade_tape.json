@@ -8328,5 +8328,459 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-09-22",
+    "season": "2026",
+    "week": 2,
+    "transaction_id": "1408167358056394752",
+    "sides": {
+      "ARae": {
+        "in": [
+          "Jonathon Brooks"
+        ],
+        "out": [
+          "Terrance Ferguson"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Terrance Ferguson"
+        ],
+        "out": [
+          "Jonathon Brooks"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-09-28",
+    "season": "2026",
+    "week": 3,
+    "transaction_id": "1410348964254851072",
+    "sides": {
+      "SF69erss": {
+        "in": [
+          "Quinshon Judkins",
+          "Kaelon Black",
+          "2027 R2 (orig roster 6)"
+        ],
+        "out": [
+          "De'Von Achane"
+        ]
+      },
+      "ARae": {
+        "in": [
+          "De'Von Achane"
+        ],
+        "out": [
+          "Quinshon Judkins",
+          "Kaelon Black",
+          "2027 R2 (orig roster 6)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-01",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411519934369894400",
+    "sides": {
+      "SF69erss": {
+        "in": [
+          "Jarquez Hunter",
+          "Mitchell Evans"
+        ],
+        "out": []
+      },
+      "KingHenryXXVI": {
+        "in": [],
+        "out": [
+          "Jarquez Hunter"
+        ]
+      },
+      "DarkWingDucks2023": {
+        "in": [],
+        "out": [
+          "Mitchell Evans"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-01",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411494592934694912",
+    "sides": {
+      "SF69erss": {
+        "in": [],
+        "out": [
+          "2029 R3 (orig roster 1)"
+        ]
+      },
+      "KingHenryXXVI": {
+        "in": [
+          "2029 R3 (orig roster 1)",
+          "2028 R4 (orig roster 9)"
+        ],
+        "out": [
+          "Jacoby Brissett"
+        ]
+      },
+      "DarkWingDucks2023": {
+        "in": [
+          "Jacoby Brissett"
+        ],
+        "out": [
+          "2028 R4 (orig roster 9)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-02",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411562260429570048",
+    "sides": {
+      "TipsUp": {
+        "in": [],
+        "out": [
+          "Christian McCaffrey"
+        ]
+      },
+      "TedCumberbatch": {
+        "in": [
+          "Christian McCaffrey"
+        ],
+        "out": []
+      }
+    }
+  },
+  {
+    "date": "2026-10-02",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411557448346513408",
+    "sides": {
+      "SF69erss": {
+        "in": [
+          "Matthew Golden"
+        ],
+        "out": [
+          "Calvin Ridley",
+          "Chris Bell",
+          "2029 R2 (orig roster 5)",
+          "2027 R3 (orig roster 7)"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Calvin Ridley",
+          "Chris Bell",
+          "2029 R2 (orig roster 5)",
+          "2027 R3 (orig roster 7)"
+        ],
+        "out": [
+          "Matthew Golden"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-02",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411554610484695040",
+    "sides": {
+      "bigjberg": {
+        "in": [
+          "Kirk Cousins"
+        ],
+        "out": []
+      },
+      "TedCumberbatch": {
+        "in": [],
+        "out": [
+          "Kirk Cousins"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-02",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411552838265450496",
+    "sides": {
+      "TipsUp": {
+        "in": [
+          "Christian McCaffrey"
+        ],
+        "out": []
+      },
+      "TedCumberbatch": {
+        "in": [],
+        "out": [
+          "Christian McCaffrey"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-02",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1411548061980725248",
+    "sides": {
+      "bigjberg": {
+        "in": [],
+        "out": [
+          "Kirk Cousins"
+        ]
+      },
+      "TedCumberbatch": {
+        "in": [
+          "Kirk Cousins"
+        ],
+        "out": []
+      }
+    }
+  },
+  {
+    "date": "2026-10-06",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1413189122566135808",
+    "sides": {
+      "ARae": {
+        "in": [
+          "2027 R3 (orig roster 6)"
+        ],
+        "out": [
+          "Devaughn Vele"
+        ]
+      },
+      "bigjberg": {
+        "in": [
+          "Devaughn Vele"
+        ],
+        "out": [
+          "2027 R3 (orig roster 6)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-07",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1413558470514384896",
+    "sides": {
+      "BubbaCuckShremp": {
+        "in": [
+          "Geno Smith"
+        ],
+        "out": [
+          "2028 R3 (orig roster 8)"
+        ]
+      },
+      "TedCumberbatch": {
+        "in": [
+          "2028 R3 (orig roster 8)"
+        ],
+        "out": [
+          "Geno Smith"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-09",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1414310546714492928",
+    "sides": {
+      "ARae": {
+        "in": [
+          "2029 R4 (orig roster 8)"
+        ],
+        "out": [
+          "Mike Gesicki"
+        ]
+      },
+      "BubbaCuckShremp": {
+        "in": [
+          "Mike Gesicki"
+        ],
+        "out": [
+          "2029 R4 (orig roster 8)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-09",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1414290769447018496",
+    "sides": {
+      "ChiefGumby": {
+        "in": [
+          "Wan'Dale Robinson",
+          "Terrance Ferguson",
+          "2028 R1 (orig roster 9)",
+          "2028 R2 (orig roster 9)"
+        ],
+        "out": [
+          "Tee Higgins",
+          "Brenton Strange",
+          "2027 R3 (orig roster 3)",
+          "2028 R3 (orig roster 5)"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Tee Higgins",
+          "Brenton Strange",
+          "2027 R3 (orig roster 3)",
+          "2028 R3 (orig roster 5)"
+        ],
+        "out": [
+          "Wan'Dale Robinson",
+          "Terrance Ferguson",
+          "2028 R1 (orig roster 9)",
+          "2028 R2 (orig roster 9)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-14",
+    "season": "2026",
+    "week": 6,
+    "transaction_id": "1416211986710093824",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Quentin Johnston",
+          "Germie Bernard"
+        ],
+        "out": [
+          "2028 R3 (orig roster 5)",
+          "2027 R2 (orig roster 9)"
+        ]
+      },
+      "DarkWingDucks2023": {
+        "in": [
+          "2028 R3 (orig roster 5)",
+          "2027 R2 (orig roster 9)"
+        ],
+        "out": [
+          "Quentin Johnston",
+          "Germie Bernard"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-15",
+    "season": "2026",
+    "week": 6,
+    "transaction_id": "1416249696204201984",
+    "sides": {
+      "ChiefGumby": {
+        "in": [
+          "Tank Bigsby",
+          "Cam Skattebo"
+        ],
+        "out": [
+          "Tyjae Spears",
+          "Woody Marks",
+          "2027 R3 (orig roster 4)"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Tyjae Spears",
+          "Woody Marks",
+          "2027 R3 (orig roster 4)"
+        ],
+        "out": [
+          "Tank Bigsby",
+          "Cam Skattebo"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-18",
+    "season": "2026",
+    "week": 6,
+    "transaction_id": "1417588066339610624",
+    "sides": {
+      "bigjberg": {
+        "in": [
+          "Mike Washington"
+        ],
+        "out": [
+          "Tyler Allgeier",
+          "2027 R4 (orig roster 3)"
+        ]
+      },
+      "BubbaCuckShremp": {
+        "in": [
+          "Tyler Allgeier",
+          "2027 R4 (orig roster 3)"
+        ],
+        "out": [
+          "Mike Washington"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-18",
+    "season": "2026",
+    "week": 6,
+    "transaction_id": "1417586796816072704",
+    "sides": {
+      "TipsUp": {
+        "in": [
+          "2027 R3 (orig roster 8)"
+        ],
+        "out": [
+          "Alvin Kamara",
+          "2029 R3 (orig roster 2)"
+        ]
+      },
+      "BubbaCuckShremp": {
+        "in": [
+          "Alvin Kamara",
+          "2029 R3 (orig roster 2)"
+        ],
+        "out": [
+          "2027 R3 (orig roster 8)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-19",
+    "season": "2026",
+    "week": 6,
+    "transaction_id": "1417713127327305728",
+    "sides": {
+      "SF69erss": {
+        "in": [],
+        "out": []
+      },
+      "TrumanCooper": {
+        "in": [],
+        "out": []
+      }
+    }
   }
 ]

@@ -1,34 +1,17 @@
 [
   {
-    "user_id": "1131056110791880704",
-    "name": "sbzy11",
-    "two_way": 1,
-    "incomplete": 0,
-    "pick_total": 4915,
-    "pick_per_trade": 4915,
-    "even_total": 3276,
-    "even_per_trade": 3276,
-    "style": {
-      "label": "Win-now",
-      "now_share": 1,
-      "horizon": 0,
-      "sold_picks_for_players": 0,
-      "sold_players_for_picks": 0
-    }
-  },
-  {
     "user_id": "1132552110328983552",
     "name": "collinmccaskill",
     "two_way": 1,
-    "incomplete": 0,
-    "pick_total": 2475,
-    "pick_per_trade": 2475,
-    "even_total": 1806,
-    "even_per_trade": 1806,
+    "incomplete": 1,
+    "pick_total": 4167,
+    "pick_per_trade": 4167,
+    "even_total": 2088,
+    "even_per_trade": 2088,
     "style": {
-      "label": "Win-now",
+      "label": "Balanced",
       "now_share": 1,
-      "horizon": 0,
+      "horizon": 2079,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -36,16 +19,33 @@
   {
     "user_id": "740721014035660800",
     "name": "kotula69",
-    "two_way": 1,
+    "two_way": 3,
     "incomplete": 0,
-    "pick_total": 1498,
-    "pick_per_trade": 1498,
-    "even_total": 1471,
-    "even_per_trade": 1471,
+    "pick_total": 3876,
+    "pick_per_trade": 1292,
+    "even_total": 3356,
+    "even_per_trade": 1118.6666666666667,
+    "style": {
+      "label": "Balanced",
+      "now_share": 1,
+      "horizon": 122,
+      "sold_picks_for_players": 0,
+      "sold_players_for_picks": 0
+    }
+  },
+  {
+    "user_id": "1131056110791880704",
+    "name": "sbzy11",
+    "two_way": 2,
+    "incomplete": 0,
+    "pick_total": 1788,
+    "pick_per_trade": 894,
+    "even_total": 1685,
+    "even_per_trade": 842.5,
     "style": {
       "label": "Win-now",
       "now_share": 1,
-      "horizon": 0,
+      "horizon": -710.5,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -53,16 +53,16 @@
   {
     "user_id": "458342725222133760",
     "name": "TrumanCooper",
-    "two_way": 3,
-    "incomplete": 0,
-    "pick_total": 3462,
-    "pick_per_trade": 1154,
-    "even_total": 1092,
-    "even_per_trade": 364,
+    "two_way": 5,
+    "incomplete": 1,
+    "pick_total": 5466,
+    "pick_per_trade": 1093.2,
+    "even_total": 1759,
+    "even_per_trade": 351.8,
     "style": {
-      "label": "Win-now",
+      "label": "Balanced",
       "now_share": 1,
-      "horizon": 0,
+      "horizon": 205,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -70,16 +70,33 @@
   {
     "user_id": "719995760556478464",
     "name": "TaylorJohnson16",
-    "two_way": 1,
+    "two_way": 3,
     "incomplete": 0,
-    "pick_total": -1183,
-    "pick_per_trade": -1183,
-    "even_total": -591,
-    "even_per_trade": -591,
+    "pick_total": 836,
+    "pick_per_trade": 278.6666666666667,
+    "even_total": 185,
+    "even_per_trade": 61.666666666666664,
+    "style": {
+      "label": "Balanced",
+      "now_share": 1,
+      "horizon": 211.66666666666666,
+      "sold_picks_for_players": 0,
+      "sold_players_for_picks": 0
+    }
+  },
+  {
+    "user_id": "741001884449525760",
+    "name": "fatassmexican",
+    "two_way": 2,
+    "incomplete": 0,
+    "pick_total": -629,
+    "pick_per_trade": -314.5,
+    "even_total": -367,
+    "even_per_trade": -183.5,
     "style": {
       "label": "Win-now",
       "now_share": 1,
-      "horizon": 0,
+      "horizon": -54,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -89,10 +106,10 @@
     "name": "Aballers",
     "two_way": 2,
     "incomplete": 0,
-    "pick_total": -4801,
-    "pick_per_trade": -2400.5,
-    "even_total": -2692,
-    "even_per_trade": -1346,
+    "pick_total": -4978,
+    "pick_per_trade": -2489,
+    "even_total": -2392,
+    "even_per_trade": -1196,
     "style": {
       "label": "Win-now",
       "now_share": 1,
@@ -104,33 +121,16 @@
   {
     "user_id": "1132151320410140672",
     "name": "ztrain123",
-    "two_way": 2,
+    "two_way": 4,
     "incomplete": 0,
-    "pick_total": -4868,
-    "pick_per_trade": -2434,
-    "even_total": -2891,
-    "even_per_trade": -1445.5,
+    "pick_total": -10526,
+    "pick_per_trade": -2631.5,
+    "even_total": -6314,
+    "even_per_trade": -1578.5,
     "style": {
       "label": "Win-now",
       "now_share": 1,
-      "horizon": 0,
-      "sold_picks_for_players": 0,
-      "sold_players_for_picks": 0
-    }
-  },
-  {
-    "user_id": "741001884449525760",
-    "name": "fatassmexican",
-    "two_way": 1,
-    "incomplete": 0,
-    "pick_total": -1498,
-    "pick_per_trade": -1498,
-    "even_total": -1471,
-    "even_per_trade": -1471,
-    "style": {
-      "label": "Win-now",
-      "now_share": 1,
-      "horizon": 0,
+      "horizon": -644,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }

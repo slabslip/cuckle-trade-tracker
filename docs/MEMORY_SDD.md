@@ -49,7 +49,7 @@ the same paint. Do not invent a 17th kind for each argument.
 |----|----------|
 | `my_trades` | My Trade History |
 | `league_trades` | League Trade History |
-| `my_draft` | My Draft Picks |
+| `my_draft` | Draft picks |
 | `league_draft` | League Draft Picks |
 | `profit_loss` | Profit / Loss |
 | `season_place` / `season_title` | How I finished |
@@ -150,7 +150,7 @@ filters by a Team dropdown, not a type-in.
 
 1. My Trade History (`my_trades`) — your partners, most deals first, then that pair newest-first (search after a pair)
 2. League Trade History (`league_trades`) — Team dropdown, then that seat's partners
-3. My Draft Picks (`my_draft`) — Used / Traded away / Traded in, each graded, no search
+3. Draft picks (`my_draft`) — unused 2027+ hub: Mine / League / Tape
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
 5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top, sort only
 6. Past champions (`past_champions`)
@@ -192,25 +192,28 @@ shows every pairing (`NameA vs NameB`). Pick one seat to see **that
 team's trade partners**, most deals first. No type-in search. Tap a
 pairing → those tickets, newest first, same year + look dropdowns.
 
-**My Draft Picks**
+**Draft picks** (`my_draft`)
 
-Default look is **Who owns mine**: origin picks earliest-first (2027
-before 2028), grouped by year, so you can see who holds each of your
-picks. Year + Picks (1st–4th) dropdowns filter that tape. Look can
-switch back to Used / Traded away / Traded in.
+One hub for still-unused capital, 2027 first (soonest draft). Not four
+overlapping tiles.
 
-- **Who owns mine** — every pick that started on this seat, year then
-  round then slot. Row says who holds it, or used/sold.
-- **Used** — this seat drafted a player on that pick (`became` and
-  `used_by` match).
-- **Traded away** — an original pick of this seat that they sold.
-- **Traded in** — a pick they took from another seat. A pick can be
-  Used and Traded in (trade for a 1st, then draft it).
+- **Mine** — who holds the unused picks that started on your seat.
+  2027, then later years. Row: holder, origin window (Contend / Tank),
+  projected slot, Early / Mid / Late.
+- **League** — every unused pick that year, firsts first. Early / Mid /
+  Late board on firsts: last-place 2026 window is 1.01, title window is
+  1.10.
+- **Tape** — the old Used / Traded away / Traded in grades. Each
+  used row grades the player vs the slot (Star / Hit / Even / Miss /
+  Bust). The section prints a **Hit rate**.
 
-Each row grades the player vs the slot (Star / Hit / Even / Miss /
-Bust). The section prints a **Hit rate**. Held unused origin picks stay
-off these three (Who has firsts covers that). No claimed seat: the door
-says so. A failed picks load says so — it is not an empty bucket.
+Early / Mid / Late is the **origin seat's 2026 outlook**, not the
+Sleeper roster slot. Blend: analyzer now (desk strength today) 62%,
+window kind (win-now vs tank) 24%, seat-direction 14%. 2028 uses later
++ now; 2029+ leans later. Tap a row for a 2-way calc (get it back / ask
+for the early). If the 2-way is stuck, a 3-way line names a third seat.
+
+Year + Picks dropdowns stay. No claimed seat: the door says so.
 
 **League Draft Picks**
 
@@ -460,12 +463,11 @@ see partners, most deals first → tap a name → newest tickets → filter
 League year or Grew / Faded → open a deal, see two questions first
 (Day they traded / From then to now). Tap **League Trade History** →
 pick a team from the dropdown → see that seat's partners → same tickets.
-Tap **My Draft Picks** → Used /
-Traded away / Traded in → read the Hit rate → tap a pick →
-“You sold this 1st. They used it. It is X.” → share icon on the ticket →
-reopen on the same layer. Tap **League Draft Picks** → pick a seat →
-the same three buckets. A nerd can Edit the board, reorder, reload on
-another phone, same layout.
+Tap **Draft picks** → Mine shows who holds your unused 2027s → League
+shows every 2027 first Early / Mid / Late → tap a pick to open calc or
+a 3-way line. Tape still has Used / Traded away / Traded in. Tap
+**League Draft Picks** → pick a seat → the same three buckets. A nerd
+can Edit the board, reorder, reload on another phone, same layout.
 
 Two-second test (novice): they can say “so it looked better when they traded,
 and now it’s worse” and “that 1st I sold is Bijan now.” They never have

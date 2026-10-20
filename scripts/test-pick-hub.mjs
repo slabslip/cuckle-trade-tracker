@@ -31,6 +31,7 @@ function need(src, label, strs) {
 
 need(page, "index.html", [
   "function pickHubSoonestYear(",
+  "function pickHubApplyScope(",
   "function pickHubProject(",
   "function receiptPickHubHtml(",
   "function pickHubDeal(",
@@ -44,9 +45,11 @@ need(page, "index.html", [
   "Early 1sts",
   "lab: \"Draft picks\"",
   "pick-hub-scopes",
+  "pick-hub-menus",
 ]);
 need(gen, "generate-page.mjs", [
   "function pickHubSoonestYear(",
+  "function pickHubApplyScope(",
   "function pickHubProject(",
   "function receiptPickHubHtml(",
   "function pickHubDeal(",
@@ -58,6 +61,7 @@ need(gen, "generate-page.mjs", [
   "Get it back",
   "3-way:",
   "Early 1sts",
+  "pick-hub-menus",
 ]);
 need(mem, "MEMORY_SDD", [
   "unused 2027",
@@ -82,6 +86,18 @@ if (!fnSrc(page, "pickHubDeal").includes("3-way:")
 if (fnSrc(page, "pickHubSoonestYear").includes("return yb - ya")
   || fnSrc(page, "pickHubUnusedRows").includes("return Number(b.parts.season)")) {
   throw new Error("unused hub must list 2027 before later years");
+}
+
+const clickSrc = page.slice(
+  page.indexOf('document.getElementById("app").addEventListener("click"'),
+  page.indexOf('document.getElementById("app").addEventListener("change"'),
+);
+const changeSrc = page.slice(page.indexOf('document.getElementById("app").addEventListener("change"'));
+if (!clickSrc.includes("pickHubApplyScope(") || !clickSrc.includes("data-pick-hub-scope")) {
+  throw new Error("Mine / League / Tape chips must switch on click, not change");
+}
+if (changeSrc.includes("data-pick-hub-scope")) {
+  throw new Error("hub scope buttons do not fire change");
 }
 
 const ctx = {};

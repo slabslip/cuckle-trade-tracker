@@ -3792,6 +3792,10 @@ const html = `<!DOCTYPE html>
       background: #141418; color: var(--text); font: inherit; font-size: 16px;
     }
     .receipt-trade-menus { margin: 0 0 14px; }
+    .pick-hub-menus {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px;
+    }
+    .pick-hub-menus .receipt-look { margin: 0; }
     .pick-hub-scopes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
     .pick-hub-scopes .chip { min-height: 40px; }
     .pick-hub-band {
@@ -4478,7 +4482,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pickhub20261020223000";
+    const DATA_V = "pickhub20261020232000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7593,7 +7597,7 @@ const html = `<!DOCTYPE html>
           + '<button type="button" class="chip' + (pickHubScope === "league" ? " on" : "") + '" data-pick-hub-scope="league">League</button>'
           + '<button type="button" class="chip" data-pick-hub-scope="tape">Tape</button>'
           + "</div>"
-          + '<div class="receipt-trade-menus">'
+          + '<div class="receipt-trade-menus pick-hub-menus">'
           + receiptLookSelect("Year", "data-receipt-pick-year", yearOpts, pickHubYearFilter())
           + receiptLookSelect("Picks", "data-receipt-pick-round", roundOpts, pickHubRoundFilter())
           + "</div>";
@@ -7612,7 +7616,7 @@ const html = `<!DOCTYPE html>
             + '<button type="button" class="chip on" data-pick-hub-scope="tape">Tape</button>'
             + "</div>")
           : "";
-        return scopes + '<div class="receipt-trade-menus">'
+        return scopes + '<div class="receipt-trade-menus pick-hub-menus">'
           + receiptLookSelect("Year", "data-receipt-pick-year", yearOpts, receiptPickYearFilter || "all")
           + receiptLookSelect("Picks", "data-receipt-pick-round", roundOpts, receiptPickRoundFilter || "all")
           + receiptLookSelect("Look", "data-receipt-door-filter", bucketOpts, receiptDoorFilter)
@@ -8555,6 +8559,30 @@ const html = `<!DOCTYPE html>
 
     function pickHubIsDynasty() {
       return typeof leagueFormat === "function" && leagueFormat().kind !== "redraft";
+    }
+
+    function pickHubApplyScope(scope) {
+      pickHubScope = scope || "mine";
+      pickIntelOpen = null;
+      if (pickHubScope === "league") {
+        if (!receiptPickYearFilter || receiptPickYearFilter === "all") {
+          receiptPickYearFilter = pickHubSoonestYear();
+        }
+        if (!receiptPickRoundFilter || receiptPickRoundFilter === "all") {
+          receiptPickRoundFilter = "1";
+        }
+        return;
+      }
+      if (pickHubScope === "mine") {
+        if (!receiptPickYearFilter || receiptPickYearFilter === "all") {
+          receiptPickYearFilter = pickHubSoonestYear();
+        }
+        receiptPickRoundFilter = "all";
+        return;
+      }
+      if (receiptDoorFilter === "hub" || !receiptDoorFilter || receiptDoorFilter === "all") {
+        receiptDoorFilter = "origin";
+      }
     }
 
     function pickHubTeamsN() {
@@ -30095,6 +30123,12 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const hubScopeBtn = e.target.closest("[data-pick-hub-scope]");
+      if (hubScopeBtn) {
+        pickHubApplyScope(hubScopeBtn.getAttribute("data-pick-hub-scope") || "mine");
+        render();
+        return;
+      }
       const hubOpenBtn = e.target.closest("[data-pick-hub-open]");
       if (hubOpenBtn) {
         const key = hubOpenBtn.getAttribute("data-pick-hub-open") || "";
@@ -31783,26 +31817,6 @@ const html = `<!DOCTYPE html>
       const pickRoundSel = e.target && e.target.closest && e.target.closest("[data-receipt-pick-round]");
       if (pickRoundSel) {
         receiptPickRoundFilter = pickRoundSel.value || "all";
-        render();
-        return;
-      }
-      const hubScopeBtn = e.target && e.target.closest && e.target.closest("[data-pick-hub-scope]");
-      if (hubScopeBtn) {
-        pickHubScope = hubScopeBtn.getAttribute("data-pick-hub-scope") || "mine";
-        if (pickHubScope === "league") {
-          if (!receiptPickYearFilter || receiptPickYearFilter === "all") {
-            receiptPickYearFilter = pickHubSoonestYear();
-          }
-          if (!receiptPickRoundFilter || receiptPickRoundFilter === "all") {
-            receiptPickRoundFilter = "1";
-          }
-        }
-        if (pickHubScope === "mine") {
-          if (!receiptPickYearFilter || receiptPickYearFilter === "all") {
-            receiptPickYearFilter = pickHubSoonestYear();
-          }
-          receiptPickRoundFilter = receiptPickRoundFilter || "all";
-        }
         render();
         return;
       }
@@ -33845,6 +33859,7 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("receiptDoorFilterHtml").includes("All picks")
     || !fnSrc("receiptDoorFilterHtml").includes("Who owns mine")
     || !inline.includes("function pickHubSoonestYear(")
+    || !inline.includes("function pickHubApplyScope(")
     || !inline.includes("function pickHubProject(")
     || !inline.includes("function receiptPickHubHtml(")
     || !fnSrc("pickHubProject").includes("rank2027")

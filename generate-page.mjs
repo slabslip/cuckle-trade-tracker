@@ -4463,7 +4463,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homebenef20261020210500";
+    const DATA_V = "ledgerpicks20261020214500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5618,6 +5618,18 @@ const html = `<!DOCTYPE html>
       return false;
     }
 
+    function receiptPickChronoCmp(a, b) {
+      const ya = Number(receiptPickYear(a.p, a.key) || 0);
+      const yb = Number(receiptPickYear(b.p, b.key) || 0);
+      if (ya !== yb) return ya - yb;
+      const pa = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
+      const pb = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
+      const ra = (pa && pa.round) || 9;
+      const rb = (pb && pb.round) || 9;
+      if (ra !== rb) return ra - rb;
+      return ((pa && pa.slot) || 99) - ((pb && pb.slot) || 99);
+    }
+
     function receiptOwnedPicksForSeat(seat) {
       if (!picks || !seat) return [];
       const keys = Object.keys(picks);
@@ -5633,12 +5645,7 @@ const html = `<!DOCTYPE html>
         const ra = pa === "USED" ? 0 : pa === "SOLD" ? 1 : 2;
         const rb = pb === "USED" ? 0 : pb === "SOLD" ? 1 : 2;
         if (ra !== rb) return ra - rb;
-        const ya = Number(receiptPickYear(a.p, a.key) || 0);
-        const yb = Number(receiptPickYear(b.p, b.key) || 0);
-        if (yb !== ya) return yb - ya;
-        const pa2 = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
-        const pb2 = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
-        return ((pa2 && pa2.round) || 9) - ((pb2 && pb2.round) || 9);
+        return receiptPickChronoCmp(a, b);
       });
       return out;
     }
@@ -5652,19 +5659,7 @@ const html = `<!DOCTYPE html>
         if (!p || typeof pickOriginName !== "function" || pickOriginName(p) !== seat) continue;
         out.push({ key: keys[i], p: p });
       }
-      out.sort(function (a, b) {
-        const ya = Number(receiptPickYear(a.p, a.key) || 0);
-        const yb = Number(receiptPickYear(b.p, b.key) || 0);
-        if (yb !== ya) return yb - ya;
-        const pa = receiptPickPrint(a.p, seat);
-        const pb = receiptPickPrint(b.p, seat);
-        const ra = pa === "USED" ? 0 : pa === "SOLD" ? 1 : 2;
-        const rb = pb === "USED" ? 0 : pb === "SOLD" ? 1 : 2;
-        if (ra !== rb) return ra - rb;
-        const pa2 = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
-        const pb2 = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
-        return ((pa2 && pa2.round) || 9) - ((pb2 && pb2.round) || 9);
-      });
+      out.sort(receiptPickChronoCmp);
       return out;
     }
 
@@ -7513,6 +7508,55 @@ const html = `<!DOCTYPE html>
       return receiptLookSelect("Team", "data-receipt-hist-team", opts, receiptHistTeam || "all");
     }
 
+    function receiptPickPortalYears(id) {
+      const seen = {};
+      const years = [];
+      const add = function (y) {
+        y = String(y || "");
+        if (!y || seen[y]) return;
+        seen[y] = true;
+        years.push(y);
+      };
+      if (picks) {
+        const keys = Object.keys(picks);
+        const seat = id === "my_picks"
+          ? (typeof authSeatCanonName === "function" ? authSeatCanonName() : "")
+          : (typeof receiptPickPortalSeat === "function" ? receiptPickPortalSeat("") : "");
+        for (let i = 0; i < keys.length; i++) {
+          const p = picks[keys[i]];
+          if (!p) continue;
+          if (id === "my_picks") {
+            if (!seat || typeof pickOriginName !== "function" || pickOriginName(p) !== seat) continue;
+          } else if (seat && typeof receiptPickEverOwned === "function" && !receiptPickEverOwned(p, seat)) {
+            continue;
+          }
+          add(receiptPickYear(p, keys[i]));
+        }
+      }
+      if (!years.length && typeof pickSeasonsAvailable === "function") {
+        const avail = pickSeasonsAvailable() || [];
+        for (let i = 0; i < avail.length; i++) add(avail[i]);
+      }
+      years.sort(function (a, b) { return Number(a) - Number(b); });
+      return years;
+    }
+
+    function receiptPickRowKeep(row) {
+      if (receiptPickYearFilter && receiptPickYearFilter !== "all") {
+        if (String(receiptPickYear(row.p, row.key) || "") !== String(receiptPickYearFilter)) return false;
+      }
+      if (receiptPickRoundFilter && receiptPickRoundFilter !== "all") {
+        const parts = typeof pickKeyParts === "function" ? pickKeyParts(row.key) : null;
+        if (!parts || String(parts.round) !== String(receiptPickRoundFilter)) return false;
+      }
+      return true;
+    }
+
+    function receiptResetPickFilters() {
+      receiptPickYearFilter = "all";
+      receiptPickRoundFilter = "all";
+    }
+
     function receiptDoorFilterHtml(id) {
       if (id === "profit_loss") {
         return receiptLookSelect("Sort", "data-receipt-pl-sort",
@@ -7542,12 +7586,20 @@ const html = `<!DOCTYPE html>
           + receiptTradeLookHtml(id)
           + "</div>";
       }
+      if (id === "pick_print" || id === "my_picks") {
+        const years = receiptPickPortalYears(id);
+        const yearOpts = [["all", "All years"]].concat(years.map(function (y) { return [y, y]; }));
+        const roundOpts = [["all", "All picks"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"], ["4", "4th"]];
+        return '<div class="receipt-trade-menus">'
+          + receiptLookSelect("Year", "data-receipt-pick-year", yearOpts, receiptPickYearFilter || "all")
+          + receiptLookSelect("Picks", "data-receipt-pick-round", roundOpts, receiptPickRoundFilter || "all")
+          + receiptLookSelect("State", "data-receipt-door-filter",
+            [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]], receiptDoorFilter)
+          + "</div>";
+      }
       let opts = [];
       let lab = "Filter";
-      if (id === "pick_print" || id === "my_picks") {
-        lab = "State";
-        opts = [["all", "All"], ["used", "Used"], ["sold", "Sold"], ["held", "Held"]];
-      } else if (id === "firsts_held") {
+      if (id === "firsts_held") {
         lab = "Season";
         opts = [["all", "All"]];
         let years = [];
@@ -7771,6 +7823,7 @@ const html = `<!DOCTYPE html>
             });
           }
         }
+        rows = rows.filter(receiptPickRowKeep);
         if (receiptDoorFilter && receiptDoorFilter !== "all") {
           const want = String(receiptDoorFilter).toUpperCase();
           rows = rows.filter(function (row) {
@@ -7821,6 +7874,7 @@ const html = `<!DOCTYPE html>
               .concat([receiptPickYear(row.p, row.key), receiptPickPrint(row.p, seat)]));
           });
         }
+        rows = rows.filter(receiptPickRowKeep);
         if (receiptDoorFilter && receiptDoorFilter !== "all") {
           const want = String(receiptDoorFilter).toUpperCase();
           rows = rows.filter(function (row) {
@@ -7848,6 +7902,7 @@ const html = `<!DOCTYPE html>
           }
           groups[year].push(rows[i]);
         }
+        years.sort(function (a, b) { return Number(a) - Number(b); });
         const head = rows.length + " origin pick" + (rows.length === 1 ? "" : "s")
           + " · " + usedN + " used · " + soldN + " sold · " + heldN + " held";
         let html = '<p class="caption">' + esc(head) + "</p>";
@@ -11022,6 +11077,7 @@ const html = `<!DOCTYPE html>
       receiptWhoList = "";
       receiptQ = "";
       receiptDoorFilter = "all";
+      receiptResetPickFilters();
       receiptListSlice = "";
       receiptListWho = "";
       receiptVsWho = "";
@@ -12823,6 +12879,7 @@ const html = `<!DOCTYPE html>
         receiptWhoList = receiptDoorCanon(id);
         receiptQ = "";
         receiptDoorFilter = "all";
+        receiptResetPickFilters();
         receiptListSlice = "";
         receiptListWho = "";
         receiptVsWho = "";
@@ -14602,24 +14659,25 @@ const html = `<!DOCTYPE html>
         they_put_cents = you_win_cents;
         they_win_cents = U;
       } else if (U > 0 && O > 0) {
-        // Plus is the line you offer them. $100 at +200: they risk 100, you risk 200.
-        they_put_cents = U;
-        they_win_cents = Math.round(U * O / 100);
-        you_put_cents = they_win_cents;
-        you_win_cents = U;
+        // House American +400 on a $100 stake: house risks 100 to win 400; them risks 400 to win 100.
+        you_put_cents = U;
+        you_win_cents = Math.round(U * O / 100);
+        they_put_cents = you_win_cents;
+        they_win_cents = U;
       }
       const nLab = U ? String(U / 100) : "N";
+      const pot = U ? String((you_put_cents + they_put_cents) / 100) : "";
       let words = "Enter a stake to see what each side puts in and wins.";
       if (U && !O) {
-        words = "Even. Both risk $" + nLab + ". Winner profits $" + nLab + ".";
+        words = "Even. Both risk $" + nLab + ". Winner profits $" + nLab + ". Winner collects $" + pot + ".";
       } else if (U && O < 0) {
         words = "You are favorite " + ledgerFmtOdds(O) + ". You risk $" + (you_put_cents / 100)
           + " to win $" + (you_win_cents / 100) + ". They risk $" + (they_put_cents / 100)
-          + " to win $" + (they_win_cents / 100) + ".";
+          + " to win $" + (they_win_cents / 100) + " (" + ledgerFmtOdds(-O) + "). Winner collects $" + pot + ".";
       } else if (U && O > 0) {
-        words = "You offer " + ledgerFmtOdds(O) + ". They risk $" + (they_put_cents / 100)
-          + " to win $" + (they_win_cents / 100) + ". You risk $" + (you_put_cents / 100)
-          + " to win $" + (you_win_cents / 100) + ".";
+        words = "You are underdog " + ledgerFmtOdds(O) + ". You risk $" + (you_put_cents / 100)
+          + " to win $" + (you_win_cents / 100) + ". They risk $" + (they_put_cents / 100)
+          + " to win $" + (they_win_cents / 100) + " (" + ledgerFmtOdds(-O) + "). Winner collects $" + pot + ".";
       }
       return {
         you_put_cents: you_put_cents,
@@ -14679,15 +14737,23 @@ const html = `<!DOCTYPE html>
         && b.side_a_claim !== b.side_b_claim);
     }
 
+    function ledgerMoneyForBet(b) {
+      const stake = Math.max(0, Math.round(Number(b && b.amount_cents) || 0));
+      return ledgerOddsPreview(stake || ledgerReadTerms(b).you_put_cents, ledgerHouseOddsOf(b));
+    }
+
     function ledgerNamedTerms(b) {
-      const money = ledgerReadTerms(b);
+      const money = ledgerMoneyForBet(b);
       if (!money.you_put_cents) return "";
       const house = ledgerSeatLabel(b.side_a || b.proposer);
       const them = ledgerSeatLabel(b.side_b);
-      return house + " puts in $" + (money.you_put_cents / 100)
-        + ". If they win they get $" + (money.you_win_cents / 100)
-        + ". " + them + " puts in $" + (money.they_put_cents / 100)
-        + ". If they win they get $" + (money.they_win_cents / 100) + ".";
+      const O = money.house_odds;
+      const pot = (money.you_put_cents + money.they_put_cents) / 100;
+      return house + " risks $" + (money.you_put_cents / 100) + " to win $" + (money.you_win_cents / 100)
+        + (O ? (" (" + ledgerFmtOdds(O) + ")") : " (even)")
+        + ". " + them + " risks $" + (money.they_put_cents / 100) + " to win $" + (money.they_win_cents / 100)
+        + (O ? (" (" + ledgerFmtOdds(-O) + ")") : " (even)")
+        + ". Winner collects $" + pot + ".";
     }
 
     function ledgerReadTerms(b) {
@@ -14701,10 +14767,10 @@ const html = `<!DOCTYPE html>
     }
 
     function ledgerPlainTerms(money) {
-      return "You put in $" + (money.you_put_cents / 100)
-        + ". If you win you get $" + (money.you_win_cents / 100)
-        + ". They put in $" + (money.they_put_cents / 100)
-        + ". If they win they get $" + (money.they_win_cents / 100) + ".";
+      const pot = ((money.you_put_cents || 0) + (money.they_put_cents || 0)) / 100;
+      return "House risks $" + (money.you_put_cents / 100) + " to win $" + (money.you_win_cents / 100)
+        + ". They risk $" + (money.they_put_cents / 100) + " to win $" + (money.they_win_cents / 100)
+        + ". Winner collects $" + pot + ".";
     }
 
     function ledgerStatusChip(b) {
@@ -14865,7 +14931,11 @@ const html = `<!DOCTYPE html>
       return '<article class="ledger-card" data-ledger-id="' + esc(b.id) + '">'
         + '<div class="lc-top">'
         + '<h3 class="lc-title">' + titleHtml + "</h3>"
-        + '<div class="lc-amt">' + esc(draft ? "" : ledgerFmtDollars(b.amount_cents)) + "</div>"
+        + '<div class="lc-amt">' + esc(draft ? "" : (function () {
+          const m = ledgerMoneyForBet(b);
+          if (!m.you_put_cents) return ledgerFmtDollars(b.amount_cents);
+          return ledgerFmtDollars(m.you_put_cents) + " / " + ledgerFmtDollars(m.they_put_cents);
+        }())) + "</div>"
         + "</div>"
         + '<p class="lc-meta">' + meta + "</p>"
         + (b.source_text
@@ -15886,7 +15956,7 @@ const html = `<!DOCTYPE html>
         + esc(odds ? ledgerFmtOdds(odds) : "even") + "</span>"
         + '<input name="odds" type="range" min="-500" max="500" step="100" value="'
         + esc(String(odds)) + '" data-ledger-wager-live="1">'
-        + '<span class="caption">\u2212500 you are favorite · 0 even · +500 you offer them plus. Steps of 100. They get the other side.</span></label>'
+        + '<span class="caption">\u2212500 you are favorite · 0 even · +500 you are underdog. Steps of 100. They take the other side.</span></label>'
         + '<p class="lc-preview" data-ledger-odds-preview>' + esc(preview.words) + "</p>"
         + ledgerClockChipsHtml(clockKind, clock)
         + (kind === "counter" ? "" : ledgerSendPickHtml(them))
@@ -16531,12 +16601,20 @@ const html = `<!DOCTYPE html>
       const clockLab = parsed.clock_kind === "date"
         ? ((clockEl && clockEl.value) || "Select own date")
         : (ledgerClockKindLabel(parsed.clock_kind) || parsed.clock_kind);
+      const m = parsed.money || {};
+      const pot = ((m.you_put_cents || 0) + (m.they_put_cents || 0)) / 100;
       return '<p><span class="caption">Send to</span> ' + esc(ledgerSeatLabel(parsed.them)) + "</p>"
-        + '<p><span class="caption">Your wager</span> $' + esc(String(parsed.stake / 100)) + "</p>"
-        + '<p><span class="caption">Odds</span> ' + esc(parsed.odds ? ledgerFmtOdds(parsed.odds) : "even") + "</p>"
+        + '<p><span class="caption">Your wager</span> $' + esc(String(parsed.stake / 100))
+        + " at " + esc(parsed.odds ? ledgerFmtOdds(parsed.odds) : "even") + "</p>"
+        + '<p><span class="caption">You risk</span> $' + esc(String((m.you_put_cents || 0) / 100))
+        + " to win $" + esc(String((m.you_win_cents || 0) / 100)) + "</p>"
+        + '<p><span class="caption">They risk</span> $' + esc(String((m.they_put_cents || 0) / 100))
+        + " to win $" + esc(String((m.they_win_cents || 0) / 100))
+        + (parsed.odds ? (" (" + esc(ledgerFmtOdds(-parsed.odds)) + ")") : " (even)") + "</p>"
+        + '<p><span class="caption">Winner collects</span> $' + esc(String(pot)) + "</p>"
         + '<p class="lc-review-desc">' + esc(parsed.desc) + "</p>"
         + '<p><span class="caption">Clock</span> ' + esc(clockLab) + "</p>"
-        + '<p class="lc-preview">' + esc(parsed.money && parsed.money.words ? parsed.money.words : "") + "</p>";
+        + '<p class="lc-preview">' + esc(m.words || "") + "</p>";
     }
 
     function ledgerShowReview(form) {
@@ -17742,6 +17820,8 @@ const html = `<!DOCTYPE html>
     let receiptQ = "";
     let receiptFilter = "all";
     let receiptDoorFilter = "all";
+    let receiptPickYearFilter = "all";
+    let receiptPickRoundFilter = "all";
     let receiptVsWho = "";
     let receiptNetWho = "";
     let receiptHistPair = "";
@@ -18375,6 +18455,7 @@ const html = `<!DOCTYPE html>
         receiptWhoList = "";
         receiptQ = "";
         receiptDoorFilter = "all";
+        receiptResetPickFilters();
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
@@ -29579,6 +29660,7 @@ const html = `<!DOCTYPE html>
         receiptWhoList = "";
         receiptQ = "";
         receiptDoorFilter = "all";
+        receiptResetPickFilters();
         receiptVsWho = "";
         receiptNetWho = "";
         receiptHistPair = "";
@@ -31195,6 +31277,18 @@ const html = `<!DOCTYPE html>
       const doorFilterSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-filter]");
       if (doorFilterSel) {
         receiptDoorFilter = doorFilterSel.value || "all";
+        render();
+        return;
+      }
+      const pickYearSel = e.target && e.target.closest && e.target.closest("[data-receipt-pick-year]");
+      if (pickYearSel) {
+        receiptPickYearFilter = pickYearSel.value || "all";
+        render();
+        return;
+      }
+      const pickRoundSel = e.target && e.target.closest && e.target.closest("[data-receipt-pick-round]");
+      if (pickRoundSel) {
+        receiptPickRoundFilter = pickRoundSel.value || "all";
         render();
         return;
       }
@@ -33226,6 +33320,15 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-pl-sort")
     || !inline.includes("function receiptOwnedPicksForSeat(")
     || !inline.includes("function receiptOriginPicksForSeat(")
+    || !inline.includes("function receiptPickChronoCmp(")
+    || !fnSrc("receiptPickChronoCmp").includes("return ya - yb")
+    || fnSrc("receiptOriginPicksForSeat").includes("return yb - ya")
+    || !inline.includes("function receiptPickPortalYears(")
+    || !inline.includes("function receiptPickRowKeep(")
+    || !inline.includes("data-receipt-pick-year")
+    || !inline.includes("data-receipt-pick-round")
+    || !fnSrc("receiptDoorFilterHtml").includes("All years")
+    || !fnSrc("receiptDoorFilterHtml").includes("All picks")
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")
     || !inline.includes("Hit rate ")
@@ -33424,8 +33527,13 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["function ledgerSend(", true],
     ["function ledgerWagerSave(", true],
     ["function ledgerOddsPreview(", true],
-    ["You offer ", true],
+    ["function ledgerMoneyForBet(", true],
+    ["You are underdog ", true],
+    ["You are favorite ", true],
     ["They risk $", true],
+    ["Winner collects $", true],
+    ["you offer them plus", false],
+    ["You offer ", false],
     ["House dog ", false],
     ["house dog", false],
     ["function ledgerSnapOdds(", true],

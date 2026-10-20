@@ -68,8 +68,9 @@ need(fnSrc(page, "overnightSlipHtml").includes("Text this") === false
 need(letter.v === 1 && letter.dateline && letter.lede && Array.isArray(letter.out) && Array.isArray(letter.ir),
   "Cuckle overnight.json must exist with a dateline, lede, and Out / IR lists");
 need(letter.quiet === true || Array.isArray(letter.trades), "letter must know if the night was quiet");
-need(letter.ir.some((p) => p.name === "A.J. Brown") && letter.out.some((p) => p.status === "OUT"),
-  "IR list must surface A.J. Brown; Out list must be its own category");
+need(letter.ir.length && letter.ir.every((p) => p.name && p.status === "IR")
+  && letter.out.some((p) => p.status === "OUT"),
+  "IR list must name injured players; Out list must be its own category");
 need(letter.out.every((p) => p.status === "OUT") && letter.ir.every((p) => p.status === "IR"),
   "Out and IR lists must not mix");
 need(letter.ir.every((p) => p.value == null) && letter.out.every((p) => p.value == null),

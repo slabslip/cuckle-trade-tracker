@@ -194,9 +194,13 @@ pairing → those tickets, newest first, same year + look dropdowns.
 
 **My Draft Picks**
 
-**Draft bucket** dropdown: Used / Traded away / Traded in (default Used).
-No year / player / pick search box.
+Default look is **Who owns mine**: origin picks earliest-first (2027
+before 2028), grouped by year, so you can see who holds each of your
+picks. Year + Picks (1st–4th) dropdowns filter that tape. Look can
+switch back to Used / Traded away / Traded in.
 
+- **Who owns mine** — every pick that started on this seat, year then
+  round then slot. Row says who holds it, or used/sold.
 - **Used** — this seat drafted a player on that pick (`became` and
   `used_by` match).
 - **Traded away** — an original pick of this seat that they sold.

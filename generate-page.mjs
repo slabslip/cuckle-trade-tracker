@@ -5850,14 +5850,7 @@ const html = `<!DOCTYPE html>
         }
         out.push({ key: keys[i], p: p });
       }
-      out.sort(function (a, b) {
-        const ya = Number(receiptPickYear(a.p, a.key) || 0);
-        const yb = Number(receiptPickYear(b.p, b.key) || 0);
-        if (yb !== ya) return yb - ya;
-        const pa = typeof pickKeyParts === "function" ? pickKeyParts(a.key) : null;
-        const pb = typeof pickKeyParts === "function" ? pickKeyParts(b.key) : null;
-        return ((pa && pa.round) || 9) - ((pb && pb.round) || 9);
-      });
+      out.sort(receiptPickChronoCmp);
       return out;
     }
 
@@ -7575,9 +7568,17 @@ const html = `<!DOCTYPE html>
           + "</div>";
       }
       if (id === "my_draft" || (id === "league_draft" && receiptDraftSeat)) {
-        return receiptLookSelect("Draft bucket", "data-receipt-door-filter",
-          [["used", "Used"], ["away", "Traded away"], ["in", "Traded in"]],
-          receiptDoorFilter);
+        const years = receiptPickPortalYears(id === "my_draft" ? "my_picks" : "pick_print");
+        const yearOpts = [["all", "All years"]].concat(years.map(function (y) { return [y, y]; }));
+        const roundOpts = [["all", "All picks"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"], ["4", "4th"]];
+        const bucketOpts = id === "my_draft"
+          ? [["origin", "Who owns mine"], ["used", "Used"], ["away", "Traded away"], ["in", "Traded in"]]
+          : [["used", "Used"], ["away", "Traded away"], ["in", "Traded in"]];
+        return '<div class="receipt-trade-menus">'
+          + receiptLookSelect("Year", "data-receipt-pick-year", yearOpts, receiptPickYearFilter || "all")
+          + receiptLookSelect("Picks", "data-receipt-pick-round", roundOpts, receiptPickRoundFilter || "all")
+          + receiptLookSelect("Look", "data-receipt-door-filter", bucketOpts, receiptDoorFilter)
+          + "</div>";
       }
       if (id === "trade_mark" || id === "lopsided") {
         return '<div class="receipt-trade-menus">'
@@ -7629,6 +7630,63 @@ const html = `<!DOCTYPE html>
       }
       if (opts.length <= 1) return "";
       return receiptLookSelect(lab, "data-receipt-door-filter", opts, receiptDoorFilter);
+    }
+
+    function receiptOriginPicksListHtml(seat, q) {
+      const needle = String(q || "").trim().toLowerCase();
+      const hit = function (parts) {
+        if (!needle) return true;
+        return parts.join(" ").toLowerCase().indexOf(needle) >= 0;
+      };
+      const you = !!seat;
+      let rows = seat ? receiptOriginPicksForSeat(seat) : [];
+      if (seat && needle) {
+        rows = rows.filter(function (row) {
+          return hit(receiptPickHopSearchBits(row.p, row.key)
+            .concat([receiptPickYear(row.p, row.key), receiptPickPrint(row.p, seat)]));
+        });
+      }
+      rows = rows.filter(receiptPickRowKeep);
+      if (receiptDoorFilter && receiptDoorFilter !== "all" && receiptDoorFilter !== "origin") {
+        const want = String(receiptDoorFilter).toUpperCase();
+        if (want === "USED" || want === "SOLD" || want === "HELD") {
+          rows = rows.filter(function (row) {
+            return receiptPickPrint(row.p, seat) === want;
+          });
+        }
+      }
+      if (!rows.length) {
+        if (!seat) return '<p class="caption">Claim your seat to see the picks that started here.</p>';
+        return '<p class="caption">Nothing on this tape matches.</p>';
+      }
+      let usedN = 0, soldN = 0, heldN = 0;
+      const groups = {};
+      const years = [];
+      for (let i = 0; i < rows.length; i++) {
+        const print = receiptPickPrint(rows[i].p, seat);
+        if (print === "USED") usedN += 1;
+        else if (print === "SOLD") soldN += 1;
+        else heldN += 1;
+        const year = receiptPickYear(rows[i].p, rows[i].key) || "—";
+        if (!groups[year]) {
+          groups[year] = [];
+          years.push(year);
+        }
+        groups[year].push(rows[i]);
+      }
+      years.sort(function (a, b) { return Number(a) - Number(b); });
+      const head = rows.length + " origin pick" + (rows.length === 1 ? "" : "s")
+        + " · " + usedN + " used · " + soldN + " sold · " + heldN + " held";
+      let html = '<p class="caption">' + esc(head) + "</p>";
+      for (let g = 0; g < years.length; g++) {
+        const list = groups[years[g]];
+        if (!list.length) continue;
+        html += '<div class="data-sec-h">' + esc(years[g]) + "</div>";
+        html += list.map(function (row) {
+          return receiptPickListRowHtml(row, seat, you);
+        }).join("");
+      }
+      return html;
     }
 
     function receiptPortalRows(id, q) {
@@ -7748,8 +7806,12 @@ const html = `<!DOCTYPE html>
         if (!seat) {
           return '<p class="caption">Claim your seat to see used, traded away, and traded in.</p>';
         }
+        if (id === "my_draft" && (receiptDoorFilter === "origin" || !receiptDoorFilter || receiptDoorFilter === "all")) {
+          return receiptOriginPicksListHtml(seat, q);
+        }
         const bucket = (receiptDoorFilter === "away" || receiptDoorFilter === "in") ? receiptDoorFilter : "used";
-        const rows = receiptDraftRowsForSeat(seat, bucket, id === "my_draft" ? "" : q);
+        let rows = receiptDraftRowsForSeat(seat, bucket, id === "my_draft" ? "" : q);
+        rows = rows.filter(receiptPickRowKeep);
         const rate = receiptDraftRateLine(rows);
         if (!rows.length) return '<p class="caption">' + esc(rate) + "</p>";
         return '<p class="caption">' + esc(rate) + "</p>"
@@ -7866,55 +7928,7 @@ const html = `<!DOCTYPE html>
         if (!picks && picksLoading) return '<p class="caption">Loading picks…</p>';
         if (!picks && picksFailed) return '<p class="caption">Could not load picks.</p>';
         const seat = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
-        const you = !!seat;
-        let rows = seat ? receiptOriginPicksForSeat(seat) : [];
-        if (seat && needle) {
-          rows = rows.filter(function (row) {
-            return hit(receiptPickHopSearchBits(row.p, row.key)
-              .concat([receiptPickYear(row.p, row.key), receiptPickPrint(row.p, seat)]));
-          });
-        }
-        rows = rows.filter(receiptPickRowKeep);
-        if (receiptDoorFilter && receiptDoorFilter !== "all") {
-          const want = String(receiptDoorFilter).toUpperCase();
-          rows = rows.filter(function (row) {
-            return receiptPickPrint(row.p, seat) === want;
-          });
-        }
-        if (!rows.length) {
-          if (!seat) {
-            return '<p class="caption">Claim your seat to see the picks that started here.</p>';
-          }
-          return '<p class="caption">Nothing on this tape matches.</p>';
-        }
-        let usedN = 0, soldN = 0, heldN = 0;
-        const groups = {};
-        const years = [];
-        for (let i = 0; i < rows.length; i++) {
-          const print = receiptPickPrint(rows[i].p, seat);
-          if (print === "USED") usedN += 1;
-          else if (print === "SOLD") soldN += 1;
-          else heldN += 1;
-          const year = receiptPickYear(rows[i].p, rows[i].key) || "—";
-          if (!groups[year]) {
-            groups[year] = [];
-            years.push(year);
-          }
-          groups[year].push(rows[i]);
-        }
-        years.sort(function (a, b) { return Number(a) - Number(b); });
-        const head = rows.length + " origin pick" + (rows.length === 1 ? "" : "s")
-          + " · " + usedN + " used · " + soldN + " sold · " + heldN + " held";
-        let html = '<p class="caption">' + esc(head) + "</p>";
-        for (let g = 0; g < years.length; g++) {
-          const list = groups[years[g]];
-          if (!list.length) continue;
-          html += '<div class="data-sec-h">' + esc(years[g]) + "</div>";
-          html += list.map(function (row) {
-            return receiptPickListRowHtml(row, seat, you);
-          }).join("");
-        }
-        return html;
+        return receiptOriginPicksListHtml(seat, q);
       }
       if (id === "season_place") {
         const items = dataListItems(id).filter(function (r) {
@@ -12889,7 +12903,7 @@ const html = `<!DOCTYPE html>
         receiptDraftSeat = "";
         receiptResetPlayerFilter();
         if (typeof receiptPlReset === "function") receiptPlReset();
-        if (receiptWhoList === "my_draft") receiptDoorFilter = "used";
+        if (receiptWhoList === "my_draft") receiptDoorFilter = "origin";
         receiptTicket = false;
         receiptPickKey = "";
         dataDashEdit = false;
@@ -33361,6 +33375,9 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-receipt-pick-round")
     || !fnSrc("receiptDoorFilterHtml").includes("All years")
     || !fnSrc("receiptDoorFilterHtml").includes("All picks")
+    || !fnSrc("receiptDoorFilterHtml").includes("Who owns mine")
+    || !inline.includes("function receiptOriginPicksListHtml(")
+    || !fnSrc("receiptPortalRows").includes('receiptDoorFilter === "origin"')
     || !inline.includes("function receiptPickEverOwned(")
     || !inline.includes("function receiptPickBecameLine(")
     || !inline.includes("Hit rate ")

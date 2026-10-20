@@ -45,6 +45,8 @@ need(page, "index.html", [
   "data-receipt-pick-round",
   "All years",
   "All picks",
+  "Who owns mine",
+  "function receiptOriginPicksListHtml(",
 ]);
 need(gen, "generate-page.mjs", [
   "function ledgerOddsPreview(",

@@ -16,8 +16,8 @@ function need(cond, msg) {
 
 need(build.includes('--skip-page') && build.includes('--skip-espn') && build.includes('--skip-finishes') && build.includes('--allow-revalue-fail'),
   "build.mjs must accept skip-page, skip-espn, skip-finishes, allow-revalue-fail");
-need(build.includes('allowRevalueFail && script === "revalue.mjs"'),
-  "revalue self-check must not abort a tape ship");
+need(build.includes('allowRevalueFail && (script === "revalue.mjs" || script === "apply-value-adjust.mjs")'),
+  "today-book self-checks must not abort a tape ship");
 need(!/if \(leagueId === CUCKLE_LEAGUE_ID\) steps.push\(\["generate-page.mjs"\]\)/.test(build),
   "Cuckle generate-page must stay gated on !skipPage");
 

@@ -74,8 +74,8 @@ for (const [script, ...args] of steps) {
     env: { ...process.env, LEAGUE_ID: leagueId },
   });
   if (!r.status) continue;
-  if (allowRevalueFail && script === "revalue.mjs") {
-    console.warn("revalue self-check failed; keeping written meter so new Sleeper trades still ship.");
+  if (allowRevalueFail && (script === "revalue.mjs" || script === "apply-value-adjust.mjs")) {
+    console.warn(`${script} self-check failed; keeping written meter so new Sleeper trades still ship.`);
     continue;
   }
   process.exit(r.status);

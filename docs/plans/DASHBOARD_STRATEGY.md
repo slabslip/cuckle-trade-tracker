@@ -148,4 +148,19 @@ Insight: every win taxes their own Early.
 
 ## Success check
 
-Each of 10 personas can open Design Mode Home and answer “where am I / what am I / who do I ping” without opening Menu. Bubble count ≤3. Proxy and tank labels unique and actionable.
+Each of 10 personas can open Design Mode Home (`?seat=`) and answer “where am I / what am I / who do I ping” without opening Menu. Bubble count ≤3. Proxy and tank labels unique and actionable.
+
+**Verified overnight (Design Mode):**
+
+| Seat | Where / what | Who to ping (chase) |
+| --- | --- | --- |
+| Truman | Early · Proxy · Hard rebuild | Defend held Early |
+| KingHenry | Late 1st · Race favorite · own Late sold | Buy Early — 1.01 / 1.02 |
+| Ted | Late 2nd · Race favorite · own Late sold | Buy Early — 1.01 / 1.02 |
+| SF | Late 3rd · Race favorite · own Late sold | Buy Early — 1.01 / 1.02 |
+| ARae | Mid · Hoarder · 4 firsts (1 Early) | Upgrade Mid→Early |
+| Chief | Early 10th · Tank · 1.01 own | Sell studs to KingHenry · Ted |
+| TipsUp | Mid · Slow burn 43% | Do not sell Mid on .500 |
+| DarkWing | Early · Fast fade (not Reload) | Sell studs before slide locks |
+| Bubba | Early · Reload | Flip stud to KingHenry · Ted |
+| bigjberg | Mid · Fast fade 43% | Buy a first — Early shop |

@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021094500";
+    const DATA_V = "dashHomeOs20261021103000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -24960,7 +24960,7 @@ const html = `<!DOCTYPE html>
         return "Tank sculptor — their 1st is Early; buy leftovers";
       }
       if (arch && arch.archetype === "reload_on_early") {
-        return "Reload on Early — ask for a stud, pay with picks";
+        return "Reload on Early — flip them a stud for picks";
       }
       if (arch && arch.archetype === "capital_hoarder") {
         return "Capital hoarder — they have firsts to deal";
@@ -24969,6 +24969,9 @@ const html = `<!DOCTYPE html>
         return "Slow burn — they climb; price Mid pieces higher later";
       }
       if (arch && arch.archetype === "fast_fade") {
+        if (proj && proj.band === "Early") {
+          return "Fast fade Early — buy their studs before the slide";
+        }
         return "Fast fade — do not sell them your Early for a push";
       }
       if (proj && proj.band === "Early") {

@@ -32,13 +32,16 @@ homepage “who to target” journeys.
 
 ---
 
-## 2. Calculus (v4 — late trend + soft early weeks)
+## 2. Calculus (v5 — week-scaled blend + Monte Carlo paths)
 
 v1 double-counted banked wins. v2 forecasts movement. v3 adds actual-vs-proj
-form. **v4** downweights noisy weeks 1–4 (unset NFL starters / rookies) and
-adds a live **playoff-trend** signal from league-relative PPW. The 2025 W6
-retrospective added **form slope** (late residual vs early) and **transaction
-heat** (recent trades + FA adds folded into trend):
+form. v4 downweights noisy weeks 1–4 and adds playoff-trend, form slope, and
+transaction heat. **v5** week-scales the blend from a 7-season × 2500-sim
+Monte Carlo calibration and blends MC mean place into `proj_finish` (with
+p10–p90 path bands on each seat). See
+[`PROJECTED_FINISH_MC_CALIB.md`](./PROJECTED_FINISH_MC_CALIB.md).
+
+v4/v5 signals still include **form slope** and **transaction heat**:
 
 ```text
 week_weight(w) = soft for w≤4, full mid-season, heaviest near playoffs
@@ -57,14 +60,17 @@ race_score = 0.65×standings_pts_norm + 0.35×talent_PF_norm
 path / ease / arc as before (arcs = career late climb)
 form_score  = normalize(0.30×form_z + 0.50×recent_z + 0.20×slope_z)
 trend_score = 0.75×normalize(0.80×trend_signal_z + 0.20×slope_z) + 0.25×heat_score
-proj_score  = 0.28×race + 0.28×path + 0.10×ease
-            + 0.10×arc + 0.12×form + 0.12×trend
+base weights = race 0.28 / path 0.28 / ease 0.10 / arc 0.10 / form 0.12 / trend 0.12
+week_scale   = early↑ race+arc · late↑ path+form+trend   (renormalized)
+proj_score   = Σ week_scaled_w × component
+mc_sims      = 2500 remaining H2H + 6-team playoff tree
+proj_finish  = rank( (1−mc_blend)×book_rank + mc_blend×mc_mean )
+mc_blend     ≈ 0.20 W1 → 0.40 W6 → 0.62 W12
 ```
 
-Historical check (Cuckle tape): mid+late PF rank correlates with final place
-(~0.84) better than weeks 1–4 alone (~0.71). Career climbers show positive
-late-minus-early league-relative PPW; faders the opposite. 2025 W6 grade vs
-actual: MAE **2.0** places, corr **0.661** — see
+Multi-season MC (2019–2025, 2500 sims): book MAE W1/W6/W12 = 2.94 / 1.74 / 1.71;
+MC MAE = 2.36 / 1.51 / 1.14; ~85–90% of actuals fall in the MC 80% band.
+2025 W6 grade vs actual: see
 [`PROJECTED_FINISH_W6_2025_RETRO.md`](./PROJECTED_FINISH_W6_2025_RETRO.md).
 
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.

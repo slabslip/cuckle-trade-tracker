@@ -4784,7 +4784,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projFinishLateTrend20261021";
+    const DATA_V = "projFinishMcCalib20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13036,6 +13036,22 @@ const html = `<!DOCTYPE html>
         + " (" + n + " wk · early weeks soft).";
     }
 
+    function projectedFinishMcLine(seat) {
+      if (!seat || seat.mc_mean == null) return "";
+      const mean = Number(seat.mc_mean);
+      const lo = Number(seat.mc_p10);
+      const hi = Number(seat.mc_p90);
+      const top4 = Number(seat.mc_p_top4);
+      const n = Number(seat.mc_n_sims) || 0;
+      if (!Number.isFinite(mean)) return "";
+      let band = "";
+      if (Number.isFinite(lo) && Number.isFinite(hi)) band = " · band #" + lo + "–#" + hi;
+      let t4 = "";
+      if (Number.isFinite(top4)) t4 = " · P(top4) " + Math.round(top4 * 100) + "%";
+      return "Paths · MC mean #" + mean.toFixed(1) + band + t4
+        + (n ? (" · " + n + " sims") : "") + ".";
+    }
+
     function projectedFinishTrendLine(seat) {
       if (!seat) return "";
       const n = Number(seat.trend_n) || 0;
@@ -13244,6 +13260,7 @@ const html = `<!DOCTYPE html>
           : "league rank for rest-of-way ease");
       const formLine = projectedFinishFormLine(seat);
       const trendLine = projectedFinishTrendLine(seat);
+      const mcLine = projectedFinishMcLine(seat);
       const formDelta = seat.form_delta != null ? Number(seat.form_delta) : null;
       const formNum = formDelta == null
         ? "—"
@@ -13258,6 +13275,11 @@ const html = `<!DOCTYPE html>
       const trendLab = trendDelta == null
         ? "playoff trend"
         : (trendDelta >= 3 ? "rising" : (trendDelta <= -3 ? "cooling" : "steady"));
+      const mcMean = seat.mc_mean != null ? Number(seat.mc_mean) : null;
+      const mcNum = mcMean == null ? "—" : ("#" + mcMean.toFixed(1));
+      const mcLab = (Number.isFinite(Number(seat.mc_p10)) && Number.isFinite(Number(seat.mc_p90)))
+        ? ("#" + seat.mc_p10 + "–#" + seat.mc_p90)
+        : "MC paths";
       return {
         name: seat.name || "Seat",
         headline: "Projected " + projLab + " · " + (seat.band || "Mid") + " pick · "
@@ -13302,6 +13324,14 @@ const html = `<!DOCTYPE html>
             num: trendNum,
             lab: trendLab,
             note: trendLine.replace(/^Trend · /, ""),
+          },
+          {
+            key: "paths",
+            tag: "Paths",
+            num: mcNum,
+            lab: mcLab,
+            note: (mcLine || "Paths · run build-projected-finish for 2500-sim bands.")
+              .replace(/^Paths · /, ""),
           },
           {
             key: "history",
@@ -36952,6 +36982,7 @@ if (!inline.includes("function projectedFinishDetailHtml(")
   || !inline.includes("function projectedPlayoffBracketBoardHtml(")
   || !inline.includes("function projectedFinishFormLine(")
   || !inline.includes("function projectedFinishTrendLine(")
+  || !inline.includes("function projectedFinishMcLine(")
   || !inline.includes("function projectedFinishAdjPyth(")
   || !inline.includes("form-adjusted PF/PA")
   || !inline.includes('tag: "Form"')

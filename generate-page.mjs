@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021044000";
+    const DATA_V = "dashHomeOs20261021051500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27074,12 +27074,58 @@ const html = `<!DOCTYPE html>
         + "</p></section>";
     }
 
+    function homeLateBuyerBits(limit) {
+      const cap = limit || 2;
+      const mine = authSeatCanonName() || authSeatName() || "";
+      const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+        ? projectedFinishBook.seats : [];
+      return seats.filter(function (s) {
+        return s && s.band === "Late" && s.name && s.name !== mine;
+      }).sort(function (a, b) {
+        return (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99);
+      }).slice(0, cap).map(function (s) { return s.name; });
+    }
+
+    function homeOwnFirstStatus() {
+      if (typeof leagueFormat === "function" && leagueFormat().kind === "redraft") return null;
+      if (typeof ensurePicks === "function") ensurePicks();
+      if (!picks) return null;
+      const mine = authSeatCanonName() || authSeatName() || "";
+      if (!mine) return null;
+      const year = typeof pickHubSoonestYear === "function" ? pickHubSoonestYear() : "";
+      const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+      for (let i = 0; i < rows.length; i++) {
+        const parts = typeof pickKeyParts === "function" ? pickKeyParts(rows[i].key) : null;
+        if (!parts || parts.round !== 1) continue;
+        if (year && parts.season !== year) continue;
+        const entry = rows[i].entry || {};
+        const origin = (typeof pickOriginName === "function" ? pickOriginName(entry) : "") || "";
+        if (origin !== mine) continue;
+        const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
+        const originProj = typeof projSeatByName === "function" ? projSeatByName(origin) : null;
+        const slot = originProj && originProj.proj_slot != null
+          ? Number(originProj.proj_slot) : 99;
+        const slotLab = slot < 99
+          ? ((slot < 10 ? "1.0" : "1.") + slot)
+          : "1.?";
+        return {
+          own: holder === mine,
+          holder: holder,
+          slot: slot,
+          slotLab: slotLab,
+          band: (originProj && originProj.band) || "Mid",
+        };
+      }
+      return null;
+    }
+
     function homeChaseTip() {
       const uid = authSeatId();
       if (!uid) return "";
       const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
       const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
       const shop = homeEarlyShopBits(2);
+      const buyers = homeLateBuyerBits(2);
       const heldBag = homeCapitalHeldRows();
       const heldEarly = heldBag && heldBag.held
         ? heldBag.held.filter(function (r) { return r.band === "Early"; }).length
@@ -27088,7 +27134,23 @@ const html = `<!DOCTYPE html>
         return "Defend held Early — keep competing";
       }
       if (arch && arch.archetype === "tank_sculptor") {
-        return "Lock 1.01 — sell win-now to Late seats";
+        const lock = homeOwnFirstStatus();
+        if (lock && lock.own && lock.slot === 1) {
+          return buyers.length
+            ? ("1.01 locked — sell studs to " + buyers.join(" · "))
+            : "1.01 locked — sell win-now to Late seats";
+        }
+        if (lock && !lock.own && lock.holder) {
+          return "Reclaim " + lock.slotLab + " — held by " + lock.holder;
+        }
+        if (lock && lock.own) {
+          return buyers.length
+            ? (lock.slotLab + " locked — sell studs to " + buyers.join(" · "))
+            : (lock.slotLab + " locked — sell win-now to Late seats");
+        }
+        return buyers.length
+          ? ("Lock Early — sell win-now to " + buyers.join(" · "))
+          : "Lock 1.01 — sell win-now to Late seats";
       }
       if (arch && arch.archetype === "reload_on_early") {
         return "Ask for a stud; pay with picks";
@@ -34202,9 +34264,13 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function homeChaseTip(")
     || !inline.includes("function homeEarlyShopBits(")
     || !inline.includes("function homeCapitalStackLab(")
+    || !inline.includes("function homeLateBuyerBits(")
+    || !inline.includes("function homeOwnFirstStatus(")
     || !fnSrc("homeChaseTip").includes("win_now_race")
     || !fnSrc("homeChaseTip").includes("capital_hoarder")
     || !fnSrc("homeChaseTip").includes("Upgrade Mid")
+    || !fnSrc("homeChaseTip").includes("1.01 locked")
+    || !fnSrc("homeChaseTip").includes("sell studs to")
     || !fnSrc("homeEarlyShopBits").includes("holder === mine")
     || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
     || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")

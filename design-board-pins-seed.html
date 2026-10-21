@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=390, initial-scale=1" />
+  <title>Design — seed old board (pins migrate)</title>
+</head>
+<body>
+  <p>Seeding an old saved board (no Season arcs / Trade helper), then opening Design Mode…</p>
+  <script>
+    (function () {
+      var seat = { id: "458342725222133760", name: "TrumanCooper" };
+      var user = {
+        access_token: "design-mode",
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 86400,
+        user_id: "design-user",
+        username: "designer",
+        seat_user_id: seat.id,
+        seat_name: seat.name
+      };
+      var league = {
+        sleeper_league_id: "1315431339301806080",
+        name: "CuckleChunckle",
+        status: "ready",
+        sleeper_user_id: seat.id,
+        team_name: seat.name
+      };
+      // Pre-#191 style board: missing season_arcs + trade_helper.
+      var oldBoard = [
+        "projected_finish", "my_draft", "firsts_held", "my_trades",
+        "league_trades", "league_draft", "profit_loss", "past_champions",
+        "season_place", "week_scores", "manager_archetypes"
+      ];
+      try {
+        localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
+        localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
+        localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
+        localStorage.setItem(
+          "cuckle.data.dash.v6." + league.sleeper_league_id + "." + seat.id,
+          JSON.stringify(oldBoard)
+        );
+        sessionStorage.setItem("cuckle.design.league_home", "1");
+        sessionStorage.setItem("cuckle.design.seat", "truman");
+      } catch (err) {
+        document.querySelector("p").textContent = "localStorage blocked.";
+        return;
+      }
+      var go = function () {
+        location.replace("./index.html?design=league-home&v=board-pins-seed&_=" + Date.now());
+      };
+      if (!("serviceWorker" in navigator)) { go(); return; }
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+      }).then(function () {
+        if (!("caches" in window)) return;
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }).catch(function () {}).then(go);
+    })();
+  </script>
+</body>
+</html>

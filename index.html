@@ -4776,7 +4776,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projFinishMcCalib20261021";
+    const DATA_V = "projFinishMcDash20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4881,7 +4881,7 @@
       pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest team weeks still hunting the title or playing for 3rd." },
       season_place: { lab: "Manager avg finish", why: "Career average, three seasons minimum. Pick a year for that 1–12 board." },
-      projected_finish: { lab: "Projected finish", why: "Race path + rest-of-way SoS + late-season arcs → projected place (can move vs now) and Early / Mid / Late pick band." },
+      projected_finish: { lab: "Expected finish", why: "v5: week-scaled race/path/form/trend + 2500-sim Monte Carlo paths → projected place (can move vs now), p10–p90 band, and Early / Mid / Late pick." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
@@ -4917,7 +4917,7 @@
       { id: "my_draft", lab: "Draft picks", desk: "lists", group: "memory", size: "full", why: "Unused 2027+ · who holds yours · early / mid / late from the 2026 window." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "Manager avg finish", desk: "lists", group: "memory", size: "full", why: "Career average finish. One year still counts. Not this season’s projection." },
-      { id: "projected_finish", lab: "Projected finish", desk: "lists", group: "memory", size: "full", why: "Place now is the race; projection blends remaining path, schedule ease, and late-season climb history." },
+      { id: "projected_finish", lab: "Expected finish", desk: "lists", group: "memory", size: "full", why: "Place now is the race; v5 blends week-scaled path/form/trend with 2500-sim Monte Carlo mean place and path bands." },
       { id: "season_arcs", lab: "Season arcs", desk: "lists", group: "memory", size: "full", why: "Slow start → finish strong. Early PF rank vs final place, bubble trades, proxy-first motive." },
       { id: "manager_archetypes", lab: "Manager type", desk: "lists", group: "memory", size: "full", why: "Slow burn, bubble trader, proxy contender, tank sculptor — how they play seasons." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
@@ -5442,11 +5442,15 @@
         return seats.map(function (s, i) {
           const delta = Number(s.delta_place) || 0;
           const climb = delta > 0 ? ("↑" + delta) : (delta < 0 ? ("↓" + (-delta)) : "flat");
+          const pathBand = (Number.isFinite(Number(s.mc_p10)) && Number.isFinite(Number(s.mc_p90)))
+            ? (" · #" + s.mc_p10 + "–#" + s.mc_p90)
+            : "";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
             metric: (typeof nth === "function" ? nth(s.proj_finish) : String(s.proj_finish))
               + " · " + (s.band || "Mid")
+              + pathBand
               + (delta ? (" · " + climb) : ""),
             // Collapsed: race snapshot. Path / SoS / history / weeks / bracket live in expand.
             sub: "#" + s.place_now + " now · " + (s.record || "")
@@ -8584,7 +8588,7 @@
         });
         if (!items.length) {
           if (id === "projected_finish" && !projectedFinishBook) {
-            return '<p class="caption">Projected finish book not loaded yet.</p>';
+            return '<p class="caption">Expected finish book not loaded yet.</p>';
           }
           if (id === "season_arcs" && !seasonArcsBook) {
             return '<p class="caption">Season arcs book not loaded yet.</p>';
@@ -8675,14 +8679,18 @@
       else if (id === "projected_finish") {
         const week = projectedFinishBook && projectedFinishBook.week;
         const left = projectedFinishBook && projectedFinishBook.remaining_week_count;
-        caption = "Cuckle projected " + ((projectedFinishBook && projectedFinishBook.season) || "this")
-          + " finish through the regular season"
+        const sims = projectedFinishBook && projectedFinishBook.mc
+          && projectedFinishBook.mc.n_sims;
+        caption = "Expected finish for "
+          + ((projectedFinishBook && projectedFinishBook.season) || "this")
+          + " — week-scaled race/path/form/trend blended with "
+          + (sims || 2500) + "-sim Monte Carlo paths"
           + (week != null ? (" (after week " + week + ")") : "")
           + (left != null ? (" · " + left + " weeks left") : "")
-          + ". Tap a row for a scorecard (Race / Path / Schedule / History), week-by-week leans,"
-          + " and a soft playoff bracket — then Share this finish."
-          + " Schedule labels: Cupcake (easiest SoS) → Hellscape (hardest)."
-          + " Last place → Early 1.01 band; title → Late.";
+          + ". Tap a row for Race / Path / Schedule / Form / Trend / Paths / History,"
+          + " week-by-week leans, and a soft playoff bracket — then Share this finish."
+          + " Paths show MC mean + p10–p90 band. Schedule: Cupcake → Hellscape."
+          + " Last place → Early 1.01; title → Late.";
       }
       else if (id === "season_arcs") {
         caption = "Season arcs from past years: week-4 cumulative PF rank vs final place."
@@ -13379,6 +13387,13 @@
       }
       lines.push("");
       lines.push("Cupcake = easiest SoS · Hellscape = hardest · Path 10/10 = Rocket");
+      if (seat.mc_mean != null) {
+        lines.push("MC paths: mean #" + Number(seat.mc_mean).toFixed(1)
+          + (Number.isFinite(Number(seat.mc_p10)) && Number.isFinite(Number(seat.mc_p90))
+            ? (" · band #" + seat.mc_p10 + "–#" + seat.mc_p90)
+            : "")
+          + (seat.mc_n_sims ? (" · " + seat.mc_n_sims + " sims") : ""));
+      }
       return lines.join("\n");
     }
 
@@ -28569,6 +28584,11 @@
       if (proj) {
         main.push("Projected "
           + (typeof nth === "function" ? nth(proj.proj_finish) : proj.proj_finish));
+        if (Number.isFinite(Number(proj.mc_p10)) && Number.isFinite(Number(proj.mc_p90))) {
+          main.push("paths #" + proj.mc_p10 + "–#" + proj.mc_p90);
+        } else if (proj.mc_mean != null && Number.isFinite(Number(proj.mc_mean))) {
+          main.push("MC #" + Number(proj.mc_mean).toFixed(1));
+        }
         if (proj.record) main.push(proj.record);
         const pf = Math.round(Number(proj.pf) || 0);
         const pa = Math.round(Number(proj.pa) || 0);
@@ -30199,8 +30219,15 @@
           return s && me && String(s.user_id) === String(me.user_id);
         })
         : null;
+      const projMcBand = (projSeat
+        && Number.isFinite(Number(projSeat.mc_p10))
+        && Number.isFinite(Number(projSeat.mc_p90)))
+        ? (" · paths #" + projSeat.mc_p10 + "–#" + projSeat.mc_p90)
+        : "";
       const projLine = projSeat
-        ? ("Projected " + (typeof nth === "function" ? nth(projSeat.proj_finish) : projSeat.proj_finish)
+        ? ("Expected "
+          + (typeof nth === "function" ? nth(projSeat.proj_finish) : projSeat.proj_finish)
+          + projMcBand
           + " · " + (projSeat.record || "")
           + " · PF " + Math.round(Number(projSeat.pf) || 0)
           + " / PA " + Math.round(Number(projSeat.pa) || 0)

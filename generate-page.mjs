@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021051500";
+    const DATA_V = "dashHomeOs20261021060000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27062,8 +27062,14 @@ const html = `<!DOCTYPE html>
       }
       if (bag.ownSold) line += " · own 1st sold";
       if (!bits.length) {
-        const shop = homeEarlyShopBits(2);
-        if (shop.length) line += " · shop " + shop.join(" · ");
+        // Slow burn / proxy: empty bag is not a shopping cue — hold the race.
+        const arch = typeof archSeatOf === "function" ? archSeatOf(authSeatId()) : null;
+        const skipShop = arch && (arch.archetype === "slow_burn"
+          || arch.archetype === "proxy_contender");
+        if (!skipShop) {
+          const shop = homeEarlyShopBits(2);
+          if (shop.length) line += " · shop " + shop.join(" · ");
+        }
       }
       return '<section class="home-capital" aria-label="Your firsts">'
         + '<p class="home-capital-h">Your firsts'
@@ -27167,6 +27173,14 @@ const html = `<!DOCTYPE html>
           : "Swap Mid origins for Early ones";
       }
       if (arch && arch.archetype === "slow_burn") {
+        const pct = Math.round((Number(arch.slow_burn_rate) || 0) * 100);
+        const climb = Number(arch.avg_climb);
+        if (pct >= 30) {
+          return pct + "% slow burn — do not sell Mid on .500 vibe";
+        }
+        if (climb > 0) {
+          return "You climb — hold Mid pieces through the cut";
+        }
         return "Hold Mid pieces — price climbs later";
       }
       if (arch && arch.archetype === "fast_fade") {
@@ -34271,9 +34285,12 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeChaseTip").includes("Upgrade Mid")
     || !fnSrc("homeChaseTip").includes("1.01 locked")
     || !fnSrc("homeChaseTip").includes("sell studs to")
+    || !fnSrc("homeChaseTip").includes("slow_burn_rate")
+    || !fnSrc("homeChaseTip").includes("do not sell Mid on .500 vibe")
     || !fnSrc("homeEarlyShopBits").includes("holder === mine")
     || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
     || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")
+    || !fnSrc("homeCapitalStripHtml").includes("slow_burn")
     || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")

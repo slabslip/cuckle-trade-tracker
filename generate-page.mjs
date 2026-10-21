@@ -4482,7 +4482,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "managerIntel20261021040000";
+    const DATA_V = "managerIntel20261021060000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4537,7 +4537,7 @@ const html = `<!DOCTYPE html>
     const DATA_DOORS = [
       "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
       "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "seat_draft", "season_arcs",
+      "week_scores", "manager_archetypes", "season_arcs",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4550,11 +4550,11 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_DEFAULT = [
       "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
       "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "seat_draft", "season_arcs",
+      "week_scores", "manager_archetypes", "season_arcs",
     ];
     const DATA_DASH_RESEARCH = [
-      "firsts_held", "uninsured", "widest_clock", "passed_around",
-      "week_scores", "draft_board", "cuffs_board", "my_trades",
+      "firsts_held", "manager_archetypes", "season_arcs", "passed_around",
+      "week_scores", "draft_board", "projected_finish", "my_trades",
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_DASH_REDRAFT = [
@@ -5154,7 +5154,8 @@ const html = `<!DOCTYPE html>
               + " · pick " + (s.proj_slot < 10 ? "0" : "") + s.proj_slot,
             rank: s.proj_finish || (i + 1),
             seat: s,
-            band: String(s.band || "Mid").toLowerCase(),
+            // pickBand only — never list.band (collides with top/bot share slice).
+            pickBand: String(s.band || "Mid"),
           };
         });
       }

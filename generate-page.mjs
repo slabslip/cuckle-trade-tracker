@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021073000";
+    const DATA_V = "dashHomeOs20261021081500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27159,7 +27159,9 @@ const html = `<!DOCTYPE html>
           : "Lock 1.01 — sell win-now to Late seats";
       }
       if (arch && arch.archetype === "reload_on_early") {
-        return "Ask for a stud; pay with picks";
+        return buyers.length
+          ? ("Flip a stud to " + buyers.join(" · ") + " — keep Early")
+          : "Ask for a stud; pay with picks";
       }
       if (arch && arch.archetype === "capital_hoarder") {
         if (heldEarly >= 1 && shop.length) {
@@ -34288,8 +34290,10 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeChaseTip").includes("Upgrade Mid")
     || !fnSrc("homeChaseTip").includes("1.01 locked")
     || !fnSrc("homeChaseTip").includes("sell studs to")
+    || !fnSrc("homeChaseTip").includes("Flip a stud to")
     || !fnSrc("homeChaseTip").includes("slow_burn_rate")
     || !fnSrc("homeChaseTip").includes("do not sell Mid on .500 vibe")
+    || !fnSrc("homeChaseTip").includes("Fade history")
     || !fnSrc("homeEarlyShopBits").includes("holder === mine")
     || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
     || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")

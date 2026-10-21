@@ -4785,7 +4785,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261021205159";
+    const DATA_V = "bagToTeam20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6633,7 +6633,7 @@
         const ahead = now == null ? "" : (now > 0 ? side.name : now < 0 ? side.other : "");
         if (ahead) verdict = ahead + " came out ahead — " + receiptClockName(key).toLowerCase() + ".";
       }
-      let because = "The bags stayed about even.";
+      let because = "The teams stayed about even.";
       if (aged != null && aged < 0) because = "It looked better the day they clicked accept.";
       else if (aged != null && aged > 0) because = "It is worth more now than the day they accepted.";
       if (!chip && t0 != null && aged != null) {
@@ -7687,7 +7687,7 @@
         + bags
         + '<div class="data-sec-h">Same deal, different question</div>'
         + receiptClockChipsHtml(selected)
-        + '<div class="data-sec-h">How the received bag moved</div>'
+        + '<div class="data-sec-h">How the received team moved</div>'
         + sparkHtml
         + '<p class="caption">What they received, year by year. A break is a missing year, not a zero.</p>'
         + receiptPickRowsHtml(selected)
@@ -14929,7 +14929,7 @@
       const flags = [];
       if (needPos) flags.push("You look thin at " + pos + " — fair hunt.");
       else if (thinPos) flags.push("You could use " + pos + " depth.");
-      else if (pos) flags.push("Not a clear " + pos + " hole on your bag — upgrade only if the price is right.");
+      else if (pos) flags.push("Not a clear " + pos + " hole on your team — upgrade only if the price is right.");
       if (target && target.injury) {
         flags.push((target.name || "Target") + " is on " + target.injury
           + " — price the downtime or pivot.");
@@ -14952,7 +14952,7 @@
       if (target && target.injury && alts.length) {
         verdict = "Hurt target — weigh healthier same-pos options before you pay full freight.";
       } else if (!packages.length && alts.length) {
-        verdict = "Hard to even this on your bag — look at alternatives first.";
+        verdict = "Hard to even this on your team — look at alternatives first.";
       } else if (packages.length && needPos) {
         verdict = "Solid need fit — lead with the closest even package.";
       } else if (theirProj && theirProj.band === "Late" && target && !target.injury) {
@@ -15021,7 +15021,7 @@
         }
         body += '<h3 class="ds-lists-h">Offer ideas</h3>';
         if (!anal.packages.length) {
-          body += '<p class="data-hint">No clean package on your bag that both sides are likely to take. Check alternatives.</p>';
+          body += '<p class="data-hint">No clean package on your team that both sides are likely to take. Check alternatives.</p>';
         } else {
           body += anal.packages.map(function (p) {
             return '<button type="button" class="data-xrow" data-dash-fit="1"'
@@ -15092,10 +15092,10 @@
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const bag = (bags.get(mine) || []).filter(function (a) { return a && a.id && !pinned[a.id]; });
       let html = '<p class="caption"><button type="button" class="chip" data-block-add-toggle="1">'
-        + (dataBlockAddOpen ? "Hide bag" : "Add from your bag") + "</button></p>";
+        + (dataBlockAddOpen ? "Hide team" : "Add from your team") + "</button></p>";
       if (!dataBlockAddOpen) return html;
       if (!bag.length) {
-        return html + '<p class="data-hint">Every leftover piece is already listed, or the bag is empty.</p>';
+        return html + '<p class="data-hint">Every leftover piece is already listed, or the team is empty.</p>';
       }
       html += bag.slice(0, 24).map(function (a) {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
@@ -15122,7 +15122,7 @@
       const huntSub = id === "move_extras"
         ? "Dart to Star, by color."
         : (id === "fill_holes"
-          ? "Dart to Star, from their bag."
+          ? "Dart to Star, from their team."
           : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
         + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
@@ -15672,7 +15672,7 @@
         + dataDashFact("Buy", buy)
         + dataDashFact("Sell", sell)
         + dataDashFact("Refuse", refuse)
-        + dataDashFact("Bag", holeBits.join(" · "));
+        + dataDashFact("Team", holeBits.join(" · "));
       return '<section class="data-dash" aria-label="' + esc(name) + ' cycle">'
         + '<p class="caption"><button type="button" class="chip back" data-dir-back="1">← League</button></p>'
         + '<div class="data-dir-hero"><h2 class="screen-h" tabindex="-1">' + esc(name) + "</h2>"
@@ -28566,7 +28566,7 @@
         + "gold line on the <b>star package</b> (the send card with fewer pieces) and the "
         + "card total is pile + that line. The extras card stays pile-only. Compare "
         + "<b>receives</b> add that line to the seat who <b>takes</b> the star.</p>"
-        + '<p class="calc-info-eq">card total = send pile + VA on that bag + Handcuff on that bag<br>'
+        + '<p class="calc-info-eq">card total = send pile + VA on that team + Handcuff on that team<br>'
         + "Team 1 receives = Team 2 card total<br>"
         + "Team 2 receives = Team 1 card total<br>"
         + "gap = larger receive total &minus; smaller receive total<br>"
@@ -29043,7 +29043,7 @@
         else if (delta < 0) main.push("↓" + (-delta) + " from now");
       }
       if (arch && arch.lab) sub.push(arch.lab);
-      if (dir && dir.label) sub.push("Bag " + dir.label);
+      if (dir && dir.label) sub.push("Team " + dir.label);
       // data-home-door (not data-dash-open): must land on League Data so the
       // expandable every-team list mounts. Race chips used to set receiptWhoList
       // while homeTab stayed Home — list looked "gone".
@@ -30718,7 +30718,7 @@
           const arch = me && typeof archSeatOf === "function" ? archSeatOf(me.user_id) : null;
           const dir = me && typeof seatDirOf === "function" ? seatDirOf(me.user_id) : null;
           if (!arch || !arch.lab) return "";
-          const bag = dir && dir.label ? (" · Bag " + dir.label) : "";
+          const bag = dir && dir.label ? (" · Team " + dir.label) : "";
           return '<p class="caption">' + esc(arch.lab) + esc(bag)
             + (arch.why ? (" — " + esc(arch.why)) : "")
             + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Manager types</button></p>';

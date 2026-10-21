@@ -4791,7 +4791,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperKick20261021";
+    const DATA_V = "tradeHelperSearchTop20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15140,7 +15140,6 @@
         : [];
       let body = "";
       if (!target) {
-        if (!q) body += tradeHelperKickstartHtml();
         body += '<label class="trade-helper-search">'
           + '<span class="data-dash-sub">Search</span>'
           + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="Search for player or trade partner"'
@@ -15156,6 +15155,8 @@
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
               + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
           }).join("");
+        } else if (!q) {
+          body += tradeHelperKickstartHtml();
         }
       } else {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name;

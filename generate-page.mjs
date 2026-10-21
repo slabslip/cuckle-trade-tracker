@@ -4799,7 +4799,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperKick20261021";
+    const DATA_V = "tradeHelperSearchTop20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4911,7 +4911,7 @@ const html = `<!DOCTYPE html>
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
     const DATA_REPORTS = [
-      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player or trade partner. Kickstart ideas load first — then build an offer or see better options." },
+      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player or trade partner. Kickstart ideas sit under the search — then build an offer or see better options." },
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
       { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Give book, Dart to Star by color." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
@@ -15148,7 +15148,6 @@ const html = `<!DOCTYPE html>
         : [];
       let body = "";
       if (!target) {
-        if (!q) body += tradeHelperKickstartHtml();
         body += '<label class="trade-helper-search">'
           + '<span class="data-dash-sub">Search</span>'
           + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="Search for player or trade partner"'
@@ -15164,6 +15163,8 @@ const html = `<!DOCTYPE html>
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
               + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
           }).join("");
+        } else if (!q) {
+          body += tradeHelperKickstartHtml();
         }
       } else {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name;
@@ -35418,7 +35419,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v339-trade-helper-kick")
+  || !swSrc.includes("chuckle-shell-v340-trade-helper-search-top")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")

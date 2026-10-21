@@ -4482,7 +4482,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "managerIntel20261021040000";
+    const DATA_V = "managerIntel20261021050000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4553,8 +4553,8 @@ const html = `<!DOCTYPE html>
       "week_scores", "seat_draft", "season_arcs",
     ];
     const DATA_DASH_RESEARCH = [
-      "firsts_held", "uninsured", "widest_clock", "passed_around",
-      "week_scores", "draft_board", "cuffs_board", "my_trades",
+      "firsts_held", "manager_archetypes", "season_arcs", "passed_around",
+      "week_scores", "draft_board", "projected_finish", "my_trades",
       "seat_run", "least_traded", "forever", "past_champions",
     ];
     const DATA_DASH_REDRAFT = [
@@ -5154,7 +5154,8 @@ const html = `<!DOCTYPE html>
               + " · pick " + (s.proj_slot < 10 ? "0" : "") + s.proj_slot,
             rank: s.proj_finish || (i + 1),
             seat: s,
-            band: String(s.band || "Mid").toLowerCase(),
+            // pickBand only — never list.band (collides with top/bot share slice).
+            pickBand: String(s.band || "Mid"),
           };
         });
       }

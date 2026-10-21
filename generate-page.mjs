@@ -8267,6 +8267,30 @@ const html = `<!DOCTYPE html>
           return listRow({ name: r.name, team: r.sub }, r.metric);
         });
       }
+      if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes") {
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub, r.rank]);
+        });
+        if (!items.length) {
+          if (id === "projected_finish" && !projectedFinishBook) {
+            return '<p class="caption">Projected finish book not loaded yet.</p>';
+          }
+          if (id === "season_arcs" && !seasonArcsBook) {
+            return '<p class="caption">Season arcs book not loaded yet.</p>';
+          }
+          if (id === "manager_archetypes" && !managerArchetypesBook) {
+            return '<p class="caption">Manager type book not loaded yet.</p>';
+          }
+          return '<p class="caption">Nothing on this tape matches.</p>';
+        }
+        return dataListBandsHtml(id, items, function (r) {
+          return '<div class="row"><div class="row-top"><div><div class="names">'
+            + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+            + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+            + "</div>"
+            + '<div class="margin">' + esc(r.metric || "—") + "</div></div></div>';
+        });
+      }
       return "";
     }
 

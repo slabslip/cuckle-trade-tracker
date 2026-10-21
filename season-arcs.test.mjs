@@ -153,3 +153,29 @@ test("buildSeasonArcsBook + proxy", () => {
   const p = archBook.seats.find((s) => s.name === "Proxy");
   assert.equal(p.archetype, "proxy_contender");
 });
+
+test("pickArchetype: fade history beats Reload-on-Early (DarkWing vs Bubba)", () => {
+  const darkWing = pickArchetype({
+    n: 7,
+    fast_fade_rate: 0.429,
+    avg_climb: -1.57,
+    slow_burn_rate: 0,
+    bubble_rate: 0.714,
+    held_firsts: 1,
+    live_band: "Early",
+    live_proj_finish: 7,
+  }, "Reload");
+  assert.equal(darkWing.id, "fast_fade");
+
+  const bubba = pickArchetype({
+    n: 7,
+    fast_fade_rate: 0,
+    avg_climb: 0.71,
+    slow_burn_rate: 0.286,
+    bubble_rate: 0.571,
+    held_firsts: 1,
+    live_band: "Early",
+    live_proj_finish: 9,
+  }, "Reload");
+  assert.equal(bubba.id, "reload_on_early");
+});

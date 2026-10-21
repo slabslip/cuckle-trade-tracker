@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021060000";
+    const DATA_V = "dashHomeOs20261021073000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27184,6 +27184,9 @@ const html = `<!DOCTYPE html>
         return "Hold Mid pieces — price climbs later";
       }
       if (arch && arch.archetype === "fast_fade") {
+        if (proj && proj.band === "Early") {
+          return "Fade history — sell studs before the slide locks";
+        }
         return shop.length
           ? ("Buy a first — " + shop.join(" · "))
           : "Buy a first before week 8";

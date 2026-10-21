@@ -60,7 +60,8 @@ Stops 7/10 Bubble mush.
 | --- | --- |
 | TrumanCooper | Proxy contender |
 | ChiefGumby | Tank sculptor |
-| Bubba / DarkWing | Reload on Early |
+| Bubba | Reload on Early |
+| DarkWing | Fast fade (fade history beats Reload bag) |
 | ARae | Capital hoarder |
 | TipsUp | Slow burn |
 | bigjberg | Fast fade |
@@ -90,10 +91,15 @@ Mid + fade history.
 Need: buy/sell before week 8; get a first without gutting starters.  
 Insight: fade rate vs bubble narrative.
 
-### Reload on Early — Bubba, DarkWing
-Early band + Reload bag.  
+### Reload on Early — Bubba
+Early band + Reload bag, no fade history.  
 Need: flip studs to Late seats? Own Early locked?  
 Insight: stud KTC ≠ seat race.
+
+### Fast fade on Early — DarkWing
+Early band + Reload bag chrome, but career fade (Δplace sinks).  
+Need: sell studs now — do not wait for a soft Reload narrative.  
+Insight: fade rate beats bag label.
 
 ### Proxy contender — Truman
 Doesn’t own own 1st; holds others’ Early; still competes.  

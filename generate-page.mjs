@@ -12709,6 +12709,8 @@ const html = `<!DOCTYPE html>
             dataDashWriteLocal(fresh);
             return fresh;
           }
+          // Persist migrate pins (Trade helper) so the next paint / device sees them.
+          if (next.join(",") !== dataDashCanon(parsed).join(",")) dataDashWriteLocal(next);
           return next;
         }
       } catch (err) { /* private mode */ }

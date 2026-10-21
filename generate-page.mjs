@@ -4784,7 +4784,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projFinishFormLean20261021";
+    const DATA_V = "projFinishLateTrend20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12975,17 +12975,30 @@ const html = `<!DOCTYPE html>
     }
 
     /**
-     * Form-adjusted strength: season PF/PA pythag nudged by actual-vs-proj
-     * residuals (form_z / form_recent_z from the projected-finish book).
+     * Form + playoff-trend adjusted strength: talent PF/PA pythag nudged by
+     * actual-vs-proj residuals and live league-relative scoring trend.
      */
     function projectedFinishAdjPyth(seat) {
-      const base = projectedFinishPyth(seat);
+      const talentPf = Number(seat && seat.talent_pf);
+      const pf = Number.isFinite(talentPf) && talentPf > 0
+        ? talentPf
+        : Math.max(0, Number(seat && seat.pf) || 0);
+      const pa = Math.max(0, Number(seat && seat.pa) || 0);
+      let base = 0.5;
+      if (pf + pa > 0) {
+        const exp = 1.8;
+        const num = Math.pow(pf, exp);
+        const den = num + Math.pow(pa, exp);
+        base = den ? (num / den) : 0.5;
+      }
       const season = Number(seat && seat.form_z);
       const recent = Number(seat && seat.form_recent_z);
-      const signal = (Number.isFinite(season) ? 0.55 * season : 0)
-        + (Number.isFinite(recent) ? 0.45 * recent : 0);
-      const lean = 0.14;
-      const bump = Math.max(-0.18, Math.min(0.18, signal * lean));
+      const trend = Number(seat && seat.trend_z);
+      const signal = (Number.isFinite(season) ? 0.35 * season : 0)
+        + (Number.isFinite(recent) ? 0.35 * recent : 0)
+        + (Number.isFinite(trend) ? 0.30 * trend : 0);
+      const lean = 0.15;
+      const bump = Math.max(-0.20, Math.min(0.20, signal * lean));
       return Math.min(0.95, Math.max(0.05, base + bump));
     }
 
@@ -13015,7 +13028,31 @@ const html = `<!DOCTYPE html>
       else if (delta - recent >= 5) tone = "cooling vs earlier overscores";
       return "Form · " + tone + " — " + sign + delta.toFixed(1) + " pts/wk vs starter proj"
         + " · last " + Math.min(3, n) + " " + rSign + recent.toFixed(1)
-        + " (" + n + " wk).";
+        + " (" + n + " wk · early weeks soft).";
+    }
+
+    function projectedFinishTrendLine(seat) {
+      if (!seat) return "";
+      const n = Number(seat.trend_n) || 0;
+      if (n < 2 || seat.trend_delta == null) {
+        return "Trend · need more scored weeks for playoff-trend.";
+      }
+      const delta = Number(seat.trend_delta) || 0;
+      const recent = seat.recent_rel != null ? Number(seat.recent_rel) : 0;
+      const climb = Number(seat.avg_climb) || 0;
+      const sign = delta >= 0 ? "+" : "";
+      const rSign = recent >= 0 ? "+" : "";
+      let tone = "flat vs early weeks";
+      if (delta >= 8) tone = "surging toward the hunt";
+      else if (delta >= 3) tone = "rising into the playoffs";
+      else if (delta <= -8) tone = "fading after a hot start";
+      else if (delta <= -3) tone = "cooling vs early weeks";
+      const career = climb >= 1
+        ? " · career late climber"
+        : (climb <= -1 ? " · career late fader" : "");
+      return "Trend · " + tone + " — " + sign + delta.toFixed(1)
+        + " rel PPW late vs early · recent " + rSign + recent.toFixed(1)
+        + career + ".";
     }
 
     function projectedFinishMoveLine(seat) {
@@ -13197,6 +13234,7 @@ const html = `<!DOCTYPE html>
           ? "absolute hardest remaining strength of schedule"
           : "league rank for rest-of-way ease");
       const formLine = projectedFinishFormLine(seat);
+      const trendLine = projectedFinishTrendLine(seat);
       const formDelta = seat.form_delta != null ? Number(seat.form_delta) : null;
       const formNum = formDelta == null
         ? "—"
@@ -13204,6 +13242,13 @@ const html = `<!DOCTYPE html>
       const formLab = formDelta == null
         ? "vs proj"
         : (formDelta >= 3 ? "clears proj" : (formDelta <= -3 ? "under proj" : "near proj"));
+      const trendDelta = seat.trend_delta != null ? Number(seat.trend_delta) : null;
+      const trendNum = trendDelta == null
+        ? "—"
+        : ((trendDelta >= 0 ? "+" : "") + trendDelta.toFixed(1));
+      const trendLab = trendDelta == null
+        ? "playoff trend"
+        : (trendDelta >= 3 ? "rising" : (trendDelta <= -3 ? "cooling" : "steady"));
       return {
         name: seat.name || "Seat",
         headline: "Projected " + projLab + " · " + (seat.band || "Mid") + " pick · "
@@ -13215,7 +13260,10 @@ const html = `<!DOCTYPE html>
             num: projLab,
             lab: "#" + (seat.place_now || "?") + " now → " + projLab,
             note: move + " · PF " + Math.round(Number(seat.pf) || 0)
-              + " / PA " + Math.round(Number(seat.pa) || 0),
+              + " / PA " + Math.round(Number(seat.pa) || 0)
+              + (seat.talent_ppw != null
+                ? (" · talent " + Number(seat.talent_ppw).toFixed(1) + "/wk")
+                : ""),
           },
           {
             key: "path",
@@ -13238,6 +13286,13 @@ const html = `<!DOCTYPE html>
             num: formNum,
             lab: formLab,
             note: formLine.replace(/^Form · /, ""),
+          },
+          {
+            key: "trend",
+            tag: "Trend",
+            num: trendNum,
+            lab: trendLab,
+            note: trendLine.replace(/^Trend · /, ""),
           },
           {
             key: "history",
@@ -34660,7 +34715,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v328-proj-form")
+  || !swSrc.includes("chuckle-shell-v329-late-trend")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36887,14 +36942,16 @@ if (!inline.includes("function projectedFinishDetailHtml(")
   || !inline.includes("Projected playoff bracket")
   || !inline.includes("function projectedPlayoffBracketBoardHtml(")
   || !inline.includes("function projectedFinishFormLine(")
+  || !inline.includes("function projectedFinishTrendLine(")
   || !inline.includes("function projectedFinishAdjPyth(")
   || !inline.includes("form-adjusted PF/PA")
   || !inline.includes('tag: "Form"')
+  || !inline.includes('tag: "Trend"')
   || !inline.includes("pf-brack-board")
   || !inline.includes("Championship")
   || !inline.includes("Rest of regular season")
   || !inline.includes("pf-scorecard")) {
-  throw new Error("Projected finish expand must ship scorecard digest, Cupcake→Hellscape SoS, form, share, weeks, bracket");
+  throw new Error("Projected finish expand must ship scorecard digest, Cupcake→Hellscape SoS, form, trend, share, weeks, bracket");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

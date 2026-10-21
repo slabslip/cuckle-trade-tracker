@@ -17,7 +17,9 @@ import {
 import {
   projectFinishBook,
   scoreFormLeague,
+  scoreTrendLeague,
   summarizeFormByRoster,
+  summarizeScoringTrend,
 } from "./lib/projected-finish.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
@@ -127,6 +129,37 @@ async function scoredFormByRoster(leagueId, season, lastScored, ptsKey) {
   return scoreFormLeague(summarizeFormByRoster(weekDeltas));
 }
 
+/**
+ * Live league-relative scoring trend from the weekly tape (early weeks soft).
+ * roster_id keyed for projectFinishBook.
+ */
+function scoringTrendByRoster(season, lastScored, ownerByRoster) {
+  const tape = readJson("weekly_scores.json", null);
+  const scores = (tape && tape.scores) || [];
+  const end = Number(lastScored) || 0;
+  const byRid = Object.create(null);
+  for (const row of scores) {
+    if (!row || String(row.season) !== String(season)) continue;
+    if (row.phase && row.phase !== "regular") continue;
+    const w = Number(row.week) || 0;
+    if (w < 1 || (end > 0 && w > end)) continue;
+    const pts = Number(row.points);
+    if (!Number.isFinite(pts) || pts <= 0) continue;
+    let rid = Number(row.roster_id);
+    if (!Number.isFinite(rid) && row.user_id != null) {
+      // Fallback: map user_id → roster_id from live owners.
+      for (const [r, uid] of Object.entries(ownerByRoster || {})) {
+        if (String(uid) === String(row.user_id)) { rid = Number(r); break; }
+      }
+    }
+    if (!Number.isFinite(rid)) continue;
+    const key = String(rid);
+    if (!byRid[key]) byRid[key] = [];
+    byRid[key].push({ week: w, points: pts });
+  }
+  return scoreTrendLeague(summarizeScoringTrend(byRid));
+}
+
 async function main() {
   const leagueId = LEAGUE_ID;
   const live = (await sleeperGet(`/league/${leagueId}`)) || null;
@@ -177,6 +210,12 @@ async function main() {
     }
   }
 
+  const trendByRoster = scoringTrendByRoster(
+    Number(live.season) || live.season,
+    lastScored,
+    ownerByRoster,
+  );
+
   const book = projectFinishBook({
     rosters: rosters || [],
     ownerByRoster,
@@ -188,6 +227,7 @@ async function main() {
     playoffWeekStart: playoffStart,
     arcByUser: arcByUser(),
     formByRoster,
+    trendByRoster,
   });
 
   book.as_of = today;

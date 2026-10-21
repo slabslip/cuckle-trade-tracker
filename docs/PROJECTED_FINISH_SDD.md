@@ -32,39 +32,39 @@ homepage “who to target” journeys.
 
 ---
 
-## 2. Calculus (v3 — movement + form)
+## 2. Calculus (v4 — late trend + soft early weeks)
 
-v1 double-counted banked wins (race + full expected_wins), so every seat’s
-projected finish matched place now. v2 forecasts **movement**. v3 also
-credits seats that beat (or miss) weekly starter projections:
+v1 double-counted banked wins. v2 forecasts movement. v3 adds actual-vs-proj
+form. **v4** downweights noisy weeks 1–4 (unset NFL starters / rookies) and
+adds a live **playoff-trend** signal from league-relative PPW:
 
 ```text
-pythag = PF^1.8 / (PF^1.8 + PA^1.8)
-form_delta = weighted mean(actual − starter_proj) over scored weeks
-form_z / form_recent_z = league z-scores (recent 3 weeks separate)
-adj_pythag = clamp(pythag + FORM_LEAN × blended form_z)
-P(A beats B) = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
-expected_remaining_wins = Σ P(win) over remaining RS weeks   ← SoS + form
-sos = mean(opponent adj_pythag); sos_ease = 1 − sos
-race_score = 0.70 × standings_pts_norm + 0.30 × PF_norm
-path_score = normalize(expected_remaining_wins)              ← remaining path only
-ease_score = normalize(sos_ease)                             ← soft vs hard slate
-arc_score  = normalize(avg_climb) × season-left scale
-             − 0.25 × fast_fade_rate                         ← season-arcs prior
-form_score = normalize(blended form_z)                       ← outscore / underscore
-proj_score = 0.28×race + 0.34×path + 0.13×ease + 0.12×arc + 0.13×form
+week_weight(w) = soft for w≤4, full mid-season, heaviest near playoffs
+talent_ppw     = weighted mean weekly PF (early soft)
+talent_PF      = 0.30×season_ppw + 0.70×talent_ppw   × games
+pythag         = talent_PF^1.8 / (talent_PF^1.8 + PA^1.8)
+form_delta     = weighted mean(actual − starter_proj)   ← early soft
+trend_delta    = league-rel PPW (post-early − early)      ← display
+trend_signal   = 0.40×trend_delta + 0.60×recent_rel      ← must score well lately
+adj_pythag     = clamp(pythag + FORM_LEAN × blend(form_z, recent_z, trend_z))
+P(A beats B)   = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
+expected_remaining_wins = Σ P(win)                       ← SoS + form + trend
+race_score = 0.65×standings_pts_norm + 0.35×talent_PF_norm
+path / ease / arc as before (arcs = career late climb)
+form_score  = normalize(0.35×form_z + 0.65×recent_z)
+trend_score = normalize(0.80×trend_signal_z + 0.20×slope_z)
+proj_score  = 0.28×race + 0.28×path + 0.10×ease
+            + 0.10×arc + 0.12×form + 0.12×trend
 ```
 
+Historical check (Cuckle tape): mid+late PF rank correlates with final place
+(~0.84) better than weeks 1–4 alone (~0.71). Career climbers show positive
+late-minus-early league-relative PPW; faders the opposite.
+
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
-- Arcs from `season-arcs.json` (`avg_climb`, fade rates). Early season trusts
-  history more (`arc_scale = weeks_left / season_weeks`).
-- Form uses Sleeper weekly projections summed over each week’s starters vs
-  actual points. Recent weeks weigh more; last-3-week residual can flip a seat
-  that has “begun” to clear proj.
-- Regular-season projection only (no Monte Carlo). Expand UI may paint a
-  **soft** playoff bracket from projected seeds + form-adjusted edges —
-  opinion, not a scored sim, and it does not write Draft picks or the trade needle.
-- Incomplete season stays out of Manager avg finish (unchanged).
+- Trend from `raw/weekly_scores.json` for the live season.
+- Form from Sleeper weekly starter projections vs actuals.
+- Soft playoff bracket in expand stays opinion chrome.
 
 Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).
 

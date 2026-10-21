@@ -1672,6 +1672,15 @@ const html = `<!DOCTYPE html>
       border: 1px solid #6b5a2e; border-radius: 12px;
       background: linear-gradient(180deg, rgba(224,180,76,0.14), rgba(224,180,76,0.03) 72%);
     }
+    button.home-you-race-open {
+      flex: 1 1 100%; margin: 0; padding: 0; border: 0; background: transparent;
+      color: inherit; font: inherit; text-align: left; cursor: pointer;
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button.home-you-race-open:focus-visible {
+      outline: 2px solid var(--lh-gold, #e0b44c); outline-offset: 2px; border-radius: 8px;
+    }
     .home-you-race-h {
       flex: 1 0 100%; margin: 0;
       font-size: 0.68rem; font-weight: 700;
@@ -4642,7 +4651,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261021165214";
+    const DATA_V = "expectedFinishClick20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27938,23 +27947,32 @@ const html = `<!DOCTYPE html>
       }
       if (arch && arch.lab) sub.push(arch.lab);
       if (dir && dir.label) sub.push("Bag " + dir.label);
+      // data-home-door (not data-dash-open): must land on League Data so the
+      // expandable every-team list mounts. Race chips used to set receiptWhoList
+      // while homeTab stayed Home — list looked "gone".
+      const openAttr = 'data-home-door="projected_finish"';
       if (!main.length && !sub.length) {
-        // Book still loading / missing — keep the bubble so Expected finish does not vanish.
         if (!projectedFinishBook) {
           return '<div class="home-you-race" aria-label="Expected finish">'
-            + '<p class="home-you-race-h">Expected finish</p>'
+            + '<button type="button" class="home-you-race-open" ' + openAttr
+            + ' aria-label="Open Expected finish">'
+            + '<span class="home-you-race-h">Expected finish</span>'
             + '<span class="home-you-race-main">Loading race…</span>'
-            + ' <button type="button" class="chip" data-dash-open="projected_finish">Race</button>'
+            + "</button>"
+            + '<button type="button" class="chip" ' + openAttr + ">Race</button>"
             + "</div>";
         }
         return "";
       }
       return '<div class="home-you-race" aria-label="Expected finish">'
-        + '<p class="home-you-race-h">Expected finish</p>'
+        + '<button type="button" class="home-you-race-open" ' + openAttr
+        + ' aria-label="Open Expected finish — league board">'
+        + '<span class="home-you-race-h">Expected finish</span>'
         + (main.length ? '<span class="home-you-race-main">' + esc(main.join(" · ")) + "</span>" : "")
         + (sub.length ? '<span class="home-you-race-sub">' + esc(sub.join(" · ")) + "</span>" : "")
-        + ' <button type="button" class="chip" data-dash-open="projected_finish">Race</button>'
-        + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Type</button>'
+        + "</button>"
+        + '<button type="button" class="chip" ' + openAttr + ">Race</button>"
+        + '<button type="button" class="chip" data-home-door="manager_archetypes">Type</button>'
         + "</div>";
     }
 
@@ -32168,7 +32186,14 @@ const html = `<!DOCTYPE html>
       const dashOpenBtn = e.target.closest("[data-dash-open]");
       if (dashOpenBtn) {
         if (dataDashDragDid) { dataDashDragDid = false; return; }
-        dataDashOpenReport(dashOpenBtn.getAttribute("data-dash-open") || "");
+        const dashId = dashOpenBtn.getAttribute("data-dash-open") || "";
+        // From league Home, board doors must switch onto League Data or the
+        // portal list never paints (receiptWhoList set while homeTab stays Home).
+        if (!me && typeof receiptIsDoor === "function" && receiptIsDoor(dashId)
+          && homeTabCanon(homeTab) !== "history") {
+          setHomeTab("history", { force: true });
+        }
+        dataDashOpenReport(dashId);
         return;
       }
       const dashPresetBtn = e.target.closest("[data-dash-preset]");
@@ -34071,7 +34096,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v324-expected-finish")
+  || !swSrc.includes("chuckle-shell-v325-expected-click")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -35374,6 +35399,8 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function homeYouRaceLine(")
     || !fnSrc("homeYouRaceLine").includes('aria-label="Expected finish"')
     || !fnSrc("homeYouRaceLine").includes("home-you-race-h")
+    || !fnSrc("homeYouRaceLine").includes("home-you-race-open")
+    || !fnSrc("homeYouRaceLine").includes('data-home-door="projected_finish"')
     || !fnSrc("homeYouRaceLine").includes("Expected finish")
     || !fnSrc("homeYouRaceLine").includes("Loading race")
     || !fnSrc("homeYouRaceLine").includes("PF ")

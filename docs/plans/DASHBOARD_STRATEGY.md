@@ -127,6 +127,8 @@ Insight: every win taxes their own Early.
 | Home race pulse + intel top-4 | Shipped overnight |
 | Team Ideas race tips | Shipped overnight |
 | Capital strip + chase pulse + Ideas-up | Shipped overnight rework |
+| Early shop bits (Late / race favorite) | Shipped — named 1.0x targets on empty capital + chase |
+| Design Mode `?seat=` persona switcher | Shipped |
 | `delta_place` movers when race moves | Wired; needs weekly refresh ≠0 |
 | Injury lede on overnight | Next (daily habit plan) |
 | Manager dossier panel | Phase D |

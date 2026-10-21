@@ -1,6 +1,6 @@
 {
   "as_of": "2026-10-21",
-  "n": 35,
+  "n": 30,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -11,36 +11,29 @@
     },
     "2216": {
       "name": "Mike Evans",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
     },
-    "4035": {
-      "name": "Alvin Kamara",
+    "3321": {
+      "name": "Tyreek Hill",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "NO",
-      "pos": "RB"
-    },
-    "4199": {
-      "name": "Aaron Jones",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIN",
-      "pos": "RB"
+      "team": null,
+      "pos": "WR"
     },
     "4866": {
       "name": "Saquon Barkley",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "PHI",
       "pos": "RB"
     },
     "4881": {
       "name": "Lamar Jackson",
-      "injury_status": "Out",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "BAL",
       "pos": "QB"
     },
@@ -53,17 +46,10 @@
     },
     "5844": {
       "name": "T.J. Hockenson",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "MIN",
       "pos": "TE"
-    },
-    "5850": {
-      "name": "Josh Jacobs",
-      "injury_status": "NA",
-      "status": "Active",
-      "team": "GB",
-      "pos": "RB"
     },
     "5859": {
       "name": "A.J. Brown",
@@ -81,24 +67,10 @@
     },
     "5892": {
       "name": "David Montgomery",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
-    },
-    "5927": {
-      "name": "Terry McLaurin",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "WAS",
-      "pos": "WR"
-    },
-    "7526": {
-      "name": "Jaylen Waddle",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DEN",
-      "pos": "WR"
     },
     "7543": {
       "name": "Travis Etienne",
@@ -123,7 +95,7 @@
     },
     "8155": {
       "name": "Breece Hall",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "RB"
@@ -144,14 +116,14 @@
     },
     "9756": {
       "name": "Jordan Addison",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "MIN",
       "pos": "WR"
     },
     "10229": {
       "name": "Rashee Rice",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "KC",
       "pos": "WR"
@@ -163,16 +135,9 @@
       "team": "BUF",
       "pos": "TE"
     },
-    "11577": {
-      "name": "Will Shipley",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "PHI",
-      "pos": "RB"
-    },
     "11625": {
       "name": "Adonai Mitchell",
-      "injury_status": "Out",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -191,23 +156,16 @@
       "team": "CLE",
       "pos": "RB"
     },
-    "12495": {
-      "name": "Ollie Gordon",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIA",
-      "pos": "RB"
-    },
     "12512": {
       "name": "Quinshon Judkins",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "CLE",
       "pos": "RB"
     },
     "12518": {
       "name": "Tyler Warren",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "IND",
       "pos": "TE"
@@ -221,7 +179,7 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"
@@ -242,10 +200,17 @@
     },
     "13287": {
       "name": "Jeremiyah Love",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "ARI",
       "pos": "RB"
+    },
+    "13296": {
+      "name": "Caleb Douglas",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIA",
+      "pos": "WR"
     }
   }
 }

@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021031500";
+    const DATA_V = "dashHomeOs20261021033000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5380,7 +5380,7 @@ const html = `<!DOCTYPE html>
           const entry = rows[i].entry || {};
           const holder = pickOwnerName(entry) || "League";
           const origin = (typeof pickOriginName === "function")
-            ? pickOriginName(entry.label) : "";
+            ? pickOriginName(entry) : "";
           const originProj = origin && typeof projSeatByName === "function"
             ? projSeatByName(origin) : null;
           const holderArch = typeof archSeatByName === "function" ? archSeatByName(holder) : null;
@@ -12321,11 +12321,6 @@ const html = `<!DOCTYPE html>
       return managerArchetypesBook.seats.find(function (s) {
         return s && String(s.name) === want;
       }) || null;
-    }
-
-    function pickOriginName(label) {
-      const m = String(label || "").match(/\(([^)]+)\)\s*$/);
-      return m ? m[1] : "";
     }
 
     function raceMoversLines() {
@@ -26962,7 +26957,7 @@ const html = `<!DOCTYPE html>
         const entry = rows[i].entry || {};
         const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
         const origin = (typeof pickOriginName === "function")
-          ? pickOriginName(entry.label) : "";
+          ? (pickOriginName(entry) || "") : "";
         if (origin === mine && holder && holder !== mine) ownSold = true;
         if (holder !== mine) continue;
         const originProj = origin && typeof projSeatByName === "function"
@@ -34978,6 +34973,16 @@ if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("func
 }
 if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
   throw new Error("pickOriginName regex must escape parens through the HTML template literal");
+}
+{
+  const originFns = inline.match(/function pickOriginName\(/g) || [];
+  if (originFns.length !== 1) {
+    throw new Error("exactly one pickOriginName(entry) must exist — a label-only shadow breaks firsts bands");
+  }
+  if (fnSrc("homeCapitalHeldRows").includes("pickOriginName(entry.label)")
+    || fnSrc("dataListItems").includes("pickOriginName(entry.label)")) {
+    throw new Error("firsts / capital strip must call pickOriginName(entry), not entry.label");
+  }
 }
 if (!fnSrc("pickOwnerName").includes("entry.holder")) {
   throw new Error("pickOwnerName must prefer live Sleeper holder over a stale hop");

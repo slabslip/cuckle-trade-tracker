@@ -4583,6 +4583,23 @@ const html = `<!DOCTYPE html>
     let homeWireOpen = "";
     // Optional expand of the full overnight ticket under the bar (off by default).
     let homeWireFullLetter = false;
+    // #region agent log
+    function __dbgHomeWire(hypothesisId, location, message, data) {
+      try {
+        fetch("http://127.0.0.1:8777/debug", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hypothesisId: hypothesisId,
+            location: location,
+            message: message,
+            data: data || {},
+            timestamp: Date.now()
+          })
+        }).catch(function () {});
+      } catch (_) {}
+    }
+    // #endregion
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -10338,15 +10355,28 @@ const html = `<!DOCTYPE html>
     }
 
     function homeWireBarHtml() {
-      if (!overnightEnabled()) return "";
+      if (!overnightEnabled()) {
+        // #region agent log
+        __dbgHomeWire("C", "homeWireBarHtml:disabled", "overnightEnabled false", { homeWireOpen: String(homeWireOpen || "") });
+        // #endregion
+        return "";
+      }
       ensureOvernight();
       if (typeof ensureCuffs === "function") ensureCuffs();
       const letter = overnight;
       if (!letter && overnightLoading) {
+        // #region agent log
+        __dbgHomeWire("C", "homeWireBarHtml:loading", "overnight still loading", { homeWireOpen: String(homeWireOpen || "") });
+        // #endregion
         return '<section class="home-wire" aria-label="League pulse">'
           + '<p class="home-wire-empty" style="padding:12px">Loading pulse…</p></section>';
       }
-      if (!letter) return "";
+      if (!letter) {
+        // #region agent log
+        __dbgHomeWire("C", "homeWireBarHtml:empty", "no overnight letter", { homeWireOpen: String(homeWireOpen || "") });
+        // #endregion
+        return "";
+      }
       const waivers = homeWireWaiverBits(letter);
       const outs = homeWireSeatName()
         ? homeWireOutBits(letter)
@@ -10366,6 +10396,15 @@ const html = `<!DOCTYPE html>
       const open = homeWireOpen && icons.some(function (ic) { return ic.id === homeWireOpen; })
         ? homeWireOpen
         : "";
+      // #region agent log
+      __dbgHomeWire("C", "homeWireBarHtml:build", "building wire bar", {
+        homeWireOpen: String(homeWireOpen || ""),
+        open: String(open || ""),
+        homeWireFullLetter: !!homeWireFullLetter,
+        iconIds: icons.map(function (ic) { return ic.id; }),
+        outN: outs.length
+      });
+      // #endregion
       const row = icons.map(function (ic) {
         const pressed = open === ic.id;
         const nClass = ic.n > 0 ? "" : " is-zero";
@@ -30530,6 +30569,17 @@ const html = `<!DOCTYPE html>
     function blockGhostUiClick(e) {
       const now = Date.now();
       if (now < voteModalSwallowClicksUntil) {
+        // #region agent log
+        try {
+          const hw = e.target && e.target.closest && e.target.closest("[data-home-wire]");
+          if (hw || (e.target && e.target.closest && e.target.closest(".home-wire"))) {
+            __dbgHomeWire("A", "blockGhostUiClick:voteSwallow", "blocked by voteModalSwallow", {
+              type: e.type,
+              homeWire: hw ? (hw.getAttribute("data-home-wire") || "") : ""
+            });
+          }
+        } catch (_) {}
+        // #endregion
         e.preventDefault();
         e.stopPropagation();
         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -30541,6 +30591,21 @@ const html = `<!DOCTYPE html>
         try {
           if (e.target && e.target.closest && e.target.closest("#newsPullup")) return;
         } catch (_) {}
+        // #region agent log
+        try {
+          const hw = e.target && e.target.closest && e.target.closest("[data-home-wire]");
+          if (hw || (e.target && e.target.closest && e.target.closest(".home-wire"))) {
+            __dbgHomeWire("A", "blockGhostUiClick:newsSwallow", "blocked by news pullup gate", {
+              type: e.type,
+              newsPullupOpen: !!newsPullupOpen,
+              swallowLeftMs: Math.max(0, newsPullupSwallowClicksUntil - now),
+              homeWire: hw ? (hw.getAttribute("data-home-wire") || "") : "",
+              hasGuard: !!document.getElementById("newsPullupClickGuard"),
+              bodyClasses: (document.body && document.body.className) || ""
+            });
+          }
+        } catch (_) {}
+        // #endregion
         e.preventDefault();
         e.stopPropagation();
         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -30549,6 +30614,40 @@ const html = `<!DOCTYPE html>
     document.addEventListener("pointerup", blockGhostUiClick, true);
     document.addEventListener("click", blockGhostUiClick, true);
     document.addEventListener("touchend", blockGhostUiClick, true);
+    // #region agent log
+    document.addEventListener("click", function (e) {
+      try {
+        const t = e.target;
+        const hw = t && t.closest ? t.closest("[data-home-wire]") : null;
+        if (!hw && !(t && t.closest && t.closest(".home-wire"))) return;
+        let top = null;
+        try { top = document.elementFromPoint(e.clientX, e.clientY); } catch (_) {}
+        const topHw = top && top.closest ? top.closest("[data-home-wire]") : null;
+        const topNews = top && top.closest ? top.closest("#newsPullup") : null;
+        const topGuard = top && top.closest ? top.closest("#newsPullupClickGuard") : null;
+        __dbgHomeWire("D", "docCapture:homeWireClick", "document capture saw home-wire click", {
+          type: e.type,
+          phase: "capture",
+          defaultPrevented: !!e.defaultPrevented,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          targetTag: t && t.nodeName,
+          targetClosestId: hw ? (hw.getAttribute("data-home-wire") || "") : "",
+          inApp: !!(t && t.closest && t.closest("#app")),
+          topTag: top && top.nodeName,
+          topId: top && top.id,
+          topClass: top && top.className && String(top.className).slice(0, 80),
+          topMatchesBtn: !!(topHw && hw && topHw === hw),
+          topInNews: !!topNews,
+          topIsGuard: !!topGuard,
+          newsPullupOpen: !!newsPullupOpen,
+          swallowLeftMs: Math.max(0, newsPullupSwallowClicksUntil - Date.now()),
+          bodyHasNewsOpen: !!(document.body && document.body.classList.contains("has-news-pullup-open")),
+          bodyHasClosing: !!(document.body && document.body.classList.contains("has-news-pullup-closing"))
+        });
+      } catch (_) {}
+    }, true);
+    // #endregion
     document.addEventListener("click", (e) => {
       const opt = e.target.closest("#scoreAs [data-lens]");
       if (opt) {
@@ -30878,6 +30977,32 @@ const html = `<!DOCTYPE html>
       }
     });
     document.getElementById("app").addEventListener("click", (e) => {
+      // #region agent log
+      try {
+        const raw = e.target;
+        const hwEarly = raw && raw.closest ? raw.closest("[data-home-wire]") : null;
+        if (hwEarly || (raw && raw.closest && raw.closest(".home-wire"))) {
+          let topEl = null;
+          try {
+            if (e.clientX || e.clientY) {
+              topEl = document.elementFromPoint(e.clientX, e.clientY);
+            }
+          } catch (_) {}
+          __dbgHomeWire("B", "appClick:homeWireSeen", "app click near home-wire", {
+            tag: raw && raw.nodeName,
+            nodeType: raw && raw.nodeType,
+            hasClosest: !!(raw && raw.closest),
+            homeWireId: hwEarly ? (hwEarly.getAttribute("data-home-wire") || "") : "",
+            blocked: !!newsPullupClickThroughBlocked(),
+            newsPullupOpen: !!newsPullupOpen,
+            topTag: topEl && topEl.nodeName,
+            topHomeWire: !!(topEl && topEl.closest && topEl.closest("[data-home-wire]")),
+            topInNews: !!(topEl && topEl.closest && topEl.closest("#newsPullup")),
+            pe: topEl ? (window.getComputedStyle(topEl).pointerEvents || "") : ""
+          });
+        }
+      } catch (_) {}
+      // #endregion
       // Before everything: post-close ghost clicks must not activate home controls.
       // Clicks inside the News Feed sheet itself are allowed (delete / links / swipe chrome).
       if (newsPullupClickThroughBlocked()) {
@@ -30885,6 +31010,11 @@ const html = `<!DOCTYPE html>
           if (e.target && e.target.closest && e.target.closest("#newsPullup")) {
             /* feed chrome / cards */
           } else {
+            // #region agent log
+            __dbgHomeWire("B", "appClick:blockedSwallow", "app handler blocked by swallow", {
+              homeWire: !!(e.target && e.target.closest && e.target.closest("[data-home-wire]"))
+            });
+            // #endregion
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -30895,6 +31025,15 @@ const html = `<!DOCTYPE html>
           return;
         }
       }
+      // #region agent log
+      if (!(e.target && e.target.closest)) {
+        __dbgHomeWire("E", "appClick:noClosest", "e.target lacks closest (text node?)", {
+          nodeType: e.target && e.target.nodeType,
+          tag: e.target && e.target.nodeName,
+          parentTag: e.target && e.target.parentElement && e.target.parentElement.nodeName
+        });
+      }
+      // #endregion
       const backBtn = e.target.closest("[data-back]");
       if (backBtn) {
         if (view === "cosmetics" && cosmeticsFrom === "settings") {
@@ -31174,17 +31313,38 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
-      const homeWireBtn = e.target.closest("[data-home-wire]");
+      const homeWireBtn = e.target && e.target.closest ? e.target.closest("[data-home-wire]") : null;
       if (homeWireBtn && homeWireBtn.closest(".home-wire")) {
         e.preventDefault();
         e.stopPropagation();
         const id = homeWireBtn.getAttribute("data-home-wire") || "";
+        const prev = String(homeWireOpen || "");
         homeWireOpen = (String(homeWireOpen) === String(id)) ? "" : id;
         if (homeWireOpen) homeWireFullLetter = false;
+        // #region agent log
+        __dbgHomeWire("B", "appClick:homeWireToggle", "homeWireBtn handler fired", {
+          id: id,
+          prev: prev,
+          next: String(homeWireOpen || ""),
+          willRender: typeof render === "function"
+        });
+        // #endregion
         if (typeof render === "function") render();
         return;
       }
-      const homeWireFullBtn = e.target.closest("[data-home-wire-full]");
+      // #region agent log
+      try {
+        if (e.target && e.target.closest && e.target.closest(".home-wire")) {
+          __dbgHomeWire("B", "appClick:homeWireMiss", "click in .home-wire but no data-home-wire match before later branches", {
+            tag: e.target.nodeName,
+            homeWireFull: !!(e.target.closest("[data-home-wire-full]")),
+            who: !!(e.target.closest("[data-who]")),
+            lhNav: !!(e.target.closest("[data-lh-nav]"))
+          });
+        }
+      } catch (_) {}
+      // #endregion
+      const homeWireFullBtn = e.target && e.target.closest ? e.target.closest("[data-home-wire-full]") : null;
       if (homeWireFullBtn) {
         e.preventDefault();
         e.stopPropagation();
@@ -31193,6 +31353,11 @@ const html = `<!DOCTYPE html>
           homeWireOpen = "";
           overnightOpen = true;
         }
+        // #region agent log
+        __dbgHomeWire("B", "appClick:homeWireFull", "full letter toggle", {
+          homeWireFullLetter: !!homeWireFullLetter
+        });
+        // #endregion
         if (typeof render === "function") render();
         return;
       }

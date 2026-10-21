@@ -16169,6 +16169,13 @@ const html = `<!DOCTYPE html>
         if (next === "friend") friendBox.removeAttribute("hidden");
         else friendBox.setAttribute("hidden", "");
       }
+      if (next === "friend") {
+        const clockSel = form.querySelector("select[name=clock_kind]");
+        const clockDate = form.querySelector("input[name=clock]");
+        if (clockSel && clockSel.value === "date" && !(clockDate && clockDate.value)) {
+          ledgerApplyClockKind(form, "this_week");
+        }
+      }
       const send = form.querySelector("[data-ledger-send-lab]");
       if (send) {
         send.textContent = next === "friend" ? "Save private wager" : "Review";
@@ -18224,8 +18231,12 @@ const html = `<!DOCTYPE html>
       if (lab) lab.textContent = o ? ledgerFmtOdds(o) : "even";
       if (box) box.textContent = prev.words;
       if (send && form.hasAttribute("data-ledger-wager-form")) {
-        const them = String(fd.get("them") || "");
-        send.textContent = ledgerSendLabel(them);
+        const mode = form.getAttribute("data-ledger-with") || "league";
+        if (mode === "friend") send.textContent = "Save private wager";
+        else {
+          const them = String(fd.get("them") || "");
+          send.textContent = ledgerSendLabel(them);
+        }
       }
     }
 
@@ -18243,6 +18254,9 @@ const html = `<!DOCTYPE html>
       const clockRaw = String(fd.get("clock") || "").trim();
       let kind = String(fd.get("clock_kind") || "this_week").trim();
       if (["this_week","next_week","regular","season","playoffs","date"].indexOf(kind) < 0) kind = "this_week";
+      // Private friend notebook: empty "own date" falls back to this NFL week so a quick
+      // remember-slip is not blocked on picking a calendar day.
+      if (withMode === "friend" && kind === "date" && !clockRaw) kind = "this_week";
       let deadline_at = null;
       if (kind === "date" && clockRaw) {
         const t = new Date(clockRaw + "T23:59:59");
@@ -35952,6 +35966,7 @@ if (!fnSrc("dsMenu").includes(">Past Champions<") || !fnSrc("dsMenu").includes('
     ["Isiah Likely", true],
     ["Isiah Pacheco", true],
     ["Do not auto-expand unique first names", true],
+    ["empty \"own date\" falls back to this NFL week", true],
     ["Propose a NEW Wager", true],
     [">New wager</button>", false],
     ["New wager with a teammate", false],

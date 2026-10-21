@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021033000";
+    const DATA_V = "dashHomeOs20261021034500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26981,6 +26981,44 @@ const html = `<!DOCTYPE html>
       return { year: year, held: held, ownSold: ownSold };
     }
 
+    function homeEarlyShopBits(limit) {
+      const cap = limit || 2;
+      if (typeof leagueFormat === "function" && leagueFormat().kind === "redraft") return [];
+      if (typeof ensurePicks === "function") ensurePicks();
+      if (!picks) return [];
+      const mine = authSeatCanonName() || authSeatName() || "";
+      const year = typeof pickHubSoonestYear === "function" ? pickHubSoonestYear() : "";
+      const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+      const shop = [];
+      for (let i = 0; i < rows.length; i++) {
+        const parts = typeof pickKeyParts === "function" ? pickKeyParts(rows[i].key) : null;
+        if (!parts || parts.round !== 1) continue;
+        if (year && parts.season !== year) continue;
+        const entry = rows[i].entry || {};
+        const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
+        const origin = (typeof pickOriginName === "function" ? pickOriginName(entry) : "") || "";
+        if (!origin || origin === mine) continue;
+        const originProj = typeof projSeatByName === "function" ? projSeatByName(origin) : null;
+        if (!originProj || originProj.band !== "Early") continue;
+        const slot = originProj.proj_slot != null ? Number(originProj.proj_slot) : 99;
+        if (slot >= 99) continue;
+        const slotLab = (slot < 10 ? "1.0" : "1.") + slot;
+        const who = holder && holder !== origin ? (origin + " · " + holder) : origin;
+        shop.push({ slot: slot, lab: slotLab + " " + who });
+      }
+      shop.sort(function (a, b) {
+        return (a.slot - b.slot) || String(a.lab).localeCompare(String(b.lab));
+      });
+      const out = [];
+      const seen = {};
+      for (let i = 0; i < shop.length && out.length < cap; i++) {
+        if (seen[shop[i].lab]) continue;
+        seen[shop[i].lab] = 1;
+        out.push(shop[i].lab);
+      }
+      return out;
+    }
+
     function homeCapitalStripHtml() {
       if (!authSession || !authSeatId()) return "";
       const bag = homeCapitalHeldRows();
@@ -26996,6 +27034,10 @@ const html = `<!DOCTYPE html>
         ? bits.slice(0, 4).join(" · ") + (bits.length > 4 ? (" · +" + (bits.length - 4)) : "")
         : "No " + (bag.year || "future") + " first held";
       if (bag.ownSold) line += " · own 1st sold";
+      if (!bits.length) {
+        const shop = homeEarlyShopBits(2);
+        if (shop.length) line += " · shop " + shop.join(" · ");
+      }
       return '<section class="home-capital" aria-label="Your firsts">'
         + '<p class="home-capital-h">Your firsts'
         + (bag.year ? (" · " + esc(bag.year)) : "")
@@ -27010,6 +27052,7 @@ const html = `<!DOCTYPE html>
       if (!uid) return "";
       const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
       const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
+      const shop = homeEarlyShopBits(2);
       if (arch && arch.archetype === "proxy_contender") {
         return "Defend held Early — keep competing";
       }
@@ -27020,16 +27063,27 @@ const html = `<!DOCTYPE html>
         return "Ask for a stud; pay with picks";
       }
       if (arch && arch.archetype === "capital_hoarder") {
-        return "Swap Mid origins for Early ones";
+        return shop.length
+          ? ("Swap for Early — " + shop.join(" · "))
+          : "Swap Mid origins for Early ones";
       }
       if (arch && arch.archetype === "slow_burn") {
         return "Hold Mid pieces — price climbs later";
       }
       if (arch && arch.archetype === "fast_fade") {
-        return "Buy a first before week 8";
+        return shop.length
+          ? ("Buy a first — " + shop.join(" · "))
+          : "Buy a first before week 8";
+      }
+      if (arch && arch.archetype === "win_now_race") {
+        return shop.length
+          ? ("Buy Early — " + shop.join(" · "))
+          : "Buy Early origins — sell aging for Late capital";
       }
       if (proj && proj.band === "Late") {
-        return "Buy Early origins from tanks";
+        return shop.length
+          ? ("Buy Early — " + shop.join(" · "))
+          : "Buy Early origins from tanks";
       }
       if (proj && proj.band === "Early") {
         return "Origin firsts read 1.0x — shop leftovers";
@@ -34109,6 +34163,10 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function homeCapitalStripHtml(")
     || !inline.includes("function homePulseHtml(")
     || !inline.includes("function homeChaseTip(")
+    || !inline.includes("function homeEarlyShopBits(")
+    || !fnSrc("homeChaseTip").includes("win_now_race")
+    || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")
+    || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")
     || !fnSrc("homeYouHtml").includes("home-you-name")

@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021081500";
+    const DATA_V = "dashHomeOs20261021090000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27189,8 +27189,13 @@ const html = `<!DOCTYPE html>
         if (proj && proj.band === "Early") {
           return "Fade history — sell studs before the slide locks";
         }
-        return shop.length
-          ? ("Buy a first — " + shop.join(" · "))
+        const fadePct = Math.round((Number(arch.fast_fade_rate) || 0) * 100);
+        const fadeLead = fadePct >= 30 ? (fadePct + "% fade — ") : "";
+        if (shop.length) {
+          return fadeLead + "Buy a first — " + shop.join(" · ");
+        }
+        return fadeLead
+          ? (fadeLead + "buy a first before week 8")
           : "Buy a first before week 8";
       }
       if (arch && arch.archetype === "win_now_race") {
@@ -34294,6 +34299,7 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeChaseTip").includes("slow_burn_rate")
     || !fnSrc("homeChaseTip").includes("do not sell Mid on .500 vibe")
     || !fnSrc("homeChaseTip").includes("Fade history")
+    || !fnSrc("homeChaseTip").includes("fast_fade_rate")
     || !fnSrc("homeEarlyShopBits").includes("holder === mine")
     || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
     || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")

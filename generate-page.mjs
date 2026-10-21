@@ -10306,7 +10306,7 @@ const html = `<!DOCTYPE html>
         title = "League trades";
         bits = homeWireTradeBits(letter);
       } else if (kind === "news") {
-        title = seat ? "News on your bag" : "League news";
+        title = "News";
         bits = homeWireNewsBits();
       }
       const body = bits.length

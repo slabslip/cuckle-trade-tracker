@@ -17,8 +17,16 @@ import {
 import {
   projectFinishBook,
   scoreFormLeague,
+  scoreHeatLeague,
+  scoreTrendLeague,
   summarizeFormByRoster,
+  summarizeHeatByRoster,
+  summarizeScoringTrend,
 } from "./lib/projected-finish.mjs";
+import {
+  DEFAULT_MC_SIMS,
+  attachMonteCarloToBook,
+} from "./lib/projected-finish-mc.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -127,6 +135,37 @@ async function scoredFormByRoster(leagueId, season, lastScored, ptsKey) {
   return scoreFormLeague(summarizeFormByRoster(weekDeltas));
 }
 
+/**
+ * Live league-relative scoring trend from the weekly tape (early weeks soft).
+ * roster_id keyed for projectFinishBook.
+ */
+function scoringTrendByRoster(season, lastScored, ownerByRoster) {
+  const tape = readJson("weekly_scores.json", null);
+  const scores = (tape && tape.scores) || [];
+  const end = Number(lastScored) || 0;
+  const byRid = Object.create(null);
+  for (const row of scores) {
+    if (!row || String(row.season) !== String(season)) continue;
+    if (row.phase && row.phase !== "regular") continue;
+    const w = Number(row.week) || 0;
+    if (w < 1 || (end > 0 && w > end)) continue;
+    const pts = Number(row.points);
+    if (!Number.isFinite(pts) || pts <= 0) continue;
+    let rid = Number(row.roster_id);
+    if (!Number.isFinite(rid) && row.user_id != null) {
+      // Fallback: map user_id → roster_id from live owners.
+      for (const [r, uid] of Object.entries(ownerByRoster || {})) {
+        if (String(uid) === String(row.user_id)) { rid = Number(r); break; }
+      }
+    }
+    if (!Number.isFinite(rid)) continue;
+    const key = String(rid);
+    if (!byRid[key]) byRid[key] = [];
+    byRid[key].push({ week: w, points: pts });
+  }
+  return scoreTrendLeague(summarizeScoringTrend(byRid));
+}
+
 async function main() {
   const leagueId = LEAGUE_ID;
   const live = (await sleeperGet(`/league/${leagueId}`)) || null;
@@ -177,18 +216,100 @@ async function main() {
     }
   }
 
+  const season = Number(live.season) || live.season;
+  const trendByRoster = scoringTrendByRoster(season, lastScored, ownerByRoster);
+  const tradesRaw = readJson("trades.json", []) || [];
+  const movesRaw = readJson("moves.json", []) || [];
+  const heatByRoster = scoreHeatLeague(summarizeHeatByRoster({
+    trades: Array.isArray(tradesRaw) ? tradesRaw : Object.values(tradesRaw),
+    moves: Array.isArray(movesRaw) ? movesRaw : Object.values(movesRaw),
+    ownerByRoster,
+    season,
+    week: lastScored,
+    window: 3,
+  }));
+
   const book = projectFinishBook({
     rosters: rosters || [],
     ownerByRoster,
     nameByUser,
     remainingPairs: rem.pairs,
     teams,
-    season: Number(live.season),
+    season,
     week: lastScored,
     playoffWeekStart: playoffStart,
     arcByUser: arcByUser(),
     formByRoster,
+    trendByRoster,
+    heatByRoster,
   });
+
+  // Monte Carlo remaining RS + playoffs — blend mean place into proj_finish
+  // (multi-season calib: MC MAE beats the point book especially after W6).
+  const mcSeats = Object.create(null);
+  for (const r of rosters || []) {
+    const rid = Number(r.roster_id);
+    const st = r.settings || {};
+    const pf = (Number(st.fpts) || 0) + (Number(st.fpts_decimal) || 0) / 100;
+    const pa = (Number(st.fpts_against) || 0)
+      + (Number(st.fpts_against_decimal) || 0) / 100;
+    const trend = trendByRoster[String(rid)] || {};
+    const weekPts = Array.isArray(trend._week_pts)
+      ? trend._week_pts
+      : null;
+    mcSeats[rid] = {
+      wins: Number(st.wins) || 0,
+      losses: Number(st.losses) || 0,
+      ties: Number(st.ties) || 0,
+      pf,
+      pa,
+      weekPts: weekPts || [],
+    };
+  }
+  // Prefer raw tape points when trend helper did not stash them.
+  const tape = readJson("weekly_scores.json", null);
+  if (tape && Array.isArray(tape.scores)) {
+    for (const row of tape.scores) {
+      if (!row || String(row.season) !== String(season)) continue;
+      if (row.phase && row.phase !== "regular") continue;
+      const w = Number(row.week) || 0;
+      if (w < 1 || w > lastScored) continue;
+      const rid = Number(row.roster_id);
+      if (!mcSeats[rid]) continue;
+      if (!mcSeats[rid].weekPts) mcSeats[rid].weekPts = [];
+      // Avoid dupes if already filled.
+      if (mcSeats[rid].weekPts.length < lastScored) {
+        mcSeats[rid].weekPts.push(Number(row.points) || 0);
+      }
+    }
+    // Tape push order may not be week-sorted per roster — rebuild sorted.
+    const byRid = Object.create(null);
+    for (const row of tape.scores) {
+      if (!row || String(row.season) !== String(season)) continue;
+      if (row.phase && row.phase !== "regular") continue;
+      const w = Number(row.week) || 0;
+      if (w < 1 || w > lastScored) continue;
+      const rid = Number(row.roster_id);
+      if (!mcSeats[rid]) continue;
+      if (!byRid[rid]) byRid[rid] = [];
+      byRid[rid].push({ week: w, points: Number(row.points) || 0 });
+    }
+    for (const rid of Object.keys(byRid)) {
+      mcSeats[rid].weekPts = byRid[rid]
+        .sort((a, b) => a.week - b.week)
+        .map((x) => x.points);
+    }
+  }
+
+  if (lastScored >= 1 && rem.pairs.length) {
+    attachMonteCarloToBook(book, {
+      seats: mcSeats,
+      remainingPairs: rem.pairs,
+      week: lastScored,
+      playoffWeekStart: playoffStart,
+      nSims: DEFAULT_MC_SIMS,
+    });
+  }
 
   book.as_of = today;
   book.league_id = String(leagueId);
@@ -204,6 +325,8 @@ async function main() {
     "w" + book.week,
     book.seats.length + " seats",
     rem.weeks.length + " weeks left",
+    "mc",
+    book.mc ? book.mc.n_sims + "@blend" + book.mc.blend_weight : "off",
     "→",
     book.seats.slice(0, 3).map((s) => s.name + " #" + s.proj_finish).join(", "),
   );

@@ -32,39 +32,52 @@ homepage “who to target” journeys.
 
 ---
 
-## 2. Calculus (v3 — movement + form)
+## 2. Calculus (v5 — week-scaled blend + Monte Carlo paths)
 
-v1 double-counted banked wins (race + full expected_wins), so every seat’s
-projected finish matched place now. v2 forecasts **movement**. v3 also
-credits seats that beat (or miss) weekly starter projections:
+v1 double-counted banked wins. v2 forecasts movement. v3 adds actual-vs-proj
+form. v4 downweights noisy weeks 1–4 and adds playoff-trend, form slope, and
+transaction heat. **v5** week-scales the blend from a 7-season × 2500-sim
+Monte Carlo calibration and blends MC mean place into `proj_finish` (with
+p10–p90 path bands on each seat). See
+[`PROJECTED_FINISH_MC_CALIB.md`](./PROJECTED_FINISH_MC_CALIB.md).
+
+v4/v5 signals still include **form slope** and **transaction heat**:
 
 ```text
-pythag = PF^1.8 / (PF^1.8 + PA^1.8)
-form_delta = weighted mean(actual − starter_proj) over scored weeks
-form_z / form_recent_z = league z-scores (recent 3 weeks separate)
-adj_pythag = clamp(pythag + FORM_LEAN × blended form_z)
-P(A beats B) = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
-expected_remaining_wins = Σ P(win) over remaining RS weeks   ← SoS + form
-sos = mean(opponent adj_pythag); sos_ease = 1 − sos
-race_score = 0.70 × standings_pts_norm + 0.30 × PF_norm
-path_score = normalize(expected_remaining_wins)              ← remaining path only
-ease_score = normalize(sos_ease)                             ← soft vs hard slate
-arc_score  = normalize(avg_climb) × season-left scale
-             − 0.25 × fast_fade_rate                         ← season-arcs prior
-form_score = normalize(blended form_z)                       ← outscore / underscore
-proj_score = 0.28×race + 0.34×path + 0.13×ease + 0.12×arc + 0.13×form
+week_weight(w) = soft for w≤4, full mid-season, heaviest near playoffs
+talent_ppw     = weighted mean weekly PF (early soft)
+talent_PF      = 0.30×season_ppw + 0.70×talent_ppw   × games
+pythag         = talent_PF^1.8 / (talent_PF^1.8 + PA^1.8)
+form_delta     = weighted mean(actual − starter_proj)   ← early soft
+form_slope     = recent residual − early residual       ← W4–6 vs W1–3
+trend_delta    = league-rel PPW (post-early − early)      ← display
+trend_signal   = 0.40×trend_delta + 0.60×recent_rel      ← must score well lately
+heat           = 2×trades + 0.35×FA adds in last 3 scored weeks
+adj_pythag     = clamp(pythag + FORM_LEAN × blend(form_z, recent_z, trend_z+0.25×heat_z, slope_z))
+P(A beats B)   = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
+expected_remaining_wins = Σ P(win)                       ← SoS + form + trend
+race_score = 0.65×standings_pts_norm + 0.35×talent_PF_norm
+path / ease / arc as before (arcs = career late climb)
+form_score  = normalize(0.30×form_z + 0.50×recent_z + 0.20×slope_z)
+trend_score = 0.75×normalize(0.80×trend_signal_z + 0.20×slope_z) + 0.25×heat_score
+base weights = race 0.28 / path 0.28 / ease 0.10 / arc 0.10 / form 0.12 / trend 0.12
+week_scale   = early↑ race+arc · late↑ path+form+trend   (renormalized)
+proj_score   = Σ week_scaled_w × component
+mc_sims      = 2500 remaining H2H + 6-team playoff tree
+proj_finish  = rank( (1−mc_blend)×book_rank + mc_blend×mc_mean )
+mc_blend     ≈ 0.20 W1 → 0.40 W6 → 0.62 W12
 ```
 
+Multi-season MC (2019–2025, 2500 sims): book MAE W1/W6/W12 = 2.94 / 1.74 / 1.71;
+MC MAE = 2.36 / 1.51 / 1.14; ~85–90% of actuals fall in the MC 80% band.
+2025 W6 grade vs actual: see
+[`PROJECTED_FINISH_W6_2025_RETRO.md`](./PROJECTED_FINISH_W6_2025_RETRO.md).
+
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
-- Arcs from `season-arcs.json` (`avg_climb`, fade rates). Early season trusts
-  history more (`arc_scale = weeks_left / season_weeks`).
-- Form uses Sleeper weekly projections summed over each week’s starters vs
-  actual points. Recent weeks weigh more; last-3-week residual can flip a seat
-  that has “begun” to clear proj.
-- Regular-season projection only (no Monte Carlo). Expand UI may paint a
-  **soft** playoff bracket from projected seeds + form-adjusted edges —
-  opinion, not a scored sim, and it does not write Draft picks or the trade needle.
-- Incomplete season stays out of Manager avg finish (unchanged).
+- Trend from `raw/weekly_scores.json` for the live season.
+- Form from Sleeper weekly starter projections vs actuals.
+- Heat from `raw/trades.json` + `raw/moves.json` (last 3 scored weeks).
+- Soft playoff bracket in expand stays opinion chrome.
 
 Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).
 

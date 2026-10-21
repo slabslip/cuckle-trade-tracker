@@ -1667,13 +1667,22 @@ const html = `<!DOCTYPE html>
     button.home-you-name b { font-size: 1.64rem; font-weight: 750; }
     button.home-you-name span { color: var(--dim); font-size: 1.44rem; font-weight: 650; }
     .home-you-race {
-      margin: 10px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px;
+      margin: 10px 0 12px; padding: 10px 12px;
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px;
+      border: 1px solid #6b5a2e; border-radius: 12px;
+      background: linear-gradient(180deg, rgba(224,180,76,0.14), rgba(224,180,76,0.03) 72%);
+    }
+    .home-you-race-h {
+      flex: 1 0 100%; margin: 0;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-gold, #e0b44c);
     }
     .home-you-race-main {
-      font-size: 1.05rem; font-weight: 750; letter-spacing: -0.02em; color: var(--text);
+      font-size: 1.08rem; font-weight: 750; letter-spacing: -0.02em; color: var(--text);
       line-height: 1.25;
     }
     .home-you-race-sub {
+      flex: 1 0 100%;
       font-size: 0.8125rem; font-weight: 600; color: var(--muted); line-height: 1.3;
     }
     .home-capital {
@@ -4633,7 +4642,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "ledgerFriends20261021";
+    const DATA_V = "expectedFinishBubble20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7292,7 +7301,12 @@ const html = `<!DOCTYPE html>
       if (!spec) return "";
       let fig = "";
       if (id === "projected_finish") {
-        const lead = projectedFinishBook && projectedFinishBook.seats && projectedFinishBook.seats[0];
+        // Prefer the signed-in seat so the Home door bubble is *your* expected finish.
+        // Fall back to league lead when unsigned or the book has no match.
+        const mine = (typeof authSeatId === "function" && typeof projSeatOf === "function")
+          ? projSeatOf(authSeatId()) : null;
+        const lead = mine || (projectedFinishBook && projectedFinishBook.seats
+          && projectedFinishBook.seats[0]);
         if (lead) {
           fig = receiptDoorLeadFig(lead.name,
             (typeof nth === "function" ? nth(lead.proj_finish) : String(lead.proj_finish))
@@ -27914,12 +27928,29 @@ const html = `<!DOCTYPE html>
         main.push("Projected "
           + (typeof nth === "function" ? nth(proj.proj_finish) : proj.proj_finish));
         if (proj.record) main.push(proj.record);
-        main.push(proj.band || "Mid");
+        const pf = Math.round(Number(proj.pf) || 0);
+        const pa = Math.round(Number(proj.pa) || 0);
+        if (pf || pa) main.push("PF " + pf + " / PA " + pa);
+        main.push((proj.band || "Mid") + " pick");
+        const delta = Number(proj.delta_place);
+        if (delta > 0) main.push("↑" + delta + " from now");
+        else if (delta < 0) main.push("↓" + (-delta) + " from now");
       }
       if (arch && arch.lab) sub.push(arch.lab);
       if (dir && dir.label) sub.push("Bag " + dir.label);
-      if (!main.length && !sub.length) return "";
-      return '<div class="home-you-race">'
+      if (!main.length && !sub.length) {
+        // Book still loading / missing — keep the bubble so Expected finish does not vanish.
+        if (!projectedFinishBook) {
+          return '<div class="home-you-race" aria-label="Expected finish">'
+            + '<p class="home-you-race-h">Expected finish</p>'
+            + '<span class="home-you-race-main">Loading race…</span>'
+            + ' <button type="button" class="chip" data-dash-open="projected_finish">Race</button>'
+            + "</div>";
+        }
+        return "";
+      }
+      return '<div class="home-you-race" aria-label="Expected finish">'
+        + '<p class="home-you-race-h">Expected finish</p>'
         + (main.length ? '<span class="home-you-race-main">' + esc(main.join(" · ")) + "</span>" : "")
         + (sub.length ? '<span class="home-you-race-sub">' + esc(sub.join(" · ")) + "</span>" : "")
         + ' <button type="button" class="chip" data-dash-open="projected_finish">Race</button>'
@@ -34040,7 +34071,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v323-ledger-friends")
+  || !swSrc.includes("chuckle-shell-v324-expected-finish")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -35338,7 +35369,15 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeYouHtml").includes("home-you-name")
     || !fnSrc("homeYouHtml").includes("home-you-plate")
     || !fnSrc("homeYouHtml").includes("homeYouFlairHtml(")
+    || !fnSrc("homeYouHtml").includes("homeYouRaceLine(")
     || !inline.includes("function homeYouFlairHtml(")
+    || !inline.includes("function homeYouRaceLine(")
+    || !fnSrc("homeYouRaceLine").includes('aria-label="Expected finish"')
+    || !fnSrc("homeYouRaceLine").includes("home-you-race-h")
+    || !fnSrc("homeYouRaceLine").includes("Expected finish")
+    || !fnSrc("homeYouRaceLine").includes("Loading race")
+    || !fnSrc("homeYouRaceLine").includes("PF ")
+    || !fnSrc("receiptDoorFace").includes("projSeatOf(authSeatId())")
     || fnSrc("homeYouHtml").includes("Open my team")
     || fnSrc("homeYouHtml").includes("home-desk-h")
     || fnSrc("homeYouHtml").indexOf("home-you-name") > fnSrc("homeYouHtml").indexOf("home-you-plate")

@@ -5,6 +5,10 @@ Chuckle Fantasy / CuckleChunckle lives in **https://github.com/slabslip/cuckle-t
 — not SlabSlip, not another folder name. When docs say “session repo” or “Cuckle trade repo,”
 they mean this repository.
 
+**New Cloud Agent?** Read [`AGENT_HANDOFF.md`](AGENT_HANDOFF.md) first (what’s shipped, what
+other agents left open, what not to reopen), then [`plans/MASTER_PLAN.md`](plans/MASTER_PLAN.md)
+for the next build order. Agent/PR index: [`AGENT_CATALOG.md`](AGENT_CATALOG.md).
+
 | What | Where |
 | --- | --- |
 | **Repo** | `slabslip/cuckle-trade-tracker` |
@@ -121,6 +125,9 @@ Full meter pipeline: see [`README.md`](../README.md).
 
 | Doc | Purpose |
 | --- | --- |
+| [`AGENT_HANDOFF.md`](AGENT_HANDOFF.md) | New-agent starting point (shipped / open / forks) |
+| [`plans/MASTER_PLAN.md`](plans/MASTER_PLAN.md) | Prioritized next build order |
+| [`AGENT_CATALOG.md`](AGENT_CATALOG.md) | Other agents, branches, open PRs |
 | [`APP_SDD.md`](APP_SDD.md) | Accounts, invites, league home |
 | [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) | Votes, news queue, RLS |
 | [`PRODUCT.md`](PRODUCT.md) | Meter canon |

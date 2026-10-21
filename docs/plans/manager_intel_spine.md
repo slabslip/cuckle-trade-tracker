@@ -1,6 +1,6 @@
 # Manager intel spine — next build from Projected finish
 
-**Status:** Plan after Projected finish v1 (#172).  
+**Status:** Phase A–C shipped on `cursor/manager-intel-build-33b5` (Season arcs + Manager type doors, firsts/Ideas/overnight wired).  
 **Companion:** [`PROJECTED_FINISH_SDD.md`](../PROJECTED_FINISH_SDD.md),
 [`projected_finish_leverage.md`](./projected_finish_leverage.md).  
 **Law:** Five tabs. Pipeline owns arithmetic. Projected finish / archetypes

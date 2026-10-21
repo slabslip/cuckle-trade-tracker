@@ -35,6 +35,9 @@ build-seat-direction.mjs
   → data/ui/seat-direction.json      (last-window tape review per seat; captions only)
 build-projected-finish.mjs
   → data/ui/projected-finish.json    (in-season race + SoS → proj place + Early/Mid/Late)
+build-season-arcs.mjs
+  → data/ui/season-arcs.json         (week-4 PF rank → final place, bubble trades, proxy first)
+  → data/ui/manager-archetypes.json  (slow burn / bubble / proxy / tank sculptor labels)
 build-cosmetics.mjs
   → data/ui/cosmetics.json           (136 catalog (68 pairs) + computed unlocks; award ladder → docs/plans/awards_titles_emblems.md)
 generate-page.mjs

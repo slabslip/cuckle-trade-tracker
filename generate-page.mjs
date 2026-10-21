@@ -4793,7 +4793,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "bagToTeam20261021";
+    const DATA_V = "noFirstsHeld20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4848,10 +4848,10 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
-      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "past_champions", "season_place",
-      "week_scores", "manager_archetypes",
+      "week_scores", "draft_board",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4862,15 +4862,15 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "past_champions", "season_place",
-      "week_scores", "manager_archetypes",
+      "week_scores", "draft_board",
     ];
     const DATA_DASH_RESEARCH = [
-      "firsts_held", "manager_archetypes", "season_arcs", "passed_around",
-      "week_scores", "draft_board", "projected_finish", "my_trades",
-      "seat_run", "least_traded", "forever", "past_champions",
+      "manager_archetypes", "season_arcs", "passed_around", "week_scores",
+      "draft_board", "projected_finish", "my_trades", "seat_run",
+      "least_traded", "forever", "past_champions", "my_draft",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -4883,7 +4883,7 @@ const html = `<!DOCTYPE html>
     ];
     const DATA_DASH_DYNASTY_ONLY = [
       "stash_young", "draft_board", "held_picks", "widest_clock", "seat_aging", "seat_run",
-      "firsts_held", "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
+      "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "book_top", "seat_manners",
@@ -4913,7 +4913,6 @@ const html = `<!DOCTYPE html>
       { id: "my_block", lab: "My block", desk: "book", group: "deal", size: "full", why: "Pieces you will actually deal." },
       { id: "league_block", lab: "League block", desk: "book", group: "deal", size: "full", why: "What everyone else listed for sale." },
       { id: "block_fits", lab: "Block fits", desk: "book", group: "deal", size: "full", why: "Listed pieces that fill a hole." },
-      { id: "firsts_held", lab: "Who has firsts", desk: "draft", size: "half", why: "Unused firsts sorted by projected slot — Early 1.01 first. Holder, origin, proxy tag." },
       { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
@@ -12618,6 +12617,10 @@ const html = `<!DOCTYPE html>
         const i = src.indexOf("book_top");
         if (i >= 0) src[i] = "profit_loss";
       }
+      // Retired: Who has firsts left the Data board / library.
+      while (src.indexOf("firsts_held") >= 0) {
+        src.splice(src.indexOf("firsts_held"), 1);
+      }
       // Dynasty: force critical doors onto saved boards (remote seat_data_dash often
       // predates Season arcs / Trade helper — Home top-4 and Your board stayed blank).
       const dynasty = !(typeof isRedraftLeague === "function" && isRedraftLeague());
@@ -12628,7 +12631,7 @@ const html = `<!DOCTYPE html>
           if (src.length < DATA_DASH_MAX) {
             src.splice(Math.min(3, src.length), 0, "season_arcs");
           } else {
-            const keepTop = { projected_finish: 1, my_draft: 1, firsts_held: 1 };
+            const keepTop = { projected_finish: 1, my_draft: 1, manager_archetypes: 1 };
             if (src.length > 3 && !keepTop[src[3]]) {
               src[3] = "season_arcs";
             } else {
@@ -29222,9 +29225,7 @@ const html = `<!DOCTYPE html>
         + '<p class="home-capital-h">Your firsts'
         + (bag.year ? (" · " + esc(bag.year)) : "")
         + "</p>"
-        + '<p class="home-capital-line">' + esc(line)
-        + ' <button type="button" class="chip" data-dash-open="firsts_held">Firsts</button>'
-        + "</p></section>";
+        + '<p class="home-capital-line">' + esc(line) + "</p></section>";
     }
 
     function homeLateBuyerBits(limit) {
@@ -29358,7 +29359,7 @@ const html = `<!DOCTYPE html>
       if (proj && proj.band === "Early") {
         return "Origin firsts read 1.0x — shop leftovers";
       }
-      return "Open Who has firsts for Early slots";
+      return "Shop Early origins — Draft capital on Your board";
     }
 
     function homePulseHtml() {
@@ -35257,7 +35258,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v337-bag-to-team")
+  || !swSrc.includes("chuckle-shell-v338-no-firsts-held")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36686,8 +36687,12 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 44 || uniq.size !== 44) {
-    throw new Error("DATA_REPORTS must hold exactly 44 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 43 || uniq.size !== 43) {
+    throw new Error("DATA_REPORTS must hold exactly 43 unique reports, found " + reportIds.length);
+  }
+  if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
+    || inline.includes('data-dash-open="firsts_held"')) {
+    throw new Error("Who has firsts must stay off the Data board, library, and Home chips");
   }
   if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
@@ -36709,9 +36714,10 @@ if (!inline.includes("function dataDashHtml(")
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   if (defIds.length !== 13 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
-    || defIds[2] !== "firsts_held" || defIds[3] !== "season_arcs"
-    || defIds[4] !== "my_trades") {
-    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles (race/capital top-4)");
+    || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
+    || defIds[4] !== "my_trades"
+    || defIds.indexOf("firsts_held") >= 0) {
+    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
@@ -36760,7 +36766,7 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function formatLensOrT0(")
     || !inline.includes("function effectiveRunLens(")
     || !fnSrc("applyDefaultLens").includes("formatLensOrT0")
-    || !fnSrc("dataDashFirstsHeld").includes("firsts_held")
+    || !fnSrc("dataDashFirstsHeld").includes("league.firsts_held")
     || !inline.includes("This season first-round")
     || !fnSrc("homeDeskWants").includes('kind === "redraft"')
     || !inline.includes("function deskSlots(")
@@ -36769,7 +36775,7 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function resetLeagueSession(")
     || !inline.includes("const DATA_DASH_REDRAFT = [")
     || !inline.includes("DATA_DASH_DYNASTY_ONLY")
-    || !inline.includes('"firsts_held", "uninsured", "available_cuffs"')
+    || !inline.includes('"uninsured", "available_cuffs", "cuffs_board"')
     || !inline.includes("function dataDashRedraftStale(")
     || !inline.includes("function finishCareerClaim(")
     || !inline.includes("function finishPointsKing(")

@@ -175,13 +175,14 @@ loop(10, page.includes('const DATA_V = "pickhub20261020232000"')
 
 // 11 Redraft library still hides dynasty ops
 loop(11, page.includes("DATA_DASH_DYNASTY_ONLY")
-  && page.includes('"firsts_held", "uninsured", "available_cuffs"')
+  && page.includes('"uninsured", "available_cuffs", "cuffs_board"')
   && fnSrc(page, "dataDashById").includes("DATA_DASH_DYNASTY_ONLY")
   && fnSrc(html, "dataDashById").includes("DATA_DASH_DYNASTY_ONLY")
+  && page.indexOf('lab: "Who has firsts"') < 0
   && redIds.indexOf("firsts_held") < 0
   && redIds.indexOf("profit_loss") < 0
   && redIds.indexOf("draft_board") < 0,
-  "dynasty-only doors stay off the redraft board and library");
+  "dynasty-only doors stay off the redraft board; Who has firsts stays off Data");
 
 // 12 Career leaders after the name map — the four home doors
 const biff = (finishes.seats || []).find((s) => s.name === "Biff34");

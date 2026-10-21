@@ -28,10 +28,19 @@ function nameMap() {
   return map;
 }
 
-function bagNowByUser() {
-  // Optional: calculator.json does not expose analyzer scores. Leave empty —
-  // the page can refine client-side; the committed book stays schedule-honest.
-  return {};
+function arcByUser() {
+  const book = readUi("season-arcs.json", null);
+  const map = Object.create(null);
+  for (const s of (book && book.seats) || []) {
+    if (!s || s.user_id == null) continue;
+    map[String(s.user_id)] = {
+      avg_climb: Number(s.avg_climb) || 0,
+      slow_burn_rate: Number(s.slow_burn_rate) || 0,
+      fast_fade_rate: Number(s.fast_fade_rate) || 0,
+      n: Number(s.n) || 0,
+    };
+  }
+  return map;
 }
 
 async function remainingPairs(leagueId, lastScored, playoffStart) {
@@ -111,7 +120,7 @@ async function main() {
     season: Number(live.season),
     week: lastScored,
     playoffWeekStart: playoffStart,
-    bagNowByUser: bagNowByUser(),
+    arcByUser: arcByUser(),
   });
 
   book.as_of = today;

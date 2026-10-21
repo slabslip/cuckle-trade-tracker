@@ -32,19 +32,27 @@ homepage “who to target” journeys.
 
 ---
 
-## 2. Calculus (locked for v1)
+## 2. Calculus (v2 — movement)
+
+v1 double-counted banked wins (race + full expected_wins), so every seat’s
+projected finish matched place now. v2 forecasts **movement**:
 
 ```text
 pythag = PF^1.8 / (PF^1.8 + PA^1.8)
 P(A beats B) = pythag_A / (pythag_A + pythag_B)
-expected_wins = wins + Σ P(win) over remaining RS weeks
+expected_remaining_wins = Σ P(win) over remaining RS weeks   ← SoS lives here
+sos = mean(opponent pythag); sos_ease = 1 − sos
 race_score = 0.70 × standings_pts_norm + 0.30 × PF_norm
-sos_score  = expected_wins_norm
-bag_score  = analyzer_now/10 when present, else race_score
-proj_score = 0.55×race + 0.35×sos + 0.10×bag
+path_score = normalize(expected_remaining_wins)              ← remaining path only
+ease_score = normalize(sos_ease)                             ← soft vs hard slate
+arc_score  = normalize(avg_climb) × season-left scale
+             − 0.25 × fast_fade_rate                         ← season-arcs prior
+proj_score = 0.30×race + 0.40×path + 0.15×ease + 0.15×arc
 ```
 
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
+- Arcs from `season-arcs.json` (`avg_climb`, fade rates). Early season trusts
+  history more (`arc_scale = weeks_left / season_weeks`).
 - Does **not** simulate the playoff bracket. Regular season only.
 - Incomplete season stays out of Manager avg finish (unchanged).
 

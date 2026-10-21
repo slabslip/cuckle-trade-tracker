@@ -10252,10 +10252,11 @@ const html = `<!DOCTYPE html>
         if (r.starter) mineNames[String(r.starter).toLowerCase()] = true;
       });
       const clip = function (s, n) {
-        const t = String(s || "").replace(/\s+/g, " ").trim();
+        // Double-escape \\s here: this block lives in generate-page's template literal.
+        const t = String(s || "").replace(/\\s+/g, " ").trim();
         if (!t) return "";
         if (t.length <= n) return t;
-        return t.slice(0, Math.max(0, n - 1)).replace(/\s+\S*$/, "").trim() + "…";
+        return t.slice(0, Math.max(0, n - 1)).replace(/\\s+\\S*$/, "").trim() + "…";
       };
       const mine = [];
       const leagueBits = [];
@@ -10277,7 +10278,7 @@ const html = `<!DOCTYPE html>
         // Prefer authored league_line (same field the full News tab paints). title/text/headline
         // are empty on tweet items — falling back to player alone left the wire as a name list.
         const story = String(it.league_line || it.headline || it.note || it.title || it.text || "")
-          .replace(/\s+/g, " ").trim();
+          .replace(/\\s+/g, " ").trim();
         const who = String(it.player || "").trim();
         const source = String(it.source_label || it.tweet_handle || "").trim();
         const line = story ? clip(story, 110) : (who || "League note");

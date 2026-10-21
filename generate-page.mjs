@@ -1769,14 +1769,6 @@ const html = `<!DOCTYPE html>
     .home-wire-empty {
       margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
     }
-    .home-wire-foot {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line);
-    }
-    .home-wire-foot p {
-      margin: 0; font-size: 0.68rem; font-weight: 650; color: var(--dim);
-      letter-spacing: 0.04em; text-transform: uppercase;
-    }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
@@ -4595,7 +4587,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "wireNewsLabel20261021115500";
+    const DATA_V = "wireNoLedeFoot20261021120000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -10327,13 +10319,10 @@ const html = `<!DOCTYPE html>
                   ? "No news matched yet"
                   : "Nobody on your roster is Out / IR on the letter")
           + "</p>";
-      const lede = (letter && letter.lede) ? letter.lede : "";
+      // No league overnight lede under panels — seat-scoped lines only.
       return '<div class="home-wire-panel" data-home-wire-panel="' + esc(kind) + '">'
         + '<p class="home-wire-panel-h">' + esc(title) + "</p>"
         + body
-        + (lede
-          ? '<div class="home-wire-foot"><p>' + esc(lede) + "</p></div>"
-          : "")
         + "</div>";
     }
 
@@ -10378,16 +10367,11 @@ const html = `<!DOCTYPE html>
           + '<span class="home-wire-n' + nClass + '">' + ic.n + "</span>"
           + "</button>";
       }).join("");
-      const foot = open
-        ? ""
-        : '<div class="home-wire-foot" style="padding:8px 12px;border-top:1px solid var(--line)">'
-          + "<p>" + esc(letter.dateline || "Overnight") + "</p></div>";
       return '<section class="home-wire' + (open ? " is-open" : "") + '" aria-label="League pulse">'
         + '<div class="home-wire-row" role="toolbar" aria-label="Wire, outs, watch, deals, news">'
         + row
         + "</div>"
         + (open ? homeWirePanelHtml(open, letter) : "")
-        + foot
         + "</section>";
     }
 

@@ -53,7 +53,9 @@ proj_score = 0.30×race + 0.40×path + 0.15×ease + 0.15×arc
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
 - Arcs from `season-arcs.json` (`avg_climb`, fade rates). Early season trusts
   history more (`arc_scale = weeks_left / season_weeks`).
-- Does **not** simulate the playoff bracket. Regular season only.
+- Regular-season projection only (no Monte Carlo). Expand UI may paint a
+  **soft** playoff bracket from projected seeds + PF/PA edges — opinion, not
+  a scored sim, and it does not write Draft picks or the trade needle.
 - Incomplete season stays out of Manager avg finish (unchanged).
 
 Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).
@@ -64,6 +66,8 @@ Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).
 
 - Five-tab pill unchanged. This is a **League Data door**, not a sixth tab.
 - Team home shows a one-line projected caption + **League board** chip.
+- Projected finish rows expand: plain-language path / SoS / history, week-by-week
+  expected W/L on the remaining slate, and a soft top-six playoff bracket.
 - Draft picks hub: soonest year (2027) ranks from this book when present;
   2028+ still use bag-window scores.
 - Rename only: “How I finished” → **Manager avg finish**.
@@ -102,8 +106,10 @@ same wall as Votes and Ledger.
 
 ## 6. Out of scope (v1)
 
-- Playoff odds / championship probability
-- Monte Carlo weekly score sims
+- Monte Carlo weekly score sims / true playoff probability distributions
 - Writing projected slot into the **value book** (unslotted picks stay Mid until
   the draft; UI projection is separate)
 - GM redraft pot law (door still works; pot tiles stay redraft-only)
+
+Soft bracket in the expand pane is allowed (seeded from `proj_finish`, edges from
+PF/PA pythag). It stays opinion chrome — not a second book.

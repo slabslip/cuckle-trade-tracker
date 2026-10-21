@@ -1792,6 +1792,31 @@
       color: var(--text); line-height: 1.4;
     }
     .pf-why p:last-child { margin-bottom: 0; }
+    .pf-why-head {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      margin: 0 0 8px;
+    }
+    .pf-why-head .pf-why-h { margin: 0; flex: 1 1 auto; }
+    .pf-scorecard {
+      list-style: none; margin: 0 0 8px; padding: 0;
+      display: grid; gap: 6px;
+    }
+    .pf-scorecard li {
+      display: grid; grid-template-columns: auto 1fr; gap: 8px 10px;
+      align-items: baseline;
+      padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+      background: #161618; font-size: 0.84rem; font-weight: 650; line-height: 1.35;
+    }
+    .pf-scorecard .pf-tag {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--lh-gold, #e0b44c);
+      white-space: nowrap;
+    }
+    .pf-scorecard .pf-num {
+      font-variant-numeric: tabular-nums; font-weight: 800; color: var(--text);
+    }
+    .pf-scorecard .pf-lab { color: var(--text); }
+    .pf-scorecard .pf-note { grid-column: 2; color: var(--muted); font-size: 0.78rem; }
     .pf-why .pf-week { color: var(--muted); }
     .pf-why .pf-week b { color: var(--text); font-weight: 750; }
     .pf-why .pf-week .pf-win { color: var(--green); }
@@ -4643,7 +4668,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "expectedFinishClick20261021";
+    const DATA_V = "projFinishShareDigest20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5227,6 +5252,11 @@
         : items;
       if (opts.who && picked[0]) {
         const r = picked[0];
+        if ((id === "projected_finish"
+          || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "projected_finish"))
+          && r.seat && typeof projectedFinishShareText === "function") {
+          return projectedFinishShareText(r.seat);
+        }
         let body = leagueName + " · " + lab + "\n" + String(r.name || "") + (r.metric ? " · " + r.metric : "");
         if (r.sub) body += "\n" + r.sub;
         if ((id === "pot_net" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "pot_net"))
@@ -5734,6 +5764,9 @@
       receiptListWho = who || "";
       if (receiptListWho && tile === "pot_net") receiptNetWho = receiptListWho;
       if (receiptListWho && tile === "vs_you") receiptVsWho = receiptListWho;
+      if (receiptListWho && tile === "projected_finish") {
+        projectedFinishOpenKey = receiptListWho;
+      }
       if (typeof render === "function") render();
       return true;
     }
@@ -8455,7 +8488,8 @@
         }
         return dataListBandsHtml(id, items, function (r) {
           if (id === "projected_finish") {
-            const open = String(projectedFinishOpenKey || "") === String(r.key || "");
+            const open = String(projectedFinishOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
             const head = '<div class="row-top"><div><div class="names">'
               + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
               + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
@@ -8537,13 +8571,10 @@
           + " finish through the regular season"
           + (week != null ? (" (after week " + week + ")") : "")
           + (left != null ? (" · " + left + " weeks left") : "")
-          + ". Place now is the live race. Projection blends remaining win path (SoS inside),"
-          + " schedule soft/hard vs the league, and each seat’s late-season climb history"
-          + " — so finish can move off today’s place."
-          + " Tap a row for plain-language why, week-by-week expected W/L, and a soft projected"
-          + " playoff bracket (top six seeds from this board)."
-          + " Last place → Early 1.01 band; title → Late."
-          + " Draft picks Early / Mid / Late read this book first.";
+          + ". Tap a row for a scorecard (Race / Path / Schedule / History), week-by-week leans,"
+          + " and a soft playoff bracket — then Share this finish."
+          + " Schedule labels: Cupcake (easiest SoS) → Hellscape (hardest)."
+          + " Last place → Early 1.01 band; title → Late.";
       }
       else if (id === "season_arcs") {
         caption = "Season arcs from past years: week-4 cumulative PF rank vs final place."
@@ -12848,52 +12879,252 @@
       return "Stays put — projection matches " + now + " now (" + proj + ").";
     }
 
+    /** Easiest (#1 Cupcake) → hardest. Index 0 = absolute easiest remaining SoS. */
+    const PF_SOS_LABELS = [
+      "Cupcake",
+      "Soft serve",
+      "Picnic",
+      "Fairway",
+      "Mid lane",
+      "Sticky",
+      "Gauntlet",
+      "Meat grinder",
+      "Death march",
+      "Hellscape",
+    ];
+    /** Strongest remaining win path (#1 Rocket) → weakest. */
+    const PF_PATH_LABELS = [
+      "Rocket",
+      "Cruise",
+      "Tailwind",
+      "Solid",
+      "Mid pack",
+      "Bumpy",
+      "Thin ice",
+      "Uphill",
+      "Grind",
+      "Cliff",
+    ];
+
+    function projectedFinishEaseVal(seat) {
+      const ease = Number(seat && seat.sos_ease);
+      if (Number.isFinite(ease)) return ease;
+      const score = Number(seat && seat.ease_score);
+      return Number.isFinite(score) ? score : 0.5;
+    }
+
+    function projectedFinishPathVal(seat) {
+      const path = Number(seat && seat.path_score);
+      if (Number.isFinite(path)) return path;
+      return Number(seat && seat.expected_remaining_wins) || 0;
+    }
+
+    /** League ranks for digest scores (1 = best path / easiest SoS). */
+    function projectedFinishLeagueRanks(seat) {
+      const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+        ? projectedFinishBook.seats.slice() : [];
+      const n = seats.length || 1;
+      const uid = seat && seat.user_id != null ? String(seat.user_id) : "";
+      const byEase = seats.slice().sort(function (a, b) {
+        return projectedFinishEaseVal(b) - projectedFinishEaseVal(a)
+          || (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99);
+      });
+      const byPath = seats.slice().sort(function (a, b) {
+        return projectedFinishPathVal(b) - projectedFinishPathVal(a)
+          || (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99);
+      });
+      let sosRank = n;
+      let pathRank = n;
+      for (let i = 0; i < byEase.length; i++) {
+        if (String(byEase[i].user_id) === uid) { sosRank = i + 1; break; }
+      }
+      for (let i = 0; i < byPath.length; i++) {
+        if (String(byPath[i].user_id) === uid) { pathRank = i + 1; break; }
+      }
+      const sosIdx = Math.min(PF_SOS_LABELS.length - 1,
+        Math.max(0, Math.round(((sosRank - 1) / Math.max(1, n - 1)) * (PF_SOS_LABELS.length - 1))));
+      const pathIdx = Math.min(PF_PATH_LABELS.length - 1,
+        Math.max(0, Math.round(((pathRank - 1) / Math.max(1, n - 1)) * (PF_PATH_LABELS.length - 1))));
+      return {
+        n: n,
+        sosRank: sosRank,
+        pathRank: pathRank,
+        sosLab: PF_SOS_LABELS[sosIdx] || "Mid lane",
+        pathLab: PF_PATH_LABELS[pathIdx] || "Mid pack",
+        pathScore10: Math.max(1, Math.min(10, 11 - pathRank)),
+        sosScore10: Math.max(1, Math.min(10, 11 - sosRank)),
+      };
+    }
+
+    function projectedFinishHistoryTone(seat) {
+      const climb = Number(seat && seat.avg_climb) || 0;
+      const fade = Number(seat && seat.fast_fade_rate) || 0;
+      const burn = Number(seat && seat.slow_burn_rate) || 0;
+      if (climb > 0.5 || burn >= 0.3) {
+        return {
+          lab: "Climber",
+          note: "avg " + (climb > 0 ? "+" : "") + climb.toFixed(1) + " late"
+            + (burn ? " · " + Math.round(burn * 100) + "% slow-burn" : ""),
+        };
+      }
+      if (climb < -0.5 || fade >= 0.3) {
+        return {
+          lab: "Fader",
+          note: "avg " + climb.toFixed(1) + " late"
+            + (fade ? " · " + Math.round(fade * 100) + "% fast-fade" : ""),
+        };
+      }
+      return { lab: "Holder", note: "late place usually sticks near mid-year" };
+    }
+
     function projectedFinishPathLine(seat) {
       if (!seat) return "";
+      const ranks = projectedFinishLeagueRanks(seat);
       const rem = Number(seat.expected_remaining_wins) || 0;
-      const path = Number(seat.path_score);
       const weeks = (projectedFinishBook && projectedFinishBook.remaining_week_count) != null
         ? Number(projectedFinishBook.remaining_week_count)
         : ((seat.remaining && seat.remaining.length) || 0);
-      let tone = "a middle-of-the-pack remaining path";
-      if (Number.isFinite(path) && path >= 0.67) tone = "one of the stronger remaining win paths";
-      else if (Number.isFinite(path) && path <= 0.33) tone = "a thinner remaining win path";
-      return "Path: about " + rem.toFixed(1) + " wins across "
-        + weeks + " week" + (weeks === 1 ? "" : "s") + " left — " + tone + ".";
+      return "Path " + ranks.pathScore10 + "/10 · " + ranks.pathLab
+        + " (#" + ranks.pathRank + " of " + ranks.n + ") — about "
+        + rem.toFixed(1) + " wins across " + weeks + " week"
+        + (weeks === 1 ? "" : "s") + " left.";
     }
 
     function projectedFinishSosLine(seat) {
       if (!seat) return "";
-      const ease = Number(seat.sos_ease);
-      const easeScore = Number(seat.ease_score);
-      if ((Number.isFinite(ease) && ease >= 0.51)
-        || (Number.isFinite(easeScore) && easeScore >= 0.67)) {
-        return "Schedule (SoS): softer rest-of-way slate than most of the league.";
-      }
-      if ((Number.isFinite(ease) && ease <= 0.49)
-        || (Number.isFinite(easeScore) && easeScore <= 0.33)) {
-        return "Schedule (SoS): harder rest-of-way slate than most of the league.";
-      }
-      return "Schedule (SoS): average rest-of-way difficulty.";
+      const ranks = projectedFinishLeagueRanks(seat);
+      const tip = ranks.sosRank === 1
+        ? "absolute easiest remaining strength of schedule"
+        : (ranks.sosRank === ranks.n
+          ? "absolute hardest remaining strength of schedule"
+          : (ranks.sosRank <= Math.ceil(ranks.n / 3)
+            ? "softer rest-of-way than most"
+            : (ranks.sosRank >= Math.ceil((ranks.n * 2) / 3)
+              ? "harder rest-of-way than most"
+              : "middle-of-the-pack rest-of-way")));
+      return "Schedule " + ranks.sosScore10 + "/10 · " + ranks.sosLab
+        + " (#" + ranks.sosRank + " easiest of " + ranks.n + ") — " + tip + ".";
     }
 
     function projectedFinishHistoryLine(seat) {
       if (!seat) return "";
-      const climb = Number(seat.avg_climb) || 0;
-      const fade = Number(seat.fast_fade_rate) || 0;
-      const burn = Number(seat.slow_burn_rate) || 0;
-      if (climb > 0.5 || burn >= 0.3) {
-        return "History: tends to climb late (avg "
-          + (climb > 0 ? "+" : "") + climb.toFixed(1) + " places"
-          + (burn ? "; " + Math.round(burn * 100) + "% slow-burn seasons" : "")
-          + ").";
+      const tone = projectedFinishHistoryTone(seat);
+      return "History · " + tone.lab + " — " + tone.note + ".";
+    }
+
+    /** Structured digest for expand UI + share cards. */
+    function projectedFinishDigest(seat) {
+      if (!seat) return null;
+      const ranks = projectedFinishLeagueRanks(seat);
+      const hist = projectedFinishHistoryTone(seat);
+      const d = Number(seat.delta_place) || 0;
+      const projLab = typeof nth === "function" ? nth(seat.proj_finish) : String(seat.proj_finish);
+      const move = d > 0 ? ("↑" + d + " from now") : (d < 0 ? ("↓" + (-d) + " from now") : "flat vs now");
+      const rem = Number(seat.expected_remaining_wins) || 0;
+      const weeks = (projectedFinishBook && projectedFinishBook.remaining_week_count) != null
+        ? Number(projectedFinishBook.remaining_week_count)
+        : ((seat.remaining && seat.remaining.length) || 0);
+      const weekLines = projectedFinishWeekLines(seat);
+      let wins = 0;
+      let losses = 0;
+      weekLines.forEach(function (w) { if (w.expectWin) wins += 1; else losses += 1; });
+      const bracket = projectedPlayoffBracket(seat);
+      let playoff = "Outside projected top " + ((bracket && bracket.n) || 6);
+      if (bracket && Number(seat.proj_finish) > 0 && Number(seat.proj_finish) <= Number(bracket.n)) {
+        playoff = "Seed #" + seat.proj_finish + " of top " + bracket.n;
+        if (bracket.champion && String(bracket.champion.user_id) === String(seat.user_id)) {
+          playoff += " · projected champ edge";
+        } else if (Number(seat.proj_finish) <= 2) {
+          playoff += " · bye week";
+        }
       }
-      if (climb < -0.5 || fade >= 0.3) {
-        return "History: tends to fade late (avg " + climb.toFixed(1) + " places"
-          + (fade ? "; " + Math.round(fade * 100) + "% fast-fade seasons" : "")
-          + ").";
+      const sosTip = ranks.sosRank === 1
+        ? "absolute easiest remaining strength of schedule"
+        : (ranks.sosRank === ranks.n
+          ? "absolute hardest remaining strength of schedule"
+          : "league rank for rest-of-way ease");
+      return {
+        name: seat.name || "Seat",
+        headline: "Projected " + projLab + " · " + (seat.band || "Mid") + " pick · "
+          + (seat.record || "") + " · " + move,
+        scores: [
+          {
+            key: "race",
+            tag: "Race",
+            num: projLab,
+            lab: "#" + (seat.place_now || "?") + " now → " + projLab,
+            note: move + " · PF " + Math.round(Number(seat.pf) || 0)
+              + " / PA " + Math.round(Number(seat.pa) || 0),
+          },
+          {
+            key: "path",
+            tag: "Path",
+            num: ranks.pathScore10 + "/10",
+            lab: ranks.pathLab,
+            note: "#" + ranks.pathRank + " of " + ranks.n
+              + " · ~" + rem.toFixed(1) + " wins in " + weeks + " left",
+          },
+          {
+            key: "sos",
+            tag: "Schedule",
+            num: ranks.sosScore10 + "/10",
+            lab: ranks.sosLab,
+            note: "#" + ranks.sosRank + " easiest of " + ranks.n + " · " + sosTip,
+          },
+          {
+            key: "history",
+            tag: "History",
+            num: hist.lab,
+            lab: hist.lab,
+            note: hist.note,
+          },
+          {
+            key: "band",
+            tag: "Band",
+            num: seat.band || "Mid",
+            lab: (seat.band || "Mid") + " pick band",
+            note: "slot " + (seat.proj_slot != null ? seat.proj_slot : "—")
+              + " · " + playoff,
+          },
+        ],
+        weekLines: weekLines,
+        weekSummary: weekLines.length
+          ? ("Lean " + wins + "-" + losses + " rest of regular season")
+          : "",
+        playoff: playoff,
+        bracket: bracket,
+        ranks: ranks,
+      };
+    }
+
+    function projectedFinishShareText(seat) {
+      const dig = projectedFinishDigest(seat);
+      if (!dig) return "";
+      const leagueName = (activeLeague && activeLeague.name) || (league && league.name) || "League";
+      const lines = [
+        leagueName + " · Expected finish",
+        dig.name + " — " + dig.headline,
+        "",
+      ];
+      dig.scores.forEach(function (s) {
+        lines.push("• " + s.tag + ": " + s.num + " · " + s.lab
+          + (s.note ? " — " + s.note : ""));
+      });
+      if (dig.weekSummary) {
+        lines.push("");
+        lines.push(dig.weekSummary + ":");
+        dig.weekLines.forEach(function (w) {
+          lines.push("• " + w.week + " vs " + w.opp + " — "
+            + (w.expectWin ? "W" : "L") + " lean (" + w.pct + "%)");
+        });
       }
-      return "History: late-season place usually holds near where they sit mid-year.";
+      if (dig.playoff) {
+        lines.push("");
+        lines.push("Soft playoffs: " + dig.playoff);
+      }
+      lines.push("");
+      lines.push("Cupcake = easiest SoS · Hellscape = hardest · Path 10/10 = Rocket");
+      return lines.join("\n");
     }
 
     /** Week-by-week expected W/L from remaining matchups (weeks from the book). */
@@ -13001,27 +13232,43 @@
 
     function projectedFinishDetailHtml(seat) {
       if (!seat) return "";
-      const weeks = projectedFinishWeekLines(seat);
-      const bracket = projectedPlayoffBracket(seat);
+      const dig = projectedFinishDigest(seat);
+      if (!dig) return "";
+      const weeks = dig.weekLines || [];
+      const bracket = dig.bracket;
+      const who = String(seat.user_id || seat.name || "");
       let html = '<div class="pf-why">';
-      html += '<p class="pf-why-h">Why</p>';
-      html += "<p>" + esc(projectedFinishMoveLine(seat)) + "</p>";
-      html += "<p>" + esc(projectedFinishPathLine(seat)) + "</p>";
-      html += "<p>" + esc(projectedFinishSosLine(seat)) + "</p>";
-      html += "<p>" + esc(projectedFinishHistoryLine(seat)) + "</p>";
+      html += '<div class="pf-why-head">'
+        + '<p class="pf-why-h">Scorecard</p>'
+        + '<button type="button" class="chip" data-proj-finish-share="' + esc(who)
+        + '" aria-label="Share this expected finish">Share this finish</button>'
+        + "</div>";
+      html += "<p>" + esc(dig.headline) + "</p>";
+      html += '<ul class="pf-scorecard">';
+      dig.scores.forEach(function (s) {
+        html += '<li><span class="pf-tag">' + esc(s.tag) + "</span>"
+          + '<span><span class="pf-num">' + esc(s.num) + "</span>"
+          + ' <span class="pf-lab">' + esc(s.lab) + "</span></span>"
+          + (s.note ? '<span class="pf-note">' + esc(s.note) + "</span>" : "")
+          + "</li>";
+      });
+      html += "</ul>";
+      html += '<p class="caption">Schedule scale: Cupcake (easiest SoS) → Hellscape (hardest). '
+        + "Path 10/10 = Rocket.</p>";
       if (weeks.length) {
         html += '<p class="pf-why-h">Rest of regular season</p>';
+        if (dig.weekSummary) html += "<p>" + esc(dig.weekSummary) + "</p>";
         weeks.forEach(function (w) {
           html += '<p class="pf-week"><b>' + esc(w.week) + "</b> vs " + esc(w.opp)
             + ' — <span class="' + (w.expectWin ? "pf-win" : "pf-loss") + '">'
-            + esc(w.expectWin ? "expected win" : "expected loss")
+            + esc(w.expectWin ? "W lean" : "L lean")
             + "</span> (" + esc(String(w.pct)) + "%)</p>";
         });
       }
       if (bracket) {
         html += '<p class="pf-why-h">Projected playoff bracket</p>';
-        html += '<p>Seeds from projected finish · top ' + esc(String(bracket.n))
-          + " · matchup edges from PF/PA (opinion, not a sim).</p>";
+        html += "<p>" + esc(dig.playoff)
+          + " · seeds from this board · matchup edges from PF/PA (opinion, not a sim).</p>";
         if (bracket.byes && bracket.byes.length) {
           html += '<p class="pf-bracket-bye">Byes: '
             + bracket.byes.map(function (b) {
@@ -31813,6 +32060,23 @@
         const id = homeWireBtn.getAttribute("data-home-wire") || "";
         homeWireOpen = (String(homeWireOpen) === String(id)) ? "" : id;
         if (typeof render === "function") render();
+        return;
+      }
+      const projFinishShareBtn = e.target.closest("[data-proj-finish-share]");
+      if (projFinishShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const who = projFinishShareBtn.getAttribute("data-proj-finish-share") || "";
+        const seat = (typeof projSeatOf === "function" ? projSeatOf(who) : null)
+          || ((projectedFinishBook && projectedFinishBook.seats) || []).find(function (s) {
+            return s && (String(s.user_id) === String(who) || String(s.name) === String(who));
+          });
+        if (!seat) return;
+        shareProofNow(
+          projectedFinishShareText(seat),
+          dataTileShareUrl("projected_finish", { who: String(seat.user_id || who) }),
+          "Expected finish"
+        );
         return;
       }
       const projFinishOpenBtn = e.target.closest("[data-proj-finish-open]");

@@ -1758,8 +1758,44 @@
     .home-wire-line.watch b { color: #e0b44c; }
     .home-wire-line.out b { color: #ff6b3d; }
     .home-wire-line.waivers b { color: #34d399; }
+    .home-wire-line.news b { color: #9bb6ff; }
     .home-wire-empty {
       margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
+    }
+    /* Projected finish expandable why + soft playoff bracket. */
+    .pf-why { margin: 0; padding: 0; }
+    .pf-why-h {
+      margin: 10px 0 4px; font-size: 0.68rem; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+    }
+    .pf-why-h:first-child { margin-top: 0; }
+    .pf-why p {
+      margin: 0 0 6px; font-size: 0.84rem; font-weight: 650;
+      color: var(--text); line-height: 1.4;
+    }
+    .pf-why p:last-child { margin-bottom: 0; }
+    .pf-why .pf-week { color: var(--muted); }
+    .pf-why .pf-week b { color: var(--text); font-weight: 750; }
+    .pf-why .pf-week .pf-win { color: var(--green); }
+    .pf-why .pf-week .pf-loss { color: var(--red); }
+    .pf-bracket { display: grid; gap: 6px; margin: 4px 0 0; }
+    .pf-bracket-game {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px;
+      align-items: baseline; font-size: 0.8rem; font-weight: 650;
+      padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+      background: #161618;
+    }
+    .pf-bracket-game .pf-seed { color: var(--dim); font-size: 0.72rem; }
+    .pf-bracket-game .pf-name { color: var(--text); }
+    .pf-bracket-game .pf-name.is-focus { color: #e0b44c; }
+    .pf-bracket-game .pf-vs { color: var(--dim); font-size: 0.72rem; text-align: center; }
+    .pf-bracket-game .pf-edge { color: var(--muted); font-size: 0.72rem; }
+    .pf-why .pf-edge {
+      margin: 0 0 8px; font-size: 0.78rem; font-weight: 650; color: var(--muted);
+    }
+    .pf-bracket-bye {
+      font-size: 0.8rem; font-weight: 650; color: var(--muted);
+      padding: 4px 8px;
     }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
@@ -4557,6 +4593,8 @@
     let overnightOpenPlayer = "";
     // Home wire bar: which icon panel is open (waivers|out|watch|trades|news|"").
     let homeWireOpen = "";
+    // Projected finish list: which seat row is expanded (user_id / key).
+    let projectedFinishOpenKey = "";
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -5240,27 +5278,17 @@
         return seats.map(function (s, i) {
           const delta = Number(s.delta_place) || 0;
           const climb = delta > 0 ? ("↑" + delta) : (delta < 0 ? ("↓" + (-delta)) : "flat");
-          const ease = Number(s.sos_ease);
-          const sosBit = Number.isFinite(ease)
-            ? (" · SoS " + (ease >= 0.51 ? "soft" : (ease <= 0.49 ? "hard" : "avg")))
-            : "";
-          const arcBit = (Number(s.avg_climb) || 0) !== 0
-            ? (" · hist " + ((Number(s.avg_climb) > 0 ? "+" : "") + Number(s.avg_climb).toFixed(1)))
-            : "";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
             metric: (typeof nth === "function" ? nth(s.proj_finish) : String(s.proj_finish))
               + " · " + (s.band || "Mid")
               + (delta ? (" · " + climb) : ""),
+            // Collapsed: race snapshot. Path / SoS / history / weeks / bracket live in expand.
             sub: "#" + s.place_now + " now · " + (s.record || "")
               + " · PF " + Math.round(Number(s.pf) || 0)
-              + " · PA " + Math.round(Number(s.pa) || 0)
-              + " · path " + (Number(s.expected_remaining_wins) || 0).toFixed(1) + "W left"
-              + sosBit
-              + arcBit
               + " · " + climb
-              + " · pick " + (s.proj_slot < 10 ? "0" : "") + s.proj_slot,
+              + " · tap for why",
             rank: s.proj_finish || (i + 1),
             seat: s,
             // pickBand only — never list.band (collides with top/bot share slice).
@@ -8395,6 +8423,23 @@
           return '<p class="caption">Nothing on this tape matches.</p>';
         }
         return dataListBandsHtml(id, items, function (r) {
+          if (id === "projected_finish") {
+            const open = String(projectedFinishOpenKey || "") === String(r.key || "");
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-proj-finish-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + projectedFinishDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
           return '<div class="row"><div class="row-top"><div><div class="names">'
             + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
             + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
@@ -8464,6 +8509,8 @@
           + ". Place now is the live race. Projection blends remaining win path (SoS inside),"
           + " schedule soft/hard vs the league, and each seat’s late-season climb history"
           + " — so finish can move off today’s place."
+          + " Tap a row for plain-language why, week-by-week expected W/L, and a soft projected"
+          + " playoff bracket (top six seeds from this board)."
           + " Last place → Early 1.01 band; title → Late."
           + " Draft picks Early / Mid / Late read this book first.";
       }
@@ -10196,6 +10243,12 @@
         if (r.starter_id) mineIds[String(r.starter_id)] = true;
         if (r.starter) mineNames[String(r.starter).toLowerCase()] = true;
       });
+      const clip = function (s, n) {
+        const t = String(s || "").replace(/s+/g, " ").trim();
+        if (!t) return "";
+        if (t.length <= n) return t;
+        return t.slice(0, Math.max(0, n - 1)).replace(/s+S*$/, "").trim() + "…";
+      };
       const mine = [];
       const leagueBits = [];
       for (let i = 0; i < items.length && (mine.length < 4 || leagueBits.length < 3); i++) {
@@ -10213,10 +10266,23 @@
             break;
           }
         }
-        const title = it.title || it.text || it.player || "League note";
+        // Prefer authored league_line (same field the full News tab paints). title/text/headline
+        // are empty on tweet items — falling back to player alone left the wire as a name list.
+        const story = String(it.league_line || it.headline || it.note || it.title || it.text || "")
+          .replace(/s+/g, " ").trim();
+        const who = String(it.player || "").trim();
+        const source = String(it.source_label || it.tweet_handle || "").trim();
+        const line = story ? clip(story, 110) : (who || "League note");
+        const metaParts = [];
+        if (who && story) metaParts.push(who);
+        if (source) metaParts.push(source);
+        if (hit) metaParts.push("your roster");
+        else if (it.manager) metaParts.push(String(it.manager));
         const bit = {
           key: String(it.id || i),
-          line: title,
+          line: line,
+          meta: metaParts.join(" · "),
+          detail: story && story.length > 110 ? story : "",
           tone: "news",
           mine: hit,
         };
@@ -10295,6 +10361,7 @@
       }
       const body = bits.length
         ? bits.map(function (b) {
+          // News: bold = league_line (story); italic meta = player · source · roster.
           return '<p class="home-wire-line ' + esc(b.tone || "") + '"><b>'
             + esc(b.line) + "</b>"
             + (b.meta ? " <i>" + esc(b.meta) + "</i>" : "")
@@ -10813,6 +10880,7 @@
       overnightOpen = false;
       overnightOpenPlayer = "";
       homeWireOpen = "";
+      projectedFinishOpenKey = "";
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -12714,6 +12782,250 @@
           + " → proj " + (typeof nth === "function" ? nth(s.proj_finish) : s.proj_finish)
           + (s.band ? (" · " + s.band) : "");
       });
+    }
+
+    /** Pythagorean win rate from seat PF/PA — same exponent as the projected-finish book. */
+    function projectedFinishPyth(seat) {
+      const pf = Math.max(0, Number(seat && seat.pf) || 0);
+      const pa = Math.max(0, Number(seat && seat.pa) || 0);
+      if (pf + pa <= 0) return 0.5;
+      const exp = 1.8;
+      const num = Math.pow(pf, exp);
+      const den = num + Math.pow(pa, exp);
+      return den ? (num / den) : 0.5;
+    }
+
+    function projectedFinishMatchupP(a, b) {
+      const pa = Math.min(0.95, Math.max(0.05, projectedFinishPyth(a)));
+      const pb = Math.min(0.95, Math.max(0.05, projectedFinishPyth(b)));
+      const sum = pa + pb;
+      return sum > 0 ? (pa / sum) : 0.5;
+    }
+
+    function projectedFinishMoveLine(seat) {
+      if (!seat) return "";
+      const d = Number(seat.delta_place) || 0;
+      const now = "#" + (seat.place_now || "?");
+      const proj = typeof nth === "function" ? nth(seat.proj_finish) : String(seat.proj_finish);
+      if (d > 0) {
+        return "Moves up " + d + " — " + now + " now → projected " + proj + ".";
+      }
+      if (d < 0) {
+        return "Slips " + (-d) + " — " + now + " now → projected " + proj + ".";
+      }
+      return "Stays put — projection matches " + now + " now (" + proj + ").";
+    }
+
+    function projectedFinishPathLine(seat) {
+      if (!seat) return "";
+      const rem = Number(seat.expected_remaining_wins) || 0;
+      const path = Number(seat.path_score);
+      const weeks = (projectedFinishBook && projectedFinishBook.remaining_week_count) != null
+        ? Number(projectedFinishBook.remaining_week_count)
+        : ((seat.remaining && seat.remaining.length) || 0);
+      let tone = "a middle-of-the-pack remaining path";
+      if (Number.isFinite(path) && path >= 0.67) tone = "one of the stronger remaining win paths";
+      else if (Number.isFinite(path) && path <= 0.33) tone = "a thinner remaining win path";
+      return "Path: about " + rem.toFixed(1) + " wins across "
+        + weeks + " week" + (weeks === 1 ? "" : "s") + " left — " + tone + ".";
+    }
+
+    function projectedFinishSosLine(seat) {
+      if (!seat) return "";
+      const ease = Number(seat.sos_ease);
+      const easeScore = Number(seat.ease_score);
+      if ((Number.isFinite(ease) && ease >= 0.51)
+        || (Number.isFinite(easeScore) && easeScore >= 0.67)) {
+        return "Schedule (SoS): softer rest-of-way slate than most of the league.";
+      }
+      if ((Number.isFinite(ease) && ease <= 0.49)
+        || (Number.isFinite(easeScore) && easeScore <= 0.33)) {
+        return "Schedule (SoS): harder rest-of-way slate than most of the league.";
+      }
+      return "Schedule (SoS): average rest-of-way difficulty.";
+    }
+
+    function projectedFinishHistoryLine(seat) {
+      if (!seat) return "";
+      const climb = Number(seat.avg_climb) || 0;
+      const fade = Number(seat.fast_fade_rate) || 0;
+      const burn = Number(seat.slow_burn_rate) || 0;
+      if (climb > 0.5 || burn >= 0.3) {
+        return "History: tends to climb late (avg "
+          + (climb > 0 ? "+" : "") + climb.toFixed(1) + " places"
+          + (burn ? "; " + Math.round(burn * 100) + "% slow-burn seasons" : "")
+          + ").";
+      }
+      if (climb < -0.5 || fade >= 0.3) {
+        return "History: tends to fade late (avg " + climb.toFixed(1) + " places"
+          + (fade ? "; " + Math.round(fade * 100) + "% fast-fade seasons" : "")
+          + ").";
+      }
+      return "History: late-season place usually holds near where they sit mid-year.";
+    }
+
+    /** Week-by-week expected W/L from remaining matchups (weeks from the book). */
+    function projectedFinishWeekLines(seat) {
+      if (!seat) return [];
+      const games = Array.isArray(seat.remaining) ? seat.remaining : [];
+      const weeks = (projectedFinishBook && Array.isArray(projectedFinishBook.remaining_weeks))
+        ? projectedFinishBook.remaining_weeks : [];
+      return games.map(function (g, i) {
+        const p = Number(g && g.p_win);
+        const pct = Number.isFinite(p) ? Math.round(p * 100) : 50;
+        const expectWin = pct >= 50;
+        const week = weeks[i] != null ? ("Week " + weeks[i]) : ("Game " + (i + 1));
+        return {
+          week: week,
+          opp: (g && g.opp) || "Opponent",
+          pct: pct,
+          expectWin: expectWin,
+          line: week + " vs " + ((g && g.opp) || "Opponent")
+            + " — expected " + (expectWin ? "win" : "loss")
+            + " (" + pct + "%)",
+        };
+      });
+    }
+
+    /**
+     * Soft projected playoff bracket from projected seeds (proj_finish).
+     * Top six (league law): 1–2 bye, 3v6 / 4v5, then semis, final + 3rd.
+     * Matchup edges use PF/PA pythag — opinion only, not a Monte Carlo.
+     */
+    function projectedPlayoffBracket(focusSeat) {
+      const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+        ? projectedFinishBook.seats.slice() : [];
+      if (seats.length < 4) return null;
+      const teams = Number((projectedFinishBook && projectedFinishBook.teams) || seats.length) || seats.length;
+      const nPlayoff = Math.min(6, teams, seats.length);
+      const seeds = seats.slice().sort(function (a, b) {
+        return (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99);
+      }).slice(0, nPlayoff);
+      const start = Number((projectedFinishBook && projectedFinishBook.playoff_week_start) || 15);
+      const focusId = focusSeat && focusSeat.user_id != null ? String(focusSeat.user_id) : "";
+      const label = function (s) {
+        if (!s) return { seed: 0, name: "Seat", user_id: "", focus: false, seat: null };
+        return {
+          seed: Number(s.proj_finish) || 0,
+          name: s.name || "Seat",
+          user_id: s.user_id,
+          focus: !!(focusId && String(s.user_id) === focusId),
+          seat: s,
+        };
+      };
+      const game = function (round, week, seatA, seatB) {
+        const pA = projectedFinishMatchupP(seatA, seatB);
+        const aWins = pA >= 0.5;
+        const winnerSeat = aWins ? seatA : seatB;
+        const loserSeat = aWins ? seatB : seatA;
+        const pct = Math.round((aWins ? pA : (1 - pA)) * 100);
+        return {
+          round: round,
+          week: week,
+          a: label(seatA),
+          b: label(seatB),
+          winner: label(winnerSeat),
+          loser: label(loserSeat),
+          winnerSeat: winnerSeat,
+          loserSeat: loserSeat,
+          pct: pct,
+        };
+      };
+      const out = { n: nPlayoff, start: start, byes: [], rounds: [], champion: null, third: null };
+      if (nPlayoff >= 6) {
+        const s1 = seeds[0];
+        const s2 = seeds[1];
+        const s3 = seeds[2];
+        const s4 = seeds[3];
+        const s5 = seeds[4];
+        const s6 = seeds[5];
+        out.byes = [label(s1), label(s2)];
+        const q1 = game("Quarterfinals", start, s3, s6);
+        const q2 = game("Quarterfinals", start, s4, s5);
+        out.rounds.push({ lab: "Week " + start + " · Quarterfinals", games: [q1, q2] });
+        const semiA = game("Semifinals", start + 1, s1, q2.winnerSeat);
+        const semiB = game("Semifinals", start + 1, s2, q1.winnerSeat);
+        out.rounds.push({ lab: "Week " + (start + 1) + " · Semifinals", games: [semiA, semiB] });
+        const fin = game("Championship", start + 2, semiA.winnerSeat, semiB.winnerSeat);
+        const third = game("3rd place", start + 2, semiA.loserSeat, semiB.loserSeat);
+        out.rounds.push({ lab: "Week " + (start + 2) + " · Finals", games: [fin, third] });
+        out.champion = fin.winner;
+        out.third = third.winner;
+      } else {
+        // 4-team: 1v4, 2v3, then final.
+        const s1 = seeds[0];
+        const s2 = seeds[1];
+        const s3 = seeds[2];
+        const s4 = seeds[3];
+        const semiA = game("Semifinals", start, s1, s4);
+        const semiB = game("Semifinals", start, s2, s3);
+        out.rounds.push({ lab: "Week " + start + " · Semifinals", games: [semiA, semiB] });
+        const fin = game("Championship", start + 1, semiA.winnerSeat, semiB.winnerSeat);
+        out.rounds.push({ lab: "Week " + (start + 1) + " · Finals", games: [fin] });
+        out.champion = fin.winner;
+      }
+      return out;
+    }
+
+    function projectedFinishDetailHtml(seat) {
+      if (!seat) return "";
+      const weeks = projectedFinishWeekLines(seat);
+      const bracket = projectedPlayoffBracket(seat);
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">Why</p>';
+      html += "<p>" + esc(projectedFinishMoveLine(seat)) + "</p>";
+      html += "<p>" + esc(projectedFinishPathLine(seat)) + "</p>";
+      html += "<p>" + esc(projectedFinishSosLine(seat)) + "</p>";
+      html += "<p>" + esc(projectedFinishHistoryLine(seat)) + "</p>";
+      if (weeks.length) {
+        html += '<p class="pf-why-h">Rest of regular season</p>';
+        weeks.forEach(function (w) {
+          html += '<p class="pf-week"><b>' + esc(w.week) + "</b> vs " + esc(w.opp)
+            + ' — <span class="' + (w.expectWin ? "pf-win" : "pf-loss") + '">'
+            + esc(w.expectWin ? "expected win" : "expected loss")
+            + "</span> (" + esc(String(w.pct)) + "%)</p>";
+        });
+      }
+      if (bracket) {
+        html += '<p class="pf-why-h">Projected playoff bracket</p>';
+        html += '<p>Seeds from projected finish · top ' + esc(String(bracket.n))
+          + " · matchup edges from PF/PA (opinion, not a sim).</p>";
+        if (bracket.byes && bracket.byes.length) {
+          html += '<p class="pf-bracket-bye">Byes: '
+            + bracket.byes.map(function (b) {
+              return "#" + b.seed + " " + b.name;
+            }).join(" · ")
+            + "</p>";
+        }
+        html += '<div class="pf-bracket">';
+        (bracket.rounds || []).forEach(function (round) {
+          html += '<p class="pf-why-h">' + esc(round.lab) + "</p>";
+          (round.games || []).forEach(function (g) {
+            const aCls = g.a.focus ? " is-focus" : "";
+            const bCls = g.b.focus ? " is-focus" : "";
+            html += '<div class="pf-bracket-game">'
+              + '<div><span class="pf-seed">#' + esc(String(g.a.seed)) + "</span> "
+              + '<span class="pf-name' + aCls + '">' + esc(g.a.name) + "</span></div>"
+              + '<div class="pf-vs">vs</div>'
+              + '<div style="text-align:right"><span class="pf-seed">#'
+              + esc(String(g.b.seed)) + "</span> "
+              + '<span class="pf-name' + bCls + '">' + esc(g.b.name) + "</span></div>"
+              + "</div>";
+            html += '<p class="pf-edge">→ ' + esc(g.winner.name) + " (" + esc(String(g.pct))
+              + "%)"
+              + (g.round === "3rd place" ? " takes 3rd" : (g.round === "Championship" ? " wins the title" : " advances"))
+              + "</p>";
+          });
+        });
+        html += "</div>";
+        if (bracket.champion) {
+          html += "<p>Projected champ: <b>" + esc(bracket.champion.name) + "</b>"
+            + (bracket.third ? (" · 3rd: " + esc(bracket.third.name)) : "")
+            + ".</p>";
+        }
+      }
+      html += "</div>";
+      return html;
     }
 
     function seatDirOf(uid) {
@@ -31152,6 +31464,15 @@
         e.stopPropagation();
         const id = homeWireBtn.getAttribute("data-home-wire") || "";
         homeWireOpen = (String(homeWireOpen) === String(id)) ? "" : id;
+        if (typeof render === "function") render();
+        return;
+      }
+      const projFinishOpenBtn = e.target.closest("[data-proj-finish-open]");
+      if (projFinishOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = projFinishOpenBtn.getAttribute("data-proj-finish-open") || "";
+        projectedFinishOpenKey = (String(projectedFinishOpenKey) === String(key)) ? "" : key;
         if (typeof render === "function") render();
         return;
       }

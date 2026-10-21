@@ -34,6 +34,11 @@ need(script.includes("wireLine") && script.includes("claimed")
 need(!page.includes("data-home-wire-full") && !page.includes("Full letter")
   && !gen.includes("homeWireFullLetter") && !gen.includes("data-home-wire-full"),
   "Home wire bar must not expand the full overnight letter");
+need(!fnSrc(page, "homeWirePanelHtml").includes("letter.lede")
+  && !fnSrc(page, "homeWirePanelHtml").includes("home-wire-foot")
+  && !fnSrc(page, "homeWireBarHtml").includes("home-wire-foot")
+  && !fnSrc(gen, "homeWirePanelHtml").includes("letter.lede"),
+  "Home wire bar must not paint the league overnight lede under each tab");
 need(script.includes("irScore") && script.includes("readUi") && script.includes("calculator.json")
   && script.includes("cuffs.json") && script.includes("attachCuff")
   && script.includes("cuff_owned === false")

@@ -13,9 +13,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "seasonArcsExpand20261021"')
-  || !gen.includes('const DATA_V = "seasonArcsExpand20261021"')
-  || !sw.includes("chuckle-shell-v336-season-arcs-expand")) {
+if (!page.includes('const DATA_V = "seasonArcsExpandMerge20261021"')
+  || !gen.includes('const DATA_V = "seasonArcsExpandMerge20261021"')
+  || !sw.includes("chuckle-shell-v341-season-arcs-expand")) {
   fail("season arcs expand must bust DATA_V and SW");
 }
 

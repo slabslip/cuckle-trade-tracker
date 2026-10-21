@@ -3253,6 +3253,12 @@ const html = `<!DOCTYPE html>
     .trade-helper-verdict { margin: 6px 0 0; font-size: 0.9rem; }
     .trade-helper-flags { margin: 0 0 12px; padding-left: 1.1rem; color: var(--muted); font-size: 0.8125rem; }
     .trade-helper-flags li { margin: 0 0 4px; }
+    .trade-helper-kick { margin: 0 0 14px; }
+    .trade-helper-kick > .ds-lists-h { margin: 0 0 4px; }
+    .trade-helper-kick > .caption { margin: 0 0 10px; }
+    .trade-helper-kick .home-desk-row { margin-bottom: 8px; }
+    .trade-helper-kick .home-desk-row:last-child { margin-bottom: 0; }
+    .trade-helper-kick .home-desk-meta { white-space: normal; }
     .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
     .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
@@ -4795,7 +4801,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "seasonArcsExpand20261021";
+    const DATA_V = "seasonArcsExpandMerge20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4850,10 +4856,10 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
-      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "past_champions", "season_place",
-      "week_scores", "manager_archetypes",
+      "week_scores", "draft_board",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4864,15 +4870,15 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "past_champions", "season_place",
-      "week_scores", "manager_archetypes",
+      "week_scores", "draft_board",
     ];
     const DATA_DASH_RESEARCH = [
-      "firsts_held", "manager_archetypes", "season_arcs", "passed_around",
-      "week_scores", "draft_board", "projected_finish", "my_trades",
-      "seat_run", "least_traded", "forever", "past_champions",
+      "manager_archetypes", "season_arcs", "passed_around", "week_scores",
+      "draft_board", "projected_finish", "my_trades", "seat_run",
+      "least_traded", "forever", "past_champions", "my_draft",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -4885,7 +4891,7 @@ const html = `<!DOCTYPE html>
     ];
     const DATA_DASH_DYNASTY_ONLY = [
       "stash_young", "draft_board", "held_picks", "widest_clock", "seat_aging", "seat_run",
-      "firsts_held", "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
+      "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "book_top", "seat_manners",
@@ -4907,7 +4913,7 @@ const html = `<!DOCTYPE html>
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
     const DATA_REPORTS = [
-      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player you want. Build an offer, or see better / more tradeable options." },
+      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player or trade partner. Kickstart ideas sit under the search — then build an offer or see better options." },
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
       { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Give book, Dart to Star by color." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
@@ -4915,7 +4921,6 @@ const html = `<!DOCTYPE html>
       { id: "my_block", lab: "My block", desk: "book", group: "deal", size: "full", why: "Pieces you will actually deal." },
       { id: "league_block", lab: "League block", desk: "book", group: "deal", size: "full", why: "What everyone else listed for sale." },
       { id: "block_fits", lab: "Block fits", desk: "book", group: "deal", size: "full", why: "Listed pieces that fill a hole." },
-      { id: "firsts_held", lab: "Who has firsts", desk: "draft", size: "half", why: "Unused firsts sorted by projected slot — Early 1.01 first. Holder, origin, proxy tag." },
       { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
@@ -6646,7 +6651,7 @@ const html = `<!DOCTYPE html>
         const ahead = now == null ? "" : (now > 0 ? side.name : now < 0 ? side.other : "");
         if (ahead) verdict = ahead + " came out ahead — " + receiptClockName(key).toLowerCase() + ".";
       }
-      let because = "The bags stayed about even.";
+      let because = "The teams stayed about even.";
       if (aged != null && aged < 0) because = "It looked better the day they clicked accept.";
       else if (aged != null && aged > 0) because = "It is worth more now than the day they accepted.";
       if (!chip && t0 != null && aged != null) {
@@ -7700,7 +7705,7 @@ const html = `<!DOCTYPE html>
         + bags
         + '<div class="data-sec-h">Same deal, different question</div>'
         + receiptClockChipsHtml(selected)
-        + '<div class="data-sec-h">How the received bag moved</div>'
+        + '<div class="data-sec-h">How the received team moved</div>'
         + sparkHtml
         + '<p class="caption">What they received, year by year. A break is a missing year, not a zero.</p>'
         + receiptPickRowsHtml(selected)
@@ -12643,6 +12648,10 @@ const html = `<!DOCTYPE html>
         const i = src.indexOf("book_top");
         if (i >= 0) src[i] = "profit_loss";
       }
+      // Retired: Who has firsts left the Data board / library.
+      while (src.indexOf("firsts_held") >= 0) {
+        src.splice(src.indexOf("firsts_held"), 1);
+      }
       // Dynasty: force critical doors onto saved boards (remote seat_data_dash often
       // predates Season arcs / Trade helper — Home top-4 and Your board stayed blank).
       const dynasty = !(typeof isRedraftLeague === "function" && isRedraftLeague());
@@ -12653,7 +12662,7 @@ const html = `<!DOCTYPE html>
           if (src.length < DATA_DASH_MAX) {
             src.splice(Math.min(3, src.length), 0, "season_arcs");
           } else {
-            const keepTop = { projected_finish: 1, my_draft: 1, firsts_held: 1 };
+            const keepTop = { projected_finish: 1, my_draft: 1, manager_archetypes: 1 };
             if (src.length > 3 && !keepTop[src[3]]) {
               src[3] = "season_arcs";
             } else {
@@ -14716,7 +14725,7 @@ const html = `<!DOCTYPE html>
         || id === "poach_cuffs" || id === "my_block" || id === "block_fits")) {
         return "Claim your team to see this";
       }
-      if (id === "trade_helper") return "Search a player you want — build an offer or see better options";
+      if (id === "trade_helper") return "Search for player or trade partner — or tap a kickstart idea";
       if (id === "fill_holes") return "No Get that both sides will take";
       if (id === "move_extras") return "No Give that both sides will take";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
@@ -15158,7 +15167,7 @@ const html = `<!DOCTYPE html>
       const flags = [];
       if (needPos) flags.push("You look thin at " + pos + " — fair hunt.");
       else if (thinPos) flags.push("You could use " + pos + " depth.");
-      else if (pos) flags.push("Not a clear " + pos + " hole on your bag — upgrade only if the price is right.");
+      else if (pos) flags.push("Not a clear " + pos + " hole on your team — upgrade only if the price is right.");
       if (target && target.injury) {
         flags.push((target.name || "Target") + " is on " + target.injury
           + " — price the downtime or pivot.");
@@ -15181,7 +15190,7 @@ const html = `<!DOCTYPE html>
       if (target && target.injury && alts.length) {
         verdict = "Hurt target — weigh healthier same-pos options before you pay full freight.";
       } else if (!packages.length && alts.length) {
-        verdict = "Hard to even this on your bag — look at alternatives first.";
+        verdict = "Hard to even this on your team — look at alternatives first.";
       } else if (packages.length && needPos) {
         verdict = "Solid need fit — lead with the closest even package.";
       } else if (theirProj && theirProj.band === "Late" && target && !target.injury) {
@@ -15197,6 +15206,152 @@ const html = `<!DOCTYPE html>
       };
     }
 
+    function tradeHelperKickstartCards() {
+      if (!authSeatId() || !authSession) return [];
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const mine = String(authSeatId());
+      const seats = (members || []).filter(function (m) { return m && m.user_id; });
+      if (seats.length < 2) return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = bags.get(mine) || [];
+      if (!myBag.length) return [];
+      const nameOf = function (uid) {
+        const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
+        return (hit && hit.name) || uid;
+      };
+      const profA = typeof homeDeskProfile === "function" ? homeDeskProfile(myBag) : null;
+      const wants = typeof homeDeskWants === "function" ? homeDeskWants(mine, profA) : [];
+      const scored = [];
+      for (let i = 0; i < seats.length; i++) {
+        const uid = String(seats[i].user_id);
+        if (uid === mine) continue;
+        const theirBag = bags.get(uid) || [];
+        if (!theirBag.length) continue;
+        const profB = typeof homeDeskProfile === "function" ? homeDeskProfile(theirBag) : null;
+        for (let w = 0; w < wants.length; w++) {
+          const want = wants[w];
+          const talk = typeof homeDeskTalk === "function" ? homeDeskTalk(myBag, theirBag, want) : null;
+          if (!talk) continue;
+          const job = typeof homeDeskJob === "function" ? homeDeskJob(talk, profA, profB) : "";
+          if (job !== want) continue;
+          scored.push({
+            a: mine,
+            b: uid,
+            nameA: "You",
+            nameB: seats[i].name || nameOf(uid) || "them",
+            talk: talk,
+            job: job,
+            score: talk.score,
+          });
+        }
+        // Also score an open swap vs this seat so the kickstart list stays full.
+        const open = typeof homeDeskTalk === "function" ? homeDeskTalk(myBag, theirBag, "") : null;
+        if (open) {
+          const job = typeof homeDeskJob === "function" ? homeDeskJob(open, profA, profB) : "swap";
+          scored.push({
+            a: mine,
+            b: uid,
+            nameA: "You",
+            nameB: seats[i].name || nameOf(uid) || "them",
+            talk: open,
+            job: job,
+            score: open.score + 40,
+          });
+        }
+      }
+      scored.sort(function (x, y) { return x.score - y.score; });
+      const usedKey = {};
+      const partnerN = {};
+      const picks = [];
+      for (let i = 0; i < scored.length && picks.length < 8; i++) {
+        const row = scored[i];
+        const pack = [(row.talk.legsA || []).map(function (a) { return a && a.id; }).join(","),
+          (row.talk.legsB || []).map(function (a) { return a && a.id; }).join(",")].join("|");
+        if (usedKey[pack]) continue;
+        if ((partnerN[row.b] || 0) >= 2) continue;
+        usedKey[pack] = 1;
+        partnerN[row.b] = (partnerN[row.b] || 0) + 1;
+        picks.push(row);
+      }
+      return picks;
+    }
+
+    function tradeHelperIdeaLogic(row) {
+      if (!row || !row.talk) return "";
+      const bits = [];
+      const meta = typeof homeDeskMeta === "function"
+        ? homeDeskMeta(row.talk, row.job, row.nameB, row.b)
+        : "";
+      if (meta) bits.push(meta);
+      const dir = typeof seatDirOf === "function" ? seatDirOf(row.b) : null;
+      if (dir && dir.label) bits.push("Their seat reads " + dir.label + ".");
+      const arch = typeof archSeatOf === "function" ? archSeatOf(row.b) : null;
+      if (arch && (arch.lab || arch.why)) {
+        bits.push((arch.lab || "Manager type")
+          + (arch.why ? (": " + arch.why) : "."));
+      }
+      const proj = typeof projSeatOf === "function" ? projSeatOf(row.b) : null;
+      if (proj && (proj.band || proj.proj_finish != null)) {
+        bits.push("Live race: "
+          + (proj.band ? (proj.band + " pick band") : "band unset")
+          + (proj.proj_finish != null
+            ? (", projected " + (typeof nth === "function" ? nth(proj.proj_finish) : proj.proj_finish))
+            : "")
+          + ".");
+      }
+      const getPlay = (row.talk.legsB || []).filter(function (a) {
+        return a && a.id && !(typeof homeDeskIsPick === "function" && homeDeskIsPick(a));
+      });
+      const getName = getPlay[0]
+        ? ((typeof homeDeskShortName === "function" ? homeDeskShortName(getPlay[0]) : getPlay[0].name) || getPlay[0].name)
+        : "";
+      if (getName) {
+        bits.push("Tap to search " + getName
+          + (row.nameB ? (" (or type " + row.nameB + ").") : "."));
+      } else if (row.nameB) {
+        bits.push("Tap to search " + row.nameB + ".");
+      }
+      return bits.join(" ");
+    }
+
+    function tradeHelperKickstartHtml() {
+      const cards = tradeHelperKickstartCards();
+      if (!cards.length) return "";
+      let html = '<div class="trade-helper-kick" aria-label="Kickstart ideas">'
+        + '<h3 class="ds-lists-h">Kickstart ideas</h3>'
+        + '<p class="caption">Team Ideas with the longer why — tap one to start a search.</p>';
+      html += cards.map(function (row) {
+        const getPlay = (row.talk.legsB || []).filter(function (a) {
+          return a && a.id && !(typeof homeDeskIsPick === "function" && homeDeskIsPick(a));
+        });
+        const seedId = getPlay[0] ? getPlay[0].id : "";
+        const seedName = seedId
+          ? ""
+          : (row.nameB || ((row.talk.legsB || [])[0] && (row.talk.legsB || [])[0].name) || "");
+        const line = (row.talk.legsA || []).map(function (a) {
+          return typeof homeDeskShortName === "function" ? homeDeskShortName(a) : (a.name || "?");
+        }).join(" + ")
+          + " for "
+          + (row.talk.legsB || []).map(function (a) {
+            return typeof homeDeskShortName === "function" ? homeDeskShortName(a) : (a.name || "?");
+          }).join(" + ");
+        const job = typeof homeDeskJobLabel === "function" ? homeDeskJobLabel(row.job) : (row.job || "Swap");
+        const them = row.nameB || "them";
+        const logic = tradeHelperIdeaLogic(row);
+        return '<button type="button" class="home-desk-row"'
+          + (seedId
+            ? (' data-trade-helper-pick="' + esc(seedId) + '"')
+            : (' data-trade-helper-seed="' + esc(seedName) + '"'))
+          + ' aria-label="' + esc(job + ". You and " + them + " — " + line) + '">'
+          + '<div class="home-desk-pair"><span class="home-desk-job">' + esc(job) + "</span> You · "
+          + esc(them) + "</div>"
+          + '<p class="home-desk-line">' + esc(line) + "</p>"
+          + '<p class="home-desk-meta">' + esc(logic) + "</p>"
+          + "</button>";
+      }).join("");
+      return html + "</div>";
+    }
+
     function dataDashTradeHelperHtml() {
       const spec = dataDashById("trade_helper");
       if (!spec) return "";
@@ -15208,16 +15363,17 @@ const html = `<!DOCTYPE html>
           + "</section>";
       }
       const target = tradeHelperTargetId ? tradeHelperAssetById(tradeHelperTargetId) : null;
-      const hits = (!target && tradeHelperQ.trim().length >= 2)
+      const q = tradeHelperQ.trim();
+      const hits = (!target && q.length >= 2)
         ? tradeHelperSearchHits(tradeHelperQ, 12)
         : [];
       let body = "";
       if (!target) {
         body += '<label class="trade-helper-search">'
-          + '<span class="data-dash-sub">Player you want</span>'
-          + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="e.g. Travis Etienne or TipsUp RB…"'
+          + '<span class="data-dash-sub">Search</span>'
+          + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="Search for player or trade partner"'
           + ' value="' + esc(tradeHelperQ) + '" autocomplete="off" /></label>';
-        if (tradeHelperQ.trim().length >= 2 && !hits.length) {
+        if (q.length >= 2 && !hits.length) {
           body += '<p class="data-hint">No other-seat players match that search.</p>';
         } else if (hits.length) {
           body += hits.map(function (a) {
@@ -15228,8 +15384,8 @@ const html = `<!DOCTYPE html>
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
               + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
           }).join("");
-        } else {
-          body += '<p class="data-hint">' + esc(dataDashHuntEmpty("trade_helper")) + "</p>";
+        } else if (!q) {
+          body += tradeHelperKickstartHtml();
         }
       } else {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name;
@@ -15250,7 +15406,7 @@ const html = `<!DOCTYPE html>
         }
         body += '<h3 class="ds-lists-h">Offer ideas</h3>';
         if (!anal.packages.length) {
-          body += '<p class="data-hint">No clean package on your bag that both sides are likely to take. Check alternatives.</p>';
+          body += '<p class="data-hint">No clean package on your team that both sides are likely to take. Check alternatives.</p>';
         } else {
           body += anal.packages.map(function (p) {
             return '<button type="button" class="data-xrow" data-dash-fit="1"'
@@ -15321,10 +15477,10 @@ const html = `<!DOCTYPE html>
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const bag = (bags.get(mine) || []).filter(function (a) { return a && a.id && !pinned[a.id]; });
       let html = '<p class="caption"><button type="button" class="chip" data-block-add-toggle="1">'
-        + (dataBlockAddOpen ? "Hide bag" : "Add from your bag") + "</button></p>";
+        + (dataBlockAddOpen ? "Hide team" : "Add from your team") + "</button></p>";
       if (!dataBlockAddOpen) return html;
       if (!bag.length) {
-        return html + '<p class="data-hint">Every leftover piece is already listed, or the bag is empty.</p>';
+        return html + '<p class="data-hint">Every leftover piece is already listed, or the team is empty.</p>';
       }
       html += bag.slice(0, 24).map(function (a) {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
@@ -15351,7 +15507,7 @@ const html = `<!DOCTYPE html>
       const huntSub = id === "move_extras"
         ? "Dart to Star, by color."
         : (id === "fill_holes"
-          ? "Dart to Star, from their bag."
+          ? "Dart to Star, from their team."
           : spec.why);
       return '<section class="data-dash" aria-label="' + esc(huntTitle) + '">'
         + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
@@ -15901,7 +16057,7 @@ const html = `<!DOCTYPE html>
         + dataDashFact("Buy", buy)
         + dataDashFact("Sell", sell)
         + dataDashFact("Refuse", refuse)
-        + dataDashFact("Bag", holeBits.join(" · "));
+        + dataDashFact("Team", holeBits.join(" · "));
       return '<section class="data-dash" aria-label="' + esc(name) + ' cycle">'
         + '<p class="caption"><button type="button" class="chip back" data-dir-back="1">← League</button></p>'
         + '<div class="data-dir-hero"><h2 class="screen-h" tabindex="-1">' + esc(name) + "</h2>"
@@ -28795,7 +28951,7 @@ const html = `<!DOCTYPE html>
         + "gold line on the <b>star package</b> (the send card with fewer pieces) and the "
         + "card total is pile + that line. The extras card stays pile-only. Compare "
         + "<b>receives</b> add that line to the seat who <b>takes</b> the star.</p>"
-        + '<p class="calc-info-eq">card total = send pile + VA on that bag + Handcuff on that bag<br>'
+        + '<p class="calc-info-eq">card total = send pile + VA on that team + Handcuff on that team<br>'
         + "Team 1 receives = Team 2 card total<br>"
         + "Team 2 receives = Team 1 card total<br>"
         + "gap = larger receive total &minus; smaller receive total<br>"
@@ -29272,7 +29428,7 @@ const html = `<!DOCTYPE html>
         else if (delta < 0) main.push("↓" + (-delta) + " from now");
       }
       if (arch && arch.lab) sub.push(arch.lab);
-      if (dir && dir.label) sub.push("Bag " + dir.label);
+      if (dir && dir.label) sub.push("Team " + dir.label);
       // data-home-door (not data-dash-open): must land on League Data so the
       // expandable every-team list mounts. Race chips used to set receiptWhoList
       // while homeTab stayed Home — list looked "gone".
@@ -29443,9 +29599,7 @@ const html = `<!DOCTYPE html>
         + '<p class="home-capital-h">Your firsts'
         + (bag.year ? (" · " + esc(bag.year)) : "")
         + "</p>"
-        + '<p class="home-capital-line">' + esc(line)
-        + ' <button type="button" class="chip" data-dash-open="firsts_held">Firsts</button>'
-        + "</p></section>";
+        + '<p class="home-capital-line">' + esc(line) + "</p></section>";
     }
 
     function homeLateBuyerBits(limit) {
@@ -29579,7 +29733,7 @@ const html = `<!DOCTYPE html>
       if (proj && proj.band === "Early") {
         return "Origin firsts read 1.0x — shop leftovers";
       }
-      return "Open Who has firsts for Early slots";
+      return "Shop Early origins — Draft capital on Your board";
     }
 
     function homePulseHtml() {
@@ -30947,7 +31101,7 @@ const html = `<!DOCTYPE html>
           const arch = me && typeof archSeatOf === "function" ? archSeatOf(me.user_id) : null;
           const dir = me && typeof seatDirOf === "function" ? seatDirOf(me.user_id) : null;
           if (!arch || !arch.lab) return "";
-          const bag = dir && dir.label ? (" · Bag " + dir.label) : "";
+          const bag = dir && dir.label ? (" · Team " + dir.label) : "";
           return '<p class="caption">' + esc(arch.lab) + esc(bag)
             + (arch.why ? (" — " + esc(arch.why)) : "")
             + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Manager types</button></p>';
@@ -33594,6 +33748,14 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const tradeHelperSeed = e.target.closest("[data-trade-helper-seed]");
+      if (tradeHelperSeed) {
+        tradeHelperTargetId = "";
+        tradeHelperQ = tradeHelperSeed.getAttribute("data-trade-helper-seed") || "";
+        focusNext = "[data-trade-helper-q]";
+        render();
+        return;
+      }
       const dirBack = e.target.closest("[data-dir-back]");
       if (dirBack) {
         dataSeat = "";
@@ -35487,7 +35649,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v336-season-arcs-expand")
+  || !swSrc.includes("chuckle-shell-v341-season-arcs-expand")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36916,8 +37078,12 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 44 || uniq.size !== 44) {
-    throw new Error("DATA_REPORTS must hold exactly 44 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 43 || uniq.size !== 43) {
+    throw new Error("DATA_REPORTS must hold exactly 43 unique reports, found " + reportIds.length);
+  }
+  if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
+    || inline.includes('data-dash-open="firsts_held"')) {
+    throw new Error("Who has firsts must stay off the Data board, library, and Home chips");
   }
   if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
@@ -36939,9 +37105,10 @@ if (!inline.includes("function dataDashHtml(")
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   if (defIds.length !== 13 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
-    || defIds[2] !== "firsts_held" || defIds[3] !== "season_arcs"
-    || defIds[4] !== "my_trades") {
-    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles (race/capital top-4)");
+    || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
+    || defIds[4] !== "my_trades"
+    || defIds.indexOf("firsts_held") >= 0) {
+    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
@@ -36990,7 +37157,7 @@ if (!inline.includes("function dataDashHtml(")
   if (!inline.includes("function formatLensOrT0(")
     || !inline.includes("function effectiveRunLens(")
     || !fnSrc("applyDefaultLens").includes("formatLensOrT0")
-    || !fnSrc("dataDashFirstsHeld").includes("firsts_held")
+    || !fnSrc("dataDashFirstsHeld").includes("league.firsts_held")
     || !inline.includes("This season first-round")
     || !fnSrc("homeDeskWants").includes('kind === "redraft"')
     || !inline.includes("function deskSlots(")
@@ -36999,7 +37166,7 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function resetLeagueSession(")
     || !inline.includes("const DATA_DASH_REDRAFT = [")
     || !inline.includes("DATA_DASH_DYNASTY_ONLY")
-    || !inline.includes('"firsts_held", "uninsured", "available_cuffs"')
+    || !inline.includes('"uninsured", "available_cuffs", "cuffs_board"')
     || !inline.includes("function dataDashRedraftStale(")
     || !inline.includes("function finishCareerClaim(")
     || !inline.includes("function finishPointsKing(")
@@ -37046,6 +37213,16 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("dataDashHuntPeekHtml").includes("calcFmt(")
     || fnSrc("dataDashHuntPeekHtml").includes("calcValueNum(")) {
     throw new Error("Deal hunts must peek player + reason and open calc first-person");
+  }
+  if (!inline.includes("function tradeHelperKickstartHtml(")
+    || !inline.includes("function tradeHelperKickstartCards(")
+    || !inline.includes("function tradeHelperIdeaLogic(")
+    || !inline.includes("Kickstart ideas")
+    || !inline.includes('placeholder="Search for player or trade partner"')
+    || inline.includes("Travis Etienne or TipsUp")
+    || !inline.includes('data-trade-helper-seed="')
+    || !inline.includes('closest("[data-trade-helper-seed]")')) {
+    throw new Error("Trade helper must ship kickstart ideas and a plain search placeholder");
   }
   if (!inline.includes("function loadSeatDataDash(")
     || !inline.includes("function saveSeatDataDash(")
@@ -38742,7 +38919,7 @@ if (!inline.includes("function calcInfoHtml(") || !inline.includes('data-calc-in
   || !inline.includes("If flatten is missing")
   || !inline.includes("FantasyCalc") || !inline.includes("DynastyDealer")
   || !inline.includes("Worked example") || !inline.includes("calcInfoOpen")
-  || !fnSrc("calcInfoHtml").includes("send pile + VA on that bag")
+  || !fnSrc("calcInfoHtml").includes("send pile + VA on that team")
   || !fnSrc("calcInfoHtml").includes("4. Handcuff")
   || !fnSrc("calcInfoHtml").includes("Handcuff worked")
   || !fnSrc("calcInfoHtml").includes("Same-team backup")
@@ -38765,6 +38942,17 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || !inline.includes("2-3 years out") || !inline.includes("your QB throws to ")
   || !inline.includes("markets bid up")
   || inline.includes("Talks for your bag")
+  || inline.includes("your bag")
+  || inline.includes("their bag")
+  || inline.includes("Hide bag")
+  || inline.includes("Add from your bag")
+  || inline.includes("the bag is empty")
+  || inline.includes("received bag")
+  || inline.includes("The bags stayed")
+  || inline.includes(" · Bag ")
+  || inline.includes('dataDashFact("Bag"')
+  || inline.includes("VA on that bag")
+  || inline.includes("Reload bag")
   || fnSrc("homeDeskJobLabel").includes("Fill")
   || fnSrc("homeDeskJobLabel").includes("Even")
   || fnSrc("homeDeskCards").includes("takeJob(\"fill\")")
@@ -38786,7 +38974,7 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || !fnSrc("homeDeskCards").includes("homeDeskTalk(myBag, theirBag, want")
   || !fnSrc("homeDeskCards").includes("homeDeskWants(")
   || fnSrc("homeDeskCards").includes("for (let j = i + 1")) {
-  throw new Error("Team Ideas must be first-person, omit when signed out, and stay free of bag numbers");
+  throw new Error("Team Ideas must be first-person; dashboard copy says team, not bag");
 }
 if (!inline.includes("async function openLeagueDashboard(")
   || !inline.includes("Keep a deep-linked sub-screen")) {

@@ -4763,6 +4763,8 @@
     let homeWireOpen = "";
     // Projected finish list: which seat row is expanded (user_id / key).
     let projectedFinishOpenKey = "";
+    // Season arcs list: which seat row is expanded (user_id / key).
+    let seasonArcsOpenKey = "";
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -4785,7 +4787,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "boardPinsForce20261021";
+    const DATA_V = "seasonArcsExpand20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5890,6 +5892,9 @@
       if (receiptListWho && tile === "vs_you") receiptVsWho = receiptListWho;
       if (receiptListWho && tile === "projected_finish") {
         projectedFinishOpenKey = receiptListWho;
+      }
+      if (receiptListWho && tile === "season_arcs") {
+        seasonArcsOpenKey = receiptListWho;
       }
       if (typeof render === "function") render();
       return true;
@@ -8630,6 +8635,24 @@
                 : "")
               + "</div>";
           }
+          if (id === "season_arcs") {
+            const open = String(seasonArcsOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-season-arcs-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + seasonArcsDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
           return '<div class="row"><div class="row-top"><div><div class="names">'
             + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
             + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
@@ -8709,7 +8732,8 @@
         caption = "Season arcs from past years: week-4 cumulative PF rank vs final place."
           + " Slow burn climbs 3+ spots; fast fade drops 3+."
           + " Bubble = early-season player buys then playoffs or not-last."
-          + " Proxy first = sold their own soonest 1st but still competing while holding others’ Early.";
+          + " Proxy first = sold their own soonest 1st but still competing while holding others’ Early."
+          + " Tap a team for the scorecard, what the rates mean, and year-by-year arcs.";
       }
       else if (id === "manager_archetypes") {
         caption = "One label per seat from arcs + live race + seat direction."
@@ -11073,6 +11097,7 @@
       overnightOpenPlayer = "";
       homeWireOpen = "";
       projectedFinishOpenKey = "";
+      seasonArcsOpenKey = "";
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -13787,6 +13812,202 @@
           + " (opinion, not a sim).</p>";
         html += projectedPlayoffBracketBoardHtml(bracket);
       }
+      html += "</div>";
+      return html;
+    }
+
+    function seasonArcsArcLab(arc) {
+      const a = String(arc || "");
+      if (a === "slow_burn") return "Slow burn";
+      if (a === "fast_fade") return "Fast fade";
+      if (a === "spike") return "Spike";
+      if (a === "steady") return "Steady";
+      return a || "—";
+    }
+
+    function seasonArcsPlaceLab(n) {
+      const v = Number(n);
+      if (!Number.isFinite(v) || v < 1) return "—";
+      return (typeof nth === "function") ? nth(v) : String(v);
+    }
+
+    function seasonArcsYearRows(seat) {
+      const uid = String((seat && seat.user_id) || "");
+      const name = String((seat && seat.name) || "");
+      const blocks = (seasonArcsBook && Array.isArray(seasonArcsBook.seasons))
+        ? seasonArcsBook.seasons : [];
+      const out = [];
+      for (let i = 0; i < blocks.length; i++) {
+        const block = blocks[i];
+        const rows = (block && Array.isArray(block.seats)) ? block.seats : [];
+        let hit = null;
+        for (let j = 0; j < rows.length; j++) {
+          const r = rows[j];
+          if (!r) continue;
+          if (uid && String(r.user_id || "") === uid) { hit = r; break; }
+          if (!uid && name && String(r.name || "") === name) { hit = r; break; }
+        }
+        if (!hit) continue;
+        out.push({
+          season: String(block.season || ""),
+          arc: hit.arc,
+          place_w4: hit.place_w4,
+          place_w8: hit.place_w8,
+          place_final: hit.place_final,
+          delta: hit.delta_early_final,
+          early_trades_n: hit.early_trades_n,
+          bought_players_early: hit.bought_players_early,
+          made_playoffs: !!hit.made_playoffs,
+          avoided_last: !!hit.avoided_last,
+        });
+      }
+      return out;
+    }
+
+    function seasonArcsMeaning(seat) {
+      if (!seat) return "";
+      const n = Number(seat.n) || 0;
+      const slow = Math.round((Number(seat.slow_burn_rate) || 0) * 100);
+      const fade = Math.round((Number(seat.fast_fade_rate) || 0) * 100);
+      const bubble = Math.round((Number(seat.bubble_rate) || 0) * 100);
+      const playoff = Math.round((Number(seat.playoff_rate) || 0) * 100);
+      const climb = Number(seat.avg_climb) || 0;
+      const bits = [];
+      if (n === 1) bits.push("One completed season on this book — rates are thin.");
+      else if (n > 1) bits.push(n + " completed seasons on this book.");
+      if (slow >= 40) {
+        bits.push("Slow-burn seat: often starts quiet on week-4 PF rank and finishes 3+ spots higher.");
+      } else if (slow >= 25) {
+        bits.push("Sometimes climbs after a soft start (slow burn in about " + slow + "% of seasons).");
+      }
+      if (fade >= 40) {
+        bits.push("Fast-fade pattern: often looks strong early, then slides 3+ spots by the final board.");
+      } else if (fade >= 25) {
+        bits.push("Has faded after a hot start in about " + fade + "% of seasons.");
+      }
+      if (climb >= 1.5) {
+        bits.push("Average climb +" + climb.toFixed(1) + " — finishes better than early PF usually suggested.");
+      } else if (climb <= -1.5) {
+        bits.push("Average climb " + climb.toFixed(1) + " — early PF rank usually overstated the finish.");
+      } else {
+        bits.push("Average climb near flat (" + (climb > 0 ? "+" : "") + climb.toFixed(1)
+          + ") — early PF and final place usually stay close.");
+      }
+      if (bubble >= 70) {
+        bits.push("Bubble trader: early player buys (week ≤4) still led to playoffs or not-last "
+          + bubble + "% of the time.");
+      } else if (bubble >= 40) {
+        bits.push("Mixed bubble tape — early buys sometimes salvage the year (" + bubble + "%).");
+      } else if (n >= 2) {
+        bits.push("Rarely turns early player buys into a salvaged board (bubble " + bubble + "%).");
+      }
+      if (playoff >= 70) bits.push("Playoff regular (" + playoff + "% of seasons top six).");
+      else if (playoff <= 30 && n >= 2) bits.push("Playoffs are rare here (" + playoff + "%).");
+      if (seat.proxy_motive) {
+        bits.push("Proxy motive now: sold their own soonest 1st, still competing, holding other firsts "
+          + "— Early capital on their roster stays valuable.");
+      } else if (seat.owned_own_first === false) {
+        bits.push("Does not hold their own soonest 1st right now.");
+      } else if (seat.owned_own_first === true) {
+        bits.push("Still holds their own soonest 1st.");
+      }
+      if (seat.live_band || seat.live_proj_finish != null) {
+        bits.push("Live race: "
+          + (seat.live_band ? (seat.live_band + " pick band") : "pick band unset")
+          + (seat.live_proj_finish != null
+            ? (", projected " + seasonArcsPlaceLab(seat.live_proj_finish))
+            : "")
+          + ".");
+      }
+      return bits.join(" ");
+    }
+
+    function seasonArcsDetailHtml(seat) {
+      if (!seat) return "";
+      const n = Number(seat.n) || 0;
+      const slow = Math.round((Number(seat.slow_burn_rate) || 0) * 100);
+      const fade = Math.round((Number(seat.fast_fade_rate) || 0) * 100);
+      const bubble = Math.round((Number(seat.bubble_rate) || 0) * 100);
+      const playoff = Math.round((Number(seat.playoff_rate) || 0) * 100);
+      const climb = Number(seat.avg_climb) || 0;
+      const early = Number(seat.early_trades_avg) || 0;
+      const years = seasonArcsYearRows(seat);
+      const scores = [
+        {
+          tag: "Slow burn",
+          num: slow + "%",
+          lab: n ? ("of " + n) : "",
+          note: "Climbed 3+ spots from week-4 PF rank to final place.",
+        },
+        {
+          tag: "Fast fade",
+          num: fade + "%",
+          lab: n ? ("of " + n) : "",
+          note: "Dropped 3+ spots from week-4 PF rank to final place.",
+        },
+        {
+          tag: "Avg climb",
+          num: (climb > 0 ? "+" : "") + climb.toFixed(1),
+          lab: "spots",
+          note: "Week-4 PF rank minus final place, averaged. + means finished higher.",
+        },
+        {
+          tag: "Bubble",
+          num: bubble + "%",
+          lab: n ? ("of " + n) : "",
+          note: "Week ≤4 trade + net player buy, then playoffs or avoided last.",
+        },
+        {
+          tag: "Playoffs",
+          num: playoff + "%",
+          lab: n ? ("of " + n) : "",
+          note: "Finished top six in that season.",
+        },
+        {
+          tag: "Early deals",
+          num: early.toFixed(1),
+          lab: "/yr",
+          note: "Average trades in weeks 0–4 (regular season).",
+        },
+      ];
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">Scorecard</p>';
+      html += '<ul class="pf-scorecard">';
+      scores.forEach(function (s) {
+        html += '<li><span class="pf-tag">' + esc(s.tag) + "</span>"
+          + '<span><span class="pf-num">' + esc(s.num) + "</span>"
+          + (s.lab ? (' <span class="pf-lab">' + esc(s.lab) + "</span>") : "")
+          + "</span>"
+          + (s.note ? '<span class="pf-note">' + esc(s.note) + "</span>" : "")
+          + "</li>";
+      });
+      html += "</ul>";
+      html += '<p class="pf-why-h">What this means</p>';
+      html += "<p>" + esc(seasonArcsMeaning(seat)) + "</p>";
+      if (years.length) {
+        html += '<p class="pf-why-h">Year by year</p>';
+        html += '<p class="caption">Place uses cumulative PF rank through week 4 / week 8 '
+          + "as a mid-season stand-in, then real final place.</p>";
+        years.forEach(function (y) {
+          const d = Number(y.delta) || 0;
+          const dLab = (d > 0 ? "+" : "") + d;
+          const buy = Number(y.bought_players_early) || 0;
+          const buyLab = buy > 0 ? ("bought +" + buy) : (buy < 0 ? ("sold " + Math.abs(buy)) : "flat bag");
+          const end = y.made_playoffs ? "playoffs" : (y.avoided_last ? "missed, not last" : "finished last");
+          html += '<p class="pf-week"><b>' + esc(y.season) + "</b> · "
+            + esc(seasonArcsArcLab(y.arc))
+            + " — W4 " + esc(seasonArcsPlaceLab(y.place_w4))
+            + " → W8 " + esc(seasonArcsPlaceLab(y.place_w8))
+            + " → final " + esc(seasonArcsPlaceLab(y.place_final))
+            + " (" + esc(dLab) + ")"
+            + " · " + esc(String(y.early_trades_n || 0)) + " early deals · "
+            + esc(buyLab) + " · " + esc(end)
+            + "</p>";
+        });
+      }
+      html += '<p class="caption">Arc labels: Slow burn Δ≥+3 · Fast fade Δ≤−3 · '
+        + "Spike = early top-third + final top 3 · else Steady. "
+        + "Proxy = no own soonest 1st, still competing, holds other firsts.</p>";
       html += "</div>";
       return html;
     }
@@ -32950,6 +33171,15 @@
         e.stopPropagation();
         const key = projFinishOpenBtn.getAttribute("data-proj-finish-open") || "";
         projectedFinishOpenKey = (String(projectedFinishOpenKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+        return;
+      }
+      const seasonArcsOpenBtn = e.target.closest("[data-season-arcs-open]");
+      if (seasonArcsOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = seasonArcsOpenBtn.getAttribute("data-season-arcs-open") || "";
+        seasonArcsOpenKey = (String(seasonArcsOpenKey) === String(key)) ? "" : key;
         if (typeof render === "function") render();
         return;
       }

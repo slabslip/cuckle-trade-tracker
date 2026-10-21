@@ -13115,7 +13115,8 @@ const html = `<!DOCTYPE html>
         "",
       ];
       dig.scores.forEach(function (s) {
-        lines.push("• " + s.tag + ": " + s.num + " · " + s.lab
+        lines.push("• " + s.tag + ": " + s.num
+          + (s.lab ? (" · " + s.lab) : "")
           + (s.note ? " — " + s.note : ""));
       });
       if (dig.weekSummary) {
@@ -13256,7 +13257,8 @@ const html = `<!DOCTYPE html>
       dig.scores.forEach(function (s) {
         html += '<li><span class="pf-tag">' + esc(s.tag) + "</span>"
           + '<span><span class="pf-num">' + esc(s.num) + "</span>"
-          + ' <span class="pf-lab">' + esc(s.lab) + "</span></span>"
+          + (s.lab ? (' <span class="pf-lab">' + esc(s.lab) + "</span>") : "")
+          + "</span>"
           + (s.note ? '<span class="pf-note">' + esc(s.note) + "</span>" : "")
           + "</li>";
       });
